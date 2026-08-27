@@ -31,17 +31,18 @@ Claude Code / Claude Desktop:
 }
 ```
 
-## Hai credential, và vì sao phải có cả hai
+## Lấy khoá ở đâu
 
-Nền tảng từ chối mỗi loại trên bề mặt của loại kia, nên đây không phải lựa chọn:
+Mở cửa hàng của bạn, vào **Apps → AI agent**, bấm **Tạo khoá**. Màn hình đó đưa luôn khối
+cấu hình cho client bạn dùng, khoá đã điền sẵn — cả mục này chỉ để bạn khỏi phải đọc.
 
-| Credential | Với tới |
-| --- | --- |
-| `SB_TOKEN` — khoá API `wbk_` bạn tạo trong app | `/api/v1`: sản phẩm, đơn hàng, khách hàng, media, blog, metadata trang, webhook |
-| `SB_EMAIL` + `SB_PASSWORD` — một tài khoản thường | mọi thứ dưới `/api/sites/…`: trang, menu, theme, form, overlay, bản dịch, cài đặt — và socket live-edit |
+Một khoá là đủ. Nó với tới cả bề mặt đối tác (`/api/v1`) lẫn private site API, gồm tài liệu
+trang và socket live-edit, và bị chặn ba lớp ở mỗi request: scope của chính nó, role sống của
+thành viên đã tạo ra nó, và đúng một cửa hàng nó thuộc về.
 
-Gửi token phiên vào `/api/v1` sẽ nhận `401 api_key_required`; gửi khoá API vào private API
-cũng bị từ chối. `sb_connect` cho biết bạn đang có nửa nào.
+`SB_EMAIL` + `SB_PASSWORD` vẫn tuỳ chọn, và mua đúng một thứ: các lệnh **cấp tài khoản** —
+liệt kê site, quản lý thành viên và role — mà khoá cố ý không làm được, vì những thứ đó nghĩa
+là "tài khoản của người này".
 
 `SB_API` mặc định `http://localhost:8080`. Bí mật chỉ đọc từ biến môi trường.
 
