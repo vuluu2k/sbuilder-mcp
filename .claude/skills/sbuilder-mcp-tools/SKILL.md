@@ -54,6 +54,16 @@ The third is the dangerous one. It mixes genuine action endpoints with missing a
 — `PUT /pages/{id}/source` takes an entire page document and is documented as taking
 nothing. Reporting it as "no body" would have a model send an empty PUT and wipe a page.
 
+## A writing tool publishes
+
+Never call `doc.apply(patches)` from a tool. Go through `PageSession.applyAndPublish`, which
+applies locally AND puts the batch on the live-edit wire when the agent has joined a room.
+Skipping it fails invisibly: the document is right, the save is right, and only the humans
+watching the editor see nothing happen.
+
+The live client never answers `snapreq` and never publishes a `ckpt`. That is the yield
+rule, and it is what keeps `src/live/session.ts` small. See `CLAUDE.md`.
+
 ## Registering
 
 A new tool is not done until it appears in **three** places beyond its own file:

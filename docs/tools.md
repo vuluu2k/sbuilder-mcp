@@ -154,3 +154,53 @@ Four platform rules, encoded and tested rather than documented:
 
 Plus tree integrity: no dangling child ids, no parent pointer disagreeing with a child
 list, no node unreachable from ROOT.
+
+---
+
+# Live editing and sight
+
+## `sb_live_join`
+
+`site_id`. Joins the editor's live-edit room as a visible peer. From then on every
+`sb_add` / `sb_set` / `sb_move` / `sb_remove` / `sb_bind` **also goes out as a live op**, so
+anyone with the editor open watches the page assemble, and the agent's cursor moves to the
+node it is changing — whenever a real measurement from `sb_look` exists. Presence with an
+invented coordinate would be theatre, so absent a measurement the cursor simply does not
+move.
+
+**The yield rule.** This client is never the authority on the document. It does not answer
+a snapshot request for anyone, and it publishes no convergence checkpoint of its own. On any
+evidence of divergence — a gap in the server's `seq`, a checkpoint arriving at its own seq,
+a rejected save — it discards its copy, re-pulls from the server, and **fails the next save
+loudly** so the caller re-reads and reapplies. Safe to run beside a human; the human wins
+every disagreement.
+
+## `sb_look`
+
+| Arg | Type | Notes |
+| --- | --- | --- |
+| `widths` | number[]? | Defaults to 1440 / 768 / 390 |
+| `with_boxes` | boolean? | Defaults to true |
+
+**Saves first**, then mints a signed preview link and renders the page through the
+platform's own Go renderer — so the picture is of the *stored draft*, never of unsaved local
+edits. Returns one image per width plus the measured bounding box of every `[data-node-id]`.
+
+Needs **system Google Chrome**: `playwright-core` bundles no browser, so nothing is
+downloaded on install. If Chrome is missing the tool says so by name rather than returning a
+blank image — an agent that judges a page it never saw is worse than one that stops.
+
+## `sb_bind`
+
+| Arg | Type | Notes |
+| --- | --- | --- |
+| `id` | string | |
+| `source` | string | One of 22 keys the renderer provides — `product.title`, `product.price`, `category.title`, `article.title`, … |
+| `field` | string | Always `specials.<key>` |
+| `dry_run` | boolean? | Defaults to true |
+
+Both arguments are validated against generated vocabulary, because both failures are
+**silent**: an unknown `source` resolves to nothing and renders as the element's own
+placeholder (indistinguishable from "still loading"), and a `field` outside `specials` is
+stored, saved, published, and ignored forever — `applyBindings` reads the namespace off the
+field and skips anything else.
