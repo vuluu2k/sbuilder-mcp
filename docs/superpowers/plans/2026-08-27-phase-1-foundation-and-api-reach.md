@@ -2,11 +2,11 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Ship a working MCP stdio server that authenticates with both platform credentials and can drive all 320 of the platform's API operations through a generated, searchable index.
+**Goal:** Ship a working MCP stdio server that authenticates with both platform credentials and can drive all 310 of the platform's API operations through a generated, searchable index.
 
-**Architecture:** A build step reads `server/docs/swagger.json` out of a `web_builder` checkout and emits a typed operation index. Two tools — `sb_api_find` and `sb_api_call` — turn that index into full API reach without a 320-entry tool list. Credentials are chosen by path prefix, because the OpenAPI document declares one scheme for both.
+**Architecture:** A build step reads `server/docs/swagger.json` out of a `web_builder` checkout and emits a typed operation index. Two tools — `sb_api_find` and `sb_api_call` — turn that index into full API reach without a 310-entry tool list. Credentials are chosen by path prefix, because the OpenAPI document declares one scheme for both.
 
-**Tech Stack:** TypeScript (ESM, `module: Node16`), `@modelcontextprotocol/sdk` ^1.30, `zod` ^3, `vitest` ^4, `tsx` for build scripts. Node ≥20.
+**Tech Stack:** TypeScript (ESM, `module: Node16`), `@modelcontextprotocol/sdk` ^1.30, `zod` ^3, `vitest` ^3.2, `tsx` for build scripts. Node ≥20.
 
 **Spec:** `docs/superpowers/specs/2026-08-27-sbuilder-mcp-design.md`
 
@@ -47,7 +47,7 @@ Copied verbatim from the spec. Every task's requirements implicitly include this
 - Consumes: nothing.
 - Produces: `text(value: unknown): { content: [{ type: 'text'; text: string }] }`; `createServer(): McpServer`; `runSmoke(): Promise<void>`.
 
-- [ ] **Step 1: Write `package.json`**
+- [x] **Step 1: Write `package.json`**
 
 ```json
 {
@@ -78,14 +78,14 @@ Copied verbatim from the spec. Every task's requirements implicitly include this
     "@types/node": "^22.0.0",
     "tsx": "^4.19.0",
     "typescript": "^5.6.0",
-    "vitest": "^4.1.0"
+    "vitest": "^3.2.0"
   }
 }
 ```
 
 `zod` is pinned to v3 deliberately: the sibling `webcake-landing-mcp` runs SDK 1.29 against zod 3 in production. zod 4 changes the raw-shape inference `server.tool()` relies on and has not been verified here.
 
-- [ ] **Step 2: Write `tsconfig.json` and `vitest.config.ts`**
+- [x] **Step 2: Write `tsconfig.json` and `vitest.config.ts`**
 
 ```json
 {
@@ -126,7 +126,7 @@ dist/
 .env
 ```
 
-- [ ] **Step 3: Write the failing test**
+- [x] **Step 3: Write the failing test**
 
 ```ts
 // test/response.test.ts
@@ -144,12 +144,12 @@ describe('text()', () => {
 });
 ```
 
-- [ ] **Step 4: Run it and watch it fail**
+- [x] **Step 4: Run it and watch it fail**
 
 Run: `npm install && npx vitest run test/response.test.ts`
 Expected: FAIL — `Cannot find module '../src/mcp/response.js'`.
 
-- [ ] **Step 5: Write `src/mcp/response.ts`**
+- [x] **Step 5: Write `src/mcp/response.ts`**
 
 ```ts
 /**
@@ -198,12 +198,12 @@ export function images(
 }
 ```
 
-- [ ] **Step 6: Run the test and watch it pass**
+- [x] **Step 6: Run the test and watch it pass**
 
 Run: `npx vitest run test/response.test.ts`
 Expected: PASS, 2 tests.
 
-- [ ] **Step 7: Write the server and entry point**
+- [x] **Step 7: Write the server and entry point**
 
 ```ts
 // src/server.ts
@@ -252,7 +252,7 @@ main().catch((err) => {
 });
 ```
 
-- [ ] **Step 8: Write the smoke gate**
+- [x] **Step 8: Write the smoke gate**
 
 ```ts
 // src/smoke.ts
@@ -284,12 +284,12 @@ runSmoke().catch((err) => {
 });
 ```
 
-- [ ] **Step 9: Run the full gate**
+- [x] **Step 9: Run the full gate**
 
 Run: `npm run build && npm test && npm run smoke`
 Expected: tsc emits `dist/` with no errors; vitest passes 2 tests; smoke prints `ALL GOOD`.
 
-- [ ] **Step 10: Commit**
+- [x] **Step 10: Commit**
 
 ```bash
 git add -A
@@ -310,7 +310,7 @@ git commit -m "feat: repo skeleton, response helpers, and a green build/test/smo
 
 The platform writes exactly one error shape — `{"error": "human message", "code": "machine_code"}` — through `httpx.WriteError`, and never plain text. A client that reads `res.statusText` throws away the only branchable half.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```ts
 // test/http.test.ts
@@ -369,12 +369,12 @@ describe('redact()', () => {
 });
 ```
 
-- [ ] **Step 2: Run it and watch it fail**
+- [x] **Step 2: Run it and watch it fail**
 
 Run: `npx vitest run test/http.test.ts`
 Expected: FAIL — `Cannot find module '../src/transport/http.js'`.
 
-- [ ] **Step 3: Write `src/transport/http.ts`**
+- [x] **Step 3: Write `src/transport/http.ts`**
 
 ```ts
 /**
@@ -473,12 +473,12 @@ export async function request(opts: RequestOpts): Promise<unknown> {
 }
 ```
 
-- [ ] **Step 4: Run the test and watch it pass**
+- [x] **Step 4: Run the test and watch it pass**
 
 Run: `npx vitest run test/http.test.ts`
 Expected: PASS, 6 tests.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/transport/http.ts test/http.test.ts
@@ -499,7 +499,7 @@ git commit -m "feat(transport): shared HTTP client with the platform error envel
 
 The rule this task exists to enforce: **`token()` is read per use, never captured.** The editor shipped this bug and documented the fix (`editor/src/features/realtime/socket.ts`, MF1) — a client holding the string it was constructed with replays an expired token on every reconnect, and the failure is silent. The socket in Phase 3 will take `() => session.token()`, so the getter has to exist from the start.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```ts
 // test/auth.test.ts
@@ -553,12 +553,12 @@ describe('Session', () => {
 });
 ```
 
-- [ ] **Step 2: Run it and watch it fail**
+- [x] **Step 2: Run it and watch it fail**
 
 Run: `npx vitest run test/auth.test.ts`
 Expected: FAIL — `Cannot find module '../src/transport/auth.js'`.
 
-- [ ] **Step 3: Write `src/transport/auth.ts`**
+- [x] **Step 3: Write `src/transport/auth.ts`**
 
 ```ts
 import { request } from './http.js';
@@ -632,12 +632,12 @@ export class Session {
 }
 ```
 
-- [ ] **Step 4: Run the test and watch it pass**
+- [x] **Step 4: Run the test and watch it pass**
 
 Run: `npx vitest run test/auth.test.ts`
 Expected: PASS, 3 tests.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/transport/auth.ts test/auth.test.ts
@@ -658,7 +658,7 @@ git commit -m "feat(transport): session login/refresh with a per-use token gette
 
 The OpenAPI document declares one scheme, `BearerAuth`, for both the API key and the session JWT, so it cannot make this call. Getting it wrong is not a soft failure: `/api/v1` answers `401 api_key_required` to a session token, and the private API rejects an API key.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```ts
 // test/credential.test.ts
@@ -691,12 +691,12 @@ describe('credentialFor()', () => {
 });
 ```
 
-- [ ] **Step 2: Run it and watch it fail**
+- [x] **Step 2: Run it and watch it fail**
 
 Run: `npx vitest run test/credential.test.ts`
 Expected: FAIL — `Cannot find module '../src/transport/credential.js'`.
 
-- [ ] **Step 3: Write `src/transport/credential.ts`**
+- [x] **Step 3: Write `src/transport/credential.ts`**
 
 ```ts
 /**
@@ -721,12 +721,12 @@ export function credentialFor(path: string): Credential {
 }
 ```
 
-- [ ] **Step 4: Run the test and watch it pass**
+- [x] **Step 4: Run the test and watch it pass**
 
 Run: `npx vitest run test/credential.test.ts`
 Expected: PASS, 5 tests.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/transport/credential.ts test/credential.test.ts
@@ -747,9 +747,9 @@ git commit -m "feat(transport): route credentials by path prefix, which the Open
 - Consumes: `credentialFor` from `src/transport/credential.js`.
 - Produces: `interface ApiOperation { id: string; method: string; path: string; tags: string[]; summary: string; params: ApiParam[]; bodyDescribed: boolean; bodyRef: string | null; credential: Credential; }`; `interface ApiParam { name: string; in: 'path'|'query'|'body'|'header'; required: boolean; type: string; description: string }`; `const API_OPERATIONS: ApiOperation[]`; `const API_DEFINITIONS: Record<string, unknown>`; `const SWAGGER_SOURCE: { operations: number; generatedFrom: string }`.
 
-Facts measured from the real document, which the generator asserts rather than assumes: 205 paths, 320 operations, 85 definitions, **no `operationId` anywhere**, and **58 of 140 body-carrying operations have an opaque body**.
+Facts measured from the real document, which the generator asserts rather than assumes: 205 paths, 310 operations, 85 definitions, **no `operationId` anywhere**, and **58 of 140 body-carrying operations have an opaque body**.
 
-- [ ] **Step 1: Write `src/catalog/types.ts`**
+- [x] **Step 1: Write `src/catalog/types.ts`**
 
 ```ts
 import type { Credential } from '../transport/credential.js';
@@ -778,7 +778,7 @@ export interface ApiOperation {
 }
 ```
 
-- [ ] **Step 2: Write the failing test**
+- [x] **Step 2: Write the failing test**
 
 ```ts
 // test/api-index.test.ts
@@ -821,12 +821,12 @@ describe('generated API index', () => {
 });
 ```
 
-- [ ] **Step 3: Run it and watch it fail**
+- [x] **Step 3: Run it and watch it fail**
 
 Run: `npx vitest run test/api-index.test.ts`
 Expected: FAIL — `Cannot find module '../src/catalog/api.generated.js'`.
 
-- [ ] **Step 4: Write `scripts/gen-catalog.ts`**
+- [x] **Step 4: Write `scripts/gen-catalog.ts`**
 
 ```ts
 /**
@@ -955,28 +955,28 @@ export const API_DEFINITIONS: Record<string, unknown> = ${JSON.stringify(
 main();
 ```
 
-- [ ] **Step 5: Run the generator**
+- [x] **Step 5: Run the generator**
 
 Run: `WB_REPO=/Volumes/workspace/webcake/web_builder npm run codegen`
-Expected: stderr reports `320 operations, 85 definitions, 58 with an undescribed body`.
+Expected: stderr reports `310 operations, 85 definitions, 58 with an undescribed body`.
 
-- [ ] **Step 6: Run the test and watch it pass**
+- [x] **Step 6: Run the test and watch it pass**
 
 Run: `npx vitest run test/api-index.test.ts`
 Expected: PASS, 5 tests.
 
-- [ ] **Step 7: Commit, including the generated file**
+- [x] **Step 7: Commit, including the generated file**
 
 The generated file is committed on purpose: `npm install` of this package must work with no `web_builder` checkout anywhere.
 
 ```bash
 git add scripts/gen-catalog.ts src/catalog/types.ts src/catalog/api.generated.ts test/api-index.test.ts
-git commit -m "feat(catalog): generate the 320-operation API index from the platform OpenAPI doc"
+git commit -m "feat(catalog): generate the 310-operation API index from the platform OpenAPI doc"
 ```
 
 ---
 
-### Task 6: `sb_api_find` — search 320 operations by intent
+### Task 6: `sb_api_find` — search 310 operations by intent
 
 **Files:**
 - Create: `src/catalog/search.ts`
@@ -989,7 +989,7 @@ git commit -m "feat(catalog): generate the 320-operation API index from the plat
 
 Scoring is deliberately plain — term hits weighted by field — because the caller is a language model that will re-query with better words when the first list is wrong. A fuzzy ranker would make wrong answers look confident.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```ts
 // test/api-search.test.ts
@@ -1040,12 +1040,12 @@ describe('describeOperation()', () => {
 });
 ```
 
-- [ ] **Step 2: Run it and watch it fail**
+- [x] **Step 2: Run it and watch it fail**
 
 Run: `npx vitest run test/api-search.test.ts`
 Expected: FAIL — `Cannot find module '../src/catalog/search.js'`.
 
-- [ ] **Step 3: Write `src/catalog/search.ts`**
+- [x] **Step 3: Write `src/catalog/search.ts`**
 
 ```ts
 import { API_OPERATIONS, API_DEFINITIONS } from './api.generated.js';
@@ -1111,12 +1111,12 @@ export function describeOperation(op: ApiOperation): Record<string, unknown> {
 }
 ```
 
-- [ ] **Step 4: Run the test and watch it pass**
+- [x] **Step 4: Run the test and watch it pass**
 
 Run: `npx vitest run test/api-search.test.ts`
 Expected: PASS, 7 tests.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/catalog/search.ts test/api-search.test.ts
@@ -1136,7 +1136,7 @@ git commit -m "feat(catalog): intent search over the API index, with an explicit
 - Consumes: `request`, `redact`, `ApiError`; `Session`; `credentialFor`; `API_OPERATIONS`.
 - Produces: `interface ToolContext { base: string; session: Session; apiKey?: string; fetchImpl?: typeof fetch }`; `callOperation(ctx: ToolContext, args: CallArgs): Promise<unknown>` where `CallArgs = { id: string; path_params?: Record<string,string>; query?: Record<string,string>; body?: unknown; dry_run?: boolean }`.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```ts
 // test/api-call.test.ts
@@ -1214,12 +1214,12 @@ describe('callOperation()', () => {
 });
 ```
 
-- [ ] **Step 2: Run it and watch it fail**
+- [x] **Step 2: Run it and watch it fail**
 
 Run: `npx vitest run test/api-call.test.ts`
 Expected: FAIL — `callOperation` is not exported.
 
-- [ ] **Step 3: Write `src/tools/context.ts`**
+- [x] **Step 3: Write `src/tools/context.ts`**
 
 ```ts
 import type { Session } from '../transport/auth.js';
@@ -1234,7 +1234,7 @@ export interface ToolContext {
 }
 ```
 
-- [ ] **Step 4: Write `callOperation` in `src/tools/api.ts`**
+- [x] **Step 4: Write `callOperation` in `src/tools/api.ts`**
 
 ```ts
 import { API_OPERATIONS } from '../catalog/api.generated.js';
@@ -1302,12 +1302,12 @@ export async function callOperation(ctx: ToolContext, args: CallArgs): Promise<u
 }
 ```
 
-- [ ] **Step 5: Run the test and watch it pass**
+- [x] **Step 5: Run the test and watch it pass**
 
 Run: `npx vitest run test/api-call.test.ts`
 Expected: PASS, 6 tests.
 
-- [ ] **Step 6: Register both tools**
+- [x] **Step 6: Register both tools**
 
 Append to `src/tools/api.ts`:
 
@@ -1322,7 +1322,7 @@ export function registerApiTools(server: McpServer, ctx: ToolContext): void {
     'sb_api_find',
     'Find platform API operations by intent. Returns each match with its real parameter ' +
       'schema and which credential it needs. Use this before sb_api_call — the tool list ' +
-      'holds 18 tools, but this index reaches all 320 operations.',
+      'holds 18 tools, but this index reaches all 310 operations.',
     {
       query: z.string().describe('What you want to do, in words: "create a menu", "list orders"'),
       tag: z.string().optional().describe('Narrow to one tag, e.g. "menus", "products"'),
@@ -1347,16 +1347,16 @@ export function registerApiTools(server: McpServer, ctx: ToolContext): void {
 }
 ```
 
-- [ ] **Step 7: Run the gate**
+- [x] **Step 7: Run the gate**
 
 Run: `npm run build && npm test && npm run smoke`
 Expected: all green; smoke prints `ALL GOOD`.
 
-- [ ] **Step 8: Commit**
+- [x] **Step 8: Commit**
 
 ```bash
 git add src/tools/context.ts src/tools/api.ts test/api-call.test.ts
-git commit -m "feat(tools): sb_api_find and sb_api_call — full 320-operation reach in two tools"
+git commit -m "feat(tools): sb_api_find and sb_api_call — full 310-operation reach in two tools"
 ```
 
 ---
@@ -1374,7 +1374,7 @@ git commit -m "feat(tools): sb_api_find and sb_api_call — full 320-operation r
 
 `sb_connect` is the only tool that may read `SB_EMAIL`/`SB_PASSWORD`, and it never echoes them.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```ts
 // test/connect.test.ts
@@ -1428,12 +1428,12 @@ describe('connect()', () => {
 });
 ```
 
-- [ ] **Step 2: Run it and watch it fail**
+- [x] **Step 2: Run it and watch it fail**
 
 Run: `npx vitest run test/connect.test.ts`
 Expected: FAIL — `Cannot find module '../src/tools/session.js'`.
 
-- [ ] **Step 3: Write `src/tools/session.ts`**
+- [x] **Step 3: Write `src/tools/session.ts`**
 
 ```ts
 import { z } from 'zod';
@@ -1521,12 +1521,12 @@ export function registerSessionTools(server: McpServer, ctx: ToolContext): void 
 }
 ```
 
-- [ ] **Step 4: Run the test and watch it pass**
+- [x] **Step 4: Run the test and watch it pass**
 
 Run: `npx vitest run test/connect.test.ts`
 Expected: PASS, 3 tests.
 
-- [ ] **Step 5: Wire it all together in `src/server.ts` and `src/index.ts`**
+- [x] **Step 5: Wire it all together in `src/server.ts` and `src/index.ts`**
 
 Replace `createServer` in `src/server.ts`:
 
@@ -1541,7 +1541,7 @@ const INSTRUCTIONS = `Design and operate a Store Builder site.
 
 Call sb_connect first. Then:
 - sb_api_find describes what the platform can do; sb_api_call executes it. Between
-  them they reach all 320 API operations, so most merchant work needs no other tool.
+  them they reach all 310 API operations, so most merchant work needs no other tool.
 - Mutating calls default to dry_run:true and send nothing. Pass dry_run:false to act.
 - /api/v1 paths need SB_TOKEN; every other path uses the session from sb_connect.`;
 
@@ -1563,7 +1563,7 @@ export function createServer(ctx: ToolContext = buildContext()): McpServer {
 
 (`pkgVersion` stays as written in Task 1.)
 
-- [ ] **Step 6: Extend the smoke gate**
+- [x] **Step 6: Extend the smoke gate**
 
 Add to `runSmoke()` in `src/smoke.ts`, before the `ALL GOOD` line:
 
@@ -1578,17 +1578,17 @@ Add to `runSmoke()` in `src/smoke.ts`, before the `ALL GOOD` line:
   check('search finds menu operations', searchOperations('menu').length > 0);
 ```
 
-- [ ] **Step 7: Run the full gate**
+- [x] **Step 7: Run the full gate**
 
 Run: `npm run build && npm test && npm run smoke`
 Expected: all green; smoke prints `ALL GOOD`.
 
-- [ ] **Step 8: Verify the server actually starts and lists its tools**
+- [x] **Step 8: Verify the server actually starts and lists its tools**
 
 Run: `npx -y @modelcontextprotocol/inspector node dist/index.js`
 Expected: the inspector connects and shows 4 tools — `sb_connect`, `sb_site_list`, `sb_api_find`, `sb_api_call`. Close it when confirmed.
 
-- [ ] **Step 9: Commit**
+- [x] **Step 9: Commit**
 
 ```bash
 git add -A
@@ -1611,32 +1611,32 @@ git commit -m "feat(tools): sb_connect and sb_site_list; wire the server end to 
 
 Docs are bilingual (`*.md` + `*.vi.md`), matching `webcake-landing-mcp` and `@sbuilder/cli`.
 
-- [ ] **Step 1: Write `CLAUDE.md`**
+- [x] **Step 1: Write `CLAUDE.md`**
 
 It must state, at minimum: what the server is; the gate (`npm run build && npm test && npm run smoke`, ending `ALL GOOD`); the Global Constraints from this plan verbatim; the credential routing rule; where a new tool goes (`src/tools/*.ts`, registered in `server.ts`, documented in `docs/tools.md` + `.vi`, listed in the README table); and the codegen command with `WB_REPO`.
 
-- [ ] **Step 2: Write `AGENTS.md`**
+- [x] **Step 2: Write `AGENTS.md`**
 
 One paragraph pointing non-Claude agents at `CLAUDE.md`, matching how `web_builder` does it.
 
-- [ ] **Step 3: Write the READMEs**
+- [x] **Step 3: Write the READMEs**
 
 Both carry an at-a-glance tool table, the four env vars, an install snippet, and the two-credential explanation.
 
-- [ ] **Step 4: Write the skill**
+- [x] **Step 4: Write the skill**
 
 `.claude/skills/sbuilder-mcp-tools/SKILL.md` — frontmatter `name` + `description` with trigger words ("add a tool", "change a tool", "the MCP surface"), then the tool-authoring rules: `text()` only, `dry_run` default true, `console.error` only, register in three places, add a test.
 
-- [ ] **Step 5: Write the two agents**
+- [x] **Step 5: Write the two agents**
 
 `mcp-tool-author` (adds or modifies a tool, enforces the rules above) and `mcp-verifier` (runs the gate, checks conventions, never edits). Model the frontmatter on `web_builder`'s `.claude/agents/`.
 
-- [ ] **Step 6: Verify the kit loads**
+- [x] **Step 6: Verify the kit loads**
 
 Run: `ls .claude/skills .claude/agents && npm run build && npm test && npm run smoke`
 Expected: files present; gate green.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add -A

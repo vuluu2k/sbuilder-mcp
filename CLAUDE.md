@@ -1,0 +1,94 @@
+# CLAUDE.md — `@sbuilder/mcp`
+
+Guidance for Claude Code when working in this repository.
+
+## What this is
+
+An MCP **stdio** server that lets an AI agent operate a Store Builder site end to end —
+design its pages, fill them with real data, look at the result, and publish it — with no
+human clicking anything.
+
+It is **not** a renderer. Every pixel comes from the platform's Go renderer; this server
+only ever holds the document and the screenshots.
+
+Published to npm as `@sbuilder/mcp`, binary `sb-mcp`. Runs via `npx -y @sbuilder/mcp`.
+
+Design spec: `docs/superpowers/specs/2026-08-27-sbuilder-mcp-design.md`. Read it before
+changing anything structural — it records *why* each boundary is where it is.
+
+## Commands
+
+```bash
+npm run build     # tsc -> dist/
+npm test          # vitest run
+npm run smoke     # offline self-test; MUST print "ALL GOOD"
+npm run codegen   # WB_REPO=/path/to/web_builder npm run codegen
+npm start         # node dist/index.js (stdio server)
+```
+
+**The gate for every change is `npm run build && npm test && npm run smoke`.**
+`prepublishOnly` runs build + smoke, so a broken smoke blocks publishing.
+
+## Invariants — do not wait for a review to be told these
+
+- **Package `@sbuilder/mcp`, bin `sb-mcp`, server name `sbuilder`.** Never the internal
+  `@webbuilder/*` scope: that scope is private to the platform monorepo and an npm name is
+  effectively permanent once taken.
+- **stdout is the MCP channel.** Every log line is `console.error`. One stray `console.log`
+  corrupts the protocol for every client.
+- **ESM / Node16.** Every relative import ends in `.js`, including from a `.ts` source.
+- **Secrets come from env only** — `SB_API`, `SB_TOKEN`, `SB_EMAIL`, `SB_PASSWORD`. This
+  repo is public. No secret reaches a file, a log, or a tool result.
+- **Every tool answers through `text()`** (or `image()`/`images()`) from `src/mcp/response.ts`.
+  A hand-built content array is the shape that drifts.
+- **Mutating tools take `dry_run` and default it to `true`**, returning a request preview
+  passed through `redact()`.
+- **Credential routing is by path prefix**, in `src/transport/credential.ts`, and is not
+  negotiable: `/api/v1/…` → `SB_TOKEN`; everything else → the session JWT. The OpenAPI
+  document declares one `BearerAuth` scheme for both, so it *cannot* make this call, and
+  the platform refuses each credential on the other's surface.
+- **`src/catalog/api.generated.ts` is generated and committed.** Never hand-edit it;
+  regenerate with `npm run codegen`. It is committed so `npm install` needs no
+  `web_builder` checkout.
+
+## The platform facts that shaped this code
+
+Each of these cost real investigation. Do not re-derive them, and do not "fix" the code
+that accounts for them.
+
+- **The OpenAPI document holds 205 paths / 310 operations / 85 definitions, and no
+  `operationId`.** Ids are synthesized as `method:path`; the generator asserts uniqueness.
+  (320 is the count of *tag assignments* — an operation with two tags is counted twice.)
+- **Bodies are under-described in two different ways.** 58 of 140 body-carrying operations
+  declare a body with no `$ref`; 60 of 137 write operations declare no body *at all*, and
+  that second group mixes genuine action endpoints (`POST /orgs/{id}/leave`) with missing
+  annotations (`PUT /pages/{id}/source` carries a whole page document). `describeOperation`
+  gives the two cases different words on purpose — saying "no body" for the second would
+  have a model send an empty PUT and wipe a page.
+- **The session access token lives ~15 minutes and rotates.** `Session.token()` is a
+  GETTER and every consumer must call it per use. A client that captures the string
+  replays an expired token forever, and the failure is silent — a rejected socket auth
+  still fires `onopen`.
+- **The platform writes exactly one error shape**, `{"error", "code"}`, never plain text.
+  `code` is the branchable half; reading `statusText` throws it away.
+
+## Adding a tool
+
+1. Put it in a group under `src/tools/*.ts`, registered via `server.tool(...)`.
+2. Return through `text()`. Take `dry_run` if it writes.
+3. Register the group in `src/server.ts`.
+4. Add a test under `test/`.
+5. Document it in `docs/tools.md` **and** `docs/tools.vi.md`, and in both READMEs' table.
+6. Run the gate.
+
+The `sbuilder-mcp-tools` skill in `.claude/skills/` carries the same rules in the form the
+agent reads at the moment it starts the work. Specialist subagents in `.claude/agents/`
+enforce them: **mcp-tool-author** (add or modify a tool) and **mcp-verifier** (run the gate
+and check conventions; never edits).
+
+## Phases
+
+Phase 1 (shipped): auth, the generated API index, `sb_api_find`/`sb_api_call`, session
+tools. Phase 2: the page document — model, patch core, expand/compact, builder, the three
+traps, autosave. Phase 3: the live-edit socket, presence, and the Playwright vision loop.
+Plans live in `docs/superpowers/plans/`.

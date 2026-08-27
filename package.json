@@ -1,0 +1,31 @@
+{
+  "name": "@sbuilder/mcp",
+  "version": "0.1.0",
+  "description": "MCP server that designs and operates a Store Builder site — pages, data, theme and publish — through the platform's own API and live-edit protocol.",
+  "mcpName": "io.github.vuluu2k/sbuilder-mcp",
+  "type": "module",
+  "license": "MIT",
+  "bin": { "sb-mcp": "dist/index.js" },
+  "files": ["dist"],
+  "engines": { "node": ">=20" },
+  "publishConfig": { "access": "public" },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "start": "node dist/index.js",
+    "smoke": "node dist/smoke.js",
+    "test": "vitest run",
+    "codegen": "tsx scripts/gen-catalog.ts",
+    "prepublishOnly": "npm run build && npm run smoke"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.30.0",
+    "zod": "^3.25.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.6.0",
+    "vitest": "^3.2.0"
+  }
+}

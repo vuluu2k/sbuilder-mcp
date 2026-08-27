@@ -27,7 +27,7 @@ describe everything this server needs to know.**
 
 | Input (in the `web_builder` checkout) | What it yields |
 | --- | --- |
-| `server/docs/swagger.json` | 205 paths / 320 operations / 85 definitions — route, method, parameters, response shape, auth requirement, for the entire private + public API |
+| `server/docs/swagger.json` | 205 paths / 310 operations / 85 definitions — route, method, parameters, response shape, auth requirement, for the entire private + public API |
 | `schema/src/elements/**` (95 elements, each with `meta.ts` + `ai.ts`) | the element catalog: traits, defaults, and the `useWhen` / `avoidWhen` / `contentTips` / `semantics` hints written for exactly this purpose |
 
 Both are already committed and already guarded in that repo (`npm run docs:api` regenerates
@@ -177,7 +177,7 @@ is encoded in `domains/site/traps.ts` with its own test, not written down in a R
 
 ## 7. Tool surface — two tiers, ~18 tools
 
-320 operations cannot be 320 tools. The split:
+310 operations cannot each be a tool — the list would drown any model. The split:
 
 ### Tier 1 — hand-written (16)
 
@@ -197,7 +197,7 @@ See       sb_look
 
 `sb_api_find` (describe an intent → matching operations with their real parameter schemas)
 and `sb_api_call` (execute one). This is the pattern the Claude Code harness itself uses
-for deferred tools: keep the list short, fetch the schema on demand. Every one of the 320
+for deferred tools: keep the list short, fetch the schema on demand. Every one of the 310
 operations is reachable, and operations added to the platform later arrive with the next
 codegen run.
 
