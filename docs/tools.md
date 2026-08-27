@@ -65,3 +65,92 @@ Execute one operation found by `sb_api_find`.
 Credentials are chosen from the path, never from the argument: `/api/v1/…` uses `SB_TOKEN`,
 everything else uses the session. A missing `SB_TOKEN` is reported by name rather than
 letting the platform answer `401 api_key_required`, which reads like a permissions problem.
+
+---
+
+# Page tools
+
+Nine more tools that design the page itself. `sb_page_open` must come first — the rest act
+on the one open document.
+
+## `sb_page_open`
+
+| Arg | Type |
+| --- | --- |
+| `site_id` | string |
+| `page_id` | string |
+
+Loads the page's **draft** document and returns its outline. What comes back is *composed*:
+global sections and site overlays have been merged onto ROOT.
+
+## `sb_outline`
+
+`depth` (1–6, default 1). One line per node: `id`, `type`, `name`, `children`, plus `band`
+(`header`/`middle`/`footer`), `global: true` for a shared master, and `overlay: true` for a
+site overlay. **Never the raw document** — a real page is hundreds of KB.
+
+## `sb_node_read`
+
+`id`. One node in full. Attaches a `warning` when the node is a shared global.
+
+## `sb_catalog_search`
+
+`query`, `limit`. Searches the platform's own AI hints across all 85 elements and returns
+`description`, `useWhen`, `avoidWhen`, `contentTips` for each match — written by the
+platform team for exactly this purpose.
+
+## `sb_traits_for`
+
+`type`. Which trait **groups** the element accepts (`size`, `typography`, `background`,
+`spacing` …), its seeded defaults, and its containment rules.
+
+## `sb_add`
+
+| Arg | Type | Notes |
+| --- | --- | --- |
+| `parent_id` | string | |
+| `spec` | object | `{ type, name?, style?, config?, specials?, children? }` — **nested** |
+| `index` | number? | Defaults to append |
+| `dry_run` | boolean? | Defaults to true |
+
+Pass `children` to build a whole section in one call. Refuses a root-only element inside a
+section, a child a parent's whitelist excludes, and any add into a non-container.
+
+## `sb_set`
+
+| Arg | Type | Notes |
+| --- | --- | --- |
+| `id` | string | |
+| `namespace` | `style` \| `config` \| `specials` | |
+| `keys` | object | |
+| `breakpoint` | `desktop` \| `laptop` \| `tablet` \| `mobile` | Defaults to `desktop` |
+| `base` | boolean? | Write at base instead of per breakpoint |
+| `dry_run` | boolean? | Defaults to true |
+
+**Style and config are written per breakpoint by default.** A visual quantity written at
+base renders on the canvas and then vanishes on publish — the published cascade has no base
+layer under it. `base: true` is refused for anything that is not an identity key
+(`htmlTag`, `kind`, `href`, `src`, `alt`, …). `specials` is always base: content is not a
+quantity.
+
+## `sb_move` / `sb_remove`
+
+`sb_move` takes `id`, `parent_id`, `index`. `sb_remove` takes `id` and deletes the whole
+subtree. Both refuse to touch a **site overlay** — it is composed onto ROOT on read and
+stripped on write, so editing it here would do nothing on save. `sb_move` refuses a move
+into the node's own descendant, which would detach that subtree with nothing to report it.
+
+## What every write checks before it saves
+
+Four platform rules, encoded and tested rather than documented:
+
+1. **Band order** — ROOT's children must read `[header][middle][footer]`. The platform
+   refuses *every* save otherwise (`ErrBandOrder`).
+2. **Overlays** are excluded from every ROOT-level rule, exactly as the platform excludes
+   them before its own check.
+3. **Globals** are shared masters; any result touching one carries a warning that edits
+   change every page and publishing cascades.
+4. **The responsive mandate** — see `sb_set` above.
+
+Plus tree integrity: no dangling child ids, no parent pointer disagreeing with a child
+list, no node unreachable from ROOT.

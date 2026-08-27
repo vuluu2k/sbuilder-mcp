@@ -65,3 +65,91 @@ Chạy một operation tìm được bằng `sb_api_find`.
 Credential chọn theo path chứ không theo tham số: `/api/v1/…` dùng `SB_TOKEN`, còn lại
 dùng phiên. Thiếu `SB_TOKEN` thì báo đích danh tên biến, thay vì để nền tảng trả
 `401 api_key_required` — cái đó đọc lên giống lỗi phân quyền.
+
+---
+
+# Bộ tool cho trang
+
+Chín tool nữa để thiết kế chính trang đó. `sb_page_open` phải gọi trước; các tool còn lại
+thao tác trên đúng một tài liệu đang mở.
+
+## `sb_page_open`
+
+| Tham số | Kiểu |
+| --- | --- |
+| `site_id` | string |
+| `page_id` | string |
+
+Nạp tài liệu **bản nháp** của trang và trả về outline. Thứ nhận được đã *ghép sẵn*: global
+section và site overlay đã được gộp lên ROOT.
+
+## `sb_outline`
+
+`depth` (1–6, mặc định 1). Mỗi node một dòng: `id`, `type`, `name`, `children`, kèm `band`
+(`header`/`middle`/`footer`), `global: true` nếu là master dùng chung, `overlay: true` nếu
+là site overlay. **Không bao giờ trả tài liệu thô** — một trang thật nặng hàng trăm KB.
+
+## `sb_node_read`
+
+`id`. Một node đầy đủ. Kèm `warning` nếu node đó là global dùng chung.
+
+## `sb_catalog_search`
+
+`query`, `limit`. Tìm trong chính AI hints của nền tảng trên cả 85 element, trả về
+`description`, `useWhen`, `avoidWhen`, `contentTips` cho mỗi kết quả — do đội nền tảng viết
+đúng cho mục đích này.
+
+## `sb_traits_for`
+
+`type`. Element nhận những **nhóm** trait nào (`size`, `typography`, `background`,
+`spacing` …), default được gieo sẵn, và luật chứa con.
+
+## `sb_add`
+
+| Tham số | Kiểu | Ghi chú |
+| --- | --- | --- |
+| `parent_id` | string | |
+| `spec` | object | `{ type, name?, style?, config?, specials?, children? }` — **lồng nhau** |
+| `index` | number? | Mặc định nối vào cuối |
+| `dry_run` | boolean? | Mặc định true |
+
+Truyền `children` để dựng nguyên một section trong một lần gọi. Từ chối element root-only
+đặt trong section, con nằm ngoài whitelist của cha, và mọi lần thêm vào node không phải
+container.
+
+## `sb_set`
+
+| Tham số | Kiểu | Ghi chú |
+| --- | --- | --- |
+| `id` | string | |
+| `namespace` | `style` \| `config` \| `specials` | |
+| `keys` | object | |
+| `breakpoint` | `desktop` \| `laptop` \| `tablet` \| `mobile` | Mặc định `desktop` |
+| `base` | boolean? | Ghi ở base thay vì theo breakpoint |
+| `dry_run` | boolean? | Mặc định true |
+
+**Style và config mặc định ghi theo breakpoint.** Một đại lượng thị giác ghi ở base sẽ hiện
+đúng trên canvas rồi biến mất lúc publish — cascade đã publish không có lớp base nào đỡ.
+`base: true` bị từ chối với mọi key không phải key định danh (`htmlTag`, `kind`, `href`,
+`src`, `alt`, …). `specials` luôn ở base: nội dung không phải đại lượng.
+
+## `sb_move` / `sb_remove`
+
+`sb_move` nhận `id`, `parent_id`, `index`. `sb_remove` nhận `id` và xoá cả cây con. Cả hai
+từ chối đụng vào **site overlay** — nó được ghép lên ROOT lúc đọc và bóc ra lúc ghi, nên sửa
+ở đây lúc lưu sẽ không có tác dụng gì. `sb_move` từ chối chuyển node vào chính hậu duệ của
+nó, việc sẽ tách rời cây con đó mà không báo gì.
+
+## Mỗi lần ghi kiểm tra gì trước khi lưu
+
+Bốn luật của nền tảng, được viết thành code có test chứ không phải ghi chú:
+
+1. **Thứ tự băng** — con của ROOT phải đọc `[header][middle][footer]`. Sai là nền tảng từ
+   chối *mọi* lần lưu (`ErrBandOrder`).
+2. **Overlay** bị loại khỏi mọi luật cấp ROOT, đúng như nền tảng loại nó trước khi tự kiểm.
+3. **Global** là master dùng chung; mọi kết quả đụng tới nó đều kèm cảnh báo rằng sửa nó là
+   sửa mọi trang, và publish thì lan.
+4. **Luật responsive** — xem `sb_set` ở trên.
+
+Cộng thêm tính toàn vẹn cây: không có id con trỏ vào hư không, không có con trỏ cha mâu
+thuẫn với danh sách con, không có node nào không với tới được từ ROOT.
