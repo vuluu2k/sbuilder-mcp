@@ -12,7 +12,8 @@ import { chromium, type Browser } from 'playwright-core';
  */
 declare const document: {
   querySelectorAll(selector: string): Array<{
-    getAttribute(name: string): string | null;
+    id: string;
+    className: string;
     getBoundingClientRect(): { x: number; y: number; width: number; height: number };
   }>;
 };
@@ -72,18 +73,35 @@ export async function shoot(url: string, opts: { widths?: number[] } = {}): Prom
       const page = await browser.newPage({ viewport: { width, height: 900 } });
       await page.goto(url, { waitUntil: 'networkidle' });
       const png = await page.screenshot({ type: 'png', fullPage: true });
+      // A RENDERED page carries its node ids as the HTML `id` attribute — not as
+      // `data-node-id`, which is the editor CANVAS's hook and never reaches the
+      // renderer. Selecting the canvas attribute here returned an empty box list
+      // on every real page, silently: the screenshots looked fine, and the half
+      // of this function that exists to place the presence cursor did nothing.
+      // Found by running it against the Go renderer.
+      //
+      // Ids are filtered by SHAPE (`xx_8hex`, plus ROOT) rather than taken from
+      // every `[id]`, so a wrapper or an anchor target cannot be mistaken for a
+      // node. `type` is read off the leading `wb-` class, which is the only type
+      // signal the render emits; the caller already knows the real types from
+      // sb_outline, so this is a convenience, not a contract.
       const boxes = (await page.evaluate(() =>
-        [...document.querySelectorAll('[data-node-id]')].map((el) => {
-          const r = el.getBoundingClientRect();
-          return {
-            id: el.getAttribute('data-node-id') ?? '',
-            type: el.getAttribute('data-node-type') ?? '',
-            x: Math.round(r.x),
-            y: Math.round(r.y),
-            w: Math.round(r.width),
-            h: Math.round(r.height),
-          };
-        }),
+        [...document.querySelectorAll('[id]')]
+          .filter((el) => el.id === 'ROOT' || /^[a-z]{2}_[0-9a-f]{8}$/.test(el.id))
+          .map((el) => {
+            const r = el.getBoundingClientRect();
+            const wb = String(el.className || '')
+              .split(/\s+/)
+              .find((c) => c.startsWith('wb-'));
+            return {
+              id: el.id,
+              type: wb ? wb.slice(3) : '',
+              x: Math.round(r.x),
+              y: Math.round(r.y),
+              w: Math.round(r.width),
+              h: Math.round(r.height),
+            };
+          }),
       )) as Box[];
       shots.push({ width, pngBase64: png.toString('base64'), boxes });
       await page.close();
