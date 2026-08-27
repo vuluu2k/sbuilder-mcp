@@ -1,0 +1,88 @@
+import { API_OPERATIONS, API_DEFINITIONS } from './api.generated.js';
+import type { ApiOperation } from './types.js';
+
+/**
+ * Term-hit scoring, weighted by field, and deliberately NOT fuzzy.
+ *
+ * The caller is a language model that can re-query with better words, so an
+ * empty list is a cheap, recoverable answer. A fuzzy ranker's failure mode is
+ * the expensive one: it returns a confident wrong operation, and the model then
+ * calls it. Ties break by id so the same query always returns the same order —
+ * a ranker whose output shuffles between calls is one nobody can debug.
+ */
+const WEIGHT = { tag: 5, path: 3, summary: 2 } as const;
+
+export function searchOperations(
+  query: string,
+  opts: { tag?: string; limit?: number } = {},
+): ApiOperation[] {
+  const limit = opts.limit ?? 12;
+  const terms = query.toLowerCase().split(/[^a-z0-9]+/).filter(Boolean);
+  let pool = API_OPERATIONS;
+  if (opts.tag) pool = pool.filter((o) => o.tags.includes(opts.tag!));
+  if (terms.length === 0) return pool.slice(0, limit);
+
+  const scored: Array<{ op: ApiOperation; score: number }> = [];
+  for (const op of pool) {
+    const tags = op.tags.join(' ').toLowerCase();
+    const path = op.path.toLowerCase();
+    const summary = op.summary.toLowerCase();
+    let score = 0;
+    for (const t of terms) {
+      if (tags.includes(t)) score += WEIGHT.tag;
+      if (path.includes(t)) score += WEIGHT.path;
+      if (summary.includes(t)) score += WEIGHT.summary;
+    }
+    if (score > 0) scored.push({ op, score });
+  }
+  scored.sort((a, b) => b.score - a.score || a.op.id.localeCompare(b.op.id));
+  return scored.slice(0, limit).map((s) => s.op);
+}
+
+/**
+ * The full call sheet for one operation — including, deliberately, what is NOT
+ * known about it.
+ *
+ * The source document under-describes bodies in TWO different ways, and telling
+ * them apart matters because the right recovery differs:
+ *
+ *  - 58 of the 140 body-carrying operations declare a body with no `$ref`, so
+ *    the shape is unknown but its EXISTENCE is certain.
+ *  - 60 of the 137 write operations declare no body parameter at all. Some
+ *    genuinely take none (`POST /api/orgs/{id}/leave` is an action, not a
+ *    payload). Others are simply un-annotated: `PUT /pages/{id}/source` carries
+ *    a whole page document and the document says nothing about it, and
+ *    `POST /_wb/account/login` obviously takes credentials.
+ *
+ * Saying "no body" for the second group would be the silent failure — the model
+ * would send an empty PUT and wipe a page. So the two get different words.
+ */
+export function describeOperation(op: ApiOperation): Record<string, unknown> {
+  const out: Record<string, unknown> = {
+    id: op.id,
+    method: op.method,
+    path: op.path,
+    summary: op.summary,
+    tags: op.tags,
+    credential: op.credential,
+    params: op.params.filter((p) => p.in !== 'body'),
+  };
+  const hasBody = op.params.some((p) => p.in === 'body');
+  const isWrite = op.method === 'POST' || op.method === 'PUT' || op.method === 'PATCH';
+
+  if (hasBody && op.bodyDescribed && op.bodyRef) {
+    out.body_schema = API_DEFINITIONS[op.bodyRef];
+  } else if (hasBody) {
+    out.body_warning =
+      'This operation takes a body, but the OpenAPI document does not describe its shape ' +
+      '(no $ref). Do NOT guess one: read an existing item with the matching GET first and ' +
+      'send back a modified copy.';
+  } else if (isWrite) {
+    out.body_note =
+      'The document declares NO request body for this write operation. That may be true ' +
+      '(some endpoints are pure actions, e.g. POST /api/orgs/{id}/leave), or the annotation ' +
+      'may simply be missing — PUT /pages/{id}/source takes a whole page document and is ' +
+      'documented exactly like this. Confirm with the matching GET before sending an empty body.';
+  }
+  return out;
+}
