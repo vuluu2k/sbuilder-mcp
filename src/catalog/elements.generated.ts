@@ -5382,3 +5382,28 @@ export const ELEMENTS: Record<string, CatalogElement> = {
     ]
   }
 };
+
+export const BINDING_SOURCES: string[] = [
+  "article.author",
+  "article.categories",
+  "article.content",
+  "article.date",
+  "article.image",
+  "article.summary",
+  "article.tags",
+  "article.title",
+  "article.url",
+  "category.description",
+  "category.image",
+  "category.title",
+  "product.compareAtCents",
+  "product.compareAtPrice",
+  "product.description",
+  "product.id",
+  "product.image",
+  "product.images",
+  "product.price",
+  "product.priceCents",
+  "product.title",
+  "product.vendor"
+];
