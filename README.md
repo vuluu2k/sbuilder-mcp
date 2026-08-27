@@ -31,17 +31,20 @@ Claude Code / Claude Desktop:
 }
 ```
 
-## Two credentials, and why you need both
+## Getting the key
 
-The platform refuses each credential on the other's surface, so this is not a choice:
+Open your store, go to **Apps → AI agent**, and press **Create key**. That screen hands you
+the config block for your client with the key already in it — this whole section is what it
+saves you reading.
 
-| Credential | Reaches |
-| --- | --- |
-| `SB_TOKEN` — a `wbk_` API key you mint in the app | `/api/v1`: products, orders, customers, media, blog, page metadata, webhooks |
-| `SB_EMAIL` + `SB_PASSWORD` — a normal account | everything under `/api/sites/…`: pages, menus, theme, forms, overlays, translations, settings — and the live-edit socket |
+One key is all you need. It reaches both the partner surface (`/api/v1`) and the private
+site API, including the page document and the live-edit socket, and it is bounded three ways
+on every request: its own scopes, the live role of the member who created it, and the single
+store it belongs to.
 
-Sending a session token to `/api/v1` answers `401 api_key_required`; sending an API key to
-the private API is refused too. `sb_connect` reports which half you have.
+`SB_EMAIL` + `SB_PASSWORD` remain optional, and buy exactly one thing: **account-level**
+calls — listing your sites, managing members and roles — which a key deliberately cannot
+make, because those mean "this person's account".
 
 `SB_API` defaults to `http://localhost:8080`. Secrets are read from the environment only.
 

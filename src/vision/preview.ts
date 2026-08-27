@@ -1,4 +1,5 @@
 import { request } from '../transport/http.js';
+import { siteToken } from '../tools/credentialpick.js';
 import type { ToolContext } from '../tools/context.js';
 
 /**
@@ -17,7 +18,7 @@ export async function previewUrl(
     base: ctx.base,
     method: 'GET',
     path: `/api/sites/${encodeURIComponent(siteId)}/pages/${encodeURIComponent(pageId)}/preview`,
-    token: ctx.session.token(),
+    token: siteToken(ctx),
     fetchImpl: ctx.fetchImpl,
   })) as { preview?: { url?: string } };
   const url = out?.preview?.url;

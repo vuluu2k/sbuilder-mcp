@@ -14,7 +14,16 @@ export interface CallArgs {
   dry_run?: boolean;
 }
 
-function tokenFor(ctx: ToolContext, credential: string): string | undefined {
+/**
+ * Pick the credential a path needs.
+ *
+ * `siteScoped` PREFERS the API key. Both open the private surface, and the key
+ * is the narrower of the two: revocable on its own, bounded by its scopes
+ * intersected with its minter's live role, and bound to one store — while a
+ * session carries the whole account. Preferring it is also what lets a merchant
+ * connect an agent with one env var and no password.
+ */
+export function tokenFor(ctx: ToolContext, credential: string): string | undefined {
   if (credential === 'apiKey') {
     // Naming the env var matters: the alternative is a 401 api_key_required
     // from the platform, which reads like a permissions problem rather than an
@@ -24,7 +33,14 @@ function tokenFor(ctx: ToolContext, credential: string): string | undefined {
     }
     return ctx.apiKey;
   }
-  if (credential === 'session') return ctx.session.token();
+  if (credential === 'siteScoped') {
+    if (ctx.apiKey) return ctx.apiKey;
+    if (ctx.session.loggedIn()) return ctx.session.token();
+    throw new Error(
+      'sbuilder: no credential for this site. Set SB_TOKEN to an API key from the site\'s ' +
+        'Agent app, or call sb_connect with SB_EMAIL and SB_PASSWORD.',
+    );
+  }
   return undefined;
 }
 

@@ -9,6 +9,7 @@ import { RealtimeSocket } from '../transport/socket.js';
 import { LiveSession } from '../live/session.js';
 import type { Patch } from '../core/patch.js';
 import type { PageDoc } from '../domains/site/document.js';
+import { siteToken } from './credentialpick.js';
 import type { ToolContext } from './context.js';
 import type { PageSession } from './page.js';
 
@@ -65,7 +66,7 @@ export function registerLiveTools(
       const wsBase = ctx.base.replace(/^http/, 'ws').replace(/\/$/, '');
       const socket = new RealtimeSocket(
         `${wsBase}/api/realtime/ws?site=${encodeURIComponent(site_id)}`,
-        () => ctx.session.token(),
+        () => siteToken(ctx),
       );
       const live = new LiveSession(socket, {
         onRemote: (patches) => session.applyRemote(patches),

@@ -1,4 +1,5 @@
 import { request } from './http.js';
+import { siteToken } from '../tools/credentialpick.js';
 import type { ToolContext } from '../tools/context.js';
 
 export interface PageSource {
@@ -37,7 +38,7 @@ export async function loadSource(
     base: ctx.base,
     method: 'GET',
     path: sourcePath(siteId, pageId),
-    token: ctx.session.token(),
+    token: siteToken(ctx),
     fetchImpl: ctx.fetchImpl,
   })) as { source: PageSource };
   return out.source;
@@ -67,7 +68,7 @@ export async function saveSource(
     base: ctx.base,
     method: 'PUT',
     path: sourcePath(siteId, pageId),
-    token: ctx.session.token(),
+    token: siteToken(ctx),
     body: { document, schemaVersion: document.schema_version ?? 1 },
     fetchImpl: ctx.fetchImpl,
   })) as { source: PageSource };

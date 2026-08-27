@@ -27,9 +27,29 @@ export async function connect(
 ): Promise<ConnectResult> {
   const email = args.email ?? process.env.SB_EMAIL;
   const password = args.password ?? process.env.SB_PASSWORD;
+
+  // KEY-ONLY MODE. An API key from the site's Agent app opens both surfaces on
+  // its own, which is the whole point of the connect button: one env var, no
+  // password anywhere. There is no login to do and no site list to fetch — a key
+  // belongs to exactly one store, and `GET /api/sites` means "this human's
+  // account", which a key deliberately cannot answer.
+  if (ctx.apiKey && (!email || !password)) {
+    return {
+      user: 'api key',
+      sites: [],
+      api_key: 'present',
+      operations: API_OPERATIONS.length,
+      note:
+        'Connected with an API key alone. It is bound to one site, so there is no site list — ' +
+        'pass that site id to sb_page_open. Set SB_EMAIL and SB_PASSWORD as well if you want ' +
+        'account-level calls (listing sites, members, roles), which a key cannot make.',
+    };
+  }
+
   if (!email || !password) {
     throw new Error(
-      'sbuilder: set SB_EMAIL and SB_PASSWORD in the environment, or pass email and password',
+      'sbuilder: set SB_TOKEN to an API key from the site\'s Agent app, or set SB_EMAIL and ' +
+        'SB_PASSWORD for a full account session.',
     );
   }
   await ctx.session.login(email, password);

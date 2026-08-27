@@ -12,11 +12,11 @@ describe('generated API index', () => {
     expect(ids.size).toBe(API_OPERATIONS.length);
   });
 
-  it('routes /api/v1 operations to the API key and site operations to the session', () => {
+  it('routes /api/v1 to the API key and the private surface to a site-scoped credential', () => {
     const v1 = API_OPERATIONS.find((o) => o.path.startsWith('/api/v1/'));
     expect(v1?.credential).toBe('apiKey');
     const site = API_OPERATIONS.find((o) => o.path.startsWith('/api/sites/'));
-    expect(site?.credential).toBe('session');
+    expect(site?.credential).toBe('siteScoped');
   });
 
   it('knows the page source route and flags its body as undescribed', () => {
