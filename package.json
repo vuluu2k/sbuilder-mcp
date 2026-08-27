@@ -5,10 +5,18 @@
   "mcpName": "io.github.vuluu2k/sbuilder-mcp",
   "type": "module",
   "license": "MIT",
-  "bin": { "sb-mcp": "dist/index.js" },
-  "files": ["dist"],
-  "engines": { "node": ">=20" },
-  "publishConfig": { "access": "public" },
+  "bin": {
+    "sb-mcp": "dist/index.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "engines": {
+    "node": ">=22"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "build": "tsc",
     "dev": "tsc --watch",
@@ -20,6 +28,7 @@
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.30.0",
+    "playwright-core": "^1.62.1",
     "zod": "^3.25.0"
   },
   "devDependencies": {
