@@ -1,5 +1,22 @@
 import { chromium, type Browser } from 'playwright-core';
 
+/**
+ * The browser globals the `page.evaluate` body below uses.
+ *
+ * Declared here, module-scoped, rather than adding "DOM" to tsconfig's `lib`.
+ * That would tell the WHOLE server it runs in a browser — it does not — and
+ * would put DOM's `fetch`/`Response` types in conflict with @types/node's,
+ * which every other file in this repo relies on. Narrow and local is the honest
+ * shape: exactly the two calls that really do run in Chrome, type-checked, and
+ * no claim beyond them.
+ */
+declare const document: {
+  querySelectorAll(selector: string): Array<{
+    getAttribute(name: string): string | null;
+    getBoundingClientRect(): { x: number; y: number; width: number; height: number };
+  }>;
+};
+
 export interface Box {
   id: string;
   type: string;

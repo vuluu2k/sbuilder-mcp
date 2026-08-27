@@ -14,6 +14,9 @@ import {
 import { validateForSave } from '../domains/site/validate.js';
 import { globalWarning, RESPONSIVE_NOTICE } from '../domains/site/traps.js';
 import { ELEMENTS } from '../catalog/elements.generated.js';
+import type { Patch } from '../core/patch.js';
+import type { LiveSession } from '../live/session.js';
+import type { Box } from '../vision/shoot.js';
 import type { ToolContext } from './context.js';
 
 /**
@@ -27,8 +30,56 @@ export class PageSession {
   private doc: PageDoc | null = null;
   private siteId = '';
   private pageId = '';
+  private live: LiveSession | null = null;
+  private stale: string | null = null;
+  private boxes: Box[] = [];
 
   constructor(private readonly ctx: ToolContext) {}
+
+  attachLive(live: LiveSession): void {
+    this.live = live;
+  }
+
+  location(): { siteId: string; pageId: string } {
+    this.current();
+    return { siteId: this.siteId, pageId: this.pageId };
+  }
+
+  /** Remember where each node landed, so the presence cursor can be honest. */
+  noteBoxes(boxes: Box[]): void {
+    this.boxes = boxes;
+  }
+
+  /**
+   * Apply MY patches and, when joined to a room, put them on the wire.
+   *
+   * ONE method rather than two calls at every site, because "applied locally and
+   * forgot to publish" is invisible: this session's document is right, the save
+   * is right, and only the humans watching see nothing happen.
+   */
+  applyAndPublish(patches: Patch[]): void {
+    const d = this.current();
+    d.apply(patches);
+    this.live?.publish(patches);
+    // Move the cursor to what was just touched, but ONLY when a real
+    // measurement exists. Presence with a made-up coordinate is theatre;
+    // presence with a measured one is information.
+    const touched = String(patches[0]?.path[1] ?? '');
+    const box = this.boxes.find((b) => b.id === touched);
+    if (box && this.live) {
+      this.live.select(touched);
+      this.live.cursor(box.x + box.w / 2, box.y + box.h / 2);
+    }
+  }
+
+  applyRemote(patches: Patch[]): void {
+    this.doc?.apply(patches);
+  }
+
+  /** The yield rule's local half: the next save re-pulls instead of overwriting. */
+  markStale(reason: string): void {
+    this.stale = reason;
+  }
 
   async open(siteId: string, pageId: string): Promise<OutlineNode[]> {
     const src = await loadSource(this.ctx, siteId, pageId);
@@ -52,6 +103,19 @@ export class PageSession {
    * will ever store.
    */
   async save(): Promise<void> {
+    if (this.stale) {
+      // THE YIELD RULE. The room moved in a way this client cannot reconcile, so
+      // it must not write its copy over whatever is there now. Re-pull, and make
+      // the caller redo the intent against the current tree — loudly, because a
+      // silently dropped edit is the outcome this whole rule exists to prevent.
+      const reason = this.stale;
+      this.stale = null;
+      await this.open(this.siteId, this.pageId);
+      throw new Error(
+        `sbuilder: the page changed under this session (${reason}). It has been re-loaded from ` +
+          'the server; re-read it with sb_outline and reapply your change.',
+      );
+    }
     const d = this.current();
     const problems = validateForSave(d);
     if (problems.length > 0) {
@@ -77,7 +141,7 @@ const specSchema: z.ZodType<NodeSpec> = z.lazy(() =>
   }),
 );
 
-export function registerPageTools(server: McpServer, ctx: ToolContext): void {
+export function registerPageTools(server: McpServer, ctx: ToolContext): PageSession {
   const session = new PageSession(ctx);
 
   server.tool(
@@ -178,7 +242,7 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): void {
       if (dry_run !== false) {
         return text({ dry_run: true, would_add: ids.length, patches: patches.length });
       }
-      d.apply(patches);
+      session.applyAndPublish(patches);
       await session.save();
       return text({ added: ids, rev: d.rev });
     },
@@ -204,7 +268,7 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): void {
         base,
       });
       if (dry_run !== false) return text({ dry_run: true, patches, note: RESPONSIVE_NOTICE });
-      d.apply(patches);
+      session.applyAndPublish(patches);
       await session.save();
       const warn = globalWarning(d.doc, id);
       return text({ set: Object.keys(keys), rev: d.rev, ...(warn ? { warning: warn } : {}) });
@@ -224,7 +288,7 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): void {
       const d = session.current();
       const patches = moveNode(d, id, parent_id, index);
       if (dry_run !== false) return text({ dry_run: true, patches });
-      d.apply(patches);
+      session.applyAndPublish(patches);
       await session.save();
       return text({ moved: id, rev: d.rev });
     },
@@ -238,9 +302,11 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): void {
       const d = session.current();
       const patches = removeNode(d, id);
       if (dry_run !== false) return text({ dry_run: true, removing: patches.length });
-      d.apply(patches);
+      session.applyAndPublish(patches);
       await session.save();
       return text({ removed: id, rev: d.rev });
     },
   );
+
+  return session;
 }

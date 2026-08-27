@@ -4,6 +4,7 @@ import { Session } from './transport/auth.js';
 import { registerApiTools } from './tools/api.js';
 import { registerSessionTools } from './tools/session.js';
 import { registerPageTools } from './tools/page.js';
+import { registerLiveTools } from './tools/live.js';
 import type { ToolContext } from './tools/context.js';
 
 const INSTRUCTIONS = `Design and operate a Store Builder site.
@@ -24,7 +25,13 @@ with a NESTED spec (one call per section, not per node), then sb_set for styling
   vanishes on publish; pass base:true only for identity or content.
 - sb_outline, never a raw document dump. Read one node with sb_node_read.
 - A node flagged global is a SHARED master: editing it changes every page that carries it.
-  A node flagged overlay is not part of the page at all.`;
+  A node flagged overlay is not part of the page at all.
+
+- sb_live_join makes the agent VISIBLE: edits then appear in anyone's open editor as they
+  happen, with a cursor that moves to the node being changed.
+- sb_look saves, renders through the platform's own renderer, and hands back screenshots
+  plus measured node boxes. Judge the design from those; do not guess at it.
+- sb_bind puts real store data in the page instead of placeholder text.`;
 
 /**
  * The published version, read from package.json at runtime so serverInfo never
@@ -53,6 +60,7 @@ export function createServer(ctx: ToolContext = buildContext()): McpServer {
   );
   registerSessionTools(server, ctx);
   registerApiTools(server, ctx);
-  registerPageTools(server, ctx);
+  const pageSession = registerPageTools(server, ctx);
+  registerLiveTools(server, ctx, pageSession);
   return server;
 }
