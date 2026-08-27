@@ -24,7 +24,7 @@ export async function runSmoke(): Promise<void> {
   check('API index has 300+ operations', API_OPERATIONS.length > 300);
   check(
     'every operation has a credential',
-    API_OPERATIONS.every((o) => ['apiKey', 'session', 'none'].includes(o.credential)),
+    API_OPERATIONS.every((o) => ['apiKey', 'siteScoped', 'none'].includes(o.credential)),
   );
   check(
     'every credential matches the routing rule',

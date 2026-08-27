@@ -22,7 +22,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     "params": [],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "post:/_wb/account/login",
@@ -35,7 +35,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     "params": [],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "post:/_wb/account/logout",
@@ -48,7 +48,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     "params": [],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "get:/_wb/account/me",
@@ -61,7 +61,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     "params": [],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "get:/_wb/account/orders",
@@ -74,7 +74,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     "params": [],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "post:/_wb/account/register",
@@ -87,7 +87,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     "params": [],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "post:/_wb/account/reset",
@@ -100,7 +100,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     "params": [],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "post:/_wb/account/verify",
@@ -113,7 +113,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     "params": [],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "get:/_wb/css/{siteID}/{lane}-{hash}.css",
@@ -126,7 +126,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     "params": [],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "get:/_wb/feed/facets",
@@ -196,7 +196,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "get:/_wb/feed/products",
@@ -266,7 +266,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "post:/_wb/forms/{formId}/submit",
@@ -287,7 +287,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "get:/_wb/img/{width}/{format}/{key}",
@@ -300,7 +300,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     "params": [],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "get:/_wb/notify-verify",
@@ -321,7 +321,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "get:/_wb/runtime/current.json",
@@ -334,7 +334,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     "params": [],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "get:/_wb/runtime/{version}/{file}",
@@ -347,7 +347,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     "params": [],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "post:/_wb/sepay/webhook",
@@ -360,7 +360,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     "params": [],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "get:/api/admin/billing",
@@ -373,7 +373,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     "params": [],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "post:/api/admin/billing/payments/{id}/resolve",
@@ -386,7 +386,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     "params": [],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "get:/api/admin/plans/export",
@@ -399,7 +399,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     "params": [],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "post:/api/admin/plans/import",
@@ -420,7 +420,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "get:/api/admin/plans/import-template",
@@ -433,7 +433,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     "params": [],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "get:/api/admin/revenue/export",
@@ -468,7 +468,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "post:/api/auth/change-password",
@@ -699,7 +699,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "post:/api/invitations/{id}/accept",
@@ -736,7 +736,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "post:/api/invitations/{id}/decline",
@@ -773,7 +773,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "post:/api/media/{siteId}",
@@ -815,7 +815,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "get:/api/notifications",
@@ -828,7 +828,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     "params": [],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "get:/api/orgs",
@@ -849,7 +849,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "post:/api/orgs",
@@ -870,7 +870,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "delete:/api/orgs/{id}",
@@ -891,7 +891,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "get:/api/orgs/{id}/activity",
@@ -926,7 +926,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "get:/api/orgs/{id}/invitations",
@@ -947,7 +947,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "post:/api/orgs/{id}/leave",
@@ -968,7 +968,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "get:/api/orgs/{id}/members",
@@ -996,7 +996,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "post:/api/orgs/{id}/members",
@@ -1024,7 +1024,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "patch:/api/orgs/{id}/members/{userId}",
@@ -1059,7 +1059,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "delete:/api/orgs/{id}/members/{userId}",
@@ -1094,7 +1094,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "put:/api/orgs/{id}/owner",
@@ -1122,7 +1122,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "get:/api/orgs/{id}/sites",
@@ -1143,7 +1143,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "get:/api/orgs/{id}/templates",
@@ -1164,7 +1164,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "post:/api/orgs/{id}/templates/{siteId}",
@@ -1199,7 +1199,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "get:/api/orgs/{orgId}/apps",
@@ -1227,7 +1227,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "post:/api/orgs/{orgId}/apps",
@@ -1255,7 +1255,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "get:/api/orgs/{orgId}/apps/{appId}",
@@ -1283,7 +1283,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "put:/api/orgs/{orgId}/apps/{appId}",
@@ -1318,7 +1318,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "get:/api/orgs/{orgId}/apps/{appId}/events",
@@ -1353,7 +1353,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "get:/api/orgs/{orgId}/apps/{appId}/requests",
@@ -1388,7 +1388,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "post:/api/orgs/{orgId}/apps/{appId}/secret",
@@ -1416,7 +1416,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "post:/api/orgs/{orgId}/apps/{appId}/versions",
@@ -1451,7 +1451,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "put:/api/orgs/{orgId}/apps/{appId}/versions/{versionId}",
@@ -1493,7 +1493,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "put:/api/orgs/{orgId}/apps/{appId}/versions/{versionId}/blocks",
@@ -1535,7 +1535,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "post:/api/orgs/{orgId}/apps/{appId}/versions/{versionId}/images",
@@ -1591,7 +1591,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "delete:/api/orgs/{orgId}/apps/{appId}/versions/{versionId}/images",
@@ -1647,7 +1647,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "put:/api/orgs/{orgId}/apps/{appId}/versions/{versionId}/islands",
@@ -1689,7 +1689,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "post:/api/orgs/{orgId}/apps/{appId}/versions/{versionId}/islands/module",
@@ -1731,7 +1731,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "post:/api/orgs/{orgId}/apps/{appId}/versions/{versionId}/submit",
@@ -1766,7 +1766,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "post:/api/orgs/{orgId}/apps/{appId}/versions/{versionId}/withdraw",
@@ -1801,7 +1801,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "get:/api/orgs/{orgId}/section-templates",
@@ -1822,7 +1822,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "delete:/api/orgs/{orgId}/section-templates/{siteId}/{id}",
@@ -1857,7 +1857,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "post:/api/orgs/{orgId}/section-templates/{siteId}/{id}/review",
@@ -1892,7 +1892,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "get:/api/sites",
@@ -1913,7 +1913,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "post:/api/sites",
@@ -1934,7 +1934,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "put:/api/sites/{id}/owner",
@@ -1962,7 +1962,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "get:/api/sites/{siteID}/menus",
@@ -1983,7 +1983,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": true,
     "bodyRef": "github_com_webbuilder_server_internal_menus.Menu",
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "post:/api/sites/{siteID}/menus",
@@ -2004,7 +2004,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": true,
     "bodyRef": "github_com_webbuilder_server_internal_menus.Menu",
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "get:/api/sites/{siteID}/menus/{id}",
@@ -2025,7 +2025,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": true,
     "bodyRef": "github_com_webbuilder_server_internal_menus.Menu",
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "put:/api/sites/{siteID}/menus/{id}",
@@ -2046,7 +2046,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": true,
     "bodyRef": "github_com_webbuilder_server_internal_menus.Menu",
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "delete:/api/sites/{siteID}/menus/{id}",
@@ -2067,7 +2067,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": true,
     "bodyRef": "github_com_webbuilder_server_internal_menus.Menu",
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "put:/api/sites/{siteID}/preview",
@@ -2080,7 +2080,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     "params": [],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "put:/api/sites/{siteID}/preview/attempt",
@@ -2101,7 +2101,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "get:/api/sites/{siteId}/activity",
@@ -2151,7 +2151,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "get:/api/sites/{siteId}/api-keys",
@@ -2179,7 +2179,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "post:/api/sites/{siteId}/api-keys",
@@ -2207,7 +2207,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "delete:/api/sites/{siteId}/api-keys/{id}",
@@ -2235,7 +2235,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "get:/api/sites/{siteId}/app-data",
@@ -2256,7 +2256,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "delete:/api/sites/{siteId}/app-data/{appId}",
@@ -2284,7 +2284,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "get:/api/sites/{siteId}/apps",
@@ -2305,7 +2305,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "get:/api/sites/{siteId}/apps/blocks",
@@ -2326,7 +2326,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "get:/api/sites/{siteId}/apps/installs",
@@ -2347,7 +2347,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "delete:/api/sites/{siteId}/apps/installs/{installId}",
@@ -2375,7 +2375,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "post:/api/sites/{siteId}/apps/installs/{installId}/frame",
@@ -2403,7 +2403,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "get:/api/sites/{siteId}/apps/installs/{installId}/usage",
@@ -2431,7 +2431,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "put:/api/sites/{siteId}/apps/installs/{installId}/version",
@@ -2466,7 +2466,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": true,
     "bodyRef": "internal_appinstalls_rest.versionChoice",
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "get:/api/sites/{siteId}/apps/installs/{installId}/versions",
@@ -2494,7 +2494,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "get:/api/sites/{siteId}/articles",
@@ -2515,7 +2515,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "post:/api/sites/{siteId}/articles",
@@ -2536,7 +2536,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "get:/api/sites/{siteId}/billing",
@@ -2549,7 +2549,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     "params": [],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "get:/api/sites/{siteId}/builtin-apps",
@@ -2570,7 +2570,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "post:/api/sites/{siteId}/builtin-apps/{key}",
@@ -2598,7 +2598,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "delete:/api/sites/{siteId}/builtin-apps/{key}",
@@ -2626,7 +2626,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "post:/api/sites/{siteId}/clipboard/reconcile",
@@ -2654,7 +2654,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "get:/api/sites/{siteId}/code-files",
@@ -2710,7 +2710,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": true,
     "bodyRef": "github_com_webbuilder_server_internal_codefiles.CodeFile",
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "post:/api/sites/{siteId}/code-files",
@@ -2766,7 +2766,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": true,
     "bodyRef": "github_com_webbuilder_server_internal_codefiles.CodeFile",
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "get:/api/sites/{siteId}/code-files/{id}",
@@ -2801,7 +2801,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": true,
     "bodyRef": "github_com_webbuilder_server_internal_codefiles.CodeFile",
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "put:/api/sites/{siteId}/code-files/{id}",
@@ -2836,7 +2836,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": true,
     "bodyRef": "github_com_webbuilder_server_internal_codefiles.CodeFile",
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "delete:/api/sites/{siteId}/code-files/{id}",
@@ -2871,7 +2871,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": true,
     "bodyRef": "github_com_webbuilder_server_internal_codefiles.CodeFile",
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "get:/api/sites/{siteId}/copy",
@@ -2899,7 +2899,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "post:/api/sites/{siteId}/copy",
@@ -2927,7 +2927,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "get:/api/sites/{siteId}/copy/{jobId}",
@@ -2955,7 +2955,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "get:/api/sites/{siteId}/customers",
@@ -3018,7 +3018,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": true,
     "bodyRef": "github_com_webbuilder_server_internal_customers.Customer",
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "post:/api/sites/{siteId}/customers",
@@ -3081,7 +3081,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": true,
     "bodyRef": "github_com_webbuilder_server_internal_customers.Customer",
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "get:/api/sites/{siteId}/customers/{id}",
@@ -3116,7 +3116,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": true,
     "bodyRef": "github_com_webbuilder_server_internal_customers.Customer",
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "put:/api/sites/{siteId}/customers/{id}",
@@ -3151,7 +3151,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": true,
     "bodyRef": "github_com_webbuilder_server_internal_customers.Customer",
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "delete:/api/sites/{siteId}/customers/{id}",
@@ -3186,7 +3186,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": true,
     "bodyRef": "github_com_webbuilder_server_internal_customers.Customer",
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "get:/api/sites/{siteId}/discounts",
@@ -3214,7 +3214,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": true,
     "bodyRef": "github_com_webbuilder_server_internal_discounts.Discount",
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "post:/api/sites/{siteId}/discounts",
@@ -3242,7 +3242,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": true,
     "bodyRef": "github_com_webbuilder_server_internal_discounts.Discount",
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "get:/api/sites/{siteId}/discounts/{id}",
@@ -3277,7 +3277,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": true,
     "bodyRef": "github_com_webbuilder_server_internal_discounts.Discount",
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "put:/api/sites/{siteId}/discounts/{id}",
@@ -3312,7 +3312,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": true,
     "bodyRef": "github_com_webbuilder_server_internal_discounts.Discount",
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "delete:/api/sites/{siteId}/discounts/{id}",
@@ -3347,7 +3347,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": true,
     "bodyRef": "github_com_webbuilder_server_internal_discounts.Discount",
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "get:/api/sites/{siteId}/domains",
@@ -3375,7 +3375,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "post:/api/sites/{siteId}/domains",
@@ -3403,7 +3403,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "post:/api/sites/{siteId}/domains/check",
@@ -3431,7 +3431,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "get:/api/sites/{siteId}/domains/{id}",
@@ -3459,7 +3459,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "delete:/api/sites/{siteId}/domains/{id}",
@@ -3487,7 +3487,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "post:/api/sites/{siteId}/domains/{id}/primary",
@@ -3515,7 +3515,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "post:/api/sites/{siteId}/domains/{id}/verify",
@@ -3543,7 +3543,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "get:/api/sites/{siteId}/filter-facets",
@@ -3564,7 +3564,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "get:/api/sites/{siteId}/fonts",
@@ -3592,7 +3592,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": true,
     "bodyRef": "github_com_webbuilder_server_internal_fonts.FontGroup",
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "post:/api/sites/{siteId}/fonts",
@@ -3620,7 +3620,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": true,
     "bodyRef": "github_com_webbuilder_server_internal_fonts.FontGroup",
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "get:/api/sites/{siteId}/fonts/{groupId}",
@@ -3655,7 +3655,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": true,
     "bodyRef": "github_com_webbuilder_server_internal_fonts.FontGroup",
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "put:/api/sites/{siteId}/fonts/{groupId}",
@@ -3690,7 +3690,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": true,
     "bodyRef": "github_com_webbuilder_server_internal_fonts.FontGroup",
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "delete:/api/sites/{siteId}/fonts/{groupId}",
@@ -3725,7 +3725,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": true,
     "bodyRef": "github_com_webbuilder_server_internal_fonts.FontGroup",
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "put:/api/sites/{siteId}/fonts/{groupId}/files",
@@ -3760,7 +3760,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": true,
     "bodyRef": "github_com_webbuilder_server_internal_fonts.FontFile",
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "delete:/api/sites/{siteId}/fonts/{groupId}/files/{fileId}",
@@ -3795,7 +3795,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "get:/api/sites/{siteId}/forms",
@@ -3823,7 +3823,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": true,
     "bodyRef": "github_com_webbuilder_server_internal_forms.Form",
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "post:/api/sites/{siteId}/forms",
@@ -3851,7 +3851,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": true,
     "bodyRef": "github_com_webbuilder_server_internal_forms.Form",
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "get:/api/sites/{siteId}/forms/notify-addresses",
@@ -3879,7 +3879,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "post:/api/sites/{siteId}/forms/notify-addresses",
@@ -3907,7 +3907,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "delete:/api/sites/{siteId}/forms/notify-addresses",
@@ -3935,7 +3935,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "get:/api/sites/{siteId}/forms/{id}",
@@ -3963,7 +3963,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "put:/api/sites/{siteId}/forms/{id}",
@@ -3991,7 +3991,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "delete:/api/sites/{siteId}/forms/{id}",
@@ -4019,7 +4019,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "get:/api/sites/{siteId}/forms/{id}/document",
@@ -4047,7 +4047,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "put:/api/sites/{siteId}/forms/{id}/document",
@@ -4075,7 +4075,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "get:/api/sites/{siteId}/forms/{id}/schema",
@@ -4103,7 +4103,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "get:/api/sites/{siteId}/forms/{id}/submissions",
@@ -4145,7 +4145,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "get:/api/sites/{siteId}/forms/{id}/submissions/export",
@@ -4173,7 +4173,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "get:/api/sites/{siteId}/forms/{id}/submissions/{submissionId}",
@@ -4208,7 +4208,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "delete:/api/sites/{siteId}/forms/{id}/submissions/{submissionId}",
@@ -4243,7 +4243,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "get:/api/sites/{siteId}/global-sections",
@@ -4264,7 +4264,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "post:/api/sites/{siteId}/global-sections",
@@ -4285,7 +4285,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "get:/api/sites/{siteId}/global-sections/{id}",
@@ -4313,7 +4313,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "patch:/api/sites/{siteId}/global-sections/{id}",
@@ -4341,7 +4341,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "delete:/api/sites/{siteId}/global-sections/{id}",
@@ -4369,7 +4369,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "put:/api/sites/{siteId}/global-sections/{id}/document",
@@ -4397,7 +4397,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "get:/api/sites/{siteId}/global-sections/{id}/pages",
@@ -4425,7 +4425,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "get:/api/sites/{siteId}/integrations",
@@ -4446,7 +4446,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "post:/api/sites/{siteId}/integrations",
@@ -4467,7 +4467,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "get:/api/sites/{siteId}/mail-settings",
@@ -4488,7 +4488,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "put:/api/sites/{siteId}/mail-settings",
@@ -4509,7 +4509,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "delete:/api/sites/{siteId}/mail-settings",
@@ -4530,7 +4530,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "post:/api/sites/{siteId}/mail-settings/test-send",
@@ -4551,7 +4551,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "get:/api/sites/{siteId}/media",
@@ -4635,7 +4635,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "get:/api/sites/{siteId}/media/assets/by-url",
@@ -4663,7 +4663,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "get:/api/sites/{siteId}/media/assets/{assetId}",
@@ -4698,7 +4698,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "put:/api/sites/{siteId}/media/assets/{assetId}",
@@ -4733,7 +4733,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "delete:/api/sites/{siteId}/media/assets/{assetId}",
@@ -4768,7 +4768,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "delete:/api/sites/{siteId}/media/assets/{assetId}/purge",
@@ -4796,7 +4796,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "post:/api/sites/{siteId}/media/assets/{assetId}/restore",
@@ -4824,7 +4824,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "get:/api/sites/{siteId}/media/assets/{assetId}/usage",
@@ -4852,7 +4852,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "get:/api/sites/{siteId}/media/folders",
@@ -4880,7 +4880,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "post:/api/sites/{siteId}/media/folders",
@@ -4908,7 +4908,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "get:/api/sites/{siteId}/media/folders/{folderId}",
@@ -4943,7 +4943,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "put:/api/sites/{siteId}/media/folders/{folderId}",
@@ -4978,7 +4978,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "delete:/api/sites/{siteId}/media/folders/{folderId}",
@@ -5013,7 +5013,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "get:/api/sites/{siteId}/media/quota",
@@ -5034,7 +5034,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "get:/api/sites/{siteId}/orders",
@@ -5104,7 +5104,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": true,
     "bodyRef": "github_com_webbuilder_server_internal_orders.Order",
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "post:/api/sites/{siteId}/orders",
@@ -5174,7 +5174,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": true,
     "bodyRef": "github_com_webbuilder_server_internal_orders.Order",
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "get:/api/sites/{siteId}/orders/analytics",
@@ -5209,7 +5209,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "get:/api/sites/{siteId}/orders/stats",
@@ -5230,7 +5230,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "get:/api/sites/{siteId}/orders/{id}",
@@ -5265,7 +5265,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": true,
     "bodyRef": "github_com_webbuilder_server_internal_orders.Order",
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "put:/api/sites/{siteId}/orders/{id}",
@@ -5300,7 +5300,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": true,
     "bodyRef": "github_com_webbuilder_server_internal_orders.Order",
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "delete:/api/sites/{siteId}/orders/{id}",
@@ -5335,7 +5335,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": true,
     "bodyRef": "github_com_webbuilder_server_internal_orders.Order",
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "put:/api/sites/{siteId}/org",
@@ -5385,7 +5385,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "delete:/api/sites/{siteId}/org",
@@ -5435,7 +5435,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "get:/api/sites/{siteId}/overlays",
@@ -5456,7 +5456,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "post:/api/sites/{siteId}/overlays",
@@ -5477,7 +5477,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "get:/api/sites/{siteId}/overlays/{id}",
@@ -5505,7 +5505,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "patch:/api/sites/{siteId}/overlays/{id}",
@@ -5533,7 +5533,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "delete:/api/sites/{siteId}/overlays/{id}",
@@ -5561,7 +5561,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "get:/api/sites/{siteId}/overlays/{id}/pages",
@@ -5589,7 +5589,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "get:/api/sites/{siteId}/page-links",
@@ -5624,7 +5624,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "post:/api/sites/{siteId}/page-links/bulk",
@@ -5645,7 +5645,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "get:/api/sites/{siteId}/page-links/{linkType}/{linkId}",
@@ -5680,7 +5680,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "put:/api/sites/{siteId}/page-links/{linkType}/{linkId}",
@@ -5715,7 +5715,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "delete:/api/sites/{siteId}/page-links/{linkType}/{linkId}",
@@ -5750,7 +5750,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "get:/api/sites/{siteId}/pages",
@@ -5761,7 +5761,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     "params": [],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "post:/api/sites/{siteId}/pages",
@@ -5772,7 +5772,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     "params": [],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "get:/api/sites/{siteId}/pages/locate-nodes",
@@ -5808,7 +5808,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": true,
     "bodyRef": "github_com_webbuilder_server_internal_page.CreatePageInput",
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "put:/api/sites/{siteId}/pages/{pageId}/default-template",
@@ -5836,7 +5836,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "post:/api/sites/{siteId}/pages/{pageId}/duplicate",
@@ -5871,7 +5871,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "get:/api/sites/{siteId}/pages/{pageId}/preview",
@@ -5899,7 +5899,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "get:/api/sites/{siteId}/pages/{pageId}/source",
@@ -5927,7 +5927,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "put:/api/sites/{siteId}/pages/{pageId}/source",
@@ -5955,7 +5955,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "get:/api/sites/{siteId}/product-categories",
@@ -5983,7 +5983,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": true,
     "bodyRef": "github_com_webbuilder_server_internal_products.ProductCategory",
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "post:/api/sites/{siteId}/product-categories",
@@ -6011,7 +6011,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": true,
     "bodyRef": "github_com_webbuilder_server_internal_products.ProductCategory",
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "get:/api/sites/{siteId}/product-categories/counts",
@@ -6032,7 +6032,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "get:/api/sites/{siteId}/product-categories/{id}",
@@ -6067,7 +6067,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": true,
     "bodyRef": "github_com_webbuilder_server_internal_products.ProductCategory",
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "put:/api/sites/{siteId}/product-categories/{id}",
@@ -6102,7 +6102,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": true,
     "bodyRef": "github_com_webbuilder_server_internal_products.ProductCategory",
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "delete:/api/sites/{siteId}/product-categories/{id}",
@@ -6137,7 +6137,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": true,
     "bodyRef": "github_com_webbuilder_server_internal_products.ProductCategory",
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "get:/api/sites/{siteId}/product-categories/{id}/products",
@@ -6186,7 +6186,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "post:/api/sites/{siteId}/product-categories/{id}/products",
@@ -6235,7 +6235,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "put:/api/sites/{siteId}/product-categories/{id}/products",
@@ -6284,7 +6284,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "delete:/api/sites/{siteId}/product-categories/{id}/products",
@@ -6333,7 +6333,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "get:/api/sites/{siteId}/products",
@@ -6403,7 +6403,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": true,
     "bodyRef": "github_com_webbuilder_server_internal_products.Product",
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "post:/api/sites/{siteId}/products",
@@ -6473,7 +6473,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": true,
     "bodyRef": "github_com_webbuilder_server_internal_products.Product",
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "get:/api/sites/{siteId}/products/export",
@@ -6494,7 +6494,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "post:/api/sites/{siteId}/products/import",
@@ -6522,7 +6522,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "get:/api/sites/{siteId}/products/import-template",
@@ -6543,7 +6543,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "get:/api/sites/{siteId}/products/{id}",
@@ -6578,7 +6578,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": true,
     "bodyRef": "github_com_webbuilder_server_internal_products.Product",
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "put:/api/sites/{siteId}/products/{id}",
@@ -6613,7 +6613,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": true,
     "bodyRef": "github_com_webbuilder_server_internal_products.Product",
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "delete:/api/sites/{siteId}/products/{id}",
@@ -6648,7 +6648,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": true,
     "bodyRef": "github_com_webbuilder_server_internal_products.Product",
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "get:/api/sites/{siteId}/products/{productId}/categories",
@@ -6683,7 +6683,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "put:/api/sites/{siteId}/products/{productId}/categories",
@@ -6718,7 +6718,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "post:/api/sites/{siteId}/publish",
@@ -6739,7 +6739,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "get:/api/sites/{siteId}/roles",
@@ -6767,7 +6767,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "post:/api/sites/{siteId}/roles",
@@ -6795,7 +6795,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "put:/api/sites/{siteId}/roles/{roleId}",
@@ -6823,7 +6823,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "delete:/api/sites/{siteId}/roles/{roleId}",
@@ -6851,7 +6851,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "get:/api/sites/{siteId}/section-templates",
@@ -6872,7 +6872,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "post:/api/sites/{siteId}/section-templates",
@@ -6893,7 +6893,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "get:/api/sites/{siteId}/section-templates/categories",
@@ -6921,7 +6921,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "patch:/api/sites/{siteId}/section-templates/{id}",
@@ -6949,7 +6949,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "delete:/api/sites/{siteId}/section-templates/{id}",
@@ -6977,7 +6977,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "put:/api/sites/{siteId}/section-templates/{id}/document",
@@ -7005,7 +7005,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "post:/api/sites/{siteId}/section-templates/{id}/instantiate",
@@ -7033,7 +7033,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "post:/api/sites/{siteId}/section-templates/{id}/share",
@@ -7061,7 +7061,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "delete:/api/sites/{siteId}/section-templates/{id}/share",
@@ -7089,7 +7089,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "get:/api/sites/{siteId}/settings",
@@ -7110,7 +7110,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "put:/api/sites/{siteId}/settings",
@@ -7131,7 +7131,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "post:/api/sites/{siteId}/template",
@@ -7159,7 +7159,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "get:/api/sites/{siteId}/theme",
@@ -7180,7 +7180,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "put:/api/sites/{siteId}/theme",
@@ -7201,7 +7201,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "get:/api/sites/{siteId}/translations",
@@ -7243,7 +7243,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "put:/api/sites/{siteId}/translations",
@@ -7285,7 +7285,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "delete:/api/sites/{siteId}/translations",
@@ -7327,7 +7327,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "get:/api/sites/{siteId}/translations/auto",
@@ -7340,7 +7340,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     "params": [],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "post:/api/sites/{siteId}/translations/auto",
@@ -7353,7 +7353,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     "params": [],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "get:/api/sites/{siteId}/translations/pending",
@@ -7402,7 +7402,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "get:/api/sites/{siteId}/translations/progress",
@@ -7423,7 +7423,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "post:/api/sites/{siteId}/translations/review",
@@ -7436,7 +7436,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     "params": [],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "get:/api/sites/{siteId}/webhooks",
@@ -7457,7 +7457,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "post:/api/sites/{siteId}/webhooks",
@@ -7478,7 +7478,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "get:/api/sites/{siteId}/webhooks/{id}",
@@ -7506,7 +7506,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "patch:/api/sites/{siteId}/webhooks/{id}",
@@ -7534,7 +7534,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "delete:/api/sites/{siteId}/webhooks/{id}",
@@ -7562,7 +7562,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "get:/api/sites/{siteId}/webhooks/{id}/deliveries",
@@ -7590,7 +7590,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "post:/api/sites/{siteId}/webhooks/{id}/secret",
@@ -7618,7 +7618,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "post:/api/sites/{siteId}/webhooks/{id}/secret/rotate",
@@ -7646,7 +7646,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "post:/api/sites/{siteId}/webhooks/{id}/test",
@@ -7674,7 +7674,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
-    "credential": "session"
+    "credential": "siteScoped"
   },
   {
     "id": "get:/api/v1/app-data",

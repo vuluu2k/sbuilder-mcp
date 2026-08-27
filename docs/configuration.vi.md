@@ -6,12 +6,27 @@ file — repo này công khai.
 | Biến | Bắt buộc | Mặc định | Là gì |
 | --- | --- | --- | --- |
 | `SB_API` | không | `http://localhost:8080` | URL gốc của API nền tảng |
-| `SB_TOKEN` | với `/api/v1` | — | Khoá API `wbk_` tạo trong app. Cũng nhận app access token `wba_` |
-| `SB_EMAIL` | với private API | — | Một tài khoản nền tảng |
-| `SB_PASSWORD` | với private API | — | Mật khẩu tài khoản đó |
+| `SB_TOKEN` | nên có | — | Khoá API `wbk_` tạo trong app. Cũng nhận app access token `wba_` |
+| `SB_EMAIL` | tuỳ chọn | — | Một tài khoản nền tảng |
+| `SB_PASSWORD` | tuỳ chọn | — | Mật khẩu tài khoản đó |
 | `WB_REPO` | chỉ khi codegen | — | Đường dẫn tới checkout `web_builder`. Không cần lúc chạy |
 
-## Vì sao phải hai credential
+## Một biến là đủ
+
+`SB_TOKEN` một mình mở được mọi thứ server này làm hằng ngày. Một khoá API lấy từ app
+**Agent** của site với tới được cả bề mặt đối tác (`/api/v1`) lẫn bề mặt tài nguyên của
+private site API, gồm cả tài liệu trang và socket live-edit.
+
+Nó bị chặn ba lớp, kiểm mỗi request: scope của chính khoá, role sống của thành viên đã mint
+nó, và đúng một site nó thuộc về. Hạ quyền thành viên đó là mọi khoá họ mint hẹp lại ngay;
+thu hồi khoá là nó tắt ở mọi nơi cùng lúc.
+
+`SB_EMAIL` / `SB_PASSWORD` vẫn dùng được cho người chạy trên tài khoản của chính mình. Chúng
+mua đúng một thứ mà khoá cố ý không làm được: các lệnh **cấp tài khoản** — liệt kê site,
+quản lý thành viên và role — vì những thứ đó nghĩa là "tài khoản của người này", mà khoá thì
+không có người nào đứng sau.
+
+## Vì sao trước đây phải hai credential
 
 Nền tảng khai báo một scheme `BearerAuth` duy nhất trong tài liệu OpenAPI nhưng thực thi
 hai credential khác nhau đằng sau nó, và từ chối mỗi loại trên bề mặt của loại kia.

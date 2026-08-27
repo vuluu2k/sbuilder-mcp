@@ -57,7 +57,7 @@ describe('callOperation()', () => {
     ).rejects.toThrow(/unknown operation/i);
   });
 
-  it('sends the session token for a private path', async () => {
+  it('PREFERS the API key on a private path - it is the narrower credential', async () => {
     const f = ok();
     await callOperation(await ctxWith(f, 'wbk_k'), {
       id: 'get:/api/sites/{siteID}/menus',
@@ -65,7 +65,29 @@ describe('callOperation()', () => {
       dry_run: false,
     });
     const init = calls(f)[0][1] as RequestInit;
+    expect((init.headers as Record<string, string>).Authorization).toBe('Bearer wbk_k');
+  });
+
+  it('falls back to the session on a private path when no key is set', async () => {
+    const f = ok();
+    await callOperation(await ctxWith(f), {
+      id: 'get:/api/sites/{siteID}/menus',
+      path_params: { siteID: 's1' },
+      dry_run: false,
+    });
+    const init = calls(f)[0][1] as RequestInit;
     expect((init.headers as Record<string, string>).Authorization).toBe('Bearer jwt');
+  });
+
+  it('names both ways to authenticate when neither is present', async () => {
+    const loginless = { base: 'http://x', session: new Session('http://x'), fetchImpl: ok() };
+    await expect(
+      callOperation(loginless, {
+        id: 'get:/api/sites/{siteID}/menus',
+        path_params: { siteID: 's1' },
+        dry_run: false,
+      }),
+    ).rejects.toThrow(/SB_TOKEN.*SB_EMAIL|SB_EMAIL.*SB_TOKEN/s);
   });
 
   it('sends the API key for a /api/v1 path', async () => {
