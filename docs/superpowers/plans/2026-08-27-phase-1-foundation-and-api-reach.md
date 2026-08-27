@@ -2,11 +2,11 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Ship a working MCP stdio server that authenticates with both platform credentials and can drive all 320 of the platform's API operations through a generated, searchable index.
+**Goal:** Ship a working MCP stdio server that authenticates with both platform credentials and can drive all 310 of the platform's API operations through a generated, searchable index.
 
-**Architecture:** A build step reads `server/docs/swagger.json` out of a `web_builder` checkout and emits a typed operation index. Two tools — `sb_api_find` and `sb_api_call` — turn that index into full API reach without a 320-entry tool list. Credentials are chosen by path prefix, because the OpenAPI document declares one scheme for both.
+**Architecture:** A build step reads `server/docs/swagger.json` out of a `web_builder` checkout and emits a typed operation index. Two tools — `sb_api_find` and `sb_api_call` — turn that index into full API reach without a 310-entry tool list. Credentials are chosen by path prefix, because the OpenAPI document declares one scheme for both.
 
-**Tech Stack:** TypeScript (ESM, `module: Node16`), `@modelcontextprotocol/sdk` ^1.30, `zod` ^3, `vitest` ^4, `tsx` for build scripts. Node ≥20.
+**Tech Stack:** TypeScript (ESM, `module: Node16`), `@modelcontextprotocol/sdk` ^1.30, `zod` ^3, `vitest` ^3.2, `tsx` for build scripts. Node ≥20.
 
 **Spec:** `docs/superpowers/specs/2026-08-27-sbuilder-mcp-design.md`
 
@@ -78,7 +78,7 @@ Copied verbatim from the spec. Every task's requirements implicitly include this
     "@types/node": "^22.0.0",
     "tsx": "^4.19.0",
     "typescript": "^5.6.0",
-    "vitest": "^4.1.0"
+    "vitest": "^3.2.0"
   }
 }
 ```
@@ -747,7 +747,7 @@ git commit -m "feat(transport): route credentials by path prefix, which the Open
 - Consumes: `credentialFor` from `src/transport/credential.js`.
 - Produces: `interface ApiOperation { id: string; method: string; path: string; tags: string[]; summary: string; params: ApiParam[]; bodyDescribed: boolean; bodyRef: string | null; credential: Credential; }`; `interface ApiParam { name: string; in: 'path'|'query'|'body'|'header'; required: boolean; type: string; description: string }`; `const API_OPERATIONS: ApiOperation[]`; `const API_DEFINITIONS: Record<string, unknown>`; `const SWAGGER_SOURCE: { operations: number; generatedFrom: string }`.
 
-Facts measured from the real document, which the generator asserts rather than assumes: 205 paths, 320 operations, 85 definitions, **no `operationId` anywhere**, and **58 of 140 body-carrying operations have an opaque body**.
+Facts measured from the real document, which the generator asserts rather than assumes: 205 paths, 310 operations, 85 definitions, **no `operationId` anywhere**, and **58 of 140 body-carrying operations have an opaque body**.
 
 - [ ] **Step 1: Write `src/catalog/types.ts`**
 
@@ -958,7 +958,7 @@ main();
 - [ ] **Step 5: Run the generator**
 
 Run: `WB_REPO=/Volumes/workspace/webcake/web_builder npm run codegen`
-Expected: stderr reports `320 operations, 85 definitions, 58 with an undescribed body`.
+Expected: stderr reports `310 operations, 85 definitions, 58 with an undescribed body`.
 
 - [ ] **Step 6: Run the test and watch it pass**
 
@@ -971,12 +971,12 @@ The generated file is committed on purpose: `npm install` of this package must w
 
 ```bash
 git add scripts/gen-catalog.ts src/catalog/types.ts src/catalog/api.generated.ts test/api-index.test.ts
-git commit -m "feat(catalog): generate the 320-operation API index from the platform OpenAPI doc"
+git commit -m "feat(catalog): generate the 310-operation API index from the platform OpenAPI doc"
 ```
 
 ---
 
-### Task 6: `sb_api_find` — search 320 operations by intent
+### Task 6: `sb_api_find` — search 310 operations by intent
 
 **Files:**
 - Create: `src/catalog/search.ts`
@@ -1322,7 +1322,7 @@ export function registerApiTools(server: McpServer, ctx: ToolContext): void {
     'sb_api_find',
     'Find platform API operations by intent. Returns each match with its real parameter ' +
       'schema and which credential it needs. Use this before sb_api_call — the tool list ' +
-      'holds 18 tools, but this index reaches all 320 operations.',
+      'holds 18 tools, but this index reaches all 310 operations.',
     {
       query: z.string().describe('What you want to do, in words: "create a menu", "list orders"'),
       tag: z.string().optional().describe('Narrow to one tag, e.g. "menus", "products"'),
@@ -1356,7 +1356,7 @@ Expected: all green; smoke prints `ALL GOOD`.
 
 ```bash
 git add src/tools/context.ts src/tools/api.ts test/api-call.test.ts
-git commit -m "feat(tools): sb_api_find and sb_api_call — full 320-operation reach in two tools"
+git commit -m "feat(tools): sb_api_find and sb_api_call — full 310-operation reach in two tools"
 ```
 
 ---
@@ -1541,7 +1541,7 @@ const INSTRUCTIONS = `Design and operate a Store Builder site.
 
 Call sb_connect first. Then:
 - sb_api_find describes what the platform can do; sb_api_call executes it. Between
-  them they reach all 320 API operations, so most merchant work needs no other tool.
+  them they reach all 310 API operations, so most merchant work needs no other tool.
 - Mutating calls default to dry_run:true and send nothing. Pass dry_run:false to act.
 - /api/v1 paths need SB_TOKEN; every other path uses the session from sb_connect.`;
 
