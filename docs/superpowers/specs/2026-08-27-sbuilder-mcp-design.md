@@ -28,7 +28,7 @@ describe everything this server needs to know.**
 | Input (in the `web_builder` checkout) | What it yields |
 | --- | --- |
 | `server/docs/swagger.json` | 205 paths / 310 operations / 85 definitions — route, method, parameters, response shape, auth requirement, for the entire private + public API |
-| `schema/src/elements/**` (95 elements, each with `meta.ts` + `ai.ts`) | the element catalog: traits, defaults, and the `useWhen` / `avoidWhen` / `contentTips` / `semantics` hints written for exactly this purpose |
+| `schema/src/elements/**` (85 elements, each with `meta.ts` + `ai.ts`) | the element catalog: traits, defaults, and the `useWhen` / `avoidWhen` / `contentTips` / `semantics` hints written for exactly this purpose |
 
 Both are already committed and already guarded in that repo (`npm run docs:api` regenerates
 the first; the schema has its own drift tests). So this repo **vendors no code**. A build
