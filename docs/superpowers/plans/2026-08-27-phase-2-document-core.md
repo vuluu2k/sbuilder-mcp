@@ -76,7 +76,7 @@ the schema package. The generator reads it with a regex over that one file rathe
 importing it — importing an editor module would drag Vue into a build script for a single
 integer.
 
-- [ ] **Step 1: Write `src/catalog/element-types.ts`**
+- [x] **Step 1: Write `src/catalog/element-types.ts`**
 
 ```ts
 export interface CatalogElement {
@@ -105,7 +105,7 @@ export interface CatalogElement {
 }
 ```
 
-- [ ] **Step 2: Write the failing test**
+- [x] **Step 2: Write the failing test**
 
 ```ts
 // test/element-catalog.test.ts
@@ -148,12 +148,12 @@ describe('generated element catalog', () => {
 });
 ```
 
-- [ ] **Step 3: Run it and watch it fail**
+- [x] **Step 3: Run it and watch it fail**
 
 Run: `npx vitest run test/element-catalog.test.ts`
 Expected: FAIL — `Cannot find module '../src/catalog/elements.generated.js'`.
 
-- [ ] **Step 4: Extend `scripts/gen-catalog.ts`**
+- [x] **Step 4: Extend `scripts/gen-catalog.ts`**
 
 Add above `main()`:
 
@@ -290,17 +290,17 @@ export const ELEMENTS: Record<string, CatalogElement> = ${JSON.stringify(element
   console.error(`wrote elements.generated.ts: ${types.length} elements, doc schema v${readDocSchemaVersion(repo)}`);
 ```
 
-- [ ] **Step 5: Run the generator**
+- [x] **Step 5: Run the generator**
 
 Run: `WB_REPO=/Volumes/workspace/webcake/web_builder npm run codegen`
 Expected: stderr reports `310 operations…` as before **and** `85 elements, doc schema v2`.
 
-- [ ] **Step 6: Run the test**
+- [x] **Step 6: Run the test**
 
 Run: `npx vitest run test/element-catalog.test.ts`
 Expected: PASS, 6 tests.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add scripts/gen-catalog.ts src/catalog/element-types.ts src/catalog/elements.generated.ts test/element-catalog.test.ts
@@ -322,7 +322,7 @@ git commit -m "feat(catalog): generate the 85-element catalog with its AI hints"
 The three admission rules are a **security boundary** mirrored from
 `editor/src/features/liveedit/ops.ts`. Each closes a real door.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```ts
 // test/patch.test.ts
@@ -410,12 +410,12 @@ describe('applyPatches()', () => {
 });
 ```
 
-- [ ] **Step 2: Run it and watch it fail**
+- [x] **Step 2: Run it and watch it fail**
 
 Run: `npx vitest run test/patch.test.ts`
 Expected: FAIL — `Cannot find module '../src/core/patch.js'`.
 
-- [ ] **Step 3: Write `src/core/patch.ts`**
+- [x] **Step 3: Write `src/core/patch.ts`**
 
 ```ts
 /**
@@ -533,12 +533,12 @@ export function applyPatches(state: object, patches: Patch[]): void {
 }
 ```
 
-- [ ] **Step 4: Run the test and watch it pass**
+- [x] **Step 4: Run the test and watch it pass**
 
 Run: `npx vitest run test/patch.test.ts`
 Expected: PASS, 13 tests.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/core/patch.ts test/patch.test.ts
@@ -560,7 +560,7 @@ git commit -m "feat(core): the document patch primitive and its three admission 
 `pageChildren` is the one every ROOT walk must use. It is separate from `childrenOf` so the
 overlay rule cannot be forgotten by writing the obvious thing.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```ts
 // test/tree.test.ts
@@ -637,12 +637,12 @@ describe('tree', () => {
 });
 ```
 
-- [ ] **Step 2: Run it and watch it fail**
+- [x] **Step 2: Run it and watch it fail**
 
 Run: `npx vitest run test/tree.test.ts`
 Expected: FAIL — `Cannot find module '../src/core/tree.js'`.
 
-- [ ] **Step 3: Write `src/core/tree.ts`**
+- [x] **Step 3: Write `src/core/tree.ts`**
 
 ```ts
 export interface NodeLike {
@@ -730,12 +730,12 @@ export function ancestors(doc: DocLike, id: string): string[] {
 }
 ```
 
-- [ ] **Step 4: Run the test and watch it pass**
+- [x] **Step 4: Run the test and watch it pass**
 
 Run: `npx vitest run test/tree.test.ts`
 Expected: PASS, 6 tests.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/core/tree.ts test/tree.test.ts
@@ -754,7 +754,7 @@ git commit -m "feat(core): overlay-aware tree walking, with pageChildren as the 
 - Consumes: `DocLike`, `pageChildren`, `isOverlay`, `SPEC_GLOBAL_ID`, `SPEC_GLOBAL_KIND` from `src/core/tree.js`.
 - Produces: `type Band = 'header' | 'middle' | 'footer'`; `bandOf(doc, id): Band`; `checkBandOrder(doc): string | null`; `isGlobal(doc, id): boolean`; `globalWarning(doc, id): string | null`; `RESPONSIVE_NOTICE: string`; `isIdentityKey(key: string): boolean`.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```ts
 // test/traps.test.ts
@@ -856,12 +856,12 @@ describe('isIdentityKey()', () => {
 });
 ```
 
-- [ ] **Step 2: Run it and watch it fail**
+- [x] **Step 2: Run it and watch it fail**
 
 Run: `npx vitest run test/traps.test.ts`
 Expected: FAIL — `Cannot find module '../src/domains/site/traps.js'`.
 
-- [ ] **Step 3: Write `src/domains/site/traps.ts`**
+- [x] **Step 3: Write `src/domains/site/traps.ts`**
 
 ```ts
 import {
@@ -968,12 +968,12 @@ export const RESPONSIVE_NOTICE =
 export { isOverlay };
 ```
 
-- [ ] **Step 4: Run the test and watch it pass**
+- [x] **Step 4: Run the test and watch it pass**
 
 Run: `npx vitest run test/traps.test.ts`
 Expected: PASS, 10 tests.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/domains/site/traps.ts test/traps.test.ts
@@ -997,7 +997,7 @@ The id prefix table is mirrored from `schema/src/node.ts`. It is cosmetic — id
 to be unique — but matching it keeps a document the agent built indistinguishable from one a
 human built, which is the whole point of this server.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```ts
 // test/node.test.ts
@@ -1049,12 +1049,12 @@ describe('createNode()', () => {
 });
 ```
 
-- [ ] **Step 2: Run it and watch it fail**
+- [x] **Step 2: Run it and watch it fail**
 
 Run: `npx vitest run test/node.test.ts`
 Expected: FAIL — `Cannot find module '../src/domains/site/ids.js'`.
 
-- [ ] **Step 3: Write `src/domains/site/ids.ts`**
+- [x] **Step 3: Write `src/domains/site/ids.ts`**
 
 ```ts
 import { randomBytes } from 'node:crypto';
@@ -1088,7 +1088,7 @@ export function genId(type: string): string {
 }
 ```
 
-- [ ] **Step 4: Write `src/domains/site/node.ts`**
+- [x] **Step 4: Write `src/domains/site/node.ts`**
 
 ```ts
 import { ELEMENTS } from '../../catalog/elements.generated.js';
@@ -1162,12 +1162,12 @@ export function createNode(type: string, opts: CreateOpts = {}): BuilderNode {
 }
 ```
 
-- [ ] **Step 5: Run the test and watch it pass**
+- [x] **Step 5: Run the test and watch it pass**
 
 Run: `npx vitest run test/node.test.ts`
 Expected: PASS, 7 tests.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add src/domains/site/ids.ts src/domains/site/node.ts test/node.test.ts
@@ -1189,7 +1189,7 @@ git commit -m "feat(site): node ids and catalog-seeded node construction"
 `outline()` is what keeps a page affordable to read. A real page is hundreds of KB of JSON;
 this returns one short line per node.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```ts
 // test/document.test.ts
@@ -1260,12 +1260,12 @@ describe('PageDoc', () => {
 });
 ```
 
-- [ ] **Step 2: Run it and watch it fail**
+- [x] **Step 2: Run it and watch it fail**
 
 Run: `npx vitest run test/document.test.ts`
 Expected: FAIL — `Cannot find module '../src/domains/site/document.js'`.
 
-- [ ] **Step 3: Write `src/domains/site/document.ts`**
+- [x] **Step 3: Write `src/domains/site/document.ts`**
 
 ```ts
 import { applyPatches, type Patch } from '../../core/patch.js';
@@ -1370,12 +1370,12 @@ export class PageDoc {
 Note the `void pageChildren` line is a placeholder for an unused import — delete the import
 instead if the implementation does not need it, rather than shipping the `void`.
 
-- [ ] **Step 4: Run the test and watch it pass**
+- [x] **Step 4: Run the test and watch it pass**
 
 Run: `npx vitest run test/document.test.ts`
 Expected: PASS, 7 tests.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/domains/site/document.ts test/document.test.ts
@@ -1396,7 +1396,7 @@ git commit -m "feat(site): the in-memory page document with a compressed outline
 
 `addSubtree` takes a **nested** spec so a whole hero section is one call rather than forty.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```ts
 // test/builder.test.ts
@@ -1543,12 +1543,12 @@ describe('moveNode() / removeNode()', () => {
 });
 ```
 
-- [ ] **Step 2: Run it and watch it fail**
+- [x] **Step 2: Run it and watch it fail**
 
 Run: `npx vitest run test/builder.test.ts`
 Expected: FAIL — `Cannot find module '../src/domains/site/builder.js'`.
 
-- [ ] **Step 3: Write `src/domains/site/builder.ts`**
+- [x] **Step 3: Write `src/domains/site/builder.ts`**
 
 ```ts
 import type { Patch } from '../../core/patch.js';
@@ -1751,12 +1751,12 @@ export function removeNode(doc: PageDoc, id: string): Patch[] {
 }
 ```
 
-- [ ] **Step 4: Run the test and watch it pass**
+- [x] **Step 4: Run the test and watch it pass**
 
 Run: `npx vitest run test/builder.test.ts`
 Expected: PASS, 12 tests.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/domains/site/builder.ts test/builder.test.ts
@@ -1778,7 +1778,7 @@ git commit -m "feat(site): the builder — nested subtrees, per-breakpoint write
 Every check here mirrors one the platform runs on save. Catching them locally turns "the
 autosave silently failed twenty minutes ago" into "this call refused, and said why".
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```ts
 // test/validate.test.ts
@@ -1831,12 +1831,12 @@ describe('validateForSave()', () => {
 });
 ```
 
-- [ ] **Step 2: Run it and watch it fail**
+- [x] **Step 2: Run it and watch it fail**
 
 Run: `npx vitest run test/validate.test.ts`
 Expected: FAIL — `Cannot find module '../src/domains/site/validate.js'`.
 
-- [ ] **Step 3: Write `src/domains/site/validate.ts`**
+- [x] **Step 3: Write `src/domains/site/validate.ts`**
 
 ```ts
 import { childrenOf, subtreeIds, type DocLike } from '../../core/tree.js';
@@ -1893,12 +1893,12 @@ export function validateForSave(doc: PageDoc): string[] {
 }
 ```
 
-- [ ] **Step 4: Run the test and watch it pass**
+- [x] **Step 4: Run the test and watch it pass**
 
 Run: `npx vitest run test/validate.test.ts`
 Expected: PASS, 5 tests.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/domains/site/validate.ts test/validate.test.ts
@@ -1920,7 +1920,7 @@ git commit -m "feat(site): pre-save validation mirroring the platform's own refu
 The response is enveloped under `source` (`httpx.WriteItem(w, 200, "source", …)`), and
 `warnings` / `globals` / `overlays` are **omitted** when empty rather than sent as null.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```ts
 // test/pages-transport.test.ts
@@ -1998,12 +1998,12 @@ describe('saveSource()', () => {
 });
 ```
 
-- [ ] **Step 2: Run it and watch it fail**
+- [x] **Step 2: Run it and watch it fail**
 
 Run: `npx vitest run test/pages-transport.test.ts`
 Expected: FAIL — `Cannot find module '../src/transport/pages.js'`.
 
-- [ ] **Step 3: Write `src/transport/pages.ts`**
+- [x] **Step 3: Write `src/transport/pages.ts`**
 
 ```ts
 import { request } from './http.js';
@@ -2077,12 +2077,12 @@ export async function saveSource(
 }
 ```
 
-- [ ] **Step 4: Run the test and watch it pass**
+- [x] **Step 4: Run the test and watch it pass**
 
 Run: `npx vitest run test/pages-transport.test.ts`
 Expected: PASS, 4 tests.
 
-- [ ] **Step 5: Verify the save body shape against the real server**
+- [x] **Step 5: Verify the save body shape against the real server**
 
 The PUT body is `{ document }` here, but the OpenAPI document describes no body for this
 route (that is the `body_note` case from Phase 1), so the shape is inferred from
@@ -2093,7 +2093,7 @@ Expected: confirms the request body key. **If it differs, change `saveSource` an
 match the editor** — the editor is the working client, and this repo copies it rather than
 guessing.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add src/transport/pages.ts test/pages-transport.test.ts
@@ -2116,7 +2116,7 @@ git commit -m "feat(transport): load and save a page's draft document"
 Eleven tools. `PageSession` holds the one open document so the write tools do not each
 re-fetch it.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```ts
 // test/page-tools.test.ts
@@ -2194,12 +2194,12 @@ describe('PageSession', () => {
 });
 ```
 
-- [ ] **Step 2: Run it and watch it fail**
+- [x] **Step 2: Run it and watch it fail**
 
 Run: `npx vitest run test/page-tools.test.ts`
 Expected: FAIL — `Cannot find module '../src/tools/page.js'`.
 
-- [ ] **Step 3: Write `src/tools/page.ts`**
+- [x] **Step 3: Write `src/tools/page.ts`**
 
 ```ts
 import { z } from 'zod';
@@ -2436,7 +2436,7 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): void {
 }
 ```
 
-- [ ] **Step 4: Register the group in `src/server.ts`**
+- [x] **Step 4: Register the group in `src/server.ts`**
 
 Add the import and the call:
 
@@ -2454,19 +2454,19 @@ Extend `INSTRUCTIONS` with a paragraph:
   default to dry_run:true. sb_set writes per breakpoint — pass base:true only for identity.
 ```
 
-- [ ] **Step 5: Run the test and the gate**
+- [x] **Step 5: Run the test and the gate**
 
 Run: `npx vitest run test/page-tools.test.ts && npm run build && npm test && npm run smoke`
 Expected: page-tools 4 tests PASS; build clean; whole suite green; smoke `ALL GOOD`.
 
-- [ ] **Step 6: Verify the tools appear over the real protocol**
+- [x] **Step 6: Verify the tools appear over the real protocol**
 
 Run the stdio probe from Phase 1 (`node /tmp/mcp-probe.mjs`, recreating it if gone).
 Expected: 13 tools listed — the four from Phase 1 plus `sb_page_open`, `sb_outline`,
 `sb_node_read`, `sb_catalog_search`, `sb_traits_for`, `sb_add`, `sb_set`, `sb_move`,
 `sb_remove`.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add src/tools/page.ts src/server.ts test/page-tools.test.ts
@@ -2480,7 +2480,7 @@ git commit -m "feat(tools): the page tools — open, outline, catalog search, ad
 **Files:**
 - Modify: `src/smoke.ts`, `CLAUDE.md`, `README.md`, `README.vi.md`, `docs/tools.md`, `docs/tools.vi.md`
 
-- [ ] **Step 1: Extend the smoke gate**
+- [x] **Step 1: Extend the smoke gate**
 
 Add to `runSmoke()`, before `ALL GOOD`:
 
@@ -2507,23 +2507,23 @@ Add to `runSmoke()`, before `ALL GOOD`:
   check('builder linked the subtree', d.outline({ depth: 2 })[0].kids?.length === 1);
 ```
 
-- [ ] **Step 2: Update the tool tables**
+- [x] **Step 2: Update the tool tables**
 
 Add the nine new tools to `docs/tools.md`, `docs/tools.vi.md`, and the at-a-glance tables in
 both READMEs. State in each: writes default to `dry_run:true`; `sb_set` writes per
 breakpoint; `sb_outline` never returns the raw document.
 
-- [ ] **Step 3: Update `CLAUDE.md`**
+- [x] **Step 3: Update `CLAUDE.md`**
 
 Move Phase 2 from "next" to "shipped" in the Phases section, and add the four traps to the
 platform-facts list with their one-line reasons.
 
-- [ ] **Step 4: Run the full gate**
+- [x] **Step 4: Run the full gate**
 
 Run: `npm run build && npm test && npm run smoke`
 Expected: all green, `ALL GOOD`.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add -A

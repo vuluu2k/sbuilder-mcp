@@ -71,6 +71,34 @@ that accounts for them.
   still fires `onopen`.
 - **The platform writes exactly one error shape**, `{"error", "code"}`, never plain text.
   `code` is the branchable half; reading `statusText` throws it away.
+- **`PUT /pages/{id}/source` takes `{ document, schemaVersion }`**, not `{ document }`. The
+  OpenAPI document declares no body for it at all, so the shape was read off the editor's
+  own `saveSource` (`editor/src/features/pages/api.ts:114`), including its
+  `schema_version ?? 1` fallback. Copy the working client; never guess a body.
+- **The element registry holds 85 types, and `getElementAI` covers 85/85.** The directory
+  has 95 entries because 14 are loose `.ts` files, not elements.
+- **`DOC_SCHEMA_VERSION` is 2** and lives in `editor/src/theme/legacyScopes.ts`, not in the
+  schema package. Codegen reads it with a regex — importing an editor module would drag Vue
+  into a build script for one integer.
+
+## The four traps
+
+Each fails SILENTLY. Each is encoded in `src/domains/site/traps.ts` with its own test,
+because this platform treats an unproven guard as indistinguishable from an absent one.
+
+1. **Site overlays** — the cart drawer and pop-ups are composed onto ROOT on read and
+   stripped on write. Stamped `specials.overlayId`, and only a DIRECT child of ROOT may be
+   one. `pageChildren()` is the walk every ROOT-level rule must use; `childrenOf()` on the
+   root is the mistake that reads correctly and behaves wrongly.
+2. **Global sections** — stamped `specials.globalId`/`globalKind`; shared masters. Editing
+   one changes every page carrying it, and publish cascades. Results say so.
+3. **Band order** — ROOT's children must read `[header*][middle*][footer*]`. The platform
+   refuses EVERY save otherwise (`checkBands`, `server/internal/page/decompose.go`). It
+   strips overlays before checking, which is why the rule needs no overlay exception — and
+   why ours strips them too.
+4. **The responsive mandate** — if a key CAN be responsive it MUST be. A visual quantity
+   written base-only renders on the canvas and vanishes on publish. `setKeys` writes per
+   breakpoint by default and REFUSES a base write of anything that is not an identity key.
 
 ## Adding a tool
 
@@ -89,6 +117,11 @@ and check conventions; never edits).
 ## Phases
 
 Phase 1 (shipped): auth, the generated API index, `sb_api_find`/`sb_api_call`, session
-tools. Phase 2: the page document — model, patch core, expand/compact, builder, the three
-traps, autosave. Phase 3: the live-edit socket, presence, and the Playwright vision loop.
+tools. Phase 2 (shipped): the element catalog, the patch core, overlay-aware tree walking,
+the four traps, the document, the builder, save validation, and the nine page tools.
+Phase 3: the live-edit socket, presence, the yield rule, and the Playwright vision loop.
 Plans live in `docs/superpowers/plans/`.
+
+Deferred with the seam left open: `expand`/`compact` sparse authoring (`createNode` already
+seeds from `meta.defaults`, so the write-path win is banked; the read-path inverse waits for
+a measured need) and `sb_bind`, which belongs with Phase 3's binding work.

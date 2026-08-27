@@ -40,6 +40,49 @@ export async function runSmoke(): Promise<void> {
     }),
   );
 
+  const { ELEMENTS, ELEMENT_SOURCE } = await import('./catalog/elements.generated.js');
+  check('element catalog is populated', Object.keys(ELEMENTS).length === ELEMENT_SOURCE.count);
+  check(
+    'every element carries AI hints',
+    Object.values(ELEMENTS).every((e) => e.description.length > 0),
+  );
+
+  // An end-to-end pass through the document core: build a section with a child,
+  // and assert the result is something the platform would actually store.
+  const { PageDoc } = await import('./domains/site/document.js');
+  const { addSubtree, setKeys } = await import('./domains/site/builder.js');
+  const { validateForSave } = await import('./domains/site/validate.js');
+  const doc = PageDoc.from({
+    schema_version: 2,
+    root_node_id: 'rt',
+    nodes: {
+      rt: {
+        id: 'rt',
+        data: { type: 'root', parent: null, nodes: [], isCanvas: true, hidden: false, custom: {} },
+        style: {}, config: {}, specials: {}, responsive: {}, events: [], bindings: [],
+      },
+    },
+  });
+  const built = addSubtree(doc, 'rt', { type: 'flex-section', children: [{ type: 'heading' }] });
+  doc.apply(built.patches);
+  check('builder linked the subtree', doc.outline({ depth: 2 })[0].kids?.length === 1);
+  check('builder produces a storable document', validateForSave(doc).length === 0);
+
+  doc.apply(setKeys(doc, built.ids[0], { gap: '24px' }, { namespace: 'style' }));
+  const section = doc.node(built.ids[0]) as unknown as {
+    responsive: Record<string, { style?: Record<string, unknown> }>;
+    style: Record<string, unknown>;
+  };
+  check('sb_set writes per breakpoint, not at base', section.responsive.desktop?.style?.gap === '24px' && section.style.gap === undefined);
+
+  let refused = false;
+  try {
+    setKeys(doc, built.ids[0], { gap: '1px' }, { namespace: 'style', base: true });
+  } catch {
+    refused = true;
+  }
+  check('a base-only write of a quantity is REFUSED', refused);
+
   console.error('ALL GOOD');
 }
 

@@ -53,8 +53,17 @@ cũng bị từ chối. `sb_connect` cho biết bạn đang có nửa nào.
 | `sb_site_list` | Liệt kê site tài khoản vận hành được |
 | `sb_api_find` | Tìm operation theo ý định — trả về schema tham số thật, credential cần dùng, và cảnh báo rõ ràng khi tài liệu của nền tảng không mô tả request body |
 | `sb_api_call` | Chạy một operation. Mặc định chạy khô, không gửi gì |
+| `sb_page_open` | Mở một trang để sửa và trả về outline |
+| `sb_outline` | Trang đang mở dạng cây nén — không bao giờ dump tài liệu thô |
+| `sb_node_read` | Một node đầy đủ, kèm cảnh báo nếu nó là global dùng chung |
+| `sb_catalog_search` | Tìm element theo việc nó cần làm, dùng chính AI hints của nền tảng |
+| `sb_traits_for` | Element nhận nhóm trait nào, kèm default và luật chứa con |
+| `sb_add` | Thêm một element — hoặc cả cây con lồng nhau — trong một lần gọi |
+| `sb_set` | Ghi style/config/specials. Mặc định theo breakpoint |
+| `sb_move` | Chuyển node sang cha khác |
+| `sb_remove` | Xoá node và cả cây con |
 
-Bốn tool, **310 operation**. `sb_api_find` là một chỉ mục chứ không phải mỗi endpoint một
+Mười ba tool, **310 operation API**. `sb_api_find` là một chỉ mục chứ không phải mỗi endpoint một
 tool, nên danh sách tool vẫn ngắn trong khi mọi thứ nền tảng làm được vẫn với tới — và
 operation mới thêm bên nền tảng sẽ tự có sau lần `npm run codegen` kế tiếp.
 
@@ -84,10 +93,25 @@ npm run smoke     # tự kiểm offline; phải in ALL GOOD
 Hướng dẫn đóng góp: [`CLAUDE.md`](./CLAUDE.md). Lý do thiết kế:
 [`docs/superpowers/specs/`](./docs/superpowers/specs/).
 
+## Thiết kế an toàn
+
+Bốn luật của nền tảng hỏng **im lặng** nếu client không biết, nên chúng được viết thành code
+có test chứ không phải lời khuyên:
+
+- **Thứ tự băng** — con của ROOT phải đọc `[header][middle][footer]`, sai là nền tảng từ
+  chối mọi lần lưu.
+- **Site overlay** (cart drawer, pop-up) được ghép lên ROOT lúc đọc và bóc ra lúc ghi; nó bị
+  loại khỏi mọi luật cấp ROOT và không sửa được qua bộ page tool.
+- **Global section** là master dùng chung — sửa một cái là đổi mọi trang mang nó, và publish
+  thì lan. Mọi kết quả đụng tới nó đều nói rõ.
+- **Luật responsive** — đại lượng thị giác ghi ở base sẽ hiện trên canvas rồi biến mất lúc
+  publish, nên `sb_set` mặc định ghi theo breakpoint và từ chối ghi base cho mọi thứ không
+  phải định danh.
+
 ## Trạng thái
 
-Giai đoạn 1 trên 3. Đã xong: xác thực, chỉ mục API sinh tự động, và với tới toàn bộ API.
-Tiếp theo: tài liệu trang (model, giao thức patch, builder), rồi socket live-edit, hiện
+Giai đoạn 1 và 2 trên 3. Đã xong: xác thực, chỉ mục API sinh tự động, với tới toàn bộ API,
+tài liệu trang, giao thức patch, builder, và bốn cái bẫy. Tiếp theo: socket live-edit, hiện
 diện realtime, và vòng lặp tự nhìn ảnh chụp.
 
 MIT.
