@@ -21,6 +21,17 @@ describe('previewUrl()', () => {
     expect(await previewUrl(ctxWith(f), 's1', 'pg_1')).toBe('http://store/_wb/preview?t=abc');
   });
 
+  it('resolves a RELATIVE link against the API base - dev returns a path, not a url', async () => {
+    const f = vi.fn(
+      async () =>
+        new Response(JSON.stringify({ preview: { url: '/_wb/preview?t=abc' } }), {
+          status: 200,
+          headers: { 'content-type': 'application/json' },
+        }),
+    ) as unknown as typeof fetch;
+    expect(await previewUrl(ctxWith(f), 's1', 'pg_1')).toBe('http://x/_wb/preview?t=abc');
+  });
+
   it('says what is missing when the server sends no url', async () => {
     const f = vi.fn(
       async () =>
@@ -38,14 +49,17 @@ describe('previewUrl()', () => {
 // a test skip quietly and read as green.
 describe.runIf(process.env.SB_BROWSER_TEST === '1')('shoot()', () => {
   it('returns a png and the real bounding box of every data-node-id', async () => {
+    // Shaped like the RENDERER's own output: node id as the HTML id, type as a
+    // leading wb- class. The `nope` div proves an arbitrary id is not a node.
     const html =
-      '<div data-node-id="fs_1" data-node-type="flex-section" style="width:300px;height:120px"></div>';
+      '<section id="fs_1a2b3c4d" class="wb-flex-section" style="width:300px;height:120px"></section>' +
+      '<div id="nope" style="width:10px;height:10px"></div>';
     const shots = await shoot(`data:text/html,${encodeURIComponent(html)}`, { widths: [1440] });
     expect(shots.length).toBe(1);
     expect(shots[0].width).toBe(1440);
     expect(shots[0].pngBase64.length).toBeGreaterThan(100);
     expect(shots[0].boxes).toEqual([
-      { id: 'fs_1', type: 'flex-section', x: 8, y: 8, w: 300, h: 120 },
+      { id: 'fs_1a2b3c4d', type: 'flex-section', x: 8, y: 8, w: 300, h: 120 },
     ]);
   }, 30_000);
 });

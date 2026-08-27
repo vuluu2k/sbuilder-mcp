@@ -28,8 +28,28 @@ describe('PageDoc', () => {
     expect(d.has('tx_1')).toBe(true);
   });
 
-  it('refuses a document with no root node rather than healing it', () => {
-    expect(() => PageDoc.from({ schema_version: 2, root_node_id: 'nope', nodes: {} })).toThrow(/root/i);
+  it('seeds ROOT for a brand-new page, which is how the server hands one over', () => {
+    // The server's own emptyDocument. An agent that just created a page must be
+    // able to open it; there is nothing here to race with.
+    const d = PageDoc.from({ schema_version: 1, root_node_id: '', nodes: {} });
+    expect(d.doc.root_node_id).toBe('ROOT');
+    expect(d.node('ROOT').data.type).toBe('root');
+    expect(d.node('ROOT').data.nodes).toEqual([]);
+    expect(d.outline()).toEqual([]);
+  });
+
+  it('refuses a DAMAGED document - nodes present, root naming none of them', () => {
+    expect(() =>
+      PageDoc.from({
+        schema_version: 2,
+        root_node_id: 'nope',
+        nodes: { a: { id: 'a', data: { type: 'text', parent: null, nodes: [] }, specials: {} } },
+      }),
+    ).toThrow(/damaged/i);
+  });
+
+  it('refuses an empty-nodes document that still claims a root', () => {
+    expect(() => PageDoc.from({ schema_version: 2, root_node_id: 'nope', nodes: {} })).toThrow(/damaged/i);
   });
 
   it('refuses something that is not a document at all', () => {

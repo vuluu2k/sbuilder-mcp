@@ -34,13 +34,42 @@ export class PageDoc {
       );
     }
     const d = JSON.parse(JSON.stringify(raw)) as DocLike;
+
+    // A BRAND-NEW page comes back as {"schema_version":1,"root_node_id":"","nodes":{}}
+    // — the server's `emptyDocument`, because it treats the document as opaque
+    // JSONB and will not synthesize node shapes. Seed the same ROOT the editor's
+    // own `seedRoot` does, id and all.
+    //
+    // This used to throw, on the reasoning that healing here would race the
+    // editor's hydrate path. Running it against a live server showed the cost:
+    // an agent that had just CREATED a page could not open it, which is the
+    // first thing anyone connecting an agent does. And there is no race to lose
+    // — an empty document has nothing to disagree with, and whichever side seeds
+    // first is the tree the other then loads.
+    //
+    // The genuinely broken case is still refused below: a document that HAS
+    // nodes but whose root_node_id names none of them is damage, not emptiness,
+    // and inventing a root there would strand every existing node as an orphan.
+    if (!d.root_node_id && Object.keys(d.nodes).length === 0) {
+      d.root_node_id = 'ROOT';
+      d.nodes.ROOT = {
+        id: 'ROOT',
+        data: { type: 'root', parent: null, nodes: [] },
+        specials: {},
+        // The remaining namespaces the platform's own makeRoot writes. Spread
+        // through an index signature because NodeLike models only what the tree
+        // walk reads — the document carries more, and a node missing them is a
+        // node the renderer cannot draw.
+        ...({ style: {}, config: {}, responsive: {}, events: [], bindings: [] } as object),
+      } as DocLike['nodes'][string];
+      if (!d.schema_version) d.schema_version = 2;
+    }
+
     if (!d.root_node_id || !d.nodes[d.root_node_id]) {
-      // Deliberately NOT healed. The editor repairs rootless documents on its own
-      // hydrate path, and inventing a root here would put two different repairs
-      // in a race to define the same tree.
       throw new Error(
-        `sbuilder: document has no root node (root_node_id=${JSON.stringify(d.root_node_id)}). ` +
-          'Open the page in the editor once; its hydrate path repairs this.',
+        `sbuilder: document is damaged — root_node_id=${JSON.stringify(d.root_node_id)} names no ` +
+          `node, but ${Object.keys(d.nodes).length} nodes are present. Open the page in the ` +
+          'editor once; its hydrate path repairs this.',
       );
     }
     return new PageDoc(d);

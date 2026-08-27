@@ -21,12 +21,18 @@ export async function previewUrl(
     token: siteToken(ctx),
     fetchImpl: ctx.fetchImpl,
   })) as { preview?: { url?: string } };
-  const url = out?.preview?.url;
-  if (!url) {
+  const link = out?.preview?.url;
+  if (!link) {
     throw new Error(
       'sbuilder: the server returned no preview url for this page. A page with no saved draft ' +
         'has no preview — save it first.',
     );
   }
-  return url;
+  // The server returns a RELATIVE link in dev (`/_wb/preview?t=…`) and an
+  // absolute one in production, where the preview is served from the storefront
+  // origin rather than the API's. Resolving against the API base handles both:
+  // `new URL` leaves an absolute input untouched. Passing the raw value to
+  // Playwright throws "Cannot navigate to invalid URL", which is where this was
+  // found — running it, not reading it.
+  return new URL(link, ctx.base).toString();
 }
