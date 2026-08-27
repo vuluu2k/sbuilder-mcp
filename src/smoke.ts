@@ -83,6 +83,40 @@ export async function runSmoke(): Promise<void> {
   }
   check('a base-only write of a quantity is REFUSED', refused);
 
+  const { BINDING_SOURCES } = await import('./catalog/elements.generated.js');
+  check('binding sources are populated', BINDING_SOURCES.length > 15);
+
+  const { bindNode } = await import('./tools/live.js');
+  const bd = PageDoc.from({
+    schema_version: 2,
+    root_node_id: 'rt',
+    nodes: {
+      rt: {
+        id: 'rt',
+        data: { type: 'root', parent: null, nodes: ['he_1'], isCanvas: true, hidden: false, custom: {} },
+        style: {}, config: {}, specials: {}, responsive: {}, events: [], bindings: [],
+      },
+      he_1: {
+        id: 'he_1',
+        data: { type: 'heading', parent: 'rt', nodes: [], isCanvas: false, hidden: false, custom: {} },
+        style: {}, config: {}, specials: {}, responsive: {}, events: [], bindings: [],
+      },
+    },
+  });
+  bd.apply(bindNode(bd, 'he_1', 'product.title', 'specials.text'));
+  check(
+    'a valid binding lands',
+    (bd.node('he_1') as unknown as { bindings: unknown[] }).bindings.length === 1,
+  );
+
+  let bindRefused = false;
+  try {
+    bindNode(bd, 'he_1', 'product.title', 'style.color');
+  } catch {
+    bindRefused = true;
+  }
+  check('a non-specials binding field is REFUSED', bindRefused);
+
   console.error('ALL GOOD');
 }
 

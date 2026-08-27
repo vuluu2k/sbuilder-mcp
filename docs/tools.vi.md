@@ -153,3 +153,50 @@ Bốn luật của nền tảng, được viết thành code có test chứ khô
 
 Cộng thêm tính toàn vẹn cây: không có id con trỏ vào hư không, không có con trỏ cha mâu
 thuẫn với danh sách con, không có node nào không với tới được từ ROOT.
+
+---
+
+# Sửa trực tiếp và thị giác
+
+## `sb_live_join`
+
+`site_id`. Vào phòng live-edit của editor với tư cách một peer nhìn thấy được. Từ đó mọi
+`sb_add` / `sb_set` / `sb_move` / `sb_remove` / `sb_bind` **đồng thời phát ra thành live op**,
+nên ai đang mở editor sẽ thấy trang mọc dần, và con trỏ của agent di chuyển tới node nó đang
+sửa — với điều kiện đã có số đo thật từ `sb_look`. Con trỏ với toạ độ bịa ra chỉ là diễn, nên
+khi chưa đo thì con trỏ đơn giản là không nhúc nhích.
+
+**Luật nhường.** Client này không bao giờ là nguồn chân lý về tài liệu. Nó không trả lời yêu
+cầu snapshot cho ai, và không phát checkpoint hội tụ nào của riêng nó. Gặp bất kỳ dấu hiệu
+lệch nào — lỗ trong `seq` của server, checkpoint đến đúng seq của nó, một lần lưu bị từ chối
+— nó vứt bản của mình, kéo lại từ server, và **để lần lưu kế tiếp báo lỗi to** để người gọi
+đọc lại rồi làm lại. An toàn khi chạy cạnh người thật; người thật thắng mọi bất đồng.
+
+## `sb_look`
+
+| Tham số | Kiểu | Ghi chú |
+| --- | --- | --- |
+| `widths` | number[]? | Mặc định 1440 / 768 / 390 |
+| `with_boxes` | boolean? | Mặc định true |
+
+**Lưu trước**, rồi mint link preview đã ký và render trang bằng chính renderer Go của nền
+tảng — nên bức ảnh là của *bản nháp đã lưu*, không bao giờ là của sửa đổi chưa lưu. Trả về
+một ảnh mỗi bề rộng, kèm bounding box đo được của từng `[data-node-id]`.
+
+Cần **Google Chrome của hệ thống**: `playwright-core` không kèm trình duyệt nào nên lúc cài
+không tải gì. Nếu thiếu Chrome, tool nói đích danh chứ không trả ảnh trắng — một agent đi
+chấm bức trang nó chưa từng nhìn thấy còn tệ hơn một agent chịu dừng.
+
+## `sb_bind`
+
+| Tham số | Kiểu | Ghi chú |
+| --- | --- | --- |
+| `id` | string | |
+| `source` | string | Một trong 22 khoá renderer cung cấp — `product.title`, `product.price`, `category.title`, `article.title`, … |
+| `field` | string | Luôn là `specials.<key>` |
+| `dry_run` | boolean? | Mặc định true |
+
+Cả hai tham số đều được kiểm với từ vựng sinh tự động, vì cả hai lỗi đều **im lặng**:
+`source` lạ sẽ giải ra rỗng và hiện placeholder của chính element (không phân biệt được với
+"đang tải"), còn `field` ngoài `specials` thì được lưu, được ghi, được publish, và bị bỏ qua
+mãi mãi — `applyBindings` đọc namespace từ field rồi bỏ qua mọi thứ khác.

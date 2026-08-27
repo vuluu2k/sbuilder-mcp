@@ -62,8 +62,11 @@ the private API is refused too. `sb_connect` reports which half you have.
 | `sb_set` | Write style/config/specials. Per breakpoint by default |
 | `sb_move` | Move a node to another parent |
 | `sb_remove` | Remove a node and its subtree |
+| `sb_live_join` | Join the editor's live-edit room as a visible peer — edits then appear live |
+| `sb_look` | Save, render, and return screenshots plus measured node boxes |
+| `sb_bind` | Bind a node's content to real store data |
 
-Thirteen tools, **310 API operations**. `sb_api_find` is an index rather than a tool per endpoint,
+Sixteen tools, **310 API operations**. `sb_api_find` is an index rather than a tool per endpoint,
 so the tool list stays short while everything the platform can do stays reachable — and
 operations added to the platform arrive with the next `npm run codegen`.
 
@@ -111,8 +114,11 @@ here as tested code rather than advice:
 
 ## Status
 
-Phases 1 and 2 of three. Shipped: authentication, the generated API index, full API reach,
-the page document, the patch protocol, the builder, and the four traps. Next: the live-edit
-socket, presence, and a screenshot feedback loop.
+All three phases shipped: authentication and full API reach; the page document, patch
+protocol, builder and the four traps; the live-edit socket, the yield rule, and the vision
+loop.
+
+Requires **Node ≥22** (the global `WebSocket`) and, for `sb_look` only, **system Google
+Chrome** — `playwright-core` bundles no browser, so installing downloads nothing.
 
 MIT.

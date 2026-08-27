@@ -62,8 +62,11 @@ cũng bị từ chối. `sb_connect` cho biết bạn đang có nửa nào.
 | `sb_set` | Ghi style/config/specials. Mặc định theo breakpoint |
 | `sb_move` | Chuyển node sang cha khác |
 | `sb_remove` | Xoá node và cả cây con |
+| `sb_live_join` | Vào phòng live-edit của editor như một peer nhìn thấy được — sửa gì hiện ngay |
+| `sb_look` | Lưu, render, trả về ảnh chụp kèm box đo được của từng node |
+| `sb_bind` | Gắn nội dung một node vào dữ liệu cửa hàng thật |
 
-Mười ba tool, **310 operation API**. `sb_api_find` là một chỉ mục chứ không phải mỗi endpoint một
+Mười sáu tool, **310 operation API**. `sb_api_find` là một chỉ mục chứ không phải mỗi endpoint một
 tool, nên danh sách tool vẫn ngắn trong khi mọi thứ nền tảng làm được vẫn với tới — và
 operation mới thêm bên nền tảng sẽ tự có sau lần `npm run codegen` kế tiếp.
 
@@ -110,8 +113,10 @@ có test chứ không phải lời khuyên:
 
 ## Trạng thái
 
-Giai đoạn 1 và 2 trên 3. Đã xong: xác thực, chỉ mục API sinh tự động, với tới toàn bộ API,
-tài liệu trang, giao thức patch, builder, và bốn cái bẫy. Tiếp theo: socket live-edit, hiện
-diện realtime, và vòng lặp tự nhìn ảnh chụp.
+Cả ba giai đoạn đã xong: xác thực và với tới toàn bộ API; tài liệu trang, giao thức patch,
+builder và bốn cái bẫy; socket live-edit, luật nhường, và vòng lặp thị giác.
+
+Cần **Node ≥22** (WebSocket toàn cục) và, chỉ với `sb_look`, **Google Chrome của hệ thống** —
+`playwright-core` không kèm trình duyệt nào nên lúc cài không tải gì.
 
 MIT.

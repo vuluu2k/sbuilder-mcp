@@ -31,6 +31,11 @@ npm start         # node dist/index.js (stdio server)
 
 ## Invariants — do not wait for a review to be told these
 
+- **Node ≥22**, because this repo uses the GLOBAL `WebSocket`, unflagged from 22. The
+  alternative was a `ws` dependency for a runtime the platform's own dev stack already
+  exceeds; a stated version floor is the cheaper cost.
+- **`playwright-core` + `channel: 'chrome'`** — the system browser, so `npm install`
+  downloads nothing. A missing Chrome is reported by name, never degraded to a blank image.
 - **Package `@sbuilder/mcp`, bin `sb-mcp`, server name `sbuilder`.** Never the internal
   `@webbuilder/*` scope: that scope is private to the platform monorepo and an npm name is
   effectively permanent once taken.
@@ -77,6 +82,14 @@ that accounts for them.
   `schema_version ?? 1` fallback. Copy the working client; never guess a body.
 - **The element registry holds 85 types, and `getElementAI` covers 85/85.** The directory
   has 95 entries because 14 are loose `.ts` files, not elements.
+- **The wire caps frames by KIND.** `ops` and `snap` may reach 4 MiB; EVERY other kind is
+  capped at 64 KiB, and exceeding it CLOSES the socket (`StatusMessageTooBig`) rather than
+  rejecting one frame. Split a large batch.
+- **An `ops` frame with an empty `pageId` or empty `ops[]` is dropped SILENTLY** by the
+  server (a bare `continue`), so sending one is indistinguishable from success. `publish`
+  guards both.
+- **`applyBindings` honours only the `specials` namespace.** A binding whose `field` names
+  any other namespace is stored, saved, published, and ignored forever.
 - **`DOC_SCHEMA_VERSION` is 2** and lives in `editor/src/theme/legacyScopes.ts`, not in the
   schema package. Codegen reads it with a regex — importing an editor module would drag Vue
   into a build script for one integer.
@@ -100,6 +113,23 @@ because this platform treats an unproven guard as indistinguishable from an abse
    written base-only renders on the canvas and vanishes on publish. `setKeys` writes per
    breakpoint by default and REFUSES a base write of anything that is not an identity key.
 
+## The yield rule
+
+The live-edit client is NEVER the authority on a document. It does not answer `snapreq` for
+anyone and publishes no convergence checkpoint of its own. On any evidence of divergence —
+a gap in `seq`, a checkpoint at its own seq, a rejected save — it discards its copy,
+re-pulls, and makes the next save FAIL LOUDLY so the caller re-reads and reapplies.
+
+This is what lets `src/live/session.ts` be one small class instead of the editor's outbox
+deferral plus inbox arbitration plus "who pulls" tie-break — roughly a thousand lines whose
+entire purpose is arbitrating between two EQUALLY authoritative editors. Alone in the room
+the agent is the sole writer and the rule costs nothing, so it is a mode rather than a
+permanent sacrifice. Do not "fix" it by making this client answer snapshots.
+
+A tool that writes must go through `PageSession.applyAndPublish`, never `doc.apply`
+directly — otherwise the local document is right, the save is right, and only the humans
+watching see nothing happen.
+
 ## Adding a tool
 
 1. Put it in a group under `src/tools/*.ts`, registered via `server.tool(...)`.
@@ -116,11 +146,14 @@ and check conventions; never edits).
 
 ## Phases
 
-Phase 1 (shipped): auth, the generated API index, `sb_api_find`/`sb_api_call`, session
-tools. Phase 2 (shipped): the element catalog, the patch core, overlay-aware tree walking,
-the four traps, the document, the builder, save validation, and the nine page tools.
-Phase 3: the live-edit socket, presence, the yield rule, and the Playwright vision loop.
-Plans live in `docs/superpowers/plans/`.
+All three phases are shipped, and their plans live in `docs/superpowers/plans/`:
+auth and full API reach; the element catalog, patch core, four traps, document, builder,
+validation and page tools; the live-edit socket, the yield rule, the vision loop and
+`sb_bind`. Sixteen tools reach 310 API operations.
+
+`SB_BROWSER_TEST=1 npm test` adds the one test that launches Chrome. Run it after touching
+`src/vision/**` — the default suite skips it, and a skip that reads as green is the failure
+this repo keeps closing.
 
 Deferred with the seam left open: `expand`/`compact` sparse authoring (`createNode` already
 seeds from `meta.defaults`, so the write-path win is banked; the read-path inverse waits for

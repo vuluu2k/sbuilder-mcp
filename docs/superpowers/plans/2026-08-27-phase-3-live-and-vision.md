@@ -101,13 +101,13 @@ Two bugs the editor already shipped and fixed are designed out here from the sta
   forever`: a 2 Hz reconnect storm with no `onerror` (a policy close is not an error) and
   nothing at all in any UI.
 
-- [ ] **Step 1: Bump the engine floor**
+- [x] **Step 1: Bump the engine floor**
 
 In `package.json`: `"engines": { "node": ">=22" }`, and add a line to `CLAUDE.md`'s
 invariants saying why (global `WebSocket` is unflagged from 22; the alternative was a `ws`
 dependency).
 
-- [ ] **Step 2: Write the failing test**
+- [x] **Step 2: Write the failing test**
 
 ```ts
 // test/socket.test.ts
@@ -190,12 +190,12 @@ describe('RealtimeSocket', () => {
 });
 ```
 
-- [ ] **Step 3: Run it and watch it fail**
+- [x] **Step 3: Run it and watch it fail**
 
 Run: `npx vitest run test/socket.test.ts`
 Expected: FAIL — `Cannot find module '../src/transport/socket.js'`.
 
-- [ ] **Step 4: Write `src/transport/socket.ts`**
+- [x] **Step 4: Write `src/transport/socket.ts`**
 
 ```ts
 /**
@@ -309,12 +309,12 @@ export class RealtimeSocket {
 }
 ```
 
-- [ ] **Step 5: Run the test and watch it pass**
+- [x] **Step 5: Run the test and watch it pass**
 
 Run: `npx vitest run test/socket.test.ts`
 Expected: PASS, 6 tests.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add src/transport/socket.ts test/socket.test.ts package.json CLAUDE.md
@@ -333,7 +333,7 @@ git commit -m "feat(transport): the live-edit socket, with the editor's two reco
 - Consumes: `RealtimeSocket`, `RealtimeEvent`; `Patch`, `syncable` from `src/core/patch.js`; `PageDoc`.
 - Produces: `class LiveSession { constructor(socket: RealtimeSocket, opts: LiveOpts); start(pageId: string): void; publish(patches: Patch[]): void; readonly peers: Peer[]; readonly maxSeq: number; readonly humanPresent: boolean; readonly pendingAcks: number }`; `interface LiveOpts { onRemote(patches: Patch[]): void; onDesync(reason: string): void; selfName?: string }`; `interface Peer { id: string; userId: string; name: string; color: string; pageId: string }`.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```ts
 // test/live-session.test.ts
@@ -469,12 +469,12 @@ describe('LiveSession', () => {
 });
 ```
 
-- [ ] **Step 2: Run it and watch it fail**
+- [x] **Step 2: Run it and watch it fail**
 
 Run: `npx vitest run test/live-session.test.ts`
 Expected: FAIL — `Cannot find module '../src/live/session.js'`.
 
-- [ ] **Step 3: Write `src/live/session.ts`**
+- [x] **Step 3: Write `src/live/session.ts`**
 
 ```ts
 import { randomBytes } from 'node:crypto';
@@ -651,12 +651,12 @@ is the conservative direction for a client whose repair is "re-pull from HTTP", 
 comment must say so. If it proves noisy in practice, the fix is to compute a digest, not to
 delete the branch.
 
-- [ ] **Step 4: Run the test and watch it pass**
+- [x] **Step 4: Run the test and watch it pass**
 
 Run: `npx vitest run test/live-session.test.ts`
 Expected: PASS, 10 tests.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/live/session.ts test/live-session.test.ts
@@ -685,7 +685,7 @@ The bounding boxes are not a bonus feature. `cursor` frames carry **layout pixel
 without a real measurement an agent cursor is a random number. Measured here, it moves to
 the thing the agent is about to edit.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```ts
 // test/vision.test.ts
@@ -741,12 +741,12 @@ describe.runIf(process.env.SB_BROWSER_TEST === '1')('shoot()', () => {
 });
 ```
 
-- [ ] **Step 2: Run it and watch it fail**
+- [x] **Step 2: Run it and watch it fail**
 
 Run: `npx vitest run test/vision.test.ts`
 Expected: FAIL — `Cannot find module '../src/vision/preview.js'`.
 
-- [ ] **Step 3: Write `src/vision/preview.ts`**
+- [x] **Step 3: Write `src/vision/preview.ts`**
 
 ```ts
 import { request } from '../transport/http.js';
@@ -782,7 +782,7 @@ export async function previewUrl(
 }
 ```
 
-- [ ] **Step 4: Write `src/vision/shoot.ts`**
+- [x] **Step 4: Write `src/vision/shoot.ts`**
 
 ```ts
 import { chromium, type Browser } from 'playwright-core';
@@ -865,14 +865,14 @@ export async function shoot(url: string, opts: { widths?: number[] } = {}): Prom
 }
 ```
 
-- [ ] **Step 5: Run both test groups**
+- [x] **Step 5: Run both test groups**
 
 Run: `npx vitest run test/vision.test.ts` — expected PASS, 2 tests (the browser group skipped).
 Run: `SB_BROWSER_TEST=1 npx vitest run test/vision.test.ts` — expected PASS, 3 tests.
 
 Both must be run. The second is the one that proves the vision loop exists.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add src/vision package.json package-lock.json test/vision.test.ts
@@ -895,7 +895,7 @@ git commit -m "feat(vision): preview links and Chrome screenshots with real node
 `specials` namespace, and a `source` the render scope does not provide is a binding that
 silently does nothing. Both facts become validation rather than documentation.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```ts
 // test/binding-sources.test.ts
@@ -918,7 +918,7 @@ describe('BINDING_SOURCES', () => {
 });
 ```
 
-- [ ] **Step 2: Extend the generator**
+- [x] **Step 2: Extend the generator**
 
 Add to `scripts/gen-catalog.ts`, near `readDocSchemaVersion`:
 
@@ -949,12 +949,12 @@ And append to the generated elements file, inside the same template:
 export const BINDING_SOURCES: string[] = ${JSON.stringify(readBindingSources(repo), null, 2)};
 ```
 
-- [ ] **Step 3: Run the generator and the test**
+- [x] **Step 3: Run the generator and the test**
 
 Run: `WB_REPO=/Volumes/workspace/webcake/web_builder npm run codegen && npx vitest run test/binding-sources.test.ts`
 Expected: generator reports the element line as before; test PASSES, 2 tests.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add scripts/gen-catalog.ts src/catalog/elements.generated.ts test/binding-sources.test.ts
@@ -980,7 +980,7 @@ The page session gains an optional live channel. When one is attached, every wri
 publishes its patches to the room **as well as** applying them locally — that is what makes
 the agent visible.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```ts
 // test/live-tools.test.ts
@@ -1028,12 +1028,12 @@ describe('bindNode()', () => {
 });
 ```
 
-- [ ] **Step 2: Run it and watch it fail**
+- [x] **Step 2: Run it and watch it fail**
 
 Run: `npx vitest run test/live-tools.test.ts`
 Expected: FAIL — `Cannot find module '../src/tools/live.js'`.
 
-- [ ] **Step 3: Write `src/tools/live.ts`**
+- [x] **Step 3: Write `src/tools/live.ts`**
 
 ```ts
 import { randomBytes } from 'node:crypto';
@@ -1166,7 +1166,7 @@ export function registerLiveTools(
 }
 ```
 
-- [ ] **Step 4: Extend `PageSession` in `src/tools/page.ts`**
+- [x] **Step 4: Extend `PageSession` in `src/tools/page.ts`**
 
 Add the live channel and the box memo:
 
@@ -1239,7 +1239,7 @@ And in `save()`, before validating:
 
 Then replace every `d.apply(patches)` in the write tools with `session.applyAndPublish(patches)`.
 
-- [ ] **Step 5: Register the group in `src/server.ts`**
+- [x] **Step 5: Register the group in `src/server.ts`**
 
 `registerPageTools` must return its `PageSession` so `registerLiveTools` can share it:
 
@@ -1259,17 +1259,17 @@ Add to `INSTRUCTIONS`:
   boxes — judge the design from those, do not guess.
 ```
 
-- [ ] **Step 6: Run the test and the gate**
+- [x] **Step 6: Run the test and the gate**
 
 Run: `npx vitest run test/live-tools.test.ts && npm run build && npm test && npm run smoke`
 Expected: live-tools 4 tests PASS; build clean; whole suite green; smoke `ALL GOOD`.
 
-- [ ] **Step 7: Verify the tool list over the real protocol**
+- [x] **Step 7: Verify the tool list over the real protocol**
 
 Run the stdio probe.
 Expected: **16 tools** — the 13 from Phases 1–2 plus `sb_live_join`, `sb_look`, `sb_bind`.
 
-- [ ] **Step 8: Commit**
+- [x] **Step 8: Commit**
 
 ```bash
 git add src/tools/live.ts src/tools/page.ts src/server.ts test/live-tools.test.ts
@@ -1283,7 +1283,7 @@ git commit -m "feat(tools): sb_live_join, sb_look and sb_bind; writes publish to
 **Files:**
 - Modify: `src/smoke.ts`, `CLAUDE.md`, `README.md`, `README.vi.md`, `docs/tools.md`, `docs/tools.vi.md`, `.claude/skills/sbuilder-mcp-tools/SKILL.md`
 
-- [ ] **Step 1: Extend the smoke gate (offline only)**
+- [x] **Step 1: Extend the smoke gate (offline only)**
 
 ```ts
   const { BINDING_SOURCES } = await import('./catalog/elements.generated.js');
@@ -1313,14 +1313,14 @@ git commit -m "feat(tools): sb_live_join, sb_look and sb_bind; writes publish to
 
 Smoke must stay offline — it never launches Chrome and never opens a socket.
 
-- [ ] **Step 2: Document the three tools**
+- [x] **Step 2: Document the three tools**
 
 Add `sb_live_join`, `sb_look` and `sb_bind` to `docs/tools.md`, `docs/tools.vi.md`, and both
 README tables. State: `sb_look` **saves first** (the preview renders the stored draft, so an
 unsaved edit is not in the picture); `sb_look` needs system Chrome and says so by name if it
 is missing; `sb_live_join` makes the agent visible and always yields.
 
-- [ ] **Step 3: Update `CLAUDE.md` and the skill**
+- [x] **Step 3: Update `CLAUDE.md` and the skill**
 
 Move Phase 3 to shipped. Add to the platform-facts list: the frame-size split (64 KiB for
 everything but `ops`/`snap` at 4 MiB), the silent drop of an empty `ops` batch, and that
@@ -1328,13 +1328,13 @@ everything but `ops`/`snap` at 4 MiB), the silent drop of an empty `ops` batch, 
 section. In `.claude/skills/sbuilder-mcp-tools/SKILL.md`, add: a tool that writes must go
 through `applyAndPublish`, never `doc.apply` directly, or the room sees nothing.
 
-- [ ] **Step 4: Run the full gate, both ways**
+- [x] **Step 4: Run the full gate, both ways**
 
 Run: `npm run build && npm test && npm run smoke`
 Run: `SB_BROWSER_TEST=1 npm test`
 Expected: both green; smoke `ALL GOOD`.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add -A
