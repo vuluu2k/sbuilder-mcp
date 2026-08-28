@@ -1,4 +1,4 @@
-# `@sbuilder/mcp` — design
+# `sbuilder-mcp` — design
 
 Date: 2026-08-27 · Status: approved, pre-implementation
 

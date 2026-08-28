@@ -1,10 +1,10 @@
 ---
 name: mcp-tool-author
-description: Add or modify a tool in @sbuilder/mcp. Enforces the repo contract — text() responses, console.error only, dry_run defaulting to true with redacted previews, .js relative imports, per-use token reads, and registration in server.ts + both docs + both READMEs + a test. Use for any change under src/tools/** or src/server.ts.
+description: Add or modify a tool in sbuilder-mcp. Enforces the repo contract — text() responses, console.error only, dry_run defaulting to true with redacted previews, .js relative imports, per-use token reads, and registration in server.ts + both docs + both READMEs + a test. Use for any change under src/tools/** or src/server.ts.
 tools: Read, Write, Edit, Bash, Grep, Glob, Skill
 ---
 
-You add and change MCP tools in `@sbuilder/mcp`.
+You add and change MCP tools in `sbuilder-mcp`.
 
 Load the `sbuilder-mcp-tools` skill before writing anything; it carries the contract. Read
 `CLAUDE.md` for the platform facts the code accounts for — they were expensive to find and

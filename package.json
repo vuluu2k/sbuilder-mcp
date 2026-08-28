@@ -1,5 +1,5 @@
 {
-  "name": "@sbuilder/mcp",
+  "name": "sbuilder-mcp",
   "version": "0.1.0",
   "description": "MCP server that designs and operates a Store Builder site — pages, data, theme and publish — through the platform's own API and live-edit protocol.",
   "mcpName": "io.github.vuluu2k/sbuilder-mcp",
@@ -9,7 +9,11 @@
     "sb-mcp": "dist/index.js"
   },
   "files": [
-    "dist"
+    "dist",
+    "README.md",
+    "README.vi.md",
+    "LICENSE",
+    "CHANGELOG.md"
   ],
   "engines": {
     "node": ">=22"
@@ -24,7 +28,12 @@
     "smoke": "node dist/smoke.js",
     "test": "vitest run",
     "codegen": "tsx scripts/gen-catalog.ts",
-    "prepublishOnly": "npm run build && npm run smoke"
+    "prepublishOnly": "npm run build && npm run smoke",
+    "release": "node scripts/release.mjs",
+    "release:patch": "node scripts/release.mjs patch",
+    "release:minor": "node scripts/release.mjs minor",
+    "release:major": "node scripts/release.mjs major",
+    "release:dry": "node scripts/release.mjs --dry"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.30.0",
@@ -36,5 +45,22 @@
     "tsx": "^4.19.0",
     "typescript": "^5.6.0",
     "vitest": "^3.2.0"
-  }
+  },
+  "homepage": "https://github.com/vuluu2k/sbuilder-mcp#readme",
+  "bugs": {
+    "url": "https://github.com/vuluu2k/sbuilder-mcp/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/vuluu2k/sbuilder-mcp.git"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "store-builder",
+    "sbuilder",
+    "website-builder",
+    "ai-agent",
+    "page-builder"
+  ]
 }

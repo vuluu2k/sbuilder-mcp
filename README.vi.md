@@ -1,4 +1,4 @@
-# `@sbuilder/mcp`
+# `sbuilder-mcp`
 
 Máy chủ MCP chạy trên **stdio**, cho phép một AI agent vận hành trọn vẹn một site
 [Store Builder](https://sbuilder.io.vn) — thiết kế trang, đổ dữ liệu thật vào, tự nhìn kết
@@ -9,7 +9,7 @@ quả rồi xuất bản — mà không cần người bấm gì.
 ## Cài đặt
 
 ```bash
-npx -y @sbuilder/mcp
+npx -y sbuilder-mcp
 ```
 
 Claude Code / Claude Desktop:
@@ -19,7 +19,7 @@ Claude Code / Claude Desktop:
   "mcpServers": {
     "sbuilder": {
       "command": "npx",
-      "args": ["-y", "@sbuilder/mcp"],
+      "args": ["-y", "sbuilder-mcp"],
       "env": {
         "SB_API": "https://api.your-host",
         "SB_TOKEN": "wbk_…",

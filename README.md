@@ -1,4 +1,4 @@
-# `@sbuilder/mcp`
+# `sbuilder-mcp`
 
 An MCP **stdio** server that lets an AI agent operate a [Store Builder](https://sbuilder.io.vn)
 site end to end — design its pages, fill them with real data, look at the result, and
@@ -9,7 +9,7 @@ publish it — with no human clicking anything.
 ## Install
 
 ```bash
-npx -y @sbuilder/mcp
+npx -y sbuilder-mcp
 ```
 
 Claude Code / Claude Desktop:
@@ -19,7 +19,7 @@ Claude Code / Claude Desktop:
   "mcpServers": {
     "sbuilder": {
       "command": "npx",
-      "args": ["-y", "@sbuilder/mcp"],
+      "args": ["-y", "sbuilder-mcp"],
       "env": {
         "SB_API": "https://api.your-host",
         "SB_TOKEN": "wbk_…",

@@ -1,0 +1,46 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.vuluu2k/sbuilder-mcp",
+  "title": "Store Builder",
+  "description": "Design and operate a Store Builder site from an AI agent: build pages through the platform's own live-edit protocol, fill them with real store data, render them, and publish.",
+  "repository": {
+    "url": "https://github.com/vuluu2k/sbuilder-mcp",
+    "source": "github"
+  },
+  "websiteUrl": "https://github.com/vuluu2k/sbuilder-mcp#readme",
+  "version": "0.1.0",
+  "packages": [
+    {
+      "registryType": "npm",
+      "registryBaseUrl": "https://registry.npmjs.org",
+      "identifier": "sbuilder-mcp",
+      "version": "0.1.0",
+      "runtimeHint": "npx",
+      "transport": { "type": "stdio" },
+      "environmentVariables": [
+        {
+          "name": "SB_API",
+          "description": "Base URL of the Store Builder API. Defaults to http://localhost:8080.",
+          "isRequired": false
+        },
+        {
+          "name": "SB_TOKEN",
+          "description": "An API key from the store's Agent app (Apps → AI agent → Create key). Opens both the partner API and the private site API for that one store.",
+          "isSecret": true,
+          "isRequired": true
+        },
+        {
+          "name": "SB_EMAIL",
+          "description": "Optional. A platform account, only for account-level calls a key cannot make (listing sites, members, roles).",
+          "isRequired": false
+        },
+        {
+          "name": "SB_PASSWORD",
+          "description": "Optional. That account's password.",
+          "isSecret": true,
+          "isRequired": false
+        }
+      ]
+    }
+  ]
+}

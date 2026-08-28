@@ -1,9 +1,9 @@
 ---
 name: sbuilder-mcp-tools
-description: The tool-authoring contract for @sbuilder/mcp — where a tool lives, how it answers, the dry_run default, credential routing, and the three places a new tool must be registered. Triggers when adding, changing, or reviewing an MCP tool in this repo, touching src/tools/**, src/server.ts, or src/catalog/**.
+description: The tool-authoring contract for sbuilder-mcp — where a tool lives, how it answers, the dry_run default, credential routing, and the three places a new tool must be registered. Triggers when adding, changing, or reviewing an MCP tool in this repo, touching src/tools/**, src/server.ts, or src/catalog/**.
 ---
 
-# Authoring a tool in `@sbuilder/mcp`
+# Authoring a tool in `sbuilder-mcp`
 
 ## The gate
 

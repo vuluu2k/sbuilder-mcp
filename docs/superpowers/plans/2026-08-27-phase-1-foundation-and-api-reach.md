@@ -1,4 +1,4 @@
-# `@sbuilder/mcp` Phase 1 — Foundation & Full API Reach
+# `sbuilder-mcp` Phase 1 — Foundation & Full API Reach
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
@@ -24,7 +24,7 @@ This plan is Phase 1 of three. Each phase produces working, shippable software o
 
 Copied verbatim from the spec. Every task's requirements implicitly include this section.
 
-- Package `@sbuilder/mcp`, bin `sb-mcp`, MCP server name `sbuilder`. **Never** the internal `@webbuilder/*` scope — that scope is private to the platform monorepo and must not appear on a publishable package.
+- Package `sbuilder-mcp`, bin `sb-mcp`, MCP server name `sbuilder`. **Never** the internal `@webbuilder/*` scope — that scope is private to the platform monorepo and must not appear on a publishable package.
 - Env names carry the product's initials: `SB_API`, `SB_TOKEN`, `SB_EMAIL`, `SB_PASSWORD`. Plus `WB_REPO` for codegen only (a path to a `web_builder` checkout, never needed at runtime).
 - **Secrets come from env only.** The repo is public. No secret is ever written to a file, a log, or a tool result.
 - **stdout is the MCP channel.** Every log line is `console.error`. A stray `console.log` corrupts the protocol.
@@ -51,7 +51,7 @@ Copied verbatim from the spec. Every task's requirements implicitly include this
 
 ```json
 {
-  "name": "@sbuilder/mcp",
+  "name": "sbuilder-mcp",
   "version": "0.1.0",
   "description": "MCP server that designs and operates a Store Builder site — pages, data, theme and publish — through the platform's own API and live-edit protocol.",
   "mcpName": "io.github.vuluu2k/sbuilder-mcp",

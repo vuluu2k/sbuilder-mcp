@@ -1,4 +1,4 @@
-# CLAUDE.md — `@sbuilder/mcp`
+# CLAUDE.md — `sbuilder-mcp`
 
 Guidance for Claude Code when working in this repository.
 
@@ -11,7 +11,7 @@ human clicking anything.
 It is **not** a renderer. Every pixel comes from the platform's Go renderer; this server
 only ever holds the document and the screenshots.
 
-Published to npm as `@sbuilder/mcp`, binary `sb-mcp`. Runs via `npx -y @sbuilder/mcp`.
+Published to npm as `sbuilder-mcp`, binary `sb-mcp`. Runs via `npx -y sbuilder-mcp`.
 
 Design spec: `docs/superpowers/specs/2026-08-27-sbuilder-mcp-design.md`. Read it before
 changing anything structural — it records *why* each boundary is where it is.
@@ -36,7 +36,7 @@ npm start         # node dist/index.js (stdio server)
   exceeds; a stated version floor is the cheaper cost.
 - **`playwright-core` + `channel: 'chrome'`** — the system browser, so `npm install`
   downloads nothing. A missing Chrome is reported by name, never degraded to a blank image.
-- **Package `@sbuilder/mcp`, bin `sb-mcp`, server name `sbuilder`.** Never the internal
+- **Package `sbuilder-mcp`, bin `sb-mcp`, server name `sbuilder`.** Never the internal
   `@webbuilder/*` scope: that scope is private to the platform monorepo and an npm name is
   effectively permanent once taken.
 - **stdout is the MCP channel.** Every log line is `console.error`. One stray `console.log`

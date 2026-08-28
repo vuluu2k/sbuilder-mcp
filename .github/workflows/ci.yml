@@ -1,0 +1,24 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - run: npm test
+      - run: npm run smoke
+    # The browser test (SB_BROWSER_TEST=1) is deliberately NOT run here: it
+    # launches the system Chrome, and a runner without one would either fail a
+    # green build or be skipped into a false pass. It is a local gate, and
+    # CLAUDE.md says to run it after touching src/vision/**.

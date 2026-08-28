@@ -1,4 +1,4 @@
-# `@sbuilder/mcp` Phase 2 — The Page Document
+# `sbuilder-mcp` Phase 2 — The Page Document
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 

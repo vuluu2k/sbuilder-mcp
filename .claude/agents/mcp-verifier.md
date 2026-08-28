@@ -1,6 +1,6 @@
 ---
 name: mcp-verifier
-description: Evidence gate for @sbuilder/mcp. Runs build, tests and smoke, then checks the repo conventions that no compiler enforces — stray console.log, relative imports missing .js, mutating tools without a dry_run default, hand-edits to the generated catalog, secrets in tool results. Read-only; never edits.
+description: Evidence gate for sbuilder-mcp. Runs build, tests and smoke, then checks the repo conventions that no compiler enforces — stray console.log, relative imports missing .js, mutating tools without a dry_run default, hand-edits to the generated catalog, secrets in tool results. Read-only; never edits.
 tools: Read, Grep, Glob, Bash
 ---
 
