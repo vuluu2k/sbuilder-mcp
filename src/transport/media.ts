@@ -1,3 +1,4 @@
+import { identityHeaders } from './identity.js';
 import { readFile } from 'node:fs/promises';
 import { basename } from 'node:path';
 import { ApiError } from './http.js';
@@ -58,7 +59,14 @@ export async function uploadMedia(
   // make a valid upload unparseable at the other end.
   const res = await doFetch(`${ctx.base.replace(/\/$/, '')}/api/media/${encodeURIComponent(siteId)}`, {
     method: 'POST',
-    headers: { Authorization: `Bearer ${siteToken(ctx)}`, Accept: 'application/json' },
+    // Content-Type stays ABSENT — fetch writes it with the boundary it just
+    // built — but the identity headers belong here as much as on any other call:
+    // an install whose only traffic is image uploads is still an install.
+    headers: {
+      Authorization: `Bearer ${siteToken(ctx)}`,
+      Accept: 'application/json',
+      ...identityHeaders(),
+    },
     body: form,
   });
 

@@ -7,6 +7,7 @@
  * instead throws it away. A bare "Conflict" reaching the model is the failure
  * this file exists to prevent.
  */
+import { identityHeaders } from './identity.js';
 export interface RequestOpts {
   base: string;
   method: string;
@@ -65,7 +66,12 @@ export function buildUrl(base: string, path: string, query?: RequestOpts['query'
 
 export async function request(opts: RequestOpts): Promise<unknown> {
   const doFetch = opts.fetchImpl ?? fetch;
-  const headers: Record<string, string> = { Accept: 'application/json' };
+  // Identity rides on EVERY call rather than on a handshake of its own. There is
+  // no "connect" request to hang it off — the first thing this server does is
+  // whatever the agent asked for — and a separate announcement call would be one
+  // more thing that can fail while the real work succeeds, leaving a working
+  // install invisible on the operator's screen.
+  const headers: Record<string, string> = { Accept: 'application/json', ...identityHeaders() };
   if (opts.token) headers.Authorization = `Bearer ${opts.token}`;
   if (opts.body !== undefined) headers['Content-Type'] = 'application/json';
 

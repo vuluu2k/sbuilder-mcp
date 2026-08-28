@@ -1,3 +1,4 @@
+import { setAgentClient } from './transport/identity.js';
 import { readFileSync } from 'node:fs';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { Session } from './transport/auth.js';
@@ -58,6 +59,15 @@ export function createServer(ctx: ToolContext = buildContext()): McpServer {
     { name: 'sbuilder', version: pkgVersion(), title: 'Store Builder' },
     { instructions: INSTRUCTIONS },
   );
+  // LEARN WHO LAUNCHED US, at the handshake, before any tool runs.
+  //
+  // Set here rather than after connect() because the handshake happens DURING
+  // connect: a hook attached afterwards is attached to an event that has already
+  // fired, and every call would then report an anonymous machine — the exact
+  // blindness this exists to remove.
+  server.server.oninitialized = () => {
+    setAgentClient(server.server.getClientVersion(), pkgVersion());
+  };
   registerSessionTools(server, ctx);
   registerApiTools(server, ctx);
   const pageSession = registerPageTools(server, ctx);
