@@ -8,40 +8,14 @@ publish it — with no human clicking anything.
 
 ## Install
 
-```bash
-npx -y sbuilder-mcp
-```
-
-Claude Code / Claude Desktop:
-
-```json
-{
-  "mcpServers": {
-    "sbuilder": {
-      "command": "npx",
-      "args": ["-y", "sbuilder-mcp"],
-      "env": {
-        "SB_API": "https://api.your-host",
-        "SB_TOKEN": "wbk_…",
-        "SB_EMAIL": "you@example.com",
-        "SB_PASSWORD": "…"
-      }
-    }
-  }
-}
-```
-
-## Installing it
-
 One command writes this server into every agent client on your machine:
 
 ```bash
 npx -y sbuilder-mcp install --token wbk_… --api https://your-host
 ```
 
-It knows Claude Code, Claude Desktop, Cursor, Windsurf, VS Code and Codex, and by default
-installs into the ones it finds. Name them explicitly with `--client cursor,codex`, or
-rehearse with `--dry-run`.
+It knows Claude Code, Claude Desktop, Cursor, Windsurf, VS Code and Codex, and installs into
+the ones it finds. Name them with `--client cursor,codex`, or rehearse with `--dry-run`.
 
 It **merges**: the servers already in those files stay, whatever it replaces is copied to
 `<file>.sbuilder-backup`, and a config it cannot parse is refused rather than overwritten —
@@ -49,6 +23,22 @@ a file with a trailing comma is far likelier than one worth discarding, and it i
 need to fix it.
 
 The store's **Apps → AI agent** screen hands you this command with the key already in it.
+
+<details><summary>Or configure a client by hand</summary>
+
+```json
+{
+  "mcpServers": {
+    "sbuilder": {
+      "command": "npx",
+      "args": ["-y", "sbuilder-mcp"],
+      "env": { "SB_API": "https://api.your-host", "SB_TOKEN": "wbk_…" }
+    }
+  }
+}
+```
+
+</details>
 
 ## Getting the key
 

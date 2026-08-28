@@ -8,11 +8,22 @@ quả rồi xuất bản — mà không cần người bấm gì.
 
 ## Cài đặt
 
+Một lệnh ghi server này vào mọi agent client trên máy bạn:
+
 ```bash
-npx -y sbuilder-mcp
+npx -y sbuilder-mcp install --token wbk_… --api https://your-host
 ```
 
-Claude Code / Claude Desktop:
+Nó biết Claude Code, Claude Desktop, Cursor, Windsurf, VS Code và Codex, và cài vào những
+cái nó tìm thấy. Chỉ định bằng `--client cursor,codex`, hoặc diễn thử với `--dry-run`.
+
+Nó **gộp**: các server đã có trong file được giữ nguyên, thứ nó thay thế được chép sang
+`<file>.sbuilder-backup`, và một config nó không đọc được thì bị từ chối chứ không ghi đè —
+một file thừa dấu phẩy khả dĩ hơn nhiều một file đáng vứt, và đó chính là thứ bạn cần để sửa.
+
+Màn hình **Apps → AI agent** của cửa hàng đưa sẵn lệnh này kèm khoá.
+
+<details><summary>Hoặc tự cấu hình từng client</summary>
 
 ```json
 {
@@ -20,16 +31,13 @@ Claude Code / Claude Desktop:
     "sbuilder": {
       "command": "npx",
       "args": ["-y", "sbuilder-mcp"],
-      "env": {
-        "SB_API": "https://api.your-host",
-        "SB_TOKEN": "wbk_…",
-        "SB_EMAIL": "ban@example.com",
-        "SB_PASSWORD": "…"
-      }
+      "env": { "SB_API": "https://api.your-host", "SB_TOKEN": "wbk_…" }
     }
   }
 }
 ```
+
+</details>
 
 ## Lấy khoá ở đâu
 
