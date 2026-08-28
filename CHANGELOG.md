@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.2 — 2026-08-29
+
+244625
+
 ## 0.1.1 — 2026-08-28
 
 - fix(release): ask for the one-time password instead of dying on it
