@@ -11,6 +11,7 @@ import type { Patch } from '../core/patch.js';
 import type { PageDoc } from '../domains/site/document.js';
 import { siteToken } from './credentialpick.js';
 import type { ToolContext } from './context.js';
+import { reviewDesign, REVIEW_NOTICE } from '../domains/site/review.js';
 import type { PageSession } from './page.js';
 
 /**
@@ -97,12 +98,15 @@ export function registerLiveTools(
       const shots = await shoot(url, { widths: widths ?? DEFAULT_WIDTHS });
       // The boxes feed the presence cursor as well as the agent's own reading.
       session.noteBoxes(shots[0]?.boxes ?? []);
-      return images(
-        shots.map((s) => ({ dataBase64: s.pngBase64 })),
-        with_boxes === false
-          ? { widths: shots.map((s) => s.width) }
-          : { widths: shots.map((s) => s.width), boxes: shots[0]?.boxes ?? [] },
-      );
+      // The findings ride WITH the picture. Judging a page by eye and judging it
+      // by rule are the same act, and separating them is how the second one gets
+      // skipped.
+      const findings = reviewDesign(session.current());
+      return images(shots.map((s) => ({ dataBase64: s.pngBase64 })), {
+        widths: shots.map((s) => s.width),
+        ...(with_boxes === false ? {} : { boxes: shots[0]?.boxes ?? [] }),
+        ...(findings.length > 0 ? { findings, findings_notice: REVIEW_NOTICE } : {}),
+      });
     },
   );
 

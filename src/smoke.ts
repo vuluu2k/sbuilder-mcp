@@ -75,13 +75,9 @@ export async function runSmoke(): Promise<void> {
   };
   check('sb_set writes per breakpoint, not at base', section.responsive.desktop?.style?.gap === '24px' && section.style.gap === undefined);
 
-  let refused = false;
-  try {
-    setKeys(doc, built.ids[0], { gap: '1px' }, { namespace: 'style', base: true });
-  } catch {
-    refused = true;
-  }
-  check('a base-only write of a quantity is REFUSED', refused);
+  doc.apply(setKeys(doc, built.ids[0], { maxWidth: '1200px' }, { namespace: 'style', base: true }));
+  const seeded = doc.node(built.ids[0]) as unknown as { style: Record<string, unknown> };
+  check('a base style is written, not refused', seeded.style.maxWidth === '1200px');
 
   const { BINDING_SOURCES } = await import('./catalog/elements.generated.js');
   check('binding sources are populated', BINDING_SOURCES.length > 15);
@@ -116,6 +112,20 @@ export async function runSmoke(): Promise<void> {
     bindRefused = true;
   }
   check('a non-specials binding field is REFUSED', bindRefused);
+
+  const { reviewDesign } = await import('./domains/site/review.js');
+  // Fill the heading before claiming the section is finished. The first version
+  // of this check asserted the section built above was clean; it was not — the
+  // heading still carried the placeholder the element ships with, and the
+  // reviewer said so. The check was wrong, not the reviewer.
+  doc.apply(setKeys(doc, built.ids[1], { text: 'Autumn sale' }, { namespace: 'specials' }));
+  check('a finished section reviews clean', reviewDesign(doc).length === 0);
+  // ...and an unfilled one must. A reviewer that never fires is indistinguishable
+  // from one that is not wired up.
+  const { addSubtree: add2 } = await import('./domains/site/builder.js');
+  doc.apply(add2(doc, 'rt', { type: 'flex-section', children: [{ type: 'text' }] }).patches);
+  const codes = reviewDesign(doc).map((f) => f.code);
+  check('an unfilled placeholder IS reported', codes.includes('placeholder_content'));
 
   console.error('ALL GOOD');
 }

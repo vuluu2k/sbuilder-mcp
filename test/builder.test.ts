@@ -77,11 +77,30 @@ describe('setKeys()', () => {
     expect(n.style.gap).toBeUndefined();
   });
 
-  it('refuses a base write of a visual quantity', () => {
+  it('WRITES a base style when asked - base is the cascade fallback, not a trap', () => {
+    // This used to throw. The refusal was built on a misread: the platform's
+    // responsive mandate is about an element's Go renderer reading n.Config
+    // directly, not about what a document may store. MergeNamespace resolves
+    // current slot → wider → BASE → narrower, and meta.defaults seeds base.
     const d = emptyDoc();
     d.apply(addSubtree(d, 'rt', { type: 'flex-section' }).patches);
     const id = d.node('rt').data.nodes[0];
-    expect(() => setKeys(d, id, { gap: '24px' }, { namespace: 'style', base: true })).toThrow(/vanish/i);
+    d.apply(setKeys(d, id, { gap: '24px' }, { namespace: 'style', base: true }));
+    const n = d.node(id) as unknown as { style: Record<string, unknown> };
+    expect(n.style.gap).toBe('24px');
+  });
+
+  it('still defaults to per-breakpoint, because a design should respond', () => {
+    const d = emptyDoc();
+    d.apply(addSubtree(d, 'rt', { type: 'flex-section' }).patches);
+    const id = d.node('rt').data.nodes[0];
+    d.apply(setKeys(d, id, { gap: '8px' }, { namespace: 'style' }));
+    const n = d.node(id) as unknown as {
+      style: Record<string, unknown>;
+      responsive: Record<string, { style?: Record<string, unknown> }>;
+    };
+    expect(n.responsive.desktop?.style?.gap).toBe('8px');
+    expect(n.style.gap).toBeUndefined();
   });
 
   it('allows a base write of an identity key', () => {

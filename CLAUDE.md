@@ -109,9 +109,18 @@ because this platform treats an unproven guard as indistinguishable from an abse
    refuses EVERY save otherwise (`checkBands`, `server/internal/page/decompose.go`). It
    strips overlays before checking, which is why the rule needs no overlay exception — and
    why ours strips them too.
-4. **The responsive mandate** — if a key CAN be responsive it MUST be. A visual quantity
-   written base-only renders on the canvas and vanishes on publish. `setKeys` writes per
-   breakpoint by default and REFUSES a base write of anything that is not an identity key.
+4. **Responsive by default, not by refusal.** `setKeys` writes per breakpoint because a
+   design should respond — but base is legitimate and is NOT a trap. This entry used to say
+   a base value "vanishes on publish" and `setKeys` threw for one; both were wrong, and the
+   correction is worth keeping because the misreading is easy to repeat.
+
+   The platform's mandate ("if a key CAN be responsive it MUST be") is about ELEMENT
+   IMPLEMENTATION: an element whose Go renderer reads `n.Config[...]` directly — `nodes.ConfigInt`
+   in `html.go`, an SVG `width=` attribute — bypasses the cascade, so a per-breakpoint value the
+   author sets renders on the canvas and never reaches publish. Nothing a DOCUMENT stores can
+   cause that. `server/render/style/cascade.go`'s MergeNamespace resolves a key
+   *current slot → wider slots → BASE → narrower slots*, so base is the fallback layer, and
+   every element's `meta.defaults.style` is seeded straight into it.
 
 ## The yield rule
 

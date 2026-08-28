@@ -82,12 +82,18 @@ export function globalWarning(doc: DocLike, id: string): string | null {
 }
 
 /**
- * Keys that legitimately live at base rather than per breakpoint.
+ * Keys that are identity or content rather than a visual quantity.
  *
- * The platform's rule is: if a key CAN be responsive it MUST be. A visual
- * quantity written base-only renders correctly on the canvas and then VANISHES
- * on publish, because the published cascade has no base layer to fall back to.
- * Only identity and content are exempt — everything else is a quantity.
+ * Kept as a hint for callers deciding where a value belongs — NOT as a gate. An
+ * earlier version of this file claimed base-only values "vanish on publish" and
+ * `setKeys` refused them; both were wrong. The published cascade has a base
+ * layer (style/cascade.go MergeNamespace: current slot → wider → BASE →
+ * narrower), and every element's meta.defaults seeds into it.
+ *
+ * The platform's responsive mandate is about ELEMENT IMPLEMENTATION — a renderer
+ * reading `n.Config[...]` directly bypasses that cascade, which is what makes a
+ * per-breakpoint value unreachable at publish. Nothing a document stores can
+ * cause it.
  */
 const IDENTITY_KEYS = new Set(['htmlTag', 'kind', 'name', 'id', 'type', 'href', 'src', 'alt']);
 
@@ -96,8 +102,9 @@ export function isIdentityKey(key: string): boolean {
 }
 
 export const RESPONSIVE_NOTICE =
-  'Written per breakpoint. A visual quantity written at base only renders on the canvas and ' +
-  'then vanishes on publish — the published cascade has no base layer to fall back to. Pass ' +
-  'base:true only for identity or content.';
+  'Written per breakpoint, which is the default because a design should respond. Base is ' +
+  'legitimate too — it is the cascade\'s fallback layer, below every breakpoint slot, and ' +
+  'where an element\'s own defaults live. Use base for a value that genuinely should not ' +
+  'vary; use a breakpoint for anything a narrower screen should change.';
 
 export { isOverlay };

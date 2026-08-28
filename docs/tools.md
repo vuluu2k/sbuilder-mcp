@@ -127,11 +127,9 @@ section, a child a parent's whitelist excludes, and any add into a non-container
 | `base` | boolean? | Write at base instead of per breakpoint |
 | `dry_run` | boolean? | Defaults to true |
 
-**Style and config are written per breakpoint by default.** A visual quantity written at
-base renders on the canvas and then vanishes on publish — the published cascade has no base
-layer under it. `base: true` is refused for anything that is not an identity key
-(`htmlTag`, `kind`, `href`, `src`, `alt`, …). `specials` is always base: content is not a
-quantity.
+**Base and breakpoints.** `sb_set` writes per breakpoint by default, because a design should respond. Base is legitimate too — the cascade resolves a key *current slot → wider → base → narrower*, so base is the fallback layer, and it is where every element's own defaults are seeded. Use base for a value that genuinely should not vary.
+
+`specials` is always base: content is not a quantity.
 
 ## `sb_move` / `sb_remove`
 
@@ -273,3 +271,21 @@ Cursor, Windsurf, VS Code, Codex. `--client cursor,codex` names them; `--dry-run
 | Idempotent | A second identical run writes nothing and leaves no backup behind. |
 | One broken client never stops the others | A bad Cursor config is no reason to leave Claude Code unconfigured. The report says which is which. |
 | Writes the **key** alone when you have one | A key opens everything the agent does day to day. Putting an account password into six config files to buy a few account-level calls is a bad trade to make on someone's behalf. |
+
+## `sb_review` — what a visitor would see
+
+Distinct from whether the page saves: a perfectly storable document can publish as an empty
+box. Reports, in document order, each with the command that fixes it:
+
+| Code | The defect |
+| --- | --- |
+| `empty_page` | Nothing on it — publishes blank |
+| `empty_container` | A section holding nothing — an empty band |
+| `placeholder_content` | Still the copy the element ships with ("Enter your text here") |
+| `empty_text` / `missing_media` | An element left blank — empty space, or a broken image |
+| `dead_binding` | A source the renderer never provides, or a field outside `specials` — shows the placeholder forever |
+| `unknown_element` | A type the catalog does not know; run `npm run codegen` |
+
+Findings ride along with `sb_page_open` and `sb_look` as well, carrying a directive that says
+they are defects rather than suggestions — the sibling `webcake-landing-mcp` records in its
+own source that without one, models read warnings as advisory noise and save anyway.
