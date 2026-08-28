@@ -3,7 +3,6 @@ import { isOverlay, subtreeIds, ancestors } from '../../core/tree.js';
 import { ELEMENTS } from '../../catalog/elements.generated.js';
 import { createNode } from './node.js';
 import { genId } from './ids.js';
-import { isIdentityKey } from './traps.js';
 import type { PageDoc } from './document.js';
 
 export type Breakpoint = 'desktop' | 'laptop' | 'tablet' | 'mobile';
@@ -145,14 +144,24 @@ export function setKeys(
   }
 
   if (opts.base) {
-    const offenders = Object.keys(keys).filter((k) => !isIdentityKey(k));
-    if (offenders.length > 0) {
-      throw new Error(
-        `sbuilder: refusing a base-only write of [${offenders.join(', ')}]. A visual quantity ` +
-          'written at base renders on the canvas and then VANISHES on publish. Write it per ' +
-          'breakpoint instead, or pass identity keys only.',
-      );
-    }
+    // Base IS legitimate, and this used to throw for anything that was not an
+    // identity key — a refusal built on a misread of the platform's responsive
+    // mandate.
+    //
+    // That mandate is about ELEMENT IMPLEMENTATION: an element whose Go renderer
+    // reads `n.Config[...]` directly (nodes.ConfigInt in html.go, an SVG width=
+    // attribute) bypasses the cascade, so a per-breakpoint value the author sets
+    // renders on the canvas and never reaches publish. It is not a rule about
+    // documents.
+    //
+    // The cascade proves it: style/cascade.go's MergeNamespace resolves a key
+    // "current slot, then wider slots, then BASE, then narrower slots" — base is
+    // the fallback layer, and it is exactly where every element's own
+    // meta.defaults.style is seeded. Refusing to write there refused a namespace
+    // the platform itself fills on every node it creates.
+    //
+    // Per-breakpoint remains the DEFAULT, because a design should respond. Base
+    // is for a value that genuinely should not vary.
     return Object.entries(keys).map(([k, v]) => ({
       op: 'set' as const,
       path: ['nodes', id, namespace, k],

@@ -128,10 +128,9 @@ container.
 | `base` | boolean? | Ghi ở base thay vì theo breakpoint |
 | `dry_run` | boolean? | Mặc định true |
 
-**Style và config mặc định ghi theo breakpoint.** Một đại lượng thị giác ghi ở base sẽ hiện
-đúng trên canvas rồi biến mất lúc publish — cascade đã publish không có lớp base nào đỡ.
-`base: true` bị từ chối với mọi key không phải key định danh (`htmlTag`, `kind`, `href`,
-`src`, `alt`, …). `specials` luôn ở base: nội dung không phải đại lượng.
+**Base và breakpoint.** `sb_set` mặc định ghi theo breakpoint, vì một thiết kế nên đáp ứng. Base cũng hợp lệ — cascade giải một khoá theo thứ tự *slot hiện tại → rộng hơn → base → hẹp hơn*, nên base là lớp dự phòng, và là chỗ default của chính mỗi element được gieo vào. Dùng base cho giá trị thật sự không nên thay đổi.
+
+`specials` luôn ở base: nội dung không phải đại lượng.
 
 ## `sb_move` / `sb_remove`
 

@@ -127,11 +127,9 @@ section, a child a parent's whitelist excludes, and any add into a non-container
 | `base` | boolean? | Write at base instead of per breakpoint |
 | `dry_run` | boolean? | Defaults to true |
 
-**Style and config are written per breakpoint by default.** A visual quantity written at
-base renders on the canvas and then vanishes on publish — the published cascade has no base
-layer under it. `base: true` is refused for anything that is not an identity key
-(`htmlTag`, `kind`, `href`, `src`, `alt`, …). `specials` is always base: content is not a
-quantity.
+**Base and breakpoints.** `sb_set` writes per breakpoint by default, because a design should respond. Base is legitimate too — the cascade resolves a key *current slot → wider → base → narrower*, so base is the fallback layer, and it is where every element's own defaults are seeded. Use base for a value that genuinely should not vary.
+
+`specials` is always base: content is not a quantity.
 
 ## `sb_move` / `sb_remove`
 

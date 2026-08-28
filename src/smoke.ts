@@ -75,13 +75,9 @@ export async function runSmoke(): Promise<void> {
   };
   check('sb_set writes per breakpoint, not at base', section.responsive.desktop?.style?.gap === '24px' && section.style.gap === undefined);
 
-  let refused = false;
-  try {
-    setKeys(doc, built.ids[0], { gap: '1px' }, { namespace: 'style', base: true });
-  } catch {
-    refused = true;
-  }
-  check('a base-only write of a quantity is REFUSED', refused);
+  doc.apply(setKeys(doc, built.ids[0], { maxWidth: '1200px' }, { namespace: 'style', base: true }));
+  const seeded = doc.node(built.ids[0]) as unknown as { style: Record<string, unknown> };
+  check('a base style is written, not refused', seeded.style.maxWidth === '1200px');
 
   const { BINDING_SOURCES } = await import('./catalog/elements.generated.js');
   check('binding sources are populated', BINDING_SOURCES.length > 15);

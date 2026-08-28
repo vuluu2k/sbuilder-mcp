@@ -122,9 +122,8 @@ có test chứ không phải lời khuyên:
   loại khỏi mọi luật cấp ROOT và không sửa được qua bộ page tool.
 - **Global section** là master dùng chung — sửa một cái là đổi mọi trang mang nó, và publish
   thì lan. Mọi kết quả đụng tới nó đều nói rõ.
-- **Luật responsive** — đại lượng thị giác ghi ở base sẽ hiện trên canvas rồi biến mất lúc
-  publish, nên `sb_set` mặc định ghi theo breakpoint và từ chối ghi base cho mọi thứ không
-  phải định danh.
+- **Mặc định responsive** — `sb_set` ghi theo breakpoint, vì một thiết kế nên đáp ứng. Base
+  là lớp dự phòng của cascade, không phải cái bẫy.
 
 ## Trạng thái
 

@@ -126,9 +126,8 @@ here as tested code rather than advice:
   page tools.
 - **Global sections** are shared masters — editing one changes every page carrying it, and
   publishing cascades. Any result touching one says so.
-- **The responsive mandate** — a visual quantity written at base renders on the canvas and
-  vanishes on publish, so `sb_set` writes per breakpoint by default and refuses a base-only
-  write of anything that is not identity.
+- **Responsive by default** — `sb_set` writes per breakpoint, because a design should
+  respond. Base is the cascade's fallback layer, not a trap.
 
 ## Status
 
