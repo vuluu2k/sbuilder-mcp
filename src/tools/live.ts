@@ -7,6 +7,7 @@ import { previewUrl } from '../vision/preview.js';
 import { uploadMedia } from '../transport/media.js';
 import { request } from '../transport/http.js';
 import { shoot, DEFAULT_WIDTHS } from '../vision/shoot.js';
+import { measure, MEASURE_NOTICE } from '../vision/measure.js';
 import { RealtimeSocket } from '../transport/socket.js';
 import { LiveSession } from '../live/session.js';
 import type { Patch } from '../core/patch.js';
@@ -88,8 +89,9 @@ export function registerLiveTools(
     'sb_look',
     "Save the open page, render it through the platform's own renderer, and return " +
       'screenshots at desktop, tablet and mobile widths — plus the measured bounding box of ' +
-      'every node. Pass node_id to frame ONE element instead of the whole page. Judge your ' +
-      'own work from these rather than guessing.',
+      'every node — plus any LAYOUT defect measured on the render: content past the ' +
+      'viewport, elements overlapping, text too small to read. Pass node_id to frame ONE ' +
+      'element instead of the whole page. Judge your own work from these rather than guessing.',
     {
       widths: z.array(z.number().int().min(320).max(2560)).optional(),
       with_boxes: z.boolean().optional(),
@@ -109,11 +111,15 @@ export function registerLiveTools(
       // by rule are the same act, and separating them is how the second one gets
       // skipped.
       const findings = reviewDesign(session.current());
+      // Measured on the render, not read off the document — a card that spills
+      // at 390px is invisible to every check that only reads the tree.
+      const visual = node_id ? [] : measure(shots);
       return images(shots.map((s) => ({ dataBase64: s.pngBase64 })), {
         widths: shots.map((s) => s.width),
         ...(node_id ? { framed: node_id } : {}),
         ...(with_boxes === false ? {} : { boxes: shots[0]?.boxes ?? [] }),
         ...(findings.length > 0 ? { findings, findings_notice: REVIEW_NOTICE } : {}),
+        ...(visual.length > 0 ? { layout: visual, layout_notice: MEASURE_NOTICE } : {}),
       });
     },
   );

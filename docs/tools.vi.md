@@ -307,3 +307,20 @@ Nhận `path` (file trên máy) hoặc `url` (tải về rồi upload). Trả v�
 vì thêm bản sao.
 
 Lỗi nói rõ phía nào hỏng: `url` không tải được là `source_unreachable`, không đổ cho upload.
+
+### Lỗi bố cục, đo trên bản render
+
+`sb_look` còn báo những thứ chỉ tồn tại sau khi trình duyệt đã dàn trang — thứ đọc tài liệu
+không tìm ra:
+
+| Mã | Đo được |
+| --- | --- |
+| `off_canvas` | Nội dung tràn khỏi khung nhìn; trên điện thoại còn kéo theo thanh cuộn ngang cả trang |
+| `text_too_small` | Chữ render dưới 12px, chỉ tính nơi thật sự có chữ |
+| `overlap` | Hai element đè lên nhau — lồng nhau và sai số 1px không tính |
+
+Mỗi lỗi kèm **các bề rộng** nó xảy ra, vì đó là phần lớn chẩn đoán: ổn ở 1440 mà hỏng ở 390
+là lỗi responsive, không phải element hỏng.
+
+Nó không chấm thẩm mỹ. Một hero có đọc xuôi hay không thì không đo được, và giả vờ đo được
+sẽ tiêu tốn sự chú ý của agent vào thứ nó không thể biết.

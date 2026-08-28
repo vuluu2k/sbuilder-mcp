@@ -58,9 +58,18 @@ describe.runIf(process.env.SB_BROWSER_TEST === '1')('shoot()', () => {
     expect(shots.length).toBe(1);
     expect(shots[0].width).toBe(1440);
     expect(shots[0].pngBase64.length).toBeGreaterThan(100);
-    expect(shots[0].boxes).toEqual([
-      { id: 'fs_1a2b3c4d', type: 'flex-section', x: 8, y: 8, w: 300, h: 120 },
-    ]);
+    // Asserted field by field rather than by whole-object equality: a box grew
+    // fontPx and hasText for the layout measurements, and an exact match would
+    // fail every time the shape usefully gains something.
+    expect(shots[0].boxes.length).toBe(1);
+    expect(shots[0].boxes[0]).toMatchObject({
+      id: 'fs_1a2b3c4d',
+      type: 'flex-section',
+      x: 8,
+      y: 8,
+      w: 300,
+      h: 120,
+    });
   }, 30_000);
 
   const page =
@@ -91,4 +100,27 @@ describe.runIf(process.env.SB_BROWSER_TEST === '1')('shoot()', () => {
       shoot(`data:text/html,${encodeURIComponent(collapsed)}`, { widths: [1440], node: 'fs_1a2b3c4d' }),
     ).rejects.toThrow(/no size/i);
   }, 30_000);
+});
+
+// Opt-in: the measurements only mean anything against a real layout engine.
+describe.runIf(process.env.SB_BROWSER_TEST === '1')('measured against a real render', () => {
+  it('catches a block that spills past a narrow viewport', async () => {
+    const html =
+      '<section id="fs_1a2b3c4d" class="wb-flex-section" style="width:900px;height:80px"></section>';
+    const { measure } = await import('../src/vision/measure.js');
+    const shots = await shoot(`data:text/html,${encodeURIComponent(html)}`, { widths: [1440, 390] });
+    const found = measure(shots);
+    const spill = found.find((f) => f.code === 'off_canvas');
+    expect(spill).toBeDefined();
+    // Fine on desktop, broken on the phone — the widths ARE the diagnosis.
+    expect(spill!.widths).toEqual([390]);
+  }, 40_000);
+
+  it('catches text the browser renders too small to read', async () => {
+    const html =
+      '<p id="tx_1a2b3c4d" class="wb-text" style="font-size:9px">Terms and conditions apply</p>';
+    const { measure } = await import('../src/vision/measure.js');
+    const shots = await shoot(`data:text/html,${encodeURIComponent(html)}`, { widths: [390] });
+    expect(measure(shots).some((f) => f.code === 'text_too_small')).toBe(true);
+  }, 40_000);
 });
