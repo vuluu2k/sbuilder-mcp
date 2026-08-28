@@ -4,6 +4,8 @@ import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { text, images } from '../mcp/response.js';
 import { BINDING_SOURCES } from '../catalog/elements.generated.js';
 import { previewUrl } from '../vision/preview.js';
+import { uploadMedia } from '../transport/media.js';
+import { request } from '../transport/http.js';
 import { shoot, DEFAULT_WIDTHS } from '../vision/shoot.js';
 import { RealtimeSocket } from '../transport/socket.js';
 import { LiveSession } from '../live/session.js';
@@ -112,6 +114,63 @@ export function registerLiveTools(
         ...(node_id ? { framed: node_id } : {}),
         ...(with_boxes === false ? {} : { boxes: shots[0]?.boxes ?? [] }),
         ...(findings.length > 0 ? { findings, findings_notice: REVIEW_NOTICE } : {}),
+      });
+    },
+  );
+
+  server.tool(
+    'sb_media_list',
+    "The site's media library — reuse an image that is already there before adding another. " +
+      'Search by name, filter by type, page with limit/offset.',
+    {
+      site_id: z.string(),
+      search: z.string().optional(),
+      media_type: z.string().optional().describe('e.g. "image"'),
+      limit: z.number().int().min(1).max(200).optional(),
+      offset: z.number().int().min(0).optional(),
+    },
+    async ({ site_id, search, media_type, limit, offset }) =>
+      text(
+        await request({
+          base: ctx.base,
+          method: 'GET',
+          path: `/api/sites/${encodeURIComponent(site_id)}/media`,
+          token: siteToken(ctx),
+          query: { search, mediaType: media_type, limit, offset },
+          fetchImpl: ctx.fetchImpl,
+        }),
+      ),
+  );
+
+  server.tool(
+    'sb_media_upload',
+    'Put an image into the media library and get its URL back, ready for sb_set. Takes a ' +
+      'local file path or a URL to fetch. This is the ONLY way to add an image: the upload ' +
+      'is multipart, which sb_api_call cannot send.',
+    {
+      site_id: z.string(),
+      path: z.string().optional().describe('A file on this machine'),
+      url: z.string().optional().describe('Fetched, then uploaded'),
+      name: z.string().optional(),
+      folder_id: z.string().optional(),
+      dry_run: z.boolean().optional(),
+    },
+    async ({ site_id, path, url, name, folder_id, dry_run }) => {
+      if (!path && !url) throw new Error('sbuilder: give sb_media_upload either a path or a url');
+      if (dry_run !== false) {
+        return text({
+          dry_run: true,
+          would_upload: path ?? url,
+          into: site_id,
+          note: 'Nothing was sent. Re-call with dry_run:false to upload.',
+        });
+      }
+      const asset = await uploadMedia(ctx, site_id, { path, url, name, folderId: folder_id });
+      return text({
+        asset,
+        next: asset.url
+          ? `Use it: sb_set id "<node>", namespace specials, keys { "src": ${JSON.stringify(asset.url)} }`
+          : 'Uploaded, but the server returned no url — read it back with sb_media_list.',
       });
     },
   );
