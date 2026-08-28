@@ -1,5 +1,50 @@
 # Changelog
 
+## 0.1.1 — 2026-08-28
+
+- fix(release): ask for the one-time password instead of dying on it
+- feat: sb_media_upload — the agent can add images
+- feat(vision): sb_look frames one element
+- feat: sb_review — the defects a visitor sees, not the ones a save catches
+- fix: base style is the cascade's fallback layer, not a trap
+- docs: one install section per README, not two
+- feat: sbuilder-mcp install — one command, six clients
+- feat: close the gap with a human designer — 22 tools
+- docs: phase-6 plan — close the gap with a human designer
+- fix: three defects a live run found that no unit test could
+- docs: point the setup at the store's Agent app, which hands over the config
+- feat(transport): one credential — an API key now opens the private surface too
+- docs: phase 3 tools, the yield rule, and the wire-protocol facts
+- feat(tools): sb_live_join, sb_look and sb_bind; writes publish to the room
+- feat(catalog): generate the renderer's 22 binding source keys
+- feat(vision): preview links and Chrome screenshots with real node bounding boxes
+- feat(live): the live-edit session, with the yield rule as its organising decision
+- feat(transport): the live-edit socket, with the editor's two reconnect bugs designed out
+- docs: phase-3 plan (live editing and sight)
+- docs: phase 2 tools, traps, and an end-to-end smoke check
+- feat(tools): the page tools - open, outline, catalog search, add, set, move, remove
+- feat(transport): load and save a page's draft document
+- feat(site): pre-save validation mirroring the platform's own refusals
+- feat(site): the builder - nested subtrees, per-breakpoint writes, containment rules
+- feat(site): the in-memory page document with a compressed outline
+- feat(site): node ids and catalog-seeded node construction
+- feat(site): encode the four silent-failure traps as tested code
+- feat(core): overlay-aware tree walking, with pageChildren as the safe default
+- feat(core): the document patch primitive and its three admission rules
+- feat(catalog): generate the 85-element catalog with its AI hints
+- docs: phase-2 plan (the page document) and corrected element count
+- docs: mark phase-1 plan steps complete
+- docs: repo kit, bilingual docs, and the tool-authoring skill
+- feat(tools): sb_connect and sb_site_list; wire the server end to end
+- feat(tools): sb_api_find and sb_api_call - full 310-operation reach in two tools
+- feat(catalog): intent search over the API index, with three honest body verdicts
+- feat(catalog): generate the 310-operation API index from the platform OpenAPI doc
+- feat(transport): route credentials by path prefix, which the OpenAPI doc cannot
+- feat(transport): session login/refresh with a per-use token getter
+- feat(transport): shared HTTP client with the platform error envelope and redaction
+- feat: repo skeleton, response helpers, and a green build/test/smoke gate
+- docs: design spec and phase-1 implementation plan for @sbuilder/mcp
+
 ## 0.1.0
 
 First release.
