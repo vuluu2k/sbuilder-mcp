@@ -177,6 +177,7 @@ lệch nào — lỗ trong `seq` của server, checkpoint đến đúng seq củ
 | --- | --- | --- |
 | `widths` | number[]? | Mặc định 1440 / 768 / 390 |
 | `with_boxes` | boolean? | Mặc định true |
+| `node_id` | string? | Chỉ đóng khung element này thay vì cả trang |
 
 **Lưu trước**, rồi mint link preview đã ký và render trang bằng chính renderer Go của nền
 tảng — nên bức ảnh là của *bản nháp đã lưu*, không bao giờ là của sửa đổi chưa lưu. Trả về
@@ -286,3 +287,9 @@ publish ra một cái hộp rỗng. Báo theo thứ tự tài liệu, mỗi lỗ
 Findings cũng đi kèm `sb_page_open` và `sb_look`, mang theo một directive nói rõ đây là
 khiếm khuyết chứ không phải gợi ý — repo anh em ghi trong chính source của nó rằng nếu thiếu,
 model đọc cảnh báo như tiếng ồn tư vấn rồi lưu luôn.
+
+`node_id` đóng khung đúng một element — người thiết kế không chấm một thẻ bằng cách nhìn cả
+trang, và ảnh full-page của một storefront dài làm cái thẻ đó chỉ còn vài pixel. Vùng cắt lấy
+từ chính lần đo ra bounding box, nên thứ được đóng khung đúng là thứ `sb_set` nhắm tới. Node
+không có trên trang đã render, hoặc render ra kích thước bằng 0, bị **từ chối đích danh** chứ
+không trả về một bức ảnh sai.

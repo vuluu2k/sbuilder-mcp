@@ -86,16 +86,21 @@ export function registerLiveTools(
     'sb_look',
     "Save the open page, render it through the platform's own renderer, and return " +
       'screenshots at desktop, tablet and mobile widths — plus the measured bounding box of ' +
-      'every node. Judge your own work from these rather than guessing.',
+      'every node. Pass node_id to frame ONE element instead of the whole page. Judge your ' +
+      'own work from these rather than guessing.',
     {
       widths: z.array(z.number().int().min(320).max(2560)).optional(),
       with_boxes: z.boolean().optional(),
+      node_id: z
+        .string()
+        .optional()
+        .describe('Frame just this node instead of the whole page — how a designer looks at one card'),
     },
-    async ({ widths, with_boxes }) => {
+    async ({ widths, with_boxes, node_id }) => {
       await session.save();
       const { siteId, pageId } = session.location();
       const url = await previewUrl(ctx, siteId, pageId);
-      const shots = await shoot(url, { widths: widths ?? DEFAULT_WIDTHS });
+      const shots = await shoot(url, { widths: widths ?? DEFAULT_WIDTHS, node: node_id });
       // The boxes feed the presence cursor as well as the agent's own reading.
       session.noteBoxes(shots[0]?.boxes ?? []);
       // The findings ride WITH the picture. Judging a page by eye and judging it
@@ -104,6 +109,7 @@ export function registerLiveTools(
       const findings = reviewDesign(session.current());
       return images(shots.map((s) => ({ dataBase64: s.pngBase64 })), {
         widths: shots.map((s) => s.width),
+        ...(node_id ? { framed: node_id } : {}),
         ...(with_boxes === false ? {} : { boxes: shots[0]?.boxes ?? [] }),
         ...(findings.length > 0 ? { findings, findings_notice: REVIEW_NOTICE } : {}),
       });
