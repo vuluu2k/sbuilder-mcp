@@ -62,4 +62,33 @@ describe.runIf(process.env.SB_BROWSER_TEST === '1')('shoot()', () => {
       { id: 'fs_1a2b3c4d', type: 'flex-section', x: 8, y: 8, w: 300, h: 120 },
     ]);
   }, 30_000);
+
+  const page =
+    '<section id="fs_1a2b3c4d" class="wb-flex-section" style="width:300px;height:120px;background:#eee"></section>' +
+    '<div id="sp_00000000" class="wb-spacer" style="height:2000px"></div>';
+
+  it('frames ONE node, and the result is smaller than the whole page', async () => {
+    const url = `data:text/html,${encodeURIComponent(page)}`;
+    const full = await shoot(url, { widths: [1440] });
+    const one = await shoot(url, { widths: [1440], node: 'fs_1a2b3c4d' });
+    // A 2000px filler below makes the full-page shot much taller; the framed one
+    // is the card plus padding. If clipping silently did nothing these would be
+    // the same bytes.
+    expect(one[0].pngBase64.length).toBeLessThan(full[0].pngBase64.length);
+    // The boxes still come back — framing changes the picture, not the measurements.
+    expect(one[0].boxes.map((b) => b.id)).toContain('fs_1a2b3c4d');
+  }, 30_000);
+
+  it('says the node is not on the page rather than returning the wrong picture', async () => {
+    await expect(
+      shoot(`data:text/html,${encodeURIComponent(page)}`, { widths: [1440], node: 'he_deadbeef' }),
+    ).rejects.toThrow(/not on the rendered page/i);
+  }, 30_000);
+
+  it('refuses a node that renders with no size', async () => {
+    const collapsed = '<div id="fs_1a2b3c4d" class="wb-flex-section"></div>';
+    await expect(
+      shoot(`data:text/html,${encodeURIComponent(collapsed)}`, { widths: [1440], node: 'fs_1a2b3c4d' }),
+    ).rejects.toThrow(/no size/i);
+  }, 30_000);
 });

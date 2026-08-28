@@ -64,7 +64,10 @@ async function launch(): Promise<Browser> {
  * this server knows where a node ended up. Measured here, the agent's cursor
  * moves to the element it is about to change instead of to a made-up number.
  */
-export async function shoot(url: string, opts: { widths?: number[] } = {}): Promise<Shot[]> {
+export async function shoot(
+  url: string,
+  opts: { widths?: number[]; node?: string; pad?: number } = {},
+): Promise<Shot[]> {
   const widths = opts.widths ?? DEFAULT_WIDTHS;
   const browser = await launch();
   try {
@@ -72,7 +75,6 @@ export async function shoot(url: string, opts: { widths?: number[] } = {}): Prom
     for (const width of widths) {
       const page = await browser.newPage({ viewport: { width, height: 900 } });
       await page.goto(url, { waitUntil: 'networkidle' });
-      const png = await page.screenshot({ type: 'png', fullPage: true });
       // A RENDERED page carries its node ids as the HTML `id` attribute — not as
       // `data-node-id`, which is the editor CANVAS's hook and never reaches the
       // renderer. Selecting the canvas attribute here returned an empty box list
@@ -103,6 +105,41 @@ export async function shoot(url: string, opts: { widths?: number[] } = {}): Prom
             };
           }),
       )) as Box[];
+
+      // ZOOM. A designer does not judge a card by looking at the whole page, and
+      // a full-page shot of a long storefront makes one card a few pixels tall.
+      // The clip comes from the SAME measurement pass the boxes do, so what is
+      // framed is exactly what `sb_set` addresses.
+      let clip: { x: number; y: number; width: number; height: number } | undefined;
+      if (opts.node) {
+        const box = boxes.find((b) => b.id === opts.node);
+        if (!box) {
+          await page.close();
+          throw new Error(
+            `sbuilder: node "${opts.node}" is not on the rendered page at ${width}px. It may be ` +
+              'hidden at this breakpoint, or not saved yet — sb_look renders the STORED draft.',
+          );
+        }
+        if (box.w === 0 || box.h === 0) {
+          await page.close();
+          throw new Error(
+            `sbuilder: node "${opts.node}" renders with no size at ${width}px (${box.w}×${box.h}) — ` +
+              'nothing to photograph. It is collapsed or empty; sb_review will say which.',
+          );
+        }
+        const pad = opts.pad ?? 16;
+        clip = {
+          x: Math.max(0, box.x - pad),
+          y: Math.max(0, box.y - pad),
+          width: Math.min(width, box.w + pad * 2),
+          height: box.h + pad * 2,
+        };
+      }
+
+      const png = await page.screenshot({
+        type: 'png',
+        ...(clip ? { clip } : { fullPage: true }),
+      });
       shots.push({ width, pngBase64: png.toString('base64'), boxes });
       await page.close();
     }

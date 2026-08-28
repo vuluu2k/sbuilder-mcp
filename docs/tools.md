@@ -179,6 +179,7 @@ every disagreement.
 | --- | --- | --- |
 | `widths` | number[]? | Defaults to 1440 / 768 / 390 |
 | `with_boxes` | boolean? | Defaults to true |
+| `node_id` | string? | Frame just this element instead of the whole page |
 
 **Saves first**, then mints a signed preview link and renders the page through the
 platform's own Go renderer — so the picture is of the *stored draft*, never of unsaved local
@@ -289,3 +290,9 @@ box. Reports, in document order, each with the command that fixes it:
 Findings ride along with `sb_page_open` and `sb_look` as well, carrying a directive that says
 they are defects rather than suggestions — the sibling `webcake-landing-mcp` records in its
 own source that without one, models read warnings as advisory noise and save anyway.
+
+`node_id` frames one element — a designer does not judge a card by looking at the whole
+page, and a full-page shot of a long storefront makes one card a few pixels tall. The clip
+comes from the same measurement pass the boxes do, so what is framed is exactly what
+`sb_set` addresses. A node that is not on the rendered page, or that renders with no size,
+is **refused by name** rather than answered with the wrong picture.
