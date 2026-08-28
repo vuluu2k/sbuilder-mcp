@@ -311,3 +311,20 @@ has before adding another copy.
 
 Errors say which side failed: an unreachable `url` is `source_unreachable`, not a blamed
 upload.
+
+### Layout defects, measured on the render
+
+`sb_look` also reports what only exists once the browser has laid the page out — things
+reading the document cannot find:
+
+| Code | Measured |
+| --- | --- |
+| `off_canvas` | Content past the viewport; on a phone it also drags a horizontal scrollbar across the page |
+| `text_too_small` | Body text rendering under 12px, only where text actually shows |
+| `overlap` | Two elements on top of each other — nesting and a pixel of rounding are not counted |
+
+Each carries the **widths** it happens at, because that is most of the diagnosis: fine at
+1440 and broken at 390 is a responsive failure, not a broken element.
+
+It does not judge taste. Whether a hero reads well is not measurable, and pretending
+otherwise would spend the agent's attention on what it cannot know.

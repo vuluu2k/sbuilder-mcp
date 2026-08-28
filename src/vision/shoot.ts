@@ -14,9 +14,13 @@ declare const document: {
   querySelectorAll(selector: string): Array<{
     id: string;
     className: string;
+    parentElement: { id: string } | null;
     getBoundingClientRect(): { x: number; y: number; width: number; height: number };
+    textContent: string | null;
   }>;
 };
+declare function getComputedStyle(el: unknown): { fontSize: string };
+declare const window: { innerWidth: number };
 
 export interface Box {
   id: string;
@@ -25,6 +29,10 @@ export interface Box {
   y: number;
   w: number;
   h: number;
+  /** Computed font size in px — a rendered fact, not a stored style. */
+  fontPx?: number;
+  /** Whether this element carries visible text of its own. */
+  hasText?: boolean;
 }
 
 export interface Shot {
@@ -95,6 +103,8 @@ export async function shoot(
             const wb = String(el.className || '')
               .split(/\s+/)
               .find((c) => c.startsWith('wb-'));
+            const cs = getComputedStyle(el);
+            const own = (el.textContent ?? '').trim();
             return {
               id: el.id,
               type: wb ? wb.slice(3) : '',
@@ -102,6 +112,8 @@ export async function shoot(
               y: Math.round(r.y),
               w: Math.round(r.width),
               h: Math.round(r.height),
+              fontPx: Math.round(parseFloat(cs.fontSize) || 0),
+              hasText: own.length > 0,
             };
           }),
       )) as Box[];
