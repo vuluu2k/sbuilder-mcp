@@ -268,3 +268,21 @@ Windsurf, VS Code, Codex. `--client cursor,codex` để chỉ định; `--dry-ru
 | Idempotent | Chạy lại y hệt thì không ghi gì và không để lại backup thừa. |
 | Một client hỏng không chặn các client khác | Cursor lỗi config không phải lý do để Claude Code không được cài. Báo cáo nói rõ cái nào ra cái nào. |
 | Chỉ ghi **khoá** khi bạn có khoá | Khoá mở được mọi thứ agent làm hằng ngày. Nhét mật khẩu tài khoản vào sáu file config để đổi lấy vài lệnh cấp tài khoản là một đánh đổi tồi để quyết thay người khác. |
+
+## `sb_review` — thứ một người xem sẽ thấy
+
+Khác với chuyện trang có lưu được hay không: một tài liệu lưu được hoàn hảo vẫn có thể
+publish ra một cái hộp rỗng. Báo theo thứ tự tài liệu, mỗi lỗi kèm lệnh sửa:
+
+| Mã | Khiếm khuyết |
+| --- | --- |
+| `empty_page` | Không có gì — publish ra trang trắng |
+| `empty_container` | Section không chứa gì — một dải trống |
+| `placeholder_content` | Vẫn là chữ mặc định của element ("Enter your text here") |
+| `empty_text` / `missing_media` | Element bỏ trống — khoảng trắng, hoặc ảnh vỡ |
+| `dead_binding` | Nguồn renderer không cung cấp, hoặc field ngoài `specials` — hiện placeholder mãi mãi |
+| `unknown_element` | Type catalog không biết; chạy `npm run codegen` |
+
+Findings cũng đi kèm `sb_page_open` và `sb_look`, mang theo một directive nói rõ đây là
+khiếm khuyết chứ không phải gợi ý — repo anh em ghi trong chính source của nó rằng nếu thiếu,
+model đọc cảnh báo như tiếng ồn tư vấn rồi lưu luôn.

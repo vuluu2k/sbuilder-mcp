@@ -80,11 +80,12 @@ make, because those mean "this person's account".
 | `sb_page_list` | Every page on the site |
 | `sb_page_create` | Create a page |
 | `sb_publish` | Compile the draft into the live page (cascades to shared globals) |
+| `sb_review` | Every defect a visitor would see, each with the command that fixes it |
 | `sb_live_join` | Join the editor's live-edit room as a visible peer — edits then appear live |
 | `sb_look` | Save, render, and return screenshots plus measured node boxes |
 | `sb_bind` | Bind a node's content to real store data |
 
-Twenty-two tools, **310 API operations**. `sb_api_find` is an index rather than a tool per endpoint,
+Twenty-three tools, **310 API operations**. `sb_api_find` is an index rather than a tool per endpoint,
 so the tool list stays short while everything the platform can do stays reachable — and
 operations added to the platform arrive with the next `npm run codegen`.
 

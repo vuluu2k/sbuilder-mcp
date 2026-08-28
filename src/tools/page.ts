@@ -15,12 +15,24 @@ import {
 import { request } from '../transport/http.js';
 import { siteToken } from './credentialpick.js';
 import { validateForSave } from '../domains/site/validate.js';
+import { reviewDesign, REVIEW_NOTICE } from '../domains/site/review.js';
 import { globalWarning, RESPONSIVE_NOTICE } from '../domains/site/traps.js';
 import { ELEMENTS, TRAIT_WRITES } from '../catalog/elements.generated.js';
 import type { Patch } from '../core/patch.js';
 import type { LiveSession } from '../live/session.js';
 import type { Box } from '../vision/shoot.js';
 import type { ToolContext } from './context.js';
+
+/**
+ * Findings, in the shape every surface returns them.
+ *
+ * Spread rather than repeated: three tools attach this, and three hand-written
+ * copies of a directive is how one of them quietly loses it.
+ */
+function reviewField(doc: PageDoc): Record<string, unknown> {
+  const findings = reviewDesign(doc);
+  return findings.length > 0 ? { findings, findings_notice: REVIEW_NOTICE } : {};
+}
 
 /**
  * The one open page.
@@ -180,7 +192,10 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
     'Open a page for editing and return its outline. Call before any sb_add / sb_set / ' +
       'sb_move / sb_remove. Find page ids with sb_api_find "list pages".',
     { site_id: z.string(), page_id: z.string() },
-    async ({ site_id, page_id }) => text(await session.open(site_id, page_id)),
+    async ({ site_id, page_id }) => {
+      const outline = await session.open(site_id, page_id);
+      return text({ outline, ...reviewField(session.current()) });
+    },
   );
 
   server.tool(
@@ -362,6 +377,23 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
       session.applyAndPublish(patches);
       await session.save();
       return text({ removed: id, rev: d.rev });
+    },
+  );
+
+  server.tool(
+    'sb_review',
+    'Everything wrong with the open page that a VISITOR would see — a blank band, a ' +
+      'placeholder sentence the author never replaced, an image with no source, a binding ' +
+      'that will never resolve. Distinct from whether the page saves: a perfectly storable ' +
+      'document can publish as an empty box. Run it before you call a page finished.',
+    {},
+    async () => {
+      const findings = reviewDesign(session.current());
+      return text(
+        findings.length === 0
+          ? { findings: [], verdict: 'Nothing a visitor would notice.' }
+          : { findings, findings_notice: REVIEW_NOTICE },
+      );
     },
   );
 

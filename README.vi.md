@@ -77,11 +77,12 @@ là "tài khoản của người này".
 | `sb_page_list` | Mọi trang của site |
 | `sb_page_create` | Tạo một trang |
 | `sb_publish` | Biên dịch bản nháp thành trang live (lan sang global dùng chung) |
+| `sb_review` | Mọi khiếm khuyết người xem sẽ thấy, kèm lệnh sửa từng cái |
 | `sb_live_join` | Vào phòng live-edit của editor như một peer nhìn thấy được — sửa gì hiện ngay |
 | `sb_look` | Lưu, render, trả về ảnh chụp kèm box đo được của từng node |
 | `sb_bind` | Gắn nội dung một node vào dữ liệu cửa hàng thật |
 
-Hai mươi hai tool, **310 operation API**. `sb_api_find` là một chỉ mục chứ không phải mỗi endpoint một
+Hai mươi ba tool, **310 operation API**. `sb_api_find` là một chỉ mục chứ không phải mỗi endpoint một
 tool, nên danh sách tool vẫn ngắn trong khi mọi thứ nền tảng làm được vẫn với tới — và
 operation mới thêm bên nền tảng sẽ tự có sau lần `npm run codegen` kế tiếp.
 

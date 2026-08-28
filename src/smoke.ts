@@ -113,6 +113,20 @@ export async function runSmoke(): Promise<void> {
   }
   check('a non-specials binding field is REFUSED', bindRefused);
 
+  const { reviewDesign } = await import('./domains/site/review.js');
+  // Fill the heading before claiming the section is finished. The first version
+  // of this check asserted the section built above was clean; it was not — the
+  // heading still carried the placeholder the element ships with, and the
+  // reviewer said so. The check was wrong, not the reviewer.
+  doc.apply(setKeys(doc, built.ids[1], { text: 'Autumn sale' }, { namespace: 'specials' }));
+  check('a finished section reviews clean', reviewDesign(doc).length === 0);
+  // ...and an unfilled one must. A reviewer that never fires is indistinguishable
+  // from one that is not wired up.
+  const { addSubtree: add2 } = await import('./domains/site/builder.js');
+  doc.apply(add2(doc, 'rt', { type: 'flex-section', children: [{ type: 'text' }] }).patches);
+  const codes = reviewDesign(doc).map((f) => f.code);
+  check('an unfilled placeholder IS reported', codes.includes('placeholder_content'));
+
   console.error('ALL GOOD');
 }
 
