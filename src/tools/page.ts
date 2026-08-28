@@ -8,12 +8,15 @@ import {
   setKeys,
   moveNode,
   removeNode,
+  duplicateNode,
   type NodeSpec,
   type Breakpoint,
 } from '../domains/site/builder.js';
+import { request } from '../transport/http.js';
+import { siteToken } from './credentialpick.js';
 import { validateForSave } from '../domains/site/validate.js';
 import { globalWarning, RESPONSIVE_NOTICE } from '../domains/site/traps.js';
-import { ELEMENTS } from '../catalog/elements.generated.js';
+import { ELEMENTS, TRAIT_WRITES } from '../catalog/elements.generated.js';
 import type { Patch } from '../core/patch.js';
 import type { LiveSession } from '../live/session.js';
 import type { Box } from '../vision/shoot.js';
@@ -130,6 +133,34 @@ export class PageSession {
   }
 }
 
+/**
+ * What one inspector control writes.
+ *
+ * 83 of the 372 controls declare it in the platform's trait registry. The rest
+ * live inside a Vue widget's prop closure, which is not machine-readable — so
+ * they come back named but undescribed, with the honest reason. Saying nothing
+ * would read as "this control writes nothing".
+ */
+function describeControl(key: string): Record<string, unknown> {
+  const d = TRAIT_WRITES[key];
+  if (!d) {
+    return {
+      writes: null,
+      note:
+        'The platform does not declare what this control writes (its widget builds the ' +
+        'binding in Vue). Read a node that already uses it with sb_node_read, or set the ' +
+        'CSS property directly — style is open.',
+    };
+  }
+  return { label: d.label, writes: d.writes, ...(d.defaults ? { defaults: d.defaults } : {}) };
+}
+
+const STYLE_NOTE =
+  'The `style` namespace is OPEN CSS: any camelCase key becomes a CSS property ' +
+  '(schema/src/satelliteCss.ts camelToKebab), so you can set anything CSS can express, ' +
+  'whether or not a control exists for it. `config` and `specials` are NOT open — they are ' +
+  "per-element, and this element's `defaults` name the keys it actually uses.";
+
 const specSchema: z.ZodType<NodeSpec> = z.lazy(() =>
   z.object({
     type: z.string(),
@@ -208,20 +239,44 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
 
   server.tool(
     'sb_traits_for',
-    'Which inspector trait GROUPS an element accepts (size, typography, background, spacing …), ' +
-      'plus its seeded defaults and containment rules.',
-    { type: z.string() },
-    async ({ type }) => {
+    "This element's INSPECTOR, exactly as a person sees it: tabs, groups, and every control " +
+      'in them — with what each control writes when the platform declares it. Read this ' +
+      'before styling an element; it is the difference between designing it and guessing at it.',
+    {
+      type: z.string(),
+      control: z.string().optional().describe('Narrow to one control, e.g. "font_size"'),
+    },
+    async ({ type, control }) => {
       const el = ELEMENTS[type];
       if (!el) throw new Error(`sbuilder: unknown element "${type}" — use sb_catalog_search`);
+
+      if (control) {
+        if (!el.controls.includes(control)) {
+          throw new Error(
+            `sbuilder: ${type} has no control "${control}". It has: ${el.controls.join(', ')}.`,
+          );
+        }
+        return text({ type, control, ...describeControl(control) });
+      }
+
       return text({
         type: el.type,
-        traitGroups: el.traits,
+        inspector: el.inspector.map((t) => ({
+          tab: t.tab,
+          groups: t.groups.map((g) => ({
+            group: g.label,
+            controls: g.controls.map((c) => ({ control: c, ...describeControl(c) })),
+          })),
+        })),
+        // The keys this element actually seeds. For `config` and `specials` —
+        // which, unlike `style`, are NOT open — this is the machine-readable
+        // answer to "what does this element store", and often the only one.
         defaults: el.defaults,
         isContainer: el.isContainer,
         isRootOnly: el.isRootOnly,
         childAllows: el.childAllows,
         contentTips: el.contentTips,
+        style_is_open_css: STYLE_NOTE,
       });
     },
   );
@@ -258,14 +313,16 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
       keys: z.record(z.unknown()),
       breakpoint: z.enum(['desktop', 'laptop', 'tablet', 'mobile']).optional(),
       base: z.boolean().optional(),
+      state: z.string().optional().describe('An interaction state, e.g. "hover"'),
       dry_run: z.boolean().optional(),
     },
-    async ({ id, namespace, keys, breakpoint, base, dry_run }) => {
+    async ({ id, namespace, keys, breakpoint, base, state, dry_run }) => {
       const d = session.current();
       const patches = setKeys(d, id, keys, {
         namespace,
         breakpoint: breakpoint as Breakpoint | undefined,
         base,
+        state,
       });
       if (dry_run !== false) return text({ dry_run: true, patches, note: RESPONSIVE_NOTICE });
       session.applyAndPublish(patches);
@@ -305,6 +362,132 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
       session.applyAndPublish(patches);
       await session.save();
       return text({ removed: id, rev: d.rev });
+    },
+  );
+
+  server.tool(
+    'sb_duplicate',
+    'Copy a node and everything under it, under fresh ids, right after the original. The ' +
+      'move a designer makes constantly — build one card, duplicate it twice.',
+    { id: z.string(), dry_run: z.boolean().optional() },
+    async ({ id, dry_run }) => {
+      const d = session.current();
+      const { patches, ids } = duplicateNode(d, id);
+      if (dry_run !== false) return text({ dry_run: true, would_copy: ids.length });
+      session.applyAndPublish(patches);
+      await session.save();
+      return text({ duplicated: id, into: ids[0], nodes: ids.length, rev: d.rev });
+    },
+  );
+
+  server.tool(
+    'sb_templates',
+    "The store's saved section templates — designed sections a person starts from rather " +
+      'than assembling one. Use sb_template_use to drop one into the open page.',
+    { site_id: z.string() },
+    async ({ site_id }) =>
+      text(
+        await request({
+          base: ctx.base,
+          method: 'GET',
+          path: `/api/sites/${encodeURIComponent(site_id)}/section-templates`,
+          token: siteToken(ctx),
+          fetchImpl: ctx.fetchImpl,
+        }),
+      ),
+  );
+
+  server.tool(
+    'sb_template_use',
+    'Instantiate a saved section template into a page. The server does the copy, so the ' +
+      'section arrives exactly as it was designed — then re-open the page to see it.',
+    {
+      site_id: z.string(),
+      template_id: z.string(),
+      page_id: z.string(),
+      dry_run: z.boolean().optional(),
+    },
+    async ({ site_id, template_id, page_id, dry_run }) => {
+      const path = `/api/sites/${encodeURIComponent(site_id)}/section-templates/${encodeURIComponent(template_id)}/instantiate`;
+      if (dry_run !== false) {
+        return text({ dry_run: true, would_post: path, body: { pageId: page_id } });
+      }
+      const out = await request({
+        base: ctx.base,
+        method: 'POST',
+        path,
+        token: siteToken(ctx),
+        body: { pageId: page_id },
+        fetchImpl: ctx.fetchImpl,
+      });
+      return text({
+        instantiated: template_id,
+        into: page_id,
+        result: out,
+        note: 'Re-open the page with sb_page_open — this session still holds the old tree.',
+      });
+    },
+  );
+
+  server.tool(
+    'sb_page_list',
+    "Every page on the site, with its slug and whether it is live.",
+    { site_id: z.string() },
+    async ({ site_id }) =>
+      text(
+        await request({
+          base: ctx.base,
+          method: 'GET',
+          path: `/api/sites/${encodeURIComponent(site_id)}/pages`,
+          token: siteToken(ctx),
+          fetchImpl: ctx.fetchImpl,
+        }),
+      ),
+  );
+
+  server.tool(
+    'sb_page_create',
+    'Create a page. It arrives empty; sb_page_open seeds its ROOT so you can build into it.',
+    {
+      site_id: z.string(),
+      name: z.string(),
+      settings: z.record(z.unknown()).optional(),
+      dry_run: z.boolean().optional(),
+    },
+    async ({ site_id, name, settings, dry_run }) => {
+      const path = `/api/sites/${encodeURIComponent(site_id)}/pages`;
+      if (dry_run !== false) return text({ dry_run: true, would_post: path, body: { name, settings } });
+      return text(
+        await request({
+          base: ctx.base,
+          method: 'POST',
+          path,
+          token: siteToken(ctx),
+          body: { name, ...(settings ? { settings } : {}) },
+          fetchImpl: ctx.fetchImpl,
+        }),
+      );
+    },
+  );
+
+  server.tool(
+    'sb_publish',
+    'Compile the draft into the live page. PUBLISH CASCADES: a page sharing a global ' +
+      'section with others republishes them too, because a header edited once must not go ' +
+      'live on one page and stay stale on the rest.',
+    { site_id: z.string(), page_id: z.string(), dry_run: z.boolean().optional() },
+    async ({ site_id, page_id, dry_run }) => {
+      const path = `/api/sites/${encodeURIComponent(site_id)}/pages/${encodeURIComponent(page_id)}/publish`;
+      if (dry_run !== false) return text({ dry_run: true, would_post: path });
+      return text(
+        await request({
+          base: ctx.base,
+          method: 'POST',
+          path,
+          token: siteToken(ctx),
+          fetchImpl: ctx.fetchImpl,
+        }),
+      );
     },
   );
 

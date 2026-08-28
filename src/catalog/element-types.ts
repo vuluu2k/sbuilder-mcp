@@ -15,11 +15,41 @@ export interface CatalogElement {
     responsive?: Record<string, unknown>;
     states?: Record<string, unknown>;
   };
-  /** Flattened trait keys, whichever shape the platform declared them in. */
-  traits: string[];
+  /** The inspector as a human sees it: tabs → groups → controls. */
+  inspector: Array<{
+    tab: string;
+    groups: Array<{ key: string; label: string; controls: string[] }>;
+  }>;
+  /** Every control key on this element, flat — the union of `inspector`. */
+  controls: string[];
   description: string;
   useWhen: string[];
   avoidWhen: string[];
   contentTips: string[];
   semantics: string[];
+}
+
+/**
+ * What one inspector control writes, when the platform declares it.
+ *
+ * `schema/src/traits/registry.ts` describes 54 of the 373 control keys this way.
+ * The rest live inside a Vue widget's prop closure and are not machine-readable,
+ * so an agent learns them from the element's seeded `defaults` and from reading a
+ * node — see the note `sb_traits_for` returns.
+ */
+export interface TraitWrite {
+  /** Which namespace the value lands in. */
+  target: string;
+  /** The key inside that namespace. */
+  writeKey: string;
+  type: string;
+  unit?: string;
+}
+
+export interface TraitDescription {
+  key: string;
+  label: string;
+  writes: TraitWrite[];
+  /** Per-breakpoint (or `base`) seeded values, when the platform declares them. */
+  defaults?: Record<string, unknown>;
 }

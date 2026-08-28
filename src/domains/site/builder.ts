@@ -2,6 +2,7 @@ import type { Patch } from '../../core/patch.js';
 import { isOverlay, subtreeIds, ancestors } from '../../core/tree.js';
 import { ELEMENTS } from '../../catalog/elements.generated.js';
 import { createNode } from './node.js';
+import { genId } from './ids.js';
 import { isIdentityKey } from './traps.js';
 import type { PageDoc } from './document.js';
 
@@ -118,7 +119,19 @@ export function setKeys(
   doc: PageDoc,
   id: string,
   keys: Record<string, unknown>,
-  opts: { namespace: 'style' | 'config' | 'specials'; breakpoint?: Breakpoint; base?: boolean },
+  opts: {
+    namespace: 'style' | 'config' | 'specials';
+    breakpoint?: Breakpoint;
+    base?: boolean;
+    /**
+     * An interaction state — `hover` is the one the inspector offers.
+     *
+     * A state is a variation ON a breakpoint's style, so it nests under the
+     * breakpoint rather than replacing it, and it never takes the base branch:
+     * "how this looks when hovered" is a visual quantity like any other.
+     */
+    state?: string;
+  },
 ): Patch[] {
   doc.node(id); // throws naming the id if it is not there
   const { namespace } = opts;
@@ -148,11 +161,69 @@ export function setKeys(
   }
 
   const bp = opts.breakpoint ?? 'desktop';
+  if (opts.state) {
+    return Object.entries(keys).map(([k, v]) => ({
+      op: 'set' as const,
+      path: ['nodes', id, 'states', opts.state as string, bp, namespace, k],
+      value: v,
+    }));
+  }
   return Object.entries(keys).map(([k, v]) => ({
     op: 'set' as const,
     path: ['nodes', id, 'responsive', bp, namespace, k],
     value: v,
   }));
+}
+
+/**
+ * Copy a node and everything under it, under fresh ids, beside the original.
+ *
+ * The move a designer makes constantly — build one card, duplicate it twice —
+ * and without it an agent rebuilds the subtree by hand and gets it subtly
+ * different. Ids are re-minted rather than reused: two nodes sharing an id is a
+ * document the renderer draws once and the editor cannot select.
+ *
+ * Refuses ROOT (there is nothing to put a second one beside) and an overlay
+ * (not part of this document at all).
+ */
+export function duplicateNode(doc: PageDoc, id: string): { patches: Patch[]; ids: string[] } {
+  const n = doc.node(id);
+  if (id === doc.doc.root_node_id) throw new Error('sbuilder: cannot duplicate ROOT');
+  refuseOverlay(doc, id, 'duplicating');
+  const parentId = n.data.parent;
+  if (!parentId || !doc.has(parentId)) {
+    throw new Error(`sbuilder: ${id} has no parent to be duplicated beside`);
+  }
+
+  const patches: Patch[] = [];
+  const ids: string[] = [];
+  // One pass, parent-first, so a child's `parent` always names an id already
+  // emitted — the same ordering rule addSubtree follows.
+  const copy = (srcId: string, newParent: string): string => {
+    const src = doc.node(srcId) as unknown as Record<string, unknown> & {
+      data: { type: string; name?: string; parent: string | null; nodes: string[] };
+    };
+    const clone = JSON.parse(JSON.stringify(src)) as typeof src & { id: string };
+    clone.id = genId(src.data.type);
+    clone.data = { ...clone.data, parent: newParent, nodes: [] };
+    patches.push({ op: 'set', path: ['nodes', clone.id], value: clone });
+    ids.push(clone.id);
+    for (const kid of src.data.nodes) {
+      const kidId = copy(kid, clone.id);
+      patches.push({ op: 'insert', path: ['nodes', clone.id, 'data', 'nodes'], index: APPEND, value: kidId });
+    }
+    return clone.id;
+  };
+
+  const rootId = copy(id, parentId);
+  const at = doc.node(parentId).data.nodes.indexOf(id);
+  patches.push({
+    op: 'insert',
+    path: ['nodes', parentId, 'data', 'nodes'],
+    index: at < 0 ? APPEND : at + 1,
+    value: rootId,
+  });
+  return { patches, ids };
 }
 
 export function moveNode(doc: PageDoc, id: string, newParentId: string, index: number): Patch[] {

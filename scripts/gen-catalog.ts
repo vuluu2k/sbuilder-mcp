@@ -14,7 +14,7 @@ import { readFileSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { credentialFor } from '../src/transport/credential.js';
 import type { ApiOperation, ApiParam } from '../src/catalog/types.js';
-import type { CatalogElement } from '../src/catalog/element-types.js';
+import type { CatalogElement, TraitDescription } from '../src/catalog/element-types.js';
 
 const METHODS = ['get', 'post', 'put', 'patch', 'delete'] as const;
 
@@ -34,35 +34,60 @@ function refName(ref: string | undefined): string | null {
 }
 
 /**
- * Flatten the platform's two accepted trait shapes into one key list.
+ * Read an element's inspector as a human sees it: tabs → groups → controls.
  *
- * `meta.traits` is either a legacy flat `string[]` or a structured
- * `{ general, advanced }` of tabs -> groups -> ordered widget attributes. The
- * agent only ever needs "which keys does this element accept", so both collapse
- * to the same list here rather than every consumer learning both shapes.
+ * `meta.traits` is either a legacy flat `string[]` or the real structure —
+ * `{ general: [...], advanced: [...] }`, each entry a GROUP with a `key`, a
+ * `label` and an **`attributes`** array whose items are the actual control keys
+ * (a bare string, or `{ key, group?, visible? }`).
+ *
+ * The first version of this function recursed into `items`/`widgets`/`groups`
+ * and never touched `attributes`, so it collected GROUP keys and stopped:
+ * `heading` reported nine section headers (`size`, `typography`, `seo`, …)
+ * instead of its twenty-four controls. The catalog was describing the
+ * inspector's headings rather than its inspector, and nothing said so — the
+ * output was a plausible list of plausible words.
  */
-function flattenTraits(traits: unknown): string[] {
-  const out = new Set<string>();
-  const walk = (v: unknown): void => {
-    if (typeof v === 'string') {
-      out.add(v);
-      return;
-    }
-    if (Array.isArray(v)) {
-      for (const x of v) walk(x);
-      return;
-    }
-    if (v && typeof v === 'object') {
-      const o = v as Record<string, unknown>;
-      if (typeof o.attr === 'string') out.add(o.attr);
-      else if (typeof o.key === 'string') out.add(o.key);
-      for (const k of ['items', 'widgets', 'groups', 'general', 'advanced', 'tabs']) {
-        if (k in o) walk(o[k]);
+function readInspector(traits: unknown): {
+  tabs: Array<{ tab: string; groups: Array<{ key: string; label: string; controls: string[] }> }>;
+  controls: string[];
+} {
+  const controls = new Set<string>();
+  const tabs: Array<{ tab: string; groups: Array<{ key: string; label: string; controls: string[] }> }> = [];
+
+  const readControls = (attributes: unknown): string[] => {
+    const out: string[] = [];
+    for (const a of Array.isArray(attributes) ? attributes : []) {
+      if (typeof a === 'string') out.push(a);
+      else if (a && typeof a === 'object' && typeof (a as { key?: unknown }).key === 'string') {
+        // `visible: false` controls exist but are not rendered as a row; they are
+        // still the element's own keys, so they belong in the list with the flag
+        // dropped rather than being hidden from an agent too.
+        out.push((a as { key: string }).key);
       }
     }
+    for (const c of out) controls.add(c);
+    return out;
   };
-  walk(traits);
-  return [...out];
+
+  // Legacy flat form: a bare list of control keys, no tabs.
+  if (Array.isArray(traits)) {
+    const flat = readControls(traits);
+    return { tabs: flat.length ? [{ tab: 'general', groups: [{ key: 'general', label: 'General', controls: flat }] }] : [], controls: [...controls] };
+  }
+
+  const t = (traits ?? {}) as Record<string, unknown>;
+  for (const tab of ['general', 'advanced']) {
+    const groups = Array.isArray(t[tab]) ? (t[tab] as unknown[]) : [];
+    const read = groups
+      .map((g) => {
+        const o = (g ?? {}) as { key?: string; label?: string; attributes?: unknown };
+        return { key: o.key ?? '', label: o.label ?? o.key ?? '', controls: readControls(o.attributes) };
+      })
+      .filter((g) => g.key);
+    if (read.length) tabs.push({ tab, groups: read });
+  }
+  return { tabs, controls: [...controls] };
 }
 
 /**
@@ -201,6 +226,24 @@ export const API_DEFINITIONS: Record<string, unknown> = ${JSON.stringify(
   // relative imports and all — that package is bundled by Vite, not resolved as
   // Node16 ESM, so a plain `import` from a Node16 build would fail. Verified
   // against the real checkout before this was written.
+  const traitReg = (await import(resolve(repo, 'schema/src/traits/registry.ts'))) as {
+    TRAITS: Record<string, { key: string; label: string; writes?: Array<{ target: string; writeKey: string; schema?: { type?: string; unit?: string } }>; default?: Record<string, unknown> }>;
+  };
+  const traits: Record<string, TraitDescription> = {};
+  for (const [key, d] of Object.entries(traitReg.TRAITS)) {
+    traits[key] = {
+      key,
+      label: d.label ?? key,
+      writes: (d.writes ?? []).map((w) => ({
+        target: w.target,
+        writeKey: w.writeKey,
+        type: w.schema?.type ?? 'string',
+        ...(w.schema?.unit ? { unit: w.schema.unit } : {}),
+      })),
+      ...(d.default ? { defaults: d.default } : {}),
+    };
+  }
+
   const registry = (await import(resolve(repo, 'schema/src/elements/registry.ts'))) as {
     ELEMENTS: Record<string, Record<string, unknown>>;
     allElementTypes: () => string[];
@@ -245,7 +288,8 @@ export const API_DEFINITIONS: Record<string, unknown> = ${JSON.stringify(
       hideInLayer: em.rules?.hideInLayer === true,
       childAllows: (em.rules?.nodeChildAllows as string[] | undefined) ?? [],
       defaults: (em.defaults ?? {}) as CatalogElement['defaults'],
-      traits: flattenTraits(em.traits),
+      inspector: readInspector(em.traits).tabs,
+      controls: readInspector(em.traits).controls,
       description: a.description,
       useWhen: a.hints?.useWhen ?? [],
       avoidWhen: a.hints?.avoidWhen ?? [],
@@ -254,21 +298,43 @@ export const API_DEFINITIONS: Record<string, unknown> = ${JSON.stringify(
     };
   }
 
+  // The bug this replaced was SILENT: a plausible list of plausible words. So
+  // the shape is asserted, not trusted. A heading has two dozen controls; if this
+  // ever collapses back to section headers the count gives it away here rather
+  // than in an agent's guesswork.
+  const headingControls = elements.heading?.controls ?? [];
+  if (headingControls.length < 15 || !headingControls.includes('font_size')) {
+    console.error(
+      `heading reports ${headingControls.length} controls (${headingControls.slice(0, 6).join(', ')}) — ` +
+        'expected 15+ including font_size. readInspector is reading groups, not attributes.',
+    );
+    process.exit(1);
+  }
+  const allControls = new Set(Object.values(elements).flatMap((e) => e.controls));
+  if (allControls.size < 300) {
+    console.error(`only ${allControls.size} distinct controls — expected 300+`);
+    process.exit(1);
+  }
+
   const docVersion = readDocSchemaVersion(repo);
   const bindingSources = readBindingSources(repo);
   const elementsOut = `// GENERATED by scripts/gen-catalog.ts — do not edit by hand.
 // Source: <WB_REPO>/schema/src/elements/** and editor/src/theme/legacyScopes.ts
-import type { CatalogElement } from './element-types.js';
+import type { CatalogElement, TraitDescription } from './element-types.js';
 
 export const ELEMENT_SOURCE = ${JSON.stringify({ count: types.length, docSchemaVersion: docVersion }, null, 2)} as const;
 
 export const ELEMENTS: Record<string, CatalogElement> = ${JSON.stringify(elements, null, 2)};
 
 export const BINDING_SOURCES: string[] = ${JSON.stringify(bindingSources, null, 2)};
+
+export const TRAIT_WRITES: Record<string, TraitDescription> = ${JSON.stringify(traits, null, 2)};
 `;
   writeFileSync(resolve(process.cwd(), 'src/catalog/elements.generated.ts'), elementsOut, 'utf8');
   console.error(
-    `wrote elements.generated.ts: ${types.length} elements, ${bindingSources.length} binding sources, doc schema v${docVersion}`,
+    `wrote elements.generated.ts: ${types.length} elements, ${allControls.size} controls ` +
+      `(${Object.keys(traits).length} with a declared write target), ` +
+      `${bindingSources.length} binding sources, doc schema v${docVersion}`,
   );
 
   const dest = resolve(process.cwd(), 'src/catalog/api.generated.ts');

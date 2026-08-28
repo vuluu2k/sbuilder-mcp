@@ -200,3 +200,52 @@ Cả hai tham số đều được kiểm với từ vựng sinh tự động, v
 `source` lạ sẽ giải ra rỗng và hiện placeholder của chính element (không phân biệt được với
 "đang tải"), còn `field` ngoài `specials` thì được lưu, được ghi, được publish, và bị bỏ qua
 mãi mãi — `applyBindings` đọc namespace từ field rồi bỏ qua mọi thứ khác.
+
+---
+
+# Thiết kế như người thật
+
+## `sb_traits_for` — inspector, không phải bản tóm tắt
+
+Trả về inspector của element đúng như người ta nhìn: **tab → nhóm → control**, và mỗi
+control ghi vào đâu nếu nền tảng có khai báo.
+
+```
+[general] Typography: text_color, font_family, font_size, text_align, line_height, …
+font_size → ghi style.fontSize, kiểu number, đơn vị px, mặc định { base: 16, mobile: 14 }
+```
+
+83 trên 372 control có đích ghi khai báo sẵn. Số còn lại trả về **có tên nhưng không mô
+tả**, kèm lý do — ràng buộc của chúng dựng bên trong widget Vue, máy không đọc được. Với
+những cái đó, hãy đọc một node đã dùng control ấy (`sb_node_read`), hoặc set thẳng thuộc
+tính CSS.
+
+**`style` là CSS mở.** Mọi khoá camelCase đều thành một thuộc tính CSS, nên bạn set được
+bất cứ thứ gì CSS diễn đạt được, dù có control cho nó hay không. `config` và `specials`
+thì **không** mở — chúng theo từng element, và `defaults` của element nói đúng những khoá
+nó thật sự dùng.
+
+## `sb_duplicate`
+
+`id`. Nhân bản node và cả cây con dưới **id mới**, chèn ngay sau bản gốc — thao tác người
+thiết kế làm liên tục. Style đi theo, và đó chính là mục đích. Từ chối ROOT và site overlay.
+
+## `sb_templates` / `sb_template_use`
+
+`sb_templates` liệt kê section template đã lưu. `sb_template_use` thả một cái vào trang —
+server tự copy, nên section tới đúng như lúc được thiết kế. Nhớ mở lại trang sau đó; phiên
+đang mở vẫn giữ cây cũ.
+
+## `sb_page_list` / `sb_page_create` / `sb_publish`
+
+Vòng đời trang, thành tool hạng nhất thay vì đi vòng qua `sb_api_call`. Trang mới tạo thì
+rỗng, và `sb_page_open` gieo ROOT cho nó.
+
+`sb_publish` **lan**: trang dùng chung global section với trang khác sẽ publish luôn các
+trang đó, vì header sửa một lần không được lên live ở trang này mà cũ ở trang kia.
+
+## Hover và các trạng thái khác
+
+`sb_set` nhận `state` — `hover` là cái inspector có. Trạng thái lồng *dưới* breakpoint chứ
+không thay thế nó, nên vẫn ghi theo breakpoint như mọi đại lượng thị giác, không bao giờ ở
+base.

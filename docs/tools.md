@@ -204,3 +204,52 @@ Both arguments are validated against generated vocabulary, because both failures
 placeholder (indistinguishable from "still loading"), and a `field` outside `specials` is
 stored, saved, published, and ignored forever — `applyBindings` reads the namespace off the
 field and skips anything else.
+
+---
+
+# Designing like a person
+
+## `sb_traits_for` — the inspector, not a summary
+
+Returns the element's inspector as a person navigates it: **tabs → groups → controls**, and
+for each control what it writes when the platform declares it.
+
+```
+[general] Typography: text_color, font_family, font_size, text_align, line_height, …
+font_size → writes style.fontSize, number, px, defaults { base: 16, mobile: 14 }
+```
+
+83 of the 372 controls carry a declared write target. The rest come back **named but
+undescribed**, with the reason — their binding is built inside a Vue widget and is not
+machine-readable. For those, read a node that already uses the control (`sb_node_read`), or
+set the CSS property directly.
+
+**`style` is open CSS.** Any camelCase key becomes a CSS property, so you can set anything
+CSS expresses whether or not a control exists for it. `config` and `specials` are **not**
+open — they are per-element, and the element's `defaults` name the keys it really uses.
+
+## `sb_duplicate`
+
+`id`. Copies the node and everything under it under **fresh ids**, inserted right after the
+original — the move a designer makes constantly. Styling comes with it, which is the point.
+Refuses ROOT and site overlays.
+
+## `sb_templates` / `sb_template_use`
+
+`sb_templates` lists the store's saved section templates. `sb_template_use` instantiates one
+into a page — the server does the copy, so the section arrives exactly as designed. Re-open
+the page afterwards; the open session still holds the older tree.
+
+## `sb_page_list` / `sb_page_create` / `sb_publish`
+
+The page lifecycle, first-class rather than through `sb_api_call`. A created page arrives
+empty and `sb_page_open` seeds its ROOT.
+
+`sb_publish` **cascades**: a page sharing a global section with others republishes them too,
+because a header edited once must not go live on one page and stay stale on the rest.
+
+## Hover, and other states
+
+`sb_set` takes `state` — `hover` is the one the inspector offers. A state nests *under* a
+breakpoint rather than replacing it, so it is written per breakpoint like any other visual
+quantity, and never at base.

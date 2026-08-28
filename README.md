@@ -65,11 +65,17 @@ make, because those mean "this person's account".
 | `sb_set` | Write style/config/specials. Per breakpoint by default |
 | `sb_move` | Move a node to another parent |
 | `sb_remove` | Remove a node and its subtree |
+| `sb_duplicate` | Copy a node and its subtree under fresh ids, right after the original |
+| `sb_templates` | The store's saved section templates — designed sections to start from |
+| `sb_template_use` | Instantiate a template into a page |
+| `sb_page_list` | Every page on the site |
+| `sb_page_create` | Create a page |
+| `sb_publish` | Compile the draft into the live page (cascades to shared globals) |
 | `sb_live_join` | Join the editor's live-edit room as a visible peer — edits then appear live |
 | `sb_look` | Save, render, and return screenshots plus measured node boxes |
 | `sb_bind` | Bind a node's content to real store data |
 
-Sixteen tools, **310 API operations**. `sb_api_find` is an index rather than a tool per endpoint,
+Twenty-two tools, **310 API operations**. `sb_api_find` is an index rather than a tool per endpoint,
 so the tool list stays short while everything the platform can do stays reachable — and
 operations added to the platform arrive with the next `npm run codegen`.
 
