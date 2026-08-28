@@ -296,3 +296,18 @@ page, and a full-page shot of a long storefront makes one card a few pixels tall
 comes from the same measurement pass the boxes do, so what is framed is exactly what
 `sb_set` addresses. A node that is not on the rendered page, or that renders with no size,
 is **refused by name** rather than answered with the wrong picture.
+
+## `sb_media_list` / `sb_media_upload`
+
+`sb_media_upload` is the **only** way to add an image. The endpoint takes multipart
+(`file:formData/file`), and `sb_api_call` JSON-encodes every body — so reaching it that way
+sent JSON to a multipart handler and got a rejection nothing could act on. A page with no
+images is not a designed page, so this was the gap between laying a page out and finishing
+one.
+
+Takes a local `path` or a `url` to fetch. Returns the asset with its URL and the exact
+`sb_set` call that puts it on a node. `sb_media_list` first — reuse what the store already
+has before adding another copy.
+
+Errors say which side failed: an unreachable `url` is `source_unreachable`, not a blamed
+upload.

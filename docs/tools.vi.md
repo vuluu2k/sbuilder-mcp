@@ -293,3 +293,17 @@ trang, và ảnh full-page của một storefront dài làm cái thẻ đó ch�
 từ chính lần đo ra bounding box, nên thứ được đóng khung đúng là thứ `sb_set` nhắm tới. Node
 không có trên trang đã render, hoặc render ra kích thước bằng 0, bị **từ chối đích danh** chứ
 không trả về một bức ảnh sai.
+
+## `sb_media_list` / `sb_media_upload`
+
+`sb_media_upload` là cách **duy nhất** để thêm ảnh. Endpoint nhận multipart
+(`file:formData/file`), còn `sb_api_call` mã hoá mọi body bằng JSON — nên đi đường đó là gửi
+JSON vào một handler multipart và nhận một lỗi không làm gì được. Một trang không có ảnh thì
+chưa phải trang được thiết kế, nên đây chính là khoảng cách giữa *dàn xong bố cục* và *làm
+xong trang*.
+
+Nhận `path` (file trên máy) hoặc `url` (tải về rồi upload). Trả về asset kèm URL và đúng lệnh
+`sb_set` để gắn nó lên node. Nên gọi `sb_media_list` trước — dùng lại ảnh cửa hàng đã có thay
+vì thêm bản sao.
+
+Lỗi nói rõ phía nào hỏng: `url` không tải được là `source_unreachable`, không đổ cho upload.
