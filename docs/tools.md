@@ -253,3 +253,23 @@ because a header edited once must not go live on one page and stay stale on the 
 `sb_set` takes `state` — `hover` is the one the inspector offers. A state nests *under* a
 breakpoint rather than replacing it, so it is written per breakpoint like any other visual
 quantity, and never at base.
+
+---
+
+# Installing (`sbuilder-mcp install`)
+
+```bash
+npx -y sbuilder-mcp install --token wbk_… --api https://your-host
+```
+
+Writes this server into every agent client on the machine — Claude Code, Claude Desktop,
+Cursor, Windsurf, VS Code, Codex. `--client cursor,codex` names them; `--dry-run` rehearses.
+
+| Behaviour | Why |
+| --- | --- |
+| **Merges** into the existing file | Those files hold other people's servers. A whole-file write is the difference between installing one and deleting somebody's setup — and they would find out the next time they reached for a tool that had quietly gone. |
+| Copies what it replaces to `<file>.sbuilder-backup` | The undo, named in the output. A config writer that changes a file without saying where the old one went leaves you with nothing to reach for. |
+| **Refuses** a file it cannot parse | A config with a trailing comma is far likelier than one worth discarding, and it is the very thing you need to fix it. |
+| Idempotent | A second identical run writes nothing and leaves no backup behind. |
+| One broken client never stops the others | A bad Cursor config is no reason to leave Claude Code unconfigured. The report says which is which. |
+| Writes the **key** alone when you have one | A key opens everything the agent does day to day. Putting an account password into six config files to buy a few account-level calls is a bad trade to make on someone's behalf. |
