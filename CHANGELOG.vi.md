@@ -6,6 +6,29 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.1] - 2026-09-07
+
+### Added
+- sb_add và sb_move giờ seed đúng nội dung mà editor gán cho một element lúc kéo-thả: các node vệ tinh như skin của từng mục accordion hay nút dùng chung của tab, và các subtree được seed sẵn cho trạng thái rỗng của list cũng như cho dropdown, select và popover — vốn render thành hộp trống nếu thiếu chúng.
+- sb_page_open giờ báo cáo compose_warnings từ nền tảng, bao gồm globalMissing — nghĩa là server không tìm thấy bản gốc của một shared section và đã xóa node tham chiếu khỏi document trả về; lưu từ đây sẽ khiến việc mất đó thành vĩnh viễn.
+- sb_page_create giờ báo cáo slug_renamed khi slug yêu cầu đã bị chiếm; nền tảng âm thầm lưu một slug có hậu tố khác và trả về thành công, nên mọi link được gán theo slug yêu cầu ban đầu sẽ chết nếu không có cảnh báo này.
+- sb_publish giờ báo cáo not_published khi một trang chưa có draft đã lưu, vì nền tảng bỏ qua trang đó và vẫn trả về thành công kèm những trang khác đã publish được.
+- sb_review giờ báo cáo unlinked_form khi một form element không trỏ tới form nào, vì nó không compose được gì và publish thành một hộp trống mà nền tảng không hề cảnh báo.
+- sb_review giờ báo cáo dead_menu_link khi một menu không có entry nào hoặc một entry không có href, vì renderer chỉ đọc specials.menuItems chứ không đọc menuId.
+- sb_review giờ báo cáo extra_repeater_child khi một repeater element (như list-dataset) có nhiều hơn một child, vì chỉ child đầu tiên được render cho mỗi record.
+
+### Changed
+- sb_add và sb_move giờ từ chối thêm hoặc di chuyển child thứ hai vào một repeater element, vì chỉ child đầu tiên được render; việc sắp xếp lại thứ tự trong cùng một parent vẫn được cho phép.
+- sb_duplicate giờ cũng từ chối nhân bản vào một repeater element vì lý do tương tự, và deep-copy các node vệ tinh (như skin của accordion) kèm việc ghi lại con trỏ về đúng owner mới, thay vì để bản sao trỏ vào vệ tinh của bản gốc.
+- sb_duplicate giờ loại bỏ các stamp composition (globalId, globalRef, globalKind, globalRev) khỏi node được nhân bản thay vì sao chép nguyên trạng, vì hai node dùng chung một stamp sẽ bị nền tảng từ chối ở lần lưu kế tiếp.
+- sb_publish giờ chỉ trả về các trường mà caller thực sự dùng đến (pageId, slug, isHomepage) cho mỗi trang đã publish, thay vì toàn bộ document, html và css đã render của mọi trang mà cascade chạm tới.
+- Bản xem trước dry_run và phản hồi thật của sb_page_create giờ redact settings giống cách sb_api_call làm, vì đây là một object tự do mà caller có thể lỡ truyền credential vào.
+- Lượt duyệt cây nội bộ dùng bởi sb_remove, sb_duplicate và kiểm tra khi lưu giờ đi theo cả các node vệ tinh (gắn qua config, không qua child list) bên cạnh child list, nên việc xóa hoặc nhân bản một node giờ xử lý đúng cả các vệ tinh của nó.
+- Kiểm tra khi lưu giờ từ chối một document có stamp composition (globalId, overlayId) nằm trên node không phải con trực tiếp của ROOT, hoặc bị lặp trên hai node, vì nền tảng cũng từ chối cả hai trường hợp này nhưng báo lỗi mơ hồ ở bước sau.
+
+### Fixed
+- Sắp xếp lại một node trong cùng parent của repeater không còn bị chặn nhầm bởi guard child thứ hai mới thêm.
+
 ## [0.2.0] - 2026-09-07
 
 ### Added

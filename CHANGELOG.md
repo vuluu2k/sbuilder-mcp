@@ -6,6 +6,29 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.1] - 2026-09-07
+
+### Added
+- sb_add and sb_move now seed the same content the editor gives an element at drop time: satellite nodes such as an accordion's item skin or a tab's shared button, and seeded subtrees for a list's empty state and for dropdown, select and popover, which render as an empty box without them.
+- sb_page_open reports compose_warnings from the platform, including globalMissing, which means the server could not find a shared section's master and deleted the reference node from the document it handed back — saving from there makes the loss permanent.
+- sb_page_create reports slug_renamed when the requested slug was already taken; the platform silently stores a suffixed slug and answers success, so every link authored to the requested slug would otherwise be dead.
+- sb_publish reports not_published when a page has no saved draft, since the platform skips it and still answers success with whatever else did publish.
+- sb_review reports unlinked_form when a form element names no form, since it composes nothing and publishes as an empty box with no warning from the platform.
+- sb_review reports dead_menu_link when a menu has no entries or an entry has no href, since the renderer reads specials.menuItems and never menuId.
+- sb_review reports extra_repeater_child when a repeater element (such as list-dataset) carries more than one child, since only the first is ever rendered per record.
+
+### Changed
+- sb_add and sb_move now refuse adding or moving a second child into a repeater element, since only the first child renders; a reorder within the same parent is still allowed.
+- sb_duplicate now refuses duplicating into a repeater element for the same reason, and deep-copies satellite nodes (such as an accordion's skin) with the owner's pointer rewritten instead of aiming the copy at the original's satellite.
+- sb_duplicate strips the composition stamps (globalId, globalRef, globalKind, globalRev) from a duplicated node instead of copying them, since two nodes sharing one stamp is refused by the platform on the next save.
+- sb_publish now returns only the fields a caller acts on (pageId, slug, isHomepage) for each published page instead of the platform's full rendered document, html and css for every page the cascade touched.
+- sb_page_create's dry_run preview and live response now redact settings the same way sb_api_call does, since it is a free-form object a caller can pass a credential inside.
+- The internal tree walk used by sb_remove, sb_duplicate and save validation now follows satellite nodes (attached through config, not the child list) in addition to the child list, so removing or duplicating a node also handles its satellites correctly.
+- Save validation now refuses a document where a composition stamp (globalId, overlayId) sits on a node that is not a direct child of ROOT, or is duplicated across two nodes, since the platform refuses both later and reports it as an opaque error.
+
+### Fixed
+- Reordering a node within the same repeater parent no longer trips the new second-child guard.
+
 ## [0.2.0] - 2026-09-07
 
 ### Added
