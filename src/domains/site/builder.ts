@@ -1,5 +1,5 @@
 import type { Patch } from '../../core/patch.js';
-import { isOverlay, subtreeIds, ancestors } from '../../core/tree.js';
+import { isOverlay, subtreeIds, ancestors, appBlockRoot } from '../../core/tree.js';
 import { ELEMENTS } from '../../catalog/elements.generated.js';
 import { createNode } from './node.js';
 import { genId } from './ids.js';
@@ -55,6 +55,44 @@ function refuseOverlay(doc: PageDoc, id: string, verb: string): void {
   );
 }
 
+function appBlockMessage(id: string, root: string, verb: string): string {
+  const where =
+    id === root
+      ? `${id} is the root of an app block, so anything placed under it lands inside the block`
+      : `${id} is inside the app block ${root}`;
+  return (
+    `sbuilder: ${where}. On save the platform reduces the whole block back to its reference, ` +
+    `so ${verb} here would be lost silently. Configure the block through its app, or remove ` +
+    `the block (sb_remove ${root}).`
+  );
+}
+
+/**
+ * TRAP 5: refuse a write to a strict descendant of a composed app block.
+ *
+ * The block ROOT is allowed through — it is the reference node the document
+ * actually stores, and `specials.appBlockValues` on it is exactly where the
+ * merchant's settings live. Everything under it is the app's markup, composed
+ * on read and reduced back to the reference on write: an edit there is stored
+ * nowhere and reported nowhere.
+ */
+export function refuseAppBlockInterior(doc: PageDoc, id: string, verb: string): void {
+  const root = appBlockRoot(doc.doc, id);
+  if (!root || root === id) return;
+  throw new Error(appBlockMessage(id, root, verb));
+}
+
+/**
+ * The parent-side twin: a child placed under ANY node of a block — the root
+ * included — lands inside the block, so the root is refused here where
+ * `refuseAppBlockInterior` lets it through.
+ */
+function refuseAppBlockParent(doc: PageDoc, parentId: string, verb: string): void {
+  const root = appBlockRoot(doc.doc, parentId);
+  if (!root) return;
+  throw new Error(appBlockMessage(parentId, root, verb));
+}
+
 /**
  * Add a whole subtree under `parentId`, as ONE batch of patches.
  *
@@ -71,6 +109,7 @@ export function addSubtree(
   index?: number,
 ): { patches: Patch[]; ids: string[] } {
   const parent = doc.node(parentId);
+  refuseAppBlockParent(doc, parentId, 'adding');
   requireContainer(parent.data.type, parentId);
   requireAllowed(parent.data.type, spec.type);
 
@@ -133,6 +172,7 @@ export function setKeys(
   },
 ): Patch[] {
   doc.node(id); // throws naming the id if it is not there
+  refuseAppBlockInterior(doc, id, 'writing');
   const { namespace } = opts;
 
   if (namespace === 'specials') {
@@ -199,6 +239,7 @@ export function duplicateNode(doc: PageDoc, id: string): { patches: Patch[]; ids
   const n = doc.node(id);
   if (id === doc.doc.root_node_id) throw new Error('sbuilder: cannot duplicate ROOT');
   refuseOverlay(doc, id, 'duplicating');
+  refuseAppBlockInterior(doc, id, 'duplicating');
   const parentId = n.data.parent;
   if (!parentId || !doc.has(parentId)) {
     throw new Error(`sbuilder: ${id} has no parent to be duplicated beside`);
@@ -238,7 +279,9 @@ export function duplicateNode(doc: PageDoc, id: string): { patches: Patch[]; ids
 export function moveNode(doc: PageDoc, id: string, newParentId: string, index: number): Patch[] {
   const n = doc.node(id);
   refuseOverlay(doc, id, 'moving');
+  refuseAppBlockInterior(doc, id, 'moving');
   const newParent = doc.node(newParentId);
+  refuseAppBlockParent(doc, newParentId, 'moving');
 
   // The STRUCTURAL check runs first, before the type rules, and the order is not
   // arbitrary: a node moved inside its own subtree detaches that subtree from the
@@ -269,6 +312,7 @@ export function removeNode(doc: PageDoc, id: string): Patch[] {
   const n = doc.node(id);
   if (id === doc.doc.root_node_id) throw new Error('sbuilder: cannot remove ROOT');
   refuseOverlay(doc, id, 'removing');
+  refuseAppBlockInterior(doc, id, 'removing');
 
   const patches: Patch[] = [];
   const parentId = n.data.parent;

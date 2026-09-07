@@ -1,5 +1,5 @@
 import { applyPatches, type Patch } from '../../core/patch.js';
-import { childrenOf, isOverlay, type DocLike, type NodeLike } from '../../core/tree.js';
+import { childrenOf, isOverlay, appBlockRoot, type DocLike, type NodeLike } from '../../core/tree.js';
 import { bandOf, isGlobal, type Band } from './traps.js';
 
 export interface OutlineNode {
@@ -10,6 +10,8 @@ export interface OutlineNode {
   band?: Band;
   global?: boolean;
   overlay?: boolean;
+  /** The root of a composed app block: edits under it are lost on save (trap 5). */
+  app?: boolean;
   kids?: OutlineNode[];
 }
 
@@ -118,6 +120,7 @@ export class PageDoc {
         else out.band = bandOf(this.doc, id);
       }
       if (isGlobal(this.doc, id)) out.global = true;
+      if (appBlockRoot(this.doc, id) === id) out.app = true;
       if (level + 1 < depth && kidIds.length > 0) {
         out.kids = kidIds.map((k) => line(k, level + 1));
       }
