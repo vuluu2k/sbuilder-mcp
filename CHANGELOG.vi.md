@@ -6,6 +6,12 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.2] - 2026-09-07
+
+### Fixed
+- sb_live_join giờ chấp nhận API key (SB_TOKEN) để vào phòng live-edit, thay vì từ chối và bắt buộc dùng session; nền tảng giờ kiểm soát socket dựa trên quyền member được ủy quyền qua key và site của chính key đó, nên một cài đặt chỉ dùng key có thể tham gia như mọi tool khác.
+- sb_media_upload giờ chấp nhận API key, thay vì từ chối và bắt buộc dùng session; endpoint upload của nền tảng giờ nằm sau cùng một cổng chặn với sb_sites, và lỗi 401 khi có key giờ báo rằng key thiếu quyền media hoặc thuộc site khác, thay vì bảo caller đổi sang loại credential khác.
+
 ## [0.2.1] - 2026-09-07
 
 ### Added

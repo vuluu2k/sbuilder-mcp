@@ -6,6 +6,12 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.2] - 2026-09-07
+
+### Fixed
+- sb_live_join now accepts an API key (SB_TOKEN) to join the live-edit room, instead of refusing it and requiring a session; the platform now gates the socket on the key's delegated member permission and its own site, so a key-only install can join like every other tool.
+- sb_media_upload now accepts an API key, instead of refusing it and requiring a session; the platform's upload endpoint moved behind the same gate as sb_sites, and a 401 with a key present now reports that the key lacks the media permission or belongs to another site, rather than telling the caller to switch credentials.
+
 ## [0.2.1] - 2026-09-07
 
 ### Added
