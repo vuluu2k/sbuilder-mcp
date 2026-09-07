@@ -83,14 +83,18 @@ export function registerLiveTools(
   ctx: ToolContext,
   session: PageSession,
 ): void {
-  server.tool(
+  server.registerTool(
     'sb_live_join',
-    "Join the editor's live-edit room for this site, as a visible peer. Once joined, every " +
-      'sb_add / sb_set / sb_move / sb_remove / sb_bind also goes out as a live op, so anyone ' +
-      'with the editor open watches the page assemble. Safe alongside a human: this client ' +
-      'always yields — it never answers a snapshot request and re-pulls on any divergence. ' +
-      'Needs SB_EMAIL / SB_PASSWORD: the socket refuses API keys.',
-    { site_id: z.string() },
+    {
+      description:
+        "Join the editor's live-edit room for this site, as a visible peer. Once joined, every " +
+          'sb_add / sb_set / sb_move / sb_remove / sb_bind also goes out as a live op, so anyone ' +
+          'with the editor open watches the page assemble. Safe alongside a human: this client ' +
+          'always yields — it never answers a snapshot request and re-pulls on any divergence. ' +
+          'Needs SB_EMAIL / SB_PASSWORD: the socket refuses API keys.',
+      inputSchema: { site_id: z.string() },
+      annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true },
+    },
     async ({ site_id }) => {
       const tokenFn = requireSessionForLive(ctx);
       const wsBase = ctx.base.replace(/^http/, 'ws').replace(/\/$/, '');
@@ -111,14 +115,16 @@ export function registerLiveTools(
     },
   );
 
-  server.tool(
+  server.registerTool(
     'sb_look',
-    "Save the open page, render it through the platform's own renderer, and return " +
-      'screenshots at desktop, tablet and mobile widths — plus measured boxes for the bands ' +
-      'and their children (box_depth for more) — plus any LAYOUT defect measured on the render: content past the ' +
-      'viewport, elements overlapping, text too small to read. Pass node_id to frame ONE ' +
-      'element instead of the whole page. Judge your own work from these rather than guessing.',
     {
+      description:
+        "Save the open page, render it through the platform's own renderer, and return " +
+          'screenshots at desktop, tablet and mobile widths — plus measured boxes for the bands ' +
+          'and their children (box_depth for more) — plus any LAYOUT defect measured on the render: content past the ' +
+          'viewport, elements overlapping, text too small to read. Pass node_id to frame ONE ' +
+          'element instead of the whole page. Judge your own work from these rather than guessing.',
+      inputSchema: {
       widths: z.array(z.number().int().min(320).max(2560)).optional(),
       with_boxes: z.boolean().optional(),
       box_depth: z
@@ -132,6 +138,8 @@ export function registerLiveTools(
         .string()
         .optional()
         .describe('Frame just this node instead of the whole page — how a designer looks at one card'),
+    },
+      annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true },
     },
     async ({ widths, with_boxes, box_depth, node_id }) => {
       await session.save();
@@ -172,16 +180,20 @@ export function registerLiveTools(
     },
   );
 
-  server.tool(
+  server.registerTool(
     'sb_media_list',
-    "The site's media library — reuse an image that is already there before adding another. " +
-      'Search by name, filter by type, page with limit/offset.',
     {
+      description:
+        "The site's media library — reuse an image that is already there before adding another. " +
+          'Search by name, filter by type, page with limit/offset.',
+      inputSchema: {
       site_id: z.string(),
       search: z.string().optional(),
       media_type: z.string().optional().describe('e.g. "image"'),
       limit: z.number().int().min(1).max(200).optional(),
       offset: z.number().int().min(0).optional(),
+    },
+      annotations: { readOnlyHint: true },
     },
     async ({ site_id, search, media_type, limit, offset }) =>
       text(
@@ -200,18 +212,22 @@ export function registerLiveTools(
       ),
   );
 
-  server.tool(
+  server.registerTool(
     'sb_media_upload',
-    'Put an image into the media library and get its URL back, ready for sb_set. Takes a ' +
-      'local file path or a URL to fetch. This is the ONLY way to add an image: the upload ' +
-      'is multipart, which sb_api_call cannot send.',
     {
+      description:
+        'Put an image into the media library and get its URL back, ready for sb_set. Takes a ' +
+          'local file path or a URL to fetch. This is the ONLY way to add an image: the upload ' +
+          'is multipart, which sb_api_call cannot send.',
+      inputSchema: {
       site_id: z.string(),
       path: z.string().optional().describe('A file on this machine'),
       url: z.string().optional().describe('Fetched, then uploaded'),
       name: z.string().optional(),
       folder_id: z.string().optional(),
       dry_run: z.boolean().optional(),
+    },
+      annotations: { readOnlyHint: false, destructiveHint: false },
     },
     async ({ site_id, path, url, name, folder_id, dry_run }) => {
       if (!path && !url) throw new Error('sbuilder: give sb_media_upload either a path or a url');
@@ -233,15 +249,19 @@ export function registerLiveTools(
     },
   );
 
-  server.tool(
+  server.registerTool(
     'sb_bind',
-    "Bind a node's content to real store data, so the page shows actual products rather than " +
-      'placeholder text.',
     {
+      description:
+        "Bind a node's content to real store data, so the page shows actual products rather than " +
+          'placeholder text.',
+      inputSchema: {
       id: z.string(),
       source: z.string().describe(`One of: ${BINDING_SOURCES.join(', ')}`),
       field: z.string().describe('Where the value lands, always "specials.<key>"'),
       dry_run: z.boolean().optional(),
+    },
+      annotations: { readOnlyHint: false, destructiveHint: false },
     },
     async ({ id, source, field, dry_run }) => {
       const d = session.current();

@@ -79,21 +79,29 @@ export async function connect(
 }
 
 export function registerSessionTools(server: McpServer, ctx: ToolContext): void {
-  server.tool(
+  server.registerTool(
     'sb_connect',
-    'Log in and list the sites this account can operate. Call this first. Reads SB_EMAIL and ' +
-      'SB_PASSWORD from the environment unless you pass them.',
     {
+      description:
+        'Log in and list the sites this account can operate. Call this first. Reads SB_EMAIL and ' +
+          'SB_PASSWORD from the environment unless you pass them.',
+      inputSchema: {
       email: z.string().optional(),
       password: z.string().optional(),
+    },
+      annotations: { readOnlyHint: true },
     },
     async (args) => text(await connect(ctx, args)),
   );
 
-  server.tool(
+  server.registerTool(
     'sb_site_list',
-    'List the sites this account can operate.',
-    {},
+    {
+      description:
+        'List the sites this account can operate.',
+      inputSchema: {},
+      annotations: { readOnlyHint: true },
+    },
     async () =>
       text(
         await request({

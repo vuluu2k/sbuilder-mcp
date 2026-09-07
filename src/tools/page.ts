@@ -165,30 +165,42 @@ const specSchema: z.ZodType<NodeSpec> = z.lazy(() =>
 export function registerPageTools(server: McpServer, ctx: ToolContext): PageSession {
   const session = new PageSession(ctx);
 
-  server.tool(
+  server.registerTool(
     'sb_page_open',
-    'Open a page for editing and return its outline. Call before any sb_add / sb_set / ' +
-      'sb_move / sb_remove. Find page ids with sb_api_find "list pages".',
-    { site_id: z.string(), page_id: z.string() },
+    {
+      description:
+        'Open a page for editing and return its outline. Call before any sb_add / sb_set / ' +
+          'sb_move / sb_remove. Find page ids with sb_api_find "list pages".',
+      inputSchema: { site_id: z.string(), page_id: z.string() },
+      annotations: { readOnlyHint: true },
+    },
     async ({ site_id, page_id }) => {
       const outline = await session.open(site_id, page_id);
       return text({ outline, ...reviewField(ctx, session.current()) });
     },
   );
 
-  server.tool(
+  server.registerTool(
     'sb_outline',
-    'The open page as a compressed tree — id, type, name, child count, band, and whether a ' +
-      'node is a shared global or a site overlay. Never the raw document: a real page is ' +
-      'hundreds of KB of JSON.',
-    { depth: z.number().int().min(1).max(6).optional() },
+    {
+      description:
+        'The open page as a compressed tree — id, type, name, child count, band, and whether a ' +
+          'node is a shared global or a site overlay. Never the raw document: a real page is ' +
+          'hundreds of KB of JSON.',
+      inputSchema: { depth: z.number().int().min(1).max(6).optional() },
+      annotations: { readOnlyHint: true },
+    },
     async ({ depth }) => text(session.current().outline({ depth })),
   );
 
-  server.tool(
+  server.registerTool(
     'sb_node_read',
-    'One node in full — style, config, specials, per-breakpoint overrides, bindings.',
-    { id: z.string() },
+    {
+      description:
+        'One node in full — style, config, specials, per-breakpoint overrides, bindings.',
+      inputSchema: { id: z.string() },
+      annotations: { readOnlyHint: true },
+    },
     async ({ id }) => {
       const d = session.current();
       const node = d.node(id);
@@ -197,39 +209,51 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
     },
   );
 
-  server.tool(
+  server.registerTool(
     'sb_catalog_search',
-    'Find an element type by what you want it to do. Four fields per match; pass detail:true ' +
-      "for the platform's AI hints, or read them with sb_traits_for once you have chosen.",
     {
+      description:
+        'Find an element type by what you want it to do. Four fields per match; pass detail:true ' +
+          "for the platform's AI hints, or read them with sb_traits_for once you have chosen.",
+      inputSchema: {
       query: z.string(),
       limit: z.number().int().min(1).max(30).optional().describe('Default 8'),
       detail: z.boolean().optional().describe('Include useWhen / avoidWhen / contentTips per match'),
     },
+      annotations: { readOnlyHint: true },
+    },
     async ({ query, limit, detail }) => text(catalogMatches(query, { limit, detail })),
   );
 
-  server.tool(
+  server.registerTool(
     'sb_traits_for',
-    "This element's INSPECTOR, as a person sees it: tabs, groups, and every control name — " +
-      'with what each DECLARED control writes, and the AI hints for using the element. Read ' +
-      'this before styling an element; pass control to read one control in full.',
     {
+      description:
+        "This element's INSPECTOR, as a person sees it: tabs, groups, and every control name — " +
+          'with what each DECLARED control writes, and the AI hints for using the element. Read ' +
+          'this before styling an element; pass control to read one control in full.',
+      inputSchema: {
       type: z.string(),
       control: z.string().optional().describe('Narrow to one control, e.g. "font_size"'),
+    },
+      annotations: { readOnlyHint: true },
     },
     async ({ type, control }) => text(traitsFor(type, control)),
   );
 
-  server.tool(
+  server.registerTool(
     'sb_add',
-    'Add an element — or a whole NESTED subtree — under a parent. One call builds a complete ' +
-      'section: pass children rather than calling this once per node.',
     {
+      description:
+        'Add an element — or a whole NESTED subtree — under a parent. One call builds a complete ' +
+          'section: pass children rather than calling this once per node.',
+      inputSchema: {
       parent_id: z.string(),
       spec: specSchema,
       index: z.number().int().min(0).optional(),
       dry_run: z.boolean().optional(),
+    },
+      annotations: { readOnlyHint: false, destructiveHint: false },
     },
     async ({ parent_id, spec, index, dry_run }) => {
       const d = session.current();
@@ -243,11 +267,13 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
     },
   );
 
-  server.tool(
+  server.registerTool(
     'sb_set',
-    'Write style, config or specials keys on a node. Style and config are written PER ' +
-      'BREAKPOINT by default — a visual quantity written at base vanishes on publish.',
     {
+      description:
+        'Write style, config or specials keys on a node. Style and config are written PER ' +
+          'BREAKPOINT by default — a visual quantity written at base vanishes on publish.',
+      inputSchema: {
       id: z.string(),
       namespace: z.enum(['style', 'config', 'specials']),
       keys: z.record(z.unknown()),
@@ -255,6 +281,8 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
       base: z.boolean().optional(),
       state: z.string().optional().describe('An interaction state, e.g. "hover"'),
       dry_run: z.boolean().optional(),
+    },
+      annotations: { readOnlyHint: false, destructiveHint: false },
     },
     async ({ id, namespace, keys, breakpoint, base, state, dry_run }) => {
       const d = session.current();
@@ -275,14 +303,18 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
     },
   );
 
-  server.tool(
+  server.registerTool(
     'sb_move',
-    'Move a node to another parent at an index.',
     {
+      description:
+        'Move a node to another parent at an index.',
+      inputSchema: {
       id: z.string(),
       parent_id: z.string(),
       index: z.number().int().min(0),
       dry_run: z.boolean().optional(),
+    },
+      annotations: { readOnlyHint: false, destructiveHint: false },
     },
     async ({ id, parent_id, index, dry_run }) => {
       const d = session.current();
@@ -294,10 +326,14 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
     },
   );
 
-  server.tool(
+  server.registerTool(
     'sb_remove',
-    'Remove a node and its whole subtree.',
-    { id: z.string(), dry_run: z.boolean().optional() },
+    {
+      description:
+        'Remove a node and its whole subtree.',
+      inputSchema: { id: z.string(), dry_run: z.boolean().optional() },
+      annotations: { readOnlyHint: false, destructiveHint: true },
+    },
     async ({ id, dry_run }) => {
       const d = session.current();
       const patches = removeNode(d, id);
@@ -308,13 +344,17 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
     },
   );
 
-  server.tool(
+  server.registerTool(
     'sb_review',
-    'Everything wrong with the open page that a VISITOR would see — a blank band, a ' +
-      'placeholder sentence the author never replaced, an image with no source, a binding ' +
-      'that will never resolve. Distinct from whether the page saves: a perfectly storable ' +
-      'document can publish as an empty box. Run it before you call a page finished.',
-    {},
+    {
+      description:
+        'Everything wrong with the open page that a VISITOR would see — a blank band, a ' +
+          'placeholder sentence the author never replaced, an image with no source, a binding ' +
+          'that will never resolve. Distinct from whether the page saves: a perfectly storable ' +
+          'document can publish as an empty box. Run it before you call a page finished.',
+      inputSchema: {},
+      annotations: { readOnlyHint: true },
+    },
     async () => {
       const field = reviewField(ctx, session.current());
       return text(
@@ -325,11 +365,15 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
     },
   );
 
-  server.tool(
+  server.registerTool(
     'sb_duplicate',
-    'Copy a node and everything under it, under fresh ids, right after the original. The ' +
-      'move a designer makes constantly — build one card, duplicate it twice.',
-    { id: z.string(), dry_run: z.boolean().optional() },
+    {
+      description:
+        'Copy a node and everything under it, under fresh ids, right after the original. The ' +
+          'move a designer makes constantly — build one card, duplicate it twice.',
+      inputSchema: { id: z.string(), dry_run: z.boolean().optional() },
+      annotations: { readOnlyHint: false, destructiveHint: false },
+    },
     async ({ id, dry_run }) => {
       const d = session.current();
       const { patches, ids } = duplicateNode(d, id);
@@ -340,11 +384,15 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
     },
   );
 
-  server.tool(
+  server.registerTool(
     'sb_templates',
-    "The store's saved section templates — designed sections a person starts from rather " +
-      'than assembling one. Use sb_template_use to drop one into the open page.',
-    { site_id: z.string() },
+    {
+      description:
+        "The store's saved section templates — designed sections a person starts from rather " +
+          'than assembling one. Use sb_template_use to drop one into the open page.',
+      inputSchema: { site_id: z.string() },
+      annotations: { readOnlyHint: true },
+    },
     async ({ site_id }) =>
       text(
         projectList(
@@ -361,15 +409,19 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
       ),
   );
 
-  server.tool(
+  server.registerTool(
     'sb_template_use',
-    'Instantiate a saved section template into a page. The server does the copy, so the ' +
-      'section arrives exactly as it was designed — then re-open the page to see it.',
     {
+      description:
+        'Instantiate a saved section template into a page. The server does the copy, so the ' +
+          'section arrives exactly as it was designed — then re-open the page to see it.',
+      inputSchema: {
       site_id: z.string(),
       template_id: z.string(),
       page_id: z.string(),
       dry_run: z.boolean().optional(),
+    },
+      annotations: { readOnlyHint: false, destructiveHint: false },
     },
     async ({ site_id, template_id, page_id, dry_run }) => {
       const path = `/api/sites/${encodeURIComponent(site_id)}/section-templates/${encodeURIComponent(template_id)}/instantiate`;
@@ -393,10 +445,14 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
     },
   );
 
-  server.tool(
+  server.registerTool(
     'sb_page_list',
-    "Every page on the site, with its slug and whether it is live.",
-    { site_id: z.string() },
+    {
+      description:
+        "Every page on the site, with its slug and whether it is live.",
+      inputSchema: { site_id: z.string() },
+      annotations: { readOnlyHint: true },
+    },
     async ({ site_id }) =>
       text(
         projectList(
@@ -413,14 +469,18 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
       ),
   );
 
-  server.tool(
+  server.registerTool(
     'sb_page_create',
-    'Create a page. It arrives empty; sb_page_open seeds its ROOT so you can build into it.',
     {
+      description:
+        'Create a page. It arrives empty; sb_page_open seeds its ROOT so you can build into it.',
+      inputSchema: {
       site_id: z.string(),
       name: z.string(),
       settings: z.record(z.unknown()).optional(),
       dry_run: z.boolean().optional(),
+    },
+      annotations: { readOnlyHint: false, destructiveHint: false },
     },
     async ({ site_id, name, settings, dry_run }) => {
       const path = `/api/sites/${encodeURIComponent(site_id)}/pages`;
@@ -438,12 +498,16 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
     },
   );
 
-  server.tool(
+  server.registerTool(
     'sb_publish',
-    'Compile the draft into the live page. PUBLISH CASCADES: a page sharing a global ' +
-      'section with others republishes them too, because a header edited once must not go ' +
-      'live on one page and stay stale on the rest.',
-    { site_id: z.string(), page_id: z.string(), dry_run: z.boolean().optional() },
+    {
+      description:
+        'Compile the draft into the live page. PUBLISH CASCADES: a page sharing a global ' +
+          'section with others republishes them too, because a header edited once must not go ' +
+          'live on one page and stay stale on the rest.',
+      inputSchema: { site_id: z.string(), page_id: z.string(), dry_run: z.boolean().optional() },
+      annotations: { readOnlyHint: false, destructiveHint: true, idempotentHint: true },
+    },
     async ({ site_id, page_id, dry_run }) => {
       const path = `/api/sites/${encodeURIComponent(site_id)}/pages/${encodeURIComponent(page_id)}/publish`;
       if (dry_run !== false) return text({ dry_run: true, would_post: path });

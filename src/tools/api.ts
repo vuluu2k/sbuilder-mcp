@@ -93,13 +93,15 @@ export async function callOperation(ctx: ToolContext, args: CallArgs): Promise<u
 }
 
 export function registerApiTools(server: McpServer, ctx: ToolContext): void {
-  server.tool(
+  server.registerTool(
     'sb_api_find',
-    'Find platform API operations by intent (query), or read ONE operation\'s full call sheet ' +
-      '(id). The list is one line per match; the call sheet carries parameter types, the ' +
-      'credential, and either the body schema or an explicit warning that the platform does ' +
-      `not describe it. Reaches all ${SWAGGER_SOURCE.operations} operations.`,
     {
+      description:
+        'Find platform API operations by intent (query), or read ONE operation\'s full call sheet ' +
+          '(id). The list is one line per match; the call sheet carries parameter types, the ' +
+          'credential, and either the body schema or an explicit warning that the platform does ' +
+          `not describe it. Reaches all ${SWAGGER_SOURCE.operations} operations.`,
+      inputSchema: {
       query: z
         .string()
         .optional()
@@ -110,6 +112,8 @@ export function registerApiTools(server: McpServer, ctx: ToolContext): void {
         .describe('An id from a previous search — returns that operation\'s full call sheet'),
       tag: z.string().optional().describe('Narrow to one tag, e.g. "menus", "products", "theme"'),
       limit: z.number().int().min(1).max(50).optional().describe('Default 8'),
+    },
+      annotations: { readOnlyHint: true },
     },
     async ({ query, id, tag, limit }) => {
       if (id) {
@@ -130,11 +134,13 @@ export function registerApiTools(server: McpServer, ctx: ToolContext): void {
     },
   );
 
-  server.tool(
+  server.registerTool(
     'sb_api_call',
-    'Execute one operation found by sb_api_find. Defaults to a dry run that sends nothing ' +
-      'and shows the request it would have made.',
     {
+      description:
+        'Execute one operation found by sb_api_find. Defaults to a dry run that sends nothing ' +
+          'and shows the request it would have made.',
+      inputSchema: {
       id: z
         .string()
         .describe('Operation id from sb_api_find, e.g. "get:/api/sites/{siteID}/menus"'),
@@ -142,6 +148,8 @@ export function registerApiTools(server: McpServer, ctx: ToolContext): void {
       query: z.record(z.string()).optional(),
       body: z.unknown().optional(),
       dry_run: z.boolean().optional().describe('Defaults to true. Pass false to actually send.'),
+    },
+      annotations: { readOnlyHint: false, destructiveHint: true, openWorldHint: true },
     },
     async (args) => text(await callOperation(ctx, args as CallArgs)),
   );
