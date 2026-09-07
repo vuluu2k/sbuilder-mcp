@@ -6,6 +6,36 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.4] - 2026-09-07
+
+### Added
+- sb_set accepts an edits[] batch so many nodes save and publish in one call instead of one round trip per node.
+- sb_api_call shapes list answers with pick and max_items, and cuts an oversized list to fit the result cap while saying how many items were shown and how to narrow the call.
+- All 25 tools carry MCP annotations (readOnlyHint, destructiveHint, idempotentHint, openWorldHint), so compliant clients stop asking for confirmation on reads.
+- Trap 5 is now guarded in code: an edit inside an app block's interior is refused instead of being silently lost on save.
+- The catalog is regenerated from the platform: 106 elements, 412 API operations, and 26 binding sources.
+
+### Changed
+- sb_look keeps Chrome open across calls, launching it lazily and reusing it while connected, and captures multiple widths in parallel instead of one at a time.
+- sb_look screenshots are JPEG by default (format: "png" still available), which cuts image size and cost without changing token count.
+- sb_look's node_id boxes now count depth from the framed node and cover only its subtree.
+- sb_page_list, sb_templates and sb_media_list return a smaller, whitelisted set of fields instead of the whole document or settings blob.
+- sb_look's measured layout boxes are returned as compact tuples ([id, type, x, y, w, h]) instead of pretty-printed objects, with box_depth controlling how deep the tree goes.
+- Tool descriptions for sb_bind, sb_look, sb_live_join, sb_review and sb_api_find are shorter; sb_bind no longer interpolates all 26 binding sources into its schema.
+- The server's handshake instructions are shorter, take their tool/element/operation counts from generated source records, and no longer claim a base style value vanishes on publish.
+- Findings from sb_page_open, sb_review and sb_look reuse one fix template per kind of defect, and directives such as FIX THESE are said once per process instead of on every call.
+- Every tool result is now compact JSON.
+
+### Fixed
+- sb_live_join reports why an API key cannot join a live session instead of joining silently into a socket that never opens, since the platform refuses wbk_ keys.
+- Multipart uploads now surface the platform's per-field validation errors instead of a generic failure.
+- Duplicating a subtree that contains an app block is refused instead of being silently reduced.
+- fill() throws when a code has no template instead of returning an empty fix.
+- sb_api_call's publish step splits an ops batch to stay under the live socket's 4 MiB frame cap instead of risking a dropped connection.
+- A non-list answer's size is no longer silently cut, and asking for max_items on a non-list answer is now reported instead of ignored.
+- A platform response field named truncated is no longer overwritten by the result-shaping logic.
+- Each screenshot page now closes in its own finally block, so a tab lost to a first rejection can no longer leak for the life of the process.
+
 ## [0.1.2] - 2026-08-29
 
 ### Added
