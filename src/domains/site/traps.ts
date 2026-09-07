@@ -1,3 +1,4 @@
+import { FIRST_CHILD_ONLY } from '../../catalog/elements.generated.js';
 import {
   pageChildren,
   isOverlay,
@@ -106,5 +107,29 @@ export const RESPONSIVE_NOTICE =
   'legitimate too — it is the cascade\'s fallback layer, below every breakpoint slot, and ' +
   'where an element\'s own defaults live. Use base for a value that genuinely should not ' +
   'vary; use a breakpoint for anything a narrower screen should change.';
+
+/**
+ * Refuse a child a repeater would never render.
+ *
+ * `list-dataset` clones `Data.Nodes[0]` per record and ignores every sibling
+ * after it (`server/render/nodes/list-dataset/html.go:60`). A second child is a
+ * perfectly valid document: it stores, it publishes, and it simply never appears
+ * — so the agent designs a card nobody will ever see and nothing says why.
+ *
+ * The list is GENERATED from the renderers. `dataset-block` is a dataset
+ * container too and renders all of its children, so the obvious
+ * `isContainer && category === 'dataset'` predicate would have restricted the
+ * wrong element.
+ */
+export function refuseSecondTemplate(doc: DocLike, parentId: string, verb: string): void {
+  const parent = doc.nodes[parentId];
+  if (!parent || !FIRST_CHILD_ONLY.includes(parent.data.type)) return;
+  if (parent.data.nodes.length === 0) return;
+  throw new Error(
+    `sbuilder: "${parent.data.type}" (${parentId}) renders only its FIRST child, once per ` +
+      `record — Data.Nodes[0] is the template. ${verb} a second one stores fine and never ` +
+      'appears on the published page. Design the existing template, or sb_remove it first.',
+  );
+}
 
 export { isOverlay };

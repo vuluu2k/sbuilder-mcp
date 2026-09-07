@@ -1,5 +1,5 @@
 import { childrenOf, isOverlay, pageChildren, appBlockRoot, type DocLike } from '../../core/tree.js';
-import { ELEMENTS, BINDING_SOURCES, BOUND_SPECIALS } from '../../catalog/elements.generated.js';
+import { ELEMENTS, BINDING_SOURCES, BOUND_SPECIALS , FIRST_CHILD_ONLY } from '../../catalog/elements.generated.js';
 import type { PageDoc } from './document.js';
 import { fill } from './findings.js';
 
@@ -214,6 +214,80 @@ export function reviewDesign(doc: PageDoc): Finding[] {
           fix: fill('placeholder_content', { id, key }),
         });
       }
+    }
+
+    // A FORM NOBODY LINKED publishes as an empty box, and the platform stays
+    // deliberately quiet about it: form.go:221 skips an empty formId with the
+    // comment that reporting it "would cry wolf on every page mid-edit". True
+    // for a human mid-drag, wrong for an agent that has finished — and since the
+    // element seeds `formId: ""` and forms compose on the RENDER path only, the
+    // canvas looks identical either way. An unlinked form is the DEFAULT.
+    if (type === 'form') {
+      const formId = (n.specials ?? {}).formId;
+      if (typeof formId !== 'string' || formId.trim() === '') {
+        out.push({
+          code: 'unlinked_form',
+          nodeId: id,
+          type,
+          problem:
+            'This form names no form, so it composes nothing and publishes as an empty box — ' +
+            'and the platform reports no warning for it.',
+          key: 'formId',
+          fix: fill('unlinked_form', { id, key: 'formId' }),
+        });
+      }
+    }
+
+    // A MENU ENTRY WITH NO HREF is a link that goes nowhere. The Go renderer
+    // reads specials.menuItems and never menuId, so picking a menu by id
+    // publishes an empty nav, and the element's own seed ships one entry
+    // ("Home") whose href is "". Resolution from a menu id to real addresses is
+    // client-side (editor/src/features/menus/snapshot.ts), so nothing fills it
+    // in on the way to publish.
+    if (type === 'menu') {
+      const items = (n.specials ?? {}).menuItems;
+      const rows = Array.isArray(items) ? items : [];
+      const dead = rows.filter((r) => {
+        const row = (r ?? {}) as Record<string, unknown>;
+        const href = row.href;
+        const panel = row.panelId;
+        return (
+          (typeof href !== 'string' || href.trim() === '') &&
+          (typeof panel !== 'string' || panel.trim() === '')
+        );
+      });
+      if (rows.length === 0 || dead.length > 0) {
+        out.push({
+          code: 'dead_menu_link',
+          nodeId: id,
+          type,
+          problem:
+            rows.length === 0
+              ? 'This menu has no entries, so it publishes as an empty nav. The renderer reads ' +
+                'specials.menuItems and never menuId.'
+              : `${dead.length} of ${rows.length} entries have no href, so those links go ` +
+                'nowhere. The renderer reads specials.menuItems and never menuId.',
+          key: 'menuItems',
+          fix: fill('dead_menu_link', { id, key: 'menuItems' }),
+        });
+      }
+    }
+
+    // A REPEATER RENDERS ITS FIRST CHILD AND DROPS THE REST. `templateID`
+    // returns Data.Nodes[0], and list-dataset is the only renderer that does —
+    // which is why the list is generated rather than derived from the obvious
+    // "is a dataset container" predicate, since dataset-block renders all of
+    // its children.
+    if (FIRST_CHILD_ONLY.includes(type) && n.data.nodes.length > 1) {
+      out.push({
+        code: 'extra_repeater_child',
+        nodeId: id,
+        type,
+        problem:
+          `"${type}" clones only its FIRST child per record, so the other ` +
+          `${n.data.nodes.length - 1} never appear on the published page.`,
+        fix: fill('extra_repeater_child', { id }),
+      });
     }
 
     // A dataset element with NO binding at all is the same silence from the other

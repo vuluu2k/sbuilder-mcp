@@ -31,6 +31,16 @@ export const FIX: Record<string, string> = {
   unbound_dataset_element:
     'Bind it: sb_bind id "<id>", field "specials.<key>", and the source that names the record ' +
     'field you want (sb_bind refuses an unknown source and lists every valid one).',
+  unlinked_form:
+    'Point it at a real form: sb_set id "<id>", namespace specials, keys ' +
+    '{ "formId": "<a form id from sb_api_find \'list forms\'>" }.',
+  dead_menu_link:
+    'Write the entries the renderer actually reads: sb_set id "<id>", namespace specials, keys ' +
+    '{ "menuItems": [{ "id": "mi-1", "label": "Shop", "href": "/shop" }] }. Setting menuId alone ' +
+    'publishes an empty nav — the Go renderer never reads it.',
+  extra_repeater_child:
+    'Keep one template: sb_remove the extra children of "<id>", or sb_move them out. Design the ' +
+    'single remaining child — it is what every record is drawn with.',
   dead_binding_source: `Rebind with sb_bind using one of: ${BINDING_SOURCES.join(', ')}.`,
   // "<key>" here is documentation, not a placeholder: this template is never
   // filled with a key, so the reader sees the form a field must take.

@@ -10,6 +10,7 @@ import {
 } from '../../core/tree.js';
 import { ELEMENTS, ELEMENT_SEEDS, SATELLITE_RULES } from '../../catalog/elements.generated.js';
 import { createNode, mintSatellites } from './node.js';
+import { refuseSecondTemplate } from './traps.js';
 import { genId } from './ids.js';
 import type { PageDoc } from './document.js';
 
@@ -120,6 +121,7 @@ export function addSubtree(
   refuseAppBlockParent(doc, parentId, 'adding');
   requireContainer(parent.data.type, parentId);
   requireAllowed(parent.data.type, spec.type);
+  refuseSecondTemplate(doc.doc, parentId, 'Adding');
 
   const patches: Patch[] = [];
   const ids: string[] = [];
@@ -449,6 +451,9 @@ export function moveNode(doc: PageDoc, id: string, newParentId: string, index: n
 
   requireContainer(newParent.data.type, newParentId);
   requireAllowed(newParent.data.type, n.data.type);
+  // Not for a REORDER: a node already in this parent is not a second template,
+  // and refusing it would block the one move that is always safe.
+  if (n.data.parent !== newParentId) refuseSecondTemplate(doc.doc, newParentId, 'Moving');
 
   const patches: Patch[] = [];
   const oldParentId = n.data.parent;

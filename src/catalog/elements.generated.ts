@@ -33545,3 +33545,7 @@ export const ELEMENT_SEEDS: Record<string, NodeSeed[]> = {
     }
   ]
 };
+
+export const FIRST_CHILD_ONLY: string[] = [
+  "list-dataset"
+];

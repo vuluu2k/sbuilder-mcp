@@ -237,3 +237,63 @@ describe('reviewDesign()', () => {
     expect(ids.indexOf(first)).toBeLessThan(ids.indexOf(second));
   });
 });
+
+describe('the render rules a document can satisfy and still publish wrong', () => {
+  it('reports a form nobody linked, which publishes as an empty box', () => {
+    // `form` seeds specials.formId: "" and form.go:221 skips an empty one with
+    // an explicit comment that this is deliberately NOT a warning. Forms compose
+    // on the RENDER path only, so the canvas looks identical either way — an
+    // unlinked form is the DEFAULT outcome of sb_add.
+    const d = emptyDoc();
+    d.apply(addSubtree(d, 'ROOT', { type: 'flex-section', children: [{ type: 'form' }] }).patches);
+    const f = reviewDesign(d).find((x) => x.code === 'unlinked_form');
+    expect(f).toBeDefined();
+    expect(f!.fix).toContain(f!.nodeId);
+  });
+
+  it('stops reporting the form once it names one', () => {
+    const d = emptyDoc();
+    d.apply(addSubtree(d, 'ROOT', { type: 'flex-section', children: [{ type: 'form' }] }).patches);
+    const formId = d.node(d.node('ROOT').data.nodes[0]).data.nodes[0];
+    d.apply(setKeys(d, formId, { formId: 'frm_1' }, { namespace: 'specials' }));
+    expect(codes(d)).not.toContain('unlinked_form');
+  });
+
+  it('reports a menu whose entries lead nowhere', () => {
+    // menu seeds menuItems: [{ id, label: 'Home', href: '' }], and the Go
+    // renderer reads menuItems and never menuId — so a freshly added menu
+    // publishes a nav whose one link goes nowhere.
+    const d = emptyDoc();
+    d.apply(addSubtree(d, 'ROOT', { type: 'flex-section', children: [{ type: 'menu' }] }).patches);
+    expect(codes(d)).toContain('dead_menu_link');
+  });
+
+  it('stops reporting the menu once its entries resolve', () => {
+    const d = emptyDoc();
+    d.apply(addSubtree(d, 'ROOT', { type: 'flex-section', children: [{ type: 'menu' }] }).patches);
+    const menuId = d.node(d.node('ROOT').data.nodes[0]).data.nodes[0];
+    d.apply(
+      setKeys(d, menuId, { menuItems: [{ id: 'mi-1', label: 'Home', href: '/' }] }, { namespace: 'specials' }),
+    );
+    expect(codes(d)).not.toContain('dead_menu_link');
+  });
+
+  it('reports a repeater holding more than the one child it renders', () => {
+    // templateID returns Data.Nodes[0] and list-dataset is the ONLY renderer
+    // that does; every sibling after the first is valid, saves fine, and never
+    // appears in the published HTML.
+    const d = emptyDoc();
+    d.apply(addSubtree(d, 'ROOT', { type: 'flex-section' }).patches);
+    const section = d.node('ROOT').data.nodes[0];
+    const list = addSubtree(d, section, { type: 'list-dataset', children: [{ type: 'dataset-block' }] });
+    d.apply(list.patches);
+    // A second template, patched in directly — sb_add now refuses this, so the
+    // only way to hold one is a document written somewhere else. That is exactly
+    // the case the review exists for.
+    const second = d.node(list.ids[0]).data.nodes[0];
+    d.apply([
+      { op: 'insert', path: ['nodes', list.ids[0], 'data', 'nodes'], index: 1, value: second },
+    ]);
+    expect(codes(d)).toContain('extra_repeater_child');
+  });
+});

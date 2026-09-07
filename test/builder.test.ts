@@ -500,3 +500,45 @@ describe('duplicateNode() and the things a verbatim clone carries over', () => {
     expect(d.node(sec.ids[0]).specials.globalId).toBe('gs_1');
   });
 });
+
+describe('a repeater takes one template, and the write says so', () => {
+  function listIn() {
+    const d = emptyDoc();
+    const sec = addSubtree(d, 'rt', { type: 'flex-section' });
+    d.apply(sec.patches);
+    const list = addSubtree(d, sec.ids[0], { type: 'list-dataset', children: [{ type: 'dataset-block' }] });
+    d.apply(list.patches);
+    return { d, section: sec.ids[0], list: list.ids[0] };
+  }
+
+  it('refuses a second child into a repeater, naming the rule', () => {
+    const { d, list } = listIn();
+    expect(() => addSubtree(d, list, { type: 'dataset-block' })).toThrow(/first|one template|Nodes\[0\]/i);
+  });
+
+  it('refuses a move into a repeater that already has its template', () => {
+    const { d, section, list } = listIn();
+    const stray = addSubtree(d, section, { type: 'dataset-block' });
+    d.apply(stray.patches);
+    expect(() => moveNode(d, stray.ids[0], list, 0)).toThrow(/first|one template|Nodes\[0\]/i);
+  });
+
+  it('still allows the FIRST child', () => {
+    const d = emptyDoc();
+    const sec = addSubtree(d, 'rt', { type: 'flex-section' });
+    d.apply(sec.patches);
+    const list = addSubtree(d, sec.ids[0], { type: 'list-dataset' });
+    d.apply(list.patches);
+    expect(() => addSubtree(d, list.ids[0], { type: 'dataset-block' })).not.toThrow();
+  });
+
+  it('leaves a container that renders every child alone', () => {
+    // dataset-block is a dataset container too and renders ALL of its children,
+    // which is why the rule is generated from the renderers rather than derived
+    // from "is a dataset container".
+    const { d, list } = listIn();
+    const block = d.node(list).data.nodes[0];
+    expect(() => addSubtree(d, block, { type: 'text' })).not.toThrow();
+    expect(() => addSubtree(d, block, { type: 'heading' })).not.toThrow();
+  });
+});
