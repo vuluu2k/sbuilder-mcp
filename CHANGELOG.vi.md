@@ -6,6 +6,27 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.5] - 2026-09-07
+
+### Added
+- sb_review giờ báo cáo store_gaps: các quy tắc sẵn sàng bán hàng của chính nền tảng — chưa có trang checkout đã publish, chưa có cổng thanh toán live, chưa có trang product đã publish, chưa có phương thức vận chuyển, không có gì mở lại giỏ hàng — không API nào lộ ra các quy tắc này và tất cả đều sống sót qua publish một cách âm thầm.
+- sb_page_create nhận type, slug và is_homepage, để agent tạo được trang checkout và product mà /checkout và /products/{slug} phân giải theo type chứ không theo slug.
+- sb_look nhận url để chụp một địa chỉ cho trước (thường là storefront đã publish) thay vì bản xem trước dạng draft, vốn không truyền dữ liệu cửa hàng và khiến mọi repeater render trạng thái rỗng.
+
+### Changed
+- sb_set giờ tính lại binding của một dataset element khi config.datasetSource hoặc config.kind thay đổi, thay vì để binding tiếp tục trỏ vào entity cũ.
+- sb_add và sb_set giờ từ chối khi caller ghi specials.globalId, specials.appBlockId hoặc specials.appBlockHash — đây là các stamp do server ghi khi compose; tự ghi một trong số đó sẽ khiến lần lưu kế tiếp decompose node đó đè lên bản gốc chung.
+- Số nguồn binding cho sb_bind và sb_review tăng từ 26 lên 77 nhờ đọc thêm context binding của editor, nên một binding do nền tảng tự seed như price không còn bị báo là dead.
+- Tham số source của sb_bind không còn liệt kê toàn bộ nguồn binding trong schema; một nguồn không hợp lệ vẫn bị từ chối kèm danh sách đầy đủ.
+
+### Fixed
+- Các dataset element mới thêm (text-dataset, pricing-dataset, list-dataset, và các loại khác) giờ mang đúng binding mà editor sẽ gán lúc kéo-thả, thay vì lưu, publish và render mãi ở trạng thái placeholder.
+- Xóa một node giờ cũng xóa các node vệ tinh của nó (list-empty, list-loading, các node quantity và product-variant-label), vốn chỉ gắn qua con trỏ parent và trước đây sống sót qua việc xóa rồi làm lần lưu kế tiếp bị từ chối vì id không xác định.
+- sb_publish giờ gọi endpoint publish cấp site với pageIds, thay vì một route publish theo từng trang mà nền tảng trả về 404.
+- Một kết quả tool được dựng từ response rỗng (như 204 khi xóa) không còn bị client từ chối do lỗi validate.
+- sb_page_open, sb_set và sb_look không còn từ chối các node vệ tinh của một trang thật (list-empty, list-loading, các node quantity và product-variant-label) như thể chúng là orphan; kiểm tra khi lưu giờ xác minh sự gắn kết vào cây thay vì yêu cầu parent và child-list khớp chính xác.
+- sb_media_upload giờ báo rõ rằng một cài đặt chỉ dùng API key không thể upload media, vì /api/media chỉ chấp nhận xác thực bằng session, thay vì trả về lỗi unauthorized trần trụi.
+
 ## [0.1.4] - 2026-09-07
 
 ### Added

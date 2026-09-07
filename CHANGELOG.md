@@ -6,6 +6,27 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.5] - 2026-09-07
+
+### Added
+- sb_review reports store_gaps: the platform's own readiness rules — no published checkout page, no live payment gateway, no published product page, no shipping method, nothing that opens the cart — none of which any API exposes and all of which survive publish silently.
+- sb_page_create takes type, slug and is_homepage, so an agent can create the checkout and product pages that /checkout and /products/{slug} resolve by type rather than by slug.
+- sb_look takes url to shoot a given address (typically the published storefront) instead of the draft preview, which threads no store data and renders every repeater's empty state.
+
+### Changed
+- sb_set re-derives a dataset element's bindings when config.datasetSource or config.kind changes, instead of leaving them pointing at the entity they used to describe.
+- sb_add and sb_set now refuse a caller writing specials.globalId, specials.appBlockId or specials.appBlockHash, which are stamps the server writes on compose; authoring one decomposes the node over its shared master on the next save.
+- Binding sources for sb_bind and sb_review grew from 26 to 77 by also reading the editor's own binding context, so a platform-seeded binding such as price is no longer reported as dead.
+- sb_bind's source argument no longer lists every binding source in its schema; an unknown source is still refused with the full list.
+
+### Fixed
+- Newly added dataset elements (text-dataset, pricing-dataset, list-dataset, and others) now carry the bindings the editor would have given them at drop time, instead of saving, publishing and rendering their placeholder forever.
+- Removing a node now also removes its satellite nodes (list-empty, list-loading, the quantity and product-variant-label nodes), which attach by parent pointer alone and used to survive removal and fail the next save with unrecognized ids.
+- sb_publish now posts to the site's publish endpoint with pageIds instead of a per-page publish route that the platform answers with 404.
+- A tool result built from an empty response body (such as a 204 on delete) no longer fails client-side validation.
+- sb_page_open, sb_set and sb_look no longer refuse a real page's satellite nodes (list-empty, list-loading, the quantity and product-variant-label nodes) as orphans; the save check now verifies attachment to the tree instead of exact parent/child-list agreement.
+- sb_media_upload reports that a key-only install cannot upload media, since /api/media is mounted behind session auth only, instead of surfacing a bare unauthorized error.
+
 ## [0.1.4] - 2026-09-07
 
 ### Added
