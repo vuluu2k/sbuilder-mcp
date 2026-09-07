@@ -19,21 +19,47 @@ takes the first, and records the other two so the evidence is not re-derived:
 - **Correctness** (this phase). The tools we already ship can corrupt a document.
 - **Reach.** `sb_api_call` is a CLOSED LIST — `src/tools/api.ts:191` throws
   `unknown operation` on anything absent from the committed catalog — so what the
-  OpenAPI document omits is unreachable, not merely undescribed. 34 operations
-  carry `@Router` annotations in the Go source and are missing from the
-  checked-in `server/docs/swagger.json` (measured by diffing the two: 446
-  annotations against 412 declared paths), including `POST /_wb/checkout/order`,
-  `POST /_wb/checkout/quote`, all four `shipping-zones` routes, `inventory`, and
-  the quiz surface. Worse, `GET/PUT/DELETE /api/sites/{siteId}/payment-gateways/{provider}`
-  carries NO annotation at all — it is documented only in a plain Go comment
-  (`server/internal/payments/rest/manage.go:15`), so no amount of regenerating
-  swagger will surface it. That endpoint is the fix for `sb_review`'s own
-  `payment` store-gap: the review can diagnose "no live gateway" and has no way
-  to resolve it. Page SEO (`PATCH /api/sites/{siteId}/pages/{pageId}`) and all
-  five page-version/history/restore routes are unreachable for the same reason —
-  and undo is client-local with no API at all
+  OpenAPI document omits is unreachable, not merely undescribed. There are two
+  groups, measured twice by different methods that agreed:
+
+  **(a) Annotated in Go, absent from `swagger.json` — 34.** Diffing 446 `@Router`
+  annotations against the 412 declared paths. The reverse diff is 0, so the
+  catalog is a strict SUBSET of the annotations: this is pure staleness in the
+  platform's checked-in artifact. Contents: all four `shipping-zones` routes,
+  `inventory` and its history/adjust, seven `quizzes` routes, the
+  `course-instructors` surface, `course-enrollments`, `admin/translation-keys`,
+  and five `_wb` storefront routes including `POST /_wb/checkout/order` and
+  `/checkout/quote`.
+
+  **`npm run codegen` does NOT recover these.** The generator reads
+  `server/docs/swagger.json`, which is the stale artifact itself — a codegen run
+  against a current checkout produced no diff, which is how the staleness was
+  found. Recovering them needs `swag init` re-run in `web_builder`, which is the
+  platform repo's job, not this one's.
+
+  **(b) Registered with NO `@Router` at all — 41.** No annotation diff can ever
+  surface these, by definition. They are found through the route-map comment
+  blocks at the top of each `server/internal/*/rest/*.go`
+  (`//\tGET/PUT/DELETE  /path`), parsed and diffed against both the annotations
+  and the catalog — note that some are written as paths RELATIVE to
+  `/api/sites/{siteId}`, and a filter that assumes an absolute path silently
+  drops them (it undercounted 41 as 27 on the first pass here). The clusters:
+  `courses` lessons/sections (9), **`pages` (9)**, `blog` articles and categories
+  (8), **`payments` (7)**, `integrations` (3), `templates` (2), domain
+  canonical/redirect (2). One entry (`DEL /api/orgs/{}/members/{}`) is a parse
+  artifact of an abbreviated comment.
+
+  Two consequences worth stating plainly. `GET/PUT/DELETE
+  /api/sites/{siteId}/payment-gateways/{provider}` is in group (b) — documented
+  only in a plain Go comment (`server/internal/payments/rest/manage.go:15`) — so
+  `sb_review` can diagnose its own `payment` store-gap and nothing can close it.
+  And the whole `pages/{pageId}` cluster is in group (b): this server cannot read
+  ONE page's metadata, cannot `PATCH` it (so no title, description, canonical, OG
+  image or JSON-LD on any page it publishes, and `noIndex` can never be cleared),
+  cannot delete a page, and cannot reach any of the five version/history/restore
+  routes — while undo is client-local with no API at all
   (`editor/src/history/patchRecorder.ts:7-12`), so those checkpoints are the only
-  thing that can recover a wrecked draft.
+  thing that could recover a wrecked draft and they are unreachable too.
 - **Capability.** Only 45 of 180 write operations declare a body. `PUT /theme`,
   `PUT /settings`, and all of global-sections and overlays declare none, and
   `PUT /settings` is a whole-document replace (`editor/src/features/settings/api.ts:18`),
