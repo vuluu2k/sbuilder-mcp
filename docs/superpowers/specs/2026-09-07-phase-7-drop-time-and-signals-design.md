@@ -49,6 +49,14 @@ takes the first, and records the other two so the evidence is not re-derived:
   canonical/redirect (2). One entry (`DEL /api/orgs/{}/members/{}`) is a parse
   artifact of an abbreviated comment.
 
+  **Neither group is free, and that is the Phase 8 fork.** (a) needs `swag init`
+  re-run in `web_builder`; (b) needs `@Router` annotations written first and then
+  `swag init`. Both are upstream work in the platform repo. The alternative, if
+  that work is not on offer, is a hand-maintained supplement table on this side —
+  which buys reach at the cost of the property that makes the current catalog
+  trustworthy: that it is generated and therefore cannot quietly disagree with the
+  platform. Whichever is chosen should be chosen deliberately, not discovered.
+
   Two consequences worth stating plainly. `GET/PUT/DELETE
   /api/sites/{siteId}/payment-gateways/{provider}` is in group (b) — documented
   only in a plain Go comment (`server/internal/payments/rest/manage.go:15`) — so
