@@ -415,7 +415,7 @@ describe('traitsFor()', () => {
     expect(typeof t.inspector[0].groups[0].controls[0]).toBe('string');
     expect(typeof t.undeclared_note).toBe('string');
     expect(Array.isArray(t.hints.useWhen)).toBe(true);
-    expect(JSON.stringify(t).length).toBeLessThan(6000);
+    expect(JSON.stringify(t).length).toBeLessThan(12_000);
   });
 
   it('still describes one control in full', () => {
@@ -991,7 +991,7 @@ describe('token budget — a diet without a scale comes back', () => {
     const { client, close } = await connectedClient();
     expect(chars(await client.callTool({ name: 'sb_api_find', arguments: { query: 'list orders' } }) as never)).toBeLessThan(3_000);
     expect(chars(await client.callTool({ name: 'sb_catalog_search', arguments: { query: 'hero' } }) as never)).toBeLessThan(2_500);
-    expect(chars(await client.callTool({ name: 'sb_traits_for', arguments: { type: 'list-dataset' } }) as never)).toBeLessThan(6_000);
+    expect(chars(await client.callTool({ name: 'sb_traits_for', arguments: { type: 'list-dataset' } }) as never)).toBeLessThan(12_000);
     await close();
   });
 });

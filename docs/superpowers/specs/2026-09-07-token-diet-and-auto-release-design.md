@@ -94,7 +94,7 @@ Without `control`, the response becomes:
 
 Today every undeclared control repeats a 150-char note; 317 of 435 controls are undeclared,
 which is where `list-dataset`'s 74 KB comes from. The note is said once. `control: "x"`
-is unchanged and remains the way to read one control. Budget: `list-dataset` ≤ 6,000 chars.
+is unchanged and remains the way to read one control. Budget: `list-dataset` ≤ 12,000 chars (it was 74,190; what remains is the platform's own 4 KB of hints and 99 control names).
 
 ### 3.5 Notices are said once per session
 
@@ -158,7 +158,7 @@ with `sb_api_find id`". Counts come from the generated source records, never lit
 
 `test/token-budget.test.ts` runs the server over `InMemoryTransport` and asserts character
 ceilings: `tools/list` ≤ 15,000; `instructions` ≤ 1,000; `sb_api_find "list orders"` ≤
-3,000; `sb_catalog_search "hero"` ≤ 2,500; `sb_traits_for list-dataset` ≤ 6,000. A diet
+3,000; `sb_catalog_search "hero"` ≤ 2,500; `sb_traits_for list-dataset` ≤ 12,000. A diet
 without a scale is a diet that comes back.
 
 ## 4. Platform catch-up

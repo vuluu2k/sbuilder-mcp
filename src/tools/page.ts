@@ -17,7 +17,7 @@ import { siteToken } from './credentialpick.js';
 import { validateForSave } from '../domains/site/validate.js';
 import { reviewDesign, REVIEW_NOTICE } from '../domains/site/review.js';
 import { globalWarning, RESPONSIVE_NOTICE } from '../domains/site/traps.js';
-import { ELEMENTS, TRAIT_WRITES } from '../catalog/elements.generated.js';
+import { catalogMatches, traitsFor } from '../catalog/element-search.js';
 import type { Patch } from '../core/patch.js';
 import type { LiveSession } from '../live/session.js';
 import type { Box } from '../vision/shoot.js';
@@ -145,34 +145,6 @@ export class PageSession {
   }
 }
 
-/**
- * What one inspector control writes.
- *
- * 83 of the 372 controls declare it in the platform's trait registry. The rest
- * live inside a Vue widget's prop closure, which is not machine-readable — so
- * they come back named but undescribed, with the honest reason. Saying nothing
- * would read as "this control writes nothing".
- */
-function describeControl(key: string): Record<string, unknown> {
-  const d = TRAIT_WRITES[key];
-  if (!d) {
-    return {
-      writes: null,
-      note:
-        'The platform does not declare what this control writes (its widget builds the ' +
-        'binding in Vue). Read a node that already uses it with sb_node_read, or set the ' +
-        'CSS property directly — style is open.',
-    };
-  }
-  return { label: d.label, writes: d.writes, ...(d.defaults ? { defaults: d.defaults } : {}) };
-}
-
-const STYLE_NOTE =
-  'The `style` namespace is OPEN CSS: any camelCase key becomes a CSS property ' +
-  '(schema/src/satelliteCss.ts camelToKebab), so you can set anything CSS can express, ' +
-  'whether or not a control exists for it. `config` and `specials` are NOT open — they are ' +
-  "per-element, and this element's `defaults` name the keys it actually uses.";
-
 const specSchema: z.ZodType<NodeSpec> = z.lazy(() =>
   z.object({
     type: z.string(),
@@ -221,79 +193,26 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
 
   server.tool(
     'sb_catalog_search',
-    "Find an element type by what you want it to do. Searches the platform's own AI hints — " +
-      'when to use each element, when not to, and what content suits it.',
-    { query: z.string(), limit: z.number().int().min(1).max(30).optional() },
-    async ({ query, limit }) => {
-      const terms = query.toLowerCase().split(/[^a-z0-9]+/).filter(Boolean);
-      const scored = Object.values(ELEMENTS)
-        .map((el) => {
-          const hay = [el.type, el.label, el.category, el.description, ...el.semantics, ...el.useWhen]
-            .join(' ')
-            .toLowerCase();
-          return { el, score: terms.filter((t) => hay.includes(t)).length };
-        })
-        .filter((s) => s.score > 0)
-        .sort((a, b) => b.score - a.score || a.el.type.localeCompare(b.el.type))
-        .slice(0, limit ?? 10);
-      return text(
-        scored.map(({ el }) => ({
-          type: el.type,
-          label: el.label,
-          category: el.category,
-          isContainer: el.isContainer,
-          isRootOnly: el.isRootOnly,
-          description: el.description,
-          useWhen: el.useWhen,
-          avoidWhen: el.avoidWhen,
-          contentTips: el.contentTips,
-        })),
-      );
+    'Find an element type by what you want it to do. Four fields per match; pass detail:true ' +
+      "for the platform's AI hints, or read them with sb_traits_for once you have chosen.",
+    {
+      query: z.string(),
+      limit: z.number().int().min(1).max(30).optional().describe('Default 8'),
+      detail: z.boolean().optional().describe('Include useWhen / avoidWhen / contentTips per match'),
     },
+    async ({ query, limit, detail }) => text(catalogMatches(query, { limit, detail })),
   );
 
   server.tool(
     'sb_traits_for',
-    "This element's INSPECTOR, exactly as a person sees it: tabs, groups, and every control " +
-      'in them — with what each control writes when the platform declares it. Read this ' +
-      'before styling an element; it is the difference between designing it and guessing at it.',
+    "This element's INSPECTOR, as a person sees it: tabs, groups, and every control name — " +
+      'with what each DECLARED control writes, and the AI hints for using the element. Read ' +
+      'this before styling an element; pass control to read one control in full.',
     {
       type: z.string(),
       control: z.string().optional().describe('Narrow to one control, e.g. "font_size"'),
     },
-    async ({ type, control }) => {
-      const el = ELEMENTS[type];
-      if (!el) throw new Error(`sbuilder: unknown element "${type}" — use sb_catalog_search`);
-
-      if (control) {
-        if (!el.controls.includes(control)) {
-          throw new Error(
-            `sbuilder: ${type} has no control "${control}". It has: ${el.controls.join(', ')}.`,
-          );
-        }
-        return text({ type, control, ...describeControl(control) });
-      }
-
-      return text({
-        type: el.type,
-        inspector: el.inspector.map((t) => ({
-          tab: t.tab,
-          groups: t.groups.map((g) => ({
-            group: g.label,
-            controls: g.controls.map((c) => ({ control: c, ...describeControl(c) })),
-          })),
-        })),
-        // The keys this element actually seeds. For `config` and `specials` —
-        // which, unlike `style`, are NOT open — this is the machine-readable
-        // answer to "what does this element store", and often the only one.
-        defaults: el.defaults,
-        isContainer: el.isContainer,
-        isRootOnly: el.isRootOnly,
-        childAllows: el.childAllows,
-        contentTips: el.contentTips,
-        style_is_open_css: STYLE_NOTE,
-      });
-    },
+    async ({ type, control }) => text(traitsFor(type, control)),
   );
 
   server.tool(
