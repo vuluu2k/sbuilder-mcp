@@ -1,7 +1,15 @@
 # Tools
 
-Four tools reach 310 platform operations. `sb_api_find` is an index, not a tool per
+Four tools reach 412 platform operations. `sb_api_find` is an index, not a tool per
 endpoint — see [why](../README.md#tools).
+
+Every result is **compact JSON** — no indentation, because the reader is a model and the
+whitespace was 15 % of every answer. A directive (`findings_notice`, `layout_notice`,
+`note`, `boxes_format`) is said **once per process** and its field is simply absent after:
+an instruction repeated on every call is skimmed by the third one. Every tool carries MCP
+annotations — `readOnlyHint` on the twelve read tools, `destructiveHint` on `sb_remove`,
+`sb_api_call` and `sb_publish` — so a client that honours them stops asking a person to
+confirm a read.
 
 ---
 
@@ -26,25 +34,36 @@ List the sites this account can operate. No arguments.
 
 ## `sb_api_find`
 
-Find operations by intent.
+Find operations by intent, then read one operation's call sheet. Two modes on one tool,
+chosen by argument — pass `query` or `id`.
 
 | Arg | Type | Notes |
 | --- | --- | --- |
-| `query` | string | What you want to do, in words |
-| `tag` | string? | Narrow to one tag: `menus`, `products`, `theme`, … |
-| `limit` | number? | Default 12, max 50 |
+| `query` | string? | What you want to do, in words — **search** |
+| `id` | string? | An id from a previous search — its **call sheet** |
+| `tag` | string? | Narrow a search to one tag: `menus`, `products`, `theme`, … |
+| `limit` | number? | Default 8, max 50 |
 
-Each match returns its id, method, path, summary, tags, required credential, and
-non-body parameters — plus **one** body verdict:
+**Search** returns `{ matches, next }`, one line per match:
+`{ id, method, path, summary, credential, params, body? }`. `params` lists the non-body
+parameter names with `?` prefixed on optional ones (`["siteID", "?limit"]`); `body` is one
+word — `described`, `undescribed` or `none_declared` — and absent on a read. No tags, no
+schemas: twelve matches with their schemas inlined were measured at 44 KB, for a list the
+agent calls one item of. `next` says to pass an id back for the call sheet.
+
+**Call sheet** (`id`) returns the operation in full — typed `params`, `tags`, `credential` —
+plus **one** body verdict:
 
 | Field | Meaning |
 | --- | --- |
 | `body_schema` | The document resolved a `$ref`; this is the real shape |
-| `body_warning` | A body is declared but has no schema (58 operations). Read the matching GET and modify a copy |
-| `body_note` | A write operation declares **no** body at all (60 operations). Sometimes true — `POST /orgs/{id}/leave` is a pure action — and sometimes a missing annotation: `PUT /pages/{id}/source` carries an entire page document and is documented exactly like this |
+| `body_warning` | A body is declared but has no schema (62 of 168 body-carrying operations). Read the matching GET and modify a copy |
+| `body_note` | A write operation declares **no** body at all (95 of 180 write operations). Sometimes true — `POST /orgs/{id}/leave` is a pure action — and sometimes a missing annotation: `PUT /pages/{id}/source` carries an entire page document and is documented exactly like this |
 
 Never more than one of the three. The distinction is load-bearing: treating `body_note` as
-"takes no body" would send an empty PUT and wipe a page.
+"takes no body" would send an empty PUT and wipe a page. It is unchanged from when it rode
+on every match; it now arrives at the moment the agent has picked an operation, which is
+when it is read.
 
 Scoring is term hits weighted by field (tag 5, path 3, summary 2), ties broken by id. It is
 deliberately not fuzzy — an empty list is cheap to recover from, a confidently wrong
@@ -66,6 +85,10 @@ Credentials are chosen from the path, never from the argument: `/api/v1/…` use
 everything else uses the session. A missing `SB_TOKEN` is reported by name rather than
 letting the platform answer `401 api_key_required`, which reads like a permissions problem.
 
+A failed call carries the platform's one error shape, `{ error, code }`, and — when the
+platform sends them — `details` and `fields`. A `validation` error names the offending
+field in its message, so a 400 says *which* field rather than that one exists.
+
 ---
 
 # Page tools
@@ -81,13 +104,15 @@ on the one open document.
 | `page_id` | string |
 
 Loads the page's **draft** document and returns its outline. What comes back is *composed*:
-global sections and site overlays have been merged onto ROOT.
+global sections, site overlays and app blocks have been merged onto ROOT. Findings ride
+along in the same shape `sb_review` returns them — see below.
 
 ## `sb_outline`
 
 `depth` (1–6, default 1). One line per node: `id`, `type`, `name`, `children`, plus `band`
-(`header`/`middle`/`footer`), `global: true` for a shared master, and `overlay: true` for a
-site overlay. **Never the raw document** — a real page is hundreds of KB.
+(`header`/`middle`/`footer`), `global: true` for a shared master, `overlay: true` for a
+site overlay, and `app: true` for the root of a composed app block — nothing under it is
+editable. **Never the raw document** — a real page is hundreds of KB.
 
 ## `sb_node_read`
 
@@ -95,14 +120,25 @@ site overlay. **Never the raw document** — a real page is hundreds of KB.
 
 ## `sb_catalog_search`
 
-`query`, `limit`. Searches the platform's own AI hints across all 85 elements and returns
-`description`, `useWhen`, `avoidWhen`, `contentTips` for each match — written by the
-platform team for exactly this purpose.
+| Arg | Type | Notes |
+| --- | --- | --- |
+| `query` | string | What the element should do |
+| `limit` | number? | Default 8, max 30 |
+| `detail` | boolean? | Add `useWhen`, `avoidWhen`, `contentTips` to every match |
+
+Searches the platform's own AI hints across all 106 elements. Each match is
+`{ type, label, category, description }`, plus `isContainer: true` / `isRootOnly: true`
+only when true — four fields to **choose** by. The hints themselves, written by the platform
+team for exactly this purpose, come with `sb_traits_for` for the element chosen, or on every
+match with `detail: true`; ten matches' worth of hints was 7 KB for a choice made from the
+description.
 
 ## `sb_traits_for`
 
-`type`. Which trait **groups** the element accepts (`size`, `typography`, `background`,
-`spacing` …), its seeded defaults, and its containment rules.
+`type`, `control?`. Without `control`: the element's AI hints, its inspector as tab → group
+→ control names, every control with a declared write target in full, its seeded defaults
+and its containment rules — the shape is under [Designing like a person](#sb_traits_for--the-inspector-not-a-summary).
+With `control`: that one control in full.
 
 ## `sb_add`
 
@@ -131,16 +167,21 @@ section, a child a parent's whitelist excludes, and any add into a non-container
 
 `specials` is always base: content is not a quantity.
 
+A dry run returns the `patches` and, the first time in a process, a `note` restating the
+base-and-breakpoint rule above. A real write returns the keys set and the new `rev`, with
+a `warning` when the node is a shared global.
+
 ## `sb_move` / `sb_remove`
 
 `sb_move` takes `id`, `parent_id`, `index`. `sb_remove` takes `id` and deletes the whole
 subtree. Both refuse to touch a **site overlay** — it is composed onto ROOT on read and
-stripped on write, so editing it here would do nothing on save. `sb_move` refuses a move
-into the node's own descendant, which would detach that subtree with nothing to report it.
+stripped on write, so editing it here would do nothing on save — and anything **inside an
+app block**, for the same reason. `sb_move` refuses a move into the node's own descendant,
+which would detach that subtree with nothing to report it, and a move *into* an app block.
 
 ## What every write checks before it saves
 
-Four platform rules, encoded and tested rather than documented:
+Five platform rules, encoded and tested rather than documented:
 
 1. **Band order** — ROOT's children must read `[header][middle][footer]`. The platform
    refuses *every* save otherwise (`ErrBandOrder`).
@@ -149,6 +190,25 @@ Four platform rules, encoded and tested rather than documented:
 3. **Globals** are shared masters; any result touching one carries a warning that edits
    change every page and publishing cascades.
 4. **The responsive mandate** — see `sb_set` above.
+5. **App blocks** — see next.
+
+### App blocks
+
+A marketplace app contributes a whole subtree to a page. The document stores **one
+reference node**, stamped `specials.appBlockRef`; on read the platform materialises the
+app's markup under it and stamps the block root `appBlockId`; on save `DecomposeAppBlocks`
+(`server/internal/page/globalservice.go:56`, after overlays, before `Decompose`) reduces
+the subtree back to that one reference. So an edit inside a composed block is stored
+nowhere and reported nowhere — the local document is right, the save succeeds, and the
+change is gone.
+
+Every write therefore refuses a node **inside** a block, naming the block root and saying
+the edit would be lost: `sb_set`, `sb_bind`, `sb_remove` and `sb_duplicate` on a strict
+descendant, and `sb_add` or `sb_move` with any node of the block — root included — as the
+destination. The root itself may be set, moved or removed, because it *is* the reference
+and its `specials.appBlockValues` is where the merchant's settings live. The outline flags
+it `app: true`, and `sb_review` skips the interior: its placeholder text is the app's, not
+this page's to fix.
 
 Plus tree integrity: no dangling child ids, no parent pointer disagreeing with a child
 list, no node unreachable from ROOT.
@@ -166,6 +226,12 @@ node it is changing — whenever a real measurement from `sb_look` exists. Prese
 invented coordinate would be theatre, so absent a measurement the cursor simply does not
 move.
 
+**Needs a session.** The live socket takes a session token only — `realtime.go:38`
+refuses API keys — and a rejected socket auth still fires `onopen`, so an API-key-only
+agent would "join", publish every edit into the void, and never learn why nobody saw them.
+`sb_live_join` checks for `SB_EMAIL` / `SB_PASSWORD` up front and refuses with the reason.
+Every other tool works with the key alone.
+
 **The yield rule.** This client is never the authority on the document. It does not answer
 a snapshot request for anyone, and it publishes no convergence checkpoint of its own. On any
 evidence of divergence — a gap in the server's `seq`, a checkpoint arriving at its own seq,
@@ -179,11 +245,19 @@ every disagreement.
 | --- | --- | --- |
 | `widths` | number[]? | Defaults to 1440 / 768 / 390 |
 | `with_boxes` | boolean? | Defaults to true |
+| `box_depth` | number? | Boxes for nodes down to this depth in the tree. Default 2, max 8 |
 | `node_id` | string? | Frame just this element instead of the whole page |
 
 **Saves first**, then mints a signed preview link and renders the page through the
 platform's own Go renderer — so the picture is of the *stored draft*, never of unsaved local
-edits. Returns one image per width plus the measured bounding box of every `[data-node-id]`.
+edits. Returns one image per width plus `boxes`: an array of `[id, type, x, y, w, h]`
+tuples in CSS px at `widths[0]`, for nodes down to `box_depth` in the open document — the
+default 2 is the bands and their direct children, which is what a layout judgement needs;
+ROOT is always kept. A one-line `boxes_format` legend comes with the first look in a
+process. Every `[data-node-id]` is still measured and kept in the session for the presence
+cursor and the layout checks; two hundred pretty-printed objects were 27 KB a look.
+`with_boxes: false` drops them. Findings ride along as with `sb_review`, and layout defects
+as `layout` — see the end of this document.
 
 Needs **system Google Chrome**: `playwright-core` bundles no browser, so nothing is
 downloaded on install. If Chrome is missing the tool says so by name rather than returning a
@@ -194,7 +268,7 @@ blank image — an agent that judges a page it never saw is worse than one that 
 | Arg | Type | Notes |
 | --- | --- | --- |
 | `id` | string | |
-| `source` | string | One of 22 keys the renderer provides — `product.title`, `product.price`, `category.title`, `article.title`, … |
+| `source` | string | One of 26 keys the renderer provides — `product.title`, `product.price`, `category.title`, `article.title`, … |
 | `field` | string | Always `specials.<key>` |
 | `dry_run` | boolean? | Defaults to true |
 
@@ -210,18 +284,24 @@ field and skips anything else.
 
 ## `sb_traits_for` — the inspector, not a summary
 
-Returns the element's inspector as a person navigates it: **tabs → groups → controls**, and
-for each control what it writes when the platform declares it.
+Returns the element's inspector as a person navigates it — **tabs → groups → control
+names** — and, for each control the platform declares, what it writes:
 
 ```
-[general] Typography: text_color, font_family, font_size, text_align, line_height, …
-font_size → writes style.fontSize, number, px, defaults { base: 16, mobile: 14 }
+{ type, hints: { useWhen, avoidWhen, contentTips },
+  inspector: [{ tab, groups: [{ group, controls: ["font_size", …] }] }],
+  declared: { font_size: { label, writes, defaults? }, … },
+  defaults, isContainer, isRootOnly, childAllows,
+  undeclared_note, style_is_open_css }
 ```
 
-83 of the 372 controls carry a declared write target. The rest come back **named but
-undescribed**, with the reason — their binding is built inside a Vue widget and is not
-machine-readable. For those, read a node that already uses the control (`sb_node_read`), or
-set the CSS property directly.
+`hints` are the platform's own AI hints for the element, here because this is the call an
+agent makes once it has chosen one. `declared` holds only the controls with a declared write
+target — 118 of the 435 in the platform's trait registry. The rest come back **named only**,
+and `undeclared_note` gives the reason once: their binding is built inside a Vue widget and
+is not machine-readable. (It used to be repeated under each of them; `list-dataset` alone was
+74 KB.) For those, read a node that already uses the control (`sb_node_read`), set the CSS
+property directly, or pass `control` to read one control in full — that mode is unchanged.
 
 **`style` is open CSS.** Any camelCase key becomes a CSS property, so you can set anything
 CSS expresses whether or not a control exists for it. `config` and `specials` are **not**
@@ -235,14 +315,23 @@ Refuses ROOT and site overlays.
 
 ## `sb_templates` / `sb_template_use`
 
-`sb_templates` lists the store's saved section templates. `sb_template_use` instantiates one
-into a page — the server does the copy, so the section arrives exactly as designed. Re-open
-the page afterwards; the open session still holds the older tree.
+`sb_templates` lists the store's saved section templates as
+`{ sectionTemplates: [{ id, name, description, categoryIds, source, listed, updatedAt }], total }`
+— the fields the next call needs, not the template's whole document. `sb_template_use`
+instantiates one into a page — the server does the copy, so the section arrives exactly as
+designed. Re-open the page afterwards; the open session still holds the older tree.
 
 ## `sb_page_list` / `sb_page_create` / `sb_publish`
 
-The page lifecycle, first-class rather than through `sb_api_call`. A created page arrives
-empty and `sb_page_open` seeds its ROOT.
+The page lifecycle, first-class rather than through `sb_api_call`. `sb_page_list` returns
+`{ pages: [{ id, name, slug, path, isHomepage, type, status, updatedAt, publishedAt }], total }`
+— a page's settings blob stays behind. A created page arrives empty and `sb_page_open`
+seeds its ROOT.
+
+The three list tools project by whitelist. The OpenAPI document does not describe list
+responses, so the field names were read off the Go structs' json tags; an item that is not
+an object comes back untouched, so a platform shape change degrades to yesterday's
+behaviour rather than to an empty list.
 
 `sb_publish` **cascades**: a page sharing a global section with others republishes them too,
 because a header edited once must not go live on one page and stay stale on the rest.
@@ -276,7 +365,7 @@ Cursor, Windsurf, VS Code, Codex. `--client cursor,codex` names them; `--dry-run
 ## `sb_review` — what a visitor would see
 
 Distinct from whether the page saves: a perfectly storable document can publish as an empty
-box. Reports, in document order, each with the command that fixes it:
+box. Returns `{ findings, fixes, findings_notice? }`, in document order:
 
 | Code | The defect |
 | --- | --- |
@@ -284,12 +373,21 @@ box. Reports, in document order, each with the command that fixes it:
 | `empty_container` | A section holding nothing — an empty band |
 | `placeholder_content` | Still the copy the element ships with ("Enter your text here") |
 | `empty_text` / `missing_media` | An element left blank — empty space, or a broken image |
-| `dead_binding` | A source the renderer never provides, or a field outside `specials` — shows the placeholder forever |
+| `dead_binding_source` | A source the renderer never provides — shows the placeholder forever |
+| `dead_binding_field` | A binding field outside `specials` — stored, published, and ignored |
 | `unknown_element` | A type the catalog does not know; run `npm run codegen` |
 
-Findings ride along with `sb_page_open` and `sb_look` as well, carrying a directive that says
-they are defects rather than suggestions — the sibling `webcake-landing-mcp` records in its
-own source that without one, models read warnings as advisory noise and save anyway.
+Each finding is `{ code, nodeId, type, problem, key? }` — `key` where the fix names a
+specials key. **`fixes` is a legend**: one template per code present, with `<id>` and
+`<key>` to substitute, so twenty placeholders cost one sentence rather than twenty copies
+of it with a different id in each (measured at ~270 chars a finding). `findings_notice` is
+the directive that says these are defects rather than suggestions — the sibling
+`webcake-landing-mcp` records in its own source that without one, models read warnings as
+advisory noise and save anyway. It comes with the first non-empty result in a process and is
+absent after. An empty review is `{ findings: [], verdict }`.
+
+Findings ride along with `sb_page_open` and `sb_look` in exactly this shape. Overlays and
+the inside of app blocks are skipped: their placeholders are not this page's to fix.
 
 `node_id` frames one element — a designer does not judge a card by looking at the whole
 page, and a full-page shot of a long storefront makes one card a few pixels tall. The clip
@@ -324,7 +422,10 @@ reading the document cannot find:
 | `overlap` | Two elements on top of each other — nesting and a pixel of rounding are not counted |
 
 Each carries the **widths** it happens at, because that is most of the diagnosis: fine at
-1440 and broken at 390 is a responsive failure, not a broken element.
+1440 and broken at 390 is a responsive failure, not a broken element. They arrive as
+`layout`, with `layout_fixes` as the legend and `layout_notice` — measured, not read off the
+document; fix at the breakpoint named — the first time in a process. None of the three is
+present when nothing was measured, or when `node_id` frames one element.
 
 It does not judge taste. Whether a hero reads well is not measurable, and pretending
 otherwise would spend the agent's attention on what it cannot know.

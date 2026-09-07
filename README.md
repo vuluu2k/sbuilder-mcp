@@ -63,13 +63,13 @@ make, because those mean "this person's account".
 | --- | --- |
 | `sb_connect` | Log in, list the sites this account can operate, report which credentials are present |
 | `sb_site_list` | List the sites this account can operate |
-| `sb_api_find` | Find API operations by intent — returns real parameter schemas, the credential each needs, and an explicit note when the platform's document fails to describe a request body |
+| `sb_api_find` | Find API operations by intent — one line per match — then read one operation's call sheet by id: real parameter schemas, the credential it needs, and an explicit note when the platform's document fails to describe a request body |
 | `sb_api_call` | Execute one operation. Defaults to a dry run that sends nothing |
 | `sb_page_open` | Open a page for editing and return its outline |
 | `sb_outline` | The open page as a compressed tree — never a raw document dump |
 | `sb_node_read` | One node in full, with a warning if it is a shared global |
 | `sb_catalog_search` | Find an element by what it should do, using the platform's own AI hints |
-| `sb_traits_for` | Which trait groups an element accepts, plus defaults and containment rules |
+| `sb_traits_for` | An element's inspector — tabs, groups, controls and what each declared one writes — plus its AI hints, defaults and containment rules |
 | `sb_add` | Add an element — or a whole nested subtree — in one call |
 | `sb_set` | Write style/config/specials. Per breakpoint by default |
 | `sb_move` | Move a node to another parent |
@@ -84,12 +84,17 @@ make, because those mean "this person's account".
 | `sb_media_list` | The site's media library |
 | `sb_media_upload` | Add an image and get its URL — the only route, the upload is multipart |
 | `sb_live_join` | Join the editor's live-edit room as a visible peer — edits then appear live |
-| `sb_look` | Save, render, and return screenshots plus measured node boxes |
+| `sb_look` | Save, render, and return screenshots plus measured node boxes and layout defects measured on the render |
 | `sb_bind` | Bind a node's content to real store data |
 
-Twenty-five tools, **310 API operations**. `sb_api_find` is an index rather than a tool per endpoint,
-so the tool list stays short while everything the platform can do stays reachable — and
-operations added to the platform arrive with the next `npm run codegen`.
+Twenty-five tools, **412 API operations**, 106 elements, 26 binding sources. `sb_api_find`
+is an index rather than a tool per endpoint, so the tool list stays short while everything
+the platform can do stays reachable — and operations added to the platform arrive with the
+next `npm run codegen`.
+
+Every result is compact JSON, every directive is said once per process, and every tool
+carries MCP annotations — a client that honours them stops asking a person to confirm a
+read.
 
 Full reference: [`docs/tools.md`](./docs/tools.md).
 
@@ -117,9 +122,27 @@ npm run smoke     # offline self-test; must print ALL GOOD
 Contributor guide: [`CLAUDE.md`](./CLAUDE.md). Design rationale:
 [`docs/superpowers/specs/`](./docs/superpowers/specs/).
 
+### Release
+
+A push to `main` that touches `src/**` releases on its own
+(`.github/workflows/auto-release.yml`): the gate runs (build, test, smoke), the version
+bump is read off the commit subject — `feat` is minor, `BREAKING CHANGE` or `!` is major,
+anything else is patch — Claude writes the changelog entry in both languages,
+`server.json` is synced, the release is committed as `chore(release): vX.Y.Z` and tagged,
+then published to npm, as a GitHub Release, and to the MCP Registry through GitHub OIDC.
+`workflow_dispatch` runs the same flow with a bump you choose. A commit whose subject
+contains `chore(release):` or `release: v` is skipped, so a release never triggers another.
+
+The workflow needs two repository secrets in the `prod` environment: `NPM_ACCESS_TOKEN`
+and `CLAUDE_CODE_OAUTH_TOKEN`. The registry step needs none.
+
+`npm run release` (`scripts/release.mjs`) is the offline path — a machine with no CI, or a
+release cut while a secret is being rotated. It runs the same gate and writes the same
+`## [x.y.z] - date` changelog heading, so the two never disagree.
+
 ## Designing safely
 
-Four platform rules fail **silently** if a client does not know them, so they are encoded
+Five platform rules fail **silently** if a client does not know them, so they are encoded
 here as tested code rather than advice:
 
 - **Band order** — ROOT's children must read `[header][middle][footer]`, or the platform
@@ -131,12 +154,15 @@ here as tested code rather than advice:
   publishing cascades. Any result touching one says so.
 - **Responsive by default** — `sb_set` writes per breakpoint, because a design should
   respond. Base is the cascade's fallback layer, not a trap.
+- **App blocks** — a marketplace app's subtree is composed onto the page on read and reduced
+  back to one reference node on save, so an edit inside it is lost without a word. Every
+  write refuses the interior; the outline flags the block root `app: true`.
 
 ## Status
 
 All three phases shipped: authentication and full API reach; the page document, patch
-protocol, builder and the four traps; the live-edit socket, the yield rule, and the vision
-loop.
+protocol, builder and the five traps; the live-edit socket, the yield rule, and the vision
+loop. Since then: a token diet across every result, and releases that cut themselves.
 
 Requires **Node ≥22** (the global `WebSocket`) and, for `sb_look` only, **system Google
 Chrome** — `playwright-core` bundles no browser, so installing downloads nothing.

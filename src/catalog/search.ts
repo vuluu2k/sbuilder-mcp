@@ -53,9 +53,9 @@ export function searchOperations(
  * The source document under-describes bodies in TWO different ways, and telling
  * them apart matters because the right recovery differs:
  *
- *  - 58 of the 140 body-carrying operations declare a body with no `$ref`, so
+ *  - 62 of the 168 body-carrying operations declare a body with no `$ref`, so
  *    the shape is unknown but its EXISTENCE is certain.
- *  - 60 of the 137 write operations declare no body parameter at all. Some
+ *  - 95 of the 180 write operations declare no body parameter at all. Some
  *    genuinely take none (`POST /api/orgs/{id}/leave` is an action, not a
  *    payload). Others are simply un-annotated: `PUT /pages/{id}/source` carries
  *    a whole page document and the document says nothing about it, and

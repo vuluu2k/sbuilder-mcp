@@ -29,6 +29,21 @@ npm start         # node dist/index.js (stdio server)
 **The gate for every change is `npm run build && npm test && npm run smoke`.**
 `prepublishOnly` runs build + smoke, so a broken smoke blocks publishing.
 
+## Releasing
+
+A push to `main` that touches `src/**` releases on its own through
+`.github/workflows/auto-release.yml`: the gate (build, test, smoke), a bump read off the
+commit subject (`feat` → minor, `BREAKING CHANGE` or `!` → major, else patch; a
+`workflow_dispatch` run picks its own), a bilingual changelog entry written by Claude,
+`server.json` synced, a `chore(release): vX.Y.Z` commit plus tag, then npm publish, a GitHub
+Release, and the MCP Registry through GitHub OIDC. Secrets, in the `prod` environment:
+`NPM_ACCESS_TOKEN` and `CLAUDE_CODE_OAUTH_TOKEN`; the registry step needs none. The
+workflow skips a head commit whose subject contains `chore(release):` or `release: v`, so a
+release never triggers a second one. `npm run release` (`scripts/release.mjs`) is the
+offline path — no CI, or a secret mid-rotation — and it MUST keep writing the same
+`## [x.y.z] - date` heading and the same commit subject, because the workflow prepends above
+the first `## [` line and matches the subject as its skip guard.
+
 ## Invariants — do not wait for a review to be told these
 
 - **Node ≥22**, because this repo uses the GLOBAL `WebSocket`, unflagged from 22. The
@@ -48,6 +63,9 @@ npm start         # node dist/index.js (stdio server)
   A hand-built content array is the shape that drifts.
 - **Mutating tools take `dry_run` and default it to `true`**, returning a request preview
   passed through `redact()`.
+- **Every result is compact JSON, and every directive is said once per process through
+  `ctx.notices`**; a tool that repeats a notice on every call is the shape that drifts.
+  `test/token-budget.test.ts` is the scale — a diet without one comes back.
 - **Credential routing is by path prefix**, in `src/transport/credential.ts`, and is not
   negotiable: `/api/v1/…` → `SB_TOKEN`; everything else → the session JWT. The OpenAPI
   document declares one `BearerAuth` scheme for both, so it *cannot* make this call, and
@@ -61,11 +79,11 @@ npm start         # node dist/index.js (stdio server)
 Each of these cost real investigation. Do not re-derive them, and do not "fix" the code
 that accounts for them.
 
-- **The OpenAPI document holds 205 paths / 310 operations / 85 definitions, and no
+- **The OpenAPI document holds 278 paths / 412 operations / 97 definitions, and no
   `operationId`.** Ids are synthesized as `method:path`; the generator asserts uniqueness.
-  (320 is the count of *tag assignments* — an operation with two tags is counted twice.)
-- **Bodies are under-described in two different ways.** 58 of 140 body-carrying operations
-  declare a body with no `$ref`; 60 of 137 write operations declare no body *at all*, and
+  (423 is the count of *tag assignments* — an operation with two tags is counted twice.)
+- **Bodies are under-described in two different ways.** 62 of 168 body-carrying operations
+  declare a body with no `$ref`; 95 of 180 write operations declare no body *at all*, and
   that second group mixes genuine action endpoints (`POST /orgs/{id}/leave`) with missing
   annotations (`PUT /pages/{id}/source` carries a whole page document). `describeOperation`
   gives the two cases different words on purpose — saying "no body" for the second would
@@ -75,13 +93,16 @@ that accounts for them.
   replays an expired token forever, and the failure is silent — a rejected socket auth
   still fires `onopen`.
 - **The platform writes exactly one error shape**, `{"error", "code"}`, never plain text.
-  `code` is the branchable half; reading `statusText` throws it away.
+  `code` is the branchable half; reading `statusText` throws it away. Two documented
+  supersets exist — `details` (`WriteErrorCodeDetails`) and `fields` (`fielderrors.go`, with
+  `code: "validation"`) — and `ApiError` carries both when present.
 - **`PUT /pages/{id}/source` takes `{ document, schemaVersion }`**, not `{ document }`. The
   OpenAPI document declares no body for it at all, so the shape was read off the editor's
-  own `saveSource` (`editor/src/features/pages/api.ts:114`), including its
+  own `saveSource` (`editor/src/features/pages/api.ts:115`), including its
   `schema_version ?? 1` fallback. Copy the working client; never guess a body.
-- **The element registry holds 85 types, and `getElementAI` covers 85/85.** The directory
-  has 95 entries because 14 are loose `.ts` files, not elements.
+- **The element registry holds 106 types, and `getElementAI` covers 106/106.** The
+  directory has more entries than that because the loose `.ts` files beside the elements
+  are not elements. 26 binding sources.
 - **The wire caps frames by KIND.** `ops` and `snap` may reach 4 MiB; EVERY other kind is
   capped at 64 KiB, and exceeding it CLOSES the socket (`StatusMessageTooBig`) rather than
   rejecting one frame. Split a large batch.
@@ -94,10 +115,11 @@ that accounts for them.
   schema package. Codegen reads it with a regex — importing an editor module would drag Vue
   into a build script for one integer.
 
-## The four traps
+## The five traps
 
-Each fails SILENTLY. Each is encoded in `src/domains/site/traps.ts` with its own test,
-because this platform treats an unproven guard as indistinguishable from an absent one.
+Each fails SILENTLY. Each is encoded in `src/domains/site/traps.ts` (trap 5 in
+`src/core/tree.ts` and `src/domains/site/builder.ts`) with its own test, because this
+platform treats an unproven guard as indistinguishable from an absent one.
 
 1. **Site overlays** — the cart drawer and pop-ups are composed onto ROOT on read and
    stripped on write. Stamped `specials.overlayId`, and only a DIRECT child of ROOT may be
@@ -121,6 +143,15 @@ because this platform treats an unproven guard as indistinguishable from an abse
    cause that. `server/render/style/cascade.go`'s MergeNamespace resolves a key
    *current slot → wider slots → BASE → narrower slots*, so base is the fallback layer, and
    every element's `meta.defaults.style` is seeded straight into it.
+5. **App blocks** — a marketplace app's subtree. The document stores ONE reference node
+   stamped `specials.appBlockRef`; on read the platform composes the app's markup under it
+   and stamps the block root `appBlockId`; on save `DecomposeAppBlocks`
+   (`server/internal/page/globalservice.go:56`, after overlays, before `Decompose`) reduces
+   the subtree back to the reference, so an edit inside is stored nowhere and reported
+   nowhere. `appBlockRoot()` in `src/core/tree.ts` finds the nearest stamped self-or-ancestor;
+   every write refuses a strict descendant through `refuseAppBlockInterior` (and `sb_add` /
+   `sb_move` refuse the root as a destination), the outline flags the root `app: true`, and
+   `sb_review` skips the interior. Tested in `test/traps.test.ts`.
 
 ## The yield rule
 
@@ -141,8 +172,10 @@ watching see nothing happen.
 
 ## Adding a tool
 
-1. Put it in a group under `src/tools/*.ts`, registered via `server.tool(...)`.
-2. Return through `text()`. Take `dry_run` if it writes.
+1. Put it in a group under `src/tools/*.ts`, registered via `server.registerTool(...)` with
+   MCP annotations (`readOnlyHint` for a read; `destructiveHint` where a write destroys).
+2. Return through `text()`. Take `dry_run` if it writes. Say a directive through
+   `ctx.notices.once(...)`, never inline.
 3. Register the group in `src/server.ts`.
 4. Add a test under `test/`.
 5. Document it in `docs/tools.md` **and** `docs/tools.vi.md`, and in both READMEs' table.
@@ -158,7 +191,10 @@ and check conventions; never edits).
 All three phases are shipped, and their plans live in `docs/superpowers/plans/`:
 auth and full API reach; the element catalog, patch core, four traps, document, builder,
 validation and page tools; the live-edit socket, the yield rule, the vision loop and
-`sb_bind`. Sixteen tools reach 310 API operations.
+`sb_bind`. Twenty-five tools reach 412 API operations. The 2026-09-07 token diet plan in
+`docs/superpowers/plans/` (compact results, once-per-process notices, the `sb_api_find`
+call sheet, trap 5, auto-release) is shipped too, and `test/token-budget.test.ts` holds its
+ceilings.
 
 `SB_BROWSER_TEST=1 npm test` adds the one test that launches Chrome. Run it after touching
 `src/vision/**` — the default suite skips it, and a skip that reads as green is the failure

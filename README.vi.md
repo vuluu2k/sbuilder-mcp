@@ -60,13 +60,13 @@ là "tài khoản của người này".
 | --- | --- |
 | `sb_connect` | Đăng nhập, liệt kê site tài khoản vận hành được, báo đang có credential nào |
 | `sb_site_list` | Liệt kê site tài khoản vận hành được |
-| `sb_api_find` | Tìm operation theo ý định — trả về schema tham số thật, credential cần dùng, và cảnh báo rõ ràng khi tài liệu của nền tảng không mô tả request body |
+| `sb_api_find` | Tìm operation theo ý định — mỗi kết quả một dòng — rồi đọc call sheet của một operation theo id: schema tham số thật, credential cần dùng, và cảnh báo rõ ràng khi tài liệu của nền tảng không mô tả request body |
 | `sb_api_call` | Chạy một operation. Mặc định chạy khô, không gửi gì |
 | `sb_page_open` | Mở một trang để sửa và trả về outline |
 | `sb_outline` | Trang đang mở dạng cây nén — không bao giờ dump tài liệu thô |
 | `sb_node_read` | Một node đầy đủ, kèm cảnh báo nếu nó là global dùng chung |
 | `sb_catalog_search` | Tìm element theo việc nó cần làm, dùng chính AI hints của nền tảng |
-| `sb_traits_for` | Element nhận nhóm trait nào, kèm default và luật chứa con |
+| `sb_traits_for` | Inspector của element — tab, nhóm, control và mỗi control khai báo sẵn ghi vào đâu — kèm AI hints, default và luật chứa con |
 | `sb_add` | Thêm một element — hoặc cả cây con lồng nhau — trong một lần gọi |
 | `sb_set` | Ghi style/config/specials. Mặc định theo breakpoint |
 | `sb_move` | Chuyển node sang cha khác |
@@ -81,12 +81,16 @@ là "tài khoản của người này".
 | `sb_media_list` | Thư viện ảnh của site |
 | `sb_media_upload` | Thêm ảnh và lấy URL — đường duy nhất, vì upload là multipart |
 | `sb_live_join` | Vào phòng live-edit của editor như một peer nhìn thấy được — sửa gì hiện ngay |
-| `sb_look` | Lưu, render, trả về ảnh chụp kèm box đo được của từng node |
+| `sb_look` | Lưu, render, trả về ảnh chụp kèm box đo được của node và lỗi bố cục đo trên bản render |
 | `sb_bind` | Gắn nội dung một node vào dữ liệu cửa hàng thật |
 
-Hai mươi lăm tool, **310 operation API**. `sb_api_find` là một chỉ mục chứ không phải mỗi endpoint một
-tool, nên danh sách tool vẫn ngắn trong khi mọi thứ nền tảng làm được vẫn với tới — và
-operation mới thêm bên nền tảng sẽ tự có sau lần `npm run codegen` kế tiếp.
+Hai mươi lăm tool, **412 operation API**, 106 element, 26 nguồn binding. `sb_api_find` là
+một chỉ mục chứ không phải mỗi endpoint một tool, nên danh sách tool vẫn ngắn trong khi mọi
+thứ nền tảng làm được vẫn với tới — và operation mới thêm bên nền tảng sẽ tự có sau lần
+`npm run codegen` kế tiếp.
+
+Mọi kết quả đều là JSON nén, mọi directive chỉ nói một lần mỗi process, và mọi tool đều mang
+MCP annotation — client nào tôn trọng chúng sẽ thôi hỏi người dùng xác nhận một lần đọc.
 
 Tra cứu đầy đủ: [`docs/tools.vi.md`](./docs/tools.vi.md).
 
@@ -114,9 +118,27 @@ npm run smoke     # tự kiểm offline; phải in ALL GOOD
 Hướng dẫn đóng góp: [`CLAUDE.md`](./CLAUDE.md). Lý do thiết kế:
 [`docs/superpowers/specs/`](./docs/superpowers/specs/).
 
+### Phát hành
+
+Một lần push lên `main` có đụng `src/**` sẽ tự phát hành
+(`.github/workflows/auto-release.yml`): cổng kiểm chạy (build, test, smoke), mức tăng phiên
+bản đọc từ tiêu đề commit — `feat` là minor, `BREAKING CHANGE` hoặc `!` là major, còn lại là
+patch — Claude viết mục changelog bằng cả hai ngôn ngữ, `server.json` được đồng bộ, bản phát
+hành được commit là `chore(release): vX.Y.Z` và gắn tag, rồi publish lên npm, thành GitHub
+Release, và lên MCP Registry qua GitHub OIDC. `workflow_dispatch` chạy đúng luồng đó với mức
+tăng bạn chọn. Commit có tiêu đề chứa `chore(release):` hoặc `release: v` thì bị bỏ qua, nên
+một lần phát hành không bao giờ kích hoạt lần khác.
+
+Workflow cần hai secret của repo trong environment `prod`: `NPM_ACCESS_TOKEN` và
+`CLAUDE_CODE_OAUTH_TOKEN`. Bước registry không cần secret nào.
+
+`npm run release` (`scripts/release.mjs`) là đường offline — máy không có CI, hoặc phát hành
+đúng lúc đang xoay secret. Nó chạy cùng cổng kiểm và ghi cùng tiêu đề changelog
+`## [x.y.z] - date`, nên hai bên không bao giờ lệch nhau.
+
 ## Thiết kế an toàn
 
-Bốn luật của nền tảng hỏng **im lặng** nếu client không biết, nên chúng được viết thành code
+Năm luật của nền tảng hỏng **im lặng** nếu client không biết, nên chúng được viết thành code
 có test chứ không phải lời khuyên:
 
 - **Thứ tự băng** — con của ROOT phải đọc `[header][middle][footer]`, sai là nền tảng từ
@@ -127,11 +149,15 @@ có test chứ không phải lời khuyên:
   thì lan. Mọi kết quả đụng tới nó đều nói rõ.
 - **Mặc định responsive** — `sb_set` ghi theo breakpoint, vì một thiết kế nên đáp ứng. Base
   là lớp dự phòng của cascade, không phải cái bẫy.
+- **App block** — cây con của một app trên marketplace được ghép vào trang lúc đọc và thu về
+  một node tham chiếu lúc lưu, nên sửa gì bên trong là mất mà không một lời. Mọi lần ghi đều
+  từ chối phần bên trong; outline cắm cờ `app: true` cho gốc block.
 
 ## Trạng thái
 
 Cả ba giai đoạn đã xong: xác thực và với tới toàn bộ API; tài liệu trang, giao thức patch,
-builder và bốn cái bẫy; socket live-edit, luật nhường, và vòng lặp thị giác.
+builder và năm cái bẫy; socket live-edit, luật nhường, và vòng lặp thị giác. Sau đó: một đợt
+ăn kiêng token trên mọi kết quả, và phát hành tự cắt.
 
 Cần **Node ≥22** (WebSocket toàn cục) và, chỉ với `sb_look`, **Google Chrome của hệ thống** —
 `playwright-core` không kèm trình duyệt nào nên lúc cài không tải gì.
