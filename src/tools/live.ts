@@ -8,6 +8,8 @@ import { uploadMedia } from '../transport/media.js';
 import { request } from '../transport/http.js';
 import { shoot, DEFAULT_WIDTHS } from '../vision/shoot.js';
 import { measure, MEASURE_NOTICE } from '../vision/measure.js';
+import { compactFindings } from '../domains/site/findings.js';
+import { reviewField } from './page.js';
 import { boxesForResponse, BOXES_FORMAT } from '../vision/boxes.js';
 import { RealtimeSocket } from '../transport/socket.js';
 import { LiveSession } from '../live/session.js';
@@ -17,7 +19,6 @@ import { refuseAppBlockInterior } from '../domains/site/builder.js';
 import { siteToken } from './credentialpick.js';
 import type { ToolContext } from './context.js';
 import { projectList, MEDIA_FIELDS } from './project.js';
-import { reviewDesign, REVIEW_NOTICE } from '../domains/site/review.js';
 import type { PageSession } from './page.js';
 
 /**
@@ -121,10 +122,12 @@ export function registerLiveTools(
       // The findings ride WITH the picture. Judging a page by eye and judging it
       // by rule are the same act, and separating them is how the second one gets
       // skipped.
-      const findings = reviewDesign(session.current());
+      const review = reviewField(ctx, session.current());
       // Measured on the render, not read off the document — a card that spills
       // at 390px is invisible to every check that only reads the tree.
       const visual = node_id ? [] : measure(shots);
+      const layout = compactFindings(visual);
+      const layoutNotice = visual.length > 0 ? ctx.notices.once('measure', MEASURE_NOTICE) : undefined;
       // The legend rides with the first look only; the shape does not change after.
       const fmt = with_boxes === false ? undefined : ctx.notices.once('boxes', BOXES_FORMAT);
       return images(shots.map((s) => ({ dataBase64: s.pngBase64 })), {
@@ -136,8 +139,14 @@ export function registerLiveTools(
               boxes: boxesForResponse(session.current().doc, shots[0]?.boxes ?? [], box_depth ?? 2),
               ...(fmt ? { boxes_format: fmt } : {}),
             }),
-        ...(findings.length > 0 ? { findings, findings_notice: REVIEW_NOTICE } : {}),
-        ...(visual.length > 0 ? { layout: visual, layout_notice: MEASURE_NOTICE } : {}),
+        ...review,
+        ...(visual.length > 0
+          ? {
+              layout: layout.findings,
+              layout_fixes: layout.fixes,
+              ...(layoutNotice ? { layout_notice: layoutNotice } : {}),
+            }
+          : {}),
       });
     },
   );

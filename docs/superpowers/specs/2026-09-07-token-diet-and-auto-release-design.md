@@ -107,14 +107,15 @@ time it is asked for in a process and `undefined` after. The field (`findings_no
 
 ### 3.6 Findings carry a kind; fixes are a legend
 
-`Finding` and `VisualFinding` gain `kind` (a short slug: `empty_band`, `unknown_type`,
-`empty_container`, `missing_content`, `placeholder`, `unknown_source`, `bad_field`,
-`overflow`, `small_text`, `overlap`). Each finding keeps `id`, `problem`, and whatever
-per-finding value the fix needs (`key`, `sources`). `fix` leaves the finding and becomes
-`fixes: { <kind>: "template with <id> / <key>" }` alongside the findings array, containing
-only the kinds present. Twenty placeholder findings cost one template instead of twenty
-sentences. `reviewDesign` / `measure` return the findings; a `withFixes(findings)` helper
-in each module builds the legend, and the tool layer spreads both.
+`Finding` and `VisualFinding` already carry `code` (`empty_page`, `unknown_element`,
+`empty_container`, `empty_text`, `missing_media`, `placeholder_content`,
+`dead_binding_source`, `dead_binding_field`, `off_canvas`, `text_too_small`, `overlap`);
+that is the kind. Each finding keeps `nodeId`, `problem`, and `key` where the fix names one.
+At the domain layer `fix` is still filled per finding from one template per code
+(`src/domains/site/findings.ts`), so a finding read alone is whole. At the tool layer
+`compactFindings()` drops `fix` and emits `fixes: { <code>: template }` beside the array,
+containing only the codes present. Twenty placeholder findings cost one template instead of
+twenty sentences.
 
 ### 3.7 `sb_look`: boxes as tuples, near the top by default
 

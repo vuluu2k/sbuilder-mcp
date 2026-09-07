@@ -16,6 +16,7 @@ import { request } from '../transport/http.js';
 import { siteToken } from './credentialpick.js';
 import { validateForSave } from '../domains/site/validate.js';
 import { reviewDesign, REVIEW_NOTICE } from '../domains/site/review.js';
+import { compactFindings } from '../domains/site/findings.js';
 import { globalWarning, RESPONSIVE_NOTICE } from '../domains/site/traps.js';
 import { catalogMatches, traitsFor } from '../catalog/element-search.js';
 import type { Patch } from '../core/patch.js';
@@ -28,11 +29,15 @@ import { projectList, PAGE_FIELDS, TEMPLATE_FIELDS } from './project.js';
  * Findings, in the shape every surface returns them.
  *
  * Spread rather than repeated: three tools attach this, and three hand-written
- * copies of a directive is how one of them quietly loses it.
+ * copies of a directive is how one of them quietly loses it. The fix for each
+ * KIND is sent once under `fixes`, and the directive once per process.
  */
-function reviewField(doc: PageDoc): Record<string, unknown> {
-  const findings = reviewDesign(doc);
-  return findings.length > 0 ? { findings, findings_notice: REVIEW_NOTICE } : {};
+export function reviewField(ctx: ToolContext, doc: PageDoc): Record<string, unknown> {
+  const all = reviewDesign(doc);
+  if (all.length === 0) return {};
+  const { findings, fixes } = compactFindings(all);
+  const notice = ctx.notices.once('review', REVIEW_NOTICE);
+  return { findings, fixes, ...(notice ? { findings_notice: notice } : {}) };
 }
 
 /**
@@ -167,7 +172,7 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
     { site_id: z.string(), page_id: z.string() },
     async ({ site_id, page_id }) => {
       const outline = await session.open(site_id, page_id);
-      return text({ outline, ...reviewField(session.current()) });
+      return text({ outline, ...reviewField(ctx, session.current()) });
     },
   );
 
@@ -259,7 +264,10 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
         base,
         state,
       });
-      if (dry_run !== false) return text({ dry_run: true, patches, note: RESPONSIVE_NOTICE });
+      if (dry_run !== false) {
+        const note = ctx.notices.once('responsive', RESPONSIVE_NOTICE);
+        return text({ dry_run: true, patches, ...(note ? { note } : {}) });
+      }
       session.applyAndPublish(patches);
       await session.save();
       const warn = globalWarning(d.doc, id);
@@ -308,11 +316,11 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
       'document can publish as an empty box. Run it before you call a page finished.',
     {},
     async () => {
-      const findings = reviewDesign(session.current());
+      const field = reviewField(ctx, session.current());
       return text(
-        findings.length === 0
+        Object.keys(field).length === 0
           ? { findings: [], verdict: 'Nothing a visitor would notice.' }
-          : { findings, findings_notice: REVIEW_NOTICE },
+          : field,
       );
     },
   );

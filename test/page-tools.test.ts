@@ -1,6 +1,8 @@
 import { describe, it, expect, vi } from 'vitest';
-import { PageSession } from '../src/tools/page.js';
+import { PageSession, reviewField } from '../src/tools/page.js';
 import { Session } from '../src/transport/auth.js';
+import { Notices } from '../src/mcp/notices.js';
+import { PageDoc } from '../src/domains/site/document.js';
 
 const emptyDocument = {
   schema_version: 2,
@@ -27,7 +29,7 @@ function scripted() {
 function ctxWith(f: typeof fetch) {
   const s = new Session('http://x', f);
   (s as unknown as { access: string }).access = 'jwt';
-  return { base: 'http://x', session: s, fetchImpl: f };
+  return { base: 'http://x', session: s, fetchImpl: f, notices: new Notices() };
 }
 
 describe('PageSession', () => {
@@ -65,5 +67,21 @@ describe('PageSession', () => {
     ]);
     await expect(ps.save()).rejects.toThrow(/unreachable/i);
     expect(saved.length).toBe(0);
+  });
+});
+
+describe('reviewField()', () => {
+  it('says the notice once and sends fixes as a legend', () => {
+    const ctx = { ...ctxWith(scripted().f), notices: new Notices() };
+    const d = PageDoc.from({ schema_version: 2, root_node_id: '', nodes: {} });
+    const first = reviewField(ctx, d) as {
+      findings: Array<Record<string, unknown>>;
+      fixes: Record<string, string>;
+      findings_notice?: string;
+    };
+    expect(first.findings_notice).toMatch(/FIX THESE/);
+    expect('fix' in first.findings[0]).toBe(false);
+    expect(first.fixes.empty_page).toMatch(/sb_add/);
+    expect((reviewField(ctx, d) as { findings_notice?: string }).findings_notice).toBeUndefined();
   });
 });
