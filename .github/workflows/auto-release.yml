@@ -47,6 +47,21 @@ jobs:
           git config user.name "vuluu2k"
           git config user.email "vuluu040320@gmail.com"
 
+      # Fail in seconds, naming what is missing. The first real run spent the
+      # whole gate and a global npm install before dying at the changelog step
+      # on an empty token, under a stack of green steps that said nothing about
+      # the cause. Only NPM_ACCESS_TOKEN is checked here because it is needed on
+      # every path; the changelog step checks its own token, which resume mode
+      # legitimately does not need.
+      - name: Require the publish secret
+        env:
+          NPM_ACCESS_TOKEN: ${{ secrets.NPM_ACCESS_TOKEN }}
+        run: |
+          if [ -z "$NPM_ACCESS_TOKEN" ]; then
+            echo "::error::NPM_ACCESS_TOKEN is not set. Add it to the 'prod' environment (Settings -> Environments -> prod -> Add secret), then re-run this workflow." >&2
+            exit 1
+          fi
+
       - name: Detect resume mode (tag pushed but never published)
         id: mode
         run: |
@@ -180,6 +195,11 @@ jobs:
           REL_DATE: ${{ steps.context.outputs.date }}
           PREV_TAG: ${{ steps.context.outputs.prev_tag }}
         run: |
+          if [ -z "$CLAUDE_CODE_OAUTH_TOKEN" ]; then
+            echo "::error::CLAUDE_CODE_OAUTH_TOKEN is not set, so the changelog cannot be written. Add it to the 'prod' environment (Settings -> Environments -> prod -> Add secret), then re-run this workflow." >&2
+            exit 1
+          fi
+
           RANGE="${PREV_TAG:+${PREV_TAG}..HEAD}"
           RANGE="${RANGE:-HEAD}"
 
