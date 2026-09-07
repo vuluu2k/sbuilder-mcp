@@ -1,0 +1,373 @@
+name: Auto Release
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "src/**"
+  workflow_dispatch:
+    inputs:
+      bump:
+        description: "Version bump type"
+        required: true
+        default: "patch"
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+
+concurrency:
+  group: auto-release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    environment: prod
+    if: "!contains(github.event.head_commit.message, 'chore(release):') && !contains(github.event.head_commit.message, 'release: v')"
+    permissions:
+      contents: write
+      id-token: write # OIDC token for MCP Registry auth (mcp-publisher login github-oidc)
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          registry-url: "https://registry.npmjs.org"
+
+      - name: Configure git
+        run: |
+          git config user.name "vuluu2k"
+          git config user.email "vuluu040320@gmail.com"
+
+      - name: Detect resume mode (tag pushed but never published)
+        id: mode
+        run: |
+          git fetch --tags --force origin >/dev/null 2>&1 || true
+          PKG=$(node -p "require('./package.json').name")
+          CURRENT_VERSION=$(node -p "require('./package.json').version")
+          CURRENT_TAG="v${CURRENT_VERSION}"
+
+          TAG_ON_ORIGIN="0"
+          if git ls-remote --tags origin "refs/tags/${CURRENT_TAG}" | grep -q "refs/tags/${CURRENT_TAG}$"; then
+            TAG_ON_ORIGIN="1"
+          fi
+
+          PUBLISHED="0"
+          if npm view "${PKG}@${CURRENT_VERSION}" version >/dev/null 2>&1; then
+            PUBLISHED="1"
+          fi
+
+          if [ "$TAG_ON_ORIGIN" = "1" ] && [ "$PUBLISHED" = "0" ]; then
+            echo "Resume mode: tag ${CURRENT_TAG} exists on origin but ${PKG}@${CURRENT_VERSION} is not on npm — skipping bump/commit/tag, going straight to publish + GitHub Release."
+            echo "resume=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "Normal release flow (tag_on_origin=${TAG_ON_ORIGIN}, published=${PUBLISHED})."
+            echo "resume=false" >> "$GITHUB_OUTPUT"
+          fi
+          echo "version=${CURRENT_VERSION}" >> "$GITHUB_OUTPUT"
+          echo "tag=${CURRENT_TAG}" >> "$GITHUB_OUTPUT"
+
+      - name: Resolve bump type
+        id: bump
+        if: steps.mode.outputs.resume != 'true'
+        env:
+          # Pass untrusted inputs through env, never interpolated into the shell
+          # script directly — a commit message containing backticks or $(...)
+          # would otherwise be executed by the shell.
+          INPUT_BUMP: ${{ github.event.inputs.bump }}
+          COMMIT_MSG: ${{ github.event.head_commit.message }}
+        run: |
+          BUMP="$INPUT_BUMP"
+          if [ -z "$BUMP" ]; then
+            case "$COMMIT_MSG" in
+              *"BREAKING CHANGE"*|*"!:"*) BUMP="major" ;;
+              feat*|*"feat:"*|*"feat("*) BUMP="minor" ;;
+              *) BUMP="patch" ;;
+            esac
+          fi
+          echo "type=$BUMP" >> "$GITHUB_OUTPUT"
+
+      - name: Bump version (skipping reserved npm versions and existing git tags)
+        id: version
+        if: steps.mode.outputs.resume != 'true'
+        run: |
+          PKG=$(node -p "require('./package.json').name")
+          OLD_VERSION=$(node -p "require('./package.json').version")
+          NEW_VERSION=$(npm version ${{ steps.bump.outputs.type }} --no-git-tag-version)
+          NEW_VERSION="${NEW_VERSION#v}"
+
+          # Make sure we know about every tag the remote already has so we
+          # don't try to recreate one that exists upstream.
+          git fetch --tags --force origin >/dev/null 2>&1 || true
+
+          # Skip versions that are already published OR were unpublished
+          # (npm reserves unpublished version numbers permanently), and
+          # versions whose git tag already exists locally or on the remote.
+          while true; do
+            # Overwrite (not append) on failure: for an unpublished package,
+            # `npm view ... --json` prints an E404 error object to stdout AND
+            # exits non-zero, so an inline `|| echo {}` would concatenate the two
+            # and break JSON.parse. Keep the fallback outside the substitution.
+            TIME_JSON=$(npm view "$PKG" time --json 2>/dev/null) || TIME_JSON="{}"
+            [ -z "$TIME_JSON" ] && TIME_JSON="{}"
+            NPM_RESERVED=$(node -e "
+              let t = {};
+              try { t = JSON.parse(process.argv[1] || '{}'); } catch { t = {}; }
+              process.stdout.write(t['${NEW_VERSION}'] ? '1' : '0');
+            " "$TIME_JSON")
+
+            TAG_EXISTS="0"
+            if git rev-parse -q --verify "refs/tags/v${NEW_VERSION}" >/dev/null 2>&1; then
+              TAG_EXISTS="1"
+            elif git ls-remote --tags origin "refs/tags/v${NEW_VERSION}" | grep -q "refs/tags/v${NEW_VERSION}$"; then
+              TAG_EXISTS="1"
+            fi
+
+            if [ "$NPM_RESERVED" = "1" ] || [ "$TAG_EXISTS" = "1" ]; then
+              if [ "$NPM_RESERVED" = "1" ]; then
+                echo "Version ${NEW_VERSION} is taken or reserved on npm — bumping patch."
+              fi
+              if [ "$TAG_EXISTS" = "1" ]; then
+                echo "Git tag v${NEW_VERSION} already exists — bumping patch."
+              fi
+              NEW_VERSION=$(npm version patch --no-git-tag-version)
+              NEW_VERSION="${NEW_VERSION#v}"
+            else
+              break
+            fi
+          done
+
+          echo "old=$OLD_VERSION" >> "$GITHUB_OUTPUT"
+          echo "new=$NEW_VERSION" >> "$GITHUB_OUTPUT"
+          echo "tag=v$NEW_VERSION" >> "$GITHUB_OUTPUT"
+          echo "Final version: $NEW_VERSION"
+
+      - name: Resolve prev tag
+        id: context
+        if: steps.mode.outputs.resume != 'true'
+        run: |
+          PREV_TAG=$(git describe --tags --abbrev=0 "HEAD^" 2>/dev/null || git describe --tags --abbrev=0 2>/dev/null || echo "")
+          DATE=$(date -u +%Y-%m-%d)
+          echo "date=$DATE" >> "$GITHUB_OUTPUT"
+          echo "prev_tag=$PREV_TAG" >> "$GITHUB_OUTPUT"
+
+      - name: Install deps
+        run: npm ci --ignore-scripts
+
+      - name: Build + test + smoke gate
+        run: |
+          npm run build
+          npm test
+          npm run smoke
+
+      - name: Install Claude Code CLI
+        if: steps.mode.outputs.resume != 'true'
+        run: npm i -g @anthropic-ai/claude-code
+
+      - name: Generate changelog with Claude
+        if: steps.mode.outputs.resume != 'true'
+        env:
+          CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          NEW_VERSION: ${{ steps.version.outputs.new }}
+          REL_DATE: ${{ steps.context.outputs.date }}
+          PREV_TAG: ${{ steps.context.outputs.prev_tag }}
+        run: |
+          RANGE="${PREV_TAG:+${PREV_TAG}..HEAD}"
+          RANGE="${RANGE:-HEAD}"
+
+          PROMPT=$(cat <<EOF
+          You are the release manager for sbuilder-mcp, an MCP (Model Context Protocol) stdio
+          server that lets an AI agent design and operate a Store Builder site: pages, elements,
+          live editing, screenshots, data bindings, and the platform's full REST API.
+
+          Write the CHANGELOG entry for version ${NEW_VERSION} (${REL_DATE}).
+
+          Investigate the changes yourself using the tools available:
+          - Run "git log ${RANGE} --stat -- src/" to see commits touching src/.
+          - Run "git diff ${RANGE} -- src/" or "git diff ${RANGE} --stat -- src/" when you need more detail.
+          - Read CHANGELOG.md and CHANGELOG.vi.md to match the existing tone and section ordering in each language.
+          - Read docs/tools.md if you need to map a change to a public tool name.
+
+          Produce the entry in BOTH English and Vietnamese, in strict Keep a Changelog format:
+
+          ## [${NEW_VERSION}] - ${REL_DATE}
+
+          ### Added
+          - ...
+
+          ### Changed
+          - ...
+
+          ### Fixed
+          - ...
+
+          Rules:
+          - Only include sections that have entries; omit empty sections.
+          - One bullet per user-visible change. Merge duplicate or noisy commits.
+          - Skip purely internal commits (CI, formatting, scripts) UNLESS nothing user-visible changed — then use a single "### Internal" section.
+          - Refer to MCP tools by their public name (sb_page_open, sb_api_find, sb_look, …) and to arguments by their key (dry_run, box_depth).
+          - Each bullet: one sentence, present tense, ends with a period. No commit hashes, no emoji, no links.
+          - Keep the section headers in English (### Added / Changed / Fixed / Removed / Internal) in BOTH languages so they parse identically; translate only the bullet text, and keep code identifiers / tool names verbatim.
+          - Write the English entry to .release_notes.md and the Vietnamese entry to .release_notes.vi.md, then print both. Do NOT modify CHANGELOG.md or CHANGELOG.vi.md yourself.
+          EOF
+          )
+
+          claude -p "$PROMPT" \
+            --output-format text \
+            --allowedTools "Bash(git log:*)" \
+            --allowedTools "Bash(git diff:*)" \
+            --allowedTools "Read" \
+            --allowedTools "Write" \
+            --permission-mode acceptEdits \
+            > .claude_output.log
+
+          if [ ! -s .release_notes.md ]; then
+            echo "Claude did not produce .release_notes.md" >&2
+            cat .claude_output.log >&2
+            exit 1
+          fi
+          # Fall back to the English entry if the Vietnamese one is missing, so
+          # CHANGELOG.vi.md still gets this version rather than silently drifting.
+          if [ ! -s .release_notes.vi.md ]; then
+            echo "No .release_notes.vi.md — falling back to the English entry for CHANGELOG.vi.md." >&2
+            cp .release_notes.md .release_notes.vi.md
+          fi
+          echo "--- Release notes (en) ---"
+          cat .release_notes.md
+          echo "--- Release notes (vi) ---"
+          cat .release_notes.vi.md
+
+      - name: Prepend entry to CHANGELOG.md + CHANGELOG.vi.md
+        if: steps.mode.outputs.resume != 'true'
+        run: |
+          # Insert the matching release-notes file above the first existing
+          # "## [" entry of each changelog (or create the file if it is missing).
+          prepend() {
+            file="$1"; notes="$2"
+            if [ -f "$file" ]; then
+              awk -v notes_file="$notes" '
+                BEGIN { inserted=0 }
+                /^## \[/ && !inserted {
+                  while ((getline line < notes_file) > 0) print line
+                  close(notes_file)
+                  print ""
+                  inserted=1
+                }
+                { print }
+                END {
+                  if (!inserted) {
+                    while ((getline line < notes_file) > 0) print line
+                  }
+                }
+              ' "$file" > "$file.new"
+              mv "$file.new" "$file"
+            else
+              {
+                echo "# Changelog"
+                echo ""
+                cat "$notes"
+              } > "$file"
+            fi
+          }
+          prepend CHANGELOG.md .release_notes.md
+          prepend CHANGELOG.vi.md .release_notes.vi.md
+
+      - name: Commit, tag and push
+        if: steps.mode.outputs.resume != 'true'
+        run: |
+          # Keep server.json (MCP Registry manifest) version in lockstep with the release.
+          node -e "const fs=require('fs'),v='${{ steps.version.outputs.new }}',j=require('./server.json');j.version=v;if(j.packages&&j.packages[0])j.packages[0].version=v;fs.writeFileSync('server.json',JSON.stringify(j,null,2)+'\n')"
+          git add package.json server.json CHANGELOG.md CHANGELOG.vi.md
+          git diff --cached --quiet || git add -u
+          git commit -m "chore(release): ${{ steps.version.outputs.tag }}"
+          git tag -a "${{ steps.version.outputs.tag }}" -m "Release ${{ steps.version.outputs.tag }}"
+          git push origin HEAD:main
+          git push origin "${{ steps.version.outputs.tag }}"
+
+      - name: Resolve final tag
+        id: final
+        run: |
+          if [ "${{ steps.mode.outputs.resume }}" = "true" ]; then
+            echo "tag=${{ steps.mode.outputs.tag }}" >> "$GITHUB_OUTPUT"
+            echo "version=${{ steps.mode.outputs.version }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "tag=${{ steps.version.outputs.tag }}" >> "$GITHUB_OUTPUT"
+            echo "version=${{ steps.version.outputs.new }}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Extract release notes from CHANGELOG.md (resume mode)
+        if: steps.mode.outputs.resume == 'true'
+        run: |
+          VERSION="${{ steps.mode.outputs.version }}"
+          awk -v ver="$VERSION" '
+            BEGIN { inSection=0 }
+            /^## \[/ {
+              if (inSection) exit
+              if (index($0, "[" ver "]") > 0) {
+                inSection=1
+                next
+              }
+            }
+            inSection { print }
+          ' CHANGELOG.md > .release_notes.md
+          if [ ! -s .release_notes.md ]; then
+            echo "Could not extract CHANGELOG section for ${VERSION} — using fallback notes." >&2
+            echo "Release of ${VERSION}." > .release_notes.md
+          fi
+          echo "--- Resume-mode release notes ---"
+          cat .release_notes.md
+
+      - name: Publish to npm
+        run: npm publish --access public --ignore-scripts
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_ACCESS_TOKEN }}
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if gh release view "${{ steps.final.outputs.tag }}" >/dev/null 2>&1; then
+            echo "GitHub Release ${{ steps.final.outputs.tag }} already exists — skipping."
+          else
+            gh release create "${{ steps.final.outputs.tag }}" \
+              --title "${{ steps.final.outputs.tag }}" \
+              --notes-file .release_notes.md
+          fi
+
+      # --- Publish to the official MCP Registry (registry.modelcontextprotocol.io) ---
+      # Runs AFTER npm publish so the registry's npm package-ownership check
+      # (it fetches the npm tarball and matches package.json#mcpName) can pass.
+      # OIDC maps the repo owner to the io.github.<owner>/* namespace — no secret.
+      - name: Install mcp-publisher
+        run: |
+          curl -L "https://github.com/modelcontextprotocol/registry/releases/latest/download/mcp-publisher_$(uname -s | tr '[:upper:]' '[:lower:]')_$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/').tar.gz" | tar xz mcp-publisher
+
+      - name: Wait for npm to expose the released version
+        run: |
+          PKG=$(node -p "require('./package.json').name")
+          VER="${{ steps.final.outputs.version }}"
+          for i in $(seq 1 30); do
+            if npm view "${PKG}@${VER}" version >/dev/null 2>&1; then
+              echo "npm has ${PKG}@${VER}"; exit 0
+            fi
+            echo "waiting for npm ${PKG}@${VER}... ($i/30)"; sleep 10
+          done
+          echo "npm did not expose ${VER} within timeout" >&2; exit 1
+
+      - name: Sync server.json to the released version
+        run: |
+          node -e "const fs=require('fs'),v='${{ steps.final.outputs.version }}',j=require('./server.json');j.version=v;if(j.packages&&j.packages[0])j.packages[0].version=v;fs.writeFileSync('server.json',JSON.stringify(j,null,2)+'\n')"
+
+      - name: Authenticate to MCP Registry (GitHub OIDC)
+        run: ./mcp-publisher login github-oidc
+
+      - name: Publish to MCP Registry
+        run: ./mcp-publisher publish
