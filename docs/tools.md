@@ -80,6 +80,8 @@ Execute one operation found by `sb_api_find`.
 | `query` | object? | Query string; `undefined` values are dropped |
 | `body` | any? | Request body |
 | `dry_run` | boolean? | **Defaults to `true`** — sends nothing, returns a redacted preview |
+| `pick` | string[]? | Fields to keep on each item of a list answer (or on the one item of a `{ page: {…} }` answer) |
+| `max_items` | number? | Cap on a list answer's items, applied after the platform's own paging |
 
 Credentials are chosen from the path, never from the argument: `/api/v1/…` uses `SB_TOKEN`,
 everything else uses the session. A missing `SB_TOKEN` is reported by name rather than
@@ -88,6 +90,14 @@ letting the platform answer `401 api_key_required`, which reads like a permissio
 A failed call carries the platform's one error shape, `{ error, code }`, and — when the
 platform sends them — `details` and `fields`. A `validation` error names the offending
 field in its message, so a 400 says *which* field rather than that one exists.
+
+**Shaping.** A product list is fifty objects of 2 KB for the ids and titles the agent wanted.
+The platform's list answers (`{ <name>: [...], total }`, or a bare array) are shaped for the
+reader: `pick` keeps the named fields on every item, `max_items` cuts the list, and a list
+still over **60,000 characters** is cut to fit. Every cut is said — `truncated: { shown, of,
+hint }` names how many came back, how many there were, and how to narrow the call (`pick`,
+`max_items`, or the operation's own `limit`/`offset` query). A non-list answer is never cut:
+there is no honest place to stop inside one object.
 
 ---
 
@@ -117,6 +127,12 @@ editable. **Never the raw document** — a real page is hundreds of KB.
 ## `sb_node_read`
 
 `id`. One node in full. Attaches a `warning` when the node is a shared global.
+
+**Many nodes at once.** The move after a look is "raise this heading, widen that card,
+recolour the button" — pass them as `edits` and it is one batch of patches, one save and
+one live frame instead of one of each per node. Every edit is checked before any patch is
+emitted, so a bad id in the fourth edit refuses the whole batch. The result is then
+`{ set: [{ id, keys }], rev, warnings? }` with `warnings` keyed by node id.
 
 ## `sb_catalog_search`
 
@@ -161,6 +177,7 @@ section, a child a parent's whitelist excludes, and any add into a non-container
 | `keys` | object | |
 | `breakpoint` | `desktop` \| `laptop` \| `tablet` \| `mobile` | Defaults to `desktop` |
 | `base` | boolean? | Write at base instead of per breakpoint |
+| `edits` | array? | Many nodes in one call: `[{ id, namespace, keys, breakpoint?, base?, state? }]`; the single-node fields above are then ignored |
 | `dry_run` | boolean? | Defaults to true |
 
 **Base and breakpoints.** `sb_set` writes per breakpoint by default, because a design should respond. Base is legitimate too — the cascade resolves a key *current slot → wider → base → narrower*, so base is the fallback layer, and it is where every element's own defaults are seeded. Use base for a value that genuinely should not vary.

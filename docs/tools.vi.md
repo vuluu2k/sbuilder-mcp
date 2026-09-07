@@ -79,6 +79,8 @@ Chạy một operation tìm được bằng `sb_api_find`.
 | `query` | object? | Query string; giá trị `undefined` bị bỏ |
 | `body` | any? | Thân yêu cầu |
 | `dry_run` | boolean? | **Mặc định `true`** — không gửi gì, trả về bản xem trước đã che bí mật |
+| `pick` | string[]? | Các field giữ lại trên mỗi item của một câu trả lời dạng danh sách (hoặc trên item duy nhất của câu trả lời `{ page: {…} }`) |
+| `max_items` | number? | Trần số item của một danh sách, áp sau phân trang của chính nền tảng |
 
 Credential chọn theo path chứ không theo tham số: `/api/v1/…` dùng `SB_TOKEN`, còn lại
 dùng phiên. Thiếu `SB_TOKEN` thì báo đích danh tên biến, thay vì để nền tảng trả
@@ -87,6 +89,15 @@ dùng phiên. Thiếu `SB_TOKEN` thì báo đích danh tên biến, thay vì đ�
 Một lệnh gọi thất bại mang đúng một hình dạng lỗi của nền tảng, `{ error, code }`, và — khi
 nền tảng gửi kèm — `details` và `fields`. Lỗi `validation` nêu đích danh trường sai trong
 thông điệp, nên một 400 nói rõ *trường nào* chứ không chỉ nói là có một trường sai.
+
+**Định hình kết quả.** Một danh sách sản phẩm là năm mươi object 2 KB chỉ để lấy id và tên.
+Câu trả lời dạng danh sách của nền tảng (`{ <tên>: [...], total }`, hoặc một mảng trần) được
+định hình cho người đọc: `pick` giữ các field được nêu trên mỗi item, `max_items` cắt danh
+sách, và danh sách vẫn quá **60.000 ký tự** thì bị cắt cho vừa. Mọi lần cắt đều được nói ra —
+`truncated: { shown, of, hint }` cho biết trả về bao nhiêu, có tất cả bao nhiêu, và cách thu
+hẹp lệnh gọi (`pick`, `max_items`, hoặc query `limit`/`offset` của chính operation). Câu trả
+lời không phải danh sách thì không bao giờ bị cắt: không có chỗ nào trung thực để dừng giữa
+một object.
 
 ---
 
@@ -116,6 +127,12 @@ bên dưới nó. **Không bao giờ trả tài liệu thô** — một trang th
 ## `sb_node_read`
 
 `id`. Một node đầy đủ. Kèm `warning` nếu node đó là global dùng chung.
+
+**Nhiều node một lần.** Việc làm sau một lần look là "nâng heading này, mở rộng card kia, đổi
+màu nút" — đưa chúng vào `edits` thì chỉ còn một batch patch, một lần lưu và một frame live
+thay vì mỗi node một bộ. Mọi edit được kiểm tra trước khi phát ra bất kỳ patch nào, nên một
+id sai ở edit thứ tư từ chối cả batch. Kết quả khi đó là `{ set: [{ id, keys }], rev,
+warnings? }` với `warnings` khoá theo id node.
 
 ## `sb_catalog_search`
 
@@ -160,6 +177,7 @@ container.
 | `keys` | object | |
 | `breakpoint` | `desktop` \| `laptop` \| `tablet` \| `mobile` | Mặc định `desktop` |
 | `base` | boolean? | Ghi ở base thay vì theo breakpoint |
+| `edits` | array? | Nhiều node trong một lần gọi: `[{ id, namespace, keys, breakpoint?, base?, state? }]`; các tham số một-node ở trên khi đó bị bỏ qua |
 | `dry_run` | boolean? | Mặc định true |
 
 **Base và breakpoint.** `sb_set` mặc định ghi theo breakpoint, vì một thiết kế nên đáp ứng. Base cũng hợp lệ — cascade giải một khoá theo thứ tự *slot hiện tại → rộng hơn → base → hẹp hơn*, nên base là lớp dự phòng, và là chỗ default của chính mỗi element được gieo vào. Dùng base cho giá trị thật sự không nên thay đổi.
