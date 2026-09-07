@@ -44,6 +44,20 @@ offline path — no CI, or a secret mid-rotation — and it MUST keep writing th
 `## [x.y.z] - date` heading and the same commit subject, because the workflow prepends above
 the first `## [` line and matches the subject as its skip guard.
 
+Three things the first live release cost, so nobody pays them twice:
+
+- **`gh workflow run` starts TWO runs**, observed both times it was used here. The second
+  queues behind the `auto-release` concurrency group and would release again after the
+  first. Cancel it — and read each run's dispatch inputs before cancelling either, because
+  they are not interchangeable: choosing by status alone released a patch when the run
+  carrying `bump=minor` was the one cancelled.
+- **`NPM_ACCESS_TOKEN` must be an npm AUTOMATION token** (or a granular token with read and
+  write). A classic "publish" token still demands an OTP, and CI answers `EOTP` after the
+  tag is already pushed.
+- **Never re-run a failed release run.** It replays the OLD commit, whose `package.json`
+  predates the release commit, so it bumps again. Dispatch a fresh run on `main` instead:
+  resume mode sees the pushed tag and the missing npm version and publishes that version.
+
 ## Invariants — do not wait for a review to be told these
 
 - **Node ≥22**, because this repo uses the GLOBAL `WebSocket`, unflagged from 22. The
