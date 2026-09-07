@@ -1,15 +1,20 @@
 #!/usr/bin/env node
 /**
- * One command to cut a release: gate, bump, write the changelog, publish, tag,
- * announce.
+ * The OFFLINE release: gate, bump, write the changelog, publish, tag, announce.
  *
  * `npm run release` (or release:patch / :minor / :major), `--dry` to rehearse.
  *
- * WHY A SCRIPT AND NOT A CI WORKFLOW. Publishing needs an npm OTP, which a
- * human types. A workflow would need a long-lived automation token in repo
- * secrets — a credential that can publish this package forever, sitting where
- * more people can read it than can currently publish. CI runs the gate on every
- * push; the irreversible step stays on a person's machine.
+ * THE NORMAL PATH IS CI. `.github/workflows/auto-release.yml` releases on every
+ * push to `main` that touches `src/**`: it runs the gate, picks the bump from
+ * the commit subject, has Claude write the bilingual changelog entry, publishes
+ * to npm and the MCP Registry, and tags. This script exists for the two cases
+ * CI cannot cover — a machine with no CI, or a release cut while the publish
+ * secret is being rotated — and it MUST agree with the workflow on the two
+ * things both write: the changelog heading is `## [x.y.z] - date` (the
+ * workflow prepends above the first `## [` line, so any other form would land
+ * under the oldest entry), and the commit subject is `chore(release): vx.y.z`,
+ * which is what the workflow's skip guard matches so a manual release does not
+ * trigger a second one.
  *
  * THE ORDER IS THE DESIGN: everything that can REFUSE runs before anything that
  * cannot be undone. A dirty tree, a wrong branch, an unpushed main and a red
@@ -264,11 +269,11 @@ if (isMain) {
 
   const entry = await askEntry();
   const date = out('git log -1 --format=%cs'); // the commit's own date, not the clock
-  const heading = `## ${version} — ${date}\n\n${entry.trim()}\n`;
+  const heading = `## [${version}] - ${date}\n\n${entry.trim()}\n`;
 
   if (dry) {
     console.log('\n\x1b[1m▸ DRY RUN — nothing was changed\x1b[0m\n');
-    console.log('CHANGELOG.md would gain:\n');
+    console.log('CHANGELOG.md would gain, above its first "## [" entry:\n');
     console.log(heading.replace(/^/gm, '  '));
     console.log('  then: npm publish --access public');
     console.log(`  then: git tag v${version} && git push --follow-tags`);
@@ -280,12 +285,12 @@ if (isMain) {
   say('writing CHANGELOG.md');
   const CL = 'CHANGELOG.md';
   const existing = existsSync(CL) ? readFileSync(CL, 'utf8') : '# Changelog\n';
-  // Newest first, under the title. Splitting on the first blank line after the
-  // heading keeps a hand-written preamble if one is ever added.
-  const nl = existing.indexOf('\n');
-  const title = nl === -1 ? existing : existing.slice(0, nl + 1);
-  const rest = nl === -1 ? '' : existing.slice(nl + 1).replace(/^\n+/, '');
-  writeFileSync(CL, `${title}\n${heading}\n${rest}`);
+  // Newest first, ABOVE the first existing `## [` entry — the same rule the
+  // workflow's awk uses — so the preamble between the title and the first
+  // release survives. With no entry yet, the heading goes at the end.
+  const at = existing.search(/^## \[/m);
+  const next = at === -1 ? `${existing.trimEnd()}\n\n${heading}` : `${existing.slice(0, at)}${heading}\n${existing.slice(at)}`;
+  writeFileSync(CL, next);
 
   // server.json carries the version twice (the manifest and its package entry),
   // and a registry entry pointing at a version npm does not have is worse than a
@@ -300,7 +305,7 @@ if (isMain) {
 
   say('committing');
   run('git add -A');
-  run(`git commit -q -m "release: v${version}"`);
+  run(`git commit -q -m "chore(release): v${version}"`);
   run(`git tag v${version}`);
   committed = true; // past here, `undo` below is the way back, not `restore`
 

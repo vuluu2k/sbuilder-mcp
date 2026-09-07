@@ -1,10 +1,18 @@
 # Changelog
 
-## 0.1.2 — 2026-08-29
+**English** · [Tiếng Việt](./CHANGELOG.vi.md)
 
-244625
+All notable changes to this project are documented in this file.
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## 0.1.1 — 2026-08-28
+## [0.1.2] - 2026-08-29
+
+### Added
+- The server reports which machine and which client it runs on, so the store's Agent app can show every connected agent.
+- sb_look measures the render: content past the viewport, overlapping siblings, and text too small to read are reported with the width they happen at.
+
+## [0.1.1] - 2026-08-28
 
 - fix(release): ask for the one-time password instead of dying on it
 - feat: sb_media_upload — the agent can add images
@@ -49,7 +57,7 @@
 - feat: repo skeleton, response helpers, and a green build/test/smoke gate
 - docs: design spec and phase-1 implementation plan for @sbuilder/mcp
 
-## 0.1.0
+## [0.1.0]
 
 First release.
 
