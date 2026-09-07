@@ -6708,10 +6708,10 @@ export const ELEMENTS: Record<string, CatalogElement> = {
             ]
           },
           {
-            "key": "choice_skin",
+            "key": "radio_skin",
             "label": "Option list style",
             "controls": [
-              "choice_skin"
+              "radio_skin"
             ]
           },
           {
@@ -6771,7 +6771,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
       "field_options",
       "field_content",
       "field_chrome",
-      "choice_skin",
+      "radio_skin",
       "field_columns",
       "field_layout",
       "width_select",
@@ -7187,10 +7187,10 @@ export const ELEMENTS: Record<string, CatalogElement> = {
             ]
           },
           {
-            "key": "choice_skin",
+            "key": "checkbox_skin",
             "label": "Option list style",
             "controls": [
-              "choice_skin"
+              "checkbox_skin"
             ]
           },
           {
@@ -7250,7 +7250,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
       "field_options",
       "field_content",
       "field_chrome",
-      "choice_skin",
+      "checkbox_skin",
       "field_columns",
       "field_layout",
       "width_select",
