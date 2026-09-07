@@ -6,6 +6,16 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.0] - 2026-09-07
+
+### Added
+- sb_review reports static_in_dataset when an element inside a repeater (such as a plain image in a product card) can only render one authored value across every record, and names the record-capable element to swap in instead.
+- sb_review reports unbound_dataset_element when a dataset element capable of showing a record carries no binding at all, instead of silently rendering the same authored content on every row.
+- sb_page_open reports blank_page_repair when a page's stored document names its root under rootId instead of root_node_id, the alias that renders as an empty page.
+
+### Fixed
+- Opening a page whose document names its root under rootId no longer fails as a damaged document; the document adopts the alias so the next save writes the canonical key and the page stops rendering blank.
+
 ## [0.1.5] - 2026-09-07
 
 ### Added

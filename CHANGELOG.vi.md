@@ -6,6 +6,16 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.0] - 2026-09-07
+
+### Added
+- sb_review giờ báo cáo static_in_dataset khi một element bên trong repeater (như một image thường trong thẻ sản phẩm) chỉ có thể render một giá trị đã gán cho mọi record, đồng thời chỉ ra element có thể hiển thị record để thay thế.
+- sb_review giờ báo cáo unbound_dataset_element khi một dataset element có khả năng hiển thị record nhưng không mang binding nào, thay vì âm thầm render cùng một nội dung đã gán cho mọi dòng.
+- sb_page_open giờ báo cáo blank_page_repair khi document lưu trữ của trang đặt tên root là rootId thay vì root_node_id — alias khiến trang render rỗng.
+
+### Fixed
+- Mở một trang có document đặt tên root là rootId không còn bị từ chối như document hỏng; document giờ tự nhận alias này để lần lưu kế tiếp ghi đúng khóa chuẩn và trang không còn render rỗng.
+
 ## [0.1.5] - 2026-09-07
 
 ### Added
