@@ -12,11 +12,18 @@ import type { ApiOperation } from './types.js';
  */
 const WEIGHT = { tag: 5, path: 3, summary: 2 } as const;
 
+/** Eight is enough to choose from; twelve was measured at 44 KB once the schemas rode along. */
+export const DEFAULT_FIND_LIMIT = 8;
+
+export function findOperation(id: string): ApiOperation | undefined {
+  return API_OPERATIONS.find((o) => o.id === id);
+}
+
 export function searchOperations(
   query: string,
   opts: { tag?: string; limit?: number } = {},
 ): ApiOperation[] {
-  const limit = opts.limit ?? 12;
+  const limit = opts.limit ?? DEFAULT_FIND_LIMIT;
   const terms = query.toLowerCase().split(/[^a-z0-9]+/).filter(Boolean);
   let pool = API_OPERATIONS;
   if (opts.tag) pool = pool.filter((o) => o.tags.includes(opts.tag!));
@@ -84,5 +91,42 @@ export function describeOperation(op: ApiOperation): Record<string, unknown> {
       'may simply be missing — PUT /pages/{id}/source takes a whole page document and is ' +
       'documented exactly like this. Confirm with the matching GET before sending an empty body.';
   }
+  return out;
+}
+
+export interface OperationLine {
+  id: string;
+  method: string;
+  path: string;
+  summary: string;
+  credential: string;
+  /** Non-body parameter names; `?` prefixes an optional one. */
+  params: string[];
+  body?: 'described' | 'undescribed' | 'none_declared';
+}
+
+/**
+ * One LINE per match — what an agent needs to CHOOSE, not to call.
+ *
+ * `describeOperation` inlined the whole body definition for every hit, so a
+ * "list orders" search cost ~44 KB for twelve operations the agent would call
+ * one of. The schema now arrives with `sb_api_find id:` once the choice is
+ * made. `body` is the three-way verdict as one word; the full wording — the
+ * one that stops a model sending an empty PUT — lives in the call sheet, where
+ * it is read at the moment it matters.
+ */
+export function summarizeOperation(op: ApiOperation): OperationLine {
+  const hasBody = op.params.some((p) => p.in === 'body');
+  const isWrite = op.method === 'POST' || op.method === 'PUT' || op.method === 'PATCH';
+  const out: OperationLine = {
+    id: op.id,
+    method: op.method,
+    path: op.path,
+    summary: op.summary,
+    credential: op.credential,
+    params: op.params.filter((p) => p.in !== 'body').map((p) => (p.required ? p.name : `?${p.name}`)),
+  };
+  if (hasBody) out.body = op.bodyDescribed && op.bodyRef ? 'described' : 'undescribed';
+  else if (isWrite) out.body = 'none_declared';
   return out;
 }

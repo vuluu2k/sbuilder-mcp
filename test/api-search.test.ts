@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { searchOperations, describeOperation } from '../src/catalog/search.js';
+import { searchOperations, describeOperation, summarizeOperation, findOperation } from '../src/catalog/search.js';
 
 describe('searchOperations()', () => {
   it('finds menu operations from the word "menu"', () => {
@@ -72,5 +72,47 @@ describe('describeOperation()', () => {
       const d = describeOperation(op) as Record<string, unknown>;
       expect(d.body_warning !== undefined && d.body_note !== undefined).toBe(false);
     }
+  });
+});
+
+describe('summarizeOperation()', () => {
+  it('names params with ? on optional ones and never inlines a schema', () => {
+    const op = searchOperations('media', { limit: 50 }).find(
+      (o) => o.path.endsWith('/media') && o.method === 'GET',
+    )!;
+    const s = summarizeOperation(op);
+    expect(s.params).toContain('siteId');
+    expect(s.params.some((p) => p.startsWith('?'))).toBe(true);
+    expect('body_schema' in s).toBe(false);
+    expect(JSON.stringify(s).length).toBeLessThan(400);
+  });
+
+  it('gives the three body verdicts as one word', () => {
+    const put = searchOperations('source', { limit: 50 }).find(
+      (o) => o.method === 'PUT' && o.path.endsWith('/source'),
+    )!;
+    expect(summarizeOperation(put).body).toBe('none_declared');
+    const described = searchOperations('', { limit: 500 }).find((o) => o.bodyDescribed)!;
+    expect(summarizeOperation(described).body).toBe('described');
+    const loose = searchOperations('', { limit: 500 }).find(
+      (o) => o.params.some((p) => p.in === 'body') && !o.bodyDescribed,
+    )!;
+    expect(summarizeOperation(loose).body).toBe('undescribed');
+  });
+
+  it('omits body on a GET', () => {
+    const get = searchOperations('', { limit: 500 }).find((o) => o.method === 'GET')!;
+    expect(summarizeOperation(get).body).toBeUndefined();
+  });
+
+  it('defaults to eight matches', () => {
+    expect(searchOperations('site').length).toBeLessThanOrEqual(8);
+  });
+});
+
+describe('findOperation()', () => {
+  it('returns the operation by id, or undefined', () => {
+    expect(findOperation('get:/api/sites')?.method).toBe('GET');
+    expect(findOperation('nope')).toBeUndefined();
   });
 });

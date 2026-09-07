@@ -1,7 +1,12 @@
 import { z } from 'zod';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import { API_OPERATIONS } from '../catalog/api.generated.js';
-import { searchOperations, describeOperation } from '../catalog/search.js';
+import { API_OPERATIONS, SWAGGER_SOURCE } from '../catalog/api.generated.js';
+import {
+  searchOperations,
+  describeOperation,
+  summarizeOperation,
+  findOperation,
+} from '../catalog/search.js';
 import { request, redact } from '../transport/http.js';
 import { text } from '../mcp/response.js';
 import type { ToolContext } from './context.js';
@@ -90,19 +95,39 @@ export async function callOperation(ctx: ToolContext, args: CallArgs): Promise<u
 export function registerApiTools(server: McpServer, ctx: ToolContext): void {
   server.tool(
     'sb_api_find',
-    'Find platform API operations by intent. Returns each match with its real parameter ' +
-      'schema, which credential it needs, and an explicit note when the document fails to ' +
-      'describe the request body. Use this before sb_api_call: the tool list is short, but ' +
-      'this index reaches all 310 operations.',
+    'Find platform API operations by intent (query), or read ONE operation\'s full call sheet ' +
+      '(id). The list is one line per match; the call sheet carries parameter types, the ' +
+      'credential, and either the body schema or an explicit warning that the platform does ' +
+      `not describe it. Reaches all ${SWAGGER_SOURCE.operations} operations.`,
     {
       query: z
         .string()
+        .optional()
         .describe('What you want to do, in words: "create a menu", "list orders", "upload media"'),
+      id: z
+        .string()
+        .optional()
+        .describe('An id from a previous search — returns that operation\'s full call sheet'),
       tag: z.string().optional().describe('Narrow to one tag, e.g. "menus", "products", "theme"'),
-      limit: z.number().int().min(1).max(50).optional(),
+      limit: z.number().int().min(1).max(50).optional().describe('Default 8'),
     },
-    async ({ query, tag, limit }) =>
-      text(searchOperations(query, { tag, limit }).map(describeOperation)),
+    async ({ query, id, tag, limit }) => {
+      if (id) {
+        const op = findOperation(id);
+        if (!op) throw new Error(`sbuilder: unknown operation "${id}" — search with query first`);
+        return text(describeOperation(op));
+      }
+      if (!query) {
+        throw new Error('sbuilder: sb_api_find needs a query (search) or an id (call sheet)');
+      }
+      const matches = searchOperations(query, { tag, limit }).map(summarizeOperation);
+      return text({
+        matches,
+        next: matches.length
+          ? 'Pass one id back to sb_api_find for its call sheet before calling it.'
+          : 'No match — try other words, or a tag.',
+      });
+    },
   );
 
   server.tool(
