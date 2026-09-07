@@ -1,6 +1,7 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, afterAll, afterEach } from 'vitest';
+import { chromium } from 'playwright-core';
 import { previewUrl } from '../src/vision/preview.js';
-import { shoot } from '../src/vision/shoot.js';
+import { shoot, closeBrowser, setLauncherForTest } from '../src/vision/shoot.js';
 import { Session } from '../src/transport/auth.js';
 
 function ctxWith(f: typeof fetch) {
@@ -44,11 +45,90 @@ describe('previewUrl()', () => {
   });
 });
 
+// Runs WITHOUT Chrome: the launcher is swapped for one that throws, which is
+// what a machine with no Chrome looks like from here. The message must name
+// Chrome — a blank image would have the agent judge a page it never saw.
+describe('shoot() without Chrome', () => {
+  afterEach(async () => {
+    setLauncherForTest();
+    await closeBrowser();
+  });
+
+  it('names Chrome when the launch fails, and tries again on the next call', async () => {
+    await closeBrowser();
+    let launches = 0;
+    setLauncherForTest(async () => {
+      launches++;
+      throw new Error('ENOENT: no such browser');
+    });
+    await expect(shoot('data:text/html,hi', { widths: [1440] })).rejects.toThrow(
+      /could not launch Google Chrome.*ENOENT/s,
+    );
+    // A failed launch is not cached as "the browser": the second call launches
+    // again (and fails again) rather than replaying the first failure.
+    await expect(shoot('data:text/html,hi', { widths: [1440] })).rejects.toThrow(/Google Chrome/);
+    expect(launches).toBe(2);
+  });
+});
+
 // Opt-in: launches the system Chrome. Kept out of the default run because a
 // machine without Chrome must FAIL LOUDLY when sb_look is used, rather than have
 // a test skip quietly and read as green.
 describe.runIf(process.env.SB_BROWSER_TEST === '1')('shoot()', () => {
-  it('returns a png and the real bounding box of every data-node-id', async () => {
+  afterAll(async () => {
+    setLauncherForTest();
+    await closeBrowser();
+  });
+
+  it('launches Chrome ONCE and reuses it across calls', async () => {
+    // Proved by counting, not assumed: the real launcher is wrapped so every
+    // launch is seen, then two looks are taken and only one launch happened.
+    await closeBrowser();
+    let launches = 0;
+    setLauncherForTest(async () => {
+      launches++;
+      return chromium.launch({ channel: 'chrome', headless: true });
+    });
+    try {
+      const url = 'data:text/html,<p id="tx_00000001" class="wb-text">a</p>';
+      await shoot(url, { widths: [390] });
+      await shoot(url, { widths: [390] });
+      expect(launches).toBe(1);
+      // ...and once the browser is gone, the next call launches again rather
+      // than failing on a dead handle.
+      await closeBrowser();
+      await shoot(url, { widths: [390] });
+      expect(launches).toBe(2);
+    } finally {
+      setLauncherForTest();
+      await closeBrowser();
+    }
+  }, 60_000);
+
+  it('shoots the widths in parallel and returns them in the order asked', async () => {
+    const html = '<section id="fs_1a2b3c4d" class="wb-flex-section" style="width:200px;height:50px"></section>';
+    // Deliberately NOT sorted, so an implementation that returned shots in
+    // completion order (the narrow page tends to finish first) would fail.
+    const widths = [1440, 390, 768, 1024];
+    const shots = await shoot(`data:text/html,${encodeURIComponent(html)}`, { widths });
+    expect(shots.map((s) => s.width)).toEqual(widths);
+    for (const s of shots) expect(s.boxes[0]).toMatchObject({ id: 'fs_1a2b3c4d', w: 200, h: 50 });
+  }, 40_000);
+
+  it('encodes JPEG by default and PNG when asked', async () => {
+    const url = 'data:text/html,<p id="tx_00000001" class="wb-text">hello</p>';
+    const [jpeg] = await shoot(url, { widths: [390] });
+    expect(jpeg.mimeType).toBe('image/jpeg');
+    // The bytes must match the label: a JPEG starts FF D8, a PNG with the
+    // "\x89PNG" signature. A mimeType that lied would have the client decode
+    // the wrong codec.
+    expect(Buffer.from(jpeg.imageBase64, 'base64').subarray(0, 2)).toEqual(Buffer.from([0xff, 0xd8]));
+    const [png] = await shoot(url, { widths: [390], format: 'png' });
+    expect(png.mimeType).toBe('image/png');
+    expect(Buffer.from(png.imageBase64, 'base64').subarray(1, 4).toString('latin1')).toBe('PNG');
+  }, 40_000);
+
+  it('returns an image and the real bounding box of every node id', async () => {
     // Shaped like the RENDERER's own output: node id as the HTML id, type as a
     // leading wb- class. The `nope` div proves an arbitrary id is not a node.
     const html =
@@ -57,7 +137,7 @@ describe.runIf(process.env.SB_BROWSER_TEST === '1')('shoot()', () => {
     const shots = await shoot(`data:text/html,${encodeURIComponent(html)}`, { widths: [1440] });
     expect(shots.length).toBe(1);
     expect(shots[0].width).toBe(1440);
-    expect(shots[0].pngBase64.length).toBeGreaterThan(100);
+    expect(shots[0].imageBase64.length).toBeGreaterThan(100);
     // Asserted field by field rather than by whole-object equality: a box grew
     // fontPx and hasText for the layout measurements, and an exact match would
     // fail every time the shape usefully gains something.
@@ -83,7 +163,7 @@ describe.runIf(process.env.SB_BROWSER_TEST === '1')('shoot()', () => {
     // A 2000px filler below makes the full-page shot much taller; the framed one
     // is the card plus padding. If clipping silently did nothing these would be
     // the same bytes.
-    expect(one[0].pngBase64.length).toBeLessThan(full[0].pngBase64.length);
+    expect(one[0].imageBase64.length).toBeLessThan(full[0].imageBase64.length);
     // The boxes still come back — framing changes the picture, not the measurements.
     expect(one[0].boxes.map((b) => b.id)).toContain('fs_1a2b3c4d');
   }, 30_000);
@@ -104,6 +184,10 @@ describe.runIf(process.env.SB_BROWSER_TEST === '1')('shoot()', () => {
 
 // Opt-in: the measurements only mean anything against a real layout engine.
 describe.runIf(process.env.SB_BROWSER_TEST === '1')('measured against a real render', () => {
+  afterAll(async () => {
+    await closeBrowser();
+  });
+
   it('catches a block that spills past a narrow viewport', async () => {
     const html =
       '<section id="fs_1a2b3c4d" class="wb-flex-section" style="width:900px;height:80px"></section>';
