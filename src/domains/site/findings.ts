@@ -1,4 +1,7 @@
-import { BINDING_SOURCES } from '../../catalog/elements.generated.js';
+import { BINDING_SOURCES, BOUND_SPECIALS } from '../../catalog/elements.generated.js';
+
+/** The elements whose renderer reads a bound special — the ones that can show a record. */
+const RECORD_ELEMENTS = Object.keys(BOUND_SPECIALS).sort().join(', ');
 
 /**
  * One fix per KIND of finding, as a template.
@@ -19,6 +22,15 @@ export const FIX: Record<string, string> = {
   empty_text: 'Set it: sb_set id "<id>", namespace specials, keys { "<key>": … }.',
   missing_media: 'Set it: sb_set id "<id>", namespace specials, keys { "<key>": … }.',
   placeholder_content: 'Write the real copy: sb_set id "<id>", namespace specials, keys { "<key>": … }.',
+  // The fix is a DIFFERENT ELEMENT, not a value: setting "<key>" here would put
+  // one authored value on every row of the repeater.
+  static_in_dataset:
+    `Swap the element: sb_add one of ${RECORD_ELEMENTS} in the same parent, sb_bind it ` +
+    '(field "specials.bound…", source matching the record), sb_move it into place, then ' +
+    'sb_remove id "<id>". Setting "<key>" on this one would show the same value in every row.',
+  unbound_dataset_element:
+    'Bind it: sb_bind id "<id>", field "specials.<key>", and the source that names the record ' +
+    'field you want (sb_bind refuses an unknown source and lists every valid one).',
   dead_binding_source: `Rebind with sb_bind using one of: ${BINDING_SOURCES.join(', ')}.`,
   // "<key>" here is documentation, not a placeholder: this template is never
   // filled with a key, so the reader sees the form a field must take.

@@ -84,6 +84,95 @@ describe('reviewDesign()', () => {
     expect(f!.fix).toContain('product.title');
   });
 
+  /**
+   * THE PRODUCT CARD WITH ONE PICTURE ON EVERY ROW.
+   *
+   * A `list-dataset` repeats its `dataset-block` once per record. A plain
+   * `image` inside it renders `specials.src` — the one the DOCUMENT holds — so
+   * every card shows the same picture and the product's own photo can never
+   * appear. Nothing structural is wrong: the tree saves, publishes and renders.
+   * This was shipped on a real storefront before the check existed.
+   */
+  it('reports a static element inside a repeater, and does NOT tell the author to set it', () => {
+    const d = emptyDoc();
+    d.apply(
+      addSubtree(d, 'ROOT', {
+        type: 'flex-section',
+        children: [{ type: 'list-dataset', children: [{ type: 'dataset-block', children: [{ type: 'image' }] }] }],
+      }).patches,
+    );
+    const section = d.node('ROOT').data.nodes[0];
+    const list = d.node(section).data.nodes[0];
+    const block = d.node(list).data.nodes[0];
+    const image = d.node(block).data.nodes[0];
+
+    const f = reviewDesign(d).find((x) => x.nodeId === image);
+    expect(f?.code).toBe('static_in_dataset');
+    // It names the repeater, so the reader can see WHY this one is different.
+    expect(f!.problem).toContain(list);
+    // The generic advice would be actively wrong here.
+    expect(f!.fix).not.toMatch(/sb_set/);
+    expect(f!.fix).toContain('collection-media');
+  });
+
+  it('leaves the same element alone outside a repeater', () => {
+    const d = emptyDoc();
+    d.apply(addSubtree(d, 'ROOT', { type: 'flex-section', children: [{ type: 'image' }] }).patches);
+    const codesOut = codes(d);
+    expect(codesOut).toContain('missing_media');
+    expect(codesOut).not.toContain('static_in_dataset');
+  });
+
+  it('reports a dataset element that carries no binding at all', () => {
+    const d = emptyDoc();
+    d.apply(
+      addSubtree(d, 'ROOT', {
+        type: 'flex-section',
+        children: [
+          { type: 'list-dataset', children: [{ type: 'dataset-block', children: [{ type: 'collection-media' }] }] },
+        ],
+      }).patches,
+    );
+    const section = d.node('ROOT').data.nodes[0];
+    const list = d.node(section).data.nodes[0];
+    const block = d.node(list).data.nodes[0];
+    const media = d.node(block).data.nodes[0];
+    // Whatever the catalog seeds, this test is about the UNBOUND case.
+    d.apply([{ op: 'set', path: ['nodes', media, 'bindings'], value: [] }]);
+
+    const f = reviewDesign(d).find((x) => x.nodeId === media && x.code === 'unbound_dataset_element');
+    expect(f).toBeDefined();
+    expect(f!.problem).toContain('boundImage');
+    expect(f!.fix).toContain('sb_bind');
+  });
+
+  it('says nothing about a BOUND element whose authored value is empty', () => {
+    const d = emptyDoc();
+    d.apply(
+      addSubtree(d, 'ROOT', {
+        type: 'flex-section',
+        children: [
+          { type: 'list-dataset', children: [{ type: 'dataset-block', children: [{ type: 'collection-media' }] }] },
+        ],
+      }).patches,
+    );
+    const section = d.node('ROOT').data.nodes[0];
+    const list = d.node(section).data.nodes[0];
+    const block = d.node(list).data.nodes[0];
+    const media = d.node(block).data.nodes[0];
+    d.apply([
+      {
+        op: 'set',
+        path: ['nodes', media, 'bindings'],
+        value: [{ id: 'b1', source: 'product.image', field: 'specials.boundImage' }],
+      },
+    ]);
+    // A bound tile with an empty specials.src is FINISHED, not unfinished: the
+    // renderer prefers the bound key. Reporting it is the false positive that
+    // teaches a reader to ignore the whole list.
+    expect(reviewDesign(d).filter((f) => f.nodeId === media)).toEqual([]);
+  });
+
   it('reports a binding aimed outside specials', () => {
     const d = emptyDoc();
     d.apply(addSubtree(d, 'ROOT', { type: 'flex-section', children: [{ type: 'heading' }] }).patches);

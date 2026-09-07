@@ -120,7 +120,20 @@ that accounts for them.
   `schema_version ?? 1` fallback. Copy the working client; never guess a body.
 - **The element registry holds 106 types, and `getElementAI` covers 106/106.** The
   directory has more entries than that because the loose `.ts` files beside the elements
-  are not elements. 26 binding sources.
+  are not elements. 77 binding sources, read from BOTH renderers — the Go scope and the
+  editor's own binding context, which carries keys the Go side never spells out
+  (`product.moneyOverride`, `site.*`, `course.*`). Reading one alone made `sb_review` call
+  the platform's own seeded pricing binding dead on every page that showed a price.
+- **A plain `image` inside a repeater can never show a product photo.** Its renderer reads
+  `specials.src` — what the DOCUMENT holds — so every card gets the same picture. Only the
+  elements whose renderer reads a `bound…` special can show a record; that list is generated
+  (`BOUND_SPECIALS`, read from `server/render/nodes/*/html.go`) rather than hand-kept, and
+  `sb_review` reports the mistake as `static_in_dataset` with the element swap as the fix.
+  A live storefront shipped with six identical placeholder cards before this check existed.
+- **`rootId` is the app-block key for the same idea `root_node_id` names in a page.** A page
+  document carrying it renders an EMPTY `<body>` with a 200 — the order-complete page of a
+  real store did exactly that. `PageDoc.from` adopts the alias, drops it, and `sb_page_open`
+  reports `blank_page_repair`, so one save fixes the page.
 - **The wire caps frames by KIND.** `ops` and `snap` may reach 4 MiB; EVERY other kind is
   capped at 64 KiB, and exceeding it CLOSES the socket (`StatusMessageTooBig`) rather than
   rejecting one frame. Split a large batch.

@@ -87,7 +87,7 @@ make, because those mean "this person's account".
 | `sb_look` | Save, render, and return screenshots plus measured node boxes and layout defects measured on the render |
 | `sb_bind` | Bind a node's content to real store data |
 
-Twenty-five tools, **412 API operations**, 106 elements, 26 binding sources. `sb_api_find`
+Twenty-five tools, **412 API operations**, 106 elements, 77 binding sources. `sb_api_find`
 is an index rather than a tool per endpoint, so the tool list stays short while everything
 the platform can do stays reachable — and operations added to the platform arrive with the
 next `npm run codegen`.

@@ -84,7 +84,7 @@ là "tài khoản của người này".
 | `sb_look` | Lưu, render, trả về ảnh chụp kèm box đo được của node và lỗi bố cục đo trên bản render |
 | `sb_bind` | Gắn nội dung một node vào dữ liệu cửa hàng thật |
 
-Hai mươi lăm tool, **412 operation API**, 106 element, 26 nguồn binding. `sb_api_find` là
+Hai mươi lăm tool, **412 operation API**, 106 element, 77 nguồn binding. `sb_api_find` là
 một chỉ mục chứ không phải mỗi endpoint một tool, nên danh sách tool vẫn ngắn trong khi mọi
 thứ nền tảng làm được vẫn với tới — và operation mới thêm bên nền tảng sẽ tự có sau lần
 `npm run codegen` kế tiếp.

@@ -131,6 +131,13 @@ Nạp tài liệu **bản nháp** của trang và trả về outline. Thứ nh�
 section, site overlay và app block đã được gộp lên ROOT. Findings đi kèm, đúng hình dạng
 `sb_review` trả về — xem bên dưới.
 
+**`blank_page_repair`** xuất hiện khi tài liệu đã lưu đặt tên gốc là `rootId` (tên mà app
+block và section template dùng cho cùng ý niệm) thay vì `root_node_id`. Bộ render trang
+không tìm thấy gốc, không duyệt gì cả và xuất bản một trang trả 200 với `<body>` rỗng — gặp
+thật trên trang hoàn tất đơn của một storefront đang chạy, khách vừa trả tiền xong thì thấy
+màn hình trắng. Tài liệu được nhận vào chứ không bị từ chối, nên lần lưu kế tiếp ghi đúng
+khoá chuẩn và trang hiện lại.
+
 ## `sb_outline`
 
 `depth` (1–6, mặc định 1). Mỗi node một dòng: `id`, `type`, `name`, `children`, kèm `band`
@@ -331,7 +338,7 @@ không chụp được.
 | Tham số | Kiểu | Ghi chú |
 | --- | --- | --- |
 | `id` | string | |
-| `source` | string | Một trong 26 khoá renderer cung cấp — `product.title`, `product.price`, `category.title`, `article.title`, … |
+| `source` | string | Một trong 77 khoá mà hai bộ render cung cấp — `product.title`, `product.price`, `category.title`, `course.title`, `site.*`, … Schema chỉ nêu bốn cái; sai một khoá thì bị từ chối kèm danh sách đầy đủ, nhờ vậy danh sách tool vẫn gọn |
 | `field` | string | Luôn là `specials.<key>` |
 | `dry_run` | boolean? | Mặc định true |
 
@@ -438,9 +445,18 @@ tài liệu:
 | `empty_container` | Section không chứa gì — một dải trống |
 | `placeholder_content` | Vẫn là chữ mặc định của element ("Enter your text here") |
 | `empty_text` / `missing_media` | Element bỏ trống — khoảng trắng, hoặc ảnh vỡ |
+| `static_in_dataset` | Một element nằm trong repeater nhưng chỉ render nội dung do tài liệu ghi — cùng một tấm ảnh trên mọi thẻ sản phẩm |
+| `unbound_dataset_element` | Element dataset không có binding nào — nó chờ một `bound…` special mà không ai ghi |
 | `dead_binding_source` | Nguồn renderer không cung cấp — hiện placeholder mãi mãi |
 | `dead_binding_field` | Field binding ngoài `specials` — được lưu, được publish, và bị bỏ qua |
 | `unknown_element` | Type catalog không biết; chạy `npm run codegen` |
+
+Hai mã dataset này tồn tại vì lời khuyên thông thường lại sai bên trong một repeater. Một
+`image` trong thẻ sản phẩm render `specials.src`, nên đặt giá trị cho nó là đặt MỘT tấm ảnh
+cho mọi thẻ và ảnh riêng của sản phẩm không bao giờ hiện ra; cách sửa là đổi element —
+`collection-media`, `text-dataset`, `pricing-dataset`… — danh sách đọc thẳng từ các bộ render
+Go lúc codegen, gồm những element mà renderer có đọc một `bound…` special. Một element đã
+được bind mà giá trị tự ghi để trống là đã xong, không phải còn dở, nên không bị báo.
 
 Mỗi finding là `{ code, nodeId, type, problem, key? }` — có `key` khi lệnh sửa nêu một khoá
 specials. **`fixes` là một chú giải**: mỗi mã có mặt một mẫu, với `<id>` và `<key>` để thay

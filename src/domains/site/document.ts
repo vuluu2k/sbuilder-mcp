@@ -67,6 +67,33 @@ export class PageDoc {
       if (!d.schema_version) d.schema_version = 2;
     }
 
+    // A DOCUMENT THAT NAMES ITS ROOT UNDER THE WRONG KEY.
+    //
+    // `rootId` is the key an APP BLOCK and a section template use for the same
+    // idea (server/internal/apps/blocks.go), so a document assembled from that
+    // shape and PUT to a page carries it. The page renderer reads only
+    // `root_node_id`: it finds no root, walks nothing, and publishes a page that
+    // answers 200 with an EMPTY BODY. Found in the wild on a live storefront's
+    // order-complete page, where the shopper who had just paid saw a blank
+    // screen.
+    //
+    // Adopted rather than refused, because refusing left the one tool that can
+    // SEE the problem unable to open the page, and the repair is a single save:
+    // the canonical key is written and the alias dropped from what this holds.
+    let adopted: string | undefined;
+    if (!d.root_node_id || !d.nodes[d.root_node_id]) {
+      const bag = d as unknown as Record<string, unknown>;
+      for (const key of ['rootId', 'rootNodeId']) {
+        const value = bag[key];
+        if (typeof value === 'string' && d.nodes[value]) {
+          d.root_node_id = value;
+          delete bag[key];
+          adopted = key;
+          break;
+        }
+      }
+    }
+
     if (!d.root_node_id || !d.nodes[d.root_node_id]) {
       throw new Error(
         `sbuilder: document is damaged — root_node_id=${JSON.stringify(d.root_node_id)} names no ` +
@@ -74,8 +101,18 @@ export class PageDoc {
           'editor once; its hydrate path repairs this.',
       );
     }
-    return new PageDoc(d);
+    const out = new PageDoc(d);
+    out.adoptedRootKey = adopted;
+    return out;
   }
+
+  /**
+   * The wrong key this document named its root under, when it did.
+   *
+   * Set means the page currently PUBLISHES BLANK and the next save fixes it —
+   * a fact no other surface reports, so the tool layer says it out loud.
+   */
+  adoptedRootKey?: string;
 
   get rev(): number {
     return this.revision;

@@ -1,5 +1,5 @@
 import { childrenOf, isOverlay, pageChildren, appBlockRoot, type DocLike } from '../../core/tree.js';
-import { ELEMENTS, BINDING_SOURCES } from '../../catalog/elements.generated.js';
+import { ELEMENTS, BINDING_SOURCES, BOUND_SPECIALS } from '../../catalog/elements.generated.js';
 import type { PageDoc } from './document.js';
 import { fill } from './findings.js';
 
@@ -49,6 +49,26 @@ function seededValue(type: string, key: string): unknown {
 }
 
 /**
+ * A container that renders its subtree ONCE PER RECORD.
+ *
+ * `list-dataset` is the repeater and `dataset-block` its per-record template;
+ * both are read off the catalog rather than named here, so a new repeater the
+ * platform ships is covered the day the catalog is regenerated.
+ */
+function repeats(type: string): boolean {
+  const meta = ELEMENTS[type];
+  return Boolean(meta?.isContainer && meta.category === 'dataset');
+}
+
+/** The element types that can actually show a record: their renderer reads a bound special. */
+const BOUND_TYPES = Object.keys(BOUND_SPECIALS).sort();
+
+/** Whether this element type's renderer reads anything a binding can write. */
+function canShowARecord(type: string): boolean {
+  return (BOUND_SPECIALS[type] ?? []).length > 0;
+}
+
+/**
  * Everything wrong with this page that a person would notice.
  *
  * Overlays are skipped: the cart drawer is composed onto ROOT on read and is not
@@ -79,12 +99,18 @@ export function reviewDesign(doc: PageDoc): Finding[] {
   // Document order, depth-first from ROOT: the order a reader meets them.
   const seen = new Set<string>();
   const walkOrder: string[] = [];
-  const go = (id: string): void => {
+  // Which repeater each node sits inside, filled on the way down. A repeater
+  // itself belongs to the scope OUTSIDE it, which is why this is set before the
+  // scope for the children is computed.
+  const inRepeater = new Map<string, string>();
+  const go = (id: string, repeater?: string): void => {
     if (seen.has(id) || overlayIds.has(id)) return;
     seen.add(id);
     walkOrder.push(id);
+    if (repeater) inRepeater.set(id, repeater);
     if (appBlockRoot(d, id) === id) return;
-    for (const k of childrenOf(d, id)) go(k);
+    const inner = repeats(d.nodes[id]?.data.type ?? '') ? (repeater ?? id) : repeater;
+    for (const k of childrenOf(d, id)) go(k, inner);
   };
   go(d.root_node_id);
 
@@ -117,10 +143,45 @@ export function reviewDesign(doc: PageDoc): Finding[] {
       });
     }
 
+    const bindings =
+      (n as unknown as { bindings?: Array<{ source?: string; field?: string }> }).bindings ?? [];
+    const repeater = inRepeater.get(id);
+    const boundFields = new Set(bindings.map((b) => b.field));
+    /**
+     * Whether a binding, not the author, supplies this key at render time.
+     *
+     * Either the binding names the key outright, or the element is one whose
+     * renderer PREFERS its bound special over the authored one — a bound
+     * `collection-media` with an empty `src` is finished, not unfinished, and
+     * reporting it would be the false positive that teaches a reader to ignore
+     * the list.
+     */
+    const supplied = (key: string): boolean =>
+      boundFields.has(`specials.${key}`) || (bindings.length > 0 && canShowARecord(type));
+
     for (const key of contentKeys(type)) {
       const value = (n.specials ?? {})[key];
       const seed = seededValue(type, key);
       const isBlank = value === undefined || value === null || String(value).trim() === '';
+      if (supplied(key)) continue;
+
+      // INSIDE A REPEATER the generic advice is actively wrong: setting a static
+      // src on an image in a product card puts the SAME picture on every card and
+      // the product's own photo can never appear. The defect is the element
+      // choice, not the missing value, so it gets its own finding and its own fix.
+      if (repeater && (isBlank || (seed !== undefined && value === seed))) {
+        out.push({
+          code: 'static_in_dataset',
+          nodeId: id,
+          type,
+          problem:
+            `Inside the repeater "${repeater}", but "${type}" renders only what the document ` +
+            `authors — so every record shows the same ${key}, and the record's own never appears.`,
+          key,
+          fix: fill('static_in_dataset', { id, key }),
+        });
+        continue;
+      }
 
       if (isBlank) {
         // An element that seeds a blank (image.src is "") is not misconfigured —
@@ -155,11 +216,27 @@ export function reviewDesign(doc: PageDoc): Finding[] {
       }
     }
 
+    // A dataset element with NO binding at all is the same silence from the other
+    // direction: its renderer is waiting for a bound special that nothing writes,
+    // so it falls back to whatever the document authored — once, for every record.
+    if (repeater && canShowARecord(type) && bindings.length === 0) {
+      const key = BOUND_SPECIALS[type][0];
+      out.push({
+        code: 'unbound_dataset_element',
+        nodeId: id,
+        type,
+        problem:
+          `"${type}" reads specials.${key} from a binding and has none, so every row in ` +
+          `"${repeater}" renders the same authored content.`,
+        key,
+        fix: fill('unbound_dataset_element', { id, key }),
+      });
+    }
+
     // A binding whose source the renderer does not provide resolves to nothing,
     // and the element falls back to its own placeholder — indistinguishable, on
     // screen, from data that has not loaded.
-    for (const b of (n as unknown as { bindings?: Array<{ source?: string; field?: string }> })
-      .bindings ?? []) {
+    for (const b of bindings) {
       if (b.source && !BINDING_SOURCES.includes(b.source)) {
         out.push({
           code: 'dead_binding_source',

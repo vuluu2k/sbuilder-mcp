@@ -90,3 +90,53 @@ describe('PageDoc', () => {
     expect(() => PageDoc.from(raw).node('nope')).toThrow(/nope/);
   });
 });
+
+/**
+ * THE PAGE THAT PUBLISHES BLANK.
+ *
+ * `rootId` is what an app block and a section template call the same idea, so a
+ * document assembled from that shape and PUT to a page carries it. The page
+ * renderer reads only `root_node_id`: it finds no root and emits an empty
+ * <body>. Found on a live storefront's order-complete page — the shopper who
+ * had just paid saw a blank screen, with a 200 and no warning anywhere.
+ */
+describe('a document that names its root under the wrong key', () => {
+  const legacy = () => ({
+    schema_version: 1,
+    rootId: 'ROOT',
+    nodes: {
+      ROOT: { id: 'ROOT', data: { type: 'root', parent: null, nodes: ['fs_1'] }, specials: {} },
+      fs_1: { id: 'fs_1', data: { type: 'flex-section', parent: 'ROOT', nodes: [] }, specials: {} },
+    },
+  });
+
+  it('opens it, and says which key it adopted', () => {
+    const d = PageDoc.from(legacy());
+    expect(d.doc.root_node_id).toBe('ROOT');
+    expect(d.adoptedRootKey).toBe('rootId');
+  });
+
+  it('drops the alias, so the next save writes only the canonical key', () => {
+    const d = PageDoc.from(legacy());
+    expect((d.doc as unknown as Record<string, unknown>).rootId).toBeUndefined();
+  });
+
+  it('stays quiet about a healthy document', () => {
+    const d = PageDoc.from({
+      schema_version: 2,
+      root_node_id: 'ROOT',
+      nodes: { ROOT: { id: 'ROOT', data: { type: 'root', parent: null, nodes: [] }, specials: {} } },
+    });
+    expect(d.adoptedRootKey).toBeUndefined();
+  });
+
+  it('still refuses a document whose alias names no node', () => {
+    expect(() =>
+      PageDoc.from({
+        schema_version: 1,
+        rootId: 'nope',
+        nodes: { fs_1: { id: 'fs_1', data: { type: 'flex-section', parent: null, nodes: [] }, specials: {} } },
+      }),
+    ).toThrow(/damaged/);
+  });
+});

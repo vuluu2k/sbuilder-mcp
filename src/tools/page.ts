@@ -180,7 +180,20 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
     },
     async ({ site_id, page_id }) => {
       const outline = await session.open(site_id, page_id);
-      return text({ outline, ...reviewField(ctx, session.current()) });
+      const doc = session.current();
+      // A page whose stored document named its root under the app-block key
+      // renders as an empty <body> and says nothing about why. Nobody else can
+      // see this, so it is reported on open rather than left for the screenshot.
+      const blank_page_repair = doc.adoptedRootKey
+        ? `This page's document names its root as "${doc.adoptedRootKey}", not "root_node_id", so ` +
+          'the renderer finds no root and publishes an EMPTY BODY. The next save from here writes ' +
+          'the canonical key and fixes it; publish afterwards.'
+        : undefined;
+      return text({
+        outline,
+        ...(blank_page_repair ? { blank_page_repair } : {}),
+        ...reviewField(ctx, doc),
+      });
     },
   );
 

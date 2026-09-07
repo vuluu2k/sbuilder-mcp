@@ -125,6 +125,13 @@ Loads the page's **draft** document and returns its outline. What comes back is 
 global sections, site overlays and app blocks have been merged onto ROOT. Findings ride
 along in the same shape `sb_review` returns them — see below.
 
+**`blank_page_repair`** comes back when the stored document names its root under `rootId`
+(what an app block and a section template call the same idea) instead of `root_node_id`. The
+page renderer finds no root, walks nothing and publishes a page that answers 200 with an
+empty `<body>` — found on a live storefront's order-complete page, where the shopper who had
+just paid saw a blank screen. The document is adopted rather than refused, so the next save
+writes the canonical key and the page comes back.
+
 ## `sb_outline`
 
 `depth` (1–6, default 1). One line per node: `id`, `type`, `name`, `children`, plus `band`
@@ -334,7 +341,7 @@ data renders impossible to photograph.
 | Arg | Type | Notes |
 | --- | --- | --- |
 | `id` | string | |
-| `source` | string | One of 26 keys the renderer provides — `product.title`, `product.price`, `category.title`, `article.title`, … |
+| `source` | string | One of 77 keys the renderers provide — `product.title`, `product.price`, `category.title`, `course.title`, `site.*`, … The schema names four; a wrong one is refused with the full list, which keeps the tool list small |
 | `field` | string | Always `specials.<key>` |
 | `dry_run` | boolean? | Defaults to true |
 
@@ -447,9 +454,18 @@ box. Returns `{ findings, fixes, findings_notice? }`, in document order:
 | `empty_container` | A section holding nothing — an empty band |
 | `placeholder_content` | Still the copy the element ships with ("Enter your text here") |
 | `empty_text` / `missing_media` | An element left blank — empty space, or a broken image |
+| `static_in_dataset` | An element inside a repeater that renders only what the document authors — the same picture on every product card |
+| `unbound_dataset_element` | A dataset element with no binding at all — it waits for a bound special nothing writes |
 | `dead_binding_source` | A source the renderer never provides — shows the placeholder forever |
 | `dead_binding_field` | A binding field outside `specials` — stored, published, and ignored |
 | `unknown_element` | A type the catalog does not know; run `npm run codegen` |
+
+The two dataset codes exist because the obvious advice is wrong inside a repeater. An
+`image` in a product card renders `specials.src`, so setting it puts ONE picture on every
+card and the product's own photo can never appear; the fix is a different element —
+`collection-media`, `text-dataset`, `pricing-dataset` and the rest, read out of the Go
+renderers at codegen time as the elements whose renderer reads a `bound…` special. A bound
+element with an empty authored value is finished, not unfinished, and is not reported.
 
 Each finding is `{ code, nodeId, type, problem, key? }` — `key` where the fix names a
 specials key. **`fixes` is a legend**: one template per code present, with `<id>` and

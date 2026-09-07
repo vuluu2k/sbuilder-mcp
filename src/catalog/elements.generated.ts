@@ -31597,6 +31597,46 @@ export const BINDING_SOURCES: string[] = [
   "site.youtube"
 ];
 
+export const BOUND_SPECIALS: Record<string, string[]> = {
+  "collection-media": [
+    "boundImage"
+  ],
+  "dataset-block": [
+    "boundHref",
+    "boundHrefLabel"
+  ],
+  "media-dataset": [
+    "boundImage",
+    "boundImages"
+  ],
+  "pricing-dataset": [
+    "boundCompare",
+    "boundCompareCents",
+    "boundMoneyOverride",
+    "boundPrice",
+    "boundPriceCents"
+  ],
+  "product-image-feature": [
+    "boundImage",
+    "boundImages",
+    "boundProductURL"
+  ],
+  "product-image-list": [
+    "boundImages"
+  ],
+  "product-variants": [
+    "boundAttributes",
+    "boundVariations"
+  ],
+  "qr-code": [
+    "boundValue"
+  ],
+  "text-dataset": [
+    "boundHtml",
+    "boundText"
+  ]
+};
+
 export const TRAIT_WRITES: Record<string, TraitDescription> = {
   "font_size": {
     "key": "font_size",
