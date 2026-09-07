@@ -15,7 +15,10 @@ describe('token budget — a diet without a scale comes back', () => {
   it('tools/list and instructions stay small, and the instructions are true', async () => {
     const { client, close } = await connectedClient();
     const { tools } = await client.listTools();
-    expect(JSON.stringify(tools).length).toBeLessThan(15_500);
+    // 13,606 before the diet. What sits above that is bought on purpose: annotations
+    // (~1,000), the sb_bind source enum (~500), sb_set edits[] and sb_api_call pick /
+    // max_items (~700) — each one saves more per session than it costs.
+    expect(JSON.stringify(tools).length).toBeLessThan(16_000);
     for (const t of tools) expect(t.description, t.name).not.toMatch(/vanishes on publish/);
     const instructions = client.getInstructions() ?? '';
     expect(instructions.length).toBeGreaterThan(200);

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { callOperation } from '../src/tools/api.js';
+import { callOperation, shapeResponse, RESULT_CAP } from '../src/tools/api.js';
 import { Session } from '../src/transport/auth.js';
 
 const ok = () =>
@@ -122,5 +122,46 @@ describe('callOperation()', () => {
       dry_run: false,
     });
     expect(calls(f)[0][0]).toBe('http://x/api/sites/a%2F..%2Fb/menus');
+  });
+});
+
+describe('shapeResponse()', () => {
+  const list = (n: number) => ({
+    products: Array.from({ length: n }, (_, i) => ({ id: `p${i}`, title: `T${i}`, blob: 'x'.repeat(200) })),
+    total: n,
+  });
+
+  it('pick keeps the named fields on every item and leaves the envelope', () => {
+    const out = shapeResponse(list(2), { pick: ['id'] }) as { products: unknown[]; total: number };
+    expect(out).toEqual({ products: [{ id: 'p0' }, { id: 'p1' }], total: 2 });
+  });
+
+  it('max_items cuts the list and says so', () => {
+    const out = shapeResponse(list(5), { max_items: 2 }) as { products: unknown[]; truncated: { shown: number; of: number } };
+    expect(out.products.length).toBe(2);
+    expect(out.truncated).toMatchObject({ shown: 2, of: 5 });
+  });
+
+  it('a list over the cap is cut to fit, with a hint that names pick and max_items', () => {
+    const out = shapeResponse(list(600), {}) as { products: unknown[]; truncated: { shown: number; of: number; hint: string } };
+    expect(JSON.stringify(out).length).toBeLessThanOrEqual(RESULT_CAP + 200);
+    expect(out.truncated.of).toBe(600);
+    expect(out.truncated.shown).toBeLessThan(600);
+    expect(out.truncated.hint).toMatch(/pick/);
+  });
+
+  it('pick reaches inside a single-item answer', () => {
+    expect(shapeResponse({ page: { id: 'p1', name: 'Home', settings: {} } }, { pick: ['id'] })).toEqual({ page: { id: 'p1' } });
+  });
+
+  it('a non-list answer is never cut, and untouched without pick', () => {
+    const big = { thing: { blob: 'x'.repeat(RESULT_CAP + 10) } };
+    expect(shapeResponse(big, { max_items: 1 })).toBe(big);
+  });
+
+  it('a bare array is shaped too', () => {
+    const out = shapeResponse([{ id: 1, x: 2 }, { id: 2, x: 3 }], { pick: ['id'], max_items: 1 }) as { items: unknown[]; truncated: unknown };
+    expect(out.items).toEqual([{ id: 1 }]);
+    expect(out.truncated).toBeDefined();
   });
 });

@@ -160,7 +160,7 @@ with `sb_api_find id`". Counts come from the generated source records, never lit
 ### 3.11 Budgets are tests
 
 `test/token-budget.test.ts` runs the server over `InMemoryTransport` and asserts character
-ceilings: `tools/list` ≤ 15,500 (annotations cost ~1,000 and the `sb_bind` enum ~500, both kept on purpose); `instructions` ≤ 1,000; `sb_api_find "list orders"` ≤
+ceilings: `tools/list` ≤ 16,000 (above the 13,606 baseline sit annotations ~1,000, the `sb_bind` enum ~500, and `sb_set edits[]` + `sb_api_call pick`/`max_items` ~700, each kept because it saves more per session than it costs); `instructions` ≤ 1,000; `sb_api_find "list orders"` ≤
 3,000; `sb_catalog_search "hero"` ≤ 2,500; `sb_traits_for list-dataset` ≤ 12,000. A diet
 without a scale is a diet that comes back.
 

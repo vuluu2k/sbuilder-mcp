@@ -17,6 +17,98 @@ export interface CallArgs {
   query?: Record<string, string>;
   body?: unknown;
   dry_run?: boolean;
+  /** Fields to keep on each item of a list response (or on a single item). */
+  pick?: string[];
+  /** Cap on the items of a list response, applied after the platform's own paging. */
+  max_items?: number;
+}
+
+/** Past this many characters a list response is cut to fit and says so. */
+export const RESULT_CAP = 60_000;
+
+/**
+ * Find the ONE list in a platform response.
+ *
+ * httpx.WriteList answers `{ <name>: [...], total }`, WriteItem `{ <name>: {...} }`,
+ * and a few endpoints answer a bare array. The list is the part that grows,
+ * so it is the part that gets picked, capped and truncated.
+ */
+function listOf(raw: unknown): { key: string | null; items: unknown[] } | null {
+  if (Array.isArray(raw)) return { key: null, items: raw };
+  if (!raw || typeof raw !== 'object') return null;
+  const arrays = Object.entries(raw as Record<string, unknown>).filter(([, v]) => Array.isArray(v));
+  if (arrays.length !== 1) return null;
+  return { key: arrays[0][0], items: arrays[0][1] as unknown[] };
+}
+
+function pickFields(item: unknown, fields: string[]): unknown {
+  if (!item || typeof item !== 'object' || Array.isArray(item)) return item;
+  const o: Record<string, unknown> = {};
+  for (const f of fields) {
+    const v = (item as Record<string, unknown>)[f];
+    if (v !== undefined) o[f] = v;
+  }
+  return o;
+}
+
+/**
+ * Shape a live response for the reader: pick, cap, and never exceed RESULT_CAP
+ * on a list.
+ *
+ * A product list is 50 objects of 2 KB each — 100 KB into the context for the
+ * ids and titles the agent wanted. `pick` keeps the named fields on every item
+ * (or on the single item of a WriteItem answer), `max_items` cuts the list, and
+ * a list still over RESULT_CAP is cut to fit. Every cut is SAID, with the size
+ * it would have been and how to narrow the call. A non-list answer is never
+ * cut: there is no honest place to stop inside one object.
+ */
+export function shapeResponse(raw: unknown, opts: { pick?: string[]; max_items?: number }): unknown {
+  const list = listOf(raw);
+  if (!list) {
+    // WriteItem: `{ page: {...} }` — pick reaches inside the one object.
+    if (opts.pick && raw && typeof raw === 'object') {
+      const entries = Object.entries(raw as Record<string, unknown>);
+      const objs = entries.filter(([, v]) => v && typeof v === 'object' && !Array.isArray(v));
+      if (objs.length === 1) return { ...raw, [objs[0][0]]: pickFields(objs[0][1], opts.pick) };
+      return pickFields(raw, opts.pick);
+    }
+    return raw;
+  }
+  let items = opts.pick ? list.items.map((it) => pickFields(it, opts.pick!)) : list.items;
+  const of = items.length;
+  let cut: string | undefined;
+  if (opts.max_items !== undefined && items.length > opts.max_items) {
+    items = items.slice(0, opts.max_items);
+    cut = 'max_items';
+  }
+  const rebuild = (its: unknown[]) =>
+    list.key === null ? its : { ...(raw as Record<string, unknown>), [list.key]: its };
+  let out = rebuild(items);
+  if (JSON.stringify(out).length > RESULT_CAP) {
+    // Drop from the end until it fits; the first items are the ones paging asked for.
+    const fixed = JSON.stringify(rebuild([])).length;
+    let used = fixed;
+    let n = 0;
+    for (const it of items) {
+      const size = JSON.stringify(it).length + 1;
+      if (used + size > RESULT_CAP) break;
+      used += size;
+      n++;
+    }
+    items = items.slice(0, n);
+    out = rebuild(items);
+    cut = 'size';
+  }
+  if (!cut) return out;
+  const truncated = {
+    shown: items.length,
+    of,
+    hint:
+      cut === 'size'
+        ? `The full list was over ${RESULT_CAP} characters. Pass pick to keep only the fields you need, max_items, or the operation's own limit/offset query.`
+        : 'Cut by max_items; raise it or page with the operation\'s own limit/offset query.',
+  };
+  return list.key === null ? { items, truncated } : { ...(out as Record<string, unknown>), truncated };
 }
 
 /**
@@ -81,7 +173,7 @@ export async function callOperation(ctx: ToolContext, args: CallArgs): Promise<u
     };
   }
 
-  return request({
+  const raw = await request({
     base: ctx.base,
     method: op.method,
     path,
@@ -90,6 +182,7 @@ export async function callOperation(ctx: ToolContext, args: CallArgs): Promise<u
     body: args.body,
     fetchImpl: ctx.fetchImpl,
   });
+  return shapeResponse(raw, { pick: args.pick, max_items: args.max_items });
 }
 
 export function registerApiTools(server: McpServer, ctx: ToolContext): void {
@@ -137,8 +230,9 @@ export function registerApiTools(server: McpServer, ctx: ToolContext): void {
     'sb_api_call',
     {
       description:
-        'Execute one operation found by sb_api_find. Defaults to a dry run that sends nothing ' +
-          'and shows the request it would have made.',
+        'Execute one operation from sb_api_find. Defaults to a dry run that sends nothing and ' +
+          'shows the request. pick keeps only named fields on list items, max_items caps the ' +
+          'list, and a list over 60 KB is cut to fit and says so.',
       inputSchema: {
       id: z
         .string()
@@ -147,6 +241,8 @@ export function registerApiTools(server: McpServer, ctx: ToolContext): void {
       query: z.record(z.string()).optional(),
       body: z.unknown().optional(),
       dry_run: z.boolean().optional().describe('Defaults to true. Pass false to actually send.'),
+      pick: z.array(z.string()).optional(),
+      max_items: z.number().int().min(1).optional(),
     },
       annotations: { readOnlyHint: false, destructiveHint: true, openWorldHint: true },
     },
