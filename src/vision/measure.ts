@@ -1,4 +1,5 @@
 import type { Box, Shot } from './shoot.js';
+import { fill } from '../domains/site/findings.js';
 
 /**
  * A defect measured on the RENDERED page, not read off the document.
@@ -60,7 +61,7 @@ export function measureShot(shot: Shot): VisualFinding[] {
         nodeId: b.id,
         width: shot.width,
         problem: `Extends past the ${shot.width}px viewport (${b.x} → ${b.x + b.w}).`,
-        fix: `Give it a width that can shrink — sb_set id "${b.id}", namespace style, keys { "maxWidth": "100%" } at this breakpoint.`,
+        fix: fill('off_canvas', { id: b.id }),
       });
     }
 
@@ -72,7 +73,7 @@ export function measureShot(shot: Shot): VisualFinding[] {
         nodeId: b.id,
         width: shot.width,
         problem: `Renders at ${b.fontPx}px at ${shot.width}px wide — below the ${MIN_BODY_PX}px a phone can read comfortably.`,
-        fix: `Raise it for this breakpoint: sb_set id "${b.id}", namespace style, keys { "fontSize": "16px" }.`,
+        fix: fill('text_too_small', { id: b.id }),
       });
     }
   }
@@ -96,7 +97,7 @@ export function measureShot(shot: Shot): VisualFinding[] {
         nodeId: a.id,
         width: shot.width,
         problem: `Overlaps ${b.id} at ${shot.width}px wide — one of them is unreadable.`,
-        fix: 'Check the two for a fixed height or a negative margin at this breakpoint; sb_look with node_id on each shows which one is out of place.',
+        fix: fill('overlap', { id: a.id }),
       });
     }
   }

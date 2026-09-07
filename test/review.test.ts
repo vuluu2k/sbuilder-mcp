@@ -77,7 +77,7 @@ describe('reviewDesign()', () => {
         value: { id: 'b1', source: 'product.nonsense', field: 'specials.text' },
       },
     ]);
-    const f = reviewDesign(d).find((x) => x.code === 'dead_binding');
+    const f = reviewDesign(d).find((x) => x.code === 'dead_binding_source');
     expect(f).toBeDefined();
     expect(f!.problem).toContain('product.nonsense');
     // The fix lists what IS available, so it can be acted on immediately.

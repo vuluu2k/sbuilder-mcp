@@ -1,6 +1,7 @@
 import { childrenOf, isOverlay, pageChildren, type DocLike } from '../../core/tree.js';
 import { ELEMENTS, BINDING_SOURCES } from '../../catalog/elements.generated.js';
 import type { PageDoc } from './document.js';
+import { fill } from './findings.js';
 
 /**
  * A defect somebody looking at the page would see.
@@ -18,6 +19,8 @@ export interface Finding {
   nodeId: string;
   type: string;
   problem: string;
+  /** The specials key the fix names, where one does. */
+  key?: string;
   fix: string;
 }
 
@@ -65,7 +68,7 @@ export function reviewDesign(doc: PageDoc): Finding[] {
       nodeId: d.root_node_id,
       type: 'root',
       problem: 'The page has no content — it publishes as a blank document.',
-      fix: 'Add a section with sb_add (parent_id ROOT, type flex-section), or drop a designed one in with sb_template_use.',
+      fix: fill('empty_page', {}),
     });
     return out;
   }
@@ -93,7 +96,7 @@ export function reviewDesign(doc: PageDoc): Finding[] {
         nodeId: id,
         type,
         problem: `"${type}" is not an element this catalog knows, so nothing can say how it renders.`,
-        fix: 'Regenerate the catalog (npm run codegen against a current web_builder checkout). If the element was removed from the platform, delete the node with sb_remove.',
+        fix: fill('unknown_element', {}),
       });
       continue;
     }
@@ -106,7 +109,7 @@ export function reviewDesign(doc: PageDoc): Finding[] {
         nodeId: id,
         type,
         problem: 'This container holds nothing — it renders as an empty band.',
-        fix: `Add something inside it (sb_add with parent_id "${id}"), or remove it with sb_remove.`,
+        fix: fill('empty_container', { id }),
       });
     }
 
@@ -126,7 +129,8 @@ export function reviewDesign(doc: PageDoc): Finding[] {
             key === 'text'
               ? 'This element has no text — it renders as empty space.'
               : `This element has no ${key} — it renders as a broken or missing image.`,
-          fix: `Set it: sb_set id "${id}", namespace specials, keys { "${key}": … }.`,
+          key,
+          fix: fill(key === 'text' ? 'empty_text' : 'missing_media', { id, key }),
         });
         continue;
       }
@@ -141,7 +145,8 @@ export function reviewDesign(doc: PageDoc): Finding[] {
           nodeId: id,
           type,
           problem: `Still the placeholder the element ships with (${JSON.stringify(seed)}).`,
-          fix: `Write the real copy: sb_set id "${id}", namespace specials, keys { "${key}": … }.`,
+          key,
+          fix: fill('placeholder_content', { id, key }),
         });
       }
     }
@@ -153,20 +158,20 @@ export function reviewDesign(doc: PageDoc): Finding[] {
       .bindings ?? []) {
       if (b.source && !BINDING_SOURCES.includes(b.source)) {
         out.push({
-          code: 'dead_binding',
+          code: 'dead_binding_source',
           nodeId: id,
           type,
           problem: `Bound to "${b.source}", which the renderer does not provide — it will show the placeholder forever.`,
-          fix: `Rebind with sb_bind using one of: ${BINDING_SOURCES.join(', ')}.`,
+          fix: fill('dead_binding_source', {}),
         });
       }
       if (b.field && !b.field.startsWith('specials.')) {
         out.push({
-          code: 'dead_binding',
+          code: 'dead_binding_field',
           nodeId: id,
           type,
           problem: `Binds into "${b.field}"; the renderer only applies bindings under "specials".`,
-          fix: `Rebind with sb_bind and a field of the form "specials.<key>".`,
+          fix: fill('dead_binding_field', {}),
         });
       }
     }
