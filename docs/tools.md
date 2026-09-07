@@ -273,7 +273,7 @@ tuples in CSS px at `widths[0]`, for nodes down to `box_depth` in the open docum
 default 2 is the bands and their direct children, which is what a layout judgement needs;
 ROOT is always kept. With `node_id` the depth counts from that node and only its subtree
 comes back. A one-line `boxes_format` legend comes with the first look in a
-process. Every `[data-node-id]` is still measured and kept in the session for the presence
+process. Every rendered node (its `id` attribute) is still measured and kept in the session for the presence
 cursor and the layout checks; two hundred pretty-printed objects were 27 KB a look.
 `with_boxes: false` drops them. Findings ride along as with `sb_review`, and layout defects
 as `layout` — see the end of this document.

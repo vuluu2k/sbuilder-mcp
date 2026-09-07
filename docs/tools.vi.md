@@ -266,7 +266,7 @@ tảng — nên bức ảnh là của *bản nháp đã lưu*, không bao giờ 
 một ảnh mỗi bề rộng, kèm `boxes`: một mảng các bộ `[id, type, x, y, w, h]` tính bằng CSS px
 ở `widths[0]`, cho các node tới `box_depth` trong tài liệu đang mở — mặc định 2 là các băng
 và con trực tiếp của chúng, đúng thứ một nhận định bố cục cần; ROOT luôn được giữ. Với `node_id`, độ sâu
-tính từ node đó và chỉ cây con của nó được trả về. Chú giải một dòng `boxes_format` đi kèm lần look đầu tiên trong một process. Mọi `[data-node-id]` vẫn
+tính từ node đó và chỉ cây con của nó được trả về. Chú giải một dòng `boxes_format` đi kèm lần look đầu tiên trong một process. Mọi node đã render (thuộc tính `id`) vẫn
 được đo và giữ trong phiên cho con trỏ hiện diện và các kiểm tra bố cục; hai trăm object in
 đẹp từng tốn 27 KB mỗi lần look. `with_boxes: false` bỏ chúng đi. Findings đi kèm như với
 `sb_review`, và lỗi bố cục đi kèm dưới `layout` — xem cuối tài liệu này.
