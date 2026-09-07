@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import { composeWarnings, type ComposeWarning } from '../domains/site/findings.js';
 import { text } from '../mcp/response.js';
 import { loadSource, saveSource } from '../transport/pages.js';
 import { PageDoc, type OutlineNode } from '../domains/site/document.js';
@@ -57,6 +58,7 @@ export class PageSession {
   private pageId = '';
   private live: LiveSession | null = null;
   private stale: string | null = null;
+  private warnings: ComposeWarning[] = [];
   private boxes: Box[] = [];
 
   constructor(private readonly ctx: ToolContext) {}
@@ -111,7 +113,15 @@ export class PageSession {
     this.doc = PageDoc.from(src.document);
     this.siteId = siteId;
     this.pageId = pageId;
+    // The platform's own account of what it could not compose. Typed on the
+    // response since the transport was written and read by nothing until now.
+    this.warnings = composeWarnings(src.warnings);
     return this.doc.outline();
+  }
+
+  /** What the server said it could not compose when this page was opened. */
+  composeWarnings(): ComposeWarning[] {
+    return this.warnings;
   }
 
   current(): PageDoc {
@@ -189,9 +199,11 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
           'the renderer finds no root and publishes an EMPTY BODY. The next save from here writes ' +
           'the canonical key and fixes it; publish afterwards.'
         : undefined;
+      const warnings = session.composeWarnings();
       return text({
         outline,
         ...(blank_page_repair ? { blank_page_repair } : {}),
+        ...(warnings.length ? { compose_warnings: warnings } : {}),
         ...reviewField(ctx, doc),
       });
     },
@@ -559,16 +571,32 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
         ...(settings ? { settings } : {}),
       };
       if (dry_run !== false) return text({ dry_run: true, would_post: path, body });
-      return text(
-        await request({
-          base: ctx.base,
-          method: 'POST',
-          path,
-          token: siteToken(ctx),
-          body,
-          fetchImpl: ctx.fetchImpl,
-        }),
-      );
+      const res = (await request({
+        base: ctx.base,
+        method: 'POST',
+        path,
+        token: siteToken(ctx),
+        body,
+        fetchImpl: ctx.fetchImpl,
+      })) as { page?: Record<string, unknown> };
+      // A COLLIDING SLUG IS RENAMED, NOT REFUSED. `uniqueSlug` suffixes -1, -2 …
+      // and its own comment says it "never errors"
+      // (server/internal/page/service.go:877). ErrSlugConflict exists and maps to
+      // 409; this path never reaches it. So the create answers 200 carrying a
+      // DIFFERENT slug than the one asked for, and every link the caller then
+      // authors to the slug it requested is dead.
+      const got = res.page?.slug;
+      const renamed = slug && typeof got === 'string' && got !== slug;
+      return text({
+        ...res,
+        ...(renamed
+          ? {
+              slug_renamed: `The slug "${slug}" was already taken, so the platform stored ` +
+                `"${got}" instead and reported success. Link to "${got}", or free the name and ` +
+                'create it again.',
+            }
+          : {}),
+      });
     },
   );
 
@@ -592,16 +620,39 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
       const path = `/api/sites/${encodeURIComponent(site_id)}/publish`;
       const body = { pageIds: [page_id] };
       if (dry_run !== false) return text({ dry_run: true, would_post: path, body });
-      return text(
-        await request({
-          base: ctx.base,
-          method: 'POST',
-          path,
-          token: siteToken(ctx),
-          body,
-          fetchImpl: ctx.fetchImpl,
-        }),
-      );
+      const res = (await request({
+        base: ctx.base,
+        method: 'POST',
+        path,
+        token: siteToken(ctx),
+        body,
+        fetchImpl: ctx.fetchImpl,
+      })) as { published?: Array<Record<string, unknown>>; total?: number };
+      // A PUBLISHED ROW CARRIES THE WHOLE RENDERED PAGE — document, html and css
+      // — and publish CASCADES, so returning the response as it arrives pours
+      // every republished page's markup into the reader. Kept: what identifies
+      // the row and what a caller would act on.
+      const published = (res.published ?? []).map((p) => ({
+        pageId: p.pageId,
+        ...(p.slug !== undefined ? { slug: p.slug } : {}),
+        ...(p.isHomepage ? { isHomepage: true } : {}),
+      }));
+      // PUBLISH SKIPS A PAGE WITH NO SAVED DRAFT and still answers 200 with
+      // whatever did publish (`server/internal/page/service.go:650`, a bare
+      // `continue`). sb_page_create followed by sb_publish does exactly that:
+      // the call succeeds, the page never flips to published, and the URL 404s.
+      const landed = published.some((p) => p.pageId === page_id);
+      return text({
+        published,
+        ...(published.length !== (res.total ?? published.length) ? { total: res.total } : {}),
+        ...(landed
+          ? {}
+          : {
+              not_published: `Page ${page_id} has no saved draft, so the platform published ` +
+                'nothing for it and reported success anyway. Open it with sb_page_open, save an ' +
+                'edit, then publish again.',
+            }),
+      });
     },
   );
 

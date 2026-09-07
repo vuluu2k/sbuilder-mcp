@@ -68,3 +68,65 @@ export function compactFindings<T extends { code: string; fix: string }>(
   });
   return { findings, fixes };
 }
+
+/**
+ * What a COMPOSE WARNING means for the document now in hand.
+ *
+ * These ride on `GET .../source` beside the page. The client typed the field and
+ * read it nowhere, which mattered most for the one that is destructive:
+ * `globalMissing` means the server could not find the master and DELETED the
+ * reference node from the tree it handed back (`compose.go:118,127`), so the
+ * page opens with the section already gone and the next save stores that loss
+ * permanently — with no error at any step.
+ */
+export const COMPOSE_WARNINGS: Record<string, string> = {
+  globalMissing:
+    'The shared section is GONE from the tree you just opened — the server could not find its ' +
+    'master and removed the reference. Saving from here makes that permanent. Re-add the section, ' +
+    'or restore the master, before you save.',
+  globalStale:
+    'A shared section was edited elsewhere while this copy was held; the master write was refused.',
+  overlayStale:
+    'The overlay master was edited elsewhere while this copy was held; that write was refused. ' +
+    'The page edits in the same request were kept.',
+  appBlockMissing: 'An app block on this page no longer resolves; its subtree composed as nothing.',
+  appBlockEdited:
+    'An edit inside an app block was reduced back to its reference on save, and is stored nowhere.',
+  formMissing:
+    'A form placement names a form that no longer exists, so it publishes as an EMPTY BOX rather ' +
+    'than an error.',
+};
+
+export interface ComposeWarning {
+  code: string;
+  id?: string;
+  name?: string;
+  effect: string;
+}
+
+/**
+ * Turn the server's warnings into something a reader can act on.
+ *
+ * The two id fields are separate on the wire on purpose — they name rows in
+ * different tables, and one field holding "an id of whichever kind the code
+ * implies" is the shape that makes a client resolve it against the wrong store.
+ * An unknown code is passed through rather than dropped: a warning this build
+ * has never heard of is still the platform telling the caller something.
+ */
+export function composeWarnings(raw: unknown[] | undefined): ComposeWarning[] {
+  if (!raw?.length) return [];
+  const out: ComposeWarning[] = [];
+  for (const w of raw) {
+    if (!w || typeof w !== 'object') continue;
+    const { code, globalId, overlayId, name } = w as Record<string, unknown>;
+    if (typeof code !== 'string' || !code) continue;
+    const id = typeof overlayId === 'string' && overlayId ? overlayId : globalId;
+    out.push({
+      code,
+      ...(typeof id === 'string' && id ? { id } : {}),
+      ...(typeof name === 'string' && name ? { name } : {}),
+      effect: COMPOSE_WARNINGS[code] ?? 'The platform reported this about the page it composed.',
+    });
+  }
+  return out;
+}

@@ -117,3 +117,87 @@ describe('sb_page_create', () => {
     await close();
   });
 });
+
+/** A fetch that answers one scripted JSON body for every request. */
+function answering(body: unknown, status = 200) {
+  return (async () =>
+    new Response(JSON.stringify(body), {
+      status,
+      headers: { 'content-type': 'application/json' },
+    })) as unknown as typeof fetch;
+}
+
+async function callTool(f: typeof fetch, name: string, args: Record<string, unknown>) {
+  const session = new Session('http://x', f);
+  (session as unknown as { access: string }).access = 'jwt';
+  const { client, close } = await connectedClient({ fetchImpl: f, session });
+  const res = (await client.callTool({ name, arguments: args })) as {
+    content: Array<{ type: string; text?: string }>;
+  };
+  await close();
+  return res.content.map((c) => c.text ?? '').join('');
+}
+
+describe('the signals the platform sends that used to be dropped', () => {
+  it('reports a publish that silently skipped the page', async () => {
+    // service.go:650 — `continue // nothing to publish yet` for a page with no
+    // saved draft, and the call still answers 200 with whatever DID publish.
+    const f = answering({ published: [{ pageId: 'other', slug: 'x' }], total: 1 });
+    const out = await callTool(f, 'sb_publish', { site_id: 's1', page_id: 'pg_1', dry_run: false });
+    expect(out).toMatch(/not_published|no saved draft/i);
+  });
+
+  it('says nothing extra when the page did publish', async () => {
+    const f = answering({ published: [{ pageId: 'pg_1', slug: 'home' }], total: 1 });
+    const out = await callTool(f, 'sb_publish', { site_id: 's1', page_id: 'pg_1', dry_run: false });
+    expect(out).not.toMatch(/not_published|no saved draft/i);
+  });
+
+  it('never returns the published HTML and CSS', async () => {
+    // PublishedPage carries Document, HTML and CSS. Returned raw, one publish
+    // pours an entire rendered page — and every cascaded page — into the reader.
+    const f = answering({
+      published: [{ pageId: 'pg_1', slug: 'home', html: '<h1>x</h1>'.repeat(500), css: 'a{}'.repeat(500), document: { nodes: {} } }],
+      total: 1,
+    });
+    const out = await callTool(f, 'sb_publish', { site_id: 's1', page_id: 'pg_1', dry_run: false });
+    expect(out).not.toContain('<h1>x</h1>');
+    expect(out.length).toBeLessThan(2_000);
+    expect(out).toContain('pg_1');
+  });
+
+  it('reports a slug the platform renamed out from under the caller', async () => {
+    // uniqueSlug suffixes -1/-2 and "never errors" (service.go:877), so the
+    // create returns 200 carrying a different slug than the one asked for and
+    // every link authored to the requested one is dead.
+    const f = answering({ page: { id: 'pg_9', name: 'Shop', slug: 'shop-1' } });
+    const out = await callTool(f, 'sb_page_create', {
+      site_id: 's1',
+      name: 'Shop',
+      slug: 'shop',
+      dry_run: false,
+    });
+    // Not just "the response mentions shop-1" — the raw echo already did that,
+    // and an agent reading it would not know its own slug had been taken.
+    expect(out).toContain('slug_renamed');
+    expect(out).toContain('shop');
+  });
+
+  it('surfaces a compose warning that came with the page', async () => {
+    // compose.go:118 deletes the reference node outright, so the page opens with
+    // the section already gone and the next save stores that loss for good.
+    const f = answering({
+      source: {
+        pageId: 'pg_1',
+        siteId: 's1',
+        document: emptyDocument,
+        schemaVersion: 2,
+        updatedAt: 'now',
+        warnings: [{ code: 'globalMissing', globalId: 'gs_7', name: 'Site header' }],
+      },
+    });
+    const out = await callTool(f, 'sb_page_open', { site_id: 's1', page_id: 'pg_1' });
+    expect(out).toContain('globalMissing');
+    expect(out).toContain('gs_7');
+  });
+})
