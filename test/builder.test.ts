@@ -332,3 +332,112 @@ describe('setKeys() and the data axis', () => {
     expect((d.node(id) as unknown as { bindings: unknown[] }).bindings).toEqual([]);
   });
 });
+
+describe('addSubtree() mints the satellites an element owns', () => {
+  // A satellite is a real node referenced from `config[configKey]` instead of
+  // `data.nodes`. The editor's node store mints them on add
+  // (editor/src/element/seeds.ts:5-7); this server did not, so an accordion it
+  // created had no item skin at all and the renderer took its degrade path.
+  function withSection() {
+    const d = emptyDoc();
+    const { patches, ids } = addSubtree(d, 'rt', { type: 'flex-section' });
+    d.apply(patches);
+    return { d, section: ids[0] };
+  }
+
+  it('points config.emptyStateId at a real list-empty node', () => {
+    const { d, section } = withSection();
+    const { patches, ids } = addSubtree(d, section, { type: 'list-dataset' });
+    d.apply(patches);
+    const list = d.node(ids[0]);
+    const emptyId = list.config.emptyStateId as string;
+    expect(typeof emptyId).toBe('string');
+    expect(d.has(emptyId)).toBe(true);
+    expect(d.node(emptyId).data.type).toBe('list-empty');
+  });
+
+  it('attaches the satellite by parent alone, never in the owner child list', () => {
+    const { d, section } = withSection();
+    const { patches, ids } = addSubtree(d, section, { type: 'list-dataset' });
+    d.apply(patches);
+    const list = d.node(ids[0]);
+    const emptyId = list.config.emptyStateId as string;
+    expect(d.node(emptyId).data.parent).toBe(list.id);
+    expect(list.data.nodes).not.toContain(emptyId);
+  });
+
+  it('does NOT mint an optional satellite', () => {
+    // list-loading is the only `optional: true` satellite in the platform. A list
+    // with no loading design shows a silhouette of its own cards, which is the
+    // better default; seeding one would replace it with a design nobody asked for.
+    const { d, section } = withSection();
+    const { patches, ids } = addSubtree(d, section, { type: 'list-dataset' });
+    d.apply(patches);
+    expect(d.node(ids[0]).config.loadingStateId).toBeUndefined();
+  });
+
+  it('mints the accordion item skin, which meta.defaults never carried', () => {
+    const { d, section } = withSection();
+    const { patches, ids } = addSubtree(d, section, { type: 'accordion' });
+    d.apply(patches);
+    const itemId = d.node(ids[0]).config.accordionItemId as string;
+    expect(d.has(itemId)).toBe(true);
+    expect(d.node(itemId).data.type).toBe('accordion-item');
+  });
+
+  it('leaves a document with satellites saveable', () => {
+    const { d, section } = withSection();
+    const { patches } = addSubtree(d, section, { type: 'list-dataset' });
+    d.apply(patches);
+    expect(validateForSave(d)).toEqual([]);
+  });
+});
+
+describe('a minted empty state carries the design the editor gives it', () => {
+  // The three list-empty owners get a SUBTREE, not a bare node
+  // (editor/src/nodes/*/index.vue call addDetachedTree, not addDetachedNode).
+  // A bare list-empty renders as blank space where the editor shows a glyph, a
+  // headline and a line of body.
+  function withSection() {
+    const d = emptyDoc();
+    const { patches, ids } = addSubtree(d, 'rt', { type: 'flex-section' });
+    d.apply(patches);
+    return { d, section: ids[0] };
+  }
+
+  it('fills the list empty state with a glyph, a headline and a line of body', () => {
+    const { d, section } = withSection();
+    const { patches, ids } = addSubtree(d, section, { type: 'list-dataset' });
+    d.apply(patches);
+    const empty = d.node(d.node(ids[0]).config.emptyStateId as string);
+    expect(empty.data.nodes.map((i) => d.node(i).data.type)).toEqual(['icon', 'heading', 'text']);
+  });
+
+  it('writes the copy for the list dataset source, not the product default', () => {
+    const { d, section } = withSection();
+    const { patches, ids } = addSubtree(d, section, {
+      type: 'list-dataset',
+      config: { datasetSource: 'article' },
+    });
+    d.apply(patches);
+    const empty = d.node(d.node(ids[0]).config.emptyStateId as string);
+    const heading = d.node(empty.data.nodes[1]);
+    expect(heading.specials.text).toBe('No posts yet');
+  });
+
+  it('gives the cart its own second-person copy', () => {
+    const { d, section } = withSection();
+    const { patches, ids } = addSubtree(d, section, { type: 'cart-order' });
+    d.apply(patches);
+    const empty = d.node(d.node(ids[0]).config.emptyStateId as string);
+    expect(empty.data.nodes.length).toBeGreaterThan(0);
+    expect(String(d.node(empty.data.nodes[1]).specials.text)).not.toBe('No products yet');
+  });
+
+  it('keeps every seeded node attached, so the document still saves', () => {
+    const { d, section } = withSection();
+    const { patches } = addSubtree(d, section, { type: 'list-dataset' });
+    d.apply(patches);
+    expect(validateForSave(d)).toEqual([]);
+  });
+});

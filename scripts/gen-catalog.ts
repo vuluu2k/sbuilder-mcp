@@ -14,7 +14,7 @@ import { readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { credentialFor } from '../src/transport/credential.js';
 import type { ApiOperation, ApiParam } from '../src/catalog/types.js';
-import type { CatalogElement, TraitDescription } from '../src/catalog/element-types.js';
+import type { CatalogElement, NodeSeed, SatelliteRule, TraitDescription } from '../src/catalog/element-types.js';
 
 const METHODS = ['get', 'post', 'put', 'patch', 'delete'] as const;
 
@@ -182,6 +182,25 @@ function readBoundSpecials(repo: string): Record<string, string[]> {
   }
   return out;
 }
+
+/** A built node as the editor's factory returns it — ids and parents included. */
+interface RawNode {
+  id: string;
+  data: { type: string; parent: string | null; nodes: string[] };
+  style?: Record<string, unknown>;
+  config?: Record<string, unknown>;
+  specials?: Record<string, unknown>;
+}
+
+/**
+ * The two empty-state owners whose source is fixed at the call site rather than
+ * read from the node — `dataset-block` passes 'item', `cart-order` passes 'cart'
+ * (each element's own editor/src/nodes entry). `list-dataset` is the one that varies.
+ */
+const FIXED_EMPTY_SOURCE: Record<string, string> = {
+  'dataset-block': 'item',
+  'cart-order': 'cart',
+};
 
 async function main(): Promise<void> {
   const repo = process.env.WB_REPO;
@@ -382,12 +401,176 @@ export const API_DEFINITIONS: Record<string, unknown> = ${JSON.stringify(
     process.exit(1);
   }
 
+  // WHAT AN ELEMENT ARRIVES WITH, beyond its own defaults.
+  //
+  // Two editor modules, imported rather than transcribed. Both are plain TS
+  // whose only import is `@webbuilder/schema` (and a factory importing the
+  // same), so neither drags Vue into this script the way `legacyScopes` would
+  // have — that one is still read by regex for exactly that reason.
+  //
+  //  • `ELEMENT_SEEDS` — the children an element "is not USABLE without". A
+  //    `dropdown` without its trigger and panel is, in the registry's own words,
+  //    "a bare relative box"; a `select` renders INTO those two nodes and draws
+  //    an empty box without them.
+  //  • `buildEmptyStateTree` — the satellite subtree the three list-empty owners
+  //    are born as (they call addDetachedTree, not addDetachedNode). A bare
+  //    list-empty is blank space where the editor shows a glyph, a headline and
+  //    a line of body.
+  const seedsMod = (await import(resolve(repo, 'editor/src/element/seeds.ts'))) as {
+    ELEMENT_SEEDS: Record<string, Array<Record<string, unknown>>>;
+  };
+  const emptyMod = (await import(resolve(repo, 'editor/src/element/emptyState.ts'))) as {
+    buildEmptyStateTree: (ownerId: string, source: unknown) => {
+      rootId: string;
+      nodes: Record<string, RawNode>;
+    };
+  };
+  const factoryMod = (await import(resolve(repo, 'editor/src/element/factory.ts'))) as {
+    createElement: (type: string) => RawNode;
+  };
+
+  // Only what the seed DECIDED. Every value equal to the element's own default
+  // is dropped, so the table says what makes this node a seed rather than
+  // restating meta.defaults in a second place that can disagree with the first.
+  const decided = (
+    type: string,
+    ns: 'style' | 'config' | 'specials',
+    got: Record<string, unknown> | undefined,
+  ): Record<string, unknown> | undefined => {
+    if (!got) return undefined;
+    let base: Record<string, unknown> = {};
+    try {
+      base = ((factoryMod.createElement(type) as unknown as Record<string, Record<string, unknown>>)[ns] ?? {});
+    } catch {
+      base = {};
+    }
+    const out: Record<string, unknown> = {};
+    for (const [k, v] of Object.entries(got)) {
+      if (JSON.stringify(base[k]) !== JSON.stringify(v)) out[k] = v;
+    }
+    return Object.keys(out).length ? out : undefined;
+  };
+
+  const toSeed = (node: RawNode, all: Record<string, RawNode>): NodeSeed => {
+    const kids = (node.data?.nodes ?? []).map((k) => all[k]).filter(Boolean);
+    const style = decided(node.data.type, 'style', node.style);
+    const config = decided(node.data.type, 'config', node.config);
+    const specials = decided(node.data.type, 'specials', node.specials);
+    return {
+      type: node.data.type,
+      ...(style ? { style } : {}),
+      ...(config ? { config } : {}),
+      ...(specials ? { specials } : {}),
+      ...(kids.length ? { children: kids.map((k) => toSeed(k, all)) } : {}),
+    };
+  };
+
+  // A palette seed is written as a nested SeedSpec, not as built nodes, so it
+  // converts directly.
+  const specToSeed = (spec: Record<string, unknown>): NodeSeed => ({
+    type: String(spec.type),
+    ...(spec.style ? { style: spec.style as Record<string, unknown> } : {}),
+    ...(spec.config ? { config: spec.config as Record<string, unknown> } : {}),
+    ...(spec.specials ? { specials: spec.specials as Record<string, unknown> } : {}),
+    ...(Array.isArray(spec.children) && spec.children.length
+      ? { children: (spec.children as Array<Record<string, unknown>>).map(specToSeed) }
+      : {}),
+  });
+
+  const elementSeeds: Record<string, NodeSeed[]> = {};
+  for (const [type, specs] of Object.entries(seedsMod.ELEMENT_SEEDS)) {
+    elementSeeds[type] = specs.map(specToSeed);
+  }
+  if (!Object.keys(elementSeeds).length) {
+    console.error('ELEMENT_SEEDS came back empty — is WB_REPO stale?');
+    process.exit(1);
+  }
+
+  // The dataset sources the empty-state copy is written for. EMPTY_COPY is not
+  // exported, so its keys are read from the source the way DOC_SCHEMA_VERSION is
+  // — and asserted, because a regex that silently matches nothing would seed
+  // every list with the product copy and say nothing.
+  const emptySrc = readFileSync(resolve(repo, 'editor/src/element/emptyState.ts'), 'utf8');
+  const copyBlock = emptySrc.slice(emptySrc.indexOf('const EMPTY_COPY'));
+  const sources = [...copyBlock.matchAll(/^  (\w+): \{$/gm)].map((m) => m[1]);
+  if (sources.length < 5) {
+    console.error(`only ${sources.length} empty-state sources — has EMPTY_COPY moved?`);
+    process.exit(1);
+  }
+  const emptyTrees: Record<string, NodeSeed> = {};
+  for (const src of sources) {
+    const tree = emptyMod.buildEmptyStateTree('OWNER', src);
+    emptyTrees[src] = toSeed(tree.nodes[tree.rootId], tree.nodes);
+  }
+  // Distinct copy per source is the whole point of the table; identical trees
+  // mean the source argument stopped being read.
+  if (new Set(Object.values(emptyTrees).map((t) => JSON.stringify(t))).size < 2) {
+    console.error('every empty-state source produced the same tree');
+    process.exit(1);
+  }
+
+  // THE SATELLITES EACH ELEMENT OWNS.
+  //
+  // A satellite is a real node referenced from `config[configKey]` instead of
+  // `data.nodes`, so it is invisible to any walk that follows children only. The
+  // platform states the contract at
+  // server/render/generated/schema_gen.go:245 — "Anything that asks 'what is
+  // inside this node?' (subtree collection, copy, delete) must consult this
+  // table as well".
+  //
+  // Read from the element METAS, never from that Go map, because only the metas
+  // carry `optional`. The flag is the whole difference between a list that ships
+  // its designed empty state and one that shows ghost cards to a shopper: absent
+  // (the normal case) means the owner MINTS the satellite at create time, while
+  // `list-loading` is opt-in on purpose — a list with no loading design shows a
+  // silhouette of its own cards, which is the better answer for almost every
+  // site. Go's SatelliteConfigKeys flattens both cases into one map.
+  const satellites: Record<string, SatelliteRule[]> = {};
+  for (const type of types) {
+    const rules = (registry.ELEMENTS[type] as { satellite?: SatelliteRule[] }).satellite;
+    if (!rules?.length) continue;
+    satellites[type] = rules.map((r) => {
+      // The three list-empty owners are born as a SUBTREE. cart-order and
+      // dataset-block pass a fixed source at the call site; list-dataset passes
+      // its own `config.datasetSource`, so it carries the whole table.
+      const fixed = FIXED_EMPTY_SOURCE[type];
+      const seeded =
+        r.type !== 'list-empty'
+          ? {}
+          : fixed
+            ? { seed: emptyTrees[fixed] }
+            : { seedBySource: emptyTrees };
+      return {
+        type: r.type,
+        configKey: r.configKey,
+        ...(r.optional ? { optional: true as const } : {}),
+        ...seeded,
+      };
+    });
+    // A satellite whose type is not an element cannot be minted, and a silent
+    // skip here would put the owner back in the degrade path this table exists
+    // to close.
+    for (const r of rules) {
+      if (!elements[r.type]) {
+        console.error(`satellite ${type}.${r.configKey} names unknown element "${r.type}"`);
+        process.exit(1);
+      }
+    }
+  }
+  // Eight owners today. Asserted so the table cannot silently empty the way the
+  // trait `attributes` walk did in Phase 6 — a generated table that quietly goes
+  // to zero reads exactly like an element that owns nothing.
+  if (Object.keys(satellites).length < 8) {
+    console.error(`only ${Object.keys(satellites).length} satellite owners — is WB_REPO stale?`);
+    process.exit(1);
+  }
+
   const docVersion = readDocSchemaVersion(repo);
   const bindingSources = readBindingSources(repo);
   const boundSpecials = readBoundSpecials(repo);
   const elementsOut = `// GENERATED by scripts/gen-catalog.ts — do not edit by hand.
 // Source: <WB_REPO>/schema/src/elements/** and editor/src/theme/legacyScopes.ts
-import type { CatalogElement, TraitDescription } from './element-types.js';
+import type { CatalogElement, NodeSeed, SatelliteRule, TraitDescription } from './element-types.js';
 
 export const ELEMENT_SOURCE = ${JSON.stringify({ count: types.length, docSchemaVersion: docVersion }, null, 2)} as const;
 
@@ -398,6 +581,10 @@ export const BINDING_SOURCES: string[] = ${JSON.stringify(bindingSources, null, 
 export const BOUND_SPECIALS: Record<string, string[]> = ${JSON.stringify(boundSpecials, null, 2)};
 
 export const TRAIT_WRITES: Record<string, TraitDescription> = ${JSON.stringify(traits, null, 2)};
+
+export const SATELLITE_RULES: Record<string, SatelliteRule[]> = ${JSON.stringify(satellites, null, 2)};
+
+export const ELEMENT_SEEDS: Record<string, NodeSeed[]> = ${JSON.stringify(elementSeeds, null, 2)};
 `;
   writeFileSync(resolve(process.cwd(), 'src/catalog/elements.generated.ts'), elementsOut, 'utf8');
   console.error(

@@ -1,7 +1,7 @@
 import type { Patch } from '../../core/patch.js';
 import { isOverlay, subtreeIds, ancestors, appBlockRoot } from '../../core/tree.js';
-import { ELEMENTS } from '../../catalog/elements.generated.js';
-import { createNode } from './node.js';
+import { ELEMENTS, ELEMENT_SEEDS } from '../../catalog/elements.generated.js';
+import { createNode, mintSatellites } from './node.js';
 import { genId } from './ids.js';
 import type { PageDoc } from './document.js';
 
@@ -125,9 +125,22 @@ export function addSubtree(
       config: s.config,
       specials: s.specials,
     });
+    // Before the owner is handed to a patch: minting rewrites its `config`.
+    const sats = mintSatellites(n);
     patches.push({ op: 'set', path: ['nodes', n.id], value: n });
     ids.push(n.id);
-    for (const child of s.children ?? []) {
+    for (const sat of sats) {
+      patches.push({ op: 'set', path: ['nodes', sat.id], value: sat });
+      ids.push(sat.id);
+    }
+    // SEEDED CONTENT, when the caller brought none of its own.
+    //
+    // `ELEMENT_SEEDS` is the content an element "is not USABLE without": a
+    // dropdown with no trigger and no panel is a bare relative box, and a select
+    // renders INTO those two nodes and draws an empty box without them. A caller
+    // who passed children has expressed an intent and is never overridden.
+    const children = s.children?.length ? s.children : (ELEMENT_SEEDS[s.type] ?? []);
+    for (const child of children) {
       requireContainer(s.type, n.id);
       requireAllowed(s.type, child.type);
       const childId = build(child, n.id);

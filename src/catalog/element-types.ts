@@ -73,3 +73,43 @@ export interface TraitDescription {
   /** Per-breakpoint (or `base`) seeded values, when the platform declares them. */
   defaults?: Record<string, unknown>;
 }
+
+/**
+ * A satellite an element OWNS: a real node in the document's node map whose id
+ * lives in `config[configKey]` rather than in the owner's `data.nodes`.
+ *
+ * `optional` is the field that makes this table worth generating. Absent — the
+ * normal case — the owner mints the satellite when it is created. `list-loading`
+ * is the one opt-in satellite in the platform, because a list with no loading
+ * design shows a silhouette of its own cards, and seeding one would replace that
+ * with a design nobody asked for.
+ */
+export interface SatelliteRule {
+  type: string;
+  configKey: string;
+  optional?: true;
+  /** The subtree this satellite is born as, when it is more than a bare node. */
+  seed?: NodeSeed;
+  /**
+   * The same, chosen by the owner's `config.datasetSource` — a repeater's empty
+   * state says "No products yet" or "No posts yet" depending on what it lists.
+   * Falls back to `product`, exactly as the editor's `copyFor` does.
+   */
+  seedBySource?: Record<string, NodeSeed>;
+}
+
+/**
+ * Content an element arrives with: the children a palette drop seeds, or the
+ * subtree a satellite is born as. Ids and parents are deliberately absent — the
+ * table describes a SHAPE, and the ids are minted per document.
+ *
+ * Only what differs from the element's own `meta.defaults` is carried, so the
+ * table stays small and says what the seed actually decided.
+ */
+export interface NodeSeed {
+  type: string;
+  style?: Record<string, unknown>;
+  config?: Record<string, unknown>;
+  specials?: Record<string, unknown>;
+  children?: NodeSeed[];
+}

@@ -127,6 +127,42 @@ export async function runSmoke(): Promise<void> {
   const codes = reviewDesign(doc).map((f) => f.code);
   check('an unfilled placeholder IS reported', codes.includes('placeholder_content'));
 
+
+  // A REPEATER ARRIVES WITH ITS EMPTY STATE.
+  //
+  // On its OWN document, because a repeater with no card template is a genuinely
+  // empty container and would answer the review check below with a finding it is
+  // right to make.
+  //
+  // The satellite hangs off `config.emptyStateId`, not the child list, so every
+  // walk that follows children only reports this document as correct while the
+  // renderer takes its degrade path and ships ghost cards to a shopper.
+  const satDoc = PageDoc.from({
+    schema_version: 2,
+    root_node_id: 'rt',
+    nodes: {
+      rt: {
+        id: 'rt',
+        data: { type: 'root', parent: null, nodes: [], isCanvas: true, hidden: false, custom: {} },
+        style: {}, config: {}, specials: {}, responsive: {}, events: [], bindings: [],
+      },
+    },
+  });
+  const satSection = addSubtree(satDoc, 'rt', { type: 'flex-section' });
+  satDoc.apply(satSection.patches);
+  const listed = addSubtree(satDoc, satSection.ids[0], { type: 'list-dataset' });
+  satDoc.apply(listed.patches);
+  const list = satDoc.node(listed.ids[0]) as unknown as { config: Record<string, unknown> };
+  const emptyId = list.config.emptyStateId;
+  check(
+    'a repeater is minted with its empty state',
+    typeof emptyId === 'string' && satDoc.has(emptyId) && satDoc.node(emptyId).data.type === 'list-empty',
+  );
+  check(
+    'the empty state carries its design, not a blank box',
+    satDoc.node(String(emptyId)).data.nodes.length === 3,
+  );
+  check('a document carrying satellites still stores', validateForSave(satDoc).length === 0);
   console.error('ALL GOOD');
 }
 
