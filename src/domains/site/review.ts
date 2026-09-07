@@ -1,4 +1,4 @@
-import { childrenOf, isOverlay, pageChildren, type DocLike } from '../../core/tree.js';
+import { childrenOf, isOverlay, pageChildren, appBlockRoot, type DocLike } from '../../core/tree.js';
 import { ELEMENTS, BINDING_SOURCES } from '../../catalog/elements.generated.js';
 import type { PageDoc } from './document.js';
 import { fill } from './findings.js';
@@ -52,7 +52,10 @@ function seededValue(type: string, key: string): unknown {
  * Everything wrong with this page that a person would notice.
  *
  * Overlays are skipped: the cart drawer is composed onto ROOT on read and is not
- * this page's to fix. Findings are ordered by document order so a caller working
+ * this page's to fix. So is the INSIDE of an app block (trap 5): its
+ * placeholders are the app's, and no fix this page could apply would survive a
+ * save. The block root itself is still walked — it is a node the page owns and
+ * can be an empty container. Findings are ordered by document order so a caller working
  * top-down meets them in the order they appear on screen.
  */
 export function reviewDesign(doc: PageDoc): Finding[] {
@@ -80,6 +83,7 @@ export function reviewDesign(doc: PageDoc): Finding[] {
     if (seen.has(id) || overlayIds.has(id)) return;
     seen.add(id);
     walkOrder.push(id);
+    if (appBlockRoot(d, id) === id) return;
     for (const k of childrenOf(d, id)) go(k);
   };
   go(d.root_node_id);

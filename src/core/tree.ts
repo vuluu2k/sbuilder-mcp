@@ -16,6 +16,9 @@ export const SPEC_OVERLAY_ID = 'overlayId';
 export const SPEC_GLOBAL_ID = 'globalId';
 export const SPEC_GLOBAL_KIND = 'globalKind';
 export const SPEC_GLOBAL_REF = 'globalRef';
+/** The specials stamps a composed APP BLOCK carries (appblocks.go:97-100). */
+export const SPEC_APP_BLOCK_ID = 'appBlockId';
+export const SPEC_APP_BLOCK_REF = 'appBlockRef';
 
 export function childrenOf(doc: DocLike, id: string): string[] {
   return doc.nodes[id]?.data.nodes ?? [];
@@ -80,4 +83,23 @@ export function ancestors(doc: DocLike, id: string): string[] {
     cur = doc.nodes[cur]?.data.parent ?? null;
   }
   return out;
+}
+
+/**
+ * The composed app block this node sits in, or null.
+ *
+ * A marketplace app contributes a subtree. The document stores ONE reference
+ * node (`appBlockRef`); on read the platform materializes the app's markup under
+ * it and stamps the root `appBlockId`; on write `DecomposeAppBlocks` reduces the
+ * whole subtree back to the reference (globalservice.go:56). An edit inside is
+ * therefore stored nowhere and reported nowhere — trap 5. Nearest stamp wins:
+ * the block root answers with itself.
+ */
+export function appBlockRoot(doc: DocLike, id: string): string | null {
+  const stamped = (n?: NodeLike): boolean =>
+    n !== undefined &&
+    (n.specials?.[SPEC_APP_BLOCK_ID] !== undefined || n.specials?.[SPEC_APP_BLOCK_REF] !== undefined);
+  if (stamped(doc.nodes[id])) return id;
+  for (const a of ancestors(doc, id)) if (stamped(doc.nodes[a])) return a;
+  return null;
 }

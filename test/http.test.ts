@@ -48,6 +48,16 @@ describe('request()', () => {
     expect(calls(f)[0][0]).toBe('http://x/a?limit=10');
   });
 
+  it('carries details and fields when the platform sends them, and names the field in the message', async () => {
+    const f = fakeFetch(400, { error: 'invalid', code: 'validation', fields: { slug: 'taken' }, details: { hint: 'x' } });
+    await expect(request({ base: 'http://x', method: 'POST', path: '/a', fetchImpl: f })).rejects.toMatchObject({
+      code: 'validation',
+      fields: { slug: 'taken' },
+      details: { hint: 'x' },
+      message: expect.stringContaining('slug'),
+    });
+  });
+
   it('reports a non-JSON error body without inventing a code', async () => {
     const f = vi.fn(
       async () => new Response('<html>502 Bad Gateway</html>', { status: 502 }),

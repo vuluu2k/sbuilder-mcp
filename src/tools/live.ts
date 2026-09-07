@@ -13,6 +13,7 @@ import { RealtimeSocket } from '../transport/socket.js';
 import { LiveSession } from '../live/session.js';
 import type { Patch } from '../core/patch.js';
 import type { PageDoc } from '../domains/site/document.js';
+import { refuseAppBlockInterior } from '../domains/site/builder.js';
 import { siteToken } from './credentialpick.js';
 import type { ToolContext } from './context.js';
 import { projectList, MEDIA_FIELDS } from './project.js';
@@ -33,6 +34,7 @@ import type { PageSession } from './page.js';
  */
 export function bindNode(doc: PageDoc, id: string, source: string, field: string): Patch[] {
   const node = doc.node(id) as unknown as { bindings: unknown[] };
+  refuseAppBlockInterior(doc, id, 'binding');
   if (!BINDING_SOURCES.includes(source)) {
     throw new Error(
       `sbuilder: "${source}" is not a binding source the renderer provides, so the binding ` +
