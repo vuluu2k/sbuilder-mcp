@@ -132,6 +132,14 @@ empty `<body>` — found on a live storefront's order-complete page, where the s
 just paid saw a blank screen. The document is adopted rather than refused, so the next save
 writes the canonical key and the page comes back.
 
+**`compose_warnings`** comes back when the platform reports something it could not
+compose. `globalMissing` is the destructive one: the server could not find the
+master and DELETED the reference from the tree you were just handed, so the page
+opens with the section already gone and saving makes that permanent. The others
+(`globalStale`, `overlayStale`, `appBlockMissing`, `appBlockEdited`, `formMissing`)
+say what was refused or reduced. The response has always carried these; nothing
+read them until now.
+
 ## `sb_outline`
 
 `depth` (1–6, default 1). One line per node: `id`, `type`, `name`, `children`, plus `band`
@@ -459,6 +467,9 @@ box. Returns `{ findings, fixes, findings_notice? }`, in document order:
 | `dead_binding_source` | A source the renderer never provides — shows the placeholder forever |
 | `dead_binding_field` | A binding field outside `specials` — stored, published, and ignored |
 | `unknown_element` | A type the catalog does not know; run `npm run codegen` |
+| `unlinked_form` | A `form` naming no form — composes nothing and publishes an EMPTY BOX. The platform stays deliberately quiet about this one |
+| `dead_menu_link` | A menu entry with no `href` — the renderer reads `specials.menuItems` and never `menuId` |
+| `extra_repeater_child` | A repeater holding more than the one child it clones per record; the rest never appear |
 
 The two dataset codes exist because the obvious advice is wrong inside a repeater. An
 `image` in a product card renders `specials.src`, so setting it puts ONE picture on every
@@ -475,6 +486,16 @@ the directive that says these are defects rather than suggestions — the siblin
 `webcake-landing-mcp` records in its own source that without one, models read warnings as
 advisory noise and save anyway. It comes with the first non-empty result in a process and is
 absent after. An empty review is `{ findings: [], verdict }`.
+
+The last three are render rules a perfectly storable document can break. `form`
+seeds `formId: ""` and forms compose on the RENDER path only, so an unlinked form
+looks identical on the canvas and is the DEFAULT outcome of `sb_add`; `menu` seeds
+one entry whose `href` is `""`, so a freshly added menu publishes a nav that leads
+nowhere; and `list-dataset` clones `Data.Nodes[0]` alone. `sb_add` and `sb_move`
+now REFUSE a second child into a repeater (a reorder within it is still fine), so
+`extra_repeater_child` only appears for documents this server did not write. The
+list of first-child-only elements is generated from the renderers, because
+`dataset-block` is a dataset container too and renders all of its children.
 
 Findings ride along with `sb_page_open` and `sb_look` in exactly this shape. Overlays and
 the inside of app blocks are skipped: their placeholders are not this page's to fix.

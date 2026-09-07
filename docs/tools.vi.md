@@ -138,6 +138,13 @@ thật trên trang hoàn tất đơn của một storefront đang chạy, khách
 màn hình trắng. Tài liệu được nhận vào chứ không bị từ chối, nên lần lưu kế tiếp ghi đúng
 khoá chuẩn và trang hiện lại.
 
+**`compose_warnings`** trả về khi platform báo có thứ nó không compose được.
+`globalMissing` là trường hợp phá hoại: server không tìm thấy master nên đã XOÁ
+node tham chiếu khỏi cây vừa trao cho bạn — trang mở ra đã mất sẵn section đó, và
+lưu lại sẽ khiến mất vĩnh viễn. Các mã còn lại (`globalStale`, `overlayStale`,
+`appBlockMissing`, `appBlockEdited`, `formMissing`) cho biết thứ gì bị từ chối hoặc
+bị rút gọn. Response vẫn luôn mang theo chúng; trước nay không ai đọc.
+
 ## `sb_outline`
 
 `depth` (1–6, mặc định 1). Mỗi node một dòng: `id`, `type`, `name`, `children`, kèm `band`
@@ -450,6 +457,19 @@ tài liệu:
 | `dead_binding_source` | Nguồn renderer không cung cấp — hiện placeholder mãi mãi |
 | `dead_binding_field` | Field binding ngoài `specials` — được lưu, được publish, và bị bỏ qua |
 | `unknown_element` | Type catalog không biết; chạy `npm run codegen` |
+| `unlinked_form` | `form` không trỏ tới form nào — compose ra rỗng và publish thành MỘT HỘP TRỐNG. Platform cố tình im lặng về lỗi này |
+| `dead_menu_link` | Mục menu không có `href` — renderer đọc `specials.menuItems` chứ không bao giờ đọc `menuId` |
+| `extra_repeater_child` | Repeater chứa nhiều hơn một child mà nó nhân bản cho mỗi bản ghi; phần còn lại không bao giờ xuất hiện |
+
+Ba mã cuối là những luật RENDER mà một document hoàn toàn hợp lệ vẫn có thể vi
+phạm. `form` seed sẵn `formId: ""` và form chỉ được compose trên đường RENDER, nên
+một form chưa liên kết trông y hệt trên canvas và là kết quả MẶC ĐỊNH của `sb_add`;
+`menu` seed sẵn một mục có `href` là `""`, nên menu vừa thêm publish ra một nav
+không dẫn đi đâu; còn `list-dataset` chỉ nhân bản `Data.Nodes[0]`. `sb_add` và
+`sb_move` giờ TỪ CHỐI thêm child thứ hai vào repeater (sắp xếp lại bên trong vẫn
+được), nên `extra_repeater_child` chỉ xuất hiện với document không do server này
+viết ra. Danh sách phần tử chỉ-render-child-đầu được sinh ra từ chính các renderer,
+vì `dataset-block` cũng là dataset container nhưng render TẤT CẢ child của nó.
 
 Hai mã dataset này tồn tại vì lời khuyên thông thường lại sai bên trong một repeater. Một
 `image` trong thẻ sản phẩm render `specials.src`, nên đặt giá trị cho nó là đặt MỘT tấm ảnh

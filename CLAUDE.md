@@ -85,7 +85,9 @@ Three things the first live release cost, so nobody pays them twice:
   `ctx.notices`**; a tool that repeats a notice on every call is the shape that drifts.
   `test/token-budget.test.ts` is the scale — a diet without one comes back.
 - **Credential routing is by path prefix**, in `src/transport/credential.ts`, and is not
-  negotiable: `/api/v1/…` → `SB_TOKEN`; everything else → the session JWT. The OpenAPI
+  negotiable: `/api/v1/…` → `SB_TOKEN`; everything else is `siteScoped` — it takes EITHER
+  credential and prefers the key, because a key is narrower (revocable on its own, scoped,
+  bound to one store) while a session carries the whole account. The OpenAPI
   document declares one `BearerAuth` scheme for both, so it *cannot* make this call, and
   the platform refuses each credential on the other's surface.
 - **`src/catalog/api.generated.ts` is generated and committed.** Never hand-edit it;
@@ -164,6 +166,56 @@ that accounts for them.
   and `validateForSave` checks ATTACHMENT — reachable, or hanging off something reachable —
   not reachability. The two stricter rules that used to live there refused every save of
   every real page, and only a live run could show it.
+- **A SATELLITE hangs off `config[key]`, and the editor mints it on ADD.** Eight elements own
+  one — `accordion`, `tab`, `menu`, `list-dataset`, `dataset-block`, `cart-order`,
+  `product-variants`, `quantity-dataset`. The table is generated from the element METAS
+  (`SATELLITE_RULES`), never from Go's `SatelliteConfigKeys`, because only the metas carry
+  `optional` — and `list-loading` is the single opt-in satellite in the platform, because a
+  list with no loading design shows a silhouette of its own cards. `schema_gen.go:245` states
+  the walk contract outright: subtree collection, copy and delete must consult the table.
+  `createNode` mints them, `walk` follows them, and `duplicateNode` deep-copies them with the
+  owner's pointer rewritten — before which a duplicated accordion pointed at the ORIGINAL's
+  skin. Three list-empty owners are born as a SUBTREE, not a bare node, so the empty state is
+  generated per dataset source from the editor's own `buildEmptyStateTree`.
+
+- **`ELEMENT_SEEDS` is content an element is not USABLE without.** A `dropdown` without its
+  trigger and panel is "a bare relative box"; a `select` renders INTO those two nodes.
+  Generated from `editor/src/element/seeds.ts`. Both that module and `emptyState.ts` import
+  only `@webbuilder/schema`, so codegen imports them directly — unlike `legacyScopes.ts`,
+  which is still read by regex because importing it would drag Vue into a build script.
+
+- **`list-dataset` clones `Data.Nodes[0]` and drops every sibling** (`html.go:60`). It is the
+  ONLY renderer that does, which is why `FIRST_CHILD_ONLY` is generated: `dataset-block` is a
+  dataset container too and renders ALL of its children, so the obvious
+  `isContainer && category === 'dataset'` predicate restricts the wrong element.
+
+- **`GET .../source` returns compose `warnings`, and one of them is destructive.**
+  `globalMissing` means the server could not find the master and `delete`d the reference from
+  the composed document it handed back (`compose.go:118`), so the page opens with the section
+  already gone and the next save stores that loss permanently. The field was typed on the
+  response and read by nothing for three phases.
+
+- **Publish SKIPS a page with no saved draft and still answers 200** (`service.go:650`, a bare
+  `continue`), and a published row carries the whole rendered page — `document`, `html`, `css`
+  — for every page the cascade touched. So `sb_publish` asserts the page came back, and
+  projects the rows.
+
+- **A colliding page slug is RENAMED, not refused.** `uniqueSlug` suffixes `-1`, `-2`, … and
+  its own comment says it "never errors" (`service.go:877`). `ErrSlugConflict` exists and maps
+  to 409; this path never reaches it. The create answers 200 carrying a slug the caller never
+  asked for, and every link authored to the requested one is dead.
+
+- **The OpenAPI document is not a complete map of the platform**, and `sb_api_call` is a
+  CLOSED LIST (`src/tools/api.ts:191`), so what it omits is UNREACHABLE. 34 operations carry
+  `@Router` annotations and are missing from the checked-in `swagger.json` (`swag init` has not
+  been re-run; `npm run codegen` CANNOT recover them — it reads that same file, and a no-diff
+  run is the evidence, not the all-clear). A further 41 merchant-facing routes carry no
+  annotation at all and are findable only through the route-map comment blocks in each
+  `internal/*/rest/*.go` — among them payment-gateway config, which is the fix for
+  `sb_review`'s own `payment` gap, and the whole `pages/{pageId}` cluster: no page metadata
+  read, no SEO, no delete, and none of the five version/history/restore routes. See
+  `docs/superpowers/specs/2026-09-07-phase-7-drop-time-and-signals-design.md`.
+
 - **`/api/media/{siteId}` takes a session JWT only.** It is mounted behind `RequireAuth`,
   not the `RequireAuthOrDefer` that lets a `wbk_` key open `/api/sites`. So `sb_media_upload`
   — the one tool `sb_api_call` cannot replace, because the body is multipart — does not work
@@ -254,6 +306,15 @@ ceilings.
 `SB_BROWSER_TEST=1 npm test` adds the one test that launches Chrome. Run it after touching
 `src/vision/**` — the default suite skips it, and a skip that reads as green is the failure
 this repo keeps closing.
+
+Phase 7 (2026-09-07) closed ten silent failures reachable through this server's OWN tools —
+the drop-time contract (satellites and seeded content), the satellite-aware walk and the two
+`sb_duplicate` defects it exposed, the compose warnings / publish skip / slug rename this
+client received and discarded, and three render rules a valid document can break. It added no
+tools. Its spec also records the two axes it deliberately did NOT take, so the measurements
+are not re-derived: REACH (75 operations unreachable, see the OpenAPI bullet above) and
+CAPABILITY (only 45 of 180 write operations declare a body; `PUT /settings` is a
+whole-document replace, so a partial body erases the store's configuration).
 
 Deferred with the seam left open: `expand`/`compact` sparse authoring (`createNode` already
 seeds from `meta.defaults`, so the write-path win is banked; the read-path inverse waits for
