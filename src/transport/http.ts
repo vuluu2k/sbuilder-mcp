@@ -2,10 +2,13 @@
  * The one HTTP path to the platform.
  *
  * The platform writes exactly ONE error shape — {"error": "...", "code": "..."} —
- * through httpx.WriteError, and never plain text. So an error is parsed, not
+ * through httpx.WriteError, and never plain text, and two supersets of it:
+ * `details` (WriteErrorCodeDetails) and `fields` (fielderrors.go, beside
+ * `code: "validation"`) — carried, never required. So an error is parsed, not
  * stringified: `code` is the branchable half, and reading `res.statusText`
  * instead throws it away. A bare "Conflict" reaching the model is the failure
- * this file exists to prevent.
+ * this file exists to prevent; a bare "invalid" with the offending field
+ * dropped on the floor is the second.
  */
 import { identityHeaders } from './identity.js';
 export interface RequestOpts {
@@ -24,6 +27,10 @@ export class ApiError extends Error {
     readonly status: number,
     readonly code: string,
     message: string,
+    /** Whatever WriteErrorCodeDetails attached — shape is the endpoint's. */
+    readonly details?: unknown,
+    /** Per-field messages from a validation failure: which field, and why. */
+    readonly fields?: Record<string, string>,
   ) {
     super(message);
     this.name = 'ApiError';
@@ -96,8 +103,25 @@ export async function request(opts: RequestOpts): Promise<unknown> {
   }
 
   if (!res.ok) {
-    const env = (parsed ?? {}) as { error?: string; code?: string };
-    throw new ApiError(res.status, env.code ?? 'unknown', env.error ?? `HTTP ${res.status}`);
+    const env = (parsed ?? {}) as {
+      error?: string;
+      code?: string;
+      details?: unknown;
+      fields?: Record<string, string>;
+    };
+    // The field errors ride in the MESSAGE too, not only on the object: a 400
+    // reaching the model as "invalid" sends it guessing which field, when the
+    // platform already said.
+    const fieldText = env.fields
+      ? ' — ' + Object.entries(env.fields).map(([k, v]) => `${k}: ${v}`).join('; ')
+      : '';
+    throw new ApiError(
+      res.status,
+      env.code ?? 'unknown',
+      (env.error ?? `HTTP ${res.status}`) + fieldText,
+      env.details,
+      env.fields,
+    );
   }
   return parsed;
 }
