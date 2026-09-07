@@ -15,6 +15,7 @@ import type { Patch } from '../core/patch.js';
 import type { PageDoc } from '../domains/site/document.js';
 import { siteToken } from './credentialpick.js';
 import type { ToolContext } from './context.js';
+import { projectList, MEDIA_FIELDS } from './project.js';
 import { reviewDesign, REVIEW_NOTICE } from '../domains/site/review.js';
 import type { PageSession } from './page.js';
 
@@ -152,7 +153,8 @@ export function registerLiveTools(
     },
     async ({ site_id, search, media_type, limit, offset }) =>
       text(
-        await request({
+        projectList(
+          await request({
           base: ctx.base,
           method: 'GET',
           path: `/api/sites/${encodeURIComponent(site_id)}/media`,
@@ -160,6 +162,9 @@ export function registerLiveTools(
           query: { search, mediaType: media_type, limit, offset },
           fetchImpl: ctx.fetchImpl,
         }),
+          'assets',
+          MEDIA_FIELDS,
+        ),
       ),
   );
 

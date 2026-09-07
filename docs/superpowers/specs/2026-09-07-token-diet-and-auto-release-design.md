@@ -129,10 +129,12 @@ responsive-by-default rule applied to seeing.
 ### 3.8 Passthrough tools return what the caller will use
 
 `sb_page_list`, `sb_templates`, `sb_media_list` return the platform's JSON today, verbatim.
-Each gets a projection to the fields the follow-up call needs, taken from the response
-definition in `api.generated.ts` (page: id, name, slug/path, published state, updated;
-template: id, name, kind, updated; media: id, name, url, type, size, plus the list's
-paging fields). The projection is by whitelist: unknown extra keys drop, and if an item is
+Each gets a projection to the fields the follow-up call needs. The OpenAPI document does
+not describe list responses, so the names were read off the Go structs' json tags
+(`page.go:163`, `media.go:245` + `library.go:339`, `sectiontemplate.go:129`): page id, name,
+slug, path, isHomepage, type, status, updatedAt, publishedAt; template id, name, description,
+categoryIds, source, listed, updatedAt; media id, name, url, mediaType, contentType,
+sizeBytes, width, height, folderId, state; plus `total`. The projection is by whitelist: unknown extra keys drop, and if an item is
 not an object the response is returned untouched, so a platform shape change degrades to
 today's behaviour rather than to an empty list. `sb_site_list` and `sb_connect` already
 project and are unchanged.

@@ -22,6 +22,7 @@ import type { Patch } from '../core/patch.js';
 import type { LiveSession } from '../live/session.js';
 import type { Box } from '../vision/shoot.js';
 import type { ToolContext } from './context.js';
+import { projectList, PAGE_FIELDS, TEMPLATE_FIELDS } from './project.js';
 
 /**
  * Findings, in the shape every surface returns them.
@@ -338,13 +339,17 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
     { site_id: z.string() },
     async ({ site_id }) =>
       text(
-        await request({
+        projectList(
+          await request({
           base: ctx.base,
           method: 'GET',
           path: `/api/sites/${encodeURIComponent(site_id)}/section-templates`,
           token: siteToken(ctx),
           fetchImpl: ctx.fetchImpl,
         }),
+          'sectionTemplates',
+          TEMPLATE_FIELDS,
+        ),
       ),
   );
 
@@ -386,13 +391,17 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
     { site_id: z.string() },
     async ({ site_id }) =>
       text(
-        await request({
+        projectList(
+          await request({
           base: ctx.base,
           method: 'GET',
           path: `/api/sites/${encodeURIComponent(site_id)}/pages`,
           token: siteToken(ctx),
           fetchImpl: ctx.fetchImpl,
         }),
+          'pages',
+          PAGE_FIELDS,
+        ),
       ),
   );
 
