@@ -25,6 +25,16 @@ export interface CatalogElement {
      */
     bindings?: unknown[];
   };
+  /**
+   * The bindings this element needs for each `datasetSource|kind` pair, so a
+   * caller who CHANGES either key does not keep the bindings of the old one.
+   *
+   * `sb_set` re-derives from this table. Without it, switching a text-dataset
+   * from a product title to a collection title left it bound to `product.title`
+   * — the node renders the wrong entity's field, or nothing, and says neither.
+   * Keyed `"<datasetSource>|<kind>"`; absent for elements with no data axis.
+   */
+  bindingsFor?: Record<string, unknown[]>;
   /** The inspector as a human sees it: tabs → groups → controls. */
   inspector: Array<{
     tab: string;

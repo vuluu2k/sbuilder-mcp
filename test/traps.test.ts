@@ -109,11 +109,15 @@ function withAppBlock() {
   const d = PageDoc.from({ schema_version: 2, root_node_id: '', nodes: {} });
   const first = addSubtree(d, 'ROOT', {
     type: 'flex-section',
-    children: [
-      { type: 'flex-block', specials: { [SPEC_APP_BLOCK_ID]: 'inst_1/hero' }, children: [{ type: 'heading' }] },
-    ],
+    children: [{ type: 'flex-block', children: [{ type: 'heading' }] }],
   });
   d.apply(first.patches);
+  // The COMPOSED stamp is applied the way the server applies it — by patch, not
+  // through sb_add, which now refuses a caller who authors one. This fixture is
+  // standing in for the platform's own compose step.
+  d.apply([
+    { op: 'set', path: ['nodes', first.ids[1], 'specials', SPEC_APP_BLOCK_ID], value: 'inst_1/hero' },
+  ]);
   d.apply(addSubtree(d, 'ROOT', { type: 'flex-section' }).patches);
   const [section, block, inner] = first.ids;
   return { d, section, block, inner };
@@ -164,5 +168,28 @@ describe('trap 5: duplicating over a block', () => {
   it('refuses to duplicate a section that contains an app block', () => {
     const { d, section } = withAppBlock();
     expect(() => duplicateNode(d, section)).toThrow(/app block/i);
+  });
+});
+
+describe('composed stamps are the server’s to write', () => {
+  it('refuses globalId on sb_add, naming globalRef', () => {
+    const d = PageDoc.from({ schema_version: 2, root_node_id: '', nodes: {} });
+    expect(() =>
+      addSubtree(d, 'ROOT', { type: 'flex-section', specials: { globalId: 'gs_1' } }),
+    ).toThrow(/globalRef/);
+  });
+
+  it('refuses globalId on sb_set too', () => {
+    const d = PageDoc.from({ schema_version: 2, root_node_id: '', nodes: {} });
+    d.apply(addSubtree(d, 'ROOT', { type: 'flex-section' }).patches);
+    const id = d.outline()[0].id;
+    expect(() => setKeys(d, id, { globalId: 'gs_1' }, { namespace: 'specials' })).toThrow(/globalRef/);
+  });
+
+  it('allows the reference itself', () => {
+    const d = PageDoc.from({ schema_version: 2, root_node_id: '', nodes: {} });
+    expect(() =>
+      addSubtree(d, 'ROOT', { type: 'flex-section', specials: { globalRef: 'gs_1', globalKind: 'header' } }),
+    ).not.toThrow();
   });
 });

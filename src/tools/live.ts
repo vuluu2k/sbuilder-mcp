@@ -87,9 +87,9 @@ export function registerLiveTools(
     'sb_live_join',
     {
       description:
-        "Join the site's live-edit room as a visible peer: every write then appears in any " +
-          'open editor as it happens. Safe beside a human — this client always yields and ' +
-          're-pulls on divergence. Needs SB_EMAIL / SB_PASSWORD; the socket refuses API keys.',
+        "Join the site's live-edit room as a visible peer: every write then appears in any open " +
+          'editor as it happens. Always yields, so it is safe beside a human. Needs ' +
+          'SB_EMAIL / SB_PASSWORD; the socket refuses API keys.',
       inputSchema: { site_id: z.string() },
       annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true },
     },
@@ -189,8 +189,8 @@ export function registerLiveTools(
     'sb_media_list',
     {
       description:
-        "The site's media library — reuse an image that is already there before adding another. " +
-          'Search by name, filter by type, page with limit/offset.',
+        "The site's media library. Reuse an image before adding another; search by name, filter " +
+          'by type, page with limit/offset.',
       inputSchema: {
       site_id: z.string(),
       search: z.string().optional(),
@@ -262,7 +262,14 @@ export function registerLiveTools(
           'placeholder text.',
       inputSchema: {
       id: z.string(),
-      source: z.string().describe(`One of: ${BINDING_SOURCES.join(', ')}`),
+      source: z
+        .string()
+        .describe(
+          // The full list GROWS with the platform and would push the tool list
+          // over its budget on its own; the refusal carries every source, so an
+          // unknown one costs one round trip and the schema stays small.
+          `e.g. ${BINDING_SOURCES.slice(0, 4).join(', ')}; ${BINDING_SOURCES.length} in all, and a wrong one is refused with the list`,
+        ),
       field: z.string().describe('Where the value lands, always "specials.<key>"'),
       dry_run: z.boolean().optional(),
     },

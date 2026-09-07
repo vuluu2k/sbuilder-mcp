@@ -104,3 +104,16 @@ describe('sb_publish', () => {
     await close();
   });
 });
+
+describe('sb_page_create', () => {
+  it('sends the page TYPE, which is what routes /checkout and /products', async () => {
+    const { client, close } = await connectedClient();
+    const dry = (await client.callTool({
+      name: 'sb_page_create',
+      arguments: { site_id: 's1', name: 'Thanh toán', type: 'checkout', slug: 'thanh-toan' },
+    })) as { content: Array<{ text: string }> };
+    const body = JSON.parse(dry.content[0].text) as { body: Record<string, unknown> };
+    expect(body.body).toMatchObject({ name: 'Thanh toán', type: 'checkout', slug: 'thanh-toan' });
+    await close();
+  });
+});

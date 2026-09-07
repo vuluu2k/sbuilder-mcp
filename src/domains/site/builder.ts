@@ -117,6 +117,7 @@ export function addSubtree(
   const ids: string[] = [];
 
   const build = (s: NodeSpec, parentNodeId: string): string => {
+    refuseComposedStamp(s.specials);
     const n = createNode(s.type, {
       name: s.name,
       parent: parentNodeId,
@@ -139,6 +140,35 @@ export function addSubtree(
   const at = index ?? parent.data.nodes.length;
   patches.push({ op: 'insert', path: ['nodes', parentId, 'data', 'nodes'], index: at, value: rootId });
   return { patches, ids };
+}
+
+/**
+ * Refuse the stamps the SERVER writes, which a caller must never author.
+ *
+ * `globalId` and `appBlockId` are what compose puts on a node it just
+ * materialised; the REFERENCE a document stores is `globalRef` / `appBlockRef`.
+ * Author the composed stamp instead and the save decomposes your node over the
+ * master: a section with no children silently overwrites a shared header's
+ * whole subtree, and every page carrying it goes blank. That is not a
+ * hypothetical — it took four pages down before this check existed.
+ */
+const COMPOSED_STAMPS: Record<string, string> = {
+  globalId: 'globalRef',
+  appBlockId: 'appBlockRef',
+  appBlockHash: 'appBlockRef',
+};
+
+function refuseComposedStamp(specials?: Record<string, unknown>): void {
+  if (!specials) return;
+  for (const [stamp, ref] of Object.entries(COMPOSED_STAMPS)) {
+    if (specials[stamp] === undefined) continue;
+    throw new Error(
+      `sbuilder: "${stamp}" is the stamp the SERVER writes when it composes a shared subtree ` +
+        `onto the page. A document REFERENCES one with "${ref}" instead. Writing ${stamp} makes ` +
+        `the next save decompose this node over the master, which empties it for every page ` +
+        `that carries it. Use specials.${ref}.`,
+    );
+  }
 }
 
 /**
@@ -175,7 +205,19 @@ export function setKeys(
   refuseAppBlockInterior(doc, id, 'writing');
   const { namespace } = opts;
 
+  // RE-DERIVE THE BINDINGS when the data axis moves.
+  //
+  // A dataset element's bindings are a function of `config.datasetSource` and
+  // `config.kind`. Rewrite either and leave the bindings alone, and the node
+  // still reads the OLD entity's field: switch a text-dataset from a product
+  // title to a collection title and it stays bound to `product.title`, which
+  // off a product page resolves to nothing. It renders empty and says nothing —
+  // the same silent shape as an unbound element, which cost a whole page of
+  // "$0.00" cards to find once.
+  const rebind = namespace === 'config' ? rebindPatch(doc, id, keys) : null;
+
   if (namespace === 'specials') {
+    refuseComposedStamp(keys);
     return Object.entries(keys).map(([k, v]) => ({
       op: 'set' as const,
       path: ['nodes', id, 'specials', k],
@@ -202,26 +244,61 @@ export function setKeys(
     //
     // Per-breakpoint remains the DEFAULT, because a design should respond. Base
     // is for a value that genuinely should not vary.
-    return Object.entries(keys).map(([k, v]) => ({
-      op: 'set' as const,
-      path: ['nodes', id, namespace, k],
-      value: v,
-    }));
+    return [
+      ...Object.entries(keys).map(([k, v]) => ({
+        op: 'set' as const,
+        path: ['nodes', id, namespace, k],
+        value: v,
+      })),
+      ...(rebind ? [rebind] : []),
+    ];
   }
 
   const bp = opts.breakpoint ?? 'desktop';
   if (opts.state) {
-    return Object.entries(keys).map(([k, v]) => ({
-      op: 'set' as const,
-      path: ['nodes', id, 'states', opts.state as string, bp, namespace, k],
-      value: v,
-    }));
+    return [
+      ...Object.entries(keys).map(([k, v]) => ({
+        op: 'set' as const,
+        path: ['nodes', id, 'states', opts.state as string, bp, namespace, k],
+        value: v,
+      })),
+      ...(rebind ? [rebind] : []),
+    ];
   }
-  return Object.entries(keys).map(([k, v]) => ({
-    op: 'set' as const,
-    path: ['nodes', id, 'responsive', bp, namespace, k],
-    value: v,
-  }));
+  return [
+    ...Object.entries(keys).map(([k, v]) => ({
+      op: 'set' as const,
+      path: ['nodes', id, 'responsive', bp, namespace, k],
+      value: v,
+    })),
+    ...(rebind ? [rebind] : []),
+  ];
+}
+
+/**
+ * The patch that re-points a dataset element at the entity and field it is now
+ * configured for, or null when nothing about the data axis moved.
+ *
+ * Reads the generated `bindingsFor` table — the platform's own
+ * `datasetBindings(type, config)` answers, enumerated at codegen — so the
+ * result is what the editor would have produced for the same config. A pair the
+ * table does not know (an exotic kind, an element with no data axis) leaves the
+ * bindings alone rather than clearing them: a wrong binding is bad, and no
+ * binding is worse.
+ */
+function rebindPatch(doc: PageDoc, id: string, keys: Record<string, unknown>): Patch | null {
+  const touchesAxis = 'kind' in keys || 'datasetSource' in keys;
+  if (!touchesAxis) return null;
+  const node = doc.node(id);
+  const meta = ELEMENTS[node.data.type];
+  const table = meta?.bindingsFor;
+  if (!table) return null;
+  const cfg = (node as unknown as { config?: Record<string, unknown> }).config ?? {};
+  const source = String(keys.datasetSource ?? cfg.datasetSource ?? 'product');
+  const kind = String(keys.kind ?? cfg.kind ?? '');
+  const next = table[`${source}|${kind}`];
+  if (!next) return null;
+  return { op: 'set', path: ['nodes', id, 'bindings'], value: JSON.parse(JSON.stringify(next)) };
 }
 
 /**
@@ -247,7 +324,7 @@ export function duplicateNode(doc: PageDoc, id: string): { patches: Patch[]; ids
   const blockInside = subtreeIds(doc.doc, id).find((n) => appBlockRoot(doc.doc, n) === n);
   if (blockInside) {
     throw new Error(
-      `sbuilder:  contains the app block , whose copy the platform would ` +
+      `sbuilder: ${id} contains the app block ${blockInside}, whose copy the platform would ` +
         'reduce back to a reference on save. Remove the block, duplicate, then add the block ' +
         'again through its app.',
     );

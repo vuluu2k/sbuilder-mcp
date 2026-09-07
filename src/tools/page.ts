@@ -19,6 +19,8 @@ import { siteToken } from './credentialpick.js';
 import { validateForSave } from '../domains/site/validate.js';
 import { reviewDesign, REVIEW_NOTICE } from '../domains/site/review.js';
 import { compactFindings } from '../domains/site/findings.js';
+import { readinessGaps, READINESS_NOTICE } from '../domains/site/readiness.js';
+import { gatherReadiness } from '../domains/site/readiness-fetch.js';
 import { globalWarning, RESPONSIVE_NOTICE } from '../domains/site/traps.js';
 import { catalogMatches, traitsFor } from '../catalog/element-search.js';
 import type { Patch } from '../core/patch.js';
@@ -374,19 +376,36 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
     'sb_review',
     {
       description:
-        'Everything wrong with the open page that a VISITOR would see: a blank band, a ' +
-          'placeholder never replaced, an image with no source, a dead binding. A page can save ' +
-          'perfectly and publish as an empty box. Run it before calling a page finished.',
+        'What a VISITOR would meet on the open page (blank band, placeholder, dead binding) AND ' +
+          "what stands between this store and a paid order (checkout page, gateway, delivery, a " +
+          'way back to the cart). Run it before calling a page finished.',
       inputSchema: {},
       annotations: { readOnlyHint: true },
     },
     async () => {
-      const field = reviewField(ctx, session.current());
-      return text(
-        Object.keys(field).length === 0
-          ? { findings: [], verdict: 'Nothing a visitor would notice.' }
-          : field,
-      );
+      const doc = session.current();
+      const field = reviewField(ctx, doc);
+      // THE STORE'S OWN READINESS, which no API exposes and no page document
+      // can show. A page can review perfectly clean and still sit on a store
+      // with no checkout page, no gateway and no way back to the cart.
+      let store: Record<string, unknown> = {};
+      try {
+        const { siteId } = session.location();
+        const gaps = readinessGaps(
+          await gatherReadiness(ctx, siteId, Object.values(doc.doc.nodes) as never),
+        );
+        if (gaps.length > 0) {
+          const notice = ctx.notices.once('readiness', READINESS_NOTICE);
+          store = { store_gaps: gaps, ...(notice ? { store_notice: notice } : {}) };
+        }
+      } catch {
+        // Readiness is additional information, never the reason a review fails.
+      }
+      const clean = Object.keys(field).length === 0;
+      return text({
+        ...(clean ? { findings: [], verdict: 'Nothing a visitor would notice on this page.' } : field),
+        ...store,
+      });
     },
   );
 
@@ -498,25 +517,42 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
     'sb_page_create',
     {
       description:
-        'Create a page. It arrives empty; sb_page_open seeds its ROOT so you can build into it.',
+        'Create a page. It arrives empty; sb_page_open seeds its ROOT. TYPE is the route for ' +
+          'checkout, product, category, post and course: /checkout and /products/{slug} need a ' +
+          'PUBLISHED page of that type or they 404.',
       inputSchema: {
       site_id: z.string(),
       name: z.string(),
+      type: z.string().optional().describe('page (default), checkout, product, category, post, course'),
+      slug: z.string().optional(),
+      is_homepage: z.boolean().optional(),
       settings: z.record(z.unknown()).optional(),
       dry_run: z.boolean().optional(),
     },
       annotations: { readOnlyHint: false, destructiveHint: false },
     },
-    async ({ site_id, name, settings, dry_run }) => {
+    async ({ site_id, name, type, slug, is_homepage, settings, dry_run }) => {
       const path = `/api/sites/${encodeURIComponent(site_id)}/pages`;
-      if (dry_run !== false) return text({ dry_run: true, would_post: path, body: { name, settings } });
+      // TYPE IS THE ROUTE for several kinds of page: /checkout and
+      // /products/{slug} resolve to the site's PUBLISHED page of that type and
+      // fall through to a 404 when there is none. Without this argument the
+      // agent could build a shop it could never let anyone buy from, which is
+      // exactly the gap sb_review's store_gaps now reports.
+      const body = {
+        name,
+        ...(type ? { type } : {}),
+        ...(slug ? { slug } : {}),
+        ...(is_homepage !== undefined ? { isHomepage: is_homepage } : {}),
+        ...(settings ? { settings } : {}),
+      };
+      if (dry_run !== false) return text({ dry_run: true, would_post: path, body });
       return text(
         await request({
           base: ctx.base,
           method: 'POST',
           path,
           token: siteToken(ctx),
-          body: { name, ...(settings ? { settings } : {}) },
+          body,
           fetchImpl: ctx.fetchImpl,
         }),
       );

@@ -294,3 +294,41 @@ describe('removeNode() and satellites', () => {
     expect(validateForSave(d)).toEqual([]);
   });
 });
+
+describe('setKeys() and the data axis', () => {
+  function withTextDataset() {
+    const d = emptyDoc();
+    d.apply(addSubtree(d, 'rt', { type: 'flex-section', children: [{ type: 'text-dataset' }] }).patches);
+    return { d, id: d.node(d.node('rt').data.nodes[0]).data.nodes[0] };
+  }
+  const bindings = (d: PageDoc, id: string) =>
+    (d.node(id) as unknown as { bindings: Array<{ source?: string }> }).bindings;
+
+  it('re-points a dataset element when the kind changes', () => {
+    const { d, id } = withTextDataset();
+    expect(bindings(d, id)[0].source).toBe('product.title');
+    d.apply(setKeys(d, id, { kind: 'vendor' }, { namespace: 'config', base: true }));
+    expect(bindings(d, id)[0].source).toBe('product.vendor');
+  });
+
+  it('follows a change of entity, not just of field', () => {
+    const { d, id } = withTextDataset();
+    d.apply(setKeys(d, id, { datasetSource: 'category', kind: 'title' }, { namespace: 'config', base: true }));
+    expect(bindings(d, id)[0].source).toBe('category.title');
+  });
+
+  it('leaves the bindings alone for a write that is not about the data axis', () => {
+    const { d, id } = withTextDataset();
+    const before = JSON.stringify(bindings(d, id));
+    d.apply(setKeys(d, id, { descriptionLines: 4 }, { namespace: 'config', base: true }));
+    expect(JSON.stringify(bindings(d, id))).toBe(before);
+  });
+
+  it('does not touch an element with no data axis', () => {
+    const d = emptyDoc();
+    d.apply(addSubtree(d, 'rt', { type: 'flex-section', children: [{ type: 'heading' }] }).patches);
+    const id = d.node(d.node('rt').data.nodes[0]).data.nodes[0];
+    d.apply(setKeys(d, id, { kind: 'title' }, { namespace: 'config', base: true }));
+    expect((d.node(id) as unknown as { bindings: unknown[] }).bindings).toEqual([]);
+  });
+});

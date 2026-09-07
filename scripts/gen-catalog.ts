@@ -113,13 +113,33 @@ function readDocSchemaVersion(repo: string): number {
  * exists to close.
  */
 function readBindingSources(repo: string): string[] {
-  const src = readFileSync(resolve(repo, 'server/render/scope/scope.go'), 'utf8');
+  // TWO FILES, unioned, because neither is complete on its own.
+  //
+  // `scope.go` is the Go renderer's context; `schema/src/binding.ts` is the
+  // editor's, and the editor's carries keys the Go regex never sees —
+  // `product.moneyOverride`, `product.attributes`, `product.variations`. Reading
+  // only the Go side made `sb_review` report the platform's OWN seeded
+  // pricing binding as dead, on every pricing element of every page. A check
+  // that cries wolf about correct output is worse than no check.
+  const files = ['server/render/scope/scope.go', 'schema/src/binding.ts'];
   const found = new Set<string>();
-  for (const m of src.matchAll(/"((?:product|category|article|collection)\.[a-zA-Z]+)"/g)) {
-    found.add(m[1]);
+  for (const rel of files) {
+    let src = '';
+    try {
+      src = readFileSync(resolve(repo, rel), 'utf8');
+    } catch {
+      continue;
+    }
+    // SIX NAMESPACES, not four: `site`, `course` and `review` join the original
+    // product/category/article/collection. Missing one made the review call a
+    // seeded binding dead — currency-switcher ships `site.moneySwitch`.
+    const ns = 'product|category|article|collection|site|course|review|instructor';
+    for (const m of src.matchAll(new RegExp(`['"]((?:${ns})\\.[a-zA-Z]+)['"]`, 'g'))) {
+      found.add(m[1]);
+    }
   }
   if (found.size < 15) {
-    console.error(`only ${found.size} binding sources found — has scope.go moved?`);
+    console.error(`only ${found.size} binding sources found — have scope.go / binding.ts moved?`);
     process.exit(1);
   }
   return [...found].sort();
@@ -295,6 +315,7 @@ export const API_DEFINITIONS: Record<string, unknown> = ${JSON.stringify(
       hideInLayer: em.rules?.hideInLayer === true,
       childAllows: (em.rules?.nodeChildAllows as string[] | undefined) ?? [],
       defaults: withBindings(type, (em.defaults ?? {}) as CatalogElement['defaults'], bindMod.datasetBindings),
+      ...bindingTable(type, (em.defaults ?? {}) as CatalogElement['defaults'], bindMod.datasetBindings),
       inspector: readInspector(em.traits).tabs,
       controls: readInspector(em.traits).controls,
       description: a.description,
@@ -375,4 +396,56 @@ function withBindings(
     bindings = [];
   }
   return bindings.length > 0 ? { ...defaults, bindings } : defaults;
+}
+
+/**
+ * Every binding set an element can need, keyed `"<datasetSource>|<kind>"`.
+ *
+ * The factory is pure in (type, config) and reads exactly two keys off it, so
+ * the whole answer space is a cross product this can enumerate offline. The
+ * candidates are the entity axes and field kinds the platform's own dataset
+ * elements offer; a combination the factory does not recognise simply repeats
+ * an answer already in the table and is dropped, which is what keeps it small.
+ *
+ * `sb_set` reads this when a caller rewrites `kind` or `datasetSource`. Without
+ * it the node keeps the OLD entity's bindings and renders the wrong field, or
+ * nothing, in silence.
+ */
+function bindingTable(
+  type: string,
+  defaults: CatalogElement['defaults'],
+  factory: (type: string, config: Record<string, unknown>) => unknown[],
+): { bindingsFor?: Record<string, unknown[]> } {
+  // Declared HERE, not at module scope: this file runs `main()` at the top
+  // level, so a const below that call is still in its temporal dead zone.
+  const BIND_SOURCES = ['product', 'category', 'article', 'course', 'instructor', 'blogCategory'];
+  const BIND_KINDS = [
+    'title', 'vendor', 'description', 'summary', 'content', 'author', 'date',
+    'image', 'price', 'prices', 'url', 'name',
+  ];
+  const base = (defaults.config ?? {}) as Record<string, unknown>;
+  const table: Record<string, unknown[]> = {};
+  const seen = new Set<string>();
+  for (const datasetSource of BIND_SOURCES) {
+    for (const kind of BIND_KINDS) {
+      let got: unknown[] = [];
+      try {
+        got = factory(type, { ...base, datasetSource, kind }) ?? [];
+      } catch {
+        continue;
+      }
+      if (got.length === 0) continue;
+      const fingerprint = JSON.stringify(got);
+      // One entry per DISTINCT answer: an element that ignores `kind` would
+      // otherwise store the same array seventy-two times.
+      if (seen.has(fingerprint)) {
+        const already = Object.entries(table).find(([, v]) => JSON.stringify(v) === fingerprint);
+        if (already) table[`${datasetSource}|${kind}`] = already[1];
+        continue;
+      }
+      seen.add(fingerprint);
+      table[`${datasetSource}|${kind}`] = got;
+    }
+  }
+  return Object.keys(table).length > 0 ? { bindingsFor: table } : {};
 }
