@@ -78,6 +78,23 @@ export async function uploadMedia(
     throw new ApiError(res.status, 'non_json_response', raw.slice(0, 400));
   }
   if (!res.ok) {
+    // THE UPLOAD SURFACE TAKES A SESSION ONLY.
+    //
+    // `/api/media/{siteId}` is mounted behind `RequireAuth` — not the
+    // `RequireAuthOrDefer` that lets a `wbk_` key open `/api/sites`
+    // (server/internal/server/router.go). So a key-only install, which is the
+    // one the store's Agent app hands out and the one the README recommends,
+    // gets a bare "unauthorized" from the ONE tool that cannot be replaced by
+    // sb_api_call, because the body is multipart. Found on a live run.
+    if ((res.status === 401 || res.status === 403) && ctx.apiKey && !ctx.session.loggedIn()) {
+      throw new ApiError(
+        res.status,
+        'media_needs_session',
+        'sbuilder: the media upload endpoint takes a session token only — an API key cannot ' +
+          'upload. Set SB_EMAIL and SB_PASSWORD and call sb_connect, then retry. Every other ' +
+          'tool works with the key alone.',
+      );
+    }
     const env = (parsed ?? {}) as {
       error?: string;
       code?: string;

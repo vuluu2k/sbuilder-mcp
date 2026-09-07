@@ -128,6 +128,19 @@ that accounts for them.
 - **`DOC_SCHEMA_VERSION` is 2** and lives in `editor/src/theme/legacyScopes.ts`, not in the
   schema package. Codegen reads it with a regex — importing an editor module would drag Vue
   into a build script for one integer.
+- **A real document carries SATELLITE nodes, attached by `parent` alone.** `list-empty`,
+  `list-loading`, `quantity-button`, `quantity-input`, `product-variant-label` and their
+  contents set `parent` to their owner and are deliberately absent from that owner's
+  `data.nodes`. Measured on a live page: 55 nodes, 16 of them satellites. So "every node is
+  reachable from ROOT through child lists" is FALSE of documents the platform itself serves,
+  and `validateForSave` checks ATTACHMENT — reachable, or hanging off something reachable —
+  not reachability. The two stricter rules that used to live there refused every save of
+  every real page, and only a live run could show it.
+- **`/api/media/{siteId}` takes a session JWT only.** It is mounted behind `RequireAuth`,
+  not the `RequireAuthOrDefer` that lets a `wbk_` key open `/api/sites`. So `sb_media_upload`
+  — the one tool `sb_api_call` cannot replace, because the body is multipart — does not work
+  on a key-only install, which is the install the store's Agent app hands out.
+  `src/transport/media.ts` says that in as many words rather than passing on `unauthorized`.
 
 ## The five traps
 

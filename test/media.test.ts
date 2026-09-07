@@ -4,6 +4,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { uploadMedia } from '../src/transport/media.js';
 import { Session } from '../src/transport/auth.js';
+import { Notices } from '../src/mcp/notices.js';
 
 function ctxWith(f: typeof fetch, apiKey = 'wbk_k') {
   return { base: 'http://x', session: new Session('http://x', f), apiKey, fetchImpl: f };
@@ -123,5 +124,32 @@ describe('uploadMedia()', () => {
 
   it('refuses when given neither a path nor a url', async () => {
     await expect(uploadMedia(ctxWith(ok()), 's1', {})).rejects.toThrow(/path or a url/i);
+  });
+});
+
+describe('uploadMedia() on a key-only install', () => {
+  it('names the session requirement instead of repeating a bare unauthorized', async () => {
+    const f = (async () =>
+      new Response(JSON.stringify({ error: 'unauthorized', code: 'unauthorized' }), {
+        status: 401,
+        headers: { 'content-type': 'application/json' },
+      })) as unknown as typeof fetch;
+    const ctx = {
+      base: 'http://x',
+      session: new Session('http://x', f),
+      apiKey: 'wbk_k',
+      fetchImpl: f,
+      notices: new Notices(),
+    };
+    const dir = mkdtempSync(join(tmpdir(), 'sb-media-'));
+    const file = join(dir, 'a.jpg');
+    writeFileSync(file, Buffer.from([0xff, 0xd8, 0xff]));
+    try {
+      await expect(uploadMedia(ctx, 's1', { path: file })).rejects.toThrow(
+        /session token only|SB_EMAIL/,
+      );
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
   });
 });

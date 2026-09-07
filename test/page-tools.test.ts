@@ -65,7 +65,7 @@ describe('PageSession', () => {
         value: { id: 'ghost', data: { type: 'text', parent: null, nodes: [], isCanvas: false, hidden: false, custom: {} }, style: {}, config: {}, specials: {}, responsive: {}, events: [], bindings: [] },
       },
     ]);
-    await expect(ps.save()).rejects.toThrow(/unreachable/i);
+    await expect(ps.save()).rejects.toThrow(/attached to nothing/i);
     expect(saved.length).toBe(0);
   });
 });

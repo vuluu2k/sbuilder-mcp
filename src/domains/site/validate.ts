@@ -1,4 +1,4 @@
-import { childrenOf, subtreeIds, type DocLike } from '../../core/tree.js';
+import { subtreeIds, type DocLike } from '../../core/tree.js';
 import { checkBandOrder } from './traps.js';
 import type { PageDoc } from './document.js';
 
@@ -29,24 +29,44 @@ export function validateForSave(doc: PageDoc): string[] {
     }
   }
 
-  // Parent pointers that disagree with the child lists. BOTH are stored, and the
-  // renderer trusts the child list while a move trusts the pointer — so a
-  // disagreement renders one tree and edits another.
-  for (const [id, n] of Object.entries(d.nodes)) {
-    if (id === d.root_node_id) continue;
-    const p = n.data.parent;
-    if (p && d.nodes[p] && !childrenOf(d, p).includes(id)) {
-      problems.push(`Node ${id} claims parent ${p}, but ${p} does not list it as a child.`);
-    }
-  }
-
-  // Orphans: reachable from nobody. They bloat every save and never render.
-  // Walking from ROOT covers overlays too — they are composed onto ROOT's child
-  // list, so they are reachable and correctly not reported here.
+  // ATTACHMENT, not reachability — and this distinction was paid for.
+  //
+  // Two earlier rules lived here: "a parent pointer must agree with the child
+  // list", and "every node must be reachable from ROOT through child lists".
+  // Both refuse documents THE PLATFORM ITSELF SERVES. A real page carries
+  // SATELLITE nodes: `list-empty` and `list-loading` (the empty and loading
+  // states of a store listing), `quantity-button` and `quantity-input`,
+  // `product-variant-label` and friends. The catalog calls them hidden
+  // satellites in as many words. They set `parent` to their owner and are
+  // deliberately NOT in that owner's `data.nodes`, because they are rendered in
+  // place of, or as part of, the owner rather than beside its children.
+  //
+  // Measured on a live page after one save: 55 nodes, 16 of them satellites
+  // hanging off the composed cart drawer and off a list-dataset. The old rules
+  // reported all 16 and refused every subsequent save — so sb_set, sb_bind and
+  // sb_look were broken on any real site the moment an overlay or a store
+  // listing was on the page, which no offline fixture could show.
+  //
+  // What is still a real defect is a node attached to NOTHING: neither in
+  // ROOT's tree nor hanging off something that is. Those bloat every save and
+  // never render, and the platform has no use for them either.
   const reachable = new Set(subtreeIds(d, d.root_node_id));
+  const attached = (start: string): boolean => {
+    const seen = new Set<string>();
+    let cur: string | null = start;
+    while (cur && !seen.has(cur)) {
+      if (reachable.has(cur)) return true;
+      seen.add(cur);
+      cur = d.nodes[cur]?.data.parent ?? null;
+    }
+    return false;
+  };
   for (const id of Object.keys(d.nodes)) {
-    if (!reachable.has(id)) {
-      problems.push(`Node ${id} is unreachable from ROOT — nothing references it.`);
+    if (id === d.root_node_id) continue;
+    if (!attached(id)) {
+      problems.push(
+        `Node ${id} is attached to nothing — it is not in ROOT's tree, and its parent chain reaches no node that is.`,
+      );
     }
   }
 
