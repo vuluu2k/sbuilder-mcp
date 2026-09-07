@@ -3,14 +3,232 @@
 import type { ApiOperation } from './types.js';
 
 export const SWAGGER_SOURCE = {
-  "operations": 310,
-  "definitions": 85,
-  "bodyCarrying": 140,
-  "bodyUndescribed": 58,
+  "operations": 412,
+  "definitions": 97,
+  "bodyCarrying": 168,
+  "bodyUndescribed": 62,
   "generatedFrom": "server/docs/swagger.json"
 } as const;
 
 export const API_OPERATIONS: ApiOperation[] = [
+  {
+    "id": "get:/_wb/account/addresses",
+    "method": "GET",
+    "path": "/_wb/account/addresses",
+    "tags": [
+      "storeaccount"
+    ],
+    "summary": "The signed-in shopper's address book",
+    "params": [],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "put:/_wb/account/addresses",
+    "method": "PUT",
+    "path": "/_wb/account/addresses",
+    "tags": [
+      "storeaccount"
+    ],
+    "summary": "Replace the signed-in shopper's address book",
+    "params": [],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/_wb/account/cart",
+    "method": "GET",
+    "path": "/_wb/account/cart",
+    "tags": [
+      "storeaccount"
+    ],
+    "summary": "The signed-in shopper's saved cart",
+    "params": [],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "put:/_wb/account/cart",
+    "method": "PUT",
+    "path": "/_wb/account/cart",
+    "tags": [
+      "storeaccount"
+    ],
+    "summary": "Replace the signed-in shopper's saved cart",
+    "params": [],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/_wb/account/course-announcements",
+    "method": "GET",
+    "path": "/_wb/account/course-announcements",
+    "tags": [
+      "storefront"
+    ],
+    "summary": "A course's announcements, for a student who holds it",
+    "params": [
+      {
+        "name": "courseId",
+        "in": "query",
+        "required": true,
+        "type": "string",
+        "description": "Course ID"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/_wb/account/course-claim",
+    "method": "POST",
+    "path": "/_wb/account/course-claim",
+    "tags": [
+      "storeaccount"
+    ],
+    "summary": "Redeem a course invitation",
+    "params": [],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/_wb/account/course-lesson",
+    "method": "GET",
+    "path": "/_wb/account/course-lesson",
+    "tags": [
+      "storeaccount"
+    ],
+    "summary": "One lesson's body, for a student entitled to it",
+    "params": [
+      {
+        "name": "courseId",
+        "in": "query",
+        "required": true,
+        "type": "string",
+        "description": "Course ID"
+      },
+      {
+        "name": "lessonId",
+        "in": "query",
+        "required": true,
+        "type": "string",
+        "description": "Lesson ID"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/_wb/account/course-note",
+    "method": "GET",
+    "path": "/_wb/account/course-note",
+    "tags": [
+      "storeaccount"
+    ],
+    "summary": "Read or write a student's own note on a lesson",
+    "params": [],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "put:/_wb/account/course-note",
+    "method": "PUT",
+    "path": "/_wb/account/course-note",
+    "tags": [
+      "storeaccount"
+    ],
+    "summary": "Read or write a student's own note on a lesson",
+    "params": [],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/_wb/account/course-progress",
+    "method": "POST",
+    "path": "/_wb/account/course-progress",
+    "tags": [
+      "storeaccount"
+    ],
+    "summary": "Record how far a student got in a lesson",
+    "params": [],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/_wb/account/course-questions",
+    "method": "GET",
+    "path": "/_wb/account/course-questions",
+    "tags": [
+      "storeaccount"
+    ],
+    "summary": "A student's own questions on a course, and asking one",
+    "params": [],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/_wb/account/course-questions",
+    "method": "POST",
+    "path": "/_wb/account/course-questions",
+    "tags": [
+      "storeaccount"
+    ],
+    "summary": "A student's own questions on a course, and asking one",
+    "params": [],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/_wb/account/courses",
+    "method": "GET",
+    "path": "/_wb/account/courses",
+    "tags": [
+      "storeaccount"
+    ],
+    "summary": "The signed-in shopper's courses",
+    "params": [],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/_wb/account/email",
+    "method": "POST",
+    "path": "/_wb/account/email",
+    "tags": [
+      "storeaccount"
+    ],
+    "summary": "Begin a signed-in email change",
+    "params": [],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/_wb/account/email-confirm",
+    "method": "POST",
+    "path": "/_wb/account/email-confirm",
+    "tags": [
+      "storeaccount"
+    ],
+    "summary": "Complete a signed-in email change",
+    "params": [],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
   {
     "id": "post:/_wb/account/forgot",
     "method": "POST",
@@ -51,6 +269,19 @@ export const API_OPERATIONS: ApiOperation[] = [
     "credential": "siteScoped"
   },
   {
+    "id": "put:/_wb/account/marketing",
+    "method": "PUT",
+    "path": "/_wb/account/marketing",
+    "tags": [
+      "storeaccount"
+    ],
+    "summary": "Set the signed-in shopper's own marketing consent",
+    "params": [],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
     "id": "get:/_wb/account/me",
     "method": "GET",
     "path": "/_wb/account/me",
@@ -64,6 +295,19 @@ export const API_OPERATIONS: ApiOperation[] = [
     "credential": "siteScoped"
   },
   {
+    "id": "put:/_wb/account/me",
+    "method": "PUT",
+    "path": "/_wb/account/me",
+    "tags": [
+      "storeaccount"
+    ],
+    "summary": "Update the signed-in shopper's own name and phone",
+    "params": [],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
     "id": "get:/_wb/account/orders",
     "method": "GET",
     "path": "/_wb/account/orders",
@@ -71,6 +315,45 @@ export const API_OPERATIONS: ApiOperation[] = [
       "storeaccount"
     ],
     "summary": "The signed-in shopper's order history",
+    "params": [],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/_wb/account/password",
+    "method": "POST",
+    "path": "/_wb/account/password",
+    "tags": [
+      "storeaccount"
+    ],
+    "summary": "Change the signed-in shopper's password",
+    "params": [],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/_wb/account/points",
+    "method": "GET",
+    "path": "/_wb/account/points",
+    "tags": [
+      "storeaccount"
+    ],
+    "summary": "The shopper's points — or the program's pitch",
+    "params": [],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/_wb/account/points-redeem",
+    "method": "POST",
+    "path": "/_wb/account/points-redeem",
+    "tags": [
+      "storeaccount"
+    ],
+    "summary": "Convert points into a single-use discount code",
     "params": [],
     "bodyDescribed": false,
     "bodyRef": null,
@@ -103,6 +386,32 @@ export const API_OPERATIONS: ApiOperation[] = [
     "credential": "siteScoped"
   },
   {
+    "id": "get:/_wb/account/returns",
+    "method": "GET",
+    "path": "/_wb/account/returns",
+    "tags": [
+      "storeaccount"
+    ],
+    "summary": "The signed-in shopper's own return requests",
+    "params": [],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/_wb/account/returns",
+    "method": "POST",
+    "path": "/_wb/account/returns",
+    "tags": [
+      "storeaccount"
+    ],
+    "summary": "File a return request against one of the shopper's own orders",
+    "params": [],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
     "id": "post:/_wb/account/verify",
     "method": "POST",
     "path": "/_wb/account/verify",
@@ -111,6 +420,147 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "summary": "Complete email verification",
     "params": [],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/_wb/account/wishlist",
+    "method": "GET",
+    "path": "/_wb/account/wishlist",
+    "tags": [
+      "storeaccount"
+    ],
+    "summary": "The signed-in shopper's saved products",
+    "params": [],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "put:/_wb/account/wishlist",
+    "method": "PUT",
+    "path": "/_wb/account/wishlist",
+    "tags": [
+      "storeaccount"
+    ],
+    "summary": "Replace the signed-in shopper's saved products",
+    "params": [],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/_wb/address/countries",
+    "method": "GET",
+    "path": "/_wb/address/countries",
+    "tags": [
+      "storefront"
+    ],
+    "summary": "Countries and administrative divisions for an address field",
+    "params": [],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/_wb/address/provinces",
+    "method": "GET",
+    "path": "/_wb/address/provinces",
+    "tags": [
+      "storefront"
+    ],
+    "summary": "Countries and administrative divisions for an address field",
+    "params": [],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/_wb/address/suggest",
+    "method": "GET",
+    "path": "/_wb/address/suggest",
+    "tags": [
+      "storefront"
+    ],
+    "summary": "Countries and administrative divisions for an address field",
+    "params": [],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/_wb/address/wards",
+    "method": "GET",
+    "path": "/_wb/address/wards",
+    "tags": [
+      "storefront"
+    ],
+    "summary": "Countries and administrative divisions for an address field",
+    "params": [],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/_wb/certificate",
+    "method": "GET",
+    "path": "/_wb/certificate",
+    "tags": [
+      "storefront"
+    ],
+    "summary": "Verify a course certificate",
+    "params": [
+      {
+        "name": "code",
+        "in": "query",
+        "required": true,
+        "type": "string",
+        "description": "The certificate's public code"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/_wb/course-outline",
+    "method": "GET",
+    "path": "/_wb/course-outline",
+    "tags": [
+      "storefront"
+    ],
+    "summary": "A course's public syllabus",
+    "params": [
+      {
+        "name": "courseId",
+        "in": "query",
+        "required": true,
+        "type": "string",
+        "description": "The course id"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/_wb/course-renew",
+    "method": "GET",
+    "path": "/_wb/course-renew",
+    "tags": [
+      "courses"
+    ],
+    "summary": "Renew a course from the reminder email",
+    "params": [
+      {
+        "name": "t",
+        "in": "query",
+        "required": true,
+        "type": "string",
+        "description": "Signed renewal token"
+      }
+    ],
     "bodyDescribed": false,
     "bodyRef": null,
     "credential": "siteScoped"
@@ -178,6 +628,20 @@ export const API_OPERATIONS: ApiOperation[] = [
         "required": false,
         "type": "string",
         "description": "Ranges in minor units, e.g. 1000-2000 or 1000- for Above"
+      },
+      {
+        "name": "f.purchase_history",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "purchased / not_purchased — REFUSED here (400); it needs a shopper session, so it works on the served page only"
+      },
+      {
+        "name": "ids",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "products-by-id only: product ids, comma-separated (max 200); ids the catalog no longer has are absent from the answer"
       },
       {
         "name": "limit",
@@ -250,6 +714,20 @@ export const API_OPERATIONS: ApiOperation[] = [
         "description": "Ranges in minor units, e.g. 1000-2000 or 1000- for Above"
       },
       {
+        "name": "f.purchase_history",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "purchased / not_purchased — REFUSED here (400); it needs a shopper session, so it works on the served page only"
+      },
+      {
+        "name": "ids",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "products-by-id only: product ids, comma-separated (max 200); ids the catalog no longer has are absent from the answer"
+      },
+      {
         "name": "limit",
         "in": "query",
         "required": false,
@@ -262,6 +740,132 @@ export const API_OPERATIONS: ApiOperation[] = [
         "required": false,
         "type": "integer",
         "description": "Page offset"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/_wb/feed/products-by-id",
+    "method": "GET",
+    "path": "/_wb/feed/products-by-id",
+    "tags": [
+      "storefeed"
+    ],
+    "summary": "Storefront catalog feed",
+    "params": [
+      {
+        "name": "f.category",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Category ids, comma-separated"
+      },
+      {
+        "name": "f.availability",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "in_stock and/or out_of_stock"
+      },
+      {
+        "name": "f.attribute",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Axis-qualified values, e.g. Color:Pink"
+      },
+      {
+        "name": "f.brand",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Brand names, case-insensitive"
+      },
+      {
+        "name": "f.tag",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Tags, case-insensitive"
+      },
+      {
+        "name": "f.price",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Ranges in minor units, e.g. 1000-2000 or 1000- for Above"
+      },
+      {
+        "name": "f.purchase_history",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "purchased / not_purchased — REFUSED here (400); it needs a shopper session, so it works on the served page only"
+      },
+      {
+        "name": "ids",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "products-by-id only: product ids, comma-separated (max 200); ids the catalog no longer has are absent from the answer"
+      },
+      {
+        "name": "limit",
+        "in": "query",
+        "required": false,
+        "type": "integer",
+        "description": "Page size (max 200)"
+      },
+      {
+        "name": "offset",
+        "in": "query",
+        "required": false,
+        "type": "integer",
+        "description": "Page offset"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/_wb/forms/{formId}/slots",
+    "method": "GET",
+    "path": "/_wb/forms/{formId}/slots",
+    "tags": [
+      "storeforms"
+    ],
+    "summary": "Booking slot availability",
+    "params": [
+      {
+        "name": "formId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Form ID"
+      },
+      {
+        "name": "date",
+        "in": "query",
+        "required": true,
+        "type": "string",
+        "description": "Day (a stay's check-in), YYYY-MM-DD"
+      },
+      {
+        "name": "until",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "A stay's check-out, YYYY-MM-DD — answers per room type over the nights in between"
+      },
+      {
+        "name": "month",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "A month, YYYY-MM — answers instead which days of it are closed or full, as days: date → closed or full"
       }
     ],
     "bodyDescribed": false,
@@ -285,6 +889,19 @@ export const API_OPERATIONS: ApiOperation[] = [
         "description": "Form ID"
       }
     ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/_wb/geo/suggest",
+    "method": "GET",
+    "path": "/_wb/geo/suggest",
+    "tags": [
+      "storefront"
+    ],
+    "summary": "Street suggestions for an address field",
+    "params": [],
     "bodyDescribed": false,
     "bodyRef": null,
     "credential": "siteScoped"
@@ -319,6 +936,45 @@ export const API_OPERATIONS: ApiOperation[] = [
         "description": "Verification token"
       }
     ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/_wb/payments/retry",
+    "method": "POST",
+    "path": "/_wb/payments/retry",
+    "tags": [
+      "payments"
+    ],
+    "summary": "Re-open a payment for an order",
+    "params": [],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/_wb/payments/{siteId}/{provider}/callback",
+    "method": "POST",
+    "path": "/_wb/payments/{siteId}/{provider}/callback",
+    "tags": [
+      "payments"
+    ],
+    "summary": "Payment gateway callback and shopper return",
+    "params": [],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/_wb/payments/{siteId}/{provider}/return",
+    "method": "GET",
+    "path": "/_wb/payments/{siteId}/{provider}/return",
+    "tags": [
+      "payments"
+    ],
+    "summary": "Payment gateway callback and shopper return",
+    "params": [],
     "bodyDescribed": false,
     "bodyRef": null,
     "credential": "siteScoped"
@@ -363,6 +1019,19 @@ export const API_OPERATIONS: ApiOperation[] = [
     "credential": "siteScoped"
   },
   {
+    "id": "get:/api/admin/address-units",
+    "method": "GET",
+    "path": "/api/admin/address-units",
+    "tags": [
+      "admin"
+    ],
+    "summary": "List and load administrative-unit data",
+    "params": [],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
     "id": "get:/api/admin/billing",
     "method": "GET",
     "path": "/api/admin/billing",
@@ -383,6 +1052,32 @@ export const API_OPERATIONS: ApiOperation[] = [
       "admin"
     ],
     "summary": "Record that a person dealt with a queued transfer",
+    "params": [],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/admin/geo-keys",
+    "method": "GET",
+    "path": "/api/admin/geo-keys",
+    "tags": [
+      "admin"
+    ],
+    "summary": "Manage the platform's Geoapify credentials",
+    "params": [],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/api/admin/geo-keys",
+    "method": "POST",
+    "path": "/api/admin/geo-keys",
+    "tags": [
+      "admin"
+    ],
+    "summary": "Manage the platform's Geoapify credentials",
     "params": [],
     "bodyDescribed": false,
     "bodyRef": null,
@@ -663,6 +1358,69 @@ export const API_OPERATIONS: ApiOperation[] = [
     "bodyDescribed": false,
     "bodyRef": null,
     "credential": "none"
+  },
+  {
+    "id": "post:/api/course-uploads/{siteId}",
+    "method": "POST",
+    "path": "/api/course-uploads/{siteId}",
+    "tags": [
+      "courses"
+    ],
+    "summary": "Upload a course video, attachment or cover to the external host",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "file",
+        "in": "formData",
+        "required": true,
+        "type": "file",
+        "description": "The file to upload"
+      },
+      {
+        "name": "fileSize",
+        "in": "formData",
+        "required": false,
+        "type": "string",
+        "description": "Browser-reported size, relayed to the host as a hint"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/docs/search",
+    "method": "GET",
+    "path": "/api/docs/search",
+    "tags": [
+      "docs"
+    ],
+    "summary": "Search the user manual",
+    "params": [
+      {
+        "name": "q",
+        "in": "query",
+        "required": true,
+        "type": "string",
+        "description": "Words to search for (min 3 characters)"
+      },
+      {
+        "name": "locale",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Manual language: vi (default) or en"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
   },
   {
     "id": "delete:/api/invitations/{id}",
@@ -2154,6 +2912,55 @@ export const API_OPERATIONS: ApiOperation[] = [
     "credential": "siteScoped"
   },
   {
+    "id": "get:/api/sites/{siteId}/agent-connections",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/agent-connections",
+    "tags": [
+      "api-keys"
+    ],
+    "summary": "List where this site's agent keys are installed",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "delete:/api/sites/{siteId}/agent-connections/{id}",
+    "method": "DELETE",
+    "path": "/api/sites/{siteId}/agent-connections/{id}",
+    "tags": [
+      "api-keys"
+    ],
+    "summary": "Forget one agent connection row",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Connection ID"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
     "id": "get:/api/sites/{siteId}/api-keys",
     "method": "GET",
     "path": "/api/sites/{siteId}/api-keys",
@@ -2958,6 +3765,667 @@ export const API_OPERATIONS: ApiOperation[] = [
     "credential": "siteScoped"
   },
   {
+    "id": "get:/api/sites/{siteId}/course-enrollments/export",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/course-enrollments/export",
+    "tags": [
+      "courses"
+    ],
+    "summary": "Download the store's students as a workbook",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "courseId",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "one course"
+      },
+      {
+        "name": "status",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "enrollment status"
+      },
+      {
+        "name": "search",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "name or email"
+      },
+      {
+        "name": "expiring",
+        "in": "query",
+        "required": false,
+        "type": "boolean",
+        "description": "live, time-boxed, inside the renewal window — the dashboard's 'sắp hết hạn'"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/api/sites/{siteId}/course-enrollments/{id}/extend",
+    "method": "POST",
+    "path": "/api/sites/{siteId}/course-enrollments/{id}/extend",
+    "tags": [
+      "courses"
+    ],
+    "summary": "Add days of access to one student",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Enrollment ID"
+      },
+      {
+        "name": "body",
+        "in": "body",
+        "required": true,
+        "type": "object",
+        "description": "days to add"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "internal_courses_rest.extendBody",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/api/sites/{siteId}/course-enrollments/{id}/resend",
+    "method": "POST",
+    "path": "/api/sites/{siteId}/course-enrollments/{id}/resend",
+    "tags": [
+      "courses"
+    ],
+    "summary": "Mail a pending student their claim code again",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Enrollment ID"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/sites/{siteId}/courses",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/courses",
+    "tags": [
+      "courses",
+      "courses"
+    ],
+    "summary": "The app dashboard's counts",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/api/sites/{siteId}/courses",
+    "method": "POST",
+    "path": "/api/sites/{siteId}/courses",
+    "tags": [
+      "courses",
+      "courses"
+    ],
+    "summary": "The app dashboard's counts",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/sites/{siteId}/courses/overview",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/courses/overview",
+    "tags": [
+      "courses",
+      "courses"
+    ],
+    "summary": "The app dashboard's counts",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/sites/{siteId}/courses/question-counts",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/courses/question-counts",
+    "tags": [
+      "courses"
+    ],
+    "summary": "How many questions each course is waiting on",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "ids",
+        "in": "query",
+        "required": true,
+        "type": "string",
+        "description": "Comma-separated course IDs"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/sites/{siteId}/courses/{courseId}",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/courses/{courseId}",
+    "tags": [
+      "courses"
+    ],
+    "summary": "Read, update or delete one course",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "courseId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Course ID"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "put:/api/sites/{siteId}/courses/{courseId}",
+    "method": "PUT",
+    "path": "/api/sites/{siteId}/courses/{courseId}",
+    "tags": [
+      "courses"
+    ],
+    "summary": "Read, update or delete one course",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "courseId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Course ID"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "delete:/api/sites/{siteId}/courses/{courseId}",
+    "method": "DELETE",
+    "path": "/api/sites/{siteId}/courses/{courseId}",
+    "tags": [
+      "courses"
+    ],
+    "summary": "Read, update or delete one course",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "courseId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Course ID"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "put:/api/sites/{siteId}/courses/{courseId}/curriculum",
+    "method": "PUT",
+    "path": "/api/sites/{siteId}/courses/{courseId}/curriculum",
+    "tags": [
+      "courses"
+    ],
+    "summary": "Reorder a course's chapters and lessons in one write",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "courseId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Course ID"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/sites/{siteId}/courses/{courseId}/products",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/courses/{courseId}/products",
+    "tags": [
+      "courses"
+    ],
+    "summary": "List, attach or detach the products that unlock a course",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "courseId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Course ID"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/api/sites/{siteId}/courses/{courseId}/products",
+    "method": "POST",
+    "path": "/api/sites/{siteId}/courses/{courseId}/products",
+    "tags": [
+      "courses"
+    ],
+    "summary": "List, attach or detach the products that unlock a course",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "courseId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Course ID"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/sites/{siteId}/courses/{courseId}/students",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/courses/{courseId}/students",
+    "tags": [
+      "courses"
+    ],
+    "summary": "List a course's students, or admit one by hand",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "courseId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Course ID"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/api/sites/{siteId}/courses/{courseId}/students",
+    "method": "POST",
+    "path": "/api/sites/{siteId}/courses/{courseId}/students",
+    "tags": [
+      "courses"
+    ],
+    "summary": "List a course's students, or admit one by hand",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "courseId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Course ID"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/sites/{siteId}/courses/{id}/announcements",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/courses/{id}/announcements",
+    "tags": [
+      "courses"
+    ],
+    "summary": "A course's announcements, and posting one",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Course ID"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/api/sites/{siteId}/courses/{id}/announcements",
+    "method": "POST",
+    "path": "/api/sites/{siteId}/courses/{id}/announcements",
+    "tags": [
+      "courses"
+    ],
+    "summary": "A course's announcements, and posting one",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Course ID"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/api/sites/{siteId}/courses/{id}/duplicate",
+    "method": "POST",
+    "path": "/api/sites/{siteId}/courses/{id}/duplicate",
+    "tags": [
+      "courses"
+    ],
+    "summary": "Duplicate a course into a new draft",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Course ID"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/sites/{siteId}/courses/{id}/lesson-stats",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/courses/{id}/lesson-stats",
+    "tags": [
+      "courses"
+    ],
+    "summary": "How many students have finished each lesson",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Course ID"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/sites/{siteId}/courses/{id}/questions",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/courses/{id}/questions",
+    "tags": [
+      "courses"
+    ],
+    "summary": "A course's question inbox, and answering one",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Course ID"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "put:/api/sites/{siteId}/courses/{id}/questions/{questionId}",
+    "method": "PUT",
+    "path": "/api/sites/{siteId}/courses/{id}/questions/{questionId}",
+    "tags": [
+      "courses"
+    ],
+    "summary": "A course's question inbox, and answering one",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Course ID"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/sites/{siteId}/courses/{id}/students/export",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/courses/{id}/students/export",
+    "tags": [
+      "courses"
+    ],
+    "summary": "Download a course's students as a workbook",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Course ID"
+      },
+      {
+        "name": "status",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "enrollment status"
+      },
+      {
+        "name": "search",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "name or email"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
     "id": "get:/api/sites/{siteId}/customers",
     "method": "GET",
     "path": "/api/sites/{siteId}/customers",
@@ -3186,6 +4654,41 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": true,
     "bodyRef": "github_com_webbuilder_server_internal_customers.Customer",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "put:/api/sites/{siteId}/customers/{id}/marketing",
+    "method": "PUT",
+    "path": "/api/sites/{siteId}/customers/{id}/marketing",
+    "tags": [
+      "customers"
+    ],
+    "summary": "Grant or revoke marketing consent",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Customer ID"
+      },
+      {
+        "name": "body",
+        "in": "body",
+        "required": true,
+        "type": "object",
+        "description": "{\\"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
     "credential": "siteScoped"
   },
   {
@@ -4129,6 +5632,20 @@ export const API_OPERATIONS: ApiOperation[] = [
         "description": "Form ID"
       },
       {
+        "name": "status",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Filter by one status (complete|confirmed|draft|spam|cancelled|no_show)"
+      },
+      {
+        "name": "statuses",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Comma-separated status SET (OR) — replaces status when given"
+      },
+      {
         "name": "limit",
         "in": "query",
         "required": false,
@@ -4182,7 +5699,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     "tags": [
       "forms"
     ],
-    "summary": "Read or delete one response",
+    "summary": "Read, cancel/restore, or delete one response",
     "params": [
       {
         "name": "siteId",
@@ -4204,6 +5721,55 @@ export const API_OPERATIONS: ApiOperation[] = [
         "required": true,
         "type": "string",
         "description": "Submission ID"
+      },
+      {
+        "name": "status",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "PATCH only: {\\"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "patch:/api/sites/{siteId}/forms/{id}/submissions/{submissionId}",
+    "method": "PATCH",
+    "path": "/api/sites/{siteId}/forms/{id}/submissions/{submissionId}",
+    "tags": [
+      "forms"
+    ],
+    "summary": "Read, cancel/restore, or delete one response",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Form ID"
+      },
+      {
+        "name": "submissionId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Submission ID"
+      },
+      {
+        "name": "status",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "PATCH only: {\\"
       }
     ],
     "bodyDescribed": false,
@@ -4217,7 +5783,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     "tags": [
       "forms"
     ],
-    "summary": "Read or delete one response",
+    "summary": "Read, cancel/restore, or delete one response",
     "params": [
       {
         "name": "siteId",
@@ -4239,10 +5805,283 @@ export const API_OPERATIONS: ApiOperation[] = [
         "required": true,
         "type": "string",
         "description": "Submission ID"
+      },
+      {
+        "name": "status",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "PATCH only: {\\"
       }
     ],
     "bodyDescribed": false,
     "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/sites/{siteId}/gift-cards",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/gift-cards",
+    "tags": [
+      "gift-cards"
+    ],
+    "summary": "List or issue gift cards",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "search",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Match code, recipient name or email"
+      },
+      {
+        "name": "status",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "active | void"
+      },
+      {
+        "name": "redeemable",
+        "in": "query",
+        "required": false,
+        "type": "boolean",
+        "description": "Only cards that can be spent right now"
+      },
+      {
+        "name": "limit",
+        "in": "query",
+        "required": false,
+        "type": "integer",
+        "description": "Page size (default 50, max 200)"
+      },
+      {
+        "name": "offset",
+        "in": "query",
+        "required": false,
+        "type": "integer",
+        "description": "Rows to skip"
+      },
+      {
+        "name": "giftCard",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "Gift card to issue (POST only)"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "github_com_webbuilder_server_internal_giftcards.GiftCard",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/api/sites/{siteId}/gift-cards",
+    "method": "POST",
+    "path": "/api/sites/{siteId}/gift-cards",
+    "tags": [
+      "gift-cards"
+    ],
+    "summary": "List or issue gift cards",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "search",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Match code, recipient name or email"
+      },
+      {
+        "name": "status",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "active | void"
+      },
+      {
+        "name": "redeemable",
+        "in": "query",
+        "required": false,
+        "type": "boolean",
+        "description": "Only cards that can be spent right now"
+      },
+      {
+        "name": "limit",
+        "in": "query",
+        "required": false,
+        "type": "integer",
+        "description": "Page size (default 50, max 200)"
+      },
+      {
+        "name": "offset",
+        "in": "query",
+        "required": false,
+        "type": "integer",
+        "description": "Rows to skip"
+      },
+      {
+        "name": "giftCard",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "Gift card to issue (POST only)"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "github_com_webbuilder_server_internal_giftcards.GiftCard",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/sites/{siteId}/gift-cards/{id}",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/gift-cards/{id}",
+    "tags": [
+      "gift-cards"
+    ],
+    "summary": "Get or update a gift card",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Gift card ID"
+      },
+      {
+        "name": "giftCard",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "Editable fields (PUT only)"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "github_com_webbuilder_server_internal_giftcards.GiftCard",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "put:/api/sites/{siteId}/gift-cards/{id}",
+    "method": "PUT",
+    "path": "/api/sites/{siteId}/gift-cards/{id}",
+    "tags": [
+      "gift-cards"
+    ],
+    "summary": "Get or update a gift card",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Gift card ID"
+      },
+      {
+        "name": "giftCard",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "Editable fields (PUT only)"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "github_com_webbuilder_server_internal_giftcards.GiftCard",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/api/sites/{siteId}/gift-cards/{id}/adjust",
+    "method": "POST",
+    "path": "/api/sites/{siteId}/gift-cards/{id}/adjust",
+    "tags": [
+      "gift-cards"
+    ],
+    "summary": "Read a gift card's ledger, or adjust its balance",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Gift card ID"
+      },
+      {
+        "name": "adjust",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "Balance adjustment (adjust only)"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "internal_giftcards_rest.adjustRequest",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/sites/{siteId}/gift-cards/{id}/entries",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/gift-cards/{id}/entries",
+    "tags": [
+      "gift-cards"
+    ],
+    "summary": "Read a gift card's ledger, or adjust its balance",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Gift card ID"
+      },
+      {
+        "name": "adjust",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "Balance adjustment (adjust only)"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "internal_giftcards_rest.adjustRequest",
     "credential": "siteScoped"
   },
   {
@@ -4463,6 +6302,104 @@ export const API_OPERATIONS: ApiOperation[] = [
         "required": true,
         "type": "string",
         "description": "Site ID"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/sites/{siteId}/loyalty",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/loyalty",
+    "tags": [
+      "loyalty"
+    ],
+    "summary": "Read or save the site's points policy",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "put:/api/sites/{siteId}/loyalty",
+    "method": "PUT",
+    "path": "/api/sites/{siteId}/loyalty",
+    "tags": [
+      "loyalty"
+    ],
+    "summary": "Read or save the site's points policy",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/sites/{siteId}/loyalty/{customerId}",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/loyalty/{customerId}",
+    "tags": [
+      "loyalty"
+    ],
+    "summary": "A customer's points balance and ledger",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "customerId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Customer ID"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/api/sites/{siteId}/loyalty/{customerId}/adjust",
+    "method": "POST",
+    "path": "/api/sites/{siteId}/loyalty/{customerId}/adjust",
+    "tags": [
+      "loyalty"
+    ],
+    "summary": "Manually adjust a customer's points",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "customerId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Customer ID"
       }
     ],
     "bodyDescribed": false,
@@ -5060,6 +6997,13 @@ export const API_OPERATIONS: ApiOperation[] = [
         "description": "Search over the order number and customer name"
       },
       {
+        "name": "customer",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Exact customer id — only that customer's orders"
+      },
+      {
         "name": "status",
         "in": "query",
         "required": false,
@@ -5128,6 +7072,13 @@ export const API_OPERATIONS: ApiOperation[] = [
         "required": false,
         "type": "string",
         "description": "Search over the order number and customer name"
+      },
+      {
+        "name": "customer",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Exact customer id — only that customer's orders"
       },
       {
         "name": "status",
@@ -5335,6 +7286,111 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": true,
     "bodyRef": "github_com_webbuilder_server_internal_orders.Order",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/sites/{siteId}/orders/{id}/shipments",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/orders/{id}/shipments",
+    "tags": [
+      "orders"
+    ],
+    "summary": "List or record the parcels for an order",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Order ID"
+      },
+      {
+        "name": "shipment",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "Parcel to record (POST only)"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "github_com_webbuilder_server_internal_orders.Shipment",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/api/sites/{siteId}/orders/{id}/shipments",
+    "method": "POST",
+    "path": "/api/sites/{siteId}/orders/{id}/shipments",
+    "tags": [
+      "orders"
+    ],
+    "summary": "List or record the parcels for an order",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Order ID"
+      },
+      {
+        "name": "shipment",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "Parcel to record (POST only)"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "github_com_webbuilder_server_internal_orders.Shipment",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "delete:/api/sites/{siteId}/orders/{id}/shipments/{shipmentId}",
+    "method": "DELETE",
+    "path": "/api/sites/{siteId}/orders/{id}/shipments/{shipmentId}",
+    "tags": [
+      "orders"
+    ],
+    "summary": "Remove a parcel record",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Order ID"
+      },
+      {
+        "name": "shipmentId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Shipment ID"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
     "credential": "siteScoped"
   },
   {
@@ -5585,6 +7641,76 @@ export const API_OPERATIONS: ApiOperation[] = [
         "required": true,
         "type": "string",
         "description": "Overlay ID"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/api/sites/{siteId}/overlays/{id}/pages/{pageId}",
+    "method": "POST",
+    "path": "/api/sites/{siteId}/overlays/{id}/pages/{pageId}",
+    "tags": [
+      "overlays"
+    ],
+    "summary": "Attach or detach a pop-up from a page",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Overlay ID"
+      },
+      {
+        "name": "pageId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Page ID"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "delete:/api/sites/{siteId}/overlays/{id}/pages/{pageId}",
+    "method": "DELETE",
+    "path": "/api/sites/{siteId}/overlays/{id}/pages/{pageId}",
+    "tags": [
+      "overlays"
+    ],
+    "summary": "Attach or detach a pop-up from a page",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Overlay ID"
+      },
+      {
+        "name": "pageId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Page ID"
       }
     ],
     "bodyDescribed": false,
@@ -5953,6 +8079,32 @@ export const API_OPERATIONS: ApiOperation[] = [
         "description": "Page ID"
       }
     ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/sites/{siteId}/payment-gateways",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/payment-gateways",
+    "tags": [
+      "payments"
+    ],
+    "summary": "Payment gateways and charges for a site",
+    "params": [],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/sites/{siteId}/payment-transactions",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/payment-transactions",
+    "tags": [
+      "payments"
+    ],
+    "summary": "Payment gateways and charges for a site",
+    "params": [],
     "bodyDescribed": false,
     "bodyRef": null,
     "credential": "siteScoped"
@@ -6742,6 +8894,538 @@ export const API_OPERATIONS: ApiOperation[] = [
     "credential": "siteScoped"
   },
   {
+    "id": "get:/api/sites/{siteId}/returns",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/returns",
+    "tags": [
+      "returns"
+    ],
+    "summary": "List return requests, or file one as the merchant",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "status",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "requested | approved | rejected | received | refunded | cancelled"
+      },
+      {
+        "name": "order",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Filter to one order"
+      },
+      {
+        "name": "customer",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Filter to one customer"
+      },
+      {
+        "name": "q",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Search the order number and the shopper's comment"
+      },
+      {
+        "name": "limit",
+        "in": "query",
+        "required": false,
+        "type": "integer",
+        "description": "Page size (max 200)"
+      },
+      {
+        "name": "offset",
+        "in": "query",
+        "required": false,
+        "type": "integer",
+        "description": "Page offset"
+      },
+      {
+        "name": "request",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "Return to create (POST only)"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "github_com_webbuilder_server_internal_returns.Request",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/api/sites/{siteId}/returns",
+    "method": "POST",
+    "path": "/api/sites/{siteId}/returns",
+    "tags": [
+      "returns"
+    ],
+    "summary": "List return requests, or file one as the merchant",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "status",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "requested | approved | rejected | received | refunded | cancelled"
+      },
+      {
+        "name": "order",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Filter to one order"
+      },
+      {
+        "name": "customer",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Filter to one customer"
+      },
+      {
+        "name": "q",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Search the order number and the shopper's comment"
+      },
+      {
+        "name": "limit",
+        "in": "query",
+        "required": false,
+        "type": "integer",
+        "description": "Page size (max 200)"
+      },
+      {
+        "name": "offset",
+        "in": "query",
+        "required": false,
+        "type": "integer",
+        "description": "Page offset"
+      },
+      {
+        "name": "request",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "Return to create (POST only)"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "github_com_webbuilder_server_internal_returns.Request",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/sites/{siteId}/returns/{id}",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/returns/{id}",
+    "tags": [
+      "returns"
+    ],
+    "summary": "Read, answer or remove one return request",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Return ID"
+      },
+      {
+        "name": "request",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "Fields to update (PUT only)"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "github_com_webbuilder_server_internal_returns.Request",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "put:/api/sites/{siteId}/returns/{id}",
+    "method": "PUT",
+    "path": "/api/sites/{siteId}/returns/{id}",
+    "tags": [
+      "returns"
+    ],
+    "summary": "Read, answer or remove one return request",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Return ID"
+      },
+      {
+        "name": "request",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "Fields to update (PUT only)"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "github_com_webbuilder_server_internal_returns.Request",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "delete:/api/sites/{siteId}/returns/{id}",
+    "method": "DELETE",
+    "path": "/api/sites/{siteId}/returns/{id}",
+    "tags": [
+      "returns"
+    ],
+    "summary": "Read, answer or remove one return request",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Return ID"
+      },
+      {
+        "name": "request",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "Fields to update (PUT only)"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "github_com_webbuilder_server_internal_returns.Request",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/sites/{siteId}/reviews",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/reviews",
+    "tags": [
+      "reviews"
+    ],
+    "summary": "List reviews, or record one as the merchant",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "product",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Filter to one product"
+      },
+      {
+        "name": "status",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "pending | published | rejected"
+      },
+      {
+        "name": "rating",
+        "in": "query",
+        "required": false,
+        "type": "integer",
+        "description": "Filter to one star count (1-5)"
+      },
+      {
+        "name": "verified",
+        "in": "query",
+        "required": false,
+        "type": "boolean",
+        "description": "Verified-purchase reviews only"
+      },
+      {
+        "name": "q",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Search the author, title and body"
+      },
+      {
+        "name": "limit",
+        "in": "query",
+        "required": false,
+        "type": "integer",
+        "description": "Page size (max 200)"
+      },
+      {
+        "name": "offset",
+        "in": "query",
+        "required": false,
+        "type": "integer",
+        "description": "Page offset"
+      },
+      {
+        "name": "review",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "Review to create (POST only)"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "github_com_webbuilder_server_internal_reviews.Review",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/api/sites/{siteId}/reviews",
+    "method": "POST",
+    "path": "/api/sites/{siteId}/reviews",
+    "tags": [
+      "reviews"
+    ],
+    "summary": "List reviews, or record one as the merchant",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "product",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Filter to one product"
+      },
+      {
+        "name": "status",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "pending | published | rejected"
+      },
+      {
+        "name": "rating",
+        "in": "query",
+        "required": false,
+        "type": "integer",
+        "description": "Filter to one star count (1-5)"
+      },
+      {
+        "name": "verified",
+        "in": "query",
+        "required": false,
+        "type": "boolean",
+        "description": "Verified-purchase reviews only"
+      },
+      {
+        "name": "q",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Search the author, title and body"
+      },
+      {
+        "name": "limit",
+        "in": "query",
+        "required": false,
+        "type": "integer",
+        "description": "Page size (max 200)"
+      },
+      {
+        "name": "offset",
+        "in": "query",
+        "required": false,
+        "type": "integer",
+        "description": "Page offset"
+      },
+      {
+        "name": "review",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "Review to create (POST only)"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "github_com_webbuilder_server_internal_reviews.Review",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/sites/{siteId}/reviews/summary",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/reviews/summary",
+    "tags": [
+      "reviews"
+    ],
+    "summary": "Per-product rating aggregates",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "products",
+        "in": "query",
+        "required": true,
+        "type": "string",
+        "description": "Comma-separated product ids"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/sites/{siteId}/reviews/{id}",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/reviews/{id}",
+    "tags": [
+      "reviews"
+    ],
+    "summary": "Read, moderate or delete one review",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Review ID"
+      },
+      {
+        "name": "review",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "Moderated review (PUT only)"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "github_com_webbuilder_server_internal_reviews.Review",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "put:/api/sites/{siteId}/reviews/{id}",
+    "method": "PUT",
+    "path": "/api/sites/{siteId}/reviews/{id}",
+    "tags": [
+      "reviews"
+    ],
+    "summary": "Read, moderate or delete one review",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Review ID"
+      },
+      {
+        "name": "review",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "Moderated review (PUT only)"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "github_com_webbuilder_server_internal_reviews.Review",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "delete:/api/sites/{siteId}/reviews/{id}",
+    "method": "DELETE",
+    "path": "/api/sites/{siteId}/reviews/{id}",
+    "tags": [
+      "reviews"
+    ],
+    "summary": "Read, moderate or delete one review",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Review ID"
+      },
+      {
+        "name": "review",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "Moderated review (PUT only)"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "github_com_webbuilder_server_internal_reviews.Review",
+    "credential": "siteScoped"
+  },
+  {
     "id": "get:/api/sites/{siteId}/roles",
     "method": "GET",
     "path": "/api/sites/{siteId}/roles",
@@ -7131,6 +9815,167 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/sites/{siteId}/shipping-methods",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/shipping-methods",
+    "tags": [
+      "shipping"
+    ],
+    "summary": "List or create shipping methods",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "method",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "Method to create (POST only)"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "github_com_webbuilder_server_internal_shipping.Method",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/api/sites/{siteId}/shipping-methods",
+    "method": "POST",
+    "path": "/api/sites/{siteId}/shipping-methods",
+    "tags": [
+      "shipping"
+    ],
+    "summary": "List or create shipping methods",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "method",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "Method to create (POST only)"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "github_com_webbuilder_server_internal_shipping.Method",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/sites/{siteId}/shipping-methods/{id}",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/shipping-methods/{id}",
+    "tags": [
+      "shipping"
+    ],
+    "summary": "Read, update or delete one shipping method",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Method ID"
+      },
+      {
+        "name": "method",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "Method to update (PUT only)"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "github_com_webbuilder_server_internal_shipping.Method",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "put:/api/sites/{siteId}/shipping-methods/{id}",
+    "method": "PUT",
+    "path": "/api/sites/{siteId}/shipping-methods/{id}",
+    "tags": [
+      "shipping"
+    ],
+    "summary": "Read, update or delete one shipping method",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Method ID"
+      },
+      {
+        "name": "method",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "Method to update (PUT only)"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "github_com_webbuilder_server_internal_shipping.Method",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "delete:/api/sites/{siteId}/shipping-methods/{id}",
+    "method": "DELETE",
+    "path": "/api/sites/{siteId}/shipping-methods/{id}",
+    "tags": [
+      "shipping"
+    ],
+    "summary": "Read, update or delete one shipping method",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Method ID"
+      },
+      {
+        "name": "method",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "Method to update (PUT only)"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "github_com_webbuilder_server_internal_shipping.Method",
     "credential": "siteScoped"
   },
   {
@@ -7670,6 +10515,34 @@ export const API_OPERATIONS: ApiOperation[] = [
         "required": true,
         "type": "string",
         "description": "Endpoint ID"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/sites/{siteId}/wishlist-demand",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/wishlist-demand",
+    "tags": [
+      "wishlist"
+    ],
+    "summary": "What shoppers are waiting for, ranked by how many",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "limit",
+        "in": "query",
+        "required": false,
+        "type": "integer",
+        "description": "How many products to rank (default 50, max 200)"
       }
     ],
     "bodyDescribed": false,
@@ -9662,6 +12535,9 @@ export const API_DEFINITIONS: Record<string, unknown> = {
       "country": {
         "type": "string"
       },
+      "district": {
+        "type": "string"
+      },
       "fullName": {
         "type": "string"
       },
@@ -9679,12 +12555,19 @@ export const API_DEFINITIONS: Record<string, unknown> = {
       },
       "province": {
         "type": "string"
+      },
+      "ward": {
+        "type": "string"
       }
     }
   },
   "github_com_webbuilder_server_internal_customers.Customer": {
     "type": "object",
     "properties": {
+      "acceptsMarketing": {
+        "description": "AcceptsMarketing is CONSENT — a fact about what this person agreed to,\nwith MarketingOptInAt as when. STORED, unlike the computed pair above,\nbecause it derives from nothing. It has exactly ONE door:\nSetMarketingConsent. CreateCustomer strips it and UpdateCustomer\npreserves the stored value (the CreatedAt treatment), so a PUT that\nsimply omits the field cannot silently unsubscribe a whole list.\nThe timestamp stands only while consent does — a revoke clears it,\nbecause a revoked consent wearing its old date reads as a standing one.",
+        "type": "boolean"
+      },
       "addresses": {
         "type": "array",
         "items": {
@@ -9704,6 +12587,9 @@ export const API_DEFINITIONS: Record<string, unknown> = {
       "id": {
         "type": "string"
       },
+      "marketingOptInAt": {
+        "type": "string"
+      },
       "name": {
         "type": "string"
       },
@@ -9716,6 +12602,10 @@ export const API_DEFINITIONS: Record<string, unknown> = {
       },
       "phone": {
         "type": "string"
+      },
+      "registered": {
+        "description": "Registered reports whether this person has ever set a password, i.e.\nwhether customerauth holds credentials for them. COMPUTED at read time\nlike the two above and stored nowhere: the fact belongs to the auth\ncontext, and a copy here would be a second answer that goes stale the\nmoment somebody registers.\n\nFALSE IS THE ORDINARY CASE. A guest checkout creates a customer with no\ncredentials, and until this field existed nothing on any screen could\ntell that person apart from one who had made an account.",
+        "type": "boolean"
       },
       "siteId": {
         "type": "string"
@@ -9872,6 +12762,107 @@ export const API_DEFINITIONS: Record<string, unknown> = {
       }
     }
   },
+  "github_com_webbuilder_server_internal_forms.BookingSettings": {
+    "type": "object",
+    "properties": {
+      "allowRepeatBooking": {
+        "description": "AllowRepeatBooking turns the duplicate guard OFF: the same phone may\nthen book the exact same date+slot twice — a parent booking two\nhaircuts into one sitting. NAMED FOR THE NON-DEFAULT so the Go zero\nvalue is the product default (guard ON), the site.SubdomainRedirect\nlesson.",
+        "type": "boolean"
+      },
+      "closedDates": {
+        "description": "ClosedDates lists specific days the shop does not take bookings —\nholidays, Tết, a renovation week — each `YYYY-MM-DD`. The weekday set\non the date field cannot express these; this list can. Normalized on\nthe way in (validate: shape-checked, capped) and matched by DAY. On a\nSTAY form a closed day refuses any stay whose NIGHTS cover it —\nchecking out on a closed morning is fine, sleeping through it is not.",
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "customerMail": {
+        "description": "CustomerMail switches the booker's own notices on (customernotice.go):\nbooked, confirmed, cancelled, deposit paid, hold expired, the reminder.\nOff by default; needs an email box mapped to customer.email.",
+        "type": "boolean"
+      },
+      "dayRules": {
+        "description": "DayRules override the capacity numbers above on particular DAYS — a\nrota. Keyed by a weekday (`mon`…`sun`) or a date (`YYYY-MM-DD`); a\ndate rule beats a weekday rule, and within a rule an option's own\nentry beats its MaxPerSlot. Every field 0 / absent = inherit from the\nlevel below (date → weekday → the general rulebook), so a Saturday\nrule that only sets MaxPerDay leaves the per-slot numbers alone.\nResolved by CapFor / DayCap, which every counter asks per DAY (per\nNIGHT on a stay) — never by reading this map directly.",
+        "type": "object",
+        "additionalProperties": {
+          "$ref": "#/definitions/github_com_webbuilder_server_internal_forms.DayRule"
+        }
+      },
+      "depositHoldMinutes": {
+        "description": "DepositHoldMinutes is how long an awaiting_deposit row keeps its seat\nbefore the hold lapses (see StatusAwaitingDeposit). 0 = the default,\nDefaultDepositHoldMinutes; validated 5..1440 otherwise. Minutes, not\nhours, because a gateway pay link lives in minutes.",
+        "type": "integer"
+      },
+      "depositPercent": {
+        "description": "DepositPercent takes the deposit as a SHARE of the service's price\ninstead of a fixed product: the slot option the visitor chose\n(a room type, a service) maps through ServiceProducts to the product\nthat carries the price, and the orders context prices a custom line\nat Percent of it. When the chosen option has no mapping the fixed\nDepositProductID still applies, and with neither the booking is free.\n0 = off; 1..100.",
+        "type": "integer"
+      },
+      "depositProductId": {
+        "description": "DepositProductID makes a booking COST something: when set, every\naccepted booking also creates an ORDER for this one product (quantity\n1), through the same sink, price and gateways an order form uses —\nso a deposit is a product the merchant creates (\"Đặt cọc 200.000₫\"),\nnever an amount stated on this side of an anonymous endpoint (the\nOrderDraft rule). A payment-method field on the form picks how it is\npaid; without one the order is unpaid, like a COD order. Empty = free.",
+        "type": "string"
+      },
+      "maxAdvanceDays": {
+        "description": "MaxAdvanceDays refuses dates further out than this many days. 0 = no\nhorizon.",
+        "type": "integer"
+      },
+      "maxPerCustomer": {
+        "description": "MaxPerCustomer caps how many UPCOMING (today-onwards) accepted\nbookings one visitor — by phone digits, else email — may hold at once.\n0 = unlimited.",
+        "type": "integer"
+      },
+      "maxPerDay": {
+        "description": "MaxPerDay caps accepted bookings across the WHOLE day, on top of (and\nindependent of) MaxPerSlot — a restaurant seats ten per sitting but\nforty a night; a studio with no slot field expresses day capacity\nthrough MaxPerSlot instead, so this matters only alongside slots.\n0 = unlimited.",
+        "type": "integer"
+      },
+      "maxPerSlot": {
+        "description": "MaxPerSlot caps how many accepted bookings may share one date+slot\n(one DAY, when the form has no slot field). 0 = unlimited.",
+        "type": "integer"
+      },
+      "maxStayNights": {
+        "type": "integer"
+      },
+      "minNoticeDays": {
+        "description": "MinNoticeDays refuses dates sooner than this many days from today —\n1 means \"not today\", 2 means \"the day after tomorrow at the earliest\".\nDays, not hours, because the date field is a date: an hours rule\nagainst a field with no clock would be a rule about a number the\nvisitor never entered. 0 = today is bookable.",
+        "type": "integer"
+      },
+      "minStayNights": {
+        "description": "MinStayNights / MaxStayNights bound a STAY's length (a form with two\ndate fields). The homestay-weekend case: a 2-night minimum; and its\nmirror for shops that will not hold a room half a year. 0 = no rule.\nMeaningless — and ignored — on a single-date form.",
+        "type": "integer"
+      },
+      "reminderDaysBefore": {
+        "description": "ReminderDaysBefore sends the reminder this many days before the\nbooking day, at ReminderHour site-local. 0 = no reminder. 1..30.",
+        "type": "integer"
+      },
+      "serviceProducts": {
+        "description": "ServiceProducts maps a slot option STRING (the rota's keying rule) to\nthe product whose catalogue price is the service's price. ≤ 200.",
+        "type": "object",
+        "additionalProperties": {
+          "type": "string"
+        }
+      },
+      "slotCapacity": {
+        "description": "SlotCapacity caps ONE slot option at its own number — \"Phòng đôi\": 2,\n\"Thợ Hùng\": 1 — where MaxPerSlot is the same number for every option.\nA value here wins for its option; an option not named falls back to\nMaxPerSlot. Keyed by the option STRING the field offers (the same\nstring a submission carries), so renaming an option in the form\norphans its entry here: the panel lists the live options, an orphan\nis dropped on save. 0 or absent = the general cap.",
+        "type": "object",
+        "additionalProperties": {
+          "type": "integer"
+        }
+      }
+    }
+  },
+  "github_com_webbuilder_server_internal_forms.DayRule": {
+    "type": "object",
+    "properties": {
+      "maxPerDay": {
+        "type": "integer"
+      },
+      "maxPerSlot": {
+        "type": "integer"
+      },
+      "slotCapacity": {
+        "type": "object",
+        "additionalProperties": {
+          "type": "integer"
+        }
+      }
+    }
+  },
   "github_com_webbuilder_server_internal_forms.Form": {
     "type": "object",
     "properties": {
@@ -9933,6 +12924,14 @@ export const API_DEFINITIONS: Record<string, unknown> = {
       "afterSubmit": {
         "$ref": "#/definitions/github_com_webbuilder_server_internal_forms.AfterSubmit"
       },
+      "booking": {
+        "description": "Booking is the booking-form rulebook (TypeBooking only — see\nbooking.go). Ignored on every other type, and `omitzero` keeps it out\nof stored JSON until an author actually sets a rule.",
+        "allOf": [
+          {
+            "$ref": "#/definitions/github_com_webbuilder_server_internal_forms.BookingSettings"
+          }
+        ]
+      },
       "limitOnePerIpPerDay": {
         "description": "LimitOnePerIPPerDay is an OPTIONAL extra throttle. The honeypot and the\nbaseline rate limit are always on and are not exposed here: a\nmerchant cannot switch off spam protection they did not know they had.",
         "type": "boolean"
@@ -9952,40 +12951,26 @@ export const API_DEFINITIONS: Record<string, unknown> = {
           }
         ]
       },
+      "reviewProductId": {
+        "description": "ReviewProductID is what a type=review form reviews, PINNED by the\nmerchant — OrderProductID's twin, and the trustworthy half of the two\nanswers this type accepts.\n\nThe other half is Payload.ProductID, which the product page carrying the\nform supplies. A review form is naturally placed on a product template\nthat renders for a whole catalogue, so a per-form pin cannot be the only\nanswer the way it is for an order form; and unlike an order, nothing on\nthis path spends money or reserves stock, so the page being able to name\nthe product is a bounded exposure: the worst a forged id achieves is a\nreview queued for moderation against the wrong product, which is a thing\na merchant sees and rejects BEFORE it is published or counted (see\nreviews.Status.Counts).\n\nTHE PIN WINS when set, because it is the value a caller cannot change.\nSee ReviewDraft.ProductID.",
+        "type": "string"
+      },
       "skipStorage": {
         "description": "SkipStorage turns OFF storing responses (sink-only forms).\n\nDeliberately NAMED FOR THE NON-DEFAULT so the Go zero value is the\nproduct default. The repo has been bitten by the opposite: a\ndefault-true bool (site.SubdomainRedirect) meant every struct literal\nthat omitted it described a site with the feature off, and two\nstorefront fixtures silently changed behaviour. Naming this\nStoreResponses would repeat that with a much worse blast radius —\na zero-valued Settings would discard every response.",
         "type": "boolean"
-      },
-      "stepMode": {
-        "description": "StepMode and SubmitSegmentID drive how segments are presented and which\none carries the submit button. Empty StepMode means StepModeParts.",
-        "allOf": [
-          {
-            "$ref": "#/definitions/github_com_webbuilder_server_internal_forms.StepMode"
-          }
-        ]
       },
       "submitLabel": {
         "description": "SubmitLabel / SubmittingLabel: the button's resting and in-flight text.\nAn in-flight label is not decoration — without one the visitor gets no\nfeedback and presses again, which is how one intent becomes two rows.",
         "type": "string"
       },
       "submitSegmentId": {
+        "description": "SubmitSegmentID is which segment carries the submit button.\n\n`StepMode` stood beside it and is GONE. It asked the author to declare,\non the form, how its segments reach the visitor — while the page already\nsaid it: place the form whole and the visitor walks it with Back / Next,\npin a part and that part renders where it was put. See\npage.stepModeOf, which is now the whole of the answer. A stored value is\nsimply dropped on the next write; nothing reads it.",
         "type": "string"
       },
       "submittingLabel": {
         "type": "string"
       }
     }
-  },
-  "github_com_webbuilder_server_internal_forms.StepMode": {
-    "type": "string",
-    "enum": [
-      "parts",
-      "steps"
-    ],
-    "x-enum-varnames": [
-      "StepModeParts",
-      "StepModeSteps"
-    ]
   },
   "github_com_webbuilder_server_internal_forms.Type": {
     "type": "string",
@@ -9994,6 +12979,8 @@ export const API_DEFINITIONS: Record<string, unknown> = {
       "contact",
       "subscribe",
       "order",
+      "booking",
+      "review",
       "login",
       "register",
       "forgot",
@@ -10005,12 +12992,68 @@ export const API_DEFINITIONS: Record<string, unknown> = {
       "TypeContact",
       "TypeSubscribe",
       "TypeOrder",
+      "TypeBooking",
+      "TypeReview",
       "TypeLogin",
       "TypeRegister",
       "TypeForgot",
       "TypeReset",
       "TypeVerify"
     ]
+  },
+  "github_com_webbuilder_server_internal_giftcards.GiftCard": {
+    "type": "object",
+    "properties": {
+      "balanceCents": {
+        "description": "BalanceCents is Σ delta. DERIVED — see the type doc.",
+        "type": "integer"
+      },
+      "code": {
+        "description": "Code is what a shopper types. Stored upper-cased; unique per site.",
+        "type": "string"
+      },
+      "createdAt": {
+        "type": "string"
+      },
+      "currency": {
+        "type": "string"
+      },
+      "customerId": {
+        "description": "CustomerID optionally BINDS the card to one shopper, so a code that leaks\ncannot be spent by whoever found it. Blank means bearer — anyone holding\nthe code can spend it, which is what a printed gift card IS.",
+        "type": "string"
+      },
+      "expiresAt": {
+        "description": "ExpiresAt is when the card stops being redeemable, or nil for never.\nA POINTER because \"no expiry\" and \"expired at the zero time\" are\ndifferent facts and a zero time.Time cannot tell them apart.",
+        "type": "string"
+      },
+      "id": {
+        "type": "string"
+      },
+      "initialCents": {
+        "description": "InitialCents is the face value the card opened with — kept beside the\nledger so a screen can say \"200k of 500k left\" without summing history,\nand so a written-off card still shows what it was issued for.",
+        "type": "integer"
+      },
+      "note": {
+        "type": "string"
+      },
+      "recipientEmail": {
+        "type": "string"
+      },
+      "recipientName": {
+        "description": "RecipientName and RecipientEmail are who the card was bought FOR. Purely\ndescriptive: this context sends nothing and gates nothing on them. They\nexist so a merchant issuing fifty cards by hand can tell them apart.",
+        "type": "string"
+      },
+      "siteId": {
+        "type": "string"
+      },
+      "status": {
+        "description": "Status is active | void. See the constants: expiry is not in here.",
+        "type": "string"
+      },
+      "updatedAt": {
+        "type": "string"
+      }
+    }
   },
   "github_com_webbuilder_server_internal_httpx.ErrorResponse": {
     "type": "object",
@@ -10208,6 +13251,10 @@ export const API_DEFINITIONS: Record<string, unknown> = {
       "customerId": {
         "type": "string"
       },
+      "depositCents": {
+        "description": "DepositCents is how much the NEXT payment against this order asks for —\nđặt cọc. NOT derived, unlike every total above it: a merchant sets it,\nand the Store must never recompute it.\n\nZero means \"no deposit\": collect whatever is still owed, which is what\nevery order did before this field existed. A value larger than what\nremains is clamped by the payments context rather than refused here —\nthe order is the merchant's statement of intent, and a deposit left at\n500k on an order with 200k outstanding should collect 200k, not fail.\n\nIt lives HERE rather than in a charge request because internal/payments\ntakes no amount from any request body. A number typed into one becomes a\ncharge nobody can reconcile; a number stored on the order is on the\nrecord both sides read.",
+        "type": "integer"
+      },
       "discountCents": {
         "description": "resolved from DiscountCode on create",
         "type": "integer"
@@ -10222,6 +13269,18 @@ export const API_DEFINITIONS: Record<string, unknown> = {
       },
       "fulfillment": {
         "$ref": "#/definitions/github_com_webbuilder_server_internal_orders.FulfillmentStatus"
+      },
+      "giftCardCents": {
+        "description": "GiftCardCents is how much stored value paid for this order.\n\nNOT A DISCOUNT, and deliberately not folded into TotalCents: a gift card\nis money the merchant was already paid, so the goods still cost what they\ncost and the tax on them is still owed. It reduces what is left to\nCOLLECT, which is where it is subtracted — see NewPayableReader. Treating\nit as a price cut would under-report revenue by the face value of every\ncard ever redeemed.\n\nZero on every order that used no card, which is every order placed before\nthis field existed.",
+        "type": "integer"
+      },
+      "giftCardCode": {
+        "description": "GiftCardCode is the stored-value code entered at checkout (input). On\ncreate the checkout service spends it and normalises this field to the\ncard's own display code (\"\" when none was applied).",
+        "type": "string"
+      },
+      "giftCardId": {
+        "description": "GiftCardID is the card the checkout service debited (\"\" = none).",
+        "type": "string"
       },
       "id": {
         "type": "string"
@@ -10250,6 +13309,10 @@ export const API_DEFINITIONS: Record<string, unknown> = {
       "shippingCents": {
         "type": "integer"
       },
+      "shippingMethod": {
+        "description": "ShippingMethod is the delivery option this order was placed under — the\nmerchant-authored NAME, the same string internal/shipping keys a method\nby. It is what ShippingCents was derived FROM on a storefront order, and\nkeeping it on the record is what lets a merchant see why a fee is what it\nis (or why it is zero, when the option no longer exists).\n\nEmpty on every order that names no option, which is every order placed\nbefore this field existed and every merchant-typed order whose\nShippingCents was entered by hand.",
+        "type": "string"
+      },
       "siteId": {
         "type": "string"
       },
@@ -10261,6 +13324,16 @@ export const API_DEFINITIONS: Record<string, unknown> = {
         "type": "integer"
       },
       "taxCents": {
+        "type": "integer"
+      },
+      "taxIncluded": {
+        "type": "boolean"
+      },
+      "taxLabel": {
+        "type": "string"
+      },
+      "taxRateBps": {
+        "description": "The TAX SNAPSHOT — what rate was charged, whether the item prices already\ncarried it, and what the merchant calls it.\n\nCarried on the ORDER rather than re-derived from the site's current\nsetting, for the reason every line price is: a rate is a setting a\nmerchant changes, and an order is a record of what was charged. Deriving\nlast year's tax from this year's rate is how a store's books stop\nmatching its invoices.\n\nAll three are zero on every order placed before tax was computed and on\nevery site that charges none — which is what keeps those orders reading\nexactly as they always did. See orders.ApplyTax.",
         "type": "integer"
       },
       "totalCents": {
@@ -10353,6 +13426,45 @@ export const API_DEFINITIONS: Record<string, unknown> = {
       "PaymentStatusPartial",
       "PaymentStatusRefunded"
     ]
+  },
+  "github_com_webbuilder_server_internal_orders.Shipment": {
+    "type": "object",
+    "properties": {
+      "carrier": {
+        "description": "Carrier is the merchant's own name for who is carrying it (\"Giao Hàng\nNhanh\", \"Viettel Post\", \"shipper của shop\"). Free text on purpose — see\nTrackingURL for why there is no built-in carrier registry.",
+        "type": "string"
+      },
+      "createdAt": {
+        "type": "string"
+      },
+      "id": {
+        "type": "string"
+      },
+      "note": {
+        "description": "Note is anything the merchant wants on the record (\"giao buổi chiều\",\n\"2/3 kiện\"). Not shown to the buyer.",
+        "type": "string"
+      },
+      "orderId": {
+        "type": "string"
+      },
+      "shippedAt": {
+        "description": "ShippedAt is when the parcel actually left, which is not always when the\nrow was created — a merchant records yesterday's parcels this morning.",
+        "type": "string"
+      },
+      "siteId": {
+        "type": "string"
+      },
+      "trackingNumber": {
+        "type": "string"
+      },
+      "trackingUrl": {
+        "description": "TrackingURL is where the buyer can follow the parcel. OPTIONAL and\nmerchant-supplied.\n\nThere is deliberately NO built-in table of carrier URL templates. The\nshape would be easy — a map from carrier to a \"…?code={code}\" template —\nand it is the obvious N-case generalisation this codebase usually\nprefers. What stops it is that those URLs are EXTERNAL FACTS that change\nwithout notice, and a wrong one is not a visible bug: it is a link in a\ncustomer's email that quietly 404s, discovered by the customer. Seeding a\nregistry with URLs nobody here verified would be inventing data.\n\nThe seam is left open: this field is per-shipment, so a future registry\nonly has to fill it in at create time and nothing else changes.",
+        "type": "string"
+      },
+      "updatedAt": {
+        "type": "string"
+      }
+    }
   },
   "github_com_webbuilder_server_internal_page.BulkResult": {
     "type": "object",
@@ -10759,6 +13871,227 @@ export const API_DEFINITIONS: Record<string, unknown> = {
       }
     }
   },
+  "github_com_webbuilder_server_internal_returns.Line": {
+    "type": "object",
+    "properties": {
+      "name": {
+        "type": "string"
+      },
+      "priceCents": {
+        "type": "integer"
+      },
+      "productId": {
+        "type": "string"
+      },
+      "quantity": {
+        "type": "integer"
+      },
+      "sku": {
+        "type": "string"
+      },
+      "variantId": {
+        "type": "string"
+      }
+    }
+  },
+  "github_com_webbuilder_server_internal_returns.Reason": {
+    "type": "string",
+    "enum": [
+      "damaged",
+      "wrong_item",
+      "not_as_described",
+      "size_fit",
+      "changed_mind",
+      "other"
+    ],
+    "x-enum-varnames": [
+      "ReasonDamaged",
+      "ReasonWrongItem",
+      "ReasonNotAsDescribed",
+      "ReasonSizeFit",
+      "ReasonChangedMind",
+      "ReasonOther"
+    ]
+  },
+  "github_com_webbuilder_server_internal_returns.Request": {
+    "type": "object",
+    "properties": {
+      "comment": {
+        "description": "Comment is the shopper's own words. Free text beside the closed Reason\nvocabulary, because \"it does not fit\" and \"the sleeve came unstitched at\nthe shoulder after one wear\" are both true and only one of them is\nactionable.",
+        "type": "string"
+      },
+      "createdAt": {
+        "type": "string"
+      },
+      "customerId": {
+        "description": "CustomerID is server-set from the session and never read from a request\nbody — see the package doc.",
+        "type": "string"
+      },
+      "id": {
+        "type": "string"
+      },
+      "lines": {
+        "type": "array",
+        "items": {
+          "$ref": "#/definitions/github_com_webbuilder_server_internal_returns.Line"
+        }
+      },
+      "orderId": {
+        "description": "OrderID and OrderNumber are both carried: the id is the link, the number\nis what a merchant and a shopper both call it out loud. A queue that\nshowed only ids would make every row a lookup.",
+        "type": "string"
+      },
+      "orderNumber": {
+        "type": "string"
+      },
+      "reason": {
+        "$ref": "#/definitions/github_com_webbuilder_server_internal_returns.Reason"
+      },
+      "refundCents": {
+        "description": "RefundCents is what the merchant actually gave back, which is NOT\nnecessarily what the lines are worth: a restocking fee, a partial\ngoodwill refund, or shipping refunded on a merchant-fault return all make\nthem differ. Recorded rather than derived for exactly that reason.",
+        "type": "integer"
+      },
+      "restocked": {
+        "description": "Restocked says the merchant judged the returned units sellable and put\nthem back. FALSE by default and only ever set by a person: see the\npackage doc on why this is never automatic.",
+        "type": "boolean"
+      },
+      "siteId": {
+        "type": "string"
+      },
+      "staffNote": {
+        "description": "StaffNote is the merchant's own words — why they approved, refused, or\nrefunded less than was asked. Never shown to the shopper by this context;\nit is the record a second person on the same team reads.",
+        "type": "string"
+      },
+      "status": {
+        "$ref": "#/definitions/github_com_webbuilder_server_internal_returns.Status"
+      },
+      "updatedAt": {
+        "type": "string"
+      }
+    }
+  },
+  "github_com_webbuilder_server_internal_returns.Status": {
+    "type": "string",
+    "enum": [
+      "requested",
+      "approved",
+      "rejected",
+      "received",
+      "refunded",
+      "cancelled"
+    ],
+    "x-enum-varnames": [
+      "StatusRequested",
+      "StatusApproved",
+      "StatusRejected",
+      "StatusReceived",
+      "StatusRefunded",
+      "StatusCancelled"
+    ]
+  },
+  "github_com_webbuilder_server_internal_reviews.Review": {
+    "type": "object",
+    "properties": {
+      "authorName": {
+        "description": "AuthorName is what appears beside the review. Free text the reviewer\ntyped — the customer record's name is not used, because a shopper may\nreasonably want to be \"Minh N.\" in public and their full name on an\ninvoice.",
+        "type": "string"
+      },
+      "body": {
+        "type": "string"
+      },
+      "createdAt": {
+        "type": "string"
+      },
+      "customerId": {
+        "description": "CustomerID is the signed-in shopper who wrote it, or \"\" for a guest.\nResolved by the server from the session, never from the payload.",
+        "type": "string"
+      },
+      "id": {
+        "type": "string"
+      },
+      "productId": {
+        "description": "ProductID is what is being reviewed. Required — a review of nothing has\nnowhere to appear and nothing to average into.",
+        "type": "string"
+      },
+      "rating": {
+        "description": "Rating is 1-5 inclusive. Refused outside that range rather than clamped:\na 0 or a 7 arriving means the caller is wrong about something, and\nsilently storing a 5 for a 7 would move a product's average on the\nstrength of a bug.",
+        "type": "integer"
+      },
+      "reply": {
+        "description": "Reply is the merchant's public answer, shown beneath the review. Empty\nwhen they have not answered.",
+        "type": "string"
+      },
+      "siteId": {
+        "type": "string"
+      },
+      "status": {
+        "$ref": "#/definitions/github_com_webbuilder_server_internal_reviews.Status"
+      },
+      "title": {
+        "type": "string"
+      },
+      "updatedAt": {
+        "type": "string"
+      },
+      "verified": {
+        "description": "Verified says the reviewer had actually bought this product when they\nwrote it. SERVER-COMPUTED at submission from the orders context's\npurchase history and never writable — see the package doc.",
+        "type": "boolean"
+      }
+    }
+  },
+  "github_com_webbuilder_server_internal_reviews.Status": {
+    "type": "string",
+    "enum": [
+      "pending",
+      "published",
+      "rejected"
+    ],
+    "x-enum-varnames": [
+      "StatusPending",
+      "StatusPublished",
+      "StatusRejected"
+    ]
+  },
+  "github_com_webbuilder_server_internal_shipping.Method": {
+    "type": "object",
+    "properties": {
+      "createdAt": {
+        "type": "string"
+      },
+      "description": {
+        "description": "Description is the reassurance beside the option (\"2-3 ngày làm việc\").\nFree-form and never matched on.",
+        "type": "string"
+      },
+      "disabled": {
+        "description": "Disabled keeps a method configured but unofferable.\n\nNEGATIVE, so the zero value is the enabled default. A positive `Active`\nwould mean every Method built by a literal — every fixture, every\nhand-constructed test double — silently described a switched-off method,\nwhich is the default-true bool trap the webbuilder-go-api skill records\nfrom site.SubdomainRedirect. Inverting costs nothing while the column is\nstill ours to choose.",
+        "type": "boolean"
+      },
+      "feeCents": {
+        "description": "FeeCents is what this option costs, in minor units.",
+        "type": "integer"
+      },
+      "freeOverCents": {
+        "description": "FreeOverCents waives the fee once the order's subtotal reaches it.\n\nZERO MEANS \"never free\", not \"always free\". That reading is the one a\nmerchant expects from an empty box, and it is also the safe direction to\nbe wrong in: the alternative would make every method that was never\nconfigured ship for nothing.",
+        "type": "integer"
+      },
+      "id": {
+        "type": "string"
+      },
+      "name": {
+        "description": "Name is what the shopper reads AND the pairing key an order form's\nchosen option is matched against — see the package doc. Unique per site,\ncase-insensitively.",
+        "type": "string"
+      },
+      "position": {
+        "description": "Position is the merchant's arrangement; ties break on Name.",
+        "type": "integer"
+      },
+      "siteId": {
+        "type": "string"
+      },
+      "updatedAt": {
+        "type": "string"
+      }
+    }
+  },
   "github_com_webbuilder_server_internal_webhooks.EventType": {
     "type": "string",
     "enum": [
@@ -10769,7 +14102,9 @@ export const API_DEFINITIONS: Record<string, unknown> = {
       "product.created",
       "product.updated",
       "product.deleted",
-      "page.published"
+      "page.published",
+      "course.enrolled",
+      "course.revoked"
     ],
     "x-enum-varnames": [
       "EventOrderCreated",
@@ -10779,13 +14114,36 @@ export const API_DEFINITIONS: Record<string, unknown> = {
       "EventProductCreated",
       "EventProductUpdated",
       "EventProductDeleted",
-      "EventPagePublished"
+      "EventPagePublished",
+      "EventCourseEnrolled",
+      "EventCourseRevoked"
     ]
   },
   "internal_appinstalls_rest.versionChoice": {
     "type": "object",
     "properties": {
       "versionId": {
+        "type": "string"
+      }
+    }
+  },
+  "internal_courses_rest.extendBody": {
+    "type": "object",
+    "properties": {
+      "days": {
+        "type": "integer"
+      }
+    }
+  },
+  "internal_giftcards_rest.adjustRequest": {
+    "type": "object",
+    "properties": {
+      "deltaCents": {
+        "description": "DeltaCents moves the balance either way. Never an absolute \"set the\nbalance to X\": a ledger records what HAPPENED, and two staff correcting\nthe same card a second apart would otherwise silently overwrite each\nother's answer instead of both being recorded.",
+        "type": "integer"
+      },
+      "note": {
+        "description": "Note is required. An unexplained movement of money is the one thing a\nledger exists to prevent.",
         "type": "string"
       }
     }
@@ -10797,6 +14155,10 @@ export const API_DEFINITIONS: Record<string, unknown> = {
         "type": "string"
       },
       "country": {
+        "type": "string"
+      },
+      "district": {
+        "description": "The two lower Vietnamese levels — quận/huyện and phường/xã.\n\nONE DTO, TWO SOURCES, AND ONLY ONE OF THEM CAN FILL THESE. A CUSTOMER's\naddress carries them (customers.Address grew its own fields; see its doc\ncomment for why fusing them into City was lossy). An ORDER's address does\nnot yet — internal/orders keeps its own Address, still fusing district\ninto City, and moving that is its own wave in its own context.\n\nSo an order address answers `\"\"` here, and that is the truth about the\norder context rather than a missing value on the address. Added beside\nCity rather than replacing it: this is a published API shape, and a\ncustomer outside Vietnam has a city and neither of these.",
         "type": "string"
       },
       "fullName": {
@@ -10815,6 +14177,9 @@ export const API_DEFINITIONS: Record<string, unknown> = {
         "type": "string"
       },
       "province": {
+        "type": "string"
+      },
+      "ward": {
         "type": "string"
       }
     }
@@ -11111,6 +14476,10 @@ export const API_DEFINITIONS: Record<string, unknown> = {
   "internal_publicapi.Customer": {
     "type": "object",
     "properties": {
+      "acceptsMarketing": {
+        "description": "Marketing consent, READ-ONLY through this API. An email integration is\nexactly who needs it — without these two, a merchant's mailing list\ncannot be exported by machine, only read off the screen. Read-only\nbecause the write is a consent decision with its own rules (forms grant,\nnever revoke; the ordinary update never touches it); a partner write\nsurface would need those rules restated for a third door, and until an\nintegration actually asks to sync unsubscribes back, two doors are the\nwhole story. MarketingOptInAt is zero-omitted: absent means \"never\nconsented\", which reads truer than a 0001-01-01 timestamp.",
+        "type": "boolean"
+      },
       "addresses": {
         "description": "Addresses in the order the merchant arranged them.",
         "type": "array",
@@ -11129,6 +14498,9 @@ export const API_DEFINITIONS: Record<string, unknown> = {
         "type": "string"
       },
       "id": {
+        "type": "string"
+      },
+      "marketingOptInAt": {
         "type": "string"
       },
       "name": {
@@ -11368,6 +14740,13 @@ export const API_DEFINITIONS: Record<string, unknown> = {
       },
       "taxCents": {
         "type": "integer"
+      },
+      "taxIncluded": {
+        "description": "The TAX SNAPSHOT — the merchant's own name for the tax and whether it was\nalready inside the prices. Omitted for an order that records none, which\nis every order from a site that charges no tax.\n\nTaxIncluded is not a display nicety: an included tax is a BREAKDOWN of\nTotalCents rather than a term added to it, so a shopper's own order\nhistory cannot lay the numbers out correctly without it. The rate itself\nstays behind — it is the merchant's setting, and the amount is what the\nshopper was charged.",
+        "type": "boolean"
+      },
+      "taxLabel": {
+        "type": "string"
       },
       "totalCents": {
         "type": "integer"

@@ -3,7 +3,7 @@
 import type { CatalogElement, TraitDescription } from './element-types.js';
 
 export const ELEMENT_SOURCE = {
-  "count": 85,
+  "count": 106,
   "docSchemaVersion": 2
 } as const;
 
@@ -1656,6 +1656,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
         "filterExcluded": [],
         "filterColors": {},
         "filterMatch": "any",
+        "filterArity": "",
         "filterBehavior": "filter",
         "filterTargets": [],
         "filterRanges": []
@@ -1680,6 +1681,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
               "filter_box_radius",
               "filter_gap",
               "filter_label_gap",
+              "filter_indent",
               "filter_columns"
             ]
           },
@@ -1782,6 +1784,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
       "filter_box_radius",
       "filter_gap",
       "filter_label_gap",
+      "filter_indent",
       "filter_columns",
       "filter_accent",
       "filter_box_border_color",
@@ -1861,6 +1864,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
         "filterExcluded": [],
         "filterColors": {},
         "filterMatch": "any",
+        "filterArity": "",
         "filterBehavior": "filter",
         "filterTargets": [],
         "filterRanges": []
@@ -1885,6 +1889,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
               "filter_box_radius",
               "filter_gap",
               "filter_label_gap",
+              "filter_indent",
               "filter_columns"
             ]
           },
@@ -1987,6 +1992,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
       "filter_box_radius",
       "filter_gap",
       "filter_label_gap",
+      "filter_indent",
       "filter_columns",
       "filter_accent",
       "filter_box_border_color",
@@ -2067,6 +2073,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
         "filterExcluded": [],
         "filterColors": {},
         "filterMatch": "any",
+        "filterArity": "",
         "filterBehavior": "filter",
         "filterTargets": [],
         "filterRanges": []
@@ -2091,6 +2098,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
               "filter_box_radius",
               "filter_gap",
               "filter_label_gap",
+              "filter_indent",
               "filter_columns"
             ]
           },
@@ -2193,6 +2201,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
       "filter_box_radius",
       "filter_gap",
       "filter_label_gap",
+      "filter_indent",
       "filter_columns",
       "filter_accent",
       "filter_box_border_color",
@@ -2272,6 +2281,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
         "filterExcluded": [],
         "filterColors": {},
         "filterMatch": "any",
+        "filterArity": "",
         "filterBehavior": "filter",
         "filterTargets": [],
         "filterRanges": []
@@ -3725,8 +3735,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
             "label": "Background",
             "controls": [
               "bg_color",
-              "bg_image",
-              "bg_video"
+              "bg_image"
             ]
           },
           {
@@ -3784,7 +3793,6 @@ export const ELEMENTS: Record<string, CatalogElement> = {
       "size_bounds",
       "bg_color",
       "bg_image",
-      "bg_video",
       "border",
       "corner",
       "shadow",
@@ -3827,7 +3835,11 @@ export const ELEMENTS: Record<string, CatalogElement> = {
       "specials": {
         "title": "Đơn hàng của bạn",
         "emptyText": "Chưa có đơn hàng nào.",
-        "signedOutText": "Đăng nhập để xem đơn hàng của bạn"
+        "signedOutText": "Đăng nhập để xem đơn hàng của bạn",
+        "lookupEnabled": true,
+        "lookupNumberPlaceholder": "Mã đơn hàng (VD: #1001)",
+        "lookupContactPlaceholder": "Số điện thoại hoặc email",
+        "lookupButtonText": "Tra cứu"
       },
       "config": {
         "rowLimit": 5
@@ -3847,7 +3859,11 @@ export const ELEMENTS: Record<string, CatalogElement> = {
               "account_title",
               "account_empty_text",
               "account_signed_out_text",
-              "account_row_limit"
+              "account_row_limit",
+              "account_lookup_enabled",
+              "account_lookup_number",
+              "account_lookup_contact",
+              "account_lookup_button"
             ]
           },
           {
@@ -3864,8 +3880,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
             "label": "Background",
             "controls": [
               "bg_color",
-              "bg_image",
-              "bg_video"
+              "bg_image"
             ]
           },
           {
@@ -3918,12 +3933,15 @@ export const ELEMENTS: Record<string, CatalogElement> = {
       "account_empty_text",
       "account_signed_out_text",
       "account_row_limit",
+      "account_lookup_enabled",
+      "account_lookup_number",
+      "account_lookup_contact",
+      "account_lookup_button",
       "width_select",
       "height_select",
       "size_bounds",
       "bg_color",
       "bg_image",
-      "bg_video",
       "border",
       "corner",
       "shadow",
@@ -3950,6 +3968,1461 @@ export const ELEMENTS: Record<string, CatalogElement> = {
       "orders",
       "order-history",
       "customer",
+      "signed-in"
+    ]
+  },
+  "course-outline": {
+    "type": "course-outline",
+    "label": "Course Syllabus",
+    "category": "advanced",
+    "isContainer": false,
+    "isRootOnly": false,
+    "locked": false,
+    "hideInLayer": false,
+    "childAllows": [],
+    "defaults": {
+      "specials": {
+        "courseId": "",
+        "emptyText": "Khoá học này chưa có bài nào."
+      },
+      "style": {
+        "width": "100%"
+      }
+    },
+    "inspector": [
+      {
+        "tab": "general",
+        "groups": [
+          {
+            "key": "course",
+            "label": "Course",
+            "controls": [
+              "course_player_source"
+            ]
+          },
+          {
+            "key": "course_text",
+            "label": "Text",
+            "controls": [
+              "course_player_empty_text"
+            ]
+          },
+          {
+            "key": "size",
+            "label": "Size",
+            "controls": [
+              "width_select",
+              "height_select",
+              "size_bounds"
+            ]
+          },
+          {
+            "key": "background",
+            "label": "Background",
+            "controls": [
+              "bg_color",
+              "bg_image"
+            ]
+          },
+          {
+            "key": "shape",
+            "label": "Shape",
+            "controls": [
+              "border",
+              "corner",
+              "shadow"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "advanced",
+        "groups": [
+          {
+            "key": "spacing",
+            "label": "Spacing",
+            "controls": [
+              "padding_margin"
+            ]
+          },
+          {
+            "key": "display",
+            "label": "Display",
+            "controls": [
+              "display"
+            ]
+          },
+          {
+            "key": "animation",
+            "label": "Animation",
+            "controls": [
+              "animation"
+            ]
+          },
+          {
+            "key": "class_css",
+            "label": "Class",
+            "controls": [
+              "class_css"
+            ]
+          }
+        ]
+      }
+    ],
+    "controls": [
+      "course_player_source",
+      "course_player_empty_text",
+      "width_select",
+      "height_select",
+      "size_bounds",
+      "bg_color",
+      "bg_image",
+      "border",
+      "corner",
+      "shadow",
+      "padding_margin",
+      "display",
+      "animation",
+      "class_css"
+    ],
+    "description": "The public syllabus for the Khoá học app: the sections and lessons of a course, with each lesson's type and length, and a marker on the free samples. Read by anyone — it is the list a shopper reads before buying — and it never contains lesson bodies or video URLs.",
+    "useWhen": [
+      "Building a course SALES page — the syllabus is the strongest argument a course page has, and every course platform leads with it.",
+      "One page should serve every course in the catalogue: leave the course empty and let /courses/{slug} name it.",
+      "A shopper needs to judge length and depth before paying."
+    ],
+    "avoidWhen": [
+      "On the learning page. The player draws its own curriculum with the student’s progress ticked; two lists on one page disagree the moment one of them updates.",
+      "To give access to a lesson. This lists what is in the course; opening anything still goes through the player and the entitlement gate."
+    ],
+    "contentTips": [
+      "Write the empty text for the merchant, not the shopper: a course with no lessons is usually one still being built.",
+      "Free samples are marked automatically from the lesson’s own preview switch — set that on the lesson, not here."
+    ],
+    "semantics": [
+      "course",
+      "syllabus",
+      "curriculum",
+      "lessons",
+      "outline",
+      "sales",
+      "sections"
+    ]
+  },
+  "my-courses": {
+    "type": "my-courses",
+    "label": "My Courses",
+    "category": "advanced",
+    "isContainer": false,
+    "isRootOnly": false,
+    "locked": false,
+    "hideInLayer": false,
+    "childAllows": [],
+    "defaults": {
+      "specials": {
+        "emptyText": "Bạn chưa có khoá học nào.",
+        "signedOutText": "Đăng nhập để xem khoá học của bạn.",
+        "continueText": "Tiếp tục học",
+        "learnHref": "/learn"
+      },
+      "style": {
+        "width": "100%"
+      }
+    },
+    "inspector": [
+      {
+        "tab": "general",
+        "groups": [
+          {
+            "key": "course_text",
+            "label": "Text",
+            "controls": [
+              "course_player_empty_text"
+            ]
+          },
+          {
+            "key": "my_courses_text",
+            "label": "Labels",
+            "controls": [
+              "my_courses_signed_out_text",
+              "my_courses_continue_text"
+            ]
+          },
+          {
+            "key": "course",
+            "label": "Course",
+            "controls": [
+              "my_courses_learn_href"
+            ]
+          },
+          {
+            "key": "size",
+            "label": "Size",
+            "controls": [
+              "width_select",
+              "height_select",
+              "size_bounds"
+            ]
+          },
+          {
+            "key": "background",
+            "label": "Background",
+            "controls": [
+              "bg_color",
+              "bg_image"
+            ]
+          },
+          {
+            "key": "shape",
+            "label": "Shape",
+            "controls": [
+              "border",
+              "corner",
+              "shadow"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "advanced",
+        "groups": [
+          {
+            "key": "spacing",
+            "label": "Spacing",
+            "controls": [
+              "padding_margin"
+            ]
+          },
+          {
+            "key": "display",
+            "label": "Display",
+            "controls": [
+              "display"
+            ]
+          },
+          {
+            "key": "animation",
+            "label": "Animation",
+            "controls": [
+              "animation"
+            ]
+          },
+          {
+            "key": "class_css",
+            "label": "Class",
+            "controls": [
+              "class_css"
+            ]
+          }
+        ]
+      }
+    ],
+    "controls": [
+      "course_player_empty_text",
+      "my_courses_signed_out_text",
+      "my_courses_continue_text",
+      "my_courses_learn_href",
+      "width_select",
+      "height_select",
+      "size_bounds",
+      "bg_color",
+      "bg_image",
+      "border",
+      "corner",
+      "shadow",
+      "padding_margin",
+      "display",
+      "animation",
+      "class_css"
+    ],
+    "description": "The student's own course shelf for the Khoá học app: every course this signed-in customer holds, each with its cover, how many lessons they have finished, a progress bar, when their access runs out, and one button that opens the next lesson they have not done. Its feed is the SESSION, so it needs no course to be chosen — one shelf serves every student.",
+    "useWhen": [
+      "Building the customer account area of a site that sells courses — this is the \"My Learning\" page every course platform opens onto.",
+      "A student holds more than one course and needs somewhere to choose between them; the player only ever shows one.",
+      "Somewhere to land a student after they buy, or after they log in."
+    ],
+    "avoidWhen": [
+      "On a sales page. It shows nothing to a visitor who has not bought, so a shopper meets an empty shelf where the argument for buying should be — use the course syllabus there.",
+      "To list the catalogue. This is what the reader OWNS, not what is for sale; a store list of courses is a list-dataset with the course source.",
+      "Next to the player on the learning page, where the two compete for the same decision."
+    ],
+    "contentTips": [
+      "The signed-out line is the one worth writing carefully: it is read by somebody who is not logged in, so it should point at the login page rather than explain the shelf.",
+      "The empty line is read by a signed-in customer who owns nothing yet — a link to the catalogue serves them better than an apology.",
+      "Progress, covers and expiry come from the courses themselves; there is nothing to configure here."
+    ],
+    "semantics": [
+      "course",
+      "account",
+      "student",
+      "my courses",
+      "my learning",
+      "progress",
+      "enrolled"
+    ]
+  },
+  "course-player": {
+    "type": "course-player",
+    "label": "Course Player",
+    "category": "advanced",
+    "isContainer": false,
+    "isRootOnly": false,
+    "locked": false,
+    "hideInLayer": false,
+    "childAllows": [],
+    "defaults": {
+      "specials": {
+        "courseId": "",
+        "lockedText": "Bạn chưa có quyền học bài này.",
+        "lockedLabel": "Xem khoá học",
+        "lockedHref": "",
+        "emptyText": "Khoá học này chưa có bài nào.",
+        "completeLabel": "Đánh dấu hoàn thành",
+        "completedLabel": "Đã hoàn thành",
+        "certificateText": "Bạn đã hoàn thành khoá học và đạt chứng chỉ.",
+        "showOutline": true,
+        "autoComplete": true
+      },
+      "style": {
+        "width": "100%"
+      }
+    },
+    "inspector": [
+      {
+        "tab": "general",
+        "groups": [
+          {
+            "key": "course",
+            "label": "Course",
+            "controls": [
+              "course_player_source",
+              "course_player_outline",
+              "course_player_autocomplete"
+            ]
+          },
+          {
+            "key": "course_text",
+            "label": "Text",
+            "controls": [
+              "course_player_complete_label",
+              "course_player_completed_label",
+              "course_player_certificate_text",
+              "course_player_locked_text",
+              "course_player_locked_label",
+              "course_player_locked_href",
+              "course_player_empty_text"
+            ]
+          },
+          {
+            "key": "size",
+            "label": "Size",
+            "controls": [
+              "width_select",
+              "height_select",
+              "size_bounds"
+            ]
+          },
+          {
+            "key": "background",
+            "label": "Background",
+            "controls": [
+              "bg_color",
+              "bg_image"
+            ]
+          },
+          {
+            "key": "shape",
+            "label": "Shape",
+            "controls": [
+              "border",
+              "corner",
+              "shadow"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "advanced",
+        "groups": [
+          {
+            "key": "spacing",
+            "label": "Spacing",
+            "controls": [
+              "padding_margin"
+            ]
+          },
+          {
+            "key": "display",
+            "label": "Display",
+            "controls": [
+              "display"
+            ]
+          },
+          {
+            "key": "animation",
+            "label": "Animation",
+            "controls": [
+              "animation"
+            ]
+          },
+          {
+            "key": "class_css",
+            "label": "Class",
+            "controls": [
+              "class_css"
+            ]
+          }
+        ]
+      }
+    ],
+    "controls": [
+      "course_player_source",
+      "course_player_outline",
+      "course_player_autocomplete",
+      "course_player_complete_label",
+      "course_player_completed_label",
+      "course_player_certificate_text",
+      "course_player_locked_text",
+      "course_player_locked_label",
+      "course_player_locked_href",
+      "course_player_empty_text",
+      "width_select",
+      "height_select",
+      "size_bounds",
+      "bg_color",
+      "bg_image",
+      "border",
+      "corner",
+      "shadow",
+      "padding_margin",
+      "display",
+      "animation",
+      "class_css"
+    ],
+    "description": "The lesson player for the Khoá học app: plays a course lesson (video, text, quiz or downloadable) to a student entitled to it, tracks progress, and shows the curriculum. The body is fetched per-student after a server-side entitlement check — it never appears in the published HTML.",
+    "useWhen": [
+      "Building the page a student watches a lesson on — the /learn or \"my course\" page.",
+      "A page gated on a course (Page settings → the Khoá học gate) needs the actual lesson on it.",
+      "One page should serve every course in the catalogue: leave the course empty and let the URL name it."
+    ],
+    "avoidWhen": [
+      "On a sales page. A course landing page is built from the course dataset elements plus an enrol button pointing at the product — the player is for people who already bought.",
+      "To show a free trailer. Bind a video element to `course.preview` instead; the player is the gated surface.",
+      "To list courses a shopper owns. That is the account page, not this element."
+    ],
+    "contentTips": [
+      "Write the locked text for the person most likely to see it — someone who has not bought yet — and point the link at the sales page.",
+      "The complete button is the student's own record of progress; keep both labels short so the state change reads at a glance.",
+      "Turn the curriculum off only when the page already lists the lessons some other way, or the student loses their way through the course."
+    ],
+    "semantics": [
+      "course",
+      "lesson",
+      "player",
+      "video",
+      "learning",
+      "members",
+      "gated",
+      "progress"
+    ]
+  },
+  "wishlist-list": {
+    "type": "wishlist-list",
+    "label": "Wishlist",
+    "category": "advanced",
+    "isContainer": false,
+    "isRootOnly": false,
+    "locked": false,
+    "hideInLayer": false,
+    "childAllows": [],
+    "defaults": {
+      "specials": {
+        "title": "Đã lưu",
+        "emptyText": "Bạn chưa lưu sản phẩm nào."
+      },
+      "style": {
+        "width": "100%"
+      }
+    },
+    "inspector": [
+      {
+        "tab": "general",
+        "groups": [
+          {
+            "key": "account",
+            "label": "Account",
+            "controls": [
+              "account_title",
+              "account_empty_text"
+            ]
+          },
+          {
+            "key": "size",
+            "label": "Size",
+            "controls": [
+              "width_select",
+              "height_select",
+              "size_bounds"
+            ]
+          },
+          {
+            "key": "background",
+            "label": "Background",
+            "controls": [
+              "bg_color",
+              "bg_image"
+            ]
+          },
+          {
+            "key": "shape",
+            "label": "Shape",
+            "controls": [
+              "border",
+              "corner",
+              "shadow"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "advanced",
+        "groups": [
+          {
+            "key": "spacing",
+            "label": "Spacing",
+            "controls": [
+              "padding_margin"
+            ]
+          },
+          {
+            "key": "display",
+            "label": "Display",
+            "controls": [
+              "display"
+            ]
+          },
+          {
+            "key": "animation",
+            "label": "Animation",
+            "controls": [
+              "animation"
+            ]
+          },
+          {
+            "key": "class_css",
+            "label": "Class",
+            "controls": [
+              "class_css"
+            ]
+          }
+        ]
+      }
+    ],
+    "controls": [
+      "account_title",
+      "account_empty_text",
+      "width_select",
+      "height_select",
+      "size_bounds",
+      "bg_color",
+      "bg_image",
+      "border",
+      "corner",
+      "shadow",
+      "padding_margin",
+      "display",
+      "animation",
+      "class_css"
+    ],
+    "description": "The products a shopper saved for later: a loading skeleton by default, an empty state when nothing is saved, or a grid of the saved products (image, title, price, and a remove control) — hydrated client-side from the shopper’s own list, never queried at render time. Works for an anonymous visitor too, whose saves live in the browser.",
+    "useWhen": [
+      "On a /wishlist or /saved page, as the whole point of that page",
+      "On an /account page beside account-info and order-history, as the saved-items half of a dashboard"
+    ],
+    "avoidWhen": [
+      "To show a curated shelf a merchant chose — that is a product list with a collection source, not this",
+      "To show what OTHER shoppers saved (a \"most wanted\" shelf) — this is always the current visitor’s own list",
+      "As a cart — a saved item has no quantity and checking out is not an action here"
+    ],
+    "contentTips": [
+      "Write the empty-state text in the site language, and make it point somewhere: \"You have not saved anything yet\" is true but a dead end",
+      "The card layout belongs to the element, so pair this with a heart (a button or icon carrying the \"Save for later\" action) on the product cards elsewhere on the site — without one, nothing can ever be added to this list"
+    ],
+    "semantics": [
+      "account",
+      "wishlist",
+      "saved",
+      "favourites",
+      "shopper",
+      "saved-for-later"
+    ]
+  },
+  "payment-status": {
+    "type": "payment-status",
+    "label": "Payment status",
+    "category": "advanced",
+    "isContainer": false,
+    "isRootOnly": false,
+    "locked": false,
+    "hideInLayer": false,
+    "childAllows": [],
+    "defaults": {
+      "specials": {
+        "paidTitle": "Thanh toán thành công",
+        "paidText": "Cảm ơn bạn! Chúng tôi đã nhận được thanh toán và đang xử lý đơn hàng.",
+        "pendingTitle": "Đang chờ xác nhận",
+        "pendingText": "Chúng tôi chưa nhận được xác nhận từ cổng thanh toán. Đơn hàng sẽ được cập nhật ngay khi có kết quả.",
+        "failedTitle": "Thanh toán chưa hoàn tất",
+        "failedText": "Giao dịch không thành công hoặc đã bị hủy. Bạn có thể thử lại.",
+        "retryLabel": "Thử lại",
+        "referenceLabel": "Mã giao dịch"
+      },
+      "style": {
+        "width": "100%"
+      }
+    },
+    "inspector": [
+      {
+        "tab": "general",
+        "groups": [
+          {
+            "key": "payment_paid",
+            "label": "Paid",
+            "controls": [
+              "payment_paid_title",
+              "payment_paid_text"
+            ]
+          },
+          {
+            "key": "payment_pending",
+            "label": "Pending",
+            "controls": [
+              "payment_pending_title",
+              "payment_pending_text"
+            ]
+          },
+          {
+            "key": "payment_failed",
+            "label": "Failed",
+            "controls": [
+              "payment_failed_title",
+              "payment_failed_text",
+              "payment_retry_label"
+            ]
+          },
+          {
+            "key": "payment_reference",
+            "label": "Reference",
+            "controls": [
+              "payment_reference_label"
+            ]
+          },
+          {
+            "key": "size",
+            "label": "Size",
+            "controls": [
+              "width_select",
+              "height_select",
+              "size_bounds"
+            ]
+          },
+          {
+            "key": "background",
+            "label": "Background",
+            "controls": [
+              "bg_color",
+              "bg_image"
+            ]
+          },
+          {
+            "key": "shape",
+            "label": "Shape",
+            "controls": [
+              "border",
+              "corner",
+              "shadow"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "advanced",
+        "groups": [
+          {
+            "key": "spacing",
+            "label": "Spacing",
+            "controls": [
+              "padding_margin"
+            ]
+          },
+          {
+            "key": "display",
+            "label": "Display",
+            "controls": [
+              "display"
+            ]
+          },
+          {
+            "key": "animation",
+            "label": "Animation",
+            "controls": [
+              "animation"
+            ]
+          },
+          {
+            "key": "class_css",
+            "label": "Class",
+            "controls": [
+              "class_css"
+            ]
+          }
+        ]
+      }
+    ],
+    "controls": [
+      "payment_paid_title",
+      "payment_paid_text",
+      "payment_pending_title",
+      "payment_pending_text",
+      "payment_failed_title",
+      "payment_failed_text",
+      "payment_retry_label",
+      "payment_reference_label",
+      "width_select",
+      "height_select",
+      "size_bounds",
+      "bg_color",
+      "bg_image",
+      "border",
+      "corner",
+      "shadow",
+      "padding_margin",
+      "display",
+      "animation",
+      "class_css"
+    ],
+    "description": "The payment result on a checkout completion page: three author-written messages — paid, pending, failed — of which the shopper sees exactly one, chosen client-side from the `status` this platform wrote into the return URL after verifying the gateway signature. Also shows the transaction reference, and a retry link when a payment did not go through.",
+    "useWhen": [
+      "On the checkout completion page (/checkout/complete), where a shopper lands after paying",
+      "Anywhere a shopper returns from a payment gateway and needs to know whether the money moved"
+    ],
+    "avoidWhen": [
+      "As the order confirmation itself — the order number, items and totals belong to the order elements; this block reports the PAYMENT only",
+      "On a page a shopper reaches without paying (a product or cart page): with no status in the URL the block hides itself and occupies no space",
+      "To show a merchant-facing payment log — that is Manage ▸ Apps ▸ Payments ▸ Transactions"
+    ],
+    "contentTips": [
+      "Write all three messages: a shopper only ever sees one, and the one they see is the one you did not think about",
+      "The pending message is what shows before the page knows anything, so keep it reassuring rather than alarming",
+      "Say what happens next in the paid message (an email, a delivery window) — it is the last page of the purchase"
+    ],
+    "semantics": [
+      "payment",
+      "checkout",
+      "completion",
+      "receipt",
+      "gateway",
+      "status"
+    ]
+  },
+  "member-gate": {
+    "type": "member-gate",
+    "label": "Member Block",
+    "category": "advanced",
+    "isContainer": true,
+    "isRootOnly": false,
+    "locked": false,
+    "hideInLayer": false,
+    "childAllows": [],
+    "defaults": {
+      "specials": {
+        "audience": "members"
+      },
+      "style": {
+        "display": "flex",
+        "flexDirection": "column",
+        "alignItems": "flex-start",
+        "justifyContent": "flex-start",
+        "gap": "8px",
+        "width": "100%"
+      }
+    },
+    "inspector": [
+      {
+        "tab": "general",
+        "groups": [
+          {
+            "key": "account",
+            "label": "Account",
+            "controls": [
+              "member_audience"
+            ]
+          },
+          {
+            "key": "size",
+            "label": "Size",
+            "controls": [
+              "width_select",
+              "height_select",
+              "size_bounds"
+            ]
+          },
+          {
+            "key": "layout",
+            "label": "Layout",
+            "controls": [
+              "direction",
+              "gap",
+              "padding",
+              "margin",
+              "vertical",
+              "horizontal",
+              "overflow_x",
+              "overflow_y"
+            ]
+          },
+          {
+            "key": "background",
+            "label": "Background",
+            "controls": [
+              "bg_color",
+              "bg_image"
+            ]
+          },
+          {
+            "key": "shape",
+            "label": "Shape",
+            "controls": [
+              "border",
+              "corner",
+              "shadow"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "advanced",
+        "groups": [
+          {
+            "key": "spacing",
+            "label": "Spacing",
+            "controls": [
+              "padding_margin"
+            ]
+          },
+          {
+            "key": "display",
+            "label": "Display",
+            "controls": [
+              "display"
+            ]
+          },
+          {
+            "key": "animation",
+            "label": "Animation",
+            "controls": [
+              "animation"
+            ]
+          },
+          {
+            "key": "class_css",
+            "label": "Class",
+            "controls": [
+              "class_css"
+            ]
+          }
+        ]
+      }
+    ],
+    "controls": [
+      "member_audience",
+      "width_select",
+      "height_select",
+      "size_bounds",
+      "direction",
+      "gap",
+      "padding",
+      "margin",
+      "vertical",
+      "horizontal",
+      "overflow_x",
+      "overflow_y",
+      "bg_color",
+      "bg_image",
+      "border",
+      "corner",
+      "shadow",
+      "padding_margin",
+      "display",
+      "animation",
+      "class_css"
+    ],
+    "description": "A container whose children render for ONE audience only: signed-in members, or anonymous guests. The choice is the `audience` special; visibility is resolved client-side from the shopper session, so the page HTML stays static and cacheable.",
+    "useWhen": [
+      "A header needs \"Đăng nhập / Đăng ký\" for guests and \"Xin chào … / Đăng xuất\" for members",
+      "A block of the page — member pricing, a loyalty note, a members-only download — should only appear once the shopper is signed in",
+      "A promo urging registration should disappear for people who already registered"
+    ],
+    "avoidWhen": [
+      "The content must be SECRET. The children ship in the page source for anyone who opens it — this hides them, it does not withhold them. Flag the whole PAGE as members-only instead: an anonymous visitor is redirected before any HTML is written",
+      "The whole page is for members anyway — the page-level flag is one setting instead of a wrapper around everything",
+      "You only need the shopper name/email/phone as text — member-field is the inline element for that, and it carries its own signed-out wording"
+    ],
+    "contentTips": [
+      "Build the pair: one gate set to Members and one set to Guests, holding the two versions of the same row",
+      "A guests block is VISIBLE until the session resolves and a members block is HIDDEN until it does, so both degrade to what an anonymous visitor should see if scripts never run",
+      "Put the sign-out control inside a Members gate — a button carrying the Log out action"
+    ],
+    "semantics": [
+      "account",
+      "member",
+      "signed-in",
+      "guest",
+      "visibility",
+      "conditional",
+      "audience"
+    ]
+  },
+  "address-book": {
+    "type": "address-book",
+    "label": "Address Book",
+    "category": "advanced",
+    "isContainer": false,
+    "isRootOnly": false,
+    "locked": false,
+    "hideInLayer": false,
+    "childAllows": [],
+    "defaults": {
+      "specials": {
+        "title": "Sổ địa chỉ",
+        "emptyText": "Chưa có địa chỉ nào.",
+        "signedOutText": "Đăng nhập để quản lý địa chỉ của bạn",
+        "addLabel": "Thêm địa chỉ"
+      },
+      "style": {
+        "width": "100%"
+      }
+    },
+    "inspector": [
+      {
+        "tab": "general",
+        "groups": [
+          {
+            "key": "account",
+            "label": "Account",
+            "controls": [
+              "account_title",
+              "account_empty_text",
+              "account_signed_out_text",
+              "account_add_label"
+            ]
+          },
+          {
+            "key": "size",
+            "label": "Size",
+            "controls": [
+              "width_select",
+              "height_select",
+              "size_bounds"
+            ]
+          },
+          {
+            "key": "background",
+            "label": "Background",
+            "controls": [
+              "bg_color",
+              "bg_image"
+            ]
+          },
+          {
+            "key": "shape",
+            "label": "Shape",
+            "controls": [
+              "border",
+              "corner",
+              "shadow"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "advanced",
+        "groups": [
+          {
+            "key": "spacing",
+            "label": "Spacing",
+            "controls": [
+              "padding_margin"
+            ]
+          },
+          {
+            "key": "display",
+            "label": "Display",
+            "controls": [
+              "display"
+            ]
+          },
+          {
+            "key": "animation",
+            "label": "Animation",
+            "controls": [
+              "animation"
+            ]
+          },
+          {
+            "key": "class_css",
+            "label": "Class",
+            "controls": [
+              "class_css"
+            ]
+          }
+        ]
+      }
+    ],
+    "controls": [
+      "account_title",
+      "account_empty_text",
+      "account_signed_out_text",
+      "account_add_label",
+      "width_select",
+      "height_select",
+      "size_bounds",
+      "bg_color",
+      "bg_image",
+      "border",
+      "corner",
+      "shadow",
+      "padding_margin",
+      "display",
+      "animation",
+      "class_css"
+    ],
+    "description": "The signed-in shopper's own address book: their saved addresses listed with a default badge, plus add, edit, delete and set-default — all saved back to their account. Hydrated client-side; a signed-out visitor sees a sign-in prompt instead.",
+    "useWhen": [
+      "On the /account page, beside account info and order history",
+      "Anywhere a shopper should manage where their orders ship to"
+    ],
+    "avoidWhen": [
+      "To COLLECT a delivery address during checkout — that is the address form field, which writes the order; this element manages the reusable book behind it",
+      "For anonymous visitors — the element only shows a prompt until they sign in"
+    ],
+    "contentTips": [
+      "The title, empty-state line, signed-out prompt and add-button label are your own words",
+      "The default address is what checkout forms prefill from, so the badge is worth a word in your page copy"
+    ],
+    "semantics": [
+      "account",
+      "address",
+      "address-book",
+      "shipping",
+      "customer",
+      "signed-in"
+    ]
+  },
+  "points-card": {
+    "type": "points-card",
+    "label": "Points",
+    "category": "advanced",
+    "isContainer": false,
+    "isRootOnly": false,
+    "locked": false,
+    "hideInLayer": false,
+    "childAllows": [],
+    "defaults": {
+      "specials": {
+        "title": "Điểm thưởng",
+        "signedOutText": "Đăng nhập để xem điểm của bạn"
+      },
+      "style": {
+        "width": "100%"
+      }
+    },
+    "inspector": [
+      {
+        "tab": "general",
+        "groups": [
+          {
+            "key": "account",
+            "label": "Account",
+            "controls": [
+              "account_title",
+              "account_signed_out_text"
+            ]
+          },
+          {
+            "key": "size",
+            "label": "Size",
+            "controls": [
+              "width_select",
+              "height_select",
+              "size_bounds"
+            ]
+          },
+          {
+            "key": "background",
+            "label": "Background",
+            "controls": [
+              "bg_color",
+              "bg_image"
+            ]
+          },
+          {
+            "key": "shape",
+            "label": "Shape",
+            "controls": [
+              "border",
+              "corner",
+              "shadow"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "advanced",
+        "groups": [
+          {
+            "key": "spacing",
+            "label": "Spacing",
+            "controls": [
+              "padding_margin"
+            ]
+          },
+          {
+            "key": "display",
+            "label": "Display",
+            "controls": [
+              "display"
+            ]
+          },
+          {
+            "key": "animation",
+            "label": "Animation",
+            "controls": [
+              "animation"
+            ]
+          },
+          {
+            "key": "class_css",
+            "label": "Class",
+            "controls": [
+              "class_css"
+            ]
+          }
+        ]
+      }
+    ],
+    "controls": [
+      "account_title",
+      "account_signed_out_text",
+      "width_select",
+      "height_select",
+      "size_bounds",
+      "bg_color",
+      "bg_image",
+      "border",
+      "corner",
+      "shadow",
+      "padding_margin",
+      "display",
+      "animation",
+      "class_css"
+    ],
+    "description": "The signed-in shopper's loyalty points: their balance, a redeem form that converts points into a single-use discount code, and the recent points history. Requires the Loyalty app installed and the points program enabled; hydrated client-side.",
+    "useWhen": [
+      "On the /account page, beside account info and order history",
+      "Anywhere a shopper should see and spend the points the store grants per delivered order"
+    ],
+    "avoidWhen": [
+      "On stores without the Loyalty app — the card hides itself when the program is off, so it would render nothing",
+      "To show a PRODUCT price or discount — points are the account currency, not the cart"
+    ],
+    "contentTips": [
+      "The title and signed-out prompt are your own words",
+      "The redeem rate and minimum live in the Loyalty app settings, not on this element — the card reads them live"
+    ],
+    "semantics": [
+      "account",
+      "loyalty",
+      "points",
+      "rewards",
+      "customer",
+      "signed-in"
+    ]
+  },
+  "points-prompt": {
+    "type": "points-prompt",
+    "label": "Points prompt",
+    "category": "advanced",
+    "isContainer": false,
+    "isRootOnly": false,
+    "locked": false,
+    "hideInLayer": false,
+    "childAllows": [],
+    "defaults": {
+      "style": {
+        "width": "100%"
+      }
+    },
+    "inspector": [
+      {
+        "tab": "general",
+        "groups": [
+          {
+            "key": "size",
+            "label": "Size",
+            "controls": [
+              "width_select",
+              "height_select",
+              "size_bounds"
+            ]
+          },
+          {
+            "key": "background",
+            "label": "Background",
+            "controls": [
+              "bg_color",
+              "bg_image"
+            ]
+          },
+          {
+            "key": "shape",
+            "label": "Shape",
+            "controls": [
+              "border",
+              "corner",
+              "shadow"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "advanced",
+        "groups": [
+          {
+            "key": "spacing",
+            "label": "Spacing",
+            "controls": [
+              "padding_margin"
+            ]
+          },
+          {
+            "key": "display",
+            "label": "Display",
+            "controls": [
+              "display"
+            ]
+          },
+          {
+            "key": "animation",
+            "label": "Animation",
+            "controls": [
+              "animation"
+            ]
+          },
+          {
+            "key": "class_css",
+            "label": "Class",
+            "controls": [
+              "class_css"
+            ]
+          }
+        ]
+      }
+    ],
+    "controls": [
+      "width_select",
+      "height_select",
+      "size_bounds",
+      "bg_color",
+      "bg_image",
+      "border",
+      "corner",
+      "shadow",
+      "padding_margin",
+      "display",
+      "animation",
+      "class_css"
+    ],
+    "description": "A one-line live prompt that tells the shopper how many loyalty points the current cart would earn — members see their estimate (tier multiplier included), visitors see the same number as a reason to sign in. Requires the Loyalty app installed and the points program enabled; hydrated client-side and hidden when the program is off.",
+    "useWhen": [
+      "In the cart drawer, near the checkout button, so the points argument lands at the moment of decision",
+      "On the checkout page beside the order total"
+    ],
+    "avoidWhen": [
+      "On stores without the Loyalty app — the line hides itself when the program is off",
+      "As a general marketing banner — its words are computed from the live cart, not authored"
+    ],
+    "contentTips": [
+      "It has no editable text: the sentence is computed from the cart subtotal and the program rates",
+      "The estimate uses the cart subtotal — shipping and discounts settle at earning time, hence the ~"
+    ],
+    "semantics": [
+      "loyalty",
+      "points",
+      "cart",
+      "conversion",
+      "account"
+    ]
+  },
+  "member-field": {
+    "type": "member-field",
+    "label": "Member Field",
+    "category": "advanced",
+    "isContainer": false,
+    "isRootOnly": false,
+    "locked": false,
+    "hideInLayer": false,
+    "childAllows": [],
+    "defaults": {
+      "specials": {
+        "field": "name",
+        "guestText": "Quý khách",
+        "prefix": "",
+        "suffix": ""
+      }
+    },
+    "inspector": [
+      {
+        "tab": "general",
+        "groups": [
+          {
+            "key": "account",
+            "label": "Account",
+            "controls": [
+              "member_field_source",
+              "member_field_prefix",
+              "member_field_suffix",
+              "member_guest_text"
+            ]
+          },
+          {
+            "key": "size",
+            "label": "Size",
+            "controls": [
+              "width_select",
+              "height_select",
+              "size_bounds"
+            ]
+          },
+          {
+            "key": "typography",
+            "label": "Typography",
+            "controls": [
+              "text_global_style",
+              "text_color",
+              "text_style",
+              "font_family",
+              "font_size",
+              "text_align",
+              "line_height",
+              "text_spacing",
+              "text_transform"
+            ]
+          },
+          {
+            "key": "background",
+            "label": "Background",
+            "controls": [
+              "bg_color",
+              "bg_image"
+            ]
+          },
+          {
+            "key": "shape",
+            "label": "Shape",
+            "controls": [
+              "border",
+              "corner",
+              "shadow"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "advanced",
+        "groups": [
+          {
+            "key": "spacing",
+            "label": "Spacing",
+            "controls": [
+              "padding_margin"
+            ]
+          },
+          {
+            "key": "display",
+            "label": "Display",
+            "controls": [
+              "display"
+            ]
+          },
+          {
+            "key": "animation",
+            "label": "Animation",
+            "controls": [
+              "animation"
+            ]
+          },
+          {
+            "key": "class_css",
+            "label": "Class",
+            "controls": [
+              "class_css"
+            ]
+          }
+        ]
+      }
+    ],
+    "controls": [
+      "member_field_source",
+      "member_field_prefix",
+      "member_field_suffix",
+      "member_guest_text",
+      "width_select",
+      "height_select",
+      "size_bounds",
+      "text_global_style",
+      "text_color",
+      "text_style",
+      "font_family",
+      "font_size",
+      "text_align",
+      "line_height",
+      "text_spacing",
+      "text_transform",
+      "bg_color",
+      "bg_image",
+      "border",
+      "corner",
+      "shadow",
+      "padding_margin",
+      "display",
+      "animation",
+      "class_css"
+    ],
+    "description": "An inline span carrying one of the signed-in shopper's own values — name, email or phone — with author-owned wording around it and a separate line for visitors who are not signed in. Hydrated client-side from the shopper session, never queried at render time.",
+    "useWhen": [
+      "A greeting in the header or on the account page: \"Xin chào, {name}\"",
+      "Showing which email an order confirmation will be sent to",
+      "Any sentence that needs the shopper's own value INSIDE the line rather than as a card"
+    ],
+    "avoidWhen": [
+      "You want the whole profile block — account-info renders name, email and phone together",
+      "You want to EDIT the value: this only displays it",
+      "The value must be hidden from guests entirely — wrap it in a member-gate set to Members, or leave the signed-out text empty"
+    ],
+    "contentTips": [
+      "Prefix and suffix are your own words and wrap as one sentence with the value — put the comma in the prefix (\"Xin chào, \") rather than in a separate text element",
+      "Signed-out text is what an anonymous visitor reads in place of the whole field; leave it empty to render nothing at all",
+      "Phone can be blank on a real customer — registration does not require one"
+    ],
+    "semantics": [
+      "account",
+      "member",
+      "customer",
+      "name",
+      "email",
+      "phone",
+      "greeting",
       "signed-in"
     ]
   },
@@ -4115,6 +5588,13 @@ export const ELEMENTS: Record<string, CatalogElement> = {
             ]
           },
           {
+            "key": "action",
+            "label": "Action",
+            "controls": [
+              "action"
+            ]
+          },
+          {
             "key": "size",
             "label": "Size",
             "controls": [
@@ -4129,7 +5609,6 @@ export const ELEMENTS: Record<string, CatalogElement> = {
             "controls": [
               "direction",
               "gap",
-              "padding",
               "vertical",
               "horizontal"
             ]
@@ -4139,8 +5618,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
             "label": "Background",
             "controls": [
               "bg_color",
-              "bg_image",
-              "bg_video"
+              "bg_image"
             ]
           },
           {
@@ -4197,17 +5675,16 @@ export const ELEMENTS: Record<string, CatalogElement> = {
     ],
     "controls": [
       "form_source",
+      "action",
       "width_select",
       "height_select",
       "size_bounds",
       "direction",
       "gap",
-      "padding",
       "vertical",
       "horizontal",
       "bg_color",
       "bg_image",
-      "bg_video",
       "border",
       "corner",
       "shadow",
@@ -4271,7 +5748,10 @@ export const ELEMENTS: Record<string, CatalogElement> = {
         "inputType": "text",
         "limitChars": false,
         "minChars": 0,
-        "maxChars": 500
+        "maxChars": 500,
+        "patternPreset": "",
+        "pattern": "",
+        "patternCountries": []
       },
       "style": {
         "width": "100%"
@@ -4315,7 +5795,6 @@ export const ELEMENTS: Record<string, CatalogElement> = {
             "label": "Size",
             "controls": [
               "width_select",
-              "height_select",
               "size_bounds"
             ]
           }
@@ -4324,6 +5803,27 @@ export const ELEMENTS: Record<string, CatalogElement> = {
       {
         "tab": "advanced",
         "groups": [
+          {
+            "key": "id_field",
+            "label": "ID field",
+            "controls": [
+              "field_name"
+            ]
+          },
+          {
+            "key": "input_type",
+            "label": "Input type",
+            "controls": [
+              "field_input_type"
+            ]
+          },
+          {
+            "key": "field_format",
+            "label": "Format",
+            "controls": [
+              "field_pattern"
+            ]
+          },
           {
             "key": "limit_chars",
             "label": "Limit characters",
@@ -4351,13 +5851,6 @@ export const ELEMENTS: Record<string, CatalogElement> = {
             "controls": [
               "class_css"
             ]
-          },
-          {
-            "key": "id_field",
-            "label": "ID field",
-            "controls": [
-              "field_name"
-            ]
           }
         ]
       }
@@ -4369,13 +5862,14 @@ export const ELEMENTS: Record<string, CatalogElement> = {
       "field_icon",
       "field_skin",
       "width_select",
-      "height_select",
       "size_bounds",
+      "field_name",
+      "field_input_type",
+      "field_pattern",
       "field_limit_chars",
       "padding_margin",
       "display",
-      "class_css",
-      "field_name"
+      "class_css"
     ],
     "description": "A single text field inside a form: a label, the box the visitor types into, and an optional line of help underneath. Switches between a one-line input and a multi-line box, and can be pointed at a customer column so what is typed reaches the customer record rather than only the response log.",
     "useWhen": [
@@ -4441,6 +5935,20 @@ export const ELEMENTS: Record<string, CatalogElement> = {
             ]
           },
           {
+            "key": "field_chrome",
+            "label": "Label & hint",
+            "controls": [
+              "field_chrome"
+            ]
+          },
+          {
+            "key": "file_skin",
+            "label": "Control style",
+            "controls": [
+              "file_skin"
+            ]
+          },
+          {
             "key": "field_layout",
             "label": "Layout",
             "controls": [
@@ -4452,7 +5960,6 @@ export const ELEMENTS: Record<string, CatalogElement> = {
             "label": "Size",
             "controls": [
               "width_select",
-              "height_select",
               "size_bounds"
             ]
           }
@@ -4461,6 +5968,13 @@ export const ELEMENTS: Record<string, CatalogElement> = {
       {
         "tab": "advanced",
         "groups": [
+          {
+            "key": "id_field",
+            "label": "ID field",
+            "controls": [
+              "field_name"
+            ]
+          },
           {
             "key": "file_type",
             "label": "File type",
@@ -4495,29 +6009,23 @@ export const ELEMENTS: Record<string, CatalogElement> = {
             "controls": [
               "class_css"
             ]
-          },
-          {
-            "key": "id_field",
-            "label": "ID field",
-            "controls": [
-              "field_name"
-            ]
           }
         ]
       }
     ],
     "controls": [
       "field_content",
+      "field_chrome",
+      "file_skin",
       "field_layout",
       "width_select",
-      "height_select",
       "size_bounds",
+      "field_name",
       "field_upload",
       "field_file_limit",
       "padding_margin",
       "display",
-      "class_css",
-      "field_name"
+      "class_css"
     ],
     "description": "A field that lets a visitor attach a file to their response — a photo, a video or a PDF. Accepts one kind at a time, optionally several files at once, and the attachments arrive with the response rather than separately, so a refused form never leaves a stray upload behind.",
     "useWhen": [
@@ -4740,7 +6248,6 @@ export const ELEMENTS: Record<string, CatalogElement> = {
             "label": "Size",
             "controls": [
               "width_select",
-              "height_select",
               "size_bounds"
             ]
           }
@@ -4749,6 +6256,13 @@ export const ELEMENTS: Record<string, CatalogElement> = {
       {
         "tab": "advanced",
         "groups": [
+          {
+            "key": "id_field",
+            "label": "ID field",
+            "controls": [
+              "field_name"
+            ]
+          },
           {
             "key": "number_range",
             "label": "Set number range",
@@ -4776,13 +6290,6 @@ export const ELEMENTS: Record<string, CatalogElement> = {
             "controls": [
               "class_css"
             ]
-          },
-          {
-            "key": "id_field",
-            "label": "ID field",
-            "controls": [
-              "field_name"
-            ]
           }
         ]
       }
@@ -4794,13 +6301,12 @@ export const ELEMENTS: Record<string, CatalogElement> = {
       "field_icon",
       "field_skin",
       "width_select",
-      "height_select",
       "size_bounds",
+      "field_name",
       "field_number_range",
       "padding_margin",
       "display",
-      "class_css",
-      "field_name"
+      "class_css"
     ],
     "description": "A field that accepts a number and nothing else: the visitor gets a numeric keyboard on a phone, and the answer arrives as a number rather than as text that happens to look like one. Can be held to a range.",
     "useWhen": [
@@ -4821,6 +6327,183 @@ export const ELEMENTS: Record<string, CatalogElement> = {
       "number",
       "quantity",
       "input"
+    ]
+  },
+  "form-address": {
+    "type": "form-address",
+    "label": "Address",
+    "category": "form",
+    "isContainer": false,
+    "isRootOnly": false,
+    "locked": false,
+    "hideInLayer": false,
+    "childAllows": [],
+    "defaults": {
+      "specials": {
+        "name": "",
+        "label": "Địa chỉ",
+        "description": "",
+        "required": false,
+        "showLabel": true,
+        "mapTo": "",
+        "part": "",
+        "addressLink": true,
+        "addressGroup": "",
+        "provinceField": "",
+        "allowedCodes": [],
+        "presetCode": "",
+        "copyFrom": "",
+        "sameDefault": true,
+        "placeholder": "",
+        "provinceLabel": "Tỉnh / Thành phố",
+        "wardLabel": "Phường / Xã",
+        "detailLabel": "Số nhà, tên đường",
+        "provincePlaceholder": "Chọn tỉnh / thành phố",
+        "wardPlaceholder": "Chọn phường / xã",
+        "detailPlaceholder": "Ví dụ: 12 Nguyễn Huệ",
+        "showDetail": true,
+        "country": "VN"
+      },
+      "style": {
+        "width": "100%"
+      }
+    },
+    "inspector": [
+      {
+        "tab": "general",
+        "groups": [
+          {
+            "key": "content",
+            "label": "Content",
+            "controls": [
+              "field_content"
+            ]
+          },
+          {
+            "key": "address_link",
+            "label": "Address link",
+            "controls": [
+              "field_address_link"
+            ]
+          },
+          {
+            "key": "address_scope",
+            "label": "Address scope",
+            "controls": [
+              "field_address_scope"
+            ]
+          },
+          {
+            "key": "address_same",
+            "label": "Same as",
+            "controls": [
+              "field_address_same"
+            ]
+          },
+          {
+            "key": "address_parts",
+            "label": "Address boxes",
+            "controls": [
+              "field_address_parts"
+            ]
+          },
+          {
+            "key": "field_layout",
+            "label": "Layout",
+            "controls": [
+              "field_layout"
+            ]
+          },
+          {
+            "key": "field_skin",
+            "label": "Field style",
+            "controls": [
+              "field_skin"
+            ]
+          },
+          {
+            "key": "size",
+            "label": "Size",
+            "controls": [
+              "width_select",
+              "size_bounds"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "advanced",
+        "groups": [
+          {
+            "key": "id_field",
+            "label": "ID field",
+            "controls": [
+              "field_name"
+            ]
+          },
+          {
+            "key": "spacing",
+            "label": "Spacing",
+            "controls": [
+              "padding_margin"
+            ]
+          },
+          {
+            "key": "display",
+            "label": "Display",
+            "controls": [
+              "display"
+            ]
+          },
+          {
+            "key": "class_css",
+            "label": "Class",
+            "controls": [
+              "class_css"
+            ]
+          }
+        ]
+      }
+    ],
+    "controls": [
+      "field_content",
+      "field_address_link",
+      "field_address_scope",
+      "field_address_same",
+      "field_address_parts",
+      "field_layout",
+      "field_skin",
+      "width_select",
+      "size_bounds",
+      "field_name",
+      "padding_margin",
+      "display",
+      "class_css"
+    ],
+    "description": "A Vietnamese address field: two dependent selects (province/city, then ward/commune) plus a free line for house number and street. The administrative lists come from the platform, so they are always the current two-level model.",
+    "useWhen": [
+      "a form needs a deliverable address — an order, a booking, a service call",
+      "the merchant wants to filter or report on orders by province",
+      "a customer should pick their ward rather than type it, so the value is normalised"
+    ],
+    "avoidWhen": [
+      "only a rough location is needed — a plain text field or a single select is lighter",
+      "the audience is outside Vietnam; the dataset loaded today is Vietnamese only",
+      "the address is displayed rather than collected — this is an input, not a text block"
+    ],
+    "contentTips": [
+      "Rename the three box labels to match the shop’s own words; \"Khu vực\" often reads better than \"Tỉnh / Thành phố\" for a single-city seller.",
+      "Turn the street line off when delivery is by ward alone — asking for something nobody reads is worse than not asking.",
+      "Map it to the customer address so repeat buyers are recognised."
+    ],
+    "semantics": [
+      "address",
+      "form",
+      "input",
+      "vietnam",
+      "province",
+      "ward",
+      "shipping"
     ]
   },
   "form-select": {
@@ -4850,6 +6533,9 @@ export const ELEMENTS: Record<string, CatalogElement> = {
       },
       "style": {
         "width": "100%"
+      },
+      "config": {
+        "optionSource": "manual"
       }
     },
     "inspector": [
@@ -4860,6 +6546,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
             "key": "options",
             "label": "Option list",
             "controls": [
+              "field_option_source",
               "field_options"
             ]
           },
@@ -4889,7 +6576,6 @@ export const ELEMENTS: Record<string, CatalogElement> = {
             "label": "Size",
             "controls": [
               "width_select",
-              "height_select",
               "size_bounds"
             ]
           }
@@ -4898,6 +6584,13 @@ export const ELEMENTS: Record<string, CatalogElement> = {
       {
         "tab": "advanced",
         "groups": [
+          {
+            "key": "id_field",
+            "label": "ID field",
+            "controls": [
+              "field_name"
+            ]
+          },
           {
             "key": "spacing",
             "label": "Spacing",
@@ -4918,29 +6611,22 @@ export const ELEMENTS: Record<string, CatalogElement> = {
             "controls": [
               "class_css"
             ]
-          },
-          {
-            "key": "id_field",
-            "label": "ID field",
-            "controls": [
-              "field_name"
-            ]
           }
         ]
       }
     ],
     "controls": [
+      "field_option_source",
       "field_options",
       "field_content",
       "field_layout",
       "field_skin",
       "width_select",
-      "height_select",
       "size_bounds",
+      "field_name",
       "padding_margin",
       "display",
-      "class_css",
-      "field_name"
+      "class_css"
     ],
     "description": "A dropdown of known choices. Shows one answer at a time and takes the least room of the three choice controls, which is what makes it right for long lists.",
     "useWhen": [
@@ -4988,7 +6674,8 @@ export const ELEMENTS: Record<string, CatalogElement> = {
         "defaultValue": ""
       },
       "config": {
-        "columns": 1
+        "columns": 1,
+        "optionSource": "manual"
       },
       "style": {
         "width": "100%"
@@ -5002,6 +6689,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
             "key": "options",
             "label": "Option list",
             "controls": [
+              "field_option_source",
               "field_options"
             ]
           },
@@ -5010,6 +6698,20 @@ export const ELEMENTS: Record<string, CatalogElement> = {
             "label": "Content",
             "controls": [
               "field_content"
+            ]
+          },
+          {
+            "key": "field_chrome",
+            "label": "Label & hint",
+            "controls": [
+              "field_chrome"
+            ]
+          },
+          {
+            "key": "choice_skin",
+            "label": "Option list style",
+            "controls": [
+              "choice_skin"
             ]
           },
           {
@@ -5025,7 +6727,6 @@ export const ELEMENTS: Record<string, CatalogElement> = {
             "label": "Size",
             "controls": [
               "width_select",
-              "height_select",
               "size_bounds"
             ]
           }
@@ -5034,6 +6735,13 @@ export const ELEMENTS: Record<string, CatalogElement> = {
       {
         "tab": "advanced",
         "groups": [
+          {
+            "key": "id_field",
+            "label": "ID field",
+            "controls": [
+              "field_name"
+            ]
+          },
           {
             "key": "spacing",
             "label": "Spacing",
@@ -5054,29 +6762,24 @@ export const ELEMENTS: Record<string, CatalogElement> = {
             "controls": [
               "class_css"
             ]
-          },
-          {
-            "key": "id_field",
-            "label": "ID field",
-            "controls": [
-              "field_name"
-            ]
           }
         ]
       }
     ],
     "controls": [
+      "field_option_source",
       "field_options",
       "field_content",
+      "field_chrome",
+      "choice_skin",
       "field_columns",
       "field_layout",
       "width_select",
-      "height_select",
       "size_bounds",
+      "field_name",
       "padding_margin",
       "display",
-      "class_css",
-      "field_name"
+      "class_css"
     ],
     "description": "A set of choices with exactly one answer, all visible at once. The visitor compares them without opening anything.",
     "useWhen": [
@@ -5097,6 +6800,332 @@ export const ELEMENTS: Record<string, CatalogElement> = {
       "radio",
       "choice",
       "single"
+    ]
+  },
+  "form-payment": {
+    "type": "form-payment",
+    "label": "Payment method",
+    "category": "form",
+    "isContainer": false,
+    "isRootOnly": false,
+    "locked": false,
+    "hideInLayer": false,
+    "childAllows": [],
+    "defaults": {
+      "specials": {
+        "name": "",
+        "label": "Phương thức thanh toán",
+        "description": "",
+        "required": true,
+        "showLabel": true,
+        "mapTo": "order.paymentMethod",
+        "methods": [],
+        "defaultValue": "",
+        "showLogos": false,
+        "showMarker": true
+      },
+      "style": {
+        "width": "100%"
+      }
+    },
+    "inspector": [
+      {
+        "tab": "general",
+        "groups": [
+          {
+            "key": "options",
+            "label": "Option list",
+            "controls": [
+              "field_payment_methods"
+            ]
+          },
+          {
+            "key": "logos",
+            "label": "Logos",
+            "controls": [
+              "pay_logo_size"
+            ]
+          },
+          {
+            "key": "content",
+            "label": "Content",
+            "controls": [
+              "field_content"
+            ]
+          },
+          {
+            "key": "card_skin",
+            "label": "Card style",
+            "controls": [
+              "pay_card_skin"
+            ]
+          },
+          {
+            "key": "state_skin",
+            "label": "States",
+            "controls": [
+              "pay_state_skin"
+            ]
+          },
+          {
+            "key": "text_skin",
+            "label": "Card text",
+            "controls": [
+              "pay_text_skin"
+            ]
+          },
+          {
+            "key": "marker",
+            "label": "Marker",
+            "controls": [
+              "pay_marker_skin"
+            ]
+          },
+          {
+            "key": "field_chrome",
+            "label": "Label & hint",
+            "controls": [
+              "field_chrome"
+            ]
+          },
+          {
+            "key": "field_layout",
+            "label": "Layout",
+            "controls": [
+              "field_layout"
+            ]
+          },
+          {
+            "key": "size",
+            "label": "Size",
+            "controls": [
+              "width_select",
+              "size_bounds"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "advanced",
+        "groups": [
+          {
+            "key": "id_field",
+            "label": "ID field",
+            "controls": [
+              "field_name"
+            ]
+          },
+          {
+            "key": "spacing",
+            "label": "Spacing",
+            "controls": [
+              "padding_margin"
+            ]
+          },
+          {
+            "key": "display",
+            "label": "Display",
+            "controls": [
+              "display"
+            ]
+          },
+          {
+            "key": "class_css",
+            "label": "Class",
+            "controls": [
+              "class_css"
+            ]
+          }
+        ]
+      }
+    ],
+    "controls": [
+      "field_payment_methods",
+      "pay_logo_size",
+      "field_content",
+      "pay_card_skin",
+      "pay_state_skin",
+      "pay_text_skin",
+      "pay_marker_skin",
+      "field_chrome",
+      "field_layout",
+      "width_select",
+      "size_bounds",
+      "field_name",
+      "padding_margin",
+      "display",
+      "class_css"
+    ],
+    "description": "The payment-method chooser of an order form, or of a booking form that takes a deposit: one card per way to pay — cash on delivery and every gateway the store has switched on — each with a name and a one-line explanation. The chosen value is the gateway id the server charges through.",
+    "useWhen": [
+      "An order or checkout form needs to ask how the shopper will pay.",
+      "A booking form has a deposit product set and the customer should pay it right away through a gateway.",
+      "The store has connected a gateway and wants it offered beside cash on delivery."
+    ],
+    "avoidWhen": [
+      "The form is neither an order form nor a booking form with a deposit product set — a contact form has no order to pay for.",
+      "You want a free-text answer: a typed method name opens no payment, so the values come from the store, never from the keyboard."
+    ],
+    "contentTips": [
+      "Keep the description to one sentence about what happens next: \"Nhận số tài khoản và nội dung chuyển khoản sau khi đặt\".",
+      "Put the method most shoppers use first and make it the default — cash on delivery for most Vietnamese stores.",
+      "Leave the value alone; it is the gateway id and the server matches it exactly."
+    ],
+    "semantics": [
+      "form",
+      "field",
+      "payment",
+      "checkout",
+      "choice",
+      "gateway"
+    ]
+  },
+  "form-timeslot": {
+    "type": "form-timeslot",
+    "label": "Time slot",
+    "category": "form",
+    "isContainer": false,
+    "isRootOnly": false,
+    "locked": false,
+    "hideInLayer": false,
+    "childAllows": [],
+    "defaults": {
+      "specials": {
+        "name": "",
+        "label": "Giờ hẹn",
+        "description": "",
+        "required": true,
+        "showLabel": true,
+        "mapTo": "",
+        "start": "09:00",
+        "end": "18:00",
+        "step": 60,
+        "breakStart": "",
+        "breakEnd": "",
+        "defaultValue": ""
+      },
+      "style": {
+        "width": "100%"
+      }
+    },
+    "inspector": [
+      {
+        "tab": "general",
+        "groups": [
+          {
+            "key": "hours",
+            "label": "Opening hours",
+            "controls": [
+              "field_timeslot"
+            ]
+          },
+          {
+            "key": "content",
+            "label": "Content",
+            "controls": [
+              "field_content"
+            ]
+          },
+          {
+            "key": "field_chrome",
+            "label": "Label & hint",
+            "controls": [
+              "field_chrome"
+            ]
+          },
+          {
+            "key": "slot_skin",
+            "label": "Slot style",
+            "controls": [
+              "timeslot_skin"
+            ]
+          },
+          {
+            "key": "field_layout",
+            "label": "Layout",
+            "controls": [
+              "field_layout"
+            ]
+          },
+          {
+            "key": "size",
+            "label": "Size",
+            "controls": [
+              "width_select",
+              "size_bounds"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "advanced",
+        "groups": [
+          {
+            "key": "id_field",
+            "label": "ID field",
+            "controls": [
+              "field_name"
+            ]
+          },
+          {
+            "key": "spacing",
+            "label": "Spacing",
+            "controls": [
+              "padding_margin"
+            ]
+          },
+          {
+            "key": "display",
+            "label": "Display",
+            "controls": [
+              "display"
+            ]
+          },
+          {
+            "key": "class_css",
+            "label": "Class",
+            "controls": [
+              "class_css"
+            ]
+          }
+        ]
+      }
+    ],
+    "controls": [
+      "field_timeslot",
+      "field_content",
+      "field_chrome",
+      "timeslot_skin",
+      "field_layout",
+      "width_select",
+      "size_bounds",
+      "field_name",
+      "padding_margin",
+      "display",
+      "class_css"
+    ],
+    "description": "A grid of bookable start times generated from opening hours — open, close, slot length and one break — for a booking form. The visitor taps one; the server counts capacity per slot and the page greys out slots already full.",
+    "useWhen": [
+      "A booking form needs a time of day and the shop books in regular slots (every 30, 45 or 60 minutes).",
+      "The hours change with the season and retyping a list of times each time is the thing to avoid."
+    ],
+    "avoidWhen": [
+      "The choice is a wide band rather than a start time (\"Sáng / Chiều / Tối\") — a Select or Radio with three options says that better.",
+      "The form is not a booking form — nothing counts these slots outside the Booking app."
+    ],
+    "contentTips": [
+      "Set the slot length to how long one appointment takes, not how often you want the grid to read.",
+      "Use the break for lunch or a fixed daily closure; block whole days with the date box’s weekday rule and the form’s closed dates.",
+      "Leave the label short — \"Giờ hẹn\", \"Giờ đến\" — the grid itself explains the rest."
+    ],
+    "semantics": [
+      "form",
+      "field",
+      "booking",
+      "time",
+      "slot",
+      "schedule",
+      "appointment"
     ]
   },
   "form-checkbox": {
@@ -5124,7 +7153,8 @@ export const ELEMENTS: Record<string, CatalogElement> = {
         "defaultValue": ""
       },
       "config": {
-        "columns": 1
+        "columns": 1,
+        "optionSource": "manual"
       },
       "style": {
         "width": "100%"
@@ -5138,6 +7168,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
             "key": "options",
             "label": "Option list",
             "controls": [
+              "field_option_source",
               "field_options"
             ]
           },
@@ -5146,6 +7177,20 @@ export const ELEMENTS: Record<string, CatalogElement> = {
             "label": "Content",
             "controls": [
               "field_content"
+            ]
+          },
+          {
+            "key": "field_chrome",
+            "label": "Label & hint",
+            "controls": [
+              "field_chrome"
+            ]
+          },
+          {
+            "key": "choice_skin",
+            "label": "Option list style",
+            "controls": [
+              "choice_skin"
             ]
           },
           {
@@ -5161,7 +7206,6 @@ export const ELEMENTS: Record<string, CatalogElement> = {
             "label": "Size",
             "controls": [
               "width_select",
-              "height_select",
               "size_bounds"
             ]
           }
@@ -5170,6 +7214,13 @@ export const ELEMENTS: Record<string, CatalogElement> = {
       {
         "tab": "advanced",
         "groups": [
+          {
+            "key": "id_field",
+            "label": "ID field",
+            "controls": [
+              "field_name"
+            ]
+          },
           {
             "key": "spacing",
             "label": "Spacing",
@@ -5190,29 +7241,24 @@ export const ELEMENTS: Record<string, CatalogElement> = {
             "controls": [
               "class_css"
             ]
-          },
-          {
-            "key": "id_field",
-            "label": "ID field",
-            "controls": [
-              "field_name"
-            ]
           }
         ]
       }
     ],
     "controls": [
+      "field_option_source",
       "field_options",
       "field_content",
+      "field_chrome",
+      "choice_skin",
       "field_columns",
       "field_layout",
       "width_select",
-      "height_select",
       "size_bounds",
+      "field_name",
       "padding_margin",
       "display",
-      "class_css",
-      "field_name"
+      "class_css"
     ],
     "description": "A set of choices the visitor can pick several of at once, all visible together. The answer arrives as the list of what was ticked.",
     "useWhen": [
@@ -5301,7 +7347,6 @@ export const ELEMENTS: Record<string, CatalogElement> = {
             "label": "Size",
             "controls": [
               "width_select",
-              "height_select",
               "size_bounds"
             ]
           }
@@ -5310,6 +7355,13 @@ export const ELEMENTS: Record<string, CatalogElement> = {
       {
         "tab": "advanced",
         "groups": [
+          {
+            "key": "id_field",
+            "label": "ID field",
+            "controls": [
+              "field_name"
+            ]
+          },
           {
             "key": "spacing",
             "label": "Spacing",
@@ -5330,13 +7382,6 @@ export const ELEMENTS: Record<string, CatalogElement> = {
             "controls": [
               "class_css"
             ]
-          },
-          {
-            "key": "id_field",
-            "label": "ID field",
-            "controls": [
-              "field_name"
-            ]
           }
         ]
       }
@@ -5347,12 +7392,11 @@ export const ELEMENTS: Record<string, CatalogElement> = {
       "field_layout",
       "field_skin",
       "width_select",
-      "height_select",
       "size_bounds",
+      "field_name",
       "padding_margin",
       "display",
-      "class_css",
-      "field_name"
+      "class_css"
     ],
     "description": "A date asked as separate boxes — day, month and year, optionally with a time box, or the time alone (the Format setting: Date & time / Only date / Only time). Nothing opens; the visitor types what they already know.",
     "useWhen": [
@@ -5401,7 +7445,8 @@ export const ELEMENTS: Record<string, CatalogElement> = {
         "defaultMode": "unset",
         "specificDate": "",
         "acceptedDates": "all",
-        "availableDays": "1,2,3,4,5,6,7"
+        "availableDays": "1,2,3,4,5,6,7",
+        "picker": "native"
       },
       "style": {
         "width": "100%"
@@ -5451,7 +7496,6 @@ export const ELEMENTS: Record<string, CatalogElement> = {
             "label": "Size",
             "controls": [
               "width_select",
-              "height_select",
               "size_bounds"
             ]
           }
@@ -5461,10 +7505,24 @@ export const ELEMENTS: Record<string, CatalogElement> = {
         "tab": "advanced",
         "groups": [
           {
+            "key": "id_field",
+            "label": "ID field",
+            "controls": [
+              "field_name"
+            ]
+          },
+          {
             "key": "accepted_dates",
             "label": "Accepted dates",
             "controls": [
               "field_date_accepted"
+            ]
+          },
+          {
+            "key": "date_picker",
+            "label": "Calendar style",
+            "controls": [
+              "field_date_picker"
             ]
           },
           {
@@ -5487,13 +7545,6 @@ export const ELEMENTS: Record<string, CatalogElement> = {
             "controls": [
               "class_css"
             ]
-          },
-          {
-            "key": "id_field",
-            "label": "ID field",
-            "controls": [
-              "field_name"
-            ]
           }
         ]
       }
@@ -5505,13 +7556,13 @@ export const ELEMENTS: Record<string, CatalogElement> = {
       "field_date_default",
       "field_skin",
       "width_select",
-      "height_select",
       "size_bounds",
+      "field_name",
       "field_date_accepted",
+      "field_date_picker",
       "padding_margin",
       "display",
-      "class_css",
-      "field_name"
+      "class_css"
     ],
     "description": "A single date box that opens the device’s own calendar. One answer, already valid — the visitor cannot pick a thirty-first of February.",
     "useWhen": [
@@ -5824,7 +7875,6 @@ export const ELEMENTS: Record<string, CatalogElement> = {
             "controls": [
               "direction",
               "gap",
-              "padding",
               "vertical",
               "horizontal"
             ]
@@ -5834,8 +7884,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
             "label": "Background",
             "controls": [
               "bg_color",
-              "bg_image",
-              "bg_video"
+              "bg_image"
             ]
           },
           {
@@ -5882,12 +7931,10 @@ export const ELEMENTS: Record<string, CatalogElement> = {
       "size_bounds",
       "direction",
       "gap",
-      "padding",
       "vertical",
       "horizontal",
       "bg_color",
       "bg_image",
-      "bg_video",
       "border",
       "corner",
       "shadow",
@@ -5920,13 +7967,18 @@ export const ELEMENTS: Record<string, CatalogElement> = {
     "type": "form-step-nav",
     "label": "Step navigation",
     "category": "form",
-    "isContainer": false,
+    "isContainer": true,
     "isRootOnly": false,
     "locked": false,
     "hideInLayer": false,
-    "childAllows": [],
+    "childAllows": [
+      "form-step-button",
+      "form-step-count",
+      "form-submit"
+    ],
     "defaults": {
       "specials": {
+        "parts": true,
         "prevText": "Quay lại",
         "nextText": "Tiếp tục",
         "showCount": true
@@ -5945,13 +7997,6 @@ export const ELEMENTS: Record<string, CatalogElement> = {
       {
         "tab": "general",
         "groups": [
-          {
-            "key": "steps",
-            "label": "Steps",
-            "controls": [
-              "step_nav_labels"
-            ]
-          },
           {
             "key": "size",
             "label": "Size",
@@ -6002,7 +8047,6 @@ export const ELEMENTS: Record<string, CatalogElement> = {
       }
     ],
     "controls": [
-      "step_nav_labels",
       "width_select",
       "height_select",
       "size_bounds",
@@ -6034,6 +8078,267 @@ export const ELEMENTS: Record<string, CatalogElement> = {
       "navigation",
       "wizard",
       "next"
+    ]
+  },
+  "form-step-button": {
+    "type": "form-step-button",
+    "label": "Step button",
+    "category": "form",
+    "isContainer": false,
+    "isRootOnly": false,
+    "locked": false,
+    "hideInLayer": false,
+    "childAllows": [],
+    "defaults": {
+      "specials": {
+        "dir": "next",
+        "text": "Tiếp tục"
+      },
+      "style": {
+        "width": "fit-content",
+        "height": "fit-content",
+        "padding": "8px 16px",
+        "borderRadius": "6px",
+        "borderWidth": "1px",
+        "borderStyle": "solid",
+        "borderColor": "#171717",
+        "backgroundColor": "#171717",
+        "color": "#ffffff"
+      },
+      "config": {
+        "iconSize": 20,
+        "iconGap": 8,
+        "iconPosition": "left"
+      }
+    },
+    "inspector": [
+      {
+        "tab": "general",
+        "groups": [
+          {
+            "key": "button",
+            "label": "Button",
+            "controls": [
+              "step_button_label"
+            ]
+          },
+          {
+            "key": "icon",
+            "label": "Icon",
+            "controls": [
+              "button_icon",
+              "icon_size",
+              "icon_position",
+              "icon_gap"
+            ]
+          },
+          {
+            "key": "size",
+            "label": "Size",
+            "controls": [
+              "width_select",
+              "height_select",
+              "size_bounds"
+            ]
+          },
+          {
+            "key": "typography",
+            "label": "Typography",
+            "controls": [
+              "text_color",
+              "text_style",
+              "font_family",
+              "font_size"
+            ]
+          },
+          {
+            "key": "background",
+            "label": "Background",
+            "controls": [
+              "bg_color"
+            ]
+          },
+          {
+            "key": "shape",
+            "label": "Shape",
+            "controls": [
+              "border",
+              "corner",
+              "shadow"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "advanced",
+        "groups": [
+          {
+            "key": "spacing",
+            "label": "Spacing",
+            "controls": [
+              "padding_margin"
+            ]
+          },
+          {
+            "key": "display",
+            "label": "Display",
+            "controls": [
+              "display"
+            ]
+          },
+          {
+            "key": "class_css",
+            "label": "Class",
+            "controls": [
+              "class_css"
+            ]
+          }
+        ]
+      }
+    ],
+    "controls": [
+      "step_button_label",
+      "button_icon",
+      "icon_size",
+      "icon_position",
+      "icon_gap",
+      "width_select",
+      "height_select",
+      "size_bounds",
+      "text_color",
+      "text_style",
+      "font_family",
+      "font_size",
+      "bg_color",
+      "border",
+      "corner",
+      "shadow",
+      "padding_margin",
+      "display",
+      "class_css"
+    ],
+    "description": "One button of a multi-step form's navigation bar — Back or Next, decided by its `dir`. It is placed and kept in place by the Steps panel rather than dragged in, and the published page's island decides which of them a given step is allowed to show.",
+    "useWhen": [
+      "Only inside a step navigation bar of a form that is divided into steps — the Steps panel puts one Back and one Next in every step.",
+      "When the author wants the step controls to match the rest of the form: their own colour, border, radius, padding, width, type size or icon."
+    ],
+    "avoidWhen": [
+      "Anywhere outside a step bar: it carries the step island call and would be a button that visibly does nothing.",
+      "As a general-purpose button — a plain Button element goes anywhere and answers to a dozen actions; this one only ever moves a form one step.",
+      "As a way to send the form. That is the Submit element, which shares the bar and takes Next’s place on the last step."
+    ],
+    "contentTips": [
+      "Label it with the direction, not the mechanism: \"Tiếp tục\" / \"Quay lại\" rather than \"Next step button\".",
+      "Keep Back visually quieter than Next — the forward move is the one the visitor is being asked to make.",
+      "An arrow icon reads faster than the word alone, but the word should stay: an icon-only control leaves a visitor guessing which way it goes."
+    ],
+    "semantics": [
+      "form",
+      "step",
+      "next",
+      "back",
+      "button",
+      "navigation"
+    ]
+  },
+  "form-step-count": {
+    "type": "form-step-count",
+    "label": "Step counter",
+    "category": "form",
+    "isContainer": false,
+    "isRootOnly": false,
+    "locked": false,
+    "hideInLayer": false,
+    "childAllows": [],
+    "defaults": {
+      "style": {
+        "opacity": "0.7"
+      }
+    },
+    "inspector": [
+      {
+        "tab": "general",
+        "groups": [
+          {
+            "key": "typography",
+            "label": "Typography",
+            "controls": [
+              "text_color",
+              "text_style",
+              "font_family",
+              "font_size"
+            ]
+          },
+          {
+            "key": "size",
+            "label": "Size",
+            "controls": [
+              "width_select",
+              "height_select",
+              "size_bounds"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "advanced",
+        "groups": [
+          {
+            "key": "spacing",
+            "label": "Spacing",
+            "controls": [
+              "padding_margin"
+            ]
+          },
+          {
+            "key": "display",
+            "label": "Display",
+            "controls": [
+              "display"
+            ]
+          },
+          {
+            "key": "class_css",
+            "label": "Class",
+            "controls": [
+              "class_css"
+            ]
+          }
+        ]
+      }
+    ],
+    "controls": [
+      "text_color",
+      "text_style",
+      "font_family",
+      "font_size",
+      "width_select",
+      "height_select",
+      "size_bounds",
+      "padding_margin",
+      "display",
+      "class_css"
+    ],
+    "description": "The “2/3” counter in a multi-step form's navigation bar. It renders empty in both renderers — the published page's island fills in the numbers at load, because neither renderer knows how many steps the visitor will end up seeing.",
+    "useWhen": [
+      "Inside a step navigation bar, when the form has enough steps that a visitor benefits from knowing how far along they are.",
+      "On long forms above all: the count is what tells someone whether to keep going or come back later."
+    ],
+    "avoidWhen": [
+      "Outside a step bar — nothing fills it in, so it renders as an empty box forever.",
+      "On a two-step form where the bar already reads Back / Next; the counter adds a number nobody needed."
+    ],
+    "contentTips": [
+      "Do not type text into it: the numbers are written at load, and anything authored here is overwritten.",
+      "Keep it quieter than the buttons beside it — it is orientation, not an action.",
+      "Hide it rather than delete it when a form does not want one; the eye on its toolbar is the switch."
+    ],
+    "semantics": [
+      "form",
+      "step",
+      "counter",
+      "progress",
+      "indicator"
     ]
   },
   "custom-code": {
@@ -8418,8 +10723,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
             "label": "Background",
             "controls": [
               "bg_color",
-              "bg_image",
-              "bg_video"
+              "bg_image"
             ]
           },
           {
@@ -8485,7 +10789,6 @@ export const ELEMENTS: Record<string, CatalogElement> = {
       "submenu_style",
       "bg_color",
       "bg_image",
-      "bg_video",
       "border",
       "corner",
       "shadow",
@@ -8739,8 +11042,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
             "label": "Background",
             "controls": [
               "bg_color",
-              "bg_image",
-              "bg_video"
+              "bg_image"
             ]
           },
           {
@@ -8800,7 +11102,6 @@ export const ELEMENTS: Record<string, CatalogElement> = {
       "horizontal",
       "bg_color",
       "bg_image",
-      "bg_video",
       "border",
       "corner",
       "shadow",
@@ -8879,8 +11180,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
             "label": "Background",
             "controls": [
               "bg_color",
-              "bg_image",
-              "bg_video"
+              "bg_image"
             ]
           },
           {
@@ -8933,7 +11233,6 @@ export const ELEMENTS: Record<string, CatalogElement> = {
       "horizontal",
       "bg_color",
       "bg_image",
-      "bg_video",
       "border",
       "corner",
       "shadow",
@@ -9019,8 +11318,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
             "label": "Background",
             "controls": [
               "bg_color",
-              "bg_image",
-              "bg_video"
+              "bg_image"
             ]
           },
           {
@@ -9076,7 +11374,6 @@ export const ELEMENTS: Record<string, CatalogElement> = {
       "overflow_y",
       "bg_color",
       "bg_image",
-      "bg_video",
       "border",
       "corner",
       "shadow",
@@ -9567,6 +11864,166 @@ export const ELEMENTS: Record<string, CatalogElement> = {
       "dynamic"
     ]
   },
+  "cart-total": {
+    "type": "cart-total",
+    "label": "Cart total",
+    "category": "store",
+    "isContainer": false,
+    "isRootOnly": false,
+    "locked": false,
+    "hideInLayer": false,
+    "childAllows": [],
+    "defaults": {
+      "style": {
+        "display": "flex",
+        "flexDirection": "row",
+        "justifyContent": "space-between",
+        "alignItems": "center",
+        "width": "100%",
+        "gap": "12px",
+        "fontSize": "16px",
+        "fontWeight": "600",
+        "color": "#171717"
+      },
+      "specials": {
+        "label": "Tổng cộng",
+        "placeholder": "0 ₫",
+        "part": "total"
+      }
+    },
+    "inspector": [
+      {
+        "tab": "general",
+        "groups": [
+          {
+            "key": "content",
+            "label": "Content",
+            "controls": [
+              "cart_total_part",
+              "cart_total_label",
+              "cart_total_placeholder"
+            ]
+          },
+          {
+            "key": "size",
+            "label": "Size",
+            "controls": [
+              "width_select",
+              "height_select",
+              "size_bounds"
+            ]
+          },
+          {
+            "key": "layout",
+            "label": "Layout",
+            "controls": [
+              "direction",
+              "gap",
+              "padding",
+              "margin",
+              "vertical",
+              "horizontal"
+            ]
+          },
+          {
+            "key": "typography",
+            "label": "Typography",
+            "controls": [
+              "font_family",
+              "font_size",
+              "font_weight",
+              "text_color"
+            ]
+          },
+          {
+            "key": "background",
+            "label": "Background",
+            "controls": [
+              "bg_color"
+            ]
+          },
+          {
+            "key": "shape",
+            "label": "Shape",
+            "controls": [
+              "border",
+              "corner"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "advanced",
+        "groups": [
+          {
+            "key": "spacing",
+            "label": "Spacing",
+            "controls": [
+              "padding_margin"
+            ]
+          },
+          {
+            "key": "display",
+            "label": "Display",
+            "controls": [
+              "display"
+            ]
+          },
+          {
+            "key": "class_css",
+            "label": "Class",
+            "controls": [
+              "class_css"
+            ]
+          }
+        ]
+      }
+    ],
+    "controls": [
+      "cart_total_part",
+      "cart_total_label",
+      "cart_total_placeholder",
+      "width_select",
+      "height_select",
+      "size_bounds",
+      "direction",
+      "gap",
+      "padding",
+      "margin",
+      "vertical",
+      "horizontal",
+      "font_family",
+      "font_size",
+      "font_weight",
+      "text_color",
+      "bg_color",
+      "border",
+      "corner",
+      "padding_margin",
+      "display",
+      "class_css"
+    ],
+    "description": "The cart's total price, with a label beside it. The number comes from the shopper's own cart in their browser, so it updates as they add, remove or re-count lines. Place it near the checkout button — it is the figure a shopper checks before paying.",
+    "useWhen": [
+      "building a cart drawer or a cart page, beside the checkout button",
+      "a shopper needs to see what they will pay before they commit"
+    ],
+    "avoidWhen": [
+      "showing one product’s price — that is a pricing-dataset bound to the product",
+      "showing an order’s total after checkout — an order is a record, not the live cart"
+    ],
+    "contentTips": [
+      "rename the label to the shop’s own words; it is ordinary translatable text",
+      "the placeholder is what an empty cart shows, so write it as a real empty-cart amount"
+    ],
+    "semantics": [
+      "cart",
+      "total",
+      "price",
+      "checkout",
+      "commerce"
+    ]
+  },
   "menu-drawer": {
     "type": "menu-drawer",
     "label": "Menu drawer",
@@ -9620,8 +12077,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
             "label": "Background",
             "controls": [
               "bg_color",
-              "bg_image",
-              "bg_video"
+              "bg_image"
             ]
           },
           {
@@ -9676,7 +12132,6 @@ export const ELEMENTS: Record<string, CatalogElement> = {
       "overflow_y",
       "bg_color",
       "bg_image",
-      "bg_video",
       "border",
       "corner",
       "shadow",
@@ -9753,8 +12208,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
             "label": "Background",
             "controls": [
               "bg_color",
-              "bg_image",
-              "bg_video"
+              "bg_image"
             ]
           },
           {
@@ -9810,7 +12264,6 @@ export const ELEMENTS: Record<string, CatalogElement> = {
       "margin",
       "bg_color",
       "bg_image",
-      "bg_video",
       "border",
       "corner",
       "shadow",
@@ -11492,7 +13945,8 @@ export const ELEMENTS: Record<string, CatalogElement> = {
               "categoryId",
               "src",
               "alt",
-              "datasetSource"
+              "datasetSource",
+              "imageField"
             ]
           },
           {
@@ -11586,6 +14040,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
       "src",
       "alt",
       "datasetSource",
+      "imageField",
       "width_select",
       "size_bounds",
       "image",
@@ -11712,6 +14167,27 @@ export const ELEMENTS: Record<string, CatalogElement> = {
             "controls": [
               "data_source",
               "article",
+              "kind",
+              "productId",
+              "categoryId",
+              "datasetSource",
+              "textValue",
+              "descriptionDisplayType",
+              "descriptionLines",
+              "moreText",
+              "lessText",
+              "moreButtonColor",
+              "icon",
+              "textGlobalStyle",
+              "htmlTag",
+              "moreButtonEnabled"
+            ]
+          },
+          {
+            "key": "contextual",
+            "label": "Data",
+            "controls": [
+              "data_source",
               "kind",
               "productId",
               "categoryId",
@@ -13312,8 +15788,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
             "label": "Background",
             "controls": [
               "bg_color",
-              "bg_image",
-              "bg_video"
+              "bg_image"
             ]
           },
           {
@@ -13459,7 +15934,6 @@ export const ELEMENTS: Record<string, CatalogElement> = {
       "size_bounds",
       "bg_color",
       "bg_image",
-      "bg_video",
       "border",
       "corner",
       "shadow",
@@ -13482,7 +15956,8 @@ export const ELEMENTS: Record<string, CatalogElement> = {
     "contentTips": [
       "Always add exactly one dataset-block child as the repeated item template; every row clones that exact structure and styling",
       "config.datasetSource picks the ENTITY: \"product\" for a product list, \"category\" for a collection list. It is what derives the node's binding target (product::product_list / category::collection_list)",
-      "Product lists: config.collectionType \"all_products\" renders the whole catalog, \"collection\" renders the one named by config.collectionId",
+      "Product lists: config.collectionType \"all_products\" renders the whole catalog, \"collection\" renders the one named by config.collectionId, \"related\" renders the PAGE PRODUCT's neighbours — the products sharing one of its collections, minus itself",
+      "Use \"related\" for a cross-sell shelf on a product page (\"Sản phẩm liên quan\" / \"You may also like\"). It reads no collectionId — its axis is whatever collections the page product is filed under — and it renders nothing on a page that names no product, so pair it with an emptyStateId if the section must never be blank",
       "Collection lists: config.collectionListType \"all_collections\" renders every collection; \"custom_collections\" renders specials.collectionIds, in that order",
       "config.quantity caps how many records render; config.itemsPerRow is the row size (grid columns / slide page size) and style.gap is the space between cards — both are per-breakpoint",
       "config.layout \"grid\" for a multi-row grid, \"slide\" for row-by-row carousel behaviour",
@@ -13566,8 +16041,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
             "label": "Background",
             "controls": [
               "bg_color",
-              "bg_image",
-              "bg_video"
+              "bg_image"
             ]
           },
           {
@@ -13621,7 +16095,6 @@ export const ELEMENTS: Record<string, CatalogElement> = {
       "horizontal",
       "bg_color",
       "bg_image",
-      "bg_video",
       "border",
       "corner",
       "shadow",
@@ -13709,8 +16182,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
             "label": "Background",
             "controls": [
               "bg_color",
-              "bg_image",
-              "bg_video"
+              "bg_image"
             ]
           },
           {
@@ -13764,7 +16236,6 @@ export const ELEMENTS: Record<string, CatalogElement> = {
       "horizontal",
       "bg_color",
       "bg_image",
-      "bg_video",
       "border",
       "corner",
       "shadow",
@@ -13795,6 +16266,673 @@ export const ELEMENTS: Record<string, CatalogElement> = {
       "placeholder",
       "container"
     ]
+  },
+  "dropdown": {
+    "type": "dropdown",
+    "label": "Dropdown",
+    "category": "basic",
+    "isContainer": true,
+    "isRootOnly": false,
+    "locked": false,
+    "hideInLayer": false,
+    "childAllows": [
+      "dropdown-trigger",
+      "dropdown-panel"
+    ],
+    "defaults": {
+      "style": {
+        "display": "flex",
+        "flexDirection": "column",
+        "width": "fit-content"
+      },
+      "config": {
+        "panelAlign": "left",
+        "panelGap": 8,
+        "placement": "bottom"
+      },
+      "specials": {
+        "openOnHover": false
+      }
+    },
+    "inspector": [
+      {
+        "tab": "general",
+        "groups": [
+          {
+            "key": "dropdown",
+            "label": "Dropdown",
+            "controls": [
+              "anchored_placement",
+              "dropdown_align",
+              "dropdown_gap",
+              "dropdown_hover"
+            ]
+          },
+          {
+            "key": "size",
+            "label": "Size",
+            "controls": [
+              "width_select",
+              "height_select",
+              "size_bounds"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "advanced",
+        "groups": [
+          {
+            "key": "spacing",
+            "label": "Spacing",
+            "controls": [
+              "padding_margin"
+            ]
+          },
+          {
+            "key": "display",
+            "label": "Display",
+            "controls": [
+              "display"
+            ]
+          },
+          {
+            "key": "animation",
+            "label": "Animation",
+            "controls": [
+              "animation"
+            ]
+          },
+          {
+            "key": "class_css",
+            "label": "Class",
+            "controls": [
+              "class_css"
+            ]
+          }
+        ]
+      }
+    ],
+    "controls": [
+      "anchored_placement",
+      "dropdown_align",
+      "dropdown_gap",
+      "dropdown_hover",
+      "width_select",
+      "height_select",
+      "size_bounds",
+      "padding_margin",
+      "display",
+      "animation",
+      "class_css"
+    ],
+    "description": "An anchored dropdown: a trigger zone that opens a floating panel of arbitrary content directly under it. Page-local — each instance lives in the page document.",
+    "useWhen": [
+      "A header or toolbar needs a click-to-open menu of links or actions",
+      "Secondary content (an account box, filters, a language list) should stay hidden until asked for",
+      "The opened content must sit anchored to its trigger rather than centered over the page"
+    ],
+    "avoidWhen": [
+      "The content should interrupt the whole page — use a pop-up (site overlay) instead",
+      "You are building navigation from the site menu — the menu element has its own submenus",
+      "The content must always be visible — use a plain block"
+    ],
+    "contentTips": [
+      "Put the visible button content (text, icon, avatar) in the trigger zone",
+      "Keep the panel focused: a short list of links or one compact form",
+      "Turn on hover-opening only for desktop navigation patterns; click stays the mobile behavior"
+    ],
+    "semantics": [
+      "dropdown",
+      "menu",
+      "disclosure",
+      "navigation",
+      "popover"
+    ]
+  },
+  "dropdown-trigger": {
+    "type": "dropdown-trigger",
+    "label": "Dropdown trigger",
+    "category": "basic",
+    "isContainer": true,
+    "isRootOnly": false,
+    "locked": false,
+    "hideInLayer": false,
+    "childAllows": [],
+    "defaults": {
+      "style": {
+        "display": "flex",
+        "flexDirection": "row",
+        "alignItems": "center",
+        "justifyContent": "flex-start",
+        "gap": "8px",
+        "padding": "10px 16px",
+        "backgroundColor": "#ffffff",
+        "border": "1px solid #e5e5e5",
+        "borderRadius": "8px",
+        "width": "fit-content",
+        "cursor": "pointer"
+      }
+    },
+    "inspector": [
+      {
+        "tab": "general",
+        "groups": [
+          {
+            "key": "size",
+            "label": "Size",
+            "controls": [
+              "width_select",
+              "height_select",
+              "size_bounds"
+            ]
+          },
+          {
+            "key": "layout",
+            "label": "Layout",
+            "controls": [
+              "direction",
+              "gap",
+              "padding",
+              "margin",
+              "vertical",
+              "horizontal"
+            ]
+          },
+          {
+            "key": "background",
+            "label": "Background",
+            "controls": [
+              "bg_color",
+              "bg_image"
+            ]
+          },
+          {
+            "key": "shape",
+            "label": "Shape",
+            "controls": [
+              "border",
+              "corner",
+              "shadow"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "advanced",
+        "groups": [
+          {
+            "key": "spacing",
+            "label": "Spacing",
+            "controls": [
+              "padding_margin"
+            ]
+          },
+          {
+            "key": "display",
+            "label": "Display",
+            "controls": [
+              "display"
+            ]
+          },
+          {
+            "key": "animation",
+            "label": "Animation",
+            "controls": [
+              "animation"
+            ]
+          },
+          {
+            "key": "class_css",
+            "label": "Class",
+            "controls": [
+              "class_css"
+            ]
+          }
+        ]
+      }
+    ],
+    "controls": [
+      "width_select",
+      "height_select",
+      "size_bounds",
+      "direction",
+      "gap",
+      "padding",
+      "margin",
+      "vertical",
+      "horizontal",
+      "bg_color",
+      "bg_image",
+      "border",
+      "corner",
+      "shadow",
+      "padding_margin",
+      "display",
+      "animation",
+      "class_css"
+    ],
+    "description": "The always-visible zone of a dropdown — the shopper clicks (or hovers) it to open the panel. A free container: its seeded text+chevron can be replaced with any content.",
+    "useWhen": [
+      "Styling the clickable face of a dropdown (colors, border, padding)",
+      "Replacing the default label with an icon, avatar or image"
+    ],
+    "avoidWhen": [
+      "Outside a dropdown — it only exists as the first child of one",
+      "For a navigation link — use a button; a trigger opens its panel, it never navigates"
+    ],
+    "contentTips": [
+      "Keep it compact: a short label plus a chevron reads as openable",
+      "The whole zone is the hit target — pad it enough to tap on mobile"
+    ],
+    "semantics": [
+      "dropdown",
+      "trigger",
+      "button",
+      "disclosure"
+    ]
+  },
+  "dropdown-panel": {
+    "type": "dropdown-panel",
+    "label": "Dropdown panel",
+    "category": "basic",
+    "isContainer": true,
+    "isRootOnly": false,
+    "locked": false,
+    "hideInLayer": false,
+    "childAllows": [],
+    "defaults": {
+      "style": {
+        "display": "flex",
+        "flexDirection": "column",
+        "alignItems": "stretch",
+        "gap": "4px",
+        "padding": "8px",
+        "backgroundColor": "#ffffff",
+        "border": "1px solid #e5e5e5",
+        "borderRadius": "8px",
+        "boxShadow": "0px 8px 24px 0px #0000001f",
+        "minWidth": "180px",
+        "width": "fit-content"
+      }
+    },
+    "inspector": [
+      {
+        "tab": "general",
+        "groups": [
+          {
+            "key": "size",
+            "label": "Size",
+            "controls": [
+              "width_select",
+              "height_select",
+              "size_bounds"
+            ]
+          },
+          {
+            "key": "layout",
+            "label": "Layout",
+            "controls": [
+              "direction",
+              "gap",
+              "padding",
+              "margin",
+              "vertical",
+              "horizontal"
+            ]
+          },
+          {
+            "key": "background",
+            "label": "Background",
+            "controls": [
+              "bg_color",
+              "bg_image"
+            ]
+          },
+          {
+            "key": "shape",
+            "label": "Shape",
+            "controls": [
+              "border",
+              "corner",
+              "shadow"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "advanced",
+        "groups": [
+          {
+            "key": "spacing",
+            "label": "Spacing",
+            "controls": [
+              "padding_margin"
+            ]
+          },
+          {
+            "key": "display",
+            "label": "Display",
+            "controls": [
+              "display"
+            ]
+          },
+          {
+            "key": "animation",
+            "label": "Animation",
+            "controls": [
+              "animation"
+            ]
+          },
+          {
+            "key": "class_css",
+            "label": "Class",
+            "controls": [
+              "class_css"
+            ]
+          }
+        ]
+      }
+    ],
+    "controls": [
+      "width_select",
+      "height_select",
+      "size_bounds",
+      "direction",
+      "gap",
+      "padding",
+      "margin",
+      "vertical",
+      "horizontal",
+      "bg_color",
+      "bg_image",
+      "border",
+      "corner",
+      "shadow",
+      "padding_margin",
+      "display",
+      "animation",
+      "class_css"
+    ],
+    "description": "The floating surface a dropdown opens under its trigger — an anchored container for arbitrary content, hidden until the trigger opens it.",
+    "useWhen": [
+      "Designing what appears when a dropdown opens: links, actions, a compact form",
+      "Styling the floating surface (background, radius, shadow, padding)"
+    ],
+    "avoidWhen": [
+      "Outside a dropdown — it only exists as the second child of one",
+      "For content that must interrupt the page — use a pop-up instead"
+    ],
+    "contentTips": [
+      "Vertical lists of short rows read best; keep it under one screen tall",
+      "It anchors below the trigger — align it left/center/right from the dropdown’s own panel"
+    ],
+    "semantics": [
+      "dropdown",
+      "panel",
+      "popover",
+      "menu",
+      "surface"
+    ]
+  },
+  "popover": {
+    "type": "popover",
+    "label": "Popover",
+    "category": "basic",
+    "isContainer": true,
+    "isRootOnly": false,
+    "locked": false,
+    "hideInLayer": false,
+    "childAllows": [
+      "dropdown-trigger",
+      "dropdown-panel"
+    ],
+    "defaults": {
+      "style": {
+        "display": "flex",
+        "flexDirection": "column",
+        "width": "fit-content"
+      },
+      "config": {
+        "placement": "top",
+        "panelAlign": "center",
+        "panelGap": 8
+      },
+      "specials": {
+        "arrow": true,
+        "openOnHover": false
+      }
+    },
+    "inspector": [
+      {
+        "tab": "general",
+        "groups": [
+          {
+            "key": "popover",
+            "label": "Popover",
+            "controls": [
+              "anchored_placement",
+              "dropdown_align",
+              "dropdown_gap",
+              "popover_arrow",
+              "dropdown_hover"
+            ]
+          },
+          {
+            "key": "size",
+            "label": "Size",
+            "controls": [
+              "width_select",
+              "height_select",
+              "size_bounds"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "advanced",
+        "groups": [
+          {
+            "key": "spacing",
+            "label": "Spacing",
+            "controls": [
+              "padding_margin"
+            ]
+          },
+          {
+            "key": "display",
+            "label": "Display",
+            "controls": [
+              "display"
+            ]
+          },
+          {
+            "key": "animation",
+            "label": "Animation",
+            "controls": [
+              "animation"
+            ]
+          },
+          {
+            "key": "class_css",
+            "label": "Class",
+            "controls": [
+              "class_css"
+            ]
+          }
+        ]
+      }
+    ],
+    "controls": [
+      "anchored_placement",
+      "dropdown_align",
+      "dropdown_gap",
+      "popover_arrow",
+      "dropdown_hover",
+      "width_select",
+      "height_select",
+      "size_bounds",
+      "padding_margin",
+      "display",
+      "animation",
+      "class_css"
+    ],
+    "description": "An anchored popover: a trigger zone and a small card that floats beside it — above, below, left or right — with an arrow pointing back at the trigger. Opens on click, optionally on hover. Page-local; the card is arbitrary content.",
+    "useWhen": [
+      "A short explanation, a preview or a small form should appear next to the thing it is about",
+      "The card must POINT at its trigger — an info icon, a price, an avatar — rather than hang under a button",
+      "The content is a card (a title and a sentence, a small image) rather than a list of links"
+    ],
+    "avoidWhen": [
+      "You want a menu of links under a button — that is the dropdown",
+      "The content should interrupt the whole page — use a pop-up (site overlay)",
+      "The text is a one-line hint that could be a native title attribute"
+    ],
+    "contentTips": [
+      "Put whatever the visitor points at in the trigger zone: an icon, a word, an image",
+      "Keep the card short: a heading and one or two sentences read best at 240–320px",
+      "Prefer placement top for inline triggers and bottom for controls in a toolbar",
+      "Turn on hover only for desktop-style triggers; touch devices always use tap"
+    ],
+    "semantics": [
+      "popover",
+      "tooltip",
+      "card",
+      "disclosure",
+      "anchored",
+      "hint"
+    ]
+  },
+  "select": {
+    "type": "select",
+    "label": "Select",
+    "category": "input",
+    "isContainer": true,
+    "isRootOnly": false,
+    "locked": false,
+    "hideInLayer": false,
+    "childAllows": [
+      "dropdown-trigger",
+      "dropdown-panel"
+    ],
+    "defaults": {
+      "style": {
+        "display": "flex",
+        "flexDirection": "column",
+        "width": "fit-content"
+      },
+      "config": {
+        "panelAlign": "left",
+        "panelGap": 8
+      },
+      "specials": {
+        "openOnHover": false,
+        "filterSource": "sort",
+        "filterValues": [],
+        "filterTargets": [],
+        "placeholder": "",
+        "filterBehavior": "filter"
+      }
+    },
+    "inspector": [
+      {
+        "tab": "general",
+        "groups": [
+          {
+            "key": "select",
+            "label": "Select",
+            "controls": [
+              "filter_config",
+              "dropdown_placeholder",
+              "dropdown_behavior",
+              "dropdown_align",
+              "dropdown_gap",
+              "dropdown_hover"
+            ]
+          },
+          {
+            "key": "size",
+            "label": "Size",
+            "controls": [
+              "width_select",
+              "height_select",
+              "size_bounds"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "advanced",
+        "groups": [
+          {
+            "key": "spacing",
+            "label": "Spacing",
+            "controls": [
+              "padding_margin"
+            ]
+          },
+          {
+            "key": "display",
+            "label": "Display",
+            "controls": [
+              "display"
+            ]
+          },
+          {
+            "key": "animation",
+            "label": "Animation",
+            "controls": [
+              "animation"
+            ]
+          },
+          {
+            "key": "class_css",
+            "label": "Class",
+            "controls": [
+              "class_css"
+            ]
+          }
+        ]
+      }
+    ],
+    "controls": [
+      "filter_config",
+      "dropdown_placeholder",
+      "dropdown_behavior",
+      "dropdown_align",
+      "dropdown_gap",
+      "dropdown_hover",
+      "width_select",
+      "height_select",
+      "size_bounds",
+      "padding_margin",
+      "display",
+      "animation",
+      "class_css"
+    ],
+    "description": "A select: a compact trigger showing the chosen value, opening a panel of options generated from the storefront data it is pointed at. Re-orders a product list (sort) or narrows it (a filter facet) by writing the URL the server renders against.",
+    "useWhen": [
+      "A product shelf needs a \"Sort by\" control",
+      "A facet with many values would be a long column as checkboxes and reads better collapsed",
+      "The page has room for one compact control rather than a filter sidebar"
+    ],
+    "avoidWhen": [
+      "The panel should hold the author’s OWN content rather than generated options — use a dropdown",
+      "A shopper should see every option at once, or pick several — use a filter element",
+      "Nothing on the page is a product or article list for it to drive"
+    ],
+    "contentTips": [
+      "Give it a placeholder that names the axis (\"Sort by\", \"Thương hiệu\") — it is what shows before a choice",
+      "Aim it at specific lists only when the page carries more than one; empty means every list",
+      "Style the trigger and panel zones freely — only the words come from the data"
+    ],
+    "semantics": [
+      "select",
+      "sort",
+      "filter",
+      "dropdown",
+      "storefront"
+    ]
   }
 };
 
@@ -13811,6 +16949,7 @@ export const BINDING_SOURCES: string[] = [
   "category.description",
   "category.image",
   "category.title",
+  "category.url",
   "product.compareAtCents",
   "product.compareAtPrice",
   "product.description",
@@ -13819,7 +16958,10 @@ export const BINDING_SOURCES: string[] = [
   "product.images",
   "product.price",
   "product.priceCents",
+  "product.ratingAverage",
+  "product.ratingCount",
   "product.title",
+  "product.url",
   "product.vendor"
 ];
 
@@ -14025,6 +17167,314 @@ export const TRAIT_WRITES: Record<string, TraitDescription> = {
       {
         "target": "specials",
         "writeKey": "signedOutText",
+        "type": "string"
+      }
+    ]
+  },
+  "account_lookup_enabled": {
+    "key": "account_lookup_enabled",
+    "label": "Order lookup",
+    "writes": [
+      {
+        "target": "specials",
+        "writeKey": "lookupEnabled",
+        "type": "boolean"
+      }
+    ]
+  },
+  "account_lookup_number": {
+    "key": "account_lookup_number",
+    "label": "Order number box",
+    "writes": [
+      {
+        "target": "specials",
+        "writeKey": "lookupNumberPlaceholder",
+        "type": "string"
+      }
+    ]
+  },
+  "account_lookup_contact": {
+    "key": "account_lookup_contact",
+    "label": "Phone or email box",
+    "writes": [
+      {
+        "target": "specials",
+        "writeKey": "lookupContactPlaceholder",
+        "type": "string"
+      }
+    ]
+  },
+  "account_lookup_button": {
+    "key": "account_lookup_button",
+    "label": "Lookup button",
+    "writes": [
+      {
+        "target": "specials",
+        "writeKey": "lookupButtonText",
+        "type": "string"
+      }
+    ]
+  },
+  "account_add_label": {
+    "key": "account_add_label",
+    "label": "Add-button text",
+    "writes": [
+      {
+        "target": "specials",
+        "writeKey": "addLabel",
+        "type": "string"
+      }
+    ]
+  },
+  "course_player_complete_label": {
+    "key": "course_player_complete_label",
+    "label": "Complete button",
+    "writes": [
+      {
+        "target": "specials",
+        "writeKey": "completeLabel",
+        "type": "string"
+      }
+    ]
+  },
+  "course_player_completed_label": {
+    "key": "course_player_completed_label",
+    "label": "Completed text",
+    "writes": [
+      {
+        "target": "specials",
+        "writeKey": "completedLabel",
+        "type": "string"
+      }
+    ]
+  },
+  "course_player_certificate_text": {
+    "key": "course_player_certificate_text",
+    "label": "Certificate text",
+    "writes": [
+      {
+        "target": "specials",
+        "writeKey": "certificateText",
+        "type": "string"
+      }
+    ]
+  },
+  "course_player_locked_text": {
+    "key": "course_player_locked_text",
+    "label": "Locked text",
+    "writes": [
+      {
+        "target": "specials",
+        "writeKey": "lockedText",
+        "type": "string"
+      }
+    ]
+  },
+  "course_player_locked_label": {
+    "key": "course_player_locked_label",
+    "label": "Locked link text",
+    "writes": [
+      {
+        "target": "specials",
+        "writeKey": "lockedLabel",
+        "type": "string"
+      }
+    ]
+  },
+  "course_player_locked_href": {
+    "key": "course_player_locked_href",
+    "label": "Locked link",
+    "writes": [
+      {
+        "target": "specials",
+        "writeKey": "lockedHref",
+        "type": "string"
+      }
+    ]
+  },
+  "course_player_empty_text": {
+    "key": "course_player_empty_text",
+    "label": "No-lessons text",
+    "writes": [
+      {
+        "target": "specials",
+        "writeKey": "emptyText",
+        "type": "string"
+      }
+    ]
+  },
+  "my_courses_signed_out_text": {
+    "key": "my_courses_signed_out_text",
+    "label": "Signed-out text",
+    "writes": [
+      {
+        "target": "specials",
+        "writeKey": "signedOutText",
+        "type": "string"
+      }
+    ]
+  },
+  "my_courses_continue_text": {
+    "key": "my_courses_continue_text",
+    "label": "Continue button",
+    "writes": [
+      {
+        "target": "specials",
+        "writeKey": "continueText",
+        "type": "string"
+      }
+    ]
+  },
+  "my_courses_learn_href": {
+    "key": "my_courses_learn_href",
+    "label": "Learning page",
+    "writes": [
+      {
+        "target": "specials",
+        "writeKey": "learnHref",
+        "type": "string"
+      }
+    ]
+  },
+  "payment_paid_title": {
+    "key": "payment_paid_title",
+    "label": "Title",
+    "writes": [
+      {
+        "target": "specials",
+        "writeKey": "paidTitle",
+        "type": "string"
+      }
+    ]
+  },
+  "payment_paid_text": {
+    "key": "payment_paid_text",
+    "label": "Message",
+    "writes": [
+      {
+        "target": "specials",
+        "writeKey": "paidText",
+        "type": "string"
+      }
+    ]
+  },
+  "payment_pending_title": {
+    "key": "payment_pending_title",
+    "label": "Title",
+    "writes": [
+      {
+        "target": "specials",
+        "writeKey": "pendingTitle",
+        "type": "string"
+      }
+    ]
+  },
+  "payment_pending_text": {
+    "key": "payment_pending_text",
+    "label": "Message",
+    "writes": [
+      {
+        "target": "specials",
+        "writeKey": "pendingText",
+        "type": "string"
+      }
+    ]
+  },
+  "payment_failed_title": {
+    "key": "payment_failed_title",
+    "label": "Title",
+    "writes": [
+      {
+        "target": "specials",
+        "writeKey": "failedTitle",
+        "type": "string"
+      }
+    ]
+  },
+  "payment_failed_text": {
+    "key": "payment_failed_text",
+    "label": "Message",
+    "writes": [
+      {
+        "target": "specials",
+        "writeKey": "failedText",
+        "type": "string"
+      }
+    ]
+  },
+  "payment_retry_label": {
+    "key": "payment_retry_label",
+    "label": "Retry button",
+    "writes": [
+      {
+        "target": "specials",
+        "writeKey": "retryLabel",
+        "type": "string"
+      }
+    ]
+  },
+  "payment_reference_label": {
+    "key": "payment_reference_label",
+    "label": "Label",
+    "writes": [
+      {
+        "target": "specials",
+        "writeKey": "referenceLabel",
+        "type": "string"
+      }
+    ]
+  },
+  "member_audience": {
+    "key": "member_audience",
+    "label": "Show to",
+    "writes": [
+      {
+        "target": "specials",
+        "writeKey": "audience",
+        "type": "string"
+      }
+    ]
+  },
+  "member_field_source": {
+    "key": "member_field_source",
+    "label": "Field",
+    "writes": [
+      {
+        "target": "specials",
+        "writeKey": "field",
+        "type": "string"
+      }
+    ]
+  },
+  "member_field_prefix": {
+    "key": "member_field_prefix",
+    "label": "Text before",
+    "writes": [
+      {
+        "target": "specials",
+        "writeKey": "prefix",
+        "type": "string"
+      }
+    ]
+  },
+  "member_field_suffix": {
+    "key": "member_field_suffix",
+    "label": "Text after",
+    "writes": [
+      {
+        "target": "specials",
+        "writeKey": "suffix",
+        "type": "string"
+      }
+    ]
+  },
+  "member_guest_text": {
+    "key": "member_guest_text",
+    "label": "Signed-out text",
+    "writes": [
+      {
+        "target": "specials",
+        "writeKey": "guestText",
         "type": "string"
       }
     ]
@@ -14474,6 +17924,39 @@ export const TRAIT_WRITES: Record<string, TraitDescription> = {
       }
     ]
   },
+  "cart_total_label": {
+    "key": "cart_total_label",
+    "label": "Label",
+    "writes": [
+      {
+        "target": "specials",
+        "writeKey": "label",
+        "type": "string"
+      }
+    ]
+  },
+  "cart_total_part": {
+    "key": "cart_total_part",
+    "label": "Amount",
+    "writes": [
+      {
+        "target": "specials",
+        "writeKey": "part",
+        "type": "string"
+      }
+    ]
+  },
+  "cart_total_placeholder": {
+    "key": "cart_total_placeholder",
+    "label": "Empty amount",
+    "writes": [
+      {
+        "target": "specials",
+        "writeKey": "placeholder",
+        "type": "string"
+      }
+    ]
+  },
   "list_load_more_label": {
     "key": "list_load_more_label",
     "label": "Button text",
@@ -14529,6 +18012,39 @@ export const TRAIT_WRITES: Record<string, TraitDescription> = {
       }
     ]
   },
+  "dropdown_placeholder": {
+    "key": "dropdown_placeholder",
+    "label": "Placeholder",
+    "writes": [
+      {
+        "target": "specials",
+        "writeKey": "placeholder",
+        "type": "string"
+      }
+    ]
+  },
+  "dropdown_align": {
+    "key": "dropdown_align",
+    "label": "Panel alignment",
+    "writes": [
+      {
+        "target": "config",
+        "writeKey": "panelAlign",
+        "type": "string"
+      }
+    ]
+  },
+  "anchored_placement": {
+    "key": "anchored_placement",
+    "label": "Placement",
+    "writes": [
+      {
+        "target": "config",
+        "writeKey": "placement",
+        "type": "string"
+      }
+    ]
+  },
   "divider_position": {
     "key": "divider_position",
     "label": "Position",
@@ -14569,6 +18085,18 @@ export const TRAIT_WRITES: Record<string, TraitDescription> = {
       {
         "target": "style",
         "writeKey": "--wb-divider-thickness",
+        "type": "number",
+        "unit": "px"
+      }
+    ]
+  },
+  "pay_logo_size": {
+    "key": "pay_logo_size",
+    "label": "Logo height",
+    "writes": [
+      {
+        "target": "style",
+        "writeKey": "--wb-pay-logo-h",
         "type": "number",
         "unit": "px"
       }
