@@ -531,6 +531,27 @@ export const API_DEFINITIONS: Record<string, unknown> = ${JSON.stringify(
     console.error(`only ${sources.length} empty-state sources — has EMPTY_COPY moved?`);
     process.exit(1);
   }
+  // FIXED_EMPTY_SOURCE is the one hand-kept map in this file, so it is the one
+  // that can go stale silently: change the argument at either call site and
+  // codegen would emit the wrong empty-state copy and report success. Checked
+  // against the call sites themselves.
+  for (const [type, source] of Object.entries(FIXED_EMPTY_SOURCE)) {
+    const vue = resolve(repo, `editor/src/nodes/${type}/index.vue`);
+    let src = '';
+    try {
+      src = readFileSync(vue, 'utf8');
+    } catch {
+      console.error(`cannot read ${vue} to verify its empty-state source`);
+      process.exit(1);
+    }
+    if (!src.includes(`buildEmptyStateTree(props.nodeId, '${source}')`)) {
+      console.error(
+        `${type} no longer calls buildEmptyStateTree with '${source}' — FIXED_EMPTY_SOURCE is stale`,
+      );
+      process.exit(1);
+    }
+  }
+
   const emptyTrees: Record<string, NodeSeed> = {};
   for (const src of sources) {
     const tree = emptyMod.buildEmptyStateTree('OWNER', src);

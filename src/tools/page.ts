@@ -15,7 +15,7 @@ import {
   type Breakpoint,
   type SetEdit,
 } from '../domains/site/builder.js';
-import { request } from '../transport/http.js';
+import { request, redact } from '../transport/http.js';
 import { siteToken } from './credentialpick.js';
 import { validateForSave } from '../domains/site/validate.js';
 import { reviewDesign, REVIEW_NOTICE } from '../domains/site/review.js';
@@ -570,15 +570,20 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
         ...(is_homepage !== undefined ? { isHomepage: is_homepage } : {}),
         ...(settings ? { settings } : {}),
       };
-      if (dry_run !== false) return text({ dry_run: true, would_post: path, body });
-      const res = (await request({
-        base: ctx.base,
-        method: 'POST',
-        path,
-        token: siteToken(ctx),
-        body,
-        fetchImpl: ctx.fetchImpl,
-      })) as { page?: Record<string, unknown> };
+      // `settings` is the one free-form object a caller hands this server, so the
+      // preview and the echo both go through redact — everything else on this
+      // path is built from narrow arguments.
+      if (dry_run !== false) return text({ dry_run: true, would_post: path, body: redact(body) });
+      const res = redact(
+        await request({
+          base: ctx.base,
+          method: 'POST',
+          path,
+          token: siteToken(ctx),
+          body,
+          fetchImpl: ctx.fetchImpl,
+        }),
+      ) as { page?: Record<string, unknown> };
       // A COLLIDING SLUG IS RENAMED, NOT REFUSED. `uniqueSlug` suffixes -1, -2 …
       // and its own comment says it "never errors"
       // (server/internal/page/service.go:877). ErrSlugConflict exists and maps to

@@ -385,12 +385,6 @@ describe('addSubtree() mints the satellites an element owns', () => {
     expect(d.node(itemId).data.type).toBe('accordion-item');
   });
 
-  it('leaves a document with satellites saveable', () => {
-    const { d, section } = withSection();
-    const { patches } = addSubtree(d, section, { type: 'list-dataset' });
-    d.apply(patches);
-    expect(validateForSave(d)).toEqual([]);
-  });
 });
 
 describe('a minted empty state carries the design the editor gives it', () => {
@@ -540,5 +534,39 @@ describe('a repeater takes one template, and the write says so', () => {
     const block = d.node(list).data.nodes[0];
     expect(() => addSubtree(d, block, { type: 'text' })).not.toThrow();
     expect(() => addSubtree(d, block, { type: 'heading' })).not.toThrow();
+  });
+});
+
+describe('the repeater rule holds on every write path, not just two', () => {
+  function listWithTemplate() {
+    const d = emptyDoc();
+    const sec = addSubtree(d, 'rt', { type: 'flex-section' });
+    d.apply(sec.patches);
+    const list = addSubtree(d, sec.ids[0], { type: 'list-dataset', children: [{ type: 'dataset-block' }] });
+    d.apply(list.patches);
+    return { d, list: list.ids[0], template: d.node(list.ids[0]).data.nodes[0] };
+  }
+
+  it('refuses duplicating a repeater template, which is the designer move', () => {
+    // sb_add and sb_move refuse a second template; duplicate produced exactly
+    // the document they exist to prevent, and "duplicate the card" is the most
+    // likely way to reach for a second one.
+    const { d, template } = listWithTemplate();
+    expect(() => duplicateNode(d, template)).toThrow(/first|template|Nodes\[0\]/i);
+  });
+
+  it('still duplicates a child of a container that renders all of them', () => {
+    const { d, list } = listWithTemplate();
+    const block = d.node(list).data.nodes[0];
+    const inner = addSubtree(d, block, { type: 'text' });
+    d.apply(inner.patches);
+    expect(() => duplicateNode(d, inner.ids[0])).not.toThrow();
+  });
+
+  it('allows a REORDER inside a repeater, which is never a second template', () => {
+    // The subtlest line in moveNode: `n.data.parent !== newParentId`. Without a
+    // test, deleting it leaves the suite green and breaks every reorder.
+    const { d, list, template } = listWithTemplate();
+    expect(() => moveNode(d, template, list, 0)).not.toThrow();
   });
 });

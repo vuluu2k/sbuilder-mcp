@@ -43,8 +43,10 @@ const SECRET_KEYS = /^(authorization|token|access_?token|refresh_?token|password
 /**
  * Replace credential-shaped values with a marker, recursively.
  *
- * Every dry-run preview goes through this, so it is the only thing standing
- * between a `dry_run` result and a bearer token sitting in a transcript. It keys
+ * Every preview that can carry a FREE-FORM object goes through this — `sb_api_call`'s
+ * body and `sb_page_create`'s `settings`, the two places a caller supplies a shape
+ * this server does not type. The rest of the dry-run previews echo patch counts or
+ * bodies built from narrow arguments, which cannot hold a credential. It keys
  * off the FIELD NAME rather than the value's shape on purpose: a token format
  * can change tomorrow, while the field name is what this repo controls.
  */

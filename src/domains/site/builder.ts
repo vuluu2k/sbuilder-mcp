@@ -365,6 +365,11 @@ export function duplicateNode(doc: PageDoc, id: string): { patches: Patch[]; ids
   if (!parentId || !doc.has(parentId)) {
     throw new Error(`sbuilder: ${id} has no parent to be duplicated beside`);
   }
+  // A copy lands BESIDE the original, so duplicating a repeater's template makes
+  // the second child the renderer will never draw. sb_add and sb_move already
+  // refuse that; duplicate is the likeliest way to reach for it, since
+  // "duplicate the card" is the move a designer makes constantly.
+  refuseSecondTemplate(doc.doc, parentId, 'Duplicating into');
 
   const patches: Patch[] = [];
   const ids: string[] = [];

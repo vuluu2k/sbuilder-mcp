@@ -287,12 +287,19 @@ describe('the render rules a document can satisfy and still publish wrong', () =
     const section = d.node('ROOT').data.nodes[0];
     const list = addSubtree(d, section, { type: 'list-dataset', children: [{ type: 'dataset-block' }] });
     d.apply(list.patches);
-    // A second template, patched in directly — sb_add now refuses this, so the
-    // only way to hold one is a document written somewhere else. That is exactly
-    // the case the review exists for.
-    const second = d.node(list.ids[0]).data.nodes[0];
+    // A REAL second template, re-parented by raw patch. Every write path now
+    // refuses this — add, move and duplicate — so the only way to hold one is a
+    // document written somewhere else, which is exactly the case review exists
+    // for. Built as a genuine second node rather than the same id listed twice:
+    // that shortcut exercises the same branch but produces a document the
+    // platform would never serve.
+    const stray = addSubtree(d, section, { type: 'dataset-block' });
+    d.apply(stray.patches);
+    const at = d.node(section).data.nodes.indexOf(stray.ids[0]);
     d.apply([
-      { op: 'insert', path: ['nodes', list.ids[0], 'data', 'nodes'], index: 1, value: second },
+      { op: 'remove', path: ['nodes', section, 'data', 'nodes'], index: at },
+      { op: 'insert', path: ['nodes', list.ids[0], 'data', 'nodes'], index: 1, value: stray.ids[0] },
+      { op: 'set', path: ['nodes', stray.ids[0], 'data', 'parent'], value: list.ids[0] },
     ]);
     expect(codes(d)).toContain('extra_repeater_child');
   });
