@@ -8,6 +8,7 @@ import { uploadMedia } from '../transport/media.js';
 import { request } from '../transport/http.js';
 import { shoot, DEFAULT_WIDTHS } from '../vision/shoot.js';
 import { measure, MEASURE_NOTICE } from '../vision/measure.js';
+import { boxesForResponse, BOXES_FORMAT } from '../vision/boxes.js';
 import { RealtimeSocket } from '../transport/socket.js';
 import { LiveSession } from '../live/session.js';
 import type { Patch } from '../core/patch.js';
@@ -88,19 +89,26 @@ export function registerLiveTools(
   server.tool(
     'sb_look',
     "Save the open page, render it through the platform's own renderer, and return " +
-      'screenshots at desktop, tablet and mobile widths — plus the measured bounding box of ' +
-      'every node — plus any LAYOUT defect measured on the render: content past the ' +
+      'screenshots at desktop, tablet and mobile widths — plus measured boxes for the bands ' +
+      'and their children (box_depth for more) — plus any LAYOUT defect measured on the render: content past the ' +
       'viewport, elements overlapping, text too small to read. Pass node_id to frame ONE ' +
       'element instead of the whole page. Judge your own work from these rather than guessing.',
     {
       widths: z.array(z.number().int().min(320).max(2560)).optional(),
       with_boxes: z.boolean().optional(),
+      box_depth: z
+        .number()
+        .int()
+        .min(1)
+        .max(8)
+        .optional()
+        .describe('Boxes down to this depth in the tree (default 2: bands and their children)'),
       node_id: z
         .string()
         .optional()
         .describe('Frame just this node instead of the whole page — how a designer looks at one card'),
     },
-    async ({ widths, with_boxes, node_id }) => {
+    async ({ widths, with_boxes, box_depth, node_id }) => {
       await session.save();
       const { siteId, pageId } = session.location();
       const url = await previewUrl(ctx, siteId, pageId);
@@ -114,10 +122,17 @@ export function registerLiveTools(
       // Measured on the render, not read off the document — a card that spills
       // at 390px is invisible to every check that only reads the tree.
       const visual = node_id ? [] : measure(shots);
+      // The legend rides with the first look only; the shape does not change after.
+      const fmt = with_boxes === false ? undefined : ctx.notices.once('boxes', BOXES_FORMAT);
       return images(shots.map((s) => ({ dataBase64: s.pngBase64 })), {
         widths: shots.map((s) => s.width),
         ...(node_id ? { framed: node_id } : {}),
-        ...(with_boxes === false ? {} : { boxes: shots[0]?.boxes ?? [] }),
+        ...(with_boxes === false
+          ? {}
+          : {
+              boxes: boxesForResponse(session.current().doc, shots[0]?.boxes ?? [], box_depth ?? 2),
+              ...(fmt ? { boxes_format: fmt } : {}),
+            }),
         ...(findings.length > 0 ? { findings, findings_notice: REVIEW_NOTICE } : {}),
         ...(visual.length > 0 ? { layout: visual, layout_notice: MEASURE_NOTICE } : {}),
       });
