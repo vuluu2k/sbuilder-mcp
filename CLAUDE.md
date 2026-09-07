@@ -212,8 +212,17 @@ that accounts for them.
   run is the evidence, not the all-clear). A further 41 merchant-facing routes carry no
   annotation at all and are findable only through the route-map comment blocks in each
   `internal/*/rest/*.go` — among them payment-gateway config, which is the fix for
-  `sb_review`'s own `payment` gap, and the whole `pages/{pageId}` cluster: no page metadata
-  read, no SEO, no delete, and none of the five version/history/restore routes. See
+  `sb_review`'s own `payment` gap, and the private `pages/{pageId}` cluster.
+
+  **But the PRIVATE surface is not the whole map, and reading only it overstates the gap.**
+  `/api/v1` — the partner surface, `SB_TOKEN` — carries 49 reachable operations, including
+  `GET/PATCH/DELETE /api/v1/pages/{id}` and `POST /api/v1/pages/{id}/publish`, all with a
+  DESCRIBED body (`internal_publicapi.PagePatch`), plus full CRUD for products, articles,
+  blog categories, customers, media, orders, translations and webhooks. So a page CAN be
+  read, patched and deleted, and a catalogue CAN be filled — through the key, not the
+  session. What genuinely has no route on either surface is page VERSIONS / HISTORY /
+  RESTORE: the only `restore` in `/api/v1` is `media/{id}/restore`. So a wrecked draft is
+  still unrecoverable, and a page delete is still one-way. See
   `docs/superpowers/specs/2026-09-07-phase-7-drop-time-and-signals-design.md`.
 
 - **`/api/media/{siteId}` takes a session JWT only.** It is mounted behind `RequireAuth`,

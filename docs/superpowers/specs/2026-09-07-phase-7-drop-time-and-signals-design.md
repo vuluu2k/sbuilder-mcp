@@ -61,13 +61,24 @@ takes the first, and records the other two so the evidence is not re-derived:
   /api/sites/{siteId}/payment-gateways/{provider}` is in group (b) — documented
   only in a plain Go comment (`server/internal/payments/rest/manage.go:15`) — so
   `sb_review` can diagnose its own `payment` store-gap and nothing can close it.
-  And the whole `pages/{pageId}` cluster is in group (b): this server cannot read
-  ONE page's metadata, cannot `PATCH` it (so no title, description, canonical, OG
-  image or JSON-LD on any page it publishes, and `noIndex` can never be cleared),
-  cannot delete a page, and cannot reach any of the five version/history/restore
-  routes — while undo is client-local with no API at all
-  (`editor/src/history/patchRecorder.ts:7-12`), so those checkpoints are the only
-  thing that could recover a wrecked draft and they are unreachable too.
+  The private `pages/{pageId}` cluster is in group (b) too.
+
+  **CORRECTION, made after this spec was first written.** An earlier draft said
+  this server therefore cannot read a page's metadata, set SEO, or delete a page.
+  That was wrong, and wrong in a specific way worth recording: it read only the
+  PRIVATE surface. `/api/v1` — the partner surface, opened by `SB_TOKEN` — carries
+  49 reachable operations including `GET/PATCH/DELETE /api/v1/pages/{id}` and
+  `POST /api/v1/pages/{id}/publish`, each with a DESCRIBED body
+  (`internal_publicapi.PagePatch`), plus full CRUD for products, articles, blog
+  categories, customers, media, orders, translations and webhooks. Page metadata,
+  SEO and deletion are all reachable through the key.
+
+  What survives the correction: page VERSIONS / HISTORY / RESTORE have no route on
+  either surface (the only `restore` under `/api/v1` is `media/{id}/restore`), and
+  undo is client-local with no API at all
+  (`editor/src/history/patchRecorder.ts:7-12`). So a wrecked draft is
+  unrecoverable and a page delete is one-way — which is the part that should
+  govern how a destructive operation is offered to a user.
 - **Capability.** Only 45 of 180 write operations declare a body. `PUT /theme`,
   `PUT /settings`, and all of global-sections and overlays declare none, and
   `PUT /settings` is a whole-document replace (`editor/src/features/settings/api.ts:18`),
