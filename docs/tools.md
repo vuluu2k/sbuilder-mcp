@@ -99,6 +99,14 @@ hint }` names how many came back, how many there were, and how to narrow the cal
 `max_items`, or the operation's own `limit`/`offset` query). A non-list answer is never cut:
 there is no honest place to stop inside one object.
 
+Three quieter rules, each of which exists because the alternative loses data silently. An
+answer with **no single list** — two arrays, say — is returned untouched with a
+`shaping_note`, rather than shaped into something the platform never sent; a `pick` that
+matches nothing does the same, because `{}` reads as "the platform answered nothing". If the
+platform's own answer already carries a `truncated` field, this one lands under `_truncated`
+instead of overwriting it. And when the non-list part of an answer alone exceeds the cap,
+nothing is cut — dropping items would not help — and the note says why.
+
 ---
 
 # Page tools

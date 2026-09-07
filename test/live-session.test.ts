@@ -130,3 +130,23 @@ describe('LiveSession', () => {
     expect(remote.length).toBe(0);
   });
 });
+
+describe('publish() frame size', () => {
+  it('splits a batch that would exceed the 4 MiB ops cap into several frames', () => {
+    const { fake, live, deliver } = harness();
+    live.start('pg_1');
+    deliver({ t: 'welcome', peerId: 'me', peers: [] });
+    const big = 'x'.repeat(1_200_000);
+    live.publish([
+      { op: 'set', path: ['nodes', 'a', 'specials', 'text'], value: big },
+      { op: 'set', path: ['nodes', 'b', 'specials', 'text'], value: big },
+      { op: 'set', path: ['nodes', 'c', 'specials', 'text'], value: big },
+      { op: 'set', path: ['nodes', 'd', 'specials', 'text'], value: big },
+    ]);
+    const frames = fake.sent.filter((f) => f.t === 'ops');
+    expect(frames.length).toBeGreaterThan(1);
+    for (const f of frames) expect(JSON.stringify(f).length).toBeLessThan(4 * 1024 * 1024);
+    expect(frames.flatMap((f) => f.ops as unknown[]).length).toBe(4);
+    expect(new Set(frames.map((f) => f.opId)).size).toBe(frames.length);
+  });
+});

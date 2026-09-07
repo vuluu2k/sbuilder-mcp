@@ -27,6 +27,28 @@ export interface LiveOpts {
  * purpose is arbitrating between two EQUALLY authoritative editors. This one is
  * not one of those, deliberately.
  */
+/** Under the server's 4 MiB `ops` cap, with room for the frame envelope. */
+export const OPS_FRAME_BUDGET = 3 * 1024 * 1024;
+
+/** Greedy split by serialized size; one oversize op still goes alone rather than never. */
+export function chunkBySize<T>(items: T[], budget: number): T[][] {
+  const out: T[][] = [];
+  let cur: T[] = [];
+  let used = 0;
+  for (const it of items) {
+    const size = JSON.stringify(it).length + 1;
+    if (cur.length > 0 && used + size > budget) {
+      out.push(cur);
+      cur = [];
+      used = 0;
+    }
+    cur.push(it);
+    used += size;
+  }
+  if (cur.length > 0) out.push(cur);
+  return out;
+}
+
 export class LiveSession {
   private selfId = '';
   private pageId = '';
@@ -83,9 +105,16 @@ export class LiveSession {
     if (!this.pageId) return;
     const ops = syncable(patches);
     if (ops.length === 0) return;
-    const opId = randomBytes(8).toString('hex');
-    this.pending.set(opId, Date.now());
-    this.socket.send({ t: 'ops', pageId: this.pageId, ops, opId });
+    // The wire caps an `ops` frame at 4 MiB and CLOSES the socket past it, so a
+    // batch (sb_set edits[], a big sb_add) is split into frames under a budget
+    // that leaves room for the envelope. Each frame gets its own opId, and a
+    // peer applying them in order sees the same tree — patches are in creation
+    // order and never reference a node a later frame creates.
+    for (const chunk of chunkBySize(ops, OPS_FRAME_BUDGET)) {
+      const opId = randomBytes(8).toString('hex');
+      this.pending.set(opId, Date.now());
+      this.socket.send({ t: 'ops', pageId: this.pageId, ops: chunk, opId });
+    }
   }
 
   /** Presence only — never document state. */

@@ -235,9 +235,12 @@ describe('setKeys() with a state', () => {
 describe('setMany()', () => {
   it('writes several nodes in one batch, in edit order', () => {
     const d = emptyDoc();
-    const { ids } = addSubtree(d, 'rt', { type: 'flex-section', children: [{ type: 'heading' }, { type: 'heading' }] });
-    d.apply(addSubtree(d, 'rt', { type: 'flex-section', children: [{ type: 'heading' }, { type: 'heading' }] }).patches);
-    void ids;
+    d.apply(
+      addSubtree(d, 'rt', {
+        type: 'flex-section',
+        children: [{ type: 'heading' }, { type: 'heading' }],
+      }).patches,
+    );
     const [a, b] = d.node(d.node('rt').data.nodes[0]).data.nodes;
     const { patches, touched } = setMany(d, [
       { id: a, namespace: 'specials', keys: { text: 'One' } },
@@ -249,15 +252,21 @@ describe('setMany()', () => {
     expect((d.node(b).specials as { text: string }).text).toBe('Two');
   });
 
-  it('refuses the whole batch when one edit is bad — nothing half-applied', () => {
+  it('refuses the whole batch when one edit is bad — the caller gets no patches at all', () => {
     const d = emptyDoc();
     d.apply(addSubtree(d, 'rt', { type: 'flex-section', children: [{ type: 'heading' }] }).patches);
     const a = d.node(d.node('rt').data.nodes[0]).data.nodes[0];
-    expect(() => setMany(d, [
-      { id: a, namespace: 'specials', keys: { text: 'One' } },
-      { id: 'ghost', namespace: 'specials', keys: { text: 'Two' } },
-    ])).toThrow(/ghost/);
-    expect((d.node(a).specials as { text?: string }).text).not.toBe('One');
+    // An implementation that returned the good edit's patches alongside the
+    // error would leave the caller applying half a batch; this is what says it
+    // does not, because `patches` never gets assigned.
+    let patches: unknown;
+    expect(() => {
+      patches = setMany(d, [
+        { id: a, namespace: 'specials', keys: { text: 'One' } },
+        { id: 'ghost', namespace: 'specials', keys: { text: 'Two' } },
+      ]).patches;
+    }).toThrow(/ghost/);
+    expect(patches).toBeUndefined();
   });
 
   it('refuses an empty batch', () => {

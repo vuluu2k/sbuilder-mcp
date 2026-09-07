@@ -208,3 +208,73 @@ describe.runIf(process.env.SB_BROWSER_TEST === '1')('measured against a real ren
     expect(measure(shots).some((f) => f.code === 'text_too_small')).toBe(true);
   }, 40_000);
 });
+
+describe('shoot() page hygiene', () => {
+  it('closes every tab it opened even when the first width fails before the second opens', async () => {
+    await closeBrowser();
+    let closed = 0;
+    const page = (delay: number) =>
+      new Promise((resolve) =>
+        setTimeout(
+          () =>
+            resolve({
+              goto: async () => {
+                throw new Error('boom');
+              },
+              close: async () => {
+                closed++;
+              },
+            }),
+          delay,
+        ),
+      );
+    let n = 0;
+    setLauncherForTest(async () =>
+      ({
+        isConnected: () => true,
+        newPage: () => page(n++ === 0 ? 0 : 30),
+        close: async () => {},
+      }) as unknown as import('playwright-core').Browser,
+    );
+    try {
+      await expect(shoot('data:text/html,x', { widths: [1440, 390] })).rejects.toThrow(/boom/);
+      await new Promise((r) => setTimeout(r, 80));
+      expect(closed).toBe(2);
+    } finally {
+      setLauncherForTest();
+      await closeBrowser();
+    }
+  });
+});
+
+describe('browser reuse, without needing Chrome', () => {
+  it('launches once and reuses the browser across calls', async () => {
+    // Proved in the DEFAULT suite with a stub: the gated tests prove it with a
+    // real Chrome, but a claim only checked behind SB_BROWSER_TEST=1 is a claim
+    // most runs never check. newPage throws, so no page work is stubbed — the
+    // point is only how many times the launcher ran.
+    await closeBrowser();
+    let launches = 0;
+    setLauncherForTest(async () => {
+      launches++;
+      return {
+        isConnected: () => true,
+        newPage: async () => {
+          throw new Error('stub: no pages');
+        },
+        close: async () => {},
+      } as unknown as import('playwright-core').Browser;
+    });
+    try {
+      await expect(shoot('data:text/html,x', { widths: [390] })).rejects.toThrow(/stub/);
+      await expect(shoot('data:text/html,x', { widths: [390] })).rejects.toThrow(/stub/);
+      expect(launches).toBe(1);
+      await closeBrowser();
+      await expect(shoot('data:text/html,x', { widths: [390] })).rejects.toThrow(/stub/);
+      expect(launches).toBe(2);
+    } finally {
+      setLauncherForTest();
+      await closeBrowser();
+    }
+  });
+});

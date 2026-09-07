@@ -63,31 +63,80 @@ function pickFields(item: unknown, fields: string[]): unknown {
  * cut: there is no honest place to stop inside one object.
  */
 export function shapeResponse(raw: unknown, opts: { pick?: string[]; max_items?: number }): unknown {
+  const asked = opts.pick !== undefined || opts.max_items !== undefined;
+  const isObj = (v: unknown): v is Record<string, unknown> =>
+    !!v && typeof v === 'object' && !Array.isArray(v);
   const list = listOf(raw);
+
   if (!list) {
-    // WriteItem: `{ page: {...} }` — pick reaches inside the one object.
-    if (opts.pick && raw && typeof raw === 'object') {
-      const entries = Object.entries(raw as Record<string, unknown>);
-      const objs = entries.filter(([, v]) => v && typeof v === 'object' && !Array.isArray(v));
-      if (objs.length === 1) return { ...raw, [objs[0][0]]: pickFields(objs[0][1], opts.pick) };
-      return pickFields(raw, opts.pick);
+    // No single list. `pick` has two honest targets: the answer's own fields,
+    // or the ONE object a WriteItem answer wraps (`{ page: {...} }`) — tried in
+    // that order, because an item that happens to hold a nested object would
+    // otherwise have its named fields dropped and the nested object emptied.
+    // Never `{}`: a pick that matched nothing returns the answer untouched and
+    // says so, since an empty object reads as "the platform sent nothing".
+    let out: unknown = raw;
+    let applied = false;
+    if (opts.pick && isObj(raw)) {
+      const top = pickFields(raw, opts.pick) as Record<string, unknown>;
+      if (Object.keys(top).length > 0) {
+        out = top;
+        applied = true;
+      } else {
+        const objs = Object.entries(raw).filter(([, v]) => isObj(v));
+        if (objs.length === 1) {
+          const inner = pickFields(objs[0][1], opts.pick) as Record<string, unknown>;
+          if (Object.keys(inner).length > 0) {
+            out = { ...raw, [objs[0][0]]: inner };
+            applied = true;
+          }
+        }
+      }
     }
-    return raw;
+    if (asked && !applied && isObj(out)) {
+      return {
+        ...out,
+        shaping_note:
+          'Not a single-list answer and pick matched no field, so nothing was shaped or cut.',
+      };
+    }
+    if (opts.max_items !== undefined && isObj(out)) {
+      return { ...out, shaping_note: 'Not a list answer, so max_items did not apply.' };
+    }
+    return out;
   }
+
   let items = opts.pick ? list.items.map((it) => pickFields(it, opts.pick!)) : list.items;
   const of = items.length;
-  let cut: string | undefined;
+  let cut: 'max_items' | 'size' | undefined;
   if (opts.max_items !== undefined && items.length > opts.max_items) {
     items = items.slice(0, opts.max_items);
     cut = 'max_items';
   }
   const rebuild = (its: unknown[]) =>
     list.key === null ? its : { ...(raw as Record<string, unknown>), [list.key]: its };
-  let out = rebuild(items);
-  if (JSON.stringify(out).length > RESULT_CAP) {
-    // Drop from the end until it fits; the first items are the ones paging asked for.
+
+  // The platform may already answer with a `truncated` field; never clobber it.
+  const key = isObj(raw) && 'truncated' in raw ? '_truncated' : 'truncated';
+  const said = (t: Record<string, unknown>) =>
+    list.key === null
+      ? { items, [key]: t }
+      : { ...(rebuild(items) as Record<string, unknown>), [key]: t };
+
+  // Budget the cut so the answer INCLUDING what it says about the cut fits.
+  const TRUNCATED_ROOM = 320;
+  if (JSON.stringify(rebuild(items)).length > RESULT_CAP) {
     const fixed = JSON.stringify(rebuild([])).length;
-    let used = fixed;
+    if (fixed + TRUNCATED_ROOM > RESULT_CAP) {
+      // The non-list part alone is over the cap, so dropping items gains
+      // nothing. The answer goes back whole, with the reason.
+      return said({
+        shown: items.length,
+        of,
+        hint: `The non-list part of this answer alone is over ${RESULT_CAP} characters, so nothing was cut. Pass pick to keep only the fields you need.`,
+      });
+    }
+    let used = fixed + TRUNCATED_ROOM;
     let n = 0;
     for (const it of items) {
       const size = JSON.stringify(it).length + 1;
@@ -96,19 +145,17 @@ export function shapeResponse(raw: unknown, opts: { pick?: string[]; max_items?:
       n++;
     }
     items = items.slice(0, n);
-    out = rebuild(items);
     cut = 'size';
   }
-  if (!cut) return out;
-  const truncated = {
+  if (!cut) return rebuild(items);
+  return said({
     shown: items.length,
     of,
     hint:
       cut === 'size'
         ? `The full list was over ${RESULT_CAP} characters. Pass pick to keep only the fields you need, max_items, or the operation's own limit/offset query.`
-        : 'Cut by max_items; raise it or page with the operation\'s own limit/offset query.',
-  };
-  return list.key === null ? { items, truncated } : { ...(out as Record<string, unknown>), truncated };
+        : "Cut by max_items; raise it or page with the operation's own limit/offset query.",
+  });
 }
 
 /**
@@ -169,6 +216,11 @@ export async function callOperation(ctx: ToolContext, args: CallArgs): Promise<u
         Authorization: token ? `Bearer ${token}` : undefined,
         body: args.body,
       }),
+      // Shaping is part of what the call WOULD do, so the preview says it;
+      // otherwise a dry run reads identically whether or not it was asked for.
+      ...(args.pick !== undefined || args.max_items !== undefined
+        ? { shaping: { pick: args.pick, max_items: args.max_items } }
+        : {}),
       note: 'Nothing was sent. Re-call with dry_run:false to execute.',
     };
   }

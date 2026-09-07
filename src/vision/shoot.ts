@@ -79,7 +79,19 @@ async function launch(): Promise<Browser> {
 }
 
 type Launcher = () => Promise<Browser>;
-const realLauncher: Launcher = () => chromium.launch({ channel: 'chrome', headless: true });
+// Playwright installs its OWN SIGINT/SIGTERM/SIGHUP handlers by default, and
+// its SIGTERM handler closes browsers without exiting. Its handlers live until
+// the browser process closes, so a signal re-raised by this module could land
+// while Playwright is still listening and the server would survive a signal it
+// should die on. This module owns the handlers; Playwright gets none.
+const realLauncher: Launcher = () =>
+  chromium.launch({
+    channel: 'chrome',
+    headless: true,
+    handleSIGINT: false,
+    handleSIGTERM: false,
+    handleSIGHUP: false,
+  });
 let launcher: Launcher = realLauncher;
 
 /**
@@ -157,8 +169,10 @@ for (const signal of ['SIGINT', 'SIGTERM'] as const) {
  *
  * The widths are shot IN PARALLEL, each in its own page of the one shared
  * browser, and the array comes back in the order `widths` was given — the
- * caller reads `shots[0]` as `widths[0]`. If any width fails, the others are
- * closed and the FIRST error is the one thrown.
+ * caller reads `shots[0]` as `widths[0]`. If a width fails, the error thrown is
+ * whichever failed FIRST IN TIME, not first in `widths`: with parallel pages
+ * those differ, so an error naming a width names the one that actually failed,
+ * and a second failing width may go unmentioned.
  */
 export async function shoot(
   url: string,
@@ -167,23 +181,20 @@ export async function shoot(
   const widths = opts.widths ?? DEFAULT_WIDTHS;
   const format = opts.format ?? DEFAULT_FORMAT;
   const b = await browser();
-  const pages: Page[] = [];
-  try {
-    return await Promise.all(
-      widths.map(async (width) => {
-        const page = await b.newPage({ viewport: { width, height: 900 } });
-        pages.push(page);
-        const shot = await shootOne(page, url, width, format, opts);
-        await page.close();
-        return shot;
-      }),
-    );
-  } finally {
-    // Promise.all rejects on the FIRST failure while the others still run;
-    // close every page opened so a failed look leaves no tab behind. Closing
-    // an already-closed page is a no-op.
-    await Promise.all(pages.map((p) => p.close().catch(() => {})));
-  }
+  // Each page closes in ITS OWN finally. A list of pages closed after
+  // Promise.all would miss a page whose `newPage` resolved after the first
+  // rejection — and now that the browser lives for the whole process, a leaked
+  // tab is leaked forever rather than until the next call.
+  return Promise.all(
+    widths.map(async (width) => {
+      const page = await b.newPage({ viewport: { width, height: 900 } });
+      try {
+        return await shootOne(page, url, width, format, opts);
+      } finally {
+        await page.close().catch(() => {});
+      }
+    }),
+  );
 }
 
 async function shootOne(

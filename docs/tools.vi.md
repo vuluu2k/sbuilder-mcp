@@ -99,6 +99,14 @@ hẹp lệnh gọi (`pick`, `max_items`, hoặc query `limit`/`offset` của ch�
 lời không phải danh sách thì không bao giờ bị cắt: không có chỗ nào trung thực để dừng giữa
 một object.
 
+Ba luật lặng lẽ hơn, mỗi luật tồn tại vì phương án còn lại làm mất dữ liệu mà không nói. Một
+câu trả lời **không có danh sách duy nhất** — ví dụ hai mảng — được trả về nguyên vẹn kèm
+`shaping_note`, thay vì bị định hình thành thứ nền tảng chưa từng gửi; `pick` không khớp
+trường nào cũng vậy, vì `{}` đọc lên như "nền tảng không trả gì". Nếu chính câu trả lời của
+nền tảng đã có trường `truncated`, thông tin cắt sẽ nằm ở `_truncated` chứ không ghi đè. Và
+khi riêng phần không phải danh sách đã vượt trần, không cắt gì cả — bỏ bớt item cũng không
+giúp — và ghi chú nói rõ vì sao.
+
 ---
 
 # Bộ tool cho trang

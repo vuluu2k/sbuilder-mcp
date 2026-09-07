@@ -154,14 +154,61 @@ describe('shapeResponse()', () => {
     expect(shapeResponse({ page: { id: 'p1', name: 'Home', settings: {} } }, { pick: ['id'] })).toEqual({ page: { id: 'p1' } });
   });
 
-  it('a non-list answer is never cut, and untouched without pick', () => {
+  it('a non-list answer is never cut — its payload survives, with a note that the cap did not apply', () => {
     const big = { thing: { blob: 'x'.repeat(RESULT_CAP + 10) } };
-    expect(shapeResponse(big, { max_items: 1 })).toBe(big);
+    const out = shapeResponse(big, { max_items: 1 }) as Record<string, unknown>;
+    expect(out.thing).toEqual(big.thing);
+    expect(String(out.shaping_note)).toMatch(/max_items|nothing was shaped/);
+  });
+
+  it('is identity when nothing was asked for', () => {
+    const raw = { thing: { a: 1 } };
+    expect(shapeResponse(raw, {})).toBe(raw);
   });
 
   it('a bare array is shaped too', () => {
     const out = shapeResponse([{ id: 1, x: 2 }, { id: 2, x: 3 }], { pick: ['id'], max_items: 1 }) as { items: unknown[]; truncated: unknown };
     expect(out.items).toEqual([{ id: 1 }]);
     expect(out.truncated).toBeDefined();
+  });
+});
+
+describe('shapeResponse() — the edges the review found', () => {
+  it('pick on a two-array answer returns it untouched and says so, never {}', () => {
+    const raw = { items: [{ id: 1, blob: 'x' }], warnings: [{ w: 1 }] };
+    const out = shapeResponse(raw, { pick: ['id'] }) as Record<string, unknown>;
+    expect(out.items).toEqual(raw.items);
+    expect(out.warnings).toEqual(raw.warnings);
+    expect(String(out.shaping_note)).toMatch(/nothing was shaped/);
+  });
+
+  it('pick prefers the answer\'s own fields over its one nested object', () => {
+    const out = shapeResponse({ id: 'p1', title: 'Home', config: { a: 1 } }, { pick: ['id', 'title'] });
+    expect(out).toEqual({ id: 'p1', title: 'Home' });
+  });
+
+  it('max_items on a non-list answer is reported, not silently ignored', () => {
+    const out = shapeResponse({ items: [1, 2, 3], warnings: [] }, { max_items: 1 }) as Record<string, unknown>;
+    expect(out.items).toEqual([1, 2, 3]);
+    expect(String(out.shaping_note)).toMatch(/max_items|nothing was shaped/);
+  });
+
+  it('a size cut fits under the cap INCLUDING its note', () => {
+    const raw = { products: Array.from({ length: 600 }, (_, i) => ({ id: `p${i}`, blob: 'x'.repeat(200) })), total: 600 };
+    const out = shapeResponse(raw, {});
+    expect(JSON.stringify(out).length).toBeLessThanOrEqual(RESULT_CAP);
+  });
+
+  it('when the non-list part alone is over the cap, nothing is cut and the note says why', () => {
+    const raw = { products: [{ id: 'p1' }], meta: 'x'.repeat(RESULT_CAP + 10) };
+    const out = shapeResponse(raw, {}) as { products: unknown[]; truncated: { hint: string } };
+    expect(out.products.length).toBe(1);
+    expect(out.truncated.hint).toMatch(/nothing was cut/);
+  });
+
+  it('never clobbers a platform field named truncated', () => {
+    const out = shapeResponse({ rows: [1, 2, 3], truncated: 'platform' }, { max_items: 1 }) as Record<string, unknown>;
+    expect(out.truncated).toBe('platform');
+    expect(out._truncated).toMatchObject({ shown: 1, of: 3 });
   });
 });
