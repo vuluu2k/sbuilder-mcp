@@ -11,6 +11,18 @@ import { measure, MEASURE_NOTICE } from '../vision/measure.js';
 import { compactFindings } from '../domains/site/findings.js';
 import { reviewField } from './page.js';
 import { boxesForResponse, BOXES_FORMAT } from '../vision/boxes.js';
+
+/** Element types whose content comes from the store, not from the document. */
+const DATASET_TYPES = new Set([
+  'list-dataset',
+  'dataset-block',
+  'text-dataset',
+  'pricing-dataset',
+  'media-dataset',
+  'collection-media',
+  'quantity-dataset',
+  'product-variants',
+]);
 import { RealtimeSocket } from '../transport/socket.js';
 import { LiveSession } from '../live/session.js';
 import type { Patch } from '../core/patch.js';
@@ -135,6 +147,10 @@ export function registerLiveTools(
         .string()
         .optional()
         .describe('Frame just this node instead of the whole page — how a designer looks at one card'),
+      url: z
+        .string()
+        .optional()
+        .describe('Shoot this address instead of the draft preview — use the PUBLISHED storefront URL to see real store data'),
       format: z
         .enum(['jpeg', 'png'])
         .optional()
@@ -142,15 +158,23 @@ export function registerLiveTools(
     },
       annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true },
     },
-    async ({ widths, with_boxes, box_depth, node_id, format }) => {
+    async ({ widths, with_boxes, box_depth, node_id, format, url }) => {
       await session.save();
       const { siteId, pageId } = session.location();
-      const url = await previewUrl(ctx, siteId, pageId);
+      // THE DRAFT PREVIEW THREADS NO STORE DATA. `/_wb/preview` renders the
+      // document with an empty scope, so every repeater falls back to its empty
+      // state — a product grid looks broken there and is not. Judging a
+      // data-driven page by a preview screenshot is how an agent spends an hour
+      // fixing a page that was already right. Pass the PUBLISHED storefront
+      // address as `url` to see the real thing; it is also the escape hatch when
+      // the minted preview origin is unreachable, which a dev host with
+      // STOREFRONT_BASE_DOMAIN set and no TLS is.
+      const target = url ?? (await previewUrl(ctx, siteId, pageId));
       // The widths are shot in parallel inside one Chrome that stays open for
       // the process; `shoot` keeps them in `widths` order. The format changes
       // bytes and latency only — the client prices an image by its pixel size,
       // so jpeg and png cost the agent the same tokens.
-      const shots = await shoot(url, { widths: widths ?? DEFAULT_WIDTHS, node: node_id, format });
+      const shots = await shoot(target, { widths: widths ?? DEFAULT_WIDTHS, node: node_id, format });
       // The boxes feed the presence cursor as well as the agent's own reading.
       session.noteBoxes(shots[0]?.boxes ?? []);
       // The findings ride WITH the picture. Judging a page by eye and judging it
@@ -164,8 +188,24 @@ export function registerLiveTools(
       const layoutNotice = visual.length > 0 ? ctx.notices.once('measure', MEASURE_NOTICE) : undefined;
       // The legend rides with the first look only; the shape does not change after.
       const fmt = with_boxes === false ? undefined : ctx.notices.once('boxes', BOXES_FORMAT);
+      // Say it ONCE, and only when it can actually mislead: a page with no
+      // store-driven element has nothing to be missing from the preview.
+      const dataDriven = Object.values(session.current().doc.nodes).some((n) =>
+        DATASET_TYPES.has((n as { data: { type: string } }).data.type),
+      );
+      const previewNote =
+        !url && dataDriven
+          ? ctx.notices.once(
+              'preview-scope',
+              'This is the DRAFT PREVIEW, which threads no store data: every repeater renders its ' +
+                'empty state there, however correct the page is. Publish and pass the storefront ' +
+                'URL as `url` to see real products.',
+            )
+          : undefined;
       return images(shots.map((s) => ({ dataBase64: s.imageBase64, mimeType: s.mimeType })), {
         widths: shots.map((s) => s.width),
+        ...(url ? { shot: url } : {}),
+        ...(previewNote ? { preview_note: previewNote } : {}),
         ...(node_id ? { framed: node_id } : {}),
         ...(with_boxes === false
           ? {}

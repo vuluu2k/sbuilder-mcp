@@ -163,6 +163,12 @@ jobs:
           echo "old=$OLD_VERSION" >> "$GITHUB_OUTPUT"
           echo "new=$NEW_VERSION" >> "$GITHUB_OUTPUT"
           echo "tag=v$NEW_VERSION" >> "$GITHUB_OUTPUT"
+          # SYNC server.json HERE, not at commit time. The gate runs between the
+          # bump and the commit, and it asserts the manifest version matches
+          # package.json — an invariant that must hold at EVERY moment, not only
+          # at rest. Syncing later made the release fail its own tests with
+          # "expected 0.1.4 to be 0.1.5" on a perfectly good build.
+          node -e "const fs=require('fs'),v='$NEW_VERSION',j=require('./server.json');j.version=v;if(j.packages)for(const p of j.packages)p.version=v;fs.writeFileSync('server.json',JSON.stringify(j,null,2)+'\n')"
           echo "Final version: $NEW_VERSION"
 
       - name: Resolve prev tag
@@ -303,8 +309,8 @@ jobs:
       - name: Commit, tag and push
         if: steps.mode.outputs.resume != 'true'
         run: |
-          # Keep server.json (MCP Registry manifest) version in lockstep with the release.
-          node -e "const fs=require('fs'),v='${{ steps.version.outputs.new }}',j=require('./server.json');j.version=v;if(j.packages&&j.packages[0])j.packages[0].version=v;fs.writeFileSync('server.json',JSON.stringify(j,null,2)+'\n')"
+          # server.json was synced with the bump, above, so the gate could see a
+          # consistent pair. Here it only needs staging.
           git add package.json package-lock.json server.json CHANGELOG.md CHANGELOG.vi.md
           git diff --cached --quiet || git add -u
           git commit -m "chore(release): ${{ steps.version.outputs.tag }}"

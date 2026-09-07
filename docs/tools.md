@@ -316,6 +316,19 @@ second instead of three. Images come back as JPEG at quality 80 unless `format: 
 asked for; the format changes bytes and latency only, since the client prices an image by
 its pixel size, not its byte size.
 
+
+**The draft preview threads NO store data.** `/_wb/preview` renders the document with an
+empty scope, so every repeater falls back to its empty state — a product grid looks broken
+there and is not. `sb_look` says so once per process when the open page holds a store-driven
+element. Pass the PUBLISHED storefront address as `url` to photograph the real thing; the
+result echoes it back as `shot`. `url` is also the way out when the minted preview origin is
+unreachable, which a dev host with `STOREFRONT_BASE_DOMAIN` set and no TLS is.
+
+The page is waited for with `load` plus a bounded settle, never `networkidle` alone: a
+storefront keeps connections open (the cart island polls, a visitor's session endpoint answers
+401 forever), so waiting for a quiet moment that never comes made the only page where store
+data renders impossible to photograph.
+
 ## `sb_bind`
 
 | Arg | Type | Notes |

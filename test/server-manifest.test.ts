@@ -30,9 +30,12 @@ describe('server.json', () => {
   });
 
   it('carries the same version as package.json, and so does its package entry', () => {
-    // The release workflow syncs these before it commits; at rest they agree,
-    // and a hand-bump that forgets one would point the registry at a version
-    // npm does not have, which 404s for whoever trusts it.
+    // AT EVERY MOMENT, not only at rest — which is why the release workflow
+    // syncs server.json in the same step as the version bump, BEFORE the gate.
+    // Syncing at commit time instead put the gate between the two files and
+    // this assertion failed a perfectly good release with "expected 0.1.4 to be
+    // 0.1.5". A hand-bump that forgets one points the registry at a version npm
+    // does not have, which 404s for whoever trusts it.
     expect(manifest.version).toBe(pkg.version);
     for (const p of manifest.packages ?? []) expect(p.version).toBe(pkg.version);
   });

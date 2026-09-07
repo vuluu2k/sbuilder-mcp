@@ -204,7 +204,17 @@ async function shootOne(
   format: ShotFormat,
   opts: { node?: string; pad?: number },
 ): Promise<Shot> {
-  await page.goto(url, { waitUntil: 'networkidle' });
+  // LOAD, then a BOUNDED settle — never `networkidle` alone.
+  //
+  // A storefront keeps connections open: the cart island polls, a customer
+  // session endpoint answers 401 forever for a visitor. `networkidle` waits for
+  // a quiet moment that never comes and the whole look times out, so a
+  // published page — the only place store data renders — could not be
+  // photographed at all. Found the first time sb_look was aimed at a real
+  // storefront. The settle is best-effort: if the page does go quiet, the shot
+  // waits for it; if it never does, the shot happens anyway.
+  await page.goto(url, { waitUntil: 'load', timeout: 30_000 });
+  await page.waitForLoadState('networkidle', { timeout: 2_500 }).catch(() => {});
   // A RENDERED page carries its node ids as the HTML `id` attribute — not as
   // `data-node-id`, which is the editor CANVAS's hook and never reaches the
   // renderer. Selecting the canvas attribute here returned an empty box list

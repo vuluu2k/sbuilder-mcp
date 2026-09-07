@@ -278,3 +278,35 @@ describe('browser reuse, without needing Chrome', () => {
     }
   });
 });
+
+describe('sb_look targets', () => {
+  it('shoots the address it was given instead of minting a preview', async () => {
+    // The escape hatch that closes the vision loop: a draft preview threads no
+    // store data, so a product grid is empty there however correct it is. It is
+    // also the way out when the minted preview origin is unreachable.
+    await closeBrowser();
+    const seen: string[] = [];
+    setLauncherForTest(async () =>
+      ({
+        isConnected: () => true,
+        newPage: async () => ({
+          goto: async (u: string) => {
+            seen.push(u);
+            throw new Error('stub: no rendering');
+          },
+          close: async () => {},
+        }),
+        close: async () => {},
+      }) as unknown as import('playwright-core').Browser,
+    );
+    try {
+      await expect(
+        shoot('https://shop.example/ca-phe', { widths: [1440] }),
+      ).rejects.toThrow(/stub/);
+      expect(seen).toEqual(['https://shop.example/ca-phe']);
+    } finally {
+      setLauncherForTest();
+      await closeBrowser();
+    }
+  });
+});

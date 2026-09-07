@@ -313,6 +313,19 @@ chụp song song, mỗi bề rộng một tab — một lần look ba bề rộn
 ba. Ảnh trả về là JPEG chất lượng 80 trừ khi yêu cầu `format: "png"`; định dạng chỉ thay đổi
 số byte và độ trễ, vì client tính giá ảnh theo kích thước pixel chứ không theo số byte.
 
+
+**Bản xem trước KHÔNG luồng dữ liệu cửa hàng.** `/_wb/preview` render tài liệu với scope
+rỗng, nên mọi repeater rơi về trạng thái rỗng — lưới sản phẩm trông như hỏng trong khi nó
+đúng. `sb_look` nói điều đó một lần mỗi process khi trang đang mở có phần tử đọc dữ liệu
+cửa hàng. Truyền địa chỉ storefront ĐÃ PUBLISH vào `url` để chụp bản thật; kết quả trả lại
+địa chỉ đó ở `shot`. `url` cũng là lối thoát khi origin xem trước được đúc ra không truy cập
+được, đúng tình huống máy dev có `STOREFRONT_BASE_DOMAIN` mà không có TLS.
+
+Trang được chờ bằng `load` cộng một khoảng lắng có giới hạn, không bao giờ chỉ `networkidle`:
+storefront giữ kết nối mở (island giỏ hàng poll, endpoint phiên khách trả 401 mãi), nên chờ
+một khoảnh khắc yên tĩnh không bao giờ tới khiến đúng trang duy nhất có dữ liệu thật lại
+không chụp được.
+
 ## `sb_bind`
 
 | Tham số | Kiểu | Ghi chú |
