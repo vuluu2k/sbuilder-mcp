@@ -64,3 +64,44 @@ describe('tree', () => {
     expect(ancestors(cyc, 'a')).toEqual(['b']);
   });
 });
+
+describe('subtreeIds and satellites', () => {
+  // The platform states the contract at schema_gen.go:245 — "Anything that asks
+  // 'what is inside this node?' (subtree collection, copy, delete) must consult
+  // this table as well, exactly as the editor's subtreeIds does."
+  function typed(id: string, type: string, kids: string[] = [], parent: string | null = null, config: Record<string, unknown> = {}) {
+    return { id, data: { type, parent, nodes: kids }, specials: {}, config };
+  }
+
+  const withSatellite: DocLike = {
+    schema_version: 2,
+    root_node_id: 'rt',
+    nodes: {
+      rt: typed('rt', 'root', ['acc']),
+      acc: typed('acc', 'accordion', ['pane'], 'rt', { accordionItemId: 'skin' }),
+      pane: typed('pane', 'flex-section', [], 'acc'),
+      // Attached by parent alone, deliberately absent from acc.data.nodes.
+      skin: typed('skin', 'accordion-item', [], 'acc'),
+    },
+  };
+
+  it('walks a satellite the owner points at from config', () => {
+    expect(subtreeIds(withSatellite, 'acc').sort()).toEqual(['acc', 'pane', 'skin']);
+  });
+
+  it('still returns the plain subtree when an element owns no satellite', () => {
+    expect(subtreeIds(withSatellite, 'pane')).toEqual(['pane']);
+  });
+
+  it('ignores a config key naming a node that is not in the document', () => {
+    const dangling: DocLike = {
+      schema_version: 2,
+      root_node_id: 'rt',
+      nodes: {
+        rt: typed('rt', 'root', ['acc']),
+        acc: typed('acc', 'accordion', [], 'rt', { accordionItemId: 'gone' }),
+      },
+    };
+    expect(subtreeIds(dangling, 'acc')).toEqual(['acc']);
+  });
+});

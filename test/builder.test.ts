@@ -441,3 +441,62 @@ describe('a minted empty state carries the design the editor gives it', () => {
     expect(validateForSave(d)).toEqual([]);
   });
 });
+
+describe('duplicateNode() and the things a verbatim clone carries over', () => {
+  it('gives the copy its OWN satellite, not a pointer to the original one', () => {
+    // JSON.parse(JSON.stringify(src)) rewrote only `id` and `data`, so
+    // config.accordionItemId came over verbatim: two accordions sharing one item
+    // skin, and removing the original orphaned the copy's reference.
+    const d = emptyDoc();
+    const sec = addSubtree(d, 'rt', { type: 'flex-section' });
+    d.apply(sec.patches);
+    const acc = addSubtree(d, sec.ids[0], { type: 'accordion' });
+    d.apply(acc.patches);
+    const originalSkin = d.node(acc.ids[0]).config.accordionItemId as string;
+
+    const dup = duplicateNode(d, acc.ids[0]);
+    d.apply(dup.patches);
+    const copySkin = d.node(dup.ids[0]).config.accordionItemId as string;
+
+    expect(copySkin).not.toBe(originalSkin);
+    expect(d.has(copySkin)).toBe(true);
+    expect(d.node(copySkin).data.type).toBe('accordion-item');
+    expect(d.node(copySkin).data.parent).toBe(dup.ids[0]);
+  });
+
+  it('copies the whole empty-state subtree a repeater owns', () => {
+    const d = emptyDoc();
+    const sec = addSubtree(d, 'rt', { type: 'flex-section' });
+    d.apply(sec.patches);
+    const list = addSubtree(d, sec.ids[0], { type: 'list-dataset' });
+    d.apply(list.patches);
+
+    const dup = duplicateNode(d, list.ids[0]);
+    d.apply(dup.patches);
+    const copyEmpty = d.node(dup.ids[0]).config.emptyStateId as string;
+    expect(copyEmpty).not.toBe(d.node(list.ids[0]).config.emptyStateId);
+    expect(d.node(copyEmpty).data.nodes.length).toBe(3);
+  });
+
+  it('strips the global stamp, so the copy is a plain local section', () => {
+    // Two ROOT children carrying one globalId is ErrDuplicateGlobal
+    // (decompose.go:293) — refused on a LATER save, reading like a transport
+    // error by the time it arrives.
+    const d = emptyDoc();
+    const sec = addSubtree(d, 'rt', { type: 'flex-section' });
+    d.apply(sec.patches);
+    d.apply([
+      { op: 'set', path: ['nodes', sec.ids[0], 'specials', 'globalId'], value: 'gs_1' },
+      { op: 'set', path: ['nodes', sec.ids[0], 'specials', 'globalKind'], value: 'header' },
+    ]);
+
+    const dup = duplicateNode(d, sec.ids[0]);
+    d.apply(dup.patches);
+    const copy = d.node(dup.ids[0]);
+    expect(copy.specials.globalId).toBeUndefined();
+    expect(copy.specials.globalRef).toBeUndefined();
+    expect(copy.specials.globalKind).toBeUndefined();
+    // the original is untouched
+    expect(d.node(sec.ids[0]).specials.globalId).toBe('gs_1');
+  });
+});

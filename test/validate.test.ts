@@ -107,3 +107,43 @@ describe('validateForSave() and satellite nodes', () => {
     expect(validateForSave(d).join(' ')).toMatch(/lists child "ghost"/);
   });
 });
+
+describe('validateForSave() and composition stamps', () => {
+  it('reports the same globalId on two ROOT children', () => {
+    // ErrDuplicateGlobal, server/internal/page/decompose.go:293 — refused on
+    // every save, and the bare `duplicate_global` reads like a transport error.
+    const d = doc(['h1', 'h2'], {
+      h1: sec('h1', { globalId: 'g_1', globalKind: 'header' }),
+      h2: sec('h2', { globalId: 'g_1', globalKind: 'header' }),
+    });
+    expect(validateForSave(d).join(' ')).toMatch(/g_1/);
+  });
+
+  it('reports a globalId on a node that is not a direct child of ROOT', () => {
+    // ErrGlobalNested, decompose.go:256.
+    const d = doc(['a'], {
+      a: sec('a', {}, ['deep']),
+      deep: sec('deep', { globalId: 'g_2', globalKind: 'header' }, [], 'a'),
+    });
+    expect(validateForSave(d).join(' ')).toMatch(/g_2/);
+  });
+
+  it('reports a nested overlay stamp', () => {
+    // ErrOverlayNested, overlay.go:46-55 — and the overlay pair has no mapped
+    // error code, so the platform answers with writeErr's default.
+    const d = doc(['a'], {
+      a: sec('a', {}, ['pop']),
+      pop: sec('pop', { overlayId: 'ov_1' }, [], 'a'),
+    });
+    expect(validateForSave(d).join(' ')).toMatch(/ov_1/);
+  });
+
+  it('leaves a correct header and a correct overlay alone', () => {
+    const d = doc(['h', 'm', 'cart'], {
+      h: sec('h', { globalId: 'g_3', globalKind: 'header' }),
+      m: sec('m'),
+      cart: sec('cart', { overlayId: 'ov_2' }),
+    });
+    expect(validateForSave(d)).toEqual([]);
+  });
+});

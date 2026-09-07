@@ -1,4 +1,10 @@
-import { subtreeIds, type DocLike } from '../../core/tree.js';
+import {
+  subtreeIds,
+  childrenOf,
+  SPEC_GLOBAL_ID,
+  SPEC_OVERLAY_ID,
+  type DocLike,
+} from '../../core/tree.js';
 import { checkBandOrder } from './traps.js';
 import type { PageDoc } from './document.js';
 
@@ -18,6 +24,40 @@ export function validateForSave(doc: PageDoc): string[] {
 
   const band = checkBandOrder(d);
   if (band) problems.push(band);
+
+  // COMPOSITION STAMPS: only a DIRECT child of ROOT may carry one, and never the
+  // same id twice.
+  //
+  // The platform refuses both — ErrGlobalNested / ErrDuplicateGlobal
+  // (server/internal/page/decompose.go:256,293) and their overlay twins
+  // (overlay.go:46-55). It refuses them LATE, though: the agent keeps editing
+  // and one autosave later gets a bare `duplicate_global`, which reads like a
+  // transport error rather than something it did. The overlay pair is worse
+  // still — it has no mapped error code and falls through to writeErr's default.
+  const rootKids = new Set(childrenOf(d, d.root_node_id));
+  for (const stamp of [SPEC_GLOBAL_ID, SPEC_OVERLAY_ID]) {
+    const seen = new Map<string, string>();
+    for (const [id, n] of Object.entries(d.nodes)) {
+      const value = n.specials?.[stamp];
+      if (typeof value !== 'string' || !value) continue;
+      if (!rootKids.has(id)) {
+        problems.push(
+          `Node ${id} carries ${stamp} "${value}" but is not a direct child of ROOT. ` +
+            'The platform refuses the save; move it to ROOT or remove the stamp.',
+        );
+        continue;
+      }
+      const first = seen.get(value);
+      if (first) {
+        problems.push(
+          `Nodes ${first} and ${id} both carry ${stamp} "${value}". One page may reference ` +
+            'it only once — remove one, or drop the stamp to make it a plain local section.',
+        );
+        continue;
+      }
+      seen.set(value, id);
+    }
+  }
 
   // Dangling child ids: a parent naming a node that is not in the map. The
   // renderer walks children by id, so this is a hole in the rendered page.

@@ -1,7 +1,10 @@
+import { SATELLITE_RULES } from '../catalog/elements.generated.js';
 export interface NodeLike {
   id: string;
   data: { type: string; name?: string; parent: string | null; nodes: string[] };
   specials: Record<string, unknown>;
+  /** Where a SATELLITE id lives — see `walk`. Optional so a fixture may omit it. */
+  config?: Record<string, unknown>;
 }
 
 export interface DocLike {
@@ -52,7 +55,26 @@ export function pageChildren(doc: DocLike): string[] {
   return childrenOf(doc, doc.root_node_id).filter((id) => !isOverlay(doc, id));
 }
 
-/** Depth-first walk. Cycle-safe: a malformed document must not hang a save. */
+/**
+ * Depth-first walk, children AND satellites. Cycle-safe: a malformed document
+ * must not hang a save.
+ *
+ * A satellite is a real node referenced from `config[configKey]` rather than
+ * from `data.nodes`, so a walk that follows child lists alone cannot see it. The
+ * platform states the requirement in as many words
+ * (`server/render/generated/schema_gen.go:245`): "Anything that asks 'what is
+ * inside this node?' (subtree collection, copy, delete) must consult this table
+ * as well, exactly as the editor's `subtreeIds` does."
+ *
+ * Satellite-aware is the DEFAULT, and the name stays short, for the same reason
+ * `pageChildren` has the short name and `childrenOf` the explicit one: a caller
+ * who writes the obvious thing must not be silently wrong. Copying an accordion
+ * with the child-only walk gave the copy a pointer to the ORIGINAL's skin.
+ *
+ * A `configKey` naming a node that is not in the document is skipped rather than
+ * reported here — a walk is not a validator, and a trimmed subtree is a real
+ * shape the editor handles the same way (`stores/node.ts:408-411`).
+ */
 export function walk(doc: DocLike, id: string, visit: (n: NodeLike) => void): void {
   const seen = new Set<string>();
   const go = (cur: string): void => {
@@ -62,6 +84,10 @@ export function walk(doc: DocLike, id: string, visit: (n: NodeLike) => void): vo
     if (!n) return;
     visit(n);
     for (const k of n.data.nodes) go(k);
+    for (const rule of SATELLITE_RULES[n.data.type] ?? []) {
+      const sat = n.config?.[rule.configKey];
+      if (typeof sat === 'string' && sat && doc.nodes[sat]) go(sat);
+    }
   };
   go(id);
 }

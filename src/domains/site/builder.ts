@@ -1,6 +1,14 @@
 import type { Patch } from '../../core/patch.js';
-import { isOverlay, subtreeIds, ancestors, appBlockRoot } from '../../core/tree.js';
-import { ELEMENTS, ELEMENT_SEEDS } from '../../catalog/elements.generated.js';
+import {
+  isOverlay,
+  subtreeIds,
+  ancestors,
+  appBlockRoot,
+  SPEC_GLOBAL_ID,
+  SPEC_GLOBAL_KIND,
+  SPEC_GLOBAL_REF,
+} from '../../core/tree.js';
+import { ELEMENTS, ELEMENT_SEEDS, SATELLITE_RULES } from '../../catalog/elements.generated.js';
 import { createNode, mintSatellites } from './node.js';
 import { genId } from './ids.js';
 import type { PageDoc } from './document.js';
@@ -165,6 +173,15 @@ export function addSubtree(
  * whole subtree, and every page carrying it goes blank. That is not a
  * hypothetical — it took four pages down before this check existed.
  */
+/**
+ * The composition stamps a DUPLICATE must not inherit.
+ *
+ * `globalRev` is the fence the editor writes against a shared master
+ * (`features/globalsections/api.ts:65`); a local copy has no master and so no
+ * revision to be stale against.
+ */
+const COPY_STRIPPED_SPECIALS = [SPEC_GLOBAL_ID, SPEC_GLOBAL_REF, SPEC_GLOBAL_KIND, 'globalRev'];
+
 const COMPOSED_STAMPS: Record<string, string> = {
   globalId: 'globalRef',
   appBlockId: 'appBlockRef',
@@ -355,14 +372,48 @@ export function duplicateNode(doc: PageDoc, id: string): { patches: Patch[]; ids
     const src = doc.node(srcId) as unknown as Record<string, unknown> & {
       data: { type: string; name?: string; parent: string | null; nodes: string[] };
     };
-    const clone = JSON.parse(JSON.stringify(src)) as typeof src & { id: string };
+    const clone = JSON.parse(JSON.stringify(src)) as typeof src & {
+      id: string;
+      specials?: Record<string, unknown>;
+      config?: Record<string, unknown>;
+    };
     clone.id = genId(src.data.type);
     clone.data = { ...clone.data, parent: newParent, nodes: [] };
+    // A COPY IS NOT THE SHARED MASTER.
+    //
+    // The stamps came over verbatim, so duplicating a global header produced two
+    // ROOT children carrying one globalId — ErrDuplicateGlobal
+    // (server/internal/page/decompose.go:293), refused on a LATER save, by which
+    // time the agent has kept editing and reads it as a transport error. Strip
+    // rather than refuse: unlike an overlay or an app block, whose copies the
+    // SERVER would destroy, a stripped global copy is a perfectly valid
+    // document, and it is what a designer means by duplicating a header to make
+    // a variant.
+    for (const stamp of COPY_STRIPPED_SPECIALS) delete clone.specials?.[stamp];
     patches.push({ op: 'set', path: ['nodes', clone.id], value: clone });
     ids.push(clone.id);
     for (const kid of src.data.nodes) {
       const kidId = copy(kid, clone.id);
       patches.push({ op: 'insert', path: ['nodes', clone.id, 'data', 'nodes'], index: APPEND, value: kidId });
+    }
+    // SATELLITES, deep-copied with the owner's pointer rewritten — the editor's
+    // copyNode does exactly this (`editor/src/stores/node.ts:373,403`). Without
+    // it the copy pointed at the ORIGINAL's skin: editing one changed both, and
+    // removing the original deleted the skin out from under the copy.
+    //
+    // Written as an explicit patch rather than by mutating `clone` after it has
+    // been handed to one, so the emitted patch list says what it does.
+    for (const rule of SATELLITE_RULES[src.data.type] ?? []) {
+      const satId = (src as { config?: Record<string, unknown> }).config?.[rule.configKey];
+      const path = ['nodes', clone.id, 'config', rule.configKey];
+      if (typeof satId === 'string' && satId && doc.has(satId)) {
+        patches.push({ op: 'set', path, value: copy(satId, clone.id) });
+      } else if (satId !== undefined) {
+        // A satellite id that resolves to nothing is a trimmed subtree, which the
+        // editor handles the same way (`stores/node.ts:408-411`). Carrying the
+        // pointer would aim the copy at a node it does not own.
+        patches.push({ op: 'unset', path });
+      }
     }
     return clone.id;
   };
