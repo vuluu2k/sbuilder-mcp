@@ -11,7 +11,7 @@ function box(id: string, x: number, y: number, w: number, h: number, extra: Part
   return { id, type: 'flex-block', x, y, w, h, ...extra };
 }
 function shot(width: number, boxes: Box[]): Shot {
-  return { width, pngBase64: '', boxes };
+  return { width, imageBase64: '', mimeType: 'image/jpeg', boxes };
 }
 
 describe('measureShot()', () => {

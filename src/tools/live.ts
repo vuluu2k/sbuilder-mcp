@@ -135,14 +135,22 @@ export function registerLiveTools(
         .string()
         .optional()
         .describe('Frame just this node instead of the whole page — how a designer looks at one card'),
+      format: z
+        .enum(['jpeg', 'png'])
+        .optional()
+        .describe('jpeg (default) is smaller and faster; png for pixel-exact colour'),
     },
       annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true },
     },
-    async ({ widths, with_boxes, box_depth, node_id }) => {
+    async ({ widths, with_boxes, box_depth, node_id, format }) => {
       await session.save();
       const { siteId, pageId } = session.location();
       const url = await previewUrl(ctx, siteId, pageId);
-      const shots = await shoot(url, { widths: widths ?? DEFAULT_WIDTHS, node: node_id });
+      // The widths are shot in parallel inside one Chrome that stays open for
+      // the process; `shoot` keeps them in `widths` order. The format changes
+      // bytes and latency only — the client prices an image by its pixel size,
+      // so jpeg and png cost the agent the same tokens.
+      const shots = await shoot(url, { widths: widths ?? DEFAULT_WIDTHS, node: node_id, format });
       // The boxes feed the presence cursor as well as the agent's own reading.
       session.noteBoxes(shots[0]?.boxes ?? []);
       // The findings ride WITH the picture. Judging a page by eye and judging it
@@ -156,7 +164,7 @@ export function registerLiveTools(
       const layoutNotice = visual.length > 0 ? ctx.notices.once('measure', MEASURE_NOTICE) : undefined;
       // The legend rides with the first look only; the shape does not change after.
       const fmt = with_boxes === false ? undefined : ctx.notices.once('boxes', BOXES_FORMAT);
-      return images(shots.map((s) => ({ dataBase64: s.pngBase64 })), {
+      return images(shots.map((s) => ({ dataBase64: s.imageBase64, mimeType: s.mimeType })), {
         widths: shots.map((s) => s.width),
         ...(node_id ? { framed: node_id } : {}),
         ...(with_boxes === false

@@ -1,4 +1,4 @@
-import { chromium, type Browser } from 'playwright-core';
+import { chromium, type Browser, type Page } from 'playwright-core';
 
 /**
  * The browser globals the `page.evaluate` body below uses.
@@ -35,14 +35,29 @@ export interface Box {
   hasText?: boolean;
 }
 
+export type ShotFormat = 'jpeg' | 'png';
+
 export interface Shot {
   width: number;
-  pngBase64: string;
+  /** Base64 of the encoded image; `mimeType` says which encoding. */
+  imageBase64: string;
+  mimeType: 'image/jpeg' | 'image/png';
   boxes: Box[];
 }
 
 /** The three widths the platform's own breakpoints care about. */
 export const DEFAULT_WIDTHS = [1440, 768, 390];
+
+/**
+ * JPEG at 80 by default. A full-page storefront screenshot is a third the
+ * bytes as JPEG and encodes faster than PNG, and neither changes what the
+ * agent pays for: the client prices an image by its PIXEL dimensions, not by
+ * its byte size, so the format moves bytes on the wire and latency, not
+ * tokens. PNG stays available for the one case JPEG is wrong — judging an
+ * exact colour, where 8×8 block artefacts would put a tint on a flat fill.
+ */
+const DEFAULT_FORMAT: ShotFormat = 'jpeg';
+const JPEG_QUALITY = 80;
 
 /**
  * Launch the SYSTEM Chrome — `channel: 'chrome'`, not a bundled browser.
@@ -54,13 +69,81 @@ export const DEFAULT_WIDTHS = [1440, 768, 390];
  */
 async function launch(): Promise<Browser> {
   try {
-    return await chromium.launch({ channel: 'chrome', headless: true });
+    return await launcher();
   } catch (err) {
     throw new Error(
       'sbuilder: could not launch Google Chrome for the screenshot. sb_look needs Chrome ' +
         `installed — playwright-core bundles no browser. Underlying error: ${String(err)}`,
     );
   }
+}
+
+type Launcher = () => Promise<Browser>;
+const realLauncher: Launcher = () => chromium.launch({ channel: 'chrome', headless: true });
+let launcher: Launcher = realLauncher;
+
+/**
+ * Tests only: swap the thing that launches Chrome. A throwing launcher
+ * exercises the missing-Chrome message without uninstalling Chrome, and a
+ * counting one proves the browser is reused rather than assumed to be.
+ * Pass nothing to restore the real one.
+ */
+export function setLauncherForTest(fn?: Launcher): void {
+  launcher = fn ?? realLauncher;
+}
+
+/**
+ * ONE Chrome per process, launched on first use and kept.
+ *
+ * Launching Chrome was the largest fixed cost of every `sb_look` — roughly a
+ * second before a single pixel is drawn — and a vision loop calls it after
+ * every edit. The browser is process state, not call state: it is launched
+ * lazily, reused while it is still connected, and relaunched if Chrome went
+ * away underneath (crashed, was killed, closed by a test). `browserPromise`
+ * rather than `browser` so two concurrent first calls share one launch instead
+ * of racing to start two.
+ */
+let browserPromise: Promise<Browser> | undefined;
+
+async function browser(): Promise<Browser> {
+  if (browserPromise) {
+    const b = await browserPromise.catch(() => undefined);
+    if (b?.isConnected()) return b;
+    browserPromise = undefined;
+  }
+  const p = launch();
+  browserPromise = p;
+  // A failed launch must not be cached as "the browser": the next call has to
+  // try again, and report again, rather than replay the first failure forever.
+  p.catch(() => {
+    if (browserPromise === p) browserPromise = undefined;
+  });
+  return p;
+}
+
+/** Close the shared Chrome, if one is open. Idempotent; never throws. */
+export async function closeBrowser(): Promise<void> {
+  const p = browserPromise;
+  browserPromise = undefined;
+  if (!p) return;
+  const b = await p.catch(() => undefined);
+  if (b) await b.close().catch(() => {});
+}
+
+/**
+ * A kept browser is a child process, and a child process outlives a parent
+ * that forgets it. `beforeExit` fires when the event loop drains and CAN await
+ * the close (`exit` cannot). A signal kills the loop without draining it, so
+ * SIGINT/SIGTERM close Chrome too and then re-raise so the exit code is the
+ * one the signal would have produced. Registered once, at module load.
+ */
+process.once('beforeExit', () => {
+  void closeBrowser();
+});
+for (const signal of ['SIGINT', 'SIGTERM'] as const) {
+  process.once(signal, () => {
+    void closeBrowser().finally(() => process.kill(process.pid, signal));
+  });
 }
 
 /**
@@ -71,92 +154,117 @@ async function launch(): Promise<Browser> {
  * lands somewhere else on a peer with a different window — and nothing else in
  * this server knows where a node ended up. Measured here, the agent's cursor
  * moves to the element it is about to change instead of to a made-up number.
+ *
+ * The widths are shot IN PARALLEL, each in its own page of the one shared
+ * browser, and the array comes back in the order `widths` was given — the
+ * caller reads `shots[0]` as `widths[0]`. If any width fails, the others are
+ * closed and the FIRST error is the one thrown.
  */
 export async function shoot(
   url: string,
-  opts: { widths?: number[]; node?: string; pad?: number } = {},
+  opts: { widths?: number[]; node?: string; pad?: number; format?: ShotFormat } = {},
 ): Promise<Shot[]> {
   const widths = opts.widths ?? DEFAULT_WIDTHS;
-  const browser = await launch();
+  const format = opts.format ?? DEFAULT_FORMAT;
+  const b = await browser();
+  const pages: Page[] = [];
   try {
-    const shots: Shot[] = [];
-    for (const width of widths) {
-      const page = await browser.newPage({ viewport: { width, height: 900 } });
-      await page.goto(url, { waitUntil: 'networkidle' });
-      // A RENDERED page carries its node ids as the HTML `id` attribute — not as
-      // `data-node-id`, which is the editor CANVAS's hook and never reaches the
-      // renderer. Selecting the canvas attribute here returned an empty box list
-      // on every real page, silently: the screenshots looked fine, and the half
-      // of this function that exists to place the presence cursor did nothing.
-      // Found by running it against the Go renderer.
-      //
-      // Ids are filtered by SHAPE (`xx_8hex`, plus ROOT) rather than taken from
-      // every `[id]`, so a wrapper or an anchor target cannot be mistaken for a
-      // node. `type` is read off the leading `wb-` class, which is the only type
-      // signal the render emits; the caller already knows the real types from
-      // sb_outline, so this is a convenience, not a contract.
-      const boxes = (await page.evaluate(() =>
-        [...document.querySelectorAll('[id]')]
-          .filter((el) => el.id === 'ROOT' || /^[a-z]{2}_[0-9a-f]{8}$/.test(el.id))
-          .map((el) => {
-            const r = el.getBoundingClientRect();
-            const wb = String(el.className || '')
-              .split(/\s+/)
-              .find((c) => c.startsWith('wb-'));
-            const cs = getComputedStyle(el);
-            const own = (el.textContent ?? '').trim();
-            return {
-              id: el.id,
-              type: wb ? wb.slice(3) : '',
-              x: Math.round(r.x),
-              y: Math.round(r.y),
-              w: Math.round(r.width),
-              h: Math.round(r.height),
-              fontPx: Math.round(parseFloat(cs.fontSize) || 0),
-              hasText: own.length > 0,
-            };
-          }),
-      )) as Box[];
-
-      // ZOOM. A designer does not judge a card by looking at the whole page, and
-      // a full-page shot of a long storefront makes one card a few pixels tall.
-      // The clip comes from the SAME measurement pass the boxes do, so what is
-      // framed is exactly what `sb_set` addresses.
-      let clip: { x: number; y: number; width: number; height: number } | undefined;
-      if (opts.node) {
-        const box = boxes.find((b) => b.id === opts.node);
-        if (!box) {
-          await page.close();
-          throw new Error(
-            `sbuilder: node "${opts.node}" is not on the rendered page at ${width}px. It may be ` +
-              'hidden at this breakpoint, or not saved yet — sb_look renders the STORED draft.',
-          );
-        }
-        if (box.w === 0 || box.h === 0) {
-          await page.close();
-          throw new Error(
-            `sbuilder: node "${opts.node}" renders with no size at ${width}px (${box.w}×${box.h}) — ` +
-              'nothing to photograph. It is collapsed or empty; sb_review will say which.',
-          );
-        }
-        const pad = opts.pad ?? 16;
-        clip = {
-          x: Math.max(0, box.x - pad),
-          y: Math.max(0, box.y - pad),
-          width: Math.min(width, box.w + pad * 2),
-          height: box.h + pad * 2,
-        };
-      }
-
-      const png = await page.screenshot({
-        type: 'png',
-        ...(clip ? { clip } : { fullPage: true }),
-      });
-      shots.push({ width, pngBase64: png.toString('base64'), boxes });
-      await page.close();
-    }
-    return shots;
+    return await Promise.all(
+      widths.map(async (width) => {
+        const page = await b.newPage({ viewport: { width, height: 900 } });
+        pages.push(page);
+        const shot = await shootOne(page, url, width, format, opts);
+        await page.close();
+        return shot;
+      }),
+    );
   } finally {
-    await browser.close();
+    // Promise.all rejects on the FIRST failure while the others still run;
+    // close every page opened so a failed look leaves no tab behind. Closing
+    // an already-closed page is a no-op.
+    await Promise.all(pages.map((p) => p.close().catch(() => {})));
   }
+}
+
+async function shootOne(
+  page: Page,
+  url: string,
+  width: number,
+  format: ShotFormat,
+  opts: { node?: string; pad?: number },
+): Promise<Shot> {
+  await page.goto(url, { waitUntil: 'networkidle' });
+  // A RENDERED page carries its node ids as the HTML `id` attribute — not as
+  // `data-node-id`, which is the editor CANVAS's hook and never reaches the
+  // renderer. Selecting the canvas attribute here returned an empty box list
+  // on every real page, silently: the screenshots looked fine, and the half
+  // of this function that exists to place the presence cursor did nothing.
+  // Found by running it against the Go renderer.
+  //
+  // Ids are filtered by SHAPE (`xx_8hex`, plus ROOT) rather than taken from
+  // every `[id]`, so a wrapper or an anchor target cannot be mistaken for a
+  // node. `type` is read off the leading `wb-` class, which is the only type
+  // signal the render emits; the caller already knows the real types from
+  // sb_outline, so this is a convenience, not a contract.
+  const boxes = (await page.evaluate(() =>
+    [...document.querySelectorAll('[id]')]
+      .filter((el) => el.id === 'ROOT' || /^[a-z]{2}_[0-9a-f]{8}$/.test(el.id))
+      .map((el) => {
+        const r = el.getBoundingClientRect();
+        const wb = String(el.className || '')
+          .split(/\s+/)
+          .find((c) => c.startsWith('wb-'));
+        const cs = getComputedStyle(el);
+        const own = (el.textContent ?? '').trim();
+        return {
+          id: el.id,
+          type: wb ? wb.slice(3) : '',
+          x: Math.round(r.x),
+          y: Math.round(r.y),
+          w: Math.round(r.width),
+          h: Math.round(r.height),
+          fontPx: Math.round(parseFloat(cs.fontSize) || 0),
+          hasText: own.length > 0,
+        };
+      }),
+  )) as Box[];
+
+  // ZOOM. A designer does not judge a card by looking at the whole page, and
+  // a full-page shot of a long storefront makes one card a few pixels tall.
+  // The clip comes from the SAME measurement pass the boxes do, so what is
+  // framed is exactly what `sb_set` addresses.
+  let clip: { x: number; y: number; width: number; height: number } | undefined;
+  if (opts.node) {
+    const box = boxes.find((b) => b.id === opts.node);
+    if (!box) {
+      throw new Error(
+        `sbuilder: node "${opts.node}" is not on the rendered page at ${width}px. It may be ` +
+          'hidden at this breakpoint, or not saved yet — sb_look renders the STORED draft.',
+      );
+    }
+    if (box.w === 0 || box.h === 0) {
+      throw new Error(
+        `sbuilder: node "${opts.node}" renders with no size at ${width}px (${box.w}×${box.h}) — ` +
+          'nothing to photograph. It is collapsed or empty; sb_review will say which.',
+      );
+    }
+    const pad = opts.pad ?? 16;
+    clip = {
+      x: Math.max(0, box.x - pad),
+      y: Math.max(0, box.y - pad),
+      width: Math.min(width, box.w + pad * 2),
+      height: box.h + pad * 2,
+    };
+  }
+
+  const bytes = await page.screenshot({
+    ...(format === 'jpeg' ? { type: 'jpeg', quality: JPEG_QUALITY } : { type: 'png' }),
+    ...(clip ? { clip } : { fullPage: true }),
+  });
+  return {
+    width,
+    imageBase64: bytes.toString('base64'),
+    mimeType: format === 'jpeg' ? 'image/jpeg' : 'image/png',
+    boxes,
+  };
 }

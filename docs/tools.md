@@ -247,6 +247,7 @@ every disagreement.
 | `with_boxes` | boolean? | Defaults to true |
 | `box_depth` | number? | Boxes for nodes down to this depth in the tree. Default 2, max 8 |
 | `node_id` | string? | Frame just this element instead of the whole page |
+| `format` | `"jpeg"` \| `"png"`? | `jpeg` (default) is smaller and faster; `png` for pixel-exact colour |
 
 **Saves first**, then mints a signed preview link and renders the page through the
 platform's own Go renderer — so the picture is of the *stored draft*, never of unsaved local
@@ -263,6 +264,11 @@ as `layout` — see the end of this document.
 Needs **system Google Chrome**: `playwright-core` bundles no browser, so nothing is
 downloaded on install. If Chrome is missing the tool says so by name rather than returning a
 blank image — an agent that judges a page it never saw is worse than one that stops.
+Chrome is launched on the first look and stays open for the life of the process, and the
+widths are captured in parallel, each in its own tab — a three-width look is roughly a
+second instead of three. Images come back as JPEG at quality 80 unless `format: "png"` is
+asked for; the format changes bytes and latency only, since the client prices an image by
+its pixel size, not its byte size.
 
 ## `sb_bind`
 

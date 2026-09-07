@@ -241,6 +241,7 @@ lệch nào — lỗ trong `seq` của server, checkpoint đến đúng seq củ
 | `with_boxes` | boolean? | Mặc định true |
 | `box_depth` | number? | Box cho các node tới độ sâu này trong cây. Mặc định 2, tối đa 8 |
 | `node_id` | string? | Chỉ đóng khung element này thay vì cả trang |
+| `format` | `"jpeg"` \| `"png"`? | `jpeg` (mặc định) nhỏ hơn và nhanh hơn; `png` khi cần màu chính xác từng pixel |
 
 **Lưu trước**, rồi mint link preview đã ký và render trang bằng chính renderer Go của nền
 tảng — nên bức ảnh là của *bản nháp đã lưu*, không bao giờ là của sửa đổi chưa lưu. Trả về
@@ -255,6 +256,10 @@ tính từ node đó và chỉ cây con của nó được trả về. Chú gi�
 Cần **Google Chrome của hệ thống**: `playwright-core` không kèm trình duyệt nào nên lúc cài
 không tải gì. Nếu thiếu Chrome, tool nói đích danh chứ không trả ảnh trắng — một agent đi
 chấm bức trang nó chưa từng nhìn thấy còn tệ hơn một agent chịu dừng.
+Chrome được mở ở lần look đầu tiên và giữ mở suốt vòng đời của process, còn các bề rộng được
+chụp song song, mỗi bề rộng một tab — một lần look ba bề rộng mất khoảng một giây thay vì
+ba. Ảnh trả về là JPEG chất lượng 80 trừ khi yêu cầu `format: "png"`; định dạng chỉ thay đổi
+số byte và độ trễ, vì client tính giá ảnh theo kích thước pixel chứ không theo số byte.
 
 ## `sb_bind`
 
