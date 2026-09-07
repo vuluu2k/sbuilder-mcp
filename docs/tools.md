@@ -176,6 +176,13 @@ With `control`: that one control in full.
 Pass `children` to build a whole section in one call. Refuses a root-only element inside a
 section, a child a parent's whitelist excludes, and any add into a non-container.
 
+
+A created element arrives with the BINDINGS its type needs: a `text-dataset` already reads
+`product.title`, a `pricing-dataset` its six price keys, a `list-dataset` its repeater target.
+The editor derives them at drop time and nothing in the element's defaults carried them, so
+every dataset element this server minted used to save, publish and render its placeholder
+forever.
+
 ## `sb_set`
 
 | Arg | Type | Notes |
@@ -195,6 +202,20 @@ section, a child a parent's whitelist excludes, and any add into a non-container
 A dry run returns the `patches` and, the first time in a process, a `note` restating the
 base-and-breakpoint rule above. A real write returns the keys set and the new `rev`, with
 a `warning` when the node is a shared global.
+
+
+**A dataset element follows its data.** Writing `config.kind` or `config.datasetSource` also
+re-derives that element's bindings, because the bindings ARE a function of those two keys.
+Leaving them alone made a text-dataset switched from a product title to a collection title
+keep reading `product.title`, which off a product page resolves to nothing: it rendered empty
+and said nothing. A pair the generated table does not know leaves the bindings untouched
+rather than clearing them — a wrong binding is bad, and no binding is worse.
+
+**`globalId`, `appBlockId` and `appBlockHash` are refused.** They are the stamps the SERVER
+writes when it composes a shared subtree onto a page; a document REFERENCES one with
+`globalRef` / `appBlockRef`. Author the composed stamp and the next save decomposes your node
+over the master, emptying it for every page that carries it. That is not hypothetical: it
+took four pages blank in one run. Both `sb_add` and `sb_set` refuse it and name the right key.
 
 ## `sb_move` / `sb_remove`
 
@@ -367,6 +388,12 @@ responses, so the field names were read off the Go structs' json tags; an item t
 an object comes back untouched, so a platform shape change degrades to yesterday's
 behaviour rather than to an empty list.
 
+`sb_page_create` takes `name` plus `type`, `slug`, `is_homepage` and `settings`. **TYPE IS
+THE ROUTE** for several kinds: `checkout`, `product`, `category`, `post` and `course` resolve
+by type rather than by slug, so `/checkout` and `/products/{slug}` answer 404 until a page of
+that type is PUBLISHED. The default is `page`. Without this argument an agent can build a
+shop it can never let anyone buy from — which is the first gap `sb_review` reports.
+
 `sb_publish` **cascades**: a page sharing a global section with others republishes them too,
 because a header edited once must not go live on one page and stay stale on the rest.
 
@@ -428,6 +455,30 @@ page, and a full-page shot of a long storefront makes one card a few pixels tall
 comes from the same measurement pass the boxes do, so what is framed is exactly what
 `sb_set` addresses. A node that is not on the rendered page, or that renders with no size,
 is **refused by name** rather than answered with the wrong picture.
+
+
+**And what stands between this store and a paid order**, under `store_gaps`, with a
+`store_notice` said once per process. These are the platform's OWN readiness rules, and they
+live only in the editor (`editor/src/editor/storeReadiness.ts`) — no API exposes them, so an
+agent that never opens the editor is blind to every one. A four-page storefront built
+entirely through these tools reviewed clean, published and rendered correctly; the editor's
+publish panel then listed five gaps.
+
+| `id` | What it means |
+| --- | --- |
+| `checkoutPage` | No PUBLISHED page of the `checkout` type. /checkout routes by type, so the cart's Checkout button 404s |
+| `payment` | No live gateway — nothing but cash on delivery, and an online order dead-ends |
+| `productPage` | No published `product` page, so every link out of a product card 404s |
+| `shipping` | No delivery option: the checkout's select is empty and every order ships free |
+| `cartTrigger` | Nothing opens the cart on its own; a shopper who closes the drawer cannot get back |
+
+Each gap carries `draft: true` when the page EXISTS but is unpublished, because "publish the
+one you made" and "create one" are different jobs. Ordered most-blocking first.
+
+Four extra GETs pay for this (pages, payment-gateways, shipping-methods, global-sections) and
+none of them can fail the review: a fetch that fails leaves that rule **silent** rather than
+reporting a gap the store may not have. A warning that fires on a correct store is one the
+reader learns to ignore.
 
 ## `sb_media_list` / `sb_media_upload`
 

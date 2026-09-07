@@ -8,7 +8,13 @@ Mọi kết quả đều là **JSON nén** — không thụt lề, vì người 
 `boxes_format`) chỉ nói **một lần mỗi process**, sau đó trường ấy đơn giản là vắng mặt: một
 chỉ dẫn lặp lại ở mọi lần gọi thì tới lần thứ ba là bị đọc lướt. Mọi tool đều mang MCP
 annotation — `readOnlyHint` trên mười hai tool chỉ đọc, `destructiveHint` trên `sb_remove`,
-`sb_api_call` và `sb_publish` — nên client nào tôn trọng chúng sẽ thôi hỏi người dùng xác
+`sb_api_call` và `sb_page_create` nhận `name` cùng `type`, `slug`, `is_homepage` và `settings`. **TYPE CHÍNH LÀ
+ĐƯỜNG ĐI** với vài loại trang: `checkout`, `product`, `category`, `post` và `course` được
+định tuyến theo type chứ không theo slug, nên `/checkout` và `/products/{slug}` trả 404 cho
+tới khi có một trang loại đó ĐƯỢC PUBLISH. Mặc định là `page`. Thiếu tham số này thì agent có
+thể dựng một cửa hàng không ai mua được — đúng khoảng trống đầu tiên mà `sb_review` báo.
+
+`sb_publish` — nên client nào tôn trọng chúng sẽ thôi hỏi người dùng xác
 nhận một lần đọc.
 
 ---
@@ -176,6 +182,12 @@ Truyền `children` để dựng nguyên một section trong một lần gọi. 
 đặt trong section, con nằm ngoài whitelist của cha, và mọi lần thêm vào node không phải
 container.
 
+
+Phần tử vừa tạo mang sẵn BINDINGS mà kiểu của nó cần: `text-dataset` đã đọc `product.title`,
+`pricing-dataset` có đủ sáu khoá giá, `list-dataset` có target repeater. Editor suy chúng lúc
+kéo thả và defaults của element không mang, nên trước đây mọi phần tử dữ liệu server này tạo
+ra đều lưu được, publish được và render mãi placeholder.
+
 ## `sb_set`
 
 | Tham số | Kiểu | Ghi chú |
@@ -195,6 +207,20 @@ container.
 Chạy khô trả về `patches` và, lần đầu trong một process, một `note` nhắc lại luật base và
 breakpoint ở trên. Ghi thật trả về các khoá đã set và `rev` mới, kèm `warning` nếu node là
 global dùng chung.
+
+
+**Phần tử dữ liệu đi theo dữ liệu của nó.** Ghi `config.kind` hoặc `config.datasetSource` sẽ
+suy lại luôn bindings của phần tử đó, vì bindings CHÍNH LÀ hàm của hai khoá này. Để nguyên
+thì một text-dataset chuyển từ tên sản phẩm sang tên bộ sưu tập vẫn đọc `product.title`, mà
+ngoài trang sản phẩm thì khoá đó không giải ra gì: nó render rỗng và không nói gì. Cặp giá
+trị mà bảng sinh sẵn không biết thì giữ nguyên bindings chứ không xoá — bind sai đã tệ, không
+bind còn tệ hơn.
+
+**`globalId`, `appBlockId` và `appBlockHash` bị từ chối.** Đó là dấu MÁY CHỦ đóng khi nó ghép
+một cây con dùng chung lên trang; tài liệu THAM CHIẾU tới nó bằng `globalRef` / `appBlockRef`.
+Tự viết dấu đã-ghép thì lần lưu kế tiếp sẽ rã node của bạn đè lên master, làm trống nó cho
+mọi trang mang nó. Không phải giả định: một lần chạy đã làm trắng bốn trang. Cả `sb_add` lẫn
+`sb_set` đều từ chối và nêu đúng khoá cần dùng.
 
 ## `sb_move` / `sb_remove`
 
@@ -419,6 +445,30 @@ trang, và ảnh full-page của một storefront dài làm cái thẻ đó ch�
 từ chính lần đo ra bounding box, nên thứ được đóng khung đúng là thứ `sb_set` nhắm tới. Node
 không có trên trang đã render, hoặc render ra kích thước bằng 0, bị **từ chối đích danh** chứ
 không trả về một bức ảnh sai.
+
+
+**Và những gì chắn giữa cửa hàng này với một đơn đã thanh toán**, ở `store_gaps`, kèm
+`store_notice` chỉ nói một lần mỗi process. Đây là luật kiểm tra sẵn sàng của chính nền tảng,
+và chúng chỉ tồn tại trong editor (`editor/src/editor/storeReadiness.ts`) — không API nào lộ
+ra, nên một agent không bao giờ mở editor thì mù hoàn toàn. Một storefront bốn trang dựng
+hoàn toàn bằng bộ tool này review sạch, publish và render đúng; bảng publish của editor sau
+đó liệt kê năm khoảng trống.
+
+| `id` | Nghĩa là gì |
+| --- | --- |
+| `checkoutPage` | Chưa có trang `checkout` ĐÃ PUBLISH. /checkout định tuyến theo type, nên nút Thanh toán trong giỏ báo 404 |
+| `payment` | Chưa có cổng thanh toán sống — chỉ còn thanh toán khi nhận hàng, đơn online tắc |
+| `productPage` | Chưa publish trang `product`, nên mọi liên kết từ thẻ sản phẩm đều 404 |
+| `shipping` | Không có phương thức giao: ô chọn ở trang thanh toán trống và mọi đơn miễn phí ship |
+| `cartTrigger` | Không gì mở được giỏ; khách đóng ngăn giỏ rồi không quay lại được |
+
+Mỗi khoảng trống mang `draft: true` khi trang ĐÃ CÓ nhưng chưa publish, vì "publish cái đã
+làm" và "tạo mới" là hai việc khác nhau. Sắp theo mức chặn giảm dần.
+
+Bốn lệnh GET phụ trả giá cho việc này (pages, payment-gateways, shipping-methods,
+global-sections) và không cái nào làm hỏng được review: một lệnh thất bại thì luật đó **im
+lặng** thay vì báo một khoảng trống cửa hàng có thể không có. Một cảnh báo nổ trên cửa hàng
+đúng là cảnh báo người ta học cách bỏ qua.
 
 ## `sb_media_list` / `sb_media_upload`
 

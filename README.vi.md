@@ -75,9 +75,9 @@ là "tài khoản của người này".
 | `sb_templates` | Section template đã lưu của cửa hàng — section thiết kế sẵn để bắt đầu |
 | `sb_template_use` | Thả một template vào trang |
 | `sb_page_list` | Mọi trang của site |
-| `sb_page_create` | Tạo một trang |
+| `sb_page_create` | Tạo một trang; `type` là đường đi cho checkout, product, category, post, course |
 | `sb_publish` | Biên dịch bản nháp thành trang live (lan sang global dùng chung) |
-| `sb_review` | Mọi khiếm khuyết người xem sẽ thấy, kèm lệnh sửa từng cái |
+| `sb_review` | Mọi khiếm khuyết người xem sẽ thấy, kèm lệnh sửa từng cái, và năm khoảng trống chắn giữa cửa hàng với một đơn đã thanh toán |
 | `sb_media_list` | Thư viện ảnh của site |
 | `sb_media_upload` | Thêm ảnh và lấy URL — đường duy nhất, vì upload là multipart |
 | `sb_live_join` | Vào phòng live-edit của editor như một peer nhìn thấy được — sửa gì hiện ngay |

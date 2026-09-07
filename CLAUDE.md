@@ -77,6 +77,10 @@ Three things the first live release cost, so nobody pays them twice:
   A hand-built content array is the shape that drifts.
 - **Mutating tools take `dry_run` and default it to `true`**, returning a request preview
   passed through `redact()`.
+- **An element's default BINDINGS come from codegen, and `createNode` seeds them.** They are
+  a function of `config.datasetSource` + `config.kind`, so `sb_set` re-derives them from the
+  generated table when either moves. A dataset element without them renders its placeholder
+  forever, saving and publishing all the way.
 - **Every result is compact JSON, and every directive is said once per process through
   `ctx.notices`**; a tool that repeats a notice on every call is the shape that drifts.
   `test/token-budget.test.ts` is the scale — a diet without one comes back.
@@ -125,6 +129,17 @@ that accounts for them.
   guards both.
 - **`applyBindings` honours only the `specials` namespace.** A binding whose `field` names
   any other namespace is stored, saved, published, and ignored forever.
+- **Store readiness lives ONLY in the editor.** `editor/src/editor/storeReadiness.ts` computes
+  five gaps between a site and a paid order — no checkout page, no live gateway, no published
+  product template, no delivery option, nothing that opens the cart — and no API exposes any
+  of it. `src/domains/site/readiness.ts` mirrors the table and `sb_review` reports it, SILENT
+  on any input it could not fetch. A storefront built entirely through these tools reviewed
+  clean and the editor then listed all five.
+- **A composed stamp is not a reference.** `globalId` / `appBlockId` are what the server
+  writes when it composes a shared subtree onto a page; the document stores `globalRef` /
+  `appBlockRef`. Authoring the composed one makes the next save decompose that node OVER the
+  master and empties it for every page carrying it — four pages went blank before `sb_add`
+  and `sb_set` learned to refuse it.
 - **`DOC_SCHEMA_VERSION` is 2** and lives in `editor/src/theme/legacyScopes.ts`, not in the
   schema package. Codegen reads it with a regex — importing an editor module would drag Vue
   into a build script for one integer.

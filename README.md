@@ -78,9 +78,9 @@ make, because those mean "this person's account".
 | `sb_templates` | The store's saved section templates — designed sections to start from |
 | `sb_template_use` | Instantiate a template into a page |
 | `sb_page_list` | Every page on the site |
-| `sb_page_create` | Create a page |
+| `sb_page_create` | Create a page; `type` is the route for checkout, product, category, post, course |
 | `sb_publish` | Compile the draft into the live page (cascades to shared globals) |
-| `sb_review` | Every defect a visitor would see, each with the command that fixes it |
+| `sb_review` | Every defect a visitor would see, each with its fix, plus the five gaps between this store and a paid order |
 | `sb_media_list` | The site's media library |
 | `sb_media_upload` | Add an image and get its URL — the only route, the upload is multipart |
 | `sb_live_join` | Join the editor's live-edit room as a visible peer — edits then appear live |
