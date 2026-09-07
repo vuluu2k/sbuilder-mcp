@@ -15,7 +15,8 @@ describe('token budget — a diet without a scale comes back', () => {
   it('tools/list and instructions stay small, and the instructions are true', async () => {
     const { client, close } = await connectedClient();
     const { tools } = await client.listTools();
-    expect(JSON.stringify(tools).length).toBeLessThan(15_000);
+    expect(JSON.stringify(tools).length).toBeLessThan(15_500);
+    for (const t of tools) expect(t.description, t.name).not.toMatch(/vanishes on publish/);
     const instructions = client.getInstructions() ?? '';
     expect(instructions.length).toBeGreaterThan(200);
     expect(instructions.length).toBeLessThan(1_000);

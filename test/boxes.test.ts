@@ -33,3 +33,16 @@ describe('boxesForResponse()', () => {
     expect(out[0][0]).toBe('ROOT');
   });
 });
+
+describe('boxesForResponse() with a framed node', () => {
+  it('counts depth from the framed node and keeps only its subtree', () => {
+    const { d, ids } = doc();
+    const boxes = [
+      { id: 'ROOT', type: 'root', x: 0, y: 0, w: 1, h: 1 },
+      ...ids.map((id, i) => ({ id, type: 't', x: i, y: 0, w: 10, h: 10 })),
+    ];
+    // Frame the flex-block (depth 2 in the page): it and its heading come back, ROOT and the section do not.
+    const out = boxesForResponse(d.doc, boxes, 1, ids[1]);
+    expect(out.map((t) => t[0])).toEqual([ids[1], ids[2]]);
+  });
+});

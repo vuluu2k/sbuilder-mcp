@@ -253,7 +253,8 @@ platform's own Go renderer — so the picture is of the *stored draft*, never of
 edits. Returns one image per width plus `boxes`: an array of `[id, type, x, y, w, h]`
 tuples in CSS px at `widths[0]`, for nodes down to `box_depth` in the open document — the
 default 2 is the bands and their direct children, which is what a layout judgement needs;
-ROOT is always kept. A one-line `boxes_format` legend comes with the first look in a
+ROOT is always kept. With `node_id` the depth counts from that node and only its subtree
+comes back. A one-line `boxes_format` legend comes with the first look in a
 process. Every `[data-node-id]` is still measured and kept in the session for the presence
 cursor and the layout checks; two hundred pretty-printed objects were 27 KB a look.
 `with_boxes: false` drops them. Findings ride along as with `sb_review`, and layout defects
@@ -311,7 +312,9 @@ open — they are per-element, and the element's `defaults` name the keys it rea
 
 `id`. Copies the node and everything under it under **fresh ids**, inserted right after the
 original — the move a designer makes constantly. Styling comes with it, which is the point.
-Refuses ROOT and site overlays.
+Refuses ROOT, site overlays, and a subtree that contains an app block — the copy would carry
+the block's stamps and the save would reduce it back to a reference with a warning this
+client does not surface.
 
 ## `sb_templates` / `sb_template_use`
 

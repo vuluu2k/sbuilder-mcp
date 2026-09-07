@@ -159,3 +159,10 @@ describe('trap 5: app blocks', () => {
     expect(reviewDesign(d).some((f) => f.nodeId === inner)).toBe(false);
   });
 });
+
+describe('trap 5: duplicating over a block', () => {
+  it('refuses to duplicate a section that contains an app block', () => {
+    const { d, section } = withAppBlock();
+    expect(() => duplicateNode(d, section)).toThrow(/app block/i);
+  });
+});

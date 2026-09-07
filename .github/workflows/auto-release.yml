@@ -285,7 +285,7 @@ jobs:
         run: |
           # Keep server.json (MCP Registry manifest) version in lockstep with the release.
           node -e "const fs=require('fs'),v='${{ steps.version.outputs.new }}',j=require('./server.json');j.version=v;if(j.packages&&j.packages[0])j.packages[0].version=v;fs.writeFileSync('server.json',JSON.stringify(j,null,2)+'\n')"
-          git add package.json server.json CHANGELOG.md CHANGELOG.vi.md
+          git add package.json package-lock.json server.json CHANGELOG.md CHANGELOG.vi.md
           git diff --cached --quiet || git add -u
           git commit -m "chore(release): ${{ steps.version.outputs.tag }}"
           git tag -a "${{ steps.version.outputs.tag }}" -m "Release ${{ steps.version.outputs.tag }}"

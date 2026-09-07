@@ -272,7 +272,8 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
     {
       description:
         'Write style, config or specials keys on a node. Style and config are written PER ' +
-          'BREAKPOINT by default — a visual quantity written at base vanishes on publish.',
+          "BREAKPOINT by default; base:true writes the cascade's fallback layer, right for a " +
+          'value that should not vary.',
       inputSchema: {
       id: z.string(),
       namespace: z.enum(['style', 'config', 'specials']),

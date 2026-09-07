@@ -28,3 +28,9 @@ describe('findings', () => {
     ]) expect(FIX[code], code).toBeTypeOf('string');
   });
 });
+
+describe('fill() on an unknown code', () => {
+  it('throws rather than returning an empty fix', () => {
+    expect(() => fill('no_such_code', {})).toThrow(/no fix template/);
+  });
+});

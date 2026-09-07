@@ -78,8 +78,22 @@ export async function uploadMedia(
     throw new ApiError(res.status, 'non_json_response', raw.slice(0, 400));
   }
   if (!res.ok) {
-    const env = (parsed ?? {}) as { error?: string; code?: string };
-    throw new ApiError(res.status, env.code ?? 'unknown', env.error ?? `HTTP ${res.status}`);
+    const env = (parsed ?? {}) as {
+      error?: string;
+      code?: string;
+      details?: unknown;
+      fields?: Record<string, string>;
+    };
+    const fieldText = env.fields
+      ? ' — ' + Object.entries(env.fields).map(([k, v]) => `${k}: ${v}`).join('; ')
+      : '';
+    throw new ApiError(
+      res.status,
+      env.code ?? 'unknown',
+      (env.error ?? `HTTP ${res.status}`) + fieldText,
+      env.details,
+      env.fields,
+    );
   }
   const body = parsed as { asset?: UploadedAsset };
   return body.asset ?? (parsed as UploadedAsset);

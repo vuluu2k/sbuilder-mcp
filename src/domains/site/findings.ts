@@ -33,7 +33,9 @@ export const FIX: Record<string, string> = {
 
 /** The template for `code`, with every `<name>` in `vars` substituted. */
 export function fill(code: string, vars: Record<string, string>): string {
-  let s = FIX[code] ?? '';
+  // Loud, not empty: a finding with no fix is the shape review exists to prevent.
+  if (!FIX[code]) throw new Error(`sbuilder: no fix template for finding code "${code}"`);
+  let s = FIX[code];
   for (const [k, v] of Object.entries(vars)) s = s.split(`<${k}>`).join(v);
   return s;
 }

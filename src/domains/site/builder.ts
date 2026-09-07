@@ -240,6 +240,18 @@ export function duplicateNode(doc: PageDoc, id: string): { patches: Patch[]; ids
   if (id === doc.doc.root_node_id) throw new Error('sbuilder: cannot duplicate ROOT');
   refuseOverlay(doc, id, 'duplicating');
   refuseAppBlockInterior(doc, id, 'duplicating');
+  // A copy of a composed block carries the original's appBlockId/appBlockHash
+  // stamps; the save reduces it to a reference and the platform answers with a
+  // WarnAppBlockEdited this client does not surface — so the local tree and the
+  // stored one would silently differ. Refuse, and say how to get the block back.
+  const blockInside = subtreeIds(doc.doc, id).find((n) => appBlockRoot(doc.doc, n) === n);
+  if (blockInside) {
+    throw new Error(
+      `sbuilder:  contains the app block , whose copy the platform would ` +
+        'reduce back to a reference on save. Remove the block, duplicate, then add the block ' +
+        'again through its app.',
+    );
+  }
   const parentId = n.data.parent;
   if (!parentId || !doc.has(parentId)) {
     throw new Error(`sbuilder: ${id} has no parent to be duplicated beside`);

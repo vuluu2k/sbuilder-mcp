@@ -162,7 +162,7 @@ export function registerLiveTools(
         ...(with_boxes === false
           ? {}
           : {
-              boxes: boxesForResponse(session.current().doc, shots[0]?.boxes ?? [], box_depth ?? 2),
+              boxes: boxesForResponse(session.current().doc, shots[0]?.boxes ?? [], box_depth ?? 2, node_id),
               ...(fmt ? { boxes_format: fmt } : {}),
             }),
         ...review,
@@ -254,9 +254,7 @@ export function registerLiveTools(
           'placeholder text.',
       inputSchema: {
       id: z.string(),
-      source: z
-        .string()
-        .describe('A renderer source such as product.title or category.image; an unknown one is refused with the full list'),
+      source: z.string().describe(`One of: ${BINDING_SOURCES.join(', ')}`),
       field: z.string().describe('Where the value lands, always "specials.<key>"'),
       dry_run: z.boolean().optional(),
     },

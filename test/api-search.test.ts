@@ -100,9 +100,12 @@ describe('summarizeOperation()', () => {
     expect(summarizeOperation(loose).body).toBe('undescribed');
   });
 
-  it('omits body on a GET', () => {
-    const get = searchOperations('', { limit: 500 }).find((o) => o.method === 'GET')!;
-    expect(summarizeOperation(get).body).toBeUndefined();
+  it('omits body on a read that declares none, and still reports one a GET declares', () => {
+    const all = searchOperations('', { limit: 500 });
+    const plain = all.find((o) => o.method === 'GET' && !o.params.some((p) => p.in === 'body'))!;
+    expect(summarizeOperation(plain).body).toBeUndefined();
+    const odd = all.find((o) => o.method === 'GET' && o.params.some((p) => p.in === 'body'));
+    if (odd) expect(summarizeOperation(odd).body).toBeDefined();
   });
 
   it('defaults to eight matches', () => {
