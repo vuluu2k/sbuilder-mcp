@@ -1,0 +1,68 @@
+name: MCP Registry Publish
+
+# The release workflow publishes to the MCP Registry as its LAST step, after npm
+# has the package and the GitHub Release exists. When only that step fails — a
+# manifest the registry refuses, an outage — the release itself is fine and the
+# only remedy was to cut another release for a field nobody needed bumped. This
+# runs that one step on demand, against whatever `server.json` is on main.
+#
+# It never touches npm, git history or tags. The registry proves ownership by
+# fetching the published npm tarball and matching its `mcpName`, so the version
+# in `server.json` must already be on npm; that is checked before publishing
+# rather than discovered as a 4xx.
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: registry-publish
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write # OIDC maps the repo owner to the io.github.<owner>/* namespace
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Check the manifest before the registry does
+        run: |
+          node -e "
+          const fs = require('fs');
+          const m = JSON.parse(fs.readFileSync('server.json', 'utf8'));
+          const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+          const fail = (msg) => { console.error('::error::' + msg); process.exitCode = 1; };
+          if (!m.description || m.description.length > 100) {
+            fail('server.json description is ' + (m.description || '').length + ' characters; the registry accepts at most 100.');
+          }
+          if (m.name !== pkg.mcpName) fail('server.json name ' + m.name + ' does not match package.json mcpName ' + pkg.mcpName + '.');
+          if (m.version !== pkg.version) fail('server.json version ' + m.version + ' does not match package.json version ' + pkg.version + '.');
+          for (const p of m.packages || []) {
+            if (p.identifier !== pkg.name) fail('package entry identifier ' + p.identifier + ' is not ' + pkg.name + '.');
+            if (p.version !== m.version) fail('package entry version ' + p.version + ' is not ' + m.version + '.');
+          }
+          "
+
+      - name: Require the version to be on npm already
+        run: |
+          PKG=$(node -p "require('./package.json').name")
+          VER=$(node -p "require('./server.json').version")
+          if ! npm view "${PKG}@${VER}" version >/dev/null 2>&1; then
+            echo "::error::${PKG}@${VER} is not on npm. The registry verifies ownership from the published tarball, so publish to npm first (the Auto Release workflow does)." >&2
+            exit 1
+          fi
+          echo "npm has ${PKG}@${VER}"
+
+      - name: Install mcp-publisher
+        run: |
+          curl -L "https://github.com/modelcontextprotocol/registry/releases/latest/download/mcp-publisher_$(uname -s | tr '[:upper:]' '[:lower:]')_$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/').tar.gz" | tar xz mcp-publisher
+
+      - name: Authenticate to MCP Registry (GitHub OIDC)
+        run: ./mcp-publisher login github-oidc
+
+      - name: Publish to MCP Registry
+        run: ./mcp-publisher publish
