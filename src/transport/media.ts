@@ -78,21 +78,30 @@ export async function uploadMedia(
     throw new ApiError(res.status, 'non_json_response', raw.slice(0, 400));
   }
   if (!res.ok) {
-    // THE UPLOAD SURFACE TAKES A SESSION ONLY.
+    // AN API KEY CAN UPLOAD — THE PLATFORM WIDENED THIS.
     //
-    // `/api/media/{siteId}` is mounted behind `RequireAuth` — not the
-    // `RequireAuthOrDefer` that lets a `wbk_` key open `/api/sites`
-    // (server/internal/server/router.go). So a key-only install, which is the
-    // one the store's Agent app hands out and the one the README recommends,
-    // gets a bare "unauthorized" from the ONE tool that cannot be replaced by
-    // sb_api_call, because the body is multipart. Found on a live run.
+    // `/api/media` is now mounted behind `RequireAuthOrDefer`
+    // (server/internal/server/router.go:2821), the same gate `/api/sites` uses,
+    // and `upload_agentkey_test.go` pins the three answers that make it safe:
+    // the key's own site only, the same permission the session path checks, and
+    // no key at all still meaning 401. The platform's own comment gives the
+    // reason it changed — the media LIBRARY already took a key while the UPLOAD
+    // refused one, so a merchant could hand an agent a key that manages every
+    // image the store has and cannot add one.
+    //
+    // This message used to say "an API key cannot upload" and send the caller to
+    // set SB_EMAIL. That is now the wrong instruction: with a key present, a 401
+    // here means the KEY is wrong for this call, not that the wrong KIND of
+    // credential was used, and the old text sent people to fix something that
+    // was never broken.
     if ((res.status === 401 || res.status === 403) && ctx.apiKey && !ctx.session.loggedIn()) {
       throw new ApiError(
         res.status,
-        'media_needs_session',
-        'sbuilder: the media upload endpoint takes a session token only — an API key cannot ' +
-          'upload. Set SB_EMAIL and SB_PASSWORD and call sb_connect, then retry. Every other ' +
-          'tool works with the key alone.',
+        'media_key_refused',
+        'sbuilder: the platform refused this API key for the upload. It accepts a key, so the ' +
+          'cause is the key itself: it needs the media permission, and it must belong to THIS ' +
+          'site — a key minted for another site is refused before the upload is read. Check the ' +
+          "key's scopes and its site, or set SB_EMAIL / SB_PASSWORD to upload as a person.",
       );
     }
     const env = (parsed ?? {}) as {

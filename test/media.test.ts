@@ -145,8 +145,12 @@ describe('uploadMedia() on a key-only install', () => {
     const file = join(dir, 'a.jpg');
     writeFileSync(file, Buffer.from([0xff, 0xd8, 0xff]));
     try {
+      // /api/media is now mounted behind RequireAuthOrDefer (router.go:2821), so
+      // a key CAN upload. A 401 therefore no longer means "get a session" — it
+      // means this key lacks the media permission or belongs to another site,
+      // and saying otherwise sends the caller to fix the wrong thing.
       await expect(uploadMedia(ctx, 's1', { path: file })).rejects.toThrow(
-        /session token only|SB_EMAIL/,
+        /permission|another site|scope/i,
       );
     } finally {
       rmSync(dir, { recursive: true, force: true });

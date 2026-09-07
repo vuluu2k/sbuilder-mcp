@@ -287,11 +287,20 @@ node it is changing — whenever a real measurement from `sb_look` exists. Prese
 invented coordinate would be theatre, so absent a measurement the cursor simply does not
 move.
 
-**Needs a session.** The live socket takes a session token only — `realtime.go:38`
-refuses API keys — and a rejected socket auth still fires `onopen`, so an API-key-only
-agent would "join", publish every edit into the void, and never learn why nobody saw them.
-`sb_live_join` checks for `SB_EMAIL` / `SB_PASSWORD` up front and refuses with the reason.
-Every other tool works with the key alone.
+**An API key opens the room.** `realtime.go:44` gives a `wbk_` bearer the same door as a
+session, decided from the token's own shape and gated on `member.read` through the key's
+DELEGATED principal — so the key joins only if the member who minted it may, and only on the
+site the key belongs to. (This used to require `SB_EMAIL` / `SB_PASSWORD`; that was true
+before agent keys landed, and the old check turned away a setup that works.)
+
+**The avatar on the canvas is the KEY, not a person.** The platform returns `key.ID` and
+`key.Name` rather than the minter's name, deliberately: an avatar borrowing a human's name
+would tell everyone in the room that a person is editing when a machine is. So whoever has
+the editor open sees the label the merchant chose for the key moving around the page, and
+knows what it is.
+
+A rejected socket auth still fires `onopen`, so a bad credential cannot be detected from the
+socket alone — which is why `sb_live_join` checks for one up front and names what is missing.
 
 **The yield rule.** This client is never the authority on the document. It does not answer
 a snapshot request for anyone, and it publishes no convergence checkpoint of its own. On any

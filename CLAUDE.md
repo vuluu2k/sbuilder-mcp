@@ -225,11 +225,26 @@ that accounts for them.
   still unrecoverable, and a page delete is still one-way. See
   `docs/superpowers/specs/2026-09-07-phase-7-drop-time-and-signals-design.md`.
 
-- **`/api/media/{siteId}` takes a session JWT only.** It is mounted behind `RequireAuth`,
-  not the `RequireAuthOrDefer` that lets a `wbk_` key open `/api/sites`. So `sb_media_upload`
-  — the one tool `sb_api_call` cannot replace, because the body is multipart — does not work
-  on a key-only install, which is the install the store's Agent app hands out.
-  `src/transport/media.ts` says that in as many words rather than passing on `unauthorized`.
+- **An AGENT KEY now opens media upload AND the live-edit socket. Both of this repo's
+  "session only" rules are DEAD, and the corrections are recorded because the old ones read
+  as settled facts.** `/api/media` is mounted behind `RequireAuthOrDefer`
+  (`server/internal/server/router.go:2821`), the same gate as `/api/sites`, pinned by
+  `media/rest/upload_agentkey_test.go`; the platform's own comment gives the reason — the
+  media LIBRARY already took a key while the UPLOAD refused one, so a merchant could hand an
+  agent a key that manages every image the store has and cannot add one. And
+  `server/internal/server/realtime.go:44` gives a `wbk_` bearer "the same door as a session"
+  on the socket, gated on `member.read` through the key's delegated principal.
+
+  So the client's two refusals were both wrong, and both have been removed. The lesson worth
+  keeping: a credential rule verified once is not a constant. The platform is actively
+  WIDENING what a key opens, and a stale "only a session can do this" guard turns away a
+  setup that works — which is worse than no guard, because it sends the caller to fix
+  something that was never broken.
+
+- **On the canvas the agent's avatar is the KEY, not a person.** `realtime.go` returns
+  `key.ID` and `key.Name` rather than the minter's name, deliberately: an avatar borrowing a
+  human's name would tell the room a person is editing when a machine is. So the merchant
+  watches the label they chose for the key move around the page.
 
 ## The five traps
 

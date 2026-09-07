@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { PageDoc } from '../src/domains/site/document.js';
-import { bindNode, requireSessionForLive } from '../src/tools/live.js';
+import { bindNode, liveTokenFor } from '../src/tools/live.js';
 import { Session } from '../src/transport/auth.js';
 import { Notices } from '../src/mcp/notices.js';
 
@@ -58,9 +58,28 @@ describe('bindNode()', () => {
   });
 });
 
-describe('requireSessionForLive()', () => {
-  it('refuses an API-key-only context up front — the socket is JWT-only', () => {
+describe('liveTokenFor()', () => {
+  // The platform WIDENED this: server/internal/server/realtime.go:44 now lets an
+  // agent key take "the same door as a session", gated on the same member.read
+  // permission through the key's delegated principal. The old refusal here was
+  // pinned to the world before agent keys and turned a working setup away.
+  it('lets an API key open the room, since the socket now accepts one', () => {
     const ctx = { base: 'http://x', session: new Session('http://x'), apiKey: 'wbk_x', notices: new Notices() };
-    expect(() => requireSessionForLive(ctx)).toThrow(/SB_EMAIL/);
+    const token = liveTokenFor(ctx);
+    expect(token()).toBe('wbk_x');
+  });
+
+  it('still refuses when there is no credential at all', () => {
+    const ctx = { base: 'http://x', session: new Session('http://x'), notices: new Notices() };
+    expect(() => liveTokenFor(ctx)).toThrow(/SB_TOKEN|SB_EMAIL/);
+  });
+
+  it('reads the token per attempt, because a session token rotates', () => {
+    const session = new Session('http://x');
+    (session as unknown as { access: string }).access = 'jwt-1';
+    const token = liveTokenFor({ base: 'http://x', session, notices: new Notices() });
+    expect(token()).toBe('jwt-1');
+    (session as unknown as { access: string }).access = 'jwt-2';
+    expect(token()).toBe('jwt-2');
   });
 });

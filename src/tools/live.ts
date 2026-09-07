@@ -72,22 +72,36 @@ export function bindNode(doc: PageDoc, id: string, source: string, field: string
 }
 
 /**
- * The live socket takes a session JWT only.
+ * The credential that opens the live-edit room.
  *
- * `server/internal/server/realtime.go:38` refuses API keys, and a rejected
- * socket auth still fires `onopen` — so without this check an API-key-only
- * agent would "join", publish every edit into the void, and never learn why
- * nobody saw them. Every other tool works with the key; this one says so.
+ * AN AGENT KEY NOW WORKS. `server/internal/server/realtime.go:44` gives a `wbk_`
+ * bearer "the same door as a session", decided from the token's own shape, and
+ * gates it on member.read through the key's DELEGATED principal — so the key
+ * sees the room only if the member who minted it may, and only on the site the
+ * key belongs to. This function used to refuse a key-only context outright,
+ * which was true before agent keys landed and now turns away a working setup.
+ *
+ * The peer that appears on the canvas is then the KEY, not a person: the
+ * platform returns `key.ID` and `key.Name` rather than the minter's name,
+ * deliberately — an avatar borrowing a human's name would tell the room a person
+ * is editing when a machine is. So the merchant sees the label they chose for
+ * the key moving around the page.
+ *
+ * Still a GETTER, read per attempt: a session access token lives ~15 minutes and
+ * rotates, and a captured string replays an expired token forever on every
+ * reconnect — silently, because a rejected socket auth still fires `onopen`.
  */
-export function requireSessionForLive(ctx: ToolContext): () => string {
-  if (!ctx.session.loggedIn()) {
+export function liveTokenFor(ctx: ToolContext): () => string {
+  if (!ctx.session.loggedIn() && !ctx.apiKey) {
     throw new Error(
-      'sbuilder: the live-edit room takes a session token only — an API key cannot join. Set ' +
-        'SB_EMAIL and SB_PASSWORD and call sb_connect, then sb_live_join. Every other tool ' +
-        'works with the key alone.',
+      'sbuilder: the live-edit room needs a credential. Set SB_TOKEN, or SB_EMAIL and ' +
+        'SB_PASSWORD, and call sb_connect before sb_live_join.',
     );
   }
-  return () => ctx.session.token();
+  // Prefer the key, for the reason `tokenFor` prefers it everywhere: a key is
+  // narrower — one site, its own scopes, revocable on its own — while a session
+  // carries the whole account.
+  return () => (ctx.apiKey ? ctx.apiKey : ctx.session.token());
 }
 
 export function registerLiveTools(
@@ -100,13 +114,14 @@ export function registerLiveTools(
     {
       description:
         "Join the site's live-edit room as a visible peer: every write then appears in any open " +
-          'editor as it happens. Always yields, so it is safe beside a human. Needs ' +
-          'SB_EMAIL / SB_PASSWORD; the socket refuses API keys.',
+          'editor as it happens, with the agent shown by the API key\'s own name rather than a ' +
+          "person's. Always yields, so it is safe beside a human. Works with SB_TOKEN or with " +
+          'SB_EMAIL / SB_PASSWORD.',
       inputSchema: { site_id: z.string() },
       annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true },
     },
     async ({ site_id }) => {
-      const tokenFn = requireSessionForLive(ctx);
+      const tokenFn = liveTokenFor(ctx);
       const wsBase = ctx.base.replace(/^http/, 'ws').replace(/\/$/, '');
       const socket = new RealtimeSocket(
         `${wsBase}/api/realtime/ws?site=${encodeURIComponent(site_id)}`,
