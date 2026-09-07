@@ -339,3 +339,33 @@ export function removeNode(doc: PageDoc, id: string): Patch[] {
   }
   return patches;
 }
+
+export interface SetEdit {
+  id: string;
+  namespace: 'style' | 'config' | 'specials';
+  keys: Record<string, unknown>;
+  breakpoint?: Breakpoint;
+  base?: boolean;
+  state?: string;
+}
+
+/**
+ * Several nodes' keys in ONE batch of patches.
+ *
+ * The move after a look is "raise this heading, widen that card, recolour the
+ * button" — six edits, six round trips, six saves, six op frames for anyone
+ * watching. One batch is one save and one frame, and the patches come out in
+ * edit order so a peer applying them left to right sees the same tree.
+ * Every edit is checked before any patch is emitted, so a bad id in the fourth
+ * edit refuses the whole batch rather than leaving three applied.
+ */
+export function setMany(doc: PageDoc, edits: SetEdit[]): { patches: Patch[]; touched: Array<{ id: string; keys: string[] }> } {
+  if (edits.length === 0) throw new Error('sbuilder: sb_set edits is empty — nothing to write');
+  const patches: Patch[] = [];
+  const touched: Array<{ id: string; keys: string[] }> = [];
+  for (const e of edits) {
+    patches.push(...setKeys(doc, e.id, e.keys, { namespace: e.namespace, breakpoint: e.breakpoint, base: e.base, state: e.state }));
+    touched.push({ id: e.id, keys: Object.keys(e.keys) });
+  }
+  return { patches, touched };
+}

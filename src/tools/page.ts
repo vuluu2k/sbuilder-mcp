@@ -6,11 +6,13 @@ import { PageDoc, type OutlineNode } from '../domains/site/document.js';
 import {
   addSubtree,
   setKeys,
+  setMany,
   moveNode,
   removeNode,
   duplicateNode,
   type NodeSpec,
   type Breakpoint,
+  type SetEdit,
 } from '../domains/site/builder.js';
 import { request } from '../transport/http.js';
 import { siteToken } from './credentialpick.js';
@@ -271,36 +273,59 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
     'sb_set',
     {
       description:
-        'Write style, config or specials keys on a node. Style and config are written PER ' +
-          "BREAKPOINT by default; base:true writes the cascade's fallback layer, right for a " +
-          'value that should not vary.',
+        'Write style, config or specials keys on one node, or on many through edits (one ' +
+          'save, one live frame). Per BREAKPOINT by default; base:true writes the fallback ' +
+          'layer, right for a value that should not vary.',
       inputSchema: {
-      id: z.string(),
-      namespace: z.enum(['style', 'config', 'specials']),
-      keys: z.record(z.unknown()),
-      breakpoint: z.enum(['desktop', 'laptop', 'tablet', 'mobile']).optional(),
-      base: z.boolean().optional(),
-      state: z.string().optional().describe('An interaction state, e.g. "hover"'),
-      dry_run: z.boolean().optional(),
-    },
+        id: z.string().optional(),
+        namespace: z.enum(['style', 'config', 'specials']).optional(),
+        keys: z.record(z.unknown()).optional(),
+        breakpoint: z.enum(['desktop', 'laptop', 'tablet', 'mobile']).optional(),
+        base: z.boolean().optional(),
+        state: z.string().optional().describe('An interaction state, e.g. "hover"'),
+        edits: z
+          .array(
+            z.object({
+              id: z.string(),
+              namespace: z.enum(['style', 'config', 'specials']),
+              keys: z.record(z.unknown()),
+              breakpoint: z.enum(['desktop', 'laptop', 'tablet', 'mobile']).optional(),
+              base: z.boolean().optional(),
+              state: z.string().optional(),
+            }),
+          )
+          .optional(),
+        dry_run: z.boolean().optional(),
+      },
       annotations: { readOnlyHint: false, destructiveHint: false },
     },
-    async ({ id, namespace, keys, breakpoint, base, state, dry_run }) => {
+    async ({ id, namespace, keys, breakpoint, base, state, edits, dry_run }) => {
       const d = session.current();
-      const patches = setKeys(d, id, keys, {
-        namespace,
-        breakpoint: breakpoint as Breakpoint | undefined,
-        base,
-        state,
-      });
+      // One shape inside: a single edit is a batch of one.
+      const batch: SetEdit[] = edits ?? [];
+      if (!edits) {
+        if (!id || !namespace || !keys) {
+          throw new Error('sbuilder: sb_set needs id + namespace + keys, or edits[]');
+        }
+        batch.push({ id, namespace, keys, breakpoint: breakpoint as Breakpoint | undefined, base, state });
+      }
+      const { patches, touched } = setMany(d, batch);
       if (dry_run !== false) {
         const note = ctx.notices.once('responsive', RESPONSIVE_NOTICE);
         return text({ dry_run: true, patches, ...(note ? { note } : {}) });
       }
       session.applyAndPublish(patches);
       await session.save();
-      const warn = globalWarning(d.doc, id);
-      return text({ set: Object.keys(keys), rev: d.rev, ...(warn ? { warning: warn } : {}) });
+      const warnings: Record<string, string> = {};
+      for (const t of touched) {
+        const w = globalWarning(d.doc, t.id);
+        if (w) warnings[t.id] = w;
+      }
+      if (!edits) {
+        const warn = warnings[batch[0].id];
+        return text({ set: touched[0].keys, rev: d.rev, ...(warn ? { warning: warn } : {}) });
+      }
+      return text({ set: touched, rev: d.rev, ...(Object.keys(warnings).length ? { warnings } : {}) });
     },
   );
 
