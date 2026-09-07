@@ -59,6 +59,25 @@ export function bindNode(doc: PageDoc, id: string, source: string, field: string
   ];
 }
 
+/**
+ * The live socket takes a session JWT only.
+ *
+ * `server/internal/server/realtime.go:38` refuses API keys, and a rejected
+ * socket auth still fires `onopen` — so without this check an API-key-only
+ * agent would "join", publish every edit into the void, and never learn why
+ * nobody saw them. Every other tool works with the key; this one says so.
+ */
+export function requireSessionForLive(ctx: ToolContext): () => string {
+  if (!ctx.session.loggedIn()) {
+    throw new Error(
+      'sbuilder: the live-edit room takes a session token only — an API key cannot join. Set ' +
+        'SB_EMAIL and SB_PASSWORD and call sb_connect, then sb_live_join. Every other tool ' +
+        'works with the key alone.',
+    );
+  }
+  return () => ctx.session.token();
+}
+
 export function registerLiveTools(
   server: McpServer,
   ctx: ToolContext,
@@ -69,13 +88,15 @@ export function registerLiveTools(
     "Join the editor's live-edit room for this site, as a visible peer. Once joined, every " +
       'sb_add / sb_set / sb_move / sb_remove / sb_bind also goes out as a live op, so anyone ' +
       'with the editor open watches the page assemble. Safe alongside a human: this client ' +
-      'always yields — it never answers a snapshot request and re-pulls on any divergence.',
+      'always yields — it never answers a snapshot request and re-pulls on any divergence. ' +
+      'Needs SB_EMAIL / SB_PASSWORD: the socket refuses API keys.',
     { site_id: z.string() },
     async ({ site_id }) => {
+      const tokenFn = requireSessionForLive(ctx);
       const wsBase = ctx.base.replace(/^http/, 'ws').replace(/\/$/, '');
       const socket = new RealtimeSocket(
         `${wsBase}/api/realtime/ws?site=${encodeURIComponent(site_id)}`,
-        () => siteToken(ctx),
+        tokenFn,
       );
       const live = new LiveSession(socket, {
         onRemote: (patches) => session.applyRemote(patches),

@@ -1,6 +1,8 @@
 import { describe, it, expect } from 'vitest';
 import { PageDoc } from '../src/domains/site/document.js';
-import { bindNode } from '../src/tools/live.js';
+import { bindNode, requireSessionForLive } from '../src/tools/live.js';
+import { Session } from '../src/transport/auth.js';
+import { Notices } from '../src/mcp/notices.js';
 
 function docWithHeading() {
   return PageDoc.from({
@@ -53,5 +55,12 @@ describe('bindNode()', () => {
   it('names the node when it does not exist', () => {
     const d = docWithHeading();
     expect(() => bindNode(d, 'ghost', 'product.title', 'specials.text')).toThrow(/ghost/);
+  });
+});
+
+describe('requireSessionForLive()', () => {
+  it('refuses an API-key-only context up front — the socket is JWT-only', () => {
+    const ctx = { base: 'http://x', session: new Session('http://x'), apiKey: 'wbk_x', notices: new Notices() };
+    expect(() => requireSessionForLive(ctx)).toThrow(/SB_EMAIL/);
   });
 });
