@@ -70,6 +70,22 @@ export function createNode(type: string, opts: CreateOpts = {}): BuilderNode {
     responsive: copy(d.responsive ?? {}) as BuilderNode['responsive'],
     ...(states ? { states: copy(states) } : {}),
     events: [],
-    bindings: [],
+    // SEED THE ELEMENT'S OWN BINDINGS.
+    //
+    // A dataset element is INERT without them. `text-dataset` reads a product
+    // title through `bind-text` → `specials.boundText`; `pricing-dataset` needs
+    // six; `list-dataset` needs `bind-target` to be a product repeater at all.
+    // The editor derives them at drop time from the platform's
+    // `datasetBindings(type, config)`, so nothing in `meta.defaults` carried
+    // them and every node this server minted saved, published and rendered its
+    // placeholder forever. Found on a live page: four product cards reading
+    // "$0.00" with no titles, on a catalogue that had four products.
+    //
+    // Codegen bakes the factory's answer for the DEFAULT config. A caller who
+    // overrides `config.kind` or `config.datasetSource` in the same call is
+    // changing which field the element binds, and that re-derivation lives in
+    // the platform — so the bindings here follow the defaults, and a changed
+    // kind needs an explicit sb_bind.
+    bindings: copy(d.bindings ?? []) as unknown[],
   };
 }

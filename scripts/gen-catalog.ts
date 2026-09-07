@@ -251,6 +251,13 @@ export const API_DEFINITIONS: Record<string, unknown> = ${JSON.stringify(
   const aiMod = (await import(resolve(repo, 'schema/src/elements/ai.ts'))) as {
     getElementAI: (type: string) => Record<string, unknown> | undefined;
   };
+  // The BINDINGS an element is born with. They are not in `meta.defaults` — the
+  // editor derives them at drop time from `datasetBindings(type, config)` — so a
+  // node minted from the defaults alone is inert: it renders its placeholder and
+  // nothing says why. Baked in here so `createNode` can seed them offline.
+  const bindMod = (await import(resolve(repo, 'schema/src/elements/datasetBindings.ts'))) as {
+    datasetBindings: (type: string, config: Record<string, unknown>) => unknown[];
+  };
 
   const types = registry.allElementTypes();
   if (types.length < 80) {
@@ -287,7 +294,7 @@ export const API_DEFINITIONS: Record<string, unknown> = ${JSON.stringify(
       locked: em.rules?.locked === true,
       hideInLayer: em.rules?.hideInLayer === true,
       childAllows: (em.rules?.nodeChildAllows as string[] | undefined) ?? [],
-      defaults: (em.defaults ?? {}) as CatalogElement['defaults'],
+      defaults: withBindings(type, (em.defaults ?? {}) as CatalogElement['defaults'], bindMod.datasetBindings),
       inspector: readInspector(em.traits).tabs,
       controls: readInspector(em.traits).controls,
       description: a.description,
@@ -347,3 +354,25 @@ export const TRAIT_WRITES: Record<string, TraitDescription> = ${JSON.stringify(t
 }
 
 await main();
+
+/**
+ * An element's defaults plus the bindings its default config implies.
+ *
+ * `datasetBindings` is the platform's own factory and is pure in (type, config),
+ * so calling it here bakes the same answer the editor would produce at drop
+ * time. Elements it has nothing to say about keep their defaults untouched, so
+ * the generated file grows only where a binding actually exists.
+ */
+function withBindings(
+  type: string,
+  defaults: CatalogElement['defaults'],
+  factory: (type: string, config: Record<string, unknown>) => unknown[],
+): CatalogElement['defaults'] {
+  let bindings: unknown[] = [];
+  try {
+    bindings = factory(type, (defaults.config ?? {}) as Record<string, unknown>) ?? [];
+  } catch {
+    bindings = [];
+  }
+  return bindings.length > 0 ? { ...defaults, bindings } : defaults;
+}

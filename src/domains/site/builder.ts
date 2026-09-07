@@ -332,9 +332,29 @@ export function removeNode(doc: PageDoc, id: string): Patch[] {
     const at = doc.node(parentId).data.nodes.indexOf(id);
     if (at >= 0) patches.push({ op: 'remove', path: ['nodes', parentId, 'data', 'nodes'], index: at });
   }
-  // Unset the whole subtree — a node left behind is an orphan the save check
-  // would reject, and the agent would never guess why.
-  for (const sub of subtreeIds(doc.doc, id)) {
+  // Unset the whole subtree AND everything hanging off it — a node left behind
+  // is an orphan the save check rejects, and the agent would never guess why.
+  //
+  // The satellites are the half that is easy to miss: `list-empty`,
+  // `list-loading` and the quantity nodes attach by PARENT POINTER and are
+  // absent from their owner's child list, so `subtreeIds` — which walks child
+  // lists — does not see them. Removing a section that contained a store
+  // listing therefore left its empty-state nodes pointing at a parent that no
+  // longer existed, and the very next save was refused with a list of ids the
+  // caller had never heard of. Found while rebuilding a real page.
+  const doomed = new Set(subtreeIds(doc.doc, id));
+  for (;;) {
+    let grew = false;
+    for (const [nodeId, node] of Object.entries(doc.doc.nodes)) {
+      const parent = node.data.parent;
+      if (parent && doomed.has(parent) && !doomed.has(nodeId)) {
+        doomed.add(nodeId);
+        grew = true;
+      }
+    }
+    if (!grew) break;
+  }
+  for (const sub of doomed) {
     patches.push({ op: 'unset', path: ['nodes', sub] });
   }
   return patches;

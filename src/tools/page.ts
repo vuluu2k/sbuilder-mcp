@@ -534,14 +534,22 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
       annotations: { readOnlyHint: false, destructiveHint: true, idempotentHint: true },
     },
     async ({ site_id, page_id, dry_run }) => {
-      const path = `/api/sites/${encodeURIComponent(site_id)}/pages/${encodeURIComponent(page_id)}/publish`;
-      if (dry_run !== false) return text({ dry_run: true, would_post: path });
+      // PUBLISH IS A SITE-LEVEL CALL that NAMES pages, not a page-level route.
+      // This used to POST /pages/{id}/publish, which the platform answers 404 —
+      // it mounts "publish" as its own resource beside "pages"
+      // (server/internal/page/rest/rest.go), taking {"pageIds": [...]}. An empty
+      // list means the whole site, so the id is always sent: publishing one page
+      // must never become publishing every page by accident.
+      const path = `/api/sites/${encodeURIComponent(site_id)}/publish`;
+      const body = { pageIds: [page_id] };
+      if (dry_run !== false) return text({ dry_run: true, would_post: path, body });
       return text(
         await request({
           base: ctx.base,
           method: 'POST',
           path,
           token: siteToken(ctx),
+          body,
           fetchImpl: ctx.fetchImpl,
         }),
       );

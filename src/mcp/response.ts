@@ -9,7 +9,12 @@
  * fails inside the client rather than here.
  */
 export function text(value: unknown) {
-  const body = typeof value === 'string' ? value : JSON.stringify(value);
+  // `JSON.stringify(undefined)` is undefined, not "undefined" — and a content
+  // block whose text is undefined is REFUSED by the client's own schema, so the
+  // tool call fails with a validation error instead of returning. A DELETE that
+  // answers 204 with no body reaches here as undefined, which is how a perfectly
+  // successful call became "Invalid tools/call result" on a live run.
+  const body = typeof value === 'string' ? value : (JSON.stringify(value) ?? 'null');
   return { content: [{ type: 'text' as const, text: body }] };
 }
 

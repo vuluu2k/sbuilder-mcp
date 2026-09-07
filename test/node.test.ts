@@ -55,3 +55,31 @@ describe('createNode()', () => {
     expect(a.style).not.toBe(b.style);
   });
 });
+
+describe('createNode() and dataset bindings', () => {
+  it('seeds the bindings a dataset element needs to read anything', () => {
+    // Without these the element renders its placeholder forever: it saves, it
+    // publishes, and a live page shows "$0.00" over a catalogue that has prices.
+    const t = createNode('text-dataset') as unknown as { bindings: Array<Record<string, unknown>> };
+    expect(t.bindings.length).toBeGreaterThan(0);
+    expect(t.bindings[0]).toMatchObject({ source: 'product.title', field: 'specials.boundText' });
+
+    const price = createNode('pricing-dataset') as unknown as { bindings: unknown[] };
+    expect(price.bindings.length).toBeGreaterThanOrEqual(2);
+
+    const list = createNode('list-dataset') as unknown as {
+      bindings: Array<{ target?: { kind?: string } }>;
+    };
+    expect(list.bindings[0]?.target?.kind).toBe('product_list');
+  });
+
+  it('leaves an element with no bindings alone', () => {
+    expect((createNode('heading') as unknown as { bindings: unknown[] }).bindings).toEqual([]);
+  });
+
+  it('copies them, so two nodes never share one array', () => {
+    const a = createNode('text-dataset') as unknown as { bindings: unknown[] };
+    const b = createNode('text-dataset') as unknown as { bindings: unknown[] };
+    expect(a.bindings).not.toBe(b.bindings);
+  });
+});

@@ -370,6 +370,13 @@ export const ELEMENTS: Record<string, CatalogElement> = {
         "tab": "general",
         "groups": [
           {
+            "key": "content",
+            "label": "Content",
+            "controls": [
+              "text_content"
+            ]
+          },
+          {
             "key": "size",
             "label": "Size",
             "controls": [
@@ -390,8 +397,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
               "text_align",
               "line_height",
               "text_spacing",
-              "text_transform",
-              "text_content"
+              "text_transform"
             ]
           },
           {
@@ -456,6 +462,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
       }
     ],
     "controls": [
+      "text_content",
       "width_select",
       "height_select",
       "size_bounds",
@@ -468,7 +475,6 @@ export const ELEMENTS: Record<string, CatalogElement> = {
       "line_height",
       "text_spacing",
       "text_transform",
-      "text_content",
       "html_tag",
       "bg_color",
       "bg_image",
@@ -527,6 +533,13 @@ export const ELEMENTS: Record<string, CatalogElement> = {
         "tab": "general",
         "groups": [
           {
+            "key": "content",
+            "label": "Content",
+            "controls": [
+              "text_content"
+            ]
+          },
+          {
             "key": "size",
             "label": "Size",
             "controls": [
@@ -547,8 +560,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
               "text_align",
               "line_height",
               "text_spacing",
-              "text_transform",
-              "text_content"
+              "text_transform"
             ]
           },
           {
@@ -612,6 +624,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
       }
     ],
     "controls": [
+      "text_content",
       "width_select",
       "height_select",
       "size_bounds",
@@ -624,7 +637,6 @@ export const ELEMENTS: Record<string, CatalogElement> = {
       "line_height",
       "text_spacing",
       "text_transform",
-      "text_content",
       "html_tag",
       "bg_color",
       "bg_image",
@@ -682,6 +694,13 @@ export const ELEMENTS: Record<string, CatalogElement> = {
       {
         "tab": "general",
         "groups": [
+          {
+            "key": "content",
+            "label": "Content",
+            "controls": [
+              "text_content"
+            ]
+          },
           {
             "key": "product",
             "label": "Product",
@@ -742,7 +761,6 @@ export const ELEMENTS: Record<string, CatalogElement> = {
               "line_height",
               "text_spacing",
               "text_transform",
-              "text_content",
               "href"
             ]
           },
@@ -805,6 +823,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
       }
     ],
     "controls": [
+      "text_content",
       "data_source",
       "product",
       "action",
@@ -826,7 +845,6 @@ export const ELEMENTS: Record<string, CatalogElement> = {
       "line_height",
       "text_spacing",
       "text_transform",
-      "text_content",
       "href",
       "bg_color",
       "bg_image",
@@ -6821,7 +6839,8 @@ export const ELEMENTS: Record<string, CatalogElement> = {
         "mapTo": "order.paymentMethod",
         "methods": [],
         "defaultValue": "",
-        "showLogos": false,
+        "showLogos": true,
+        "logoShape": "auto",
         "showMarker": true
       },
       "style": {
@@ -6843,6 +6862,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
             "key": "logos",
             "label": "Logos",
             "controls": [
+              "pay_logo_shape",
               "pay_logo_size"
             ]
           },
@@ -6941,6 +6961,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
     ],
     "controls": [
       "field_payment_methods",
+      "pay_logo_shape",
       "pay_logo_size",
       "field_content",
       "pay_card_skin",
@@ -6991,6 +7012,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
     "childAllows": [],
     "defaults": {
       "specials": {
+        "showMarker": false,
         "name": "",
         "label": "Giờ hẹn",
         "description": "",
@@ -7038,6 +7060,13 @@ export const ELEMENTS: Record<string, CatalogElement> = {
             "label": "Slot style",
             "controls": [
               "timeslot_skin"
+            ]
+          },
+          {
+            "key": "marker",
+            "label": "Marker",
+            "controls": [
+              "slot_marker_skin"
             ]
           },
           {
@@ -7096,6 +7125,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
       "field_content",
       "field_chrome",
       "timeslot_skin",
+      "slot_marker_skin",
       "field_layout",
       "width_select",
       "size_bounds",
@@ -8649,7 +8679,14 @@ export const ELEMENTS: Record<string, CatalogElement> = {
         "width": "fit-content",
         "height": "fit-content"
       },
-      "config": {}
+      "config": {},
+      "bindings": [
+        {
+          "id": "bind-payload",
+          "source": "site.moneySwitch",
+          "field": "specials.payload"
+        }
+      ]
     },
     "inspector": [
       {
@@ -8770,7 +8807,14 @@ export const ELEMENTS: Record<string, CatalogElement> = {
             "--wb-locale-flag": "18px"
           }
         }
-      }
+      },
+      "bindings": [
+        {
+          "id": "bind-payload",
+          "source": "site.localeSwitch",
+          "field": "specials.payload"
+        }
+      ]
     },
     "inspector": [
       {
@@ -12356,7 +12400,34 @@ export const ELEMENTS: Record<string, CatalogElement> = {
       },
       "specials": {
         "alt": ""
-      }
+      },
+      "bindings": [
+        {
+          "id": "bind-image",
+          "source": "product.image",
+          "field": "specials.boundImage",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "media"
+          }
+        },
+        {
+          "id": "bind-images",
+          "source": "product.images",
+          "field": "specials.boundImages"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        },
+        {
+          "id": "bind-product-url",
+          "source": "product.url",
+          "field": "specials.boundProductURL"
+        }
+      ]
     },
     "inspector": [
       {
@@ -12605,7 +12676,24 @@ export const ELEMENTS: Record<string, CatalogElement> = {
         "listItemImageRatio": "1 / 1",
         "listNavButtonBg": "rgba(255,255,255,0.60)",
         "listNavIconColor": "#000000"
-      }
+      },
+      "bindings": [
+        {
+          "id": "bind-images",
+          "source": "product.images",
+          "field": "specials.boundImages",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "media"
+          }
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ]
     },
     "inspector": [
       {
@@ -12805,7 +12893,19 @@ export const ELEMENTS: Record<string, CatalogElement> = {
       },
       "specials": {
         "button": true
-      }
+      },
+      "bindings": [
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "quantity"
+          }
+        }
+      ]
     },
     "inspector": [
       {
@@ -13206,7 +13306,29 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "enabled": false,
           "values": {}
         }
-      }
+      },
+      "bindings": [
+        {
+          "id": "bind-attributes",
+          "source": "product.attributes",
+          "field": "specials.boundAttributes",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "variants"
+          }
+        },
+        {
+          "id": "bind-variations",
+          "source": "product.variations",
+          "field": "specials.boundVariations"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ]
     },
     "inspector": [
       {
@@ -13713,7 +13835,44 @@ export const ELEMENTS: Record<string, CatalogElement> = {
       },
       "specials": {
         "htmlTag": "p"
-      }
+      },
+      "bindings": [
+        {
+          "id": "bind-price",
+          "source": "product.price",
+          "field": "specials.boundPrice",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare",
+          "source": "product.compareAtPrice",
+          "field": "specials.boundCompare"
+        },
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents"
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-price-mo",
+          "source": "product.moneyOverride",
+          "field": "specials.boundMoneyOverride"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ]
     },
     "inspector": [
       {
@@ -13931,7 +14090,19 @@ export const ELEMENTS: Record<string, CatalogElement> = {
       "specials": {
         "src": "",
         "alt": ""
-      }
+      },
+      "bindings": [
+        {
+          "id": "bind-image",
+          "source": "category.image",
+          "field": "specials.boundImage",
+          "target": {
+            "type": "category",
+            "id": "",
+            "kind": "media"
+          }
+        }
+      ]
     },
     "inspector": [
       {
@@ -14111,7 +14282,19 @@ export const ELEMENTS: Record<string, CatalogElement> = {
         "htmlTag": "p",
         "moreButtonEnabled": false,
         "stylePreset": "text-dataset-default"
-      }
+      },
+      "bindings": [
+        {
+          "id": "bind-text",
+          "source": "product.title",
+          "field": "specials.boundText",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "title"
+          }
+        }
+      ]
     },
     "inspector": [
       {
@@ -14417,7 +14600,24 @@ export const ELEMENTS: Record<string, CatalogElement> = {
         ],
         "layout": "bottom",
         "activeIndex": 0
-      }
+      },
+      "bindings": [
+        {
+          "id": "bind-image",
+          "source": "product.image",
+          "field": "specials.boundImage",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "media"
+          }
+        },
+        {
+          "id": "bind-images",
+          "source": "product.images",
+          "field": "specials.boundImages"
+        }
+      ]
     },
     "inspector": [
       {
@@ -15309,7 +15509,24 @@ export const ELEMENTS: Record<string, CatalogElement> = {
       },
       "config": {
         "contentWidth": "fill_container"
-      }
+      },
+      "bindings": [
+        {
+          "id": "bind-href",
+          "source": "product.url",
+          "field": "specials.boundHref",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "product_general"
+          }
+        },
+        {
+          "id": "bind-href-label",
+          "source": "product.title",
+          "field": "specials.boundHrefLabel"
+        }
+      ]
     },
     "inspector": [
       {
@@ -15531,7 +15748,19 @@ export const ELEMENTS: Record<string, CatalogElement> = {
       "specials": {
         "loadMoreLabel": "Load more",
         "collectionIds": []
-      }
+      },
+      "bindings": [
+        {
+          "id": "bind-target",
+          "source": "",
+          "field": "",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "product_list"
+          }
+        }
+      ]
     },
     "inspector": [
       {
@@ -18099,6 +18328,17 @@ export const TRAIT_WRITES: Record<string, TraitDescription> = {
         "writeKey": "--wb-pay-logo-h",
         "type": "number",
         "unit": "px"
+      }
+    ]
+  },
+  "pay_logo_shape": {
+    "key": "pay_logo_shape",
+    "label": "Logo shape",
+    "writes": [
+      {
+        "target": "specials",
+        "writeKey": "logoShape",
+        "type": "string"
       }
     ]
   },

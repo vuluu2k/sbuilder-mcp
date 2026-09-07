@@ -10,3 +10,10 @@ describe('text()', () => {
     expect(text({ a: 1, b: [1, 2] })).toEqual({ content: [{ type: 'text', text: '{"a":1,"b":[1,2]}' }] });
   });
 });
+
+describe('text() on an empty body', () => {
+  it('never emits an undefined text block — a 204 is a success, not a schema error', () => {
+    expect(text(undefined)).toEqual({ content: [{ type: 'text', text: 'null' }] });
+    expect(typeof text(undefined).content[0].text).toBe('string');
+  });
+});

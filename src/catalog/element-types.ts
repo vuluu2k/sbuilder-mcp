@@ -14,6 +14,16 @@ export interface CatalogElement {
     specials?: Record<string, unknown>;
     responsive?: Record<string, unknown>;
     states?: Record<string, unknown>;
+    /**
+     * The bindings this element is born with, derived from its DEFAULT config by
+     * the platform's own `datasetBindings(type, config)` factory.
+     *
+     * A dataset element without them is INERT: it saves, publishes and renders
+     * its placeholder forever, because nothing tells the renderer which product
+     * field to read. The editor seeds them at drop time; nothing seeded them
+     * here until a live page came back showing four cards of "$0.00".
+     */
+    bindings?: unknown[];
   };
   /** The inspector as a human sees it: tabs → groups → controls. */
   inspector: Array<{

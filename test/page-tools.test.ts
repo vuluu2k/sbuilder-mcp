@@ -3,6 +3,7 @@ import { PageSession, reviewField } from '../src/tools/page.js';
 import { Session } from '../src/transport/auth.js';
 import { Notices } from '../src/mcp/notices.js';
 import { PageDoc } from '../src/domains/site/document.js';
+import { connectedClient } from './harness.js';
 
 const emptyDocument = {
   schema_version: 2,
@@ -83,5 +84,23 @@ describe('reviewField()', () => {
     expect('fix' in first.findings[0]).toBe(false);
     expect(first.fixes.empty_page).toMatch(/sb_add/);
     expect((reviewField(ctx, d) as { findings_notice?: string }).findings_notice).toBeUndefined();
+  });
+});
+
+describe('sb_publish', () => {
+  it('posts the site-level publish route naming the one page, not a page route', async () => {
+    const { client, close } = await connectedClient();
+    const dry = (await client.callTool({
+      name: 'sb_publish',
+      arguments: { site_id: 's1', page_id: 'pg_1' },
+    })) as { content: Array<{ text: string }> };
+    const body = JSON.parse(dry.content[0].text) as {
+      would_post: string;
+      body: { pageIds: string[] };
+    };
+    // The platform mounts "publish" beside "pages" and 404s a page-level route.
+    expect(body.would_post).toBe('/api/sites/s1/publish');
+    expect(body.body.pageIds).toEqual(['pg_1']);
+    await close();
   });
 });

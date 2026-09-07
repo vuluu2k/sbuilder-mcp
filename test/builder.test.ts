@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { PageDoc } from '../src/domains/site/document.js';
 import { addSubtree, setKeys, setMany, moveNode, removeNode, duplicateNode } from '../src/domains/site/builder.js';
+import { validateForSave } from '../src/domains/site/validate.js';
 
 function emptyDoc() {
   return PageDoc.from({
@@ -271,5 +272,25 @@ describe('setMany()', () => {
 
   it('refuses an empty batch', () => {
     expect(() => setMany(emptyDoc(), [])).toThrow(/empty/);
+  });
+});
+
+describe('removeNode() and satellites', () => {
+  it('takes the satellites down with the subtree, so the next save is not refused', () => {
+    const d = PageDoc.from({
+      schema_version: 2,
+      root_node_id: 'rt',
+      nodes: {
+        rt: { id: 'rt', data: { type: 'root', parent: null, nodes: ['fs_1'] }, specials: {} },
+        fs_1: { id: 'fs_1', data: { type: 'flex-section', parent: 'rt', nodes: ['li_1'] }, specials: {} },
+        li_1: { id: 'li_1', data: { type: 'list-dataset', parent: 'fs_1', nodes: [] }, specials: {} },
+        // Attached to li_1 by pointer only — invisible to a child-list walk.
+        em_1: { id: 'em_1', data: { type: 'list-empty', parent: 'li_1', nodes: ['he_1'] }, specials: {} },
+        he_1: { id: 'he_1', data: { type: 'heading', parent: 'em_1', nodes: [] }, specials: {} },
+      },
+    });
+    d.apply(removeNode(d, 'fs_1'));
+    expect(Object.keys(d.doc.nodes).sort()).toEqual(['rt']);
+    expect(validateForSave(d)).toEqual([]);
   });
 });
