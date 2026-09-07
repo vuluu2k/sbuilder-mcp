@@ -19,13 +19,13 @@ import type { ToolContext } from './tools/context.js';
  */
 const INSTRUCTIONS = `Store Builder. Call sb_connect first.
 
-API: sb_api_find query → one line per operation (${SWAGGER_SOURCE.operations} reachable); sb_api_find id → the call sheet; sb_api_call runs it. /api/v1 paths take the API key, every other path the session — the platform refuses each on the other's surface. When the sheet says the body is undescribed, read the matching GET and send back a modified copy.
+API: sb_api_find query → one line per operation (${SWAGGER_SOURCE.operations} reachable); sb_api_find id → its call sheet; sb_api_call runs it. /api/v1 paths take the API key, every other path the session; the platform refuses each on the other's surface. If the sheet says the body is undescribed, read the matching GET and send back a modified copy.
 
 Design: sb_page_open → sb_catalog_search (${ELEMENT_SOURCE.count} elements) → sb_traits_for the one you chose → sb_add with a NESTED spec (one call per section) → sb_set → sb_look → sb_review.
-- Every write and every API call defaults to dry_run:true. Pass dry_run:false to act.
-- sb_set writes per breakpoint by default; base is the cascade's fallback layer and is fine for values that should not vary.
-- Outline flags: global = shared master, editing it edits every page; overlay = not this page; app = an app block, its interior cannot be edited here.
-- sb_live_join makes edits visible in an open editor (needs SB_EMAIL/SB_PASSWORD). sb_bind puts real store data in the page.`;
+- Writes and API calls default to dry_run:true; pass dry_run:false to act.
+- sb_set writes per breakpoint by default; base is the cascade's fallback layer, fine for values that should not vary.
+- Outline flags: global = shared master, an edit lands on every page; overlay = not this page; app = an app block, not editable inside.
+- sb_live_join shows edits live in an open editor (needs SB_EMAIL/SB_PASSWORD). sb_bind puts real store data in the page.`;
 
 /**
  * The published version, read from package.json at runtime so serverInfo never

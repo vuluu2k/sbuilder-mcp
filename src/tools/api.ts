@@ -97,10 +97,9 @@ export function registerApiTools(server: McpServer, ctx: ToolContext): void {
     'sb_api_find',
     {
       description:
-        'Find platform API operations by intent (query), or read ONE operation\'s full call sheet ' +
-          '(id). The list is one line per match; the call sheet carries parameter types, the ' +
-          'credential, and either the body schema or an explicit warning that the platform does ' +
-          `not describe it. Reaches all ${SWAGGER_SOURCE.operations} operations.`,
+        'Search platform API operations by intent (query: one line per match), or read one ' +
+          "operation's full call sheet (id: parameter types, credential, body schema or an " +
+          `explicit warning that none is described). Reaches all ${SWAGGER_SOURCE.operations} operations.`,
       inputSchema: {
       query: z
         .string()

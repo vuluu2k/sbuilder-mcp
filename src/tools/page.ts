@@ -348,10 +348,9 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
     'sb_review',
     {
       description:
-        'Everything wrong with the open page that a VISITOR would see — a blank band, a ' +
-          'placeholder sentence the author never replaced, an image with no source, a binding ' +
-          'that will never resolve. Distinct from whether the page saves: a perfectly storable ' +
-          'document can publish as an empty box. Run it before you call a page finished.',
+        'Everything wrong with the open page that a VISITOR would see: a blank band, a ' +
+          'placeholder never replaced, an image with no source, a dead binding. A page can save ' +
+          'perfectly and publish as an empty box. Run it before calling a page finished.',
       inputSchema: {},
       annotations: { readOnlyHint: true },
     },

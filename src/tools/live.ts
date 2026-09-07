@@ -87,11 +87,9 @@ export function registerLiveTools(
     'sb_live_join',
     {
       description:
-        "Join the editor's live-edit room for this site, as a visible peer. Once joined, every " +
-          'sb_add / sb_set / sb_move / sb_remove / sb_bind also goes out as a live op, so anyone ' +
-          'with the editor open watches the page assemble. Safe alongside a human: this client ' +
-          'always yields — it never answers a snapshot request and re-pulls on any divergence. ' +
-          'Needs SB_EMAIL / SB_PASSWORD: the socket refuses API keys.',
+        "Join the site's live-edit room as a visible peer: every write then appears in any " +
+          'open editor as it happens. Safe beside a human — this client always yields and ' +
+          're-pulls on divergence. Needs SB_EMAIL / SB_PASSWORD; the socket refuses API keys.',
       inputSchema: { site_id: z.string() },
       annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true },
     },
@@ -119,11 +117,10 @@ export function registerLiveTools(
     'sb_look',
     {
       description:
-        "Save the open page, render it through the platform's own renderer, and return " +
-          'screenshots at desktop, tablet and mobile widths — plus measured boxes for the bands ' +
-          'and their children (box_depth for more) — plus any LAYOUT defect measured on the render: content past the ' +
-          'viewport, elements overlapping, text too small to read. Pass node_id to frame ONE ' +
-          'element instead of the whole page. Judge your own work from these rather than guessing.',
+        "Save, render through the platform's own renderer, and return screenshots at desktop, " +
+          'tablet and mobile widths, measured boxes for the bands and their children, and any ' +
+          'layout defect measured on the render (overflow, overlap, unreadable text). node_id ' +
+          'frames one element. Judge your work from these, not from memory.',
       inputSchema: {
       widths: z.array(z.number().int().min(320).max(2560)).optional(),
       with_boxes: z.boolean().optional(),
@@ -257,7 +254,9 @@ export function registerLiveTools(
           'placeholder text.',
       inputSchema: {
       id: z.string(),
-      source: z.string().describe(`One of: ${BINDING_SOURCES.join(', ')}`),
+      source: z
+        .string()
+        .describe('A renderer source such as product.title or category.image; an unknown one is refused with the full list'),
       field: z.string().describe('Where the value lands, always "specials.<key>"'),
       dry_run: z.boolean().optional(),
     },
