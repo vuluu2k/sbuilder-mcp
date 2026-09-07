@@ -1,12 +1,15 @@
 /**
  * The one way a tool answers.
  *
+ * COMPACT, not pretty: the reader is a model, and a two-space indent was measured
+ * at ~15 % of every structured result. A string passes through untouched.
+ *
  * Every tool returns through here so the content shape is decided in a single
  * place — a hand-built content array is the shape that drifts, and a drifted one
  * fails inside the client rather than here.
  */
 export function text(value: unknown) {
-  const body = typeof value === 'string' ? value : JSON.stringify(value, null, 2);
+  const body = typeof value === 'string' ? value : JSON.stringify(value);
   return { content: [{ type: 'text' as const, text: body }] };
 }
 
@@ -18,7 +21,7 @@ export function image(dataBase64: string, mimeType = 'image/png', note?: unknown
   if (note !== undefined) {
     content.push({
       type: 'text' as const,
-      text: typeof note === 'string' ? note : JSON.stringify(note, null, 2),
+      text: typeof note === 'string' ? note : JSON.stringify(note),
     });
   }
   return { content };
@@ -39,7 +42,7 @@ export function images(items: Array<{ dataBase64: string; mimeType?: string }>, 
   if (note !== undefined) {
     content.push({
       type: 'text' as const,
-      text: typeof note === 'string' ? note : JSON.stringify(note, null, 2),
+      text: typeof note === 'string' ? note : JSON.stringify(note),
     });
   }
   return { content };

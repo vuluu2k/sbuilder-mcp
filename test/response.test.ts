@@ -6,7 +6,7 @@ describe('text()', () => {
     expect(text('hello')).toEqual({ content: [{ type: 'text', text: 'hello' }] });
   });
 
-  it('pretty-prints a non-string', () => {
-    expect(text({ a: 1 })).toEqual({ content: [{ type: 'text', text: '{\n  "a": 1\n}' }] });
+  it('serialises a non-string compactly — the reader is a model, and indentation is 15 % of nothing', () => {
+    expect(text({ a: 1, b: [1, 2] })).toEqual({ content: [{ type: 'text', text: '{"a":1,"b":[1,2]}' }] });
   });
 });

@@ -2,6 +2,7 @@ import { setAgentClient } from './transport/identity.js';
 import { readFileSync } from 'node:fs';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { Session } from './transport/auth.js';
+import { Notices } from './mcp/notices.js';
 import { registerApiTools } from './tools/api.js';
 import { registerSessionTools } from './tools/session.js';
 import { registerPageTools } from './tools/page.js';
@@ -51,7 +52,7 @@ export function pkgVersion(): string {
 
 export function buildContext(): ToolContext {
   const base = process.env.SB_API ?? 'http://localhost:8080';
-  return { base, session: new Session(base), apiKey: process.env.SB_TOKEN };
+  return { base, session: new Session(base), apiKey: process.env.SB_TOKEN, notices: new Notices() };
 }
 
 export function createServer(ctx: ToolContext = buildContext()): McpServer {
