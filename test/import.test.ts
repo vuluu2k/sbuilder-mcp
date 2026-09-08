@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest';
+import { capture } from '../src/vision/capture.js';
 import { PageDoc } from '../src/domains/site/document.js';
 import { addSubtree, setKeys } from '../src/domains/site/builder.js';
 import {
@@ -183,4 +184,54 @@ describe('images are copied, not hotlinked', () => {
     expect(kids[1].src).toBe('https://x.example/2.png');
     expect(kids[2].src).toBe('https://mine/a.png');
   });
+});
+
+/**
+ * THE HALF THAT RUNS IN A BROWSER, against a real one.
+ *
+ * Opt-in for the same reason `vision.test.ts` gives: a machine without Chrome
+ * must fail loudly when the tool is used, not have a test skip quietly and read
+ * as green.
+ *
+ * It exists because of a specific bug. `capturePage` is SERIALIZED and evaluated
+ * in the page, so a module-level `const` it closes over is not there — the file
+ * already carried a comment saying exactly that, and the first real run still
+ * died on `ReferenceError: HEADINGS is not defined`. Nothing but a real browser
+ * can catch that: it compiles, and every pure test of the mapper passes.
+ */
+describe.runIf(process.env.SB_BROWSER_TEST === '1')('capture()', () => {
+  const page = `data:text/html,${encodeURIComponent(
+    '<main><section>' +
+      '<h2>Tiêu đề</h2>' +
+      '<p>Một đoạn văn.</p>' +
+      '<img src="https://x.example/a.png" alt="Ảnh" style="width:40px;height:40px">' +
+      '<ul><li>Một</li><li>Hai</li></ul>' +
+      '<a href="/shop" class="btn" style="display:block">Mua ngay</a>' +
+      '<p style="display:none">Ẩn</p>' +
+      '<script>var x=1</script>' +
+      '</section></main>',
+  )}`;
+
+  it('reduces a real page to the six kinds this platform renders', async () => {
+    const r = await capture(page);
+    expect(r.sections.length).toBe(1);
+    const kinds = (r.sections[0].children ?? []).map((c) => c.kind);
+    expect(kinds).toEqual(['heading', 'text', 'image', 'list', 'button']);
+  }, 60_000);
+
+  it('skips what cannot be rendered, and says so', async () => {
+    const r = await capture(page);
+    // A hidden paragraph and a script are not content; a capture that silently
+    // dropped them would be a capture nobody could debug.
+    expect(Object.keys(r.skipped)).toContain('hidden');
+    expect(Object.keys(r.skipped)).toContain('script');
+  }, 60_000);
+
+  it('survives an href it cannot make absolute', async () => {
+    // `new URL('/shop', 'data:…')` throws, and a throw inside evaluate kills the
+    // whole capture rather than one link.
+    const r = await capture(page);
+    const button = (r.sections[0].children ?? []).find((c) => c.kind === 'button');
+    expect(button?.href).toBe('/shop');
+  }, 60_000);
 });

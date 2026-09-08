@@ -51,9 +51,6 @@ declare function getComputedStyle(el: El): {
 };
 declare const location: { href: string };
 
-/** Kinds a heading tag maps onto, so the level survives. */
-const HEADINGS = new Set(['H1', 'H2', 'H3', 'H4', 'H5', 'H6']);
-
 export interface CaptureResult {
   url: string;
   title: string;
@@ -69,6 +66,12 @@ export interface CaptureResult {
  * serialized: anything it closes over does not exist on the other side.
  */
 function capturePage(limits: { maxSections: number; maxPerSection: number }): CaptureResult {
+  // EVERY constant this function uses is declared INSIDE it. The body is
+  // serialized and evaluated in the page, so a module-level `const` it closes
+  // over is simply not there — caught the first time this ran against a real
+  // page, as `ReferenceError: HEADINGS is not defined`, by which point the file
+  // already carried a comment saying exactly that.
+  const HEADINGS = new Set(['H1', 'H2', 'H3', 'H4', 'H5', 'H6']);
   const skipped: Record<string, number> = {};
   const skip = (why: string): void => void (skipped[why] = (skipped[why] ?? 0) + 1);
   const here = location.href;
@@ -81,6 +84,19 @@ function capturePage(limits: { maxSections: number; maxPerSection: number }): Ca
   };
 
   const clean = (s: string | null): string => (s ?? '').replace(/\s+/g, ' ').trim();
+
+  // ABSOLUTE where it can be, RAW where it cannot. `new URL(rel, base)` throws
+  // when the base is not hierarchical — a `data:` page is the case that reaches
+  // this — and a throw inside `evaluate` kills the whole capture rather than one
+  // link. A relative href that survives as-is is a link this site cannot follow;
+  // a capture that died is a page nobody imported.
+  const abs = (v: string): string => {
+    try {
+      return new URL(v, here).href;
+    } catch {
+      return v;
+    }
+  };
 
   // A link is a BUTTON when it looks like one: a class saying so, or a short
   // label in a box with a background. Everything else is prose with a link in
@@ -119,7 +135,7 @@ function capturePage(limits: { maxSections: number; maxPerSection: number }): Ca
       if (tag === 'IMG') {
         const src = el.getAttribute('src');
         if (src && !src.startsWith('data:')) {
-          out.push({ kind: 'image', src: new URL(src, here).href, alt: clean(el.getAttribute('alt')) });
+          out.push({ kind: 'image', src: abs(src), alt: clean(el.getAttribute('alt')) });
         } else skip('image-without-src');
         return;
       }
@@ -127,7 +143,7 @@ function capturePage(limits: { maxSections: number; maxPerSection: number }): Ca
         const text = clean(el.textContent);
         const href = el.getAttribute('href');
         if (text) {
-          out.push({ kind: 'button', text, ...(href ? { href: new URL(href, here).href } : {}) });
+          out.push({ kind: 'button', text, ...(href ? { href: abs(href) } : {}) });
         }
         return;
       }
