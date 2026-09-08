@@ -407,6 +407,15 @@ that accounts for them.
   page that never settles must be photographed anyway. Everything else in the server is
   1-181 ms; this was the whole latency budget.
 
+- **A PUT THAT CHANGES NOTHING IS NOT FREE.** `sb_look` saves before it renders — correctly, a
+  shot of an unsaved edit is a shot of the past — and a vision loop LOOKS far more often than
+  it edits, so the same bytes went back over the wire on every look. It costs a round trip,
+  and it bumps the REVISION of every shared master the page carries: the fence
+  `restampPatches` exists to keep honest, churned for no reason, which is how a session
+  collides with a real editor. `PageSession.save` now compares the document's revision against
+  the one it last stored and returns early. Measured: six consecutive looks leave `updatedAt`
+  untouched, and the first real edit moves it.
+
 ## The five traps
 
 Each fails SILENTLY. Each is encoded in `src/domains/site/traps.ts` (trap 5 in

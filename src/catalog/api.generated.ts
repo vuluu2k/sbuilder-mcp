@@ -3,7 +3,7 @@
 import type { ApiOperation } from './types.js';
 
 export const SWAGGER_SOURCE = {
-  "operations": 456,
+  "operations": 481,
   "definitions": 99,
   "bodyCarrying": 171,
   "bodyUndescribed": 62,
@@ -631,6 +631,27 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "summary": "Price a basket",
     "params": [],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/_wb/checkout/receipt",
+    "method": "GET",
+    "path": "/_wb/checkout/receipt",
+    "tags": [
+      "storecheckout"
+    ],
+    "summary": "Read the order behind a completed payment",
+    "params": [
+      {
+        "name": "rt",
+        "in": "query",
+        "required": true,
+        "type": "string",
+        "description": "the signed receipt grant from the completion redirect"
+      }
+    ],
     "bodyDescribed": false,
     "bodyRef": null,
     "credential": "siteScoped"
@@ -3624,6 +3645,90 @@ export const API_OPERATIONS: ApiOperation[] = [
     "credential": "siteScoped"
   },
   {
+    "id": "get:/api/sites/{siteId}/articles/{id}",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/articles/{id}",
+    "tags": [
+      "blog"
+    ],
+    "summary": "Read, update or delete one blog article",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Article ID"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "put:/api/sites/{siteId}/articles/{id}",
+    "method": "PUT",
+    "path": "/api/sites/{siteId}/articles/{id}",
+    "tags": [
+      "blog"
+    ],
+    "summary": "Read, update or delete one blog article",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Article ID"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "delete:/api/sites/{siteId}/articles/{id}",
+    "method": "DELETE",
+    "path": "/api/sites/{siteId}/articles/{id}",
+    "tags": [
+      "blog"
+    ],
+    "summary": "Read, update or delete one blog article",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Article ID"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
     "id": "get:/api/sites/{siteId}/billing",
     "method": "GET",
     "path": "/api/sites/{siteId}/billing",
@@ -3632,6 +3737,132 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "summary": "What this store owes, and what to type into the transfer",
     "params": [],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/sites/{siteId}/blog-categories",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/blog-categories",
+    "tags": [
+      "blog"
+    ],
+    "summary": "List or create blog categories",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/api/sites/{siteId}/blog-categories",
+    "method": "POST",
+    "path": "/api/sites/{siteId}/blog-categories",
+    "tags": [
+      "blog"
+    ],
+    "summary": "List or create blog categories",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/sites/{siteId}/blog-categories/{id}",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/blog-categories/{id}",
+    "tags": [
+      "blog"
+    ],
+    "summary": "Read, update or delete one blog category",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Blog category ID"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "put:/api/sites/{siteId}/blog-categories/{id}",
+    "method": "PUT",
+    "path": "/api/sites/{siteId}/blog-categories/{id}",
+    "tags": [
+      "blog"
+    ],
+    "summary": "Read, update or delete one blog category",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Blog category ID"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "delete:/api/sites/{siteId}/blog-categories/{id}",
+    "method": "DELETE",
+    "path": "/api/sites/{siteId}/blog-categories/{id}",
+    "tags": [
+      "blog"
+    ],
+    "summary": "Read, update or delete one blog category",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Blog category ID"
+      }
+    ],
     "bodyDescribed": false,
     "bodyRef": null,
     "credential": "siteScoped"
@@ -4043,6 +4274,27 @@ export const API_OPERATIONS: ApiOperation[] = [
     "credential": "siteScoped"
   },
   {
+    "id": "get:/api/sites/{siteId}/course-enrollments",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/course-enrollments",
+    "tags": [
+      "courses"
+    ],
+    "summary": "List course enrolments, or remove one",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
     "id": "get:/api/sites/{siteId}/course-enrollments/export",
     "method": "GET",
     "path": "/api/sites/{siteId}/course-enrollments/export",
@@ -4085,6 +4337,34 @@ export const API_OPERATIONS: ApiOperation[] = [
         "required": false,
         "type": "boolean",
         "description": "live, time-boxed, inside the renewal window — the dashboard's 'sắp hết hạn'"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "delete:/api/sites/{siteId}/course-enrollments/{id}",
+    "method": "DELETE",
+    "path": "/api/sites/{siteId}/course-enrollments/{id}",
+    "tags": [
+      "courses"
+    ],
+    "summary": "List course enrolments, or remove one",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Enrolment ID (item route)"
       }
     ],
     "bodyDescribed": false,
@@ -4634,14 +4914,155 @@ export const API_OPERATIONS: ApiOperation[] = [
     "credential": "siteScoped"
   },
   {
+    "id": "get:/api/sites/{siteId}/courses/{courseId}/lessons",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/courses/{courseId}/lessons",
+    "tags": [
+      "courses"
+    ],
+    "summary": "List, create, update or delete a course's lessons",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "courseId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Course ID"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/api/sites/{siteId}/courses/{courseId}/lessons",
+    "method": "POST",
+    "path": "/api/sites/{siteId}/courses/{courseId}/lessons",
+    "tags": [
+      "courses"
+    ],
+    "summary": "List, create, update or delete a course's lessons",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "courseId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Course ID"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "put:/api/sites/{siteId}/courses/{courseId}/lessons/{lessonId}",
+    "method": "PUT",
+    "path": "/api/sites/{siteId}/courses/{courseId}/lessons/{lessonId}",
+    "tags": [
+      "courses"
+    ],
+    "summary": "List, create, update or delete a course's lessons",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "courseId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Course ID"
+      },
+      {
+        "name": "lessonId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Lesson ID (item routes)"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "delete:/api/sites/{siteId}/courses/{courseId}/lessons/{lessonId}",
+    "method": "DELETE",
+    "path": "/api/sites/{siteId}/courses/{courseId}/lessons/{lessonId}",
+    "tags": [
+      "courses"
+    ],
+    "summary": "List, create, update or delete a course's lessons",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "courseId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Course ID"
+      },
+      {
+        "name": "lessonId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Lesson ID (item routes)"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
     "id": "get:/api/sites/{siteId}/courses/{courseId}/products",
     "method": "GET",
     "path": "/api/sites/{siteId}/courses/{courseId}/products",
     "tags": [
+      "courses",
       "courses"
     ],
-    "summary": "List, attach or detach the products that unlock a course",
+    "summary": "Link products to a course, or unlink one",
     "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "courseId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Course ID"
+      },
       {
         "name": "siteId",
         "in": "path",
@@ -4666,9 +5087,10 @@ export const API_OPERATIONS: ApiOperation[] = [
     "method": "POST",
     "path": "/api/sites/{siteId}/courses/{courseId}/products",
     "tags": [
+      "courses",
       "courses"
     ],
-    "summary": "List, attach or detach the products that unlock a course",
+    "summary": "Link products to a course, or unlink one",
     "params": [
       {
         "name": "siteId",
@@ -4683,6 +5105,196 @@ export const API_OPERATIONS: ApiOperation[] = [
         "required": true,
         "type": "string",
         "description": "Course ID"
+      },
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "courseId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Course ID"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "delete:/api/sites/{siteId}/courses/{courseId}/products/{productId}",
+    "method": "DELETE",
+    "path": "/api/sites/{siteId}/courses/{courseId}/products/{productId}",
+    "tags": [
+      "courses",
+      "courses"
+    ],
+    "summary": "Link products to a course, or unlink one",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "courseId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Course ID"
+      },
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "courseId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Course ID"
+      },
+      {
+        "name": "productId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Product ID (unlink route)"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/sites/{siteId}/courses/{courseId}/sections",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/courses/{courseId}/sections",
+    "tags": [
+      "courses"
+    ],
+    "summary": "List, create, update or delete a course's sections",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "courseId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Course ID"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/api/sites/{siteId}/courses/{courseId}/sections",
+    "method": "POST",
+    "path": "/api/sites/{siteId}/courses/{courseId}/sections",
+    "tags": [
+      "courses"
+    ],
+    "summary": "List, create, update or delete a course's sections",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "courseId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Course ID"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "put:/api/sites/{siteId}/courses/{courseId}/sections/{sectionId}",
+    "method": "PUT",
+    "path": "/api/sites/{siteId}/courses/{courseId}/sections/{sectionId}",
+    "tags": [
+      "courses"
+    ],
+    "summary": "List, create, update or delete a course's sections",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "courseId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Course ID"
+      },
+      {
+        "name": "sectionId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Section ID (item routes)"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "delete:/api/sites/{siteId}/courses/{courseId}/sections/{sectionId}",
+    "method": "DELETE",
+    "path": "/api/sites/{siteId}/courses/{courseId}/sections/{sectionId}",
+    "tags": [
+      "courses"
+    ],
+    "summary": "List, create, update or delete a course's sections",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "courseId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Course ID"
+      },
+      {
+        "name": "sectionId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Section ID (item routes)"
       }
     ],
     "bodyDescribed": false,
@@ -6832,6 +7444,90 @@ export const API_OPERATIONS: ApiOperation[] = [
         "required": true,
         "type": "string",
         "description": "Site ID"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/sites/{siteId}/integrations/{id}",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/integrations/{id}",
+    "tags": [
+      "integrations"
+    ],
+    "summary": "Read, update or delete one integration",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Integration ID"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "put:/api/sites/{siteId}/integrations/{id}",
+    "method": "PUT",
+    "path": "/api/sites/{siteId}/integrations/{id}",
+    "tags": [
+      "integrations"
+    ],
+    "summary": "Read, update or delete one integration",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Integration ID"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "delete:/api/sites/{siteId}/integrations/{id}",
+    "method": "DELETE",
+    "path": "/api/sites/{siteId}/integrations/{id}",
+    "tags": [
+      "integrations"
+    ],
+    "summary": "Read, update or delete one integration",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Integration ID"
       }
     ],
     "bodyDescribed": false,
@@ -11682,6 +12378,40 @@ export const API_OPERATIONS: ApiOperation[] = [
         "required": false,
         "type": "integer",
         "description": "How many products to rank (default 50, max 200)"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/templates",
+    "method": "GET",
+    "path": "/api/templates",
+    "tags": [
+      "templates"
+    ],
+    "summary": "The site templates a new store can be created from",
+    "params": [],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/api/templates/{siteId}",
+    "method": "POST",
+    "path": "/api/templates/{siteId}",
+    "tags": [
+      "templates"
+    ],
+    "summary": "The site templates a new store can be created from",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site to apply the template to (POST)"
       }
     ],
     "bodyDescribed": false,

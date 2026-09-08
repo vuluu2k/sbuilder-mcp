@@ -32364,7 +32364,7 @@ export const TRAIT_WRITES: Record<string, TraitDescription> = {
   },
   "receipt_number_label": {
     "key": "receipt_number_label",
-    "label": "Order number label",
+    "label": "Order number",
     "writes": [
       {
         "target": "specials",
@@ -32375,7 +32375,7 @@ export const TRAIT_WRITES: Record<string, TraitDescription> = {
   },
   "receipt_placed_label": {
     "key": "receipt_placed_label",
-    "label": "Date label",
+    "label": "Date",
     "writes": [
       {
         "target": "specials",
@@ -32386,7 +32386,7 @@ export const TRAIT_WRITES: Record<string, TraitDescription> = {
   },
   "receipt_status_label": {
     "key": "receipt_status_label",
-    "label": "Status label",
+    "label": "Status",
     "writes": [
       {
         "target": "specials",
@@ -32397,7 +32397,7 @@ export const TRAIT_WRITES: Record<string, TraitDescription> = {
   },
   "receipt_items_label": {
     "key": "receipt_items_label",
-    "label": "Items label",
+    "label": "Items",
     "writes": [
       {
         "target": "specials",
@@ -32408,7 +32408,7 @@ export const TRAIT_WRITES: Record<string, TraitDescription> = {
   },
   "receipt_total_label": {
     "key": "receipt_total_label",
-    "label": "Total label",
+    "label": "Total",
     "writes": [
       {
         "target": "specials",
@@ -32419,7 +32419,7 @@ export const TRAIT_WRITES: Record<string, TraitDescription> = {
   },
   "receipt_due_label": {
     "key": "receipt_due_label",
-    "label": "Outstanding label",
+    "label": "Outstanding",
     "writes": [
       {
         "target": "specials",
@@ -32430,7 +32430,7 @@ export const TRAIT_WRITES: Record<string, TraitDescription> = {
   },
   "receipt_unavailable_text": {
     "key": "receipt_unavailable_text",
-    "label": "Unavailable message",
+    "label": "Message",
     "writes": [
       {
         "target": "specials",

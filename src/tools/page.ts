@@ -58,6 +58,16 @@ export class PageSession {
   private pageId = '';
   private live: LiveSession | null = null;
   private stale: string | null = null;
+  /**
+   * The document revision this session last stored, so an unchanged document is
+   * not written again. `sb_look` saves before it renders — correctly, a shot of
+   * an unsaved edit is a shot of the past — and a vision loop looks far more
+   * often than it edits, so the same bytes went back over the wire on every
+   * look. A PUT that changes nothing is not free: it costs the round trip, and
+   * it BUMPS THE REVISION of every shared master the page carries, which is the
+   * fence `restampPatches` exists to keep honest.
+   */
+  private savedRev = -1;
   private warnings: ComposeWarning[] = [];
   private boxes: Box[] = [];
 
@@ -116,6 +126,8 @@ export class PageSession {
     // The platform's own account of what it could not compose. Typed on the
     // response since the transport was written and read by nothing until now.
     this.warnings = composeWarnings(src.warnings);
+    // Freshly pulled IS the stored state.
+    this.savedRev = this.doc.rev;
     return this.doc.outline();
   }
 
@@ -152,6 +164,7 @@ export class PageSession {
       );
     }
     const d = this.current();
+    if (d.rev === this.savedRev) return;
     const problems = validateForSave(d);
     if (problems.length > 0) {
       throw new Error(`sbuilder: refusing to save — ${problems.join(' ')}`);
@@ -170,6 +183,10 @@ export class PageSession {
     // the server's own numbers coming back, not an edit anybody made, and a peer
     // in the room gets them from its own save.
     d.apply(restampPatches(d.doc, { globals: saved.globals, overlays: saved.overlays }));
+    // AFTER the re-stamp, which is itself a revision: the point of comparison is
+    // "is the document now different from what the server holds", and the
+    // re-stamp wrote the server's own answer back into it.
+    this.savedRev = d.rev;
   }
 }
 

@@ -50,6 +50,9 @@ describe('PageSession', () => {
     const { f, saved } = scripted();
     const ps = new PageSession(ctxWith(f));
     await ps.open('s1', 'pg_1');
+    // EDITED, as the name says. An unedited document is deliberately not written
+    // any more — see test/save-skip.test.ts for why a no-op PUT is not free.
+    ps.current().apply([{ op: 'set', path: ['nodes', 'rt', 'specials', 'touched'], value: 1 }]);
     await ps.save();
     expect(saved.length).toBe(1);
     expect((saved[0].document as Record<string, unknown>).root_node_id).toBe('rt');

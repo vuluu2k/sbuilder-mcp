@@ -284,6 +284,13 @@ async function settleDom(page: Page): Promise<void> {
  * rather than hanging on an image the server will never send.
  */
 async function settleLazyImages(page: Page): Promise<void> {
+  // A page with nothing lazy has nothing to walk for, and the walk is 60 ms a
+  // screen. Checked rather than assumed: the renderer marks images below the
+  // first screen lazy, so a short page legitimately has none.
+  const lazy = await page
+    .evaluate(() => document.querySelectorAll('img[loading="lazy"]').length)
+    .catch(() => 1);
+  if (!lazy) return;
   await page
     .evaluate(async () => {
       const step = window.innerHeight || 900;
