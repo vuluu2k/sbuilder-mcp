@@ -229,6 +229,53 @@ describe('duplicateNode()', () => {
  * buried inside the base-state cluster, where nothing reads it. The test pinned
  * it, so the defect had a green suite over it.
  */
+/**
+ * A NODE COULD NOT BE CREATED WITH A RESPONSIVE VALUE.
+ *
+ * The design skill's rules 1-3 are all about writing a responsive answer, and
+ * nothing could author one at CREATION: every node arrived base-only and needed
+ * a second `sb_set` a caller had to remember. The importer made it undeniable —
+ * a row rebuilt from a source page MUST carry a mobile stack, or the columns
+ * shrink to slivers with no box overflowing and nothing to measure.
+ */
+describe('addSubtree() seeds responsive overrides', () => {
+  it('writes the caller\'s per-breakpoint style at creation', () => {
+    const d = emptyDoc();
+    d.apply(
+      addSubtree(d, 'rt', {
+        type: 'flex-block',
+        style: { flexDirection: 'row' },
+        responsive: { mobile: { style: { flexDirection: 'column' } } },
+      }).patches,
+    );
+    const n = d.node(d.node('rt').data.nodes[0]) as unknown as {
+      style: Record<string, unknown>;
+      responsive: Record<string, { style?: Record<string, unknown> }>;
+    };
+    expect(n.style.flexDirection).toBe('row');
+    expect(n.responsive.mobile.style?.flexDirection).toBe('column');
+  });
+
+  it('MERGES per namespace, so an element keeps its own seeded slot', () => {
+    // quantity-button seeds `mobile.config.iconSize`. Replacing the slot would
+    // drop it — the quiet kind of loss this repo keeps finding.
+    const d = emptyDoc();
+    d.apply(
+      addSubtree(d, 'rt', {
+        type: 'flex-section',
+        children: [{ type: 'quantity-dataset' }],
+      }).patches,
+    );
+    const owner = d.node(d.node('rt').data.nodes[0]).data.nodes[0];
+    const btnId = (d.node(owner) as unknown as { config: Record<string, string> }).config
+      .quantityButtonId;
+    const seeded = d.node(btnId) as unknown as {
+      responsive: Record<string, { config?: Record<string, unknown> }>;
+    };
+    expect(seeded.responsive.mobile?.config?.iconSize).toBeDefined();
+  });
+});
+
 describe('setKeys() with a state', () => {
   function button() {
     const d = emptyDoc();

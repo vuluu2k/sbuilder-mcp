@@ -28,6 +28,44 @@ export interface CreateOpts {
   style?: Record<string, unknown>;
   config?: Record<string, unknown>;
   specials?: Record<string, unknown>;
+  /**
+   * Per-breakpoint overrides, MERGED OVER the element's own seeded ones.
+   *
+   * Absent until now, and its absence was a real hole: the design skill's rules
+   * 1-3 are all about writing a responsive answer, and nothing could author one
+   * at CREATION — every node arrived base-only and needed a second `sb_set` that
+   * a caller had to remember. The importer is the case that made it undeniable:
+   * a row it recreates from a source page MUST carry a mobile stack, or the
+   * columns shrink to slivers with no box overflowing and nothing to measure.
+   *
+   * Merged per breakpoint rather than replacing the slot, so seeding
+   * `mobile.style` does not silently drop an element's own `mobile.config`.
+   */
+  responsive?: Record<string, { style?: Record<string, unknown>; config?: Record<string, unknown> }>;
+}
+
+/**
+ * The element's own per-breakpoint defaults with the caller's laid over them.
+ *
+ * Per NAMESPACE, not per slot: an element that seeds `mobile.config.iconSize`
+ * and a caller who asks for `mobile.style.flexDirection` must end with both.
+ * Replacing the slot would drop the one nobody mentioned, which is the quiet
+ * kind of loss this repo keeps finding.
+ */
+function mergeResponsive(
+  base: Record<string, { style?: Record<string, unknown>; config?: Record<string, unknown> }>,
+  over: CreateOpts['responsive'],
+): Record<string, unknown> {
+  if (!over) return base;
+  const out: Record<string, { style?: Record<string, unknown>; config?: Record<string, unknown> }> = { ...base };
+  for (const [bp, slot] of Object.entries(over)) {
+    out[bp] = {
+      ...(out[bp] ?? {}),
+      ...(slot.style ? { style: { ...(out[bp]?.style ?? {}), ...slot.style } } : {}),
+      ...(slot.config ? { config: { ...(out[bp]?.config ?? {}), ...slot.config } } : {}),
+    };
+  }
+  return out;
 }
 
 /** Structured clone via JSON — the defaults are plain data, and this is what
@@ -106,7 +144,10 @@ export function createNode(type: string, opts: CreateOpts = {}): BuilderNode {
     style: { ...copy(d.style ?? {}), ...(opts.style ?? {}) },
     config,
     specials: { ...copy(d.specials ?? {}), ...(opts.specials ?? {}) },
-    responsive: copy(d.responsive ?? {}) as BuilderNode['responsive'],
+    responsive: mergeResponsive(
+      copy(d.responsive ?? {}) as Parameters<typeof mergeResponsive>[0],
+      opts.responsive,
+    ) as BuilderNode['responsive'],
     ...(states ? { states: copy(states) } : {}),
     events: [],
     // SEED THE ELEMENT'S OWN BINDINGS.

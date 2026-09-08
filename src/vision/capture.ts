@@ -53,6 +53,8 @@ declare function getComputedStyle(el: El): {
   backgroundColor: string;
   borderStyle: string;
   borderWidth: string;
+  flexDirection: string;
+  flexWrap: string;
 };
 declare const location: { href: string };
 
@@ -135,91 +137,105 @@ function capturePage(limits: { maxSections: number; maxPerSection: number; maxIm
   ]);
 
   /**
-   * Collect the renderable leaves under one section, in document order.
+   * The renderable content under one section, AS A TREE.
    *
-   * Returns whether it captured anything, which is what makes the TEXT FALLBACK
-   * below safe: an element only offers its own text when nothing inside it
-   * offered any, so a paragraph is never captured twice — once through its
-   * `<p>` and again through the `<div>` around it.
+   * It used to return a flat list, and flatness was the biggest thing an import
+   * lost. A source's three-column feature row came back as three stacked blocks;
+   * a card — image, heading, copy, button — came back as four siblings with
+   * nothing saying they belonged together. Everything a reader understands from
+   * the ARRANGEMENT was thrown away, and no amount of correct colour brings it
+   * back.
+   *
+   * So a container that actually lays its children out — `display:flex` or
+   * `grid` — and has two or more of them that produced something becomes a
+   * GROUP carrying its direction. Anything else flattens, because a `<div>` that
+   * merely wraps is not a design decision and reproducing it would nest the
+   * result ten deep for nothing.
    */
   const leaves = (root: El): Captured[] => {
-    const out: Captured[] = [];
-    const walk = (el: El): boolean => {
-      // TWO BOUNDS, and the per-section one used to do both jobs badly. At 40 it
-      // was not a guard against a pathological page, it was a TRUNCATION of an
-      // ordinary one: three dense pages in a sweep each stopped at exactly 40
-      // leaves, having captured 7-13% of what a reader sees. The real limit
-      // wanted is on the WHOLE import, so that is where it lives now, and the
-      // per-section one is loose enough to be a guard again.
+    const walk = (el: El): Captured[] => {
       if (taken.nodes >= limits.maxNodes) {
         skip('over-node-limit');
-        return false;
+        return [];
       }
-      if (out.length >= limits.maxPerSection) return false;
       const tag = el.tagName;
       if (IGNORE.has(tag)) {
         skip(tag.toLowerCase());
-        return false;
+        return [];
       }
       if (!visible(el)) {
         skip('hidden');
-        return false;
+        return [];
       }
+
       if (HEADINGS.has(tag)) {
         const text = clean(el.textContent);
-        if (text) { out.push({ kind: 'heading', level: Number(tag.slice(1)), text }); taken.nodes++; }
-        return Boolean(text);
+        if (!text) return [];
+        taken.nodes++;
+        return [{ kind: 'heading', level: Number(tag.slice(1)), text }];
       }
       if (tag === 'IMG') {
         const src = el.getAttribute('src');
         if (!src || src.startsWith('data:')) {
           skip('image-without-src');
-          return false;
+          return [];
         }
-        // BOUNDED, because every image is an upload. A sponsors wall is a real
-        // page shape — one measured at 36 logos in four sections — and importing
-        // it means 36 sequential HTTP round trips inside a single tool call,
-        // which is slow, half-fails in interesting ways, and is almost never
-        // what the caller wanted from "import this page".
         if (taken.images >= limits.maxImages) {
           skip('over-image-limit');
-          return false;
+          return [];
         }
         taken.images++;
         taken.nodes++;
-        out.push({ kind: 'image', src: abs(src), alt: clean(el.getAttribute('alt')) });
-        return true;
+        return [{ kind: 'image', src: abs(src), alt: clean(el.getAttribute('alt')) }];
       }
       if (tag === 'A' && looksLikeButton(el)) {
         const text = clean(el.textContent);
         const href = el.getAttribute('href');
-        if (text) {
-          out.push({ kind: 'button', text, ...(href ? { href: abs(href) } : {}) });
-          taken.nodes++;
-        }
-        return Boolean(text);
+        if (!text) return [];
+        taken.nodes++;
+        return [{ kind: 'button', text, ...(href ? { href: abs(href) } : {}) }];
       }
       if (tag === 'UL' || tag === 'OL') {
         const items = Array.from(el.querySelectorAll('li'))
           .map((li) => clean(li.textContent))
           .filter(Boolean);
-        if (items.length) { out.push({ kind: 'list', items }); taken.nodes++; }
-        return items.length > 0;
+        if (!items.length) return [];
+        taken.nodes++;
+        return [{ kind: 'list', items }];
       }
       if (tag === 'P' || tag === 'BLOCKQUOTE') {
         const text = clean(el.textContent);
-        if (text) { out.push({ kind: 'text', text }); taken.nodes++; }
-        return Boolean(text);
+        if (!text) return [];
+        taken.nodes++;
+        return [{ kind: 'text', text }];
       }
 
-      let any = false;
-      for (const child of Array.from(el.children)) any = walk(child) || any;
-      if (any) return true;
+      const kids: Captured[] = [];
+      for (const child of Array.from(el.children)) {
+        for (const c of walk(child)) kids.push(c);
+        if (kids.length >= limits.maxPerSection) break;
+      }
+
+      if (kids.length > 0) {
+        const cs = getComputedStyle(el);
+        const lays = cs.display === 'flex' || cs.display === 'grid' ||
+          cs.display === 'inline-flex' || cs.display === 'inline-grid';
+        // A ROW is worth keeping; a column is what the page already is, so
+        // wrapping one in a group would add a level that renders identically.
+        const row = cs.display.indexOf('grid') >= 0
+          ? true
+          : cs.flexDirection === 'row' || cs.flexDirection === 'row-reverse';
+        if (lays && row && kids.length >= 2) {
+          taken.nodes++;
+          return [{ kind: 'group', direction: 'row', wrap: cs.flexWrap === 'wrap', children: kids }];
+        }
+        return kids;
+      }
 
       // THE TEXT FALLBACK, and it is most of the web. Capturing only <p> meant a
       // page whose prose sits in a <div>, a <td> or a <span> came back EMPTY:
       // measured, news.ycombinator.com (a table layout) and tailwindcss.com both
-      // kept 0 of ~4,000 and ~6,000 characters, and python.org kept 54%.
+      // kept 0 of ~4,000 and ~6,000 characters.
       //
       // Safe because it only fires when nothing INSIDE offered anything, so a
       // paragraph is never taken twice — once through its <p> and again through
@@ -227,15 +243,13 @@ function capturePage(limits: { maxSections: number; maxPerSection: number; maxIm
       // tree would otherwise carry a whole page as one string.
       const own = clean(el.textContent);
       if (own && own.length <= limits.maxTextChars) {
-        out.push({ kind: 'text', text: own });
         taken.nodes++;
-        return true;
+        return [{ kind: 'text', text: own }];
       }
       if (own) skip('text-too-long');
-      return false;
+      return [];
     };
-    walk(root);
-    return out;
+    return walk(root);
   };
 
   // SECTION CANDIDATES, widest first: a page that marks its bands up

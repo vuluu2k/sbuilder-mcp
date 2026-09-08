@@ -692,6 +692,12 @@ real elements dressed in **this page's** tokens.
 | `upload_images` | boolean? | Copy images into this site's media library, default **true** |
 | `dry_run` | boolean? | Defaults to **true** — returns what was found |
 
+**Layout is kept where the source actually declared one.** A container that lays its
+children out — `display:flex` or `grid` — with two or more of them becomes a real row, and
+the row carries a **mobile stack** because nothing catches a too-narrow column for you: the
+columns shrink, no box overflows, and `measure` stays silent while a photo becomes a sliver.
+A `<div>` that merely wraps is flattened, because it is not a design decision.
+
 **A translation, not a clone, and that is the whole design.** The platform HAS an escape
 hatch that would clone a page — `custom-code` embeds raw markup verbatim — and reaching for
 it produces a Store Builder page no inspector can edit, with no responsive cascade, bound to

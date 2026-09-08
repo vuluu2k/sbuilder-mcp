@@ -143,6 +143,47 @@ describe('toSpecs()', () => {
     expect(toSpecs(page, t)[0].children![0].style).toMatchObject({ maxWidth: '1200px' });
   });
 
+  /**
+   * FLATNESS WAS THE BIGGEST THING AN IMPORT LOST.
+   *
+   * A source's three-column feature row came back as three stacked blocks and a
+   * card — image, heading, copy, button — as four siblings with nothing saying
+   * they belonged together. Everything a reader understands from the
+   * ARRANGEMENT was thrown away, and no amount of correct colour brings it back.
+   */
+  it('rebuilds a captured row as a row, and stacks it at mobile', () => {
+    const row: Captured[] = [
+      {
+        kind: 'section',
+        children: [
+          {
+            kind: 'group',
+            direction: 'row',
+            children: [
+              { kind: 'heading', text: 'One' },
+              { kind: 'heading', text: 'Two' },
+            ],
+          },
+        ],
+      },
+    ];
+    const group = toSpecs(row, {})[0].children![0].children![0];
+    expect(group.style).toMatchObject({ display: 'flex', flexDirection: 'row' });
+    // Rule 3: nothing catches a too-narrow column for you — the columns SHRINK,
+    // so no box overflows and `measure` stays silent while a photo becomes a
+    // sliver. An import is the one place a row arrives with nobody having
+    // thought about 390.
+    expect(group.responsive).toMatchObject({ mobile: { style: { flexDirection: 'column' } } });
+    expect(group.children!.length).toBe(2);
+  });
+
+  it('does not wrap a single child in a row', () => {
+    const one: Captured[] = [
+      { kind: 'section', children: [{ kind: 'group', direction: 'row', children: [{ kind: 'heading', text: 'Solo' }] }] },
+    ];
+    expect(toSpecs(one, {})[0].children![0].children![0].type).toBe('heading');
+  });
+
   it('bounds an imported image in BOTH axes', () => {
     // A source image has no known size. `maxWidth: 100%` alone is not a bound:
     // an SVG has no intrinsic pixel size, so it took the container's full width

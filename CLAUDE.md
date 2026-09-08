@@ -726,6 +726,23 @@ that accounts for them.
   Coverage is the metric worth keeping: an import that silently drops half a page reports no
   error, and no test of the mapper can see it.
 
+  **FLATNESS WAS THE BIGGEST THING LEFT.** Everything arrived as one vertical column, so a
+  source's three-column feature row came back as three stacked blocks and a card — image,
+  heading, copy, button — as four siblings with nothing saying they belonged together.
+  Everything a reader understands from the ARRANGEMENT was gone, and no amount of correct
+  colour brings it back. The walk now returns a TREE: a container that genuinely lays its
+  children out (`display:flex`/`grid`) with two or more of them becomes a row; a `<div>` that
+  merely wraps is flattened, because reproducing it would nest the result ten deep for
+  nothing. tailwindcss.com went 21.8% → 54%.
+
+  That change needed one in the builder: **`NodeSpec` could not carry `responsive`**, so no
+  node could be created with a per-breakpoint value at all — every one arrived base-only and
+  needed a second `sb_set` the caller had to remember, on a repo whose design rules 1-3 are
+  entirely about writing the responsive answer. An imported ROW is the case that made it
+  undeniable: it must stack at mobile or the columns shrink to slivers with no box overflowing
+  and nothing for `measure` to see. Merged per NAMESPACE, so seeding `mobile.style` does not
+  drop an element's own `mobile.config`.
+
   `capture.ts` launches its OWN browser rather than sharing `shoot.ts`'s process-lifetime one:
   an import is rare, slow and runs untrusted script, and coupling that to the tool a vision
   loop calls every few hundred milliseconds is how the fast path gets slow.

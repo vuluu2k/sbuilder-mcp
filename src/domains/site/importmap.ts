@@ -15,7 +15,10 @@ import { walk } from '../../core/tree.js';
  * element choices.
  */
 export interface Captured {
-  kind: 'section' | 'heading' | 'text' | 'image' | 'button' | 'list';
+  kind: 'section' | 'group' | 'heading' | 'text' | 'image' | 'button' | 'list';
+  /** For a group: the arrangement the source actually used. */
+  direction?: 'row' | 'column';
+  wrap?: boolean;
   /** 1-6 for a heading, so `htmlTag` survives the trip. */
   level?: number;
   text?: string;
@@ -206,6 +209,38 @@ function one(c: Captured, t: PageTokens): NodeSpec | null {
             ...(t.textColor ? { color: t.textColor } : {}),
             ...(t.textSize ? { fontSize: t.textSize } : {}),
           },
+        })),
+      };
+    }
+    case 'group': {
+      const kids = (c.children ?? []).map((k) => one(k, t)).filter((n): n is NodeSpec => n !== null);
+      if (kids.length === 0) return null;
+      if (kids.length === 1) return kids[0];
+      // A ROW OF TWO OR MORE COLUMNS NEEDS AN EXPLICIT STACK BREAKPOINT, and
+      // nothing catches it for you: the columns SHRINK to fit, so no box
+      // overflows and `measure` stays silent while a photo becomes a sliver and
+      // a label truncates mid-word. Rule 3 of the design skill, and an import is
+      // the one place a row arrives without anybody having thought about 390.
+      //
+      // The wide answer is said out loud at base too, because the cascade
+      // resolves narrower slots LAST but does consult them: a `column` written
+      // only at mobile would otherwise reach desktop whenever base declares
+      // nothing.
+      return {
+        type: 'flex-block',
+        style: {
+          width: '100%',
+          display: 'flex',
+          flexDirection: 'row',
+          flexWrap: c.wrap ? 'wrap' : 'nowrap',
+          alignItems: 'flex-start',
+          gap: '24px',
+        },
+        responsive: { mobile: { style: { flexDirection: 'column', gap: '16px' } } },
+        children: kids.map((k) => ({
+          type: 'flex-block',
+          style: { flex: '1 1 280px', minWidth: '0', display: 'flex', flexDirection: 'column', gap: '12px' },
+          children: [k],
         })),
       };
     }

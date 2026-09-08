@@ -668,6 +668,12 @@ mở**, dưới dạng element thật mang token của **chính trang này**.
 | `upload_images` | boolean? | Chép ảnh vào media library của site, mặc định **true** |
 | `dry_run` | boolean? | Mặc định **true** — trả về những gì tìm thấy |
 
+**Bố cục được giữ ở chỗ trang nguồn thật sự có khai báo.** Một container thật sự dàn con của
+nó — `display:flex` hoặc `grid` — với từ hai con trở lên sẽ thành một hàng thật, và hàng đó
+mang sẵn **điểm gãy dọc ở mobile**, vì không có gì bắt hộ bạn một cột quá hẹp: các cột co lại,
+không hộp nào tràn, `measure` im lặng trong khi tấm ảnh mỏng như sợi chỉ. Một `<div>` chỉ để
+bọc thì bị làm phẳng, vì nó không phải một quyết định thiết kế.
+
 **Là dịch lại, không phải sao chép, và đó là toàn bộ thiết kế.** Nền tảng CÓ một lối thoát
 hiểm cho phép sao chép nguyên trang — `custom-code` nhúng markup thô nguyên văn — nhưng dùng
 nó sẽ ra một trang Store Builder mà không inspector nào sửa được, không có cascade responsive,

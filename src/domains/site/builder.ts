@@ -22,6 +22,8 @@ export interface NodeSpec {
   style?: Record<string, unknown>;
   config?: Record<string, unknown>;
   specials?: Record<string, unknown>;
+  /** Per-breakpoint overrides, merged over the element's own — see CreateOpts. */
+  responsive?: Record<string, { style?: Record<string, unknown>; config?: Record<string, unknown> }>;
   children?: NodeSpec[];
 }
 
@@ -134,6 +136,7 @@ export function addSubtree(
       style: s.style,
       config: s.config,
       specials: s.specials,
+      responsive: s.responsive,
     });
     // Before the owner is handed to a patch: minting rewrites its `config`.
     const sats = mintSatellites(n);
