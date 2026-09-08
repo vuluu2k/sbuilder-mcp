@@ -6,6 +6,19 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.8.0] - 2026-09-08
+
+### Added
+- Tham số `spec` của sb_add giờ nhận `responsive` trên bất kỳ node nào, cho phép gieo các override style và config theo từng breakpoint ngay lúc tạo node, thay vì phải gọi thêm sb_set cho mỗi giá trị responsive; nó merge đè lên các giá trị responsive mặc định mà chính element đã gieo sẵn theo từng namespace, nên việc gieo một style cho mobile sẽ không làm mất config mobile riêng của element.
+- sb_import nhận max_nodes (mặc định 300), một giới hạn duy nhất cho toàn bộ lần import; nó thay thế giới hạn theo từng section cũ, vốn âm thầm trở thành giới hạn thực tế trên một trang mà `<body>` chỉ có một phần tử con cấp cao nhất, và số lượng bị bỏ qua giờ được báo cáo cả ở lần chạy thật, không chỉ ở dry run.
+- sb_import giờ giữ lại cách bố trí của trang nguồn: một container thực sự sắp xếp các phần tử con bằng flex hoặc grid sẽ trở thành một row thật, tự động xếp chồng ở mobile, thay vì mọi section đều bị làm phẳng thành một cột dọc.
+
+### Fixed
+- sb_import giờ lấy text từ bất kỳ phần tử nào chứa nó, không chỉ `<p>` và `<blockquote>`, vì phần lớn nội dung trên web không dùng thẻ paragraph; một trang dùng layout bảng hoặc trang dùng utility-CSS trước đây bị import mà không lấy được chữ nào.
+- Cơ chế fallback khi không có kết quả của sb_import giờ thử lại với `<main>` của trang bất cứ khi nào các section tìm được không tạo ra nội dung nào, thay vì chỉ thử lại khi không tìm được section ứng viên nào ngay từ đầu.
+- sb_import giờ giữ lại một liên kết nội dung không được "tô" thay vì bỏ nó đi, lấy nó thành một button kiểu link phẳng thay vì chỉ lấy những liên kết đã trông giống một call-to-action; một button được "tô" vẫn cần có màu nền hoặc viền có độ dày thật, nên các viền reset độ dày bằng 0 của một trang dùng Tailwind không còn bị nhầm là một call-to-action nữa.
+- sb_import không còn import header và footer cấp trang của trang nguồn, vì trang đích đã có sẵn header/footer riêng dưới dạng global dùng chung; một `<header>` nằm lồng bên trong một section (dạng hero) vẫn được giữ lại.
+
 ## [0.7.2] - 2026-09-08
 
 ### Fixed

@@ -6,6 +6,19 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.8.0] - 2026-09-08
+
+### Added
+- sb_add's `spec` argument now takes `responsive` on any node, seeding per-breakpoint style and config overrides at creation time instead of requiring a follow-up sb_set for every responsive value; it merges over the element's own seeded responsive defaults per namespace, so seeding a mobile style does not drop the element's own mobile config.
+- sb_import takes max_nodes (default 300), a single bound on the whole import; it replaces the old per-section cap, which silently became the real limit on a page whose body has one top-level child, and the amount skipped is now reported on a real run too, not only a dry one.
+- sb_import now preserves the source's layout: a container that actually lays its children out with flex or grid becomes a real row that stacks at mobile instead of every section flattening into one vertical column.
+
+### Fixed
+- sb_import now captures text from any element that holds it, not only `<p>` and `<blockquote>`, since most of the web does not use paragraph tags; a table-layout page or a utility-CSS page previously imported with none of its text at all.
+- sb_import's empty-result fallback now retries against the page's `<main>` whenever the sections it found produced no content, instead of only when it found no candidate sections in the first place.
+- sb_import now keeps an unpainted content link instead of dropping it, capturing it as a flat link-styled button rather than only capturing links that already look like a call to action; a painted button still requires a filled background or a border with actual width, so a Tailwind page's zero-width reset borders are no longer mistaken for one.
+- sb_import no longer imports the source page's own page-level header and footer, since the target page already carries its own as shared globals; a `<header>` nested inside a section (a hero) is still kept.
+
 ## [0.7.2] - 2026-09-08
 
 ### Fixed
