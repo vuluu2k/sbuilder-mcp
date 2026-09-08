@@ -6,6 +6,22 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.9.0] - 2026-09-08
+
+### Added
+- Tham số `state` của sb_set giờ nhận `"stuck"`, trạng thái mà một phần tử được ghim (`position: sticky` hoặc `fixed`) mang khi runtime island của nền tảng đánh dấu nó là stuck; sb_set sẽ từ chối ghi khi không có node nào — bản thân node hay bất kỳ tổ tiên nào — có thể ghim được, vì khi đó renderer sẽ không biên dịch rule nào cả và override sẽ bị lưu, publish rồi không bao giờ được vẽ ra.
+- sb_set giờ tự gieo `top`/`zIndex` khi ghi `position: sticky`, khớp với những gì editor của chính nền tảng gieo sẵn, vì một header được ghim mà không có z-index sẽ bị nội dung phía sau vẽ đè lên ngay khi cuộn qua.
+- sb_set giờ cảnh báo (cả ở dry_run lẫn lần ghi thật) khi một node sticky nằm trong một tổ tiên có overflow cắt nó, vì sticky phân giải theo tổ tiên có thể cuộn gần nhất, và một tổ tiên cắt nội dung sẽ âm thầm vô hiệu hóa việc ghim.
+- sb_review giờ báo cáo `stuck_no_host` cho một override trạng thái `stuck` mà không có node ghim nào ở chính nó hay tổ tiên, và `sticky_blocked` cho một node sticky bị tổ tiên có overflow vô hiệu hóa, để một document đi đến một trong hai trạng thái này qua import, template, hoặc một chỉnh sửa sau đó vẫn bị phát hiện dù đã bỏ qua được các kiểm tra lúc ghi của sb_set.
+- sb_import giờ mang theo thuộc tính ghim `sticky`/`fixed` của một section nguồn sang node được import, kèm theo đúng các giá trị gieo về offset và thứ tự layer mà sb_set ghi, vì một section được ghim để luôn hiển thị là một quyết định bố cục khác với một section cuộn trôi đi.
+
+### Fixed
+- sb_media_upload từ `url` không còn thất bại với mọi loại ảnh và video; trước đây lần upload được gửi đi mà không khai báo content type, khiến nền tảng coi đó không phải ảnh cũng không phải video, nên nó từ chối cả một file PNG bình thường với thông báo nêu sai nguyên nhân. Giờ đây content-type khai báo của nguồn được dùng khi nó xác định đúng loại file, và phần mở rộng của tên file được dùng khi không xác định được.
+- sb_import không còn làm mất chữ của một liên kết khi liên kết đó bọc markup (như `<a><span>Docs</span></a>`) mà nội dung bên trong không import được gì; giờ nó giữ lại chính chữ của liên kết thay vì import ra không có gì cho nó.
+
+### Internal
+- Catalog element được tạo lại dựa trên một bản checkout hiện tại của nền tảng: `dataset-block` và `list-dataset` giờ mang một content tip cảnh báo rằng một node dataset bên trong repeater phải bind theo đúng `config.datasetSource` của chính nó, chứ không phải theo mặc định của element.
+
 ## [0.8.0] - 2026-09-08
 
 ### Added

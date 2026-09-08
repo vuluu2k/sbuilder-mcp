@@ -6,6 +6,22 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.9.0] - 2026-09-08
+
+### Added
+- sb_set's `state` argument now accepts `"stuck"`, the look a pinned (`position: sticky` or `fixed`) element wears once the platform's runtime island marks it stuck, refusing the write when neither the node nor any ancestor can pin since the renderer would compile no rule for it and the override would be stored, published and never painted.
+- sb_set now seeds `top`/`zIndex` alongside a `position: sticky` write, matching what the platform's own editor seeds, since a pinned header with no z-index is painted over by later content the moment it scrolls past.
+- sb_set warns (in both dry_run and the real write) when a sticky node sits inside an ancestor whose overflow clips it, since sticky resolves against the nearest scrolling ancestor and a clipping one silently defeats the pin.
+- sb_review reports `stuck_no_host` for a `stuck` state override with no pinned self-or-ancestor, and `sticky_blocked` for a sticky node whose ancestor's overflow defeats it, so a document that reached either state through an import, a template, or a later edit is caught even when sb_set's own write-time checks were bypassed.
+- sb_import now carries a source section's `sticky`/`fixed` positioning onto the imported node, including the same offset and layer-order seeds sb_set writes, since a section pinned to stay in view is a layout decision distinct from one that scrolls away.
+
+### Fixed
+- sb_media_upload from a `url` no longer fails for every image and video type; the upload was sent with no declared content type, which the platform treats as neither an image nor a video, so it refused a plain PNG with a message that named the wrong cause. The source's own Content-Type header is used when it identifies the file, and the file extension otherwise.
+- sb_import no longer drops a link's text when the link wraps markup (such as `<a><span>Docs</span></a>`) whose contents produce nothing importable; it now keeps the link's own words instead of importing nothing for it.
+
+### Internal
+- The generated element catalog is refreshed against a current platform checkout: `dataset-block` and `list-dataset` now carry a content tip warning that a dataset node inside a repeater must bind to its own `config.datasetSource`, not the element's default.
+
 ## [0.8.0] - 2026-09-08
 
 ### Added
