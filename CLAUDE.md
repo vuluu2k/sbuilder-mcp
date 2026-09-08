@@ -630,6 +630,21 @@ that accounts for them.
   `tabItemId` satellite ships `#f5f5f5` / `#7b7b7b` with a `#171717` active state, which is
   rule 4 again.
 
+- **SIXTEEN OF THE PLATFORM'S SEVENTEEN FORM TEMPLATES WERE UNREACHABLE.** `formTemplates.ts`
+  ships `contact`, `subscribe`, `order`, `checkout`, `address`, `consult`, `booking`, `stay`,
+  `feedback`, `event`, `quote`, `apply`, `login`, `register`, `forgot`, `verify` and `reset`,
+  and codegen picked exactly ONE (`checkout`). So a store built entirely with these tools had
+  a checkout and nothing else: no contact form on its contact page, no newsletter, and none of
+  the five auth forms — even though `forms.Type` declares them, `customerauth` serves them,
+  and `Type.IsAuth` gates them. Hand-authoring one means writing a field document whose
+  `mapTo` values are a vocabulary the server validates, which is the guess this catalog exists
+  to remove. `FORM_TEMPLATES` now carries all seventeen with their documents, and
+  `sb_store action:"form"` runs the same three ordered writes the checkout does minus the page
+  (create → PUT back WHOLE → save the document, with the delete-on-failure guard).
+
+  It deliberately makes NO page: where a login form belongs is a design decision, and
+  `/account` is the one page that is not a free choice — see the entry above.
+
 ## The five traps
 
 Each fails SILENTLY. Each is encoded in `src/domains/site/traps.ts` (trap 5 in

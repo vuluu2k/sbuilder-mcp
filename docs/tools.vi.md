@@ -655,17 +655,40 @@ sẽ tiêu tốn sự chú ý của agent vào thứ nó không thể biết.
 
 ## `sb_store`
 
-Chạy một luồng cửa hàng bắt buộc **đúng thứ tự**. Hiện có một action; enum là cách để action
-thứ hai xuất hiện mà không cần thêm tool.
+Chạy một luồng cửa hàng bắt buộc **đúng thứ tự**.
 
 | Tham số | Kiểu | Ghi chú |
 | --- | --- | --- |
-| `action` | `"checkout"` | Luồng cần chạy |
+| `action` | `"checkout"` \| `"form"` | Luồng cần chạy |
 | `site_id` | string? | Không truyền thì lấy `SB_SITE` |
-| `language` | `"vi"` \| `"en"`? | Ngôn ngữ nội dung, mặc định `vi` |
-| `page_name` | string? | Ghi đè tên trang mặc định của editor |
-| `headline` | string? | Ghi đè tiêu đề trang |
+| `language` | `"vi"` \| `"en"`? | `checkout` — ngôn ngữ nội dung, mặc định `vi` |
+| `page_name` | string? | `checkout` — ghi đè tên trang mặc định của editor |
+| `headline` | string? | `checkout` — ghi đè tiêu đề trang |
+| `template` | enum? | `form` — chọn một trong 17 template của nền tảng |
+| `name` | string? | `form` — tên form trong danh sách của chủ shop |
 | `dry_run` | boolean? | Mặc định **true** |
+
+### `action: "form"`
+
+Gieo bất kỳ template form nào của chính nền tảng: `login`, `register`, `forgot`, `reset`,
+`verify`, `contact`, `subscribe`, `booking`, `feedback`, `event`, `quote`, `apply`,
+`address`, `consult`, `stay`, `order`, `checkout`.
+
+Editor có đủ mười bảy template còn server này trước đây chỉ mang MỘT, nên một cửa hàng dựng
+bằng bộ tool này có trang thanh toán và không có gì khác — không form liên hệ, không đăng ký
+nhận tin, và không có cả năm form xác thực, dù `forms.Type` khai báo chúng và `customerauth`
+phục vụ chúng. Tự viết tay nghĩa là viết một field document mà các giá trị `mapTo` là bộ từ
+vựng server kiểm tra — đúng thứ phỏng đoán mà catalog này sinh ra để loại bỏ.
+
+Ba lệnh ghi, y hệt checkout trừ phần trang: tạo, **PUT form về NGUYÊN VẸN** (name và type
+phải đi kèm, nếu không `Normalize()` đổi tên thành "Form" và chuyển type thành `custom`, sau
+đó document bị từ chối), rồi lưu field document với node id mới. Nếu một lệnh ghi sau đó
+hỏng thì form bị xoá lại — một form không ai thấy chính là thứ mồ côi mà lần thử lại sẽ nhân
+đôi.
+
+Nó **không tạo trang**. Đặt form ở đâu là quyết định thiết kế, và `/account` là trang duy
+nhất không được tự do chọn: `membersOnlyRedirectTarget` đưa mọi khách bị chặn về đó. Đặt form
+bằng `sb_add` rồi trỏ `specials.formId` vào id nó trả về.
 
 ### `action: "checkout"`
 

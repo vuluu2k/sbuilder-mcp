@@ -3,8 +3,8 @@
 import type { ApiOperation } from './types.js';
 
 export const SWAGGER_SOURCE = {
-  "operations": 484,
-  "definitions": 99,
+  "operations": 485,
+  "definitions": 102,
   "bodyCarrying": 171,
   "bodyUndescribed": 62,
   "generatedFrom": "server/docs/swagger.json"
@@ -10652,6 +10652,34 @@ export const API_OPERATIONS: ApiOperation[] = [
     "credential": "siteScoped"
   },
   {
+    "id": "get:/api/sites/{siteId}/relation-slots/usage",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/relation-slots/usage",
+    "tags": [
+      "relations"
+    ],
+    "summary": "How many curated shelves reference an item",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "itemId",
+        "in": "query",
+        "required": true,
+        "type": "string",
+        "description": "Product or article id"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
     "id": "post:/api/sites/{siteId}/restore",
     "method": "POST",
     "path": "/api/sites/{siteId}/restore",
@@ -15488,6 +15516,36 @@ export const API_DEFINITIONS: Record<string, unknown> = {
       }
     }
   },
+  "github_com_webbuilder_server_internal_products.BundleItem": {
+    "type": "object",
+    "properties": {
+      "position": {
+        "description": "Position is the merchant's arrangement — the order the components are\nlisted on the product page.",
+        "type": "integer"
+      },
+      "productId": {
+        "type": "string"
+      },
+      "quantity": {
+        "description": "Quantity is how many units of the component one combo contains (≥ 1).",
+        "type": "integer"
+      },
+      "variantId": {
+        "type": "string"
+      }
+    }
+  },
+  "github_com_webbuilder_server_internal_products.BundlePricing": {
+    "type": "string",
+    "enum": [
+      "fixed",
+      "percent"
+    ],
+    "x-enum-varnames": [
+      "BundlePricingFixed",
+      "BundlePricingPercent"
+    ]
+  },
   "github_com_webbuilder_server_internal_products.MetaTag": {
     "type": "object",
     "properties": {
@@ -15539,6 +15597,24 @@ export const API_DEFINITIONS: Record<string, unknown> = {
       "brand": {
         "type": "string"
       },
+      "bundleItems": {
+        "description": "BundleItems is what one combo contains. Empty on every simple product, and\non a combo a merchant has not finished building — which is authorable but\nnot sellable (ApplyBundleTotals).",
+        "type": "array",
+        "items": {
+          "$ref": "#/definitions/github_com_webbuilder_server_internal_products.BundleItem"
+        }
+      },
+      "bundlePricing": {
+        "description": "BundlePricing and BundleValue are how a combo is priced: a flat price in\ncents (\"fixed\") or a percentage off the components' total (\"percent\",\n0–100). The two share one Value field for the reason discounts.Discount\ndoes — the unit is a function of the mode, and two fields would let a\nmerchant leave the unused one holding a number that means nothing.\n\nBoth are ignored (and cleared) on a simple product.",
+        "allOf": [
+          {
+            "$ref": "#/definitions/github_com_webbuilder_server_internal_products.BundlePricing"
+          }
+        ]
+      },
+      "bundleValue": {
+        "type": "integer"
+      },
       "compareAtCents": {
         "description": "CompareAt of the min-price visible variant; 0 = none",
         "type": "integer"
@@ -15563,6 +15639,14 @@ export const API_DEFINITIONS: Record<string, unknown> = {
         "items": {
           "type": "string"
         }
+      },
+      "kind": {
+        "description": "Kind says whether this is an ordinary product or a COMBO whose price and\navailability are derived from the components in BundleItems. Absent on the\nwire means simple — see bundle.go, which owns every rule below.",
+        "allOf": [
+          {
+            "$ref": "#/definitions/github_com_webbuilder_server_internal_products.ProductKind"
+          }
+        ]
       },
       "moneyOverride": {
         "description": "MoneyOverride is an opaque per-product money-display override (compact-convert\nrules + exchange-rate overrides), stored as a JSONB blob. The domain keeps it\nopaque — it is decoded at the render boundary (bindings.ProductSource →\nrender.ProductData) — so products stays decoupled from render/money, the same\nway the site settings document is an opaque blob. Empty ({}/null) → no override.",
@@ -15699,6 +15783,17 @@ export const API_DEFINITIONS: Record<string, unknown> = {
         "type": "string"
       }
     }
+  },
+  "github_com_webbuilder_server_internal_products.ProductKind": {
+    "type": "string",
+    "enum": [
+      "simple",
+      "bundle"
+    ],
+    "x-enum-varnames": [
+      "ProductKindSimple",
+      "ProductKindBundle"
+    ]
   },
   "github_com_webbuilder_server_internal_products.ProductStatus": {
     "type": "string",

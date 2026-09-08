@@ -68,6 +68,95 @@ async function clientOver(f: typeof fetch) {
 const parse = (r: unknown) =>
   JSON.parse((r as { content: Array<{ text: string }> }).content[0].text) as Record<string, unknown>;
 
+/**
+ * EVERY OTHER FORM THE PLATFORM CAN SEED.
+ *
+ * The editor ships 17 templates and this repo carried ONE, so a store built with
+ * these tools could have a checkout and nothing else — no contact form, no
+ * newsletter, and none of the five auth forms, even though `forms.Type` declares
+ * them and `customerauth` serves them. Hand-authoring one means writing a field
+ * document whose `mapTo` values are a vocabulary the server validates.
+ */
+describe('sb_store form', () => {
+  it('names every template rather than making the caller guess', async () => {
+    const { f } = storefront();
+    const { client, close } = await clientOver(f);
+    const failed = (await client.callTool({
+      name: 'sb_store',
+      arguments: { action: 'form' },
+    })) as { isError?: boolean; content: Array<{ text: string }> };
+    expect(failed.isError).toBe(true);
+    // The message lists every key, so the caller never has to go and look.
+    for (const key of ['login', 'register', 'forgot', 'reset', 'verify', 'contact']) {
+      expect(failed.content[0].text, key).toContain(key);
+    }
+    await close();
+  });
+
+  it('previews the three ordered writes without sending one', async () => {
+    const { f, calls } = storefront();
+    const { client, close } = await clientOver(f);
+    const out = parse(await client.callTool({ name: 'sb_store', arguments: { action: 'form', template: 'forgot' } }));
+    expect(out.form_type).toBe('forgot');
+    expect((out.plan as unknown[]).length).toBe(3);
+    expect(calls.filter((c) => c.method !== 'GET')).toEqual([]);
+    await close();
+  });
+
+  it('creates the form, PUTS IT BACK WHOLE, then saves the document', async () => {
+    const { f, calls } = storefront();
+    const { client, close } = await clientOver(f);
+    const out = parse(
+      await client.callTool({
+        name: 'sb_store',
+        arguments: { action: 'form', template: 'login', name: 'Đăng nhập', dry_run: false },
+      }),
+    );
+    const writes = calls.filter((c) => c.method !== 'GET');
+    expect(writes.map((c) => c.method)).toEqual(['POST', 'PUT', 'PUT']);
+    // Name and type must ride along on the PUT or Normalize() renames the form
+    // and turns it custom, after which the document is refused.
+    expect(writes[1].body).toMatchObject({ name: 'X', type: 'order' });
+    expect(writes[2].path).toMatch(/\/document$/);
+    expect((out.form as { id: string }).id).toBe('frm_1');
+    // The caller is told where the form goes — nothing places it for them.
+    expect(String(out.next)).toContain('specials.formId');
+    await close();
+  });
+
+  it('mints fresh node ids, so two forms never share one', async () => {
+    const ids = async () => {
+      const { f, calls } = storefront();
+      const { client, close } = await clientOver(f);
+      await client.callTool({
+        name: 'sb_store',
+        arguments: { action: 'form', template: 'register', dry_run: false },
+      });
+      const doc = calls.find((c) => c.path.endsWith('/document'))!.body!.document as {
+        nodes: Record<string, unknown>;
+      };
+      await close();
+      return Object.keys(doc.nodes).sort();
+    };
+    const [a, b] = [await ids(), await ids()];
+    expect(a.length).toBeGreaterThan(1);
+    expect(a).not.toEqual(b);
+  });
+
+  it('deletes the form again when a later write fails', async () => {
+    const { f, calls } = storefront({ fail: '/document' });
+    const { client, close } = await clientOver(f);
+    const failed = (await client.callTool({
+      name: 'sb_store',
+      arguments: { action: 'form', template: 'contact', dry_run: false },
+    })) as { isError?: boolean };
+    expect(failed.isError).toBe(true);
+    // A form nobody can see is the orphan the obvious retry would duplicate.
+    expect(calls.some((c) => c.method === 'DELETE' && c.path.endsWith('/forms/frm_1'))).toBe(true);
+    await close();
+  });
+});
+
 describe('sb_store checkout', () => {
   it('defaults to a dry run that sends no write and returns the four steps in order', async () => {
     const { f, calls } = storefront();

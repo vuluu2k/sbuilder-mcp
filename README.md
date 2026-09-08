@@ -98,7 +98,7 @@ make, because those mean "this person's account".
 | `sb_look` | Save, render, and return screenshots plus measured node boxes and layout defects measured on the render |
 | `sb_event` | Give a node a click action — open the cart, go to a page, open a pop-up |
 | `sb_bind` | Bind a node's content to real store data, or make a button add to the cart |
-| `sb_store` | Run a store flow that must happen in a fixed order — today, the four writes that make a working checkout |
+| `sb_store` | Run a store flow that must happen in a fixed order — the four writes that make a working checkout, or any of the platform's 17 form templates (login, register, forgot, contact, subscribe …) with its own field document |
 | `sb_undo` | Put back what a PUT replaced — the platform has no page history or restore, so this is the only way back |
 
 Twenty-eight tools, **484 API operations** (158 of the 212 writes carrying a body shape read
