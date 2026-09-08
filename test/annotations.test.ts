@@ -10,7 +10,10 @@ describe('tool annotations', () => {
   it('every tool carries annotations; the read set is readOnlyHint', async () => {
     const { client, close } = await connectedClient();
     const { tools } = await client.listTools();
-    expect(tools.length).toBe(28);
+    // 29 since sb_import. The count is asserted rather than left open because
+    // the tools/list ceiling below is per-LIST, so a tool added without a look at
+    // its own description is how that ceiling gets tripped by somebody else.
+    expect(tools.length).toBe(29);
     for (const t of tools) expect(t.annotations, t.name).toBeDefined();
     for (const name of READ_ONLY) {
       expect(tools.find((t) => t.name === name)!.annotations!.readOnlyHint, name).toBe(true);

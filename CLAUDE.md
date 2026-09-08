@@ -667,6 +667,28 @@ that accounts for them.
   It deliberately makes NO page: where a login form belongs is a design decision, and
   `/account` is the one page that is not a free choice — see the entry above.
 
+- **AN IMPORT FROM ELSEWHERE IS A TRANSLATION, AND THE CLONE IS THE TRAP.** `custom-code`
+  embeds raw author markup verbatim, so dumping a fetched page into one is both possible and
+  the obvious shortcut — and it produces a Store Builder page that no inspector can edit, with
+  no responsive cascade, bound to nothing, carrying somebody else's CSS and scripts. `sb_import`
+  therefore reduces a page to SIX kinds — section, heading, text, image, button, list — in the
+  browser, so what crosses the boundary is small and the element choices stay testable without
+  a network (`domains/site/importmap.ts` is pure; `vision/capture.ts` holds the DOM half).
+
+  The tokens come off the TARGET page, not the source, which is rule 0 applied to the one
+  operation that most threatens it: first heading's ink and weight, first body line's colour
+  and size, first NON-transparent button's fill and radius — a transparent one is a nav link,
+  and taking its fill would leave every imported button with none. An empty target yields NO
+  tokens rather than an invented palette.
+
+  Images are uploaded into the site's own library, and a failed upload keeps the original URL:
+  a visible image beats an empty frame, and a hotlinked one is a product photo that disappears
+  when somebody else's site changes.
+
+  `capture.ts` launches its OWN browser rather than sharing `shoot.ts`'s process-lifetime one:
+  an import is rare, slow and runs untrusted script, and coupling that to the tool a vision
+  loop calls every few hundred milliseconds is how the fast path gets slow.
+
 ## The five traps
 
 Each fails SILENTLY. Each is encoded in `src/domains/site/traps.ts` (trap 5 in

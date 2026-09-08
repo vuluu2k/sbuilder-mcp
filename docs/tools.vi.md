@@ -653,6 +653,43 @@ hoặc khi `node_id` đóng khung một element.
 Nó không chấm thẩm mỹ. Một hero có đọc xuôi hay không thì không đo được, và giả vờ đo được
 sẽ tiêu tốn sự chú ý của agent vào thứ nó không thể biết.
 
+## `sb_import`
+
+Đọc một trang từ URL công khai bất kỳ rồi thêm cấu trúc và nội dung của nó vào **trang đang
+mở**, dưới dạng element thật mang token của **chính trang này**.
+
+| Tham số | Kiểu | Ghi chú |
+| --- | --- | --- |
+| `url` | string | Trang cần đọc |
+| `site_id` | string? | Không truyền thì lấy `SB_SITE` |
+| `max_sections` | number? | Mặc định 24 |
+| `upload_images` | boolean? | Chép ảnh vào media library của site, mặc định **true** |
+| `dry_run` | boolean? | Mặc định **true** — trả về những gì tìm thấy |
+
+**Là dịch lại, không phải sao chép, và đó là toàn bộ thiết kế.** Nền tảng CÓ một lối thoát
+hiểm cho phép sao chép nguyên trang — `custom-code` nhúng markup thô nguyên văn — nhưng dùng
+nó sẽ ra một trang Store Builder mà không inspector nào sửa được, không có cascade responsive,
+không bind vào đâu, và kéo theo CSS cùng script của người khác. Giống nhất về hình thức, và
+là ngõ cụt về cấu trúc.
+
+Nên chỉ sáu loại đi qua biên — section, heading, text, image, button, list — và mỗi loại đến
+nơi dưới dạng element render được nó. Thứ **không** được chép: màu, font, khoảng cách và bố
+cục của trang nguồn.
+
+**Token lấy từ chính trang bạn đang mở**, đúng rule 0 của skill thiết kế: màu và độ đậm của
+heading đầu tiên, màu và cỡ của dòng body đầu tiên, nền và bo góc của nút **không trong suốt**
+đầu tiên (nút trong suốt là link điều hướng — lấy "nền" của nó thì mọi nút import về đều
+không có nền), padding của section đầu tiên và max-width của block đầu tiên. Trang đích rỗng
+thì không có token nào và mọi element rơi về mặc định của chính nó — bịa ra một bảng màu cho
+nó chính là thứ rule 0 sinh ra để ngăn.
+
+**Ảnh được chép về, không hotlink.** Mỗi ảnh được upload vào media library của site và node
+trỏ vào bản chép; ảnh nào upload hỏng thì giữ URL gốc, vì một tấm ảnh hiện được vẫn hơn một
+khung trống. Truyền `upload_images: false` để bỏ qua.
+
+Trang tự dựng bằng script sau khi load, hoặc trang sau đăng nhập, sẽ đọc ra mỏng hoặc rỗng —
+kết quả nói rõ đã bỏ qua những gì và vì sao.
+
 ## `sb_store`
 
 Chạy một luồng cửa hàng bắt buộc **đúng thứ tự**.

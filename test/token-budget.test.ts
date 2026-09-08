@@ -39,7 +39,17 @@ describe('token budget — a diet without a scale comes back', () => {
     // `sb_undo` (~550): the platform has no page history and no restore, so every
     // whole-document replace is one-way. A merchant clicking through the editor
     // has undo; an agent had nothing, and one call does more damage.
-    expect(JSON.stringify(tools).length).toBeLessThan(19_000);
+    //
+    // `sb_import` (~400): reading a page from elsewhere is a translation, not a
+    // clone, and the description has to say so — the platform HAS an escape
+    // hatch that would clone it (`custom-code` embeds raw markup) and a caller
+    // who reaches for that gets a page no inspector can edit.
+    //
+    // 20,500 rather than 19,500: a ceiling set just above the current
+    // measurement gets raised again on the next honest tool, which trains a
+    // reader to raise it without reading. This has room for one more and still
+    // refuses a schema dump.
+    expect(JSON.stringify(tools).length).toBeLessThan(20_500);
     for (const t of tools) expect(t.description, t.name).not.toMatch(/vanishes on publish/);
     const instructions = client.getInstructions() ?? '';
     expect(instructions.length).toBeGreaterThan(200);

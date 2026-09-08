@@ -677,6 +677,42 @@ present when nothing was measured, or when `node_id` frames one element.
 It does not judge taste. Whether a hero reads well is not measurable, and pretending
 otherwise would spend the agent's attention on what it cannot know.
 
+## `sb_import`
+
+Read a page from any public URL and add its structure and content to the **open page**, as
+real elements dressed in **this page's** tokens.
+
+| Arg | Type | Notes |
+| --- | --- | --- |
+| `url` | string | The page to read |
+| `site_id` | string? | Falls back to `SB_SITE` |
+| `max_sections` | number? | Default 24 |
+| `upload_images` | boolean? | Copy images into this site's media library, default **true** |
+| `dry_run` | boolean? | Defaults to **true** — returns what was found |
+
+**A translation, not a clone, and that is the whole design.** The platform HAS an escape
+hatch that would clone a page — `custom-code` embeds raw markup verbatim — and reaching for
+it produces a Store Builder page no inspector can edit, with no responsive cascade, bound to
+nothing, carrying somebody else's CSS and scripts. Visually closest, structurally a dead end.
+
+So six kinds of thing cross the boundary — section, heading, text, image, button, list — and
+each arrives as the element that renders it. What is NOT copied: the source's colours,
+fonts, spacing and layout.
+
+**The tokens come off the page you have open**, which is rule 0 of the design skill done
+literally: the first heading's ink and weight, the first body line's colour and size, the
+first NON-transparent button's fill and radius (a transparent one is a nav link, and taking
+its "fill" would give every imported button none), the first section's padding and the first
+block's max-width. An empty target page yields no tokens and every element falls back to its
+own defaults — inventing a palette for it is the invention rule 0 exists to prevent.
+
+**Images are copied, not hotlinked.** Each source is uploaded into this site's media library
+and the node points at the copy; a source whose upload fails keeps its original URL, because
+a visible image beats an empty frame. Pass `upload_images: false` to skip.
+
+A page that builds itself with scripts after load, or one behind a login, reads as thin or
+empty — the result says what was skipped and why.
+
 ## `sb_store`
 
 Run a store flow that must happen in a **fixed order**.
