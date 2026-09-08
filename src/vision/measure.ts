@@ -44,13 +44,21 @@ function overlaps(a: Box, b: Box): boolean {
  * 1440 and spills at 390 is the ordinary responsive failure, and saying which
  * width it happened at is most of the fix.
  */
-export function measureShot(shot: Shot): VisualFinding[] {
+export function measureShot(shot: Shot, skip: ReadonlySet<string> = new Set()): VisualFinding[] {
   const out: VisualFinding[] = [];
   const byId = new Map(shot.boxes.map((b) => [b.id, b]));
   const seen = new Set<string>();
 
   for (const b of shot.boxes) {
     if (b.id === 'ROOT') continue;
+    // AN OVERLAY IS OFF-SCREEN ON PURPOSE. The cart drawer is parked outside
+    // the viewport until a shopper opens it, so every node inside it measures
+    // as off-canvas — 24 findings on one page, on every page carrying the
+    // drawer, at every width. They are also not this page's to fix: an overlay
+    // is composed onto ROOT on read and stripped on write (trap 1), which is
+    // why `reviewDesign` already skips them and this had to as well. A list
+    // that is two dozen false positives long is a list nobody reads.
+    if (skip.has(b.id)) continue;
 
     // OFF-CANVAS. A negative x, or a right edge past the viewport, is content
     // the visitor cannot reach — and on a phone it also drags a horizontal
@@ -83,8 +91,13 @@ export function measureShot(shot: Shot): VisualFinding[] {
   // choice — but two elements in the same flow row sitting on top of each other
   // is one of them being unreadable.
   for (const a of shot.boxes) {
+    if (skip.has(a.id)) continue;
     for (const b of shot.boxes) {
       if (a.id >= b.id || a.id === 'ROOT' || b.id === 'ROOT') continue;
+      // Same reason as above, and it needs saying twice because the pair loop is
+      // its own pass: a drawer parked off-screen overlaps whatever the page has
+      // at those coordinates, and neither half of that pair is a defect.
+      if (skip.has(b.id)) continue;
       if (a.w === 0 || a.h === 0 || b.w === 0 || b.h === 0) continue;
       const pairKey = `${a.id}|${b.id}`;
       if (seen.has(pairKey)) continue;
@@ -122,10 +135,13 @@ function contains(outer: Box, inner: Box): boolean {
  * widths it spills at is the useful part, so the widths are collected onto the
  * single finding rather than repeated as separate ones.
  */
-export function measure(shots: Shot[]): Array<VisualFinding & { widths: number[] }> {
+export function measure(
+  shots: Shot[],
+  skip: ReadonlySet<string> = new Set(),
+): Array<VisualFinding & { widths: number[] }> {
   const merged = new Map<string, VisualFinding & { widths: number[] }>();
   for (const shot of shots) {
-    for (const f of measureShot(shot)) {
+    for (const f of measureShot(shot, skip)) {
       const key = `${f.code}|${f.nodeId}`;
       const existing = merged.get(key);
       if (existing) existing.widths.push(f.width);

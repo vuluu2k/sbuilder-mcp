@@ -17,10 +17,18 @@ declare const document: {
     parentElement: { id: string } | null;
     getBoundingClientRect(): { x: number; y: number; width: number; height: number };
     textContent: string | null;
+    complete?: boolean;
+    naturalWidth?: number;
   }>;
+  body: { scrollHeight: number };
 };
 declare function getComputedStyle(el: unknown): { fontSize: string };
-declare const window: { innerWidth: number };
+declare const window: {
+  innerWidth: number;
+  innerHeight: number;
+  scrollTo(x: number, y: number): void;
+};
+declare function setTimeout(fn: () => void, ms: number): unknown;
 
 export interface Box {
   id: string;
@@ -197,6 +205,49 @@ export async function shoot(
   );
 }
 
+/**
+ * WALK THE PAGE so its lazy images load, then come back to the top.
+ *
+ * `fullPage: true` does NOT scroll: Playwright resizes the capture, and an
+ * `<img loading="lazy">` below the fold never enters the viewport, never
+ * fetches, and photographs as an empty box. The renderer marks every image
+ * below the first screen lazy, so this hit the one thing the vision loop exists
+ * to judge — measured on a real storefront: 4 of the page's images unloaded
+ * before the walk, 0 after. The agent saw four blank product cards on a page a
+ * shopper sees four photos on, and the honest reading of that picture is "the
+ * images are broken", which would send it to fix something that works.
+ *
+ * BOUNDED at every step, because a shot that never happens is worse than one
+ * taken a beat early: the walk is capped, and the wait for decoding gives up
+ * rather than hanging on an image the server will never send.
+ */
+async function settleLazyImages(page: Page): Promise<void> {
+  await page
+    .evaluate(async () => {
+      const step = window.innerHeight || 900;
+      const end = document.body.scrollHeight;
+      // A very long page is walked in bigger strides rather than not at all.
+      const stride = Math.max(step, Math.ceil(end / 40));
+      for (let y = 0; y < end; y += stride) {
+        window.scrollTo(0, y);
+        await new Promise((r) => setTimeout(() => r(undefined), 60));
+      }
+      window.scrollTo(0, 0);
+    })
+    .catch(() => {});
+  // Give what the walk started a chance to arrive. `complete` is false while a
+  // fetch is in flight; a decoded-but-broken image reports complete with a zero
+  // natural width, and that is a REAL defect the shot should show, so it is not
+  // waited on.
+  await page
+    .waitForFunction(
+      () => [...document.querySelectorAll('img')].every((i) => i.complete === true),
+      undefined,
+      { timeout: 3_000 },
+    )
+    .catch(() => {});
+}
+
 async function shootOne(
   page: Page,
   url: string,
@@ -215,6 +266,7 @@ async function shootOne(
   // waits for it; if it never does, the shot happens anyway.
   await page.goto(url, { waitUntil: 'load', timeout: 30_000 });
   await page.waitForLoadState('networkidle', { timeout: 2_500 }).catch(() => {});
+  await settleLazyImages(page);
   // A RENDERED page carries its node ids as the HTML `id` attribute — not as
   // `data-node-id`, which is the editor CANVAS's hook and never reaches the
   // renderer. Selecting the canvas attribute here returned an empty box list

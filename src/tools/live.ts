@@ -28,10 +28,26 @@ import { LiveSession } from '../live/session.js';
 import type { Patch } from '../core/patch.js';
 import type { PageDoc } from '../domains/site/document.js';
 import { refuseAppBlockInterior } from '../domains/site/builder.js';
+import { childrenOf, isOverlay, subtreeIds } from '../core/tree.js';
 import { siteToken } from './credentialpick.js';
-import type { ToolContext } from './context.js';
+import { siteFor, type ToolContext } from './context.js';
 import { projectList, MEDIA_FIELDS } from './project.js';
 import type { PageSession } from './page.js';
+
+/**
+ * The reserved binding id a PURCHASE control carries, and the vocabulary its
+ * target speaks — `schema/src/elements/datasetBindings.ts:845-852`.
+ *
+ * The id is reserved so authoring and the editor's own healing never collide,
+ * and `buy_now` is stored as builderx's `dynamic_checkout`: the picker's word
+ * and the document's word are deliberately different, and hand-mapping either
+ * one is how the two drift.
+ */
+const PRODUCT_ACTION_BINDING_ID = 'bind-product-action';
+const PURCHASE_TARGETS: Record<string, string> = {
+  add_to_cart: 'add_to_cart',
+  buy_now: 'dynamic_checkout',
+};
 
 /**
  * Bind a node's content to real store data.
@@ -45,8 +61,15 @@ import type { PageSession } from './page.js';
  *    reads the namespace off the field and `continue`s on anything else — so a
  *    `style.color` binding is stored, saved, published, and ignored forever.
  */
-export function bindNode(doc: PageDoc, id: string, source: string, field: string): Patch[] {
-  const node = doc.node(id) as unknown as { bindings: unknown[] };
+
+export function bindNode(
+  doc: PageDoc,
+  id: string,
+  source: string,
+  field: string,
+  action?: string,
+): Patch[] {
+  const node = doc.node(id) as unknown as { bindings: Array<{ id?: string }> };
   refuseAppBlockInterior(doc, id, 'binding');
   if (!BINDING_SOURCES.includes(source)) {
     throw new Error(
@@ -61,6 +84,38 @@ export function bindNode(doc: PageDoc, id: string, source: string, field: string
         'every other namespace, so the binding would be stored and never applied.',
     );
   }
+  // A PURCHASE BINDING, which is what makes a button add to the cart.
+  //
+  // It is not an ordinary binding and cannot be written as one: the renderer
+  // reads `target.action` (`server/render/nodes/helpers.go:1166`) and nothing
+  // else, `sb_set` writes only style/config/specials, and this tool's plain path
+  // writes no target at all — so before this branch a store built entirely
+  // through these tools had no way to author an Add-to-cart button, while
+  // `sb_review` reported the gap and named no fix that worked. The one control
+  // a shop cannot do without was the one the tools could not make.
+  if (action !== undefined) {
+    const mapped = PURCHASE_TARGETS[action];
+    if (!mapped) {
+      throw new Error(
+        `sbuilder: "${action}" is not a purchase action. Use "add_to_cart" or "buy_now" — ` +
+          'those are the two the renderer draws a purchase control for.',
+      );
+    }
+    const value = {
+      id: PRODUCT_ACTION_BINDING_ID,
+      source,
+      field,
+      target: { type: 'product', id: '', action: mapped },
+    };
+    // RESERVED ID, so a second call re-points the control instead of leaving two
+    // purchase bindings on one button for the runtime to choose between.
+    const at = node.bindings.findIndex((b) => b?.id === PRODUCT_ACTION_BINDING_ID);
+    if (at >= 0) return [{ op: 'set', path: ['nodes', id, 'bindings', String(at)], value }];
+    return [
+      { op: 'insert', path: ['nodes', id, 'bindings'], index: node.bindings.length, value },
+    ];
+  }
+
   return [
     {
       op: 'insert',
@@ -117,10 +172,11 @@ export function registerLiveTools(
           'editor as it happens, with the agent shown by the API key\'s own name rather than a ' +
           "person's. Always yields, so it is safe beside a human. Works with SB_TOKEN or with " +
           'SB_EMAIL / SB_PASSWORD.',
-      inputSchema: { site_id: z.string() },
+      inputSchema: { site_id: z.string().optional() },
       annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true },
     },
-    async ({ site_id }) => {
+    async ({ site_id: given }) => {
+      const site_id = siteFor(ctx, given);
       const tokenFn = liveTokenFor(ctx);
       const wsBase = ctx.base.replace(/^http/, 'ws').replace(/\/$/, '');
       const socket = new RealtimeSocket(
@@ -198,7 +254,14 @@ export function registerLiveTools(
       const review = reviewField(ctx, session.current());
       // Measured on the render, not read off the document — a card that spills
       // at 390px is invisible to every check that only reads the tree.
-      const visual = node_id ? [] : measure(shots);
+      // The overlay subtree, read off the OPEN DOCUMENT — the boxes come from
+      // the render and carry no idea which node is a drawer.
+      const doc = session.current().doc;
+      const skip = new Set<string>();
+      for (const id of childrenOf(doc, doc.root_node_id)) {
+        if (isOverlay(doc, id)) for (const n of subtreeIds(doc, id)) skip.add(n);
+      }
+      const visual = node_id ? [] : measure(shots, skip);
       const layout = compactFindings(visual);
       const layoutNotice = visual.length > 0 ? ctx.notices.once('measure', MEASURE_NOTICE) : undefined;
       // The legend rides with the first look only; the shape does not change after.
@@ -247,7 +310,7 @@ export function registerLiveTools(
         "The site's media library. Reuse an image before adding another; search by name, filter " +
           'by type, page with limit/offset.',
       inputSchema: {
-      site_id: z.string(),
+      site_id: z.string().optional(),
       search: z.string().optional(),
       media_type: z.string().optional().describe('e.g. "image"'),
       limit: z.number().int().min(1).max(200).optional(),
@@ -255,13 +318,13 @@ export function registerLiveTools(
     },
       annotations: { readOnlyHint: true },
     },
-    async ({ site_id, search, media_type, limit, offset }) =>
+    async ({ site_id: given, search, media_type, limit, offset }) =>
       text(
         projectList(
           await request({
           base: ctx.base,
           method: 'GET',
-          path: `/api/sites/${encodeURIComponent(site_id)}/media`,
+          path: `/api/sites/${encodeURIComponent(siteFor(ctx, given))}/media`,
           token: siteToken(ctx),
           query: { search, mediaType: media_type, limit, offset },
           fetchImpl: ctx.fetchImpl,
@@ -280,7 +343,7 @@ export function registerLiveTools(
           'local file path or a URL to fetch. This is the ONLY way to add an image: the upload ' +
           'is multipart, which sb_api_call cannot send.',
       inputSchema: {
-      site_id: z.string(),
+      site_id: z.string().optional(),
       path: z.string().optional().describe('A file on this machine'),
       url: z.string().optional().describe('Fetched, then uploaded'),
       name: z.string().optional(),
@@ -289,7 +352,8 @@ export function registerLiveTools(
     },
       annotations: { readOnlyHint: false, destructiveHint: false },
     },
-    async ({ site_id, path, url, name, folder_id, dry_run }) => {
+    async ({ site_id: given, path, url, name, folder_id, dry_run }) => {
+      const site_id = siteFor(ctx, given);
       if (!path && !url) throw new Error('sbuilder: give sb_media_upload either a path or a url');
       if (dry_run !== false) {
         return text({
@@ -313,8 +377,8 @@ export function registerLiveTools(
     'sb_bind',
     {
       description:
-        "Bind a node's content to real store data, so the page shows actual products rather than " +
-          'placeholder text.',
+        'Bind a node to real store data so the page shows actual products, not placeholder ' +
+          'text. action makes a button a purchase control.',
       inputSchema: {
       id: z.string(),
       source: z
@@ -326,17 +390,21 @@ export function registerLiveTools(
           `e.g. ${BINDING_SOURCES.slice(0, 4).join(', ')}; ${BINDING_SOURCES.length} in all, and a wrong one is refused with the list`,
         ),
       field: z.string().describe('Where the value lands, always "specials.<key>"'),
+      action: z
+        .enum(['add_to_cart', 'buy_now'])
+        .optional()
+        .describe('Pass product.id + specials.boundProductId'),
       dry_run: z.boolean().optional(),
     },
       annotations: { readOnlyHint: false, destructiveHint: false },
     },
-    async ({ id, source, field, dry_run }) => {
+    async ({ id, source, field, action, dry_run }) => {
       const d = session.current();
-      const patches = bindNode(d, id, source, field);
+      const patches = bindNode(d, id, source, field, action);
       if (dry_run !== false) return text({ dry_run: true, patches });
       session.applyAndPublish(patches);
       await session.save();
-      return text({ bound: id, source, field, rev: d.rev });
+      return text({ bound: id, source, field, ...(action ? { action } : {}), rev: d.rev });
     },
   );
 }

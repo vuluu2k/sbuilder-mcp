@@ -69,6 +69,23 @@ function canShowARecord(type: string): boolean {
 }
 
 /**
+ * Bound specials that carry NAVIGATION rather than what a visitor reads.
+ *
+ * The distinction decides whether an empty container is a defect. A
+ * `dataset-block` binds only these — it is a card that still needs the fields
+ * put inside it, so an empty one really is an empty card. A `media-dataset`
+ * binds `boundImage` / `boundImages` and DRAWS the record itself, children or
+ * not: a bound one with no children publishes a product photo, and calling that
+ * "an empty band" is the false positive that teaches a reader to skip the list.
+ */
+const LINK_SPECIALS = new Set(['boundHref', 'boundHrefLabel', 'boundProductURL']);
+
+/** Whether this element's own renderer paints the record, so it needs no children. */
+function drawsItsOwnContent(type: string): boolean {
+  return (BOUND_SPECIALS[type] ?? []).some((k) => !LINK_SPECIALS.has(k));
+}
+
+/**
  * Everything wrong with this page that a person would notice.
  *
  * Overlays are skipped: the cart drawer is composed onto ROOT on read and is not
@@ -131,9 +148,20 @@ export function reviewDesign(doc: PageDoc): Finding[] {
       continue;
     }
 
+    const bindings =
+      (n as unknown as { bindings?: Array<{ source?: string; field?: string }> }).bindings ?? [];
+
     // A container with nothing in it is a band of empty space. The commonest way
     // to ship one is to add the section and then get distracted.
-    if (meta.isContainer && childrenOf(d, id).length === 0) {
+    //
+    // Unless the element paints the record ITSELF: a bound `media-dataset` with
+    // no children publishes the product's photo and its thumbnail strip, which
+    // this rule reported as an empty band on a page that rendered correctly.
+    if (
+      meta.isContainer &&
+      childrenOf(d, id).length === 0 &&
+      !(bindings.length > 0 && drawsItsOwnContent(type))
+    ) {
       out.push({
         code: 'empty_container',
         nodeId: id,
@@ -143,8 +171,6 @@ export function reviewDesign(doc: PageDoc): Finding[] {
       });
     }
 
-    const bindings =
-      (n as unknown as { bindings?: Array<{ source?: string; field?: string }> }).bindings ?? [];
     const repeater = inRepeater.get(id);
     const boundFields = new Set(bindings.map((b) => b.field));
     /**
