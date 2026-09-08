@@ -30095,7 +30095,9 @@ export const ELEMENTS: Record<string, CatalogElement> = {
       "Place it on a product or collection page so its children inherit that page binding automatically; on any OTHER page, pin a standalone product via the Product trait group (and optionally a default variant) so the children preview that product",
       "Fill it with dataset children (media-dataset, text-dataset, pricing-dataset, product-variants, quantity, buttons); style each field on its own node",
       "Use direction + gap for the internal flex layout and content-width to cap and center the card",
-      "Prefer a horizontal split (media beside a content column) for buy boxes and a vertical stack for compact cards"
+      "Prefer a horizontal split (media beside a content column) for buy boxes and a vertical stack for compact cards",
+      "config.datasetSource names the ENTITY this card holds — \"product\" (the default when the key is absent), \"category\", \"article\", \"blogCategory\", \"course\" or \"review\". Inside a list-dataset it MUST equal the repeater's own datasetSource: it is what makes the card bind that entity's fields AND what gives the card its link, so a collection card left on the default binds product.url, resolves to nothing in a collection row, and publishes with no link on it at all",
+      "Set the same datasetSource on every dataset child of the card (text-dataset, collection-media) — each child reads its own key, not the card's"
     ],
     "semantics": [
       "dataset",
@@ -31470,6 +31472,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
     ],
     "contentTips": [
       "Always add exactly one dataset-block child as the repeated item template; every row clones that exact structure and styling",
+      "The dataset-block template — and every dataset node inside it — must carry the SAME config.datasetSource as this repeater. Each node reads its OWN key, so a collection list whose card omits it leaves that card on the product default: it binds product.url, no product context reaches a collection row, and the card publishes with no link, so clicking it does nothing",
       "config.datasetSource picks the ENTITY: \"product\" for a product list, \"category\" for a collection list. It is what derives the node's binding target (product::product_list / category::collection_list)",
       "Product lists: config.collectionType \"all_products\" renders the whole catalog, \"collection\" renders the one named by config.collectionId, \"related\" renders the PAGE PRODUCT's neighbours — the products sharing one of its collections, minus itself",
       "Use \"related\" for a cross-sell shelf on a product page (\"Sản phẩm liên quan\" / \"You may also like\"). It reads no collectionId — its axis is whatever collections the page product is filed under — and it renders nothing on a page that names no product, so pair it with an emptyStateId if the section must never be blank",
