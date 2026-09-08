@@ -23,6 +23,11 @@ worse than one that does not exist.
 as `SB_SITE` and every tool then defaults to it. Without it the model has to carry the id
 through the session, which it can only get by listing pages and reading one back.
 
+`--site-name "Your Store"` rides alongside it as `SB_SITE_NAME`. It is a label, never an
+address — nothing resolves by it — but it lets the agent say the store's name back to you
+instead of a 32-character id you did not choose. The **Apps → AI agent** screen appends it
+whenever the store has a name.
+
 It **merges**: the servers already in those files stay, whatever it replaces is copied to
 `<file>.sbuilder-backup`, and a config it cannot parse is refused rather than overwritten —
 a file with a trailing comma is far likelier than one worth discarding, and it is what you

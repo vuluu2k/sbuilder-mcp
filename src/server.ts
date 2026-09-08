@@ -52,6 +52,7 @@ export function buildContext(): ToolContext {
     session: new Session(base),
     apiKey: process.env.SB_TOKEN,
     siteId: process.env.SB_SITE,
+    siteName: process.env.SB_SITE_NAME,
     notices: new Notices(), undo: new UndoLog(),
   };
 }

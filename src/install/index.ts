@@ -11,6 +11,8 @@ export interface InstallOpts {
   password?: string;
   /** The one site this install works on, written as SB_SITE. */
   site?: string;
+  /** That site's display name, written as SB_SITE_NAME. */
+  siteName?: string;
   /** Client ids; empty means every client detected on this machine. */
   clients?: string[];
   dryRun?: boolean;
@@ -25,11 +27,21 @@ export interface InstallOpts {
  * at a real install, read by nothing, and reported as success — the caller then
  * spent the session wondering why the site was not selected. A flag that is
  * silently dropped is worse than one that does not exist.
+ *
+ * BUT REFUSING ONE THE PLATFORM ITSELF EMITS IS WORSE STILL, and that is what
+ * `--site-name` became. The editor's Agent app builds the whole install line for
+ * the merchant to paste — `AgentAppPanel.vue`, which appends
+ * `--site-name "<store>"` whenever it knows the name, with a test pinning it —
+ * so the ONE documented install path exited 1 and installed nothing. The flag
+ * was never noise; it was added on the platform side after this list was
+ * written. It is a label, not a credential: it rides in as SB_SITE_NAME so the
+ * agent can say "Áo Thun" instead of reading back site_14675b5a570b248d.
  */
 const FLAGS = [
   '--token',
   '--api',
   '--site',
+  '--site-name',
   '--email',
   '--password',
   '--client',
@@ -44,6 +56,10 @@ export function buildEntry(opts: InstallOpts, pkg = 'sbuilder-mcp'): ServerEntry
   // here spares every tool call an id the install already knew — and spares the
   // model the guess it otherwise makes from a page list.
   if (opts.site) env.SB_SITE = opts.site;
+  // The name the merchant calls the store, so the agent can too. Carried only
+  // alongside an id — a name with nothing to resolve to is decoration, and a
+  // second install would file it under a site it does not name.
+  if (opts.site && opts.siteName) env.SB_SITE_NAME = opts.siteName;
   // Only when a key is absent: a key opens everything the agent does day to day,
   // and writing an account password into six config files to buy the handful of
   // account-level calls it adds is a bad trade the installer should not make for
@@ -137,6 +153,7 @@ export function runInstallCli(argv: string[]): number {
     token: get('--token') ?? process.env.SB_TOKEN,
     api: get('--api') ?? process.env.SB_API,
     site: get('--site') ?? process.env.SB_SITE,
+    siteName: get('--site-name') ?? process.env.SB_SITE_NAME,
     email: get('--email') ?? process.env.SB_EMAIL,
     password: get('--password') ?? process.env.SB_PASSWORD,
     clients: get('--client')?.split(','),
@@ -169,7 +186,17 @@ export function runInstallCli(argv: string[]): number {
   }
 
   for (const r of results) {
-    const mark = r.status === 'installed' ? '✔' : r.status === 'unchanged' ? '·' : '✖';
+    // A DRY RUN THAT WROTE NOTHING DID ITS JOB. Every line used to be marked
+    // `✖` and the command exited 1, so the one way to inspect an install before
+    // making it reported total failure — and a CI step wrapping it would stop
+    // there. The preview gets its own mark and its own exit code.
+    const mark = opts.dryRun
+      ? '→'
+      : r.status === 'installed'
+        ? '✔'
+        : r.status === 'unchanged'
+          ? '·'
+          : '✖';
     console.error(`${mark} ${r.client} — ${r.status}${r.reason ? ` (${r.reason})` : ''}`);
     console.error(`    ${r.path}`);
     // The undo, named. A config writer that changes a file without saying where
@@ -177,5 +204,6 @@ export function runInstallCli(argv: string[]): number {
     if (r.backup) console.error(`    previous file saved as ${r.backup}`);
     if (r.note) console.error(`    ${r.note}`);
   }
+  if (opts.dryRun) return 0;
   return results.some((r) => r.status === 'installed' || r.status === 'unchanged') ? 0 : 1;
 }
