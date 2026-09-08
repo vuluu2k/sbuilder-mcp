@@ -124,7 +124,9 @@ that accounts for them.
   OpenAPI document declares no body for it at all, so the shape was read off the editor's
   own `saveSource` (`editor/src/features/pages/api.ts:115`), including its
   `schema_version ?? 1` fallback. Copy the working client; never guess a body.
-- **The element registry holds 106 types, and `getElementAI` covers 106/106.** The
+- **The element registry holds 107 types, and `getElementAI` covers 107/107** (106 until
+  `order-receipt` landed — codegen asserts the coverage, so this number moves with the
+  platform and a stale one here is caught by the next run, not by a reader). The
   directory has more entries than that because the loose `.ts` files beside the elements
   are not elements. 77 binding sources, read from BOTH renderers — the Go scope and the
   editor's own binding context, which carries keys the Go side never spells out
@@ -323,6 +325,30 @@ that accounts for them.
 - **The page's CSS is a LINKED STYLESHEET, not the HTML.** `static-*.css`, `desktop-*.css`,
   `tablet-*.css` off the assets host. Grepping the HTML for a rule and finding nothing proves
   nothing — twice here it read as "the style did not apply" when it had.
+
+- **STOREFRONT CUSTOMER ACCOUNTS EXIST, and an element hint said they did not.** `form`'s
+  `avoidWhen` carried "Sign-in, registration or password reset: those need storefront customer
+  accounts, which do not exist yet, so a form there would submit into nothing" — read at build
+  time and believed, which is why a storefront shipped with no way to sign in. They exist in
+  full: `/_wb/account/{login,register,logout,forgot,addresses,cart,courses,…}`, the `account`
+  page type served at the fixed path `/account`, form types `login` / `register` / `forgot` /
+  `reset` / `verify` (`forms.Type.IsAuth`, submitting through `customerauth` rather than the
+  submissions table), the `logout_customer` click action, and the elements `account-info`,
+  `member-gate`, `member-field`, `address-book`, `wishlist-list`, `points-card`,
+  `points-prompt` — several already shipping VIETNAMESE defaults. Corrected at the source
+  (`schema/src/elements/form/ai.ts`). The lesson is the one this file already records for
+  agent keys: a hint written when something was true survives long after it stops being, and
+  a stale one that says "you cannot" costs more than no hint at all. `customer.name` is not a
+  mapping either — the field is `customer.fullName`.
+
+- **FOUR PATHS RESOLVE BY PAGE TYPE, and only one backstops itself.** `page.FixedPathTypes` is
+  search, checkout, complete, account. `/checkout/complete` serves a built-in receipt when the
+  store has no completion page — measured 200 on a store that had none. `/account` and
+  `/search` measured 404 on the same store, QUIETLY, because nothing links to them by default:
+  the merchant finds out when a shopper who wants their order history does. `readinessGaps`
+  now reports both, after the five that stand between the store and a paid order and before
+  the cart trigger — a shop with no account page still takes money, so they are a different
+  question, asked second.
 
 - **A SHARED MASTER IS FENCED, AND THE FENCE MOVES ON EVERY SAVE.** Compose stamps
   `specials.globalRev` / `specials.overlayRev` on the node it materialises; the save sends it

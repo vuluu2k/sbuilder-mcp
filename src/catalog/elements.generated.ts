@@ -3,7 +3,7 @@
 import type { CatalogElement, NodeSeed, SatelliteRule, TraitDescription } from './element-types.js';
 
 export const ELEMENT_SOURCE = {
-  "count": 106,
+  "count": 107,
   "docSchemaVersion": 2
 } as const;
 
@@ -4050,6 +4050,170 @@ export const ELEMENTS: Record<string, CatalogElement> = {
       "signed-in"
     ]
   },
+  "order-receipt": {
+    "type": "order-receipt",
+    "label": "Order receipt",
+    "category": "advanced",
+    "isContainer": false,
+    "isRootOnly": false,
+    "locked": false,
+    "hideInLayer": false,
+    "childAllows": [],
+    "defaults": {
+      "specials": {
+        "title": "Chi tiết đơn hàng",
+        "numberLabel": "Mã đơn hàng",
+        "placedLabel": "Ngày đặt",
+        "statusLabel": "Trạng thái",
+        "itemsLabel": "Sản phẩm",
+        "totalLabel": "Tổng cộng",
+        "dueLabel": "Còn phải trả",
+        "unavailableText": "Không tải được chi tiết đơn hàng. Bạn có thể tra cứu bằng mã đơn hàng trong trang tài khoản."
+      },
+      "style": {
+        "width": "100%"
+      }
+    },
+    "inspector": [
+      {
+        "tab": "general",
+        "groups": [
+          {
+            "key": "receipt_content",
+            "label": "Content",
+            "controls": [
+              "receipt_title",
+              "receipt_number_label",
+              "receipt_placed_label",
+              "receipt_status_label",
+              "receipt_items_label"
+            ]
+          },
+          {
+            "key": "receipt_totals",
+            "label": "Totals",
+            "controls": [
+              "receipt_total_label",
+              "receipt_due_label"
+            ]
+          },
+          {
+            "key": "receipt_unavailable",
+            "label": "Unavailable",
+            "controls": [
+              "receipt_unavailable_text"
+            ]
+          },
+          {
+            "key": "size",
+            "label": "Size",
+            "controls": [
+              "width_select",
+              "height_select",
+              "size_bounds"
+            ]
+          },
+          {
+            "key": "background",
+            "label": "Background",
+            "controls": [
+              "bg_color",
+              "bg_image"
+            ]
+          },
+          {
+            "key": "shape",
+            "label": "Shape",
+            "controls": [
+              "border",
+              "corner",
+              "shadow"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "advanced",
+        "groups": [
+          {
+            "key": "spacing",
+            "label": "Spacing",
+            "controls": [
+              "padding_margin"
+            ]
+          },
+          {
+            "key": "display",
+            "label": "Display",
+            "controls": [
+              "display"
+            ]
+          },
+          {
+            "key": "animation",
+            "label": "Animation",
+            "controls": [
+              "animation"
+            ]
+          },
+          {
+            "key": "class_css",
+            "label": "Class",
+            "controls": [
+              "class_css"
+            ]
+          }
+        ]
+      }
+    ],
+    "controls": [
+      "receipt_title",
+      "receipt_number_label",
+      "receipt_placed_label",
+      "receipt_status_label",
+      "receipt_items_label",
+      "receipt_total_label",
+      "receipt_due_label",
+      "receipt_unavailable_text",
+      "width_select",
+      "height_select",
+      "size_bounds",
+      "bg_color",
+      "bg_image",
+      "border",
+      "corner",
+      "shadow",
+      "padding_margin",
+      "display",
+      "animation",
+      "class_css"
+    ],
+    "description": "Shows the order a shopper has just paid for on a checkout completion page: order number, date, status, the items, the total, and anything still owed. Reads one order through the signed receipt grant the payment return endpoint puts in the completion URL, so it works for a guest who has no account.",
+    "useWhen": [
+      "Building the checkout completion page a shopper lands on after paying at a gateway.",
+      "The store takes card or wallet payments and wants the buyer to see what they bought without signing in.",
+      "Pairing with payment-status, which reports the MONEY; this reports the ORDER."
+    ],
+    "avoidWhen": [
+      "On any page other than the completion page — every other page is reached without the signed grant, so the block hides itself and renders nothing.",
+      "As an order history list: this shows exactly one order. Use order-history for a signed-in shopper’s past orders.",
+      "To show a home address or per-line prices — the receipt read is deliberately reduced and carries neither."
+    ],
+    "contentTips": [
+      "Word the labels the way the store talks about orders; every string here is yours, not the platform’s.",
+      "The \"still owed\" row prints only when something is actually outstanding, so its label can say so plainly.",
+      "The unavailable sentence is read by someone whose link has expired — point them at where the order really lives."
+    ],
+    "semantics": [
+      "order",
+      "receipt",
+      "checkout",
+      "completion",
+      "confirmation",
+      "ecommerce",
+      "guest"
+    ]
+  },
   "course-outline": {
     "type": "course-outline",
     "label": "Course Syllabus",
@@ -5805,7 +5969,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
     "avoidWhen": [
       "A single button or link is all that is needed — a form asks the visitor to type, which is a much larger request than a click.",
       "The data belongs to an existing flow that already has its own surface (adding to the cart, checking out).",
-      "Sign-in, registration or password reset: those need storefront customer accounts, which do not exist yet, so a form there would submit into nothing."
+      "A `custom` form for sign-in or registration: use the LOGIN / REGISTER / FORGOT / RESET types instead. Storefront customer accounts exist — those types submit through /_wb/account/* rather than the submissions table, and a custom form pointed at the same job stores a password in a response row."
     ],
     "contentTips": [
       "Ask for the fewest fields that make the request answerable. Every additional field measurably reduces the number of people who finish.",
@@ -32183,6 +32347,94 @@ export const TRAIT_WRITES: Record<string, TraitDescription> = {
       {
         "target": "specials",
         "writeKey": "referenceLabel",
+        "type": "string"
+      }
+    ]
+  },
+  "receipt_title": {
+    "key": "receipt_title",
+    "label": "Section title",
+    "writes": [
+      {
+        "target": "specials",
+        "writeKey": "title",
+        "type": "string"
+      }
+    ]
+  },
+  "receipt_number_label": {
+    "key": "receipt_number_label",
+    "label": "Order number label",
+    "writes": [
+      {
+        "target": "specials",
+        "writeKey": "numberLabel",
+        "type": "string"
+      }
+    ]
+  },
+  "receipt_placed_label": {
+    "key": "receipt_placed_label",
+    "label": "Date label",
+    "writes": [
+      {
+        "target": "specials",
+        "writeKey": "placedLabel",
+        "type": "string"
+      }
+    ]
+  },
+  "receipt_status_label": {
+    "key": "receipt_status_label",
+    "label": "Status label",
+    "writes": [
+      {
+        "target": "specials",
+        "writeKey": "statusLabel",
+        "type": "string"
+      }
+    ]
+  },
+  "receipt_items_label": {
+    "key": "receipt_items_label",
+    "label": "Items label",
+    "writes": [
+      {
+        "target": "specials",
+        "writeKey": "itemsLabel",
+        "type": "string"
+      }
+    ]
+  },
+  "receipt_total_label": {
+    "key": "receipt_total_label",
+    "label": "Total label",
+    "writes": [
+      {
+        "target": "specials",
+        "writeKey": "totalLabel",
+        "type": "string"
+      }
+    ]
+  },
+  "receipt_due_label": {
+    "key": "receipt_due_label",
+    "label": "Outstanding label",
+    "writes": [
+      {
+        "target": "specials",
+        "writeKey": "dueLabel",
+        "type": "string"
+      }
+    ]
+  },
+  "receipt_unavailable_text": {
+    "key": "receipt_unavailable_text",
+    "label": "Unavailable message",
+    "writes": [
+      {
+        "target": "specials",
+        "writeKey": "unavailableText",
         "type": "string"
       }
     ]

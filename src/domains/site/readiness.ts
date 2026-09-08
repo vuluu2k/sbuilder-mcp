@@ -38,7 +38,9 @@ export type ReadinessGapId =
   | 'payment'
   | 'productPage'
   | 'shipping'
-  | 'cartTrigger';
+  | 'cartTrigger'
+  | 'accountPage'
+  | 'searchPage';
 
 export interface ReadinessGap {
   id: ReadinessGapId;
@@ -165,6 +167,47 @@ export function readinessGaps(input: ReadinessInput): ReadinessGap[] {
       fix: 'Add at least one shipping method (sb_api_find "shipping methods").',
     });
   }
+  // THE OTHER FIXED PATHS.
+  //
+  // `page.FixedPathTypes` is four — search, checkout, complete, account — and
+  // each resolves to the site's PUBLISHED page of that type
+  // (storefront/typeroute.go). `complete` is the one that backstops itself: with
+  // no completion page the storefront serves a built-in receipt, measured 200 on
+  // a live store that had none. The other three 404, and `/account` and
+  // `/search` 404 QUIETLY — nothing links to them by default, so the merchant
+  // finds out when a shopper who wants their order history does.
+  //
+  // Separate from the five above, and after them, because these do not stand
+  // between the store and a PAID ORDER: a shop with no account page still takes
+  // money. They stand between it and a finished website, which is the next
+  // question a merchant asks.
+  for (const [type, id, what, fix] of [
+    [
+      'account',
+      'accountPage' as const,
+      '/account 404s. A shopper has no way to see their orders, addresses or saved items, and ' +
+        'the account elements (account-info, address-book, wishlist-list, points-card) have ' +
+        'nowhere to live.',
+      'Create a page of type "account" and publish it. Put login and register forms behind a ' +
+        'member-gate with audience "guests", and the profile behind audience "members".',
+    ],
+    [
+      'search',
+      'searchPage' as const,
+      '/search 404s, so a search box in the header sends every shopper to a dead page.',
+      'Create a page of type "search" and publish it.',
+    ],
+  ] as const) {
+    if (!pages || published(pages, type)) continue;
+    const draft = drafted(pages, type);
+    gaps.push({
+      id,
+      draft,
+      problem: what,
+      fix: draft ? `Publish the ${type} page that already exists.` : fix,
+    });
+  }
+
   if (input.globalNodes !== null && !opensCart([...input.pageNodes, ...input.globalNodes])) {
     gaps.push({
       id: 'cartTrigger',
