@@ -150,6 +150,15 @@ that accounts for them.
   guards both.
 - **`applyBindings` honours only the `specials` namespace.** A binding whose `field` names
   any other namespace is stored, saved, published, and ignored forever.
+- **`sb_review` now answers EIGHT readiness questions, and the newest is the most basic.** A
+  store with a published product template, a checkout page, a live gateway and a delivery
+  option reported READY on an EMPTY CATALOGUE — every repeater rendering its empty state to a
+  shopper, the product template bound to nothing. `catalogue` reports that, and reports the
+  near-miss too: every active product priced at zero renders, adds to the cart and totals
+  nothing, which reads as a working store right up to the money. Read off
+  `/api/sites/{siteId}/products` rather than `/api/v1/products`, because that one takes either
+  credential and the check must answer for a session install as well as a key-only one.
+
 - **Store readiness lives ONLY in the editor.** `editor/src/editor/storeReadiness.ts` computes
   five gaps between a site and a paid order — no checkout page, no live gateway, no published
   product template, no delivery option, nothing that opens the cart — and no API exposes any

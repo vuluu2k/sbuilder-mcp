@@ -31,7 +31,7 @@ export async function gatherReadiness(
   };
   const site = encodeURIComponent(siteId);
 
-  const [pageList, gateways, shipping, globals] = await Promise.all([
+  const [pageList, gateways, shipping, globals, productList] = await Promise.all([
     get<{ pages?: ReadinessPage[] }>(`/api/sites/${site}/pages`),
     get<{ paymentGateways?: Array<{ enabled?: boolean; configured?: boolean }> }>(
       `/api/sites/${site}/payment-gateways`,
@@ -39,6 +39,13 @@ export async function gatherReadiness(
     get<{ shippingMethods?: unknown[]; methods?: unknown[] }>(`/api/sites/${site}/shipping-methods`),
     get<{ globalSections?: Array<{ document?: { nodes?: Record<string, unknown> } }> }>(
       `/api/sites/${site}/global-sections`,
+    ),
+    // The SITE-SCOPED list, not /api/v1/products: this one takes either
+    // credential, so the check answers for a session install as well as a
+    // key-only one. A page is enough to tell empty from not; `total` carries the
+    // real count when the platform sends it.
+    get<{ products?: Array<{ status?: string; priceCents?: number }>; total?: number }>(
+      `/api/sites/${site}/products?limit=200`,
     ),
   ]);
 
@@ -59,8 +66,22 @@ export async function gatherReadiness(
       ) as ReadinessInput['globalNodes']
     : null;
 
+  // ACTIVE means a shopper can see it; PURCHASABLE adds a price above zero. A
+  // product priced at zero renders, adds to the cart, and totals nothing — which
+  // reads as a working store right up to the money.
+  const rows = productList?.products;
+  const products = Array.isArray(rows)
+    ? {
+        active: rows.filter((p) => (p.status ?? 'active') === 'active').length,
+        purchasable: rows.filter(
+          (p) => (p.status ?? 'active') === 'active' && (p.priceCents ?? 0) > 0,
+        ).length,
+      }
+    : null;
+
   return {
     pages: pageList?.pages ?? null,
+    products,
     liveGateways,
     shippingMethods,
     pageNodes,

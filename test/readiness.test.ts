@@ -23,6 +23,7 @@ describe('readinessGaps()', () => {
       pages: [{ type: 'page', status: 'published' }],
       liveGateways: 0,
       shippingMethods: 0,
+      products: { active: 0, purchasable: 0 },
       pageNodes: [node('list-dataset')],
       globalNodes: [],
     });
@@ -33,6 +34,7 @@ describe('readinessGaps()', () => {
       'checkoutPage',
       'payment',
       'productPage',
+      'catalogue',
       'shipping',
       'accountPage',
       'searchPage',
@@ -140,5 +142,51 @@ describe('readinessGaps() — a finished website, not just a paid order', () => 
   it('stays silent on a site that is not a store at all', () => {
     expect(readinessGaps({ ...base, pages: [{ type: 'page', status: 'published' }] } as never))
       .toEqual([]);
+  });
+});
+
+/**
+ * NOTHING TO SELL — the most basic question, and the one nothing asked.
+ *
+ * A store with a published product template, a checkout page, a live gateway and
+ * a delivery option reported READY on an empty catalogue. Every repeater on it
+ * renders its empty state to a shopper, and the product template has nothing to
+ * bind to.
+ */
+describe('readinessGaps() — the catalogue', () => {
+  const ready = {
+    pages: [
+      { type: 'product', status: 'published' },
+      { type: 'checkout', status: 'published' },
+      { type: 'account', status: 'published' },
+      { type: 'search', status: 'published' },
+    ],
+    liveGateways: 1,
+    shippingMethods: 1,
+    pageNodes: [],
+    globalNodes: [{ data: { type: 'button' }, events: [{ action: 'open_cart' }] }],
+  };
+  const ids = (products: unknown) =>
+    readinessGaps({ ...ready, products } as never).map((g) => g.id);
+  const gap = (products: unknown) =>
+    readinessGaps({ ...ready, products } as never).find((g) => g.id === 'catalogue');
+
+  it('reports an empty catalogue on a site that is otherwise ready', () => {
+    expect(ids({ active: 0, purchasable: 0 })).toEqual(['catalogue']);
+    expect(gap({ active: 0, purchasable: 0 })!.problem).toMatch(/no active products/i);
+  });
+
+  it('reports a catalogue priced entirely at zero, and says how many', () => {
+    const g = gap({ active: 7, purchasable: 0 })!;
+    expect(g.problem).toMatch(/All 7 active products are priced at zero/);
+    expect(g.fix).toMatch(/VND × 100/);
+  });
+
+  it('is silent once one product is purchasable', () => {
+    expect(ids({ active: 7, purchasable: 1 })).toEqual([]);
+  });
+
+  it('is SILENT on unread data rather than inventing an empty shop', () => {
+    expect(ids(null)).toEqual([]);
   });
 });

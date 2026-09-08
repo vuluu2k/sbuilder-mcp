@@ -40,7 +40,8 @@ export type ReadinessGapId =
   | 'shipping'
   | 'cartTrigger'
   | 'accountPage'
-  | 'searchPage';
+  | 'searchPage'
+  | 'catalogue';
 
 export interface ReadinessGap {
   id: ReadinessGapId;
@@ -68,6 +69,16 @@ export interface ReadinessInput {
   liveGateways: number | null;
   /** Delivery options the site offers; null when unread. */
   shippingMethods: number | null;
+  /**
+   * Products a shopper could actually buy — active, priced above zero — and how
+   * many active ones there are at all. Null when the list could not be read.
+   *
+   * The most basic question of all, and the one nothing asked: a store with a
+   * published product template, a checkout page, a live gateway and a delivery
+   * option reports READY on an empty catalogue, and every repeater on it renders
+   * its empty state to a shopper.
+   */
+  products: { active: number; purchasable: number } | null;
   /** Every node of the open page. */
   pageNodes: NodeLike[];
   /** Every node of every global section master; null when unread. */
@@ -156,6 +167,32 @@ export function readinessGaps(input: ReadinessInput): ReadinessGap[] {
         : 'Create a page of type "product" and publish it.',
     });
   }
+  // NOTHING TO SELL. Checked before the delivery option, because a shipping
+  // method for an empty catalogue is furniture.
+  if (input.products) {
+    if (input.products.active === 0) {
+      gaps.push({
+        id: 'catalogue',
+        draft: false,
+        problem:
+          'The store has no active products. Every product list on the site renders its empty ' +
+          'state, the product template has nothing to bind to, and there is nothing to add to a ' +
+          'cart — on a site that otherwise reports ready.',
+        fix: 'Create products (sb_api_find "create product"). priceCents is minor units — VND × 100.',
+      });
+    } else if (input.products.purchasable === 0) {
+      gaps.push({
+        id: 'catalogue',
+        draft: false,
+        problem:
+          `All ${input.products.active} active products are priced at zero. They render, they add ` +
+          'to the cart, and the order totals nothing — which reads as a working store right up ' +
+          'to the money.',
+        fix: 'Set priceCents on each product and its variants. Minor units: VND × 100.',
+      });
+    }
+  }
+
   if (input.shippingMethods === 0) {
     gaps.push({
       id: 'shipping',

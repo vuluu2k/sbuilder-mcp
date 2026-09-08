@@ -1,12 +1,71 @@
 ---
 name: sbuilder-site-design
-description: The design contract for building a storefront with the sb_* tools — where the design comes from (a Figma or Stitch source outranks invention), what separates a real site from a generated one, the three widths, the responsive cascade's tail, the satellites that hold an element's look, the form's two-level field skin, and which artifact to judge a page from. Triggers when designing or editing pages through sb_add / sb_set / sb_look / sb_review, when porting a Figma or Stitch design onto a site, or when a rendered page looks wrong.
+description: How to build a storefront with the sb_* tools that can actually take money — the ordered build recipe (catalogue before pages, delivery before payment, paths that resolve by page type), where the design comes from (a Figma or Stitch source outranks invention), what separates a real site from a generated one, the three widths, the responsive cascade's tail, the satellites that hold an element's look, the form's two-level field skin, and which artifact to judge a page from. Triggers when designing or editing pages through sb_add / sb_set / sb_look / sb_review, when porting a Figma or Stitch design onto a site, or when a rendered page looks wrong.
 ---
 
-# Designing a site with the `sb_*` tools
+# Building and designing a site with the `sb_*` tools
 
-Every rule here is a defect that SHIPPED in this repo's own storefront build. None of them
-is taste. Each names the check that would have caught it.
+Every step and every rule here comes from a defect that SHIPPED in this repo's own storefront
+build. None of it is taste. Each names the check that would have caught it.
+
+## Building a store that can actually take money
+
+The order below is not a preference. Each step exists because doing it later
+costs a rebuild, and every one of them was learned by doing it wrong first.
+
+**1. Connect, and know your site.** `sb_connect`. With `SB_SITE` set, every
+`site_id` is optional.
+
+**2. The CATALOGUE before the pages.** Products first, then categories, then
+media — because a page binds to data, and a product grid built against an empty
+catalogue is judged against its empty state. Three facts that cost a retry each:
+
+- `priceCents` is MINOR UNITS: VND × 100. A 189.000 ₫ shirt is `18900000`.
+- `PATCH /api/v1/products/{id}` is **405**. Use PUT, and send the whole object —
+  read it back first.
+- The variant picker reads the product's `attributes` array, NOT its variants'
+  `options`. Set both, or the shopper picks from the element's seed values
+  ("Red / Green / Blue", "S / M / L") while the real sizes sit unused.
+
+**3. Media.** `sb_media_upload`, or `POST /api/v1/media` (multipart) — the second
+door, and the key's own.
+
+**4. Delivery, then payment.** Shipping methods first: the checkout seeds a
+shipping select whose options ARE the site's own methods, so a store with none
+shows a required-looking field with nothing in it. Then a gateway:
+`PUT /api/sites/{siteId}/payment-gateways/{provider}` with
+`{enabled, sandbox, label, credentials}`.
+
+**5. The checkout, through the editor's own four-step flow.** Do not hand-build
+it — the field document's `mapTo` values are a vocabulary the server validates
+(`customer.fullName`, not `customer.name`). See CLAUDE.md's checkout entry.
+
+**6. The pages, BY TYPE.** Four paths resolve by page type and ignore slugs
+entirely: `/checkout`, `/checkout/complete`, `/account`, `/search`. Plus
+`/products/{slug}` needs a published `product` page and `/categories/…` a
+`category` one. Only `/checkout/complete` backstops itself; the rest 404.
+
+**7. The design.** Rule 0 first — read the source, or read the page. Then
+sections, then the surfaces the page does not show you: satellites, field skin,
+the cart drawer, every empty state.
+
+**8. The purchase controls.** `sb_bind` with `action: "add_to_cart"` on the buy
+button — a purchase is a BINDING. `sb_event` with `open_cart` on a standalone
+cart control in the header — that one is an EVENT. Getting these two backwards
+is the commonest mistake here, and both tools refuse the other's job by name.
+
+**9. Publish.** It CASCADES through shared globals: publishing one page
+republishes every page carrying a global it touched.
+
+**10. Verify, in this order.** `sb_look` at three widths → read `layout` → the
+published storefront URL, not the preview → open the cart drawer → `sb_review`
+for the store gaps.
+
+`sb_review` answers step 10's last question with eight checks: `checkoutPage`,
+`payment`, `productPage`, `catalogue`, `shipping`, `accountPage`, `searchPage`,
+`cartTrigger`. The first five stand between the store and a PAID ORDER; the rest
+stand between it and a finished website. All eight survive publish silently, and
+a real shopper is otherwise what finds them.
 
 ## Where the design comes from
 
