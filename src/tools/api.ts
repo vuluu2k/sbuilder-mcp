@@ -199,7 +199,16 @@ export async function callOperation(ctx: ToolContext, args: CallArgs): Promise<u
     const name = m[1];
     const value = args.path_params?.[name];
     if (value === undefined) {
-      throw new Error(`sbuilder: operation ${op.id} needs path param "${name}"`);
+      // NAME THE ARGUMENT, not just the parameter. The call sheet lists these
+      // under `params` while the call takes them in `path_params`, and a caller
+      // who reads the sheet and passes `params` is told only that the param is
+      // missing — which is exactly the value they just supplied. Two words of
+      // "in path_params" is the difference between one round trip and a loop.
+      throw new Error(
+        `sbuilder: operation ${op.id} needs path param "${name}" — pass it in path_params, ` +
+          `e.g. path_params: { "${name}": "…" }. The call sheet lists it under "params"; ` +
+          'query values go in `query`.',
+      );
     }
     path = path.replace(`{${name}}`, encodeURIComponent(value));
   }
@@ -234,6 +243,13 @@ export async function callOperation(ctx: ToolContext, args: CallArgs): Promise<u
     body: args.body,
     fetchImpl: ctx.fetchImpl,
   });
+  // A 204 HAS NO BODY, and `null` is not an answer a caller can read: a DELETE
+  // that worked and a DELETE that returned nothing looked identical, so sixteen
+  // page deletes in a row reported `null` sixteen times and the only way to know
+  // they had happened was to list the pages again. Say what the operation did.
+  if (raw === null || raw === undefined) {
+    return { ok: true, method: op.method, path, note: 'The platform answered with no content.' };
+  }
   return shapeResponse(raw, { pick: args.pick, max_items: args.max_items });
 }
 

@@ -44,7 +44,13 @@ export function pkgVersion(): string {
 
 export function buildContext(): ToolContext {
   const base = process.env.SB_API ?? 'http://localhost:8080';
-  return { base, session: new Session(base), apiKey: process.env.SB_TOKEN, notices: new Notices() };
+  return {
+    base,
+    session: new Session(base),
+    apiKey: process.env.SB_TOKEN,
+    siteId: process.env.SB_SITE,
+    notices: new Notices(),
+  };
 }
 
 export function createServer(ctx: ToolContext = buildContext()): McpServer {

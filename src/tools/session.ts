@@ -9,6 +9,8 @@ export interface ConnectResult {
   user: string;
   sites: Array<{ id: string; name: string }>;
   api_key: 'present' | 'missing';
+  /** SB_SITE, when the install named one — the id every tool then defaults to. */
+  site?: string;
   operations: number;
   note?: string;
 }
@@ -38,11 +40,16 @@ export async function connect(
       user: 'api key',
       sites: [],
       api_key: 'present',
+      ...(ctx.siteId ? { site: ctx.siteId } : {}),
       operations: API_OPERATIONS.length,
-      note:
-        'Connected with an API key alone. It is bound to one site, so there is no site list — ' +
-        'pass that site id to sb_page_open. Set SB_EMAIL and SB_PASSWORD as well if you want ' +
-        'account-level calls (listing sites, members, roles), which a key cannot make.',
+      note: ctx.siteId
+        ? `Connected with an API key alone, on site ${ctx.siteId} (SB_SITE). Every tool ` +
+          'defaults to it, so site_id is optional. Set SB_EMAIL and SB_PASSWORD as well if ' +
+          'you want account-level calls (listing sites, members, roles), which a key cannot make.'
+        : 'Connected with an API key alone. It is bound to one site, so there is no site list — ' +
+          'pass that site id to sb_page_open, or set SB_SITE once and leave site_id out. Set ' +
+          'SB_EMAIL and SB_PASSWORD as well if you want account-level calls (listing sites, ' +
+          'members, roles), which a key cannot make.',
     };
   }
 
@@ -102,8 +109,29 @@ export function registerSessionTools(server: McpServer, ctx: ToolContext): void 
       inputSchema: {},
       annotations: { readOnlyHint: true },
     },
-    async () =>
-      text(
+    async () => {
+      // A KEY CANNOT ANSWER THIS, and saying "not logged in — call sb_connect
+      // first" was the wrong instruction: sb_connect SUCCEEDS on a key-only
+      // install and this call still fails, so the caller retries the thing that
+      // already worked. `GET /api/sites` means "this human's account", which a
+      // key is deliberately not.
+      if (!ctx.session.loggedIn()) {
+        if (ctx.apiKey) {
+          throw new Error(
+            'sbuilder: listing sites is an ACCOUNT call and an API key addresses one site, so ' +
+              'the platform refuses it by design — sb_connect will not change that. ' +
+              (ctx.siteId
+                ? `This install works on ${ctx.siteId} (SB_SITE).`
+                : 'Set SB_SITE to the site you mean.') +
+              ' Set SB_EMAIL and SB_PASSWORD if you genuinely need the account-level list.',
+          );
+        }
+        throw new Error(
+          'sbuilder: no credential. Set SB_TOKEN to an API key, or SB_EMAIL and SB_PASSWORD ' +
+            'and call sb_connect.',
+        );
+      }
+      return text(
         await request({
           base: ctx.base,
           method: 'GET',
@@ -111,6 +139,7 @@ export function registerSessionTools(server: McpServer, ctx: ToolContext): void 
           token: ctx.session.token(),
           fetchImpl: ctx.fetchImpl,
         }),
-      ),
+      );
+    },
   );
 }

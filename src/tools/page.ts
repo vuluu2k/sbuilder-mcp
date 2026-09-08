@@ -27,7 +27,7 @@ import { catalogMatches, traitsFor } from '../catalog/element-search.js';
 import type { Patch } from '../core/patch.js';
 import type { LiveSession } from '../live/session.js';
 import type { Box } from '../vision/shoot.js';
-import type { ToolContext } from './context.js';
+import { siteFor, type ToolContext } from './context.js';
 import { projectList, PAGE_FIELDS, TEMPLATE_FIELDS } from './project.js';
 
 /**
@@ -185,11 +185,11 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
       description:
         'Open a page for editing and return its outline. Call before any sb_add / sb_set / ' +
           'sb_move / sb_remove. Find page ids with sb_api_find "list pages".',
-      inputSchema: { site_id: z.string(), page_id: z.string() },
+      inputSchema: { site_id: z.string().optional(), page_id: z.string() },
       annotations: { readOnlyHint: true },
     },
-    async ({ site_id, page_id }) => {
-      const outline = await session.open(site_id, page_id);
+    async ({ site_id: given, page_id }) => {
+      const outline = await session.open(siteFor(ctx, given), page_id);
       const doc = session.current();
       // A page whose stored document named its root under the app-block key
       // renders as an empty <body> and says nothing about why. Nobody else can
@@ -459,16 +459,16 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
       description:
         "The store's saved section templates — designed sections a person starts from rather " +
           'than assembling one. Use sb_template_use to drop one into the open page.',
-      inputSchema: { site_id: z.string() },
+      inputSchema: { site_id: z.string().optional() },
       annotations: { readOnlyHint: true },
     },
-    async ({ site_id }) =>
+    async ({ site_id: given }) =>
       text(
         projectList(
           await request({
           base: ctx.base,
           method: 'GET',
-          path: `/api/sites/${encodeURIComponent(site_id)}/section-templates`,
+          path: `/api/sites/${encodeURIComponent(siteFor(ctx, given))}/section-templates`,
           token: siteToken(ctx),
           fetchImpl: ctx.fetchImpl,
         }),
@@ -485,14 +485,15 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
         'Instantiate a saved section template into a page. The server does the copy, so the ' +
           'section arrives exactly as it was designed — then re-open the page to see it.',
       inputSchema: {
-      site_id: z.string(),
+      site_id: z.string().optional(),
       template_id: z.string(),
       page_id: z.string(),
       dry_run: z.boolean().optional(),
     },
       annotations: { readOnlyHint: false, destructiveHint: false },
     },
-    async ({ site_id, template_id, page_id, dry_run }) => {
+    async ({ site_id: given, template_id, page_id, dry_run }) => {
+      const site_id = siteFor(ctx, given);
       const path = `/api/sites/${encodeURIComponent(site_id)}/section-templates/${encodeURIComponent(template_id)}/instantiate`;
       if (dry_run !== false) {
         return text({ dry_run: true, would_post: path, body: { pageId: page_id } });
@@ -519,16 +520,16 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
     {
       description:
         "Every page on the site, with its slug and whether it is live.",
-      inputSchema: { site_id: z.string() },
+      inputSchema: { site_id: z.string().optional() },
       annotations: { readOnlyHint: true },
     },
-    async ({ site_id }) =>
+    async ({ site_id: given }) =>
       text(
         projectList(
           await request({
           base: ctx.base,
           method: 'GET',
-          path: `/api/sites/${encodeURIComponent(site_id)}/pages`,
+          path: `/api/sites/${encodeURIComponent(siteFor(ctx, given))}/pages`,
           token: siteToken(ctx),
           fetchImpl: ctx.fetchImpl,
         }),
@@ -546,7 +547,7 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
           'checkout, product, category, post and course: /checkout and /products/{slug} need a ' +
           'PUBLISHED page of that type or they 404.',
       inputSchema: {
-      site_id: z.string(),
+      site_id: z.string().optional(),
       name: z.string(),
       type: z.string().optional().describe('page (default), checkout, product, category, post, course'),
       slug: z.string().optional(),
@@ -556,7 +557,8 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
     },
       annotations: { readOnlyHint: false, destructiveHint: false },
     },
-    async ({ site_id, name, type, slug, is_homepage, settings, dry_run }) => {
+    async ({ site_id: given, name, type, slug, is_homepage, settings, dry_run }) => {
+      const site_id = siteFor(ctx, given);
       const path = `/api/sites/${encodeURIComponent(site_id)}/pages`;
       // TYPE IS THE ROUTE for several kinds of page: /checkout and
       // /products/{slug} resolve to the site's PUBLISHED page of that type and
@@ -612,10 +614,11 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
         'Compile the draft into the live page. PUBLISH CASCADES: a page sharing a global ' +
           'section with others republishes them too, because a header edited once must not go ' +
           'live on one page and stay stale on the rest.',
-      inputSchema: { site_id: z.string(), page_id: z.string(), dry_run: z.boolean().optional() },
+      inputSchema: { site_id: z.string().optional(), page_id: z.string(), dry_run: z.boolean().optional() },
       annotations: { readOnlyHint: false, destructiveHint: true, idempotentHint: true },
     },
-    async ({ site_id, page_id, dry_run }) => {
+    async ({ site_id: given, page_id, dry_run }) => {
+      const site_id = siteFor(ctx, given);
       // PUBLISH IS A SITE-LEVEL CALL that NAMES pages, not a page-level route.
       // This used to POST /pages/{id}/publish, which the platform answers 404 —
       // it mounts "publish" as its own resource beside "pages"

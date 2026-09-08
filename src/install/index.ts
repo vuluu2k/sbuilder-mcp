@@ -9,6 +9,8 @@ export interface InstallOpts {
   api?: string;
   email?: string;
   password?: string;
+  /** The one site this install works on, written as SB_SITE. */
+  site?: string;
   /** Client ids; empty means every client detected on this machine. */
   clients?: string[];
   dryRun?: boolean;
@@ -16,10 +18,32 @@ export interface InstallOpts {
   home?: string;
 }
 
+/**
+ * Every flag the CLI understands.
+ *
+ * NAMED, so an unknown one can be refused. `--site` and `--site-name` were typed
+ * at a real install, read by nothing, and reported as success — the caller then
+ * spent the session wondering why the site was not selected. A flag that is
+ * silently dropped is worse than one that does not exist.
+ */
+const FLAGS = [
+  '--token',
+  '--api',
+  '--site',
+  '--email',
+  '--password',
+  '--client',
+  '--dry-run',
+] as const;
+
 export function buildEntry(opts: InstallOpts, pkg = 'sbuilder-mcp'): ServerEntry {
   const env: Record<string, string> = {};
   if (opts.api) env.SB_API = opts.api;
   if (opts.token) env.SB_TOKEN = opts.token;
+  // The site the agent works on. A key belongs to exactly one, so writing it
+  // here spares every tool call an id the install already knew — and spares the
+  // model the guess it otherwise makes from a page list.
+  if (opts.site) env.SB_SITE = opts.site;
   // Only when a key is absent: a key opens everything the agent does day to day,
   // and writing an account password into six config files to buy the handful of
   // account-level calls it adds is a bad trade the installer should not make for
@@ -90,9 +114,29 @@ export function runInstallCli(argv: string[]): number {
     const i = argv.indexOf(flag);
     return i >= 0 ? argv[i + 1] : undefined;
   };
+  // REFUSE what we cannot act on. Anything that looks like a flag and is not one
+  // is a typo or a flag from another version, and either way the caller believes
+  // it took effect.
+  const taken = new Set<number>();
+  for (const f of FLAGS) {
+    const i = argv.indexOf(f);
+    if (i >= 0) {
+      taken.add(i);
+      if (f !== '--dry-run') taken.add(i + 1);
+    }
+  }
+  const unknown = argv.filter((a, i) => a.startsWith('--') && !taken.has(i));
+  if (unknown.length) {
+    console.error(
+      `sbuilder: unknown option(s) ${unknown.join(', ')}. Known: ${FLAGS.join(', ')}.`,
+    );
+    return 1;
+  }
+
   const opts: InstallOpts = {
     token: get('--token') ?? process.env.SB_TOKEN,
     api: get('--api') ?? process.env.SB_API,
+    site: get('--site') ?? process.env.SB_SITE,
     email: get('--email') ?? process.env.SB_EMAIL,
     password: get('--password') ?? process.env.SB_PASSWORD,
     clients: get('--client')?.split(','),
