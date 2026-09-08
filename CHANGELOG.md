@@ -6,6 +6,14 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.7.1] - 2026-09-08
+
+### Added
+- sb_import takes max_images (default 24), bounding how many images it uploads from the imported page, since every image is a real upload and a page shape like a sponsors wall can carry dozens of them in a single tool call.
+
+### Fixed
+- sb_import no longer duplicates content that sits inside a nested section; it previously matched every `<section>` on the page, so an outer band and the bands nested inside it were both captured and the inner content came back twice. Only the innermost matching section is now kept, since the outermost is a candidate too and keeping it would reduce the whole page to one band.
+
 ## [0.7.0] - 2026-09-08
 
 ### Added

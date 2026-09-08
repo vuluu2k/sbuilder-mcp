@@ -6,6 +6,14 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.7.1] - 2026-09-08
+
+### Added
+- sb_import nhận max_images (mặc định 24), giới hạn số ảnh nó tải lên từ trang được import, vì mỗi ảnh là một lần upload thật và một dạng trang như tường tài trợ có thể chứa hàng chục ảnh trong một lần gọi tool.
+
+### Fixed
+- sb_import không còn nhân đôi nội dung nằm trong một section lồng nhau; trước đây nó khớp với mọi `<section>` trên trang, nên một band bên ngoài và các band lồng bên trong nó đều bị lấy, khiến nội dung bên trong xuất hiện hai lần. Giờ chỉ section trong cùng khớp được giữ lại, vì section ngoài cùng cũng là một ứng viên và giữ nó sẽ làm cả trang chỉ còn một band.
+
 ## [0.7.0] - 2026-09-08
 
 ### Added
