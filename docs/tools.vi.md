@@ -122,14 +122,24 @@ thao tác trên đúng một tài liệu đang mở.
 
 ## `sb_page_open`
 
-| Tham số | Kiểu |
-| --- | --- |
-| `site_id` | string |
-| `page_id` | string |
+| Tham số | Kiểu | Ghi chú |
+| --- | --- | --- |
+| `site_id` | string? | Mặc định lấy `SB_SITE` |
+| `page_id` | string | |
+
+Mọi tool nhận `site_id` đều coi nó là tuỳ chọn và lùi về `SB_SITE` — một khoá chỉ thuộc
+một site, nên bản cài đã biết sẵn. Tham số truyền tay luôn thắng.
 
 Nạp tài liệu **bản nháp** của trang và trả về outline. Thứ nhận được đã *ghép sẵn*: global
 section, site overlay và app block đã được gộp lên ROOT. Findings đi kèm, đúng hình dạng
 `sb_review` trả về — xem bên dưới.
+
+**SATELLITE CÓ TRÊN BẢN ĐỒ.** Tám kiểu element sở hữu node treo ở `config[<key>]` chứ không
+ở `data.nodes` — ô chọn biến thể, hai nút của bộ đếm số lượng, trạng thái rỗng của repeater —
+và chúng giữ toàn bộ diện mạo của element. Chúng được liệt kê dưới chủ sở hữu kèm
+`satellite: "<khoá config>"`, đứng trước các con thật, và **không** được tính vào `children`:
+con số đó vẫn là `data.nodes.length`, thứ mà mọi lệnh nhận index được viết theo. Style chúng
+bằng `sb_set` như node bình thường; chúng nhận cả `state`, nên hover và ô đang chọn là của bạn.
 
 **`blank_page_repair`** xuất hiện khi tài liệu đã lưu đặt tên gốc là `rootId` (tên mà app
 block và section template dùng cho cùng ý niệm) thay vì `root_node_id`. Bộ render trang
@@ -317,7 +327,14 @@ và con trực tiếp của chúng, đúng thứ một nhận định bố cục
 tính từ node đó và chỉ cây con của nó được trả về. Chú giải một dòng `boxes_format` đi kèm lần look đầu tiên trong một process. Mọi node đã render (thuộc tính `id`) vẫn
 được đo và giữ trong phiên cho con trỏ hiện diện và các kiểm tra bố cục; hai trăm object in
 đẹp từng tốn 27 KB mỗi lần look. `with_boxes: false` bỏ chúng đi. Findings đi kèm như với
-`sb_review`, và lỗi bố cục đi kèm dưới `layout` — xem cuối tài liệu này.
+`sb_review`, và lỗi bố cục đi kèm dưới `layout` — xem cuối tài liệu này. Node nằm trong site
+OVERLAY được đo nhưng không báo: cart drawer đỗ ngoài viewport cho tới khi khách mở, nên mọi
+node trong đó đều đọc ra là off-canvas — hai chục finding trên một trang vốn đúng, mà không
+cái nào sửa được từ trang đó.
+
+Ảnh chụp có CUỘN hết trang trước khi bấm máy, nên ảnh lazy dưới màn hình được tải thay vì
+chụp thành ô trống. Đo trên storefront thật: bốn ảnh chưa tải trước khi cuộn, không còn cái
+nào sau đó.
 
 Cần **Google Chrome của hệ thống**: `playwright-core` không kèm trình duyệt nào nên lúc cài
 không tải gì. Nếu thiếu Chrome, tool nói đích danh chứ không trả ảnh trắng — một agent đi
@@ -348,11 +365,29 @@ không chụp được.
 | `source` | string | Một trong 77 khoá mà hai bộ render cung cấp — `product.title`, `product.price`, `category.title`, `course.title`, `site.*`, … Schema chỉ nêu bốn cái; sai một khoá thì bị từ chối kèm danh sách đầy đủ, nhờ vậy danh sách tool vẫn gọn |
 | `field` | string | Luôn là `specials.<key>` |
 | `dry_run` | boolean? | Mặc định true |
+| `action` | `"add_to_cart"` \| `"buy_now"`? | Biến node thành nút MUA HÀNG thay vì một trường dữ liệu |
 
 Cả hai tham số đều được kiểm với từ vựng sinh tự động, vì cả hai lỗi đều **im lặng**:
 `source` lạ sẽ giải ra rỗng và hiện placeholder của chính element (không phân biệt được với
 "đang tải"), còn `field` ngoài `specials` thì được lưu, được ghi, được publish, và bị bỏ qua
 mãi mãi — `applyBindings` đọc namespace từ field rồi bỏ qua mọi thứ khác.
+
+
+## Binding mua hàng
+
+`action` ghi cái binding mà thiếu nó thì cửa hàng không nhận được đơn nào. Nút mua hàng
+không phải một binding thường và trước đây không tool nào tạo được: bộ render quyết định một
+button *là gì* bằng cách đọc `target.action` và chỉ nó thôi
+(`server/render/nodes/helpers.go:1166`), `sb_set` chỉ ghi style / config / specials, còn
+nhánh thường của tool này không ghi `target` nào cả. Nên một cửa hàng dựng hoàn toàn bằng bộ
+tool này không có nút "Thêm vào giỏ", trong khi `sb_review` vẫn báo thiếu hành động mua hàng
+mà không nêu được cách sửa nào chạy được.
+
+Truyền `product.id` làm `source` và `specials.boundProductId` làm `field` — đúng hình dạng
+editor ghi. Binding mang id dành riêng `bind-product-action`, nên gọi lần hai sẽ trỏ lại
+chính nút đó thay vì để hai binding mua hàng trên một nút. `buy_now` được lưu thành
+`dynamic_checkout`, đó là từ vựng của tài liệu; chữ trong bộ chọn và chữ được lưu khác nhau
+có chủ đích, và tự map tay là cách hai bên lệch nhau.
 
 ---
 

@@ -11,11 +11,17 @@ quả rồi xuất bản — mà không cần người bấm gì.
 Một lệnh ghi server này vào mọi agent client trên máy bạn:
 
 ```bash
-npx -y sbuilder-mcp install --token wbk_… --api https://your-host
+npx -y sbuilder-mcp install --token wbk_… --api https://your-host --site site_…
 ```
 
 Nó biết Claude Code, Claude Desktop, Cursor, Windsurf, VS Code và Codex, và cài vào những
-cái nó tìm thấy. Chỉ định bằng `--client cursor,codex`, hoặc diễn thử với `--dry-run`.
+cái nó tìm thấy. Chỉ định bằng `--client cursor,codex`, hoặc diễn thử với `--dry-run`. Một
+tuỳ chọn nó không biết sẽ bị **từ chối**, không phải bỏ qua — một cờ âm thầm không làm gì
+còn tệ hơn một cờ không tồn tại.
+
+`--site` là tuỳ chọn nhưng nên truyền: một khoá chỉ thuộc đúng một site, nên nó được ghi
+thành `SB_SITE` và mọi tool sau đó mặc định dùng site đó. Không có nó thì model phải mang
+theo id suốt phiên, mà cách duy nhất để lấy là liệt kê trang rồi đọc ngược ra.
 
 Nó **gộp**: các server đã có trong file được giữ nguyên, thứ nó thay thế được chép sang
 `<file>.sbuilder-backup`, và một config nó không đọc được thì bị từ chối chứ không ghi đè —
@@ -31,7 +37,7 @@ Màn hình **Apps → AI agent** của cửa hàng đưa sẵn lệnh này kèm 
     "sbuilder": {
       "command": "npx",
       "args": ["-y", "sbuilder-mcp"],
-      "env": { "SB_API": "https://api.your-host", "SB_TOKEN": "wbk_…" }
+      "env": { "SB_API": "https://api.your-host", "SB_TOKEN": "wbk_…", "SB_SITE": "site_…" }
     }
   }
 }
@@ -82,7 +88,7 @@ là "tài khoản của người này".
 | `sb_media_upload` | Thêm ảnh và lấy URL — đường duy nhất, vì upload là multipart |
 | `sb_live_join` | Vào phòng live-edit của editor như một peer nhìn thấy được — sửa gì hiện ngay |
 | `sb_look` | Lưu, render, trả về ảnh chụp kèm box đo được của node và lỗi bố cục đo trên bản render |
-| `sb_bind` | Gắn nội dung một node vào dữ liệu cửa hàng thật |
+| `sb_bind` | Gắn nội dung một node vào dữ liệu cửa hàng thật, hoặc biến một nút thành nút thêm vào giỏ |
 
 Hai mươi lăm tool, **412 operation API**, 106 element, 77 nguồn binding. `sb_api_find` là
 một chỉ mục chứ không phải mỗi endpoint một tool, nên danh sách tool vẫn ngắn trong khi mọi

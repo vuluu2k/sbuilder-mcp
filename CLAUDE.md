@@ -72,7 +72,11 @@ Three things the first live release cost, so nobody pays them twice:
   corrupts the protocol for every client.
 - **ESM / Node16.** Every relative import ends in `.js`, including from a `.ts` source.
 - **Secrets come from env only** — `SB_API`, `SB_TOKEN`, `SB_EMAIL`, `SB_PASSWORD`. This
-  repo is public. No secret reaches a file, a log, or a tool result.
+  repo is public. No secret reaches a file, a log, or a tool result. `SB_SITE` rides in the
+  same envelope without being one: a key belongs to exactly ONE site, so the id is a
+  constant the install knows, and every `site_id` argument falls back to it through
+  `siteFor()`. An explicit argument still wins, so a session spanning two sites works by
+  naming each.
 - **Every tool answers through `text()`** (or `image()`/`images()`) from `src/mcp/response.ts`.
   A hand-built content array is the shape that drifts.
 - **Mutating tools take `dry_run` and default it to `true`**, returning a request preview
@@ -246,6 +250,87 @@ that accounts for them.
   human's name would tell the room a person is editing when a machine is. So the merchant
   watches the label they chose for the key move around the page.
 
+- **THE DATA AXIS OF A REPEATER WAS UNREACHABLE THROUGH EITHER TOOL, silently.** `sb_add`
+  with `config.datasetSource: "category"` minted a `list-dataset` still bound to
+  `product_list`: `createNode` seeded the element's DEFAULT bindings and ignored the config
+  in the same call. And `sb_set` could not repair it — `rebindPatch` looked up
+  `${source}|${kind}`, and TEN elements with a `bindingsFor` table declare no default
+  `config.kind` (`list-dataset`, `dataset-block`, `media-dataset`, `collection-media`,
+  `product-variants`, `quantity-dataset` …), so the key came out `category|` and matched
+  nothing. A category shelf repeated PRODUCTS under a heading that said collections, through
+  save, publish and render, with no warning at any step. Both paths now share
+  `bindingsForConfig()` (`domains/site/node.ts`), which falls back to the first row for the
+  source when the element has no kind axis — every `<source>|*` row of such an element is
+  identical, because there is nothing for it to vary on.
+
+- **A PURCHASE BUTTON COULD NOT BE AUTHORED AT ALL.** The renderer decides what a button IS
+  by reading `target.action` and nothing else (`server/render/nodes/helpers.go:1166`);
+  `sb_set` writes only style/config/specials, and `sb_bind` wrote a binding with no target.
+  So a store built entirely through these tools had no Add-to-cart control, while `sb_review`
+  reported the missing purchase action and named no fix that worked. `sb_bind` now takes
+  `action`, writing the reserved id `bind-product-action`
+  (`schema/src/elements/datasetBindings.ts:852`) with `buy_now` stored as its document
+  vocabulary `dynamic_checkout`.
+
+- **`empty_container` fired on an element that paints the record itself.** A bound
+  `media-dataset` with no children publishes the product photo and its thumbnail strip;
+  the rule called it an empty band on a page that rendered correctly. The discriminator is
+  not "is it bound" — `dataset-block` binds too, and only the LINK (`boundHref`), so an
+  empty card really is empty. It is whether `BOUND_SPECIALS` holds a key outside the link
+  set.
+
+- **A CHECKOUT IS FOUR STEPS IN A FIXED ORDER, and the editor is the only place they are
+  written down.** `editor/src/features/pages/checkoutPage.ts` — create an order form, PUT it
+  back WHOLE (name and type ride along, or `Normalize()` renames it and turns it `custom`,
+  after which the document is refused), save the field document with the payment methods and
+  shipping options filled in at that one moment, then create the page from
+  `buildCheckoutPageDocument` and PUBLISH, because /checkout resolves to the published page
+  of the TYPE. Both seed modules import only `@webbuilder/schema` plus editor-internal
+  files, so `vite-node` runs the whole flow headlessly from `editor/`. Copy that flow; do
+  not rebuild a checkout by hand.
+
+- **`swag init` had not been re-run for a long time, and re-running it recovered 44
+  operations** — 278 paths / 412 ops → 306 / 456. Among them the three that matter most:
+  `GET/PUT/DELETE /api/sites/{siteId}/payment-gateways/{provider}`, which had no `@Router`
+  and were therefore reachable to a browser and to nothing else. A store built through the
+  API could read its gateways and never switch one on, and the cause was a missing comment
+  rather than a missing route. Annotations now live on `payments/rest/manage.go`'s
+  `gateways` method.
+
+- **A SATELLITE CARRIES THE ELEMENT'S WHOLE LOOK, and the outline used to hide it.** The
+  variant option's box, its label, the quantity stepper's two buttons and its input, a
+  repeater's empty state — all real nodes with `style` and `states`, all hanging off
+  `config[<key>]` instead of `data.nodes`, so every walk of the child lists missed them. A
+  storefront therefore shipped with the platform's grey `#d0d0d0` selects and a grey stepper
+  on a rose-and-ink page, and nothing in any tool said the nodes existed. `sb_outline` now
+  lists them under their owner as `satellite: "<config key>"`, ahead of the real children and
+  NOT counted in `children` — that number still means `data.nodes.length`, which is what every
+  index-taking call is written against.
+
+- **A FORM'S FIELDS ARE STYLED BY CONFIG KEYS THAT BECOME CSS VARIABLES**, not by style on
+  the field. `schema/src/elements/fieldSkin.ts` and its lockstep mirror
+  `server/render/nodes/fieldskin/fieldskin.go` hold the vocabulary: `fieldBg`,
+  `fieldBorderColor`, `fieldRadius`, `fieldPadY/X`, the chrome trio, and separate tables for
+  choice, timeslot, file and pay-card. TWO LEVELS: the FORM node dresses every field it
+  holds, a FIELD node overrides its own — and the split matters, because `form/css.go` emits
+  only `Knobs + ChromeKnobs`, so `payCard*` written on the form is stored and rendered
+  nowhere. Those belong on the `form-payment` field, inside the FORM DOCUMENT
+  (`PUT /api/sites/{siteId}/forms/{id}/document`) — as does the submit button, which is a
+  `form-submit` node in that document and not on the page at all. A page republish is what
+  makes a form-document edit visible, since the page inlines the form (`id` =
+  `<pageFormId>_<formNodeId>`).
+
+- **The page's CSS is a LINKED STYLESHEET, not the HTML.** `static-*.css`, `desktop-*.css`,
+  `tablet-*.css` off the assets host. Grepping the HTML for a rule and finding nothing proves
+  nothing — twice here it read as "the style did not apply" when it had.
+
+- **`POST /api/v1/media` is a SECOND upload door, and it is the key's own.** `/api/media`
+  takes a `wbk_` key only since `feat(media): a wbk_ API key may upload`, so a deployment
+  older than that commit refuses a valid key — measured against a server binary 26 minutes
+  older than the fix, with a key holding `media.write` on its own site. `uploadMedia` now
+  retries on the partner surface before blaming the key, and its refusal names the
+  deployment as a suspect alongside the scopes.
+
 ## The five traps
 
 Each fails SILENTLY. Each is encoded in `src/domains/site/traps.ts` (trap 5 in
@@ -274,6 +359,12 @@ platform treats an unproven guard as indistinguishable from an absent one.
    cause that. `server/render/style/cascade.go`'s MergeNamespace resolves a key
    *current slot → wider slots → BASE → narrower slots*, so base is the fallback layer, and
    every element's `meta.defaults.style` is seeded straight into it.
+
+   THE TAIL OF THAT ORDER BITES. Because narrower slots are consulted last but ARE consulted,
+   a key written only at `tablet` reaches `desktop` whenever neither desktop nor base declares
+   it. A `flexWrap: wrap` added to a header for tablet broke the desktop header into two rows,
+   and the fix is not to remove the tablet value — it is to say the desktop answer out loud, at
+   base. When you write a responsive override, write its wide-screen counterpart too.
 5. **App blocks** — a marketplace app's subtree. The document stores ONE reference node
    stamped `specials.appBlockRef`; on read the platform composes the app's markup under it
    and stamps the block root `appBlockId`; on save `DecomposeAppBlocks`
@@ -283,6 +374,69 @@ platform treats an unproven guard as indistinguishable from an absent one.
    every write refuses a strict descendant through `refuseAppBlockInterior` (and `sb_add` /
    `sb_move` refuse the root as a destination), the outline flags the root `app: true`, and
    `sb_review` skips the interior. Tested in `test/traps.test.ts`.
+
+## Designing a site with these tools
+
+Not taste — every rule below is a defect that SHIPPED in this repo's own storefront build,
+and each names the check that would have caught it. The `sbuilder-site-design` skill carries
+them as a checklist at the moment the work starts.
+
+1. **Nothing is finished until it has been seen at 390px.** The global header was authored
+   desktop-only and had no responsive block at all: at 390 the nav ran 408 → 460, the cart
+   button 488 → 584, and two nav buttons overlapped. It reviewed clean the whole time,
+   because `sb_review` reads the tree and a tree cannot overflow. `sb_look` the three widths.
+
+2. **Write the wide-screen counterpart whenever you write a responsive override.** The
+   cascade resolves *current slot → wider slots → BASE → narrower slots*, so a key written
+   only at `tablet` REACHES `desktop` when neither desktop nor base declares it. One
+   `flexWrap: wrap` for tablet broke the desktop header into two rows. Say the wide answer
+   out loud, at base.
+
+3. **A flex row with two or more real columns needs an explicit stack breakpoint.** Nothing
+   catches this for you: the columns SHRINK to fit, so no box overflows and `measure` is
+   silent. On the product page at 390 that left the photo a sliver, the title truncated
+   mid-word and the Add-to-cart label clipped — a page with zero findings.
+
+4. **Style the satellites, or ship the platform's grey.** A page carrying `product-variants`,
+   `quantity-dataset`, `menu`, `tab`, `accordion` or any repeater is NOT styled until the
+   nodes listed under them as `satellite: "<config key>"` are. They hold the element's whole
+   look and default to `#d0d0d0` borders and `#f8f8f8` fills, which is off-brand on every
+   site that has a brand. They take `state`, so hover and the selected option are yours too.
+
+5. **A form's fields are config keys, and the level matters.** `fieldBg` /
+   `fieldBorderColor` / `fieldRadius` / `fieldPadY` / `fieldPadX` plus the chrome trio on the
+   FORM node dress every field it holds. `payCard*`, `choice*`, `slot*`, `file*` do NOT —
+   `form/css.go` emits only `FieldKnobs` (`ChromeKnobs + Knobs`), so those written on the
+   form are stored and rendered nowhere. They belong on the field node, which lives in the FORM DOCUMENT,
+   as does the submit button.
+
+6. **Match a frame's aspect ratio to the asset it holds.** `aspectRatio: 4 / 5` with
+   `objectFit: cover` over 900×1100 artwork cropped the garment out of its own product photo.
+   Ratio to the asset, or `contain` with a ground colour.
+
+7. **One visual language across a catalogue.** Keyword stock imagery is not a source:
+   `loremflickr` answered "kids,clothing" with a cat statue and a photo of an adult. A
+   generated set that shares a palette, a stroke weight and a shoulder line reads as
+   intentional; ten photos from ten sources read as a scrape.
+
+8. **Delete by what you ADDED, never by "not in my list".** A cleanup that trashed every
+   media asset whose name was not in the new set took the site's 54 Roboto font files with
+   it. They were recoverable — `POST /api/v1/media/{id}/restore` — and only because the
+   platform soft-deletes.
+
+### Judge the page from the right artifact
+
+Three ways this build read a correct page as broken, and each cost real time:
+
+- **The draft preview threads no store data.** Every repeater renders its empty state there,
+  however right the page is. `sb_look` says so in `preview_note`; pass the published
+  storefront address as `url` to see products.
+- **The page's CSS is a LINKED STYLESHEET** — `static-*.css`, `desktop-*.css`, `tablet-*.css`
+  off the assets host. Grepping the HTML for a rule and finding nothing proves nothing. It
+  read as "the style did not apply" twice, when it had both times.
+- **A fullPage screenshot does not scroll**, so `loading="lazy"` images below the fold never
+  enter the viewport and photograph as empty boxes. `sb_look` walks the page before it fires;
+  any script of your own must do the same.
 
 ## The yield rule
 
@@ -313,9 +467,11 @@ watching see nothing happen.
 6. Run the gate.
 
 The `sbuilder-mcp-tools` skill in `.claude/skills/` carries the same rules in the form the
-agent reads at the moment it starts the work. Specialist subagents in `.claude/agents/`
-enforce them: **mcp-tool-author** (add or modify a tool) and **mcp-verifier** (run the gate
-and check conventions; never edits).
+agent reads at the moment it starts the work, and `sbuilder-site-design` does the same for
+"Designing a site with these tools" above — the two jobs are different, and the design rules
+are needed by an agent that is not editing this repo at all. Specialist subagents in
+`.claude/agents/` enforce the tool contract: **mcp-tool-author** (add or modify a tool) and
+**mcp-verifier** (run the gate and check conventions; never edits).
 
 ## Phases
 

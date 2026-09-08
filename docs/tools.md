@@ -116,14 +116,26 @@ on the one open document.
 
 ## `sb_page_open`
 
-| Arg | Type |
-| --- | --- |
-| `site_id` | string |
-| `page_id` | string |
+| Arg | Type | Notes |
+| --- | --- | --- |
+| `site_id` | string? | Defaults to `SB_SITE` |
+| `page_id` | string | |
+
+Every tool that takes a `site_id` treats it as optional and falls back to
+`SB_SITE` — a key belongs to one site, so the install already knows it. An explicit
+argument always wins.
 
 Loads the page's **draft** document and returns its outline. What comes back is *composed*:
 global sections, site overlays and app blocks have been merged onto ROOT. Findings ride
 along in the same shape `sb_review` returns them — see below.
+
+**SATELLITES ARE ON THE MAP.** Eight element types own nodes that hang off `config[<key>]`
+instead of `data.nodes` — a variant option's box, the quantity stepper's buttons, a
+repeater's empty state — and they carry the element's entire look. They are listed under
+their owner with `satellite: "<the config key>"`, before its real children, and are NOT
+counted in `children`: that number still means `data.nodes.length`, which is what every
+index-taking call is written against. Style them with `sb_set` like any other node; they
+take `state` too, so hover and the selected option are yours.
 
 **`blank_page_repair`** comes back when the stored document names its root under `rootId`
 (what an app block and a section template call the same idea) instead of `root_node_id`. The
@@ -329,7 +341,14 @@ comes back. A one-line `boxes_format` legend comes with the first look in a
 process. Every rendered node (its `id` attribute) is still measured and kept in the session for the presence
 cursor and the layout checks; two hundred pretty-printed objects were 27 KB a look.
 `with_boxes: false` drops them. Findings ride along as with `sb_review`, and layout defects
-as `layout` — see the end of this document.
+as `layout` — see the end of this document. Nodes inside a site OVERLAY are measured but not
+reported: a cart drawer is parked outside the viewport until a shopper opens it, so every
+node in it reads as off-canvas — two dozen findings on a page that is correct, none of them
+fixable from that page.
+
+The shot WALKS the page before it fires, so lazy images below the fold are loaded rather
+than photographed as empty boxes. Measured on a real storefront: four of the page's images
+unloaded before the walk, none after.
 
 Needs **system Google Chrome**: `playwright-core` bundles no browser, so nothing is
 downloaded on install. If Chrome is missing the tool says so by name rather than returning a
@@ -361,12 +380,30 @@ data renders impossible to photograph.
 | `source` | string | One of 77 keys the renderers provide — `product.title`, `product.price`, `category.title`, `course.title`, `site.*`, … The schema names four; a wrong one is refused with the full list, which keeps the tool list small |
 | `field` | string | Always `specials.<key>` |
 | `dry_run` | boolean? | Defaults to true |
+| `action` | `"add_to_cart"` \| `"buy_now"`? | Makes the node a PURCHASE control instead of a field |
 
 Both arguments are validated against generated vocabulary, because both failures are
 **silent**: an unknown `source` resolves to nothing and renders as the element's own
 placeholder (indistinguishable from "still loading"), and a `field` outside `specials` is
 stored, saved, published, and ignored forever — `applyBindings` reads the namespace off the
 field and skips anything else.
+
+
+## The purchase binding
+
+`action` writes the one binding a shop cannot take an order without. A purchase control is
+not an ordinary binding and could not be authored as one: the renderer decides what a
+button *is* by reading `target.action` and nothing else
+(`server/render/nodes/helpers.go:1166`), `sb_set` writes only style / config / specials, and
+this tool's plain path writes no `target` at all. So a store built entirely through these
+tools had no Add-to-cart button, while `sb_review` reported the missing purchase action and
+named no fix that worked.
+
+Pass `product.id` as the `source` and `specials.boundProductId` as the `field` — the shape
+the editor writes. The binding takes the reserved id `bind-product-action`, so a second call
+re-points the same control rather than leaving two purchase bindings on one button. `buy_now`
+is stored as `dynamic_checkout`, which is the document's own vocabulary for it; the picker's
+word and the stored word differ deliberately, and hand-mapping either is how they drift.
 
 ---
 

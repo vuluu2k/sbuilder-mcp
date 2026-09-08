@@ -11,11 +11,17 @@ publish it — with no human clicking anything.
 One command writes this server into every agent client on your machine:
 
 ```bash
-npx -y sbuilder-mcp install --token wbk_… --api https://your-host
+npx -y sbuilder-mcp install --token wbk_… --api https://your-host --site site_…
 ```
 
 It knows Claude Code, Claude Desktop, Cursor, Windsurf, VS Code and Codex, and installs into
-the ones it finds. Name them with `--client cursor,codex`, or rehearse with `--dry-run`.
+the ones it finds. Name them with `--client cursor,codex`, or rehearse with `--dry-run`. An
+option it does not know is **refused**, not ignored — a flag that silently does nothing is
+worse than one that does not exist.
+
+`--site` is optional and worth passing: a key belongs to exactly one site, so it is written
+as `SB_SITE` and every tool then defaults to it. Without it the model has to carry the id
+through the session, which it can only get by listing pages and reading one back.
 
 It **merges**: the servers already in those files stay, whatever it replaces is copied to
 `<file>.sbuilder-backup`, and a config it cannot parse is refused rather than overwritten —
@@ -32,7 +38,7 @@ The store's **Apps → AI agent** screen hands you this command with the key alr
     "sbuilder": {
       "command": "npx",
       "args": ["-y", "sbuilder-mcp"],
-      "env": { "SB_API": "https://api.your-host", "SB_TOKEN": "wbk_…" }
+      "env": { "SB_API": "https://api.your-host", "SB_TOKEN": "wbk_…", "SB_SITE": "site_…" }
     }
   }
 }
@@ -85,7 +91,7 @@ make, because those mean "this person's account".
 | `sb_media_upload` | Add an image and get its URL — the only route, the upload is multipart |
 | `sb_live_join` | Join the editor's live-edit room as a visible peer — edits then appear live |
 | `sb_look` | Save, render, and return screenshots plus measured node boxes and layout defects measured on the render |
-| `sb_bind` | Bind a node's content to real store data |
+| `sb_bind` | Bind a node's content to real store data, or make a button add to the cart |
 
 Twenty-five tools, **412 API operations**, 106 elements, 77 binding sources. `sb_api_find`
 is an index rather than a tool per endpoint, so the tool list stays short while everything
