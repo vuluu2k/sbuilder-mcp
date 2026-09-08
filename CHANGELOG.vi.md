@@ -6,6 +6,17 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.4] - 2026-09-08
+
+### Added
+- sb_api_find giờ trả về body_shape cho 158 trong tổng số 212 write operation của nền tảng, đọc trực tiếp từ handler Go giải mã từng body thay vì chỉ 46 operation mà swagger.json mô tả, và mở rộng thêm một cấp cho struct lồng nhau (như variants của một sản phẩm, nơi giá thực sự nằm ở đó) thay vì dừng lại ở tên kiểu.
+- sb_store chạy bốn lượt ghi theo đúng thứ tự cố định mà một checkout hoạt động cần — tạo order form, lưu lại nguyên vẹn với giỏ hàng làm nguồn, điền các phương thức thanh toán và tùy chọn giao hàng thật của cửa hàng, rồi tạo và publish một trang kiểu checkout — vì tự dựng bằng tay mà bỏ sót một bước sẽ cho ra nút Checkout luôn trả về 404. dry_run (mặc định) trả về plan theo đúng thứ tự cùng payment_methods/delivery_options mà form sẽ mang; khi thực thi sẽ trả về form_id, page_id, slug và published.
+- sb_undo khôi phục lại thứ mà một PUT qua sb_api_call vừa ghi đè, vì nền tảng không có lịch sử, phiên bản hay khôi phục cho trang, form hay settings; sb_api_call giờ đọc đối tượng của một PUT qua GET tương ứng trước khi ghi, để có thứ mà khôi phục lại.
+
+### Fixed
+- Gap checkoutPage của sb_review giờ trỏ tới action checkout của sb_store thay vì một cách sửa chỉ tạo trang kiểu checkout, vốn không có order form gắn với giỏ hàng nên không nhận được đơn hàng nào.
+- Việc redact một bản xem trước request (dùng bởi sb_api_call và sb_undo) giờ khớp với các tên trường credential có nguồn gốc từ nền tảng như accessKey, apiKey, clientSecret, hashSecret, webhookSecret, orderToken và signature, chứ không chỉ khớp chính xác "secret", vì body mà sb_undo phản chiếu lại đến từ vocabulary của nền tảng chứ không phải của caller.
+
 ## [0.4.3] - 2026-09-08
 
 ### Changed

@@ -6,6 +6,17 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.4] - 2026-09-08
+
+### Added
+- sb_api_find's call sheet now returns body_shape for 158 of the platform's 212 write operations, read directly off the Go handler that decodes each body instead of the 46 swagger.json describes, and expands one level of a nested struct (such as a product's variants, where the price actually lives) rather than stopping at the type name.
+- sb_store runs the four fixed-order writes a working checkout needs — create an order form, save it back whole with the cart as its source, fill in the store's real payment methods and delivery options, then create and publish a checkout-type page — since building them by hand and missing one step ships a Checkout button that answers 404. dry_run (the default) returns the ordered plan and the payment_methods/delivery_options the form will carry; executing returns form_id, page_id, slug and published.
+- sb_undo restores what a PUT made through sb_api_call just replaced, since the platform has no page history, versions or restore for pages, forms or settings; sb_api_call now reads a PUT's target through the matching GET before writing so there is something to put back.
+
+### Fixed
+- sb_review's checkoutPage gap now points to sb_store's checkout action instead of a fix that only creates a checkout-type page, which has no order form bound to the cart and takes no orders.
+- Redacting a request preview (used by sb_api_call and sb_undo) now matches platform-sourced credential field names such as accessKey, apiKey, clientSecret, hashSecret, webhookSecret, orderToken and signature, not just an exact "secret", since a body sb_undo echoes back comes from the platform's own vocabulary rather than a caller's.
+
 ## [0.4.3] - 2026-09-08
 
 ### Changed
