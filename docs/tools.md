@@ -373,12 +373,20 @@ asked for; the format changes bytes and latency only, since the client prices an
 its pixel size, not its byte size.
 
 
-**The draft preview threads NO store data.** `/_wb/preview` renders the document with an
-empty scope, so every repeater falls back to its empty state — a product grid looks broken
-there and is not. `sb_look` says so once per process when the open page holds a store-driven
-element. Pass the PUBLISHED storefront address as `url` to photograph the real thing; the
-result echoes it back as `shot`. `url` is also the way out when the minted preview origin is
-unreachable, which a dev host with `STOREFRONT_BASE_DOMAIN` set and no TLS is.
+**The draft preview DOES thread store data — judge a list page from it.** `ServePreview`
+runs `RenderDraft` → `gather` → `assemble`, the same path as a published page, and the
+platform's own comment says the result is "byte-identical to what publishing this source
+would serve" (`storefront.go:1260`). A home page previews its real products at their real
+prices.
+
+What the preview cannot do is resolve ONE RECORD from the address: entity routing lives in
+`ServeHost`, not `ServePreview`, so an **entity template** — the product or category detail
+page — previews with nothing bound. The title is blank, the price reads zero, and a variant
+picker shows the element's seed options ("Color / Size", "Red / S") instead of the product's
+own. That is the preview, not the page. Pass the PUBLISHED storefront address as `url` to
+judge a template; the result echoes it back as `shot`. `url` is also the way out when the
+minted preview origin is unreachable, which a dev host with `STOREFRONT_BASE_DOMAIN` set and
+no TLS is.
 
 The page is waited for with `load` plus a bounded settle, never `networkidle` alone: a
 storefront keeps connections open (the cart island polls, a visitor's session endpoint answers
@@ -517,9 +525,21 @@ because a header edited once must not go live on one page and stay stale on the 
 
 ## Hover, and other states
 
-`sb_set` takes `state` — `hover` is the one the inspector offers. A state nests *under* a
-breakpoint rather than replacing it, so it is written per breakpoint like any other visual
-quantity, and never at base.
+`sb_set` takes `state` — `hover` is the one the inspector offers. A state has **two homes**,
+and the platform names both (`schema/src/node.ts`, mirrored by `render/style/cascade.go`'s
+`MergeStateNs`):
+
+| Call | Written to | Use it for |
+| --- | --- | --- |
+| `state:"hover"` + `breakpoint:"mobile"` | `responsive.mobile.states.hover.style` | a state that differs on one screen size |
+| `state:"hover"` + `base:true` | `states.hover.style` | the usual case — a state that does not vary |
+
+Base is not a degenerate case to route away from: it is where every element seeds its own
+`meta.defaults.states` (`tab-item`'s hover, `quantity-button`'s hover), and `MergeStateNs`
+reads it first, letting breakpoint slots overlay it exactly as it does the plain namespace.
+
+`specials` takes no state and says so rather than dropping it — content and identity do not
+vary by hover.
 
 ---
 
@@ -558,6 +578,8 @@ box. Returns `{ findings, fixes, findings_notice? }`, in document order:
 | `dead_binding_field` | A binding field outside `specials` — stored, published, and ignored |
 | `unknown_element` | A type the catalog does not know; run `npm run codegen` |
 | `unlinked_form` | A `form` naming no form — composes nothing and publishes an EMPTY BOX. The platform stays deliberately quiet about this one |
+| `default_seed_copy` | A seeded satellite still carrying the PLATFORM's own English copy — a repeater's empty state saying "No products yet" in `#171717` ink. Only ever visible when the list is empty, which is why nobody writes it |
+| `form_fields_flush` | A `form` / `form-segment` / `form-step-nav` stacking its fields with no `gap`, so each label reads as belonging to the control above it. Distinct from `config.fieldStackGap`, the smaller label-to-control gap INSIDE one field |
 | `dead_menu_link` | A menu entry with no `href` — the renderer reads `specials.menuItems` and never `menuId` |
 | `extra_repeater_child` | A repeater holding more than the one child it clones per record; the rest never appear |
 

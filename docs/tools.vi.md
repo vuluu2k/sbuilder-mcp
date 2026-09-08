@@ -357,12 +357,20 @@ ba. Ảnh trả về là JPEG chất lượng 80 trừ khi yêu cầu `format: "
 số byte và độ trễ, vì client tính giá ảnh theo kích thước pixel chứ không theo số byte.
 
 
-**Bản xem trước KHÔNG luồng dữ liệu cửa hàng.** `/_wb/preview` render tài liệu với scope
-rỗng, nên mọi repeater rơi về trạng thái rỗng — lưới sản phẩm trông như hỏng trong khi nó
-đúng. `sb_look` nói điều đó một lần mỗi process khi trang đang mở có phần tử đọc dữ liệu
-cửa hàng. Truyền địa chỉ storefront ĐÃ PUBLISH vào `url` để chụp bản thật; kết quả trả lại
-địa chỉ đó ở `shot`. `url` cũng là lối thoát khi origin xem trước được đúc ra không truy cập
-được, đúng tình huống máy dev có `STOREFRONT_BASE_DOMAIN` mà không có TLS.
+**Bản xem trước CÓ luồng dữ liệu cửa hàng — cứ đánh giá trang danh sách từ nó.**
+`ServePreview` chạy `RenderDraft` → `gather` → `assemble`, đúng đường của một trang đã
+publish, và chú thích của chính nền tảng nói kết quả "byte-identical to what publishing this
+source would serve" (`storefront.go:1260`). Trang chủ xem trước ra đúng sản phẩm thật với
+giá thật.
+
+Thứ bản xem trước không làm được là phân giải MỘT BẢN GHI từ địa chỉ: định tuyến entity nằm
+ở `ServeHost` chứ không ở `ServePreview`, nên một **template entity** — trang chi tiết sản
+phẩm hay danh mục — xem trước với không gì được bind. Tiêu đề trống, giá đọc ra 0, và bộ
+chọn biến thể hiện các giá trị seed của element ("Color / Size", "Red / S") thay vì của
+chính sản phẩm. Đó là bản xem trước, không phải trang. Truyền địa chỉ storefront ĐÃ PUBLISH
+vào `url` để đánh giá một template; kết quả trả lại địa chỉ đó ở `shot`. `url` cũng là lối
+thoát khi origin xem trước được đúc ra không truy cập được, đúng tình huống máy dev có
+`STOREFRONT_BASE_DOMAIN` mà không có TLS.
 
 Trang được chờ bằng `load` cộng một khoảng lắng có giới hạn, không bao giờ chỉ `networkidle`:
 storefront giữ kết nối mở (island giỏ hàng poll, endpoint phiên khách trả 401 mãi), nên chờ
@@ -493,9 +501,22 @@ trang đó, vì header sửa một lần không được lên live ở trang nà
 
 ## Hover và các trạng thái khác
 
-`sb_set` nhận `state` — `hover` là cái inspector có. Trạng thái lồng *dưới* breakpoint chứ
-không thay thế nó, nên vẫn ghi theo breakpoint như mọi đại lượng thị giác, không bao giờ ở
-base.
+`sb_set` nhận `state` — `hover` là cái inspector có. Một trạng thái có **hai chỗ ở**, và
+platform gọi tên cả hai (`schema/src/node.ts`, được `MergeStateNs` trong
+`render/style/cascade.go` phản chiếu):
+
+| Cách gọi | Ghi vào | Dùng khi |
+| --- | --- | --- |
+| `state:"hover"` + `breakpoint:"mobile"` | `responsive.mobile.states.hover.style` | trạng thái khác nhau theo khổ màn hình |
+| `state:"hover"` + `base:true` | `states.hover.style` | trường hợp thường gặp — trạng thái không đổi theo khổ |
+
+Base không phải trường hợp suy biến cần né: đó chính là nơi mỗi element gieo
+`meta.defaults.states` của nó (hover của `tab-item`, của `quantity-button`), và
+`MergeStateNs` đọc nó trước rồi để các slot breakpoint phủ lên, y hệt cách nó xử lý namespace
+thường.
+
+`specials` không nhận state và **báo lỗi** thay vì lặng lẽ bỏ qua — nội dung và định danh
+không đổi theo hover.
 
 ---
 
@@ -535,6 +556,8 @@ tài liệu:
 | `dead_binding_field` | Field binding ngoài `specials` — được lưu, được publish, và bị bỏ qua |
 | `unknown_element` | Type catalog không biết; chạy `npm run codegen` |
 | `unlinked_form` | `form` không trỏ tới form nào — compose ra rỗng và publish thành MỘT HỘP TRỐNG. Platform cố tình im lặng về lỗi này |
+| `default_seed_copy` | Một satellite được gieo sẵn vẫn mang nguyên chữ tiếng Anh của PLATFORM — empty state của repeater ghi "No products yet" bằng ink `#171717`. Chỉ hiện khi danh sách rỗng, nên không ai viết lại |
+| `form_fields_flush` | `form` / `form-segment` / `form-step-nav` xếp các field mà không có `gap`, khiến mỗi label đọc như thuộc về ô phía TRÊN nó. Khác với `config.fieldStackGap` — khoảng cách label↔control nhỏ hơn, nằm BÊN TRONG một field |
 | `dead_menu_link` | Mục menu không có `href` — renderer đọc `specials.menuItems` chứ không bao giờ đọc `menuId` |
 | `extra_repeater_child` | Repeater chứa nhiều hơn một child mà nó nhân bản cho mỗi bản ghi; phần còn lại không bao giờ xuất hiện |
 
