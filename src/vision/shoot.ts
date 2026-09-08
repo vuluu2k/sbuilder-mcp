@@ -160,15 +160,26 @@ export async function closeBrowser(): Promise<void> {
 }
 
 /**
- * A kept browser is a child process, and a child process outlives a parent
- * that forgets it. `beforeExit` fires when the event loop drains and CAN await
- * the close (`exit` cannot). A signal kills the loop without draining it, so
- * SIGINT/SIGTERM close Chrome too and then re-raise so the exit code is the
- * one the signal would have produced. Registered once, at module load.
+ * A kept browser is a child process, and a child process outlives a parent that
+ * forgets it. SIGINT/SIGTERM close Chrome and then re-raise, so the exit code is
+ * the one the signal would have produced. That is the path the MCP server
+ * actually takes, because a stdio server is stopped by its client.
+ *
+ * THERE USED TO BE A `beforeExit` HANDLER HERE TOO, and it could never fire.
+ * `beforeExit` runs when the event loop DRAINS, and an open browser connection
+ * is exactly what keeps it from draining — so in the one situation the handler
+ * described (a caller that finished and forgot to close) it was unreachable, and
+ * in the other (nothing open) it had nothing to do. Proved by measurement: a
+ * script that took one screenshot and returned was still alive twenty seconds
+ * later, and two of them were killed by the OS for memory during this repo's own
+ * development. `playwright-core` exposes no `browser.process()` for `launch()`,
+ * so there is nothing to `unref` and no way to make it reachable.
+ *
+ * SO THE CONTRACT IS EXPLICIT: a caller that is not a long-running server must
+ * call `closeBrowser()` when it is done — a `finally` block, not a hope. The
+ * pooling is deliberate (a vision loop shoots constantly and must not pay a
+ * launch each time); the cost of it is this one line at every other call site.
  */
-process.once('beforeExit', () => {
-  void closeBrowser();
-});
 for (const signal of ['SIGINT', 'SIGTERM'] as const) {
   process.once(signal, () => {
     void closeBrowser().finally(() => process.kill(process.pid, signal));

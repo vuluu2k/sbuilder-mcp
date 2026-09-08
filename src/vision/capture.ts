@@ -53,6 +53,8 @@ declare function getComputedStyle(el: El): {
   backgroundColor: string;
   borderStyle: string;
   borderWidth: string;
+  flexDirection: string;
+  flexWrap: string;
 };
 declare const location: { href: string };
 
@@ -70,14 +72,14 @@ export interface CaptureResult {
  * Written as one function rather than composed helpers because it is
  * serialized: anything it closes over does not exist on the other side.
  */
-function capturePage(limits: { maxSections: number; maxPerSection: number; maxImages: number }): CaptureResult {
+function capturePage(limits: { maxSections: number; maxImages: number; maxTextChars: number; maxNodes: number }): CaptureResult {
   // EVERY constant this function uses is declared INSIDE it. The body is
   // serialized and evaluated in the page, so a module-level `const` it closes
   // over is simply not there — caught the first time this ran against a real
   // page, as `ReferenceError: HEADINGS is not defined`, by which point the file
   // already carried a comment saying exactly that.
   const HEADINGS = new Set(['H1', 'H2', 'H3', 'H4', 'H5', 'H6']);
-  const taken = { images: 0 };
+  const taken = { images: 0, nodes: 0 };
   const skipped: Record<string, number> = {};
   const skip = (why: string): void => void (skipped[why] = (skipped[why] ?? 0) + 1);
   const here = location.href;
@@ -134,68 +136,144 @@ function capturePage(limits: { maxSections: number; maxPerSection: number; maxIm
     'NAV', 'FORM', 'INPUT', 'SELECT', 'TEXTAREA', 'BUTTON',
   ]);
 
-  /** Collect the renderable leaves under one section, in document order. */
+  /**
+   * The renderable content under one section, AS A TREE.
+   *
+   * It used to return a flat list, and flatness was the biggest thing an import
+   * lost. A source's three-column feature row came back as three stacked blocks;
+   * a card — image, heading, copy, button — came back as four siblings with
+   * nothing saying they belonged together. Everything a reader understands from
+   * the ARRANGEMENT was thrown away, and no amount of correct colour brings it
+   * back.
+   *
+   * So a container that actually lays its children out — `display:flex` or
+   * `grid` — and has two or more of them that produced something becomes a
+   * GROUP carrying its direction. Anything else flattens, because a `<div>` that
+   * merely wraps is not a design decision and reproducing it would nest the
+   * result ten deep for nothing.
+   */
   const leaves = (root: El): Captured[] => {
-    const out: Captured[] = [];
-    const walk = (el: El): void => {
-      if (out.length >= limits.maxPerSection) return;
+    const walk = (el: El): Captured[] => {
+      // ONE BOUND, on the whole import. There used to be a second, per section,
+      // and it kept doing the same wrong job under a new number: a page whose
+      // <body> has a single child is ONE section, so the per-section cap became
+      // the page cap and truncated it — news.ycombinator.com captured 84 links
+      // and 45 lines and lost the rest at exactly 120. Two limits for one
+      // quantity means the tighter one is always the real limit, and nobody
+      // remembers which that is.
+      if (taken.nodes >= limits.maxNodes) {
+        skip('over-node-limit');
+        return [];
+      }
       const tag = el.tagName;
       if (IGNORE.has(tag)) {
         skip(tag.toLowerCase());
-        return;
+        return [];
       }
       if (!visible(el)) {
         skip('hidden');
-        return;
+        return [];
       }
+
       if (HEADINGS.has(tag)) {
         const text = clean(el.textContent);
-        if (text) out.push({ kind: 'heading', level: Number(tag.slice(1)), text });
-        return;
+        if (!text) return [];
+        taken.nodes++;
+        return [{ kind: 'heading', level: Number(tag.slice(1)), text }];
       }
       if (tag === 'IMG') {
         const src = el.getAttribute('src');
         if (!src || src.startsWith('data:')) {
           skip('image-without-src');
-          return;
+          return [];
         }
-        // BOUNDED, because every image is an upload. A sponsors wall is a real
-        // page shape — one measured at 36 logos in four sections — and importing
-        // it means 36 sequential HTTP round trips inside a single tool call,
-        // which is slow, half-fails in interesting ways, and is almost never
-        // what the caller wanted from "import this page".
         if (taken.images >= limits.maxImages) {
           skip('over-image-limit');
-          return;
+          return [];
         }
         taken.images++;
-        out.push({ kind: 'image', src: abs(src), alt: clean(el.getAttribute('alt')) });
-        return;
+        taken.nodes++;
+        return [{ kind: 'image', src: abs(src), alt: clean(el.getAttribute('alt')) }];
       }
-      if (tag === 'A' && looksLikeButton(el)) {
+      if (tag === 'A') {
         const text = clean(el.textContent);
-        const href = el.getAttribute('href');
-        if (text) {
-          out.push({ kind: 'button', text, ...(href ? { href: abs(href) } : {}) });
+        // A LINK THAT IS NOT A BUTTON IS STILL A LINK. It used to contribute
+        // NOTHING, and on a page whose content IS a list of links that is the
+        // whole page: news.ycombinator.com lost 1,595 characters of story titles
+        // and bylines that way. The platform has no inline-link element — its
+        // own idiom is a `button` carrying `href`, styled flat — so that is what
+        // an unpainted link becomes, and the variant is what keeps it from
+        // arriving as a call to action.
+        if (text && el.children.length === 0) {
+          const href = el.getAttribute('href');
+          taken.nodes++;
+          return [{
+            kind: 'button',
+            variant: looksLikeButton(el) ? 'cta' : 'link',
+            text,
+            ...(href ? { href: abs(href) } : {}),
+          }];
         }
-        return;
+        if (looksLikeButton(el) && text) {
+          const href = el.getAttribute('href');
+          taken.nodes++;
+          return [{ kind: 'button', variant: 'cta', text, ...(href ? { href: abs(href) } : {}) }];
+        }
       }
       if (tag === 'UL' || tag === 'OL') {
         const items = Array.from(el.querySelectorAll('li'))
           .map((li) => clean(li.textContent))
           .filter(Boolean);
-        if (items.length) out.push({ kind: 'list', items });
-        return;
+        if (!items.length) return [];
+        taken.nodes++;
+        return [{ kind: 'list', items }];
       }
       if (tag === 'P' || tag === 'BLOCKQUOTE') {
         const text = clean(el.textContent);
-        if (text) out.push({ kind: 'text', text });
-        return;
+        if (!text) return [];
+        taken.nodes++;
+        return [{ kind: 'text', text }];
       }
-      for (const child of Array.from(el.children)) walk(child);
+
+      const kids: Captured[] = [];
+      for (const child of Array.from(el.children)) {
+        for (const c of walk(child)) kids.push(c);
+      }
+
+      if (kids.length > 0) {
+        const cs = getComputedStyle(el);
+        const lays = cs.display === 'flex' || cs.display === 'grid' ||
+          cs.display === 'inline-flex' || cs.display === 'inline-grid';
+        // A ROW is worth keeping; a column is what the page already is, so
+        // wrapping one in a group would add a level that renders identically.
+        const row = cs.display.indexOf('grid') >= 0
+          ? true
+          : cs.flexDirection === 'row' || cs.flexDirection === 'row-reverse';
+        if (lays && row && kids.length >= 2) {
+          taken.nodes++;
+          return [{ kind: 'group', direction: 'row', wrap: cs.flexWrap === 'wrap', children: kids }];
+        }
+        return kids;
+      }
+
+      // THE TEXT FALLBACK, and it is most of the web. Capturing only <p> meant a
+      // page whose prose sits in a <div>, a <td> or a <span> came back EMPTY:
+      // measured, news.ycombinator.com (a table layout) and tailwindcss.com both
+      // kept 0 of ~4,000 and ~6,000 characters.
+      //
+      // Safe because it only fires when nothing INSIDE offered anything, so a
+      // paragraph is never taken twice — once through its <p> and again through
+      // the <div> around it. Bounded because a fallback that fires high in the
+      // tree would otherwise carry a whole page as one string.
+      const own = clean(el.textContent);
+      if (own && own.length <= limits.maxTextChars) {
+        taken.nodes++;
+        return [{ kind: 'text', text: own }];
+      }
+      if (own) skip('text-too-long');
+      return [];
     };
-    walk(root);
-    return out;
+    return walk(root);
   };
 
   // SECTION CANDIDATES, widest first: a page that marks its bands up
@@ -220,22 +298,51 @@ function capturePage(limits: { maxSections: number; maxPerSection: number; maxIm
   // single band. The finest ones are the page's actual bands.
   candidates = candidates.filter((el) => !candidates.some((o) => o !== el && el.contains(o)));
 
-  const sections: Captured[] = [];
-  for (const el of candidates) {
-    if (sections.length >= limits.maxSections) {
-      skip('over-section-limit');
-      break;
+  // THE SOURCE'S OWN HEADER AND FOOTER ARE NEVER WANTED. The target site has its
+  // own, as shared globals, and importing somebody else's navigation onto a
+  // storefront is a second menu pointing at a different website. Only the
+  // PAGE-LEVEL ones are dropped — a `<header>` inside a section is a hero, and
+  // excluding those would lose the first thing on most landing pages.
+  const chrome = new Set<El>();
+  for (const el of Array.from(document.body.children)) {
+    if (el.tagName === 'HEADER' || el.tagName === 'FOOTER') chrome.add(el);
+  }
+
+  const build = (from: El[]): Captured[] => {
+    const acc: Captured[] = [];
+    for (const el of from) {
+      if (chrome.has(el)) {
+        skip('page-chrome');
+        continue;
+      }
+      if (acc.length >= limits.maxSections) {
+        skip('over-section-limit');
+        break;
+      }
+      if (!visible(el)) {
+        skip('hidden');
+        continue;
+      }
+      const children = leaves(el);
+      if (children.length === 0) {
+        skip('empty-section');
+        continue;
+      }
+      acc.push({ kind: 'section', children });
     }
-    if (!visible(el)) {
-      skip('hidden');
-      continue;
-    }
-    const children = leaves(el);
-    if (children.length === 0) {
-      skip('empty-section');
-      continue;
-    }
-    sections.push({ kind: 'section', children });
+    return acc;
+  };
+
+  let sections = build(candidates);
+  // THE FALLBACK HAS TO FIRE ON AN EMPTY RESULT, not only on an empty candidate
+  // LIST. A page can offer `<section>` elements that hold nothing this platform
+  // renders — a wrapper around a canvas, a slot filled by script later — and the
+  // old order took "we found candidates" as "we found content", so the whole
+  // page came back empty. Measured: tailwindcss.com kept 0 of 6,004 characters
+  // while reporting one skipped empty section.
+  if (sections.length === 0) {
+    const main = document.querySelectorAll('main')[0] ?? document.body;
+    sections = build(Array.from(main.children));
   }
 
   return { url: here, title: clean(document.title), sections, skipped };
@@ -250,12 +357,13 @@ function capturePage(limits: { maxSections: number; maxPerSection: number; maxIm
  */
 export async function capture(
   url: string,
-  opts: { maxSections?: number; maxPerSection?: number; maxImages?: number; width?: number } = {},
+  opts: { maxSections?: number; maxImages?: number; maxTextChars?: number; maxNodes?: number; width?: number } = {},
 ): Promise<CaptureResult> {
   const limits = {
     maxSections: opts.maxSections ?? 24,
-    maxPerSection: opts.maxPerSection ?? 40,
     maxImages: opts.maxImages ?? 24,
+    maxTextChars: opts.maxTextChars ?? 1200,
+    maxNodes: opts.maxNodes ?? 400,
   };
   let browser: Browser | undefined;
   try {

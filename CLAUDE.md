@@ -707,6 +707,63 @@ that accounts for them.
   is most likely to be pointed at. It now reuses `shoot.ts`'s own `settleDom`, the same
   MutationObserver answer for the same question: example.com 1,884 → 1,104 ms.
 
+  A SWEEP THAT MEASURED COVERAGE — how much of the text a READER sees survives the import —
+  found the three that mattered most, and none of them showed up as an error:
+
+  - **Most of the web does not use `<p>`.** Capturing only paragraphs meant a page whose prose
+    sits in a `<div>`, a `<td>` or a `<span>` came back EMPTY: news.ycombinator.com (a table
+    layout) and tailwindcss.com each kept 0 of ~4,000 and ~6,000 characters. Text is now taken
+    from any block that holds it, and only when nothing INSIDE it offered anything — which is
+    what stops a paragraph being captured twice, once through its `<p>` and again through the
+    `<div>` around it. 0% → 41% and 22%.
+  - **The fallback fired on an empty candidate LIST, not an empty RESULT.** A page can offer
+    `<section>`s that hold nothing this platform draws, and taking "we found candidates" as
+    "we found content" returned an empty page.
+  - **`maxPerSection: 40` was truncating ordinary pages, not guarding against strange ones.**
+    Three dense pages each stopped at exactly 40 leaves. The bound that is actually wanted is
+    on the WHOLE import (`maxNodes`, 300), so that is where it lives.
+
+  **COVERAGE NEEDS THE RIGHT DENOMINATOR, and the first one was wrong.** Measured against
+  `document.body.innerText` the sweep read 44-77%, which looked like a broken importer. Diffing
+  what a reader sees against what was kept showed where it actually went: on rust-lang.org and
+  python.org, 100% of the loss was NAV, HEADER and FOOTER — chrome the importer skips on
+  purpose and a merchant would never want, because the target site has its own as globals.
+  Content loss there was ZERO. Only the honest denominator tells you whether there is a bug,
+  and the first measurement said "fix this" about something that was already right.
+
+  What the honest measure then found was real, and both were structural:
+
+  - **A link that is not a button contributed NOTHING.** On a page whose content IS a list of
+    links that is the whole page — news.ycombinator.com lost 1,595 characters of story titles.
+    The platform has no inline-link element; its own idiom is a `button` carrying `href`,
+    styled flat. So an unpainted link is captured with `variant: 'link'` and takes the target's
+    accent as INK rather than as fill. Painting them all is the opposite mistake: it turned a
+    documentation sidebar into 38 pink pills.
+  - **Two caps for one quantity meant the tighter one was always the real limit.** A page whose
+    `<body>` has a single child is ONE section, so the per-section cap silently became the page
+    cap: HN stopped at exactly 120 nodes. One bound now, on the whole import, and the skip is
+    reported on the REAL run and not only the dry one.
+
+  Content loss after both: 0 on three of the four pages, and the fourth is a marketing page of
+  code samples hitting the 400-node ceiling, which is the ceiling doing its job.
+
+  **FLATNESS WAS THE BIGGEST THING LEFT.** Everything arrived as one vertical column, so a
+  source's three-column feature row came back as three stacked blocks and a card — image,
+  heading, copy, button — as four siblings with nothing saying they belonged together.
+  Everything a reader understands from the ARRANGEMENT was gone, and no amount of correct
+  colour brings it back. The walk now returns a TREE: a container that genuinely lays its
+  children out (`display:flex`/`grid`) with two or more of them becomes a row; a `<div>` that
+  merely wraps is flattened, because reproducing it would nest the result ten deep for
+  nothing. tailwindcss.com went 21.8% → 54%.
+
+  That change needed one in the builder: **`NodeSpec` could not carry `responsive`**, so no
+  node could be created with a per-breakpoint value at all — every one arrived base-only and
+  needed a second `sb_set` the caller had to remember, on a repo whose design rules 1-3 are
+  entirely about writing the responsive answer. An imported ROW is the case that made it
+  undeniable: it must stack at mobile or the columns shrink to slivers with no box overflowing
+  and nothing for `measure` to see. Merged per NAMESPACE, so seeding `mobile.style` does not
+  drop an element's own `mobile.config`.
+
   `capture.ts` launches its OWN browser rather than sharing `shoot.ts`'s process-lifetime one:
   an import is rare, slow and runs untrusted script, and coupling that to the tool a vision
   loop calls every few hundred milliseconds is how the fast path gets slow.
@@ -724,6 +781,19 @@ that accounts for them.
   The same run found the second half of the pair: `new URL(rel, base)` THROWS on a
   non-hierarchical base (a `data:` page), and a throw inside `evaluate` kills the whole
   capture rather than one link — so URL resolution falls back to the raw value.
+
+- **`shoot()` POOLS ITS BROWSER FOR THE PROCESS LIFETIME, and a caller that forgets
+  `closeBrowser()` never exits.** The pooling is deliberate — a vision loop shoots constantly
+  and must not pay a launch each time — but the cost lands on every other call site, and there
+  was a `beforeExit` handler that looked like it covered them and could not. `beforeExit` runs
+  when the event loop DRAINS, and an open browser connection is precisely what stops it
+  draining: in the one situation the handler described it was unreachable, and in the other it
+  had nothing to do. Measured: a script that took one screenshot and returned was still alive
+  twenty seconds later, and two such scripts were killed by the OS for memory during this
+  repo's own work. `playwright-core` exposes no `browser.process()` for `launch()`, so there is
+  nothing to `unref` and no way to make the handler reachable — it is gone, and the contract is
+  written down instead. SIGINT/SIGTERM still close Chrome, which is the path the stdio server
+  actually takes.
 
 ## The five traps
 

@@ -143,6 +143,47 @@ describe('toSpecs()', () => {
     expect(toSpecs(page, t)[0].children![0].style).toMatchObject({ maxWidth: '1200px' });
   });
 
+  /**
+   * FLATNESS WAS THE BIGGEST THING AN IMPORT LOST.
+   *
+   * A source's three-column feature row came back as three stacked blocks and a
+   * card — image, heading, copy, button — as four siblings with nothing saying
+   * they belonged together. Everything a reader understands from the
+   * ARRANGEMENT was thrown away, and no amount of correct colour brings it back.
+   */
+  it('rebuilds a captured row as a row, and stacks it at mobile', () => {
+    const row: Captured[] = [
+      {
+        kind: 'section',
+        children: [
+          {
+            kind: 'group',
+            direction: 'row',
+            children: [
+              { kind: 'heading', text: 'One' },
+              { kind: 'heading', text: 'Two' },
+            ],
+          },
+        ],
+      },
+    ];
+    const group = toSpecs(row, {})[0].children![0].children![0];
+    expect(group.style).toMatchObject({ display: 'flex', flexDirection: 'row' });
+    // Rule 3: nothing catches a too-narrow column for you — the columns SHRINK,
+    // so no box overflows and `measure` stays silent while a photo becomes a
+    // sliver. An import is the one place a row arrives with nobody having
+    // thought about 390.
+    expect(group.responsive).toMatchObject({ mobile: { style: { flexDirection: 'column' } } });
+    expect(group.children!.length).toBe(2);
+  });
+
+  it('does not wrap a single child in a row', () => {
+    const one: Captured[] = [
+      { kind: 'section', children: [{ kind: 'group', direction: 'row', children: [{ kind: 'heading', text: 'Solo' }] }] },
+    ];
+    expect(toSpecs(one, {})[0].children![0].children![0].type).toBe('heading');
+  });
+
   it('bounds an imported image in BOTH axes', () => {
     // A source image has no known size. `maxWidth: 100%` alone is not a bound:
     // an SVG has no intrinsic pixel size, so it took the container's full width
@@ -269,7 +310,111 @@ describe.runIf(process.env.SB_BROWSER_TEST === '1')('capture()', () => {
    * preflight sets `border-style: solid; border-width: 0` on every element, so
    * the first fix changed nothing on a site built with it.
    */
-  it('takes a painted link as a button and leaves a bare one alone', async () => {
+  /**
+   * MOST OF THE WEB DOES NOT USE `<p>`.
+   *
+   * Capturing only paragraphs meant a page whose prose sits in a `<div>`, a
+   * `<td>` or a `<span>` came back EMPTY. Measured across a sweep:
+   * news.ycombinator.com (a table layout) and tailwindcss.com both kept 0 of
+   * ~4,000 and ~6,000 visible characters. They now keep 41% and 22%.
+   */
+  it('takes text from any block that holds it, and never twice', async () => {
+    const page = `data:text/html,${encodeURIComponent(
+      '<main><section>' +
+        '<table><tr><td>In a cell</td></tr></table>' +
+        '<div>In a div</div>' +
+        '<div><p>In a paragraph inside a div</p></div>' +
+        '</section></main>',
+    )}`;
+    const r = await capture(page);
+    const texts = (r.sections[0].children ?? []).filter((c) => c.kind === 'text').map((c) => c.text);
+    // The wrapping <div> must NOT also offer the paragraph's text: the fallback
+    // fires only when nothing inside offered anything.
+    expect(texts).toEqual(['In a cell', 'In a div', 'In a paragraph inside a div']);
+  }, 60_000);
+
+  it('falls back when the sections it found hold nothing renderable', async () => {
+    // A page can offer <section> elements that hold nothing this platform draws.
+    // Taking "we found candidates" as "we found content" returned an empty page —
+    // measured on a real site that kept 0 of 6,004 characters.
+    const page = `data:text/html,${encodeURIComponent(
+      '<main><section><canvas></canvas></section><div>Real content</div></main>',
+    )}`;
+    const r = await capture(page);
+    expect(r.sections.length).toBeGreaterThan(0);
+    const texts: string[] = [];
+    const walk = (c: { text?: string; children?: unknown[] }) => {
+      if (c.text) texts.push(c.text);
+      for (const k of (c.children ?? []) as { text?: string; children?: unknown[] }[]) walk(k);
+    };
+    r.sections.forEach(walk);
+    expect(texts).toContain('Real content');
+  }, 60_000);
+
+  /**
+   * A LINK THAT IS NOT A BUTTON IS STILL A LINK.
+   *
+   * It used to contribute NOTHING, and on a page whose content IS a list of
+   * links that is the whole page: news.ycombinator.com lost 1,595 characters of
+   * story titles that way, and now loses none. The platform has no inline-link
+   * element — its own idiom is a `button` carrying `href`, styled flat.
+   */
+  it('keeps an unpainted link as a link, not as a call to action', async () => {
+    const page = `data:text/html,${encodeURIComponent(
+      '<main><section>' +
+        '<a href="/story">A story title</a>' +
+        '<a href="/buy" style="display:block;background:#E8557A">Buy now</a>' +
+        '</section></main>',
+    )}`;
+    const r = await capture(page);
+    const buttons = (r.sections[0].children ?? []).filter((c) => c.kind === 'button');
+    expect(buttons.map((b) => [b.text, b.variant])).toEqual([
+      ['A story title', 'link'],
+      ['Buy now', 'cta'],
+    ]);
+  }, 60_000);
+
+  it("drops the source's own header and footer, but not a section's", async () => {
+    // The target has its own, as shared globals. Importing somebody else's
+    // navigation onto a storefront is a second menu pointing at another site.
+    // Only PAGE-LEVEL ones: a <header> inside a section is a hero.
+    const page = `data:text/html,${encodeURIComponent(
+      '<header><p>Site nav</p></header>' +
+        '<main><section><header><h1>Hero</h1></header><p>Body</p></section></main>' +
+        '<footer><p>Site footer</p></footer>',
+    )}`;
+    const r = await capture(page);
+    const texts: string[] = [];
+    const walk = (c: { text?: string; children?: unknown[] }) => {
+      if (c.text) texts.push(c.text);
+      for (const k of (c.children ?? []) as { text?: string; children?: unknown[] }[]) walk(k);
+    };
+    r.sections.forEach(walk);
+    expect(texts).toContain('Hero');
+    expect(texts).toContain('Body');
+    expect(texts).not.toContain('Site nav');
+    expect(texts).not.toContain('Site footer');
+  }, 60_000);
+
+  it('bounds the WHOLE import, not each section', async () => {
+    // At 40 per section the cap was not a guard against a pathological page, it
+    // was a truncation of an ordinary one — three dense pages each stopped at
+    // exactly 40 leaves having captured 7-13% of what a reader sees.
+    const many = `data:text/html,${encodeURIComponent(
+      `<main><section>${Array.from({ length: 20 }, (_, i) => `<div>Line ${i}</div>`).join('')}</section></main>`,
+    )}`;
+    const r = await capture(many, { maxNodes: 5 });
+    const texts = (r.sections[0].children ?? []).filter((c) => c.kind === 'text');
+    expect(texts.length).toBe(5);
+    expect(r.skipped['over-node-limit']).toBeGreaterThan(0);
+  }, 60_000);
+
+  it('tells a painted call to action from an ordinary link', async () => {
+    // Both are kept — dropping the plain ones lost a whole page of story titles.
+    // What must not blur is WHICH is which: painting every link produced 38 pink
+    // pills out of a documentation sidebar. And the border test needs WIDTH,
+    // because Tailwind's preflight sets `border-style: solid; border-width: 0`
+    // on every element, so testing the style alone is true of a whole site.
     const page = `data:text/html,${encodeURIComponent(
       '<main><section>' +
         '<a href="/a" style="display:block;background:#E8557A">Real CTA</a>' +
@@ -280,7 +425,12 @@ describe.runIf(process.env.SB_BROWSER_TEST === '1')('capture()', () => {
     )}`;
     const r = await capture(page);
     const buttons = (r.sections[0].children ?? []).filter((c) => c.kind === 'button');
-    expect(buttons.map((b) => b.text)).toEqual(['Real CTA', 'Classed']);
+    expect(buttons.map((b) => [b.text, b.variant])).toEqual([
+      ['Real CTA', 'cta'],
+      ['Tailwind reset', 'link'],
+      ['Sidebar link', 'link'],
+      ['Classed', 'cta'],
+    ]);
   }, 60_000);
 
   it('bounds how many images one import can carry', async () => {
