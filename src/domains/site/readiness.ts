@@ -139,9 +139,15 @@ export function readinessGaps(input: ReadinessInput): ReadinessGap[] {
       problem:
         'No published page of the "checkout" type. /checkout resolves by page TYPE, so the ' +
         'Checkout button every cart drawer ships with sends a shopper with a full basket to a 404.',
+      // NOT "create a page of type checkout": that page needs an order form
+      // bound to the cart, and the four writes that build one have a fixed order
+      // the editor keeps in a single file. A fix that names a step which does not
+      // work on its own is worse than no fix — it sends the agent to build a
+      // checkout page that renders and takes no orders.
       fix: draft
         ? 'Publish the checkout page that already exists (sb_page_list shows it, then sb_publish).'
-        : 'Create a page of type "checkout" and publish it.',
+        : 'sb_store with action:"checkout" — it makes the order form, configures it, saves its ' +
+          'fields and publishes the page. Doing it by hand needs all four, in order.',
     });
   }
   if (input.liveGateways === 0) {

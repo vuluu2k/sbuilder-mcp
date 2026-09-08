@@ -162,10 +162,14 @@ The checkout form document and the checkout page document are **generated**, not
 route already taken for `ELEMENT_SEEDS` and `buildEmptyStateTree`. A hand-copied checkout
 document is one that silently rots the next time the platform edits its own.
 
-Actions, first cut: `checkout_setup`, and the readiness-driven `status` that reports which of
-the eight gaps a fix exists for. Further actions are added when a flow proves to need ordering
-— not before, because a `sb_store` action that only wraps one API call is a tool tax on every
-session for something `sb_api_call` already does.
+**As shipped: one action, `checkout`.** The planned `status` was dropped — `sb_review` already
+reports the eight gaps, and a second tool saying the same thing is a tool tax on every session.
+Further actions arrive when a flow proves to need ordering; a `sb_store` action that only wraps
+one API call is exactly what `sb_api_call` already does.
+
+`sb_review`'s own `checkoutPage` fix now names this tool. It used to say "create a page of type
+checkout and publish it", which does not work on its own — that page needs an order form bound
+to the cart — and a fix that names a step which fails silently is worse than no fix.
 
 ## P3 — Undo: the platform has no history and a human has Ctrl+Z
 
@@ -185,9 +189,19 @@ durable store is left for a measured need, with the seam in the right place.
 
 ## P4 — Finishing a site
 
-Theme and fonts, menus, translations, domains, SEO. Almost all of it becomes reachable the
-moment P1 lands, so this phase adds **no tools** — it adds the shapes, and whatever `sb_review`
-needs to notice the gap in the first place.
+Theme and fonts, menus, translations, domains, SEO. The claim was that P1 dissolves this, and
+it did — measured after P1 landed, writes with a body shape, per surface:
+
+```
+theme 1/1   fonts 3/3   menus 2/2   translations 4/4   settings 1/1
+global-sections 3/3   discounts 2/2   customers 5/5   orders 4/4
+inventory 1/1   blog 6/6   reviews 2/2   loyalty 2/2   integrations 2/2
+shipping 4/4   products 11/12   pages 7/11   media 5/9   webhooks 4/7
+```
+
+What is left unshaped on those surfaces is action endpoints — `domains/{id}/verify`,
+`webhooks/{id}/test`, `media/{id}/restore`, the multipart uploads — which take no JSON body to
+describe. So this phase adds **no tools**.
 
 ## Non-goals
 
