@@ -9,6 +9,7 @@ import { registerApiTools } from './tools/api.js';
 import { registerSessionTools } from './tools/session.js';
 import { registerPageTools } from './tools/page.js';
 import { registerLiveTools } from './tools/live.js';
+import { registerStoreTools } from './tools/store.js';
 import type { ToolContext } from './tools/context.js';
 
 /**
@@ -71,5 +72,6 @@ export function createServer(ctx: ToolContext = buildContext()): McpServer {
   registerApiTools(server, ctx);
   const pageSession = registerPageTools(server, ctx);
   registerLiveTools(server, ctx, pageSession);
+  registerStoreTools(server, ctx);
   return server;
 }

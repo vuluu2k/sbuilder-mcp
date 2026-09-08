@@ -25,7 +25,15 @@ describe('token budget — a diet without a scale comes back', () => {
     // authored and a site built from scratch had no way to open its own cart drawer, while
     // `sb_review` reported that gap and named a fix nothing could apply. A tool that closes
     // a hole a whole storefront falls through is worth 700 characters of every session.
-    expect(JSON.stringify(tools).length).toBeLessThan(17_000);
+    //
+    // 17,000 -> 18,000 buys `sb_store` (~850). A checkout is FOUR writes in a
+    // fixed order that exist written down in exactly one place — the editor's
+    // `checkoutPage.ts` — and the order is not guessable: the form must be PUT
+    // back whole or `Normalize()` turns it custom and refuses the document, and
+    // the page must be PUBLISHED because /checkout resolves to the published page
+    // of the type. Miss one and the Checkout button every cart drawer ships with
+    // answers 404, which is a store that cannot take money while reviewing clean.
+    expect(JSON.stringify(tools).length).toBeLessThan(18_000);
     for (const t of tools) expect(t.description, t.name).not.toMatch(/vanishes on publish/);
     const instructions = client.getInstructions() ?? '';
     expect(instructions.length).toBeGreaterThan(200);

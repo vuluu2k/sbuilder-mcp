@@ -628,3 +628,57 @@ hoặc khi `node_id` đóng khung một element.
 
 Nó không chấm thẩm mỹ. Một hero có đọc xuôi hay không thì không đo được, và giả vờ đo được
 sẽ tiêu tốn sự chú ý của agent vào thứ nó không thể biết.
+
+## `sb_store`
+
+Chạy một luồng cửa hàng bắt buộc **đúng thứ tự**. Hiện có một action; enum là cách để action
+thứ hai xuất hiện mà không cần thêm tool.
+
+| Tham số | Kiểu | Ghi chú |
+| --- | --- | --- |
+| `action` | `"checkout"` | Luồng cần chạy |
+| `site_id` | string? | Không truyền thì lấy `SB_SITE` |
+| `language` | `"vi"` \| `"en"`? | Ngôn ngữ nội dung, mặc định `vi` |
+| `page_name` | string? | Ghi đè tên trang mặc định của editor |
+| `headline` | string? | Ghi đè tiêu đề trang |
+| `dry_run` | boolean? | Mặc định **true** |
+
+### `action: "checkout"`
+
+`sb_review` nêu tám readiness gap. Bảy cái giờ chỉ còn một lệnh gọi mỗi cái — một phương thức
+giao hàng, một cổng thanh toán, một sản phẩm, một trang đúng type — vì call sheet đã nói rõ
+những lệnh đó nhận gì. Checkout là cái còn lại, vì nó là **bốn lệnh ghi mà thứ tự chính là
+hợp đồng**, và chỉ được ghi lại ở đúng một chỗ:
+`editor/src/features/pages/checkoutPage.ts`.
+
+1. `POST /forms` — tạo form đơn hàng.
+2. `PUT /forms/{id}` — PUT lại **nguyên khối**, lấy giỏ hàng làm nguồn. `name` và `type` phải
+   đi kèm, nếu không `Normalize()` đổi tên form thành "Form" và chuyển nó về `custom`, sau đó
+   bước 3 bị từ chối với *"mappings do not fit this form type"*.
+3. `PUT /forms/{id}/document` — lưu tài liệu trường với phương thức thanh toán và tuỳ chọn
+   giao hàng **thật** của cửa hàng. Chuỗi option **chính là** giá trị: server đối chiếu câu
+   trả lời thanh toán với id các cổng đã bật, và quy câu trả lời giao hàng ra phí theo **tên**
+   phương thức. Nhãn tự gõ trong template thu về một câu trả lời vô giá trị.
+4. `POST /pages` với TYPE `checkout`, rồi `POST /publish` — `/checkout` trỏ tới trang **đã
+   publish** của type đó, nên bản nháp cũng như không có trang.
+
+Thiếu một bước là nút Checkout mà mọi cart drawer mặc định mang theo sẽ trả 404.
+
+**Dry run** (mặc định) trả về `plan` đã sắp thứ tự, `payment_methods` và `delivery_options`
+form sẽ mang, kèm cảnh báo khi một trong hai danh sách rỗng — một select giao hàng rỗng chặn
+đứng đơn hàng.
+
+**Khi chạy thật** trả về `form_id`, `page_id`, `slug` và `published`. Hai khẳng định đi kèm,
+vì cả hai lỗi đều im lặng:
+
+- **Publish bỏ qua trang không có bản nháp để publish nhưng vẫn trả 200** (`service.go:650`,
+  một `continue` trần), nên trang quay lại trong kết quả là bằng chứng duy nhất. Không có nó,
+  một checkout 404 vẫn báo thành công.
+- **Bất kỳ bước nào sau lệnh tạo mà hỏng thì form bị xoá lại.** Một form không trang nào bind
+  tới hiện trong danh sách Forms của người bán như một mục "Form" rỗng, và lần thử lại hiển
+  nhiên sẽ tạo ra cái thứ hai. Editor từng dính đúng lỗi này; cách khắc phục được sao lại chứ
+  không phát minh lại.
+
+Cả hai tài liệu đều được **sinh ra** từ `formTemplates.ts` và `checkoutPageSeed.ts` của chính
+editor qua `npm run codegen`, không chép tay — một bản chép seed của nền tảng sẽ mục ngay lần
+nền tảng sửa nó, và người đầu tiên phát hiện là khách mua hàng.

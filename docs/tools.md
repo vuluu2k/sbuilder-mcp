@@ -653,3 +653,56 @@ present when nothing was measured, or when `node_id` frames one element.
 
 It does not judge taste. Whether a hero reads well is not measurable, and pretending
 otherwise would spend the agent's attention on what it cannot know.
+
+## `sb_store`
+
+Run a store flow that must happen in a **fixed order**. One action today; the enum is how a
+second arrives without a second tool.
+
+| Arg | Type | Notes |
+| --- | --- | --- |
+| `action` | `"checkout"` | The flow to run |
+| `site_id` | string? | Falls back to `SB_SITE` |
+| `language` | `"vi"` \| `"en"`? | Copy language, default `vi` |
+| `page_name` | string? | Overrides the editor's own page name |
+| `headline` | string? | Overrides the page's headline |
+| `dry_run` | boolean? | Defaults to **true** |
+
+### `action: "checkout"`
+
+`sb_review` names eight readiness gaps. Seven are now one call each — a delivery option, a
+gateway, a product, a page of the right type — because the call sheet says what those calls
+take. The checkout is the one that is not, because it is four writes whose order is the
+whole contract, written down only in `editor/src/features/pages/checkoutPage.ts`:
+
+1. `POST /forms` — create the order form.
+2. `PUT /forms/{id}` — put it back **whole**, with the cart as its source. Name and type
+   ride along, or `Normalize()` renames it "Form" and turns it `custom`, after which step 3
+   is refused as *"mappings do not fit this form type"*.
+3. `PUT /forms/{id}/document` — save the field document with this store's **real** payment
+   methods and delivery options. The option string **is** the value: the server matches a
+   payment answer against the ids of the gateways the store has switched on, and resolves a
+   delivery answer to a fee by the method's name. A template's hand-typed label collects an
+   answer worth nothing.
+4. `POST /pages` of TYPE `checkout`, then `POST /publish` — `/checkout` resolves to the
+   **published** page of the type, so a draft is the same as no page.
+
+Miss any one and the Checkout button every cart drawer ships with answers 404.
+
+**Dry run** (the default) returns the ordered `plan`, the `payment_methods` and
+`delivery_options` the form will carry, and a warning when either list is empty — an empty
+delivery select stops the order dead.
+
+**Executing** returns `form_id`, `page_id`, `slug` and `published`. Two assertions ride
+along, because both failures are silent:
+
+- **Publish skips a page it has nothing to publish for and still answers 200**
+  (`service.go:650`, a bare `continue`), so the page coming back is the only proof. Without
+  it a checkout that 404s reports success.
+- **If any step after the create fails the form is deleted again.** A form no page binds
+  shows in the merchant's list as an empty "Form", and the obvious retry makes a second one.
+  The editor shipped that bug first; its recovery is copied rather than reinvented.
+
+Both documents are **generated** from the editor's own `formTemplates.ts` and
+`checkoutPageSeed.ts` by `npm run codegen`, not hand-copied — a copy of the platform's seed
+rots the next time the platform edits it, and the first person to notice is a shopper.

@@ -93,8 +93,10 @@ make, because those mean "this person's account".
 | `sb_look` | Save, render, and return screenshots plus measured node boxes and layout defects measured on the render |
 | `sb_event` | Give a node a click action — open the cart, go to a page, open a pop-up |
 | `sb_bind` | Bind a node's content to real store data, or make a button add to the cart |
+| `sb_store` | Run a store flow that must happen in a fixed order — today, the four writes that make a working checkout |
 
-Twenty-five tools, **412 API operations**, 106 elements, 77 binding sources. `sb_api_find`
+Twenty-seven tools, **484 API operations** (158 of the 212 writes carrying a body shape read
+off the handler), 107 elements, 77 binding sources. `sb_api_find`
 is an index rather than a tool per endpoint, so the tool list stays short while everything
 the platform can do stays reachable — and operations added to the platform arrive with the
 next `npm run codegen`.

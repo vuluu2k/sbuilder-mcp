@@ -10,7 +10,7 @@ describe('tool annotations', () => {
   it('every tool carries annotations; the read set is readOnlyHint', async () => {
     const { client, close } = await connectedClient();
     const { tools } = await client.listTools();
-    expect(tools.length).toBe(26);
+    expect(tools.length).toBe(27);
     for (const t of tools) expect(t.annotations, t.name).toBeDefined();
     for (const name of READ_ONLY) {
       expect(tools.find((t) => t.name === name)!.annotations!.readOnlyHint, name).toBe(true);

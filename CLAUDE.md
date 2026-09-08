@@ -324,15 +324,24 @@ that accounts for them.
   empty card really is empty. It is whether `BOUND_SPECIALS` holds a key outside the link
   set.
 
-- **A CHECKOUT IS FOUR STEPS IN A FIXED ORDER, and the editor is the only place they are
-  written down.** `editor/src/features/pages/checkoutPage.ts` — create an order form, PUT it
+- **A CHECKOUT IS FOUR STEPS IN A FIXED ORDER, AND `sb_store` NOW RUNS THEM.** The flow was
+  documented here and reachable by nothing: an agent had to read the editor's own file,
+  reproduce four writes in order, and rebuild two documents it could not author. `sb_store`
+  with `action: "checkout"` runs them, generating both documents from the editor's
+  `formTemplates.ts` and `checkoutPageSeed.ts` at codegen time — with the form id substituted
+  through a sentinel codegen asserts appears exactly once, because a substitution that
+  silently matched nothing would make a checkout page bound to no form, which renders and
+  takes no orders. `dry_run` (the default) returns the ordered plan and the payment and
+  delivery options the form will actually carry.
+
+  The original note stands as the reason it had to be a tool:
+  `editor/src/features/pages/checkoutPage.ts` — create an order form, PUT it
   back WHOLE (name and type ride along, or `Normalize()` renames it and turns it `custom`,
   after which the document is refused), save the field document with the payment methods and
   shipping options filled in at that one moment, then create the page from
   `buildCheckoutPageDocument` and PUBLISH, because /checkout resolves to the published page
   of the TYPE. Both seed modules import only `@webbuilder/schema` plus editor-internal
-  files, so `vite-node` runs the whole flow headlessly from `editor/`. Copy that flow; do
-  not rebuild a checkout by hand.
+  files, so codegen imports them directly. Copy that flow; do not rebuild a checkout by hand.
 
 - **`swag init` had not been re-run for a long time, and re-running it recovered 44
   operations** — 278 paths / 412 ops → 306 / 456. Among them the three that matter most:
