@@ -611,6 +611,25 @@ that accounts for them.
   DOCUMENT and compose on the render path, so the page's node has `nodes: []` and a
   child-count test would call every form empty.
 
+- **`/account` IS THE SIGN-IN DESTINATION, so it cannot be split — and it must not show
+  two auth forms at once.** There is no `login` or `register` page type (`FixedPathTypes` is
+  search, checkout, complete, account), and `membersonly.go`'s `membersOnlyRedirectTarget`
+  sends every anonymous visitor who hits a members-only page to `/account`, its comment
+  ruling out "a page-document scan hunting for a login form". So the instinct to give
+  sign-in and registration their own pages breaks the platform's own redirect: the shopper
+  arrives at `/account` with nowhere to sign in.
+
+  The shape the platform intends is `member-gate`'s own hint — "build the pair: one gate set
+  to Members and one set to Guests" — and the seed gives you only the members half
+  (`accountPageSeed.ts`: heading + `account-info` + `order-history` + `address-book`), so
+  the guest half is authored blind. What shipped here was both auth forms SIDE BY SIDE in
+  the guest gate: two headings, two submit buttons and one decision, becoming one long
+  double form at 390px. A `tab` is the fix — its button row is synthesized from each
+  `tab-content` child's `specials.label` (`render/nodes/tab/html.go:2`), so the undeclared
+  `tab_items` inspector control is not something you have to reverse-engineer — and its
+  `tabItemId` satellite ships `#f5f5f5` / `#7b7b7b` with a `#171717` active state, which is
+  rule 4 again.
+
 ## The five traps
 
 Each fails SILENTLY. Each is encoded in `src/domains/site/traps.ts` (trap 5 in

@@ -45,6 +45,27 @@ entirely: `/checkout`, `/checkout/complete`, `/account`, `/search`. Plus
 `/products/{slug}` needs a published `product` page and `/categories/…` a
 `category` one. Only `/checkout/complete` backstops itself; the rest 404.
 
+**6a. `/account` IS THE SIGN-IN DESTINATION, and it is ONE page.** There is no
+`login` or `register` page type — `page.FixedPathTypes` is search, checkout,
+complete, account — and `membersonly.go`'s `membersOnlyRedirectTarget` sends
+every anonymous visitor who hits a members-only page to `/account`, with its own
+comment ruling out "a page-document scan hunting for a login form". So splitting
+sign-in onto its own page breaks the platform's own redirect: the shopper lands
+on `/account` with nowhere to sign in.
+
+Build the PAIR `member-gate`'s hint names — one gate `audience: "guests"`, one
+`audience: "members"` — because the seed only gives you the members half
+(`accountPageSeed.ts`: heading + `account-info` + `order-history` +
+`address-book`). The guest half is yours, and it is the half that goes wrong.
+
+**BUT DO NOT SHOW TWO AUTH FORMS AT ONCE.** Shipped here: a login form and a
+register form side by side in the guest gate, two headings and two submit
+buttons competing for one decision, and at 390px one long double form. Put them
+in a `tab` — its button row is synthesized from each `tab-content` child's
+`specials.label` (`render/nodes/tab/html.go:2`), so there is no items config to
+discover — and style its `tabItemId` satellite, which ships `#f5f5f5` / `#7b7b7b`
+with a `#171717` active state (rule 4).
+
 **7. The design.** Rule 0 first — read the source, or read the page. Then
 sections, then the surfaces the page does not show you: satellites, field skin,
 the cart drawer, every empty state.
