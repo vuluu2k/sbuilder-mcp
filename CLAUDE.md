@@ -673,10 +673,21 @@ are needed by an agent that is not editing this repo at all. Specialist subagent
 All three phases are shipped, and their plans live in `docs/superpowers/plans/`:
 auth and full API reach; the element catalog, patch core, four traps, document, builder,
 validation and page tools; the live-edit socket, the yield rule, the vision loop and
-`sb_bind`. Twenty-five tools reach 412 API operations. The 2026-09-07 token diet plan in
+`sb_bind`. Twenty-eight tools reach 484 API operations. The 2026-09-07 token diet plan in
 `docs/superpowers/plans/` (compact results, once-per-process notices, the `sb_api_find`
 call sheet, trap 5, auto-release) is shipped too, and `test/token-budget.test.ts` holds its
 ceilings.
+
+Phase 8 (2026-09-08) made the agent an OPERATOR rather than only a designer, and its spec is
+`docs/superpowers/specs/2026-09-08-phase-8-operating-a-store-design.md`. The measurement that
+framed it: 46 of 212 write operations carried a body schema, so every merchant operation
+through `sb_api_call` was a guess, while the editor exposes 58 feature areas and this server
+covered about six. It shipped `REQUEST_SHAPES` (46 → 158, read off the handlers), `sb_store`
+(the four ordered writes that make a checkout) and `sb_undo` (a PUT reads before it writes,
+because the platform has no history). It did NOT add a tool per surface: the finishing
+surfaces — theme, fonts, menus, translations, settings, blog, orders, customers, shipping,
+discounts — became reachable the moment the shapes landed, and what is still unshaped there
+is action endpoints that take no JSON body.
 
 `SB_BROWSER_TEST=1 npm test` adds the one test that launches Chrome. Run it after touching
 `src/vision/**` — the default suite skips it, and a skip that reads as green is the failure

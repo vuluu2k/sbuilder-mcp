@@ -1,6 +1,7 @@
 # Tools
 
-Four tools reach 412 platform operations. `sb_api_find` is an index, not a tool per
+Four tools reach 484 platform operations, and 158 of the 212 writes among them carry a body
+shape read off the handler that decodes it. `sb_api_find` is an index, not a tool per
 endpoint — see [why](../README.md#tools).
 
 Every result is **compact JSON** — no indentation, because the reader is a model and the
