@@ -6,6 +6,12 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.0] - 2026-09-08
+
+### Added
+- sb_review giờ báo cáo gap catalogue khi site chưa có sản phẩm active nào, vì mọi repeater trên site sẽ render trạng thái rỗng và product template không bind vào đâu cả trên một cửa hàng vốn báo cáo là đã sẵn sàng.
+- sb_review giờ báo cáo cùng gap catalogue khi mọi sản phẩm active đều có giá bằng không, vì một sản phẩm giá 0 vẫn render, vẫn thêm được vào giỏ hàng và tổng đơn hàng bằng không.
+
 ## [0.3.0] - 2026-09-08
 
 ### Added

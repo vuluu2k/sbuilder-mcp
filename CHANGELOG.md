@@ -6,6 +6,12 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.0] - 2026-09-08
+
+### Added
+- sb_review reports a catalogue gap when a site has no active products, since every repeater on the site renders its empty state and the product template is bound to nothing on a store that otherwise reports ready.
+- sb_review reports the same catalogue gap when every active product is priced at zero, since a zero-priced product still renders, adds to the cart and totals nothing.
+
 ## [0.3.0] - 2026-09-08
 
 ### Added
