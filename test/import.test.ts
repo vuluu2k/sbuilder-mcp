@@ -269,6 +269,60 @@ describe.runIf(process.env.SB_BROWSER_TEST === '1')('capture()', () => {
    * preflight sets `border-style: solid; border-width: 0` on every element, so
    * the first fix changed nothing on a site built with it.
    */
+  /**
+   * MOST OF THE WEB DOES NOT USE `<p>`.
+   *
+   * Capturing only paragraphs meant a page whose prose sits in a `<div>`, a
+   * `<td>` or a `<span>` came back EMPTY. Measured across a sweep:
+   * news.ycombinator.com (a table layout) and tailwindcss.com both kept 0 of
+   * ~4,000 and ~6,000 visible characters. They now keep 41% and 22%.
+   */
+  it('takes text from any block that holds it, and never twice', async () => {
+    const page = `data:text/html,${encodeURIComponent(
+      '<main><section>' +
+        '<table><tr><td>In a cell</td></tr></table>' +
+        '<div>In a div</div>' +
+        '<div><p>In a paragraph inside a div</p></div>' +
+        '</section></main>',
+    )}`;
+    const r = await capture(page);
+    const texts = (r.sections[0].children ?? []).filter((c) => c.kind === 'text').map((c) => c.text);
+    // The wrapping <div> must NOT also offer the paragraph's text: the fallback
+    // fires only when nothing inside offered anything.
+    expect(texts).toEqual(['In a cell', 'In a div', 'In a paragraph inside a div']);
+  }, 60_000);
+
+  it('falls back when the sections it found hold nothing renderable', async () => {
+    // A page can offer <section> elements that hold nothing this platform draws.
+    // Taking "we found candidates" as "we found content" returned an empty page —
+    // measured on a real site that kept 0 of 6,004 characters.
+    const page = `data:text/html,${encodeURIComponent(
+      '<main><section><canvas></canvas></section><div>Real content</div></main>',
+    )}`;
+    const r = await capture(page);
+    expect(r.sections.length).toBeGreaterThan(0);
+    const texts: string[] = [];
+    const walk = (c: { text?: string; children?: unknown[] }) => {
+      if (c.text) texts.push(c.text);
+      for (const k of (c.children ?? []) as { text?: string; children?: unknown[] }[]) walk(k);
+    };
+    r.sections.forEach(walk);
+    expect(texts).toContain('Real content');
+  }, 60_000);
+
+  it('bounds the WHOLE import, not each section', async () => {
+    // At 40 per section the cap was not a guard against a pathological page, it
+    // was a truncation of an ordinary one — three dense pages each stopped at
+    // exactly 40 leaves having captured 7-13% of what a reader sees.
+    const many = `data:text/html,${encodeURIComponent(
+      `<main><section>${Array.from({ length: 20 }, (_, i) => `<div>Line ${i}</div>`).join('')}</section></main>`,
+    )}`;
+    const r = await capture(many, { maxNodes: 5 });
+    const texts = (r.sections[0].children ?? []).filter((c) => c.kind === 'text');
+    expect(texts.length).toBe(5);
+    expect(r.skipped['over-node-limit']).toBeGreaterThan(0);
+  }, 60_000);
+
   it('takes a painted link as a button and leaves a bare one alone', async () => {
     const page = `data:text/html,${encodeURIComponent(
       '<main><section>' +

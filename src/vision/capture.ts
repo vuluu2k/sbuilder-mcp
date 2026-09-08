@@ -70,14 +70,14 @@ export interface CaptureResult {
  * Written as one function rather than composed helpers because it is
  * serialized: anything it closes over does not exist on the other side.
  */
-function capturePage(limits: { maxSections: number; maxPerSection: number; maxImages: number }): CaptureResult {
+function capturePage(limits: { maxSections: number; maxPerSection: number; maxImages: number; maxTextChars: number; maxNodes: number }): CaptureResult {
   // EVERY constant this function uses is declared INSIDE it. The body is
   // serialized and evaluated in the page, so a module-level `const` it closes
   // over is simply not there — caught the first time this ran against a real
   // page, as `ReferenceError: HEADINGS is not defined`, by which point the file
   // already carried a comment saying exactly that.
   const HEADINGS = new Set(['H1', 'H2', 'H3', 'H4', 'H5', 'H6']);
-  const taken = { images: 0 };
+  const taken = { images: 0, nodes: 0 };
   const skipped: Record<string, number> = {};
   const skip = (why: string): void => void (skipped[why] = (skipped[why] ?? 0) + 1);
   const here = location.href;
@@ -134,30 +134,47 @@ function capturePage(limits: { maxSections: number; maxPerSection: number; maxIm
     'NAV', 'FORM', 'INPUT', 'SELECT', 'TEXTAREA', 'BUTTON',
   ]);
 
-  /** Collect the renderable leaves under one section, in document order. */
+  /**
+   * Collect the renderable leaves under one section, in document order.
+   *
+   * Returns whether it captured anything, which is what makes the TEXT FALLBACK
+   * below safe: an element only offers its own text when nothing inside it
+   * offered any, so a paragraph is never captured twice — once through its
+   * `<p>` and again through the `<div>` around it.
+   */
   const leaves = (root: El): Captured[] => {
     const out: Captured[] = [];
-    const walk = (el: El): void => {
-      if (out.length >= limits.maxPerSection) return;
+    const walk = (el: El): boolean => {
+      // TWO BOUNDS, and the per-section one used to do both jobs badly. At 40 it
+      // was not a guard against a pathological page, it was a TRUNCATION of an
+      // ordinary one: three dense pages in a sweep each stopped at exactly 40
+      // leaves, having captured 7-13% of what a reader sees. The real limit
+      // wanted is on the WHOLE import, so that is where it lives now, and the
+      // per-section one is loose enough to be a guard again.
+      if (taken.nodes >= limits.maxNodes) {
+        skip('over-node-limit');
+        return false;
+      }
+      if (out.length >= limits.maxPerSection) return false;
       const tag = el.tagName;
       if (IGNORE.has(tag)) {
         skip(tag.toLowerCase());
-        return;
+        return false;
       }
       if (!visible(el)) {
         skip('hidden');
-        return;
+        return false;
       }
       if (HEADINGS.has(tag)) {
         const text = clean(el.textContent);
-        if (text) out.push({ kind: 'heading', level: Number(tag.slice(1)), text });
-        return;
+        if (text) { out.push({ kind: 'heading', level: Number(tag.slice(1)), text }); taken.nodes++; }
+        return Boolean(text);
       }
       if (tag === 'IMG') {
         const src = el.getAttribute('src');
         if (!src || src.startsWith('data:')) {
           skip('image-without-src');
-          return;
+          return false;
         }
         // BOUNDED, because every image is an upload. A sponsors wall is a real
         // page shape — one measured at 36 logos in four sections — and importing
@@ -166,33 +183,56 @@ function capturePage(limits: { maxSections: number; maxPerSection: number; maxIm
         // what the caller wanted from "import this page".
         if (taken.images >= limits.maxImages) {
           skip('over-image-limit');
-          return;
+          return false;
         }
         taken.images++;
+        taken.nodes++;
         out.push({ kind: 'image', src: abs(src), alt: clean(el.getAttribute('alt')) });
-        return;
+        return true;
       }
       if (tag === 'A' && looksLikeButton(el)) {
         const text = clean(el.textContent);
         const href = el.getAttribute('href');
         if (text) {
           out.push({ kind: 'button', text, ...(href ? { href: abs(href) } : {}) });
+          taken.nodes++;
         }
-        return;
+        return Boolean(text);
       }
       if (tag === 'UL' || tag === 'OL') {
         const items = Array.from(el.querySelectorAll('li'))
           .map((li) => clean(li.textContent))
           .filter(Boolean);
-        if (items.length) out.push({ kind: 'list', items });
-        return;
+        if (items.length) { out.push({ kind: 'list', items }); taken.nodes++; }
+        return items.length > 0;
       }
       if (tag === 'P' || tag === 'BLOCKQUOTE') {
         const text = clean(el.textContent);
-        if (text) out.push({ kind: 'text', text });
-        return;
+        if (text) { out.push({ kind: 'text', text }); taken.nodes++; }
+        return Boolean(text);
       }
-      for (const child of Array.from(el.children)) walk(child);
+
+      let any = false;
+      for (const child of Array.from(el.children)) any = walk(child) || any;
+      if (any) return true;
+
+      // THE TEXT FALLBACK, and it is most of the web. Capturing only <p> meant a
+      // page whose prose sits in a <div>, a <td> or a <span> came back EMPTY:
+      // measured, news.ycombinator.com (a table layout) and tailwindcss.com both
+      // kept 0 of ~4,000 and ~6,000 characters, and python.org kept 54%.
+      //
+      // Safe because it only fires when nothing INSIDE offered anything, so a
+      // paragraph is never taken twice — once through its <p> and again through
+      // the <div> around it. Bounded because a fallback that fires high in the
+      // tree would otherwise carry a whole page as one string.
+      const own = clean(el.textContent);
+      if (own && own.length <= limits.maxTextChars) {
+        out.push({ kind: 'text', text: own });
+        taken.nodes++;
+        return true;
+      }
+      if (own) skip('text-too-long');
+      return false;
     };
     walk(root);
     return out;
@@ -220,22 +260,37 @@ function capturePage(limits: { maxSections: number; maxPerSection: number; maxIm
   // single band. The finest ones are the page's actual bands.
   candidates = candidates.filter((el) => !candidates.some((o) => o !== el && el.contains(o)));
 
-  const sections: Captured[] = [];
-  for (const el of candidates) {
-    if (sections.length >= limits.maxSections) {
-      skip('over-section-limit');
-      break;
+  const build = (from: El[]): Captured[] => {
+    const acc: Captured[] = [];
+    for (const el of from) {
+      if (acc.length >= limits.maxSections) {
+        skip('over-section-limit');
+        break;
+      }
+      if (!visible(el)) {
+        skip('hidden');
+        continue;
+      }
+      const children = leaves(el);
+      if (children.length === 0) {
+        skip('empty-section');
+        continue;
+      }
+      acc.push({ kind: 'section', children });
     }
-    if (!visible(el)) {
-      skip('hidden');
-      continue;
-    }
-    const children = leaves(el);
-    if (children.length === 0) {
-      skip('empty-section');
-      continue;
-    }
-    sections.push({ kind: 'section', children });
+    return acc;
+  };
+
+  let sections = build(candidates);
+  // THE FALLBACK HAS TO FIRE ON AN EMPTY RESULT, not only on an empty candidate
+  // LIST. A page can offer `<section>` elements that hold nothing this platform
+  // renders — a wrapper around a canvas, a slot filled by script later — and the
+  // old order took "we found candidates" as "we found content", so the whole
+  // page came back empty. Measured: tailwindcss.com kept 0 of 6,004 characters
+  // while reporting one skipped empty section.
+  if (sections.length === 0) {
+    const main = document.querySelectorAll('main')[0] ?? document.body;
+    sections = build(Array.from(main.children));
   }
 
   return { url: here, title: clean(document.title), sections, skipped };
@@ -250,12 +305,14 @@ function capturePage(limits: { maxSections: number; maxPerSection: number; maxIm
  */
 export async function capture(
   url: string,
-  opts: { maxSections?: number; maxPerSection?: number; maxImages?: number; width?: number } = {},
+  opts: { maxSections?: number; maxPerSection?: number; maxImages?: number; maxTextChars?: number; maxNodes?: number; width?: number } = {},
 ): Promise<CaptureResult> {
   const limits = {
     maxSections: opts.maxSections ?? 24,
-    maxPerSection: opts.maxPerSection ?? 40,
+    maxPerSection: opts.maxPerSection ?? 120,
     maxImages: opts.maxImages ?? 24,
+    maxTextChars: opts.maxTextChars ?? 1200,
+    maxNodes: opts.maxNodes ?? 300,
   };
   let browser: Browser | undefined;
   try {

@@ -664,6 +664,7 @@ mở**, dưới dạng element thật mang token của **chính trang này**.
 | `site_id` | string? | Không truyền thì lấy `SB_SITE` |
 | `max_sections` | number? | Mặc định 24 |
 | `max_images` | number? | Mặc định 24 — mỗi ảnh là một lần upload |
+| `max_nodes` | number? | Mặc định 300 — trần cho toàn bộ lần import |
 | `upload_images` | boolean? | Chép ảnh vào media library của site, mặc định **true** |
 | `dry_run` | boolean? | Mặc định **true** — trả về những gì tìm thấy |
 

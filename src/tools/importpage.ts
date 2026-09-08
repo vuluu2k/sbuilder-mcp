@@ -57,6 +57,13 @@ export function registerImportTools(
           .max(100)
           .optional()
           .describe('Default 24 — every image is an upload'),
+        max_nodes: z
+          .number()
+          .int()
+          .min(1)
+          .max(1000)
+          .optional()
+          .describe('Default 300 — the bound on the whole import'),
         upload_images: z
           .boolean()
           .optional()
@@ -65,14 +72,18 @@ export function registerImportTools(
       },
       annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: true },
     },
-    async ({ url, site_id: given, max_sections, max_images, upload_images, dry_run }) => {
+    async ({ url, site_id: given, max_sections, max_images, max_nodes, upload_images, dry_run }) => {
       const siteId = siteFor(ctx, given);
       // THE TARGET PAGE MUST BE OPEN, and not only because that is where the
       // nodes go: its own heading, button and section are where the tokens come
       // from, so an import with no open page is an import with no design.
       const doc = session.current();
 
-      const shot = await capture(url, { maxSections: max_sections, maxImages: max_images });
+      const shot = await capture(url, {
+        maxSections: max_sections,
+        maxImages: max_images,
+        maxNodes: max_nodes,
+      });
       const tokens = tokensFromPage(doc.doc);
       const images = imageSources(shot.sections);
 

@@ -707,6 +707,25 @@ that accounts for them.
   is most likely to be pointed at. It now reuses `shoot.ts`'s own `settleDom`, the same
   MutationObserver answer for the same question: example.com 1,884 → 1,104 ms.
 
+  A SWEEP THAT MEASURED COVERAGE — how much of the text a READER sees survives the import —
+  found the three that mattered most, and none of them showed up as an error:
+
+  - **Most of the web does not use `<p>`.** Capturing only paragraphs meant a page whose prose
+    sits in a `<div>`, a `<td>` or a `<span>` came back EMPTY: news.ycombinator.com (a table
+    layout) and tailwindcss.com each kept 0 of ~4,000 and ~6,000 characters. Text is now taken
+    from any block that holds it, and only when nothing INSIDE it offered anything — which is
+    what stops a paragraph being captured twice, once through its `<p>` and again through the
+    `<div>` around it. 0% → 41% and 22%.
+  - **The fallback fired on an empty candidate LIST, not an empty RESULT.** A page can offer
+    `<section>`s that hold nothing this platform draws, and taking "we found candidates" as
+    "we found content" returned an empty page.
+  - **`maxPerSection: 40` was truncating ordinary pages, not guarding against strange ones.**
+    Three dense pages each stopped at exactly 40 leaves. The bound that is actually wanted is
+    on the WHOLE import (`maxNodes`, 300), so that is where it lives.
+
+  Coverage is the metric worth keeping: an import that silently drops half a page reports no
+  error, and no test of the mapper can see it.
+
   `capture.ts` launches its OWN browser rather than sharing `shoot.ts`'s process-lifetime one:
   an import is rare, slow and runs untrusted script, and coupling that to the tool a vision
   loop calls every few hundred milliseconds is how the fast path gets slow.
