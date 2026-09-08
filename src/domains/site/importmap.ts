@@ -152,7 +152,28 @@ function one(c: Captured, t: PageTokens): NodeSpec | null {
       if (!c.src) return null;
       // `alt` is carried even when empty: an empty alt is a DECISION (decorative)
       // and dropping the key turns it back into an omission.
-      return { type: 'image', specials: { src: c.src, alt: c.alt ?? '' }, style: { maxWidth: '100%' } };
+      //
+      // AN IMPORTED IMAGE HAS NO KNOWN SIZE, so it needs a bound in BOTH axes.
+      // `maxWidth: 100%` alone was not one: an SVG has no intrinsic pixel size,
+      // so it took the container's full 1200px and about as much height again.
+      // Measured on a real import — four such images turned one section into a
+      // 5,564px column of mostly whitespace.
+      //
+      // `height: auto` for the same reason the platform's own media CSS needs it:
+      // a width/height ATTRIBUTE is a used height, and without this the cap below
+      // would be the thing ignored. `contain` because the source's crop is not
+      // ours to guess.
+      return {
+        type: 'image',
+        specials: { src: c.src, alt: c.alt ?? '' },
+        style: {
+          width: 'auto',
+          height: 'auto',
+          maxWidth: '100%',
+          maxHeight: '420px',
+          objectFit: 'contain',
+        },
+      };
     }
     case 'button': {
       const text = c.text?.trim();

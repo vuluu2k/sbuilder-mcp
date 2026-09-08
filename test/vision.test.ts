@@ -80,6 +80,26 @@ describe.runIf(process.env.SB_BROWSER_TEST === '1')('shoot()', () => {
     await closeBrowser();
   });
 
+  /**
+   * FRAMING A NODE BELOW THE FOLD, which used to be impossible.
+   *
+   * A clip turned `fullPage` OFF, so the screenshot was of the VIEWPORT and a
+   * clip was only satisfiable inside the first 900px. Anything further down
+   * failed with Playwright's "Clipped area is either empty or outside the
+   * resulting image", naming neither the node nor the reason — on a 4,051px
+   * page that is most of the page.
+   */
+  it('frames a node that sits below the first viewport', async () => {
+    const html =
+      '<div style="height:1600px"></div>' +
+      '<div id="fs_11111111" class="wb-flex-section" style="height:200px;background:#E8557A"></div>';
+    const shots = await shoot(`data:text/html,${encodeURIComponent(html)}`, {
+      widths: [800],
+      node: 'fs_11111111',
+    });
+    expect(shots[0].imageBase64.length).toBeGreaterThan(0);
+  }, 60_000);
+
   it('launches Chrome ONCE and reuses it across calls', async () => {
     // Proved by counting, not assumed: the real launcher is wrapped so every
     // launch is seen, then two looks are taken and only one launch happened.

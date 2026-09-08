@@ -143,6 +143,20 @@ describe('toSpecs()', () => {
     expect(toSpecs(page, t)[0].children![0].style).toMatchObject({ maxWidth: '1200px' });
   });
 
+  it('bounds an imported image in BOTH axes', () => {
+    // A source image has no known size. `maxWidth: 100%` alone is not a bound:
+    // an SVG has no intrinsic pixel size, so it took the container's full width
+    // and about as much height again — four of them turned one imported section
+    // into a 5,564px column of mostly whitespace.
+    const img = toSpecs(page, {})[0].children![0].children![2];
+    expect(img.style).toMatchObject({
+      maxWidth: '100%',
+      maxHeight: '420px',
+      height: 'auto',
+      objectFit: 'contain',
+    });
+  });
+
   it('drops what has nothing to show instead of adding an empty node', () => {
     const thin: Captured[] = [
       { kind: 'section', children: [{ kind: 'heading', text: '   ' }, { kind: 'image' }] },

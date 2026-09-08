@@ -90,17 +90,26 @@ export function registerImportTools(
       // that is a product photo going missing. A failed upload leaves the
       // original source in place rather than an empty frame.
       const rehosted = new Map<string, string>();
-      const failed: string[] = [];
+      // WHY it failed, not just how many. Four images refused for the same
+      // reason is ONE thing to fix, and a bare count is the shape that sends a
+      // caller to re-run the import hoping for a different answer. Measured: a
+      // real import lost all four images to `only image, video, or font
+      // (woff2/woff/ttf/otf) uploads are supported` — the platform refusing SVG,
+      // whose own sentinel exists precisely so a caller can be told "convert it
+      // first". The count alone said none of that.
+      const failures = new Map<string, number>();
       if (upload_images !== false) {
         for (const src of images) {
           try {
             const up = await uploadMedia(ctx, siteId, { url: src });
             if (up.url) rehosted.set(src, up.url);
-          } catch {
-            failed.push(src);
+          } catch (e) {
+            const why = (e as Error).message.replace(/^sbuilder:\s*/, '').slice(0, 160);
+            failures.set(why, (failures.get(why) ?? 0) + 1);
           }
         }
       }
+      const failed = [...failures.entries()].map(([reason, count]) => ({ reason, count }));
 
       const sections: Captured[] = rehosted.size > 0 ? rehostImages(shot.sections, rehosted) : shot.sections;
       const specs = toSpecs(sections, tokens);
@@ -123,11 +132,18 @@ export function registerImportTools(
       return text({
         read: shot.url,
         added_sections: added,
-        images: { copied: rehosted.size, failed: failed.length },
+        images: {
+          copied: rehosted.size,
+          ...(failed.length ? { failed } : {}),
+        },
         rev: doc.rev,
         note:
           'Added with THIS page\'s tokens, not the source\'s. Look at it before publishing — ' +
-          'an imported page is a starting point, and the source\'s own layout was not copied.',
+          'an imported page is a starting point, and the source\'s own layout was not copied.' +
+          (failed.length
+            ? ' An image that could not be copied KEPT ITS ORIGINAL URL, so the page still ' +
+              'shows it — but it now depends on somebody else\'s server.'
+            : ''),
       });
     },
   );
