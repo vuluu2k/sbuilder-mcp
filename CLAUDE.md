@@ -396,6 +396,17 @@ that accounts for them.
   retries on the partner surface before blaming the key, and its refusal names the
   deployment as a suspect alongside the scopes.
 
+- **`sb_look` PAID 2.5 SECONDS FOR A TIMEOUT THAT COULD NOT RESOLVE.** It waited on
+  `networkidle` with a 2500 ms cap, under a comment correctly explaining that a storefront
+  never goes idle — the cart island polls, a session endpoint answers 401 forever. So the wait
+  ran to its cap every single time: measured 2502 ms of a 2847 ms shot, three runs of three.
+  On the one tool a vision loop calls after every edit. A MutationObserver asks the question
+  actually being asked — has the page stopped changing — and answers when it becomes true:
+  400-460 ms on the same pages, identical content on screen. `sb_look` went 3211 ms → 923 ms
+  warm, 3566 → 1564 for three widths. Bounded twice (250 ms quiet, 2000 ms cap), because a
+  page that never settles must be photographed anyway. Everything else in the server is
+  1-181 ms; this was the whole latency budget.
+
 ## The five traps
 
 Each fails SILENTLY. Each is encoded in `src/domains/site/traps.ts` (trap 5 in

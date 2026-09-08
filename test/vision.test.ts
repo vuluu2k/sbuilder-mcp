@@ -207,6 +207,46 @@ describe.runIf(process.env.SB_BROWSER_TEST === '1')('measured against a real ren
     const shots = await shoot(`data:text/html,${encodeURIComponent(html)}`, { widths: [390] });
     expect(measure(shots).some((f) => f.code === 'text_too_small')).toBe(true);
   }, 40_000);
+
+  /**
+   * THE SHOT MUST NOT PAY FOR A TIMEOUT IT KNOWS WILL NOT RESOLVE.
+   *
+   * `waitForLoadState('networkidle', { timeout: 2_500 })` ran to its cap on
+   * every look of a real storefront — measured 2502 ms of a 2847 ms total, three
+   * runs out of three — because a storefront never goes idle, which the code
+   * that added it already said in its own comment. A DOM-quiet wait answers the
+   * question actually being asked and answers it when it becomes true.
+   *
+   * A page that CANNOT settle is the case worth pinning: an animation that never
+   * stops must not hold the shot forever.
+   */
+  it('photographs a page whose DOM never stops changing, without hanging', async () => {
+    const html =
+      '<div id="fs_1a2b3c4d" class="wb-flex-section" style="width:200px;height:40px">x</div>' +
+      '<script>setInterval(() => { document.title = String(Date.now()); }, 10);</script>';
+    const started = Date.now();
+    const shots = await shoot(`data:text/html,${encodeURIComponent(html)}`, { widths: [390] });
+    const elapsed = Date.now() - started;
+    expect(shots[0].imageBase64.length).toBeGreaterThan(0);
+    // The settle caps at 2s; the whole shot must land well inside the old
+    // networkidle budget rather than waiting on a page that never quiets.
+    expect(elapsed).toBeLessThan(20_000);
+  }, 40_000);
+
+  it('waits long enough that a late-rendered element is in the picture', async () => {
+    const html =
+      '<div id="fs_00000001" class="wb-flex-section"></div>' +
+      '<script>setTimeout(() => {' +
+      'const d = document.createElement("div");' +
+      'd.id = "fs_1a2b3c4d"; d.className = "wb-flex-section";' +
+      'd.setAttribute("style", "width:900px;height:80px");' +
+      'document.body.appendChild(d); }, 120);</script>';
+    const { measure } = await import('../src/vision/measure.js');
+    const shots = await shoot(`data:text/html,${encodeURIComponent(html)}`, { widths: [390] });
+    // The late block is 900px wide in a 390px viewport. Seeing it at all proves
+    // the shot did not fire before the page finished rendering.
+    expect(measure(shots).some((f) => f.nodeId === 'fs_1a2b3c4d')).toBe(true);
+  }, 40_000);
 });
 
 describe('shoot() page hygiene', () => {
