@@ -237,7 +237,7 @@ export async function shoot(
  * polling widget from holding the shot forever. A page that never settles is
  * photographed anyway — a late picture beats none.
  */
-async function settleDom(page: Page): Promise<void> {
+export async function settleDom(page: Page): Promise<void> {
   await page
     .evaluate(
       ({ quiet, cap }) =>

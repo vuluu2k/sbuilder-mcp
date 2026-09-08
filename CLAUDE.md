@@ -695,6 +695,18 @@ that accounts for them.
   sequential round trips inside one tool call is slow, half-fails interestingly, and is not
   what anybody meant by "import this page".
 
+  TWO MORE CAME OUT OF SWEEPING A JS-BUILT PAGE. A short BLOCK-LEVEL link is navigation, not
+  a call to action — the rule stopped at "not inline" and a documentation sidebar came back as
+  38 buttons, a page of pink pills where the source had a list of links. A real CTA is
+  PAINTED, and the border half must check WIDTH: Tailwind's preflight sets
+  `border-style: solid; border-width: 0` on every element, so testing the style alone is true
+  of an entire site built with it and the first fix changed nothing. 38 → 13.
+
+  And `capture` waited a flat 600ms, which is wrong at BOTH ends — example.com is finished
+  long before it and a script-built page is not finished after it, which is the page an import
+  is most likely to be pointed at. It now reuses `shoot.ts`'s own `settleDom`, the same
+  MutationObserver answer for the same question: example.com 1,884 → 1,104 ms.
+
   `capture.ts` launches its OWN browser rather than sharing `shoot.ts`'s process-lifetime one:
   an import is rare, slow and runs untrusted script, and coupling that to the tool a vision
   loop calls every few hundred milliseconds is how the fast path gets slow.

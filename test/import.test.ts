@@ -260,6 +260,29 @@ describe.runIf(process.env.SB_BROWSER_TEST === '1')('capture()', () => {
     expect(texts).toEqual(['Inner', 'Only once.']);
   }, 60_000);
 
+  /**
+   * A SHORT BLOCK-LEVEL LINK IS NAVIGATION, not a call to action.
+   *
+   * The rule stopped at "not inline" and a documentation sidebar came back as 38
+   * buttons — a page of pink pills where the source had a list of links. A real
+   * CTA is PAINTED. And the border half needs WIDTH, not just a style: Tailwind's
+   * preflight sets `border-style: solid; border-width: 0` on every element, so
+   * the first fix changed nothing on a site built with it.
+   */
+  it('takes a painted link as a button and leaves a bare one alone', async () => {
+    const page = `data:text/html,${encodeURIComponent(
+      '<main><section>' +
+        '<a href="/a" style="display:block;background:#E8557A">Real CTA</a>' +
+        '<a href="/b" style="display:block;border-style:solid;border-width:0">Tailwind reset</a>' +
+        '<a href="/c" style="display:block">Sidebar link</a>' +
+        '<a href="/d" class="btn" style="display:block">Classed</a>' +
+        '</section></main>',
+    )}`;
+    const r = await capture(page);
+    const buttons = (r.sections[0].children ?? []).filter((c) => c.kind === 'button');
+    expect(buttons.map((b) => b.text)).toEqual(['Real CTA', 'Classed']);
+  }, 60_000);
+
   it('bounds how many images one import can carry', async () => {
     // Every image is an upload. A sponsors wall — one measured at 36 logos —
     // means that many sequential round trips inside a single tool call.

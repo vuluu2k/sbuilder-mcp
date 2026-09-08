@@ -1,4 +1,5 @@
 import { chromium, type Browser, type Page } from 'playwright-core';
+import { settleDom } from './shoot.js';
 import type { Captured } from '../domains/site/importmap.js';
 
 /**
@@ -49,6 +50,9 @@ declare function getComputedStyle(el: El): {
   display: string;
   visibility: string;
   opacity: string;
+  backgroundColor: string;
+  borderStyle: string;
+  borderWidth: string;
 };
 declare const location: { href: string };
 
@@ -104,10 +108,25 @@ function capturePage(limits: { maxSections: number; maxPerSection: number; maxIm
   // label in a box with a background. Everything else is prose with a link in
   // it, and turning those into buttons produces a page of buttons.
   const looksLikeButton = (el: El): boolean => {
+    const t = clean(el.textContent);
+    if (t.length === 0 || t.length > 32) return false;
     const cls = typeof el.className === 'string' ? el.className.toLowerCase() : '';
     if (/\b(btn|button|cta)\b/.test(cls)) return true;
-    const t = clean(el.textContent);
-    return t.length > 0 && t.length <= 32 && getComputedStyle(el).display !== 'inline';
+    // A SHORT BLOCK-LEVEL LINK IS USUALLY NAVIGATION, not a call to action. The
+    // rule used to stop at "not inline" and a documentation sidebar came back as
+    // 38 buttons — a page of pink pills where the source had a list of links.
+    // A real CTA is PAINTED: it has a fill or a border. Nav links have neither.
+    const cs = getComputedStyle(el);
+    const filled = cs.backgroundColor !== '' &&
+      cs.backgroundColor !== 'transparent' &&
+      !cs.backgroundColor.startsWith('rgba(0, 0, 0, 0)');
+    // A BORDER NEEDS WIDTH, not just a style. Tailwind's preflight sets
+    // `border-style: solid; border-width: 0` on every element, so "has a border
+    // style" is true of an entire site built with it — which is how a
+    // documentation sidebar came back as 38 buttons even after the first fix.
+    const bordered =
+      cs.borderStyle !== '' && cs.borderStyle !== 'none' && parseFloat(cs.borderWidth || '0') > 0;
+    return cs.display !== 'inline' && (filled || bordered);
   };
 
   const IGNORE = new Set([
@@ -251,7 +270,13 @@ export async function capture(
   try {
     page = await browser.newPage({ viewport: { width: opts.width ?? 1440, height: 900 } });
     await page.goto(url, { waitUntil: 'load', timeout: 30_000 });
-    await page.waitForTimeout(600);
+    // THE SAME SETTLE `sb_look` USES, not a flat sleep. A fixed 600ms is wrong
+    // at both ends: example.com is finished long before it, and a page that
+    // builds itself with scripts is not finished after it — which is exactly the
+    // page an import is most likely to be pointed at. `settleDom` asks the
+    // question actually being asked (has the page stopped changing) and answers
+    // when it becomes true, bounded so a page that never settles is still read.
+    await settleDom(page);
     return (await page.evaluate(capturePage, limits)) as CaptureResult;
   } finally {
     await page?.close().catch(() => undefined);
