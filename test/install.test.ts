@@ -3,7 +3,7 @@ import { mkdtempSync, rmSync, writeFileSync, readFileSync, existsSync } from 'no
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { mergeJson, mergeToml } from '../src/install/write.js';
-import { buildEntry, chooseTargets, install } from '../src/install/index.js';
+import { buildEntry, chooseTargets, install, runInstallCli } from '../src/install/index.js';
 import type { ClientTarget } from '../src/install/paths.js';
 
 /**
@@ -150,6 +150,63 @@ describe('buildEntry()', () => {
     const e = buildEntry({ token: 'wbk_x' });
     expect(e.command).toBe('npx');
     expect(e.args).toEqual(['-y', 'sbuilder-mcp']);
+  });
+
+  it('carries the store name beside its id', () => {
+    const e = buildEntry({ token: 'wbk_x', site: 'site_1', siteName: 'Áo Thun' });
+    expect(e.env.SB_SITE).toBe('site_1');
+    expect(e.env.SB_SITE_NAME).toBe('Áo Thun');
+  });
+
+  it('drops a name with no id to attach it to', () => {
+    // A label that resolves to nothing is decoration, and a second install
+    // would file it under a site it does not name.
+    expect(buildEntry({ token: 'wbk_x', siteName: 'Áo Thun' }).env.SB_SITE_NAME).toBeUndefined();
+  });
+});
+
+describe('runInstallCli() takes what the platform emits', () => {
+  // The editor's Agent app builds the whole install line and appends
+  // `--site-name "<store>"` whenever it knows the name
+  // (editor/src/views/manage/apps/components/AgentAppPanel.vue). Refusing it
+  // made the ONE documented install path exit 1 and install nothing.
+  let said: string[] = [];
+  let restore: (() => void) | undefined;
+  beforeEach(() => {
+    said = [];
+    const real = console.error;
+    console.error = (...a: unknown[]) => void said.push(a.join(' '));
+    restore = () => void (console.error = real);
+  });
+  afterEach(() => restore?.());
+
+  it('accepts --site-name rather than refusing the platform its own flag', () => {
+    const code = runInstallCli([
+      '--token', 'wbk_x',
+      '--api', 'http://localhost:8080',
+      '--site', 'site_1',
+      '--site-name', 'Bản sao của Test',
+      '--dry-run',
+    ]);
+    expect(said.join('\n')).not.toMatch(/unknown option/i);
+    expect(code).toBe(0);
+  });
+
+  it('still refuses a flag nobody reads', () => {
+    expect(runInstallCli(['--token', 'wbk_x', '--nonesuch', 'v'])).toBe(1);
+    expect(said.join('\n')).toMatch(/unknown option\(s\) --nonesuch/);
+  });
+
+  // A preview that wrote nothing succeeded. Marking every line ✖ and exiting 1
+  // made the only way to inspect an install read as total failure.
+  it('reports a dry run as the preview it is, not as a failure', () => {
+    expect(runInstallCli(['--token', 'wbk_x', '--api', 'http://x', '--dry-run'])).toBe(0);
+    expect(said.join('\n')).not.toContain('✖');
+  });
+
+  it('never echoes the key it was handed', () => {
+    runInstallCli(['--token', 'wbk_supersecret', '--api', 'http://x', '--dry-run']);
+    expect(said.join('\n')).not.toContain('wbk_supersecret');
   });
 });
 

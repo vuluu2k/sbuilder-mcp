@@ -101,6 +101,31 @@ export function walk(doc: DocLike, id: string, visit: (n: NodeLike) => void): vo
   go(id);
 }
 
+/**
+ * One level of `walk`: `data.nodes` followed by the satellites on `config[key]`.
+ *
+ * For a caller that needs its OWN recursion — carrying scope down as it goes,
+ * the way `reviewDesign` carries "am I inside a repeater / an overlay" — and so
+ * cannot hand the traversal to `walk`. Such a caller reaching for `childrenOf`
+ * is the mistake `walk`'s comment warns about, and `sb_review` made it: it never
+ * saw a satellite, so every empty state, every variant-option skin and every
+ * quantity stepper was outside the review entirely.
+ *
+ * Satellites come AFTER the real children and are not deduplicated against
+ * them — a `configKey` pointing at a node that is also a child would be a
+ * malformed document, and a walk is not a validator.
+ */
+export function childrenWithSatellites(doc: DocLike, id: string): string[] {
+  const n = doc.nodes[id];
+  if (!n) return [];
+  const out = [...n.data.nodes];
+  for (const rule of SATELLITE_RULES[n.data.type] ?? []) {
+    const sat = n.config?.[rule.configKey];
+    if (typeof sat === 'string' && sat && doc.nodes[sat]) out.push(sat);
+  }
+  return out;
+}
+
 export function subtreeIds(doc: DocLike, id: string): string[] {
   const out: string[] = [];
   walk(doc, id, (n) => out.push(n.id));
@@ -130,6 +155,24 @@ export function ancestors(doc: DocLike, id: string): string[] {
  * therefore stored nowhere and reported nowhere — trap 5. Nearest stamp wins:
  * the block root answers with itself.
  */
+/**
+ * The site overlay this node sits in, or null. Nearest stamp wins, so the
+ * overlay root answers with itself.
+ *
+ * `isOverlay` answers only for the ROOT of one, which is right for the rules
+ * that decide whether a node may BE an overlay. It is the wrong question for a
+ * WRITE: an edit to a node inside the cart drawer is an edit to the drawer, and
+ * the drawer is one master shared by every page on the site. Without this, a
+ * `sb_set` on a drawer node reported a plain page-local success while changing
+ * ten pages — the same asymmetry `sb_review` closed when it started walking
+ * overlays and flagging their findings `overlay: true`.
+ */
+export function overlayRoot(doc: DocLike, id: string): string | null {
+  if (isOverlay(doc, id)) return id;
+  for (const a of ancestors(doc, id)) if (isOverlay(doc, a)) return a;
+  return null;
+}
+
 export function appBlockRoot(doc: DocLike, id: string): string | null {
   const stamped = (n?: NodeLike): boolean =>
     n !== undefined &&

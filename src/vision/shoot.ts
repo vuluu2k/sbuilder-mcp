@@ -193,7 +193,7 @@ for (const signal of ['SIGINT', 'SIGTERM'] as const) {
  */
 export async function shoot(
   url: string,
-  opts: { widths?: number[]; node?: string; pad?: number; format?: ShotFormat } = {},
+  opts: { widths?: number[]; node?: string; pad?: number; format?: ShotFormat; open?: string } = {},
 ): Promise<Shot[]> {
   const widths = opts.widths ?? DEFAULT_WIDTHS;
   const format = opts.format ?? DEFAULT_FORMAT;
@@ -322,7 +322,7 @@ async function shootOne(
   url: string,
   width: number,
   format: ShotFormat,
-  opts: { node?: string; pad?: number },
+  opts: { node?: string; pad?: number; open?: string },
 ): Promise<Shot> {
   // LOAD, then a BOUNDED settle — never `networkidle` alone.
   //
@@ -334,6 +334,34 @@ async function shootOne(
   // storefront. The settle is best-effort: if the page does go quiet, the shot
   // waits for it; if it never does, the shot happens anyway.
   await page.goto(url, { waitUntil: 'load', timeout: 30_000 });
+
+  // OPEN THE OVERLAY BEFORE MEASURING, or it cannot be photographed at all.
+  //
+  // A closed drawer is `visibility:hidden` and translated 105% off-screen
+  // (`render/nodes/cart-drawer/css.go`), so it measures at x=1461 on a 1440
+  // viewport and `page.screenshot({clip})` fails outright: "Clipped area is
+  // either empty or outside the resulting image". That made the ONE surface this
+  // repo's own guidance insists you look at — "open the cart drawer and look,
+  // before calling a site done" — the one surface `sb_look` could not show.
+  //
+  // `is-open` is the platform's OWN mechanism, not a hack around it: the same
+  // class the storefront's cart button toggles, whose rule is `transform:none`
+  // plus `visibility:visible`. The scrim takes it too, so the shot matches what
+  // a shopper sees rather than a panel floating over bare page.
+  if (opts.open) {
+    await page.evaluate((id) => {
+      // The narrow `document` shim this file declares is for the MEASUREMENT
+      // pass; here the real DOM is what runs, so reach it through the cast
+      // rather than widening a shim that exists to keep that pass honest.
+      const d = document as unknown as {
+        getElementById(id: string): { classList: { add(c: string): void } } | null;
+        querySelectorAll(sel: string): Array<{ classList: { add(c: string): void } }>;
+      };
+      d.getElementById(id)?.classList.add('is-open');
+      for (const s of d.querySelectorAll('.wb-cart-scrim')) s.classList.add('is-open');
+    }, opts.open);
+  }
+
   await settleDom(page);
   await settleLazyImages(page);
   // A RENDERED page carries its node ids as the HTML `id` attribute — not as

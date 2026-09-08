@@ -189,6 +189,15 @@ export function tokenFor(ctx: ToolContext, credential: string): string | undefin
   return undefined;
 }
 
+/**
+ * The path parameters that mean "THIS site" — lowercased, because the platform
+ * writes `{siteId}` in 281 operations and `{siteID}` in 8.
+ *
+ * Deliberately only the site. `{productId}`, `{id}` and the rest name a record
+ * the caller chose; the site is the one id an install already holds.
+ */
+const SITE_PARAMS = new Set(['siteid']);
+
 export async function callOperation(ctx: ToolContext, args: CallArgs): Promise<unknown> {
   const op = API_OPERATIONS.find((o) => o.id === args.id);
   if (!op) throw new Error(`sbuilder: unknown operation "${args.id}" — use sb_api_find first`);
@@ -209,6 +218,16 @@ export async function callOperation(ctx: ToolContext, args: CallArgs): Promise<u
     if (value === undefined) {
       const folded = Object.keys(given).find((k) => k.toLowerCase() === name.toLowerCase());
       if (folded !== undefined) value = given[folded];
+    }
+    // SB_SITE ANSWERS FOR {siteId}, exactly as it does for every tool's
+    // `site_id` argument through `siteFor()`. It did not here, and this is the
+    // surface where it costs most: `sb_api_call` reaches 484 operations and 289
+    // of them name the site, so a key-only install — where the id is a constant
+    // the environment already holds — made the model carry a 32-character
+    // string through every raw call it made. An explicit argument still wins,
+    // so a session spanning two sites works by naming each.
+    if (value === undefined && SITE_PARAMS.has(name.toLowerCase()) && ctx.siteId) {
+      value = ctx.siteId;
     }
     if (value === undefined) {
       // NAME THE ARGUMENT, not just the parameter. The call sheet lists these

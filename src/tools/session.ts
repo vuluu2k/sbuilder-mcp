@@ -11,6 +11,8 @@ export interface ConnectResult {
   api_key: 'present' | 'missing';
   /** SB_SITE, when the install named one — the id every tool then defaults to. */
   site?: string;
+  /** SB_SITE_NAME, when the install named it — what to call that site out loud. */
+  site_name?: string;
   operations: number;
   note?: string;
 }
@@ -41,9 +43,12 @@ export async function connect(
       sites: [],
       api_key: 'present',
       ...(ctx.siteId ? { site: ctx.siteId } : {}),
+      ...(ctx.siteId && ctx.siteName ? { site_name: ctx.siteName } : {}),
       operations: API_OPERATIONS.length,
       note: ctx.siteId
-        ? `Connected with an API key alone, on site ${ctx.siteId} (SB_SITE). Every tool ` +
+        ? `Connected with an API key alone, on site ${ctx.siteId} (SB_SITE)${
+            ctx.siteName ? `, the store called ${JSON.stringify(ctx.siteName)}` : ''
+          }. Every tool ` +
           'defaults to it, so site_id is optional. Set SB_EMAIL and SB_PASSWORD as well if ' +
           'you want account-level calls (listing sites, members, roles), which a key cannot make.'
         : 'Connected with an API key alone. It is bound to one site, so there is no site list — ' +

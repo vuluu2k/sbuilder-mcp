@@ -9,6 +9,15 @@ export interface ToolContext {
   apiKey?: string;
   /** SB_SITE: the one site this install works on, when the install named one. */
   siteId?: string;
+  /**
+   * SB_SITE_NAME: what the merchant calls that site.
+   *
+   * A LABEL, never an address. Nothing resolves by it and no request carries
+   * it — `siteFor()` still answers with the id — but a session that can say
+   * "Áo Thun" is one the merchant can follow, and the id is 32 characters they
+   * did not choose.
+   */
+  siteName?: string;
   /** Injected in tests; undefined means global fetch. */
   fetchImpl?: typeof fetch;
   /** Directives said once per process — see mcp/notices.ts. */

@@ -218,18 +218,61 @@ describe('duplicateNode()', () => {
   });
 });
 
+/**
+ * A STATE HAS TWO HOMES, and the platform names both — `schema/src/node.ts`,
+ * mirrored by `render/style/cascade.go`'s MergeStateNs:
+ *
+ *   base            node.states[state][ns]
+ *   per breakpoint  node.responsive[bp].states[state][ns]
+ *
+ * The old shape here was `states[state][bp][ns]`, which is neither: a breakpoint
+ * buried inside the base-state cluster, where nothing reads it. The test pinned
+ * it, so the defect had a green suite over it.
+ */
 describe('setKeys() with a state', () => {
-  it('writes hover under the breakpoint, not over it', () => {
+  function button() {
     const d = emptyDoc();
     d.apply(addSubtree(d, 'rt', { type: 'flex-section', children: [{ type: 'button' }] }).patches);
-    const id = d.node(d.node('rt').data.nodes[0]).data.nodes[0];
+    return { d, id: d.node(d.node('rt').data.nodes[0]).data.nodes[0] };
+  }
+  type Stated = {
+    style: Record<string, unknown>;
+    states?: Record<string, { style?: Record<string, unknown> }>;
+    responsive: Record<string, { states?: Record<string, { style?: Record<string, unknown> }> }>;
+  };
+
+  it('writes a per-breakpoint state where the cascade reads it', () => {
+    const { d, id } = button();
     d.apply(setKeys(d, id, { backgroundColor: '#000' }, { namespace: 'style', breakpoint: 'desktop', state: 'hover' }));
-    const n = d.node(id) as unknown as {
-      states: Record<string, Record<string, { style?: Record<string, unknown> }>>;
-      responsive: Record<string, unknown>;
-    };
-    expect(n.states.hover.desktop.style?.backgroundColor).toBe('#000');
-    expect(n.responsive.desktop).toBeUndefined();
+    const n = d.node(id) as unknown as Stated;
+    expect(n.responsive.desktop.states?.hover.style?.backgroundColor).toBe('#000');
+  });
+
+  it('writes a BASE state into the cluster the element seeds its own defaults in', () => {
+    const { d, id } = button();
+    d.apply(setKeys(d, id, { backgroundColor: '#000' }, { namespace: 'style', base: true, state: 'hover' }));
+    const n = d.node(id) as unknown as Stated;
+    expect(n.states?.hover.style?.backgroundColor).toBe('#000');
+  });
+
+  // THE DEFECT THIS FILE EXISTS FOR. `base` was tested first and swallowed the
+  // state, so the hover value went straight into the plain style: the node wore
+  // its hover colour permanently and had no hover at all, while the tool
+  // reported success. The design skill documents this exact call.
+  it('never lets base swallow the state and corrupt the plain style', () => {
+    const { d, id } = button();
+    const before = { ...(d.node(id) as unknown as Stated).style };
+    d.apply(setKeys(d, id, { borderColor: '#E8557A' }, { namespace: 'style', base: true, state: 'active' }));
+    const n = d.node(id) as unknown as Stated;
+    expect(n.states?.active.style?.borderColor).toBe('#E8557A');
+    expect(n.style.borderColor).toBe(before.borderColor);
+  });
+
+  it('refuses a state on specials rather than dropping it', () => {
+    const { d, id } = button();
+    expect(() =>
+      setKeys(d, id, { text: 'x' }, { namespace: 'specials', base: true, state: 'hover' }),
+    ).toThrow(/no interaction state/i);
   });
 });
 

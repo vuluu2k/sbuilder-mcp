@@ -22,6 +22,16 @@ export const FIX: Record<string, string> = {
   empty_text: 'Set it: sb_set id "<id>", namespace specials, keys { "<key>": … }.',
   missing_media: 'Set it: sb_set id "<id>", namespace specials, keys { "<key>": … }.',
   placeholder_content: 'Write the real copy: sb_set id "<id>", namespace specials, keys { "<key>": … }.',
+  // Named apart from placeholder_content because the reader needs telling that
+  // this surface EXISTS. An empty state is authored out of sight — it only shows
+  // when the list is empty — so an agent that never saw it does not know there is
+  // anything to write.
+  default_seed_copy:
+    'Write it in the shop\'s own language and ink: sb_set id "<id>", namespace specials, ' +
+    'keys { "<key>": … }. It is a seeded satellite (an empty state, an element\'s chrome), ' +
+    'so it only appears when the list is empty or the control is idle — sb_outline lists it ' +
+    'under its owner as satellite:"<config key>". Style it too: the seed ships #171717 ink ' +
+    'and #d4d4d4 icons, which are the platform\'s, not the site\'s.',
   // The fix is a DIFFERENT ELEMENT, not a value: setting "<key>" here would put
   // one authored value on every row of the repeater.
   static_in_dataset:
@@ -31,6 +41,13 @@ export const FIX: Record<string, string> = {
   unbound_dataset_element:
     'Bind it: sb_bind id "<id>", field "specials.<key>", and the source that names the record ' +
     'field you want (sb_bind refuses an unknown source and lists every valid one).',
+  // The value the platform now seeds on these elements, so a repair matches what
+  // a freshly created form would have.
+  form_fields_flush:
+    'Give the stack room: sb_set id "<id>", namespace style, base true, keys { "gap": "12px" } ' +
+    '— the value the platform seeds on form / form-segment / form-step-nav. Raise it if the ' +
+    'design wants more air; it must stay clear of config.fieldStackGap, which is the smaller ' +
+    'label-to-control gap INSIDE one field.',
   unlinked_form:
     'Point it at a real form: sb_set id "<id>", namespace specials, keys ' +
     '{ "formId": "<a form id from sb_api_find \'list forms\'>" }.',

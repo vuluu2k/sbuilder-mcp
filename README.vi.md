@@ -23,6 +23,11 @@ còn tệ hơn một cờ không tồn tại.
 thành `SB_SITE` và mọi tool sau đó mặc định dùng site đó. Không có nó thì model phải mang
 theo id suốt phiên, mà cách duy nhất để lấy là liệt kê trang rồi đọc ngược ra.
 
+`--site-name "Tên Cửa Hàng"` đi kèm, được ghi thành `SB_SITE_NAME`. Nó là một nhãn, không phải
+địa chỉ — không có gì phân giải theo nó — nhưng nhờ nó agent gọi được tên cửa hàng thay vì
+đọc lại một id 32 ký tự bạn không đặt. Màn hình **Apps → AI agent** tự thêm nó khi cửa hàng
+có tên.
+
 Nó **gộp**: các server đã có trong file được giữ nguyên, thứ nó thay thế được chép sang
 `<file>.sbuilder-backup`, và một config nó không đọc được thì bị từ chối chứ không ghi đè —
 một file thừa dấu phẩy khả dĩ hơn nhiều một file đáng vứt, và đó chính là thứ bạn cần để sửa.

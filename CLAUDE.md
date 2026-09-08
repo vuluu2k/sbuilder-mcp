@@ -29,6 +29,31 @@ npm start         # node dist/index.js (stdio server)
 **The gate for every change is `npm run build && npm test && npm run smoke`.**
 `prepublishOnly` runs build + smoke, so a broken smoke blocks publishing.
 
+### Dogfooding this server on this repo
+
+`npx -y sbuilder-mcp` **cannot start when the cwd IS this repo**, and the failure looks like
+a broken install rather than a cwd problem:
+
+```
+sh: sb-mcp: command not found     → the MCP client reports CONNECTION_CLOSED
+```
+
+npx sees a `package.json` whose name is `sbuilder-mcp`, decides the package is the local
+project, reads `bin` off it and execs `sb-mcp` — which is not in this repo's
+`node_modules/.bin`, because a package is not installed into itself. Nothing is wrong with
+the published package: the same command works from any other directory.
+
+Restore it — and get the LOCAL build served to the agent, which is what dogfooding wants:
+
+```bash
+ln -sf ../../dist/index.js node_modules/.bin/sb-mcp && chmod +x dist/index.js
+```
+
+`node_modules/` is not tracked, so **`npm ci` removes this and the server stops connecting
+again**. The exec bit survives `tsc`, so after the first setup a plain `npm run build` is
+enough for an edit to reach the agent — followed by a reconnect in the MCP client, which
+does not re-read a running server.
+
 ## Releasing
 
 A push to `main` that touches `src/**` releases on its own through
@@ -478,6 +503,132 @@ that accounts for them.
   collides with a real editor. `PageSession.save` now compares the document's revision against
   the one it last stored and returns early. Measured: six consecutive looks leave `updatedAt`
   untouched, and the first real edit moves it.
+
+- **`sb_set`'s `state` PARAMETER WAS READ BY NOTHING USEFUL, and its documented call
+  corrupted the base style.** A state has TWO homes and the platform names both
+  (`schema/src/node.ts`, mirrored by `render/style/cascade.go`'s `MergeStateNs`): base is
+  `node.states[state][ns]`, per breakpoint is `node.responsive[bp].states[state][ns]`.
+  `setKeys` wrote neither — its path was `states[state][bp][ns]`, a breakpoint buried inside
+  the base-state cluster where nothing reads it — and worse, `if (opts.base)` was tested
+  BEFORE `if (opts.state)`, so `base:true` + `state:"hover"` fell into the base branch and
+  wrote the hover value straight into the plain style. The node then wore its hover colour
+  permanently and had no hover at all, while the tool reported success. The call that does
+  this is the one the `sbuilder-site-design` skill documents:
+  `sb_set pr_option style base:true state:"active"`. A test pinned the wrong shape, so the
+  defect had a green suite over it. Base is NOT a degenerate case: it is where every element
+  seeds `meta.defaults.states` (`tab-item`, `quantity-button`), and `MergeStateNs` reads it
+  first. `specials` now REFUSES a state rather than dropping it.
+
+- **`sb_review` NEVER WALKED A SATELLITE, so an element's whole chrome was outside it.** Its
+  recursion used `childrenOf` — `data.nodes` only — which is precisely the mistake `walk`'s
+  own comment warns a caller against ("satellite-aware is the DEFAULT ... a caller who writes
+  the obvious thing must not be silently wrong"). So every repeater's empty state, every
+  variant-option skin, every quantity stepper and every menu/tab item skin was invisible to
+  the one check that exists to say what a visitor meets. `childrenWithSatellites` in
+  `core/tree.ts` is the one-level form for a caller carrying its own scope down.
+
+- **AND THE SEED COPY IT COULD THEN SEE HAD NO CHECK.** `placeholder_content` compares a
+  node's `specials.text` against `ELEMENTS[type].defaults.specials` — the element's OWN
+  default, which for a heading is `"Heading"`. An empty state's heading is minted from
+  `SATELLITE_RULES`' seed tree and says `"No products yet"`, so it matched nothing. The
+  consequence is general, not incidental: EVERY store built with these tools ships the
+  platform's English empty states, in `#171717` ink and `#d4d4d4` icons, and reviews clean.
+  Measured on a Vietnamese storefront — home, category, product and search each reported
+  "nothing a visitor would notice" while four repeaters said "No products yet" and "New
+  arrivals will show up here. Check back soon." `default_seed_copy` reports it, off both
+  generated seed tables so a new empty state is covered by the next codegen.
+
+- **THE DRAFT PREVIEW DOES THREAD STORE DATA, and the note said the opposite.** `sb_look`
+  told every caller that "every repeater renders its empty state there, however correct the
+  page is" — measured false: a home page previewed four real products at their real prices,
+  matching the catalogue exactly. `ServePreview` runs `RenderDraft` → `gather` → `assemble`,
+  the SAME path as a published page, and the platform's comment on it says the result is
+  "byte-identical to what publishing this source would serve" (`storefront.go:1260`). The
+  shoot path's own comment had already recorded the observation ("identical content on
+  screen — images, prices, no empty states") while the note contradicted it. The REAL caveat
+  is the opposite population of pages: entity routing lives in `ServeHost`, not
+  `ServePreview`, so an entity TEMPLATE previews with nothing bound — blank title, zero
+  price, and the variant picker showing the element's seed options ("Color / Size",
+  "Red / S") rather than the product's own. That last one reads exactly like the
+  attributes-vs-options defect the build recipe warns about, and is not it.
+
+- **AN OVERLAY WRITE IS SITE-WIDE AND `sb_set` SAID NOTHING.** `globalWarning` asked only
+  `isGlobal`, so restyling the cart drawer's quantity stepper changed ten pages and the
+  result read as a plain page-local success. It is the write-side of the reason `sb_review`
+  flags overlay findings `overlay: true`. `overlayRoot()` answers for a node ANYWHERE inside
+  one, which is the case that matters — the caller edits the stepper, not the drawer root.
+
+- **`sb_api_call` DEMANDED `{siteId}` ON ALL 289 OPERATIONS THAT NAME IT**, while `siteFor()`
+  defaulted it for every other tool. On a key-only install that is a 32-character constant
+  the environment already holds. It now falls back to `SB_SITE` for `{siteId}`/`{siteID}`
+  only — `{productId}` and `{id}` name a record the caller chose — and an explicit argument
+  still wins.
+
+- **`sb_look` COULD NOT PHOTOGRAPH THE ONE SURFACE THIS FILE INSISTS YOU LOOK AT.** A closed
+  drawer is `visibility:hidden` and translated 105% off-screen
+  (`render/nodes/cart-drawer/css.go`), so it measures at x=1461 on a 1440 viewport and
+  `page.screenshot({clip})` fails outright — "Clipped area is either empty or outside the
+  resulting image", naming neither the overlay nor the reason. `sb_look` now adds the
+  platform's OWN `is-open` class (plus the scrim's) before measuring, whenever `node_id`
+  resolves inside an overlay.
+
+- **A `media-dataset`'s `style.aspectRatio` SHAPES THE BOX, NOT THE PHOTO.** The image's own
+  ratio is `config.mediaImageRatio` (`"auto"`, `"custom"` + `mediaCustomImageRatio{Width,Height}`,
+  or a ratio string verbatim — `render/nodes/media-dataset/css.go`); with the config unset the
+  `<img>` keeps the static `aspect-ratio: 1 / 1`, so a portrait product photo is centre-cropped
+  to a square inside a correctly-shaped frame. `sb_traits_for media-dataset` names all three
+  controls. Rule 6 of the design skill — "match a frame's aspect ratio to the asset" — is
+  therefore only half the job on this element.
+
+  **And the platform's own CSS defeated even that**, which is worth knowing because the symptom
+  reads as an authoring mistake. `ImgAttrs` writes the intrinsic `width`/`height` ATTRIBUTES
+  onto every `<img>` (that is what keeps CLS at zero), and a presentational `height` attribute
+  is a USED height — so with no CSS `height`, `aspect-ratio` has no auto dimension to solve for
+  and is IGNORED. Measured on a live product page at 390px: a 900×1100 photo in a 326px frame
+  rendered 326×**1100**, and the node's `overflow:hidden` showed the shopper the top third of a
+  t-shirt. It was invisible at 1440 only because a taller container clipped a smaller fraction,
+  which is why it survived a desktop review. Fixed upstream by adding `height:auto` to
+  `__feature-img`, `__cell-img`, `product-image-feature__img` and `wishlist-list__card-img`, in
+  the Go static CSS AND the editor SFCs that must stay byte-identical to it.
+
+- **A FORM STACKED ITS FIELDS WITH ZERO GAP, on every store.** `form`'s
+  `meta.defaults.style` seeded `display:flex` + `flexDirection:column` + `width` + `height`
+  and no `gap`, while `form-segment` — the sibling with the IDENTICAL trait signature and the
+  identical four keys — seeded `gap: '12px'`. So the same form spaced itself differently
+  depending on whether its fields sat in a segment or directly in the form. Measured on a
+  published checkout at 1440px: eleven consecutive fields, every gap between them EXACTLY 0,
+  so each label sat nearer the previous control than its own. The Layout group offers a Gap
+  row, which is the same "the panel reports a value the box does not have" shape
+  `schema/test/direction-default.test.ts` was written for. Fixed at the seed (`gap: '12px'`,
+  matching the sibling) with `schema/test/form-gap-default.test.ts` pinning that the three
+  field stacks agree AND stay clear of `fieldStackGap` — of the 33 elements offering a Gap
+  row, 29 seed one, and the four that do not are the layout primitives, so the guard is an
+  AGREEMENT rather than a blanket rule.
+
+  `defaults` seeds at CREATION, so every form authored before the fix keeps zero — which is
+  why `sb_review` reports `form_fields_flush` rather than trusting the new default. That
+  check reads the container's own style, NOT its children: a form's fields live in the FORM
+  DOCUMENT and compose on the render path, so the page's node has `nodes: []` and a
+  child-count test would call every form empty.
+
+- **`/account` IS THE SIGN-IN DESTINATION, so it cannot be split — and it must not show
+  two auth forms at once.** There is no `login` or `register` page type (`FixedPathTypes` is
+  search, checkout, complete, account), and `membersonly.go`'s `membersOnlyRedirectTarget`
+  sends every anonymous visitor who hits a members-only page to `/account`, its comment
+  ruling out "a page-document scan hunting for a login form". So the instinct to give
+  sign-in and registration their own pages breaks the platform's own redirect: the shopper
+  arrives at `/account` with nowhere to sign in.
+
+  The shape the platform intends is `member-gate`'s own hint — "build the pair: one gate set
+  to Members and one set to Guests" — and the seed gives you only the members half
+  (`accountPageSeed.ts`: heading + `account-info` + `order-history` + `address-book`), so
+  the guest half is authored blind. What shipped here was both auth forms SIDE BY SIDE in
+  the guest gate: two headings, two submit buttons and one decision, becoming one long
+  double form at 390px. A `tab` is the fix — its button row is synthesized from each
+  `tab-content` child's `specials.label` (`render/nodes/tab/html.go:2`), so the undeclared
+  `tab_items` inspector control is not something you have to reverse-engineer — and its
+  `tabItemId` satellite ships `#f5f5f5` / `#7b7b7b` with a `#171717` active state, which is
+  rule 4 again.
 
 ## The five traps
 

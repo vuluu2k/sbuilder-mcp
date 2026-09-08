@@ -5839,7 +5839,8 @@ export const ELEMENTS: Record<string, CatalogElement> = {
         "display": "flex",
         "flexDirection": "column",
         "width": "100%",
-        "height": "fit-content"
+        "height": "fit-content",
+        "gap": "12px"
       }
     },
     "inspector": [

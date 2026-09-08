@@ -763,7 +763,8 @@ export const CHECKOUT_PAGE_DOCUMENT = {
         "display": "flex",
         "flexDirection": "column",
         "width": "100%",
-        "height": "fit-content"
+        "height": "fit-content",
+        "gap": "12px"
       },
       "config": {},
       "specials": {

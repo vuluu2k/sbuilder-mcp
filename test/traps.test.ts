@@ -80,10 +80,48 @@ describe('isGlobal() / globalWarning()', () => {
     expect(globalWarning(d, 'h')).toMatch(/every page/i);
   });
 
+  // Nobody restyles the header SECTION; they restyle a nav button inside it, and
+  // that edit is just as site-wide. Asking only `isGlobal(id)` fired the warning
+  // for the one node nobody edits.
+  it('warns for a node INSIDE a global, naming the master and its band', () => {
+    const d = docWith(['h'], {
+      h: n('h', ['nav'], { globalId: 'g1', globalKind: 'header' }),
+      nav: { id: 'nav', data: { type: 'button', parent: 'h', nodes: [] }, specials: {} },
+    });
+    const w = globalWarning(d, 'nav');
+    expect(w).toMatch(/every page/i);
+    expect(w).toContain('g1');
+    expect(w).toContain('header');
+    expect(w).toContain('inside global h');
+  });
+
   it('says nothing about an ordinary section', () => {
     const d = docWith(['a'], { a: n('a') });
     expect(isGlobal(d, 'a')).toBe(false);
     expect(globalWarning(d, 'a')).toBeNull();
+  });
+
+  // AN OVERLAY IS A SHARED MASTER TOO. This answered only for globals, so
+  // restyling the cart drawer's quantity stepper changed ten pages and the tool
+  // reported a plain page-local success.
+  it('warns that an overlay edit is site-wide', () => {
+    const d = docWith(['m', 'cart'], {
+      m: n('m'),
+      cart: n('cart', ['inner'], { overlayId: 'ov_cart' }),
+      inner: { id: 'inner', data: { type: 'button', parent: 'cart', nodes: [] }, specials: {} },
+    });
+    expect(globalWarning(d, 'cart')).toMatch(/site-wide/i);
+  });
+
+  it('warns for a node INSIDE an overlay, naming the master it belongs to', () => {
+    const d = docWith(['cart'], {
+      cart: n('cart', ['inner'], { overlayId: 'ov_cart' }),
+      inner: { id: 'inner', data: { type: 'button', parent: 'cart', nodes: [] }, specials: {} },
+    });
+    const w = globalWarning(d, 'inner');
+    expect(w).toMatch(/site-wide/i);
+    expect(w).toContain('ov_cart');
+    expect(w).toContain('inside overlay cart');
   });
 });
 

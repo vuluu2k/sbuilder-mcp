@@ -28,7 +28,7 @@ import { LiveSession } from '../live/session.js';
 import type { Patch } from '../core/patch.js';
 import type { PageDoc } from '../domains/site/document.js';
 import { refuseAppBlockInterior } from '../domains/site/builder.js';
-import { childrenOf, isOverlay, subtreeIds } from '../core/tree.js';
+import { childrenOf, isOverlay, overlayRoot, subtreeIds } from '../core/tree.js';
 import { siteToken } from './credentialpick.js';
 import { siteFor, type ToolContext } from './context.js';
 import { projectList, MEDIA_FIELDS } from './project.js';
@@ -334,7 +334,21 @@ export function registerLiveTools(
       // the process; `shoot` keeps them in `widths` order. The format changes
       // bytes and latency only — the client prices an image by its pixel size,
       // so jpeg and png cost the agent the same tokens.
-      const shots = await shoot(target, { widths: widths ?? DEFAULT_WIDTHS, node: node_id, format });
+      // FRAMING A NODE IN THE CART DRAWER MEANS OPENING THE DRAWER. A closed
+      // overlay is translated off-screen, so the clip lands outside the image
+      // and the shot fails with a Playwright error naming neither the overlay
+      // nor the reason. `overlayRoot` answers for a node ANYWHERE inside one,
+      // which is the case that matters: the caller frames the stepper or the
+      // empty state, not the drawer root.
+      const openOverlay = node_id
+        ? (overlayRoot(session.current().doc, node_id) ?? undefined)
+        : undefined;
+      const shots = await shoot(target, {
+        widths: widths ?? DEFAULT_WIDTHS,
+        node: node_id,
+        format,
+        ...(openOverlay ? { open: openOverlay } : {}),
+      });
       // The boxes feed the presence cursor as well as the agent's own reading.
       session.noteBoxes(shots[0]?.boxes ?? []);
       // The findings ride WITH the picture. Judging a page by eye and judging it
@@ -360,13 +374,33 @@ export function registerLiveTools(
       const dataDriven = Object.values(session.current().doc.nodes).some((n) =>
         DATASET_TYPES.has((n as { data: { type: string } }).data.type),
       );
+      // THIS NOTE USED TO SAY THE OPPOSITE, and it sent readers to fix a page
+      // that was right. It claimed the draft preview "threads no store data:
+      // every repeater renders its empty state there" — measured false: a home
+      // page previewed four real products at their real prices, matching the
+      // catalogue exactly. `ServePreview` runs RenderDraft → gather → assemble,
+      // the SAME path as a published page, and the platform's own comment on it
+      // says the result is "byte-identical to what publishing this source would
+      // serve" (storefront.go:1260). The shoot path's own comment had already
+      // recorded the observation — "identical content on screen (images, prices,
+      // no empty states)" — while this note contradicted it.
+      //
+      // What the preview genuinely cannot do is resolve ONE RECORD from the URL:
+      // ServePreview never runs entity routing (that lives in ServeHost), so an
+      // entity TEMPLATE previews with nothing bound. That is the real caveat,
+      // and it is the opposite population of pages from the one the old note
+      // warned about.
       const previewNote =
         !url && dataDriven
           ? ctx.notices.once(
               'preview-scope',
-              'This is the DRAFT PREVIEW, which threads no store data: every repeater renders its ' +
-                'empty state there, however correct the page is. Publish and pass the storefront ' +
-                'URL as `url` to see real products.',
+              'This is the DRAFT PREVIEW. It renders through the same path as a published page, ' +
+                'so repeaters DO show real store records — judge a list page from it. What it ' +
+                'cannot do is resolve a single record from the address: on an ENTITY TEMPLATE ' +
+                '(the product or category detail page) nothing is bound, so the title is blank, ' +
+                'the price reads zero and a variant picker shows the element\'s seed options ' +
+                '("Color / Size", "Red / S") rather than the product\'s own. That is the preview, ' +
+                'not the page. Pass a published storefront URL as `url` to judge a template.',
             )
           : undefined;
       return images(shots.map((s) => ({ dataBase64: s.imageBase64, mimeType: s.mimeType })), {
