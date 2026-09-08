@@ -3,9 +3,9 @@
 import type { ApiOperation } from './types.js';
 
 export const SWAGGER_SOURCE = {
-  "operations": 412,
-  "definitions": 97,
-  "bodyCarrying": 168,
+  "operations": 456,
+  "definitions": 99,
+  "bodyCarrying": 171,
   "bodyUndescribed": 62,
   "generatedFrom": "server/docs/swagger.json"
 } as const;
@@ -191,6 +191,66 @@ export const API_OPERATIONS: ApiOperation[] = [
     "credential": "siteScoped"
   },
   {
+    "id": "get:/_wb/account/course-quiz",
+    "method": "GET",
+    "path": "/_wb/account/course-quiz",
+    "tags": [
+      "storeaccount"
+    ],
+    "summary": "The test on a lesson, as its student sees it",
+    "params": [
+      {
+        "name": "lessonId",
+        "in": "query",
+        "required": true,
+        "type": "string",
+        "description": "Lesson ID"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/_wb/account/course-quiz-file",
+    "method": "POST",
+    "path": "/_wb/account/course-quiz-file",
+    "tags": [
+      "storeaccount"
+    ],
+    "summary": "Hand in a file for one question",
+    "params": [],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/_wb/account/course-quiz-start",
+    "method": "POST",
+    "path": "/_wb/account/course-quiz-start",
+    "tags": [
+      "storeaccount"
+    ],
+    "summary": "Start a sitting",
+    "params": [],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/_wb/account/course-quiz-submit",
+    "method": "POST",
+    "path": "/_wb/account/course-quiz-submit",
+    "tags": [
+      "storeaccount"
+    ],
+    "summary": "Submit a sitting",
+    "params": [],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
     "id": "get:/_wb/account/courses",
     "method": "GET",
     "path": "/_wb/account/courses",
@@ -237,6 +297,32 @@ export const API_OPERATIONS: ApiOperation[] = [
       "storeaccount"
     ],
     "summary": "Request a password-reset code",
+    "params": [],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/_wb/account/instructor",
+    "method": "GET",
+    "path": "/_wb/account/instructor",
+    "tags": [
+      "storeaccount"
+    ],
+    "summary": "A shopper's own application to teach, and making one",
+    "params": [],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/_wb/account/instructor",
+    "method": "POST",
+    "path": "/_wb/account/instructor",
+    "tags": [
+      "storeaccount"
+    ],
+    "summary": "A shopper's own application to teach, and making one",
     "params": [],
     "bodyDescribed": false,
     "bodyRef": null,
@@ -519,6 +605,32 @@ export const API_OPERATIONS: ApiOperation[] = [
         "description": "The certificate's public code"
       }
     ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/_wb/checkout/order",
+    "method": "POST",
+    "path": "/_wb/checkout/order",
+    "tags": [
+      "storecheckout"
+    ],
+    "summary": "Look up an order as a guest",
+    "params": [],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/_wb/checkout/quote",
+    "method": "POST",
+    "path": "/_wb/checkout/quote",
+    "tags": [
+      "storecheckout"
+    ],
+    "summary": "Price a basket",
+    "params": [],
     "bodyDescribed": false,
     "bodyRef": null,
     "credential": "siteScoped"
@@ -1166,6 +1278,32 @@ export const API_OPERATIONS: ApiOperation[] = [
     "credential": "siteScoped"
   },
   {
+    "id": "get:/api/admin/translation-keys",
+    "method": "GET",
+    "path": "/api/admin/translation-keys",
+    "tags": [
+      "admin"
+    ],
+    "summary": "Manage the platform's machine-translation credentials",
+    "params": [],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/api/admin/translation-keys",
+    "method": "POST",
+    "path": "/api/admin/translation-keys",
+    "tags": [
+      "admin"
+    ],
+    "summary": "Manage the platform's machine-translation credentials",
+    "params": [],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
     "id": "post:/api/auth/change-password",
     "method": "POST",
     "path": "/api/auth/change-password",
@@ -1416,6 +1554,146 @@ export const API_OPERATIONS: ApiOperation[] = [
         "required": false,
         "type": "string",
         "description": "Manual language: vi (default) or en"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/instructor/{siteId}/courses",
+    "method": "GET",
+    "path": "/api/instructor/{siteId}/courses",
+    "tags": [
+      "instructor"
+    ],
+    "summary": "The courses this instructor owns, and creating one",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/api/instructor/{siteId}/courses",
+    "method": "POST",
+    "path": "/api/instructor/{siteId}/courses",
+    "tags": [
+      "instructor"
+    ],
+    "summary": "The courses this instructor owns, and creating one",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/instructor/{siteId}/courses/{courseId}",
+    "method": "GET",
+    "path": "/api/instructor/{siteId}/courses/{courseId}",
+    "tags": [
+      "instructor"
+    ],
+    "summary": "Read or edit one course this instructor owns",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "courseId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Course ID"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "put:/api/instructor/{siteId}/courses/{courseId}",
+    "method": "PUT",
+    "path": "/api/instructor/{siteId}/courses/{courseId}",
+    "tags": [
+      "instructor"
+    ],
+    "summary": "Read or edit one course this instructor owns",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "courseId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Course ID"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/api/instructor/{siteId}/login",
+    "method": "POST",
+    "path": "/api/instructor/{siteId}/login",
+    "tags": [
+      "instructor"
+    ],
+    "summary": "Sign an instructor in to the authoring API",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/instructor/{siteId}/me",
+    "method": "GET",
+    "path": "/api/instructor/{siteId}/me",
+    "tags": [
+      "instructor"
+    ],
+    "summary": "Who the caller is on this store",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
       }
     ],
     "bodyDescribed": false,
@@ -3877,6 +4155,202 @@ export const API_OPERATIONS: ApiOperation[] = [
     "credential": "siteScoped"
   },
   {
+    "id": "get:/api/sites/{siteId}/course-instructors",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/course-instructors",
+    "tags": [
+      "courses"
+    ],
+    "summary": "List or create instructors",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "search",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Match against name and title"
+      },
+      {
+        "name": "status",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "active | hidden"
+      },
+      {
+        "name": "linked",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "true to list only teachers holding a storefront account"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/api/sites/{siteId}/course-instructors",
+    "method": "POST",
+    "path": "/api/sites/{siteId}/course-instructors",
+    "tags": [
+      "courses"
+    ],
+    "summary": "List or create instructors",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "search",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Match against name and title"
+      },
+      {
+        "name": "status",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "active | hidden"
+      },
+      {
+        "name": "linked",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "true to list only teachers holding a storefront account"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/sites/{siteId}/course-instructors/{instructorId}",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/course-instructors/{instructorId}",
+    "tags": [
+      "courses"
+    ],
+    "summary": "Read, update or delete one instructor",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "instructorId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Instructor ID"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "put:/api/sites/{siteId}/course-instructors/{instructorId}",
+    "method": "PUT",
+    "path": "/api/sites/{siteId}/course-instructors/{instructorId}",
+    "tags": [
+      "courses"
+    ],
+    "summary": "Read, update or delete one instructor",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "instructorId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Instructor ID"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "delete:/api/sites/{siteId}/course-instructors/{instructorId}",
+    "method": "DELETE",
+    "path": "/api/sites/{siteId}/course-instructors/{instructorId}",
+    "tags": [
+      "courses"
+    ],
+    "summary": "Read, update or delete one instructor",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "instructorId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Instructor ID"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/api/sites/{siteId}/course-instructors/{instructorId}/review",
+    "method": "POST",
+    "path": "/api/sites/{siteId}/course-instructors/{instructorId}/review",
+    "tags": [
+      "courses"
+    ],
+    "summary": "Answer an instructor's application",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "instructorId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Instructor ID"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
     "id": "get:/api/sites/{siteId}/courses",
     "method": "GET",
     "path": "/api/sites/{siteId}/courses",
@@ -4083,6 +4557,62 @@ export const API_OPERATIONS: ApiOperation[] = [
       "courses"
     ],
     "summary": "Reorder a course's chapters and lessons in one write",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "courseId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Course ID"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/sites/{siteId}/courses/{courseId}/instructors",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/courses/{courseId}/instructors",
+    "tags": [
+      "courses"
+    ],
+    "summary": "Read or replace a course's instructors",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "courseId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Course ID"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "put:/api/sites/{siteId}/courses/{courseId}/instructors",
+    "method": "PUT",
+    "path": "/api/sites/{siteId}/courses/{courseId}/instructors",
+    "tags": [
+      "courses"
+    ],
+    "summary": "Read or replace a course's instructors",
     "params": [
       {
         "name": "siteId",
@@ -6309,6 +6839,104 @@ export const API_OPERATIONS: ApiOperation[] = [
     "credential": "siteScoped"
   },
   {
+    "id": "get:/api/sites/{siteId}/inventory",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/inventory",
+    "tags": [
+      "products"
+    ],
+    "summary": "List variant stock levels",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "search",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Product name, variant SKU or barcode"
+      },
+      {
+        "name": "low",
+        "in": "query",
+        "required": false,
+        "type": "boolean",
+        "description": "Only variants at or below the threshold"
+      },
+      {
+        "name": "lowAtOrBelow",
+        "in": "query",
+        "required": false,
+        "type": "integer",
+        "description": "The threshold; 0 means only what has run out"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/api/sites/{siteId}/inventory/adjust",
+    "method": "POST",
+    "path": "/api/sites/{siteId}/inventory/adjust",
+    "tags": [
+      "products"
+    ],
+    "summary": "Adjust a variant's stock",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/sites/{siteId}/inventory/history",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/inventory/history",
+    "tags": [
+      "products"
+    ],
+    "summary": "Stock movements",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "productId",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Narrow to one product"
+      },
+      {
+        "name": "variantId",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Narrow to one variant"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
     "id": "get:/api/sites/{siteId}/loyalty",
     "method": "GET",
     "path": "/api/sites/{siteId}/loyalty",
@@ -8097,6 +8725,111 @@ export const API_OPERATIONS: ApiOperation[] = [
     "credential": "siteScoped"
   },
   {
+    "id": "get:/api/sites/{siteId}/payment-gateways/{provider}",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/payment-gateways/{provider}",
+    "tags": [
+      "payments"
+    ],
+    "summary": "Read, save or clear one payment gateway's configuration",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "provider",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Gateway provider key, e.g. stripe, vnpay, momo, payos, sepay, zalopay, paypal"
+      },
+      {
+        "name": "body",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "Gateway configuration (PUT only)"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "github_com_webbuilder_server_internal_payments.GatewayInput",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "put:/api/sites/{siteId}/payment-gateways/{provider}",
+    "method": "PUT",
+    "path": "/api/sites/{siteId}/payment-gateways/{provider}",
+    "tags": [
+      "payments"
+    ],
+    "summary": "Read, save or clear one payment gateway's configuration",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "provider",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Gateway provider key, e.g. stripe, vnpay, momo, payos, sepay, zalopay, paypal"
+      },
+      {
+        "name": "body",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "Gateway configuration (PUT only)"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "github_com_webbuilder_server_internal_payments.GatewayInput",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "delete:/api/sites/{siteId}/payment-gateways/{provider}",
+    "method": "DELETE",
+    "path": "/api/sites/{siteId}/payment-gateways/{provider}",
+    "tags": [
+      "payments"
+    ],
+    "summary": "Read, save or clear one payment gateway's configuration",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "provider",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Gateway provider key, e.g. stripe, vnpay, momo, payos, sepay, zalopay, paypal"
+      },
+      {
+        "name": "body",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "Gateway configuration (PUT only)"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "github_com_webbuilder_server_internal_payments.GatewayInput",
+    "credential": "siteScoped"
+  },
+  {
     "id": "get:/api/sites/{siteId}/payment-transactions",
     "method": "GET",
     "path": "/api/sites/{siteId}/payment-transactions",
@@ -8887,6 +9620,314 @@ export const API_OPERATIONS: ApiOperation[] = [
         "required": true,
         "type": "string",
         "description": "Site ID"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/sites/{siteId}/quiz-grading",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/quiz-grading",
+    "tags": [
+      "assessment"
+    ],
+    "summary": "The marking queue",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "courseId",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Only this course's papers"
+      },
+      {
+        "name": "quizId",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Only this quiz's papers"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/sites/{siteId}/quizzes",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/quizzes",
+    "tags": [
+      "assessment"
+    ],
+    "summary": "List or create quizzes",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "courseId",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Only this course's quizzes"
+      },
+      {
+        "name": "lessonId",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Only the quiz on this lesson"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/api/sites/{siteId}/quizzes",
+    "method": "POST",
+    "path": "/api/sites/{siteId}/quizzes",
+    "tags": [
+      "assessment"
+    ],
+    "summary": "List or create quizzes",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "courseId",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Only this course's quizzes"
+      },
+      {
+        "name": "lessonId",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Only the quiz on this lesson"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/api/sites/{siteId}/quizzes/{attemptId}/grade",
+    "method": "POST",
+    "path": "/api/sites/{siteId}/quizzes/{attemptId}/grade",
+    "tags": [
+      "assessment"
+    ],
+    "summary": "Mark the written answers on one attempt",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "attemptId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Attempt ID"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/sites/{siteId}/quizzes/{quizId}",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/quizzes/{quizId}",
+    "tags": [
+      "assessment"
+    ],
+    "summary": "Read, update or delete one quiz",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "quizId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Quiz ID"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "put:/api/sites/{siteId}/quizzes/{quizId}",
+    "method": "PUT",
+    "path": "/api/sites/{siteId}/quizzes/{quizId}",
+    "tags": [
+      "assessment"
+    ],
+    "summary": "Read, update or delete one quiz",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "quizId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Quiz ID"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "delete:/api/sites/{siteId}/quizzes/{quizId}",
+    "method": "DELETE",
+    "path": "/api/sites/{siteId}/quizzes/{quizId}",
+    "tags": [
+      "assessment"
+    ],
+    "summary": "Read, update or delete one quiz",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "quizId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Quiz ID"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/sites/{siteId}/quizzes/{quizId}/attempts",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/quizzes/{quizId}/attempts",
+    "tags": [
+      "assessment"
+    ],
+    "summary": "A quiz's attempts",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "quizId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Quiz ID"
+      },
+      {
+        "name": "enrollmentId",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "One student's history"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/sites/{siteId}/quizzes/{quizId}/questions",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/quizzes/{quizId}/questions",
+    "tags": [
+      "assessment"
+    ],
+    "summary": "Read or replace a quiz's questions",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "quizId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Quiz ID"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "put:/api/sites/{siteId}/quizzes/{quizId}/questions",
+    "method": "PUT",
+    "path": "/api/sites/{siteId}/quizzes/{quizId}/questions",
+    "tags": [
+      "assessment"
+    ],
+    "summary": "Read or replace a quiz's questions",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "quizId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Quiz ID"
       }
     ],
     "bodyDescribed": false,
@@ -9976,6 +11017,104 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": true,
     "bodyRef": "github_com_webbuilder_server_internal_shipping.Method",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/sites/{siteId}/shipping-zones",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/shipping-zones",
+    "tags": [
+      "shipping"
+    ],
+    "summary": "List or create delivery zones",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/api/sites/{siteId}/shipping-zones",
+    "method": "POST",
+    "path": "/api/sites/{siteId}/shipping-zones",
+    "tags": [
+      "shipping"
+    ],
+    "summary": "List or create delivery zones",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "put:/api/sites/{siteId}/shipping-zones/{id}",
+    "method": "PUT",
+    "path": "/api/sites/{siteId}/shipping-zones/{id}",
+    "tags": [
+      "shipping"
+    ],
+    "summary": "Update or delete a delivery zone",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Zone ID"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "delete:/api/sites/{siteId}/shipping-zones/{id}",
+    "method": "DELETE",
+    "path": "/api/sites/{siteId}/shipping-zones/{id}",
+    "tags": [
+      "shipping"
+    ],
+    "summary": "Update or delete a delivery zone",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Zone ID"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
     "credential": "siteScoped"
   },
   {
@@ -13306,12 +14445,20 @@ export const API_DEFINITIONS: Record<string, unknown> = {
       "shipTo": {
         "$ref": "#/definitions/github_com_webbuilder_server_internal_orders.Address"
       },
+      "shipToProvinceCode": {
+        "description": "ShipToWardCode is the same key one level down — the ward the parcel is\ngoing to, as the platform's own admin-unit code.\n\nNothing reads it yet. It is stored because the shopper already gave it and\nit cannot be recovered afterwards: a column added when the first reader\narrives would leave every order placed before it permanently unable to\nanswer. See forms.OrderAddress.WardCode.",
+        "type": "string"
+      },
       "shippingCents": {
         "type": "integer"
       },
       "shippingMethod": {
         "description": "ShippingMethod is the delivery option this order was placed under — the\nmerchant-authored NAME, the same string internal/shipping keys a method\nby. It is what ShippingCents was derived FROM on a storefront order, and\nkeeping it on the record is what lets a merchant see why a fee is what it\nis (or why it is zero, when the option no longer exists).\n\nEmpty on every order that names no option, which is every order placed\nbefore this field existed and every merchant-typed order whose\nShippingCents was entered by hand.",
         "type": "string"
+      },
+      "shippingTaxCents": {
+        "description": "ShippingTaxCents is the part of TaxCents that the DELIVERY FEE accounts\nfor, and it is only non-zero on an order whose lines carry more than one\ntax rate. On any other order the shipping is inside the single base\nApplyTax works over and has no separable figure — writing one would be\ninventing a split that was never computed.\n\nIt exists so a mixed order reconciles: without it, Σ(item tax) is short\nof the order's own TaxCents by the delivery's share and nothing on the\nrecord says where the difference went. See orders/taxclass.go.",
+        "type": "integer"
       },
       "siteId": {
         "type": "string"
@@ -13385,6 +14532,17 @@ export const API_DEFINITIONS: Record<string, unknown> = {
       },
       "sku": {
         "type": "string"
+      },
+      "taxCents": {
+        "type": "integer"
+      },
+      "taxClassId": {
+        "description": "TaxClassID is the class this line was taxed under, copied from the\nproduct at the moment of sale. Empty means the site's own rate, which is\nevery line in every store that has not defined a class.",
+        "type": "string"
+      },
+      "taxRateBps": {
+        "description": "TaxRateBps and TaxCents are the per-line SNAPSHOT — what this line was\nactually taxed at and for. Server-computed on every write, never read\nfrom a request: a caller-supplied line tax is a caller-chosen invoice.\n\nGrouping items by TaxRateBps is what gives an invoice its \"VAT 10% … VAT\n5% …\" breakdown, which is why there is no separate stored breakdown\ndocument to disagree with them. See orders/taxclass.go.",
+        "type": "integer"
       },
       "totalCents": {
         "description": "derived: PriceCents × Quantity",
@@ -13517,6 +14675,26 @@ export const API_DEFINITIONS: Record<string, unknown> = {
       }
     }
   },
+  "github_com_webbuilder_server_internal_payments.GatewayInput": {
+    "type": "object",
+    "properties": {
+      "credentials": {
+        "type": "object",
+        "additionalProperties": {
+          "type": "string"
+        }
+      },
+      "enabled": {
+        "type": "boolean"
+      },
+      "label": {
+        "type": "string"
+      },
+      "sandbox": {
+        "type": "boolean"
+      }
+    }
+  },
   "github_com_webbuilder_server_internal_products.MetaTag": {
     "type": "object",
     "properties": {
@@ -13643,6 +14821,10 @@ export const API_DEFINITIONS: Record<string, unknown> = {
         "items": {
           "type": "string"
         }
+      },
+      "taxClassId": {
+        "description": "TaxClassID names which of the site's tax classes this product is sold\nunder — \"\" meaning the site's own rate, which is every product in every\nstore that has not defined a class.\n\nA CLASS ID rather than a rate: the rate belongs to the class, so a\nmerchant changes 5% in one place instead of on every book they sell. The\nclasses live in the site settings document; the order path resolves this\nthrough the orders.TaxClassRates port and SNAPSHOTS the resolved rate onto\nthe order line, so re-rating a class next year cannot re-tax last year's\ninvoices. See internal/orders/taxclass.go.",
+        "type": "string"
       },
       "totalStock": {
         "description": "Σ variant Stock values",
@@ -14089,6 +15271,45 @@ export const API_DEFINITIONS: Record<string, unknown> = {
       },
       "updatedAt": {
         "type": "string"
+      },
+      "zoneFees": {
+        "description": "ZoneFees prices this method PER ZONE, keyed by zone id — the map behind\nFeeForZone. A zone with no entry falls back to FeeCents, so a merchant\nwho prices one method for one zone still has a working checkout for\nevery other combination.\n\nA MAP ON THE ROW rather than a method×zone table, and that is a\nconsidered exception to the normalise-everything rule: these fees are\nnever queried, sorted or aggregated on their own — every read wants them\nalongside the method they belong to — so a join table would buy a query\nnobody makes and cost one on every checkout.",
+        "type": "object",
+        "additionalProperties": {
+          "type": "integer"
+        }
+      }
+    }
+  },
+  "github_com_webbuilder_server_internal_shipping.Zone": {
+    "type": "object",
+    "properties": {
+      "createdAt": {
+        "type": "string"
+      },
+      "id": {
+        "type": "string"
+      },
+      "name": {
+        "description": "Name is what the merchant reads on the settings screen (\"Nội thành Hà\nNội\"). Unique per site, case-insensitively. Never matched against\nanything a shopper sends.",
+        "type": "string"
+      },
+      "position": {
+        "description": "Position is the merchant's arrangement, and it is LOAD-BEARING: a\nprovince listed in two zones resolves to the first, so the order is how a\nmerchant expresses \"this one wins\". Ties break on name.",
+        "type": "integer"
+      },
+      "provinces": {
+        "description": "Provinces are the admin-unit codes this zone covers (\"84_VN101\"). A zone\nwith none matches nothing, which is a zone still being written rather\nthan a zone that covers everywhere — see ZoneFor.",
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "siteId": {
+        "type": "string"
+      },
+      "updatedAt": {
+        "type": "string"
       }
     }
   },
@@ -14104,7 +15325,8 @@ export const API_DEFINITIONS: Record<string, unknown> = {
       "product.deleted",
       "page.published",
       "course.enrolled",
-      "course.revoked"
+      "course.revoked",
+      "form.submitted"
     ],
     "x-enum-varnames": [
       "EventOrderCreated",
@@ -14116,7 +15338,8 @@ export const API_DEFINITIONS: Record<string, unknown> = {
       "EventProductDeleted",
       "EventPagePublished",
       "EventCourseEnrolled",
-      "EventCourseRevoked"
+      "EventCourseRevoked",
+      "EventFormSubmitted"
     ]
   },
   "internal_appinstalls_rest.versionChoice": {
