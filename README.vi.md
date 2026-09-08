@@ -95,7 +95,7 @@ là "tài khoản của người này".
 | `sb_look` | Lưu, render, trả về ảnh chụp kèm box đo được của node và lỗi bố cục đo trên bản render |
 | `sb_event` | Gắn click action cho một node — mở giỏ, sang trang, mở pop-up |
 | `sb_bind` | Gắn nội dung một node vào dữ liệu cửa hàng thật, hoặc biến một nút thành nút thêm vào giỏ |
-| `sb_store` | Chạy một luồng cửa hàng bắt buộc đúng thứ tự — hiện là bốn lệnh ghi tạo nên một trang thanh toán hoạt động |
+| `sb_store` | Chạy một luồng cửa hàng bắt buộc đúng thứ tự — bốn lệnh ghi tạo nên trang thanh toán, hoặc gieo bất kỳ template nào trong 17 form của nền tảng (login, register, forgot, contact, subscribe …) kèm field document của nó |
 | `sb_undo` | Trả lại thứ mà một lệnh PUT đã ghi đè — nền tảng không có lịch sử trang hay restore, nên đây là đường về duy nhất |
 
 Hai mươi tám tool, **484 operation API** (158 trong 212 lệnh ghi có hình dạng body đọc thẳng

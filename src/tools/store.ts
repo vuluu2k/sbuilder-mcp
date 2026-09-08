@@ -41,6 +41,7 @@ import {
   CHECKOUT_TEXT,
   FORM_ID_SENTINEL,
   HEADLINE_SENTINEL,
+  FORM_TEMPLATES,
 } from '../catalog/checkout.generated.js';
 
 type Language = keyof typeof CHECKOUT_TEXT;
@@ -181,6 +182,122 @@ function pageDocumentFor(formId: string, headline: string): unknown {
   return JSON.parse(json);
 }
 
+/**
+ * THE FORM TEMPLATES, as a tuple zod can turn into an enum.
+ *
+ * Sorted so the list a caller reads is stable across codegen runs, and derived
+ * from the generated table rather than typed out — the platform ships 17 and
+ * this repo carried ONE, so a store built with these tools could have a checkout
+ * and nothing else: no contact form, no newsletter, and none of the five auth
+ * forms, even though `forms.Type` declares them and `customerauth` serves them.
+ */
+const FORM_TEMPLATE_KEYS = Object.keys(FORM_TEMPLATES).sort() as unknown as [string, ...string[]];
+
+/**
+ * Seed one form from the platform's own template.
+ *
+ * THE SAME THREE WRITES THE CHECKOUT MAKES, minus the page: create, PUT the form
+ * back WHOLE (name and type ride along, or `Normalize()` renames it "Form" and
+ * turns it `custom`, after which the document is refused as "mappings do not fit
+ * this form type"), then save the field document. The document is the half that
+ * cannot be guessed: its `mapTo` values are a vocabulary the server validates,
+ * and an auth form's are checked harder still.
+ *
+ * No page is made. Where a login form belongs is a design decision — the
+ * caller places it with `sb_add` and points `specials.formId` at the id this
+ * returns — and `/account` is the one page that is not a free choice, because
+ * `membersOnlyRedirectTarget` sends every gated visitor there.
+ */
+async function seedForm(
+  ctx: ToolContext,
+  siteId: string,
+  key: string,
+  formName: string | undefined,
+  dryRun: boolean,
+): Promise<unknown> {
+  const tpl = FORM_TEMPLATES[key as keyof typeof FORM_TEMPLATES] as {
+    key: string;
+    type: string;
+    settings: Record<string, unknown>;
+    document: { nodes: Record<string, { data?: { type?: string } }> };
+  };
+  const site = encodeURIComponent(siteId);
+  const name = formName ?? tpl.key;
+  const document = withFreshIds(tpl.document);
+  const fields = Object.values(document.nodes)
+    .map((n) => (n as { specials?: { name?: string } }).specials?.name)
+    .filter((n): n is string => typeof n === 'string' && n !== '');
+
+  if (dryRun) {
+    return {
+      dry_run: true,
+      template: tpl.key,
+      form_type: tpl.type,
+      fields,
+      plan: [
+        { step: 1, what: 'create the form', method: 'POST', path: `/api/sites/${site}/forms` },
+        {
+          step: 2,
+          what: 'PUT it back WHOLE — name and type must ride along or Normalize() turns it custom',
+          method: 'PUT',
+          path: `/api/sites/${site}/forms/{formId}`,
+        },
+        {
+          step: 3,
+          what: "save the template's field document",
+          method: 'PUT',
+          path: `/api/sites/${site}/forms/{formId}/document`,
+        },
+      ],
+      preview: redact({ name, type: tpl.type }),
+    };
+  }
+
+  const send = async <T>(method: string, path: string, body?: unknown): Promise<T> =>
+    (await request({
+      base: ctx.base,
+      method,
+      path,
+      token: siteToken(ctx),
+      body,
+      fetchImpl: ctx.fetchImpl,
+    })) as T;
+
+  const created = await send<{
+    form?: { id: string; name: string; type: string; settings?: Record<string, unknown> };
+  }>('POST', `/api/sites/${site}/forms`, { name, type: tpl.type });
+  const form = created.form;
+  if (!form?.id) {
+    throw new Error('sbuilder: the platform accepted the form create and returned no form');
+  }
+  // The same guard the checkout uses: a form nobody can see is the orphan the
+  // obvious retry then duplicates.
+  try {
+    await send('PUT', `/api/sites/${site}/forms/${encodeURIComponent(form.id)}`, {
+      name: form.name,
+      type: form.type,
+      settings: { ...(form.settings ?? {}), ...tpl.settings },
+    });
+    await send('PUT', `/api/sites/${site}/forms/${encodeURIComponent(form.id)}/document`, {
+      document,
+    });
+  } catch (e) {
+    await send('DELETE', `/api/sites/${site}/forms/${encodeURIComponent(form.id)}`).catch(
+      () => undefined,
+    );
+    throw e;
+  }
+
+  return {
+    form: { id: form.id, type: form.type, name: form.name },
+    fields,
+    next:
+      `Place it: sb_add a "form" element, then sb_set its specials.formId to "${form.id}". ` +
+      'The submit button lives in the FORM DOCUMENT, not on the page, and a page republish is ' +
+      'what makes a form-document edit visible.',
+  };
+}
+
 export function registerStoreTools(server: McpServer, ctx: ToolContext): void {
   server.registerTool(
     'sb_store',
@@ -189,19 +306,35 @@ export function registerStoreTools(server: McpServer, ctx: ToolContext): void {
         'Run a store flow that must happen in a fixed order. action:"checkout" makes the order ' +
         'form, configures it, saves its fields with this store\'s real payment and delivery ' +
         'options, then creates and PUBLISHES the checkout page — /checkout 404s without all ' +
-        'four. Dry run returns the plan.',
+        'four. action:"form" seeds any of the platform\'s other form templates (login, ' +
+        'register, forgot, reset, verify, contact, subscribe, booking, review and more) with ' +
+        'its own field document, which is the part that cannot be guessed. Dry run returns ' +
+        'the plan.',
       inputSchema: {
-        action: z.literal('checkout'),
+        action: z.enum(['checkout', 'form']),
         site_id: z.string().optional(),
         language: z.enum(['vi', 'en']).optional().describe('Copy language, default vi'),
         page_name: z.string().optional(),
         headline: z.string().optional(),
+        template: z
+          .enum(FORM_TEMPLATE_KEYS)
+          .optional()
+          .describe('action:"form" — which of the platform\'s own form templates to seed'),
+        name: z.string().optional().describe('action:"form" — the form\'s name in the merchant\'s list'),
         dry_run: z.boolean().optional(),
       },
       annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: true },
     },
-    async ({ site_id: given, language, page_name, headline, dry_run }) => {
+    async ({ action, site_id: given, language, page_name, headline, template, name, dry_run }) => {
       const siteId = siteFor(ctx, given);
+      if (action === 'form') {
+        if (!template) {
+          throw new Error(
+            `sbuilder: action:"form" needs a template. One of: ${FORM_TEMPLATE_KEYS.join(', ')}.`,
+          );
+        }
+        return text(await seedForm(ctx, siteId, template, name, dry_run !== false));
+      }
       const lang = (language ?? 'vi') as Language;
       const t = CHECKOUT_TEXT[lang];
       const site = encodeURIComponent(siteId);

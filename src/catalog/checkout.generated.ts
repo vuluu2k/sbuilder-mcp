@@ -816,3 +816,4995 @@ export const CHECKOUT_TEXT = {
     }
   }
 } as const;
+
+/**
+ * EVERY form the platform can seed, not just the checkout.
+ *
+ * The editor ships 17 templates and this file used to carry ONE, so a
+ * store built through these tools could have a checkout and nothing else — no
+ * contact form, no newsletter, and none of the five auth forms, even though
+ * `forms.Type` declares them and `customerauth` serves them. Authoring one by
+ * hand means writing a field document whose `mapTo` values are a vocabulary the
+ * server validates, which is exactly the guess this catalog exists to remove.
+ *
+ * Each entry carries what `sb_store` needs to make the form real: the type the
+ * platform validates, the settings the template chose, and the field document
+ * itself with stable placeholder ids (fresh ones are minted per run).
+ */
+export const FORM_TEMPLATES = {
+  "contact": {
+    "key": "contact",
+    "type": "contact",
+    "settings": {},
+    "document": {
+      "root_node_id": "fcon_1",
+      "nodes": {
+        "fcon_1": {
+          "id": "fcon_1",
+          "data": {
+            "type": "form",
+            "parent": null,
+            "nodes": [
+              "fcon_2",
+              "fcon_3",
+              "fcon_4",
+              "fcon_5",
+              "fcon_6",
+              "fcon_7"
+            ],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "display": "flex",
+            "flexDirection": "column",
+            "width": "100%",
+            "height": "fit-content",
+            "gap": "16px"
+          },
+          "config": {},
+          "specials": {
+            "formId": "",
+            "segmentId": "",
+            "formRules": ""
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "fcon_2": {
+          "id": "fcon_2",
+          "data": {
+            "type": "form-title",
+            "parent": "fcon_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%",
+            "height": "fit-content",
+            "textAlign": "left",
+            "lineHeight": "130%",
+            "fontSize": "20px",
+            "fontWeight": "600",
+            "color": "#171717"
+          },
+          "config": {},
+          "specials": {
+            "htmlTag": "h3",
+            "text": "Liên hệ với chúng tôi"
+          },
+          "responsive": {
+            "mobile": {
+              "style": {
+                "fontSize": "18px"
+              }
+            }
+          },
+          "events": [],
+          "bindings": []
+        },
+        "fcon_3": {
+          "id": "fcon_3",
+          "data": {
+            "type": "form-text",
+            "parent": "fcon_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%"
+          },
+          "config": {
+            "iconPosition": "left"
+          },
+          "specials": {
+            "showIcon": false,
+            "iconName": "",
+            "name": "full_name",
+            "label": "Họ và tên",
+            "placeholder": "",
+            "description": "",
+            "required": true,
+            "showLabel": true,
+            "mapTo": "customer.fullName",
+            "prefillValue": "",
+            "multiline": false,
+            "inputType": "text",
+            "limitChars": false,
+            "minChars": 0,
+            "maxChars": 500,
+            "patternPreset": "",
+            "pattern": "",
+            "patternCountries": []
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "fcon_4": {
+          "id": "fcon_4",
+          "data": {
+            "type": "form-text",
+            "parent": "fcon_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%"
+          },
+          "config": {
+            "iconPosition": "left"
+          },
+          "specials": {
+            "showIcon": false,
+            "iconName": "",
+            "name": "email",
+            "label": "Email",
+            "placeholder": "",
+            "description": "",
+            "required": true,
+            "showLabel": true,
+            "mapTo": "customer.email",
+            "prefillValue": "",
+            "multiline": false,
+            "inputType": "email",
+            "limitChars": false,
+            "minChars": 0,
+            "maxChars": 500,
+            "patternPreset": "",
+            "pattern": "",
+            "patternCountries": []
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "fcon_5": {
+          "id": "fcon_5",
+          "data": {
+            "type": "form-text",
+            "parent": "fcon_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%"
+          },
+          "config": {
+            "iconPosition": "left"
+          },
+          "specials": {
+            "showIcon": false,
+            "iconName": "",
+            "name": "phone",
+            "label": "Số điện thoại",
+            "placeholder": "",
+            "description": "",
+            "required": false,
+            "showLabel": true,
+            "mapTo": "customer.phone",
+            "prefillValue": "",
+            "multiline": false,
+            "inputType": "tel",
+            "limitChars": false,
+            "minChars": 0,
+            "maxChars": 500,
+            "patternPreset": "",
+            "pattern": "",
+            "patternCountries": []
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "fcon_6": {
+          "id": "fcon_6",
+          "data": {
+            "type": "form-text",
+            "parent": "fcon_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%"
+          },
+          "config": {
+            "iconPosition": "left"
+          },
+          "specials": {
+            "showIcon": false,
+            "iconName": "",
+            "name": "notes",
+            "label": "Nội dung",
+            "placeholder": "",
+            "description": "",
+            "required": false,
+            "showLabel": true,
+            "mapTo": "customer.notes",
+            "prefillValue": "",
+            "multiline": true,
+            "inputType": "text",
+            "limitChars": false,
+            "minChars": 0,
+            "maxChars": 500,
+            "patternPreset": "",
+            "pattern": "",
+            "patternCountries": []
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "fcon_7": {
+          "id": "fcon_7",
+          "data": {
+            "type": "form-submit",
+            "parent": "fcon_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%",
+            "padding": "10px 16px",
+            "backgroundColor": "#171717",
+            "color": "#ffffff",
+            "borderRadius": "6px"
+          },
+          "config": {},
+          "specials": {
+            "text": "Gửi",
+            "submittingText": "Đang gửi…"
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        }
+      }
+    }
+  },
+  "subscribe": {
+    "key": "subscribe",
+    "type": "subscribe",
+    "settings": {},
+    "document": {
+      "root_node_id": "fsub_1",
+      "nodes": {
+        "fsub_1": {
+          "id": "fsub_1",
+          "data": {
+            "type": "form",
+            "parent": null,
+            "nodes": [
+              "fsub_2",
+              "fsub_3",
+              "fsub_4",
+              "fsub_5"
+            ],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "display": "flex",
+            "flexDirection": "column",
+            "width": "100%",
+            "height": "fit-content",
+            "gap": "16px"
+          },
+          "config": {},
+          "specials": {
+            "formId": "",
+            "segmentId": "",
+            "formRules": ""
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "fsub_2": {
+          "id": "fsub_2",
+          "data": {
+            "type": "form-title",
+            "parent": "fsub_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%",
+            "height": "fit-content",
+            "textAlign": "left",
+            "lineHeight": "130%",
+            "fontSize": "20px",
+            "fontWeight": "600",
+            "color": "#171717"
+          },
+          "config": {},
+          "specials": {
+            "htmlTag": "h3",
+            "text": "Đăng ký nhận tin"
+          },
+          "responsive": {
+            "mobile": {
+              "style": {
+                "fontSize": "18px"
+              }
+            }
+          },
+          "events": [],
+          "bindings": []
+        },
+        "fsub_3": {
+          "id": "fsub_3",
+          "data": {
+            "type": "form-paragraph",
+            "parent": "fsub_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%",
+            "height": "fit-content",
+            "textAlign": "left",
+            "lineHeight": "150%",
+            "fontSize": "14px",
+            "color": "#525252"
+          },
+          "config": {},
+          "specials": {
+            "text": "Nhận tin khuyến mãi và sản phẩm mới qua email."
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "fsub_4": {
+          "id": "fsub_4",
+          "data": {
+            "type": "form-text",
+            "parent": "fsub_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%"
+          },
+          "config": {
+            "iconPosition": "left"
+          },
+          "specials": {
+            "showIcon": false,
+            "iconName": "",
+            "name": "email",
+            "label": "Email",
+            "placeholder": "Email của bạn",
+            "description": "",
+            "required": true,
+            "showLabel": false,
+            "mapTo": "customer.email",
+            "prefillValue": "",
+            "multiline": false,
+            "inputType": "email",
+            "limitChars": false,
+            "minChars": 0,
+            "maxChars": 500,
+            "patternPreset": "",
+            "pattern": "",
+            "patternCountries": []
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "fsub_5": {
+          "id": "fsub_5",
+          "data": {
+            "type": "form-submit",
+            "parent": "fsub_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%",
+            "padding": "10px 16px",
+            "backgroundColor": "#171717",
+            "color": "#ffffff",
+            "borderRadius": "6px"
+          },
+          "config": {},
+          "specials": {
+            "text": "Đăng ký",
+            "submittingText": "Đang gửi…"
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        }
+      }
+    }
+  },
+  "order": {
+    "key": "order",
+    "type": "order",
+    "settings": {},
+    "document": {
+      "root_node_id": "ford_1",
+      "nodes": {
+        "ford_1": {
+          "id": "ford_1",
+          "data": {
+            "type": "form",
+            "parent": null,
+            "nodes": [
+              "ford_2",
+              "ford_3",
+              "ford_4",
+              "ford_5",
+              "ford_6",
+              "ford_7",
+              "ford_8",
+              "ford_9",
+              "ford_10"
+            ],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "display": "flex",
+            "flexDirection": "column",
+            "width": "100%",
+            "height": "fit-content",
+            "gap": "16px"
+          },
+          "config": {},
+          "specials": {
+            "formId": "",
+            "segmentId": "",
+            "formRules": ""
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "ford_2": {
+          "id": "ford_2",
+          "data": {
+            "type": "form-title",
+            "parent": "ford_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%",
+            "height": "fit-content",
+            "textAlign": "left",
+            "lineHeight": "130%",
+            "fontSize": "20px",
+            "fontWeight": "600",
+            "color": "#171717"
+          },
+          "config": {},
+          "specials": {
+            "htmlTag": "h3",
+            "text": "Đặt hàng"
+          },
+          "responsive": {
+            "mobile": {
+              "style": {
+                "fontSize": "18px"
+              }
+            }
+          },
+          "events": [],
+          "bindings": []
+        },
+        "ford_3": {
+          "id": "ford_3",
+          "data": {
+            "type": "form-text",
+            "parent": "ford_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%"
+          },
+          "config": {
+            "iconPosition": "left"
+          },
+          "specials": {
+            "showIcon": false,
+            "iconName": "",
+            "name": "full_name",
+            "label": "Họ và tên",
+            "placeholder": "",
+            "description": "",
+            "required": true,
+            "showLabel": true,
+            "mapTo": "customer.fullName",
+            "prefillValue": "",
+            "multiline": false,
+            "inputType": "text",
+            "limitChars": false,
+            "minChars": 0,
+            "maxChars": 500,
+            "patternPreset": "",
+            "pattern": "",
+            "patternCountries": []
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "ford_4": {
+          "id": "ford_4",
+          "data": {
+            "type": "form-text",
+            "parent": "ford_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%"
+          },
+          "config": {
+            "iconPosition": "left"
+          },
+          "specials": {
+            "showIcon": false,
+            "iconName": "",
+            "name": "phone",
+            "label": "Số điện thoại",
+            "placeholder": "",
+            "description": "",
+            "required": true,
+            "showLabel": true,
+            "mapTo": "customer.phone",
+            "prefillValue": "",
+            "multiline": false,
+            "inputType": "tel",
+            "limitChars": false,
+            "minChars": 0,
+            "maxChars": 500,
+            "patternPreset": "",
+            "pattern": "",
+            "patternCountries": []
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "ford_5": {
+          "id": "ford_5",
+          "data": {
+            "type": "form-address",
+            "parent": "ford_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%"
+          },
+          "config": {},
+          "specials": {
+            "name": "tinh_thanh",
+            "label": "Tỉnh / Thành phố",
+            "description": "",
+            "required": true,
+            "showLabel": true,
+            "mapTo": "customer.state",
+            "part": "province",
+            "addressLink": true,
+            "addressGroup": "",
+            "provinceField": "",
+            "allowedCodes": [],
+            "presetCode": "",
+            "copyFrom": "",
+            "sameDefault": true,
+            "placeholder": "Chọn tỉnh / thành phố",
+            "provinceLabel": "Tỉnh / Thành phố",
+            "wardLabel": "Phường / Xã",
+            "detailLabel": "Số nhà, tên đường",
+            "provincePlaceholder": "Chọn tỉnh / thành phố",
+            "wardPlaceholder": "Chọn phường / xã",
+            "detailPlaceholder": "Ví dụ: 12 Nguyễn Huệ",
+            "showDetail": true,
+            "country": "VN"
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "ford_6": {
+          "id": "ford_6",
+          "data": {
+            "type": "form-address",
+            "parent": "ford_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%"
+          },
+          "config": {},
+          "specials": {
+            "name": "phuong_xa",
+            "label": "Phường / Xã",
+            "description": "",
+            "required": true,
+            "showLabel": true,
+            "mapTo": "customer.ward",
+            "part": "ward",
+            "addressLink": true,
+            "addressGroup": "",
+            "provinceField": "",
+            "allowedCodes": [],
+            "presetCode": "",
+            "copyFrom": "",
+            "sameDefault": true,
+            "placeholder": "Chọn phường / xã",
+            "provinceLabel": "Tỉnh / Thành phố",
+            "wardLabel": "Phường / Xã",
+            "detailLabel": "Số nhà, tên đường",
+            "provincePlaceholder": "Chọn tỉnh / thành phố",
+            "wardPlaceholder": "Chọn phường / xã",
+            "detailPlaceholder": "Ví dụ: 12 Nguyễn Huệ",
+            "showDetail": true,
+            "country": "VN"
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "ford_7": {
+          "id": "ford_7",
+          "data": {
+            "type": "form-address",
+            "parent": "ford_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%"
+          },
+          "config": {},
+          "specials": {
+            "name": "dia_chi",
+            "label": "Số nhà, tên đường",
+            "description": "",
+            "required": true,
+            "showLabel": true,
+            "mapTo": "customer.address",
+            "part": "street",
+            "addressLink": true,
+            "addressGroup": "",
+            "provinceField": "",
+            "allowedCodes": [],
+            "presetCode": "",
+            "copyFrom": "",
+            "sameDefault": true,
+            "placeholder": "Ví dụ: 12 Nguyễn Huệ",
+            "provinceLabel": "Tỉnh / Thành phố",
+            "wardLabel": "Phường / Xã",
+            "detailLabel": "Số nhà, tên đường",
+            "provincePlaceholder": "Chọn tỉnh / thành phố",
+            "wardPlaceholder": "Chọn phường / xã",
+            "detailPlaceholder": "Ví dụ: 12 Nguyễn Huệ",
+            "showDetail": true,
+            "country": "VN"
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "ford_8": {
+          "id": "ford_8",
+          "data": {
+            "type": "form-number",
+            "parent": "ford_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%"
+          },
+          "config": {
+            "iconPosition": "left"
+          },
+          "specials": {
+            "showIcon": false,
+            "iconName": "",
+            "name": "quantity",
+            "label": "Số lượng",
+            "placeholder": "",
+            "description": "",
+            "required": true,
+            "showLabel": true,
+            "mapTo": "order.quantity",
+            "prefillValue": "",
+            "setRange": true,
+            "minValue": 1,
+            "maxValue": 500
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "ford_9": {
+          "id": "ford_9",
+          "data": {
+            "type": "form-text",
+            "parent": "ford_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%"
+          },
+          "config": {
+            "iconPosition": "left"
+          },
+          "specials": {
+            "showIcon": false,
+            "iconName": "",
+            "name": "order_note",
+            "label": "Ghi chú",
+            "placeholder": "",
+            "description": "",
+            "required": false,
+            "showLabel": true,
+            "mapTo": "order.note",
+            "prefillValue": "",
+            "multiline": true,
+            "inputType": "text",
+            "limitChars": false,
+            "minChars": 0,
+            "maxChars": 500,
+            "patternPreset": "",
+            "pattern": "",
+            "patternCountries": []
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "ford_10": {
+          "id": "ford_10",
+          "data": {
+            "type": "form-submit",
+            "parent": "ford_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%",
+            "padding": "10px 16px",
+            "backgroundColor": "#171717",
+            "color": "#ffffff",
+            "borderRadius": "6px"
+          },
+          "config": {},
+          "specials": {
+            "text": "Đặt hàng",
+            "submittingText": "Đang gửi…"
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        }
+      }
+    }
+  },
+  "checkout": {
+    "key": "checkout",
+    "type": "order",
+    "settings": {
+      "orderSource": "cart"
+    },
+    "document": {
+      "root_node_id": "fche_1",
+      "nodes": {
+        "fche_1": {
+          "id": "fche_1",
+          "data": {
+            "type": "form",
+            "parent": null,
+            "nodes": [
+              "fche_2",
+              "fche_3",
+              "fche_4",
+              "fche_5",
+              "fche_6",
+              "fche_7",
+              "fche_8",
+              "fche_9",
+              "fche_10",
+              "fche_11",
+              "fche_12",
+              "fche_13"
+            ],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "display": "flex",
+            "flexDirection": "column",
+            "width": "100%",
+            "height": "fit-content",
+            "gap": "16px"
+          },
+          "config": {},
+          "specials": {
+            "formId": "",
+            "segmentId": "",
+            "formRules": ""
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "fche_2": {
+          "id": "fche_2",
+          "data": {
+            "type": "form-title",
+            "parent": "fche_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%",
+            "height": "fit-content",
+            "textAlign": "left",
+            "lineHeight": "130%",
+            "fontSize": "20px",
+            "fontWeight": "600",
+            "color": "#171717"
+          },
+          "config": {},
+          "specials": {
+            "htmlTag": "h3",
+            "text": "Thanh toán"
+          },
+          "responsive": {
+            "mobile": {
+              "style": {
+                "fontSize": "18px"
+              }
+            }
+          },
+          "events": [],
+          "bindings": []
+        },
+        "fche_3": {
+          "id": "fche_3",
+          "data": {
+            "type": "form-text",
+            "parent": "fche_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%"
+          },
+          "config": {
+            "iconPosition": "left"
+          },
+          "specials": {
+            "showIcon": false,
+            "iconName": "",
+            "name": "full_name",
+            "label": "Họ và tên",
+            "placeholder": "",
+            "description": "",
+            "required": true,
+            "showLabel": true,
+            "mapTo": "customer.fullName",
+            "prefillValue": "",
+            "multiline": false,
+            "inputType": "text",
+            "limitChars": false,
+            "minChars": 0,
+            "maxChars": 500,
+            "patternPreset": "",
+            "pattern": "",
+            "patternCountries": []
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "fche_4": {
+          "id": "fche_4",
+          "data": {
+            "type": "form-text",
+            "parent": "fche_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%"
+          },
+          "config": {
+            "iconPosition": "left"
+          },
+          "specials": {
+            "showIcon": false,
+            "iconName": "",
+            "name": "phone",
+            "label": "Số điện thoại",
+            "placeholder": "",
+            "description": "",
+            "required": true,
+            "showLabel": true,
+            "mapTo": "customer.phone",
+            "prefillValue": "",
+            "multiline": false,
+            "inputType": "tel",
+            "limitChars": false,
+            "minChars": 0,
+            "maxChars": 500,
+            "patternPreset": "",
+            "pattern": "",
+            "patternCountries": []
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "fche_5": {
+          "id": "fche_5",
+          "data": {
+            "type": "form-text",
+            "parent": "fche_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%"
+          },
+          "config": {
+            "iconPosition": "left"
+          },
+          "specials": {
+            "showIcon": false,
+            "iconName": "",
+            "name": "email",
+            "label": "Email",
+            "placeholder": "",
+            "description": "",
+            "required": false,
+            "showLabel": true,
+            "mapTo": "customer.email",
+            "prefillValue": "",
+            "multiline": false,
+            "inputType": "email",
+            "limitChars": false,
+            "minChars": 0,
+            "maxChars": 500,
+            "patternPreset": "",
+            "pattern": "",
+            "patternCountries": []
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "fche_6": {
+          "id": "fche_6",
+          "data": {
+            "type": "form-address",
+            "parent": "fche_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%"
+          },
+          "config": {},
+          "specials": {
+            "name": "tinh_thanh",
+            "label": "Tỉnh / Thành phố",
+            "description": "",
+            "required": true,
+            "showLabel": true,
+            "mapTo": "customer.state",
+            "part": "province",
+            "addressLink": true,
+            "addressGroup": "",
+            "provinceField": "",
+            "allowedCodes": [],
+            "presetCode": "",
+            "copyFrom": "",
+            "sameDefault": true,
+            "placeholder": "Chọn tỉnh / thành phố",
+            "provinceLabel": "Tỉnh / Thành phố",
+            "wardLabel": "Phường / Xã",
+            "detailLabel": "Số nhà, tên đường",
+            "provincePlaceholder": "Chọn tỉnh / thành phố",
+            "wardPlaceholder": "Chọn phường / xã",
+            "detailPlaceholder": "Ví dụ: 12 Nguyễn Huệ",
+            "showDetail": true,
+            "country": "VN"
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "fche_7": {
+          "id": "fche_7",
+          "data": {
+            "type": "form-address",
+            "parent": "fche_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%"
+          },
+          "config": {},
+          "specials": {
+            "name": "phuong_xa",
+            "label": "Phường / Xã",
+            "description": "",
+            "required": true,
+            "showLabel": true,
+            "mapTo": "customer.ward",
+            "part": "ward",
+            "addressLink": true,
+            "addressGroup": "",
+            "provinceField": "",
+            "allowedCodes": [],
+            "presetCode": "",
+            "copyFrom": "",
+            "sameDefault": true,
+            "placeholder": "Chọn phường / xã",
+            "provinceLabel": "Tỉnh / Thành phố",
+            "wardLabel": "Phường / Xã",
+            "detailLabel": "Số nhà, tên đường",
+            "provincePlaceholder": "Chọn tỉnh / thành phố",
+            "wardPlaceholder": "Chọn phường / xã",
+            "detailPlaceholder": "Ví dụ: 12 Nguyễn Huệ",
+            "showDetail": true,
+            "country": "VN"
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "fche_8": {
+          "id": "fche_8",
+          "data": {
+            "type": "form-address",
+            "parent": "fche_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%"
+          },
+          "config": {},
+          "specials": {
+            "name": "dia_chi",
+            "label": "Số nhà, tên đường",
+            "description": "",
+            "required": true,
+            "showLabel": true,
+            "mapTo": "customer.address",
+            "part": "street",
+            "addressLink": true,
+            "addressGroup": "",
+            "provinceField": "",
+            "allowedCodes": [],
+            "presetCode": "",
+            "copyFrom": "",
+            "sameDefault": true,
+            "placeholder": "Ví dụ: 12 Nguyễn Huệ",
+            "provinceLabel": "Tỉnh / Thành phố",
+            "wardLabel": "Phường / Xã",
+            "detailLabel": "Số nhà, tên đường",
+            "provincePlaceholder": "Chọn tỉnh / thành phố",
+            "wardPlaceholder": "Chọn phường / xã",
+            "detailPlaceholder": "Ví dụ: 12 Nguyễn Huệ",
+            "showDetail": true,
+            "country": "VN"
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "fche_9": {
+          "id": "fche_9",
+          "data": {
+            "type": "form-select",
+            "parent": "fche_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%"
+          },
+          "config": {
+            "optionSource": "manual"
+          },
+          "specials": {
+            "name": "shipping_method",
+            "label": "Phương thức vận chuyển",
+            "description": "",
+            "required": false,
+            "showLabel": true,
+            "mapTo": "order.shippingMethod",
+            "options": [],
+            "defaultValue": "",
+            "placeholder": "Chọn phương thức vận chuyển"
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "fche_10": {
+          "id": "fche_10",
+          "data": {
+            "type": "form-text",
+            "parent": "fche_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%"
+          },
+          "config": {
+            "iconPosition": "left"
+          },
+          "specials": {
+            "showIcon": false,
+            "iconName": "",
+            "name": "discount_code",
+            "label": "Mã giảm giá",
+            "placeholder": "Nhập mã nếu có",
+            "description": "",
+            "required": false,
+            "showLabel": true,
+            "mapTo": "order.discountCode",
+            "prefillValue": "",
+            "multiline": false,
+            "inputType": "text",
+            "limitChars": false,
+            "minChars": 0,
+            "maxChars": 500,
+            "patternPreset": "",
+            "pattern": "",
+            "patternCountries": []
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "fche_11": {
+          "id": "fche_11",
+          "data": {
+            "type": "form-payment",
+            "parent": "fche_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%"
+          },
+          "config": {},
+          "specials": {
+            "name": "payment_method",
+            "label": "Phương thức thanh toán",
+            "description": "",
+            "required": true,
+            "showLabel": true,
+            "mapTo": "order.paymentMethod",
+            "methods": [],
+            "defaultValue": "",
+            "showLogos": true,
+            "logoShape": "auto",
+            "showMarker": true
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "fche_12": {
+          "id": "fche_12",
+          "data": {
+            "type": "form-text",
+            "parent": "fche_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%"
+          },
+          "config": {
+            "iconPosition": "left"
+          },
+          "specials": {
+            "showIcon": false,
+            "iconName": "",
+            "name": "order_note",
+            "label": "Ghi chú",
+            "placeholder": "",
+            "description": "",
+            "required": false,
+            "showLabel": true,
+            "mapTo": "order.note",
+            "prefillValue": "",
+            "multiline": true,
+            "inputType": "text",
+            "limitChars": false,
+            "minChars": 0,
+            "maxChars": 500,
+            "patternPreset": "",
+            "pattern": "",
+            "patternCountries": []
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "fche_13": {
+          "id": "fche_13",
+          "data": {
+            "type": "form-submit",
+            "parent": "fche_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%",
+            "padding": "10px 16px",
+            "backgroundColor": "#171717",
+            "color": "#ffffff",
+            "borderRadius": "6px"
+          },
+          "config": {},
+          "specials": {
+            "text": "Đặt hàng",
+            "submittingText": "Đang gửi…"
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        }
+      }
+    }
+  },
+  "address": {
+    "key": "address",
+    "type": "contact",
+    "settings": {},
+    "document": {
+      "root_node_id": "fadd_1",
+      "nodes": {
+        "fadd_1": {
+          "id": "fadd_1",
+          "data": {
+            "type": "form",
+            "parent": null,
+            "nodes": [
+              "fadd_2",
+              "fadd_3",
+              "fadd_4",
+              "fadd_5",
+              "fadd_6",
+              "fadd_7",
+              "fadd_8",
+              "fadd_9",
+              "fadd_10",
+              "fadd_11",
+              "fadd_12",
+              "fadd_13",
+              "fadd_14",
+              "fadd_15",
+              "fadd_16",
+              "fadd_17",
+              "fadd_18"
+            ],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "display": "flex",
+            "flexDirection": "column",
+            "width": "100%",
+            "height": "fit-content",
+            "gap": "16px"
+          },
+          "config": {},
+          "specials": {
+            "formId": "",
+            "segmentId": "",
+            "formRules": ""
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "fadd_2": {
+          "id": "fadd_2",
+          "data": {
+            "type": "form-title",
+            "parent": "fadd_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%",
+            "height": "fit-content",
+            "textAlign": "left",
+            "lineHeight": "130%",
+            "fontSize": "20px",
+            "fontWeight": "600",
+            "color": "#171717"
+          },
+          "config": {},
+          "specials": {
+            "htmlTag": "h3",
+            "text": "Địa chỉ giao hàng"
+          },
+          "responsive": {
+            "mobile": {
+              "style": {
+                "fontSize": "18px"
+              }
+            }
+          },
+          "events": [],
+          "bindings": []
+        },
+        "fadd_3": {
+          "id": "fadd_3",
+          "data": {
+            "type": "form-text",
+            "parent": "fadd_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%"
+          },
+          "config": {
+            "iconPosition": "left"
+          },
+          "specials": {
+            "showIcon": false,
+            "iconName": "",
+            "name": "full_name",
+            "label": "Họ và tên",
+            "placeholder": "",
+            "description": "",
+            "required": true,
+            "showLabel": true,
+            "mapTo": "customer.fullName",
+            "prefillValue": "",
+            "multiline": false,
+            "inputType": "text",
+            "limitChars": false,
+            "minChars": 0,
+            "maxChars": 500,
+            "patternPreset": "",
+            "pattern": "",
+            "patternCountries": []
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "fadd_4": {
+          "id": "fadd_4",
+          "data": {
+            "type": "form-text",
+            "parent": "fadd_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%"
+          },
+          "config": {
+            "iconPosition": "left"
+          },
+          "specials": {
+            "showIcon": false,
+            "iconName": "",
+            "name": "phone",
+            "label": "Số điện thoại",
+            "placeholder": "",
+            "description": "",
+            "required": true,
+            "showLabel": true,
+            "mapTo": "customer.phone",
+            "prefillValue": "",
+            "multiline": false,
+            "inputType": "tel",
+            "limitChars": false,
+            "minChars": 0,
+            "maxChars": 500,
+            "patternPreset": "",
+            "pattern": "",
+            "patternCountries": []
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "fadd_5": {
+          "id": "fadd_5",
+          "data": {
+            "type": "form-address",
+            "parent": "fadd_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%"
+          },
+          "config": {},
+          "specials": {
+            "name": "quoc_gia",
+            "label": "Quốc gia",
+            "description": "",
+            "required": true,
+            "showLabel": true,
+            "mapTo": "customer.country",
+            "part": "country",
+            "addressLink": true,
+            "addressGroup": "",
+            "provinceField": "",
+            "allowedCodes": [],
+            "presetCode": "VN",
+            "copyFrom": "",
+            "sameDefault": true,
+            "placeholder": "Chọn quốc gia",
+            "provinceLabel": "Tỉnh / Thành phố",
+            "wardLabel": "Phường / Xã",
+            "detailLabel": "Số nhà, tên đường",
+            "provincePlaceholder": "Chọn tỉnh / thành phố",
+            "wardPlaceholder": "Chọn phường / xã",
+            "detailPlaceholder": "Ví dụ: 12 Nguyễn Huệ",
+            "showDetail": true,
+            "country": "VN"
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "fadd_6": {
+          "id": "fadd_6",
+          "data": {
+            "type": "form-address",
+            "parent": "fadd_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%"
+          },
+          "config": {},
+          "specials": {
+            "name": "tinh_thanh",
+            "label": "Tỉnh / Thành phố",
+            "description": "",
+            "required": true,
+            "showLabel": true,
+            "mapTo": "customer.state",
+            "part": "province",
+            "addressLink": true,
+            "addressGroup": "",
+            "provinceField": "",
+            "allowedCodes": [],
+            "presetCode": "",
+            "copyFrom": "",
+            "sameDefault": true,
+            "placeholder": "Chọn tỉnh / thành phố",
+            "provinceLabel": "Tỉnh / Thành phố",
+            "wardLabel": "Phường / Xã",
+            "detailLabel": "Số nhà, tên đường",
+            "provincePlaceholder": "Chọn tỉnh / thành phố",
+            "wardPlaceholder": "Chọn phường / xã",
+            "detailPlaceholder": "Ví dụ: 12 Nguyễn Huệ",
+            "showDetail": true,
+            "country": "VN"
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "fadd_7": {
+          "id": "fadd_7",
+          "data": {
+            "type": "form-address",
+            "parent": "fadd_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%"
+          },
+          "config": {},
+          "specials": {
+            "name": "phuong_xa",
+            "label": "Phường / Xã",
+            "description": "",
+            "required": true,
+            "showLabel": true,
+            "mapTo": "customer.ward",
+            "part": "ward",
+            "addressLink": true,
+            "addressGroup": "",
+            "provinceField": "",
+            "allowedCodes": [],
+            "presetCode": "",
+            "copyFrom": "",
+            "sameDefault": true,
+            "placeholder": "Chọn phường / xã",
+            "provinceLabel": "Tỉnh / Thành phố",
+            "wardLabel": "Phường / Xã",
+            "detailLabel": "Số nhà, tên đường",
+            "provincePlaceholder": "Chọn tỉnh / thành phố",
+            "wardPlaceholder": "Chọn phường / xã",
+            "detailPlaceholder": "Ví dụ: 12 Nguyễn Huệ",
+            "showDetail": true,
+            "country": "VN"
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "fadd_8": {
+          "id": "fadd_8",
+          "data": {
+            "type": "form-address",
+            "parent": "fadd_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%"
+          },
+          "config": {},
+          "specials": {
+            "name": "dia_chi",
+            "label": "Số nhà, tên đường",
+            "description": "",
+            "required": true,
+            "showLabel": true,
+            "mapTo": "customer.address",
+            "part": "street",
+            "addressLink": true,
+            "addressGroup": "",
+            "provinceField": "",
+            "allowedCodes": [],
+            "presetCode": "",
+            "copyFrom": "",
+            "sameDefault": true,
+            "placeholder": "Ví dụ: 12 Nguyễn Huệ",
+            "provinceLabel": "Tỉnh / Thành phố",
+            "wardLabel": "Phường / Xã",
+            "detailLabel": "Số nhà, tên đường",
+            "provincePlaceholder": "Chọn tỉnh / thành phố",
+            "wardPlaceholder": "Chọn phường / xã",
+            "detailPlaceholder": "Ví dụ: 12 Nguyễn Huệ",
+            "showDetail": true,
+            "country": "VN"
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "fadd_9": {
+          "id": "fadd_9",
+          "data": {
+            "type": "form-address",
+            "parent": "fadd_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%"
+          },
+          "config": {},
+          "specials": {
+            "name": "dia_chi_2",
+            "label": "Toà nhà, tầng, căn hộ",
+            "description": "",
+            "required": false,
+            "showLabel": true,
+            "mapTo": "customer.addressLine2",
+            "part": "line2",
+            "addressLink": true,
+            "addressGroup": "",
+            "provinceField": "",
+            "allowedCodes": [],
+            "presetCode": "",
+            "copyFrom": "",
+            "sameDefault": true,
+            "placeholder": "Không bắt buộc",
+            "provinceLabel": "Tỉnh / Thành phố",
+            "wardLabel": "Phường / Xã",
+            "detailLabel": "Số nhà, tên đường",
+            "provincePlaceholder": "Chọn tỉnh / thành phố",
+            "wardPlaceholder": "Chọn phường / xã",
+            "detailPlaceholder": "Ví dụ: 12 Nguyễn Huệ",
+            "showDetail": true,
+            "country": "VN"
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "fadd_10": {
+          "id": "fadd_10",
+          "data": {
+            "type": "form-address",
+            "parent": "fadd_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%"
+          },
+          "config": {},
+          "specials": {
+            "name": "ma_buu_chinh",
+            "label": "Mã bưu chính",
+            "description": "",
+            "required": false,
+            "showLabel": true,
+            "mapTo": "customer.postalCode",
+            "part": "postalCode",
+            "addressLink": true,
+            "addressGroup": "",
+            "provinceField": "",
+            "allowedCodes": [],
+            "presetCode": "",
+            "copyFrom": "",
+            "sameDefault": true,
+            "placeholder": "",
+            "provinceLabel": "Tỉnh / Thành phố",
+            "wardLabel": "Phường / Xã",
+            "detailLabel": "Số nhà, tên đường",
+            "provincePlaceholder": "Chọn tỉnh / thành phố",
+            "wardPlaceholder": "Chọn phường / xã",
+            "detailPlaceholder": "Ví dụ: 12 Nguyễn Huệ",
+            "showDetail": true,
+            "country": "VN"
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "fadd_11": {
+          "id": "fadd_11",
+          "data": {
+            "type": "form-title",
+            "parent": "fadd_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%",
+            "height": "fit-content",
+            "textAlign": "left",
+            "lineHeight": "130%",
+            "fontSize": "20px",
+            "fontWeight": "600",
+            "color": "#171717"
+          },
+          "config": {},
+          "specials": {
+            "htmlTag": "h3",
+            "text": "Địa chỉ xuất hoá đơn"
+          },
+          "responsive": {
+            "mobile": {
+              "style": {
+                "fontSize": "18px"
+              }
+            }
+          },
+          "events": [],
+          "bindings": []
+        },
+        "fadd_12": {
+          "id": "fadd_12",
+          "data": {
+            "type": "form-address",
+            "parent": "fadd_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%"
+          },
+          "config": {},
+          "specials": {
+            "name": "giong_dia_chi_giao",
+            "label": "Giống địa chỉ giao hàng",
+            "description": "",
+            "required": false,
+            "showLabel": true,
+            "mapTo": "",
+            "part": "sameAs",
+            "addressLink": true,
+            "addressGroup": "billing",
+            "provinceField": "",
+            "allowedCodes": [],
+            "presetCode": "",
+            "copyFrom": "",
+            "sameDefault": true,
+            "placeholder": "",
+            "provinceLabel": "Tỉnh / Thành phố",
+            "wardLabel": "Phường / Xã",
+            "detailLabel": "Số nhà, tên đường",
+            "provincePlaceholder": "Chọn tỉnh / thành phố",
+            "wardPlaceholder": "Chọn phường / xã",
+            "detailPlaceholder": "Ví dụ: 12 Nguyễn Huệ",
+            "showDetail": true,
+            "country": "VN"
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "fadd_13": {
+          "id": "fadd_13",
+          "data": {
+            "type": "form-address",
+            "parent": "fadd_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%"
+          },
+          "config": {},
+          "specials": {
+            "name": "hd_quoc_gia",
+            "label": "Quốc gia",
+            "description": "",
+            "required": false,
+            "showLabel": true,
+            "mapTo": "",
+            "part": "country",
+            "addressLink": true,
+            "addressGroup": "billing",
+            "provinceField": "",
+            "allowedCodes": [],
+            "presetCode": "VN",
+            "copyFrom": "",
+            "sameDefault": true,
+            "placeholder": "Chọn quốc gia",
+            "provinceLabel": "Tỉnh / Thành phố",
+            "wardLabel": "Phường / Xã",
+            "detailLabel": "Số nhà, tên đường",
+            "provincePlaceholder": "Chọn tỉnh / thành phố",
+            "wardPlaceholder": "Chọn phường / xã",
+            "detailPlaceholder": "Ví dụ: 12 Nguyễn Huệ",
+            "showDetail": true,
+            "country": "VN"
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "fadd_14": {
+          "id": "fadd_14",
+          "data": {
+            "type": "form-address",
+            "parent": "fadd_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%"
+          },
+          "config": {},
+          "specials": {
+            "name": "hd_tinh_thanh",
+            "label": "Tỉnh / Thành phố",
+            "description": "",
+            "required": false,
+            "showLabel": true,
+            "mapTo": "",
+            "part": "province",
+            "addressLink": true,
+            "addressGroup": "billing",
+            "provinceField": "",
+            "allowedCodes": [],
+            "presetCode": "",
+            "copyFrom": "",
+            "sameDefault": true,
+            "placeholder": "Chọn tỉnh / thành phố",
+            "provinceLabel": "Tỉnh / Thành phố",
+            "wardLabel": "Phường / Xã",
+            "detailLabel": "Số nhà, tên đường",
+            "provincePlaceholder": "Chọn tỉnh / thành phố",
+            "wardPlaceholder": "Chọn phường / xã",
+            "detailPlaceholder": "Ví dụ: 12 Nguyễn Huệ",
+            "showDetail": true,
+            "country": "VN"
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "fadd_15": {
+          "id": "fadd_15",
+          "data": {
+            "type": "form-address",
+            "parent": "fadd_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%"
+          },
+          "config": {},
+          "specials": {
+            "name": "hd_phuong_xa",
+            "label": "Phường / Xã",
+            "description": "",
+            "required": false,
+            "showLabel": true,
+            "mapTo": "",
+            "part": "ward",
+            "addressLink": true,
+            "addressGroup": "billing",
+            "provinceField": "",
+            "allowedCodes": [],
+            "presetCode": "",
+            "copyFrom": "",
+            "sameDefault": true,
+            "placeholder": "Chọn phường / xã",
+            "provinceLabel": "Tỉnh / Thành phố",
+            "wardLabel": "Phường / Xã",
+            "detailLabel": "Số nhà, tên đường",
+            "provincePlaceholder": "Chọn tỉnh / thành phố",
+            "wardPlaceholder": "Chọn phường / xã",
+            "detailPlaceholder": "Ví dụ: 12 Nguyễn Huệ",
+            "showDetail": true,
+            "country": "VN"
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "fadd_16": {
+          "id": "fadd_16",
+          "data": {
+            "type": "form-address",
+            "parent": "fadd_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%"
+          },
+          "config": {},
+          "specials": {
+            "name": "hd_dia_chi",
+            "label": "Số nhà, tên đường",
+            "description": "",
+            "required": false,
+            "showLabel": true,
+            "mapTo": "",
+            "part": "street",
+            "addressLink": true,
+            "addressGroup": "billing",
+            "provinceField": "",
+            "allowedCodes": [],
+            "presetCode": "",
+            "copyFrom": "",
+            "sameDefault": true,
+            "placeholder": "Ví dụ: 12 Nguyễn Huệ",
+            "provinceLabel": "Tỉnh / Thành phố",
+            "wardLabel": "Phường / Xã",
+            "detailLabel": "Số nhà, tên đường",
+            "provincePlaceholder": "Chọn tỉnh / thành phố",
+            "wardPlaceholder": "Chọn phường / xã",
+            "detailPlaceholder": "Ví dụ: 12 Nguyễn Huệ",
+            "showDetail": true,
+            "country": "VN"
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "fadd_17": {
+          "id": "fadd_17",
+          "data": {
+            "type": "form-address",
+            "parent": "fadd_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%"
+          },
+          "config": {},
+          "specials": {
+            "name": "hd_ma_buu_chinh",
+            "label": "Mã bưu chính",
+            "description": "",
+            "required": false,
+            "showLabel": true,
+            "mapTo": "",
+            "part": "postalCode",
+            "addressLink": true,
+            "addressGroup": "billing",
+            "provinceField": "",
+            "allowedCodes": [],
+            "presetCode": "",
+            "copyFrom": "",
+            "sameDefault": true,
+            "placeholder": "",
+            "provinceLabel": "Tỉnh / Thành phố",
+            "wardLabel": "Phường / Xã",
+            "detailLabel": "Số nhà, tên đường",
+            "provincePlaceholder": "Chọn tỉnh / thành phố",
+            "wardPlaceholder": "Chọn phường / xã",
+            "detailPlaceholder": "Ví dụ: 12 Nguyễn Huệ",
+            "showDetail": true,
+            "country": "VN"
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "fadd_18": {
+          "id": "fadd_18",
+          "data": {
+            "type": "form-submit",
+            "parent": "fadd_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%",
+            "padding": "10px 16px",
+            "backgroundColor": "#171717",
+            "color": "#ffffff",
+            "borderRadius": "6px"
+          },
+          "config": {},
+          "specials": {
+            "text": "Gửi",
+            "submittingText": "Đang gửi…"
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        }
+      }
+    }
+  },
+  "consult": {
+    "key": "consult",
+    "type": "contact",
+    "settings": {},
+    "document": {
+      "root_node_id": "fcon_1",
+      "nodes": {
+        "fcon_1": {
+          "id": "fcon_1",
+          "data": {
+            "type": "form",
+            "parent": null,
+            "nodes": [
+              "fcon_2",
+              "fcon_3",
+              "fcon_4",
+              "fcon_5",
+              "fcon_6",
+              "fcon_7"
+            ],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "display": "flex",
+            "flexDirection": "column",
+            "width": "100%",
+            "height": "fit-content",
+            "gap": "16px"
+          },
+          "config": {},
+          "specials": {
+            "formId": "",
+            "segmentId": "",
+            "formRules": ""
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "fcon_2": {
+          "id": "fcon_2",
+          "data": {
+            "type": "form-title",
+            "parent": "fcon_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%",
+            "height": "fit-content",
+            "textAlign": "left",
+            "lineHeight": "130%",
+            "fontSize": "20px",
+            "fontWeight": "600",
+            "color": "#171717"
+          },
+          "config": {},
+          "specials": {
+            "htmlTag": "h3",
+            "text": "Đăng ký tư vấn"
+          },
+          "responsive": {
+            "mobile": {
+              "style": {
+                "fontSize": "18px"
+              }
+            }
+          },
+          "events": [],
+          "bindings": []
+        },
+        "fcon_3": {
+          "id": "fcon_3",
+          "data": {
+            "type": "form-paragraph",
+            "parent": "fcon_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%",
+            "height": "fit-content",
+            "textAlign": "left",
+            "lineHeight": "150%",
+            "fontSize": "14px",
+            "color": "#525252"
+          },
+          "config": {},
+          "specials": {
+            "text": "Để lại thông tin, chúng tôi sẽ gọi lại cho bạn."
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "fcon_4": {
+          "id": "fcon_4",
+          "data": {
+            "type": "form-text",
+            "parent": "fcon_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%"
+          },
+          "config": {
+            "iconPosition": "left"
+          },
+          "specials": {
+            "showIcon": false,
+            "iconName": "",
+            "name": "full_name",
+            "label": "Họ và tên",
+            "placeholder": "",
+            "description": "",
+            "required": true,
+            "showLabel": true,
+            "mapTo": "customer.fullName",
+            "prefillValue": "",
+            "multiline": false,
+            "inputType": "text",
+            "limitChars": false,
+            "minChars": 0,
+            "maxChars": 500,
+            "patternPreset": "",
+            "pattern": "",
+            "patternCountries": []
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "fcon_5": {
+          "id": "fcon_5",
+          "data": {
+            "type": "form-text",
+            "parent": "fcon_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%"
+          },
+          "config": {
+            "iconPosition": "left"
+          },
+          "specials": {
+            "showIcon": false,
+            "iconName": "",
+            "name": "phone",
+            "label": "Số điện thoại",
+            "placeholder": "",
+            "description": "",
+            "required": true,
+            "showLabel": true,
+            "mapTo": "customer.phone",
+            "prefillValue": "",
+            "multiline": false,
+            "inputType": "tel",
+            "limitChars": false,
+            "minChars": 0,
+            "maxChars": 500,
+            "patternPreset": "",
+            "pattern": "",
+            "patternCountries": []
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "fcon_6": {
+          "id": "fcon_6",
+          "data": {
+            "type": "form-text",
+            "parent": "fcon_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%"
+          },
+          "config": {
+            "iconPosition": "left"
+          },
+          "specials": {
+            "showIcon": false,
+            "iconName": "",
+            "name": "notes",
+            "label": "Bạn cần tư vấn điều gì?",
+            "placeholder": "",
+            "description": "",
+            "required": false,
+            "showLabel": true,
+            "mapTo": "customer.notes",
+            "prefillValue": "",
+            "multiline": true,
+            "inputType": "text",
+            "limitChars": false,
+            "minChars": 0,
+            "maxChars": 500,
+            "patternPreset": "",
+            "pattern": "",
+            "patternCountries": []
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "fcon_7": {
+          "id": "fcon_7",
+          "data": {
+            "type": "form-submit",
+            "parent": "fcon_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%",
+            "padding": "10px 16px",
+            "backgroundColor": "#171717",
+            "color": "#ffffff",
+            "borderRadius": "6px"
+          },
+          "config": {},
+          "specials": {
+            "text": "Gửi thông tin",
+            "submittingText": "Đang gửi…"
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        }
+      }
+    }
+  },
+  "booking": {
+    "key": "booking",
+    "type": "booking",
+    "settings": {},
+    "document": {
+      "root_node_id": "fboo_1",
+      "nodes": {
+        "fboo_1": {
+          "id": "fboo_1",
+          "data": {
+            "type": "form",
+            "parent": null,
+            "nodes": [
+              "fboo_2",
+              "fboo_3",
+              "fboo_4",
+              "fboo_5",
+              "fboo_6",
+              "fboo_7",
+              "fboo_8"
+            ],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "display": "flex",
+            "flexDirection": "column",
+            "width": "100%",
+            "height": "fit-content",
+            "gap": "16px"
+          },
+          "config": {},
+          "specials": {
+            "formId": "",
+            "segmentId": "",
+            "formRules": ""
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "fboo_2": {
+          "id": "fboo_2",
+          "data": {
+            "type": "form-title",
+            "parent": "fboo_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%",
+            "height": "fit-content",
+            "textAlign": "left",
+            "lineHeight": "130%",
+            "fontSize": "20px",
+            "fontWeight": "600",
+            "color": "#171717"
+          },
+          "config": {},
+          "specials": {
+            "htmlTag": "h3",
+            "text": "Đặt lịch hẹn"
+          },
+          "responsive": {
+            "mobile": {
+              "style": {
+                "fontSize": "18px"
+              }
+            }
+          },
+          "events": [],
+          "bindings": []
+        },
+        "fboo_3": {
+          "id": "fboo_3",
+          "data": {
+            "type": "form-text",
+            "parent": "fboo_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%"
+          },
+          "config": {
+            "iconPosition": "left"
+          },
+          "specials": {
+            "showIcon": false,
+            "iconName": "",
+            "name": "full_name",
+            "label": "Họ và tên",
+            "placeholder": "",
+            "description": "",
+            "required": true,
+            "showLabel": true,
+            "mapTo": "customer.fullName",
+            "prefillValue": "",
+            "multiline": false,
+            "inputType": "text",
+            "limitChars": false,
+            "minChars": 0,
+            "maxChars": 500,
+            "patternPreset": "",
+            "pattern": "",
+            "patternCountries": []
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "fboo_4": {
+          "id": "fboo_4",
+          "data": {
+            "type": "form-text",
+            "parent": "fboo_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%"
+          },
+          "config": {
+            "iconPosition": "left"
+          },
+          "specials": {
+            "showIcon": false,
+            "iconName": "",
+            "name": "phone",
+            "label": "Số điện thoại",
+            "placeholder": "",
+            "description": "",
+            "required": true,
+            "showLabel": true,
+            "mapTo": "customer.phone",
+            "prefillValue": "",
+            "multiline": false,
+            "inputType": "tel",
+            "limitChars": false,
+            "minChars": 0,
+            "maxChars": 500,
+            "patternPreset": "",
+            "pattern": "",
+            "patternCountries": []
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "fboo_5": {
+          "id": "fboo_5",
+          "data": {
+            "type": "form-calendar",
+            "parent": "fboo_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%"
+          },
+          "config": {
+            "iconPosition": "left"
+          },
+          "specials": {
+            "showIcon": false,
+            "iconName": "",
+            "name": "ngay_hen",
+            "label": "Ngày hẹn",
+            "description": "",
+            "placeholder": "",
+            "required": true,
+            "showLabel": true,
+            "mapTo": "",
+            "defaultMode": "unset",
+            "specificDate": "",
+            "acceptedDates": "future",
+            "availableDays": "1,2,3,4,5,6,7",
+            "picker": "native"
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "fboo_6": {
+          "id": "fboo_6",
+          "data": {
+            "type": "form-timeslot",
+            "parent": "fboo_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%"
+          },
+          "config": {},
+          "specials": {
+            "showMarker": false,
+            "name": "gio_hen",
+            "label": "Giờ hẹn",
+            "description": "",
+            "required": true,
+            "showLabel": true,
+            "mapTo": "",
+            "start": "09:00",
+            "end": "18:00",
+            "step": 60,
+            "breakStart": "12:00",
+            "breakEnd": "13:00",
+            "defaultValue": ""
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "fboo_7": {
+          "id": "fboo_7",
+          "data": {
+            "type": "form-text",
+            "parent": "fboo_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%"
+          },
+          "config": {
+            "iconPosition": "left"
+          },
+          "specials": {
+            "showIcon": false,
+            "iconName": "",
+            "name": "notes",
+            "label": "Ghi chú",
+            "placeholder": "",
+            "description": "",
+            "required": false,
+            "showLabel": true,
+            "mapTo": "customer.notes",
+            "prefillValue": "",
+            "multiline": true,
+            "inputType": "text",
+            "limitChars": false,
+            "minChars": 0,
+            "maxChars": 500,
+            "patternPreset": "",
+            "pattern": "",
+            "patternCountries": []
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "fboo_8": {
+          "id": "fboo_8",
+          "data": {
+            "type": "form-submit",
+            "parent": "fboo_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%",
+            "padding": "10px 16px",
+            "backgroundColor": "#171717",
+            "color": "#ffffff",
+            "borderRadius": "6px"
+          },
+          "config": {},
+          "specials": {
+            "text": "Đặt lịch",
+            "submittingText": "Đang gửi…"
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        }
+      }
+    }
+  },
+  "stay": {
+    "key": "stay",
+    "type": "booking",
+    "settings": {},
+    "document": {
+      "root_node_id": "fsta_1",
+      "nodes": {
+        "fsta_1": {
+          "id": "fsta_1",
+          "data": {
+            "type": "form",
+            "parent": null,
+            "nodes": [
+              "fsta_2",
+              "fsta_3",
+              "fsta_4",
+              "fsta_5",
+              "fsta_6",
+              "fsta_7",
+              "fsta_8",
+              "fsta_9",
+              "fsta_10"
+            ],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "display": "flex",
+            "flexDirection": "column",
+            "width": "100%",
+            "height": "fit-content",
+            "gap": "16px"
+          },
+          "config": {},
+          "specials": {
+            "formId": "",
+            "segmentId": "",
+            "formRules": ""
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "fsta_2": {
+          "id": "fsta_2",
+          "data": {
+            "type": "form-title",
+            "parent": "fsta_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%",
+            "height": "fit-content",
+            "textAlign": "left",
+            "lineHeight": "130%",
+            "fontSize": "20px",
+            "fontWeight": "600",
+            "color": "#171717"
+          },
+          "config": {},
+          "specials": {
+            "htmlTag": "h3",
+            "text": "Đặt phòng nghỉ"
+          },
+          "responsive": {
+            "mobile": {
+              "style": {
+                "fontSize": "18px"
+              }
+            }
+          },
+          "events": [],
+          "bindings": []
+        },
+        "fsta_3": {
+          "id": "fsta_3",
+          "data": {
+            "type": "form-text",
+            "parent": "fsta_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%"
+          },
+          "config": {
+            "iconPosition": "left"
+          },
+          "specials": {
+            "showIcon": false,
+            "iconName": "",
+            "name": "full_name",
+            "label": "Họ và tên",
+            "placeholder": "",
+            "description": "",
+            "required": true,
+            "showLabel": true,
+            "mapTo": "customer.fullName",
+            "prefillValue": "",
+            "multiline": false,
+            "inputType": "text",
+            "limitChars": false,
+            "minChars": 0,
+            "maxChars": 500,
+            "patternPreset": "",
+            "pattern": "",
+            "patternCountries": []
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "fsta_4": {
+          "id": "fsta_4",
+          "data": {
+            "type": "form-text",
+            "parent": "fsta_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%"
+          },
+          "config": {
+            "iconPosition": "left"
+          },
+          "specials": {
+            "showIcon": false,
+            "iconName": "",
+            "name": "phone",
+            "label": "Số điện thoại",
+            "placeholder": "",
+            "description": "",
+            "required": true,
+            "showLabel": true,
+            "mapTo": "customer.phone",
+            "prefillValue": "",
+            "multiline": false,
+            "inputType": "tel",
+            "limitChars": false,
+            "minChars": 0,
+            "maxChars": 500,
+            "patternPreset": "",
+            "pattern": "",
+            "patternCountries": []
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "fsta_5": {
+          "id": "fsta_5",
+          "data": {
+            "type": "form-calendar",
+            "parent": "fsta_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%"
+          },
+          "config": {
+            "iconPosition": "left"
+          },
+          "specials": {
+            "showIcon": false,
+            "iconName": "",
+            "name": "nhan_phong",
+            "label": "Ngày nhận phòng",
+            "description": "",
+            "placeholder": "",
+            "required": true,
+            "showLabel": true,
+            "mapTo": "",
+            "defaultMode": "unset",
+            "specificDate": "",
+            "acceptedDates": "future",
+            "availableDays": "1,2,3,4,5,6,7",
+            "picker": "native"
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "fsta_6": {
+          "id": "fsta_6",
+          "data": {
+            "type": "form-calendar",
+            "parent": "fsta_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%"
+          },
+          "config": {
+            "iconPosition": "left"
+          },
+          "specials": {
+            "showIcon": false,
+            "iconName": "",
+            "name": "tra_phong",
+            "label": "Ngày trả phòng",
+            "description": "",
+            "placeholder": "",
+            "required": true,
+            "showLabel": true,
+            "mapTo": "",
+            "defaultMode": "unset",
+            "specificDate": "",
+            "acceptedDates": "future",
+            "availableDays": "1,2,3,4,5,6,7",
+            "picker": "native"
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "fsta_7": {
+          "id": "fsta_7",
+          "data": {
+            "type": "form-select",
+            "parent": "fsta_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%"
+          },
+          "config": {
+            "optionSource": "manual"
+          },
+          "specials": {
+            "name": "loai_phong",
+            "label": "Loại phòng",
+            "description": "",
+            "required": true,
+            "showLabel": true,
+            "mapTo": "",
+            "options": [
+              "Phòng đơn",
+              "Phòng đôi",
+              "Phòng gia đình"
+            ],
+            "defaultValue": "",
+            "placeholder": "Chọn loại phòng"
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "fsta_8": {
+          "id": "fsta_8",
+          "data": {
+            "type": "form-number",
+            "parent": "fsta_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%"
+          },
+          "config": {
+            "iconPosition": "left"
+          },
+          "specials": {
+            "showIcon": false,
+            "iconName": "",
+            "name": "so_khach",
+            "label": "Số khách",
+            "placeholder": "",
+            "description": "",
+            "required": true,
+            "showLabel": true,
+            "mapTo": "",
+            "prefillValue": "",
+            "setRange": true,
+            "minValue": 1,
+            "maxValue": 500
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "fsta_9": {
+          "id": "fsta_9",
+          "data": {
+            "type": "form-text",
+            "parent": "fsta_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%"
+          },
+          "config": {
+            "iconPosition": "left"
+          },
+          "specials": {
+            "showIcon": false,
+            "iconName": "",
+            "name": "notes",
+            "label": "Yêu cầu thêm",
+            "placeholder": "",
+            "description": "",
+            "required": false,
+            "showLabel": true,
+            "mapTo": "customer.notes",
+            "prefillValue": "",
+            "multiline": true,
+            "inputType": "text",
+            "limitChars": false,
+            "minChars": 0,
+            "maxChars": 500,
+            "patternPreset": "",
+            "pattern": "",
+            "patternCountries": []
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "fsta_10": {
+          "id": "fsta_10",
+          "data": {
+            "type": "form-submit",
+            "parent": "fsta_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%",
+            "padding": "10px 16px",
+            "backgroundColor": "#171717",
+            "color": "#ffffff",
+            "borderRadius": "6px"
+          },
+          "config": {},
+          "specials": {
+            "text": "Đặt phòng",
+            "submittingText": "Đang gửi…"
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        }
+      }
+    }
+  },
+  "feedback": {
+    "key": "feedback",
+    "type": "contact",
+    "settings": {},
+    "document": {
+      "root_node_id": "ffee_1",
+      "nodes": {
+        "ffee_1": {
+          "id": "ffee_1",
+          "data": {
+            "type": "form",
+            "parent": null,
+            "nodes": [
+              "ffee_2",
+              "ffee_3",
+              "ffee_4",
+              "ffee_5",
+              "ffee_6"
+            ],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "display": "flex",
+            "flexDirection": "column",
+            "width": "100%",
+            "height": "fit-content",
+            "gap": "16px"
+          },
+          "config": {},
+          "specials": {
+            "formId": "",
+            "segmentId": "",
+            "formRules": ""
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "ffee_2": {
+          "id": "ffee_2",
+          "data": {
+            "type": "form-title",
+            "parent": "ffee_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%",
+            "height": "fit-content",
+            "textAlign": "left",
+            "lineHeight": "130%",
+            "fontSize": "20px",
+            "fontWeight": "600",
+            "color": "#171717"
+          },
+          "config": {},
+          "specials": {
+            "htmlTag": "h3",
+            "text": "Góp ý của bạn"
+          },
+          "responsive": {
+            "mobile": {
+              "style": {
+                "fontSize": "18px"
+              }
+            }
+          },
+          "events": [],
+          "bindings": []
+        },
+        "ffee_3": {
+          "id": "ffee_3",
+          "data": {
+            "type": "form-radio",
+            "parent": "ffee_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%"
+          },
+          "config": {
+            "columns": 1,
+            "optionSource": "manual"
+          },
+          "specials": {
+            "name": "muc_do_hai_long",
+            "label": "Bạn hài lòng tới mức nào?",
+            "description": "",
+            "required": true,
+            "showLabel": true,
+            "mapTo": "",
+            "options": [
+              "Rất hài lòng",
+              "Hài lòng",
+              "Bình thường",
+              "Chưa hài lòng"
+            ],
+            "defaultValue": ""
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "ffee_4": {
+          "id": "ffee_4",
+          "data": {
+            "type": "form-text",
+            "parent": "ffee_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%"
+          },
+          "config": {
+            "iconPosition": "left"
+          },
+          "specials": {
+            "showIcon": false,
+            "iconName": "",
+            "name": "notes",
+            "label": "Điều gì khiến bạn đánh giá như vậy?",
+            "placeholder": "",
+            "description": "",
+            "required": true,
+            "showLabel": true,
+            "mapTo": "customer.notes",
+            "prefillValue": "",
+            "multiline": true,
+            "inputType": "text",
+            "limitChars": false,
+            "minChars": 0,
+            "maxChars": 500,
+            "patternPreset": "",
+            "pattern": "",
+            "patternCountries": []
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "ffee_5": {
+          "id": "ffee_5",
+          "data": {
+            "type": "form-text",
+            "parent": "ffee_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%"
+          },
+          "config": {
+            "iconPosition": "left"
+          },
+          "specials": {
+            "showIcon": false,
+            "iconName": "",
+            "name": "email",
+            "label": "Email (nếu muốn được phản hồi)",
+            "placeholder": "",
+            "description": "",
+            "required": false,
+            "showLabel": true,
+            "mapTo": "customer.email",
+            "prefillValue": "",
+            "multiline": false,
+            "inputType": "email",
+            "limitChars": false,
+            "minChars": 0,
+            "maxChars": 500,
+            "patternPreset": "",
+            "pattern": "",
+            "patternCountries": []
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "ffee_6": {
+          "id": "ffee_6",
+          "data": {
+            "type": "form-submit",
+            "parent": "ffee_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%",
+            "padding": "10px 16px",
+            "backgroundColor": "#171717",
+            "color": "#ffffff",
+            "borderRadius": "6px"
+          },
+          "config": {},
+          "specials": {
+            "text": "Gửi góp ý",
+            "submittingText": "Đang gửi…"
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        }
+      }
+    }
+  },
+  "event": {
+    "key": "event",
+    "type": "contact",
+    "settings": {},
+    "document": {
+      "root_node_id": "feve_1",
+      "nodes": {
+        "feve_1": {
+          "id": "feve_1",
+          "data": {
+            "type": "form",
+            "parent": null,
+            "nodes": [
+              "feve_2",
+              "feve_3",
+              "feve_4",
+              "feve_5",
+              "feve_6",
+              "feve_7"
+            ],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "display": "flex",
+            "flexDirection": "column",
+            "width": "100%",
+            "height": "fit-content",
+            "gap": "16px"
+          },
+          "config": {},
+          "specials": {
+            "formId": "",
+            "segmentId": "",
+            "formRules": ""
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "feve_2": {
+          "id": "feve_2",
+          "data": {
+            "type": "form-title",
+            "parent": "feve_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%",
+            "height": "fit-content",
+            "textAlign": "left",
+            "lineHeight": "130%",
+            "fontSize": "20px",
+            "fontWeight": "600",
+            "color": "#171717"
+          },
+          "config": {},
+          "specials": {
+            "htmlTag": "h3",
+            "text": "Đăng ký tham dự"
+          },
+          "responsive": {
+            "mobile": {
+              "style": {
+                "fontSize": "18px"
+              }
+            }
+          },
+          "events": [],
+          "bindings": []
+        },
+        "feve_3": {
+          "id": "feve_3",
+          "data": {
+            "type": "form-text",
+            "parent": "feve_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%"
+          },
+          "config": {
+            "iconPosition": "left"
+          },
+          "specials": {
+            "showIcon": false,
+            "iconName": "",
+            "name": "full_name",
+            "label": "Họ và tên",
+            "placeholder": "",
+            "description": "",
+            "required": true,
+            "showLabel": true,
+            "mapTo": "customer.fullName",
+            "prefillValue": "",
+            "multiline": false,
+            "inputType": "text",
+            "limitChars": false,
+            "minChars": 0,
+            "maxChars": 500,
+            "patternPreset": "",
+            "pattern": "",
+            "patternCountries": []
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "feve_4": {
+          "id": "feve_4",
+          "data": {
+            "type": "form-text",
+            "parent": "feve_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%"
+          },
+          "config": {
+            "iconPosition": "left"
+          },
+          "specials": {
+            "showIcon": false,
+            "iconName": "",
+            "name": "phone",
+            "label": "Số điện thoại",
+            "placeholder": "",
+            "description": "",
+            "required": true,
+            "showLabel": true,
+            "mapTo": "customer.phone",
+            "prefillValue": "",
+            "multiline": false,
+            "inputType": "tel",
+            "limitChars": false,
+            "minChars": 0,
+            "maxChars": 500,
+            "patternPreset": "",
+            "pattern": "",
+            "patternCountries": []
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "feve_5": {
+          "id": "feve_5",
+          "data": {
+            "type": "form-text",
+            "parent": "feve_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%"
+          },
+          "config": {
+            "iconPosition": "left"
+          },
+          "specials": {
+            "showIcon": false,
+            "iconName": "",
+            "name": "email",
+            "label": "Email",
+            "placeholder": "",
+            "description": "",
+            "required": false,
+            "showLabel": true,
+            "mapTo": "customer.email",
+            "prefillValue": "",
+            "multiline": false,
+            "inputType": "email",
+            "limitChars": false,
+            "minChars": 0,
+            "maxChars": 500,
+            "patternPreset": "",
+            "pattern": "",
+            "patternCountries": []
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "feve_6": {
+          "id": "feve_6",
+          "data": {
+            "type": "form-number",
+            "parent": "feve_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%"
+          },
+          "config": {
+            "iconPosition": "left"
+          },
+          "specials": {
+            "showIcon": false,
+            "iconName": "",
+            "name": "so_nguoi",
+            "label": "Số người tham dự",
+            "placeholder": "",
+            "description": "",
+            "required": true,
+            "showLabel": true,
+            "mapTo": "",
+            "prefillValue": "",
+            "setRange": true,
+            "minValue": 1,
+            "maxValue": 500
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "feve_7": {
+          "id": "feve_7",
+          "data": {
+            "type": "form-submit",
+            "parent": "feve_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%",
+            "padding": "10px 16px",
+            "backgroundColor": "#171717",
+            "color": "#ffffff",
+            "borderRadius": "6px"
+          },
+          "config": {},
+          "specials": {
+            "text": "Đăng ký",
+            "submittingText": "Đang gửi…"
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        }
+      }
+    }
+  },
+  "quote": {
+    "key": "quote",
+    "type": "contact",
+    "settings": {},
+    "document": {
+      "root_node_id": "fquo_1",
+      "nodes": {
+        "fquo_1": {
+          "id": "fquo_1",
+          "data": {
+            "type": "form",
+            "parent": null,
+            "nodes": [
+              "fquo_2",
+              "fquo_3",
+              "fquo_4",
+              "fquo_5",
+              "fquo_6",
+              "fquo_7"
+            ],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "display": "flex",
+            "flexDirection": "column",
+            "width": "100%",
+            "height": "fit-content",
+            "gap": "16px"
+          },
+          "config": {},
+          "specials": {
+            "formId": "",
+            "segmentId": "",
+            "formRules": ""
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "fquo_2": {
+          "id": "fquo_2",
+          "data": {
+            "type": "form-title",
+            "parent": "fquo_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%",
+            "height": "fit-content",
+            "textAlign": "left",
+            "lineHeight": "130%",
+            "fontSize": "20px",
+            "fontWeight": "600",
+            "color": "#171717"
+          },
+          "config": {},
+          "specials": {
+            "htmlTag": "h3",
+            "text": "Yêu cầu báo giá"
+          },
+          "responsive": {
+            "mobile": {
+              "style": {
+                "fontSize": "18px"
+              }
+            }
+          },
+          "events": [],
+          "bindings": []
+        },
+        "fquo_3": {
+          "id": "fquo_3",
+          "data": {
+            "type": "form-text",
+            "parent": "fquo_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%"
+          },
+          "config": {
+            "iconPosition": "left"
+          },
+          "specials": {
+            "showIcon": false,
+            "iconName": "",
+            "name": "full_name",
+            "label": "Họ và tên",
+            "placeholder": "",
+            "description": "",
+            "required": true,
+            "showLabel": true,
+            "mapTo": "customer.fullName",
+            "prefillValue": "",
+            "multiline": false,
+            "inputType": "text",
+            "limitChars": false,
+            "minChars": 0,
+            "maxChars": 500,
+            "patternPreset": "",
+            "pattern": "",
+            "patternCountries": []
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "fquo_4": {
+          "id": "fquo_4",
+          "data": {
+            "type": "form-text",
+            "parent": "fquo_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%"
+          },
+          "config": {
+            "iconPosition": "left"
+          },
+          "specials": {
+            "showIcon": false,
+            "iconName": "",
+            "name": "phone",
+            "label": "Số điện thoại",
+            "placeholder": "",
+            "description": "",
+            "required": true,
+            "showLabel": true,
+            "mapTo": "customer.phone",
+            "prefillValue": "",
+            "multiline": false,
+            "inputType": "tel",
+            "limitChars": false,
+            "minChars": 0,
+            "maxChars": 500,
+            "patternPreset": "",
+            "pattern": "",
+            "patternCountries": []
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "fquo_5": {
+          "id": "fquo_5",
+          "data": {
+            "type": "form-text",
+            "parent": "fquo_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%"
+          },
+          "config": {
+            "iconPosition": "left"
+          },
+          "specials": {
+            "showIcon": false,
+            "iconName": "",
+            "name": "email",
+            "label": "Email",
+            "placeholder": "",
+            "description": "",
+            "required": false,
+            "showLabel": true,
+            "mapTo": "customer.email",
+            "prefillValue": "",
+            "multiline": false,
+            "inputType": "email",
+            "limitChars": false,
+            "minChars": 0,
+            "maxChars": 500,
+            "patternPreset": "",
+            "pattern": "",
+            "patternCountries": []
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "fquo_6": {
+          "id": "fquo_6",
+          "data": {
+            "type": "form-text",
+            "parent": "fquo_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%"
+          },
+          "config": {
+            "iconPosition": "left"
+          },
+          "specials": {
+            "showIcon": false,
+            "iconName": "",
+            "name": "notes",
+            "label": "Bạn cần báo giá cho sản phẩm / dịch vụ nào?",
+            "placeholder": "",
+            "description": "",
+            "required": true,
+            "showLabel": true,
+            "mapTo": "customer.notes",
+            "prefillValue": "",
+            "multiline": true,
+            "inputType": "text",
+            "limitChars": false,
+            "minChars": 0,
+            "maxChars": 500,
+            "patternPreset": "",
+            "pattern": "",
+            "patternCountries": []
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "fquo_7": {
+          "id": "fquo_7",
+          "data": {
+            "type": "form-submit",
+            "parent": "fquo_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%",
+            "padding": "10px 16px",
+            "backgroundColor": "#171717",
+            "color": "#ffffff",
+            "borderRadius": "6px"
+          },
+          "config": {},
+          "specials": {
+            "text": "Gửi yêu cầu",
+            "submittingText": "Đang gửi…"
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        }
+      }
+    }
+  },
+  "apply": {
+    "key": "apply",
+    "type": "custom",
+    "settings": {},
+    "document": {
+      "root_node_id": "fapp_1",
+      "nodes": {
+        "fapp_1": {
+          "id": "fapp_1",
+          "data": {
+            "type": "form",
+            "parent": null,
+            "nodes": [
+              "fapp_2",
+              "fapp_3",
+              "fapp_4",
+              "fapp_5",
+              "fapp_6",
+              "fapp_7",
+              "fapp_8"
+            ],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "display": "flex",
+            "flexDirection": "column",
+            "width": "100%",
+            "height": "fit-content",
+            "gap": "16px"
+          },
+          "config": {},
+          "specials": {
+            "formId": "",
+            "segmentId": "",
+            "formRules": ""
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "fapp_2": {
+          "id": "fapp_2",
+          "data": {
+            "type": "form-title",
+            "parent": "fapp_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%",
+            "height": "fit-content",
+            "textAlign": "left",
+            "lineHeight": "130%",
+            "fontSize": "20px",
+            "fontWeight": "600",
+            "color": "#171717"
+          },
+          "config": {},
+          "specials": {
+            "htmlTag": "h3",
+            "text": "Ứng tuyển"
+          },
+          "responsive": {
+            "mobile": {
+              "style": {
+                "fontSize": "18px"
+              }
+            }
+          },
+          "events": [],
+          "bindings": []
+        },
+        "fapp_3": {
+          "id": "fapp_3",
+          "data": {
+            "type": "form-text",
+            "parent": "fapp_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%"
+          },
+          "config": {
+            "iconPosition": "left"
+          },
+          "specials": {
+            "showIcon": false,
+            "iconName": "",
+            "name": "ho_ten",
+            "label": "Họ và tên",
+            "placeholder": "",
+            "description": "",
+            "required": true,
+            "showLabel": true,
+            "mapTo": "",
+            "prefillValue": "",
+            "multiline": false,
+            "inputType": "text",
+            "limitChars": false,
+            "minChars": 0,
+            "maxChars": 500,
+            "patternPreset": "",
+            "pattern": "",
+            "patternCountries": []
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "fapp_4": {
+          "id": "fapp_4",
+          "data": {
+            "type": "form-text",
+            "parent": "fapp_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%"
+          },
+          "config": {
+            "iconPosition": "left"
+          },
+          "specials": {
+            "showIcon": false,
+            "iconName": "",
+            "name": "so_dien_thoai",
+            "label": "Số điện thoại",
+            "placeholder": "",
+            "description": "",
+            "required": true,
+            "showLabel": true,
+            "mapTo": "",
+            "prefillValue": "",
+            "multiline": false,
+            "inputType": "tel",
+            "limitChars": false,
+            "minChars": 0,
+            "maxChars": 500,
+            "patternPreset": "",
+            "pattern": "",
+            "patternCountries": []
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "fapp_5": {
+          "id": "fapp_5",
+          "data": {
+            "type": "form-text",
+            "parent": "fapp_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%"
+          },
+          "config": {
+            "iconPosition": "left"
+          },
+          "specials": {
+            "showIcon": false,
+            "iconName": "",
+            "name": "email",
+            "label": "Email",
+            "placeholder": "",
+            "description": "",
+            "required": true,
+            "showLabel": true,
+            "mapTo": "",
+            "prefillValue": "",
+            "multiline": false,
+            "inputType": "email",
+            "limitChars": false,
+            "minChars": 0,
+            "maxChars": 500,
+            "patternPreset": "",
+            "pattern": "",
+            "patternCountries": []
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "fapp_6": {
+          "id": "fapp_6",
+          "data": {
+            "type": "form-text",
+            "parent": "fapp_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%"
+          },
+          "config": {
+            "iconPosition": "left"
+          },
+          "specials": {
+            "showIcon": false,
+            "iconName": "",
+            "name": "gioi_thieu",
+            "label": "Giới thiệu ngắn về bạn",
+            "placeholder": "",
+            "description": "",
+            "required": false,
+            "showLabel": true,
+            "mapTo": "",
+            "prefillValue": "",
+            "multiline": true,
+            "inputType": "text",
+            "limitChars": false,
+            "minChars": 0,
+            "maxChars": 500,
+            "patternPreset": "",
+            "pattern": "",
+            "patternCountries": []
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "fapp_7": {
+          "id": "fapp_7",
+          "data": {
+            "type": "form-file",
+            "parent": "fapp_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%"
+          },
+          "config": {},
+          "specials": {
+            "name": "cv",
+            "label": "CV của bạn",
+            "placeholder": "Chọn tệp hoặc kéo thả vào đây",
+            "hintText": "PDF",
+            "description": "",
+            "required": true,
+            "showLabel": true,
+            "fileFormat": "pdf",
+            "allowMultiple": false,
+            "fileLimit": 3,
+            "buttonLabel": "Choose file"
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "fapp_8": {
+          "id": "fapp_8",
+          "data": {
+            "type": "form-submit",
+            "parent": "fapp_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%",
+            "padding": "10px 16px",
+            "backgroundColor": "#171717",
+            "color": "#ffffff",
+            "borderRadius": "6px"
+          },
+          "config": {},
+          "specials": {
+            "text": "Nộp hồ sơ",
+            "submittingText": "Đang gửi…"
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        }
+      }
+    }
+  },
+  "login": {
+    "key": "login",
+    "type": "login",
+    "settings": {},
+    "document": {
+      "root_node_id": "flog_1",
+      "nodes": {
+        "flog_1": {
+          "id": "flog_1",
+          "data": {
+            "type": "form",
+            "parent": null,
+            "nodes": [
+              "flog_2",
+              "flog_3",
+              "flog_4",
+              "flog_5"
+            ],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "display": "flex",
+            "flexDirection": "column",
+            "width": "100%",
+            "height": "fit-content",
+            "gap": "16px"
+          },
+          "config": {},
+          "specials": {
+            "formId": "",
+            "segmentId": "",
+            "formRules": ""
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "flog_2": {
+          "id": "flog_2",
+          "data": {
+            "type": "form-title",
+            "parent": "flog_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%",
+            "height": "fit-content",
+            "textAlign": "left",
+            "lineHeight": "130%",
+            "fontSize": "20px",
+            "fontWeight": "600",
+            "color": "#171717"
+          },
+          "config": {},
+          "specials": {
+            "htmlTag": "h3",
+            "text": "Đăng nhập"
+          },
+          "responsive": {
+            "mobile": {
+              "style": {
+                "fontSize": "18px"
+              }
+            }
+          },
+          "events": [],
+          "bindings": []
+        },
+        "flog_3": {
+          "id": "flog_3",
+          "data": {
+            "type": "form-text",
+            "parent": "flog_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%"
+          },
+          "config": {
+            "iconPosition": "left"
+          },
+          "specials": {
+            "showIcon": false,
+            "iconName": "",
+            "name": "email",
+            "label": "Email",
+            "placeholder": "",
+            "description": "",
+            "required": true,
+            "showLabel": true,
+            "mapTo": "customer.email",
+            "prefillValue": "",
+            "multiline": false,
+            "inputType": "email",
+            "limitChars": false,
+            "minChars": 0,
+            "maxChars": 500,
+            "patternPreset": "",
+            "pattern": "",
+            "patternCountries": []
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "flog_4": {
+          "id": "flog_4",
+          "data": {
+            "type": "form-text",
+            "parent": "flog_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%"
+          },
+          "config": {
+            "iconPosition": "left"
+          },
+          "specials": {
+            "showIcon": false,
+            "iconName": "",
+            "name": "password",
+            "label": "Mật khẩu",
+            "placeholder": "",
+            "description": "",
+            "required": true,
+            "showLabel": true,
+            "mapTo": "",
+            "prefillValue": "",
+            "multiline": false,
+            "inputType": "password",
+            "limitChars": false,
+            "minChars": 0,
+            "maxChars": 500,
+            "patternPreset": "",
+            "pattern": "",
+            "patternCountries": []
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "flog_5": {
+          "id": "flog_5",
+          "data": {
+            "type": "form-submit",
+            "parent": "flog_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%",
+            "padding": "10px 16px",
+            "backgroundColor": "#171717",
+            "color": "#ffffff",
+            "borderRadius": "6px"
+          },
+          "config": {},
+          "specials": {
+            "text": "Đăng nhập",
+            "submittingText": "Đang gửi…"
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        }
+      }
+    }
+  },
+  "register": {
+    "key": "register",
+    "type": "register",
+    "settings": {},
+    "document": {
+      "root_node_id": "freg_1",
+      "nodes": {
+        "freg_1": {
+          "id": "freg_1",
+          "data": {
+            "type": "form",
+            "parent": null,
+            "nodes": [
+              "freg_2",
+              "freg_3",
+              "freg_4",
+              "freg_5",
+              "freg_6"
+            ],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "display": "flex",
+            "flexDirection": "column",
+            "width": "100%",
+            "height": "fit-content",
+            "gap": "16px"
+          },
+          "config": {},
+          "specials": {
+            "formId": "",
+            "segmentId": "",
+            "formRules": ""
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "freg_2": {
+          "id": "freg_2",
+          "data": {
+            "type": "form-title",
+            "parent": "freg_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%",
+            "height": "fit-content",
+            "textAlign": "left",
+            "lineHeight": "130%",
+            "fontSize": "20px",
+            "fontWeight": "600",
+            "color": "#171717"
+          },
+          "config": {},
+          "specials": {
+            "htmlTag": "h3",
+            "text": "Đăng ký"
+          },
+          "responsive": {
+            "mobile": {
+              "style": {
+                "fontSize": "18px"
+              }
+            }
+          },
+          "events": [],
+          "bindings": []
+        },
+        "freg_3": {
+          "id": "freg_3",
+          "data": {
+            "type": "form-text",
+            "parent": "freg_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%"
+          },
+          "config": {
+            "iconPosition": "left"
+          },
+          "specials": {
+            "showIcon": false,
+            "iconName": "",
+            "name": "name",
+            "label": "Họ và tên",
+            "placeholder": "",
+            "description": "",
+            "required": true,
+            "showLabel": true,
+            "mapTo": "customer.fullName",
+            "prefillValue": "",
+            "multiline": false,
+            "inputType": "text",
+            "limitChars": false,
+            "minChars": 0,
+            "maxChars": 500,
+            "patternPreset": "",
+            "pattern": "",
+            "patternCountries": []
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "freg_4": {
+          "id": "freg_4",
+          "data": {
+            "type": "form-text",
+            "parent": "freg_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%"
+          },
+          "config": {
+            "iconPosition": "left"
+          },
+          "specials": {
+            "showIcon": false,
+            "iconName": "",
+            "name": "email",
+            "label": "Email",
+            "placeholder": "",
+            "description": "",
+            "required": true,
+            "showLabel": true,
+            "mapTo": "customer.email",
+            "prefillValue": "",
+            "multiline": false,
+            "inputType": "email",
+            "limitChars": false,
+            "minChars": 0,
+            "maxChars": 500,
+            "patternPreset": "",
+            "pattern": "",
+            "patternCountries": []
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "freg_5": {
+          "id": "freg_5",
+          "data": {
+            "type": "form-text",
+            "parent": "freg_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%"
+          },
+          "config": {
+            "iconPosition": "left"
+          },
+          "specials": {
+            "showIcon": false,
+            "iconName": "",
+            "name": "password",
+            "label": "Mật khẩu",
+            "placeholder": "",
+            "description": "",
+            "required": true,
+            "showLabel": true,
+            "mapTo": "",
+            "prefillValue": "",
+            "multiline": false,
+            "inputType": "password",
+            "limitChars": false,
+            "minChars": 0,
+            "maxChars": 500,
+            "patternPreset": "",
+            "pattern": "",
+            "patternCountries": []
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "freg_6": {
+          "id": "freg_6",
+          "data": {
+            "type": "form-submit",
+            "parent": "freg_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%",
+            "padding": "10px 16px",
+            "backgroundColor": "#171717",
+            "color": "#ffffff",
+            "borderRadius": "6px"
+          },
+          "config": {},
+          "specials": {
+            "text": "Đăng ký",
+            "submittingText": "Đang gửi…"
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        }
+      }
+    }
+  },
+  "forgot": {
+    "key": "forgot",
+    "type": "forgot",
+    "settings": {},
+    "document": {
+      "root_node_id": "ffor_1",
+      "nodes": {
+        "ffor_1": {
+          "id": "ffor_1",
+          "data": {
+            "type": "form",
+            "parent": null,
+            "nodes": [
+              "ffor_2",
+              "ffor_3",
+              "ffor_4"
+            ],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "display": "flex",
+            "flexDirection": "column",
+            "width": "100%",
+            "height": "fit-content",
+            "gap": "16px"
+          },
+          "config": {},
+          "specials": {
+            "formId": "",
+            "segmentId": "",
+            "formRules": ""
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "ffor_2": {
+          "id": "ffor_2",
+          "data": {
+            "type": "form-title",
+            "parent": "ffor_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%",
+            "height": "fit-content",
+            "textAlign": "left",
+            "lineHeight": "130%",
+            "fontSize": "20px",
+            "fontWeight": "600",
+            "color": "#171717"
+          },
+          "config": {},
+          "specials": {
+            "htmlTag": "h3",
+            "text": "Quên mật khẩu"
+          },
+          "responsive": {
+            "mobile": {
+              "style": {
+                "fontSize": "18px"
+              }
+            }
+          },
+          "events": [],
+          "bindings": []
+        },
+        "ffor_3": {
+          "id": "ffor_3",
+          "data": {
+            "type": "form-text",
+            "parent": "ffor_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%"
+          },
+          "config": {
+            "iconPosition": "left"
+          },
+          "specials": {
+            "showIcon": false,
+            "iconName": "",
+            "name": "email",
+            "label": "Email",
+            "placeholder": "",
+            "description": "",
+            "required": true,
+            "showLabel": true,
+            "mapTo": "customer.email",
+            "prefillValue": "",
+            "multiline": false,
+            "inputType": "email",
+            "limitChars": false,
+            "minChars": 0,
+            "maxChars": 500,
+            "patternPreset": "",
+            "pattern": "",
+            "patternCountries": []
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "ffor_4": {
+          "id": "ffor_4",
+          "data": {
+            "type": "form-submit",
+            "parent": "ffor_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%",
+            "padding": "10px 16px",
+            "backgroundColor": "#171717",
+            "color": "#ffffff",
+            "borderRadius": "6px"
+          },
+          "config": {},
+          "specials": {
+            "text": "Gửi mã",
+            "submittingText": "Đang gửi…"
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        }
+      }
+    }
+  },
+  "verify": {
+    "key": "verify",
+    "type": "verify",
+    "settings": {},
+    "document": {
+      "root_node_id": "fver_1",
+      "nodes": {
+        "fver_1": {
+          "id": "fver_1",
+          "data": {
+            "type": "form",
+            "parent": null,
+            "nodes": [
+              "fver_2",
+              "fver_3",
+              "fver_4",
+              "fver_5"
+            ],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "display": "flex",
+            "flexDirection": "column",
+            "width": "100%",
+            "height": "fit-content",
+            "gap": "16px"
+          },
+          "config": {},
+          "specials": {
+            "formId": "",
+            "segmentId": "",
+            "formRules": ""
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "fver_2": {
+          "id": "fver_2",
+          "data": {
+            "type": "form-title",
+            "parent": "fver_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%",
+            "height": "fit-content",
+            "textAlign": "left",
+            "lineHeight": "130%",
+            "fontSize": "20px",
+            "fontWeight": "600",
+            "color": "#171717"
+          },
+          "config": {},
+          "specials": {
+            "htmlTag": "h3",
+            "text": "Xác minh email"
+          },
+          "responsive": {
+            "mobile": {
+              "style": {
+                "fontSize": "18px"
+              }
+            }
+          },
+          "events": [],
+          "bindings": []
+        },
+        "fver_3": {
+          "id": "fver_3",
+          "data": {
+            "type": "form-text",
+            "parent": "fver_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%"
+          },
+          "config": {
+            "iconPosition": "left"
+          },
+          "specials": {
+            "showIcon": false,
+            "iconName": "",
+            "name": "email",
+            "label": "Email",
+            "placeholder": "",
+            "description": "",
+            "required": true,
+            "showLabel": true,
+            "mapTo": "customer.email",
+            "prefillValue": "",
+            "multiline": false,
+            "inputType": "email",
+            "limitChars": false,
+            "minChars": 0,
+            "maxChars": 500,
+            "patternPreset": "",
+            "pattern": "",
+            "patternCountries": []
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "fver_4": {
+          "id": "fver_4",
+          "data": {
+            "type": "form-text",
+            "parent": "fver_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%"
+          },
+          "config": {
+            "iconPosition": "left"
+          },
+          "specials": {
+            "showIcon": false,
+            "iconName": "",
+            "name": "code",
+            "label": "Mã xác nhận",
+            "placeholder": "",
+            "description": "",
+            "required": true,
+            "showLabel": true,
+            "mapTo": "",
+            "prefillValue": "",
+            "multiline": false,
+            "inputType": "text",
+            "limitChars": false,
+            "minChars": 0,
+            "maxChars": 500,
+            "patternPreset": "",
+            "pattern": "",
+            "patternCountries": []
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "fver_5": {
+          "id": "fver_5",
+          "data": {
+            "type": "form-submit",
+            "parent": "fver_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%",
+            "padding": "10px 16px",
+            "backgroundColor": "#171717",
+            "color": "#ffffff",
+            "borderRadius": "6px"
+          },
+          "config": {},
+          "specials": {
+            "text": "Xác minh",
+            "submittingText": "Đang gửi…"
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        }
+      }
+    }
+  },
+  "reset": {
+    "key": "reset",
+    "type": "reset",
+    "settings": {},
+    "document": {
+      "root_node_id": "fres_1",
+      "nodes": {
+        "fres_1": {
+          "id": "fres_1",
+          "data": {
+            "type": "form",
+            "parent": null,
+            "nodes": [
+              "fres_2",
+              "fres_3",
+              "fres_4",
+              "fres_5",
+              "fres_6"
+            ],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "display": "flex",
+            "flexDirection": "column",
+            "width": "100%",
+            "height": "fit-content",
+            "gap": "16px"
+          },
+          "config": {},
+          "specials": {
+            "formId": "",
+            "segmentId": "",
+            "formRules": ""
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "fres_2": {
+          "id": "fres_2",
+          "data": {
+            "type": "form-title",
+            "parent": "fres_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%",
+            "height": "fit-content",
+            "textAlign": "left",
+            "lineHeight": "130%",
+            "fontSize": "20px",
+            "fontWeight": "600",
+            "color": "#171717"
+          },
+          "config": {},
+          "specials": {
+            "htmlTag": "h3",
+            "text": "Đặt lại mật khẩu"
+          },
+          "responsive": {
+            "mobile": {
+              "style": {
+                "fontSize": "18px"
+              }
+            }
+          },
+          "events": [],
+          "bindings": []
+        },
+        "fres_3": {
+          "id": "fres_3",
+          "data": {
+            "type": "form-text",
+            "parent": "fres_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%"
+          },
+          "config": {
+            "iconPosition": "left"
+          },
+          "specials": {
+            "showIcon": false,
+            "iconName": "",
+            "name": "email",
+            "label": "Email",
+            "placeholder": "",
+            "description": "",
+            "required": true,
+            "showLabel": true,
+            "mapTo": "customer.email",
+            "prefillValue": "",
+            "multiline": false,
+            "inputType": "email",
+            "limitChars": false,
+            "minChars": 0,
+            "maxChars": 500,
+            "patternPreset": "",
+            "pattern": "",
+            "patternCountries": []
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "fres_4": {
+          "id": "fres_4",
+          "data": {
+            "type": "form-text",
+            "parent": "fres_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%"
+          },
+          "config": {
+            "iconPosition": "left"
+          },
+          "specials": {
+            "showIcon": false,
+            "iconName": "",
+            "name": "code",
+            "label": "Mã xác nhận",
+            "placeholder": "",
+            "description": "",
+            "required": true,
+            "showLabel": true,
+            "mapTo": "",
+            "prefillValue": "",
+            "multiline": false,
+            "inputType": "text",
+            "limitChars": false,
+            "minChars": 0,
+            "maxChars": 500,
+            "patternPreset": "",
+            "pattern": "",
+            "patternCountries": []
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "fres_5": {
+          "id": "fres_5",
+          "data": {
+            "type": "form-text",
+            "parent": "fres_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%"
+          },
+          "config": {
+            "iconPosition": "left"
+          },
+          "specials": {
+            "showIcon": false,
+            "iconName": "",
+            "name": "password",
+            "label": "Mật khẩu mới",
+            "placeholder": "",
+            "description": "",
+            "required": true,
+            "showLabel": true,
+            "mapTo": "",
+            "prefillValue": "",
+            "multiline": false,
+            "inputType": "password",
+            "limitChars": false,
+            "minChars": 0,
+            "maxChars": 500,
+            "patternPreset": "",
+            "pattern": "",
+            "patternCountries": []
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "fres_6": {
+          "id": "fres_6",
+          "data": {
+            "type": "form-submit",
+            "parent": "fres_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%",
+            "padding": "10px 16px",
+            "backgroundColor": "#171717",
+            "color": "#ffffff",
+            "borderRadius": "6px"
+          },
+          "config": {},
+          "specials": {
+            "text": "Đặt lại mật khẩu",
+            "submittingText": "Đang gửi…"
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        }
+      }
+    }
+  }
+} as const;
+
+export type FormTemplateKey = keyof typeof FORM_TEMPLATES;

@@ -1,4 +1,4 @@
-import { childrenOf, childrenWithSatellites, isOverlay, pageChildren, appBlockRoot, type DocLike } from '../../core/tree.js';
+import { childrenOf, childrenWithSatellites, isOverlay, pageChildren, appBlockRoot, SPEC_GLOBAL_REF, SPEC_APP_BLOCK_REF, type DocLike } from '../../core/tree.js';
 import { ELEMENTS, BINDING_SOURCES, BOUND_SPECIALS , FIRST_CHILD_ONLY, SATELLITE_RULES, ELEMENT_SEEDS } from '../../catalog/elements.generated.js';
 import type { PageDoc } from './document.js';
 import { fill } from './findings.js';
@@ -238,9 +238,23 @@ export function reviewDesign(doc: PageDoc): Finding[] {
     // Unless the element paints the record ITSELF: a bound `media-dataset` with
     // no children publishes the product's photo and its thumbnail strip, which
     // this rule reported as an empty band on a page that rendered correctly.
+    //
+    // OR THE NODE IS A REFERENCE, which is empty by construction. A page carries
+    // a shared header as an EMPTY flex-section stamped `globalRef` — that is
+    // literally what the platform stores (`page/decompose.go`'s makeRefNode) —
+    // and the server composes the master into it on read. An app block is the
+    // same shape one construct over. Reported, the finding is worse than noise:
+    // the notice tells the reader to fix every finding, and the fix named here
+    // is "add something inside it", which on the next save is decomposed away
+    // again. Measured on a page built with `sb_add`: the header and footer refs
+    // both flagged, and both correct.
+    const isReference =
+      (n.specials ?? {})[SPEC_GLOBAL_REF] !== undefined ||
+      (n.specials ?? {})[SPEC_APP_BLOCK_REF] !== undefined;
     if (
       meta.isContainer &&
       childrenOf(d, id).length === 0 &&
+      !isReference &&
       !(bindings.length > 0 && drawsItsOwnContent(type))
     ) {
       out.push({

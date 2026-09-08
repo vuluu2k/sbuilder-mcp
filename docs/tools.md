@@ -679,17 +679,40 @@ otherwise would spend the agent's attention on what it cannot know.
 
 ## `sb_store`
 
-Run a store flow that must happen in a **fixed order**. One action today; the enum is how a
-second arrives without a second tool.
+Run a store flow that must happen in a **fixed order**.
 
 | Arg | Type | Notes |
 | --- | --- | --- |
-| `action` | `"checkout"` | The flow to run |
+| `action` | `"checkout"` \| `"form"` | The flow to run |
 | `site_id` | string? | Falls back to `SB_SITE` |
-| `language` | `"vi"` \| `"en"`? | Copy language, default `vi` |
-| `page_name` | string? | Overrides the editor's own page name |
-| `headline` | string? | Overrides the page's headline |
+| `language` | `"vi"` \| `"en"`? | `checkout` — copy language, default `vi` |
+| `page_name` | string? | `checkout` — overrides the editor's own page name |
+| `headline` | string? | `checkout` — overrides the page's headline |
+| `template` | enum? | `form` — which of the platform's 17 templates to seed |
+| `name` | string? | `form` — the form's name in the merchant's list |
 | `dry_run` | boolean? | Defaults to **true** |
+
+### `action: "form"`
+
+Seeds any of the platform's OWN form templates: `login`, `register`, `forgot`, `reset`,
+`verify`, `contact`, `subscribe`, `booking`, `feedback`, `event`, `quote`, `apply`,
+`address`, `consult`, `stay`, `order`, `checkout`.
+
+The editor ships all seventeen and this server carried ONE, so a store built with these
+tools could have a checkout and nothing else — no contact form, no newsletter, and none of
+the five auth forms, even though `forms.Type` declares them and `customerauth` serves them.
+Hand-authoring one means writing a field document whose `mapTo` values are a vocabulary the
+server validates, which is exactly the guess this catalog exists to remove.
+
+Three writes, the same ones the checkout makes minus the page: create, **PUT the form back
+WHOLE** (name and type must ride along or `Normalize()` renames it "Form" and turns it
+`custom`, after which the document is refused), then save the field document with fresh node
+ids. If a later write fails the form is deleted again — a form nobody can see is the orphan
+the obvious retry duplicates.
+
+It makes **no page**. Where a login form belongs is a design decision, and `/account` is the
+one page that is not a free choice: `membersOnlyRedirectTarget` sends every gated visitor
+there. Place the form with `sb_add` and point `specials.formId` at the id this returns.
 
 ### `action: "checkout"`
 
