@@ -40,6 +40,79 @@ describe('reviewDesign()', () => {
     expect(f!.problem).toContain('Enter your text here');
   });
 
+  /**
+   * THE EMPTY STATE THE REVIEW COULD NOT SEE.
+   *
+   * `placeholder_content` compares against the element's OWN default — a
+   * heading's is "Heading". The heading inside a repeater's empty state is
+   * minted from the SATELLITE_RULES seed tree and says "No products yet", so it
+   * matched nothing and every store shipped the platform's English empty states
+   * while reviewing clean.
+   */
+  it('reports a seeded empty state nobody ever wrote', () => {
+    const d = emptyDoc();
+    d.apply(
+      addSubtree(d, 'ROOT', {
+        type: 'flex-section',
+        children: [{ type: 'list-dataset', config: { datasetSource: 'product' } }],
+      }).patches,
+    );
+    const seeded = reviewDesign(d).filter((x) => x.code === 'default_seed_copy');
+    expect(seeded.length).toBeGreaterThan(0);
+    expect(seeded.map((f) => f.problem).join(' ')).toMatch(/No products yet/);
+    // The fix has to say the surface EXISTS — an agent that never saw an empty
+    // state does not know there is anything to write.
+    expect(seeded[0].fix).toMatch(/satellite/i);
+  });
+
+  it('stops reporting seed copy once it is written in the shop\'s own words', () => {
+    const d = emptyDoc();
+    d.apply(
+      addSubtree(d, 'ROOT', {
+        type: 'flex-section',
+        children: [{ type: 'list-dataset', config: { datasetSource: 'product' } }],
+      }).patches,
+    );
+    for (const f of reviewDesign(d).filter((x) => x.code === 'default_seed_copy')) {
+      d.apply(setKeys(d, f.nodeId, { text: 'Chưa có sản phẩm nào' }, { namespace: 'specials' }));
+    }
+    expect(reviewDesign(d).filter((x) => x.code === 'default_seed_copy')).toEqual([]);
+  });
+
+  /**
+   * A FORM WHOSE FIELDS TOUCH. Measured on a published checkout at 1440px: six
+   * consecutive fields, every gap between them exactly 0, so each label sat
+   * nearer the previous control than its own. The platform now seeds
+   * `gap: 12px`, but `defaults` seeds at CREATION — every form authored before
+   * that keeps the spacing it was given, and nothing said so.
+   */
+  it('reports a form that stacks its fields with no gap', () => {
+    const d = emptyDoc();
+    d.apply(addSubtree(d, 'ROOT', { type: 'flex-section', children: [{ type: 'form' }] }).patches);
+    const form = d.node(d.node('ROOT').data.nodes[0]).data.nodes[0];
+    // The platform's seed is the fix, so strip it to reproduce an older document.
+    d.apply(setKeys(d, form, { gap: '0px' }, { namespace: 'style', base: true }));
+    const f = reviewDesign(d).find((x) => x.code === 'form_fields_flush');
+    expect(f).toBeDefined();
+    expect(f!.nodeId).toBe(form);
+    expect(f!.fix).toMatch(/fieldStackGap/);
+  });
+
+  it('says nothing about a form the platform seeded normally', () => {
+    const d = emptyDoc();
+    d.apply(addSubtree(d, 'ROOT', { type: 'flex-section', children: [{ type: 'form' }] }).patches);
+    expect(reviewDesign(d).filter((x) => x.code === 'form_fields_flush')).toEqual([]);
+  });
+
+  it('accepts a gap written only at a breakpoint', () => {
+    const d = emptyDoc();
+    d.apply(addSubtree(d, 'ROOT', { type: 'flex-section', children: [{ type: 'form' }] }).patches);
+    const form = d.node(d.node('ROOT').data.nodes[0]).data.nodes[0];
+    d.apply(setKeys(d, form, { gap: '0px' }, { namespace: 'style', base: true }));
+    d.apply(setKeys(d, form, { gap: '16px' }, { namespace: 'style', breakpoint: 'mobile' }));
+    expect(reviewDesign(d).filter((x) => x.code === 'form_fields_flush')).toEqual([]);
+  });
+
   it('stops reporting it once real copy is written', () => {
     const d = emptyDoc();
     d.apply(addSubtree(d, 'ROOT', { type: 'flex-section', children: [{ type: 'heading' }] }).patches);

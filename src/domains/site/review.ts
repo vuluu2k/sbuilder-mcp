@@ -1,5 +1,5 @@
-import { childrenOf, isOverlay, pageChildren, appBlockRoot, type DocLike } from '../../core/tree.js';
-import { ELEMENTS, BINDING_SOURCES, BOUND_SPECIALS , FIRST_CHILD_ONLY } from '../../catalog/elements.generated.js';
+import { childrenOf, childrenWithSatellites, isOverlay, pageChildren, appBlockRoot, type DocLike } from '../../core/tree.js';
+import { ELEMENTS, BINDING_SOURCES, BOUND_SPECIALS , FIRST_CHILD_ONLY, SATELLITE_RULES, ELEMENT_SEEDS } from '../../catalog/elements.generated.js';
 import type { PageDoc } from './document.js';
 import { fill } from './findings.js';
 
@@ -59,6 +59,55 @@ function contentKeys(type: string): string[] {
 function seededValue(type: string, key: string): unknown {
   return (ELEMENTS[type]?.defaults.specials ?? {})[key];
 }
+
+/**
+ * Every line of copy the PLATFORM writes into a seeded subtree.
+ *
+ * `placeholder_content` above compares against `ELEMENTS[type].defaults.specials`
+ * — the element's OWN default — and that is exactly why it could never see an
+ * empty state. A heading's own default is `"Heading"`; the heading inside a
+ * repeater's empty state is minted from `SATELLITE_RULES`' seed tree and says
+ * `"No products yet"`. Different source, so the check walked straight past it.
+ *
+ * The consequence was general, not incidental: EVERY store built with these
+ * tools ships the platform's English empty states and reviews clean. Measured on
+ * a Vietnamese storefront — home, category, product and search all reported
+ * "nothing a visitor would notice" while four repeaters said "No products yet"
+ * and "New arrivals will show up here. Check back soon." in `#171717` on a page
+ * that is `#2E2A3B` throughout. It is the most-visited copy on a store: an empty
+ * cart is the empty state a shopper meets first.
+ *
+ * Collected from BOTH generated seed tables, so a new empty state the platform
+ * ships is covered by the next `npm run codegen` rather than by an edit here.
+ */
+const SEEDED_SUBTREE_TEXT: ReadonlySet<string> = (() => {
+  const out = new Set<string>();
+  const visit = (v: unknown): void => {
+    if (Array.isArray(v)) {
+      for (const x of v) visit(x);
+      return;
+    }
+    if (v === null || typeof v !== 'object') return;
+    const o = v as { specials?: Record<string, unknown> };
+    const t = o.specials?.text;
+    if (typeof t === 'string' && t.trim() !== '') out.add(t);
+    for (const x of Object.values(v as Record<string, unknown>)) visit(x);
+  };
+  visit(SATELLITE_RULES);
+  visit(ELEMENT_SEEDS);
+  return out;
+})();
+
+/**
+ * The containers whose children are form FIELDS.
+ *
+ * Named rather than derived: "offers a Gap control" is true of 33 elements and
+ * four of them legitimately seed none (`flex-section` and `flex-block` are the
+ * layout primitives, where the author composes the spacing). What makes these
+ * three different is that their children are LABELLED CONTROLS, and a label with
+ * no space above it attaches itself to the wrong one.
+ */
+const FIELD_STACKS = new Set(['form', 'form-segment', 'form-step-nav']);
 
 /**
  * A container that renders its subtree ONCE PER RECORD.
@@ -153,7 +202,13 @@ export function reviewDesign(doc: PageDoc): Finding[] {
     if (repeater) inRepeater.set(id, repeater);
     if (appBlockRoot(d, id) === id) return;
     const inner = repeats(d.nodes[id]?.data.type ?? '') ? (repeater ?? id) : repeater;
-    for (const k of childrenOf(d, id)) go(k, inner, overlay || overlayIds.has(k));
+    // SATELLITES INCLUDED. `childrenOf` here meant the review never entered one,
+    // so an element's whole chrome — every repeater's empty state, the variant
+    // option skin, the quantity stepper, the menu and tab item skins — sat
+    // outside the check that exists to say what a visitor meets. `walk`'s own
+    // comment names this as the mistake a caller makes by reaching for the
+    // child-only list; this had made it.
+    for (const k of childrenWithSatellites(d, id)) go(k, inner, overlay || overlayIds.has(k));
   };
   go(d.root_node_id);
 
@@ -266,6 +321,24 @@ export function reviewDesign(doc: PageDoc): Finding[] {
           fix: fill('placeholder_content', { id, key }),
         });
       }
+
+      // The same defect, one seed table over — see SEEDED_SUBTREE_TEXT. Reported
+      // separately because the FIX reads differently: this copy is not a
+      // "<Heading>" nobody noticed, it is a real English sentence that renders
+      // as if somebody meant it.
+      else if (key === 'text' && typeof value === 'string' && SEEDED_SUBTREE_TEXT.has(value)) {
+        out.push({
+          code: 'default_seed_copy',
+          nodeId: id,
+          type,
+          problem:
+            `Still the platform's own seed copy (${JSON.stringify(value)}), in English. This ` +
+            'surface was never authored — it is minted with the element and reads as if ' +
+            'somebody wrote it.',
+          key,
+          fix: fill('default_seed_copy', { id, key }),
+        });
+      }
     }
 
     // A FORM NOBODY LINKED publishes as an empty box, and the platform stays
@@ -286,6 +359,46 @@ export function reviewDesign(doc: PageDoc): Finding[] {
             'and the platform reports no warning for it.',
           key: 'formId',
           fix: fill('unlinked_form', { id, key: 'formId' }),
+        });
+      }
+    }
+
+    // A FORM WHOSE FIELDS TOUCH. The three field stacks lay out `display:flex`
+    // + `flexDirection:column`, so with no `gap` every field sits flush against
+    // the one above it and each label ends up nearer the previous control than
+    // its own — the one thing a form's spacing has to get right.
+    //
+    // Measured on a published checkout at 1440px: six consecutive fields, every
+    // gap between them EXACTLY 0. The platform now seeds `gap: 12px` on these
+    // elements, but `defaults` seeds at CREATION, so every form authored before
+    // that keeps the spacing it was given and nothing says so.
+    //
+    // NOT a child check: a form's fields live in the FORM DOCUMENT and are
+    // composed on the render path, so the page's own node has `nodes: []` and
+    // counting children would report every form as empty.
+    if (FIELD_STACKS.has(type)) {
+      const slots = [
+        (n as { style?: Record<string, unknown> }).style,
+        ...Object.values((n as { responsive?: Record<string, { style?: Record<string, unknown> }> }).responsive ?? {}).map(
+          (s) => s?.style,
+        ),
+      ];
+      const anyGap = slots.some((s) => {
+        const g = s?.gap;
+        return g !== undefined && g !== null && `${g}`.trim() !== '' && parseFloat(`${g}`) > 0;
+      });
+      if (!anyGap) {
+        out.push({
+          code: 'form_fields_flush',
+          nodeId: id,
+          type,
+          problem:
+            'This form stacks its fields with no gap, so each one touches the one above it and ' +
+            "every label reads as belonging to the control above rather than its own. The " +
+            'field\'s own label-to-control spacing (config.fieldStackGap) is a different, ' +
+            'smaller quantity and does not close this.',
+          key: 'gap',
+          fix: fill('form_fields_flush', { id, key: 'gap' }),
         });
       }
     }
