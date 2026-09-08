@@ -6,6 +6,23 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.0] - 2026-09-08
+
+### Added
+- sb_review reports default_seed_copy when a satellite's empty state still carries the platform's own English seed text, such as a repeater's empty state saying "No products yet", which previously matched no rule and reviewed clean.
+- sb_review reports form_fields_flush when a form, form-segment or form-step-nav stacks its fields with no gap between them, so each label reads as belonging to the control above it.
+- The install CLI accepts --site-name, matching the flag the platform's own Agent app install line already appends; it rides in as SB_SITE_NAME alongside the site id, and sb_connect reports it back so a session can display the store's name instead of its id.
+- A dry run of the install CLI now reports its own preview outcome and exit code instead of reusing the failure marker and exit code of a real install.
+- sb_api_call now falls back {siteId} and {siteID} path parameters to SB_SITE across all 289 operations that name the site, matching the fallback every other tool already applies through siteFor(); an explicit argument still wins.
+
+### Fixed
+- sb_set's state parameter now writes to the location the platform's cascade actually reads: node.states[state] at base, node.responsive[breakpoint].states[state] per breakpoint. Previously it wrote to a path nothing reads, and base:true combined with state:"hover" wrote the hover value straight into the plain style, leaving a node permanently styled as if hovered with no hover state at all.
+- sb_set now refuses a state argument on specials instead of silently dropping it, since content and identity do not vary by interaction state.
+- sb_review now walks into satellite nodes (a repeater's empty state, a variant option's skin, a quantity stepper's buttons, a menu or tab item's skin), so findings inside them are reported instead of being invisible to every check.
+- sb_review and sb_set now report a site-wide edit as such: a change to a node inside a global section's interior, or inside a site overlay like the cart drawer, is flagged rather than reading as an ordinary page-local edit.
+- sb_look now opens a closed overlay (such as the cart drawer) before measuring it, so a node_id resolving inside one can be photographed at all instead of failing with a clipping error that named neither the overlay nor the reason.
+- sb_look's preview_note no longer claims the draft preview renders every repeater's empty state; the draft preview threads real store data just like a published page, and the note now describes the real caveat, which is that an entity template previews with nothing bound.
+
 ## [0.4.4] - 2026-09-08
 
 ### Added

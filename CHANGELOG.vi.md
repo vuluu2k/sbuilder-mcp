@@ -6,6 +6,23 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.0] - 2026-09-08
+
+### Added
+- sb_review giờ báo cáo default_seed_copy khi một node vệ tinh ở trạng thái rỗng vẫn còn mang seed text tiếng Anh của nền tảng, chẳng hạn trạng thái rỗng của một repeater ghi "No products yet" — trước đây không khớp với rule nào nên review vẫn báo sạch.
+- sb_review giờ báo cáo form_fields_flush khi một form, form-segment hoặc form-step-nav xếp các field mà không có gap, khiến mỗi label đọc như thể thuộc về control phía trên nó.
+- CLI cài đặt giờ nhận --site-name, khớp với flag mà dòng lệnh cài đặt của chính Agent app trên nền tảng đã thêm vào; giá trị này đi kèm dưới dạng SB_SITE_NAME cùng với site id, và sb_connect báo cáo lại giá trị này để một session có thể hiển thị tên cửa hàng thay vì id.
+- Một dry run của CLI cài đặt giờ báo cáo kết quả xem trước và exit code riêng, thay vì dùng chung dấu hiệu thất bại và exit code của một lần cài đặt thật.
+- sb_api_call giờ fallback các path parameter {siteId} và {siteID} về SB_SITE trên toàn bộ 289 operation có tên site, khớp với cách fallback mà mọi tool khác đã áp dụng qua siteFor(); một tham số được truyền rõ ràng vẫn được ưu tiên.
+
+### Fixed
+- Tham số state của sb_set giờ ghi đúng vào vị trí mà cascade của nền tảng thực sự đọc: node.states[state] ở base, node.responsive[breakpoint].states[state] theo từng breakpoint. Trước đây nó ghi vào một đường dẫn không ai đọc, và base:true kết hợp với state:"hover" ghi thẳng giá trị hover vào style thường, khiến node mang màu hover vĩnh viễn mà không hề có trạng thái hover.
+- sb_set giờ từ chối tham số state trên specials thay vì âm thầm bỏ qua, vì nội dung và identity không thay đổi theo trạng thái tương tác.
+- sb_review giờ đi vào cả các node vệ tinh (trạng thái rỗng của repeater, skin của một variant option, các nút của quantity stepper, skin của một mục menu hoặc tab), nên các finding bên trong chúng được báo cáo thay vì vô hình với mọi check.
+- sb_review và sb_set giờ báo cáo một chỉnh sửa có phạm vi toàn site đúng như bản chất của nó: thay đổi một node bên trong phần thân của một global section, hoặc bên trong một overlay của site như cart drawer, giờ được gắn cờ thay vì đọc như một chỉnh sửa cục bộ trên trang.
+- sb_look giờ mở một overlay đang đóng (như cart drawer) trước khi đo, nên một node_id nằm bên trong overlay đó giờ có thể được chụp ảnh, thay vì thất bại với lỗi clip không nêu rõ overlay hay lý do.
+- preview_note của sb_look không còn khẳng định rằng bản xem trước bản nháp render trạng thái rỗng của mọi repeater; bản xem trước bản nháp truyền dữ liệu cửa hàng thật giống như một trang đã publish, và ghi chú giờ mô tả đúng lưu ý thực sự — đó là một entity template xem trước sẽ không có gì được bind.
+
 ## [0.4.4] - 2026-09-08
 
 ### Added
