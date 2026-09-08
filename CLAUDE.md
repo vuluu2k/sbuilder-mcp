@@ -54,6 +54,12 @@ Three things the first live release cost, so nobody pays them twice:
 - **`NPM_ACCESS_TOKEN` must be an npm AUTOMATION token** (or a granular token with read and
   write). A classic "publish" token still demands an OTP, and CI answers `EOTP` after the
   tag is already pushed.
+- **The bump is read from the HEAD COMMIT ALONE**, not from the range being pushed:
+  `github.event.head_commit.message`. So a ten-commit push carrying two `feat(` commits
+  released as a PATCH because the last commit was a `fix(`. Nothing was wrong with the
+  release — the changelog described the features correctly — but the version understated
+  them. If a push is meant to land a minor, either make the LAST commit the `feat`, or
+  dispatch the run with `bump=minor` instead of relying on the push trigger.
 - **Never re-run a failed release run.** It replays the OLD commit, whose `package.json`
   predates the release commit, so it bumps again. Dispatch a fresh run on `main` instead:
   resume mode sees the pushed tag and the missing npm version and publishes that version.
