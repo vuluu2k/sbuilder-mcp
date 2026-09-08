@@ -138,6 +138,11 @@ that accounts for them.
     `CatalogProduct` omits `priceCents` and `totalStock`, which are not columns on
     `products.Product` at all, because price lives on the variant.
 
+  A nested struct is expanded ONE level, and that level is load-bearing:
+  `POST /api/v1/products` takes `variants: VariantInput[]`, and `products.Product` has no
+  price column at all — price lives on the variant. A shape that stopped at the type name
+  told an agent everything except the field that decides whether the store can take money.
+
   The generator's own evidence that it is right: it recovers `{ document, schemaVersion }` for
   `PUT /pages/{id}/source` — the shape the bullet three below records somebody having to read
   out of the editor by hand.

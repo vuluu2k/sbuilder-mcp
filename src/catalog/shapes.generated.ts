@@ -339,7 +339,51 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
     "fields": [
       {
         "name": "questions",
-        "type": "assessment.Question[]"
+        "type": "assessment.Question[]",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string"
+          },
+          {
+            "name": "siteId",
+            "type": "string"
+          },
+          {
+            "name": "quizId",
+            "type": "string"
+          },
+          {
+            "name": "bankId",
+            "type": "string",
+            "note": "BankID is the identity a question keeps across the quizzes it is used in."
+          },
+          {
+            "name": "kind",
+            "type": "QuestionKind"
+          },
+          {
+            "name": "points",
+            "type": "number"
+          },
+          {
+            "name": "position",
+            "type": "number"
+          },
+          {
+            "name": "options",
+            "type": "Option[]",
+            "note": "Options travel WITH the question, never separately."
+          },
+          {
+            "name": "createdAt",
+            "type": "string (RFC3339)"
+          },
+          {
+            "name": "updatedAt",
+            "type": "string (RFC3339)"
+          }
+        ]
       }
     ],
     "source": "go",
@@ -530,7 +574,49 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
       },
       {
         "name": "seo",
-        "type": "SEO"
+        "type": "SEO",
+        "fields": [
+          {
+            "name": "title",
+            "type": "string"
+          },
+          {
+            "name": "description",
+            "type": "string"
+          },
+          {
+            "name": "keywords",
+            "type": "string"
+          },
+          {
+            "name": "canonical",
+            "type": "string"
+          },
+          {
+            "name": "ogTitle",
+            "type": "string"
+          },
+          {
+            "name": "ogDesc",
+            "type": "string"
+          },
+          {
+            "name": "ogImage",
+            "type": "string"
+          },
+          {
+            "name": "twitterCard",
+            "type": "string"
+          },
+          {
+            "name": "noIndex",
+            "type": "boolean"
+          },
+          {
+            "name": "noFollow",
+            "type": "boolean"
+          }
+        ]
       },
       {
         "name": "author",
@@ -610,7 +696,49 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
       },
       {
         "name": "seo",
-        "type": "SEO"
+        "type": "SEO",
+        "fields": [
+          {
+            "name": "title",
+            "type": "string"
+          },
+          {
+            "name": "description",
+            "type": "string"
+          },
+          {
+            "name": "keywords",
+            "type": "string"
+          },
+          {
+            "name": "canonical",
+            "type": "string"
+          },
+          {
+            "name": "ogTitle",
+            "type": "string"
+          },
+          {
+            "name": "ogDesc",
+            "type": "string"
+          },
+          {
+            "name": "ogImage",
+            "type": "string"
+          },
+          {
+            "name": "twitterCard",
+            "type": "string"
+          },
+          {
+            "name": "noIndex",
+            "type": "boolean"
+          },
+          {
+            "name": "noFollow",
+            "type": "boolean"
+          }
+        ]
       },
       {
         "name": "author",
@@ -662,7 +790,49 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
       },
       {
         "name": "seo",
-        "type": "SEO"
+        "type": "SEO",
+        "fields": [
+          {
+            "name": "title",
+            "type": "string"
+          },
+          {
+            "name": "description",
+            "type": "string"
+          },
+          {
+            "name": "keywords",
+            "type": "string"
+          },
+          {
+            "name": "canonical",
+            "type": "string"
+          },
+          {
+            "name": "ogTitle",
+            "type": "string"
+          },
+          {
+            "name": "ogDesc",
+            "type": "string"
+          },
+          {
+            "name": "ogImage",
+            "type": "string"
+          },
+          {
+            "name": "twitterCard",
+            "type": "string"
+          },
+          {
+            "name": "noIndex",
+            "type": "boolean"
+          },
+          {
+            "name": "noFollow",
+            "type": "boolean"
+          }
+        ]
       },
       {
         "name": "createdAt",
@@ -700,7 +870,49 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
       },
       {
         "name": "seo",
-        "type": "SEO"
+        "type": "SEO",
+        "fields": [
+          {
+            "name": "title",
+            "type": "string"
+          },
+          {
+            "name": "description",
+            "type": "string"
+          },
+          {
+            "name": "keywords",
+            "type": "string"
+          },
+          {
+            "name": "canonical",
+            "type": "string"
+          },
+          {
+            "name": "ogTitle",
+            "type": "string"
+          },
+          {
+            "name": "ogDesc",
+            "type": "string"
+          },
+          {
+            "name": "ogImage",
+            "type": "string"
+          },
+          {
+            "name": "twitterCard",
+            "type": "string"
+          },
+          {
+            "name": "noIndex",
+            "type": "boolean"
+          },
+          {
+            "name": "noFollow",
+            "type": "boolean"
+          }
+        ]
       },
       {
         "name": "createdAt",
@@ -872,15 +1084,117 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
       },
       {
         "name": "instructor",
-        "type": "Instructor"
+        "type": "Instructor",
+        "fields": [
+          {
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "name": "title",
+            "type": "string"
+          },
+          {
+            "name": "avatar",
+            "type": "string"
+          },
+          {
+            "name": "bio",
+            "type": "string"
+          }
+        ]
       },
       {
         "name": "seo",
-        "type": "SEO"
+        "type": "SEO",
+        "fields": [
+          {
+            "name": "title",
+            "type": "string"
+          },
+          {
+            "name": "description",
+            "type": "string"
+          },
+          {
+            "name": "keywords",
+            "type": "string"
+          },
+          {
+            "name": "canonical",
+            "type": "string"
+          },
+          {
+            "name": "ogTitle",
+            "type": "string"
+          },
+          {
+            "name": "ogDesc",
+            "type": "string"
+          },
+          {
+            "name": "ogImage",
+            "type": "string"
+          },
+          {
+            "name": "twitterCard",
+            "type": "string"
+          },
+          {
+            "name": "noIndex",
+            "type": "boolean"
+          },
+          {
+            "name": "noFollow",
+            "type": "boolean"
+          }
+        ]
       },
       {
         "name": "settings",
-        "type": "Settings"
+        "type": "Settings",
+        "fields": [
+          {
+            "name": "grantOn",
+            "type": "string",
+            "note": "GrantOn is one of the GrantOn constants; \"\" reads as GrantOnPaid."
+          },
+          {
+            "name": "accessDays",
+            "type": "number",
+            "note": "AccessDays is how long an entitlement lasts from the moment it is granted."
+          },
+          {
+            "name": "seatCap",
+            "type": "number",
+            "note": "SeatCap caps how many ACTIVE entitlements this course may hold at once — a cohort with a real classroom, a live intake."
+          },
+          {
+            "name": "completionPercent",
+            "type": "number",
+            "note": "CompletionPercent is the share of lessons a student must finish before the course counts as completed (and a certificate, when enabled, is earned)."
+          },
+          {
+            "name": "certificate",
+            "type": "boolean",
+            "note": "Certificate turns on the completion certificate."
+          },
+          {
+            "name": "dripFromEnrollment",
+            "type": "boolean",
+            "note": "DripFromEnrollment makes Lesson. NAMED FOR THE NON-DEFAULT so the zero value is the simpler product behaviour, and because per-student drip is the thing a merchant has to opt into understanding: two students then see different lessons on…"
+          },
+          {
+            "name": "renewReminderDays",
+            "type": "number",
+            "note": "RenewReminderDays is how many days before an entitlement lapses the student is mailed."
+          },
+          {
+            "name": "renewReminderOff",
+            "type": "boolean",
+            "note": "RenewReminderOff silences the reminder for this course. NAMED FOR THE NON-DEFAULT, like DripFromEnrollment above: the zero value has to be the behaviour that serves a merchant who never opened the screen, and that is being reminded."
+          }
+        ]
       },
       {
         "name": "sectionCount",
@@ -942,15 +1256,117 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
       },
       {
         "name": "instructor",
-        "type": "Instructor"
+        "type": "Instructor",
+        "fields": [
+          {
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "name": "title",
+            "type": "string"
+          },
+          {
+            "name": "avatar",
+            "type": "string"
+          },
+          {
+            "name": "bio",
+            "type": "string"
+          }
+        ]
       },
       {
         "name": "seo",
-        "type": "SEO"
+        "type": "SEO",
+        "fields": [
+          {
+            "name": "title",
+            "type": "string"
+          },
+          {
+            "name": "description",
+            "type": "string"
+          },
+          {
+            "name": "keywords",
+            "type": "string"
+          },
+          {
+            "name": "canonical",
+            "type": "string"
+          },
+          {
+            "name": "ogTitle",
+            "type": "string"
+          },
+          {
+            "name": "ogDesc",
+            "type": "string"
+          },
+          {
+            "name": "ogImage",
+            "type": "string"
+          },
+          {
+            "name": "twitterCard",
+            "type": "string"
+          },
+          {
+            "name": "noIndex",
+            "type": "boolean"
+          },
+          {
+            "name": "noFollow",
+            "type": "boolean"
+          }
+        ]
       },
       {
         "name": "settings",
-        "type": "Settings"
+        "type": "Settings",
+        "fields": [
+          {
+            "name": "grantOn",
+            "type": "string",
+            "note": "GrantOn is one of the GrantOn constants; \"\" reads as GrantOnPaid."
+          },
+          {
+            "name": "accessDays",
+            "type": "number",
+            "note": "AccessDays is how long an entitlement lasts from the moment it is granted."
+          },
+          {
+            "name": "seatCap",
+            "type": "number",
+            "note": "SeatCap caps how many ACTIVE entitlements this course may hold at once — a cohort with a real classroom, a live intake."
+          },
+          {
+            "name": "completionPercent",
+            "type": "number",
+            "note": "CompletionPercent is the share of lessons a student must finish before the course counts as completed (and a certificate, when enabled, is earned)."
+          },
+          {
+            "name": "certificate",
+            "type": "boolean",
+            "note": "Certificate turns on the completion certificate."
+          },
+          {
+            "name": "dripFromEnrollment",
+            "type": "boolean",
+            "note": "DripFromEnrollment makes Lesson. NAMED FOR THE NON-DEFAULT so the zero value is the simpler product behaviour, and because per-student drip is the thing a merchant has to opt into understanding: two students then see different lessons on…"
+          },
+          {
+            "name": "renewReminderDays",
+            "type": "number",
+            "note": "RenewReminderDays is how many days before an entitlement lapses the student is mailed."
+          },
+          {
+            "name": "renewReminderOff",
+            "type": "boolean",
+            "note": "RenewReminderOff silences the reminder for this course. NAMED FOR THE NON-DEFAULT, like DripFromEnrollment above: the zero value has to be the behaviour that serves a merchant who never opened the screen, and that is being reminded."
+          }
+        ]
       },
       {
         "name": "sectionCount",
@@ -1142,7 +1558,52 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
     "fields": [
       {
         "name": "instructors",
-        "type": "courses.CourseInstructor[]"
+        "type": "courses.CourseInstructor[]",
+        "fields": [
+          {
+            "name": "siteId",
+            "type": "string"
+          },
+          {
+            "name": "courseId",
+            "type": "string"
+          },
+          {
+            "name": "instructorId",
+            "type": "string"
+          },
+          {
+            "name": "role",
+            "type": "InstructorRole"
+          },
+          {
+            "name": "revenueShare",
+            "type": "number",
+            "note": "RevenueShare is in BASIS POINTS (0.."
+          },
+          {
+            "name": "position",
+            "type": "number",
+            "note": "Position orders the teachers as the course page lists them."
+          },
+          {
+            "name": "createdAt",
+            "type": "string (RFC3339)"
+          },
+          {
+            "name": "name",
+            "type": "string",
+            "note": "Denormalised for reading, never written: a list of a course's teachers is always shown with their names, and making every caller join for that would be the same mistake Enrollment."
+          },
+          {
+            "name": "title",
+            "type": "string"
+          },
+          {
+            "name": "avatar",
+            "type": "string"
+          }
+        ]
       }
     ],
     "source": "go",
@@ -1195,15 +1656,117 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
       },
       {
         "name": "instructor",
-        "type": "Instructor"
+        "type": "Instructor",
+        "fields": [
+          {
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "name": "title",
+            "type": "string"
+          },
+          {
+            "name": "avatar",
+            "type": "string"
+          },
+          {
+            "name": "bio",
+            "type": "string"
+          }
+        ]
       },
       {
         "name": "seo",
-        "type": "SEO"
+        "type": "SEO",
+        "fields": [
+          {
+            "name": "title",
+            "type": "string"
+          },
+          {
+            "name": "description",
+            "type": "string"
+          },
+          {
+            "name": "keywords",
+            "type": "string"
+          },
+          {
+            "name": "canonical",
+            "type": "string"
+          },
+          {
+            "name": "ogTitle",
+            "type": "string"
+          },
+          {
+            "name": "ogDesc",
+            "type": "string"
+          },
+          {
+            "name": "ogImage",
+            "type": "string"
+          },
+          {
+            "name": "twitterCard",
+            "type": "string"
+          },
+          {
+            "name": "noIndex",
+            "type": "boolean"
+          },
+          {
+            "name": "noFollow",
+            "type": "boolean"
+          }
+        ]
       },
       {
         "name": "settings",
-        "type": "Settings"
+        "type": "Settings",
+        "fields": [
+          {
+            "name": "grantOn",
+            "type": "string",
+            "note": "GrantOn is one of the GrantOn constants; \"\" reads as GrantOnPaid."
+          },
+          {
+            "name": "accessDays",
+            "type": "number",
+            "note": "AccessDays is how long an entitlement lasts from the moment it is granted."
+          },
+          {
+            "name": "seatCap",
+            "type": "number",
+            "note": "SeatCap caps how many ACTIVE entitlements this course may hold at once — a cohort with a real classroom, a live intake."
+          },
+          {
+            "name": "completionPercent",
+            "type": "number",
+            "note": "CompletionPercent is the share of lessons a student must finish before the course counts as completed (and a certificate, when enabled, is earned)."
+          },
+          {
+            "name": "certificate",
+            "type": "boolean",
+            "note": "Certificate turns on the completion certificate."
+          },
+          {
+            "name": "dripFromEnrollment",
+            "type": "boolean",
+            "note": "DripFromEnrollment makes Lesson. NAMED FOR THE NON-DEFAULT so the zero value is the simpler product behaviour, and because per-student drip is the thing a merchant has to opt into understanding: two students then see different lessons on…"
+          },
+          {
+            "name": "renewReminderDays",
+            "type": "number",
+            "note": "RenewReminderDays is how many days before an entitlement lapses the student is mailed."
+          },
+          {
+            "name": "renewReminderOff",
+            "type": "boolean",
+            "note": "RenewReminderOff silences the reminder for this course. NAMED FOR THE NON-DEFAULT, like DripFromEnrollment above: the zero value has to be the behaviour that serves a merchant who never opened the screen, and that is being reminded."
+          }
+        ]
       },
       {
         "name": "sectionCount",
@@ -1387,7 +1950,21 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
       {
         "name": "attachments",
         "type": "Attachment[]",
-        "note": "A lesson built with the ordinary canvas does NOT name its page here, and a quiz lesson does not name its form. The copy imports courses FIRST and pages LAST, so a lesson written during a copy cannot resolve a page id that has not been…"
+        "note": "A lesson built with the ordinary canvas does NOT name its page here, and a quiz lesson does not name its form. The copy imports courses FIRST and pages LAST, so a lesson written during a copy cannot resolve a page id that has not been…",
+        "fields": [
+          {
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "name": "url",
+            "type": "string"
+          },
+          {
+            "name": "sizeBytes",
+            "type": "number"
+          }
+        ]
       },
       {
         "name": "createdAt",
@@ -1469,7 +2046,21 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
       {
         "name": "attachments",
         "type": "Attachment[]",
-        "note": "A lesson built with the ordinary canvas does NOT name its page here, and a quiz lesson does not name its form. The copy imports courses FIRST and pages LAST, so a lesson written during a copy cannot resolve a page id that has not been…"
+        "note": "A lesson built with the ordinary canvas does NOT name its page here, and a quiz lesson does not name its form. The copy imports courses FIRST and pages LAST, so a lesson written during a copy cannot resolve a page id that has not been…",
+        "fields": [
+          {
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "name": "url",
+            "type": "string"
+          },
+          {
+            "name": "sizeBytes",
+            "type": "number"
+          }
+        ]
       },
       {
         "name": "createdAt",
@@ -1487,11 +2078,35 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
     "fields": [
       {
         "name": "sections",
-        "type": "SectionPosition[]"
+        "type": "SectionPosition[]",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string"
+          },
+          {
+            "name": "position",
+            "type": "number"
+          }
+        ]
       },
       {
         "name": "lessons",
-        "type": "LessonPosition[]"
+        "type": "LessonPosition[]",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string"
+          },
+          {
+            "name": "sectionId",
+            "type": "string"
+          },
+          {
+            "name": "position",
+            "type": "number"
+          }
+        ]
       }
     ],
     "source": "go",
@@ -1781,7 +2396,21 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
       },
       {
         "name": "lines",
-        "type": "ReturnLineInput[]"
+        "type": "ReturnLineInput[]",
+        "fields": [
+          {
+            "name": "productId",
+            "type": "string"
+          },
+          {
+            "name": "variantId",
+            "type": "string"
+          },
+          {
+            "name": "qty",
+            "type": "number"
+          }
+        ]
       }
     ],
     "source": "go",
@@ -1831,7 +2460,49 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
       },
       {
         "name": "addresses",
-        "type": "Address[]"
+        "type": "Address[]",
+        "fields": [
+          {
+            "name": "fullName",
+            "type": "string"
+          },
+          {
+            "name": "phone",
+            "type": "string"
+          },
+          {
+            "name": "line1",
+            "type": "string"
+          },
+          {
+            "name": "line2",
+            "type": "string"
+          },
+          {
+            "name": "city",
+            "type": "string"
+          },
+          {
+            "name": "district",
+            "type": "string"
+          },
+          {
+            "name": "ward",
+            "type": "string"
+          },
+          {
+            "name": "province",
+            "type": "string"
+          },
+          {
+            "name": "postalCode",
+            "type": "string"
+          },
+          {
+            "name": "country",
+            "type": "string"
+          }
+        ]
       },
       {
         "name": "tags",
@@ -1898,7 +2569,49 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
       },
       {
         "name": "addresses",
-        "type": "Address[]"
+        "type": "Address[]",
+        "fields": [
+          {
+            "name": "fullName",
+            "type": "string"
+          },
+          {
+            "name": "phone",
+            "type": "string"
+          },
+          {
+            "name": "line1",
+            "type": "string"
+          },
+          {
+            "name": "line2",
+            "type": "string"
+          },
+          {
+            "name": "city",
+            "type": "string"
+          },
+          {
+            "name": "district",
+            "type": "string"
+          },
+          {
+            "name": "ward",
+            "type": "string"
+          },
+          {
+            "name": "province",
+            "type": "string"
+          },
+          {
+            "name": "postalCode",
+            "type": "string"
+          },
+          {
+            "name": "country",
+            "type": "string"
+          }
+        ]
       },
       {
         "name": "tags",
@@ -2093,7 +2806,37 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
       },
       {
         "name": "files",
-        "type": "FontFile[]"
+        "type": "FontFile[]",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string"
+          },
+          {
+            "name": "siteId",
+            "type": "string"
+          },
+          {
+            "name": "fontGroupId",
+            "type": "string"
+          },
+          {
+            "name": "weight",
+            "type": "string"
+          },
+          {
+            "name": "url",
+            "type": "string"
+          },
+          {
+            "name": "format",
+            "type": "string"
+          },
+          {
+            "name": "sizeBytes",
+            "type": "number"
+          }
+        ]
       },
       {
         "name": "createdAt",
@@ -2134,7 +2877,37 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
       },
       {
         "name": "files",
-        "type": "FontFile[]"
+        "type": "FontFile[]",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string"
+          },
+          {
+            "name": "siteId",
+            "type": "string"
+          },
+          {
+            "name": "fontGroupId",
+            "type": "string"
+          },
+          {
+            "name": "weight",
+            "type": "string"
+          },
+          {
+            "name": "url",
+            "type": "string"
+          },
+          {
+            "name": "format",
+            "type": "string"
+          },
+          {
+            "name": "sizeBytes",
+            "type": "number"
+          }
+        ]
       },
       {
         "name": "createdAt",
@@ -2219,7 +2992,61 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
       },
       {
         "name": "settings",
-        "type": "Settings"
+        "type": "Settings",
+        "fields": [
+          {
+            "name": "afterSubmit",
+            "type": "AfterSubmit"
+          },
+          {
+            "name": "notify",
+            "type": "Notify"
+          },
+          {
+            "name": "submitLabel",
+            "type": "string",
+            "note": "SubmitLabel / SubmittingLabel: the button's resting and in-flight text."
+          },
+          {
+            "name": "submittingLabel",
+            "type": "string"
+          },
+          {
+            "name": "booking",
+            "type": "BookingSettings",
+            "note": "Booking is the booking-form rulebook (TypeBooking only — see booking."
+          },
+          {
+            "name": "skipStorage",
+            "type": "boolean",
+            "note": "SkipStorage turns OFF storing responses (sink-only forms). Deliberately NAMED FOR THE NON-DEFAULT so the Go zero value is the product default."
+          },
+          {
+            "name": "limitOnePerIpPerDay",
+            "type": "boolean",
+            "note": "LimitOnePerIPPerDay is an OPTIONAL extra throttle."
+          },
+          {
+            "name": "submitSegmentId",
+            "type": "string",
+            "note": "SubmitSegmentID is which segment carries the submit button."
+          },
+          {
+            "name": "orderProductId",
+            "type": "string",
+            "note": "OrderProductID is what a type=order form sells."
+          },
+          {
+            "name": "orderSource",
+            "type": "OrderSource",
+            "note": "OrderSource is where a type=order form gets what it sells FROM: the pinned OrderProductID above, or the shopper's cart."
+          },
+          {
+            "name": "reviewProductId",
+            "type": "string",
+            "note": "ReviewProductID is what a type=review form reviews, PINNED by the merchant — OrderProductID's twin, and the trustworthy half of the two answers this type accepts. THE PIN WINS when set, because it is the value a caller cannot change."
+          }
+        ]
       },
       {
         "name": "createdAt",
@@ -2258,7 +3085,61 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
       },
       {
         "name": "settings",
-        "type": "Settings"
+        "type": "Settings",
+        "fields": [
+          {
+            "name": "afterSubmit",
+            "type": "AfterSubmit"
+          },
+          {
+            "name": "notify",
+            "type": "Notify"
+          },
+          {
+            "name": "submitLabel",
+            "type": "string",
+            "note": "SubmitLabel / SubmittingLabel: the button's resting and in-flight text."
+          },
+          {
+            "name": "submittingLabel",
+            "type": "string"
+          },
+          {
+            "name": "booking",
+            "type": "BookingSettings",
+            "note": "Booking is the booking-form rulebook (TypeBooking only — see booking."
+          },
+          {
+            "name": "skipStorage",
+            "type": "boolean",
+            "note": "SkipStorage turns OFF storing responses (sink-only forms). Deliberately NAMED FOR THE NON-DEFAULT so the Go zero value is the product default."
+          },
+          {
+            "name": "limitOnePerIpPerDay",
+            "type": "boolean",
+            "note": "LimitOnePerIPPerDay is an OPTIONAL extra throttle."
+          },
+          {
+            "name": "submitSegmentId",
+            "type": "string",
+            "note": "SubmitSegmentID is which segment carries the submit button."
+          },
+          {
+            "name": "orderProductId",
+            "type": "string",
+            "note": "OrderProductID is what a type=order form sells."
+          },
+          {
+            "name": "orderSource",
+            "type": "OrderSource",
+            "note": "OrderSource is where a type=order form gets what it sells FROM: the pinned OrderProductID above, or the shopper's cart."
+          },
+          {
+            "name": "reviewProductId",
+            "type": "string",
+            "note": "ReviewProductID is what a type=review form reviews, PINNED by the merchant — OrderProductID's twin, and the trustworthy half of the two answers this type accepts. THE PIN WINS when set, because it is the value a caller cannot change."
+          }
+        ]
       },
       {
         "name": "createdAt",
@@ -2593,7 +3474,21 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
       {
         "name": "tiers",
         "type": "Tier[]",
-        "note": "Tiers is the rank ladder, ascending by MinPoints; empty = no tiers, everyone earns at ×1."
+        "note": "Tiers is the rank ladder, ascending by MinPoints; empty = no tiers, everyone earns at ×1.",
+        "fields": [
+          {
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "name": "minPoints",
+            "type": "number"
+          },
+          {
+            "name": "multiplier",
+            "type": "number"
+          }
+        ]
       },
       {
         "name": "updatedAt",
@@ -2675,7 +3570,25 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
       },
       {
         "name": "items",
-        "type": "Item[]"
+        "type": "Item[]",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string"
+          },
+          {
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "name": "link",
+            "type": "Link"
+          },
+          {
+            "name": "items",
+            "type": "Item[]"
+          }
+        ]
       },
       {
         "name": "createdAt",
@@ -2705,7 +3618,25 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
       },
       {
         "name": "items",
-        "type": "Item[]"
+        "type": "Item[]",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string"
+          },
+          {
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "name": "link",
+            "type": "Link"
+          },
+          {
+            "name": "items",
+            "type": "Item[]"
+          }
+        ]
       },
       {
         "name": "createdAt",
@@ -2739,19 +3670,149 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
       },
       {
         "name": "customer",
-        "type": "OrderCustomer"
+        "type": "OrderCustomer",
+        "fields": [
+          {
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "name": "email",
+            "type": "string"
+          },
+          {
+            "name": "phone",
+            "type": "string"
+          }
+        ]
       },
       {
         "name": "items",
-        "type": "OrderItem[]"
+        "type": "OrderItem[]",
+        "fields": [
+          {
+            "name": "productId",
+            "type": "string"
+          },
+          {
+            "name": "variantId",
+            "type": "string"
+          },
+          {
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "name": "sku",
+            "type": "string"
+          },
+          {
+            "name": "options",
+            "type": "{ [string]: string }"
+          },
+          {
+            "name": "image",
+            "type": "string"
+          },
+          {
+            "name": "priceCents",
+            "type": "number"
+          },
+          {
+            "name": "quantity",
+            "type": "number"
+          },
+          {
+            "name": "taxClassId",
+            "type": "string",
+            "note": "TaxClassID is the class this line was taxed under, copied from the product at the moment of sale."
+          },
+          {
+            "name": "taxRateBps",
+            "type": "number",
+            "note": "TaxRateBps and TaxCents are the per-line SNAPSHOT — what this line was actually taxed at and for."
+          },
+          {
+            "name": "taxCents",
+            "type": "number"
+          }
+        ]
       },
       {
         "name": "shipTo",
-        "type": "Address"
+        "type": "Address",
+        "fields": [
+          {
+            "name": "fullName",
+            "type": "string"
+          },
+          {
+            "name": "phone",
+            "type": "string"
+          },
+          {
+            "name": "line1",
+            "type": "string"
+          },
+          {
+            "name": "line2",
+            "type": "string"
+          },
+          {
+            "name": "city",
+            "type": "string"
+          },
+          {
+            "name": "province",
+            "type": "string"
+          },
+          {
+            "name": "postalCode",
+            "type": "string"
+          },
+          {
+            "name": "country",
+            "type": "string"
+          }
+        ]
       },
       {
         "name": "billTo",
-        "type": "Address"
+        "type": "Address",
+        "fields": [
+          {
+            "name": "fullName",
+            "type": "string"
+          },
+          {
+            "name": "phone",
+            "type": "string"
+          },
+          {
+            "name": "line1",
+            "type": "string"
+          },
+          {
+            "name": "line2",
+            "type": "string"
+          },
+          {
+            "name": "city",
+            "type": "string"
+          },
+          {
+            "name": "province",
+            "type": "string"
+          },
+          {
+            "name": "postalCode",
+            "type": "string"
+          },
+          {
+            "name": "country",
+            "type": "string"
+          }
+        ]
       },
       {
         "name": "status",
@@ -2888,19 +3949,149 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
       },
       {
         "name": "customer",
-        "type": "OrderCustomer"
+        "type": "OrderCustomer",
+        "fields": [
+          {
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "name": "email",
+            "type": "string"
+          },
+          {
+            "name": "phone",
+            "type": "string"
+          }
+        ]
       },
       {
         "name": "items",
-        "type": "OrderItem[]"
+        "type": "OrderItem[]",
+        "fields": [
+          {
+            "name": "productId",
+            "type": "string"
+          },
+          {
+            "name": "variantId",
+            "type": "string"
+          },
+          {
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "name": "sku",
+            "type": "string"
+          },
+          {
+            "name": "options",
+            "type": "{ [string]: string }"
+          },
+          {
+            "name": "image",
+            "type": "string"
+          },
+          {
+            "name": "priceCents",
+            "type": "number"
+          },
+          {
+            "name": "quantity",
+            "type": "number"
+          },
+          {
+            "name": "taxClassId",
+            "type": "string",
+            "note": "TaxClassID is the class this line was taxed under, copied from the product at the moment of sale."
+          },
+          {
+            "name": "taxRateBps",
+            "type": "number",
+            "note": "TaxRateBps and TaxCents are the per-line SNAPSHOT — what this line was actually taxed at and for."
+          },
+          {
+            "name": "taxCents",
+            "type": "number"
+          }
+        ]
       },
       {
         "name": "shipTo",
-        "type": "Address"
+        "type": "Address",
+        "fields": [
+          {
+            "name": "fullName",
+            "type": "string"
+          },
+          {
+            "name": "phone",
+            "type": "string"
+          },
+          {
+            "name": "line1",
+            "type": "string"
+          },
+          {
+            "name": "line2",
+            "type": "string"
+          },
+          {
+            "name": "city",
+            "type": "string"
+          },
+          {
+            "name": "province",
+            "type": "string"
+          },
+          {
+            "name": "postalCode",
+            "type": "string"
+          },
+          {
+            "name": "country",
+            "type": "string"
+          }
+        ]
       },
       {
         "name": "billTo",
-        "type": "Address"
+        "type": "Address",
+        "fields": [
+          {
+            "name": "fullName",
+            "type": "string"
+          },
+          {
+            "name": "phone",
+            "type": "string"
+          },
+          {
+            "name": "line1",
+            "type": "string"
+          },
+          {
+            "name": "line2",
+            "type": "string"
+          },
+          {
+            "name": "city",
+            "type": "string"
+          },
+          {
+            "name": "province",
+            "type": "string"
+          },
+          {
+            "name": "postalCode",
+            "type": "string"
+          },
+          {
+            "name": "country",
+            "type": "string"
+          }
+        ]
       },
       {
         "name": "status",
@@ -3653,7 +4844,49 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
       },
       {
         "name": "seo",
-        "type": "SEO"
+        "type": "SEO",
+        "fields": [
+          {
+            "name": "title",
+            "type": "string"
+          },
+          {
+            "name": "description",
+            "type": "string"
+          },
+          {
+            "name": "keywords",
+            "type": "string"
+          },
+          {
+            "name": "canonical",
+            "type": "string"
+          },
+          {
+            "name": "ogTitle",
+            "type": "string"
+          },
+          {
+            "name": "ogDesc",
+            "type": "string"
+          },
+          {
+            "name": "ogImage",
+            "type": "string"
+          },
+          {
+            "name": "twitterCard",
+            "type": "string"
+          },
+          {
+            "name": "noIndex",
+            "type": "boolean"
+          },
+          {
+            "name": "noFollow",
+            "type": "boolean"
+          }
+        ]
       },
       {
         "name": "author",
@@ -3699,7 +4932,49 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
       },
       {
         "name": "seo",
-        "type": "SEO"
+        "type": "SEO",
+        "fields": [
+          {
+            "name": "title",
+            "type": "string"
+          },
+          {
+            "name": "description",
+            "type": "string"
+          },
+          {
+            "name": "keywords",
+            "type": "string"
+          },
+          {
+            "name": "canonical",
+            "type": "string"
+          },
+          {
+            "name": "ogTitle",
+            "type": "string"
+          },
+          {
+            "name": "ogDesc",
+            "type": "string"
+          },
+          {
+            "name": "ogImage",
+            "type": "string"
+          },
+          {
+            "name": "twitterCard",
+            "type": "string"
+          },
+          {
+            "name": "noIndex",
+            "type": "boolean"
+          },
+          {
+            "name": "noFollow",
+            "type": "boolean"
+          }
+        ]
       },
       {
         "name": "author",
@@ -3737,7 +5012,49 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
       },
       {
         "name": "seo",
-        "type": "SEO"
+        "type": "SEO",
+        "fields": [
+          {
+            "name": "title",
+            "type": "string"
+          },
+          {
+            "name": "description",
+            "type": "string"
+          },
+          {
+            "name": "keywords",
+            "type": "string"
+          },
+          {
+            "name": "canonical",
+            "type": "string"
+          },
+          {
+            "name": "ogTitle",
+            "type": "string"
+          },
+          {
+            "name": "ogDesc",
+            "type": "string"
+          },
+          {
+            "name": "ogImage",
+            "type": "string"
+          },
+          {
+            "name": "twitterCard",
+            "type": "string"
+          },
+          {
+            "name": "noIndex",
+            "type": "boolean"
+          },
+          {
+            "name": "noFollow",
+            "type": "boolean"
+          }
+        ]
       }
     ],
     "source": "go",
@@ -3771,7 +5088,49 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
       },
       {
         "name": "seo",
-        "type": "SEO"
+        "type": "SEO",
+        "fields": [
+          {
+            "name": "title",
+            "type": "string"
+          },
+          {
+            "name": "description",
+            "type": "string"
+          },
+          {
+            "name": "keywords",
+            "type": "string"
+          },
+          {
+            "name": "canonical",
+            "type": "string"
+          },
+          {
+            "name": "ogTitle",
+            "type": "string"
+          },
+          {
+            "name": "ogDesc",
+            "type": "string"
+          },
+          {
+            "name": "ogImage",
+            "type": "string"
+          },
+          {
+            "name": "twitterCard",
+            "type": "string"
+          },
+          {
+            "name": "noIndex",
+            "type": "boolean"
+          },
+          {
+            "name": "noFollow",
+            "type": "boolean"
+          }
+        ]
       }
     ],
     "source": "go",
@@ -3793,7 +5152,50 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
       },
       {
         "name": "addresses",
-        "type": "Address[]"
+        "type": "Address[]",
+        "fields": [
+          {
+            "name": "fullName",
+            "type": "string"
+          },
+          {
+            "name": "phone",
+            "type": "string"
+          },
+          {
+            "name": "line1",
+            "type": "string"
+          },
+          {
+            "name": "line2",
+            "type": "string"
+          },
+          {
+            "name": "city",
+            "type": "string"
+          },
+          {
+            "name": "district",
+            "type": "string",
+            "note": "The two lower Vietnamese levels — quận/huyện and phường/xã. ONE DTO, TWO SOURCES, AND ONLY ONE OF THEM CAN FILL THESE."
+          },
+          {
+            "name": "ward",
+            "type": "string"
+          },
+          {
+            "name": "province",
+            "type": "string"
+          },
+          {
+            "name": "postalCode",
+            "type": "string"
+          },
+          {
+            "name": "country",
+            "type": "string"
+          }
+        ]
       },
       {
         "name": "defaultAddress",
@@ -3823,7 +5225,50 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
       },
       {
         "name": "addresses",
-        "type": "Address[]"
+        "type": "Address[]",
+        "fields": [
+          {
+            "name": "fullName",
+            "type": "string"
+          },
+          {
+            "name": "phone",
+            "type": "string"
+          },
+          {
+            "name": "line1",
+            "type": "string"
+          },
+          {
+            "name": "line2",
+            "type": "string"
+          },
+          {
+            "name": "city",
+            "type": "string"
+          },
+          {
+            "name": "district",
+            "type": "string",
+            "note": "The two lower Vietnamese levels — quận/huyện and phường/xã. ONE DTO, TWO SOURCES, AND ONLY ONE OF THEM CAN FILL THESE."
+          },
+          {
+            "name": "ward",
+            "type": "string"
+          },
+          {
+            "name": "province",
+            "type": "string"
+          },
+          {
+            "name": "postalCode",
+            "type": "string"
+          },
+          {
+            "name": "country",
+            "type": "string"
+          }
+        ]
       },
       {
         "name": "defaultAddress",
@@ -3990,7 +5435,49 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
       },
       {
         "name": "variants",
-        "type": "VariantInput[]"
+        "type": "VariantInput[]",
+        "fields": [
+          {
+            "name": "sku",
+            "type": "string"
+          },
+          {
+            "name": "barcode",
+            "type": "string"
+          },
+          {
+            "name": "options",
+            "type": "{ [string]: string }"
+          },
+          {
+            "name": "priceCents",
+            "type": "number"
+          },
+          {
+            "name": "compareAtCents",
+            "type": "number"
+          },
+          {
+            "name": "stock",
+            "type": "number"
+          },
+          {
+            "name": "hidden",
+            "type": "boolean"
+          },
+          {
+            "name": "preOrder",
+            "type": "boolean"
+          },
+          {
+            "name": "weightGrams",
+            "type": "number"
+          },
+          {
+            "name": "images",
+            "type": "string[]"
+          }
+        ]
       }
     ],
     "source": "go",
@@ -4040,7 +5527,49 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
       },
       {
         "name": "variants",
-        "type": "VariantInput[]"
+        "type": "VariantInput[]",
+        "fields": [
+          {
+            "name": "sku",
+            "type": "string"
+          },
+          {
+            "name": "barcode",
+            "type": "string"
+          },
+          {
+            "name": "options",
+            "type": "{ [string]: string }"
+          },
+          {
+            "name": "priceCents",
+            "type": "number"
+          },
+          {
+            "name": "compareAtCents",
+            "type": "number"
+          },
+          {
+            "name": "stock",
+            "type": "number"
+          },
+          {
+            "name": "hidden",
+            "type": "boolean"
+          },
+          {
+            "name": "preOrder",
+            "type": "boolean"
+          },
+          {
+            "name": "weightGrams",
+            "type": "number"
+          },
+          {
+            "name": "images",
+            "type": "string[]"
+          }
+        ]
       }
     ],
     "source": "go",
@@ -4143,7 +5672,33 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
       },
       {
         "name": "lines",
-        "type": "Line[]"
+        "type": "Line[]",
+        "fields": [
+          {
+            "name": "productId",
+            "type": "string"
+          },
+          {
+            "name": "variantId",
+            "type": "string"
+          },
+          {
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "name": "sku",
+            "type": "string"
+          },
+          {
+            "name": "quantity",
+            "type": "number"
+          },
+          {
+            "name": "priceCents",
+            "type": "number"
+          }
+        ]
       },
       {
         "name": "staffNote",
@@ -4211,7 +5766,33 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
       },
       {
         "name": "lines",
-        "type": "Line[]"
+        "type": "Line[]",
+        "fields": [
+          {
+            "name": "productId",
+            "type": "string"
+          },
+          {
+            "name": "variantId",
+            "type": "string"
+          },
+          {
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "name": "sku",
+            "type": "string"
+          },
+          {
+            "name": "quantity",
+            "type": "number"
+          },
+          {
+            "name": "priceCents",
+            "type": "number"
+          }
+        ]
       },
       {
         "name": "staffNote",

@@ -179,3 +179,28 @@ describe('request shapes — the handler outranks the document', () => {
     expect(shaped.length / writes.length).toBeGreaterThan(0.6);
   });
 });
+
+describe('nested shapes — where the price actually lives', () => {
+  it('expands a variant list, because a product carries no price of its own', () => {
+    const op = findOperation('post:/api/v1/products')!;
+    const d = describeOperation(op) as {
+      body_shape?: { fields: Array<{ name: string; fields?: Array<{ name: string }> }> };
+    };
+    const variants = d.body_shape?.fields.find((f) => f.name === 'variants');
+    expect(variants).toBeDefined();
+    // `products.Product` has no price column at all — price is a variant's. A
+    // shape that stopped at the type name told an agent everything except the one
+    // field that decides whether the store can take money.
+    expect(variants?.fields?.map((f) => f.name)).toContain('priceCents');
+  });
+
+  it('stops at one level, so a shape stays an argument rather than a schema dump', () => {
+    for (const [id, shape] of Object.entries(REQUEST_SHAPES)) {
+      for (const f of shape.fields) {
+        for (const inner of f.fields ?? []) {
+          expect(inner.fields, `${id}.${f.name}.${inner.name}`).toBeUndefined();
+        }
+      }
+    }
+  });
+});

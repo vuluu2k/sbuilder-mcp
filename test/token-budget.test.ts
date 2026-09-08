@@ -50,12 +50,14 @@ describe('token budget — a diet without a scale comes back', () => {
     // The heaviest one measured, and the reason there is a ceiling at all: a body
     // shape is a whole struct's worth of field names, types and trap notes, and
     // an unbounded one would put a domain model into the context of anybody who
-    // asked what an endpoint takes. Median is 586; orders is the outlier at 3,771.
+    // asked what an endpoint takes. Median is 632; an order is the outlier at
+    // 5,084, because an order genuinely is the platform's largest object and its
+    // line items are expanded one level — the level that carries the price.
     const orders = await client.callTool({
       name: 'sb_api_find',
       arguments: { id: 'post:/api/sites/{siteId}/orders' },
     });
-    expect(chars(orders)).toBeLessThan(4_500);
+    expect(chars(orders)).toBeLessThan(5_500);
     // The one every storefront build calls, and the one that must stay cheap.
     const products = await client.callTool({
       name: 'sb_api_find',

@@ -32,6 +32,17 @@ export interface ShapeField {
   name: string;
   type: string;
   note?: string;
+  /**
+   * The nested struct's own fields, one level down.
+   *
+   * WITHOUT THIS A PRODUCT CANNOT BE PRICED. `POST /api/v1/products` takes
+   * `variants: VariantInput[]` and `products.Product` carries no price column at
+   * all — price lives on the variant — so a shape that stopped at the type NAME
+   * told an agent everything except the one field that decides whether the store
+   * can take money. One level only: it is where the answer is, and the second
+   * level is where the size is.
+   */
+  fields?: ShapeField[];
 }
 
 export interface RequestShape {
@@ -339,6 +350,24 @@ function renderType(goType: string): string {
 // ---------------------------------------------------------------------------
 
 const MAX_EMBED_DEPTH = 3;
+/** A nested struct wider than this is a row, not an argument; name it and stop. */
+const MAX_NESTED_FIELDS = 20;
+
+/** The struct a field's type names, if the index knows it. */
+function nestedOf(
+  goType: string,
+  fromDir: string,
+  index: StructIndex,
+  pkgs: PackageIndex,
+): ShapeField[] | undefined {
+  const bare = goType.trim().replace(/^[*[\]]+/, '');
+  if (SCALARS[bare] || bare.startsWith('map[')) return undefined;
+  const key = resolveRef(bare, fromDir, index, pkgs);
+  if (!key) return undefined;
+  const inner = flatten(key, index, pkgs, 0, new Set(), false);
+  if (!inner || inner.length === 0 || inner.length > MAX_NESTED_FIELDS) return undefined;
+  return inner;
+}
 
 function flatten(
   key: string,
@@ -346,6 +375,7 @@ function flatten(
   pkgs: PackageIndex,
   depth = 0,
   seen: Set<string> = new Set(),
+  expandNested = true,
 ): ShapeField[] | null {
   if (seen.has(key)) return [];
   const s = index.get(key);
@@ -357,7 +387,7 @@ function flatten(
     for (const embed of s.embeds) {
       const resolved = resolveRef(embed, s.dir, index, pkgs);
       if (!resolved) continue;
-      const inner = flatten(resolved, index, pkgs, depth + 1, seen);
+      const inner = flatten(resolved, index, pkgs, depth + 1, seen, expandNested);
       if (inner) out.push(...inner);
     }
   }
@@ -365,7 +395,13 @@ function flatten(
     if (f.jsonName === '-') continue;
     if (!/^[A-Z]/.test(f.goName)) continue; // unexported never reaches JSON
     const note = noteFrom(f.doc);
-    out.push({ name: f.jsonName ?? f.goName, type: renderType(f.goType), ...(note ? { note } : {}) });
+    const nested = expandNested ? nestedOf(f.goType, s.dir, index, pkgs) : undefined;
+    out.push({
+      name: f.jsonName ?? f.goName,
+      type: renderType(f.goType),
+      ...(note ? { note } : {}),
+      ...(nested ? { fields: nested } : {}),
+    });
   }
   // Later wins, as Go's own embedding-shadowing does.
   const byName = new Map<string, ShapeField>();

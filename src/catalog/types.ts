@@ -27,6 +27,14 @@ export interface ShapeField {
   name: string;
   type: string;
   /**
+   * A nested struct's own fields, one level down.
+   *
+   * WITHOUT THIS A PRODUCT CANNOT BE PRICED: `POST /api/v1/products` takes
+   * `variants: VariantInput[]`, and price lives on the variant — `products.Product`
+   * has no price column at all.
+   */
+  fields?: ShapeField[];
+  /**
    * The field's own doc comment, trimmed to its first sentence plus any sentence
    * that shouts. The shouting is where this platform keeps the knowledge that
    * decides a body: "ZERO MEANS 'never free', not 'always free'".
