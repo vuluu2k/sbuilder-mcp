@@ -81,3 +81,31 @@ describe('redact()', () => {
     expect(redact({ a: [{ password: 'p' }] })).toEqual({ a: [{ password: '[redacted]' }] });
   });
 });
+
+describe('redact() is the second line under a platform-sourced body', () => {
+  it('catches a credential key the platform spells its own way', () => {
+    // `sb_undo` echoes a body read back from the PLATFORM, whose vocabulary this
+    // repo does not choose. An anchored `^secret$` lets every one of these
+    // through, and the platform's masking would be the only thing standing
+    // between a gateway key and a transcript.
+    const out = redact({
+      clientSecret: 'x',
+      secretKey: 'x',
+      checksumKey: 'x',
+      credentials: { partnerCode: 'p', accessKey: 'k' },
+      privateKey: 'x',
+      label: 'VNPay',
+    }) as Record<string, unknown>;
+    for (const k of ['clientSecret', 'secretKey', 'checksumKey', 'credentials', 'privateKey']) {
+      expect(out[k], k).toBe('[redacted]');
+    }
+    // Over-redaction is the safe direction, but it must not eat everything: a
+    // translation row's `key` has to stay readable, and a bare `key` is safe
+    // because it only appears inside `credentials`, which is replaced whole
+    // before the recursion reaches its children.
+    expect(out.label).toBe('VNPay');
+    expect((redact({ key: 'home.title', value: 'Trang chủ' }) as Record<string, unknown>).key).toBe(
+      'home.title',
+    );
+  });
+});

@@ -37,18 +37,47 @@ export class ApiError extends Error {
   }
 }
 
-/** Keys whose value is a credential wherever it appears. */
-const SECRET_KEYS = /^(authorization|token|access_?token|refresh_?token|password|secret|api_?key)$/i;
+/**
+ * Keys whose value is a credential wherever it appears.
+ *
+ * A SUBSTRING MATCH, not an anchored one. It was anchored while the only
+ * free-form objects reaching `redact()` were bodies a CALLER supplied, where the
+ * key names are the caller's own. `sb_undo` changed that: it echoes a body read
+ * back from the PLATFORM, whose vocabulary this repo does not choose, and which
+ * spells credentials `clientSecret`, `secretKey`, `checksumKey` and
+ * `credentials` — every one of which an anchored `^secret$` lets through.
+ *
+ * The platform's own credential vocabulary, read off `internal/payments`:
+ * `accessKey`, `apiKey`, `checksumKey`, `clientSecret`, `hashSecret`, `secretKey`,
+ * `webhookSecret`, `orderToken`, `signature`, `credentials` — and a bare `key`.
+ *
+ * `key` needs a character in front of it (`[a-z_]key`), so the bare one does NOT
+ * match. That is deliberate and it is not a hole: a bare `key` appears inside a
+ * `credentials` map, and `credentials` is replaced WHOLE before the recursion
+ * reaches its children. Matching it unqualified would instead redact the `key` of
+ * every translation row, which is a preview nobody can read.
+ *
+ * Over-redaction is otherwise the safe direction: a `[redacted]` where none was
+ * needed costs a reader one question, and the alternative costs a merchant a
+ * gateway key in a transcript.
+ */
+const SECRET_KEYS = /(authorization|token|password|passphrase|secret|credential|signature|[a-z_]key)/i;
 
 /**
  * Replace credential-shaped values with a marker, recursively.
  *
  * Every preview that can carry a FREE-FORM object goes through this — `sb_api_call`'s
- * body and `sb_page_create`'s `settings`, the two places a caller supplies a shape
- * this server does not type. The rest of the dry-run previews echo patch counts or
- * bodies built from narrow arguments, which cannot hold a credential. It keys
- * off the FIELD NAME rather than the value's shape on purpose: a token format
- * can change tomorrow, while the field name is what this repo controls.
+ * body, `sb_page_create`'s `settings`, and `sb_undo`'s `would_restore`, which is
+ * the one sourced from the PLATFORM rather than from the caller. The rest of the
+ * dry-run previews echo patch counts or bodies built from narrow arguments, which
+ * cannot hold a credential.
+ *
+ * It keys off the FIELD NAME rather than the value's shape on purpose: a token
+ * format can change tomorrow, while a field name is stable. The platform masks
+ * its own secrets on the way out — a gateway's GET drops every field marked
+ * `Secret`, mail settings answer `hasPassword` rather than the password — so this
+ * is the second line, not the first. A second line that only fires on names this
+ * repo happens to use is not one.
  */
 export function redact(value: unknown): unknown {
   if (Array.isArray(value)) return value.map(redact);

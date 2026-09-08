@@ -132,3 +132,43 @@ describe('sb_undo end to end', () => {
     await close();
   });
 });
+
+describe('sb_undo defaults to a dry run', () => {
+  it('sends nothing when dry_run is absent — the one destructiveHint tool here', async () => {
+    const sent: string[] = [];
+    const f = vi.fn(async (url: unknown, init?: RequestInit) => {
+      const method = init?.method ?? 'GET';
+      sent.push(`${method} ${new URL(String(url)).pathname}`);
+      return new Response(JSON.stringify({ document: { nodes: { before: true } } }), {
+        status: 200,
+        headers: { 'content-type': 'application/json' },
+      });
+    }) as unknown as typeof fetch;
+    const session = new Session('http://x', f);
+    (session as unknown as { access: string }).access = 'jwt';
+    const { client, close } = await connectedClient({
+      base: 'http://x',
+      session,
+      fetchImpl: f,
+      notices: new Notices(),
+    });
+
+    await client.callTool({
+      name: 'sb_api_call',
+      arguments: {
+        id: 'put:/api/sites/{siteId}/forms/{id}/document',
+        path_params: { siteId: 's1', id: 'frm_1' },
+        body: { document: {} },
+        dry_run: false,
+      },
+    });
+    sent.length = 0;
+
+    const out = parse(await client.callTool({ name: 'sb_undo', arguments: { index: 1 } }));
+    expect(out.dry_run).toBe(true);
+    // An unproven guard is indistinguishable from an absent one, and this is the
+    // tool that writes a whole document back over a live one.
+    expect(sent).toEqual([]);
+    await close();
+  });
+});
