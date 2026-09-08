@@ -24,7 +24,8 @@ import { readinessGaps, READINESS_NOTICE } from '../domains/site/readiness.js';
 import { gatherReadiness } from '../domains/site/readiness-fetch.js';
 import { globalWarning, restampPatches, RESPONSIVE_NOTICE } from '../domains/site/traps.js';
 import { catalogMatches, traitsFor } from '../catalog/element-search.js';
-import type { Patch } from '../core/patch.js';
+import { applyPatches, type Patch } from '../core/patch.js';
+import { stickyWarning } from '../domains/site/sticky.js';
 import type { LiveSession } from '../live/session.js';
 import type { Box } from '../vision/shoot.js';
 import { siteFor, type ToolContext } from './context.js';
@@ -334,7 +335,14 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
         keys: z.record(z.unknown()).optional(),
         breakpoint: z.enum(['desktop', 'laptop', 'tablet', 'mobile']).optional(),
         base: z.boolean().optional(),
-        state: z.string().optional().describe('An interaction state, e.g. "hover"'),
+        state: z
+          .string()
+          .optional()
+          .describe(
+            'An interaction state — "hover", or "stuck" for how a pinned element looks once ' +
+              'it is stuck (needs a sticky/fixed self-or-ancestor; a descendant styles itself ' +
+              'through the host).',
+          ),
         edits: z
           .array(
             z.object({
@@ -362,16 +370,46 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
         batch.push({ id, namespace, keys, breakpoint: breakpoint as Breakpoint | undefined, base, state });
       }
       const { patches, touched } = setMany(d, batch);
+      // THE STICKY WARNING IS COMPUTED AGAINST THE DOCUMENT AS IT WILL BE, so
+      // the dry run and the real run say the same thing. A caller who is told
+      // only after committing has already shipped a header that does not move.
+      const stuck = (): Record<string, string> => {
+        // Gated on the batch actually being able to change the answer, because
+        // a page document is hundreds of KB and sb_set is the hottest write
+        // there is: a clone on every call would tax every edit for a warning
+        // that fires on almost none. `position` and `overflow*` are the only
+        // two keys in the question.
+        const relevant = batch.some(
+          (e) =>
+            e.namespace === 'style' &&
+            ('position' in e.keys || 'overflowX' in e.keys || 'overflowY' in e.keys),
+        );
+        const out: Record<string, string> = {};
+        if (!relevant) return out;
+        const probe = JSON.parse(JSON.stringify(d.doc)) as typeof d.doc;
+        applyPatches(probe as unknown as object, patches);
+        for (const e of batch) {
+          const w = stickyWarning(probe, e.id, e.base ? undefined : (e.breakpoint ?? 'desktop'));
+          if (w) out[e.id] = w;
+        }
+        return out;
+      };
       if (dry_run !== false) {
         const note = ctx.notices.once('responsive', RESPONSIVE_NOTICE);
-        return text({ dry_run: true, patches, ...(note ? { note } : {}) });
+        const sw = stuck();
+        return text({
+          dry_run: true,
+          patches,
+          ...(Object.keys(sw).length ? { warnings: sw } : {}),
+          ...(note ? { note } : {}),
+        });
       }
+      const warnings: Record<string, string> = stuck();
       session.applyAndPublish(patches);
       await session.save();
-      const warnings: Record<string, string> = {};
       for (const t of touched) {
         const w = globalWarning(d.doc, t.id);
-        if (w) warnings[t.id] = w;
+        if (w) warnings[t.id] = warnings[t.id] ? `${warnings[t.id]} ${w}` : w;
       }
       if (!edits) {
         const warn = warnings[batch[0].id];

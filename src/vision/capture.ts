@@ -55,6 +55,7 @@ declare function getComputedStyle(el: El): {
   borderWidth: string;
   flexDirection: string;
   flexWrap: string;
+  position: string;
 };
 declare const location: { href: string };
 
@@ -346,7 +347,16 @@ function capturePage(limits: { maxSections: number; maxImages: number; maxTextCh
         skip('empty-section');
         continue;
       }
-      acc.push({ kind: 'section', children });
+      // PINNING IS THE ONE BEHAVIOUR WORTH CARRYING OVER, and the only one this
+      // importer reads off computed style rather than off the tree. A sticky
+      // category bar or a fixed buy bar is a layout DECISION — the section is
+      // there to stay in view — and a copy that scrolls away is not the same
+      // section. Sticky and fixed only: `absolute` and `relative` describe where
+      // a box sits inside a layout this import is not copying, so carrying them
+      // would place a section against coordinates that no longer exist.
+      const pos = getComputedStyle(el).position;
+      const pinned = pos === 'sticky' || pos === 'fixed' ? pos : undefined;
+      acc.push({ kind: 'section', children, ...(pinned ? { pinned } : {}) });
     }
     return acc;
   };

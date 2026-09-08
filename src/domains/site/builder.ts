@@ -11,6 +11,7 @@ import {
 import { ELEMENTS, ELEMENT_SEEDS, SATELLITE_RULES } from '../../catalog/elements.generated.js';
 import { bindingsForConfig, createNode, mintSatellites } from './node.js';
 import { refuseSecondTemplate } from './traps.js';
+import { STUCK_STATE, refuseStuckConfig, requireStuckHost, stickySeeds } from './sticky.js';
 import { genId } from './ids.js';
 import type { PageDoc } from './document.js';
 
@@ -286,6 +287,15 @@ export function setKeys(
   // documents that exact call — `sb_set pr_option style base:true state:"active"`
   // — as the way to style a selected option.
   if (opts.state) {
+    // THE STUCK STATE IS THE ONE STATE WITH A PRECONDITION. Every other state
+    // is a pseudo-class the browser resolves on the node itself; `stuck` is a
+    // class a runtime island toggles on the PINNED element, and the renderer
+    // emits no rule at all when there is nothing pinned to hang it off. See
+    // sticky.ts — this is the whole reason that module exists.
+    if (opts.state === STUCK_STATE) {
+      requireStuckHost(doc.doc, id);
+      if (namespace === 'config') refuseStuckConfig(keys);
+    }
     // Base state and per-breakpoint state are DIFFERENT PLACES in the document,
     // and the old path (`states[state][bp][ns]`) was neither of them: it buried
     // a breakpoint inside the base-state cluster, where nothing reads it.
@@ -300,6 +310,19 @@ export function setKeys(
       })),
       ...(rebind ? [rebind] : []),
     ];
+  }
+
+  // WRITING `position: sticky` IS THREE WRITES, and the editor makes all three.
+  // An agent that made only the first shipped a header the page paints over —
+  // measured in Chromium by the platform, not inferred. Seeded only where the
+  // caller and the node are both silent, so an explicit answer always wins.
+  if (namespace === 'style') {
+    const seeds = stickySeeds(
+      doc.node(id) as never,
+      keys,
+      opts.base ? undefined : (opts.breakpoint ?? 'desktop'),
+    );
+    if (Object.keys(seeds).length) keys = { ...seeds, ...keys };
   }
 
   if (opts.base) {

@@ -520,6 +520,39 @@ không đổi theo hover.
 
 ---
 
+### Ghim (pin) và trạng thái `stuck`
+
+`position: sticky` không tạo ra thay đổi nào mà CSS quan sát được khi nó bám — không có
+`:stuck` — nên platform bật một class (`wb-stuck`) lên chính phần tử được ghim từ một runtime
+island, rồi biên dịch mọi rule viết cho dáng-lúc-ghim theo class đó. Vì vậy `stuck` là **trạng
+thái duy nhất có điều kiện tiên quyết**, kèm ba kiểu hỏng lặng lẽ:
+
+| Bạn viết | Nếu không có guard |
+| --- | --- |
+| `state:"stuck"` trên node không có gì được ghim | Renderer không sinh rule nào (`render/css.go` chỉ sinh CSS stuck khi có stuck host). Được lưu, được save, được publish, và không bao giờ vẽ. `sb_set` từ chối và chỉ đúng node cần ghim |
+| Chỉ `position: "sticky"` | Chạy nửa vời. Platform đo trong Chromium: một section đã ghim mà không có `z-index` sẽ bị bất kỳ phần tử `position: relative` ở section sau vẽ ĐÈ lên ngay khi cuộn qua. `sb_set` gieo kèm `top: 0px` và `zIndex: 10`, đúng như inspector làm, và không bao giờ ghi đè giá trị bạn đã đưa |
+| Node sticky nằm dưới một ancestor cắt tràn | Sticky bám theo ancestor **cuộn được** gần nhất, nên `overflow: hidden\|auto\|scroll\|clip\|overlay` ở trên nó trở thành ancestor đó, và node ghim bên trong một hộp không bao giờ cuộn. `sb_set` cảnh báo và gọi tên ancestor — kể cả ở dry run — còn `sb_review` báo `sticky_blocked` |
+
+Node **con** tự tạo dáng thông qua host: rule biên dịch thành `#host.wb-stuck #self`, nên một
+header đã ghim có thể thu nhỏ logo và ẩn tagline mà cả hai đứa con không cần biết ai ghim.
+Ghim section trước, rồi viết `stuck` lên các con.
+
+```
+sb_set hd_1 style base:true { position: "sticky" }      # gieo kèm top:0px, zIndex:10
+sb_set hd_1 style base:true state:"stuck" { boxShadow: "0 2px 8px #0002" }
+sb_set logo style base:true state:"stuck" { height: "24px" }
+sb_set tag  config      state:"stuck" { hidden: true }   # config key DUY NHẤT một state dịch được
+```
+
+`hidden` là config key duy nhất trạng thái stuck biến thành khai báo (`display: none`), và chỉ
+nhận `true`: `false` sẽ cần `display: revert`, thứ trượt qua cả CSS tĩnh của chính element về
+mặc định của trình duyệt. Muốn thôi ẩn thì xoá override đi. `fixed` cũng được tính là ghim —
+"khoảnh khắc trang đã cuộn qua chỗ đáng lẽ nó nằm" là cùng một ý đồ thiết kế — nhưng không
+được gieo kèm, vì nó đến như một quyết định đặt chỗ có chủ ý. `config.stuckAfter` (px cuộn
+trang, theo breakpoint) ghi đè thời điểm island coi là đã ghim.
+
+---
+
 # Cài đặt (`sbuilder-mcp install`)
 
 ```bash
@@ -560,6 +593,8 @@ tài liệu:
 | `form_fields_flush` | `form` / `form-segment` / `form-step-nav` xếp các field mà không có `gap`, khiến mỗi label đọc như thuộc về ô phía TRÊN nó. Khác với `config.fieldStackGap` — khoảng cách label↔control nhỏ hơn, nằm BÊN TRONG một field |
 | `dead_menu_link` | Mục menu không có `href` — renderer đọc `specials.menuItems` chứ không bao giờ đọc `menuId` |
 | `extra_repeater_child` | Repeater chứa nhiều hơn một child mà nó nhân bản cho mỗi bản ghi; phần còn lại không bao giờ xuất hiện |
+| `sticky_blocked` | Node đã ghim nằm dưới một ancestor cắt tràn. Sticky bám theo ancestor CUỘN ĐƯỢC gần nhất, nên ancestor đó trở thành chỗ bám và node ghim trong một hộp không bao giờ cuộn. Nó không nhúc nhích, và không gì báo cả. `key` chỉ ancestor cần sửa, không phải node |
+| `stuck_no_host` | Override `stuck` trên node không có gì được ghim ở trên. `render/css.go` chỉ sinh CSS stuck khi có stuck host, nên phần tạo dáng được lưu, save, publish và không bao giờ vẽ. Thường do host bị bỏ ghim về sau, hoặc do import |
 
 Ba mã cuối là những luật RENDER mà một document hoàn toàn hợp lệ vẫn có thể vi
 phạm. `form` seed sẵn `formId: ""` và form chỉ được compose trên đường RENDER, nên
@@ -673,6 +708,13 @@ nó — `display:flex` hoặc `grid` — với từ hai con trở lên sẽ thà
 mang sẵn **điểm gãy dọc ở mobile**, vì không có gì bắt hộ bạn một cột quá hẹp: các cột co lại,
 không hộp nào tràn, `measure` im lặng trong khi tấm ảnh mỏng như sợi chỉ. Một `<div>` chỉ để
 bọc thì bị làm phẳng, vì nó không phải một quyết định thiết kế.
+
+**Section đã ghim vẫn ghim.** Đây là thứ duy nhất importer đọc từ computed style thay vì từ
+cây, vì nó là một QUYẾT ĐỊNH bố cục — thanh danh mục sticky hay thanh mua hàng fixed nằm đó để
+luôn trong tầm mắt, và bản sao trôi mất khi cuộn thì không còn là cùng một section. Nó đến kèm
+offset và thứ tự lớp bên cạnh `position`, đúng ba key `sb_set` gieo, nên nó không chui xuống
+dưới section liền sau. `absolute` và `relative` cố tình không được mang theo: chúng mô tả vị
+trí một hộp bên trong bố cục mà bản import này không sao chép.
 
 **Là dịch lại, không phải sao chép, và đó là toàn bộ thiết kế.** Nền tảng CÓ một lối thoát
 hiểm cho phép sao chép nguyên trang — `custom-code` nhúng markup thô nguyên văn — nhưng dùng

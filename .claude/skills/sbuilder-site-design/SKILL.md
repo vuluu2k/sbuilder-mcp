@@ -339,6 +339,31 @@ A cleanup that trashed every media asset whose name was not in the new set took 
 54 Roboto font files with it. Recoverable only because the platform soft-deletes
 (`POST /api/v1/media/{id}/restore`).
 
+### 9. Pinning is three keys and a precondition, and every mistake is silent
+
+A sticky header is one of the few things that makes a page feel built rather than generated —
+and all three ways to get it wrong fail with nothing on screen and nothing in the log.
+
+```
+sb_set hd_1 style base:true { position: "sticky" }   # sb_set seeds top:0px + zIndex:10 with it
+sb_set hd_1 style base:true state:"stuck" { boxShadow: "0 2px 8px #0002" }
+sb_set logo style base:true state:"stuck" { height: "24px" }
+sb_set tag  config      state:"stuck" { hidden: true }
+```
+
+- **`stuck` is the state a PINNED element wears once it is stuck**, and the renderer emits no
+  rule for it unless the node or an ancestor pins. Pin the section first; the children then
+  style themselves through it (`#host.wb-stuck #self`) and need no position of their own.
+- **Never write `position: sticky` alone.** Without `zIndex`, any `position: relative` element
+  in a later section paints over the header the moment it scrolls past — measured in Chromium.
+  `sb_set` seeds `top: 0px` and `zIndex: 10`, and never over a value you gave.
+- **An ancestor with `overflow: hidden|auto|scroll|clip|overlay` kills it.** Sticky binds to
+  the nearest scrolling ancestor, so the node pins inside a box that never scrolls. `sb_set`
+  warns; `sb_review` reports `sticky_blocked`.
+
+`hidden: true` in the stuck state is how a tagline disappears when the header pins — the one
+config key the state translates, and only `true`. `fixed` pins too, and is not seeded.
+
 ## Judge the page from the right artifact
 
 Three ways a correct page reads as broken:

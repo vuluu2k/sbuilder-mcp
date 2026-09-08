@@ -543,6 +543,39 @@ vary by hover.
 
 ---
 
+### Pinning, and the `stuck` state
+
+`position: sticky` changes nothing observable when it engages — CSS has no `:stuck` — so the
+platform toggles one class (`wb-stuck`) on the pinned element from a runtime island and
+compiles every rule written for the pinned look against it. That makes `stuck` **the one
+state with a precondition**, and three separate silent failures around it:
+
+| What you write | What happens without the guard |
+| --- | --- |
+| `state:"stuck"` on a node with nothing pinned | The renderer emits no rule at all (`render/css.go` compiles stuck CSS only under a stuck host). Stored, saved, published, never painted. `sb_set` refuses it and names the node to pin |
+| `position: "sticky"` alone | Half-works. Measured in Chromium by the platform: a pinned section with no `z-index` is painted OVER by any `position: relative` element in a later section the moment it scrolls past. `sb_set` seeds `top: 0px` and `zIndex: 10` with it, exactly as the inspector does, and never over an answer you gave |
+| A sticky node under an ancestor that clips | Sticky resolves against its nearest **scrolling** ancestor, so `overflow: hidden\|auto\|scroll\|clip\|overlay` above it becomes that ancestor and the node pins inside a box that never scrolls. `sb_set` warns naming the ancestor — in the dry run too — and `sb_review` reports it as `sticky_blocked` |
+
+A **descendant** styles itself through the host: the rule compiles to `#host.wb-stuck #self`,
+so a pinned header can shrink its logo and hide its tagline without either child knowing what
+pinned it. Pin the section, then write `stuck` on the children.
+
+```
+sb_set hd_1 style base:true { position: "sticky" }      # seeds top:0px, zIndex:10
+sb_set hd_1 style base:true state:"stuck" { boxShadow: "0 2px 8px #0002" }
+sb_set logo style base:true state:"stuck" { height: "24px" }
+sb_set tag  config      state:"stuck" { hidden: true }   # the ONE config key a state translates
+```
+
+`hidden` is the only config key the stuck state turns into a declaration (`display: none`),
+and only `true`: `false` would need `display: revert`, which rolls past the element's own CSS
+to the UA default. To stop hiding something, remove the override. `fixed` counts as pinned
+too — "the moment the page has scrolled past where it would have been" is the same design —
+but it is not seeded, because it arrives as a deliberate placement. `config.stuckAfter` (px of
+page scroll, per breakpoint) overrides when the island decides the element is stuck.
+
+---
+
 # Installing (`sbuilder-mcp install`)
 
 ```bash
@@ -582,6 +615,8 @@ box. Returns `{ findings, fixes, findings_notice? }`, in document order:
 | `form_fields_flush` | A `form` / `form-segment` / `form-step-nav` stacking its fields with no `gap`, so each label reads as belonging to the control above it. Distinct from `config.fieldStackGap`, the smaller label-to-control gap INSIDE one field |
 | `dead_menu_link` | A menu entry with no `href` — the renderer reads `specials.menuItems` and never `menuId` |
 | `extra_repeater_child` | A repeater holding more than the one child it clones per record; the rest never appear |
+| `sticky_blocked` | A pinned node under an ancestor that clips its overflow. Sticky resolves against its nearest SCROLLING ancestor, so that one becomes it and the node pins inside a box that never scrolls. It does not move, and nothing reports it. `key` names the ancestor to fix, not the node |
+| `stuck_no_host` | A `stuck` override on a node with nothing pinned above it. `render/css.go` emits stuck CSS only under a stuck host, so the styling is stored, saved, published and never painted. Usually a host that was un-pinned later, or an import |
 
 The two dataset codes exist because the obvious advice is wrong inside a repeater. An
 `image` in a product card renders `specials.src`, so setting it puts ONE picture on every
@@ -697,6 +732,14 @@ children out — `display:flex` or `grid` — with two or more of them becomes a
 the row carries a **mobile stack** because nothing catches a too-narrow column for you: the
 columns shrink, no box overflows, and `measure` stays silent while a photo becomes a sliver.
 A `<div>` that merely wraps is flattened, because it is not a design decision.
+
+**A pinned section stays pinned.** It is the one thing the importer reads off computed style
+rather than off the tree, because it is a layout DECISION — a sticky category bar or a fixed
+buy bar is there to stay in view, and a copy that scrolls away is not the same section. It
+arrives with the offset and the layer order alongside `position`, the same three keys
+`sb_set` seeds, so it does not land underneath the section after it. `absolute` and
+`relative` are deliberately not carried: they describe where a box sits inside a layout this
+import is not copying.
 
 **A translation, not a clone, and that is the whole design.** The platform HAS an escape
 hatch that would clone a page — `custom-code` embeds raw markup verbatim — and reaching for

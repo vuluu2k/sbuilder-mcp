@@ -814,6 +814,47 @@ that accounts for them.
   consulted whenever the declared type does not identify the file. The old tests pinned the
   file NAME and never the type, which is how this survived.
 
+- **PINNING ARRIVED IN SEPTEMBER 2026, AND ALL THREE OF ITS FAILURES ARE SILENT.**
+  `position: sticky` changes nothing a stylesheet can see when it engages — CSS has no
+  `:stuck` — so `schema/src/stickyState.ts` (Go mirror `render/style/sticky.go`) has a runtime
+  island toggle ONE class, `wb-stuck`, on the pinned element, and compiles every rule written
+  for the pinned look against it: `#self.wb-stuck` for the node itself, `#host.wb-stuck #self`
+  for a DESCENDANT, which is what lets a pinned header shrink its logo without the logo
+  knowing what pinned it. Three things follow, and `src/domains/site/sticky.ts` holds all
+  three because each is a write that disappears:
+  - **The state needs a HOST.** `render/css.go` emits stuck rules inside
+    `if stuckHost := stuckHostFor(...); stuckHost != ""`. A `stuck` override with no pinned
+    self-or-ancestor compiles to nothing — stored, saved, published, ignored forever, the same
+    shape as a binding outside the `specials` namespace. `sb_set` refuses it and names the node
+    to pin; `sb_review` reports `stuck_no_host` for the document that got there another way.
+  - **The seeds are not cosmetic.** The inspector writes `top: 0px` AND `zIndex: 10` the moment
+    an author picks "Stick on scroll", and the platform's commit records the measurement:
+    in Chromium, a pinned header with no z-index is painted OVER by any `position: relative`
+    element in a later section the moment it scrolls past. 10 is specific, not large — above
+    page content, below the overlay ladder the static CSS owns (cart scrim 40, drawer 41,
+    pop-up scrim 50, pop-up 51), because a header outranking those would cover the drawer it
+    opens. `sb_set` seeds both, never over an answer the caller gave.
+  - **A clipping ancestor defeats it entirely.** Sticky resolves against its nearest SCROLLING
+    ancestor, so `overflow: hidden|auto|scroll|clip|overlay` above it becomes that ancestor and
+    the node pins inside a box that never scrolls. Warned by `sb_set` (in the dry run too, so
+    the caller is not told after committing) and reported as `sticky_blocked`. The check starts
+    at the PARENT: a sticky element's own overflow clips its children, not itself.
+
+  `fixed` counts as pinned — "the moment the page has scrolled past where it would have been"
+  is the same design — but it is not seeded, because it arrives as a deliberate placement, and
+  it is exempt from the clip warning because the viewport is not an ancestor. `absolute` is
+  deliberately not pinned: it scrolls away with the page. `stuckDecls` translates exactly ONE
+  config key, `hidden`, into `display: none`, and only `true` — `false` would need
+  `display: revert`, which `render/css.go` documents as wrong here because it rolls past the
+  element's own static CSS to the UA default. `config.stuckAfter` (px of page scroll, per
+  breakpoint) overrides when the island decides. `sb_import` carries `sticky`/`fixed` off a
+  source page's computed style with all three keys, because a section pinned to stay in view
+  is a layout decision and a copy that scrolls away is not the same section.
+
+  The same work also landed the thing this repo had already fixed independently: **state
+  overrides write PER BREAKPOINT** (`responsive[bp].states`), which both compilers had always
+  read and only the editor never wrote.
+
 ## The five traps
 
 Each fails SILENTLY. Each is encoded in `src/domains/site/traps.ts` (trap 5 in

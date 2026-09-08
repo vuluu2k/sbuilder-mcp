@@ -68,6 +68,18 @@ export const FIX: Record<string, string> = {
     'Raise it for this breakpoint: sb_set id "<id>", namespace style, keys { "fontSize": "16px" }.',
   overlap:
     'Check the two for a fixed height or a negative margin at this breakpoint; sb_look with node_id on each shows which one is out of place.',
+  // Both sticky findings name a node OTHER than the one at fault, because in
+  // both cases the node carrying the defect is not the node to edit.
+  sticky_blocked:
+    'Clear the clip on the ancestor: sb_set id "<key>", namespace style, keys ' +
+    '{ "overflowX": "visible", "overflowY": "visible" } — or move the pinned node outside it. ' +
+    'Sticky resolves against its nearest SCROLLING ancestor, so a clipping one becomes that ' +
+    'ancestor and the node pins inside a box that never scrolls.',
+  stuck_no_host:
+    'Pin something: sb_set id "<id>" (or the section it lives in), namespace style, keys ' +
+    '{ "position": "sticky" } — sb_set seeds the offset and the layer order with it. Until ' +
+    'then the platform compiles no rule for this state at all, so the override is stored, ' +
+    'published and never painted. To drop it instead, remove the stuck slot.',
 };
 
 /** The template for `code`, with every `<name>` in `vars` substituted. */

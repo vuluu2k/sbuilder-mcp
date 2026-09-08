@@ -1,6 +1,7 @@
 import type { NodeSpec } from './builder.js';
 import type { DocLike, NodeLike } from '../../core/tree.js';
 import { walk } from '../../core/tree.js';
+import { stickySeeds } from './sticky.js';
 
 /**
  * A page read off SOMEBODY ELSE'S SITE, reduced to the six things this platform
@@ -21,6 +22,8 @@ export interface Captured {
   wrap?: boolean;
   /** For a button: whether the source painted it as a call to action, or it is prose's link. */
   variant?: 'cta' | 'link';
+  /** For a section the source kept in view while the page scrolled. */
+  pinned?: 'sticky' | 'fixed';
   /** 1-6 for a heading, so `htmlTag` survives the trip. */
   level?: number;
   text?: string;
@@ -273,6 +276,20 @@ function one(c: Captured, t: PageTokens): NodeSpec | null {
       // inner block is what carries the page's own measure — an imported band
       // that runs the full window width on a page whose sections are 1200 reads
       // as a different site even when every colour matches.
+      // A PINNED SECTION ARRIVES WITH ALL THREE KEYS, never just `position`.
+      // The offset and the layer order are not decoration: measured in Chromium
+      // by the platform, a pinned section with no z-index is painted OVER by any
+      // `position: relative` element in a later section the moment it scrolls
+      // past, which reads as the import having produced a broken band rather
+      // than as a stacking question nobody answered. `stickySeeds` is the one
+      // place that says what they are, so this cannot drift from `sb_set`.
+      //
+      // `fixed` is carried as the source declared it, seeds and all — a fixed
+      // bar with no offset would sit wherever the flow left it, which on an
+      // imported page is not where the source had it.
+      const pin = c.pinned
+        ? { position: c.pinned, ...stickySeeds(undefined, { position: 'sticky' }) }
+        : {};
       return {
         type: 'flex-section',
         style: {
@@ -281,6 +298,7 @@ function one(c: Captured, t: PageTokens): NodeSpec | null {
           flexDirection: 'column',
           alignItems: 'center',
           ...(t.sectionPadding ? { padding: t.sectionPadding } : { padding: '64px 24px' }),
+          ...pin,
         },
         children: [
           {

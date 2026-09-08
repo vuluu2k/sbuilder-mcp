@@ -1,4 +1,5 @@
 import { childrenOf, childrenWithSatellites, isOverlay, pageChildren, appBlockRoot, SPEC_GLOBAL_REF, SPEC_APP_BLOCK_REF, type DocLike } from '../../core/tree.js';
+import { STUCK_STATE, stickyBlockedBy, stuckHostOf, isPinnedNode } from './sticky.js';
 import { ELEMENTS, BINDING_SOURCES, BOUND_SPECIALS , FIRST_CHILD_ONLY, SATELLITE_RULES, ELEMENT_SEEDS } from '../../catalog/elements.generated.js';
 import type { PageDoc } from './document.js';
 import { fill } from './findings.js';
@@ -227,6 +228,53 @@ export function reviewDesign(doc: PageDoc): Finding[] {
         fix: fill('unknown_element', {}),
       });
       continue;
+    }
+
+    // PINNING FAILS WITH NOTHING ON SCREEN AND NOTHING IN THE LOG — both halves
+    // of it — which is exactly what a review is for. `sb_set` refuses the second
+    // case at write time, but a document reaches here by other roads: an import,
+    // a template, or a later edit that un-pinned the host and left the overrides
+    // behind.
+    const styled = n as unknown as {
+      style?: Record<string, unknown>;
+      responsive?: Record<string, { style?: Record<string, unknown>; states?: Record<string, unknown> }>;
+      states?: Record<string, unknown>;
+    };
+    if (isPinnedNode(n as never)) {
+      const blocker = stickyBlockedBy(d, id);
+      // Sticky only: a `fixed` element is positioned against the viewport and an
+      // overflow ancestor cannot take that away from it.
+      const sticky =
+        String(styled.style?.position) === 'sticky' ||
+        Object.values(styled.responsive ?? {}).some((r) => String(r?.style?.position) === 'sticky');
+      if (blocker && sticky) {
+        out.push({
+          code: 'sticky_blocked',
+          nodeId: id,
+          type,
+          problem:
+            `Pinned, but ancestor "${blocker}" clips its overflow — so that ancestor becomes ` +
+            'the scroll container this node pins inside, and it never scrolls. The node does ' +
+            'not move, and nothing reports it.',
+          key: blocker,
+          fix: fill('sticky_blocked', { id, key: blocker }),
+        });
+      }
+    }
+    const hasStuck =
+      styled.states?.[STUCK_STATE] !== undefined ||
+      Object.values(styled.responsive ?? {}).some((r) => r?.states?.[STUCK_STATE] !== undefined);
+    if (hasStuck && !stuckHostOf(d, id)) {
+      out.push({
+        code: 'stuck_no_host',
+        nodeId: id,
+        type,
+        problem:
+          'Carries a "stuck" override, but neither it nor any ancestor can pin — so the ' +
+          'renderer emits no rule for it. The styling is stored, saved and published, and ' +
+          'never painted.',
+        fix: fill('stuck_no_host', { id }),
+      });
     }
 
     const bindings =
