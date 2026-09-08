@@ -24,6 +24,34 @@ export interface UploadedAsset {
  *
  * Node ≥22 has FormData, Blob and fetch as globals, so this needs no dependency.
  */
+/**
+ * A content type from the file NAME, for the local-path case and as the fallback
+ * when a server answers with nothing useful.
+ *
+ * Deliberately small: the platform decides what it accepts, and duplicating its
+ * whole table here would be a second place for that policy to drift. These are
+ * the types a page actually carries.
+ */
+const TYPE_BY_EXT: Record<string, string> = {
+  '.png': 'image/png',
+  '.jpg': 'image/jpeg',
+  '.jpeg': 'image/jpeg',
+  '.gif': 'image/gif',
+  '.webp': 'image/webp',
+  '.avif': 'image/avif',
+  '.svg': 'image/svg+xml',
+  '.ico': 'image/x-icon',
+  '.bmp': 'image/bmp',
+  '.mp4': 'video/mp4',
+  '.webm': 'video/webm',
+  '.mov': 'video/quicktime',
+};
+
+function typeForName(name: string): string {
+  const dot = name.lastIndexOf('.');
+  return dot < 0 ? '' : (TYPE_BY_EXT[name.slice(dot).toLowerCase()] ?? '');
+}
+
 export async function uploadMedia(
   ctx: ToolContext,
   siteId: string,
@@ -33,6 +61,7 @@ export async function uploadMedia(
 
   let bytes: Uint8Array;
   let filename: string;
+  let declared = '';
   if (source.path) {
     bytes = await readFile(source.path);
     filename = source.name ?? basename(source.path);
@@ -42,6 +71,8 @@ export async function uploadMedia(
       throw new ApiError(res.status, 'source_unreachable', `could not fetch ${source.url}`);
     }
     bytes = new Uint8Array(await res.arrayBuffer());
+    // The SOURCE'S OWN answer first — it is the only party that actually knows.
+    declared = (res.headers.get('content-type') ?? '').split(';')[0].trim();
     // A URL's last segment is usually the filename; when it is not (a query-only
     // CDN link), name it rather than uploading something called "".
     filename = source.name ?? (new URL(source.url).pathname.split('/').pop() || 'image');
@@ -49,8 +80,26 @@ export async function uploadMedia(
     throw new Error('sbuilder: give sb_media_upload either a local path or a url');
   }
 
+  // THE HEADER ONLY WINS WHEN IT SAYS SOMETHING. A CDN answering
+  // `application/octet-stream` for a PNG is ordinary, and it is exactly the
+  // value the platform refuses — so "the server declared a type" is not the
+  // question; "the server declared a type that identifies the file" is.
+  const usable = declared.startsWith('image/') || declared.startsWith('video/');
+  const type = (usable ? declared : '') || typeForName(filename) || declared;
+
   const form = new FormData();
-  form.set('file', new Blob([bytes]), filename);
+  // THE BLOB'S TYPE IS THE UPLOAD'S CONTENT TYPE, and omitting it broke every
+  // upload this function ever made from a URL. A typeless Blob is sent as
+  // `application/octet-stream`, the platform accepts a file whose declared type
+  // starts with `image/` or `video/` (or whose EXTENSION is a known font or
+  // document), and octet-stream is none of those — so a PNG fetched from a URL
+  // was refused with "only image, video, or font uploads are supported", which
+  // reads as a policy about the FILE and is really a bug in this line.
+  //
+  // It cost a wrong conclusion too: the same refusal on an SVG was written up
+  // here as "the platform deliberately refuses SVG". It does not — it accepts
+  // any `image/*`, and `image/svg+xml` is one.
+  form.set('file', new Blob([bytes], type ? { type } : undefined), filename);
   if (source.name) form.set('name', source.name);
   if (source.folderId) form.set('folderId', source.folderId);
 

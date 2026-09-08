@@ -81,6 +81,78 @@ describe('uploadMedia()', () => {
     expect((form.get('file') as File).name).toBe('banner.jpg');
   });
 
+  /**
+   * THE BLOB'S TYPE IS THE UPLOAD'S CONTENT TYPE, and omitting it broke every
+   * upload this function ever made.
+   *
+   * A typeless Blob is sent as `application/octet-stream`. The platform accepts
+   * a file whose DECLARED type starts with `image/` or `video/`, or whose
+   * extension is a known font or document — and octet-stream is none of those.
+   * So a PNG fetched from a URL came back "only image, video, or font uploads
+   * are supported", a message that reads as a policy about the file and was
+   * really one missing argument.
+   *
+   * It cost a wrong conclusion as well as a broken tool: the same refusal on an
+   * SVG was written up as "the platform deliberately refuses SVG". It does not.
+   *
+   * The tests above pinned the file NAME and never the type, which is how it
+   * survived.
+   */
+  it("sends the source's own content type", async () => {
+    const f = vi.fn(async (u: unknown) => {
+      if (String(u).startsWith('http://src/')) {
+        return new Response(new Uint8Array([1, 2, 3]), {
+          status: 200,
+          headers: { 'content-type': 'image/webp' },
+        });
+      }
+      return new Response(JSON.stringify({ asset: {} }), {
+        status: 200,
+        headers: { 'content-type': 'application/json' },
+      });
+    }) as unknown as typeof fetch;
+
+    await uploadMedia(ctxWith(f), 's1', { url: 'http://src/a.webp' });
+    const form = (calls(f)[1][1] as RequestInit).body as FormData;
+    expect((form.get('file') as File).type).toBe('image/webp');
+  });
+
+  it('falls back to the extension when the server declares nothing useful', async () => {
+    const f = vi.fn(async (u: unknown) => {
+      if (String(u).startsWith('http://src/')) {
+        return new Response(new Uint8Array([1]), {
+          status: 200,
+          headers: { 'content-type': 'application/octet-stream' },
+        });
+      }
+      return new Response(JSON.stringify({ asset: {} }), {
+        status: 200,
+        headers: { 'content-type': 'application/json' },
+      });
+    }) as unknown as typeof fetch;
+
+    // A CDN that answers octet-stream for a PNG is common, and the platform
+    // refuses exactly that.
+    await uploadMedia(ctxWith(f), 's1', { url: 'http://src/photo.png' });
+    const form = (calls(f)[1][1] as RequestInit).body as FormData;
+    expect((form.get('file') as File).type).toBe('image/png');
+  });
+
+  it('types an SVG as an image, which the platform accepts', async () => {
+    const f = vi.fn(async (u: unknown) => {
+      if (String(u).startsWith('http://src/')) return new Response(new Uint8Array([1]), { status: 200 });
+      return new Response(JSON.stringify({ asset: {} }), {
+        status: 200,
+        headers: { 'content-type': 'application/json' },
+      });
+    }) as unknown as typeof fetch;
+
+    await uploadMedia(ctxWith(f), 's1', { url: 'http://src/logo.svg' });
+    const form = (calls(f)[1][1] as RequestInit).body as FormData;
+    // `image/svg+xml` starts with `image/`, which is the platform's whole test.
+    expect((form.get('file') as File).type).toBe('image/svg+xml');
+  });
+
   it('names a URL that carries no filename rather than uploading an empty name', async () => {
     const f = vi.fn(async (u: unknown) => {
       if (String(u).startsWith('http://cdn2/')) return new Response(new Uint8Array([1]), { status: 200 });

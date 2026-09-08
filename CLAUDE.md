@@ -795,6 +795,25 @@ that accounts for them.
   written down instead. SIGINT/SIGTERM still close Chrome, which is the path the stdio server
   actually takes.
 
+- **`sb_media_upload` FROM A URL WAS BROKEN FOR EVERY IMAGE TYPE, and the error blamed the
+  file.** `uploadMedia` built `new Blob([bytes])` with no `type`, so the multipart part went
+  out as `application/octet-stream`. The platform accepts a file whose DECLARED type starts
+  with `image/` or `video/`, or whose EXTENSION is a known font or document — octet-stream is
+  none of those, so a PNG fetched from a URL came back "only image, video, or font
+  (woff2/woff/ttf/otf) uploads are supported". A message about the file, caused by a missing
+  argument.
+
+  IT ALSO PRODUCED A WRONG FACT IN THIS FILE. The same refusal on an SVG was recorded as "the
+  platform deliberately refuses SVG". It does not — `ResolveUploadContentType` takes any
+  `image/*`, and `image/svg+xml` is one. The lesson is the one this file already keeps for
+  stale hints: a refusal quoted verbatim is evidence, but the READING of it is a guess until
+  something else confirms it, and here the confirming step (upload a PNG) took one call.
+
+  The header wins only when it says something: a CDN answering `application/octet-stream` for
+  a PNG is ordinary, and it is exactly the value the platform refuses, so the extension is
+  consulted whenever the declared type does not identify the file. The old tests pinned the
+  file NAME and never the type, which is how this survived.
+
 ## The five traps
 
 Each fails SILENTLY. Each is encoded in `src/domains/site/traps.ts` (trap 5 in

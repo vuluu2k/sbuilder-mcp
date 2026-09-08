@@ -110,11 +110,16 @@ export function registerImportTools(
       const rehosted = new Map<string, string>();
       // WHY it failed, not just how many. Four images refused for the same
       // reason is ONE thing to fix, and a bare count is the shape that sends a
-      // caller to re-run the import hoping for a different answer. Measured: a
-      // real import lost all four images to `only image, video, or font
-      // (woff2/woff/ttf/otf) uploads are supported` — the platform refusing SVG,
-      // whose own sentinel exists precisely so a caller can be told "convert it
-      // first". The count alone said none of that.
+      // caller to re-run the import hoping for a different answer.
+      //
+      // The measurement that proved it worth having also proved a CONCLUSION
+      // WRONG. A real import lost all four images to `only image, video, or font
+      // (woff2/woff/ttf/otf) uploads are supported`, and that was written up here
+      // as the platform refusing SVG. It does not refuse SVG: it accepts any
+      // declared `image/*`, and `image/svg+xml` is one. `uploadMedia` was sending
+      // a typeless Blob, so EVERY url upload arrived as `application/octet-stream`
+      // — a PNG was refused by the same message. A reason carried verbatim is
+      // what makes a wrong reading of it findable.
       const failures = new Map<string, number>();
       if (upload_images !== false) {
         for (const src of images) {
