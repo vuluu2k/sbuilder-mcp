@@ -32,6 +32,22 @@ describe('reviewDesign()', () => {
     expect(f!.fix).toContain(f!.nodeId);
   });
 
+  /**
+   * A REFERENCE IS EMPTY BY CONSTRUCTION. A page carries a shared header as an
+   * empty flex-section stamped `globalRef` — literally what `page/decompose.go`'s
+   * makeRefNode stores — and the server composes the master in on read. Reported,
+   * it is worse than noise: the notice says fix every finding, and the fix named
+   * is "add something inside it", which the next save decomposes away again.
+   */
+  it('does not call a global reference an empty container', () => {
+    const d = emptyDoc();
+    d.apply(addSubtree(d, 'ROOT', { type: 'flex-section' }).patches);
+    const id = d.node('ROOT').data.nodes[0];
+    expect(reviewDesign(d).some((f) => f.nodeId === id && f.code === 'empty_container')).toBe(true);
+    d.apply(setKeys(d, id, { globalRef: 'gs_1', globalKind: 'header' }, { namespace: 'specials' }));
+    expect(reviewDesign(d).some((f) => f.nodeId === id && f.code === 'empty_container')).toBe(false);
+  });
+
   it('reports the PLACEHOLDER the element ships with, still published', () => {
     const d = emptyDoc();
     d.apply(addSubtree(d, 'ROOT', { type: 'flex-section', children: [{ type: 'text' }] }).patches);
