@@ -351,6 +351,51 @@ describe.runIf(process.env.SB_BROWSER_TEST === '1')('capture()', () => {
     expect(texts).toContain('Real content');
   }, 60_000);
 
+  /**
+   * A LINK THAT IS NOT A BUTTON IS STILL A LINK.
+   *
+   * It used to contribute NOTHING, and on a page whose content IS a list of
+   * links that is the whole page: news.ycombinator.com lost 1,595 characters of
+   * story titles that way, and now loses none. The platform has no inline-link
+   * element — its own idiom is a `button` carrying `href`, styled flat.
+   */
+  it('keeps an unpainted link as a link, not as a call to action', async () => {
+    const page = `data:text/html,${encodeURIComponent(
+      '<main><section>' +
+        '<a href="/story">A story title</a>' +
+        '<a href="/buy" style="display:block;background:#E8557A">Buy now</a>' +
+        '</section></main>',
+    )}`;
+    const r = await capture(page);
+    const buttons = (r.sections[0].children ?? []).filter((c) => c.kind === 'button');
+    expect(buttons.map((b) => [b.text, b.variant])).toEqual([
+      ['A story title', 'link'],
+      ['Buy now', 'cta'],
+    ]);
+  }, 60_000);
+
+  it("drops the source's own header and footer, but not a section's", async () => {
+    // The target has its own, as shared globals. Importing somebody else's
+    // navigation onto a storefront is a second menu pointing at another site.
+    // Only PAGE-LEVEL ones: a <header> inside a section is a hero.
+    const page = `data:text/html,${encodeURIComponent(
+      '<header><p>Site nav</p></header>' +
+        '<main><section><header><h1>Hero</h1></header><p>Body</p></section></main>' +
+        '<footer><p>Site footer</p></footer>',
+    )}`;
+    const r = await capture(page);
+    const texts: string[] = [];
+    const walk = (c: { text?: string; children?: unknown[] }) => {
+      if (c.text) texts.push(c.text);
+      for (const k of (c.children ?? []) as { text?: string; children?: unknown[] }[]) walk(k);
+    };
+    r.sections.forEach(walk);
+    expect(texts).toContain('Hero');
+    expect(texts).toContain('Body');
+    expect(texts).not.toContain('Site nav');
+    expect(texts).not.toContain('Site footer');
+  }, 60_000);
+
   it('bounds the WHOLE import, not each section', async () => {
     // At 40 per section the cap was not a guard against a pathological page, it
     // was a truncation of an ordinary one — three dense pages each stopped at
@@ -364,7 +409,12 @@ describe.runIf(process.env.SB_BROWSER_TEST === '1')('capture()', () => {
     expect(r.skipped['over-node-limit']).toBeGreaterThan(0);
   }, 60_000);
 
-  it('takes a painted link as a button and leaves a bare one alone', async () => {
+  it('tells a painted call to action from an ordinary link', async () => {
+    // Both are kept — dropping the plain ones lost a whole page of story titles.
+    // What must not blur is WHICH is which: painting every link produced 38 pink
+    // pills out of a documentation sidebar. And the border test needs WIDTH,
+    // because Tailwind's preflight sets `border-style: solid; border-width: 0`
+    // on every element, so testing the style alone is true of a whole site.
     const page = `data:text/html,${encodeURIComponent(
       '<main><section>' +
         '<a href="/a" style="display:block;background:#E8557A">Real CTA</a>' +
@@ -375,7 +425,12 @@ describe.runIf(process.env.SB_BROWSER_TEST === '1')('capture()', () => {
     )}`;
     const r = await capture(page);
     const buttons = (r.sections[0].children ?? []).filter((c) => c.kind === 'button');
-    expect(buttons.map((b) => b.text)).toEqual(['Real CTA', 'Classed']);
+    expect(buttons.map((b) => [b.text, b.variant])).toEqual([
+      ['Real CTA', 'cta'],
+      ['Tailwind reset', 'link'],
+      ['Sidebar link', 'link'],
+      ['Classed', 'cta'],
+    ]);
   }, 60_000);
 
   it('bounds how many images one import can carry', async () => {

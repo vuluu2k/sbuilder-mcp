@@ -19,6 +19,8 @@ export interface Captured {
   /** For a group: the arrangement the source actually used. */
   direction?: 'row' | 'column';
   wrap?: boolean;
+  /** For a button: whether the source painted it as a call to action, or it is prose's link. */
+  variant?: 'cta' | 'link';
   /** 1-6 for a heading, so `htmlTag` survives the trip. */
   level?: number;
   text?: string;
@@ -181,6 +183,26 @@ function one(c: Captured, t: PageTokens): NodeSpec | null {
     case 'button': {
       const text = c.text?.trim();
       if (!text) return null;
+      // TWO KINDS OF LINK, and giving them one look was wrong in both
+      // directions. Painting every link produced 38 pink pills out of a
+      // documentation sidebar; dropping the unpainted ones lost a whole page of
+      // story titles. A call to action takes the target's FILL; a link takes its
+      // accent as INK and nothing else, which is the platform's own idiom for a
+      // link (a button carrying href, styled flat).
+      if (c.variant === 'link') {
+        return {
+          type: 'button',
+          specials: { text, ...(c.href ? { href: c.href } : {}) },
+          style: {
+            width: 'fit-content',
+            backgroundColor: 'transparent',
+            border: 'none',
+            padding: '0',
+            fontWeight: '500',
+            ...(t.buttonBg ? { color: t.buttonBg } : {}),
+          },
+        };
+      }
       return {
         type: 'button',
         specials: { text, ...(c.href ? { href: c.href } : {}) },

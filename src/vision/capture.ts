@@ -72,7 +72,7 @@ export interface CaptureResult {
  * Written as one function rather than composed helpers because it is
  * serialized: anything it closes over does not exist on the other side.
  */
-function capturePage(limits: { maxSections: number; maxPerSection: number; maxImages: number; maxTextChars: number; maxNodes: number }): CaptureResult {
+function capturePage(limits: { maxSections: number; maxImages: number; maxTextChars: number; maxNodes: number }): CaptureResult {
   // EVERY constant this function uses is declared INSIDE it. The body is
   // serialized and evaluated in the page, so a module-level `const` it closes
   // over is simply not there — caught the first time this ran against a real
@@ -154,6 +154,13 @@ function capturePage(limits: { maxSections: number; maxPerSection: number; maxIm
    */
   const leaves = (root: El): Captured[] => {
     const walk = (el: El): Captured[] => {
+      // ONE BOUND, on the whole import. There used to be a second, per section,
+      // and it kept doing the same wrong job under a new number: a page whose
+      // <body> has a single child is ONE section, so the per-section cap became
+      // the page cap and truncated it — news.ycombinator.com captured 84 links
+      // and 45 lines and lost the rest at exactly 120. Two limits for one
+      // quantity means the tighter one is always the real limit, and nobody
+      // remembers which that is.
       if (taken.nodes >= limits.maxNodes) {
         skip('over-node-limit');
         return [];
@@ -188,12 +195,30 @@ function capturePage(limits: { maxSections: number; maxPerSection: number; maxIm
         taken.nodes++;
         return [{ kind: 'image', src: abs(src), alt: clean(el.getAttribute('alt')) }];
       }
-      if (tag === 'A' && looksLikeButton(el)) {
+      if (tag === 'A') {
         const text = clean(el.textContent);
-        const href = el.getAttribute('href');
-        if (!text) return [];
-        taken.nodes++;
-        return [{ kind: 'button', text, ...(href ? { href: abs(href) } : {}) }];
+        // A LINK THAT IS NOT A BUTTON IS STILL A LINK. It used to contribute
+        // NOTHING, and on a page whose content IS a list of links that is the
+        // whole page: news.ycombinator.com lost 1,595 characters of story titles
+        // and bylines that way. The platform has no inline-link element — its
+        // own idiom is a `button` carrying `href`, styled flat — so that is what
+        // an unpainted link becomes, and the variant is what keeps it from
+        // arriving as a call to action.
+        if (text && el.children.length === 0) {
+          const href = el.getAttribute('href');
+          taken.nodes++;
+          return [{
+            kind: 'button',
+            variant: looksLikeButton(el) ? 'cta' : 'link',
+            text,
+            ...(href ? { href: abs(href) } : {}),
+          }];
+        }
+        if (looksLikeButton(el) && text) {
+          const href = el.getAttribute('href');
+          taken.nodes++;
+          return [{ kind: 'button', variant: 'cta', text, ...(href ? { href: abs(href) } : {}) }];
+        }
       }
       if (tag === 'UL' || tag === 'OL') {
         const items = Array.from(el.querySelectorAll('li'))
@@ -213,7 +238,6 @@ function capturePage(limits: { maxSections: number; maxPerSection: number; maxIm
       const kids: Captured[] = [];
       for (const child of Array.from(el.children)) {
         for (const c of walk(child)) kids.push(c);
-        if (kids.length >= limits.maxPerSection) break;
       }
 
       if (kids.length > 0) {
@@ -274,9 +298,23 @@ function capturePage(limits: { maxSections: number; maxPerSection: number; maxIm
   // single band. The finest ones are the page's actual bands.
   candidates = candidates.filter((el) => !candidates.some((o) => o !== el && el.contains(o)));
 
+  // THE SOURCE'S OWN HEADER AND FOOTER ARE NEVER WANTED. The target site has its
+  // own, as shared globals, and importing somebody else's navigation onto a
+  // storefront is a second menu pointing at a different website. Only the
+  // PAGE-LEVEL ones are dropped — a `<header>` inside a section is a hero, and
+  // excluding those would lose the first thing on most landing pages.
+  const chrome = new Set<El>();
+  for (const el of Array.from(document.body.children)) {
+    if (el.tagName === 'HEADER' || el.tagName === 'FOOTER') chrome.add(el);
+  }
+
   const build = (from: El[]): Captured[] => {
     const acc: Captured[] = [];
     for (const el of from) {
+      if (chrome.has(el)) {
+        skip('page-chrome');
+        continue;
+      }
       if (acc.length >= limits.maxSections) {
         skip('over-section-limit');
         break;
@@ -319,14 +357,13 @@ function capturePage(limits: { maxSections: number; maxPerSection: number; maxIm
  */
 export async function capture(
   url: string,
-  opts: { maxSections?: number; maxPerSection?: number; maxImages?: number; maxTextChars?: number; maxNodes?: number; width?: number } = {},
+  opts: { maxSections?: number; maxImages?: number; maxTextChars?: number; maxNodes?: number; width?: number } = {},
 ): Promise<CaptureResult> {
   const limits = {
     maxSections: opts.maxSections ?? 24,
-    maxPerSection: opts.maxPerSection ?? 120,
     maxImages: opts.maxImages ?? 24,
     maxTextChars: opts.maxTextChars ?? 1200,
-    maxNodes: opts.maxNodes ?? 300,
+    maxNodes: opts.maxNodes ?? 400,
   };
   let browser: Browser | undefined;
   try {

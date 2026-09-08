@@ -150,6 +150,11 @@ export function registerImportTools(
       return text({
         read: shot.url,
         added_sections: added,
+        // WHAT WAS LEFT BEHIND, on the real run too. The dry run said it and the
+        // real one did not, which is the wrong way round: a caller who skipped
+        // the preview is exactly the caller who needs to be told that 21 nodes
+        // hit the ceiling, or that the page's own header was dropped on purpose.
+        ...(Object.keys(shot.skipped).length ? { skipped: shot.skipped } : {}),
         images: {
           copied: rehosted.size,
           ...(failed.length ? { failed } : {}),

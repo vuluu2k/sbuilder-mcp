@@ -723,8 +723,29 @@ that accounts for them.
     Three dense pages each stopped at exactly 40 leaves. The bound that is actually wanted is
     on the WHOLE import (`maxNodes`, 300), so that is where it lives.
 
-  Coverage is the metric worth keeping: an import that silently drops half a page reports no
-  error, and no test of the mapper can see it.
+  **COVERAGE NEEDS THE RIGHT DENOMINATOR, and the first one was wrong.** Measured against
+  `document.body.innerText` the sweep read 44-77%, which looked like a broken importer. Diffing
+  what a reader sees against what was kept showed where it actually went: on rust-lang.org and
+  python.org, 100% of the loss was NAV, HEADER and FOOTER — chrome the importer skips on
+  purpose and a merchant would never want, because the target site has its own as globals.
+  Content loss there was ZERO. Only the honest denominator tells you whether there is a bug,
+  and the first measurement said "fix this" about something that was already right.
+
+  What the honest measure then found was real, and both were structural:
+
+  - **A link that is not a button contributed NOTHING.** On a page whose content IS a list of
+    links that is the whole page — news.ycombinator.com lost 1,595 characters of story titles.
+    The platform has no inline-link element; its own idiom is a `button` carrying `href`,
+    styled flat. So an unpainted link is captured with `variant: 'link'` and takes the target's
+    accent as INK rather than as fill. Painting them all is the opposite mistake: it turned a
+    documentation sidebar into 38 pink pills.
+  - **Two caps for one quantity meant the tighter one was always the real limit.** A page whose
+    `<body>` has a single child is ONE section, so the per-section cap silently became the page
+    cap: HN stopped at exactly 120 nodes. One bound now, on the whole import, and the skip is
+    reported on the REAL run and not only the dry one.
+
+  Content loss after both: 0 on three of the four pages, and the fourth is a marketing page of
+  code samples hitting the 400-node ceiling, which is the ceiling doing its job.
 
   **FLATNESS WAS THE BIGGEST THING LEFT.** Everything arrived as one vertical column, so a
   source's three-column feature row came back as three stacked blocks and a card — image,
