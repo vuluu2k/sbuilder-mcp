@@ -1796,49 +1796,6 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
     "source": "go",
     "goType": "courses.Course"
   },
-  "post:/api/sites/{siteId}/courses/{courseId}/sections": {
-    "fields": [
-      {
-        "name": "id",
-        "type": "string"
-      },
-      {
-        "name": "siteId",
-        "type": "string"
-      },
-      {
-        "name": "courseId",
-        "type": "string"
-      },
-      {
-        "name": "title",
-        "type": "string"
-      },
-      {
-        "name": "summary",
-        "type": "string"
-      },
-      {
-        "name": "position",
-        "type": "number"
-      },
-      {
-        "name": "accessScope",
-        "type": "string",
-        "note": "AccessScope names the entitlement tier that unlocks this section."
-      },
-      {
-        "name": "createdAt",
-        "type": "string (RFC3339)"
-      },
-      {
-        "name": "updatedAt",
-        "type": "string (RFC3339)"
-      }
-    ],
-    "source": "go",
-    "goType": "courses.Section"
-  },
   "put:/api/sites/{siteId}/courses/{courseId}/sections/{sectionId}": {
     "fields": [
       {
@@ -1882,7 +1839,50 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
     "source": "go",
     "goType": "courses.Section"
   },
-  "post:/api/sites/{siteId}/courses/{courseId}/lessons": {
+  "post:/api/sites/{siteId}/courses/{courseId}/sections": {
+    "fields": [
+      {
+        "name": "id",
+        "type": "string"
+      },
+      {
+        "name": "siteId",
+        "type": "string"
+      },
+      {
+        "name": "courseId",
+        "type": "string"
+      },
+      {
+        "name": "title",
+        "type": "string"
+      },
+      {
+        "name": "summary",
+        "type": "string"
+      },
+      {
+        "name": "position",
+        "type": "number"
+      },
+      {
+        "name": "accessScope",
+        "type": "string",
+        "note": "AccessScope names the entitlement tier that unlocks this section."
+      },
+      {
+        "name": "createdAt",
+        "type": "string (RFC3339)"
+      },
+      {
+        "name": "updatedAt",
+        "type": "string (RFC3339)"
+      }
+    ],
+    "source": "go",
+    "goType": "courses.Section"
+  },
+  "put:/api/sites/{siteId}/courses/{courseId}/lessons/{lessonId}": {
     "fields": [
       {
         "name": "id",
@@ -1978,7 +1978,7 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
     "source": "go",
     "goType": "courses.Lesson"
   },
-  "put:/api/sites/{siteId}/courses/{courseId}/lessons/{lessonId}": {
+  "post:/api/sites/{siteId}/courses/{courseId}/lessons": {
     "fields": [
       {
         "name": "id",
@@ -4700,7 +4700,7 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
     "source": "go",
     "goType": "(inline)"
   },
-  "post:/api/sites/{siteId}/product-categories/{id}/products": {
+  "put:/api/sites/{siteId}/product-categories/{id}/products": {
     "fields": [
       {
         "name": "productIds",
@@ -4710,7 +4710,7 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
     "source": "go",
     "goType": "(inline)"
   },
-  "put:/api/sites/{siteId}/product-categories/{id}/products": {
+  "post:/api/sites/{siteId}/product-categories/{id}/products": {
     "fields": [
       {
         "name": "productIds",

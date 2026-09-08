@@ -456,21 +456,19 @@ interface DecodeSite {
   inline: GoStruct | null;
 }
 
-/**
- * Read one file into decode sites.
- *
- * A handler is a `func` plus the contiguous `//` block above it, which is where
- * the `@Router` lines live. Inside the body, the enclosing `case http.Method*`
- * says which of that handler's routes a decode belongs to — a handler serving GET
- * and POST from one doc comment decodes only in the POST arm.
- */
-function readDecodeSites(file: string, dir: string): DecodeSite[] {
-  const lines = readFileSync(file, 'utf8').split('\n');
-  const sites: DecodeSite[] = [];
+/** One `func` in a file: its name, the routes its doc comment claims, its body. */
+interface GoFunc {
+  name: string;
+  routes: Array<{ path: string; method: string }>;
+  body: string[];
+}
 
+function readFuncs(lines: string[]): GoFunc[] {
+  const out: GoFunc[] = [];
   let i = 0;
   while (i < lines.length) {
-    if (!/^func\s/.test(lines[i])) {
+    const sig = /^func\s+(?:\([^)]*\)\s*)?([A-Za-z_]\w*)\s*\(/.exec(lines[i]);
+    if (!sig) {
       i++;
       continue;
     }
@@ -479,66 +477,131 @@ function readDecodeSites(file: string, dir: string): DecodeSite[] {
       const r = ROUTER.exec(lines[k]);
       if (r) routes.push({ path: r[1], method: r[2].toUpperCase() });
     }
-    const start = i;
     let end = i + 1;
     for (; end < lines.length && !/^\}/.test(lines[end]); end++);
-    const body = lines.slice(start, end);
+    out.push({ name: sig[1], routes, body: lines.slice(i, end) });
     i = end + 1;
+  }
+  return out;
+}
 
-    const writeRoutes = routes.filter((r) => WRITE_METHODS.has(r.method));
+/** The lines belonging to one `case http.Method*` arm, or the whole body if there are none. */
+function armLines(body: string[], method: string): string[] {
+  const marks: Array<{ at: number; method: string }> = [];
+  for (let n = 0; n < body.length; n++) {
+    const c = CASE_METHOD.exec(body[n]) ?? IF_METHOD.exec(body[n]);
+    if (c) marks.push({ at: n, method: c[1].toUpperCase() });
+  }
+  if (marks.length === 0) return body;
+  const hit = marks.findIndex((m) => m.method === method);
+  if (hit === -1) return [];
+  const from = marks[hit].at;
+  const to = marks[hit + 1]?.at ?? body.length;
+  return body.slice(from, to);
+}
+
+/** Every body decode in a stretch of lines, in order. */
+function extractDecodes(
+  lines: string[],
+  dir: string,
+): Array<{ ref: string | null; inline: GoStruct | null }> {
+  const readsRawBody = lines.some((l) => READS_RAW_BODY.test(l));
+  const decls = new Map<string, { ref: string | null; inline: GoStruct | null }>();
+  const found: Array<{ ref: string | null; inline: GoStruct | null }> = [];
+
+  for (let n = 0; n < lines.length; n++) {
+    const line = lines[n];
+    const anon = VAR_ANON.exec(line);
+    if (anon) {
+      const inner: string[] = [];
+      let depth = 1;
+      let m = n + 1;
+      for (; m < lines.length; m++) {
+        depth += (lines[m].match(/\{/g) ?? []).length;
+        depth -= (lines[m].match(/\}/g) ?? []).length;
+        if (depth === 0) break;
+        inner.push(lines[m]);
+      }
+      decls.set(anon[1], { ref: null, inline: parseStructBody(dir, '(inline)', inner) });
+      n = m;
+      continue;
+    }
+    const typed = VAR_TYPED.exec(line);
+    if (typed) {
+      const ref = typed[2].replace(/^[*[\]]+/, '');
+      if (!NOT_A_BODY.has(ref)) decls.set(typed[1], { ref, inline: null });
+      continue;
+    }
+    const dec = DECODE.exec(line) ?? (readsRawBody ? UNMARSHAL.exec(line) : null);
+    if (!dec) continue;
+    const hit = decls.get(dec[1]);
+    if (hit) found.push(hit);
+  }
+  return found;
+}
+
+/**
+ * Read one file into decode sites.
+ *
+ * A handler is a `func` plus the contiguous `//` block above it, which is where
+ * the `@Router` lines live. Inside the body, the enclosing `case http.Method*`
+ * says which of that handler's routes a decode belongs to — a handler serving GET
+ * and POST from one doc comment decodes only in the POST arm.
+ *
+ * AND ONE HOP FURTHER, because the annotation and the decode are not always in
+ * the same function. `page/rest/rest.go` annotates the dispatcher and decodes in
+ * `createPage`, so `POST /api/sites/{siteId}/pages` — the call that makes a page
+ * at all — had no shape while every other page route did. When an arm decodes
+ * nothing itself, the functions it CALLS in this file are read instead.
+ */
+function readDecodeSites(file: string, dir: string): DecodeSite[] {
+  const funcs = readFuncs(readFileSync(file, 'utf8').split('\n'));
+  const byName = new Map(funcs.map((f) => [f.name, f]));
+  const sites: DecodeSite[] = [];
+
+  for (const fn of funcs) {
+    const writeRoutes = fn.routes.filter((r) => WRITE_METHODS.has(r.method));
     if (writeRoutes.length === 0) continue;
 
-    const readsRawBody = body.some((l) => READS_RAW_BODY.test(l));
-    const decls = new Map<string, { ref: string | null; inline: GoStruct | null }>();
-    let arm: string | null = null;
-    for (let n = 0; n < body.length; n++) {
-      const line = body[n];
-      const c = CASE_METHOD.exec(line) ?? IF_METHOD.exec(line);
-      if (c) arm = c[1].toUpperCase();
-
-      const anon = VAR_ANON.exec(line);
-      if (anon) {
-        const inner: string[] = [];
-        let depth = 1;
-        let m = n + 1;
-        for (; m < body.length; m++) {
-          depth += (body[m].match(/\{/g) ?? []).length;
-          depth -= (body[m].match(/\}/g) ?? []).length;
-          if (depth === 0) break;
-          inner.push(body[m]);
+    for (const route of writeRoutes) {
+      // A handler that guards with `if r.Method == http.MethodGet` marks only the
+      // GET, so the PUT it goes on to serve has no arm of its own. With one write
+      // route there is nothing to be ambiguous about, so the whole body is read —
+      // this is how `PUT .../pages/{pageId}/source`, `/settings` and `/theme` are
+      // reached at all.
+      let arm = armLines(fn.body, route.method);
+      if (arm.length === 0 && writeRoutes.length === 1) arm = fn.body;
+      if (arm.length === 0) continue;
+      let decodes = extractDecodes(arm, dir);
+      if (decodes.length === 0) {
+        // One hop, and only when it is UNAMBIGUOUS: every callee of this file's
+        // own that decodes is collected, and two candidates means neither is
+        // taken. `POST /domains/{id}/verify` and `/primary` sit in one dispatcher
+        // and decode nothing themselves; picking the first callee that happened
+        // to decode gave both of them a body neither takes.
+        const candidates: Array<Array<{ ref: string | null; inline: GoStruct | null }>> = [];
+        const tried = new Set<string>();
+        for (const m of arm.join('\n').matchAll(/\.([a-z]\w*)\(/g)) {
+          const callee = byName.get(m[1]);
+          if (!callee || callee === fn || callee.routes.length > 0) continue;
+          if (tried.has(callee.name)) continue;
+          tried.add(callee.name);
+          const got = extractDecodes(callee.body, dir);
+          if (got.length > 0) candidates.push(got);
         }
-        decls.set(anon[1], { ref: null, inline: parseStructBody(dir, '(inline)', inner) });
-        n = m;
-        continue;
+        if (candidates.length === 1) decodes = candidates[0];
       }
-      const typed = VAR_TYPED.exec(line);
-      if (typed) {
-        const ref = typed[2].replace(/^[*[\]]+/, '');
-        if (!NOT_A_BODY.has(ref)) decls.set(typed[1], { ref, inline: null });
-        continue;
-      }
-
-      const dec = DECODE.exec(line) ?? (readsRawBody ? UNMARSHAL.exec(line) : null);
-      if (!dec) continue;
-      const found = decls.get(dec[1]);
-      if (!found) continue;
-      // Which route? The arm if one is in scope; otherwise attribution is only
-      // unambiguous when the handler has exactly one write route.
-      const method = arm && WRITE_METHODS.has(arm) ? arm : null;
-      const targets = method
-        ? writeRoutes.filter((r) => r.method === method)
-        : writeRoutes.length === 1
-          ? writeRoutes
-          : [];
-      for (const t of targets) {
-        sites.push({
-          path: t.path,
-          method: t.method,
-          ref: found.ref,
-          fromDir: dir,
-          inline: found.inline,
-        });
-      }
+      // MORE THAN ONE DISTINCT BODY IN ONE ARM MEANS THE ARM IS NOT THE ANSWER.
+      // `sitedomain`'s `action` serves verify, primary, canonical, redirect and
+      // redirect-code from a single POST handler that switches on a PATH SEGMENT;
+      // only verify and primary are annotated, and neither takes a body. Reading
+      // the first decode gave both of them `{ canonical }`. A handler that decodes
+      // two different shapes in one method arm cannot say which route owns which,
+      // so it says nothing.
+      const distinct = new Map(decodes.map((d) => [d.ref ?? JSON.stringify(d.inline?.fields), d]));
+      if (distinct.size !== 1) continue;
+      const first = decodes[0];
+      sites.push({ path: route.path, method: route.method, ref: first.ref, fromDir: dir, inline: first.inline });
     }
   }
   return sites;

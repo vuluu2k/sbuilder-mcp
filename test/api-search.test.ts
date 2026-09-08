@@ -204,3 +204,20 @@ describe('nested shapes — where the price actually lives', () => {
     }
   });
 });
+
+describe('the scanner refuses rather than guesses', () => {
+  it('gives no body to a POST that switches on a path segment, not a method', () => {
+    // `sitedomain`'s `action` serves verify, primary, canonical, redirect and
+    // redirect-code from one POST handler. Only verify and primary are annotated,
+    // and neither takes a body — but three of its siblings decode one, so reading
+    // the first decode in the arm handed both of them `{ canonical }`.
+    expect(REQUEST_SHAPES['post:/api/sites/{siteId}/domains/{id}/verify']).toBeUndefined();
+    expect(REQUEST_SHAPES['post:/api/sites/{siteId}/domains/{id}/primary']).toBeUndefined();
+  });
+
+  it('leaves no shape with an empty field list', () => {
+    for (const [id, shape] of Object.entries(REQUEST_SHAPES)) {
+      expect(shape.fields.length, id).toBeGreaterThan(0);
+    }
+  });
+});
