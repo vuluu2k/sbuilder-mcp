@@ -6,6 +6,14 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.0] - 2026-09-08
+
+### Added
+- sb_store giờ nhận action:"form" bên cạnh action:"checkout", gieo bất kỳ template nào trong 17 template form của nền tảng (contact, subscribe, order, address, consult, booking, stay, feedback, event, quote, apply, và năm form xác thực login, register, forgot, verify, reset) cùng field document riêng của nó, thay vì trước đây server này chỉ dựng được đúng order form của checkout; nó tạo form, PUT lại nguyên vẹn (nếu không thì một lần tạo đơn thuần sẽ bị âm thầm đổi tên và chuyển thành custom), rồi lưu field document của template, và xoá lại form nếu một trong hai lệnh ghi đó thất bại. Nó không tạo trang, vì đặt form login ở đâu là quyết định thiết kế — hãy đặt form bằng sb_add rồi trỏ specials.formId vào id được trả về.
+
+### Fixed
+- sb_review không còn báo cáo empty_container trên node tham chiếu của một global section hay app block, vì một trang lưu header hoặc footer dùng chung dưới dạng node rỗng gắn cờ globalRef hoặc appBlockRef mà nền tảng sẽ ghép bản gốc vào khi đọc; cách sửa mà finding này từng nêu ra — thêm gì đó vào bên trong — sẽ bị lần lưu kế tiếp phân rã mất ngay.
+
 ## [0.5.0] - 2026-09-08
 
 ### Added

@@ -6,6 +6,14 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.0] - 2026-09-08
+
+### Added
+- sb_store now takes action:"form" alongside action:"checkout", seeding any of the platform's 17 form templates (contact, subscribe, order, address, consult, booking, stay, feedback, event, quote, apply, and the five auth forms login, register, forgot, verify, reset) with their own field document, instead of the checkout order form being the only one this server could build; it creates the form, PUTs it back whole (a bare create is otherwise silently renamed and turned custom), then saves the template's field document, deleting the form again if either write fails. It makes no page, since where a login form belongs is a design decision — place it with sb_add and point specials.formId at the id returned.
+
+### Fixed
+- sb_review no longer reports empty_container on a global section's or app block's reference node, since a page stores its shared header or footer as an empty node stamped globalRef or appBlockRef that the platform composes the master into on read; the fix the finding used to name, adding something inside it, was decomposed away by the very next save.
+
 ## [0.5.0] - 2026-09-08
 
 ### Added
