@@ -3,6 +3,8 @@ import { FIRST_CHILD_ONLY } from '../../catalog/elements.generated.js';
 import {
   pageChildren,
   isOverlay,
+  overlayRoot,
+  ancestors,
   SPEC_GLOBAL_ID,
   SPEC_GLOBAL_KIND,
   SPEC_GLOBAL_REV,
@@ -73,6 +75,20 @@ export function isGlobal(doc: DocLike, id: string): boolean {
 }
 
 /**
+ * The global section this node sits in, or null. Nearest stamp wins.
+ *
+ * `isGlobal` answers for the stamped ROOT alone, which is the right question for
+ * "may this node be moved out of the band it is in". It is the wrong one for a
+ * WRITE: nobody restyles the header section, they restyle a button inside it,
+ * and that edit is just as site-wide.
+ */
+export function globalRoot(doc: DocLike, id: string): string | null {
+  if (isGlobal(doc, id)) return id;
+  for (const a of ancestors(doc, id)) if (isGlobal(doc, a)) return a;
+  return null;
+}
+
+/**
  * The sentence to attach to any result that touched a global.
  *
  * Editing a master is not a page-local act: it changes every page carrying that
@@ -81,9 +97,34 @@ export function isGlobal(doc: DocLike, id: string): boolean {
  * not know this reports "updated the header" having changed the whole site.
  */
 export function globalWarning(doc: DocLike, id: string): string | null {
-  if (!isGlobal(doc, id)) return null;
-  const gid = doc.nodes[id].specials[SPEC_GLOBAL_ID];
-  return `Node ${id} is the shared global section ${JSON.stringify(gid)}. Editing it changes EVERY page that carries it, and publishing cascades to all of them. Say so when reporting this change.`;
+  // THE STAMP IS ON THE SECTION ROOT, and asking only `isGlobal(id)` meant the
+  // warning fired for the one node nobody edits. The work happens INSIDE: a nav
+  // button in the global header, a line of the global footer. Restyling
+  // `bu_…` changed all ten pages of a site and the result said nothing, while
+  // the same edit one level up would have warned. Same asymmetry as the overlay
+  // one below, one construct over.
+  const g = globalRoot(doc, id);
+  if (g !== null) {
+    const gid = doc.nodes[g].specials?.[SPEC_GLOBAL_ID];
+    const kind = doc.nodes[g].specials?.[SPEC_GLOBAL_KIND];
+    const self = g === id ? '' : ` (inside global ${g})`;
+    return `Node ${id}${self} belongs to the shared global section ${JSON.stringify(gid)}${
+      kind ? ` (${kind})` : ''
+    }. Editing it changes EVERY page that carries it, and publishing cascades to all of them. Say so when reporting this change.`;
+  }
+  // AN OVERLAY IS SHARED TOO, and this used to answer only for globals. The cart
+  // drawer and the pop-ups are ONE master composed onto every page, so an edit
+  // to a node inside one is site-wide — measured: restyling the drawer's
+  // quantity stepper touched ten pages and the result read as a page-local
+  // success. It is the write-side of the reason `sb_review` flags overlay
+  // findings `overlay: true` instead of reporting them once per page.
+  const ov = overlayRoot(doc, id);
+  if (ov !== null) {
+    const oid = doc.nodes[ov].specials?.[SPEC_OVERLAY_ID];
+    const self = ov === id ? '' : ` (inside overlay ${ov})`;
+    return `Node ${id}${self} belongs to the site overlay ${JSON.stringify(oid)} — the cart drawer or a pop-up. It is ONE master composed onto every page, so this change is site-wide, not page-local. Say so when reporting it.`;
+  }
+  return null;
 }
 
 /**
