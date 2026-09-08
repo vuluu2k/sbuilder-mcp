@@ -6,6 +6,12 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.7.2] - 2026-09-08
+
+### Fixed
+- sb_import không còn xếp một liên kết block-level ngắn vào loại button; trước đây rule chỉ dừng ở "không phải inline", nên danh sách liên kết điều hướng trong sidebar tài liệu bị trả về thành hàng chục button. Giờ một call-to-action thật phải được "tô" bằng màu nền hoặc viền, và viền chỉ được tính khi có độ dày, vì một trang dựng bằng Tailwind đặt `border-style: solid; border-width: 0` trên mọi phần tử.
+- Bước capture trang của sb_import không còn chờ cố định 600ms trước khi đọc trang; giờ nó dùng lại chính cơ chế chờ ổn định (settle) của sb_look, chờ đến khi trang thực sự ngừng thay đổi thay vì một khoảng chờ cố định vừa quá dài với trang tĩnh vừa quá ngắn với trang tự dựng bằng script.
+
 ## [0.7.1] - 2026-09-08
 
 ### Added

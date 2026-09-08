@@ -6,6 +6,12 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.7.2] - 2026-09-08
+
+### Fixed
+- sb_import no longer classifies a short block-level link as a button; it previously stopped at "not inline", so a documentation sidebar's list of navigation links came back as dozens of buttons. A real call to action must now be painted with a fill or a border, and a border only counts when it has width, since a Tailwind-built page sets `border-style: solid; border-width: 0` on every element.
+- sb_import's page capture no longer waits a flat 600ms before reading the page; it now reuses sb_look's own settle check, which waits until the page actually stops changing rather than a fixed delay that is too long for a static page and too short for one that builds itself with scripts.
+
 ## [0.7.1] - 2026-09-08
 
 ### Added
