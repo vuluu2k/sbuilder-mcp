@@ -37,6 +37,43 @@ function copy<T>(v: T): T {
 }
 
 /**
+ * The bindings an element carries for a given config, or null when its data
+ * axis says nothing about this pair.
+ *
+ * Reads the generated `bindingsFor` table — the platform's own
+ * `datasetBindings(type, config)` answers, enumerated at codegen.
+ *
+ * THE KIND FALLBACK IS THE POINT. The table is keyed `${datasetSource}|${kind}`,
+ * but TEN elements with a table declare no default `config.kind` at all —
+ * `list-dataset`, `dataset-block`, `media-dataset`, `collection-media`,
+ * `product-variants`, `quantity-dataset` and friends, which is most of what a
+ * store is built from. For those the key came out `category|`, matched nothing,
+ * and the lookup returned null: a `list-dataset` switched to collections kept
+ * `bind-target` → `product_list` and repeated PRODUCTS under a heading that said
+ * collections. Every `<source>|*` row of such an element is identical (they have
+ * no kind axis to vary on), so the first row for the source IS the answer, and
+ * falling back to it is what makes the axis reachable at all.
+ */
+export function bindingsForConfig(
+  type: string,
+  config: Record<string, unknown> | undefined,
+): unknown[] | null {
+  const table = ELEMENTS[type]?.bindingsFor as Record<string, unknown[]> | undefined;
+  if (!table) return null;
+  const source = String(config?.datasetSource ?? '');
+  if (!source) return null;
+  const kind = String(config?.kind ?? '');
+  const exact = table[`${source}|${kind}`];
+  if (exact) return copy(exact) as unknown[];
+  // No kind axis on this element: any row for the source carries the same answer.
+  const prefix = `${source}|`;
+  for (const [key, value] of Object.entries(table)) {
+    if (key.startsWith(prefix)) return copy(value) as unknown[];
+  }
+  return null;
+}
+
+/**
  * Mint a node seeded from its element's catalog defaults.
  *
  * `states` is spread in ONLY when the element declares defaults for it. A node
@@ -54,6 +91,7 @@ export function createNode(type: string, opts: CreateOpts = {}): BuilderNode {
   }
   const d = meta.defaults;
   const states = d.states;
+  const config = { ...copy(d.config ?? {}), ...(opts.config ?? {}) };
   return {
     id: genId(type),
     data: {
@@ -66,7 +104,7 @@ export function createNode(type: string, opts: CreateOpts = {}): BuilderNode {
       custom: {},
     },
     style: { ...copy(d.style ?? {}), ...(opts.style ?? {}) },
-    config: { ...copy(d.config ?? {}), ...(opts.config ?? {}) },
+    config,
     specials: { ...copy(d.specials ?? {}), ...(opts.specials ?? {}) },
     responsive: copy(d.responsive ?? {}) as BuilderNode['responsive'],
     ...(states ? { states: copy(states) } : {}),
@@ -82,12 +120,17 @@ export function createNode(type: string, opts: CreateOpts = {}): BuilderNode {
     // placeholder forever. Found on a live page: four product cards reading
     // "$0.00" with no titles, on a catalogue that had four products.
     //
-    // Codegen bakes the factory's answer for the DEFAULT config. A caller who
-    // overrides `config.kind` or `config.datasetSource` in the same call is
-    // changing which field the element binds, and that re-derivation lives in
-    // the platform — so the bindings here follow the defaults, and a changed
-    // kind needs an explicit sb_bind.
-    bindings: copy(d.bindings ?? []) as unknown[],
+    // Codegen bakes the factory's answer for EVERY config pair, not just the
+    // default one, so a caller who overrides `config.kind` or
+    // `config.datasetSource` in the same call is answered here rather than left
+    // holding the default entity's bindings. It used to be left: `sb_add` with
+    // `datasetSource: "category"` minted a repeater still bound to
+    // `product_list`, saved, published, and repeated products under a heading
+    // that said collections — with no warning on any of the four steps, because
+    // a wrong binding renders exactly like a right one until you read the data.
+    // `sb_set` re-derives on the same table for the same reason; the two paths
+    // must not disagree about what a config means.
+    bindings: bindingsForConfig(type, config) ?? (copy(d.bindings ?? []) as unknown[]),
   };
 }
 

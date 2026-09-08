@@ -9,7 +9,7 @@ import {
   SPEC_GLOBAL_REF,
 } from '../../core/tree.js';
 import { ELEMENTS, ELEMENT_SEEDS, SATELLITE_RULES } from '../../catalog/elements.generated.js';
-import { createNode, mintSatellites } from './node.js';
+import { bindingsForConfig, createNode, mintSatellites } from './node.js';
 import { refuseSecondTemplate } from './traps.js';
 import { genId } from './ids.js';
 import type { PageDoc } from './document.js';
@@ -322,15 +322,12 @@ function rebindPatch(doc: PageDoc, id: string, keys: Record<string, unknown>): P
   const touchesAxis = 'kind' in keys || 'datasetSource' in keys;
   if (!touchesAxis) return null;
   const node = doc.node(id);
-  const meta = ELEMENTS[node.data.type];
-  const table = meta?.bindingsFor;
-  if (!table) return null;
   const cfg = (node as unknown as { config?: Record<string, unknown> }).config ?? {};
-  const source = String(keys.datasetSource ?? cfg.datasetSource ?? 'product');
-  const kind = String(keys.kind ?? cfg.kind ?? '');
-  const next = table[`${source}|${kind}`];
+  // The config the node will HAVE once these keys land — the axis is read off
+  // the result of the write, not off either half of it.
+  const next = bindingsForConfig(node.data.type, { ...cfg, ...keys, datasetSource: keys.datasetSource ?? cfg.datasetSource ?? 'product' });
   if (!next) return null;
-  return { op: 'set', path: ['nodes', id, 'bindings'], value: JSON.parse(JSON.stringify(next)) };
+  return { op: 'set', path: ['nodes', id, 'bindings'], value: next };
 }
 
 /**
