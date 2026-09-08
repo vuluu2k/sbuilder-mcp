@@ -57,18 +57,39 @@ export async function uploadMedia(
   // No Content-Type header: fetch must set it itself so the multipart boundary
   // matches the body it just built. Setting it by hand is the classic way to
   // make a valid upload unparseable at the other end.
-  const res = await doFetch(`${ctx.base.replace(/\/$/, '')}/api/media/${encodeURIComponent(siteId)}`, {
-    method: 'POST',
-    // Content-Type stays ABSENT — fetch writes it with the boundary it just
-    // built — but the identity headers belong here as much as on any other call:
-    // an install whose only traffic is image uploads is still an install.
-    headers: {
-      Authorization: `Bearer ${siteToken(ctx)}`,
-      Accept: 'application/json',
-      ...identityHeaders(),
-    },
-    body: form,
-  });
+  const post = (path: string) =>
+    doFetch(`${ctx.base.replace(/\/$/, '')}${path}`, {
+      method: 'POST',
+      // Content-Type stays ABSENT — fetch writes it with the boundary it just
+      // built — but the identity headers belong here as much as on any other call:
+      // an install whose only traffic is image uploads is still an install.
+      headers: {
+        Authorization: `Bearer ${siteToken(ctx)}`,
+        Accept: 'application/json',
+        ...identityHeaders(),
+      },
+      body: form,
+    });
+
+  let res = await post(`/api/media/${encodeURIComponent(siteId)}`);
+
+  // THE PARTNER SURFACE IS A SECOND DOOR, and it is the key's own.
+  //
+  // `/api/media` takes a key only since `feat(media): a wbk_ API key may upload`
+  // — so against a deployment older than that commit it answers 401 to a key
+  // that is perfectly valid, and the message below then blamed the key's scopes.
+  // Measured: a key holding media.read + media.write, on its own site, refused
+  // by a server binary 26 minutes older than the fix, while `POST /api/v1/media`
+  // — multipart too, and keyed BY DEFINITION, since /api/v1 accepts nothing else
+  // — answered 201 for the same bytes.
+  //
+  // So a refusal here is not the end of the road, and retrying costs one request
+  // on a path that was failing anyway. Only when BOTH doors refuse is the key
+  // itself the suspect.
+  if ((res.status === 401 || res.status === 403) && ctx.apiKey) {
+    const viaPartner = await post('/api/v1/media');
+    if (viaPartner.ok) res = viaPartner;
+  }
 
   const raw = await res.text();
   let parsed: unknown;
@@ -98,10 +119,12 @@ export async function uploadMedia(
       throw new ApiError(
         res.status,
         'media_key_refused',
-        'sbuilder: the platform refused this API key for the upload. It accepts a key, so the ' +
-          'cause is the key itself: it needs the media permission, and it must belong to THIS ' +
-          'site — a key minted for another site is refused before the upload is read. Check the ' +
-          "key's scopes and its site, or set SB_EMAIL / SB_PASSWORD to upload as a person.",
+        'sbuilder: both upload doors refused this API key — /api/media and the partner surface ' +
+          '/api/v1/media. Two causes fit. The key: it needs media.write and must belong to THIS ' +
+          'site, since a key minted for another one is refused before the upload is read. Or the ' +
+          'DEPLOYMENT: /api/media took keys only from "feat(media): a wbk_ API key may upload", ' +
+          'so a server older than that refuses a perfectly good key — check the running build ' +
+          "before changing the key. Failing both, set SB_EMAIL / SB_PASSWORD to upload as a person.",
       );
     }
     const env = (parsed ?? {}) as {

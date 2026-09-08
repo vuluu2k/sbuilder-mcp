@@ -128,29 +128,64 @@ describe('uploadMedia()', () => {
 });
 
 describe('uploadMedia() on a key-only install', () => {
-  it('names the session requirement instead of repeating a bare unauthorized', async () => {
+  const jpeg = () => {
+    const dir = mkdtempSync(join(tmpdir(), 'sb-media-'));
+    const file = join(dir, 'a.jpg');
+    writeFileSync(file, Buffer.from([0xff, 0xd8, 0xff]));
+    return { dir, file };
+  };
+  const keyCtx = (f: typeof fetch) => ({
+    base: 'http://x',
+    session: new Session('http://x', f),
+    apiKey: 'wbk_k',
+    fetchImpl: f,
+    notices: new Notices(),
+  });
+
+  it('falls back to the partner surface when /api/media refuses the key', async () => {
+    // A deployment older than "feat(media): a wbk_ API key may upload" answers
+    // 401 to a perfectly valid key. /api/v1/media is multipart too and takes
+    // nothing BUT a key, so it is the second door — measured against a real
+    // server binary 26 minutes older than the fix.
+    const seen: string[] = [];
+    const f = (async (url: string) => {
+      seen.push(String(url));
+      if (String(url).includes('/api/v1/media')) {
+        return new Response(JSON.stringify({ asset: { id: 'mda_1', url: 'http://cdn/a.jpg' } }), {
+          status: 201,
+          headers: { 'content-type': 'application/json' },
+        });
+      }
+      return new Response(JSON.stringify({ error: 'unauthorized', code: 'unauthorized' }), {
+        status: 401,
+        headers: { 'content-type': 'application/json' },
+      });
+    }) as unknown as typeof fetch;
+    const { dir, file } = jpeg();
+    try {
+      const asset = await uploadMedia(keyCtx(f), 's1', { path: file });
+      expect(asset.url).toBe('http://cdn/a.jpg');
+      expect(seen[0]).toContain('/api/media/s1');
+      expect(seen[1]).toContain('/api/v1/media');
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  it('blames the key AND the deployment only when both doors refuse', async () => {
     const f = (async () =>
       new Response(JSON.stringify({ error: 'unauthorized', code: 'unauthorized' }), {
         status: 401,
         headers: { 'content-type': 'application/json' },
       })) as unknown as typeof fetch;
-    const ctx = {
-      base: 'http://x',
-      session: new Session('http://x', f),
-      apiKey: 'wbk_k',
-      fetchImpl: f,
-      notices: new Notices(),
-    };
-    const dir = mkdtempSync(join(tmpdir(), 'sb-media-'));
-    const file = join(dir, 'a.jpg');
-    writeFileSync(file, Buffer.from([0xff, 0xd8, 0xff]));
+    const { dir, file } = jpeg();
     try {
-      // /api/media is now mounted behind RequireAuthOrDefer (router.go:2821), so
-      // a key CAN upload. A 401 therefore no longer means "get a session" — it
-      // means this key lacks the media permission or belongs to another site,
-      // and saying otherwise sends the caller to fix the wrong thing.
-      await expect(uploadMedia(ctx, 's1', { path: file })).rejects.toThrow(
-        /permission|another site|scope/i,
+      // A 401 no longer means "get a session": a key CAN upload. It means this
+      // key lacks media.write, belongs to another site, or the server predates
+      // the change — and naming one cause alone sends the caller to fix the
+      // wrong thing, which is exactly what happened.
+      await expect(uploadMedia(keyCtx(f), 's1', { path: file })).rejects.toThrow(
+        /media\.write|another one|DEPLOYMENT/i,
       );
     } finally {
       rmSync(dir, { recursive: true, force: true });
