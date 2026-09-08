@@ -406,10 +406,26 @@ read it — the MCP must be AUTHENTICATED first (unauthenticated it exposes only
 `authenticate`), `figma-design-to-code` is a mandatory load before `get_design_context`, and
 `figma-use` before `use_figma`. Read VARIABLES AND STYLES, never a screenshot: the file
 carries the token, its name, its variants and its hover value; a picture carries an
-approximation of one colour. Same order for a Stitch design, and verify its tools are
-actually exposed in the session before planning around them. With no source you are the
-designer, and the professional move is to decide the token set FIRST and write it down, so
-every later section has something to obey.
+approximation of one colour. With no source you are the designer, and the professional move
+is to decide the token set FIRST and write it down, so every later section has something to
+obey.
+
+Google Stitch is a source of a different shape — a generator with a design system attached.
+Its fifteen tools split into projects, screens and DESIGN SYSTEMS, and the last group is the
+one that matters here: a Stitch design system already carries the palette, the typography,
+the corner roundness and the light/dark backgrounds, which is exactly the token set rule 0
+wants. So `list_projects` → `list_design_systems` → port those values through `sb_set`, and
+ask for screens second if at all — a screen is one width, and rules 1–3 still own the
+responsive answer. Its own instructions carry four facts worth obeying:
+`generate_screen_from_text` and `edit_screens` take MINUTES and must not be retried (poll
+`get_screen` every 30s, ten times); a connection error does not mean the generation failed;
+`upload_design_md` does nothing until `create_design_system_from_design_md` follows it; and
+`delete_project` is irreversible and asks for a yes/no.
+
+Check either server is exposed in THIS session before planning around it. An MCP server can
+be configured project-scoped — Stitch is, in this workspace, under one sibling repo — so
+`claude mcp list` reports it connected while a session in another directory has none of its
+tools.
 
 That translation is lossy in known places: a Figma frame is ONE width and says nothing about
 390; and satellites, the field-skin keys, the cart drawer and every empty state exist in no

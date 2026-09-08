@@ -40,9 +40,43 @@ also the naming your page should keep.
 
 ### If the work has a Google Stitch design
 
-Same rule, same order: read it, derive tokens, then build. Verify the server's tools are
-actually exposed in THIS session before planning around them — a server can be connected and
-still surface nothing here, in which case say so rather than inventing a workflow.
+Stitch (`https://stitch.googleapis.com/mcp`) is a **generator with a design system attached**,
+which makes it a different kind of source from Figma: you can read tokens out of it, and you
+can also ask it for screens. Fifteen tools, in three groups:
+
+| Group | Tools |
+| --- | --- |
+| Projects | `list_projects`, `get_project`, `create_project`, `delete_project` |
+| Screens | `list_screens`, `get_screen`, `generate_screen_from_text`, `edit_screens`, `generate_variants` |
+| **Design systems** | `list_design_systems`, `create_design_system`, `update_design_system`, `apply_design_system`, `upload_design_md`, `create_design_system_from_design_md` |
+
+**The design-system half is the half that matters here.** A Stitch design system carries the
+colour palette, typography, corner roundness and light/dark backgrounds — which is the token
+set rule 0 asks you to establish, already decided. So the order is:
+`list_projects` → `list_design_systems` → take the palette, the fonts and the shape values →
+apply them through `sb_set` as the page's tokens. Ask for screens second, if at all: a screen
+is one width and one composition, and rules 1–3 still own the responsive answer.
+
+Four operational facts, from the tools' own instructions:
+
+- `generate_screen_from_text` and `edit_screens` **take minutes, and must not be retried**. On
+  a timeout, poll `get_screen` every 30 seconds, up to ten times. A retry starts a second
+  generation.
+- A connection error does **not** mean the generation failed — it may still be running. Poll
+  before concluding anything.
+- `upload_design_md` must be followed **immediately** by `create_design_system_from_design_md`;
+  the upload alone creates nothing.
+- `delete_project` asks for an explicit yes/no and cannot be undone. Never call it to tidy up.
+
+`DESIGN.md` is also the bridge in the other direction: when you have established a token set
+for a site (rule 0, no-source case), `upload_design_md` +
+`create_design_system_from_design_md` turns that written set into a Stitch design system, so
+the next screen it generates is already on-brand.
+
+**Check the server is exposed in THIS session before planning around it.** An MCP server can
+be configured project-scoped — Stitch was, here, under one sibling repo — so `claude mcp list`
+shows it connected while `ToolSearch` finds nothing, in a different directory. Say that, and
+name the fix (move the entry to the global `mcpServers`), rather than inventing a workflow.
 
 ### If there is no design source
 
