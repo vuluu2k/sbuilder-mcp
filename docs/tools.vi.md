@@ -57,18 +57,29 @@ không phải body, tham số tuỳ chọn có tiền tố `?` (`["siteID", "?li
 tag, không có schema: mười hai kết quả kèm schema inline từng đo được 44 KB, cho một danh
 sách mà agent chỉ gọi đúng một mục. `next` nhắc truyền một id lại để lấy call sheet.
 
-**Call sheet** (`id`) trả về operation đầy đủ — `params` có kiểu, `tags`, `credential` —
-kèm **đúng một** phán quyết về body:
+**Call sheet** (`id`) trả về operation đầy đủ — `params` có kiểu, `tags`, `credential` — kèm
+**một** kết luận về body:
 
 | Trường | Nghĩa |
 | --- | --- |
-| `body_schema` | Tài liệu giải được `$ref`; đây là hình dạng thật |
-| `body_warning` | Có khai báo body nhưng không có schema (62 trên 168 operation mang body). Hãy đọc GET tương ứng rồi sửa một bản sao |
-| `body_note` | Operation ghi mà **không** khai báo body nào (95 trên 180 operation ghi). Đôi khi đúng — `POST /orgs/{id}/leave` là một hành động thuần — đôi khi chỉ là thiếu annotation: `PUT /pages/{id}/source` mang cả một tài liệu trang và được ghi chú y hệt như vậy |
+| `body_shape` | Các trường handler thật sự decode, đọc từ mã nguồn Go của nền tảng: `{ fields: [{ name, type, note? }], readOnly?, goType, source: "go" }`. Phủ 158 trong 212 write operation |
+| `body_schema` | Swagger giải được `$ref` và không tìm thấy shape từ handler |
+| `body_warning` | Có khai báo body nhưng không gì mô tả hình dạng. Hãy đọc GET tương ứng rồi sửa một bản sao |
+| `body_note` | Operation ghi mà **không** khai báo body nào. Đôi khi đúng — `POST /orgs/{id}/leave` là một hành động thuần — đôi khi chỉ là thiếu annotation |
 
-Không bao giờ có quá một trong ba. Phân biệt này là chịu lực: coi `body_note` là "không
-nhận body" sẽ gửi một PUT rỗng và xoá trắng một trang. Nó không đổi so với hồi còn đi kèm
-mọi kết quả; giờ nó tới đúng lúc agent đã chọn xong operation, tức là lúc nó được đọc.
+Không bao giờ có quá một trong bốn, và `body_shape` được ưu tiên trước. Ưu tiên vì handler là
+mã thật sự chạy: `swagger.json` mô tả 46 trong 212 write body, và nó gắn `@Param body` của
+một khối doc comment cho **mọi** dòng `@Router` bên dưới, nên một GET danh sách có thể nhận
+là có body mà nó không nhận. Điểm decode thì nằm gọn trong đúng một `case http.Method*`.
+
+`note` của một trường là doc comment của chính trường đó, cắt còn câu đầu cộng mọi câu viết
+hoa nhấn mạnh — chỗ nền tảng này cất thứ quyết định một body. `shipping.Method` ghi
+`freeOverCents` là *"ZERO MEANS 'never free', not 'always free'"*, và một shape thiếu câu đó
+tạo ra cửa hàng giao mọi thứ miễn phí. `readOnly` liệt kê những trường nền tảng sở hữu, đọc
+từ chính các type `Omit<…>` của editor, để lệnh create không cố gửi `id`.
+
+Phân biệt giữa hai mục cuối vẫn chịu lực: coi `body_note` là "không nhận body" sẽ gửi một
+PUT rỗng và xoá trắng một trang.
 
 Cách chấm điểm là đếm từ khoá có trọng số theo trường (tag 5, path 3, tóm tắt 2), hoà thì
 xếp theo id. Cố ý không dùng fuzzy — một danh sách rỗng thì dễ chữa, còn một operation sai

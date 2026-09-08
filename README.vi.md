@@ -66,7 +66,7 @@ là "tài khoản của người này".
 | --- | --- |
 | `sb_connect` | Đăng nhập, liệt kê site tài khoản vận hành được, báo đang có credential nào |
 | `sb_site_list` | Liệt kê site tài khoản vận hành được |
-| `sb_api_find` | Tìm operation theo ý định — mỗi kết quả một dòng — rồi đọc call sheet của một operation theo id: schema tham số thật, credential cần dùng, và cảnh báo rõ ràng khi tài liệu của nền tảng không mô tả request body |
+| `sb_api_find` | Tìm operation theo ý định — mỗi kết quả một dòng — rồi đọc call sheet của một operation theo id: schema tham số thật, credential cần dùng, và các trường body đọc thẳng từ handler decode chúng, mỗi trường mang theo cái bẫy doc comment của chính nó ghi lại |
 | `sb_api_call` | Chạy một operation. Mặc định chạy khô, không gửi gì |
 | `sb_page_open` | Mở một trang để sửa và trả về outline |
 | `sb_outline` | Trang đang mở dạng cây nén — không bao giờ dump tài liệu thô |

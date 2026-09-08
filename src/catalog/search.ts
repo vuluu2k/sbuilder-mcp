@@ -1,4 +1,5 @@
 import { API_OPERATIONS, API_DEFINITIONS } from './api.generated.js';
+import { REQUEST_SHAPES } from './shapes.generated.js';
 import type { ApiOperation } from './types.js';
 
 /**
@@ -76,6 +77,21 @@ export function describeOperation(op: ApiOperation): Record<string, unknown> {
   };
   const hasBody = op.params.some((p) => p.in === 'body');
   const isWrite = op.method === 'POST' || op.method === 'PUT' || op.method === 'PATCH';
+
+  // THE HANDLER OUTRANKS THE DOCUMENT. `swagger.json` describes 46 of 212 write
+  // bodies, and it attaches one doc comment's `@Param body` to every `@Router`
+  // line beneath it — so a listing GET currently claims a body it does not take.
+  // A decode site sits inside one `case http.Method*`, so it is per-method by
+  // construction, and it is read from the code that actually runs.
+  //
+  // The two warnings below are dropped when a shape is present: they exist
+  // because the shape was unknown, and keeping them once it is known is prose
+  // the model has to read past on its way to the answer.
+  const shape = REQUEST_SHAPES[op.id];
+  if (shape) {
+    out.body_shape = shape;
+    return out;
+  }
 
   if (hasBody && op.bodyDescribed && op.bodyRef) {
     out.body_schema = API_DEFINITIONS[op.bodyRef];

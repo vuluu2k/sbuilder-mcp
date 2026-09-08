@@ -22,3 +22,30 @@ export interface ApiOperation {
   bodyRef: string | null;
   credential: Credential;
 }
+
+export interface ShapeField {
+  name: string;
+  type: string;
+  /**
+   * The field's own doc comment, trimmed to its first sentence plus any sentence
+   * that shouts. The shouting is where this platform keeps the knowledge that
+   * decides a body: "ZERO MEANS 'never free', not 'always free'".
+   */
+  note?: string;
+}
+
+/**
+ * What a write operation's body carries, read off the handler that decodes it.
+ *
+ * `swagger.json` describes 46 of 211 write bodies; this covers the rest. See
+ * `scripts/shapes.ts` for how, and why the decode site is the more accurate of
+ * the two sources rather than merely the broader one.
+ */
+export interface RequestShape {
+  fields: ShapeField[];
+  /** Fields the platform owns — present on a read, refused or ignored on a write. */
+  readOnly?: string[];
+  source: 'go';
+  /** The Go type, for a reader who wants to go and look. */
+  goType: string;
+}

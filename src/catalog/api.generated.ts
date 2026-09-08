@@ -3,7 +3,7 @@
 import type { ApiOperation } from './types.js';
 
 export const SWAGGER_SOURCE = {
-  "operations": 481,
+  "operations": 484,
   "definitions": 99,
   "bodyCarrying": 171,
   "bodyUndescribed": 62,
@@ -10631,6 +10631,48 @@ export const API_OPERATIONS: ApiOperation[] = [
     "credential": "siteScoped"
   },
   {
+    "id": "get:/api/sites/{siteId}/relation-slots",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/relation-slots",
+    "tags": [
+      "relations"
+    ],
+    "summary": "Curated relation slots and their picks",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/api/sites/{siteId}/restore",
+    "method": "POST",
+    "path": "/api/sites/{siteId}/restore",
+    "tags": [
+      "sites"
+    ],
+    "summary": "Restore a site from the trash",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
     "id": "get:/api/sites/{siteId}/returns",
     "method": "GET",
     "path": "/api/sites/{siteId}/returns",
@@ -12114,6 +12156,27 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "summary": "Mark a machine-written value as reviewed",
     "params": [],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "delete:/api/sites/{siteId}/trash",
+    "method": "DELETE",
+    "path": "/api/sites/{siteId}/trash",
+    "tags": [
+      "sites"
+    ],
+    "summary": "Permanently delete a site that is in the trash",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      }
+    ],
     "bodyDescribed": false,
     "bodyRef": null,
     "credential": "siteScoped"

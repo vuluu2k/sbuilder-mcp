@@ -56,14 +56,26 @@ plus **one** body verdict:
 
 | Field | Meaning |
 | --- | --- |
-| `body_schema` | The document resolved a `$ref`; this is the real shape |
-| `body_warning` | A body is declared but has no schema (62 of 168 body-carrying operations). Read the matching GET and modify a copy |
-| `body_note` | A write operation declares **no** body at all (95 of 180 write operations). Sometimes true — `POST /orgs/{id}/leave` is a pure action — and sometimes a missing annotation: `PUT /pages/{id}/source` carries an entire page document and is documented exactly like this |
+| `body_shape` | The fields the handler actually decodes, read out of the platform's Go source: `{ fields: [{ name, type, note? }], readOnly?, goType, source: "go" }`. Covers 158 of 212 write operations |
+| `body_schema` | Swagger resolved a `$ref` and no handler shape was found |
+| `body_warning` | A body is declared but nothing describes its shape. Read the matching GET and modify a copy |
+| `body_note` | A write operation declares **no** body at all. Sometimes true — `POST /orgs/{id}/leave` is a pure action — and sometimes a missing annotation |
 
-Never more than one of the three. The distinction is load-bearing: treating `body_note` as
-"takes no body" would send an empty PUT and wipe a page. It is unchanged from when it rode
-on every match; it now arrives at the moment the agent has picked an operation, which is
-when it is read.
+Never more than one of the four, and `body_shape` outranks the rest. It outranks them
+because the handler is the code that runs: `swagger.json` describes 46 of 212 write bodies,
+and it attaches one doc comment's `@Param body` to **every** `@Router` line beneath it, so a
+listing GET can claim a body it does not take. A decode site sits inside one
+`case http.Method*`.
+
+`note` on a field is that field's own doc comment, trimmed to its first sentence plus any
+sentence that shouts — which is where this platform keeps what decides a body.
+`shipping.Method` says `freeOverCents` is *"ZERO MEANS 'never free', not 'always free'"*, and
+a shape without that sentence produces a store that delivers everything for nothing.
+`readOnly` lists the fields the platform owns, read off the editor's own `Omit<…>` input
+types, so a create does not try to supply an `id`.
+
+The distinction between the last two is still load-bearing: treating `body_note` as
+"takes no body" would send an empty PUT and wipe a page.
 
 Scoring is term hits weighted by field (tag 5, path 3, summary 2), ties broken by id. It is
 deliberately not fuzzy — an empty list is cheap to recover from, a confidently wrong

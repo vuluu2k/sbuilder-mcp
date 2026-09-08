@@ -69,7 +69,7 @@ make, because those mean "this person's account".
 | --- | --- |
 | `sb_connect` | Log in, list the sites this account can operate, report which credentials are present |
 | `sb_site_list` | List the sites this account can operate |
-| `sb_api_find` | Find API operations by intent — one line per match — then read one operation's call sheet by id: real parameter schemas, the credential it needs, and an explicit note when the platform's document fails to describe a request body |
+| `sb_api_find` | Find API operations by intent — one line per match — then read one operation's call sheet by id: real parameter schemas, the credential it needs, and the body's fields read off the handler that decodes them, each carrying the trap its own doc comment records |
 | `sb_api_call` | Execute one operation. Defaults to a dry run that sends nothing |
 | `sb_page_open` | Open a page for editing and return its outline |
 | `sb_outline` | The open page as a compressed tree — never a raw document dump |

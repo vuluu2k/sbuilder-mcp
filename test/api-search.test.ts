@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { searchOperations, describeOperation, summarizeOperation, findOperation } from '../src/catalog/search.js';
+import { REQUEST_SHAPES } from '../src/catalog/shapes.generated.js';
 
 describe('searchOperations()', () => {
   it('finds menu operations from the word "menu"', () => {
@@ -36,8 +37,15 @@ describe('searchOperations()', () => {
 
 describe('describeOperation()', () => {
   it('warns that a write op declaring no body may simply be un-annotated', () => {
-    const op = searchOperations('source', { limit: 50 }).find(
-      (o) => o.method === 'PUT' && o.path.endsWith('/source'),
+    // NOT `PUT .../source` any more, and that is the point: the handler scan now
+    // reads its `{ document, schemaVersion }` off the decode site — the shape
+    // CLAUDE.md records somebody having to read out of the editor's own
+    // `saveSource` by hand. This note is for what is still unshaped.
+    const op = searchOperations('', { limit: 600 }).find(
+      (o) =>
+        ['POST', 'PUT', 'PATCH'].includes(o.method) &&
+        !o.params.some((p) => p.in === 'body') &&
+        !REQUEST_SHAPES[o.id],
     )!;
     expect(op).toBeDefined();
     const d = describeOperation(op) as Record<string, unknown>;
@@ -45,7 +53,9 @@ describe('describeOperation()', () => {
   });
 
   it('inlines the definition when the body IS described', () => {
-    const op = searchOperations('', { limit: 400 }).find((o) => o.bodyDescribed)!;
+    const op = searchOperations('', { limit: 400 }).find(
+      (o) => o.bodyDescribed && !REQUEST_SHAPES[o.id],
+    )!;
     const d = describeOperation(op) as Record<string, unknown>;
     expect(d.body_schema).toBeDefined();
     expect(d.body_warning).toBeUndefined();
@@ -59,7 +69,7 @@ describe('describeOperation()', () => {
 
   it('warns when a body IS declared but has no schema to resolve', () => {
     const op = searchOperations('', { limit: 400 }).find(
-      (o) => o.params.some((p) => p.in === 'body') && !o.bodyDescribed,
+      (o) => o.params.some((p) => p.in === 'body') && !o.bodyDescribed && !REQUEST_SHAPES[o.id],
     )!;
     expect(op).toBeDefined();
     const d = describeOperation(op) as Record<string, unknown>;
@@ -117,5 +127,55 @@ describe('findOperation()', () => {
   it('returns the operation by id, or undefined', () => {
     expect(findOperation('get:/api/sites')?.method).toBe('GET');
     expect(findOperation('nope')).toBeUndefined();
+  });
+});
+
+describe('request shapes — the handler outranks the document', () => {
+  it('gives PUT .../source the shape a human had to read out of the editor', () => {
+    const op = findOperation('put:/api/sites/{siteId}/pages/{pageId}/source')!;
+    const d = describeOperation(op) as { body_shape?: { fields: Array<{ name: string }> } };
+    // CLAUDE.md records this body as `{ document, schemaVersion }`, discovered by
+    // reading `editor/src/features/pages/api.ts:115` by hand because the OpenAPI
+    // document declares no body for it at all. The generator recovers both.
+    const names = d.body_shape?.fields.map((f) => f.name) ?? [];
+    expect(names).toContain('document');
+    expect(names).toContain('schemaVersion');
+  });
+
+  it('keeps the trap a field comment carries, not just the field name', () => {
+    const op = findOperation('post:/api/sites/{siteId}/shipping-methods')!;
+    const d = describeOperation(op) as {
+      body_shape?: { fields: Array<{ name: string; note?: string }> };
+    };
+    const free = d.body_shape?.fields.find((f) => f.name === 'freeOverCents');
+    // "ZERO MEANS 'never free', not 'always free'" is in the SECOND sentence of
+    // that field's comment. A shape that kept only the first would ship a store
+    // that delivers everything for nothing.
+    expect(free?.note).toMatch(/ZERO MEANS/);
+  });
+
+  it('says which fields the platform owns, so a create does not send an id', () => {
+    const op = findOperation('post:/api/sites/{siteId}/products')!;
+    const d = describeOperation(op) as { body_shape?: { readOnly?: string[] } };
+    expect(d.body_shape?.readOnly).toContain('id');
+    expect(d.body_shape?.readOnly).toContain('siteId');
+  });
+
+  it('drops the two under-description warnings once a shape is known', () => {
+    for (const id of Object.keys(REQUEST_SHAPES)) {
+      const op = findOperation(id);
+      if (!op) continue;
+      const d = describeOperation(op) as Record<string, unknown>;
+      expect(d.body_warning, id).toBeUndefined();
+      expect(d.body_note, id).toBeUndefined();
+    }
+  });
+
+  it('shapes a clear majority of writes — a scan that stops matching is silent', () => {
+    const writes = searchOperations('', { limit: 600 }).filter((o) =>
+      ['POST', 'PUT', 'PATCH'].includes(o.method),
+    );
+    const shaped = writes.filter((o) => REQUEST_SHAPES[o.id] || (o.bodyDescribed && o.bodyRef));
+    expect(shaped.length / writes.length).toBeGreaterThan(0.6);
   });
 });

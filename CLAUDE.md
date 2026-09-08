@@ -103,15 +103,44 @@ Three things the first live release cost, so nobody pays them twice:
 Each of these cost real investigation. Do not re-derive them, and do not "fix" the code
 that accounts for them.
 
-- **The OpenAPI document holds 278 paths / 412 operations / 97 definitions, and no
-  `operationId`.** Ids are synthesized as `method:path`; the generator asserts uniqueness.
-  (423 is the count of *tag assignments* — an operation with two tags is counted twice.)
-- **Bodies are under-described in two different ways.** 62 of 168 body-carrying operations
-  declare a body with no `$ref`; 95 of 180 write operations declare no body *at all*, and
-  that second group mixes genuine action endpoints (`POST /orgs/{id}/leave`) with missing
-  annotations (`PUT /pages/{id}/source` carries a whole page document). `describeOperation`
-  gives the two cases different words on purpose — saying "no body" for the second would
-  have a model send an empty PUT and wipe a page.
+- **The OpenAPI document holds no `operationId`.** Ids are synthesized as `method:path`; the
+  generator asserts uniqueness. The counts move with the platform and live in `SWAGGER_SOURCE`
+  and `SHAPE_SOURCE` rather than here — 484 operations / 99 definitions at the 2026-09-08
+  regen. (A tag-assignment count is always higher: an operation with two tags is counted twice.)
+- **Bodies are under-described in two different ways, AND THE HANDLER ANSWERS BOTH.** 62 of
+  171 body-carrying operations declare a body with no `$ref`; most write operations declare no
+  body *at all*, and that second group mixes genuine action endpoints
+  (`POST /orgs/{id}/leave`) with missing annotations (`PUT /pages/{id}/source` carries a whole
+  page document). `describeOperation` still gives the two cases different words — saying "no
+  body" for the second would have a model send an empty PUT and wipe a page — but they are now
+  the FALLBACK, behind `body_shape`. See the `REQUEST_SHAPES` bullet below.
+- **THE BODY SHAPES WERE NEVER UNDISCOVERABLE — THEY WERE MERELY ABSENT FROM `swagger.json`.**
+  46 of 212 write operations carried a schema, so every merchant operation through
+  `sb_api_call` was a guess, and the documented recovery ("read the matching GET and send back
+  a modified copy") cannot help a CREATE: there is nothing to GET before the first product,
+  the first delivery option, the first gateway. But the handler decodes into a NAMED STRUCT —
+  `var m shipping.Method` — so `scripts/shapes.ts` reads the decode site, resolves the struct
+  out of `server/internal/**`, and emits `REQUEST_SHAPES` (158 of 212, committed as
+  `src/catalog/shapes.generated.ts`). Three things worth keeping:
+  - **The decode site is MORE ACCURATE than swagger, not merely broader.** One doc comment
+    block serves several `@Router` lines — `products/rest/rest.go:206` attaches
+    `@Param product body products.Product` to the GET as well as the POST — so a listing
+    claimed a body it does not take. A decode site sits inside one `case http.Method*`.
+  - **A struct is keyed by DIRECTORY, not package name.** Every `internal/*/rest/*.go` file
+    declares `package rest`, so `products/rest` and `loyalty/rest` both define
+    `adjustRequest`; keying on the package name silently gave one of them the other's fields.
+  - **The field's own doc comment is the half that decides a body**, so the note keeps the
+    first sentence AND every sentence that shouts. `shipping.Method` documents `FreeOverCents`
+    as "ZERO MEANS 'never free', not 'always free'" and `Disabled` as "NEGATIVE, so the zero
+    value is the enabled default" — both are second sentences, and a shape without them ships
+    a store that delivers everything for nothing. `readOnly` comes from the editor's own
+    `Omit<…>` input types, INTERSECTED with the struct's fields rather than required whole:
+    `CatalogProduct` omits `priceCents` and `totalStock`, which are not columns on
+    `products.Product` at all, because price lives on the variant.
+
+  The generator's own evidence that it is right: it recovers `{ document, schemaVersion }` for
+  `PUT /pages/{id}/source` — the shape the bullet three below records somebody having to read
+  out of the editor by hand.
 - **The session access token lives ~15 minutes and rotates.** `Session.token()` is a
   GETTER and every consumer must call it per use. A client that captures the string
   replays an expired token forever, and the failure is silent — a rejected socket auth

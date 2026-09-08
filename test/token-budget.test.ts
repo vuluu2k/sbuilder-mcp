@@ -44,4 +44,24 @@ describe('token budget — a diet without a scale comes back', () => {
     expect(chars(traits)).toBeLessThan(12_000);
     await close();
   });
+
+  it('a call sheet carrying a body shape still fits in a few hundred tokens', async () => {
+    const { client, close } = await connectedClient();
+    // The heaviest one measured, and the reason there is a ceiling at all: a body
+    // shape is a whole struct's worth of field names, types and trap notes, and
+    // an unbounded one would put a domain model into the context of anybody who
+    // asked what an endpoint takes. Median is 586; orders is the outlier at 3,771.
+    const orders = await client.callTool({
+      name: 'sb_api_find',
+      arguments: { id: 'post:/api/sites/{siteId}/orders' },
+    });
+    expect(chars(orders)).toBeLessThan(4_500);
+    // The one every storefront build calls, and the one that must stay cheap.
+    const products = await client.callTool({
+      name: 'sb_api_find',
+      arguments: { id: 'post:/api/sites/{siteId}/products' },
+    });
+    expect(chars(products)).toBeLessThan(2_500);
+    await close();
+  });
 });

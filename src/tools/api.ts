@@ -270,8 +270,9 @@ export function registerApiTools(server: McpServer, ctx: ToolContext): void {
     {
       description:
         'Search platform API operations by intent (query: one line per match), or read one ' +
-          "operation's full call sheet (id: parameter types, credential, body schema or an " +
-          `explicit warning that none is described). Reaches all ${SWAGGER_SOURCE.operations} operations.`,
+          "operation's full call sheet (id: parameter types, credential, and the body's fields " +
+          'with the traps their own doc comments carry, read off the handler that decodes them). ' +
+          `Reaches all ${SWAGGER_SOURCE.operations} operations.`,
       inputSchema: {
       query: z
         .string()
