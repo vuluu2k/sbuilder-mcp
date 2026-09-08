@@ -6,6 +6,12 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.1] - 2026-09-08
+
+### Fixed
+- sb_review now reports findings inside the cart drawer and other site overlays, tagged with overlay: true, instead of silently skipping them on the belief that an overlay is not the page's to fix; the review notice explains that an overlay:true finding is fixed the same way but is site-wide, so it only needs fixing once.
+- sb_api_call's path_params now matches a parameter name case-insensitively as a fallback, so a call using the common siteId spelling no longer fails against the 8 operations that spell it siteID; an exact match still wins and a genuinely missing parameter is still refused.
+
 ## [0.4.0] - 2026-09-08
 
 ### Added

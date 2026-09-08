@@ -6,6 +6,12 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.1] - 2026-09-08
+
+### Fixed
+- sb_review giờ báo cáo các finding bên trong cart drawer và các overlay khác của site, gắn cờ overlay: true, thay vì âm thầm bỏ qua chúng vì cho rằng một overlay không phải trách nhiệm của trang; thông báo review giải thích rằng một finding có overlay: true được sửa theo cùng cách nhưng có phạm vi toàn site, nên chỉ cần sửa một lần.
+- path_params của sb_api_call giờ khớp tên tham số không phân biệt hoa thường như một phương án dự phòng, nên một lời gọi dùng cách viết phổ biến siteId không còn thất bại với 8 operation viết là siteID; một khớp chính xác vẫn được ưu tiên và một tham số thực sự thiếu vẫn bị từ chối.
+
 ## [0.4.0] - 2026-09-08
 
 ### Added
