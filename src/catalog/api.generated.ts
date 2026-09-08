@@ -3,10 +3,10 @@
 import type { ApiOperation } from './types.js';
 
 export const SWAGGER_SOURCE = {
-  "operations": 485,
+  "operations": 486,
   "definitions": 102,
-  "bodyCarrying": 171,
-  "bodyUndescribed": 62,
+  "bodyCarrying": 172,
+  "bodyUndescribed": 63,
   "generatedFrom": "server/docs/swagger.json"
 } as const;
 
@@ -10232,13 +10232,57 @@ export const API_OPERATIONS: ApiOperation[] = [
     "credential": "siteScoped"
   },
   {
+    "id": "get:/api/sites/{siteId}/products/{id}/bundles",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/products/{id}/bundles",
+    "tags": [
+      "products",
+      "products"
+    ],
+    "summary": "Bundles containing a product",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "body",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "Category IDs to set (PUT only): {\\"
+      },
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Product ID"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
     "id": "get:/api/sites/{siteId}/products/{productId}/categories",
     "method": "GET",
     "path": "/api/sites/{siteId}/products/{productId}/categories",
     "tags": [
+      "products",
       "products"
     ],
-    "summary": "Get or set a product's category links",
+    "summary": "Bundles containing a product",
     "params": [
       {
         "name": "siteId",
@@ -10260,6 +10304,13 @@ export const API_OPERATIONS: ApiOperation[] = [
         "required": false,
         "type": "object",
         "description": "Category IDs to set (PUT only): {\\"
+      },
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
       }
     ],
     "bodyDescribed": false,
@@ -10271,9 +10322,10 @@ export const API_OPERATIONS: ApiOperation[] = [
     "method": "PUT",
     "path": "/api/sites/{siteId}/products/{productId}/categories",
     "tags": [
+      "products",
       "products"
     ],
-    "summary": "Get or set a product's category links",
+    "summary": "Bundles containing a product",
     "params": [
       {
         "name": "siteId",
@@ -10295,6 +10347,13 @@ export const API_OPERATIONS: ApiOperation[] = [
         "required": false,
         "type": "object",
         "description": "Category IDs to set (PUT only): {\\"
+      },
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
       }
     ],
     "bodyDescribed": false,

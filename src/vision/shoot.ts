@@ -427,9 +427,18 @@ async function shootOne(
     };
   }
 
+  // `fullPage` STAYS ON WITH A CLIP, and dropping it was a real bug: without it
+  // the screenshot is of the VIEWPORT, so a clip is only satisfiable inside the
+  // first 900px and framing anything further down failed outright with
+  // "Clipped area is either empty or outside the resulting image" — naming
+  // neither the node nor the reason. Measured on a 4,051px page: framing a
+  // section at y=2000 was impossible, which is most of any real page. With
+  // fullPage on, the clip is in PAGE coordinates, which is what the boxes the
+  // clip is computed from are already in.
   const bytes = await page.screenshot({
     ...(format === 'jpeg' ? { type: 'jpeg', quality: JPEG_QUALITY } : { type: 'png' }),
-    ...(clip ? { clip } : { fullPage: true }),
+    fullPage: true,
+    ...(clip ? { clip } : {}),
   });
   return {
     width,

@@ -5,11 +5,11 @@ import type { RequestShape } from './types.js';
 
 export const SHAPE_SOURCE = {
   "writeOperations": 212,
-  "shaped": 158,
-  "fromHandlers": 158,
+  "shaped": 157,
+  "fromHandlers": 157,
   "fromSwaggerOnly": 0,
   "withReadOnly": 26,
-  "structsRead": 1583
+  "structsRead": 1597
 } as const;
 
 export const REQUEST_SHAPES: Record<string, RequestShape> = {
@@ -4587,6 +4587,45 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
         "type": "SEO"
       },
       {
+        "name": "kind",
+        "type": "ProductKind",
+        "note": "Kind says whether this is an ordinary product or a COMBO whose price and availability are derived from the components in BundleItems."
+      },
+      {
+        "name": "bundlePricing",
+        "type": "BundlePricing",
+        "note": "BundlePricing and BundleValue are how a combo is priced: a flat price in cents (\"fixed\") or a percentage off the components' total (\"percent\", 0–100)."
+      },
+      {
+        "name": "bundleValue",
+        "type": "number"
+      },
+      {
+        "name": "bundleItems",
+        "type": "BundleItem[]",
+        "note": "BundleItems is what one combo contains.",
+        "fields": [
+          {
+            "name": "productId",
+            "type": "string"
+          },
+          {
+            "name": "variantId",
+            "type": "string"
+          },
+          {
+            "name": "quantity",
+            "type": "number",
+            "note": "Quantity is how many units of the component one combo contains (≥ 1)."
+          },
+          {
+            "name": "position",
+            "type": "number",
+            "note": "Position is the merchant's arrangement — the order the components are listed on the product page."
+          }
+        ]
+      },
+      {
         "name": "moneyOverride",
         "type": "object",
         "note": "MoneyOverride is an opaque per-product money-display override (compact-convert rules + exchange-rate overrides), stored as a JSONB blob."
@@ -4658,6 +4697,45 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
         "type": "SEO"
       },
       {
+        "name": "kind",
+        "type": "ProductKind",
+        "note": "Kind says whether this is an ordinary product or a COMBO whose price and availability are derived from the components in BundleItems."
+      },
+      {
+        "name": "bundlePricing",
+        "type": "BundlePricing",
+        "note": "BundlePricing and BundleValue are how a combo is priced: a flat price in cents (\"fixed\") or a percentage off the components' total (\"percent\", 0–100)."
+      },
+      {
+        "name": "bundleValue",
+        "type": "number"
+      },
+      {
+        "name": "bundleItems",
+        "type": "BundleItem[]",
+        "note": "BundleItems is what one combo contains.",
+        "fields": [
+          {
+            "name": "productId",
+            "type": "string"
+          },
+          {
+            "name": "variantId",
+            "type": "string"
+          },
+          {
+            "name": "quantity",
+            "type": "number",
+            "note": "Quantity is how many units of the component one combo contains (≥ 1)."
+          },
+          {
+            "name": "position",
+            "type": "number",
+            "note": "Position is the merchant's arrangement — the order the components are listed on the product page."
+          }
+        ]
+      },
+      {
         "name": "moneyOverride",
         "type": "object",
         "note": "MoneyOverride is an opaque per-product money-display override (compact-convert rules + exchange-rate overrides), stored as a JSONB blob."
@@ -4689,16 +4767,6 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
       "createdAt",
       "updatedAt"
     ]
-  },
-  "put:/api/sites/{siteId}/products/{productId}/categories": {
-    "fields": [
-      {
-        "name": "categoryIds",
-        "type": "string[]"
-      }
-    ],
-    "source": "go",
-    "goType": "(inline)"
   },
   "put:/api/sites/{siteId}/product-categories/{id}/products": {
     "fields": [

@@ -39,7 +39,17 @@ describe('token budget — a diet without a scale comes back', () => {
     // `sb_undo` (~550): the platform has no page history and no restore, so every
     // whole-document replace is one-way. A merchant clicking through the editor
     // has undo; an agent had nothing, and one call does more damage.
-    expect(JSON.stringify(tools).length).toBeLessThan(19_000);
+    //
+    // `sb_import` (~400): reading a page from elsewhere is a translation, not a
+    // clone, and the description has to say so — the platform HAS an escape
+    // hatch that would clone it (`custom-code` embeds raw markup) and a caller
+    // who reaches for that gets a page no inspector can edit.
+    //
+    // 20,500 rather than 19,500: a ceiling set just above the current
+    // measurement gets raised again on the next honest tool, which trains a
+    // reader to raise it without reading. This has room for one more and still
+    // refuses a schema dump.
+    expect(JSON.stringify(tools).length).toBeLessThan(20_500);
     for (const t of tools) expect(t.description, t.name).not.toMatch(/vanishes on publish/);
     const instructions = client.getInstructions() ?? '';
     expect(instructions.length).toBeGreaterThan(200);
@@ -73,11 +83,23 @@ describe('token budget — a diet without a scale comes back', () => {
     });
     expect(chars(orders)).toBeLessThan(5_500);
     // The one every storefront build calls, and the one that must stay cheap.
+    //
+    // The ceiling MOVED once, deliberately, and the reason is the shape of a
+    // legitimate change: the platform grew product BUNDLES, so `products.Product`
+    // gained `kind`, `bundlePricing`, `bundleValue` and a `bundleItems` array
+    // expanded one level (productId, variantId, quantity, position) — 16 fields,
+    // and the sheet went 2,446 → 2,946. That is capability an agent needs in
+    // order to sell a combo, not padding.
+    //
+    // Raised to 3,500 rather than to 3,000: a ceiling set just above today's
+    // measurement has to be raised again on the next honest field, which trains
+    // a reader to raise it without looking. This one has room for a comparable
+    // addition and still refuses a schema dump.
     const products = await client.callTool({
       name: 'sb_api_find',
       arguments: { id: 'post:/api/sites/{siteId}/products' },
     });
-    expect(chars(products)).toBeLessThan(2_500);
+    expect(chars(products)).toBeLessThan(3_500);
     await close();
   });
 });
