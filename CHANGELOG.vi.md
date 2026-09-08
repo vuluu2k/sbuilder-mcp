@@ -6,6 +6,11 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.2] - 2026-09-08
+
+### Changed
+- sb_look giờ chờ trang ngừng thay đổi (dùng MutationObserver, 250 ms yên tĩnh / giới hạn 2000 ms) thay vì chờ timeout networkidle mà cart island liên tục polling và các kiểm tra session của storefront không bao giờ thỏa mãn được, rút ngắn một lần chụp điển hình từ ~3.2s xuống dưới 1s, đồng thời vẫn chụp ảnh một trang không bao giờ ổn định thay vì giữ mãi không chụp.
+
 ## [0.4.1] - 2026-09-08
 
 ### Fixed
