@@ -10,7 +10,7 @@
  *
  * Run: WB_REPO=/path/to/web_builder npm run codegen
  */
-import { readFileSync, readdirSync, writeFileSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { buildRequestShapes } from './shapes.js';
 import { credentialFor } from '../src/transport/credential.js';
@@ -236,6 +236,55 @@ const FIXED_EMPTY_SOURCE: Record<string, string> = {
   'dataset-block': 'item',
   'cart-order': 'cart',
 };
+
+/**
+ * CHECK MODE: does the committed catalog still match the platform?
+ *
+ * `npm run codegen` is a MANUAL step, so the catalog goes stale in silence. The
+ * platform moves fast — 820 commits in the eleven days before 2026-09-07 — and
+ * the first sign of a stale catalog is a tool describing an element the platform
+ * renamed, or missing one it shipped. Measured in one afternoon: the element
+ * count moved 107 → 108 and the operation count 484 → 485 while this repo sat
+ * still.
+ *
+ * `npm run codegen -- --check` writes nothing and exits 1 naming every file that
+ * would change, so drift is REPORTED rather than discovered. Two callers want
+ * that: a person asking "is my catalog current?", and CI asking the same
+ * question of a platform checkout it already has.
+ */
+const CHECK_ONLY = process.argv.includes('--check');
+/** "wrote" is a lie in check mode, where nothing is written. */
+const VERB = CHECK_ONLY ? 'checked' : 'wrote';
+const drift: string[] = [];
+
+/** Write the generated file, or in check mode record whether it would change. */
+function emit(path: string, content: string): void {
+  if (!CHECK_ONLY) {
+    writeFileSync(path, content, 'utf8');
+    return;
+  }
+  const current = existsSync(path) ? readFileSync(path, 'utf8') : '';
+  if (current !== content) {
+    const was = current.split('\n').length;
+    const now = content.split('\n').length;
+    drift.push(`${path.replace(process.cwd() + '/', '')} (${was} → ${now} lines)`);
+  }
+}
+
+/** Called once at the end: in check mode, fail loudly and name what moved. */
+function reportDrift(): void {
+  if (!CHECK_ONLY) return;
+  if (drift.length === 0) {
+    console.error('catalog is current — no file would change');
+    return;
+  }
+  console.error(
+    `catalog is STALE against this web_builder checkout — ${drift.length} file(s) would change:`,
+  );
+  for (const d of drift) console.error(`  ${d}`);
+  console.error('Run: WB_REPO=<checkout> npm run codegen');
+  process.exit(1);
+}
 
 async function main(): Promise<void> {
   const repo = process.env.WB_REPO;
@@ -650,9 +699,9 @@ export const ELEMENT_SEEDS: Record<string, NodeSeed[]> = ${JSON.stringify(elemen
 
 export const FIRST_CHILD_ONLY: string[] = ${JSON.stringify(firstChildOnly, null, 2)};
 `;
-  writeFileSync(resolve(process.cwd(), 'src/catalog/elements.generated.ts'), elementsOut, 'utf8');
+  emit(resolve(process.cwd(), 'src/catalog/elements.generated.ts'), elementsOut);
   console.error(
-    `wrote elements.generated.ts: ${types.length} elements, ${allControls.size} controls ` +
+    `${VERB} elements.generated.ts: ${types.length} elements, ${allControls.size} controls ` +
       `(${Object.keys(traits).length} with a declared write target), ` +
       `${bindingSources.length} binding sources, ${Object.keys(boundSpecials).length} bound-special elements, ` +
       `${Object.keys(satellites).length} satellite owners, ${firstChildOnly.length} first-child-only, doc schema v${docVersion}`,
@@ -710,9 +759,9 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = ${JSON.stringify(
     2,
   )};
 `;
-  writeFileSync(resolve(process.cwd(), 'src/catalog/shapes.generated.ts'), shapesOut, 'utf8');
+  emit(resolve(process.cwd(), 'src/catalog/shapes.generated.ts'), shapesOut);
   console.error(
-    `wrote shapes.generated.ts: ${shaped.length}/${writeOps.length} write operations shaped ` +
+    `${VERB} shapes.generated.ts: ${shaped.length}/${writeOps.length} write operations shaped ` +
       `(${Object.keys(shapeResult.shapes).length} from handlers, ` +
       `${shapeResult.stats.withReadOnly} with a read-only list), ` +
       `${shapeResult.stats.structs} structs read`,
@@ -849,9 +898,9 @@ export const FORM_TEMPLATES = ${JSON.stringify(formTemplates, null, 2)} as const
 
 export type FormTemplateKey = keyof typeof FORM_TEMPLATES;
 `;
-  writeFileSync(resolve(process.cwd(), 'src/catalog/checkout.generated.ts'), checkoutOut, 'utf8');
+  emit(resolve(process.cwd(), 'src/catalog/checkout.generated.ts'), checkoutOut);
   console.error(
-    `wrote checkout.generated.ts: form type ${tpl.type}, ` +
+    `${VERB} checkout.generated.ts: form type ${tpl.type}, ` +
       `${Object.keys(checkoutFormDoc.nodes).length} form nodes, ` +
       `${Object.keys((checkoutPageDoc as { nodes: object }).nodes).length} page nodes, ` +
       `${Object.keys(checkoutText).length} locales, ` +
@@ -859,9 +908,9 @@ export type FormTemplateKey = keyof typeof FORM_TEMPLATES;
   );
 
   const dest = resolve(process.cwd(), 'src/catalog/api.generated.ts');
-  writeFileSync(dest, out, 'utf8');
+  emit(dest, out);
   console.error(
-    `wrote ${dest}: ${ops.length} operations, ` +
+    `${VERB} ${dest}: ${ops.length} operations, ` +
       `${Object.keys(spec.definitions ?? {}).length} definitions, ` +
       `${withBody.filter((o) => !o.bodyDescribed).length}/${withBody.length} with an undescribed body`,
   );
@@ -891,6 +940,7 @@ function stableIds<T extends { nodes: Record<string, unknown> }>(doc: T, prefix:
 }
 
 await main();
+reportDrift();
 
 /**
  * An element's defaults plus the bindings its default config implies.

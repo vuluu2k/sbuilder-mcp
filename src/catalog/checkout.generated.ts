@@ -5053,7 +5053,8 @@ export const FORM_TEMPLATES = {
               "freg_3",
               "freg_4",
               "freg_5",
-              "freg_6"
+              "freg_6",
+              "freg_7"
             ],
             "isCanvas": false,
             "hidden": false,
@@ -5232,6 +5233,46 @@ export const FORM_TEMPLATES = {
         },
         "freg_6": {
           "id": "freg_6",
+          "data": {
+            "type": "form-text",
+            "parent": "freg_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%"
+          },
+          "config": {
+            "iconPosition": "left"
+          },
+          "specials": {
+            "showIcon": false,
+            "iconName": "",
+            "name": "confirmPassword",
+            "label": "Nhập lại mật khẩu",
+            "placeholder": "",
+            "description": "",
+            "required": true,
+            "showLabel": true,
+            "mapTo": "",
+            "prefillValue": "",
+            "multiline": false,
+            "inputType": "password",
+            "limitChars": false,
+            "minChars": 0,
+            "maxChars": 500,
+            "patternPreset": "",
+            "pattern": "",
+            "patternCountries": []
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "freg_7": {
+          "id": "freg_7",
           "data": {
             "type": "form-submit",
             "parent": "freg_1",
@@ -5599,7 +5640,8 @@ export const FORM_TEMPLATES = {
               "fres_3",
               "fres_4",
               "fres_5",
-              "fres_6"
+              "fres_6",
+              "fres_7"
             ],
             "isCanvas": false,
             "hidden": false,
@@ -5778,6 +5820,46 @@ export const FORM_TEMPLATES = {
         },
         "fres_6": {
           "id": "fres_6",
+          "data": {
+            "type": "form-text",
+            "parent": "fres_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%"
+          },
+          "config": {
+            "iconPosition": "left"
+          },
+          "specials": {
+            "showIcon": false,
+            "iconName": "",
+            "name": "confirmPassword",
+            "label": "Nhập lại mật khẩu mới",
+            "placeholder": "",
+            "description": "",
+            "required": true,
+            "showLabel": true,
+            "mapTo": "",
+            "prefillValue": "",
+            "multiline": false,
+            "inputType": "password",
+            "limitChars": false,
+            "minChars": 0,
+            "maxChars": 500,
+            "patternPreset": "",
+            "pattern": "",
+            "patternCountries": []
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "fres_7": {
+          "id": "fres_7",
           "data": {
             "type": "form-submit",
             "parent": "fres_1",

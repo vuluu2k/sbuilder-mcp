@@ -3,7 +3,7 @@
 import type { CatalogElement, NodeSeed, SatelliteRule, TraitDescription } from './element-types.js';
 
 export const ELEMENT_SOURCE = {
-  "count": 107,
+  "count": 108,
   "docSchemaVersion": 2
 } as const;
 
@@ -900,6 +900,684 @@ export const ELEMENTS: Record<string, CatalogElement> = {
       "button",
       "action",
       "brand"
+    ]
+  },
+  "bundle-items": {
+    "type": "bundle-items",
+    "label": "Combo contents",
+    "category": "store",
+    "isContainer": false,
+    "isRootOnly": false,
+    "locked": false,
+    "hideInLayer": false,
+    "childAllows": [],
+    "defaults": {
+      "style": {
+        "display": "flex",
+        "flexDirection": "column",
+        "gap": "6px",
+        "width": "100%",
+        "height": "fit-content",
+        "fontSize": "14px",
+        "color": "#404040"
+      },
+      "specials": {
+        "heading": "Gồm có",
+        "showHeading": true,
+        "quantitySeparator": " × "
+      },
+      "bindings": [
+        {
+          "id": "bind-bundle-items",
+          "source": "product.bundleItems",
+          "field": "specials.boundBundleItems"
+        }
+      ]
+    },
+    "bindingsFor": {
+      "product|title": [
+        {
+          "id": "bind-bundle-items",
+          "source": "product.bundleItems",
+          "field": "specials.boundBundleItems"
+        }
+      ],
+      "product|vendor": [
+        {
+          "id": "bind-bundle-items",
+          "source": "product.bundleItems",
+          "field": "specials.boundBundleItems"
+        }
+      ],
+      "product|description": [
+        {
+          "id": "bind-bundle-items",
+          "source": "product.bundleItems",
+          "field": "specials.boundBundleItems"
+        }
+      ],
+      "product|summary": [
+        {
+          "id": "bind-bundle-items",
+          "source": "product.bundleItems",
+          "field": "specials.boundBundleItems"
+        }
+      ],
+      "product|content": [
+        {
+          "id": "bind-bundle-items",
+          "source": "product.bundleItems",
+          "field": "specials.boundBundleItems"
+        }
+      ],
+      "product|author": [
+        {
+          "id": "bind-bundle-items",
+          "source": "product.bundleItems",
+          "field": "specials.boundBundleItems"
+        }
+      ],
+      "product|date": [
+        {
+          "id": "bind-bundle-items",
+          "source": "product.bundleItems",
+          "field": "specials.boundBundleItems"
+        }
+      ],
+      "product|image": [
+        {
+          "id": "bind-bundle-items",
+          "source": "product.bundleItems",
+          "field": "specials.boundBundleItems"
+        }
+      ],
+      "product|price": [
+        {
+          "id": "bind-bundle-items",
+          "source": "product.bundleItems",
+          "field": "specials.boundBundleItems"
+        }
+      ],
+      "product|prices": [
+        {
+          "id": "bind-bundle-items",
+          "source": "product.bundleItems",
+          "field": "specials.boundBundleItems"
+        }
+      ],
+      "product|url": [
+        {
+          "id": "bind-bundle-items",
+          "source": "product.bundleItems",
+          "field": "specials.boundBundleItems"
+        }
+      ],
+      "product|name": [
+        {
+          "id": "bind-bundle-items",
+          "source": "product.bundleItems",
+          "field": "specials.boundBundleItems"
+        }
+      ],
+      "category|title": [
+        {
+          "id": "bind-bundle-items",
+          "source": "product.bundleItems",
+          "field": "specials.boundBundleItems"
+        }
+      ],
+      "category|vendor": [
+        {
+          "id": "bind-bundle-items",
+          "source": "product.bundleItems",
+          "field": "specials.boundBundleItems"
+        }
+      ],
+      "category|description": [
+        {
+          "id": "bind-bundle-items",
+          "source": "product.bundleItems",
+          "field": "specials.boundBundleItems"
+        }
+      ],
+      "category|summary": [
+        {
+          "id": "bind-bundle-items",
+          "source": "product.bundleItems",
+          "field": "specials.boundBundleItems"
+        }
+      ],
+      "category|content": [
+        {
+          "id": "bind-bundle-items",
+          "source": "product.bundleItems",
+          "field": "specials.boundBundleItems"
+        }
+      ],
+      "category|author": [
+        {
+          "id": "bind-bundle-items",
+          "source": "product.bundleItems",
+          "field": "specials.boundBundleItems"
+        }
+      ],
+      "category|date": [
+        {
+          "id": "bind-bundle-items",
+          "source": "product.bundleItems",
+          "field": "specials.boundBundleItems"
+        }
+      ],
+      "category|image": [
+        {
+          "id": "bind-bundle-items",
+          "source": "product.bundleItems",
+          "field": "specials.boundBundleItems"
+        }
+      ],
+      "category|price": [
+        {
+          "id": "bind-bundle-items",
+          "source": "product.bundleItems",
+          "field": "specials.boundBundleItems"
+        }
+      ],
+      "category|prices": [
+        {
+          "id": "bind-bundle-items",
+          "source": "product.bundleItems",
+          "field": "specials.boundBundleItems"
+        }
+      ],
+      "category|url": [
+        {
+          "id": "bind-bundle-items",
+          "source": "product.bundleItems",
+          "field": "specials.boundBundleItems"
+        }
+      ],
+      "category|name": [
+        {
+          "id": "bind-bundle-items",
+          "source": "product.bundleItems",
+          "field": "specials.boundBundleItems"
+        }
+      ],
+      "article|title": [
+        {
+          "id": "bind-bundle-items",
+          "source": "product.bundleItems",
+          "field": "specials.boundBundleItems"
+        }
+      ],
+      "article|vendor": [
+        {
+          "id": "bind-bundle-items",
+          "source": "product.bundleItems",
+          "field": "specials.boundBundleItems"
+        }
+      ],
+      "article|description": [
+        {
+          "id": "bind-bundle-items",
+          "source": "product.bundleItems",
+          "field": "specials.boundBundleItems"
+        }
+      ],
+      "article|summary": [
+        {
+          "id": "bind-bundle-items",
+          "source": "product.bundleItems",
+          "field": "specials.boundBundleItems"
+        }
+      ],
+      "article|content": [
+        {
+          "id": "bind-bundle-items",
+          "source": "product.bundleItems",
+          "field": "specials.boundBundleItems"
+        }
+      ],
+      "article|author": [
+        {
+          "id": "bind-bundle-items",
+          "source": "product.bundleItems",
+          "field": "specials.boundBundleItems"
+        }
+      ],
+      "article|date": [
+        {
+          "id": "bind-bundle-items",
+          "source": "product.bundleItems",
+          "field": "specials.boundBundleItems"
+        }
+      ],
+      "article|image": [
+        {
+          "id": "bind-bundle-items",
+          "source": "product.bundleItems",
+          "field": "specials.boundBundleItems"
+        }
+      ],
+      "article|price": [
+        {
+          "id": "bind-bundle-items",
+          "source": "product.bundleItems",
+          "field": "specials.boundBundleItems"
+        }
+      ],
+      "article|prices": [
+        {
+          "id": "bind-bundle-items",
+          "source": "product.bundleItems",
+          "field": "specials.boundBundleItems"
+        }
+      ],
+      "article|url": [
+        {
+          "id": "bind-bundle-items",
+          "source": "product.bundleItems",
+          "field": "specials.boundBundleItems"
+        }
+      ],
+      "article|name": [
+        {
+          "id": "bind-bundle-items",
+          "source": "product.bundleItems",
+          "field": "specials.boundBundleItems"
+        }
+      ],
+      "course|title": [
+        {
+          "id": "bind-bundle-items",
+          "source": "product.bundleItems",
+          "field": "specials.boundBundleItems"
+        }
+      ],
+      "course|vendor": [
+        {
+          "id": "bind-bundle-items",
+          "source": "product.bundleItems",
+          "field": "specials.boundBundleItems"
+        }
+      ],
+      "course|description": [
+        {
+          "id": "bind-bundle-items",
+          "source": "product.bundleItems",
+          "field": "specials.boundBundleItems"
+        }
+      ],
+      "course|summary": [
+        {
+          "id": "bind-bundle-items",
+          "source": "product.bundleItems",
+          "field": "specials.boundBundleItems"
+        }
+      ],
+      "course|content": [
+        {
+          "id": "bind-bundle-items",
+          "source": "product.bundleItems",
+          "field": "specials.boundBundleItems"
+        }
+      ],
+      "course|author": [
+        {
+          "id": "bind-bundle-items",
+          "source": "product.bundleItems",
+          "field": "specials.boundBundleItems"
+        }
+      ],
+      "course|date": [
+        {
+          "id": "bind-bundle-items",
+          "source": "product.bundleItems",
+          "field": "specials.boundBundleItems"
+        }
+      ],
+      "course|image": [
+        {
+          "id": "bind-bundle-items",
+          "source": "product.bundleItems",
+          "field": "specials.boundBundleItems"
+        }
+      ],
+      "course|price": [
+        {
+          "id": "bind-bundle-items",
+          "source": "product.bundleItems",
+          "field": "specials.boundBundleItems"
+        }
+      ],
+      "course|prices": [
+        {
+          "id": "bind-bundle-items",
+          "source": "product.bundleItems",
+          "field": "specials.boundBundleItems"
+        }
+      ],
+      "course|url": [
+        {
+          "id": "bind-bundle-items",
+          "source": "product.bundleItems",
+          "field": "specials.boundBundleItems"
+        }
+      ],
+      "course|name": [
+        {
+          "id": "bind-bundle-items",
+          "source": "product.bundleItems",
+          "field": "specials.boundBundleItems"
+        }
+      ],
+      "instructor|title": [
+        {
+          "id": "bind-bundle-items",
+          "source": "product.bundleItems",
+          "field": "specials.boundBundleItems"
+        }
+      ],
+      "instructor|vendor": [
+        {
+          "id": "bind-bundle-items",
+          "source": "product.bundleItems",
+          "field": "specials.boundBundleItems"
+        }
+      ],
+      "instructor|description": [
+        {
+          "id": "bind-bundle-items",
+          "source": "product.bundleItems",
+          "field": "specials.boundBundleItems"
+        }
+      ],
+      "instructor|summary": [
+        {
+          "id": "bind-bundle-items",
+          "source": "product.bundleItems",
+          "field": "specials.boundBundleItems"
+        }
+      ],
+      "instructor|content": [
+        {
+          "id": "bind-bundle-items",
+          "source": "product.bundleItems",
+          "field": "specials.boundBundleItems"
+        }
+      ],
+      "instructor|author": [
+        {
+          "id": "bind-bundle-items",
+          "source": "product.bundleItems",
+          "field": "specials.boundBundleItems"
+        }
+      ],
+      "instructor|date": [
+        {
+          "id": "bind-bundle-items",
+          "source": "product.bundleItems",
+          "field": "specials.boundBundleItems"
+        }
+      ],
+      "instructor|image": [
+        {
+          "id": "bind-bundle-items",
+          "source": "product.bundleItems",
+          "field": "specials.boundBundleItems"
+        }
+      ],
+      "instructor|price": [
+        {
+          "id": "bind-bundle-items",
+          "source": "product.bundleItems",
+          "field": "specials.boundBundleItems"
+        }
+      ],
+      "instructor|prices": [
+        {
+          "id": "bind-bundle-items",
+          "source": "product.bundleItems",
+          "field": "specials.boundBundleItems"
+        }
+      ],
+      "instructor|url": [
+        {
+          "id": "bind-bundle-items",
+          "source": "product.bundleItems",
+          "field": "specials.boundBundleItems"
+        }
+      ],
+      "instructor|name": [
+        {
+          "id": "bind-bundle-items",
+          "source": "product.bundleItems",
+          "field": "specials.boundBundleItems"
+        }
+      ],
+      "blogCategory|title": [
+        {
+          "id": "bind-bundle-items",
+          "source": "product.bundleItems",
+          "field": "specials.boundBundleItems"
+        }
+      ],
+      "blogCategory|vendor": [
+        {
+          "id": "bind-bundle-items",
+          "source": "product.bundleItems",
+          "field": "specials.boundBundleItems"
+        }
+      ],
+      "blogCategory|description": [
+        {
+          "id": "bind-bundle-items",
+          "source": "product.bundleItems",
+          "field": "specials.boundBundleItems"
+        }
+      ],
+      "blogCategory|summary": [
+        {
+          "id": "bind-bundle-items",
+          "source": "product.bundleItems",
+          "field": "specials.boundBundleItems"
+        }
+      ],
+      "blogCategory|content": [
+        {
+          "id": "bind-bundle-items",
+          "source": "product.bundleItems",
+          "field": "specials.boundBundleItems"
+        }
+      ],
+      "blogCategory|author": [
+        {
+          "id": "bind-bundle-items",
+          "source": "product.bundleItems",
+          "field": "specials.boundBundleItems"
+        }
+      ],
+      "blogCategory|date": [
+        {
+          "id": "bind-bundle-items",
+          "source": "product.bundleItems",
+          "field": "specials.boundBundleItems"
+        }
+      ],
+      "blogCategory|image": [
+        {
+          "id": "bind-bundle-items",
+          "source": "product.bundleItems",
+          "field": "specials.boundBundleItems"
+        }
+      ],
+      "blogCategory|price": [
+        {
+          "id": "bind-bundle-items",
+          "source": "product.bundleItems",
+          "field": "specials.boundBundleItems"
+        }
+      ],
+      "blogCategory|prices": [
+        {
+          "id": "bind-bundle-items",
+          "source": "product.bundleItems",
+          "field": "specials.boundBundleItems"
+        }
+      ],
+      "blogCategory|url": [
+        {
+          "id": "bind-bundle-items",
+          "source": "product.bundleItems",
+          "field": "specials.boundBundleItems"
+        }
+      ],
+      "blogCategory|name": [
+        {
+          "id": "bind-bundle-items",
+          "source": "product.bundleItems",
+          "field": "specials.boundBundleItems"
+        }
+      ]
+    },
+    "inspector": [
+      {
+        "tab": "general",
+        "groups": [
+          {
+            "key": "contents",
+            "label": "Contents",
+            "controls": [
+              "bundle_show_heading",
+              "bundle_heading",
+              "bundle_quantity_separator"
+            ]
+          },
+          {
+            "key": "size",
+            "label": "Size",
+            "controls": [
+              "width_select",
+              "height_select",
+              "size_bounds"
+            ]
+          },
+          {
+            "key": "layout",
+            "label": "Layout",
+            "controls": [
+              "gap"
+            ]
+          },
+          {
+            "key": "typography",
+            "label": "Typography",
+            "controls": [
+              "text_color",
+              "font_family",
+              "font_size"
+            ]
+          },
+          {
+            "key": "background",
+            "label": "Background",
+            "controls": [
+              "bg_color"
+            ]
+          },
+          {
+            "key": "shape",
+            "label": "Shape",
+            "controls": [
+              "border",
+              "corner",
+              "shadow"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "advanced",
+        "groups": [
+          {
+            "key": "state",
+            "label": "state",
+            "controls": []
+          },
+          {
+            "key": "spacing",
+            "label": "Spacing",
+            "controls": [
+              "padding_margin"
+            ]
+          },
+          {
+            "key": "display",
+            "label": "Display",
+            "controls": [
+              "display"
+            ]
+          },
+          {
+            "key": "animation",
+            "label": "Animation",
+            "controls": [
+              "animation"
+            ]
+          },
+          {
+            "key": "class_css",
+            "label": "Class",
+            "controls": [
+              "class_css"
+            ]
+          }
+        ]
+      }
+    ],
+    "controls": [
+      "bundle_show_heading",
+      "bundle_heading",
+      "bundle_quantity_separator",
+      "width_select",
+      "height_select",
+      "size_bounds",
+      "gap",
+      "text_color",
+      "font_family",
+      "font_size",
+      "bg_color",
+      "border",
+      "corner",
+      "shadow",
+      "padding_margin",
+      "display",
+      "animation",
+      "class_css"
+    ],
+    "description": "Lists what a combo product contains — one row per component, with its quantity. Binds product.bundleItems, which only a bundle-kind product carries; on any other product it renders nothing on the published page.",
+    "useWhen": [
+      "A product page template that has to serve combo products, where the shopper needs to know what is in the box before buying it.",
+      "Beside the price of a combo, where the strike-through already shows a saving but nothing says what the saving is on.",
+      "Inside a dataset block on a store page, so each combo card can list its own contents."
+    ],
+    "avoidWhen": [
+      "The page never shows a combo — the element renders nothing there, so it is dead weight in the layout.",
+      "You want to list variants or option axes: those are product-variants, a different element with a different data source.",
+      "You want a general bulleted list of author-typed text: that is the list element, which is not bound to anything."
+    ],
+    "contentTips": [
+      "Keep the heading short (\"Gồm có\", \"What is inside\") — it sits directly above the rows and competes with the product title.",
+      "The quantity separator is authorable because house styles differ; pick one and use it across the store.",
+      "The ghost rows on the canvas are an authoring aid only. Judge the layout against a real combo by pinning one to the block."
+    ],
+    "semantics": [
+      "bundle",
+      "combo",
+      "contents",
+      "product",
+      "commerce",
+      "list"
     ]
   },
   "image": {
@@ -31811,6 +32489,7 @@ export const BINDING_SOURCES: string[] = [
   "course.title",
   "course.url",
   "product.attributes",
+  "product.bundleItems",
   "product.compareAtCents",
   "product.compareAtPrice",
   "product.description",
@@ -31854,6 +32533,9 @@ export const BINDING_SOURCES: string[] = [
 ];
 
 export const BOUND_SPECIALS: Record<string, string[]> = {
+  "bundle-items": [
+    "boundBundleItems"
+  ],
   "collection-media": [
     "boundImage"
   ],
@@ -32753,6 +33435,39 @@ export const TRAIT_WRITES: Record<string, TraitDescription> = {
         "target": "specials",
         "writeKey": "searchable",
         "type": "boolean"
+      }
+    ]
+  },
+  "bundle_show_heading": {
+    "key": "bundle_show_heading",
+    "label": "Show heading",
+    "writes": [
+      {
+        "target": "specials",
+        "writeKey": "showHeading",
+        "type": "boolean"
+      }
+    ]
+  },
+  "bundle_heading": {
+    "key": "bundle_heading",
+    "label": "Text",
+    "writes": [
+      {
+        "target": "specials",
+        "writeKey": "heading",
+        "type": "string"
+      }
+    ]
+  },
+  "bundle_quantity_separator": {
+    "key": "bundle_quantity_separator",
+    "label": "Separator",
+    "writes": [
+      {
+        "target": "specials",
+        "writeKey": "quantitySeparator",
+        "type": "string"
       }
     ]
   },

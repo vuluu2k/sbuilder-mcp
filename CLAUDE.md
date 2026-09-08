@@ -23,6 +23,7 @@ npm run build     # tsc -> dist/
 npm test          # vitest run
 npm run smoke     # offline self-test; MUST print "ALL GOOD"
 npm run codegen   # WB_REPO=/path/to/web_builder npm run codegen
+npm run codegen:check  # same, but writes nothing and exits 1 if the catalog is stale
 npm start         # node dist/index.js (stdio server)
 ```
 
@@ -53,6 +54,27 @@ ln -sf ../../dist/index.js node_modules/.bin/sb-mcp && chmod +x dist/index.js
 again**. The exec bit survives `tsc`, so after the first setup a plain `npm run build` is
 enough for an edit to reach the agent — followed by a reconnect in the MCP client, which
 does not re-read a running server.
+
+### Is the catalog still current?
+
+`npm run codegen` is a MANUAL step, so the catalog goes stale in SILENCE — and the platform
+moves fast enough that this is the normal state, not the exception. Measured in one
+afternoon: 107 → 108 elements and 484 → 486 operations while this repo sat still.
+
+```bash
+WB_REPO=/path/to/web_builder npm run codegen:check
+```
+
+Writes nothing; exits 1 naming every file that would change. Point it at a COMMITTED ref
+rather than a working tree — a checkout somebody is mid-edit in will bake half-finished work
+into the catalog, which happened here (a `bundle-items` element and its relation-slot
+operations, from a concurrent session). A `git worktree add --detach <path> origin/main`
+with `node_modules` symlinked in is the cheap way to get one.
+
+Expect the token budget to move with it: a real platform addition grows a call sheet, and
+`test/token-budget.test.ts` is meant to catch RUNAWAY growth, not to freeze a byte count.
+Raise the ceiling with the reason written down, and leave headroom — a ceiling set just
+above today's measurement gets raised again without anybody looking.
 
 ## Releasing
 

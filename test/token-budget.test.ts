@@ -73,11 +73,23 @@ describe('token budget — a diet without a scale comes back', () => {
     });
     expect(chars(orders)).toBeLessThan(5_500);
     // The one every storefront build calls, and the one that must stay cheap.
+    //
+    // The ceiling MOVED once, deliberately, and the reason is the shape of a
+    // legitimate change: the platform grew product BUNDLES, so `products.Product`
+    // gained `kind`, `bundlePricing`, `bundleValue` and a `bundleItems` array
+    // expanded one level (productId, variantId, quantity, position) — 16 fields,
+    // and the sheet went 2,446 → 2,946. That is capability an agent needs in
+    // order to sell a combo, not padding.
+    //
+    // Raised to 3,500 rather than to 3,000: a ceiling set just above today's
+    // measurement has to be raised again on the next honest field, which trains
+    // a reader to raise it without looking. This one has room for a comparable
+    // addition and still refuses a schema dump.
     const products = await client.callTool({
       name: 'sb_api_find',
       arguments: { id: 'post:/api/sites/{siteId}/products' },
     });
-    expect(chars(products)).toBeLessThan(2_500);
+    expect(chars(products)).toBeLessThan(3_500);
     await close();
   });
 });
