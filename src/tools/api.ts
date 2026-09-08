@@ -197,7 +197,18 @@ export async function callOperation(ctx: ToolContext, args: CallArgs): Promise<u
   let path = op.path;
   for (const m of op.path.matchAll(/\{([^}]+)\}/g)) {
     const name = m[1];
-    const value = args.path_params?.[name];
+    // CASE-INSENSITIVE, because the platform spells one parameter two ways:
+    // `{siteId}` in 281 operations and `{siteID}` in 8. A caller who learned the
+    // common spelling passes the wrong key on those eight and is refused for a
+    // difference of one letter — a distinction no reader of the call sheet has
+    // any reason to notice, and one this tool has nothing to gain by enforcing.
+    // The exact name still wins; the fold is only a fallback.
+    const given = args.path_params ?? {};
+    let value = given[name];
+    if (value === undefined) {
+      const folded = Object.keys(given).find((k) => k.toLowerCase() === name.toLowerCase());
+      if (folded !== undefined) value = given[folded];
+    }
     if (value === undefined) {
       // NAME THE ARGUMENT, not just the parameter. The call sheet lists these
       // under `params` while the call takes them in `path_params`, and a caller

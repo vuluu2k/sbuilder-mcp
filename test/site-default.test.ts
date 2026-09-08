@@ -79,3 +79,44 @@ describe('the installer', () => {
     }
   });
 });
+
+/**
+ * ONE PARAMETER, TWO SPELLINGS.
+ *
+ * The platform writes `{siteId}` in 281 operations and `{siteID}` in 8. A caller
+ * who learned the common spelling is refused on those eight for a difference of
+ * one letter — a distinction no reader of the call sheet has reason to notice.
+ */
+describe('sb_api_call path params fold case', () => {
+  const seen: string[] = [];
+  const f = (async (url: string) => {
+    seen.push(String(url));
+    return new Response('{"menus":[]}', { status: 200, headers: { 'content-type': 'application/json' } });
+  }) as unknown as typeof fetch;
+
+  it('accepts the common spelling for an operation that uses the rare one', async () => {
+    seen.length = 0;
+    await callOperation(ctx({ apiKey: 'wbk_k', fetchImpl: f }), {
+      id: 'get:/api/sites/{siteID}/menus',
+      path_params: { siteId: 'site_1' },
+      dry_run: false,
+    });
+    expect(seen[0]).toContain('/api/sites/site_1/menus');
+  });
+
+  it('still prefers an exact match when both are present', async () => {
+    seen.length = 0;
+    await callOperation(ctx({ apiKey: 'wbk_k', fetchImpl: f }), {
+      id: 'get:/api/sites/{siteID}/menus',
+      path_params: { siteID: 'exact', siteId: 'folded' },
+      dry_run: false,
+    });
+    expect(seen[0]).toContain('/api/sites/exact/menus');
+  });
+
+  it('still refuses when the parameter is genuinely absent', async () => {
+    await expect(
+      callOperation(ctx({ apiKey: 'wbk_k', fetchImpl: f }), { id: 'get:/api/sites/{siteID}/menus' }),
+    ).rejects.toThrow(/path_params/);
+  });
+});
