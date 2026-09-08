@@ -6,6 +6,28 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.0] - 2026-09-08
+
+### Added
+- sb_event authors a click action on any node (such as open_cart), with an allow-list per element read from the catalog; a purchase action is refused here and pointed at sb_bind instead of being silently accepted and doing nothing.
+- sb_bind takes action, so a purchase control can be authored at all: the binding writes the reserved id bind-product-action and stores buy_now as the document's own dynamic_checkout, which is what the renderer reads to decide a button is a purchase button.
+- sb_outline lists satellite nodes (an accordion item's skin, a tab's shared button, a quantity stepper's buttons and input, a repeater's empty state) under their owner as satellite: "<config key>", so a node that used to be invisible to every tool is now on the map; it is not counted in children.
+- sb_review reports accountPage and searchPage gaps when a store has no page for the fixed /account or /search paths, alongside the existing checkout/gateway/product/shipping/cartTrigger gaps.
+- The install CLI accepts --site (and refuses any unrecognized flag instead of silently ignoring it), writing SB_SITE so every site_id argument falls back to it through siteFor().
+- A 204 response (such as a page delete) now reports what it did instead of answering null.
+
+### Changed
+- sb_look walks the full page before shooting a fullPage screenshot, so a lazy-loaded image below the fold is no longer photographed as an empty box.
+- sb_review no longer reports empty_container for a bound media-dataset, which paints the record itself and needs no children; and no longer reports off_canvas for nodes inside the cart drawer, which is parked off-screen until a shopper opens it.
+- sb_add's dataset elements (list-dataset, dataset-block, media-dataset, collection-media, product-variants, quantity-dataset, and others) now derive their bindings from the config.datasetSource supplied in the same call, instead of always seeding the element's default source; sb_set repairs a mismatched binding the same way.
+- sb_site_list's error message no longer tells a key-only install to call sb_connect first, since listing sites is an account-only call a key deliberately cannot make.
+- sb_api_call's error for a missing path parameter now says it belongs in path_params instead of naming the parameter without saying where it goes.
+- sb_media_upload now retries on the partner upload endpoint before reporting the key's scopes as the problem, since a deployment that has not yet enabled key uploads on the primary endpoint otherwise blames a valid key.
+- The API catalog is regenerated: 456 operations and 99 definitions (up from 412 and 97), recovering 44 previously-undocumented operations including the payment-gateway read/write endpoints; the element catalog grows to 107 with the addition of order-receipt.
+
+### Fixed
+- Saving an edit to a shared global section or an overlay (the cart drawer, a global header or footer) no longer silently drops every edit after the first one in a session; the save now re-stamps each master's revision from the platform's response instead of replaying a stale one that the platform rejects with a 200.
+
 ## [0.2.2] - 2026-09-07
 
 ### Fixed

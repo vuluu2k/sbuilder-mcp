@@ -6,6 +6,28 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.0] - 2026-09-08
+
+### Added
+- sb_event giờ có thể gán một click action lên bất kỳ node nào (như open_cart), với danh sách hành động hợp lệ cho từng element đọc từ catalog; một hành động mua hàng bị từ chối ở đây và được chỉ sang sb_bind thay vì âm thầm chấp nhận mà không làm gì.
+- sb_bind nhận tham số action, nên giờ đã có thể tạo được nút mua hàng: binding ghi id cố định bind-product-action và lưu buy_now dưới dạng dynamic_checkout của chính document — đây là thứ mà renderer đọc để quyết định một nút có phải nút mua hàng hay không.
+- sb_outline giờ liệt kê các node vệ tinh (skin của một mục accordion, nút dùng chung của tab, các nút và ô nhập của quantity stepper, trạng thái rỗng của một repeater) dưới owner của chúng dưới dạng satellite: "<config key>" — một loại node trước đây vô hình với mọi tool giờ đã có mặt trên bản đồ; nó không được tính vào children.
+- sb_review giờ báo cáo gap accountPage và searchPage khi cửa hàng chưa có trang cho đường dẫn cố định /account hoặc /search, bên cạnh các gap checkout/gateway/product/shipping/cartTrigger đã có.
+- CLI cài đặt giờ nhận --site (và từ chối mọi flag không nhận diện được thay vì âm thầm bỏ qua), ghi SB_SITE để mọi tham số site_id fallback về giá trị này qua siteFor().
+- Một response 204 (như xóa trang) giờ báo cáo đã làm gì thay vì trả về null.
+
+### Changed
+- sb_look giờ duyệt qua toàn bộ trang trước khi chụp ảnh fullPage, nên một ảnh lazy-load dưới màn hình không còn bị chụp thành hộp trống.
+- sb_review không còn báo cáo empty_container cho một media-dataset đã bind, vì element này tự vẽ record và không cần child; cũng không còn báo off_canvas cho các node bên trong cart drawer, vốn nằm ngoài màn hình cho tới khi shopper mở nó ra.
+- Các dataset element của sb_add (list-dataset, dataset-block, media-dataset, collection-media, product-variants, quantity-dataset, và các loại khác) giờ tính binding dựa trên config.datasetSource được truyền trong cùng lời gọi, thay vì luôn seed theo nguồn mặc định của element; sb_set sửa một binding sai lệch theo cùng cách.
+- Thông báo lỗi của sb_site_list không còn bảo một cài đặt chỉ dùng key phải gọi sb_connect trước, vì liệt kê site là một lời gọi cấp tài khoản mà key không thể thực hiện được.
+- Lỗi của sb_api_call khi thiếu path parameter giờ nói rõ tham số đó thuộc path_params thay vì chỉ nêu tên tham số mà không nói nó nằm ở đâu.
+- sb_media_upload giờ thử lại trên endpoint upload phía đối tác trước khi báo lỗi do quyền của key, vì một bản triển khai chưa bật upload bằng key trên endpoint chính trước đây sẽ đổ lỗi sai cho một key hợp lệ.
+- Catalog API được tạo lại: 456 operation và 99 definition (tăng từ 412 và 97), khôi phục 44 operation trước đây chưa được ghi nhận, bao gồm các endpoint đọc/ghi payment-gateway; catalog element tăng lên 107 với việc bổ sung order-receipt.
+
+### Fixed
+- Lưu một chỉnh sửa vào global section dùng chung hoặc một overlay (cart drawer, header hoặc footer dùng chung) không còn âm thầm làm mất mọi chỉnh sửa sau lần đầu tiên trong một phiên; lần lưu giờ cập nhật lại revision của từng bản gốc từ response của nền tảng thay vì gửi lại một revision cũ mà nền tảng từ chối kèm mã 200.
+
 ## [0.2.2] - 2026-09-07
 
 ### Fixed
