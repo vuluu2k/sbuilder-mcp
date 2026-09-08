@@ -1,6 +1,28 @@
 import { applyPatches, type Patch } from '../../core/patch.js';
 import { childrenOf, isOverlay, appBlockRoot, type DocLike, type NodeLike } from '../../core/tree.js';
 import { bandOf, isGlobal, type Band } from './traps.js';
+import { SATELLITE_RULES } from '../../catalog/elements.generated.js';
+
+/**
+ * The satellite nodes this one owns, as {id, config key} pairs.
+ *
+ * Read from the GENERATED rules rather than a hand-kept list, so an element the
+ * platform gives a satellite is covered the day the catalog is regenerated. A
+ * key pointing at an id the document does not hold is skipped rather than
+ * reported: a dangling pointer is `validateForSave`'s business, not the map's.
+ */
+function satellitesOf(doc: DocLike, id: string): Array<{ id: string; key: string }> {
+  const node = doc.nodes[id] as NodeLike & { config?: Record<string, unknown> };
+  const rules = SATELLITE_RULES[node?.data?.type ?? ''] ?? [];
+  const out: Array<{ id: string; key: string }> = [];
+  for (const rule of rules) {
+    const satId = node?.config?.[rule.configKey];
+    if (typeof satId === 'string' && satId && doc.nodes[satId]) {
+      out.push({ id: satId, key: rule.configKey });
+    }
+  }
+  return out;
+}
 
 export interface OutlineNode {
   id: string;
@@ -12,6 +34,17 @@ export interface OutlineNode {
   overlay?: boolean;
   /** The root of a composed app block: edits under it are lost on save (trap 5). */
   app?: boolean;
+  /**
+   * A SATELLITE, and the `config` key its owner points at it with.
+   *
+   * It is a real node holding a real look — the variant option's box, the
+   * quantity stepper's buttons, a repeater's empty state — but it hangs off
+   * `config[key]` instead of `data.nodes`, so a walk of the child lists misses
+   * it entirely. That is how a whole storefront shipped with platform-default
+   * grey selects and a grey stepper on a rose-and-ink page: the outline is the
+   * map an agent designs from, and these were not on it.
+   */
+  satellite?: string;
   kids?: OutlineNode[];
 }
 
@@ -158,8 +191,18 @@ export class PageDoc {
       }
       if (isGlobal(this.doc, id)) out.global = true;
       if (appBlockRoot(this.doc, id) === id) out.app = true;
-      if (level + 1 < depth && kidIds.length > 0) {
-        out.kids = kidIds.map((k) => line(k, level + 1));
+      if (level + 1 < depth) {
+        // Satellites come FIRST, and are counted apart from `children`: they are
+        // this node's own chrome, not content in it, and mixing the two would
+        // make the child count disagree with `data.nodes` — the number every
+        // index-taking call (sb_add, sb_move) is written against.
+        const sats = satellitesOf(this.doc, id).map((sat) => {
+          const l = line(sat.id, level + 1);
+          l.satellite = sat.key;
+          return l;
+        });
+        const kids = kidIds.map((k) => line(k, level + 1));
+        if (sats.length || kids.length) out.kids = [...sats, ...kids];
       }
       return out;
     };
