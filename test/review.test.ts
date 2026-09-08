@@ -213,7 +213,7 @@ describe('reviewDesign()', () => {
     expect(reviewDesign(d)).toEqual([]);
   });
 
-  it('ignores a site overlay — the cart drawer is not this page to fix', () => {
+  it('REPORTS a site overlay, flagged, because the page save is what stores it', () => {
     const d = PageDoc.from({
       schema_version: 2,
       root_node_id: 'rt',
@@ -221,11 +221,28 @@ describe('reviewDesign()', () => {
         rt: { id: 'rt', data: { type: 'root', parent: null, nodes: ['fs', 'cart'], isCanvas: true, hidden: false, custom: {} }, style: {}, config: {}, specials: {}, responsive: {}, events: [], bindings: [] },
         fs: { id: 'fs', data: { type: 'flex-section', parent: 'rt', nodes: ['he'], isCanvas: true, hidden: false, custom: {} }, style: {}, config: {}, specials: {}, responsive: {}, events: [], bindings: [] },
         he: { id: 'he', data: { type: 'heading', parent: 'fs', nodes: [], isCanvas: false, hidden: false, custom: {} }, style: {}, config: {}, specials: { text: 'Real copy' }, responsive: {}, events: [], bindings: [] },
-        // An empty container that WOULD be reported if it were part of the page.
+        // An empty container inside the drawer. This used to be skipped on the
+        // reasoning that an overlay "is not this page's to fix" — false: an
+        // overlay's content reaches storage through the PAGE SAVE, so sb_set on
+        // a drawer node lands, and the skip meant nothing ever reported what
+        // shipped inside one. A real storefront carried a mock "Product name /
+        // 0₫" row and English copy in there, through ten clean reviews.
         cart: { id: 'cart', data: { type: 'flex-section', parent: 'rt', nodes: [], isCanvas: true, hidden: false, custom: {} }, style: {}, config: {}, specials: { overlayId: 'ov_1' }, responsive: {}, events: [], bindings: [] },
       },
     });
-    expect(reviewDesign(d)).toEqual([]);
+    const found = reviewDesign(d);
+    expect(found.map((f) => f.nodeId)).toEqual(['cart']);
+    // Flagged, because the master is SHARED: without it the same drawer defect
+    // reads as ten problems on a ten-page site.
+    expect(found[0].overlay).toBe(true);
+  });
+
+  it('does not flag a defect on the page itself as an overlay', () => {
+    const d = emptyDoc();
+    d.apply(addSubtree(d, 'ROOT', { type: 'flex-section', name: 'empty' }).patches);
+    const found = reviewDesign(d);
+    expect(found.length).toBeGreaterThan(0);
+    expect(found.every((f) => f.overlay === undefined)).toBe(true);
   });
 
   it('reports in document order, so a caller works top-down', () => {

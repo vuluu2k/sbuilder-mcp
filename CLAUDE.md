@@ -371,6 +371,16 @@ that accounts for them.
   The platform's own comment on the field says the same thing about the editor, which had
   the bug first.
 
+- **`sb_review` USED TO SKIP OVERLAYS, on a reason that was false.** The comment said the cart
+  drawer "is not this page's to fix" — but an overlay's content reaches storage through the
+  PAGE SAVE, so `sb_set` on a drawer node lands, and the skip meant nothing ever reported what
+  shipped inside one. Measured: a rose-and-ink storefront whose drawer carried a static mock
+  row reading "Product name / 0₫", a DUPLICATE cart list rendering every item twice, and
+  English copy throughout — none of it mentioned, on a site that reviewed clean ten pages
+  running, and all of it found by a person opening the drawer. Overlays are now walked, and
+  their findings carry `overlay: true` because the master is SHARED: without the flag one
+  drawer defect reads as ten problems on a ten-page site.
+
 - **AN OVERLAY'S CONTENT IS WRITTEN THROUGH THE PAGE SAVE, never through the overlays API.**
   `PATCH /api/sites/{siteId}/overlays/{id}` accepts `name`, `kind` and `allPages` — a
   `document` in that body is ignored and the call answers 200. The route-map comment on

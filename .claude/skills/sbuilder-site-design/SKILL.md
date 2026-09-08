@@ -187,8 +187,9 @@ Run these four, in this order. Three of them catch things `sb_review` cannot see
    measured on the render.
 3. Open the **published storefront URL**, not the draft preview, for any page with a
    repeater. Pass it to `sb_look` as `url`.
-4. **Open the cart drawer** on the published page and look at it. `sb_review` SKIPS
-   overlays — a placeholder or an English button in there is reported by nothing.
+4. **Open the cart drawer** on the published page and look at it. `sb_review` now walks
+   overlays and flags their findings `overlay: true` — site-wide, so fix once, not per page —
+   but a picture still catches what no rule states.
 5. `sb_review` last, for the store gaps — they survive publish silently and a shopper is
    what finds them.
 

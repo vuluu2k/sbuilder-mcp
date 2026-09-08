@@ -21,6 +21,16 @@ export interface Finding {
   problem: string;
   /** The specials key the fix names, where one does. */
   key?: string;
+  /**
+   * Set when the node lives in a SITE OVERLAY (the cart drawer, a pop-up).
+   *
+   * The defect is real and this page can fix it — `sb_set` on a drawer node
+   * lands, because the page save carries the composed overlay and the page
+   * context writes it through to the master. But the master is SHARED, so the
+   * same finding would otherwise appear on all ten pages of a site and read as
+   * ten problems. The flag lets a caller say "site-wide" once.
+   */
+  overlay?: boolean;
   fix: string;
 }
 
@@ -36,7 +46,9 @@ export const REVIEW_NOTICE =
   'FIX THESE. Each one is a defect a visitor will see on the published page, not a ' +
   'suggestion — a blank band, a placeholder sentence, a broken image. Apply the fix each ' +
   'finding names, then review again until the list is empty. Do not report the page as done ' +
-  'while findings stand; if you believe one is a false positive, say which and why.';
+  'while findings stand; if you believe one is a false positive, say which and why. ' +
+  'A finding marked overlay:true is in the cart drawer or a pop-up — fix it the same way ' +
+  '(sb_set lands there), but it is SITE-WIDE, so fix it once rather than once per page.';
 
 /** The specials keys an element seeds that hold its visible content. */
 function contentKeys(type: string): string[] {
@@ -88,8 +100,19 @@ function drawsItsOwnContent(type: string): boolean {
 /**
  * Everything wrong with this page that a person would notice.
  *
- * Overlays are skipped: the cart drawer is composed onto ROOT on read and is not
- * this page's to fix. So is the INSIDE of an app block (trap 5): its
+ * OVERLAYS ARE WALKED, and used not to be — on the stated reasoning that the
+ * cart drawer "is not this page's to fix", which is false. An overlay's content
+ * reaches storage THROUGH THE PAGE SAVE (`overlays/rest/rest.go`: content is
+ * "deliberately NOT written here"), so `sb_set` on a drawer node lands, and the
+ * skip meant nothing ever reported what shipped inside one. Measured: a
+ * rose-and-ink storefront whose drawer carried a static mock row reading
+ * "Product name / 0₫", a duplicate cart list, and English copy — none of it
+ * mentioned by any check, on a site that reviewed clean ten pages running.
+ *
+ * Their findings carry `overlay: true`, because the master is SHARED: without
+ * the flag the same drawer defect reads as ten problems on a ten-page site.
+ *
+ * The INSIDE of an app block is still skipped (trap 5): its
  * placeholders are the app's, and no fix this page could apply would survive a
  * save. The block root itself is still walked — it is a node the page owns and
  * can be an empty container. Findings are ordered by document order so a caller working
@@ -120,14 +143,17 @@ export function reviewDesign(doc: PageDoc): Finding[] {
   // itself belongs to the scope OUTSIDE it, which is why this is set before the
   // scope for the children is computed.
   const inRepeater = new Map<string, string>();
-  const go = (id: string, repeater?: string): void => {
-    if (seen.has(id) || overlayIds.has(id)) return;
+  // Which nodes sit inside an overlay, so their findings can say so.
+  const inOverlay = new Set<string>();
+  const go = (id: string, repeater?: string, overlay = false): void => {
+    if (seen.has(id)) return;
     seen.add(id);
+    if (overlay) inOverlay.add(id);
     walkOrder.push(id);
     if (repeater) inRepeater.set(id, repeater);
     if (appBlockRoot(d, id) === id) return;
     const inner = repeats(d.nodes[id]?.data.type ?? '') ? (repeater ?? id) : repeater;
-    for (const k of childrenOf(d, id)) go(k, inner);
+    for (const k of childrenOf(d, id)) go(k, inner, overlay || overlayIds.has(k));
   };
   go(d.root_node_id);
 
@@ -358,5 +384,10 @@ export function reviewDesign(doc: PageDoc): Finding[] {
     }
   }
 
+  // Tagged in ONE place rather than at eight push sites: whether a node sits
+  // inside an overlay is a fact about where it is, not about what is wrong with
+  // it, and threading it through every rule would put the same argument in eight
+  // signatures.
+  for (const f of out) if (inOverlay.has(f.nodeId)) f.overlay = true;
   return out;
 }
