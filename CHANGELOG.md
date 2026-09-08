@@ -6,6 +6,14 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.3] - 2026-09-08
+
+### Changed
+- sb_look and every other save no longer write an unchanged document back to the platform, since a vision loop looks far more often than it edits and a no-op save still costs a round trip and bumps the revision of every shared master the page carries; a save now returns early when the document's revision matches the one last stored.
+- sb_look skips its lazy-image scroll walk on a page with nothing marked loading="lazy", instead of always paying the ~60ms scroll regardless of whether the page has anything below the fold to settle.
+- The API catalog is regenerated: 481 operations (up from 456), recovering 25 merchant routes that were previously documented only in route-map comments and unreachable through sb_api_call, including article and blog-category detail routes, a course's sections/lessons/product-links/enrolments, an integration, and site templates.
+- A handful of order-receipt trait labels (receipt_number_label, receipt_placed_label, receipt_status_label, receipt_items_label, receipt_total_label, receipt_due_label, receipt_unavailable_text) are shortened, e.g. "Order number label" to "Order number".
+
 ## [0.4.2] - 2026-09-08
 
 ### Changed

@@ -6,6 +6,14 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.3] - 2026-09-08
+
+### Changed
+- sb_look và mọi lần lưu khác giờ không còn ghi lại một document không đổi lên nền tảng, vì một vòng lặp thị giác thường "xem" nhiều hơn hẳn số lần "sửa", và một lần lưu không thay đổi gì vẫn tốn một round trip và làm tăng revision của mọi bản gốc dùng chung mà trang đó mang theo; lần lưu giờ sẽ dừng sớm khi revision của document khớp với revision đã lưu gần nhất.
+- sb_look bỏ qua bước duyệt cuộn để chờ ảnh lazy khi trang không có phần tử nào mang loading="lazy", thay vì luôn tốn ~60ms cuộn dù trang không có gì bên dưới màn hình cần ổn định.
+- Catalog API được tạo lại: 481 operation (tăng từ 456), khôi phục 25 route merchant trước đây chỉ được ghi trong comment route-map và không thể gọi qua sb_api_call, bao gồm các route chi tiết của article và blog-category, các phần section/lesson/product-link/lượt đăng ký của một khóa học, một integration, và các site template.
+- Một số nhãn trait của order-receipt được rút gọn (receipt_number_label, receipt_placed_label, receipt_status_label, receipt_items_label, receipt_total_label, receipt_due_label, receipt_unavailable_text), ví dụ "Order number label" thành "Order number".
+
 ## [0.4.2] - 2026-09-08
 
 ### Changed
