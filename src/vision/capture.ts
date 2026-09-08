@@ -38,6 +38,7 @@ interface El {
   getAttribute(name: string): string | null;
   querySelectorAll(selector: string): ArrayLike<El>;
   getBoundingClientRect(): { width: number; height: number };
+  contains(other: El): boolean;
 }
 declare const document: {
   title: string;
@@ -65,13 +66,14 @@ export interface CaptureResult {
  * Written as one function rather than composed helpers because it is
  * serialized: anything it closes over does not exist on the other side.
  */
-function capturePage(limits: { maxSections: number; maxPerSection: number }): CaptureResult {
+function capturePage(limits: { maxSections: number; maxPerSection: number; maxImages: number }): CaptureResult {
   // EVERY constant this function uses is declared INSIDE it. The body is
   // serialized and evaluated in the page, so a module-level `const` it closes
   // over is simply not there — caught the first time this ran against a real
   // page, as `ReferenceError: HEADINGS is not defined`, by which point the file
   // already carried a comment saying exactly that.
   const HEADINGS = new Set(['H1', 'H2', 'H3', 'H4', 'H5', 'H6']);
+  const taken = { images: 0 };
   const skipped: Record<string, number> = {};
   const skip = (why: string): void => void (skipped[why] = (skipped[why] ?? 0) + 1);
   const here = location.href;
@@ -134,9 +136,21 @@ function capturePage(limits: { maxSections: number; maxPerSection: number }): Ca
       }
       if (tag === 'IMG') {
         const src = el.getAttribute('src');
-        if (src && !src.startsWith('data:')) {
-          out.push({ kind: 'image', src: abs(src), alt: clean(el.getAttribute('alt')) });
-        } else skip('image-without-src');
+        if (!src || src.startsWith('data:')) {
+          skip('image-without-src');
+          return;
+        }
+        // BOUNDED, because every image is an upload. A sponsors wall is a real
+        // page shape — one measured at 36 logos in four sections — and importing
+        // it means 36 sequential HTTP round trips inside a single tool call,
+        // which is slow, half-fails in interesting ways, and is almost never
+        // what the caller wanted from "import this page".
+        if (taken.images >= limits.maxImages) {
+          skip('over-image-limit');
+          return;
+        }
+        taken.images++;
+        out.push({ kind: 'image', src: abs(src), alt: clean(el.getAttribute('alt')) });
         return;
       }
       if (tag === 'A' && looksLikeButton(el)) {
@@ -176,6 +190,16 @@ function capturePage(limits: { maxSections: number; maxPerSection: number }): Ca
     const main = document.querySelectorAll('main')[0] ?? document.body;
     candidates = Array.from(main.children);
   }
+  // INNERMOST ONLY. `section` matches nested ones too, so an outer band and the
+  // bands inside it were both taken — and the inner content came back TWICE,
+  // once through its parent's leaf walk and once on its own. Measured: 15
+  // duplicated strings out of 22 on one real page, 12 on another, which on an
+  // imported page reads as a stutter nobody typed.
+  //
+  // Innermost rather than outermost because a `<section>` that wraps the whole
+  // document is one candidate too, and keeping THAT would reduce every page to a
+  // single band. The finest ones are the page's actual bands.
+  candidates = candidates.filter((el) => !candidates.some((o) => o !== el && el.contains(o)));
 
   const sections: Captured[] = [];
   for (const el of candidates) {
@@ -207,11 +231,12 @@ function capturePage(limits: { maxSections: number; maxPerSection: number }): Ca
  */
 export async function capture(
   url: string,
-  opts: { maxSections?: number; maxPerSection?: number; width?: number } = {},
+  opts: { maxSections?: number; maxPerSection?: number; maxImages?: number; width?: number } = {},
 ): Promise<CaptureResult> {
   const limits = {
     maxSections: opts.maxSections ?? 24,
     maxPerSection: opts.maxPerSection ?? 40,
+    maxImages: opts.maxImages ?? 24,
   };
   let browser: Browser | undefined;
   try {

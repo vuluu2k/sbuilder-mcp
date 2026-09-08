@@ -687,6 +687,7 @@ real elements dressed in **this page's** tokens.
 | `url` | string | The page to read |
 | `site_id` | string? | Falls back to `SB_SITE` |
 | `max_sections` | number? | Default 24 |
+| `max_images` | number? | Default 24 — every image is an upload |
 | `upload_images` | boolean? | Copy images into this site's media library, default **true** |
 | `dry_run` | boolean? | Defaults to **true** — returns what was found |
 

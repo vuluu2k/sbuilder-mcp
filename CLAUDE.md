@@ -685,6 +685,16 @@ that accounts for them.
   a visible image beats an empty frame, and a hotlinked one is a product photo that disappears
   when somebody else's site changes.
 
+  A SWEEP ACROSS FOUR REAL SITES found the one defect a single page could not:
+  `section` matches NESTED sections, so an outer band and the bands inside it were both taken
+  and the inner content came back twice — 15 duplicated strings out of 22 on one page, 12 on
+  another, which on an imported page reads as a stutter nobody typed. Only the INNERMOST
+  candidates are kept, because a `<section>` wrapping the whole document is a candidate too
+  and keeping the outermost would reduce every page to one band. Images are capped (24) for a
+  different reason: every one is an upload, and a sponsors wall measured 36 logos — that many
+  sequential round trips inside one tool call is slow, half-fails interestingly, and is not
+  what anybody meant by "import this page".
+
   `capture.ts` launches its OWN browser rather than sharing `shoot.ts`'s process-lifetime one:
   an import is rare, slow and runs untrusted script, and coupling that to the tool a vision
   loop calls every few hundred milliseconds is how the fast path gets slow.

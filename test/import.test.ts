@@ -241,6 +241,41 @@ describe.runIf(process.env.SB_BROWSER_TEST === '1')('capture()', () => {
     expect(Object.keys(r.skipped)).toContain('script');
   }, 60_000);
 
+  /**
+   * NESTED SECTIONS WERE CAPTURED TWICE.
+   *
+   * `section` matches nested ones too, so an outer band and the bands inside it
+   * were both taken — and the inner content came back once through its parent's
+   * leaf walk and once on its own. Measured on real pages: 15 duplicated strings
+   * out of 22, and 12 on another. On an imported page that reads as a stutter
+   * nobody typed.
+   */
+  it('takes the innermost section, so nothing is captured twice', async () => {
+    const nested = `data:text/html,${encodeURIComponent(
+      '<main><section><section><h2>Inner</h2><p>Only once.</p></section></section></main>',
+    )}`;
+    const r = await capture(nested);
+    expect(r.sections.length).toBe(1);
+    const texts = (r.sections[0].children ?? []).map((c) => c.text);
+    expect(texts).toEqual(['Inner', 'Only once.']);
+  }, 60_000);
+
+  it('bounds how many images one import can carry', async () => {
+    // Every image is an upload. A sponsors wall — one measured at 36 logos —
+    // means that many sequential round trips inside a single tool call.
+    const many = `data:text/html,${encodeURIComponent(
+      '<main><section>' +
+        Array.from(
+          { length: 6 },
+          (_, i) => `<img src="https://x.example/${i}.png" style="width:20px;height:20px">`,
+        ).join('') +
+        '</section></main>',
+    )}`;
+    const r = await capture(many, { maxImages: 2 });
+    expect((r.sections[0].children ?? []).filter((c) => c.kind === 'image').length).toBe(2);
+    expect(r.skipped['over-image-limit']).toBe(4);
+  }, 60_000);
+
   it('survives an href it cannot make absolute', async () => {
     // `new URL('/shop', 'data:…')` throws, and a throw inside evaluate kills the
     // whole capture rather than one link.

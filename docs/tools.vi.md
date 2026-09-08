@@ -663,6 +663,7 @@ mở**, dưới dạng element thật mang token của **chính trang này**.
 | `url` | string | Trang cần đọc |
 | `site_id` | string? | Không truyền thì lấy `SB_SITE` |
 | `max_sections` | number? | Mặc định 24 |
+| `max_images` | number? | Mặc định 24 — mỗi ảnh là một lần upload |
 | `upload_images` | boolean? | Chép ảnh vào media library của site, mặc định **true** |
 | `dry_run` | boolean? | Mặc định **true** — trả về những gì tìm thấy |
 
