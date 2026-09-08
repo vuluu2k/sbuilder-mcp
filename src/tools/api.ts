@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { API_OPERATIONS, SWAGGER_SOURCE } from '../catalog/api.generated.js';
+import { REQUEST_SHAPES } from '../catalog/shapes.generated.js';
 import {
   searchOperations,
   describeOperation,
@@ -243,6 +244,26 @@ export async function callOperation(ctx: ToolContext, args: CallArgs): Promise<u
         : {}),
       note: 'Nothing was sent. Re-call with dry_run:false to execute.',
     };
+  }
+
+  // A PUT IS A REPLACE, AND THE PLATFORM HAS NO HISTORY. Read what is about to
+  // be destroyed first, so `sb_undo` can put it back — one extra round trip on a
+  // write, never on a read and never on a dry run. Silent on failure: an undo
+  // that could not be prepared must not stop the write the caller asked for.
+  if (op.method === 'PUT' && REQUEST_SHAPES[op.id] && API_OPERATIONS.some((o) => o.id === `get:${op.path}`)) {
+    try {
+      const before = await request({
+        base: ctx.base,
+        method: 'GET',
+        path,
+        token: tokenFor(ctx, findOperation(`get:${op.path}`)?.credential ?? op.credential),
+        fetchImpl: ctx.fetchImpl,
+      });
+      ctx.undo.record(op.id, path, before);
+    } catch {
+      // The state could not be read — the row may not exist yet, which is the
+      // common case for a PUT that creates. Nothing to undo, nothing to say.
+    }
   }
 
   const raw = await request({

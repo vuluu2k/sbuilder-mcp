@@ -3,6 +3,7 @@ import { PageDoc } from '../src/domains/site/document.js';
 import { bindNode, liveTokenFor } from '../src/tools/live.js';
 import { Session } from '../src/transport/auth.js';
 import { Notices } from '../src/mcp/notices.js';
+import { UndoLog } from '../src/tools/undo.js';
 
 function docWithHeading() {
   return PageDoc.from({
@@ -64,20 +65,20 @@ describe('liveTokenFor()', () => {
   // permission through the key's delegated principal. The old refusal here was
   // pinned to the world before agent keys and turned a working setup away.
   it('lets an API key open the room, since the socket now accepts one', () => {
-    const ctx = { base: 'http://x', session: new Session('http://x'), apiKey: 'wbk_x', notices: new Notices() };
+    const ctx = { base: 'http://x', session: new Session('http://x'), apiKey: 'wbk_x', notices: new Notices(), undo: new UndoLog() };
     const token = liveTokenFor(ctx);
     expect(token()).toBe('wbk_x');
   });
 
   it('still refuses when there is no credential at all', () => {
-    const ctx = { base: 'http://x', session: new Session('http://x'), notices: new Notices() };
+    const ctx = { base: 'http://x', session: new Session('http://x'), notices: new Notices(), undo: new UndoLog() };
     expect(() => liveTokenFor(ctx)).toThrow(/SB_TOKEN|SB_EMAIL/);
   });
 
   it('reads the token per attempt, because a session token rotates', () => {
     const session = new Session('http://x');
     (session as unknown as { access: string }).access = 'jwt-1';
-    const token = liveTokenFor({ base: 'http://x', session, notices: new Notices() });
+    const token = liveTokenFor({ base: 'http://x', session, notices: new Notices(), undo: new UndoLog() });
     expect(token()).toBe('jwt-1');
     (session as unknown as { access: string }).access = 'jwt-2';
     expect(token()).toBe('jwt-2');

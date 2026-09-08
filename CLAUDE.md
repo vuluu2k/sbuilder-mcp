@@ -263,6 +263,20 @@ that accounts for them.
   `internal/*/rest/*.go` — among them payment-gateway config, which is the fix for
   `sb_review`'s own `payment` gap, and the private `pages/{pageId}` cluster.
 
+  **AND A PUT NOW READS BEFORE IT WRITES, because that gap is the one with no route at all.**
+  Page versions / history / restore exist on neither surface, so every whole-document replace
+  this server can make is one-way — `PUT /settings` is not a patch and a partial body erases
+  the store's configuration. A merchant clicking through the editor has undo; an agent had
+  nothing, and one call does more damage. `sb_api_call` therefore GETs before any PUT that
+  has both a shape and a matching GET, and `sb_undo` puts one state back through the same
+  operation, carrying only the fields that operation's handler decodes. In process, capped at
+  20, silent when the read fails — an undo that could not be prepared must never stop the
+  write the caller asked for. The envelope rule is the part worth keeping: shape field names
+  are looked for at the TOP LEVEL first and inside a single-key envelope only if none are
+  there, because `{ document: … }` IS what `PUT .../document` wants back while `{ source: … }`
+  holds `document` and `schemaVersion` one level down. Unwrapping blindly would have restored
+  the document's own first field.
+
   **But the PRIVATE surface is not the whole map, and reading only it overstates the gap.**
   `/api/v1` — the partner surface, `SB_TOKEN` — carries 49 reachable operations, including
   `GET/PATCH/DELETE /api/v1/pages/{id}` and `POST /api/v1/pages/{id}/publish`, all with a

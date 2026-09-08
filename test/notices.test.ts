@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { Notices } from '../src/mcp/notices.js';
+import { UndoLog } from '../src/tools/undo.js';
 
 describe('Notices.once()', () => {
   it('returns the text the first time and undefined after', () => {

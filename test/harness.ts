@@ -3,6 +3,7 @@ import { InMemoryTransport } from '@modelcontextprotocol/sdk/inMemory.js';
 import { createServer } from '../src/server.js';
 import { Session } from '../src/transport/auth.js';
 import { Notices } from '../src/mcp/notices.js';
+import { UndoLog } from '../src/tools/undo.js';
 import type { ToolContext } from '../src/tools/context.js';
 
 /**
@@ -16,7 +17,7 @@ export async function connectedClient(over: Partial<ToolContext> = {}) {
   const f = (async () =>
     new Response('{}', { status: 200, headers: { 'content-type': 'application/json' } })) as unknown as typeof fetch;
   const session = new Session('http://x', f);
-  const ctx: ToolContext = { base: 'http://x', session, fetchImpl: f, notices: new Notices(), ...over };
+  const ctx: ToolContext = { base: 'http://x', session, fetchImpl: f, notices: new Notices(), undo: new UndoLog(), ...over };
   const server = createServer(ctx);
   const [a, b] = InMemoryTransport.createLinkedPair();
   await server.connect(a);

@@ -2,6 +2,7 @@ import { describe, it, expect, vi } from 'vitest';
 import { PageSession } from '../src/tools/page.js';
 import { Session } from '../src/transport/auth.js';
 import { Notices } from '../src/mcp/notices.js';
+import { UndoLog } from '../src/tools/undo.js';
 import { setKeys } from '../src/domains/site/builder.js';
 
 /**
@@ -55,7 +56,7 @@ function harness() {
     session: new Session('http://x'),
     apiKey: 'wbk_k',
     fetchImpl,
-    notices: new Notices(),
+    notices: new Notices(), undo: new UndoLog(),
   } as never;
   return { session: new PageSession(ctx), puts };
 }

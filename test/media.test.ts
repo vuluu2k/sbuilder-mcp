@@ -5,6 +5,7 @@ import { join } from 'node:path';
 import { uploadMedia } from '../src/transport/media.js';
 import { Session } from '../src/transport/auth.js';
 import { Notices } from '../src/mcp/notices.js';
+import { UndoLog } from '../src/tools/undo.js';
 
 function ctxWith(f: typeof fetch, apiKey = 'wbk_k') {
   return { base: 'http://x', session: new Session('http://x', f), apiKey, fetchImpl: f };
@@ -139,7 +140,7 @@ describe('uploadMedia() on a key-only install', () => {
     session: new Session('http://x', f),
     apiKey: 'wbk_k',
     fetchImpl: f,
-    notices: new Notices(),
+    notices: new Notices(), undo: new UndoLog(),
   });
 
   it('falls back to the partner surface when /api/media refuses the key', async () => {

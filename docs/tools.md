@@ -706,3 +706,41 @@ along, because both failures are silent:
 Both documents are **generated** from the editor's own `formTemplates.ts` and
 `checkoutPageSeed.ts` by `npm run codegen`, not hand-copied — a copy of the platform's seed
 rots the next time the platform edits it, and the first person to notice is a shopper.
+
+## `sb_undo`
+
+Put back what a `PUT` through `sb_api_call` replaced.
+
+| Arg | Type | Notes |
+| --- | --- | --- |
+| `index` | number? | 1 is the most recent write. Omit to **list** what is undoable |
+| `dry_run` | boolean? | Defaults to **true** |
+
+The platform has no page history, no versions and no restore — the only `restore` in
+`/api/v1` is `media/{id}/restore`. So every whole-document replace this server can make is
+one-way: `PUT /settings` is not a patch and a partial body erases the store's configuration;
+`PUT .../forms/{id}/document` replaces a checkout's fields; `PUT .../pages/{id}/source`
+replaces a page. A merchant clicking through the editor has undo. An agent had nothing, and
+one call does more damage.
+
+**A PUT therefore reads before it writes.** A PUT is a replace by definition, so what it is
+about to destroy is exactly what the matching GET returns — one extra round trip on a write,
+never on a read and never on a dry run. It is silent on failure: an undo that could not be
+prepared must not stop the write the caller asked for, and a PUT that creates has nothing to
+read.
+
+Restoring goes back through the **same operation**, carrying only the fields that
+operation's handler decodes — not the whole GET response, which holds identity and derived
+columns the platform owns. Envelopes are not uniform, so those field names are looked for at
+the top level first and inside a single-key envelope only if none are there:
+`{ document: … }` **is** the body `PUT .../document` wants, while `{ source: … }` holds
+`document` and `schemaVersion` one level down. An envelope it does not recognise records
+nothing rather than guessing.
+
+An entry is **dropped once it is put back**, so undo is a step backwards rather than a loop
+between two states.
+
+**In process, not on disk**, and capped at 20. This server only ever holds the document and
+the screenshots; a snapshot directory is a new kind of thing to own, with a retention
+question and a privacy question attached. The window that matters is the one where undo is
+reached for — the agent discovers the damage in the session that caused it.

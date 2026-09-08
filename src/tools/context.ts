@@ -1,5 +1,6 @@
 import type { Session } from '../transport/auth.js';
 import type { Notices } from '../mcp/notices.js';
+import type { UndoLog } from './undo.js';
 
 /** Everything a tool needs to reach the platform. Built once, in server.ts. */
 export interface ToolContext {
@@ -12,6 +13,13 @@ export interface ToolContext {
   fetchImpl?: typeof fetch;
   /** Directives said once per process — see mcp/notices.ts. */
   notices: Notices;
+  /**
+   * What a PUT replaced, so `sb_undo` can put it back.
+   *
+   * The platform has no page history and no restore, so every whole-document
+   * replace is one-way. See tools/undo.ts.
+   */
+  undo: UndoLog;
 }
 
 /**

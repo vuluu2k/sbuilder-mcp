@@ -2,6 +2,7 @@ import { describe, it, expect, vi } from 'vitest';
 import { PageSession, reviewField } from '../src/tools/page.js';
 import { Session } from '../src/transport/auth.js';
 import { Notices } from '../src/mcp/notices.js';
+import { UndoLog } from '../src/tools/undo.js';
 import { PageDoc } from '../src/domains/site/document.js';
 import { connectedClient } from './harness.js';
 
@@ -30,7 +31,7 @@ function scripted() {
 function ctxWith(f: typeof fetch) {
   const s = new Session('http://x', f);
   (s as unknown as { access: string }).access = 'jwt';
-  return { base: 'http://x', session: s, fetchImpl: f, notices: new Notices() };
+  return { base: 'http://x', session: s, fetchImpl: f, notices: new Notices(), undo: new UndoLog() };
 }
 
 describe('PageSession', () => {
@@ -76,7 +77,7 @@ describe('PageSession', () => {
 
 describe('reviewField()', () => {
   it('says the notice once and sends fixes as a legend', () => {
-    const ctx = { ...ctxWith(scripted().f), notices: new Notices() };
+    const ctx = { ...ctxWith(scripted().f), notices: new Notices(), undo: new UndoLog() };
     const d = PageDoc.from({ schema_version: 2, root_node_id: '', nodes: {} });
     const first = reviewField(ctx, d) as {
       findings: Array<Record<string, unknown>>;

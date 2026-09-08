@@ -682,3 +682,41 @@ vì cả hai lỗi đều im lặng:
 Cả hai tài liệu đều được **sinh ra** từ `formTemplates.ts` và `checkoutPageSeed.ts` của chính
 editor qua `npm run codegen`, không chép tay — một bản chép seed của nền tảng sẽ mục ngay lần
 nền tảng sửa nó, và người đầu tiên phát hiện là khách mua hàng.
+
+## `sb_undo`
+
+Trả lại thứ mà một lệnh `PUT` qua `sb_api_call` đã ghi đè.
+
+| Tham số | Kiểu | Ghi chú |
+| --- | --- | --- |
+| `index` | number? | 1 là lần ghi gần nhất. Bỏ trống để **liệt kê** những gì hoàn tác được |
+| `dry_run` | boolean? | Mặc định **true** |
+
+Nền tảng không có lịch sử trang, không có version, không có restore — `restore` duy nhất
+trong `/api/v1` là `media/{id}/restore`. Nên mọi lệnh thay-toàn-bộ-tài-liệu mà server này có
+thể gửi đều là một chiều: `PUT /settings` không phải patch, body thiếu trường là xoá cấu hình
+cửa hàng; `PUT .../forms/{id}/document` thay toàn bộ trường của trang thanh toán;
+`PUT .../pages/{id}/source` thay cả trang. Người bán bấm trong editor thì có undo. Agent thì
+không có gì, mà một lệnh của nó phá được nhiều hơn.
+
+**Vì vậy một PUT sẽ đọc trước khi ghi.** PUT theo định nghĩa là thay thế, nên thứ nó sắp phá
+chính là thứ lệnh GET tương ứng trả về — thêm đúng một round trip trên lệnh ghi, không có
+trên lệnh đọc và không có trên dry run. Nó im lặng khi thất bại: một undo không chuẩn bị được
+thì không được phép chặn lệnh ghi mà người gọi đã yêu cầu, và một PUT dùng để tạo mới thì
+chẳng có gì để đọc.
+
+Khi khôi phục, lệnh đi lại qua **đúng operation cũ**, chỉ mang những trường mà handler của
+operation đó decode — không phải cả response GET, vốn chứa các cột định danh và cột dẫn xuất
+thuộc về nền tảng. Envelope không đồng nhất, nên các tên trường đó được tìm ở tầng trên cùng
+trước, rồi mới tìm bên trong một envelope một-khoá nếu tầng trên không có:
+`{ document: … }` **chính là** body mà `PUT .../document` cần, còn `{ source: … }` giữ
+`document` và `schemaVersion` ở một tầng sâu hơn. Envelope lạ thì không ghi nhận gì, thay vì
+đoán.
+
+Một mục bị **xoá ngay sau khi được trả lại**, để undo là một bước lùi chứ không phải vòng lặp
+giữa hai trạng thái.
+
+**Nằm trong tiến trình, không nằm trên đĩa**, và giới hạn 20 mục. Server này chỉ giữ tài liệu
+và ảnh chụp; một thư mục snapshot là một loại tài sản mới phải sở hữu, kèm câu hỏi về thời
+hạn lưu và câu hỏi về riêng tư. Khoảng thời gian thật sự quan trọng là lúc người ta với tay
+tới undo — agent phát hiện hỏng hóc ngay trong phiên đã gây ra nó.

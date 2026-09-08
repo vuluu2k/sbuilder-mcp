@@ -91,8 +91,9 @@ là "tài khoản của người này".
 | `sb_event` | Gắn click action cho một node — mở giỏ, sang trang, mở pop-up |
 | `sb_bind` | Gắn nội dung một node vào dữ liệu cửa hàng thật, hoặc biến một nút thành nút thêm vào giỏ |
 | `sb_store` | Chạy một luồng cửa hàng bắt buộc đúng thứ tự — hiện là bốn lệnh ghi tạo nên một trang thanh toán hoạt động |
+| `sb_undo` | Trả lại thứ mà một lệnh PUT đã ghi đè — nền tảng không có lịch sử trang hay restore, nên đây là đường về duy nhất |
 
-Hai mươi bảy tool, **484 operation API** (158 trong 212 lệnh ghi có hình dạng body đọc thẳng
+Hai mươi tám tool, **484 operation API** (158 trong 212 lệnh ghi có hình dạng body đọc thẳng
 từ handler), 107 element, 77 nguồn binding. `sb_api_find` là
 một chỉ mục chứ không phải mỗi endpoint một tool, nên danh sách tool vẫn ngắn trong khi mọi
 thứ nền tảng làm được vẫn với tới — và operation mới thêm bên nền tảng sẽ tự có sau lần

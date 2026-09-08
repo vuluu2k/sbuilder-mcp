@@ -4,12 +4,13 @@ import { callOperation } from '../src/tools/api.js';
 import { buildEntry, runInstallCli } from '../src/install/index.js';
 import { Session } from '../src/transport/auth.js';
 import { Notices } from '../src/mcp/notices.js';
+import { UndoLog } from '../src/tools/undo.js';
 
 const ctx = (over: Record<string, unknown> = {}) =>
   ({
     base: 'http://x',
     session: new Session('http://x'),
-    notices: new Notices(),
+    notices: new Notices(), undo: new UndoLog(),
     ...over,
   }) as never;
 

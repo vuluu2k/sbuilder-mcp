@@ -2,6 +2,7 @@ import { describe, it, expect, vi } from 'vitest';
 import { connectedClient } from './harness.js';
 import { Session } from '../src/transport/auth.js';
 import { Notices } from '../src/mcp/notices.js';
+import { UndoLog } from '../src/tools/undo.js';
 
 interface Call {
   method: string;
@@ -61,7 +62,7 @@ function storefront(opts: { fail?: string; publishes?: boolean; gateways?: unkno
 async function clientOver(f: typeof fetch) {
   const session = new Session('http://x', f);
   (session as unknown as { access: string }).access = 'jwt';
-  return connectedClient({ base: 'http://x', session, fetchImpl: f, notices: new Notices(), siteId: 's1' });
+  return connectedClient({ base: 'http://x', session, fetchImpl: f, notices: new Notices(), undo: new UndoLog(), siteId: 's1' });
 }
 
 const parse = (r: unknown) =>

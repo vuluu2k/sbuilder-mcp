@@ -94,8 +94,9 @@ make, because those mean "this person's account".
 | `sb_event` | Give a node a click action — open the cart, go to a page, open a pop-up |
 | `sb_bind` | Bind a node's content to real store data, or make a button add to the cart |
 | `sb_store` | Run a store flow that must happen in a fixed order — today, the four writes that make a working checkout |
+| `sb_undo` | Put back what a PUT replaced — the platform has no page history or restore, so this is the only way back |
 
-Twenty-seven tools, **484 API operations** (158 of the 212 writes carrying a body shape read
+Twenty-eight tools, **484 API operations** (158 of the 212 writes carrying a body shape read
 off the handler), 107 elements, 77 binding sources. `sb_api_find`
 is an index rather than a tool per endpoint, so the tool list stays short while everything
 the platform can do stays reachable — and operations added to the platform arrive with the
