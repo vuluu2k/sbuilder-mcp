@@ -6,6 +6,18 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.7.0] - 2026-09-08
+
+### Added
+- sb_import đọc bất kỳ URL công khai nào và thêm cấu trúc, nội dung của nó vào trang đang mở dưới dạng các element thật — section, heading, text, image, button, list — được khoác token của chính trang đó (màu và độ đậm lấy từ heading đầu tiên, màu và cỡ chữ lấy từ dòng văn bản đầu tiên, màu nền và bo góc lấy từ nút không trong suốt đầu tiên) thay vì nhúng nguyên markup của nguồn. Một ảnh được giới hạn kích thước ở cả hai chiều thay vì chỉ giới hạn chiều rộng, vì một SVG không có kích thước pixel nội tại nên nếu không sẽ kéo dài cả một section thành hàng nghìn pixel khoảng trắng; mỗi ảnh được tải lên thư viện media của chính site, giữ nguyên URL gốc nếu upload thất bại, và một lỗi upload được báo cáo theo nhóm và đếm theo lý do thay vì chỉ là một con số trần trụi. dry_run (mặc định) trả về những gì tìm thấy trước khi thêm bất cứ thứ gì.
+- npm run codegen:check chạy trình sinh catalog dựa trên một ref đã commit của nền tảng và không ghi gì cả, thoát với mã 1 và nêu tên mọi file sẽ thay đổi, để một catalog cũ được phát hiện trước khi một tool bắt đầu mô tả một element hay operation mà nền tảng không còn nữa.
+
+### Changed
+- Catalog element và API được tạo lại: thêm element bundle-items cùng các trường kind, bundlePricing, bundleValue và bundleItems trên một sản phẩm, cùng một loạt operation cho relation-slot và lệnh làm phẳng chuỗi storefront; trần token budget của sb_api_find được nâng lên 3.500 để chứa call sheet sản phẩm lớn hơn.
+
+### Fixed
+- sb_look giờ có thể chụp được một node có box nằm dưới khoảng 900px đầu tiên của trang; trước đây một yêu cầu clip chỉ chạy trên viewport và thất bại với lỗi "Clipped area is either empty or outside the resulting image" của Playwright với bất kỳ node nào nằm xa hơn, và giờ nó chụp toàn trang trước để tọa độ clip khớp bất kể node nằm ở đâu.
+
 ## [0.6.0] - 2026-09-08
 
 ### Added

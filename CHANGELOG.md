@@ -6,6 +6,18 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.7.0] - 2026-09-08
+
+### Added
+- sb_import reads any public URL and adds its structure and content to the open page as real elements — section, heading, text, image, button, list — dressed in that page's own tokens (ink and weight off the first heading, colour and size off the first body line, fill and radius off the first non-transparent button) instead of embedding the source's raw markup. An image is bounded in both axes rather than only capped in width, since an SVG has no intrinsic pixel size and would otherwise stretch a section into thousands of pixels of empty space; each image is uploaded into the site's own media library, falling back to the original URL on a failed upload, and a failure is reported grouped and counted by reason rather than as a bare count. dry_run (the default) returns what was found before anything is added.
+- npm run codegen:check runs the catalog generator against a committed platform ref and writes nothing, exiting 1 and naming every file that would change, so a stale catalog is caught before a tool starts describing an element or operation the platform no longer has.
+
+### Changed
+- The element and API catalog is regenerated: adds the bundle-items element and the kind, bundlePricing, bundleValue and bundleItems fields on a product, plus a set of relation-slot operations and a storefront-string levelling command; sb_api_find's token budget ceiling is raised to 3,500 to hold the larger product call sheet.
+
+### Fixed
+- sb_look can now photograph a node whose box sits below roughly the first 900px of the page; a clip request previously ran against the viewport alone and failed with Playwright's "Clipped area is either empty or outside the resulting image" for anything further down, and it now captures the full page first so the clip lines up regardless of where the node sits.
+
 ## [0.6.0] - 2026-09-08
 
 ### Added
