@@ -226,9 +226,18 @@ export function setKeys(
     /**
      * An interaction state — `hover` is the one the inspector offers.
      *
-     * A state is a variation ON a breakpoint's style, so it nests under the
-     * breakpoint rather than replacing it, and it never takes the base branch:
-     * "how this looks when hovered" is a visual quantity like any other.
+     * A state has TWO homes, and the platform names both
+     * (`schema/src/node.ts`, mirrored by `render/style/cascade.go`'s
+     * MergeStateNs):
+     *
+     *   base            node.states[state][ns]
+     *   per breakpoint  node.responsive[bp].states[state][ns]
+     *
+     * The base one is not a degenerate case to be routed away from: it is where
+     * every element's own `meta.defaults.states` is seeded — `tab-item`'s hover,
+     * `quantity-button`'s hover — so it is the layer an author is usually
+     * editing. `MergeStateNs` reads it first and lets breakpoint slots overlay
+     * it, exactly as it does for the plain namespace.
      */
     state?: string;
   },
@@ -250,11 +259,44 @@ export function setKeys(
 
   if (namespace === 'specials') {
     refuseComposedStamp(keys);
+    // `specials` is content and identity, base-only by definition, and states
+    // carry style. Saying so is the point: this used to drop the state and write
+    // the value as if it had been asked for plainly.
+    if (opts.state) {
+      throw new Error(
+        `sbuilder: specials takes no interaction state — "${opts.state}" would be dropped. ` +
+          'specials is content and identity (text, htmlTag, bound…), which do not vary by ' +
+          'state. Style is what has states.',
+      );
+    }
     return Object.entries(keys).map(([k, v]) => ({
       op: 'set' as const,
       path: ['nodes', id, 'specials', k],
       value: v,
     }));
+  }
+
+  // A STATE IS ANSWERED BEFORE `base`, because `base` used to be tested first
+  // and swallowed it: `base:true state:"hover"` wrote the hover value straight
+  // into the plain style, so the node wore its hover colour permanently and had
+  // no hover at all. The tool reported success, and this repo's own design skill
+  // documents that exact call — `sb_set pr_option style base:true state:"active"`
+  // — as the way to style a selected option.
+  if (opts.state) {
+    // Base state and per-breakpoint state are DIFFERENT PLACES in the document,
+    // and the old path (`states[state][bp][ns]`) was neither of them: it buried
+    // a breakpoint inside the base-state cluster, where nothing reads it.
+    const prefix = opts.base
+      ? ['nodes', id, 'states', opts.state]
+      : ['nodes', id, 'responsive', opts.breakpoint ?? 'desktop', 'states', opts.state];
+    return [
+      ...Object.entries(keys).map(([k, v]) => ({
+        op: 'set' as const,
+        path: [...prefix, namespace, k],
+        value: v,
+      })),
+      ...(rebind ? [rebind] : []),
+    ];
   }
 
   if (opts.base) {
@@ -287,16 +329,6 @@ export function setKeys(
   }
 
   const bp = opts.breakpoint ?? 'desktop';
-  if (opts.state) {
-    return [
-      ...Object.entries(keys).map(([k, v]) => ({
-        op: 'set' as const,
-        path: ['nodes', id, 'states', opts.state as string, bp, namespace, k],
-        value: v,
-      })),
-      ...(rebind ? [rebind] : []),
-    ];
-  }
   return [
     ...Object.entries(keys).map(([k, v]) => ({
       op: 'set' as const,
