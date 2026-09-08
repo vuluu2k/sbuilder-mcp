@@ -405,6 +405,11 @@ export const API_DEFINITIONS: Record<string, unknown> = ${JSON.stringify(
       locked: em.rules?.locked === true,
       hideInLayer: em.rules?.hideInLayer === true,
       childAllows: (em.rules?.nodeChildAllows as string[] | undefined) ?? [],
+      // The click-action allow-lists, verbatim. Baked because nothing else can
+      // answer "may this element carry open_cart" — and without the answer no
+      // tool could write an event at all, so a site built from scratch had no
+      // way to open its own cart drawer.
+      ...declaredEvents(em),
       defaults: withBindings(type, (em.defaults ?? {}) as CatalogElement['defaults'], bindMod.datasetBindings),
       ...bindingTable(type, (em.defaults ?? {}) as CatalogElement['defaults'], bindMod.datasetBindings),
       inspector: readInspector(em.traits).tabs,
@@ -671,6 +676,31 @@ await main();
  * time. Elements it has nothing to say about keep their defaults untouched, so
  * the generated file grows only where a binding actually exists.
  */
+/**
+ * The two click-action allow-lists an element meta may declare.
+ *
+ * Copied rather than normalised: a trigger listed with a MISSING array means
+ * "every action this trigger offers", and flattening that to `[]` would turn
+ * "unrestricted" into "nothing allowed" — the direction that silently refuses a
+ * legitimate write. A meta that declares neither key contributes neither.
+ */
+function declaredEvents(em: {
+  events?: Record<string, string[] | undefined>;
+  bindingEvents?: Record<string, string[] | undefined>;
+}): Partial<Pick<CatalogElement, 'events' | 'bindingEvents'>> {
+  const take = (t?: Record<string, string[] | undefined>) => {
+    if (!t) return undefined;
+    const out: Record<string, string[]> = {};
+    for (const [trigger, actions] of Object.entries(t)) {
+      if (Array.isArray(actions)) out[trigger] = [...actions];
+    }
+    return Object.keys(out).length ? out : undefined;
+  };
+  const events = take(em.events);
+  const bindingEvents = take(em.bindingEvents);
+  return { ...(events ? { events } : {}), ...(bindingEvents ? { bindingEvents } : {}) };
+}
+
 function withBindings(
   type: string,
   defaults: CatalogElement['defaults'],

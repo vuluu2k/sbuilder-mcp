@@ -88,6 +88,7 @@ là "tài khoản của người này".
 | `sb_media_upload` | Thêm ảnh và lấy URL — đường duy nhất, vì upload là multipart |
 | `sb_live_join` | Vào phòng live-edit của editor như một peer nhìn thấy được — sửa gì hiện ngay |
 | `sb_look` | Lưu, render, trả về ảnh chụp kèm box đo được của node và lỗi bố cục đo trên bản render |
+| `sb_event` | Gắn click action cho một node — mở giỏ, sang trang, mở pop-up |
 | `sb_bind` | Gắn nội dung một node vào dữ liệu cửa hàng thật, hoặc biến một nút thành nút thêm vào giỏ |
 
 Hai mươi lăm tool, **412 operation API**, 106 element, 77 nguồn binding. `sb_api_find` là

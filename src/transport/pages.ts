@@ -10,8 +10,25 @@ export interface PageSource {
   updatedAt: string;
   /** Omitted by the server when empty — never null. Treat absence as "none". */
   warnings?: unknown[];
-  globals?: unknown[];
-  overlays?: unknown[];
+  /**
+   * The CURRENT revision of every shared master this save touched, reported so
+   * the client can re-stamp its own copy before the next one.
+   *
+   * NOT optional information. Both are an optimistic fence: the composed node
+   * carries `specials.globalRev` / `specials.overlayRev`, the save sends it as
+   * `expectRev`, and a stale one is REFUSED — with a warning, and a 200. So a
+   * client that does not re-stamp lands its first edit to a shared header or to
+   * the cart drawer and silently drops every edit after it, which is what the
+   * platform's own comment on this field says in as many words.
+   */
+  globals?: RevStamp[];
+  overlays?: RevStamp[];
+}
+
+/** One shared master's current revision, as the save reports it. */
+export interface RevStamp {
+  id: string;
+  rev: number;
 }
 
 function sourcePath(siteId: string, pageId: string): string {

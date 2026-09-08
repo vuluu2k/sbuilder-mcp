@@ -8,6 +8,21 @@ export interface CatalogElement {
   hideInLayer: boolean;
   /** Parent→child containment whitelist. Empty means unrestricted. */
   childAllows: string[];
+  /**
+   * WHICH CLICK ACTIONS THIS ELEMENT OFFERS, per trigger — the platform's own
+   * `meta.events`, and `meta.bindingEvents` for the list that SWAPS IN once the
+   * node carries a purchase binding (`activeEvents`, one line in
+   * `ActionTrait.vue`: `return action ? def.binding_events : def.events`).
+   *
+   * NEITHER list contains `add_to_cart` or `buy_now`, and the button meta says
+   * why in as many words: neither is a click action. A purchase is the BINDING —
+   * `sb_bind` with `action` — and the event is what happens alongside it.
+   *
+   * An element that offers no action omits both keys, which is most of them: an
+   * events array on a heading would be a dropdown that paints nothing.
+   */
+  events?: Record<string, string[]>;
+  bindingEvents?: Record<string, string[]>;
   defaults: {
     style?: Record<string, unknown>;
     config?: Record<string, unknown>;

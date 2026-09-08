@@ -357,6 +357,36 @@ storefront giữ kết nối mở (island giỏ hàng poll, endpoint phiên khá
 một khoảnh khắc yên tĩnh không bao giờ tới khiến đúng trang duy nhất có dữ liệu thật lại
 không chụp được.
 
+## `sb_event`
+
+| Tham số | Kiểu | Ghi chú |
+| --- | --- | --- |
+| `id` | string | |
+| `action` | string | Một hành động element này cho phép, hoặc `"none"` để xoá |
+| `trigger` | string? | Mặc định `click` |
+| `payload` | object? | |
+| `dry_run` | boolean? | Mặc định true |
+
+Cách duy nhất đặt được click action lên một node. `NodeSpec` không mang `events`, `sb_set`
+chỉ ghi style / config / specials, còn `createNode` luôn ghi `events: []` — nên `open_cart`
+hoàn toàn không tạo được, và một site dựng từ trắng không có cách nào mở giỏ hàng của chính
+nó, trong khi `sb_review` vẫn báo thiếu kèm một cách sửa không gì thực hiện được.
+
+Hành động được kiểm với allow-list của chính element, sai thì bị từ chối kèm danh sách. Danh
+sách nào **đang sống** phụ thuộc vào node: một nút đã gắn binding mua hàng dùng
+`bindingEvents` — nút thường thì điều hướng, nút đã bind thì bàn giao cho giỏ hoặc trang
+thanh toán, và hai tập loại trừ nhau vì "thêm sản phẩm này rồi đi tới một URL bất kỳ" không
+phải thứ cart runtime diễn đạt được.
+
+**Mua hàng không phải sự kiện.** `add_to_cart` và `buy_now` không nằm trong allow-list của
+element nào; meta của button nói thẳng lý do. Ý định nằm ở BINDING — `sb_bind` kèm `action` —
+còn event là thứ xảy ra song song. Hỏi ở đây sẽ bị từ chối và chỉ sang `sb_bind`.
+
+Một hành động cho một trigger, thay tại chỗ: hai `click` trên một node là hai câu trả lời cho
+một câu hỏi.
+
+---
+
 ## `sb_bind`
 
 | Tham số | Kiểu | Ghi chú |

@@ -18,6 +18,15 @@ export const SPEC_OVERLAY_ID = 'overlayId';
 /** The specials stamps a composed global section carries. */
 export const SPEC_GLOBAL_ID = 'globalId';
 export const SPEC_GLOBAL_KIND = 'globalKind';
+/**
+ * The OPTIMISTIC FENCE on a shared master, one per kind.
+ *
+ * Compose writes it, the save sends it back as `expectRev`, and the platform
+ * refuses a stale one with a warning and a 200 — so a client that does not
+ * re-stamp from the save's own report silently drops every edit after the first.
+ */
+export const SPEC_GLOBAL_REV = 'globalRev';
+export const SPEC_OVERLAY_REV = 'overlayRev';
 export const SPEC_GLOBAL_REF = 'globalRef';
 /** The specials stamps a composed APP BLOCK carries (appblocks.go:97-100). */
 export const SPEC_APP_BLOCK_ID = 'appBlockId';

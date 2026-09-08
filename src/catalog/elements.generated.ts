@@ -675,6 +675,34 @@ export const ELEMENTS: Record<string, CatalogElement> = {
     "locked": false,
     "hideInLayer": false,
     "childAllows": [],
+    "events": {
+      "click": [
+        "go_to_url",
+        "open_page",
+        "popup",
+        "open_menu",
+        "close_menu",
+        "toggle_menu",
+        "open_cart",
+        "close_cart",
+        "go_to_checkout",
+        "cart_remove",
+        "cart_increment",
+        "cart_decrement",
+        "change_tab",
+        "open_dropdown",
+        "close_dropdown",
+        "toggle_dropdown",
+        "logout_customer",
+        "toggle_wishlist"
+      ]
+    },
+    "bindingEvents": {
+      "click": [
+        "open_cart",
+        "go_to_checkout"
+      ]
+    },
     "defaults": {
       "specials": {
         "text": "Button",
@@ -883,6 +911,17 @@ export const ELEMENTS: Record<string, CatalogElement> = {
     "locked": false,
     "hideInLayer": false,
     "childAllows": [],
+    "events": {
+      "click": [
+        "go_to_url",
+        "open_page",
+        "popup",
+        "change_tab",
+        "open_dropdown",
+        "close_dropdown",
+        "toggle_dropdown"
+      ]
+    },
     "defaults": {
       "specials": {
         "src": "",
@@ -1030,6 +1069,28 @@ export const ELEMENTS: Record<string, CatalogElement> = {
     "locked": false,
     "hideInLayer": false,
     "childAllows": [],
+    "events": {
+      "click": [
+        "go_to_url",
+        "open_page",
+        "popup",
+        "open_menu",
+        "close_menu",
+        "toggle_menu",
+        "open_cart",
+        "close_cart",
+        "go_to_checkout",
+        "cart_remove",
+        "cart_increment",
+        "cart_decrement",
+        "change_tab",
+        "open_dropdown",
+        "close_dropdown",
+        "toggle_dropdown",
+        "logout_customer",
+        "toggle_wishlist"
+      ]
+    },
     "defaults": {
       "specials": {
         "name": "StarFill",
@@ -5581,6 +5642,29 @@ export const ELEMENTS: Record<string, CatalogElement> = {
     "locked": false,
     "hideInLayer": false,
     "childAllows": [],
+    "events": {
+      "form:submit": [
+        "popup",
+        "close_popup",
+        "open_cart",
+        "close_cart"
+      ],
+      "form:success": [
+        "go_to_url",
+        "open_page",
+        "popup",
+        "close_popup",
+        "open_cart",
+        "close_cart",
+        "go_to_checkout"
+      ],
+      "form:error": [
+        "popup",
+        "close_popup",
+        "open_cart",
+        "close_cart"
+      ]
+    },
     "defaults": {
       "specials": {
         "formId": "",
@@ -23379,6 +23463,13 @@ export const ELEMENTS: Record<string, CatalogElement> = {
     "locked": false,
     "hideInLayer": false,
     "childAllows": [],
+    "events": {
+      "click": [
+        "go_to_url",
+        "open_page",
+        "popup"
+      ]
+    },
     "defaults": {
       "style": {
         "width": "100%",

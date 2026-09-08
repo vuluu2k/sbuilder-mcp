@@ -2,7 +2,7 @@ import { randomBytes } from 'node:crypto';
 import { z } from 'zod';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { text, images } from '../mcp/response.js';
-import { BINDING_SOURCES } from '../catalog/elements.generated.js';
+import { BINDING_SOURCES, ELEMENTS } from '../catalog/elements.generated.js';
 import { previewUrl } from '../vision/preview.js';
 import { uploadMedia } from '../transport/media.js';
 import { request } from '../transport/http.js';
@@ -124,6 +124,95 @@ export function bindNode(
       value: { id: randomBytes(6).toString('hex'), source, field },
     },
   ];
+}
+
+/**
+ * The click-action allow-list that is LIVE for this node.
+ *
+ * `activeEvents` in the platform, whose whole rule is one line in
+ * `ActionTrait.vue`: `return action ? def.binding_events : def.events`. A
+ * purchase control is a different kind of control — an unbound button navigates,
+ * a bound one hands off to the cart or the checkout — and the two sets are
+ * mutually exclusive, because "add this product, then go to an arbitrary URL" is
+ * not a thing the cart runtime can express.
+ */
+function liveEventTable(type: string, node: { bindings?: Array<{ id?: string }> }): Record<string, string[]> | undefined {
+  const meta = ELEMENTS[type];
+  if (!meta?.events) return undefined;
+  const bound = (node.bindings ?? []).some((b) => b?.id === PRODUCT_ACTION_BINDING_ID);
+  return (bound && meta.bindingEvents) || meta.events;
+}
+
+/**
+ * Put a click action on a node, or take one off.
+ *
+ * THE ONE THING NO TOOL COULD DO. `NodeSpec` carries no `events`, `sb_set`
+ * writes only style/config/specials, and `createNode` always minted `events: []`
+ * — so `open_cart` could not be authored, and a site built from scratch had no
+ * way to open its own cart drawer. `sb_review` reported that gap
+ * (`cartTrigger`) and named a fix nothing could apply, which is the same shape
+ * the purchase binding had before `sb_bind` grew `action`.
+ *
+ * A purchase is NOT here. `add_to_cart` and `buy_now` are absent from every
+ * element's allow-list, and the button meta says why in as many words: neither
+ * is a click action. The intent is the BINDING — `sb_bind` with `action` — and
+ * the event is what happens alongside it.
+ *
+ * ONE ACTION PER TRIGGER, replaced in place. The platform stores a list, but a
+ * second `click` on one node is two answers to one question, and picking between
+ * them at runtime is the platform's business rather than an authoring choice.
+ */
+export function setEvent(
+  doc: PageDoc,
+  id: string,
+  trigger: string,
+  action: string,
+  payload?: Record<string, unknown>,
+): Patch[] {
+  const node = doc.node(id) as unknown as {
+    data: { type: string };
+    events?: Array<{ id?: string; name?: string }>;
+    bindings?: Array<{ id?: string }>;
+  };
+  refuseAppBlockInterior(doc, id, 'setting an event on');
+  const events = node.events ?? [];
+  const at = events.findIndex((e) => e?.name === trigger);
+
+  if (action === 'none') {
+    if (at < 0) return [];
+    return [{ op: 'remove', path: ['nodes', id, 'events'], index: at }];
+  }
+
+  const table = liveEventTable(node.data.type, node);
+  if (!table) {
+    throw new Error(
+      `sbuilder: a ${node.data.type} declares no click actions, so an event on it would be ` +
+        'stored and never fired. Elements that do: ' +
+        Object.keys(ELEMENTS).filter((t) => ELEMENTS[t]?.events).join(', ') + '.',
+    );
+  }
+  const allowed = table[trigger];
+  if (!allowed) {
+    throw new Error(
+      `sbuilder: a ${node.data.type} offers no "${trigger}" trigger. It offers: ` +
+        `${Object.keys(table).join(', ')}.`,
+    );
+  }
+  if (!allowed.includes(action)) {
+    const purchase = action === 'add_to_cart' || action === 'buy_now';
+    throw new Error(
+      `sbuilder: "${action}" is not an action a ${node.data.type} offers on ${trigger}. ` +
+        (purchase
+          ? 'A purchase is a BINDING, not a click action — use sb_bind with action:"' +
+            action + '". '
+          : '') +
+        `Allowed: ${allowed.join(', ')}.`,
+    );
+  }
+
+  const value = { id: `ev_${action}`, name: trigger, action, payload: payload ?? {} };
+  if (at >= 0) return [{ op: 'set', path: ['nodes', id, 'events', String(at)], value }];
+  return [{ op: 'insert', path: ['nodes', id, 'events'], index: events.length, value }];
 }
 
 /**
@@ -370,6 +459,33 @@ export function registerLiveTools(
           ? `Use it: sb_set id "<node>", namespace specials, keys { "src": ${JSON.stringify(asset.url)} }`
           : 'Uploaded, but the server returned no url — read it back with sb_media_list.',
       });
+    },
+  );
+
+  server.registerTool(
+    'sb_event',
+    {
+      description:
+        'Give a node a click action — open the cart, go to a page, open a pop-up. A purchase ' +
+        'is not one: use sb_bind action.',
+      inputSchema: {
+        id: z.string(),
+        action: z
+          .string()
+          .describe('An action this element allows, or "none" to clear. A wrong one is refused with the list'),
+        trigger: z.string().optional().describe('Default "click"'),
+        payload: z.record(z.unknown()).optional(),
+        dry_run: z.boolean().optional(),
+      },
+      annotations: { readOnlyHint: false, destructiveHint: false },
+    },
+    async ({ id, action, trigger, payload, dry_run }) => {
+      const d = session.current();
+      const patches = setEvent(d, id, trigger ?? 'click', action, payload);
+      if (dry_run !== false) return text({ dry_run: true, patches });
+      session.applyAndPublish(patches);
+      await session.save();
+      return text({ node: id, trigger: trigger ?? 'click', action, rev: d.rev });
     },
   );
 

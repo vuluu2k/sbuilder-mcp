@@ -22,7 +22,7 @@ import { reviewDesign, REVIEW_NOTICE } from '../domains/site/review.js';
 import { compactFindings } from '../domains/site/findings.js';
 import { readinessGaps, READINESS_NOTICE } from '../domains/site/readiness.js';
 import { gatherReadiness } from '../domains/site/readiness-fetch.js';
-import { globalWarning, RESPONSIVE_NOTICE } from '../domains/site/traps.js';
+import { globalWarning, restampPatches, RESPONSIVE_NOTICE } from '../domains/site/traps.js';
 import { catalogMatches, traitsFor } from '../catalog/element-search.js';
 import type { Patch } from '../core/patch.js';
 import type { LiveSession } from '../live/session.js';
@@ -156,12 +156,20 @@ export class PageSession {
     if (problems.length > 0) {
       throw new Error(`sbuilder: refusing to save — ${problems.join(' ')}`);
     }
-    await saveSource(
+    const saved = await saveSource(
       this.ctx,
       this.siteId,
       this.pageId,
       d.doc as unknown as { schema_version?: number; root_node_id: string; nodes: Record<string, unknown> },
     );
+    // RE-STAMP THE FENCE, or lose every edit after this one.
+    //
+    // The save reports each shared master's new revision precisely so the client
+    // can carry it into the next save; the platform refuses a stale `expectRev`
+    // with a warning and a 200. Applied locally rather than published: these are
+    // the server's own numbers coming back, not an edit anybody made, and a peer
+    // in the room gets them from its own save.
+    d.apply(restampPatches(d.doc, { globals: saved.globals, overlays: saved.overlays }));
   }
 }
 

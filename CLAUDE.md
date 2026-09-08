@@ -324,6 +324,26 @@ that accounts for them.
   `tablet-*.css` off the assets host. Grepping the HTML for a rule and finding nothing proves
   nothing — twice here it read as "the style did not apply" when it had.
 
+- **A SHARED MASTER IS FENCED, AND THE FENCE MOVES ON EVERY SAVE.** Compose stamps
+  `specials.globalRev` / `specials.overlayRev` on the node it materialises; the save sends it
+  back as `expectRev`; the platform refuses a stale one WITH A WARNING AND A 200. The save
+  response reports each master's new revision (`source.globals`, `source.overlays`) precisely
+  so the client can re-stamp — and this client typed both fields and read neither, for as
+  long as they have existed. So the FIRST edit to a global header, a global footer or the
+  cart drawer landed and every edit after it in the same session was dropped while the tool
+  answered success. Measured: two `sb_remove` calls against the drawer, the second answering
+  `{"removed": …}` and changing nothing. `PageSession.save` now applies `restampPatches`.
+  The platform's own comment on the field says the same thing about the editor, which had
+  the bug first.
+
+- **AN OVERLAY'S CONTENT IS WRITTEN THROUGH THE PAGE SAVE, never through the overlays API.**
+  `PATCH /api/sites/{siteId}/overlays/{id}` accepts `name`, `kind` and `allPages` — a
+  `document` in that body is ignored and the call answers 200. The route-map comment on
+  `overlays/rest/rest.go` says content "is deliberately NOT written here": the page save
+  carries the composed drawer and the page context decomposes it. So `sb_set` on a drawer
+  node is the right tool and it works; `refuseOverlay` fires only on the overlay ROOT, which
+  is correct, because moving or removing THAT is not a page-level fact.
+
 - **`POST /api/v1/media` is a SECOND upload door, and it is the key's own.** `/api/media`
   takes a `wbk_` key only since `feat(media): a wbk_ API key may upload`, so a deployment
   older than that commit refuses a valid key — measured against a server binary 26 minutes
@@ -380,6 +400,19 @@ platform treats an unproven guard as indistinguishable from an absent one.
 Not taste — every rule below is a defect that SHIPPED in this repo's own storefront build,
 and each names the check that would have caught it. The `sbuilder-site-design` skill carries
 them as a checklist at the moment the work starts.
+
+0. **Read the page's pattern before you add to it, and obey it.** A page already answers
+   what the accent is, how round a button is, how much air a section gets — and a section
+   that answers differently does not read as a different section, it reads as a different
+   website. Take the values off what is there (`sb_node_read` a heading, a primary button, a
+   card, a section) and reuse THOSE, not a near-miss.
+
+   The parts a page does not show you are what break this: the cart drawer, the checkout
+   form's fields, an element's satellites and every empty state are authored out of sight and
+   ship the PLATFORM's defaults — `#171717`, `#d4d4d4`, square corners, English copy. This
+   build shipped a rose-and-ink storefront whose drawer said "Cart" / "Checkout" / "Your cart
+   is empty" in black on white. `sb_review` SKIPS overlays, so nothing reported it. Open the
+   drawer and look, before calling a site done.
 
 1. **Nothing is finished until it has been seen at 390px.** The global header was authored
    desktop-only and had no responsive block at all: at 390 the nav ran 408 → 460, the cart

@@ -1,9 +1,13 @@
+import type { Patch } from '../../core/patch.js';
 import { FIRST_CHILD_ONLY } from '../../catalog/elements.generated.js';
 import {
   pageChildren,
   isOverlay,
   SPEC_GLOBAL_ID,
   SPEC_GLOBAL_KIND,
+  SPEC_GLOBAL_REV,
+  SPEC_OVERLAY_ID,
+  SPEC_OVERLAY_REV,
   type DocLike,
 } from '../../core/tree.js';
 
@@ -133,3 +137,40 @@ export function refuseSecondTemplate(doc: DocLike, parentId: string, verb: strin
 }
 
 export { isOverlay };
+
+/**
+ * Re-stamp the composed masters with the revisions the save just reported.
+ *
+ * THE FENCE MOVES ON EVERY SAVE. Compose stamps `specials.globalRev` /
+ * `specials.overlayRev` onto the node it materialises; the save sends that back
+ * as `expectRev`; the platform refuses a stale one — and refuses it with a
+ * WARNING and a 200, not an error. So the first edit to a shared header or to
+ * the cart drawer lands, the fence advances on the server, and every edit after
+ * it in the same session is dropped while the tool reports success.
+ *
+ * Measured: two `sb_remove` calls in one session against the cart drawer. The
+ * first removed its subtree; the second answered `{"removed": …}` and changed
+ * nothing, and the drawer kept rendering the node in the browser.
+ *
+ * A master the report does not mention is left alone — it was not part of this
+ * save, and inventing a revision for it is how a fence stops being one.
+ */
+export function restampPatches(
+  doc: DocLike,
+  report: { globals?: Array<{ id: string; rev: number }>; overlays?: Array<{ id: string; rev: number }> },
+): Patch[] {
+  const wanted = new Map<string, { key: string; rev: number }>();
+  for (const g of report.globals ?? []) wanted.set(g.id, { key: SPEC_GLOBAL_REV, rev: g.rev });
+  for (const o of report.overlays ?? []) wanted.set(o.id, { key: SPEC_OVERLAY_REV, rev: o.rev });
+  if (wanted.size === 0) return [];
+
+  const out: Patch[] = [];
+  for (const [id, n] of Object.entries(doc.nodes)) {
+    const masterId = n.specials?.[SPEC_GLOBAL_ID] ?? n.specials?.[SPEC_OVERLAY_ID];
+    if (typeof masterId !== 'string') continue;
+    const next = wanted.get(masterId);
+    if (!next || n.specials?.[next.key] === next.rev) continue;
+    out.push({ op: 'set', path: ['nodes', id, 'specials', next.key], value: next.rev });
+  }
+  return out;
+}

@@ -372,6 +372,37 @@ storefront keeps connections open (the cart island polls, a visitor's session en
 401 forever), so waiting for a quiet moment that never comes made the only page where store
 data renders impossible to photograph.
 
+## `sb_event`
+
+| Arg | Type | Notes |
+| --- | --- | --- |
+| `id` | string | |
+| `action` | string | An action this element allows, or `"none"` to clear |
+| `trigger` | string? | Defaults to `click` |
+| `payload` | object? | |
+| `dry_run` | boolean? | Defaults to true |
+
+The only way to put a click action on a node. `NodeSpec` carries no `events`, `sb_set` writes
+style / config / specials, and `createNode` always minted `events: []` — so `open_cart` could
+not be authored at all, and a site built from scratch had no way to open its own cart drawer
+while `sb_review` reported that gap and named a fix nothing could apply.
+
+The action is checked against the element's own allow-list, and a wrong one is refused with
+the list. WHICH list is live depends on the node: a purchase-bound control gets
+`bindingEvents` instead — an unbound button navigates, a bound one hands off to the cart or
+the checkout, and the two sets are mutually exclusive because "add this product, then go to
+an arbitrary URL" is not a thing the cart runtime can express.
+
+**A purchase is not an event.** `add_to_cart` and `buy_now` appear in no element's allow-list;
+the button meta says why in as many words. The intent is the BINDING — `sb_bind` with
+`action` — and the event is what happens alongside it. Asking for one here is refused and
+pointed at `sb_bind`.
+
+One action per trigger, replaced in place: a second `click` on one node is two answers to one
+question.
+
+---
+
 ## `sb_bind`
 
 | Arg | Type | Notes |

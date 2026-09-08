@@ -91,6 +91,7 @@ make, because those mean "this person's account".
 | `sb_media_upload` | Add an image and get its URL — the only route, the upload is multipart |
 | `sb_live_join` | Join the editor's live-edit room as a visible peer — edits then appear live |
 | `sb_look` | Save, render, and return screenshots plus measured node boxes and layout defects measured on the render |
+| `sb_event` | Give a node a click action — open the cart, go to a page, open a pop-up |
 | `sb_bind` | Bind a node's content to real store data, or make a button add to the cart |
 
 Twenty-five tools, **412 API operations**, 106 elements, 77 binding sources. `sb_api_find`

@@ -18,10 +18,56 @@ Run these four, in this order. Three of them catch things `sb_review` cannot see
    measured on the render.
 3. Open the **published storefront URL**, not the draft preview, for any page with a
    repeater. Pass it to `sb_look` as `url`.
-4. `sb_review` last, for the store gaps — they survive publish silently and a shopper is
+4. **Open the cart drawer** on the published page and look at it. `sb_review` SKIPS
+   overlays — a placeholder or an English button in there is reported by nothing.
+5. `sb_review` last, for the store gaps — they survive publish silently and a shopper is
    what finds them.
 
-## The eight rules
+## The nine rules
+
+### 0. Read the page's pattern before you add to it, and obey it
+
+The FIRST rule, because everything below is downstream of it. A page already
+answers the questions you are about to ask — what is the accent, how round is a
+button, how much air between sections, how big is a heading — and a section that
+answers them differently does not read as "a different section". It reads as a
+different website.
+
+So before the first `sb_add`, take the pattern off what is already there:
+
+```
+sb_outline depth:3                 # what sections exist, in what order
+sb_node_read <a heading>           # the type scale and the ink
+sb_node_read <a primary button>    # fill, radius, padding, weight
+sb_node_read <a card>              # border colour, radius, inner padding
+sb_node_read <a section>           # the page's vertical rhythm and max-width
+```
+
+Then reuse those exact values. Not "a pink", THE pink. Not "rounded", the same
+`999px` every other button uses. A number that appears twice on a page is a
+token; inventing a third value for the same job is how a build ends up with four
+greys and three radii.
+
+**The parts a page does not show you are the ones that break this.** The cart
+drawer, the checkout form's fields, an element's satellites and every empty state
+are authored somewhere you are not looking, and they ship the PLATFORM's defaults
+— `#171717` ink, `#d4d4d4` borders, square corners, and English copy — on a page
+that is none of those things. Measured on this build: a rose-and-ink storefront
+whose drawer said "Cart", "Checkout", "Your cart is empty" in black-on-white,
+next to a page that said everything else in Vietnamese.
+
+Go and look at them, on purpose, before calling a site done:
+
+| Surface | How to reach it |
+| --- | --- |
+| Cart drawer | `sb_outline` shows it as `overlay`; `sb_set` its nodes — the page save routes them to the overlay master |
+| Element chrome | `satellite: "<config key>"` in the outline (rule 4) |
+| Form fields | config keys on the form and field nodes (rule 5) |
+| Empty states | the `emptyStateId` satellite on every repeater |
+| Submit button | a `form-submit` node inside the FORM document |
+
+And the copy is part of the pattern. A Vietnamese store with an English cart is
+not a styling defect, it is a different shop.
 
 ### 1. Nothing is finished until it has been seen at 390px
 

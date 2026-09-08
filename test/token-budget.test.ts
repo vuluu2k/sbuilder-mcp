@@ -18,7 +18,14 @@ describe('token budget — a diet without a scale comes back', () => {
     // 13,606 before the diet. What sits above that is bought on purpose: annotations
     // (~1,000), the sb_bind source enum (~500), sb_set edits[] and sb_api_call pick /
     // max_items (~700) — each one saves more per session than it costs.
-    expect(JSON.stringify(tools).length).toBeLessThan(16_000);
+    //
+    // 16,000 -> 17,000 buys `sb_event` (~700). It is the only way to put a click action on a
+    // node — `NodeSpec` carries no events, `sb_set` writes style/config/specials, and
+    // `createNode` always minted `events: []` — so without it `open_cart` could not be
+    // authored and a site built from scratch had no way to open its own cart drawer, while
+    // `sb_review` reported that gap and named a fix nothing could apply. A tool that closes
+    // a hole a whole storefront falls through is worth 700 characters of every session.
+    expect(JSON.stringify(tools).length).toBeLessThan(17_000);
     for (const t of tools) expect(t.description, t.name).not.toMatch(/vanishes on publish/);
     const instructions = client.getInstructions() ?? '';
     expect(instructions.length).toBeGreaterThan(200);
