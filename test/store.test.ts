@@ -189,3 +189,23 @@ describe('sb_store checkout', () => {
     await close();
   });
 });
+
+describe('the seeded documents are placeholders, not values', () => {
+  it('mints fresh node ids on every run, so two checkouts share none', async () => {
+    const ids = async () => {
+      const { f, calls } = storefront();
+      const { client, close } = await clientOver(f);
+      await client.callTool({ name: 'sb_store', arguments: { action: 'checkout', dry_run: false } });
+      await close();
+      const page = calls.find((c) => c.path.endsWith('/pages'))!;
+      return new Set(Object.keys((page.body!.document as { nodes: object }).nodes));
+    };
+    const [a, b] = [await ids(), await ids()];
+    expect(a.size).toBeGreaterThan(0);
+    // The generated file carries stable `ckp_1` placeholders so codegen produces
+    // no diff. A placeholder that reached the platform would make every checkout
+    // page on every site share its node ids.
+    expect([...a].some((id) => id.startsWith('ckp_'))).toBe(false);
+    expect([...a].filter((id) => b.has(id))).toEqual([]);
+  });
+});

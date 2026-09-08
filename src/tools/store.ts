@@ -33,6 +33,7 @@ import { text } from '../mcp/response.js';
 import { request, redact } from '../transport/http.js';
 import { siteToken } from './credentialpick.js';
 import { siteFor, type ToolContext } from './context.js';
+import { genId } from '../domains/site/ids.js';
 import {
   CHECKOUT_FORM,
   CHECKOUT_FORM_DOCUMENT,
@@ -129,9 +130,11 @@ function fillDocument(
     })),
   ];
 
-  const doc = JSON.parse(JSON.stringify(CHECKOUT_FORM_DOCUMENT)) as {
-    nodes: Record<string, { specials?: Record<string, unknown> }>;
-  };
+  const doc = withFreshIds(
+    JSON.parse(JSON.stringify(CHECKOUT_FORM_DOCUMENT)) as {
+      nodes: Record<string, { data?: { type?: string }; specials?: Record<string, unknown> }>;
+    },
+  );
   for (const node of Object.values(doc.nodes)) {
     if (node.specials?.name === 'payment_method') {
       node.specials.methods = methods;
@@ -146,8 +149,31 @@ function fillDocument(
   return { document: doc, methods, shipping };
 }
 
+/**
+ * Fresh node ids for a seeded document.
+ *
+ * The generated documents carry STABLE placeholder ids (`ckf_1`, `ckp_1`) so
+ * that re-running codegen produces no diff. Placeholders are not values: the
+ * editor mints an id per node at drop time, and two checkouts built by this tool
+ * must be as unrelated as two built by hand. Longest first, so one id is never
+ * rewritten inside another.
+ */
+function withFreshIds<T extends { nodes: Record<string, { data?: { type?: string } }> }>(doc: T): T {
+  const map = new Map<string, string>();
+  for (const [id, node] of Object.entries(doc.nodes)) {
+    map.set(id, genId(node?.data?.type ?? 'node'));
+  }
+  let json = JSON.stringify(doc);
+  for (const [from, to] of [...map].sort((a, b) => b[0].length - a[0].length)) {
+    json = json.split(from).join(to);
+  }
+  return JSON.parse(json) as T;
+}
+
 function pageDocumentFor(formId: string, headline: string): unknown {
-  const json = JSON.stringify(CHECKOUT_PAGE_DOCUMENT)
+  const json = JSON.stringify(
+    withFreshIds(CHECKOUT_PAGE_DOCUMENT as { nodes: Record<string, { data?: { type?: string } }> }),
+  )
     .split(JSON.stringify(FORM_ID_SENTINEL).slice(1, -1))
     .join(formId)
     .split(HEADLINE_SENTINEL)

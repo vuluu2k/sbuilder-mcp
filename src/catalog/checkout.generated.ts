@@ -14,26 +14,26 @@ export const CHECKOUT_FORM = {
 } as const;
 
 export const CHECKOUT_FORM_DOCUMENT = {
-  "root_node_id": "fo_3a8e8ca2",
+  "root_node_id": "ckf_1",
   "nodes": {
-    "fo_3a8e8ca2": {
-      "id": "fo_3a8e8ca2",
+    "ckf_1": {
+      "id": "ckf_1",
       "data": {
         "type": "form",
         "parent": null,
         "nodes": [
-          "fo_1ca2f465",
-          "fo_ec160487",
-          "fo_770f4b11",
-          "fo_6b07131f",
-          "fo_2bc2b2a0",
-          "fo_28c0c1e5",
-          "fo_01a9844b",
-          "fo_357d821a",
-          "fo_f49f5167",
-          "fo_b0c75cd8",
-          "fo_f1a5ef7e",
-          "fo_157f628c"
+          "ckf_2",
+          "ckf_3",
+          "ckf_4",
+          "ckf_5",
+          "ckf_6",
+          "ckf_7",
+          "ckf_8",
+          "ckf_9",
+          "ckf_10",
+          "ckf_11",
+          "ckf_12",
+          "ckf_13"
         ],
         "isCanvas": false,
         "hidden": false,
@@ -56,11 +56,11 @@ export const CHECKOUT_FORM_DOCUMENT = {
       "events": [],
       "bindings": []
     },
-    "fo_1ca2f465": {
-      "id": "fo_1ca2f465",
+    "ckf_2": {
+      "id": "ckf_2",
       "data": {
         "type": "form-title",
-        "parent": "fo_3a8e8ca2",
+        "parent": "ckf_1",
         "nodes": [],
         "isCanvas": false,
         "hidden": false,
@@ -90,11 +90,11 @@ export const CHECKOUT_FORM_DOCUMENT = {
       "events": [],
       "bindings": []
     },
-    "fo_ec160487": {
-      "id": "fo_ec160487",
+    "ckf_3": {
+      "id": "ckf_3",
       "data": {
         "type": "form-text",
-        "parent": "fo_3a8e8ca2",
+        "parent": "ckf_1",
         "nodes": [],
         "isCanvas": false,
         "hidden": false,
@@ -130,11 +130,11 @@ export const CHECKOUT_FORM_DOCUMENT = {
       "events": [],
       "bindings": []
     },
-    "fo_770f4b11": {
-      "id": "fo_770f4b11",
+    "ckf_4": {
+      "id": "ckf_4",
       "data": {
         "type": "form-text",
-        "parent": "fo_3a8e8ca2",
+        "parent": "ckf_1",
         "nodes": [],
         "isCanvas": false,
         "hidden": false,
@@ -170,11 +170,11 @@ export const CHECKOUT_FORM_DOCUMENT = {
       "events": [],
       "bindings": []
     },
-    "fo_6b07131f": {
-      "id": "fo_6b07131f",
+    "ckf_5": {
+      "id": "ckf_5",
       "data": {
         "type": "form-text",
-        "parent": "fo_3a8e8ca2",
+        "parent": "ckf_1",
         "nodes": [],
         "isCanvas": false,
         "hidden": false,
@@ -210,11 +210,11 @@ export const CHECKOUT_FORM_DOCUMENT = {
       "events": [],
       "bindings": []
     },
-    "fo_2bc2b2a0": {
-      "id": "fo_2bc2b2a0",
+    "ckf_6": {
+      "id": "ckf_6",
       "data": {
         "type": "form-address",
-        "parent": "fo_3a8e8ca2",
+        "parent": "ckf_1",
         "nodes": [],
         "isCanvas": false,
         "hidden": false,
@@ -253,11 +253,11 @@ export const CHECKOUT_FORM_DOCUMENT = {
       "events": [],
       "bindings": []
     },
-    "fo_28c0c1e5": {
-      "id": "fo_28c0c1e5",
+    "ckf_7": {
+      "id": "ckf_7",
       "data": {
         "type": "form-address",
-        "parent": "fo_3a8e8ca2",
+        "parent": "ckf_1",
         "nodes": [],
         "isCanvas": false,
         "hidden": false,
@@ -296,11 +296,11 @@ export const CHECKOUT_FORM_DOCUMENT = {
       "events": [],
       "bindings": []
     },
-    "fo_01a9844b": {
-      "id": "fo_01a9844b",
+    "ckf_8": {
+      "id": "ckf_8",
       "data": {
         "type": "form-address",
-        "parent": "fo_3a8e8ca2",
+        "parent": "ckf_1",
         "nodes": [],
         "isCanvas": false,
         "hidden": false,
@@ -339,11 +339,11 @@ export const CHECKOUT_FORM_DOCUMENT = {
       "events": [],
       "bindings": []
     },
-    "fo_357d821a": {
-      "id": "fo_357d821a",
+    "ckf_9": {
+      "id": "ckf_9",
       "data": {
         "type": "form-select",
-        "parent": "fo_3a8e8ca2",
+        "parent": "ckf_1",
         "nodes": [],
         "isCanvas": false,
         "hidden": false,
@@ -370,11 +370,11 @@ export const CHECKOUT_FORM_DOCUMENT = {
       "events": [],
       "bindings": []
     },
-    "fo_f49f5167": {
-      "id": "fo_f49f5167",
+    "ckf_10": {
+      "id": "ckf_10",
       "data": {
         "type": "form-text",
-        "parent": "fo_3a8e8ca2",
+        "parent": "ckf_1",
         "nodes": [],
         "isCanvas": false,
         "hidden": false,
@@ -410,11 +410,11 @@ export const CHECKOUT_FORM_DOCUMENT = {
       "events": [],
       "bindings": []
     },
-    "fo_b0c75cd8": {
-      "id": "fo_b0c75cd8",
+    "ckf_11": {
+      "id": "ckf_11",
       "data": {
         "type": "form-payment",
-        "parent": "fo_3a8e8ca2",
+        "parent": "ckf_1",
         "nodes": [],
         "isCanvas": false,
         "hidden": false,
@@ -441,11 +441,11 @@ export const CHECKOUT_FORM_DOCUMENT = {
       "events": [],
       "bindings": []
     },
-    "fo_f1a5ef7e": {
-      "id": "fo_f1a5ef7e",
+    "ckf_12": {
+      "id": "ckf_12",
       "data": {
         "type": "form-text",
-        "parent": "fo_3a8e8ca2",
+        "parent": "ckf_1",
         "nodes": [],
         "isCanvas": false,
         "hidden": false,
@@ -481,11 +481,11 @@ export const CHECKOUT_FORM_DOCUMENT = {
       "events": [],
       "bindings": []
     },
-    "fo_157f628c": {
-      "id": "fo_157f628c",
+    "ckf_13": {
+      "id": "ckf_13",
       "data": {
         "type": "form-submit",
-        "parent": "fo_3a8e8ca2",
+        "parent": "ckf_1",
         "nodes": [],
         "isCanvas": false,
         "hidden": false,
@@ -512,15 +512,15 @@ export const CHECKOUT_FORM_DOCUMENT = {
 
 export const CHECKOUT_PAGE_DOCUMENT = {
   "schema_version": 2,
-  "root_node_id": "ROOT",
+  "root_node_id": "ckp_1",
   "nodes": {
-    "ROOT": {
-      "id": "ROOT",
+    "ckp_1": {
+      "id": "ckp_1",
       "data": {
         "type": "root",
         "parent": null,
         "nodes": [
-          "fs_cdd9a1ef"
+          "ckp_2"
         ],
         "isCanvas": true,
         "hidden": false,
@@ -533,19 +533,19 @@ export const CHECKOUT_PAGE_DOCUMENT = {
       "events": [],
       "bindings": []
     },
-    "fs_cdd9a1ef": {
-      "id": "fs_cdd9a1ef",
+    "ckp_2": {
+      "id": "ckp_2",
       "data": {
         "type": "flex-section",
-        "parent": "ROOT",
+        "parent": "ckp_1",
         "nodes": [
-          "he_fda05c23",
-          "ca_6bc3a4a6",
-          "ca_8c4f1fdc",
-          "ca_eb568367",
-          "ca_5d2ab41d",
-          "ca_334f8807",
-          "fo_51c4bd2e"
+          "ckp_3",
+          "ckp_4",
+          "ckp_5",
+          "ckp_6",
+          "ckp_7",
+          "ckp_8",
+          "ckp_9"
         ],
         "isCanvas": true,
         "hidden": false,
@@ -568,11 +568,11 @@ export const CHECKOUT_PAGE_DOCUMENT = {
       "events": [],
       "bindings": []
     },
-    "he_fda05c23": {
-      "id": "he_fda05c23",
+    "ckp_3": {
+      "id": "ckp_3",
       "data": {
         "type": "heading",
-        "parent": "fs_cdd9a1ef",
+        "parent": "ckp_2",
         "nodes": [],
         "isCanvas": false,
         "hidden": false,
@@ -594,11 +594,11 @@ export const CHECKOUT_PAGE_DOCUMENT = {
       "events": [],
       "bindings": []
     },
-    "ca_6bc3a4a6": {
-      "id": "ca_6bc3a4a6",
+    "ckp_4": {
+      "id": "ckp_4",
       "data": {
         "type": "cart-total",
-        "parent": "fs_cdd9a1ef",
+        "parent": "ckp_2",
         "nodes": [],
         "isCanvas": false,
         "hidden": false,
@@ -625,11 +625,11 @@ export const CHECKOUT_PAGE_DOCUMENT = {
       "events": [],
       "bindings": []
     },
-    "ca_8c4f1fdc": {
-      "id": "ca_8c4f1fdc",
+    "ckp_5": {
+      "id": "ckp_5",
       "data": {
         "type": "cart-total",
-        "parent": "fs_cdd9a1ef",
+        "parent": "ckp_2",
         "nodes": [],
         "isCanvas": false,
         "hidden": false,
@@ -656,11 +656,11 @@ export const CHECKOUT_PAGE_DOCUMENT = {
       "events": [],
       "bindings": []
     },
-    "ca_eb568367": {
-      "id": "ca_eb568367",
+    "ckp_6": {
+      "id": "ckp_6",
       "data": {
         "type": "cart-total",
-        "parent": "fs_cdd9a1ef",
+        "parent": "ckp_2",
         "nodes": [],
         "isCanvas": false,
         "hidden": false,
@@ -687,11 +687,11 @@ export const CHECKOUT_PAGE_DOCUMENT = {
       "events": [],
       "bindings": []
     },
-    "ca_5d2ab41d": {
-      "id": "ca_5d2ab41d",
+    "ckp_7": {
+      "id": "ckp_7",
       "data": {
         "type": "cart-total",
-        "parent": "fs_cdd9a1ef",
+        "parent": "ckp_2",
         "nodes": [],
         "isCanvas": false,
         "hidden": false,
@@ -718,11 +718,11 @@ export const CHECKOUT_PAGE_DOCUMENT = {
       "events": [],
       "bindings": []
     },
-    "ca_334f8807": {
-      "id": "ca_334f8807",
+    "ckp_8": {
+      "id": "ckp_8",
       "data": {
         "type": "cart-total",
-        "parent": "fs_cdd9a1ef",
+        "parent": "ckp_2",
         "nodes": [],
         "isCanvas": false,
         "hidden": false,
@@ -749,11 +749,11 @@ export const CHECKOUT_PAGE_DOCUMENT = {
       "events": [],
       "bindings": []
     },
-    "fo_51c4bd2e": {
-      "id": "fo_51c4bd2e",
+    "ckp_9": {
+      "id": "ckp_9",
       "data": {
         "type": "form",
-        "parent": "fs_cdd9a1ef",
+        "parent": "ckp_2",
         "nodes": [],
         "isCanvas": false,
         "hidden": false,

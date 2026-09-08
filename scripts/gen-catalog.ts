@@ -743,7 +743,7 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = ${JSON.stringify(
     console.error('no checkout form template — has editor/src/element/formTemplates.ts moved?');
     process.exit(1);
   }
-  const checkoutFormDoc = formTpl.buildTemplateDocument(tpl);
+  const checkoutFormDoc = stableIds(formTpl.buildTemplateDocument(tpl), 'ckf');
   const seeded = Object.values(checkoutFormDoc.nodes).map((n) => n.specials?.name);
   for (const required of ['payment_method', 'shipping_method']) {
     if (!seeded.includes(required)) {
@@ -752,7 +752,12 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = ${JSON.stringify(
     }
   }
   const FORM_ID_SENTINEL = '__SB_CHECKOUT_FORM_ID__';
-  const checkoutPageDoc = pageSeed.buildCheckoutPageDocument(FORM_ID_SENTINEL, '__SB_HEADLINE__');
+  const checkoutPageDoc = stableIds(
+    pageSeed.buildCheckoutPageDocument(FORM_ID_SENTINEL, '__SB_HEADLINE__') as {
+      nodes: Record<string, unknown>;
+    },
+    'ckp',
+  );
   const pageJson = JSON.stringify(checkoutPageDoc);
   if (pageJson.split(FORM_ID_SENTINEL).length - 1 !== 1) {
     console.error('the checkout page seed no longer carries exactly one form id');
@@ -817,6 +822,29 @@ export const CHECKOUT_TEXT = ${JSON.stringify(checkoutText, null, 2)} as const;
       `${Object.keys(spec.definitions ?? {}).length} definitions, ` +
       `${withBody.filter((o) => !o.bodyDescribed).length}/${withBody.length} with an undescribed body`,
   );
+}
+
+/**
+ * Rewrite a seeded document's node ids to stable ones.
+ *
+ * `createNode` mints a random id per node, so re-running codegen produced a file
+ * that differed in every id and nothing else — 82 lines of diff on a generator
+ * whose input had not changed, which trains a reader to skip the diff. The order
+ * of `nodes` is creation order and is deterministic, so numbering by it is too.
+ *
+ * These ids are a placeholder, not a value: `sb_store` mints fresh ones on every
+ * run, exactly as the editor does, so two checkouts never share a node id.
+ */
+function stableIds<T extends { nodes: Record<string, unknown> }>(doc: T, prefix: string): T {
+  const map = new Map<string, string>();
+  let n = 0;
+  for (const id of Object.keys(doc.nodes)) map.set(id, `${prefix}_${++n}`);
+  let json = JSON.stringify(doc);
+  // Longest first, so one id is never rewritten inside another.
+  for (const [from, to] of [...map].sort((a, b) => b[0].length - a[0].length)) {
+    json = json.split(from).join(to);
+  }
+  return JSON.parse(json) as T;
 }
 
 await main();
