@@ -153,6 +153,13 @@ function capturePage(limits: { maxSections: number; maxImages: number; maxTextCh
    * result ten deep for nothing.
    */
   const leaves = (root: El): Captured[] => {
+    const walkChildren = (el: El): Captured[] => {
+      const kids: Captured[] = [];
+      for (const child of Array.from(el.children)) {
+        for (const c of walk(child)) kids.push(c);
+      }
+      return kids;
+    };
     const walk = (el: El): Captured[] => {
       // ONE BOUND, on the whole import. There used to be a second, per section,
       // and it kept doing the same wrong job under a new number: a page whose
@@ -219,6 +226,20 @@ function capturePage(limits: { maxSections: number; maxImages: number; maxTextCh
           taken.nodes++;
           return [{ kind: 'button', variant: 'cta', text, ...(href ? { href: abs(href) } : {}) }];
         }
+        // A LINK WITH MARKUP INSIDE IT IS STILL A LINK. `<a><span>Docs</span></a>`
+        // has children, so it fell through to the child walk — and when those
+        // children produced nothing renderable (an icon font's ligature, a
+        // decorative span) the link's words went with them. Same shape as the
+        // text fallback below, and for the same reason: offer your own content
+        // only when nothing inside offered any.
+        const inner = walkChildren(el);
+        if (inner.length > 0) return inner;
+        if (text) {
+          const href = el.getAttribute('href');
+          taken.nodes++;
+          return [{ kind: 'button', variant: 'link', text, ...(href ? { href: abs(href) } : {}) }];
+        }
+        return [];
       }
       if (tag === 'UL' || tag === 'OL') {
         const items = Array.from(el.querySelectorAll('li'))
@@ -235,10 +256,7 @@ function capturePage(limits: { maxSections: number; maxImages: number; maxTextCh
         return [{ kind: 'text', text }];
       }
 
-      const kids: Captured[] = [];
-      for (const child of Array.from(el.children)) {
-        for (const c of walk(child)) kids.push(c);
-      }
+      const kids = walkChildren(el);
 
       if (kids.length > 0) {
         const cs = getComputedStyle(el);
