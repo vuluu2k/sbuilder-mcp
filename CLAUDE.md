@@ -782,6 +782,19 @@ that accounts for them.
   non-hierarchical base (a `data:` page), and a throw inside `evaluate` kills the whole
   capture rather than one link — so URL resolution falls back to the raw value.
 
+- **`shoot()` POOLS ITS BROWSER FOR THE PROCESS LIFETIME, and a caller that forgets
+  `closeBrowser()` never exits.** The pooling is deliberate — a vision loop shoots constantly
+  and must not pay a launch each time — but the cost lands on every other call site, and there
+  was a `beforeExit` handler that looked like it covered them and could not. `beforeExit` runs
+  when the event loop DRAINS, and an open browser connection is precisely what stops it
+  draining: in the one situation the handler described it was unreachable, and in the other it
+  had nothing to do. Measured: a script that took one screenshot and returned was still alive
+  twenty seconds later, and two such scripts were killed by the OS for memory during this
+  repo's own work. `playwright-core` exposes no `browser.process()` for `launch()`, so there is
+  nothing to `unref` and no way to make the handler reachable — it is gone, and the contract is
+  written down instead. SIGINT/SIGTERM still close Chrome, which is the path the stdio server
+  actually takes.
+
 ## The five traps
 
 Each fails SILENTLY. Each is encoded in `src/domains/site/traps.ts` (trap 5 in
