@@ -401,6 +401,20 @@ Not taste — every rule below is a defect that SHIPPED in this repo's own store
 and each names the check that would have caught it. The `sbuilder-site-design` skill carries
 them as a checklist at the moment the work starts.
 
+**Before any of them: a design source outranks invention.** If the work has a Figma file,
+read it — the MCP must be AUTHENTICATED first (unauthenticated it exposes only
+`authenticate`), `figma-design-to-code` is a mandatory load before `get_design_context`, and
+`figma-use` before `use_figma`. Read VARIABLES AND STYLES, never a screenshot: the file
+carries the token, its name, its variants and its hover value; a picture carries an
+approximation of one colour. Same order for a Stitch design, and verify its tools are
+actually exposed in the session before planning around them. With no source you are the
+designer, and the professional move is to decide the token set FIRST and write it down, so
+every later section has something to obey.
+
+That translation is lossy in known places: a Figma frame is ONE width and says nothing about
+390; and satellites, the field-skin keys, the cart drawer and every empty state exist in no
+design file at all — they are exactly the surfaces that shipped platform-grey here.
+
 0. **Read the page's pattern before you add to it, and obey it.** A page already answers
    what the accent is, how round a button is, how much air a section gets — and a section
    that answers differently does not read as a different section, it reads as a different
@@ -456,6 +470,16 @@ them as a checklist at the moment the work starts.
    media asset whose name was not in the new set took the site's 54 Roboto font files with
    it. They were recoverable — `POST /api/v1/media/{id}/restore` — and only because the
    platform soft-deletes.
+
+### What separates a real site from a generated one
+
+Six checkable things, all missing from the first pass here: a hover state on every
+interactive element and a selected state that looks selected (`sb_set` takes `state`); a
+designed empty state, since an empty cart is the most-visited one on a store; about four type
+sizes rather than a fifth that differs by 2px; a spacing scale reused rather than guessed per
+section; copy in the shopper's language on EVERY surface, the drawer and the submit button
+included; and one accent doing one job, because an accent on the button and the price and the
+active link points at nothing.
 
 ### Judge the page from the right artifact
 

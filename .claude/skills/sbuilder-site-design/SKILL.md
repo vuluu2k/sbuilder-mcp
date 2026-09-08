@@ -1,12 +1,88 @@
 ---
 name: sbuilder-site-design
-description: The design contract for building a storefront with the sb_* tools — the three widths, the responsive cascade's tail, the satellites that hold an element's look, the form's two-level field skin, and which artifact to judge a page from. Triggers when designing or editing pages through sb_add / sb_set / sb_look / sb_review, or when a rendered page looks wrong.
+description: The design contract for building a storefront with the sb_* tools — where the design comes from (a Figma or Stitch source outranks invention), what separates a real site from a generated one, the three widths, the responsive cascade's tail, the satellites that hold an element's look, the form's two-level field skin, and which artifact to judge a page from. Triggers when designing or editing pages through sb_add / sb_set / sb_look / sb_review, when porting a Figma or Stitch design onto a site, or when a rendered page looks wrong.
 ---
 
 # Designing a site with the `sb_*` tools
 
 Every rule here is a defect that SHIPPED in this repo's own storefront build. None of them
 is taste. Each names the check that would have caught it.
+
+## Where the design comes from
+
+**A design source outranks your invention. Always look for one first.**
+
+A professional does not open a blank canvas and start choosing hex codes. They open the
+file the design already lives in, read the tokens out of it, and spend their judgement on
+the translation. Improvising a palette when the brand has one is not creativity, it is
+losing the brand.
+
+### If the work has a Figma file
+
+The Figma MCP is a real design source, not a picture. Check it is **authenticated** before
+you promise anything — an unauthenticated server exposes only `authenticate` /
+`complete_authentication`, and its real tools appear after the OAuth round trip.
+
+Two of its tools have a MANDATORY skill to load first, and skipping it causes failures that
+are hard to debug:
+
+| You want | Load first | Then call |
+| --- | --- | --- |
+| Read a design to build from | `figma-design-to-code` | `get_design_context` |
+| Write anything into Figma | `figma-use` | `use_figma` |
+| Animation / motion | `figma-implement-motion` | `get_motion_context` |
+| Map a component to code | `figma-code-connect` | — |
+
+Read **variables and styles**, not a screenshot. A screenshot gives you an approximation of
+one colour and none of the states; the file gives you the token, its name, every variant, and
+the hover and disabled values you would otherwise never see. A design system's own naming is
+also the naming your page should keep.
+
+### If the work has a Google Stitch design
+
+Same rule, same order: read it, derive tokens, then build. Verify the server's tools are
+actually exposed in THIS session before planning around them — a server can be connected and
+still surface nothing here, in which case say so rather than inventing a workflow.
+
+### If there is no design source
+
+Then you are the designer, and the professional move is to **decide the token set FIRST and
+write it down**, before the first section — a palette with named roles, one type scale, one
+spacing step, one radius per shape class. Every later section then has something to obey,
+which is exactly what rule 0 asks the next agent to read back off the page.
+
+### The translation is lossy in known places — mind these
+
+- **A Figma frame is one width.** A 1440 frame says nothing about 390, and the platform's
+  cascade has a tail that will bite you (rules 1–3). Design tokens port; layout decisions do
+  not.
+- **Figma has no counterpart for what this platform hides.** Satellites, the form's field-skin
+  config keys, the cart drawer overlay and every repeater's empty state exist in no design
+  file. They are the surfaces that shipped platform-grey on a rose-and-ink storefront in this
+  repo's own build. Port your tokens onto them by hand (rules 0, 4, 5).
+- **Figma px are CSS px at 1×**, and its auto-layout maps onto flex — but `sb_set` writes per
+  breakpoint, so one frame is one slot, not the whole answer.
+
+## What separates a real site from a generated one
+
+Six things, all checkable, all missing from the first pass of this repo's own build. None is
+a matter of taste — each is something a shopper meets.
+
+1. **Every interactive element has a hover state, and the selected one looks selected.**
+   `sb_set` takes `state`. A page where nothing responds to the pointer reads as a mockup.
+2. **The empty state is designed, not defaulted.** Every repeater owns an `emptyStateId`
+   satellite that ships English copy and `#d4d4d4` icons until you touch it. A shopper WILL
+   see it — an empty cart is the most-visited empty state on a store.
+3. **Fewer type sizes, not more.** A page needs about four: display, section heading, body,
+   caption. A fifth size that differs by 2px from a neighbour is noise a reader feels and
+   cannot name.
+4. **Spacing is a scale, not a series of guesses.** Pick the steps once and reuse them. Two
+   sections 64px and 68px apart is worse than both at 64.
+5. **Copy is in the shopper's language, everywhere.** Including the drawer, the empty states,
+   the submit button and the payment card descriptions — the surfaces that come from the
+   platform in English and are never reviewed (rule 0).
+6. **One accent, used for one job.** If the primary button, the price and the active link are
+   all the accent, the accent has stopped pointing at anything.
 
 ## Before you call a page done
 
