@@ -689,6 +689,20 @@ that accounts for them.
   an import is rare, slow and runs untrusted script, and coupling that to the tool a vision
   loop calls every few hundred milliseconds is how the fast path gets slow.
 
+- **A FUNCTION PASSED TO `page.evaluate` IS SERIALIZED, so anything it closes over is not
+  there.** It compiles, every pure test passes, and it dies on the first real page. Measured:
+  `capturePage` closed over a module-level `const HEADINGS` and threw
+  `ReferenceError: HEADINGS is not defined` — in a file that already carried a comment saying
+  exactly that about itself. The rule is therefore mechanical rather than a matter of care:
+  everything such a function uses is either declared INSIDE it or passed as an argument
+  (`settleDom` takes `{quiet, cap}`; the overlay opener takes `id`), and every evaluate site
+  has a test behind `SB_BROWSER_TEST=1`, because nothing cheaper can catch it. A sweep after
+  the fix found `shoot.ts`'s five sites already clean.
+
+  The same run found the second half of the pair: `new URL(rel, base)` THROWS on a
+  non-hierarchical base (a `data:` page), and a throw inside `evaluate` kills the whole
+  capture rather than one link — so URL resolution falls back to the raw value.
+
 ## The five traps
 
 Each fails SILENTLY. Each is encoded in `src/domains/site/traps.ts` (trap 5 in
