@@ -63,6 +63,30 @@ describe('codegen refuses a checkout somebody is mid-edit in', () => {
     expect(r.stderr).not.toMatch(/uncommitted changes/);
   });
 
+  // AN UNPUSHED COMMIT IS JUST AS ABSENT AS AN UNCOMMITTED EDIT, and the first
+  // version of this guard had a hole exactly the size of the next thing that
+  // happened: a `hoverSwapImage` feature sat committed on a local main, so the
+  // tree was clean and the check waved it through. The catalog is read against
+  // DEPLOYED platforms.
+  it('refuses a commit the platform has not published', () => {
+    const git = (...a: string[]) => execFileSync('git', ['-C', repo, ...a], { encoding: 'utf8' });
+    execFileSync('git', ['-C', repo, 'checkout', '--', '.']);
+    // Give the fixture an upstream to be ahead of.
+    const remote = mkdtempSync(join(tmpdir(), 'wbremote-'));
+    execFileSync('git', ['init', '--bare', '-q', remote]);
+    git('remote', 'add', 'origin', remote);
+    git('push', '-q', '-u', 'origin', 'HEAD');
+    expect(run(['--check']).stderr).not.toMatch(/not published/);
+
+    writeFileSync(join(repo, 'schema/src/a.ts'), 'export const a = 9;\n');
+    git('commit', '-qam', 'feat: a thing nobody has deployed');
+    const r = run(['--check']);
+    expect(r.status).toBe(1);
+    expect(r.stderr).toMatch(/not published/);
+    expect(r.stderr).toMatch(/a thing nobody has deployed/);
+    rmSync(remote, { recursive: true, force: true });
+  });
+
   it('honours --dirty, and says so rather than going quiet', () => {
     writeFileSync(join(repo, 'schema/src/a.ts'), 'export const a = 3;\n');
     const r = run(['--check', '--dirty']);

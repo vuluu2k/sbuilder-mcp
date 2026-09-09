@@ -380,18 +380,52 @@ function assertCommitted(repo: string): void {
     return; // not a git checkout, or no git — nothing to assert against
   }
   const dirty = out.split('\n').filter(Boolean);
-  if (!dirty.length) return;
+  if (dirty.length) {
+    refuse('has uncommitted changes in', dirty);
+  }
+
+  // AND AN UNPUSHED COMMIT IS JUST AS ABSENT AS AN UNCOMMITTED EDIT.
+  //
+  // The first version of this check stopped at the working tree, and the hole
+  // was exactly the size of the next thing that happened: a `hoverSwapImage`
+  // feature sat COMMITTED on a local main, unpushed, so the tree was clean and
+  // the guard waved it through. The catalog is published to npm and read against
+  // DEPLOYED platforms — an agent told about a config key no deployment has is
+  // in the same position as one told about a half-written element.
+  //
+  // Only when there IS an upstream to be ahead of. A detached worktree at
+  // origin/main has none, and that is the shape this check recommends.
+  let ahead: string[] = [];
+  try {
+    ahead = execFileSync(
+      'git',
+      ['-C', repo, 'log', '--oneline', '@{u}..HEAD', '--', ...read],
+      { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] },
+    )
+      .split('\n')
+      .filter(Boolean);
+  } catch {
+    ahead = []; // detached, or no upstream — nothing to be ahead of
+  }
+  if (ahead.length) {
+    refuse('has commits the platform has not published, touching', ahead);
+  }
+  return;
+  return;
+}
+
+function refuse(what: string, lines: string[]): never {
   console.error(
-    `WB_REPO has uncommitted changes in the ${read.length} directories this generator reads, ` +
-      'and the catalog it writes is committed and published:',
+    `WB_REPO ${what} the directories this generator reads, and the catalog it writes is ` +
+      'committed and published:',
   );
-  for (const line of dirty.slice(0, 12)) console.error(`  ${line}`);
-  if (dirty.length > 12) console.error(`  …and ${dirty.length - 12} more`);
+  for (const line of lines.slice(0, 12)) console.error(`  ${line}`);
+  if (lines.length > 12) console.error(`  …and ${lines.length - 12} more`);
   console.error(
-    'Point WB_REPO at a COMMITTED ref instead — the cheap way is a detached worktree:\n' +
+    'Point WB_REPO at a PUBLISHED ref instead — the cheap way is a detached worktree:\n' +
       '  git -C <web_builder> worktree add --detach /tmp/wb origin/main\n' +
       '  ln -s <web_builder>/node_modules /tmp/wb/node_modules   # and editor/, schema/, runtime/\n' +
-      'Pass --dirty to read the working tree on purpose.',
+      'Pass --dirty to read this checkout on purpose.',
   );
   process.exit(1);
 }

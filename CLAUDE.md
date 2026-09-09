@@ -65,7 +65,15 @@ afternoon: 107 → 108 elements and 484 → 486 operations while this repo sat s
 WB_REPO=/path/to/web_builder npm run codegen:check
 ```
 
-**Codegen now REFUSES a checkout with uncommitted changes** in the four directories it reads
+**Codegen now REFUSES a checkout that is not published** — uncommitted changes in the four
+directories it reads, OR commits those directories carry that the upstream does not have. The
+second half was added the day after the first, because the first had a hole exactly the size
+of the next thing that happened: a `hoverSwapImage` feature sat COMMITTED on a local main,
+unpushed, so the tree was clean and the check waved it through. The catalog is read against
+DEPLOYED platforms; an agent told about a config key no deployment has is in the same position
+as one told about a half-written element. A detached worktree has no upstream and is therefore
+never refused for it, which is the shape this check recommends. Originally, and still, for
+uncommitted changes
 (`schema/src`, `editor/src`, `server/render`, `server/docs`), naming the files and the worktree
 command. It had to become a check rather than another paragraph: the warning below was written
 after a `bundle-items` element went in from one concurrent session, and a `cart-count` element
@@ -316,13 +324,24 @@ that accounts for them.
   asked for, and every link authored to the requested one is dead.
 
 - **The OpenAPI document is not a complete map of the platform**, and `sb_api_call` is a
-  CLOSED LIST (`src/tools/api.ts:191`), so what it omits is UNREACHABLE. 34 operations carry
-  `@Router` annotations and are missing from the checked-in `swagger.json` (`swag init` has not
-  been re-run; `npm run codegen` CANNOT recover them — it reads that same file, and a no-diff
-  run is the evidence, not the all-clear). A further 41 merchant-facing routes carry no
-  annotation at all and are findable only through the route-map comment blocks in each
-  `internal/*/rest/*.go` — among them payment-gateway config, which is the fix for
-  `sb_review`'s own `payment` gap, and the private `pages/{pageId}` cluster.
+  CLOSED LIST (`src/tools/api.ts:191`), so what it omits is UNREACHABLE. **THE ANNOTATED HALF
+  OF THAT GAP IS NOW CLOSED, measured 2026-09-09: 486 `@Router` annotations, 486 operations in
+  the checked-in `swagger.json`, 486 in this catalog.** The 34 that used to be annotated and
+  missing came back when `swag init` was finally re-run, payment-gateway config among them.
+  Re-measure with the three counts rather than trusting this paragraph — a stale number here
+  sends somebody to fix something already fixed, which cost a session once:
+
+  ```bash
+  grep -rho '@Router' --include='*.go' server/internal | wc -l          # annotated
+  node -e "s=require('./server/docs/swagger.json');…"                   # in the document
+  node -e "require('sbuilder-mcp/dist/catalog/api.generated.js').SWAGGER_SOURCE"
+  ```
+
+  What remains unmeasured is the routes with NO annotation at all. The old count (41) was
+  never re-verified and is not repeated here: the dispatchers mount wildcard subtrees
+  (`/*rest`, `/site/*rest`) and each context routes internally, so there is no mechanical way
+  to enumerate them from the router, and the running server is in release mode with no route
+  table in its log.
 
   **AND A PUT NOW READS BEFORE IT WRITES, because that gap is the one with no route at all.**
   Page versions / history / restore exist on neither surface, so every whole-document replace
@@ -1135,9 +1154,18 @@ the drop-time contract (satellites and seeded content), the satellite-aware walk
 `sb_duplicate` defects it exposed, the compose warnings / publish skip / slug rename this
 client received and discarded, and three render rules a valid document can break. It added no
 tools. Its spec also records the two axes it deliberately did NOT take, so the measurements
-are not re-derived: REACH (75 operations unreachable, see the OpenAPI bullet above) and
-CAPABILITY (only 45 of 180 write operations declare a body; `PUT /settings` is a
-whole-document replace, so a partial body erases the store's configuration).
+are not re-derived. BOTH HAVE MOVED, and the Phase 7 numbers are kept only as the before:
+REACH was 75 operations unreachable and is now zero for the annotated surface (see the OpenAPI
+bullet above); CAPABILITY was 45 of 180 write operations declaring a body, and measured
+2026-09-09 is **276 write operations, 157 shaped, 119 not** — of which 64 are DELETEs that
+take no body and 14 are action endpoints with a verb tail. The genuinely risky remainder is
+**8 PUTs with no shape**, every one of them a whole-object replace an agent would have to
+guess: `/api/sites/{siteId}/roles/{roleId}`, `…/products/{productId}/categories`,
+`…/pages/{pageId}/default-template`, `…/sites/{siteId}/org`, `…/sites/{siteID}/preview`, the
+two app-version endpoints and `/_wb/account/course-note`. `sb_undo` cannot prepare an undo for
+any of them either, because it needs the shape to know which fields to carry back. The 33
+unshaped POSTs left over are almost entirely the SHOPPER's surface (`/_wb/account/*`,
+`/_wb/checkout/*`), webhooks and multipart uploads — not an agent's to call.
 
 Deferred with the seam left open: `expand`/`compact` sparse authoring (`createNode` already
 seeds from `meta.defaults`, so the write-path win is banked; the read-path inverse waits for
