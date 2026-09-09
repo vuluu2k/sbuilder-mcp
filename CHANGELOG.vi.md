@@ -6,6 +6,11 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.9.1] - 2026-09-09
+
+### Fixed
+- sb_set giờ từ chối ghi `config.stuckAfter` nếu giá trị sẽ bị renderer âm thầm bỏ qua — số âm, không hữu hạn, rỗng, hoặc được đặt trên một node không thể ghim — thay vì lưu, save rồi publish một ngưỡng mà runtime island không bao giờ đọc và lặng lẽ quay về đáp án tự động của nó.
+
 ## [0.9.0] - 2026-09-08
 
 ### Added

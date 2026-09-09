@@ -6,6 +6,11 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.9.1] - 2026-09-09
+
+### Fixed
+- sb_set now refuses a `config.stuckAfter` write the renderer would drop on the floor — a negative, non-finite, or empty value, or one set on a node that cannot pin — instead of silently storing, saving, and publishing a threshold the runtime island never reads and quietly falling back to its automatic answer.
+
 ## [0.9.0] - 2026-09-08
 
 ### Added
