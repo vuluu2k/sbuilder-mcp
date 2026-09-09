@@ -874,6 +874,34 @@ that accounts for them.
   overrides write PER BREAKPOINT** (`responsive[bp].states`), which both compilers had always
   read and only the editor never wrote.
 
+- **HOVER HAS TWO HOMES, AND THE OBVIOUS ONE IS WRONG FOR TWELVE ELEMENT TYPES.** The platform
+  grew a UNIVERSAL hover state in September 2026 alongside the pinned one
+  (`schema/src/hoverState.ts`, Go mirror `render/style/hover.go`): `states.hover` compiles to
+  `<self>:hover`, and `states.parentHover` to `<parent>:hover <self>`, both inside
+  `@media (hover:hover)`. But the universal compiler DELIBERATELY STANDS ASIDE for every element
+  whose meta declares a Hover variant of its own — twelve of them — and the meta's `storage`
+  field says where each of those actually keeps it. A `button` keeps it in `config.stateHover`, a
+  FLAT, BASE-ONLY map its own renderer compiles; the editor routes a hover edit there on purpose
+  ("a hover edit on a button must go on being the button's :hover rule",
+  `editor/src/trait/values.ts`). MEASURED on one publish of one page: `state:"hover"` on a
+  product card's dataset-block emitted `#card:hover{…}`; the identical write on the BUTTON inside
+  it emitted nothing, and writing the same values to `config.stateHover` produced the rule on the
+  next publish. Every hover this server had ever written onto a button was stored where no
+  compiler looks. `HOVER_HOMES` is generated from `storage`, and `sb_set` routes and says so.
+
+  **THE FIRST DIAGNOSIS OF THIS WAS WRONG, AND THE WAY IT WAS WRONG IS THE POINT.** Grepping the
+  renderers for `node.States` found only four files — none of them an element's own `css.go` —
+  so the conclusion was "no element compiles `states.hover`; the exclusion list is false for all
+  seven non-satellites". A probe that rendered one node per type and looked for the value in
+  `BundleCSS` disproved it: the filters and `text-dataset` DO paint, through shared helpers the
+  grep could not see, and a patch built on the grep would have emitted a SECOND rule for each of
+  them — exactly what the exclusion exists to prevent. The absence of a string is evidence about
+  the string, not about the behaviour; only rendering a node answers "does this paint".
+
+  What the probe DID find is one real platform gap: **`product-image-list` declares
+  `storage: 'node'` and nothing compiles its `states.hover`** — the one element that promises the
+  state slot and paints nothing from it.
+
 ## The five traps
 
 Each fails SILENTLY. Each is encoded in `src/domains/site/traps.ts` (trap 5 in

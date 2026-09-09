@@ -572,6 +572,53 @@ không đổi theo hover.
 
 ---
 
+
+### Hover có HAI nhà, và `states.hover` không phải lúc nào cũng là nhà đúng
+
+Nền tảng thêm trạng thái hover phổ quát bên cạnh trạng thái ghim, và cách hiểu hiển nhiên —
+"giờ hover là `states.hover`" — **sai với mười hai loại element** tự khai Hover variant: bộ biên
+dịch phổ quát cố ý đứng sang một bên với tất cả chúng. `sb_set` ghi mỗi cái vào đúng nhà mà meta
+của nó chỉ định, và báo lại khi nhà đó không phải state slot.
+
+| Cách gọi | Rơi vào | Render thành |
+| --- | --- | --- |
+| `state:"hover"` trên hầu hết element | `states.hover` | `@media (hover:hover){#self:hover{…}}` |
+| `state:"hover"` trên `button` | `config.stateHover` — phẳng, **chỉ base** | luật `:hover` của chính button |
+| `state:"hover"` trên filter, `text-dataset`, hay satellite (`tab-item`, `quantity-button`…) | `states.hover` | skin của chính nó, hoặc của CHỦ nó |
+| `state:"parentHover"` — phổ quát trên mọi element | `states.parentHover` | `@media (hover:hover){#parent:hover #self{…}}` |
+
+**Hiệu ứng thẻ mà mọi storefront đều có** là hàng 1 và hàng 4 hợp lại: rê chuột lên thẻ thì ảnh
+phóng nhẹ và nút mua nhanh hiện ra.
+
+```
+sb_set ds_card style base:true state:"hover"       { boxShadow: "0 8px 24px #0002", transform: "translateY(-3px)" }
+sb_set img_1   style base:true state:"parentHover" { transform: "scale(1.05)" }
+sb_set btn_add config                              { revealOnHover: true }
+sb_set btn_add style base:true state:"hover"       { backgroundColor: "<accent đậm hơn>" }   # → config.stateHover
+```
+
+**`parentHover` bám vào node CHA**, và ba trường hợp cấu trúc khiến nó không có gì để bám —
+`sb_set` từ chối và gọi tên từng cái thay vì lưu một luật không bao giờ khớp: SATELLITE (treo ở
+config của chủ, không render element nào để đặt tên), con trực tiếp của ROOT (con trỏ luôn nằm
+trong trang khi nó nằm trong cửa sổ), và node mồ côi.
+
+**`config.revealOnHover`** ẩn element cho tới khi hộp bao quanh được rê chuột — biên dịch thành
+opacity + visibility + pointer-events, không dùng `display`, nên transition được và không làm
+thẻ đổi kích thước ngay dưới con trỏ. Nó cần đúng host đó và bị từ chối nếu không có: nền tảng
+không sinh nửa nào, element sẽ cứ hiện.
+
+**Mọi luật hover nằm trong `@media (hover:hover)`.** Trên màn cảm ứng `:hover` bị "dính", nên
+thiết bị không con trỏ không khớp nửa nào của reveal và element đơn giản là luôn hiện. Đừng giấu
+thứ khách bắt buộc phải chạm tới sau hover.
+
+`hidden: true` là config key duy nhất một trạng thái hover dịch được (thành `display: none`), và
+chỉ nhận `true` — cùng giao kèo với trạng thái stuck.
+
+Một element đang hỏng ở phía nền tảng: `product-image-list` khai `storage: 'node'`, tức hover của
+nó thuộc về `states.hover`, và đo ngày 2026-09-09 thì **không gì compile nó cả**. `sb_set` vẫn ghi
+đúng chỗ meta chỉ định và kèm cảnh báo.
+
+---
 ### Ghim (pin) và trạng thái `stuck`
 
 `position: sticky` không tạo ra thay đổi nào mà CSS quan sát được khi nó bám — không có

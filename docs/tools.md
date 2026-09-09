@@ -594,6 +594,54 @@ vary by hover.
 
 ---
 
+
+### Hover has TWO homes, and `states.hover` is not always the one
+
+The platform grew a universal hover state alongside the pinned one, and the obvious reading —
+"hover is `states.hover` now" — is wrong for the twelve element types that declare a Hover
+variant of their own: the universal compiler deliberately stands aside for all of them.
+`sb_set` writes each one where its meta says its hover lives, and says so when that is not the
+state slot.
+
+| Call | Lands in | Rendered as |
+| --- | --- | --- |
+| `state:"hover"` on most elements | `states.hover` | `@media (hover:hover){#self:hover{…}}` |
+| `state:"hover"` on a `button` | `config.stateHover` — flat, **base-only** | the button's own `:hover` rule |
+| `state:"hover"` on a filter, `text-dataset`, or a satellite (`tab-item`, `quantity-button`…) | `states.hover` | that element's own skin, or its OWNER's |
+| `state:"parentHover"` — universal on every element | `states.parentHover` | `@media (hover:hover){#parent:hover #self{…}}` |
+
+**The card effect every storefront ships** is rows one and four together: hover the card, and
+the image zooms while a quick-add button appears.
+
+```
+sb_set ds_card style base:true state:"hover"       { boxShadow: "0 8px 24px #0002", transform: "translateY(-3px)" }
+sb_set img_1   style base:true state:"parentHover" { transform: "scale(1.05)" }
+sb_set btn_add config                              { revealOnHover: true }
+sb_set btn_add style base:true state:"hover"       { backgroundColor: "<darker accent>" }   # → config.stateHover
+```
+
+**`parentHover` keys off the node's PARENT**, and three structural cases give it nothing to key
+off — `sb_set` refuses each by name rather than storing a rule that never matches: a SATELLITE
+(it hangs off its owner's config and renders no element to name), a direct child of ROOT (the
+pointer is inside the page whenever it is inside the window), and an orphan.
+
+**`config.revealOnHover`** hides an element until the box around it is hovered — compiled to
+opacity + visibility + pointer-events, never `display`, so it can transition and never resizes
+the card under the pointer. It needs the same host and is refused without one: the platform
+emits neither half, and the element would simply stay visible.
+
+**Every hover rule sits behind `@media (hover:hover)`.** On a touch screen `:hover` latches, so
+a device with no pointer matches neither half of a reveal and the element is simply visible.
+Never put anything a shopper must reach behind hover alone.
+
+`hidden: true` is the one config key a hover state translates (to `display: none`), and only
+`true` — the same contract the stuck state has.
+
+One element is known broken upstream: `product-image-list` declares `storage: 'node'`, so its
+hover belongs in `states.hover`, and measured on 2026-09-09 nothing compiles it. `sb_set`
+writes it where the meta says and warns.
+
+---
 ### Pinning, and the `stuck` state
 
 `position: sticky` changes nothing observable when it engages — CSS has no `:stuck` — so the

@@ -26,6 +26,7 @@ import { globalWarning, restampPatches, RESPONSIVE_NOTICE } from '../domains/sit
 import { catalogMatches, traitsFor } from '../catalog/element-search.js';
 import { applyPatches, type Patch } from '../core/patch.js';
 import { stickyWarning } from '../domains/site/sticky.js';
+import { HOVER_STATE, hoverRoutingNote } from '../domains/site/hover.js';
 import type { LiveSession } from '../live/session.js';
 import type { Box } from '../vision/shoot.js';
 import { siteFor, type ToolContext } from './context.js';
@@ -381,6 +382,16 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
         batch.push({ id, namespace, keys: keys ?? {}, breakpoint: breakpoint as Breakpoint | undefined, base, state, unset });
       }
       const { patches, touched } = setMany(d, batch);
+      // WHERE A HOVER ACTUALLY WENT. Routing it silently would leave a caller
+      // who reads the node back looking for keys in a slot they never wrote to —
+      // and, for the elements with no compiler on either home, believing they
+      // had styled something.
+      const hoverNotes: Record<string, string> = {};
+      for (const e of batch) {
+        if (e.state !== HOVER_STATE || e.namespace !== 'style') continue;
+        const note = hoverRoutingNote(d.doc.nodes[e.id]?.data.type ?? '');
+        if (note) hoverNotes[e.id] = note;
+      }
       // THE STICKY WARNING IS COMPUTED AGAINST THE DOCUMENT AS IT WILL BE, so
       // the dry run and the real run say the same thing. A caller who is told
       // only after committing has already shipped a header that does not move.
@@ -412,6 +423,7 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
           dry_run: true,
           patches,
           ...(Object.keys(sw).length ? { warnings: sw } : {}),
+          ...(Object.keys(hoverNotes).length ? { hover: hoverNotes } : {}),
           ...(note ? { note } : {}),
         });
       }
@@ -424,9 +436,20 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
       }
       if (!edits) {
         const warn = warnings[batch[0].id];
-        return text({ set: touched[0].keys, rev: d.rev, ...(warn ? { warning: warn } : {}) });
+        const hv = hoverNotes[batch[0].id];
+        return text({
+          set: touched[0].keys,
+          rev: d.rev,
+          ...(warn ? { warning: warn } : {}),
+          ...(hv ? { hover: hv } : {}),
+        });
       }
-      return text({ set: touched, rev: d.rev, ...(Object.keys(warnings).length ? { warnings } : {}) });
+      return text({
+        set: touched,
+        rev: d.rev,
+        ...(Object.keys(warnings).length ? { warnings } : {}),
+        ...(Object.keys(hoverNotes).length ? { hover: hoverNotes } : {}),
+      });
     },
   );
 

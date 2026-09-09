@@ -96,6 +96,63 @@ function readInspector(traits: unknown): {
  * read with a regex rather than imported — importing it would drag Vue into a
  * build script for a single integer.
  */
+/**
+ * WHERE AN ELEMENT'S `hover` STATE HAS TO BE WRITTEN, per type.
+ *
+ * There is no single home, and assuming there was is the mistake this table
+ * closes. Twelve element types declare a Hover variant of their own, and the
+ * platform's universal hover state (`schema/src/hoverState.ts`) deliberately
+ * stands aside for all of them — so on those twelve, `states.hover` is written
+ * by nobody's compiler unless the element's own pipeline reads it.
+ *
+ * The meta says which, in one field, and it is the field to trust:
+ *
+ *   storage: 'node'   →  node.states.hover, compiled by the element's own CSS
+ *                        (a filter's option skin, a satellite's skin through its
+ *                        OWNER). Nothing to route — write the state slot.
+ *   (no storage)      →  config.stateHover, a FLAT, BASE-ONLY style map that the
+ *                        element's own css.go compiles into its `:hover` rule.
+ *                        This is where the editor puts a hover edit for these,
+ *                        deliberately: "a hover edit on a button must go on
+ *                        being the button's :hover rule" (editor trait/values.ts).
+ *
+ * MEASURED before this existed, on one publish of one page: `state:"hover"` on a
+ * product card's dataset-block emitted `@media (hover:hover){#card:hover{…}}`;
+ * the identical write on the BUTTON inside it emitted nothing at all. Writing the
+ * same values to `config.stateHover` produced `#btn:hover{background-color:…}`
+ * on the next publish. Every hover this server had written onto a button was
+ * stored where no compiler looks.
+ *
+ * Derived from `storage` rather than from grepping the Go renderers, which is
+ * the mistake the first draft of this function made: it concluded that no
+ * element compiles `states.hover` because none names it directly, and missed
+ * that the filters and text-dataset reach it through shared helpers. A probe
+ * that rendered one node per type and looked for the value in the bundle is what
+ * corrected it — and is why `product-image-list` is flagged below rather than
+ * assumed well.
+ */
+function readHoverHomes(
+  types: string[],
+  registry: { ELEMENTS: Record<string, { states?: unknown }> },
+): Record<string, { home: 'legacy' | 'state' }> {
+  const out: Record<string, { home: 'legacy' | 'state' }> = {};
+  for (const type of types) {
+    const states = registry.ELEMENTS[type]?.states as
+      | { variants?: Array<{ value?: string }>; storage?: string }
+      | undefined;
+    if (!states?.variants?.some((v) => v?.value === 'hover')) continue; // universal state serves it
+    out[type] = { home: states.storage === 'node' ? 'state' : 'legacy' };
+  }
+  // Twelve at the 2026-09-09 regen, five of them on the legacy map. A table that
+  // silently empties would route every hover back through the universal state
+  // and re-open the defect this closes.
+  if (Object.keys(out).length < 8) {
+    console.error(`only ${Object.keys(out).length} elements declare a Hover variant — is WB_REPO stale?`);
+    process.exit(1);
+  }
+  return out;
+}
+
 function readDocSchemaVersion(repo: string): number {
   const src = readFileSync(resolve(repo, 'editor/src/theme/legacyScopes.ts'), 'utf8');
   const m = /export const DOC_SCHEMA_VERSION\s*=\s*(\d+)/.exec(src);
@@ -675,6 +732,8 @@ export const API_DEFINITIONS: Record<string, unknown> = ${JSON.stringify(
     process.exit(1);
   }
 
+  const hoverHomes = readHoverHomes(types, registry as never);
+
   const docVersion = readDocSchemaVersion(repo);
   const bindingSources = readBindingSources(repo);
   const boundSpecials = readBoundSpecials(repo);
@@ -698,6 +757,8 @@ export const SATELLITE_RULES: Record<string, SatelliteRule[]> = ${JSON.stringify
 export const ELEMENT_SEEDS: Record<string, NodeSeed[]> = ${JSON.stringify(elementSeeds, null, 2)};
 
 export const FIRST_CHILD_ONLY: string[] = ${JSON.stringify(firstChildOnly, null, 2)};
+
+export const HOVER_HOMES: Record<string, { home: 'legacy' | 'state' }> = ${JSON.stringify(hoverHomes, null, 2)};
 `;
   emit(resolve(process.cwd(), 'src/catalog/elements.generated.ts'), elementsOut);
   console.error(

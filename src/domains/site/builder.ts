@@ -18,6 +18,15 @@ import {
   requireStuckHost,
   stickySeeds,
 } from './sticky.js';
+import {
+  HOVER_STATE,
+  PARENT_HOVER_STATE,
+  hoverHome,
+  legacyHoverPath,
+  refuseHoverConfig,
+  refuseReveal,
+  requireHoverHost,
+} from './hover.js';
 import { genId } from './ids.js';
 import type { PageDoc } from './document.js';
 
@@ -287,7 +296,12 @@ export function setKeys(
   // different ways without a word — see sticky.ts. Checked here rather than in
   // the state branch because it is written on the node that PINS, at base or at
   // a breakpoint, never inside a stuck slot.
-  if (namespace === 'config') refuseStuckAfter(doc.doc, id, keys);
+  if (namespace === 'config') {
+    refuseStuckAfter(doc.doc, id, keys);
+    // The reveal is a BASE-level config key with a host precondition, so it is
+    // checked here rather than in the state branch — it is not a state at all.
+    refuseReveal(doc.doc, id, keys);
+  }
 
   // The paths `keys` and `unset` share. Computed once so a removal can never
   // land somewhere a write would not have.
@@ -343,6 +357,34 @@ export function setKeys(
     if (opts.state === STUCK_STATE && Object.keys(keys).length) {
       requireStuckHost(doc.doc, id);
       if (namespace === 'config') refuseStuckConfig(keys);
+    }
+    // THE PARENT-HOVER STATE has a host precondition of its own, and a different
+    // one: not "something pins above me" but "I am a real child of a real box".
+    if (opts.state === PARENT_HOVER_STATE && Object.keys(keys).length) {
+      requireHoverHost(doc.doc, id);
+    }
+    if (
+      (opts.state === HOVER_STATE || opts.state === PARENT_HOVER_STATE) &&
+      namespace === 'config' &&
+      Object.keys(keys).length
+    ) {
+      refuseHoverConfig(keys, opts.state);
+    }
+    // HOVER HAS THREE HOMES and only one of them is `states.hover`. An element
+    // that declares a Hover variant of its own is served by its own renderer
+    // from a flat, base-only `config.stateHover` map, and the universal compiler
+    // stands aside for it — so writing the state slot here would store keys no
+    // compiler reads. Routed rather than refused: the caller asked for a hover
+    // and there is a home that works; `hoverRoutingNote` says where it went.
+    if (opts.state === HOVER_STATE && namespace === 'style' && hoverHome(doc.node(id).data.type) === 'legacy') {
+      return [
+        ...Object.entries(keys).map(([k, v]) => ({
+          op: 'set' as const,
+          path: legacyHoverPath(id, k),
+          value: v,
+        })),
+        ...(opts.unset ?? []).map((k) => ({ op: 'unset' as const, path: legacyHoverPath(id, k) })),
+      ];
     }
     // Base state and per-breakpoint state are DIFFERENT PLACES in the document,
     // and the old path (`states[state][bp][ns]`) was neither of them: it buried

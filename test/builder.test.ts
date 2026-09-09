@@ -282,6 +282,18 @@ describe('setKeys() with a state', () => {
     d.apply(addSubtree(d, 'rt', { type: 'flex-section', children: [{ type: 'button' }] }).patches);
     return { d, id: d.node(d.node('rt').data.nodes[0]).data.nodes[0] };
   }
+  // HOVER IS THE ONE STATE A BUTTON DOES NOT KEEP IN `states`. It declares a
+  // Hover variant of its own, so the platform's universal hover compiler stands
+  // aside and its renderer reads a flat `config.stateHover` map instead — see
+  // domains/site/hover.ts, and test/hover.test.ts for that routing. The two
+  // tests below are about where a STATE lands in general, so they use an element
+  // the universal state actually serves; using a button made them pass for a
+  // reason that had nothing to do with what they were checking.
+  function block() {
+    const d = emptyDoc();
+    d.apply(addSubtree(d, 'rt', { type: 'flex-section', children: [{ type: 'flex-block' }] }).patches);
+    return { d, id: d.node(d.node('rt').data.nodes[0]).data.nodes[0] };
+  }
   type Stated = {
     style: Record<string, unknown>;
     states?: Record<string, { style?: Record<string, unknown> }>;
@@ -289,14 +301,14 @@ describe('setKeys() with a state', () => {
   };
 
   it('writes a per-breakpoint state where the cascade reads it', () => {
-    const { d, id } = button();
+    const { d, id } = block();
     d.apply(setKeys(d, id, { backgroundColor: '#000' }, { namespace: 'style', breakpoint: 'desktop', state: 'hover' }));
     const n = d.node(id) as unknown as Stated;
     expect(n.responsive.desktop.states?.hover.style?.backgroundColor).toBe('#000');
   });
 
   it('writes a BASE state into the cluster the element seeds its own defaults in', () => {
-    const { d, id } = button();
+    const { d, id } = block();
     d.apply(setKeys(d, id, { backgroundColor: '#000' }, { namespace: 'style', base: true, state: 'hover' }));
     const n = d.node(id) as unknown as Stated;
     expect(n.states?.hover.style?.backgroundColor).toBe('#000');
