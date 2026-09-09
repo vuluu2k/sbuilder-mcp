@@ -6,6 +6,11 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.11.2] - 2026-09-09
+
+### Fixed
+- sb_set's routing of a hover write to an element's legacy home (a `button`, for instance) now also clears any leftover values in the unread `states.hover` slot in the same call, instead of leaving them behind for `sb_review` to keep reporting as `hover_dead`; the finding's own message previously named `unset` as the way to remove them, which could not reach the legacy home either, so the documented fix was unreachable.
+
 ## [0.11.1] - 2026-09-09
 
 ### Added

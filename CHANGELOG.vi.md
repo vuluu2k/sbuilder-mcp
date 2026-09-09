@@ -6,6 +6,11 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.11.2] - 2026-09-09
+
+### Fixed
+- Khi sb_set định tuyến một lần ghi hover tới nơi lưu cũ của element (ví dụ `button`), giờ nó cũng xoá luôn mọi giá trị còn sót trong slot `states.hover` không ai đọc, ngay trong cùng một lệnh — thay vì để lại chúng cho sb_review tiếp tục báo là `hover_dead`; thông báo của chính finding này trước đây nêu `unset` là cách xoá, nhưng `unset` cũng không thể chạm tới nơi lưu cũ đó, khiến cách sửa được ghi ra là không thể thực hiện được.
+
 ## [0.11.1] - 2026-09-09
 
 ### Added
