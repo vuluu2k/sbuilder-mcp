@@ -1,0 +1,80 @@
+- generic [ref=f1e2]:
+  - generic [ref=f1e5]:
+    - heading "BÉ CƯNG" [level=1] [ref=f1e6]
+    - generic [ref=f1e7]:
+      - link "Trang chủ" [ref=f1e8] [cursor=pointer]:
+        - /url: /
+      - link "Sản phẩm" [ref=f1e9] [cursor=pointer]:
+        - /url: /san-pham
+      - link "Giới thiệu" [ref=f1e10] [cursor=pointer]:
+        - /url: /gioi-thieu
+      - link "Liên hệ" [ref=f1e11] [cursor=pointer]:
+        - /url: /lien-he
+      - link "Tài khoản" [ref=f1e12] [cursor=pointer]:
+        - /url: /account
+      - button "Giỏ hàng" [ref=f1e13] [cursor=pointer]
+  - generic [ref=f1e15]:
+    - heading "Thanh toán" [level=1] [ref=f1e16]
+    - generic [ref=f1e17]:
+      - generic [ref=f1e18]: Tạm tính
+      - generic [ref=f1e19]: 0 ₫
+    - generic [ref=f1e20]:
+      - generic [ref=f1e21]: Giảm giá
+      - generic [ref=f1e22]: 0 ₫
+    - generic [ref=f1e23]:
+      - generic [ref=f1e24]: Phí vận chuyển
+      - generic [ref=f1e25]: 0 ₫
+    - generic [ref=f1e26]:
+      - generic [ref=f1e27]: Tổng cộng
+      - generic [ref=f1e28]: 0 ₫
+    - generic [ref=f1e29]:
+      - generic [ref=f1e30]: Còn phải trả
+      - generic [ref=f1e31]: 0 ₫
+    - generic [ref=f1e32]:
+      - heading "Thanh toán" [level=3] [ref=f1e33]
+      - generic [ref=f1e34]:
+        - generic [ref=f1e35]: Họ và tên*
+        - textbox [ref=f1e36]
+      - generic [ref=f1e37]:
+        - generic [ref=f1e38]: Số điện thoại*
+        - textbox [ref=f1e39]
+      - generic [ref=f1e40]:
+        - generic [ref=f1e41]: Email
+        - textbox [ref=f1e42]
+      - generic [ref=f1e43]:
+        - generic [ref=f1e44]: Tỉnh / Thành phố*
+        - combobox "Tỉnh / Thành phố*" [ref=f1e46]:
+          - option "Chọn tỉnh / thành phố" [disabled] [selected]
+      - generic [ref=f1e47]:
+        - generic [ref=f1e48]: Phường / Xã*
+        - combobox "Phường / Xã*" [disabled] [ref=f1e50]:
+          - option "Chọn phường / xã" [disabled] [selected]
+      - generic [ref=f1e51]:
+        - generic [ref=f1e52]: Số nhà, tên đường*
+        - textbox "Số nhà, tên đường*" [ref=f1e54]:
+          - /placeholder: "Ví dụ: 12 Nguyễn Huệ"
+      - generic [ref=f1e55]:
+        - generic [ref=f1e56]: Phương thức vận chuyển
+        - combobox [ref=f1e57]:
+          - option "Chọn phương thức vận chuyển" [disabled] [selected]
+          - option "Giao tiêu chuẩn"
+          - option "Giao nhanh nội thành"
+      - generic [ref=f1e58]:
+        - generic [ref=f1e59]: Mã giảm giá
+        - textbox "Nhập mã nếu có" [ref=f1e60]
+      - generic [ref=f1e61]:
+        - generic [ref=f1e62]: Phương thức thanh toán*
+        - generic [ref=f1e64] [cursor=pointer]:
+          - radio "Thanh toán khi nhận hàng (COD) Trả tiền mặt cho shipper khi nhận hàng." [checked] [ref=f1e65]
+          - generic [ref=f1e66]:
+            - generic [ref=f1e67]: Thanh toán khi nhận hàng (COD)
+            - generic [ref=f1e68]: Trả tiền mặt cho shipper khi nhận hàng.
+      - generic [ref=f1e69]:
+        - generic [ref=f1e70]: Ghi chú
+        - textbox [ref=f1e71]
+      - button "Đặt hàng" [ref=f1e72] [cursor=pointer]
+  - generic [ref=f1e75]:
+    - heading "BÉ CƯNG" [level=2] [ref=f1e76]
+    - paragraph [ref=f1e77]: Thời trang trẻ em 2–9 tuổi · 82 Trần Hưng Đạo, Quận 1, TP. Hồ Chí Minh
+    - paragraph [ref=f1e78]: 0909 123 456 · xinchao@becung.vn · 8:00–21:00 mỗi ngày
+    - paragraph [ref=f1e79]: © 2026 Bé Cưng. Đổi trả trong 7 ngày · Giao toàn quốc
