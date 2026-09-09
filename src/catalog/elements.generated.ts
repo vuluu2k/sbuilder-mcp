@@ -3,7 +3,7 @@
 import type { CatalogElement, NodeSeed, SatelliteRule, TraitDescription } from './element-types.js';
 
 export const ELEMENT_SOURCE = {
-  "count": 108,
+  "count": 109,
   "docSchemaVersion": 2
 } as const;
 
@@ -1808,7 +1808,8 @@ export const ELEMENTS: Record<string, CatalogElement> = {
             "key": "action",
             "label": "Action",
             "controls": [
-              "action"
+              "action",
+              "icon_cart_badge"
             ]
           },
           {
@@ -1881,6 +1882,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
       "icon_color",
       "icon_size",
       "action",
+      "icon_cart_badge",
       "padding",
       "margin",
       "align_self",
@@ -13847,6 +13849,166 @@ export const ELEMENTS: Record<string, CatalogElement> = {
       "dynamic"
     ]
   },
+  "cart-count": {
+    "type": "cart-count",
+    "label": "Cart count",
+    "category": "store",
+    "isContainer": false,
+    "isRootOnly": false,
+    "locked": false,
+    "hideInLayer": false,
+    "childAllows": [],
+    "defaults": {
+      "style": {
+        "display": "inline-flex",
+        "alignItems": "center",
+        "justifyContent": "center",
+        "width": "fit-content",
+        "minWidth": "20px",
+        "height": "20px",
+        "paddingLeft": "6px",
+        "paddingRight": "6px",
+        "borderRadius": "999px",
+        "backgroundColor": "#171717",
+        "color": "#ffffff",
+        "fontSize": "12px",
+        "fontWeight": "600",
+        "lineHeight": "1"
+      },
+      "specials": {
+        "placeholder": "0",
+        "hideWhenEmpty": true
+      }
+    },
+    "inspector": [
+      {
+        "tab": "general",
+        "groups": [
+          {
+            "key": "content",
+            "label": "Content",
+            "controls": [
+              "cart_count_placeholder",
+              "cart_count_hide_empty"
+            ]
+          },
+          {
+            "key": "size",
+            "label": "Size",
+            "controls": [
+              "width_select",
+              "height_select",
+              "size_bounds"
+            ]
+          },
+          {
+            "key": "layout",
+            "label": "Layout",
+            "controls": [
+              "padding",
+              "margin",
+              "vertical",
+              "horizontal"
+            ]
+          },
+          {
+            "key": "typography",
+            "label": "Typography",
+            "controls": [
+              "font_family",
+              "font_size",
+              "text_style",
+              "text_color"
+            ]
+          },
+          {
+            "key": "background",
+            "label": "Background",
+            "controls": [
+              "bg_color"
+            ]
+          },
+          {
+            "key": "shape",
+            "label": "Shape",
+            "controls": [
+              "border",
+              "corner"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "advanced",
+        "groups": [
+          {
+            "key": "spacing",
+            "label": "Spacing",
+            "controls": [
+              "padding_margin"
+            ]
+          },
+          {
+            "key": "display",
+            "label": "Display",
+            "controls": [
+              "display"
+            ]
+          },
+          {
+            "key": "class_css",
+            "label": "Class",
+            "controls": [
+              "class_css"
+            ]
+          }
+        ]
+      }
+    ],
+    "controls": [
+      "cart_count_placeholder",
+      "cart_count_hide_empty",
+      "width_select",
+      "height_select",
+      "size_bounds",
+      "padding",
+      "margin",
+      "vertical",
+      "horizontal",
+      "font_family",
+      "font_size",
+      "text_style",
+      "text_color",
+      "bg_color",
+      "border",
+      "corner",
+      "padding_margin",
+      "display",
+      "class_css"
+    ],
+    "description": "The number of items in the shopper's cart, as a small badge. The figure comes from the shopper's own cart in their browser, so it changes the moment they add, remove or re-count a line. Its usual home is the cart icon in the site header, where it is the only evidence on the page that the basket holds anything.",
+    "useWhen": [
+      "a header or navigation bar carries a cart icon and a shopper needs to see the basket is not empty",
+      "building a sticky mobile bar or a mini-cart trigger anywhere outside the cart drawer"
+    ],
+    "avoidWhen": [
+      "showing what the cart COSTS — that is a cart-total, which reads a money figure",
+      "showing how many of ONE product a shopper picked — that is the quantity stepper on the product",
+      "showing a past order’s item count; an order is a record, not the live cart"
+    ],
+    "contentTips": [
+      "the placeholder is what the badge reads before the shopper’s cart is known, so write it as a real empty-cart count",
+      "leave “hide when empty” on unless the header’s layout must never shift when the first item lands",
+      "to put it on a cart icon, turn the badge on from the icon’s own inspector rather than placing this element and positioning it by hand"
+    ],
+    "semantics": [
+      "cart",
+      "count",
+      "badge",
+      "header",
+      "commerce"
+    ]
+  },
   "cart-total": {
     "type": "cart-total",
     "label": "Cart total",
@@ -13914,7 +14076,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
             "controls": [
               "font_family",
               "font_size",
-              "font_weight",
+              "text_style",
               "text_color"
             ]
           },
@@ -13977,7 +14139,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
       "horizontal",
       "font_family",
       "font_size",
-      "font_weight",
+      "text_style",
       "text_color",
       "bg_color",
       "border",
@@ -14335,7 +14497,8 @@ export const ELEMENTS: Record<string, CatalogElement> = {
         "paginationItemWidth": 8,
         "paginationItemHeight": 8,
         "paginationItemGap": 4,
-        "featureClickAction": "open_gallery"
+        "featureClickAction": "open_gallery",
+        "hoverSwapImage": false
       },
       "specials": {
         "alt": ""
@@ -16337,6 +16500,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
               "image_alt",
               "main_image_source",
               "feature_zoom",
+              "feature_hover_swap",
               "feature_click_action",
               "feature_nav",
               "feature_dots",
@@ -16359,6 +16523,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
               "listNavButtonBg",
               "hoverZoomType",
               "hoverZoomValue",
+              "hoverSwapImage",
               "paginationBg",
               "paginationItemBg",
               "paginationItemActiveBg",
@@ -16444,6 +16609,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
       "image_alt",
       "main_image_source",
       "feature_zoom",
+      "feature_hover_swap",
       "feature_click_action",
       "feature_nav",
       "feature_dots",
@@ -16466,6 +16632,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
       "listNavButtonBg",
       "hoverZoomType",
       "hoverZoomValue",
+      "hoverSwapImage",
       "paginationBg",
       "paginationItemBg",
       "paginationItemActiveBg",
@@ -16491,7 +16658,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
       "animation",
       "class_css"
     ],
-    "description": "A large product feature image carousel — stacks its images and shows the active one at full size, with optional prev/next navigation, pagination dots, and hover-zoom on published pages. When pinned to (or placed under) a product it carousels that product's full image gallery (config.mainImageSource picks which image leads), falling back to the seeded config.images when unbound. Owns no children.",
+    "description": "A large product feature image carousel — stacks its images and shows the active one at full size, with optional prev/next navigation, pagination dots, hover-zoom and a hover image swap (config.hoverSwapImage) on published pages. When pinned to (or placed under) a product it carousels that product's full image gallery (config.mainImageSource picks which image leads), falling back to the seeded config.images when unbound. Owns no children.",
     "useWhen": [
       "Showing the primary/large product photo on a product detail layout.",
       "You want visitors to page through several product images."
@@ -16504,7 +16671,8 @@ export const ELEMENTS: Record<string, CatalogElement> = {
       "Pair it with an Image list so shoppers can pick which photo shows large.",
       "Use a consistent image ratio (config.featureImageRatio) so the layout does not jump between images — default is a uniform 1:1 square; \"auto\" uses each image's natural size.",
       "Hover-zoom is on by default at 150% (config.hoverZoomValue); set it to 100 to disable, or raise it up to 300 for a closer zoom.",
-      "Nav arrows sit \"inside\" (overlaid) or \"outside\" the image via config.listNavPosition."
+      "Nav arrows sit \"inside\" (overlaid) or \"outside\" the image via config.listNavPosition.",
+      "config.hoverSwapImage shows the NEXT gallery photo while the pointer is on the tile — the product-grid effect. It needs a gallery of 2+, is off by default, and does nothing on a touch screen (no pointer), so a phone keeps the first photo."
     ],
     "semantics": [
       "product-image",
@@ -33580,6 +33748,17 @@ export const TRAIT_WRITES: Record<string, TraitDescription> = {
       }
     ]
   },
+  "feature_hover_swap": {
+    "key": "feature_hover_swap",
+    "label": "Image swap",
+    "writes": [
+      {
+        "target": "config",
+        "writeKey": "hoverSwapImage",
+        "type": "boolean"
+      }
+    ]
+  },
   "overflow_x": {
     "key": "overflow_x",
     "label": "Overflow X",
@@ -33682,6 +33861,28 @@ export const TRAIT_WRITES: Record<string, TraitDescription> = {
         "target": "specials",
         "writeKey": "part",
         "type": "string"
+      }
+    ]
+  },
+  "cart_count_placeholder": {
+    "key": "cart_count_placeholder",
+    "label": "Empty count",
+    "writes": [
+      {
+        "target": "specials",
+        "writeKey": "placeholder",
+        "type": "string"
+      }
+    ]
+  },
+  "cart_count_hide_empty": {
+    "key": "cart_count_hide_empty",
+    "label": "Hide when empty",
+    "writes": [
+      {
+        "target": "specials",
+        "writeKey": "hideWhenEmpty",
+        "type": "boolean"
       }
     ]
   },
@@ -34046,6 +34247,13 @@ export const TRAIT_WRITES: Record<string, TraitDescription> = {
 };
 
 export const SATELLITE_RULES: Record<string, SatelliteRule[]> = {
+  "icon": [
+    {
+      "type": "cart-count",
+      "configKey": "cartCountId",
+      "optional": true
+    }
+  ],
   "tab": [
     {
       "type": "tab-item",

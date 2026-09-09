@@ -1,0 +1,31 @@
+- generic [ref=f22e2]:
+  - generic [ref=f22e5]:
+    - heading "BÉ CƯNG" [level=1] [ref=f22e6]
+    - generic [ref=f22e7]:
+      - link "Trang chủ" [ref=f22e8] [cursor=pointer]:
+        - /url: /
+      - link "Sản phẩm" [ref=f22e9] [cursor=pointer]:
+        - /url: /san-pham
+      - link "Giới thiệu" [ref=f22e10] [cursor=pointer]:
+        - /url: /gioi-thieu
+      - link "Liên hệ" [ref=f22e11] [cursor=pointer]:
+        - /url: /lien-he
+      - link "Tài khoản" [ref=f22e12] [cursor=pointer]:
+        - /url: /account
+      - button "Giỏ hàng" [ref=f22e13] [cursor=pointer]
+  - generic [ref=f22e16]:
+    - heading "Cảm ơn bạn đã đặt hàng ở Bé Cưng!" [level=1] [ref=f22e17]
+    - paragraph [ref=f22e18]: Đơn hàng đã được ghi nhận. Bé Cưng sẽ gọi xác nhận trong vòng 2 giờ làm việc, và giao trong 1–3 ngày tuỳ khu vực.
+    - generic [ref=f22e20]:
+      - generic [ref=f22e21]: Đang chờ xác nhận
+      - paragraph [ref=f22e22]: Chúng tôi chưa nhận được xác nhận từ cổng thanh toán. Đơn hàng sẽ được cập nhật ngay khi có kết quả.
+    - generic [ref=f22e23]:
+      - link "Tiếp tục mua sắm" [ref=f22e24] [cursor=pointer]:
+        - /url: /san-pham
+      - link "Về trang chủ" [ref=f22e25] [cursor=pointer]:
+        - /url: /
+  - generic [ref=f22e28]:
+    - heading "BÉ CƯNG" [level=2] [ref=f22e29]
+    - paragraph [ref=f22e30]: Thời trang trẻ em 2–9 tuổi · 82 Trần Hưng Đạo, Quận 1, TP. Hồ Chí Minh
+    - paragraph [ref=f22e31]: 0909 123 456 · xinchao@becung.vn · 8:00–21:00 mỗi ngày
+    - paragraph [ref=f22e32]: © 2026 Bé Cưng. Đổi trả trong 7 ngày · Giao toàn quốc

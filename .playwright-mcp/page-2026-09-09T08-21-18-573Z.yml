@@ -1,0 +1,40 @@
+- generic [ref=f19e2]:
+  - generic [ref=f19e5]:
+    - heading "BÉ CƯNG" [level=1] [ref=f19e6]
+    - generic [ref=f19e7]:
+      - link "Trang chủ" [ref=f19e8] [cursor=pointer]:
+        - /url: /
+      - link "Sản phẩm" [ref=f19e9] [cursor=pointer]:
+        - /url: /san-pham
+      - link "Giới thiệu" [ref=f19e10] [cursor=pointer]:
+        - /url: /gioi-thieu
+      - link "Liên hệ" [ref=f19e11] [cursor=pointer]:
+        - /url: /lien-he
+      - link "Tài khoản" [ref=f19e12] [cursor=pointer]:
+        - /url: /account
+      - button "Giỏ hàng" [ref=f19e13] [cursor=pointer]
+  - generic [ref=f19e15]:
+    - heading "Thanh toán" [level=1] [ref=f19e16]
+    - generic [ref=f19e17]:
+      - generic [ref=f19e18]: Tạm tính
+      - generic [ref=f19e19]: 0 ₫
+    - generic [ref=f19e20]:
+      - generic [ref=f19e21]: Giảm giá
+      - generic [ref=f19e22]: 0 ₫
+    - generic [ref=f19e23]:
+      - generic [ref=f19e24]: Phí vận chuyển
+      - generic [ref=f19e25]: 0 ₫
+    - generic [ref=f19e26]:
+      - generic [ref=f19e27]: Tổng cộng
+      - generic [ref=f19e28]: 0 ₫
+    - generic [ref=f19e29]:
+      - generic [ref=f19e30]: Còn phải trả
+      - generic [ref=f19e31]: 0 ₫
+    - generic [ref=f19e32]:
+      - status [ref=f19e33]: "Đơn #1004 đã được ghi nhận. Cảm ơn bạn!"
+      - paragraph [ref=f19e34]: "Đơn hàng #1004258.000 ₫"
+  - generic [ref=f19e37]:
+    - heading "BÉ CƯNG" [level=2] [ref=f19e38]
+    - paragraph [ref=f19e39]: Thời trang trẻ em 2–9 tuổi · 82 Trần Hưng Đạo, Quận 1, TP. Hồ Chí Minh
+    - paragraph [ref=f19e40]: 0909 123 456 · xinchao@becung.vn · 8:00–21:00 mỗi ngày
+    - paragraph [ref=f19e41]: © 2026 Bé Cưng. Đổi trả trong 7 ngày · Giao toàn quốc

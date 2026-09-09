@@ -4,6 +4,8 @@ import { addSubtree, setKeys } from '../src/domains/site/builder.js';
 import { reviewDesign } from '../src/domains/site/review.js';
 import {
   hoverHome,
+  hoverHostChain,
+  hoverHostNote,
   hoverHostOf,
   hoverRoutingNote,
   isSatelliteNode,
@@ -210,5 +212,78 @@ describe('routing a hover also clears the slot nobody reads', () => {
     d.apply(setKeys(d, block, { boxShadow: '0 2px 8px #0002' }, { namespace: 'style', state: 'hover', base: true }));
     const n = d.node(block) as never as { states: Record<string, { style: Record<string, unknown> }> };
     expect(n.states.hover.style.boxShadow).toBe('0 2px 8px #0002');
+  });
+});
+
+/**
+ * THE HOST IS NO LONGER ALWAYS THE PARENT. The platform opened the seam its own
+ * module documented: `specials.hoverHostDepth` picks an ancestor, 1-based and
+ * nearest-first, because the moment an author groups a few things inside a card
+ * the nearest box becomes the group and "hover the whole card" stops being
+ * reachable at all.
+ */
+describe('parentHover host depth', () => {
+  /** section > card > group > image — the shape the picker exists for. */
+  function nested() {
+    const d = PageDoc.from({
+      schema_version: 2,
+      root_node_id: 'rt',
+      nodes: {
+        rt: { id: 'rt', data: { type: 'root', parent: null, nodes: [] }, style: {}, config: {}, specials: {}, responsive: {} },
+      },
+    });
+    const { patches, ids } = addSubtree(d, 'rt', {
+      type: 'flex-section',
+      children: [{ type: 'flex-block', name: 'Card', children: [{ type: 'flex-block', name: 'Group', children: [{ type: 'image' }] }] }],
+    });
+    d.apply(patches);
+    const [section, card, group, image] = ids;
+    return { d, section, card, group, image };
+  }
+
+  it('lists the ancestors nearest first, stopping below ROOT', () => {
+    const { d, card, group, image, section } = nested();
+    expect(hoverHostChain(d.doc, image)).toEqual([group, card, section]);
+    // A direct child of ROOT can host nothing: the pointer is inside the page
+    // whenever it is inside the window.
+    expect(hoverHostChain(d.doc, section)).toEqual([]);
+  });
+
+  it('defaults to the nearest box and follows the depth when one is set', () => {
+    const { d, card, group, image } = nested();
+    expect(hoverHostOf(d.doc, image)).toBe(group);
+    d.apply(setKeys(d, image, { hoverHostDepth: 2 }, { namespace: 'specials' }));
+    expect(hoverHostOf(d.doc, image)).toBe(card);
+  });
+
+  // The platform clamps rather than going dead, because the chain shortens
+  // whenever a wrapper is deleted.
+  it('clamps a depth past the end of the chain, and says it clamped', () => {
+    const { d, section, image } = nested();
+    d.apply(setKeys(d, image, { hoverHostDepth: 99 }, { namespace: 'specials' }));
+    expect(hoverHostOf(d.doc, image)).toBe(section);
+    expect(hoverHostNote(d.doc, image)).toMatch(/CLAMPED/);
+  });
+
+  it('coerces a corrupt depth to the nearest box rather than to no host', () => {
+    const { d, group, image } = nested();
+    d.apply(setKeys(d, image, { hoverHostDepth: 0 }, { namespace: 'specials' }));
+    expect(hoverHostOf(d.doc, image)).toBe(group);
+  });
+
+  // An agent has neither the picker nor the label the inspector shows, so the
+  // default being the wrong box is invisible without this.
+  it('names the box it hung off, and the wider ones on offer', () => {
+    const { d, card, group, image } = nested();
+    const note = hoverHostNote(d.doc, image);
+    expect(note).toContain(group);
+    expect(note).toContain(card);
+    expect(note).toMatch(/hoverHostDepth/);
+  });
+
+  it('says nothing when there is only one box to choose', () => {
+    const { d, block } = card();
+    // block sits directly under the section, whose parent is ROOT: one ancestor.
+    expect(hoverHostNote(d.doc, block)).toBeNull();
   });
 });

@@ -897,6 +897,16 @@ that accounts for them.
   dead and the page looked fine — `docker-compose.yml` builds `./server`, which ships the
   binary alone by design, and nothing brought a bundle in from the host (web_builder PR #99).
 
+  **AND THE HOST IS NOT ALWAYS THE PARENT — that seam opened three days later.**
+  `specials.hoverHostDepth` (base-only, 1-based, NEAREST FIRST) picks which ancestor a
+  parent-hover rule hangs off, because the moment an author groups a few things inside a card
+  the nearest box becomes the group and "hover the whole card" stops being reachable. A depth
+  past the end of the chain CLAMPS to the outermost box rather than going dead — the chain
+  shortens whenever a wrapper is deleted. The inspector has a picker AND a label naming the
+  box; an agent has neither, so `sb_set` reports which box the rule hung off, lists the wider
+  ones on offer, and says when a depth clamped. Depth is a DEPTH rather than an id on purpose:
+  duplicate a card and the copy's state points at the copy's own ancestor.
+
   The same work also landed the thing this repo had already fixed independently: **state
   overrides write PER BREAKPOINT** (`responsive[bp].states`), which both compilers had always
   read and only the editor never wrote.

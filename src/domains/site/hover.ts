@@ -80,11 +80,23 @@ export function hoverHome(type: string): 'state' | 'legacy' {
 const HOVER_UNCOMPILED = new Set(['product-image-list']);
 
 /**
- * The box whose `:hover` a parent-hover rule keys off, or null.
+ * The specials key naming WHICH ancestor a parent-hover rule hangs off, 1-based
+ * and nearest-first. Base-only: it is identity, not a quantity, and a host that
+ * differed per breakpoint would compile one state slot against different
+ * selectors at different widths.
  *
- * Mirrors `HoverHostOf`: the node's PARENT, and only when the node is a real
- * child of it. Three cases answer null, and each is a rule that would compile to
- * nothing:
+ * Absent means 1 — the node's own parent — which is what the seeded product card
+ * wants, because that template is flat and a child's parent IS the card. The key
+ * exists for the moment an author groups a few things inside it: the nearest box
+ * becomes the group, and "hover the whole card" stops being reachable without it.
+ */
+export const HOVER_HOST_DEPTH = 'hoverHostDepth';
+
+/**
+ * Every ancestor a parent-hover state could hang off, NEAREST FIRST.
+ *
+ * Mirrors `hoverHostChain`. Empty for the three cases that can host nothing, and
+ * each is a rule that would compile to nothing:
  *
  *   - a SATELLITE, which hangs off `config[key]` rather than `data.nodes` and
  *     renders no element the selector could name;
@@ -92,14 +104,54 @@ const HOVER_UNCOMPILED = new Set(['product-image-list']);
  *     whenever it is inside the window;
  *   - an orphan whose parent id points at nothing.
  */
-export function hoverHostOf(doc: DocLike, id: string): string | null {
-  const node = doc.nodes[id];
-  const parentId = node?.data.parent;
-  if (!node || !parentId) return null;
+export function hoverHostChain(doc: DocLike, id: string): string[] {
+  if (!hasHoverableBox(doc, id)) return [];
+  const out: string[] = [];
+  const seen = new Set<string>([id]);
+  let cur = doc.nodes[id];
+  for (;;) {
+    const parentId = cur?.data.parent;
+    if (!parentId || seen.has(parentId)) break;
+    seen.add(parentId);
+    const parent = doc.nodes[parentId];
+    if (!parent || parent.data.type === 'root' || parentId === doc.root_node_id) break;
+    out.push(parentId);
+    cur = parent;
+  }
+  return out;
+}
+
+/** Does this node have a box of its own — a real child of a real parent? */
+function hasHoverableBox(doc: DocLike, id: string): boolean {
+  const parentId = doc.nodes[id]?.data.parent;
+  if (!parentId) return false;
   const parent = doc.nodes[parentId];
-  if (!parent || !(parent.data.nodes ?? []).includes(id)) return null;
-  if (parent.data.type === 'root' || parentId === doc.root_node_id) return null;
-  return parentId;
+  return !!parent && (parent.data.nodes ?? []).includes(id);
+}
+
+/** The stored depth, coerced the way the platform coerces it: anything that is
+ * not a whole number ≥ 1 reads as 1, so a corrupt value costs the author the
+ * ancestor they picked rather than the whole state. */
+export function hoverHostDepthOf(doc: DocLike, id: string): number {
+  const raw = (doc.nodes[id]?.specials as Record<string, unknown> | undefined)?.[HOVER_HOST_DEPTH];
+  const n = typeof raw === 'number' ? raw : Number(raw);
+  if (!Number.isFinite(n) || n < 1) return 1;
+  return Math.floor(n);
+}
+
+/**
+ * The box whose `:hover` a parent-hover rule keys off, or null.
+ *
+ * The node's PARENT by default, or the ancestor `hoverHostDepth` levels up when
+ * the document names one. A depth past the end of the chain CLAMPS to the
+ * outermost real ancestor rather than answering null — the chain shortens
+ * whenever a wrapper is deleted, and a state pointing one level out is better
+ * than one that silently goes dead.
+ */
+export function hoverHostOf(doc: DocLike, id: string): string | null {
+  const chain = hoverHostChain(doc, id);
+  if (!chain.length) return null;
+  return chain[Math.min(hoverHostDepthOf(doc, id), chain.length) - 1];
 }
 
 /** Is this node a satellite — referenced from its parent's config, not its children? */
@@ -130,10 +182,45 @@ export function requireHoverHost(doc: DocLike, id: string): void {
     throw new Error(`sbuilder: ${id} has no parent, so "${PARENT_HOVER_STATE}" has nothing to key off.`);
   }
   throw new Error(
-    `sbuilder: "${PARENT_HOVER_STATE}" keys off the node's PARENT, and ${id}'s parent is ROOT — ` +
+    `sbuilder: "${PARENT_HOVER_STATE}" hangs off an ANCESTOR BOX, and ${id}'s only one is ROOT — ` +
       'the pointer is inside the page whenever it is inside the window, so the platform emits ' +
       'no rule. Put this node inside a real box (a section\'s inner block, a card) and set it ' +
       `there, or use state: "${HOVER_STATE}" for the node's own pointer state.`,
+  );
+}
+
+/**
+ * WHICH BOX A PARENT-HOVER RULE ACTUALLY HUNG OFF, said out loud.
+ *
+ * The inspector has a picker and a label that name it; an agent has neither, and
+ * the default — the NEAREST box — is the wrong one the moment somebody groups a
+ * few things inside a card. Writing the state and being told nothing is how a
+ * "hover the card" effect ends up triggered by an inner wrapper instead.
+ *
+ * Also reports a depth that CLAMPED, which the platform does silently: past the
+ * end of the chain it falls back to the outermost ancestor rather than going
+ * dead, so the caller's number and the box they got can differ with nothing on
+ * screen to say so.
+ */
+export function hoverHostNote(doc: DocLike, id: string): string | null {
+  const chain = hoverHostChain(doc, id);
+  if (!chain.length) return null;
+  const want = hoverHostDepthOf(doc, id);
+  const got = Math.min(want, chain.length);
+  const host = chain[got - 1];
+  const named = (n: string) => `${doc.nodes[n]?.data.name ?? doc.nodes[n]?.data.type ?? '?'} ${n}`;
+  if (want > chain.length) {
+    return (
+      `Hangs off ${named(host)} — specials.${HOVER_HOST_DEPTH} asks for level ${want} and the ` +
+      `chain is ${chain.length} long, so the platform CLAMPED to the outermost box. Set the ` +
+      'depth to a level that exists, or accept this one.'
+    );
+  }
+  if (chain.length === 1) return null; // no choice to get wrong
+  return (
+    `Hangs off ${named(host)} (level ${got} of ${chain.length}). To hang it off a wider box — ` +
+    `the whole card rather than the group inside it — set specials.${HOVER_HOST_DEPTH}, ` +
+    `1-based and nearest-first: ${chain.map((n, i) => `${i + 1}=${named(n)}`).join(', ')}.`
   );
 }
 

@@ -620,8 +620,12 @@ sb_set btn_add config                              { revealOnHover: true }
 sb_set btn_add style base:true state:"hover"       { backgroundColor: "<darker accent>" }   # → config.stateHover
 ```
 
-**`parentHover` keys off the node's PARENT**, and three structural cases give it nothing to key
-off — `sb_set` refuses each by name rather than storing a rule that never matches: a SATELLITE
+**`parentHover` hangs off an ANCESTOR BOX — by default the nearest one, and `sb_set` tells you
+which.** `specials.hoverHostDepth` (base-only, 1-based, nearest-first) picks a wider one: the
+moment somebody groups a few things inside a card, the nearest box becomes the group and
+"hover the whole card" needs depth 2. A depth past the end of the chain CLAMPS to the
+outermost box rather than going dead, and the result says when it did. Three structural cases
+give it nothing to key off — `sb_set` refuses each by name rather than storing a rule that never matches: a SATELLITE
 (it hangs off its owner's config and renders no element to name), a direct child of ROOT (the
 pointer is inside the page whenever it is inside the window), and an orphan.
 

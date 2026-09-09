@@ -26,7 +26,7 @@ import { globalWarning, restampPatches, RESPONSIVE_NOTICE } from '../domains/sit
 import { catalogMatches, traitsFor } from '../catalog/element-search.js';
 import { applyPatches, type Patch } from '../core/patch.js';
 import { stickyWarning } from '../domains/site/sticky.js';
-import { HOVER_STATE, hoverRoutingNote } from '../domains/site/hover.js';
+import { HOVER_STATE, PARENT_HOVER_STATE, hoverHostNote, hoverRoutingNote } from '../domains/site/hover.js';
 import type { LiveSession } from '../live/session.js';
 import type { Box } from '../vision/shoot.js';
 import { siteFor, type ToolContext } from './context.js';
@@ -397,6 +397,15 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
         const type = d.doc.nodes[e.id]?.data.type ?? '';
         if (hoverRoutingNote(type)) hoverTypes.add(type);
       }
+      // WHICH BOX a parent-hover rule hung off. Per NODE rather than once per
+      // process: the answer is about this node's ancestry, so a second node's is
+      // genuinely different information.
+      const hostNotes: Record<string, string> = {};
+      for (const e of batch) {
+        if (e.state !== PARENT_HOVER_STATE) continue;
+        const n = hoverHostNote(d.doc, e.id);
+        if (n) hostNotes[e.id] = n;
+      }
       const hoverNote = [...hoverTypes]
         .map((t) => ctx.notices.once(`hover-home:${t}`, hoverRoutingNote(t) as string))
         .filter((n): n is string => !!n)
@@ -433,6 +442,7 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
           patches,
           ...(Object.keys(sw).length ? { warnings: sw } : {}),
           ...(hoverNote ? { hover: hoverNote } : {}),
+          ...(Object.keys(hostNotes).length ? { hover_host: hostNotes } : {}),
           ...(note ? { note } : {}),
         });
       }
@@ -450,6 +460,7 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
           rev: d.rev,
           ...(warn ? { warning: warn } : {}),
           ...(hoverNote ? { hover: hoverNote } : {}),
+          ...(hostNotes[batch[0].id] ? { hover_host: hostNotes[batch[0].id] } : {}),
         });
       }
       return text({
@@ -457,6 +468,7 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
         rev: d.rev,
         ...(Object.keys(warnings).length ? { warnings } : {}),
         ...(hoverNote ? { hover: hoverNote } : {}),
+        ...(Object.keys(hostNotes).length ? { hover_host: hostNotes } : {}),
       });
     },
   );

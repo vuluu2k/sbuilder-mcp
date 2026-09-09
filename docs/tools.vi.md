@@ -597,7 +597,11 @@ sb_set btn_add config                              { revealOnHover: true }
 sb_set btn_add style base:true state:"hover"       { backgroundColor: "<accent đậm hơn>" }   # → config.stateHover
 ```
 
-**`parentHover` bám vào node CHA**, và ba trường hợp cấu trúc khiến nó không có gì để bám —
+**`parentHover` bám vào một HỘP TỔ TIÊN — mặc định là hộp gần nhất, và `sb_set` nói cho bạn biết
+là hộp nào.** `specials.hoverHostDepth` (chỉ base, đếm từ 1, gần nhất trước) chọn hộp rộng hơn:
+ngay khi ai đó gom vài thứ vào trong thẻ, hộp gần nhất trở thành cái nhóm đó và "rê lên cả thẻ"
+cần depth 2. Depth vượt quá chuỗi thì **kẹp** về hộp ngoài cùng chứ không chết, và kết quả có
+nói khi nó kẹp. Ba trường hợp cấu trúc khiến nó không có gì để bám —
 `sb_set` từ chối và gọi tên từng cái thay vì lưu một luật không bao giờ khớp: SATELLITE (treo ở
 config của chủ, không render element nào để đặt tên), con trực tiếp của ROOT (con trỏ luôn nằm
 trong trang khi nó nằm trong cửa sổ), và node mồ côi.
