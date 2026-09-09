@@ -6,6 +6,11 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.14.0] - 2026-09-09
+
+### Added
+- sb_review giờ báo cáo `categoryScope` khi một store có nhiều hơn một product category mà không category nào được link tới một page riêng, vì khi đó `/collections/{slug}` sẽ rơi về default template của loại category cho mọi category, và không có gì trên template dùng chung đó thu hẹp product feed theo category trong URL, nên khách hàng sẽ thấy toàn bộ catalogue (hoặc sản phẩm của category khác) dù mở category nào; finding nêu rõ cách khắc phục — mỗi category một page riêng với repeater đặt `{ "collectionType": "collection", "collectionId": "<id category>" }`, liên kết bằng `sb_api_call post:/api/sites/{siteId}/page-links/bulk`.
+
 ## [0.13.1] - 2026-09-09
 
 ### Fixed

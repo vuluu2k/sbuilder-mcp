@@ -6,6 +6,11 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.14.0] - 2026-09-09
+
+### Added
+- sb_review now reports `categoryScope` when a store has more than one product category and none of them is linked to a page of its own, since `/collections/{slug}` then falls back to the category type's default template for every category, and nothing on that shared template narrows the product feed to the category in the URL, so a shopper sees the whole catalogue (or another category's products) no matter which one they open; the finding names the fix — a page per category with its repeater set to `{ "collectionType": "collection", "collectionId": "<category id>" }`, linked with `sb_api_call post:/api/sites/{siteId}/page-links/bulk`.
+
 ## [0.13.1] - 2026-09-09
 
 ### Fixed
