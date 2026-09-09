@@ -866,8 +866,9 @@ that accounts for them.
   `Assemble(Compile(doc))` — what a browser actually receives. The lesson for THIS repo is the
   one the browser-server section of the design skill now carries: when a class never appears,
   the cart drawer is the control, because if no island hydrates the question is the deployment
-  and not the page. The dev stack builds no runtime bundle at all, so every island there is
-  dead and the page looks fine.
+  and not the page. The dev stack wired no runtime bundle in at all, so every island there was
+  dead and the page looked fine — `docker-compose.yml` builds `./server`, which ships the
+  binary alone by design, and nothing brought a bundle in from the host (web_builder PR #99).
 
   The same work also landed the thing this repo had already fixed independently: **state
   overrides write PER BREAKPOINT** (`responsive[bp].states`), which both compilers had always

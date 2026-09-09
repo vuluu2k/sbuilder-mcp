@@ -241,8 +241,8 @@ settle. Everything else, prefer the cheap tools.
    not serving the islands runtime at all — check `/_wb/runtime/current.json`. Found exactly
    this way here, twice in one sitting: once a real renderer bug (the marker was never emitted
    on the compiled publish path, so the CSS shipped and the class could not), and once a dev
-   stack that builds no runtime bundle, where every island on every page is dead and the page
-   looks perfectly fine.
+   stack that wired no runtime bundle in at all, where every island on every page was dead and
+   the page looked perfectly fine.
 
 2. **"The style did not apply."** It almost always did. The page's CSS is a LINKED
    stylesheet — `static-*.css`, `desktop-*.css`, `tablet-*.css` off the assets host — so
