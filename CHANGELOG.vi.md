@@ -6,6 +6,12 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.13.0] - 2026-09-09
+
+### Added
+- sb_set giờ hỗ trợ `specials.hoverHostDepth` khi ghi `state:"parentHover"`, cho phép một rule hover-cha hangs off bất kỳ ancestor box nào (đánh số từ 1, gần nhất trước) thay vì luôn luôn là parent trực tiếp của node, và trả về box mà nó thực sự hangs off, các ancestor rộng hơn đang có sẵn, cùng thông báo khi một depth vượt quá độ dài chuỗi bị clamp về box ngoài cùng.
+- Catalog element được làm mới lên 109 element, thêm `cart-count` và tùy chọn `hoverSwapImage` trên `product-image-feature` (hiện ảnh gallery kế tiếp khi trỏ chuột vào, mặc định tắt).
+
 ## [0.12.0] - 2026-09-09
 
 ### Added

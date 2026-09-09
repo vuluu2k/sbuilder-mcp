@@ -6,6 +6,12 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.13.0] - 2026-09-09
+
+### Added
+- sb_set now accepts `specials.hoverHostDepth` on a `state:"parentHover"` write, letting a rule hang off any ancestor box (1-based, nearest-first) instead of always the node's immediate parent, and reports which box it actually hung off, the wider ancestors on offer, and whether a depth past the end of the chain clamped to the outermost one.
+- Element catalog refreshed to 109 elements, adding `cart-count` and a `hoverSwapImage` option on `product-image-feature` (shows the next gallery photo on pointer-hover, off by default).
+
 ## [0.12.0] - 2026-09-09
 
 ### Added
