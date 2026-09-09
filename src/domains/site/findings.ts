@@ -76,10 +76,9 @@ export const FIX: Record<string, string> = {
     'Sticky resolves against its nearest SCROLLING ancestor, so a clipping one becomes that ' +
     'ancestor and the node pins inside a box that never scrolls.',
   hover_dead:
-    'Rewrite it: sb_set id "<id>", namespace style, state "hover", keys { … } — sb_set now ' +
-    'routes a hover to the home its element declares, and reports where it went. The values ' +
-    'currently in states.hover are read by nobody; remove them with the same call\'s `unset` ' +
-    'once the working copy is in place.',
+    'Rewrite it with the same values: sb_set id "<id>", namespace style, state "hover", ' +
+    'keys { … } — read them off the node first, because that one call both writes them where ' +
+    'the renderer looks AND clears the slot nobody reads. Nothing else to do afterwards.',
   stuck_no_host:
     'Pin something: sb_set id "<id>" (or the section it lives in), namespace style, keys ' +
     '{ "position": "sticky" } — sb_set seeds the offset and the layer order with it. Until ' +

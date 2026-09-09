@@ -377,6 +377,32 @@ export function setKeys(
     // compiler reads. Routed rather than refused: the caller asked for a hover
     // and there is a home that works; `hoverRoutingNote` says where it went.
     if (opts.state === HOVER_STATE && namespace === 'style' && hoverHome(doc.node(id).data.type) === 'legacy') {
+      // …AND CLEAR THE SLOT NOBODY READS, in the same call.
+      //
+      // On an element with this home, `states.hover` has no legitimate use: the
+      // universal compiler stands aside for it and its own renderer looks in the
+      // flat map. Leaving values there is the exact defect `sb_review` reports as
+      // `hover_dead`, so a rewrite that repaired the look and left the dead copy
+      // behind would fix the page and keep the finding — and the fix that
+      // finding names would still be unreachable, which is the shape this repo
+      // has now closed twice.
+      //
+      // Safe against the platform changing its mind: if a button ever keeps its
+      // hover in the node, its meta's `storage` becomes 'node', HOVER_HOMES says
+      // 'state', and this branch does not run at all.
+      const node = doc.node(id) as unknown as {
+        states?: Record<string, unknown>;
+        responsive?: Record<string, { states?: Record<string, unknown> }>;
+      };
+      const dead: Patch[] = [];
+      if (node.states?.[HOVER_STATE] !== undefined) {
+        dead.push({ op: 'unset', path: ['nodes', id, 'states', HOVER_STATE] });
+      }
+      for (const [bp, slot] of Object.entries(node.responsive ?? {})) {
+        if (slot?.states?.[HOVER_STATE] !== undefined) {
+          dead.push({ op: 'unset', path: ['nodes', id, 'responsive', bp, 'states', HOVER_STATE] });
+        }
+      }
       return [
         ...Object.entries(keys).map(([k, v]) => ({
           op: 'set' as const,
@@ -384,6 +410,7 @@ export function setKeys(
           value: v,
         })),
         ...(opts.unset ?? []).map((k) => ({ op: 'unset' as const, path: legacyHoverPath(id, k) })),
+        ...dead,
       ];
     }
     // Base state and per-breakpoint state are DIFFERENT PLACES in the document,

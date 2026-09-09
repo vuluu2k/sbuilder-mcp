@@ -163,7 +163,7 @@ describe('sb_review hover_dead', () => {
     ]);
     const f = reviewDesign(d).find((x) => x.code === 'hover_dead');
     expect(f?.nodeId).toBe(button);
-    expect(f?.fix).toMatch(/routes a hover/);
+    expect(f?.fix).toMatch(/clears the slot nobody reads/);
   });
 
   it('says nothing about an element the universal state serves', () => {
@@ -176,5 +176,39 @@ describe('sb_review hover_dead', () => {
     const { d, button } = card();
     d.apply(setKeys(d, button, { backgroundColor: '#D33F65' }, { namespace: 'style', state: 'hover', base: true }));
     expect(reviewDesign(d).some((x) => x.code === 'hover_dead')).toBe(false);
+  });
+});
+
+/**
+ * A repair that fixed the look and left the dead copy behind would keep the
+ * finding standing — and the fix that finding names would still be unreachable,
+ * which is the shape this repo has closed twice now.
+ */
+describe('routing a hover also clears the slot nobody reads', () => {
+  it('writes the working home and unsets the dead one in the same call', () => {
+    const { d, button } = card();
+    d.apply([
+      { op: 'set', path: ['nodes', button, 'states', 'hover', 'style', 'backgroundColor'], value: '#D33F65' },
+      { op: 'set', path: ['nodes', button, 'responsive', 'mobile', 'states', 'hover', 'style', 'color'], value: '#fff' },
+    ]);
+    expect(reviewDesign(d).some((f) => f.code === 'hover_dead')).toBe(true);
+
+    d.apply(setKeys(d, button, { backgroundColor: '#D33F65' }, { namespace: 'style', state: 'hover', base: true }));
+    const n = d.node(button) as never as {
+      config: Record<string, Record<string, unknown>>;
+      states?: Record<string, unknown>;
+      responsive?: Record<string, { states?: Record<string, unknown> }>;
+    };
+    expect(n.config.stateHover.backgroundColor).toBe('#D33F65');
+    expect(n.states?.hover).toBeUndefined();
+    expect(n.responsive?.mobile?.states?.hover).toBeUndefined();
+    expect(reviewDesign(d).some((f) => f.code === 'hover_dead')).toBe(false);
+  });
+
+  it('leaves an element the universal state serves entirely alone', () => {
+    const { d, block } = card();
+    d.apply(setKeys(d, block, { boxShadow: '0 2px 8px #0002' }, { namespace: 'style', state: 'hover', base: true }));
+    const n = d.node(block) as never as { states: Record<string, { style: Record<string, unknown> }> };
+    expect(n.states.hover.style.boxShadow).toBe('0 2px 8px #0002');
   });
 });
