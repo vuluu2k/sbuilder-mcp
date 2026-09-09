@@ -22,3 +22,25 @@ describe('Notices.once()', () => {
     expect(n.once('a', 'x')).toBe('x');
   });
 });
+
+/**
+ * MEASURED on this repo's own storefront: repairing every button on a page in
+ * one batch returned ten copies of the same 300-character paragraph. The type is
+ * the whole content of the note, so a second copy tells the caller nothing.
+ */
+describe('the hover-home note', () => {
+  it('is said once per element type, not once per node', async () => {
+    const { Notices } = await import('../src/mcp/notices.js');
+    const { hoverRoutingNote } = await import('../src/domains/site/hover.js');
+    const notices = new Notices();
+    const say = (type: string) =>
+      notices.once(`hover-home:${type}`, hoverRoutingNote(type) as string);
+
+    expect(say('button')).toMatch(/stateHover/);
+    // Nine more buttons in the same batch, and the same button next time.
+    for (let i = 0; i < 9; i += 1) expect(say('button')).toBeUndefined();
+    // A DIFFERENT type still gets its own, because it says something else.
+    expect(say('product-image-list')).toMatch(/paints nothing/);
+    expect(say('product-image-list')).toBeUndefined();
+  });
+});

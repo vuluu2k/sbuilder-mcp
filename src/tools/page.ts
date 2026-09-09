@@ -383,15 +383,24 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
       }
       const { patches, touched } = setMany(d, batch);
       // WHERE A HOVER ACTUALLY WENT. Routing it silently would leave a caller
-      // who reads the node back looking for keys in a slot they never wrote to —
-      // and, for the elements with no compiler on either home, believing they
-      // had styled something.
-      const hoverNotes: Record<string, string> = {};
+      // who reads the node back looking for keys in a slot they never wrote to.
+      //
+      // ONCE PER PROCESS PER ELEMENT TYPE, not once per node. A batch repairing
+      // every button on a page carried ten copies of the same 300-character
+      // paragraph — measured, on this repo's own storefront — which is the shape
+      // `ctx.notices` exists to prevent. The type is the whole content of the
+      // note, so a second copy tells the caller nothing they were not just told,
+      // and the ids it applies to are already in `set`.
+      const hoverTypes = new Set<string>();
       for (const e of batch) {
         if (e.state !== HOVER_STATE || e.namespace !== 'style') continue;
-        const note = hoverRoutingNote(d.doc.nodes[e.id]?.data.type ?? '');
-        if (note) hoverNotes[e.id] = note;
+        const type = d.doc.nodes[e.id]?.data.type ?? '';
+        if (hoverRoutingNote(type)) hoverTypes.add(type);
       }
+      const hoverNote = [...hoverTypes]
+        .map((t) => ctx.notices.once(`hover-home:${t}`, hoverRoutingNote(t) as string))
+        .filter((n): n is string => !!n)
+        .join(' ');
       // THE STICKY WARNING IS COMPUTED AGAINST THE DOCUMENT AS IT WILL BE, so
       // the dry run and the real run say the same thing. A caller who is told
       // only after committing has already shipped a header that does not move.
@@ -423,7 +432,7 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
           dry_run: true,
           patches,
           ...(Object.keys(sw).length ? { warnings: sw } : {}),
-          ...(Object.keys(hoverNotes).length ? { hover: hoverNotes } : {}),
+          ...(hoverNote ? { hover: hoverNote } : {}),
           ...(note ? { note } : {}),
         });
       }
@@ -436,19 +445,18 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
       }
       if (!edits) {
         const warn = warnings[batch[0].id];
-        const hv = hoverNotes[batch[0].id];
         return text({
           set: touched[0].keys,
           rev: d.rev,
           ...(warn ? { warning: warn } : {}),
-          ...(hv ? { hover: hv } : {}),
+          ...(hoverNote ? { hover: hoverNote } : {}),
         });
       }
       return text({
         set: touched,
         rev: d.rev,
         ...(Object.keys(warnings).length ? { warnings } : {}),
-        ...(Object.keys(hoverNotes).length ? { hover: hoverNotes } : {}),
+        ...(hoverNote ? { hover: hoverNote } : {}),
       });
     },
   );
