@@ -31,7 +31,8 @@ export async function gatherReadiness(
   };
   const site = encodeURIComponent(siteId);
 
-  const [pageList, gateways, shipping, globals, productList] = await Promise.all([
+  const [pageList, gateways, shipping, globals, productList, categoryList, pageLinks] =
+    await Promise.all([
     get<{ pages?: ReadinessPage[] }>(`/api/sites/${site}/pages`),
     get<{ paymentGateways?: Array<{ enabled?: boolean; configured?: boolean }> }>(
       `/api/sites/${site}/payment-gateways`,
@@ -47,6 +48,18 @@ export async function gatherReadiness(
     get<{ products?: Array<{ status?: string; priceCents?: number }>; total?: number }>(
       `/api/sites/${site}/products?limit=200`,
     ),
+    // THE CATEGORIES, and the pages they point at. `/collections/{slug}` resolves
+    // through PublishedForEntity: the category's OWN page when a page-link names
+    // one, else the DEFAULT TEMPLATE for the `category` type — and nothing on
+    // that shared template narrows the product feed to the category in the URL.
+    // So two categories with no page-links means at most one of them can be
+    // right, and the rest list the whole catalogue.
+    get<{ categories?: unknown[]; productCategories?: unknown[]; total?: number }>(
+      `/api/sites/${site}/product-categories`,
+    ),
+    get<{ links?: Array<{ linkType?: string }>; pageLinks?: Array<{ linkType?: string }> }>(
+      `/api/sites/${site}/page-links`,
+    ),
   ]);
 
   // A gateway counts only when it is BOTH enabled and configured — the editor's
@@ -59,6 +72,13 @@ export async function gatherReadiness(
 
   const methods = shipping?.shippingMethods ?? shipping?.methods;
   const shippingMethods = Array.isArray(methods) ? methods.length : null;
+
+  const cats = categoryList?.categories ?? categoryList?.productCategories;
+  const categories = Array.isArray(cats) ? (categoryList?.total ?? cats.length) : null;
+  const links = pageLinks?.links ?? pageLinks?.pageLinks;
+  const categoryPageLinks = Array.isArray(links)
+    ? links.filter((l) => l?.linkType === 'productCategory').length
+    : null;
 
   const globalNodes = globals?.globalSections
     ? globals.globalSections.flatMap((g) =>
@@ -86,5 +106,7 @@ export async function gatherReadiness(
     shippingMethods,
     pageNodes,
     globalNodes,
+    categories,
+    categoryPageLinks,
   };
 }

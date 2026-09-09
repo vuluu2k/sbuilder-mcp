@@ -190,3 +190,51 @@ describe('readinessGaps() — the catalogue', () => {
     expect(ids(null)).toEqual([]);
   });
 });
+
+/**
+ * EVERY CATEGORY SHOWS EVERY PRODUCT — reported from a real storefront, and the
+ * one readiness question that is answered by counts rather than by a document.
+ *
+ * `/collections/{slug}` falls back to the DEFAULT TEMPLATE for the `category`
+ * type, and nothing on it narrows the product feed to the category in the URL:
+ * `entityScope` threads the entity into the article feed for a blogCategory and
+ * the review feed for a product, and into nothing at all for a productCategory.
+ */
+describe('categoryScope', () => {
+  const store = (over: Record<string, unknown>) =>
+    readinessGaps({
+      pages: [
+        { type: 'checkout', status: 'published' },
+        { type: 'product', status: 'published' },
+        { type: 'complete', status: 'published' },
+        { type: 'account', status: 'published' },
+        { type: 'search', status: 'published' },
+      ],
+      liveGateways: 1,
+      shippingMethods: 1,
+      products: { active: 3, purchasable: 3 },
+      pageNodes: null,
+      globalNodes: null,
+      ...over,
+    } as never).map((g) => g.id);
+
+  it('reports a store whose categories all share one template', () => {
+    expect(store({ categories: 4, categoryPageLinks: 0 })).toContain('categoryScope');
+  });
+
+  it('says nothing once the categories point at pages of their own', () => {
+    expect(store({ categories: 4, categoryPageLinks: 4 })).not.toContain('categoryScope');
+  });
+
+  // One category CAN be served correctly by the shared template — its repeater
+  // just names that one collection — so a single-category store is not a defect.
+  it('says nothing about a store with one category', () => {
+    expect(store({ categories: 1, categoryPageLinks: 0 })).not.toContain('categoryScope');
+  });
+
+  // Silent on what it could not read, like every other check here.
+  it('says nothing when the counts are unknown', () => {
+    expect(store({ categories: null, categoryPageLinks: null })).not.toContain('categoryScope');
+    expect(store({})).not.toContain('categoryScope');
+  });
+});

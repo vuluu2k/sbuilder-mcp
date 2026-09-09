@@ -41,7 +41,8 @@ export type ReadinessGapId =
   | 'cartTrigger'
   | 'accountPage'
   | 'searchPage'
-  | 'catalogue';
+  | 'catalogue'
+  | 'categoryScope';
 
 export interface ReadinessGap {
   id: ReadinessGapId;
@@ -63,6 +64,10 @@ interface NodeLike {
 }
 
 export interface ReadinessInput {
+  /** How many product categories the store has; null when the list was unread. */
+  categories?: number | null;
+  /** How many of them point at a page of their own; null when unread. */
+  categoryPageLinks?: number | null;
   /** The site's pages; null when the list could not be read. */
   pages: ReadinessPage[] | null;
   /** Gateways a shopper could really pay through; null when unread. */
@@ -261,6 +266,43 @@ export function readinessGaps(input: ReadinessInput): ReadinessGap[] {
       fix: 'Put a control with the open_cart event in the header global section.',
     });
   }
+
+  // EVERY CATEGORY SHOWS EVERY PRODUCT, which is what a shared template does.
+  //
+  // `/collections/{slug}` resolves through PublishedForEntity: the category's
+  // OWN page when a page-link names one, else the DEFAULT TEMPLATE for the
+  // `category` type. Nothing on that shared template narrows the product feed to
+  // the category in the URL — `entityScope` threads the entity into the article
+  // feed for a blogCategory and the review feed for a product, and into nothing
+  // at all for a productCategory — so a repeater on `all_products` repeats the
+  // whole catalogue, and one on `collection` names ONE fixed id. Either way at
+  // most one category can be right.
+  //
+  // Reported on the COUNTS rather than by reading the template's document: two
+  // categories and no page-links is already the defect, whatever the template
+  // says, and a document fetch per review to confirm it would cost every store
+  // that has this right. Silent when either count could not be read, like every
+  // other check here.
+  if ((input.categories ?? 0) > 1 && input.categoryPageLinks === 0) {
+    gaps.push({
+      id: 'categoryScope',
+      draft: false,
+      problem:
+        `${input.categories} product categories share ONE page — none of them points at a page ` +
+        'of its own, so /collections/{slug} serves the default template for every one. Nothing ' +
+        'on that template narrows the product feed to the category in the URL (the blog twin ' +
+        'auto-scopes; this one does not), so a shopper who picks a category sees the whole ' +
+        'catalogue, or one other category, on all of them.',
+      fix:
+        'Give each category its own page and set its product repeater to config ' +
+        '{ "collectionType": "collection", "collectionId": "<that category id>" }, then link ' +
+        'them in one call: sb_api_call post:/api/sites/{siteId}/page-links/bulk with body ' +
+        '{ "linkType": "productCategory", "linkIds": ["<category ids>"], "pageId": "<page id>" } ' +
+        '— one call per page, since each page is one category. sb_duplicate the template you ' +
+        'already have rather than rebuilding it.',
+    });
+  }
+
   return gaps;
 }
 

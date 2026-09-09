@@ -777,6 +777,7 @@ publish panel then listed five gaps.
 | `productPage` | No published `product` page, so every link out of a product card 404s |
 | `shipping` | No delivery option: the checkout's select is empty and every order ships free |
 | `cartTrigger` | Nothing opens the cart on its own; a shopper who closes the drawer cannot get back |
+| `categoryScope` | Two or more product categories and none points at a page of its own, so `/collections/{slug}` serves one default template for every one — and nothing on it narrows the product feed to the category in the URL. A shopper who picks a category sees the whole catalogue. The blog twin auto-scopes by slug; this one does not |
 
 Each gap carries `draft: true` when the page EXISTS but is unpublished, because "publish the
 one you made" and "create one" are different jobs. Ordered most-blocking first.
