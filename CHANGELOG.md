@@ -6,6 +6,12 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.13.1] - 2026-09-09
+
+### Fixed
+- sb_store's checkout build now seeds a `form:success` event that sends the shopper to `/checkout/complete`, since the form record's own `settings.afterSubmit.action = "redirect"` is stored by the API but carried nowhere by the platform, leaving a completed order on the checkout page with every cart total reading 0.
+- sb_review now reports `order_goes_nowhere` for a checkout-shaped page (a form alongside a cart total) whose form has no navigating `form:success` event, naming the sb_event call that fixes it.
+
 ## [0.13.0] - 2026-09-09
 
 ### Added

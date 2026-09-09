@@ -1,6 +1,6 @@
 {
   "name": "sbuilder-mcp",
-  "version": "0.13.0",
+  "version": "0.13.1",
   "description": "MCP server that designs and operates a Store Builder site — pages, data, theme and publish — through the platform's own API and live-edit protocol.",
   "mcpName": "io.github.vuluu2k/sbuilder-mcp",
   "type": "module",

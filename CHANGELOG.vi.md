@@ -6,6 +6,12 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.13.1] - 2026-09-09
+
+### Fixed
+- Việc dựng checkout của sb_store giờ tự gieo một event `form:success` đưa khách hàng tới `/checkout/complete`, vì `settings.afterSubmit.action = "redirect"` của chính form record được API lưu lại nhưng nền tảng không mang nó đi đâu cả, khiến một đơn hàng đã hoàn tất vẫn ở lại trang checkout với mọi tổng giỏ hàng hiện 0.
+- sb_review giờ báo cáo `order_goes_nowhere` cho một trang có dáng checkout (có form và có cart total) mà form của nó không có event `form:success` nào điều hướng đi, nêu rõ lệnh sb_event để khắc phục.
+
 ## [0.13.0] - 2026-09-09
 
 ### Added
