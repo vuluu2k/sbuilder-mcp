@@ -6,6 +6,14 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.12.0] - 2026-09-09
+
+### Added
+- npm run codegen:check giờ cũng từ chối một checkout mà HEAD của nó mang các commit chạm vào những thư mục mà nó đọc (schema/src, editor/src, server/render, server/docs) mà nhánh upstream không có, nêu tên các commit đó; việc chỉ kiểm tra thay đổi chưa commit từng bị qua mặt một lần, bởi một tính năng đã được commit ở local nhưng chưa từng push, khiến working tree trông sạch trong khi catalog mà nó tạo ra lại đi trước mọi nền tảng đã triển khai. Một worktree tách rời checkout tại origin/main không có upstream nên được miễn kiểm tra này, đúng như cách mà chính kiểm tra này khuyến nghị; `--dirty` vẫn cho phép ghi đè.
+
+### Fixed
+- Catalog request-shape được sinh ra giờ bao phủ thêm ba write operation mà trình phân tích handler trước đây bỏ sót hoặc gán sai: `roles/{roleId}` (một case arm liệt kê nhiều phương thức HTTP cùng lúc), `products/{productId}/categories` (một dispatcher định tuyến theo một đoạn path cố định thay vì theo method), và `sites/{siteId}/org` (một khối doc comment dùng chung cho hai handler liền kề được khai báo theo thứ tự ngược lại, giờ được gán theo đúng tên mà nó mở đầu). 162 trong số 276 write operation giờ đã có shape, tăng từ 157, nhờ đó sb_api_call và sb_undo có thể thao tác trên cả ba mà không cần đoán body.
+
 ## [0.11.3] - 2026-09-09
 
 ### Fixed

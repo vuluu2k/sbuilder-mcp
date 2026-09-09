@@ -6,6 +6,14 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.12.0] - 2026-09-09
+
+### Added
+- npm run codegen:check now also refuses a checkout whose HEAD carries commits touching the directories it reads (schema/src, editor/src, server/render, server/docs) that its upstream branch does not have, naming the commits; an uncommitted-only check had already been fooled once, by a feature committed locally and never pushed, so the tree read clean while the catalog it fed was ahead of every deployed platform. A detached worktree checked out at origin/main has no upstream and is therefore exempt, which is the shape the check itself recommends; `--dirty` still overrides it.
+
+### Fixed
+- The generated request-shape catalog now covers three write operations its handler parser was missing or mis-attributing: `roles/{roleId}` (a case arm listing several HTTP methods together), `products/{productId}/categories` (a dispatcher that routes by a literal path segment rather than by method), and `sites/{siteId}/org` (a doc comment block shared by two adjacent handlers declared in the opposite order, now attributed by the name it opens with). 162 of 276 write operations now carry a shape, up from 157, so sb_api_call and sb_undo can act on all three without guessing a body.
+
 ## [0.11.3] - 2026-09-09
 
 ### Fixed
