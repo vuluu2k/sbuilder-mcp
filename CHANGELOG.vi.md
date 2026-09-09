@@ -6,6 +6,11 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.11.3] - 2026-09-09
+
+### Fixed
+- sb_set giờ chỉ nói ghi chú định tuyến hover một lần cho mỗi loại element trong mỗi tiến trình thay vì một lần cho mỗi node, vì việc sửa mọi nút button trên một trang trong cùng một batch trước đây trả về mười bản sao của cùng một đoạn văn 300 ký tự; một loại element khác vẫn nhận được ghi chú riêng của nó, vì nó nói một điều khác.
+
 ## [0.11.2] - 2026-09-09
 
 ### Fixed
