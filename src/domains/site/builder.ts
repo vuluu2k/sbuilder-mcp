@@ -250,6 +250,23 @@ export function setKeys(
      * it, exactly as it does for the plain namespace.
      */
     state?: string;
+    /**
+     * Keys to REMOVE from the same slot `keys` writes to.
+     *
+     * A write-only tool cannot undo itself, and this repo proved the cost of
+     * that on its own review: `stuck_no_host` fires on an override with nothing
+     * pinned above it and names "remove the stuck slot" as the fix — a fix no
+     * tool could perform. A finding whose repair is unreachable is worse than no
+     * finding, because it reports a defect and then strands the caller.
+     *
+     * Setting a key to null is NOT the same thing and must not be offered as
+     * one: null is a legitimate stored value, and a slot holding `{opacity:
+     * null}` still has length, so every "is anything overridden here" test —
+     * `hasStuckOverrides` among them — keeps answering yes. Unsetting the keys
+     * leaves `{}`, which those tests read as absent, so clearing the last key of
+     * a state slot genuinely clears the state.
+     */
+    unset?: string[];
   },
 ): Patch[] {
   doc.node(id); // throws naming the id if it is not there
@@ -272,6 +289,20 @@ export function setKeys(
   // a breakpoint, never inside a stuck slot.
   if (namespace === 'config') refuseStuckAfter(doc.doc, id, keys);
 
+  // The paths `keys` and `unset` share. Computed once so a removal can never
+  // land somewhere a write would not have.
+  const slot = (): string[] => {
+    if (namespace === 'specials') return ['nodes', id, 'specials'];
+    if (opts.state) {
+      return opts.base
+        ? ['nodes', id, 'states', opts.state, namespace]
+        : ['nodes', id, 'responsive', opts.breakpoint ?? 'desktop', 'states', opts.state, namespace];
+    }
+    if (opts.base) return ['nodes', id, namespace];
+    return ['nodes', id, 'responsive', opts.breakpoint ?? 'desktop', namespace];
+  };
+  const removals: Patch[] = (opts.unset ?? []).map((k) => ({ op: 'unset' as const, path: [...slot(), k] }));
+
   if (namespace === 'specials') {
     refuseComposedStamp(keys);
     // `specials` is content and identity, base-only by definition, and states
@@ -284,11 +315,14 @@ export function setKeys(
           'state. Style is what has states.',
       );
     }
-    return Object.entries(keys).map(([k, v]) => ({
-      op: 'set' as const,
-      path: ['nodes', id, 'specials', k],
-      value: v,
-    }));
+    return [
+      ...Object.entries(keys).map(([k, v]) => ({
+        op: 'set' as const,
+        path: ['nodes', id, 'specials', k],
+        value: v,
+      })),
+      ...removals,
+    ];
   }
 
   // A STATE IS ANSWERED BEFORE `base`, because `base` used to be tested first
@@ -303,7 +337,10 @@ export function setKeys(
     // class a runtime island toggles on the PINNED element, and the renderer
     // emits no rule at all when there is nothing pinned to hang it off. See
     // sticky.ts — this is the whole reason that module exists.
-    if (opts.state === STUCK_STATE) {
+    // A pure REMOVAL is exempt: unsetting a hostless stuck override is exactly
+    // the repair `sb_review` asks for, and refusing it would leave the caller
+    // holding a finding they cannot act on.
+    if (opts.state === STUCK_STATE && Object.keys(keys).length) {
       requireStuckHost(doc.doc, id);
       if (namespace === 'config') refuseStuckConfig(keys);
     }
@@ -319,6 +356,7 @@ export function setKeys(
         path: [...prefix, namespace, k],
         value: v,
       })),
+      ...removals,
       ...(rebind ? [rebind] : []),
     ];
   }
@@ -361,6 +399,7 @@ export function setKeys(
         path: ['nodes', id, namespace, k],
         value: v,
       })),
+      ...removals,
       ...(rebind ? [rebind] : []),
     ];
   }
@@ -372,6 +411,7 @@ export function setKeys(
       path: ['nodes', id, 'responsive', bp, namespace, k],
       value: v,
     })),
+    ...removals,
     ...(rebind ? [rebind] : []),
   ];
 }
@@ -584,6 +624,8 @@ export interface SetEdit {
   breakpoint?: Breakpoint;
   base?: boolean;
   state?: string;
+  /** Keys to remove from the same slot — see setKeys. */
+  unset?: string[];
 }
 
 /**
@@ -601,7 +643,7 @@ export function setMany(doc: PageDoc, edits: SetEdit[]): { patches: Patch[]; tou
   const patches: Patch[] = [];
   const touched: Array<{ id: string; keys: string[] }> = [];
   for (const e of edits) {
-    patches.push(...setKeys(doc, e.id, e.keys, { namespace: e.namespace, breakpoint: e.breakpoint, base: e.base, state: e.state }));
+    patches.push(...setKeys(doc, e.id, e.keys, { namespace: e.namespace, breakpoint: e.breakpoint, base: e.base, state: e.state, unset: e.unset }));
     touched.push({ id: e.id, keys: Object.keys(e.keys) });
   }
   return { patches, touched };

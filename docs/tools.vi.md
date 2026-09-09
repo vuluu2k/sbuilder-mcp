@@ -230,10 +230,11 @@ ra đều lưu được, publish được và render mãi placeholder.
 | --- | --- | --- |
 | `id` | string | |
 | `namespace` | `style` \| `config` \| `specials` | |
-| `keys` | object | |
+| `keys` | object | Có thể bỏ khi `unset` đã làm phần việc |
+| `unset` | string[]? | Các key cần XOÁ khỏi đúng slot đó — cách duy nhất để hoàn tác một lần ghi. Đặt `null` không tương đương: null là một giá trị được lưu, nên override vẫn bị tính là đang tồn tại |
 | `breakpoint` | `desktop` \| `laptop` \| `tablet` \| `mobile` | Mặc định `desktop` |
 | `base` | boolean? | Ghi ở base thay vì theo breakpoint |
-| `edits` | array? | Nhiều node trong một lần gọi: `[{ id, namespace, keys, breakpoint?, base?, state? }]`; các tham số một-node ở trên khi đó bị bỏ qua |
+| `edits` | array? | Nhiều node trong một lần gọi: `[{ id, namespace, keys, breakpoint?, base?, state?, unset? }]`; các tham số một-node ở trên khi đó bị bỏ qua |
 | `dry_run` | boolean? | Mặc định true |
 
 **Base và breakpoint.** `sb_set` mặc định ghi theo breakpoint, vì một thiết kế nên đáp ứng. Base cũng hợp lệ — cascade giải một khoá theo thứ tự *slot hiện tại → rộng hơn → base → hẹp hơn*, nên base là lớp dự phòng, và là chỗ default của chính mỗi element được gieo vào. Dùng base cho giá trị thật sự không nên thay đổi.

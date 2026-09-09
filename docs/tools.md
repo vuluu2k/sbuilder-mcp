@@ -229,10 +229,11 @@ forever.
 | --- | --- | --- |
 | `id` | string | |
 | `namespace` | `style` \| `config` \| `specials` | |
-| `keys` | object | |
+| `keys` | object | Optional when `unset` carries the work |
+| `unset` | string[]? | Keys to REMOVE from the same slot — the only way to undo a write. `null` is not the same: it is a stored value, so the override still counts as present |
 | `breakpoint` | `desktop` \| `laptop` \| `tablet` \| `mobile` | Defaults to `desktop` |
 | `base` | boolean? | Write at base instead of per breakpoint |
-| `edits` | array? | Many nodes in one call: `[{ id, namespace, keys, breakpoint?, base?, state? }]`; the single-node fields above are then ignored |
+| `edits` | array? | Many nodes in one call: `[{ id, namespace, keys, breakpoint?, base?, state?, unset? }]`; the single-node fields above are then ignored |
 | `dry_run` | boolean? | Defaults to true |
 
 **Base and breakpoints.** `sb_set` writes per breakpoint by default, because a design should respond. Base is legitimate too — the cascade resolves a key *current slot → wider → base → narrower*, so base is the fallback layer, and it is where every element's own defaults are seeded. Use base for a value that genuinely should not vary.

@@ -333,6 +333,13 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
         id: z.string().optional(),
         namespace: z.enum(['style', 'config', 'specials']).optional(),
         keys: z.record(z.unknown()).optional(),
+        unset: z
+          .array(z.string())
+          .optional()
+          .describe(
+            'Keys to REMOVE from the same slot — the only way to undo a write. Setting null ' +
+              'is not the same: null is a stored value, so the override still counts as present.',
+          ),
         breakpoint: z.enum(['desktop', 'laptop', 'tablet', 'mobile']).optional(),
         base: z.boolean().optional(),
         state: z
@@ -352,6 +359,7 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
               breakpoint: z.enum(['desktop', 'laptop', 'tablet', 'mobile']).optional(),
               base: z.boolean().optional(),
               state: z.string().optional(),
+              unset: z.array(z.string()).optional(),
             }),
           )
           .optional(),
@@ -359,15 +367,18 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
       },
       annotations: { readOnlyHint: false, destructiveHint: false },
     },
-    async ({ id, namespace, keys, breakpoint, base, state, edits, dry_run }) => {
+    async ({ id, namespace, keys, breakpoint, base, state, unset, edits, dry_run }) => {
       const d = session.current();
       // One shape inside: a single edit is a batch of one.
       const batch: SetEdit[] = edits ?? [];
       if (!edits) {
-        if (!id || !namespace || !keys) {
-          throw new Error('sbuilder: sb_set needs id + namespace + keys, or edits[]');
+        // `keys` is optional when `unset` carries the work: a pure removal is a
+        // legitimate edit, and demanding an empty object alongside it would make
+        // the repair `sb_review` names read like a workaround.
+        if (!id || !namespace || (!keys && !unset?.length)) {
+          throw new Error('sbuilder: sb_set needs id + namespace + keys (or unset), or edits[]');
         }
-        batch.push({ id, namespace, keys, breakpoint: breakpoint as Breakpoint | undefined, base, state });
+        batch.push({ id, namespace, keys: keys ?? {}, breakpoint: breakpoint as Breakpoint | undefined, base, state, unset });
       }
       const { patches, touched } = setMany(d, batch);
       // THE STICKY WARNING IS COMPUTED AGAINST THE DOCUMENT AS IT WILL BE, so

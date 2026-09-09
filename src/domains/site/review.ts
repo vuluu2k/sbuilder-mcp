@@ -261,9 +261,20 @@ export function reviewDesign(doc: PageDoc): Finding[] {
         });
       }
     }
-    const hasStuck =
-      styled.states?.[STUCK_STATE] !== undefined ||
-      Object.values(styled.responsive ?? {}).some((r) => r?.states?.[STUCK_STATE] !== undefined);
+    // COUNT THE KEYS, don't ask whether the slot exists — the platform's own
+    // `HasStuckOverrides` tests `len(slot.Style) > 0`, and an EMPTY slot paints
+    // nothing whether or not there is a host. Asking the weaker question made
+    // this a false positive on the one document the fix produces: unsetting the
+    // last key leaves `{}` behind, so the repair the finding names left the
+    // finding standing.
+    const stuckSlots = [
+      styled.states?.[STUCK_STATE],
+      ...Object.values(styled.responsive ?? {}).map((r) => r?.states?.[STUCK_STATE]),
+    ];
+    const hasStuck = stuckSlots.some((slot) => {
+      const s = slot as { style?: object; config?: object } | undefined;
+      return !!s && (Object.keys(s.style ?? {}).length > 0 || Object.keys(s.config ?? {}).length > 0);
+    });
     if (hasStuck && !stuckHostOf(d, id)) {
       out.push({
         code: 'stuck_no_host',

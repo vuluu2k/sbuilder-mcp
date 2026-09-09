@@ -339,3 +339,55 @@ describe('the stuck-scroll notice', () => {
     expect(notices.once('stuck-scroll', 'x')).toBeUndefined();
   });
 });
+
+/**
+ * The repair `sb_review` names. A write-only tool cannot undo itself, and a
+ * finding whose fix no tool can perform is worse than no finding.
+ */
+describe('sb_set unset', () => {
+  it('removes a key from the same slot a write would land in', () => {
+    const { d, section } = page();
+    pin(d, section, 'sticky');
+    d.apply(
+      setKeys(d, section, { boxShadow: '0 2px 8px #0002' }, { namespace: 'style', state: 'stuck', base: true }),
+    );
+    const states = (d.node(section) as never as { states: Record<string, { style: Record<string, unknown> }> }).states;
+    expect(states.stuck.style.boxShadow).toBe('0 2px 8px #0002');
+
+    d.apply(setKeys(d, section, {}, { namespace: 'style', state: 'stuck', base: true, unset: ['boxShadow'] }));
+    expect(states.stuck.style.boxShadow).toBeUndefined();
+    // …and the slot is now EMPTY, which is what every "is anything overridden
+    // here" test reads as absent. Setting null would have left it counting.
+    expect(Object.keys(states.stuck.style).length).toBe(0);
+  });
+
+  it('clears stuck_no_host, which is the finding that asked for it', () => {
+    const { d, section, logo } = page();
+    pin(d, section, 'sticky');
+    d.apply(setKeys(d, logo, { fontSize: '12px' }, { namespace: 'style', state: 'stuck' }));
+    d.apply(setKeys(d, section, { position: 'relative' }, { namespace: 'style', base: true }));
+    expect(reviewDesign(d).some((f) => f.code === 'stuck_no_host')).toBe(true);
+
+    d.apply(setKeys(d, logo, {}, { namespace: 'style', state: 'stuck', unset: ['fontSize'] }));
+    expect(reviewDesign(d).some((f) => f.code === 'stuck_no_host')).toBe(false);
+  });
+
+  // Refusing the removal would strand the caller: the override it refuses is
+  // exactly the one they are trying to delete.
+  it('lets a hostless stuck override be removed even though writing one is refused', () => {
+    const { d, logo } = page();
+    expect(() => setKeys(d, logo, { fontSize: '12px' }, { namespace: 'style', state: 'stuck' })).toThrow();
+    expect(() =>
+      setKeys(d, logo, {}, { namespace: 'style', state: 'stuck', unset: ['fontSize'] }),
+    ).not.toThrow();
+  });
+
+  it('removes a plain per-breakpoint key too', () => {
+    const { d, section } = page();
+    d.apply(setKeys(d, section, { gap: '8px' }, { namespace: 'style', breakpoint: 'mobile' }));
+    const n = d.node(section) as never as { responsive: Record<string, { style: Record<string, unknown> }> };
+    expect(n.responsive.mobile.style.gap).toBe('8px');
+    d.apply(setKeys(d, section, {}, { namespace: 'style', breakpoint: 'mobile', unset: ['gap'] }));
+    expect(n.responsive.mobile.style.gap).toBeUndefined();
+  });
+});

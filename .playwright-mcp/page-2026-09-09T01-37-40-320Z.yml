@@ -1,0 +1,84 @@
+- generic [ref=f14e1]:
+  - generic [ref=f14e2]:
+    - generic [ref=f14e5]:
+      - heading "BÉ CƯNG" [level=1] [ref=f14e6]
+      - generic [ref=f14e7]:
+        - link "Trang chủ" [ref=f14e8] [cursor=pointer]:
+          - /url: /
+        - link "Sản phẩm" [ref=f14e9] [cursor=pointer]:
+          - /url: /san-pham
+        - link "Giới thiệu" [ref=f14e10] [cursor=pointer]:
+          - /url: /gioi-thieu
+        - link "Liên hệ" [ref=f14e11] [cursor=pointer]:
+          - /url: /lien-he
+        - link "Tài khoản" [ref=f14e12] [cursor=pointer]:
+          - /url: /account
+        - button "Giỏ hàng" [ref=f14e13] [cursor=pointer]
+    - generic [ref=f14e17]:
+      - generic [ref=f14e18]:
+        - generic [ref=f14e22] [cursor=pointer]
+        - generic [ref=f14e23]:
+          - paragraph [ref=f14e24]:
+            - generic [ref=f14e25]: Set bộ thu đông giữ ấm
+          - generic [ref=f14e26]:
+            - paragraph [ref=f14e27]: 359.000 ₫
+            - paragraph [ref=f14e28]: 459.000 ₫
+          - generic [ref=f14e29]:
+            - generic [ref=f14e30]:
+              - generic [ref=f14e31]: Kích cỡ
+              - generic [ref=f14e32] [cursor=pointer]: 2-3 tuổi
+            - generic [ref=f14e38]:
+              - generic [ref=f14e39]: Màu
+              - generic [ref=f14e40] [cursor=pointer]: Ghi xám
+          - generic [ref=f14e46]:
+            - generic [ref=f14e47] [cursor=pointer]
+            - spinbutton [ref=f14e48]: "1"
+            - generic [ref=f14e49] [cursor=pointer]
+          - button "Thêm vào giỏ hàng" [active] [ref=f14e50] [cursor=pointer]
+          - generic [ref=f14e51]: Set áo nỉ bông và quần dài cùng chất liệu, lớp lông cừu bên trong giữ ấm tốt cho mùa lạnh miền Bắc. Cổ áo cao vừa phải, bo tay và bo gấu chống gió lùa. Quần có chun lưng điều chỉnh được.
+      - link "Set bộ thu đông giữ ấm" [ref=f14e53] [cursor=pointer]:
+        - /url: /products/set-bo-thu-dong
+    - generic [ref=f14e56]:
+      - heading "Bé có thể thích" [level=2] [ref=f14e57]
+      - generic [ref=f14e59]:
+        - heading "Chưa có sản phẩm nào" [level=3] [ref=f14e63]
+        - paragraph [ref=f14e64]: Hàng mới sẽ lên kệ ở đây, bố mẹ ghé lại sau nhé.
+    - generic [ref=f14e67]:
+      - heading "BÉ CƯNG" [level=2] [ref=f14e68]
+      - paragraph [ref=f14e69]: Thời trang trẻ em 2–9 tuổi · 82 Trần Hưng Đạo, Quận 1, TP. Hồ Chí Minh
+      - paragraph [ref=f14e70]: 0909 123 456 · xinchao@becung.vn · 8:00–21:00 mỗi ngày
+      - paragraph [ref=f14e71]: © 2026 Bé Cưng. Đổi trả trong 7 ngày · Giao toàn quốc
+    - generic [ref=f14e72]:
+      - heading "Giỏ hàng" [level=2] [ref=f14e74]
+      - generic [ref=f14e80]:
+        - generic [ref=f14e81]:
+          - generic [ref=f14e84]:
+            - generic [ref=f14e85] [cursor=pointer]
+            - generic [ref=f14e86] [cursor=pointer]
+            - generic [ref=f14e87] [cursor=pointer]
+          - generic [ref=f14e88]:
+            - heading "Quần jean co giãn bé trai" [level=4] [ref=f14e89]
+            - generic [ref=f14e90]: 249.000 ₫
+          - generic [ref=f14e91]:
+            - generic [ref=f14e92] [cursor=pointer]
+            - spinbutton [ref=f14e93]: "1"
+            - generic [ref=f14e94] [cursor=pointer]
+        - generic [ref=f14e98]:
+          - generic [ref=f14e101]:
+            - generic [ref=f14e102] [cursor=pointer]
+            - generic [ref=f14e103] [cursor=pointer]
+            - generic [ref=f14e104] [cursor=pointer]
+          - generic [ref=f14e105]:
+            - heading "Set bộ thu đông giữ ấm" [level=4] [ref=f14e106]
+            - generic [ref=f14e107]: 359.000 ₫
+          - generic [ref=f14e108]:
+            - generic [ref=f14e109] [cursor=pointer]
+            - spinbutton [ref=f14e110]: "1"
+            - generic [ref=f14e111] [cursor=pointer]
+      - generic [ref=f14e115]:
+        - button "Thanh toán" [ref=f14e116] [cursor=pointer]
+        - button "Tiếp tục mua sắm" [ref=f14e117] [cursor=pointer]
+  - status:
+    - generic [ref=f14e119]:
+      - generic [ref=f14e124]: Đã thêm vào giỏ hàng
+      - button "Close" [ref=f14e126] [cursor=pointer]
