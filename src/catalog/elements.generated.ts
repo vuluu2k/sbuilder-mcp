@@ -3,7 +3,7 @@
 import type { CatalogElement, NodeSeed, SatelliteRule, TraitDescription } from './element-types.js';
 
 export const ELEMENT_SOURCE = {
-  "count": 109,
+  "count": 110,
   "docSchemaVersion": 2
 } as const;
 
@@ -26702,6 +26702,1058 @@ export const ELEMENTS: Record<string, CatalogElement> = {
       "description"
     ]
   },
+  "rating-stars": {
+    "type": "rating-stars",
+    "label": "Rating stars",
+    "category": "dataset",
+    "isContainer": false,
+    "isRootOnly": false,
+    "locked": false,
+    "hideInLayer": false,
+    "childAllows": [],
+    "defaults": {
+      "specials": {
+        "ratingValue": ""
+      },
+      "config": {
+        "datasetSource": "product",
+        "starSize": 18,
+        "starGap": 2,
+        "starColor": "#f5a524",
+        "starEmptyColor": "#d4d4d4"
+      },
+      "style": {
+        "width": "fit-content",
+        "height": "fit-content"
+      },
+      "bindings": [
+        {
+          "id": "bind-rating",
+          "source": "product.ratingAverage",
+          "field": "specials.boundRating",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "product_general"
+          }
+        }
+      ]
+    },
+    "bindingsFor": {
+      "product|title": [
+        {
+          "id": "bind-rating",
+          "source": "product.ratingAverage",
+          "field": "specials.boundRating",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "product_general"
+          }
+        }
+      ],
+      "product|vendor": [
+        {
+          "id": "bind-rating",
+          "source": "product.ratingAverage",
+          "field": "specials.boundRating",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "product_general"
+          }
+        }
+      ],
+      "product|description": [
+        {
+          "id": "bind-rating",
+          "source": "product.ratingAverage",
+          "field": "specials.boundRating",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "product_general"
+          }
+        }
+      ],
+      "product|summary": [
+        {
+          "id": "bind-rating",
+          "source": "product.ratingAverage",
+          "field": "specials.boundRating",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "product_general"
+          }
+        }
+      ],
+      "product|content": [
+        {
+          "id": "bind-rating",
+          "source": "product.ratingAverage",
+          "field": "specials.boundRating",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "product_general"
+          }
+        }
+      ],
+      "product|author": [
+        {
+          "id": "bind-rating",
+          "source": "product.ratingAverage",
+          "field": "specials.boundRating",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "product_general"
+          }
+        }
+      ],
+      "product|date": [
+        {
+          "id": "bind-rating",
+          "source": "product.ratingAverage",
+          "field": "specials.boundRating",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "product_general"
+          }
+        }
+      ],
+      "product|image": [
+        {
+          "id": "bind-rating",
+          "source": "product.ratingAverage",
+          "field": "specials.boundRating",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "product_general"
+          }
+        }
+      ],
+      "product|price": [
+        {
+          "id": "bind-rating",
+          "source": "product.ratingAverage",
+          "field": "specials.boundRating",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "product_general"
+          }
+        }
+      ],
+      "product|prices": [
+        {
+          "id": "bind-rating",
+          "source": "product.ratingAverage",
+          "field": "specials.boundRating",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "product_general"
+          }
+        }
+      ],
+      "product|url": [
+        {
+          "id": "bind-rating",
+          "source": "product.ratingAverage",
+          "field": "specials.boundRating",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "product_general"
+          }
+        }
+      ],
+      "product|name": [
+        {
+          "id": "bind-rating",
+          "source": "product.ratingAverage",
+          "field": "specials.boundRating",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "product_general"
+          }
+        }
+      ],
+      "category|title": [
+        {
+          "id": "bind-rating",
+          "source": "product.ratingAverage",
+          "field": "specials.boundRating",
+          "target": {
+            "type": "category",
+            "id": "",
+            "kind": "category_general"
+          }
+        }
+      ],
+      "category|vendor": [
+        {
+          "id": "bind-rating",
+          "source": "product.ratingAverage",
+          "field": "specials.boundRating",
+          "target": {
+            "type": "category",
+            "id": "",
+            "kind": "category_general"
+          }
+        }
+      ],
+      "category|description": [
+        {
+          "id": "bind-rating",
+          "source": "product.ratingAverage",
+          "field": "specials.boundRating",
+          "target": {
+            "type": "category",
+            "id": "",
+            "kind": "category_general"
+          }
+        }
+      ],
+      "category|summary": [
+        {
+          "id": "bind-rating",
+          "source": "product.ratingAverage",
+          "field": "specials.boundRating",
+          "target": {
+            "type": "category",
+            "id": "",
+            "kind": "category_general"
+          }
+        }
+      ],
+      "category|content": [
+        {
+          "id": "bind-rating",
+          "source": "product.ratingAverage",
+          "field": "specials.boundRating",
+          "target": {
+            "type": "category",
+            "id": "",
+            "kind": "category_general"
+          }
+        }
+      ],
+      "category|author": [
+        {
+          "id": "bind-rating",
+          "source": "product.ratingAverage",
+          "field": "specials.boundRating",
+          "target": {
+            "type": "category",
+            "id": "",
+            "kind": "category_general"
+          }
+        }
+      ],
+      "category|date": [
+        {
+          "id": "bind-rating",
+          "source": "product.ratingAverage",
+          "field": "specials.boundRating",
+          "target": {
+            "type": "category",
+            "id": "",
+            "kind": "category_general"
+          }
+        }
+      ],
+      "category|image": [
+        {
+          "id": "bind-rating",
+          "source": "product.ratingAverage",
+          "field": "specials.boundRating",
+          "target": {
+            "type": "category",
+            "id": "",
+            "kind": "category_general"
+          }
+        }
+      ],
+      "category|price": [
+        {
+          "id": "bind-rating",
+          "source": "product.ratingAverage",
+          "field": "specials.boundRating",
+          "target": {
+            "type": "category",
+            "id": "",
+            "kind": "category_general"
+          }
+        }
+      ],
+      "category|prices": [
+        {
+          "id": "bind-rating",
+          "source": "product.ratingAverage",
+          "field": "specials.boundRating",
+          "target": {
+            "type": "category",
+            "id": "",
+            "kind": "category_general"
+          }
+        }
+      ],
+      "category|url": [
+        {
+          "id": "bind-rating",
+          "source": "product.ratingAverage",
+          "field": "specials.boundRating",
+          "target": {
+            "type": "category",
+            "id": "",
+            "kind": "category_general"
+          }
+        }
+      ],
+      "category|name": [
+        {
+          "id": "bind-rating",
+          "source": "product.ratingAverage",
+          "field": "specials.boundRating",
+          "target": {
+            "type": "category",
+            "id": "",
+            "kind": "category_general"
+          }
+        }
+      ],
+      "article|title": [
+        {
+          "id": "bind-rating",
+          "source": "product.ratingAverage",
+          "field": "specials.boundRating",
+          "target": {
+            "type": "article",
+            "id": "",
+            "kind": "article_general"
+          }
+        }
+      ],
+      "article|vendor": [
+        {
+          "id": "bind-rating",
+          "source": "product.ratingAverage",
+          "field": "specials.boundRating",
+          "target": {
+            "type": "article",
+            "id": "",
+            "kind": "article_general"
+          }
+        }
+      ],
+      "article|description": [
+        {
+          "id": "bind-rating",
+          "source": "product.ratingAverage",
+          "field": "specials.boundRating",
+          "target": {
+            "type": "article",
+            "id": "",
+            "kind": "article_general"
+          }
+        }
+      ],
+      "article|summary": [
+        {
+          "id": "bind-rating",
+          "source": "product.ratingAverage",
+          "field": "specials.boundRating",
+          "target": {
+            "type": "article",
+            "id": "",
+            "kind": "article_general"
+          }
+        }
+      ],
+      "article|content": [
+        {
+          "id": "bind-rating",
+          "source": "product.ratingAverage",
+          "field": "specials.boundRating",
+          "target": {
+            "type": "article",
+            "id": "",
+            "kind": "article_general"
+          }
+        }
+      ],
+      "article|author": [
+        {
+          "id": "bind-rating",
+          "source": "product.ratingAverage",
+          "field": "specials.boundRating",
+          "target": {
+            "type": "article",
+            "id": "",
+            "kind": "article_general"
+          }
+        }
+      ],
+      "article|date": [
+        {
+          "id": "bind-rating",
+          "source": "product.ratingAverage",
+          "field": "specials.boundRating",
+          "target": {
+            "type": "article",
+            "id": "",
+            "kind": "article_general"
+          }
+        }
+      ],
+      "article|image": [
+        {
+          "id": "bind-rating",
+          "source": "product.ratingAverage",
+          "field": "specials.boundRating",
+          "target": {
+            "type": "article",
+            "id": "",
+            "kind": "article_general"
+          }
+        }
+      ],
+      "article|price": [
+        {
+          "id": "bind-rating",
+          "source": "product.ratingAverage",
+          "field": "specials.boundRating",
+          "target": {
+            "type": "article",
+            "id": "",
+            "kind": "article_general"
+          }
+        }
+      ],
+      "article|prices": [
+        {
+          "id": "bind-rating",
+          "source": "product.ratingAverage",
+          "field": "specials.boundRating",
+          "target": {
+            "type": "article",
+            "id": "",
+            "kind": "article_general"
+          }
+        }
+      ],
+      "article|url": [
+        {
+          "id": "bind-rating",
+          "source": "product.ratingAverage",
+          "field": "specials.boundRating",
+          "target": {
+            "type": "article",
+            "id": "",
+            "kind": "article_general"
+          }
+        }
+      ],
+      "article|name": [
+        {
+          "id": "bind-rating",
+          "source": "product.ratingAverage",
+          "field": "specials.boundRating",
+          "target": {
+            "type": "article",
+            "id": "",
+            "kind": "article_general"
+          }
+        }
+      ],
+      "course|title": [
+        {
+          "id": "bind-rating",
+          "source": "course.ratingAverage",
+          "field": "specials.boundRating",
+          "target": {
+            "type": "course",
+            "id": "",
+            "kind": "course_general"
+          }
+        }
+      ],
+      "course|vendor": [
+        {
+          "id": "bind-rating",
+          "source": "course.ratingAverage",
+          "field": "specials.boundRating",
+          "target": {
+            "type": "course",
+            "id": "",
+            "kind": "course_general"
+          }
+        }
+      ],
+      "course|description": [
+        {
+          "id": "bind-rating",
+          "source": "course.ratingAverage",
+          "field": "specials.boundRating",
+          "target": {
+            "type": "course",
+            "id": "",
+            "kind": "course_general"
+          }
+        }
+      ],
+      "course|summary": [
+        {
+          "id": "bind-rating",
+          "source": "course.ratingAverage",
+          "field": "specials.boundRating",
+          "target": {
+            "type": "course",
+            "id": "",
+            "kind": "course_general"
+          }
+        }
+      ],
+      "course|content": [
+        {
+          "id": "bind-rating",
+          "source": "course.ratingAverage",
+          "field": "specials.boundRating",
+          "target": {
+            "type": "course",
+            "id": "",
+            "kind": "course_general"
+          }
+        }
+      ],
+      "course|author": [
+        {
+          "id": "bind-rating",
+          "source": "course.ratingAverage",
+          "field": "specials.boundRating",
+          "target": {
+            "type": "course",
+            "id": "",
+            "kind": "course_general"
+          }
+        }
+      ],
+      "course|date": [
+        {
+          "id": "bind-rating",
+          "source": "course.ratingAverage",
+          "field": "specials.boundRating",
+          "target": {
+            "type": "course",
+            "id": "",
+            "kind": "course_general"
+          }
+        }
+      ],
+      "course|image": [
+        {
+          "id": "bind-rating",
+          "source": "course.ratingAverage",
+          "field": "specials.boundRating",
+          "target": {
+            "type": "course",
+            "id": "",
+            "kind": "course_general"
+          }
+        }
+      ],
+      "course|price": [
+        {
+          "id": "bind-rating",
+          "source": "course.ratingAverage",
+          "field": "specials.boundRating",
+          "target": {
+            "type": "course",
+            "id": "",
+            "kind": "course_general"
+          }
+        }
+      ],
+      "course|prices": [
+        {
+          "id": "bind-rating",
+          "source": "course.ratingAverage",
+          "field": "specials.boundRating",
+          "target": {
+            "type": "course",
+            "id": "",
+            "kind": "course_general"
+          }
+        }
+      ],
+      "course|url": [
+        {
+          "id": "bind-rating",
+          "source": "course.ratingAverage",
+          "field": "specials.boundRating",
+          "target": {
+            "type": "course",
+            "id": "",
+            "kind": "course_general"
+          }
+        }
+      ],
+      "course|name": [
+        {
+          "id": "bind-rating",
+          "source": "course.ratingAverage",
+          "field": "specials.boundRating",
+          "target": {
+            "type": "course",
+            "id": "",
+            "kind": "course_general"
+          }
+        }
+      ],
+      "instructor|title": [
+        {
+          "id": "bind-rating",
+          "source": "product.ratingAverage",
+          "field": "specials.boundRating",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "product_general"
+          }
+        }
+      ],
+      "instructor|vendor": [
+        {
+          "id": "bind-rating",
+          "source": "product.ratingAverage",
+          "field": "specials.boundRating",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "product_general"
+          }
+        }
+      ],
+      "instructor|description": [
+        {
+          "id": "bind-rating",
+          "source": "product.ratingAverage",
+          "field": "specials.boundRating",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "product_general"
+          }
+        }
+      ],
+      "instructor|summary": [
+        {
+          "id": "bind-rating",
+          "source": "product.ratingAverage",
+          "field": "specials.boundRating",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "product_general"
+          }
+        }
+      ],
+      "instructor|content": [
+        {
+          "id": "bind-rating",
+          "source": "product.ratingAverage",
+          "field": "specials.boundRating",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "product_general"
+          }
+        }
+      ],
+      "instructor|author": [
+        {
+          "id": "bind-rating",
+          "source": "product.ratingAverage",
+          "field": "specials.boundRating",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "product_general"
+          }
+        }
+      ],
+      "instructor|date": [
+        {
+          "id": "bind-rating",
+          "source": "product.ratingAverage",
+          "field": "specials.boundRating",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "product_general"
+          }
+        }
+      ],
+      "instructor|image": [
+        {
+          "id": "bind-rating",
+          "source": "product.ratingAverage",
+          "field": "specials.boundRating",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "product_general"
+          }
+        }
+      ],
+      "instructor|price": [
+        {
+          "id": "bind-rating",
+          "source": "product.ratingAverage",
+          "field": "specials.boundRating",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "product_general"
+          }
+        }
+      ],
+      "instructor|prices": [
+        {
+          "id": "bind-rating",
+          "source": "product.ratingAverage",
+          "field": "specials.boundRating",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "product_general"
+          }
+        }
+      ],
+      "instructor|url": [
+        {
+          "id": "bind-rating",
+          "source": "product.ratingAverage",
+          "field": "specials.boundRating",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "product_general"
+          }
+        }
+      ],
+      "instructor|name": [
+        {
+          "id": "bind-rating",
+          "source": "product.ratingAverage",
+          "field": "specials.boundRating",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "product_general"
+          }
+        }
+      ],
+      "blogCategory|title": [
+        {
+          "id": "bind-rating",
+          "source": "product.ratingAverage",
+          "field": "specials.boundRating",
+          "target": {
+            "type": "blogCategory",
+            "id": "",
+            "kind": "blog_category_general"
+          }
+        }
+      ],
+      "blogCategory|vendor": [
+        {
+          "id": "bind-rating",
+          "source": "product.ratingAverage",
+          "field": "specials.boundRating",
+          "target": {
+            "type": "blogCategory",
+            "id": "",
+            "kind": "blog_category_general"
+          }
+        }
+      ],
+      "blogCategory|description": [
+        {
+          "id": "bind-rating",
+          "source": "product.ratingAverage",
+          "field": "specials.boundRating",
+          "target": {
+            "type": "blogCategory",
+            "id": "",
+            "kind": "blog_category_general"
+          }
+        }
+      ],
+      "blogCategory|summary": [
+        {
+          "id": "bind-rating",
+          "source": "product.ratingAverage",
+          "field": "specials.boundRating",
+          "target": {
+            "type": "blogCategory",
+            "id": "",
+            "kind": "blog_category_general"
+          }
+        }
+      ],
+      "blogCategory|content": [
+        {
+          "id": "bind-rating",
+          "source": "product.ratingAverage",
+          "field": "specials.boundRating",
+          "target": {
+            "type": "blogCategory",
+            "id": "",
+            "kind": "blog_category_general"
+          }
+        }
+      ],
+      "blogCategory|author": [
+        {
+          "id": "bind-rating",
+          "source": "product.ratingAverage",
+          "field": "specials.boundRating",
+          "target": {
+            "type": "blogCategory",
+            "id": "",
+            "kind": "blog_category_general"
+          }
+        }
+      ],
+      "blogCategory|date": [
+        {
+          "id": "bind-rating",
+          "source": "product.ratingAverage",
+          "field": "specials.boundRating",
+          "target": {
+            "type": "blogCategory",
+            "id": "",
+            "kind": "blog_category_general"
+          }
+        }
+      ],
+      "blogCategory|image": [
+        {
+          "id": "bind-rating",
+          "source": "product.ratingAverage",
+          "field": "specials.boundRating",
+          "target": {
+            "type": "blogCategory",
+            "id": "",
+            "kind": "blog_category_general"
+          }
+        }
+      ],
+      "blogCategory|price": [
+        {
+          "id": "bind-rating",
+          "source": "product.ratingAverage",
+          "field": "specials.boundRating",
+          "target": {
+            "type": "blogCategory",
+            "id": "",
+            "kind": "blog_category_general"
+          }
+        }
+      ],
+      "blogCategory|prices": [
+        {
+          "id": "bind-rating",
+          "source": "product.ratingAverage",
+          "field": "specials.boundRating",
+          "target": {
+            "type": "blogCategory",
+            "id": "",
+            "kind": "blog_category_general"
+          }
+        }
+      ],
+      "blogCategory|url": [
+        {
+          "id": "bind-rating",
+          "source": "product.ratingAverage",
+          "field": "specials.boundRating",
+          "target": {
+            "type": "blogCategory",
+            "id": "",
+            "kind": "blog_category_general"
+          }
+        }
+      ],
+      "blogCategory|name": [
+        {
+          "id": "bind-rating",
+          "source": "product.ratingAverage",
+          "field": "specials.boundRating",
+          "target": {
+            "type": "blogCategory",
+            "id": "",
+            "kind": "blog_category_general"
+          }
+        }
+      ]
+    },
+    "inspector": [
+      {
+        "tab": "general",
+        "groups": [
+          {
+            "key": "product",
+            "label": "Product",
+            "controls": [
+              "data_source",
+              "product",
+              "datasetSource",
+              "productId"
+            ]
+          },
+          {
+            "key": "contextual",
+            "label": "Data",
+            "controls": [
+              "data_source",
+              "datasetSource",
+              "productId"
+            ]
+          },
+          {
+            "key": "rating_stars",
+            "label": "Stars",
+            "controls": [
+              "rating_value",
+              "star_size",
+              "star_gap",
+              "star_color",
+              "star_empty_color"
+            ]
+          },
+          {
+            "key": "size",
+            "label": "Size",
+            "controls": [
+              "width_select",
+              "height_select",
+              "size_bounds"
+            ]
+          },
+          {
+            "key": "layout",
+            "label": "Layout",
+            "controls": [
+              "padding",
+              "margin",
+              "align_self"
+            ]
+          },
+          {
+            "key": "shape",
+            "label": "Shape",
+            "controls": [
+              "border",
+              "corner",
+              "shadow"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "advanced",
+        "groups": [
+          {
+            "key": "state",
+            "label": "state",
+            "controls": []
+          },
+          {
+            "key": "spacing",
+            "label": "Spacing",
+            "controls": [
+              "padding_margin"
+            ]
+          },
+          {
+            "key": "display",
+            "label": "Display",
+            "controls": [
+              "display"
+            ]
+          },
+          {
+            "key": "animation",
+            "label": "Animation",
+            "controls": [
+              "animation"
+            ]
+          },
+          {
+            "key": "class_css",
+            "label": "Class",
+            "controls": [
+              "class_css"
+            ]
+          }
+        ]
+      }
+    ],
+    "controls": [
+      "data_source",
+      "product",
+      "datasetSource",
+      "productId",
+      "rating_value",
+      "star_size",
+      "star_gap",
+      "star_color",
+      "star_empty_color",
+      "width_select",
+      "height_select",
+      "size_bounds",
+      "padding",
+      "margin",
+      "align_self",
+      "border",
+      "corner",
+      "shadow",
+      "padding_margin",
+      "display",
+      "animation",
+      "class_css"
+    ],
+    "description": "A five-star rating drawn as icons, filled to the bound score — a product's published-review average, a single review's own score, or a course's.",
+    "useWhen": [
+      "Beside a product title or price, where a shopper scans for social proof before reading anything",
+      "As the top line of a review card, above the headline the reviewer wrote",
+      "On a product card in a collection shelf, where there is no room for words"
+    ],
+    "avoidWhen": [
+      "On a store with no published reviews — it renders nothing there by design, so the space it holds is better given to something that does",
+      "To show a score a shopper cannot verify: this element paints only what the reviews table says"
+    ],
+    "contentTips": [
+      "Pair it with a separate rating-count text so a shopper can tell 5.0 from one review apart from 4.8 from four hundred",
+      "Leave the authored fallback empty; a number typed here publishes a score nobody gave",
+      "The fill is fractional, so 4.8 really does draw four fifths of the last star — no need to round in the data"
+    ],
+    "semantics": [
+      "rating",
+      "stars",
+      "review",
+      "score",
+      "social-proof"
+    ]
+  },
   "media-dataset": {
     "type": "media-dataset",
     "label": "Product media",
@@ -32740,6 +33792,9 @@ export const BOUND_SPECIALS: Record<string, string[]> = {
   "qr-code": [
     "boundValue"
   ],
+  "rating-stars": [
+    "boundRating"
+  ],
   "text-dataset": [
     "boundHtml",
     "boundText"
@@ -34085,6 +35140,17 @@ export const TRAIT_WRITES: Record<string, TraitDescription> = {
         "writeKey": "gap",
         "type": "number",
         "unit": "px"
+      }
+    ]
+  },
+  "rating_value": {
+    "key": "rating_value",
+    "label": "Fallback score",
+    "writes": [
+      {
+        "target": "specials",
+        "writeKey": "ratingValue",
+        "type": "string"
       }
     ]
   },
