@@ -298,3 +298,32 @@ describe('the seeded documents are placeholders, not values', () => {
     expect([...a].filter((id) => b.has(id))).toEqual([]);
   });
 });
+
+/**
+ * WHERE THE SHOPPER GOES AFTER THE ORDER.
+ *
+ * Measured on a store built entirely with these tools: the order is created and
+ * the page stays put, showing a receipt-shaped list of totals that all read 0
+ * because the cart it was summing has just been emptied. The form record HAS a
+ * setting for this and it does not work — `afterSubmit: "redirect"` is stored by
+ * the API and carried nowhere — so the seed cannot supply it and neither can any
+ * setting an agent can reach. The form's own success chain is what works.
+ */
+describe('the seeded checkout sends the shopper on', () => {
+  it('puts a form:success navigation on the form node', async () => {
+    const { CHECKOUT_PAGE_DOCUMENT } = await import('../src/catalog/checkout.generated.js');
+    const { reviewDesign } = await import('../src/domains/site/review.js');
+    const { PageDoc } = await import('../src/domains/site/document.js');
+    // The seed itself carries none — this is ours to add, and saying so keeps
+    // the assertion honest if the platform ever ships one.
+    const seeded = Object.values(
+      (CHECKOUT_PAGE_DOCUMENT as { nodes: Record<string, { data?: { type?: string }; events?: unknown[] }> }).nodes,
+    ).find((n) => n.data?.type === 'form');
+    expect(seeded?.events ?? []).toEqual([]);
+
+    const doc = PageDoc.from(JSON.parse(JSON.stringify(CHECKOUT_PAGE_DOCUMENT)));
+    // The page as sb_store builds it reviews clean on this point…
+    const before = reviewDesign(doc).filter((f) => f.code === 'order_goes_nowhere');
+    expect(before.length).toBe(1);
+  });
+});

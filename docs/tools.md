@@ -723,6 +723,7 @@ box. Returns `{ findings, fixes, findings_notice? }`, in document order:
 | `dead_menu_link` | A menu entry with no `href` — the renderer reads `specials.menuItems` and never `menuId` |
 | `extra_repeater_child` | A repeater holding more than the one child it clones per record; the rest never appear |
 | `sticky_blocked` | A pinned node under an ancestor that clips its overflow. Sticky resolves against its nearest SCROLLING ancestor, so that one becomes it and the node pins inside a box that never scrolls. It does not move, and nothing reports it. `key` names the ancestor to fix, not the node |
+| `order_goes_nowhere` | A page that totals a cart and carries a form, with nothing on `form:success` to send the shopper anywhere. The order is created and the page stays put, every total now reading 0 because the cart was just emptied — a completed order that looks like a failed one. The form record's own `afterSubmit: "redirect"` does NOT fix it: the API stores that and the platform carries it nowhere |
 | `hover_dead` | A hover stored in `states.hover` on an element that keeps its hover somewhere else — a `button` keeps it in the flat `config.stateHover` map its own renderer compiles. Stored, published, painted by nobody. Every site this server built before it learned the difference carries these |
 | `stuck_no_host` | A `stuck` override on a node with nothing pinned above it. `render/css.go` emits stuck CSS only under a stuck host, so the styling is stored, saved, published and never painted. Usually a host that was un-pinned later, or an import |
 

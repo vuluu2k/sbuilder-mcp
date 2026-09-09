@@ -700,6 +700,7 @@ tài liệu:
 | `dead_menu_link` | Mục menu không có `href` — renderer đọc `specials.menuItems` chứ không bao giờ đọc `menuId` |
 | `extra_repeater_child` | Repeater chứa nhiều hơn một child mà nó nhân bản cho mỗi bản ghi; phần còn lại không bao giờ xuất hiện |
 | `sticky_blocked` | Node đã ghim nằm dưới một ancestor cắt tràn. Sticky bám theo ancestor CUỘN ĐƯỢC gần nhất, nên ancestor đó trở thành chỗ bám và node ghim trong một hộp không bao giờ cuộn. Nó không nhúc nhích, và không gì báo cả. `key` chỉ ancestor cần sửa, không phải node |
+| `order_goes_nowhere` | Trang vừa cộng tổng giỏ vừa có form, mà không có gì trên `form:success` đưa khách đi đâu. Đơn được tạo còn trang đứng yên, mọi dòng tổng giờ là 0 vì giỏ vừa bị dọn — một đơn thành công trông y như đơn hỏng. `afterSubmit: "redirect"` của form record KHÔNG sửa được: API lưu nó và platform không mang đi đâu cả |
 | `hover_dead` | Hover được lưu ở `states.hover` trên element giữ hover ở chỗ khác — `button` giữ nó trong map phẳng `config.stateHover` mà renderer của chính nó compile. Được lưu, được publish, không ai vẽ. Mọi site server này dựng trước khi biết khác biệt đó đều dính |
 | `stuck_no_host` | Override `stuck` trên node không có gì được ghim ở trên. `render/css.go` chỉ sinh CSS stuck khi có stuck host, nên phần tạo dáng được lưu, save, publish và không bao giờ vẽ. Thường do host bị bỏ ghim về sau, hoặc do import |
 

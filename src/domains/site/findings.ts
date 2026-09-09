@@ -75,6 +75,12 @@ export const FIX: Record<string, string> = {
     '{ "overflowX": "visible", "overflowY": "visible" } — or move the pinned node outside it. ' +
     'Sticky resolves against its nearest SCROLLING ancestor, so a clipping one becomes that ' +
     'ancestor and the node pins inside a box that never scrolls.',
+  order_goes_nowhere:
+    'Send the shopper on: sb_event id "<id>", trigger "form:success", action "go_to_url", ' +
+    'payload { "url": "/checkout/complete" }. That path resolves by page TYPE and serves a ' +
+    'built-in receipt even with no completion page, so it is never a link to a 404. Do NOT ' +
+    'reach for the form record\'s settings.afterSubmit "redirect" — the API stores it and the ' +
+    'platform carries it nowhere.',
   hover_dead:
     'Rewrite it with the same values: sb_set id "<id>", namespace style, state "hover", ' +
     'keys { … } — read them off the node first, because that one call both writes them where ' +

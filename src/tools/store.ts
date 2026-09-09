@@ -179,8 +179,56 @@ function pageDocumentFor(formId: string, headline: string): unknown {
     .join(formId)
     .split(HEADLINE_SENTINEL)
     .join(headline);
-  return JSON.parse(json);
+  const doc = JSON.parse(json) as {
+    nodes: Record<string, { data?: { type?: string }; events?: unknown[] }>;
+  };
+  sendTheShopperOn(doc);
+  return doc;
 }
+
+/**
+ * WHERE THE SHOPPER GOES AFTER THE ORDER, which nothing else supplies.
+ *
+ * Measured on a store built entirely with these tools: press "Đặt hàng" and the
+ * order is created — and the shopper stays on the checkout page, looking at a
+ * receipt-shaped list of totals that all read 0 ₫ because the cart it was
+ * summing has just been emptied, under an inline confirmation whose default
+ * wording runs the order number into the total ("Đơn hàng #1003129.000 ₫").
+ * Nothing is broken; nothing sent them anywhere.
+ *
+ * The form record HAS a setting for this and it does not work:
+ * `settings.afterSubmit.action = "redirect"` is accepted by the API, stored, and
+ * carried nowhere — `forms/pagesource.go` says so outright ("Only the MESSAGE
+ * behaviour is carried today"), and `page.FormRef.RedirectPath` is assigned by
+ * nothing in the platform. Writing `specials.sentRedirect` on the node does not
+ * survive either: the composer overwrites that special from the same empty
+ * field on every render. So the platform's seed cannot carry this, and neither
+ * can any setting an agent can reach.
+ *
+ * What does work is the form's own success chain, which the island runs BEFORE
+ * afterSubmit and which `form`'s meta declares `go_to_url` on. `/checkout/complete`
+ * is the right destination unconditionally: it resolves by page TYPE, and it
+ * backstops itself with a built-in receipt when the store has no completion page
+ * of its own, so this is never a link to a 404.
+ */
+function sendTheShopperOn(doc: { nodes: Record<string, { data?: { type?: string }; events?: unknown[] }> }): void {
+  for (const node of Object.values(doc.nodes)) {
+    if (node.data?.type !== 'form') continue;
+    const events = (node.events ?? []) as Array<{ name?: string }>;
+    if (events.some((e) => e.name === 'form:success')) continue;
+    events.unshift({
+      id: 'ev_go_to_url',
+      name: 'form:success',
+      action: 'go_to_url',
+      payload: { url: COMPLETE_PATH },
+    } as never);
+    node.events = events;
+  }
+}
+
+/** The path a completed order lands on. Resolves by page TYPE, and serves a
+ * built-in receipt when the store has authored no completion page. */
+const COMPLETE_PATH = '/checkout/complete';
 
 /**
  * THE FORM TEMPLATES, as a tuple zod can turn into an enum.

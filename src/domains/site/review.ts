@@ -272,6 +272,46 @@ export function reviewDesign(doc: PageDoc): Finding[] {
       styled.states?.[STUCK_STATE],
       ...Object.values(styled.responsive ?? {}).map((r) => r?.states?.[STUCK_STATE]),
     ];
+    // AN ORDER FORM THAT LEAVES THE SHOPPER WHERE THEY WERE.
+    //
+    // Measured on a store built entirely with these tools: the order is created
+    // and the page stays put, showing a receipt-shaped list of totals that all
+    // read 0 because the cart it was summing has just been emptied. Nothing
+    // errors, and the shopper cannot tell a completed order from a failed one.
+    //
+    // Checked on the FORM NODE rather than on the form record, because the
+    // record's own `afterSubmit: "redirect"` is stored by the API and carried
+    // nowhere (`forms/pagesource.go`) — reading it would report a page as fine
+    // on the strength of a setting the platform ignores.
+    if (type === 'form') {
+      const events = (n as unknown as { events?: Array<{ name?: string; action?: string }> }).events ?? [];
+      const navigates = events.some(
+        (e) =>
+          e.name === 'form:success' &&
+          (e.action === 'go_to_url' || e.action === 'open_page' || e.action === 'go_to_checkout'),
+      );
+      // AN ORDER-SHAPED PAGE, read off the document rather than off the page
+      // record. The record's `type` would need a second round trip on every
+      // open, and the form's own type a third; a page that carries BOTH a form
+      // and a cart total is the checkout shape and nothing else is — a contact
+      // page has no cart to total.
+      const sellsFromCart = Object.values(d.nodes).some(
+        (x) => (x as { data?: { type?: string } }).data?.type === 'cart-total',
+      );
+      if (!navigates && sellsFromCart) {
+        out.push({
+          code: 'order_goes_nowhere',
+          nodeId: id,
+          type,
+          problem:
+            'This is the checkout form and nothing sends the shopper anywhere once the order ' +
+            'is placed. They stay on this page, where every cart total now reads 0 because the ' +
+            'cart was just emptied — a completed order that looks like a failed one.',
+          fix: fill('order_goes_nowhere', { id }),
+        });
+      }
+    }
+
     // A HOVER STORED WHERE NOBODY READS IT. The universal hover state is not the
     // only home: an element whose meta declares a Hover variant keeps it
     // somewhere its own renderer looks, and for a `button` that is the flat
