@@ -6,6 +6,14 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.14.1] - 2026-09-09
+
+### Added
+- Catalog element được làm mới lên 111 element, thêm `rating-stars` (vẽ điểm số dạng năm ngôi sao bằng icon) và `chat-widget` (một trợ lý AI mà merchant tự cấu hình bằng key của họ), cả hai đều dùng được ngay qua sb_catalog_search, sb_traits_for và sb_add mà không cần thêm code nào ở đây.
+
+### Fixed
+- npm run codegen:check giờ cũng từ chối một checkout web_builder mà HEAD của nó không nằm trong bất kỳ remote branch nào, vì một worktree tách rời trỏ tới một commit local chưa từng push trước đây đã vượt qua mọi kiểm tra trước đó và tạo ra một catalog mô tả một element mà không deployment nào thực sự có; một repo không có remote nào thì không báo gì thay vì từ chối, vì không có gì để đo containment.
+
 ## [0.14.0] - 2026-09-09
 
 ### Added
