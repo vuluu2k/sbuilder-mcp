@@ -939,6 +939,30 @@ that accounts for them.
   `storage: 'node'` and nothing compiles its `states.hover`** — the one element that promises the
   state slot and paints nothing from it.
 
+- **A CATEGORY TEMPLATE DOES NOT SCOPE ITSELF TO THE CATEGORY IN THE URL, and its blog twin
+  does.** `/collections/{slug}` (the prefix is `collections`, not `categories`) resolves through
+  `PublishedForEntity`: the category's OWN page when a page-link names one, else the DEFAULT
+  TEMPLATE for the `category` page type. On that shared template nothing narrows the product
+  feed — `entityScope` threads the entity into three feeds and only three
+  (`linkType == "blogCategory"` → the article feed, `linkType == "product"` → the review feed,
+  and the curated slots), so `productCategory` reaches the products feed as nothing at all. A
+  repeater left on `collectionType: "all_products"` then does exactly what the platform's own
+  comment says it does: "repeats the whole catalog whatever id is left behind". Every category
+  shows every product, on every category, with no error anywhere.
+
+  Two shapes work today, and an agent has to pick one deliberately:
+  - **A page per category.** `PUT /api/sites/{siteId}/page-links/{linkType}/{linkId}` with
+    `{pageId}` links one category to one page — `POST …/page-links/bulk` with
+    `{linkType, linkIds, pageId}` does many at once — and that page's repeater carries
+    `collectionType: "collection"` + its own `collectionId`.
+  - **One template, one collection.** `PUT /api/sites/{siteId}/pages/{pageId}/default-template`
+    (it decodes NO body) makes a page the type's default; the repeater on it still needs a fixed
+    `collectionId`, so the shared template can only ever be right for one category.
+
+  What does NOT work is leaving `all_products` on the default template and expecting the slug to
+  narrow it. The asymmetry with `blogCategory` — which IS automatic — is the platform's, not
+  this client's, and is worth reporting rather than working around.
+
 ## The five traps
 
 Each fails SILENTLY. Each is encoded in `src/domains/site/traps.ts` (trap 5 in

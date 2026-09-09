@@ -40,6 +40,15 @@ shows a required-looking field with nothing in it. Then a gateway:
 it — the field document's `mapTo` values are a vocabulary the server validates
 (`customer.fullName`, not `customer.name`). See CLAUDE.md's checkout entry.
 
+**5b. A category page shows every product unless you say which one.** `/collections/{slug}`
+falls back to the DEFAULT TEMPLATE for the `category` type, and nothing on that template
+narrows the product feed to the category in the URL — a repeater left on
+`collectionType: "all_products"` repeats the whole catalogue on every category. Give each
+category its own page and set that repeater to `collectionType: "collection"` +
+`collectionId`, linking them with `POST /api/sites/{siteId}/page-links/bulk`
+(`{linkType: "productCategory", linkIds: [...], pageId}`). The blog twin IS automatic; this
+one is not, and nothing warns you.
+
 **6. The pages, BY TYPE.** Four paths resolve by page type and ignore slugs
 entirely: `/checkout`, `/checkout/complete`, `/account`, `/search`. Plus
 `/products/{slug}` needs a published `product` page and `/categories/…` a
