@@ -405,10 +405,52 @@ function assertCommitted(repo: string): void {
       .split('\n')
       .filter(Boolean);
   } catch {
-    ahead = []; // detached, or no upstream — nothing to be ahead of
+    ahead = []; // detached, or no upstream — see the containment check below
   }
   if (ahead.length) {
     refuse('has commits the platform has not published, touching', ahead);
+  }
+
+  // A DETACHED WORKTREE IS NOT A PROOF OF ANYTHING BY ITSELF, and the previous
+  // check treated it as one.
+  //
+  // "A detached worktree has no upstream and is therefore never refused" was
+  // written as a feature — it IS the shape this file recommends — but it made
+  // the recommendation into the hole: point a worktree at a LOCAL commit and
+  // every check above passes. That is not hypothetical. `da5df0f` in this repo
+  // regenerated the catalog for a `rating-stars` element from a detached
+  // worktree at the platform's local HEAD, and that commit was not on
+  // origin/main: the catalog described an element no deployment had, which is
+  // the same harm as reading a dirty tree and reaches npm the same way.
+  //
+  // The honest question is CONTAINMENT, not upstream tracking: is this commit on
+  // any remote branch? `git branch -r --contains` answers it for a detached HEAD
+  // and for an attached one alike, and a repo with no remotes at all (a fresh
+  // clone-less checkout, a fixture) answers "no remotes" rather than "not
+  // published" — nothing to be measured against is not the same as failing.
+  try {
+    const remotes = execFileSync('git', ['-C', repo, 'remote'], {
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'ignore'],
+    }).trim();
+    if (!remotes) return;
+    const on = execFileSync('git', ['-C', repo, 'branch', '-r', '--contains', 'HEAD'], {
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'ignore'],
+    })
+      .split('\n')
+      .map((l) => l.trim())
+      .filter(Boolean);
+    if (on.length === 0) {
+      const head = execFileSync('git', ['-C', repo, 'log', '-1', '--oneline'], {
+        encoding: 'utf8',
+        stdio: ['ignore', 'pipe', 'ignore'],
+      }).trim();
+      refuse('is at a commit NO REMOTE BRANCH CONTAINS — unpublished work in', [head]);
+    }
+  } catch {
+    // No git, or a command this git cannot run: say nothing rather than refuse
+    // on the strength of a tool failure.
   }
   return;
   return;

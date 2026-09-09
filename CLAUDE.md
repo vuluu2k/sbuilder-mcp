@@ -71,8 +71,13 @@ second half was added the day after the first, because the first had a hole exac
 of the next thing that happened: a `hoverSwapImage` feature sat COMMITTED on a local main,
 unpushed, so the tree was clean and the check waved it through. The catalog is read against
 DEPLOYED platforms; an agent told about a config key no deployment has is in the same position
-as one told about a half-written element. A detached worktree has no upstream and is therefore
-never refused for it, which is the shape this check recommends. Originally, and still, for
+as one told about a half-written element. A detached worktree has no upstream, so a third check
+asks the honest question instead — is this commit on ANY remote branch? That one exists
+because the recommendation became the hole: `da5df0f` in this repo regenerated the catalog for
+a `rating-stars` element from a detached worktree at the platform's LOCAL head, and that commit
+was on no remote branch, so the catalog described an element no deployment had. A repo with no
+remotes at all says nothing rather than refusing — nothing to measure against is not a
+failure. Originally, and still, for
 uncommitted changes
 (`schema/src`, `editor/src`, `server/render`, `server/docs`), naming the files and the worktree
 command. It had to become a check rather than another paragraph: the warning below was written

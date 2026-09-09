@@ -87,6 +87,36 @@ describe('codegen refuses a checkout somebody is mid-edit in', () => {
     rmSync(remote, { recursive: true, force: true });
   });
 
+  // A DETACHED WORKTREE IS NOT A PROOF BY ITSELF. "It has no upstream and is
+  // therefore never refused" was written as a feature — it IS the shape this
+  // check recommends — and that made the recommendation into the hole: point a
+  // worktree at a LOCAL commit and every other check passes. It happened:
+  // `da5df0f` regenerated this catalog for a `rating-stars` element from a
+  // detached worktree at the platform's local HEAD, and that commit was on no
+  // remote branch.
+  it('refuses a detached HEAD no remote branch contains', () => {
+    const git = (...a: string[]) => execFileSync('git', ['-C', repo, ...a], { encoding: 'utf8' });
+    execFileSync('git', ['-C', repo, 'checkout', '--', '.']);
+    // The commit the REMOTE has, not whatever HEAD happens to be: an earlier
+    // case in this file leaves a local-only commit behind, and taking HEAD here
+    // would make the "published" half of this test assert on an unpublished one.
+    const remoteRef = git('branch', '-r', '--format=%(refname:short)').trim().split('\n')[0];
+    const published = git('rev-parse', remoteRef).trim();
+
+    writeFileSync(join(repo, 'schema/src/a.ts'), 'export const a = 42;\n');
+    git('commit', '-qam', 'feat: local only');
+    const local = git('rev-parse', 'HEAD').trim();
+    git('checkout', '-q', '--detach', local);
+    const r = run(['--check']);
+    expect(r.status).toBe(1);
+    expect(r.stderr).toMatch(/NO REMOTE BRANCH CONTAINS/);
+
+    // …and a detached worktree at a PUBLISHED commit is exactly what this check
+    // recommends, so it must pass.
+    git('checkout', '-q', '--detach', published);
+    expect(run(['--check']).stderr).not.toMatch(/NO REMOTE BRANCH CONTAINS/);
+  });
+
   it('honours --dirty, and says so rather than going quiet', () => {
     writeFileSync(join(repo, 'schema/src/a.ts'), 'export const a = 3;\n');
     const r = run(['--check', '--dirty']);
