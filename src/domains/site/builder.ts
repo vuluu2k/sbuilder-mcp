@@ -11,7 +11,13 @@ import {
 import { ELEMENTS, ELEMENT_SEEDS, SATELLITE_RULES } from '../../catalog/elements.generated.js';
 import { bindingsForConfig, createNode, mintSatellites } from './node.js';
 import { refuseSecondTemplate } from './traps.js';
-import { STUCK_STATE, refuseStuckConfig, requireStuckHost, stickySeeds } from './sticky.js';
+import {
+  STUCK_STATE,
+  refuseStuckAfter,
+  refuseStuckConfig,
+  requireStuckHost,
+  stickySeeds,
+} from './sticky.js';
 import { genId } from './ids.js';
 import type { PageDoc } from './document.js';
 
@@ -260,6 +266,11 @@ export function setKeys(
   // the same silent shape as an unbound element, which cost a whole page of
   // "$0.00" cards to find once.
   const rebind = namespace === 'config' ? rebindPatch(doc, id, keys) : null;
+  // The scroll THRESHOLD is a plain config key, and the renderer drops it in two
+  // different ways without a word — see sticky.ts. Checked here rather than in
+  // the state branch because it is written on the node that PINS, at base or at
+  // a breakpoint, never inside a stuck slot.
+  if (namespace === 'config') refuseStuckAfter(doc.doc, id, keys);
 
   if (namespace === 'specials') {
     refuseComposedStamp(keys);

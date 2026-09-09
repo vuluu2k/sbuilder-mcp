@@ -40,6 +40,18 @@ import { ancestors, type DocLike, type NodeLike } from '../../core/tree.js';
 export const STUCK_STATE = 'stuck';
 
 /**
+ * The config key holding "pinned from WHEN?", in px of page scroll.
+ *
+ * It reaches the runtime island as a CSS custom property (`--wb-stuck-after`)
+ * rather than through `wb:props`, because it is per breakpoint and the cascade
+ * is what picks the right number at the right width. Unset is the common case:
+ * the island then decides from the element itself — a sticky one the moment it
+ * is held away from its place in the flow, a fixed one the moment the page
+ * scrolls past where it would have sat.
+ */
+export const STUCK_AFTER = 'stuckAfter';
+
+/**
  * The positions that HAVE a pinned moment.
  *
  * `fixed` earns its place for a different reason than `sticky`: it is pinned
@@ -224,4 +236,41 @@ export function stickyWarning(doc: DocLike, id: string, bp?: string): string | n
     `scrolls. The node will not move. Clear overflowX/overflowY on ${blocker}, or pin a node ` +
     'outside it.'
   );
+}
+
+/**
+ * Refuse a `stuckAfter` that the renderer would drop on the floor.
+ *
+ * `stuckAfterCss` emits the custom property only for a node that CAN pin and
+ * that carries a usable number, and returns an empty string otherwise — so both
+ * mistakes here are stored, saved, published and read by nothing. The value
+ * rules are the platform's own: zero is honoured ("as soon as the page moves at
+ * all" is a real answer, and dropping it would silently fall back to the
+ * automatic one); negative and non-finite are not, because no scroll position
+ * can satisfy them.
+ */
+export function refuseStuckAfter(
+  doc: DocLike,
+  id: string,
+  keys: Record<string, unknown>,
+): void {
+  if (!(STUCK_AFTER in keys)) return;
+  const raw = keys[STUCK_AFTER];
+  const n = typeof raw === 'number' ? raw : Number(raw);
+  if (raw == null || raw === '' || !Number.isFinite(n) || n < 0) {
+    throw new Error(
+      `sbuilder: config.${STUCK_AFTER} is px of page scroll — a finite number, zero or more ` +
+        `(0 means "as soon as the page moves at all"). ${JSON.stringify(raw)} is dropped by ` +
+        "the renderer, which then falls back to the island's automatic answer without saying " +
+        'so. To go back to automatic, remove the key.',
+    );
+  }
+  if (!isPinnedNode(doc.nodes[id] as Styled)) {
+    throw new Error(
+      `sbuilder: config.${STUCK_AFTER} says WHEN a pinned element counts as stuck, and ${id} ` +
+        'cannot pin — the renderer emits the threshold only for a node that can ' +
+        '(stickyState.ts stuckAfterCss), so this would be stored and read by nothing. ' +
+        `Pin it first: sb_set ${id} style { position: "sticky" }.`,
+    );
+  }
 }

@@ -3,6 +3,7 @@ import { PageDoc } from '../src/domains/site/document.js';
 import { addSubtree, setKeys } from '../src/domains/site/builder.js';
 import { reviewDesign } from '../src/domains/site/review.js';
 import {
+  refuseStuckAfter,
   isPinnedNode,
   stuckHostOf,
   stickyBlockedBy,
@@ -282,5 +283,38 @@ describe('sb_review sticky findings', () => {
     const f = reviewDesign(d).find((x) => x.code === 'stuck_no_host');
     expect(f?.nodeId).toBe(logo);
     expect(f?.fix).toMatch(/position/);
+  });
+});
+
+/**
+ * The scroll threshold. A plain config key on the node that PINS, and the
+ * renderer drops it in two different ways without a word.
+ */
+describe('config.stuckAfter', () => {
+  it('takes a threshold on a pinned node, zero included', () => {
+    const { d, section } = page();
+    pin(d, section, 'sticky');
+    expect(() => setKeys(d, section, { stuckAfter: 240 }, { namespace: 'config' })).not.toThrow();
+    expect(() => setKeys(d, section, { stuckAfter: 0 }, { namespace: 'config' })).not.toThrow();
+  });
+
+  it('refuses one on a node that cannot pin', () => {
+    const { d, section } = page();
+    expect(() => setKeys(d, section, { stuckAfter: 240 }, { namespace: 'config' })).toThrow(
+      /cannot pin/,
+    );
+  });
+
+  it('refuses a value no scroll position can satisfy', () => {
+    const { d, section } = page();
+    pin(d, section, 'fixed');
+    for (const bad of [-1, Number.NaN, Number.POSITIVE_INFINITY, 'soon', '']) {
+      expect(() => refuseStuckAfter(d.doc, section, { stuckAfter: bad })).toThrow(/finite number/);
+    }
+  });
+
+  it('says nothing about a config write that does not name it', () => {
+    const { d, section } = page();
+    expect(() => setKeys(d, section, { gap: '8px' }, { namespace: 'config' })).not.toThrow();
   });
 });

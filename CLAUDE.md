@@ -847,7 +847,12 @@ that accounts for them.
   config key, `hidden`, into `display: none`, and only `true` — `false` would need
   `display: revert`, which `render/css.go` documents as wrong here because it rolls past the
   element's own static CSS to the UA default. `config.stuckAfter` (px of page scroll, per
-  breakpoint) overrides when the island decides. `sb_import` carries `sticky`/`fixed` off a
+  breakpoint) overrides when the island decides, and is refused on a node that cannot pin —
+  `stuckAfterCss` emits it only for one that can, so it is the FOURTH silent drop in the same
+  feature. IT IS ALSO THE ONLY GENERAL SCROLL HOOK THE PLATFORM HAS: the island toggles
+  `wb-stuck` on a PINNED element and nothing else, so "reveal this section as it scrolls into
+  view" has no answer here at all — the only other scroll-driven behaviour in the runtime is
+  `popup`'s `triggerType: "scroll"`, which opens a pop-up rather than styling anything. `sb_import` carries `sticky`/`fixed` off a
   source page's computed style with all three keys, because a section pinned to stay in view
   is a layout decision and a copy that scrolls away is not the same section.
 

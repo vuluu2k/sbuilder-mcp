@@ -572,7 +572,11 @@ and only `true`: `false` would need `display: revert`, which rolls past the elem
 to the UA default. To stop hiding something, remove the override. `fixed` counts as pinned
 too — "the moment the page has scrolled past where it would have been" is the same design —
 but it is not seeded, because it arrives as a deliberate placement. `config.stuckAfter` (px of
-page scroll, per breakpoint) overrides when the island decides the element is stuck.
+page scroll, per breakpoint) overrides when the island decides the element is stuck — it is
+the closest thing here to "restyle after N pixels of scroll", and `sb_set` refuses it on a
+node that cannot pin, and refuses a value no scroll position can satisfy, because the
+renderer emits the threshold for neither and falls back to the automatic answer without
+saying so.
 
 ---
 

@@ -549,7 +549,10 @@ nhận `true`: `false` sẽ cần `display: revert`, thứ trượt qua cả CSS
 mặc định của trình duyệt. Muốn thôi ẩn thì xoá override đi. `fixed` cũng được tính là ghim —
 "khoảnh khắc trang đã cuộn qua chỗ đáng lẽ nó nằm" là cùng một ý đồ thiết kế — nhưng không
 được gieo kèm, vì nó đến như một quyết định đặt chỗ có chủ ý. `config.stuckAfter` (px cuộn
-trang, theo breakpoint) ghi đè thời điểm island coi là đã ghim.
+trang, theo breakpoint) ghi đè thời điểm island coi là đã ghim — đây là thứ gần nhất với
+"cuộn qua N pixel thì đổi style", và `sb_set` từ chối nếu đặt lên node không ghim được, cũng
+như từ chối giá trị không có vị trí cuộn nào thoả, vì renderer không sinh ngưỡng cho cả hai
+trường hợp và lặng lẽ quay về đáp án tự động.
 
 ---
 
