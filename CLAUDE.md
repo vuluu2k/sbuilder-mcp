@@ -856,6 +856,19 @@ that accounts for them.
   source page's computed style with all three keys, because a section pinned to stay in view
   is a layout decision and a copy that scrolls away is not the same section.
 
+  **AND THE FIRST LIVE USE FOUND THAT THE MARKER NEVER REACHED A PUBLISHED PAGE.** `markStuckHosts`
+  ran in `renderDoc`; a publish does not go through it — `pagerender.Render` compiles an
+  artifact and assembles it — so `StuckIslandAttrs` returned "" for every node ever published,
+  while `BundleCSS` (which runs on the document, OUTSIDE the artifact) shipped every stuck rule
+  correctly. A live header had `#…​.wb-stuck{box-shadow:…}` in its desktop lane, its transition
+  applied, and the class never once appeared. Every island test passed, because they all call
+  the direct route. Fixed upstream (web_builder PR #98) with the assertion made through
+  `Assemble(Compile(doc))` — what a browser actually receives. The lesson for THIS repo is the
+  one the browser-server section of the design skill now carries: when a class never appears,
+  the cart drawer is the control, because if no island hydrates the question is the deployment
+  and not the page. The dev stack builds no runtime bundle at all, so every island there is
+  dead and the page looks fine.
+
   The same work also landed the thing this repo had already fixed independently: **state
   overrides write PER BREAKPOINT** (`responsive[bp].states`), which both compilers had always
   read and only the editor never wrote.

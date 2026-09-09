@@ -235,6 +235,15 @@ settle. Everything else, prefer the cheap tools.
    contract behind the `stuck` state (rule 9); if it never appears, nothing you wrote for the
    pinned look will ever paint, and no other tool will tell you.
 
+   **If it never appears, ask whether ANY island is alive before blaming the page.** Every
+   interactive element on a published storefront hydrates the same way, so the cart drawer is
+   the control: if it carries `wb:now="CartDrawer"` and still does nothing, the deployment is
+   not serving the islands runtime at all — check `/_wb/runtime/current.json`. Found exactly
+   this way here, twice in one sitting: once a real renderer bug (the marker was never emitted
+   on the compiled publish path, so the CSS shipped and the class could not), and once a dev
+   stack that builds no runtime bundle, where every island on every page is dead and the page
+   looks perfectly fine.
+
 2. **"The style did not apply."** It almost always did. The page's CSS is a LINKED
    stylesheet — `static-*.css`, `desktop-*.css`, `tablet-*.css` off the assets host — so
    grepping the HTML for a rule proves nothing, and it has read as a missing style twice in
