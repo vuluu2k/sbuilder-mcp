@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { PageDoc } from '../src/domains/site/document.js';
 import { addSubtree, setKeys } from '../src/domains/site/builder.js';
+import { reviewDesign } from '../src/domains/site/review.js';
 import {
   hoverHome,
   hoverHostOf,
@@ -145,5 +146,35 @@ describe('config.revealOnHover', () => {
     expect(() => setKeys(d, section, { revealOnHover: true }, { namespace: 'config' })).toThrow(
       /stay visible/i,
     );
+  });
+});
+
+/**
+ * Every site this server built before it learned about the second home carries
+ * these — on buttons, which is the single most common thing anyone gives a hover
+ * to. The review has to find them, because nothing on the page will.
+ */
+describe('sb_review hover_dead', () => {
+  it('reports a hover stored where the element\'s renderer does not look', () => {
+    const { d, button } = card();
+    // Written the way this server used to write it, before the routing existed.
+    d.apply([
+      { op: 'set', path: ['nodes', button, 'states', 'hover', 'style', 'backgroundColor'], value: '#D33F65' },
+    ]);
+    const f = reviewDesign(d).find((x) => x.code === 'hover_dead');
+    expect(f?.nodeId).toBe(button);
+    expect(f?.fix).toMatch(/routes a hover/);
+  });
+
+  it('says nothing about an element the universal state serves', () => {
+    const { d, block } = card();
+    d.apply(setKeys(d, block, { boxShadow: '0 2px 8px #0002' }, { namespace: 'style', state: 'hover', base: true }));
+    expect(reviewDesign(d).some((x) => x.code === 'hover_dead')).toBe(false);
+  });
+
+  it('says nothing once the value is written through the routing', () => {
+    const { d, button } = card();
+    d.apply(setKeys(d, button, { backgroundColor: '#D33F65' }, { namespace: 'style', state: 'hover', base: true }));
+    expect(reviewDesign(d).some((x) => x.code === 'hover_dead')).toBe(false);
   });
 });

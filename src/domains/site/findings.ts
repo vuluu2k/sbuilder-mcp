@@ -75,6 +75,11 @@ export const FIX: Record<string, string> = {
     '{ "overflowX": "visible", "overflowY": "visible" } — or move the pinned node outside it. ' +
     'Sticky resolves against its nearest SCROLLING ancestor, so a clipping one becomes that ' +
     'ancestor and the node pins inside a box that never scrolls.',
+  hover_dead:
+    'Rewrite it: sb_set id "<id>", namespace style, state "hover", keys { … } — sb_set now ' +
+    'routes a hover to the home its element declares, and reports where it went. The values ' +
+    'currently in states.hover are read by nobody; remove them with the same call\'s `unset` ' +
+    'once the working copy is in place.',
   stuck_no_host:
     'Pin something: sb_set id "<id>" (or the section it lives in), namespace style, keys ' +
     '{ "position": "sticky" } — sb_set seeds the offset and the layer order with it. Until ' +

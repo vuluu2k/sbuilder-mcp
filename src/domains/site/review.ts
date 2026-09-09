@@ -1,5 +1,6 @@
 import { childrenOf, childrenWithSatellites, isOverlay, pageChildren, appBlockRoot, SPEC_GLOBAL_REF, SPEC_APP_BLOCK_REF, type DocLike } from '../../core/tree.js';
 import { STUCK_STATE, stickyBlockedBy, stuckHostOf, isPinnedNode } from './sticky.js';
+import { HOVER_STATE, hoverHome } from './hover.js';
 import { ELEMENTS, BINDING_SOURCES, BOUND_SPECIALS , FIRST_CHILD_ONLY, SATELLITE_RULES, ELEMENT_SEEDS } from '../../catalog/elements.generated.js';
 import type { PageDoc } from './document.js';
 import { fill } from './findings.js';
@@ -271,6 +272,34 @@ export function reviewDesign(doc: PageDoc): Finding[] {
       styled.states?.[STUCK_STATE],
       ...Object.values(styled.responsive ?? {}).map((r) => r?.states?.[STUCK_STATE]),
     ];
+    // A HOVER STORED WHERE NOBODY READS IT. The universal hover state is not the
+    // only home: an element whose meta declares a Hover variant keeps it
+    // somewhere its own renderer looks, and for a `button` that is the flat
+    // `config.stateHover` map. Every hover this server wrote onto a button
+    // before it learned that is still sitting in `states.hover`, painting
+    // nothing — on a control that is the single most common thing anyone gives
+    // a hover to.
+    const hoverSlots = [
+      styled.states?.[HOVER_STATE],
+      ...Object.values(styled.responsive ?? {}).map((r) => r?.states?.[HOVER_STATE]),
+    ];
+    const hasHover = hoverSlots.some((slot) => {
+      const h = slot as { style?: object; config?: object } | undefined;
+      return !!h && (Object.keys(h.style ?? {}).length > 0 || Object.keys(h.config ?? {}).length > 0);
+    });
+    if (hasHover && hoverHome(type) === 'legacy') {
+      out.push({
+        code: 'hover_dead',
+        nodeId: id,
+        type,
+        problem:
+          `"${type}" keeps its hover in config.stateHover — the flat map its own renderer ` +
+          'compiles — and the platform\'s universal hover compiler stands aside for it. These ' +
+          'states.hover values are stored, saved, published and painted by nobody.',
+        fix: fill('hover_dead', { id }),
+      });
+    }
+
     const hasStuck = stuckSlots.some((slot) => {
       const s = slot as { style?: object; config?: object } | undefined;
       return !!s && (Object.keys(s.style ?? {}).length > 0 || Object.keys(s.config ?? {}).length > 0);

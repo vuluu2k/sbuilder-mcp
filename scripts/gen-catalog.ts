@@ -11,6 +11,7 @@
  * Run: WB_REPO=/path/to/web_builder npm run codegen
  */
 import { existsSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
+import { execFileSync } from 'node:child_process';
 import { resolve } from 'node:path';
 import { buildRequestShapes } from './shapes.js';
 import { credentialFor } from '../src/transport/credential.js';
@@ -343,12 +344,65 @@ function reportDrift(): void {
   process.exit(1);
 }
 
+
+/**
+ * REFUSE A CHECKOUT SOMEBODY IS MID-EDIT IN.
+ *
+ * The catalog is COMMITTED, so whatever this script reads ships to every
+ * install. Pointed at a working tree, it bakes in whatever a concurrent session
+ * happens to have half-written — and the result looks exactly like a real
+ * platform addition, because it is one, just not one that exists anywhere yet.
+ *
+ * This has now happened twice in this repo. A `bundle-items` element and its
+ * relation-slot operations went in from one session; a `cart-count` element and
+ * 193 lines around it went in from another, on the same day CLAUDE.md's warning
+ * about it was being read aloud. Prose did not stop it either time, which is the
+ * whole argument for a check: the failure is silent, the output is plausible,
+ * and the person running codegen is by definition not the person editing.
+ *
+ * Scoped to the FOUR directories this script actually reads, so an unrelated
+ * edit elsewhere in a big monorepo is not a reason to refuse. `--dirty` is the
+ * deliberate override, for the one legitimate case: generating against a change
+ * you are making yourself, to see what it would produce.
+ */
+function assertCommitted(repo: string): void {
+  if (process.argv.includes('--dirty')) {
+    console.error('warning: --dirty — reading a working tree, so half-finished work can ship');
+    return;
+  }
+  const read = ['schema/src', 'editor/src', 'server/render', 'server/docs'];
+  let out = '';
+  try {
+    out = execFileSync('git', ['-C', repo, 'status', '--porcelain', '--', ...read], {
+      encoding: 'utf8',
+    });
+  } catch {
+    return; // not a git checkout, or no git — nothing to assert against
+  }
+  const dirty = out.split('\n').filter(Boolean);
+  if (!dirty.length) return;
+  console.error(
+    `WB_REPO has uncommitted changes in the ${read.length} directories this generator reads, ` +
+      'and the catalog it writes is committed and published:',
+  );
+  for (const line of dirty.slice(0, 12)) console.error(`  ${line}`);
+  if (dirty.length > 12) console.error(`  …and ${dirty.length - 12} more`);
+  console.error(
+    'Point WB_REPO at a COMMITTED ref instead — the cheap way is a detached worktree:\n' +
+      '  git -C <web_builder> worktree add --detach /tmp/wb origin/main\n' +
+      '  ln -s <web_builder>/node_modules /tmp/wb/node_modules   # and editor/, schema/, runtime/\n' +
+      'Pass --dirty to read the working tree on purpose.',
+  );
+  process.exit(1);
+}
+
 async function main(): Promise<void> {
   const repo = process.env.WB_REPO;
   if (!repo) {
     console.error('WB_REPO is not set — point it at a web_builder checkout');
     process.exit(1);
   }
+  assertCommitted(repo);
   const specPath = resolve(repo, 'server/docs/swagger.json');
   const spec = JSON.parse(readFileSync(specPath, 'utf8')) as {
     paths: Record<string, Record<string, unknown>>;

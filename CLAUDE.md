@@ -65,6 +65,14 @@ afternoon: 107 → 108 elements and 484 → 486 operations while this repo sat s
 WB_REPO=/path/to/web_builder npm run codegen:check
 ```
 
+**Codegen now REFUSES a checkout with uncommitted changes** in the four directories it reads
+(`schema/src`, `editor/src`, `server/render`, `server/docs`), naming the files and the worktree
+command. It had to become a check rather than another paragraph: the warning below was written
+after a `bundle-items` element went in from one concurrent session, and a `cart-count` element
+plus 193 lines around it went in from another **on the day that warning was being read**. The
+output looks exactly like a real platform addition, because it is one — just not one that
+exists anywhere yet. `--dirty` is the deliberate override, and says so.
+
 Writes nothing; exits 1 naming every file that would change. Point it at a COMMITTED ref
 rather than a working tree — a checkout somebody is mid-edit in will bake half-finished work
 into the catalog, which happened here (a `bundle-items` element and its relation-slot
