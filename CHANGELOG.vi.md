@@ -6,6 +6,15 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.11.1] - 2026-09-09
+
+### Added
+- sb_review giờ báo cáo `hover_dead` cho một node mà element của nó lưu hover state ở nơi cũ mà chính renderer của nó đọc, thay vì slot `states.hover` phổ quát — ví dụ như `button` — và nêu rõ lệnh sb_set để chuyển giá trị tới đúng nơi sẽ thực sự hiển thị.
+- npm run codegen giờ từ chối chạy trên một checkout web_builder có thay đổi chưa commit trong các thư mục mà nó đọc (schema/src, editor/src, server/render, server/docs), nêu tên các file bẩn thay vì âm thầm đưa công việc dở dang của một phiên làm việc đồng thời vào catalog đã commit; `--dirty` cho phép ghi đè khi bạn tự tạo ra thay đổi đang dở dang đó.
+
+### Fixed
+- Catalog element được sinh lại từ một ref đã commit, loại bỏ một element `cart-count` và chủ sở hữu satellite của nó vốn đã lọt vào từ thay đổi nền tảng chưa commit của một phiên làm việc khác; catalog trở lại 108 element.
+
 ## [0.11.0] - 2026-09-09
 
 ### Added

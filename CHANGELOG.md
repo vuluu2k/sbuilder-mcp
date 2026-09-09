@@ -6,6 +6,15 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.11.1] - 2026-09-09
+
+### Added
+- sb_review now reports `hover_dead` for a node whose element keeps its hover state in a legacy home its own renderer reads instead of the universal `states.hover` slot — a `button`, for instance — naming the sb_set call that moves the values where they will actually paint.
+- npm run codegen now refuses to run against a web_builder checkout with uncommitted changes in the directories it reads (schema/src, editor/src, server/render, server/docs), naming the dirty files instead of silently baking a concurrent session's half-finished work into the committed catalog; `--dirty` overrides it for generating against your own in-progress change.
+
+### Fixed
+- The generated element catalog is regenerated from a committed ref, removing a `cart-count` element and its satellite owner that had leaked in from another session's uncommitted platform change; the catalog is back to 108 elements.
+
 ## [0.11.0] - 2026-09-09
 
 ### Added
