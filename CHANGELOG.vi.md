@@ -6,6 +6,14 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.10.0] - 2026-09-09
+
+### Added
+- sb_set giờ nhận `unset`, một mảng tên key cần xoá khỏi đúng slot mà một lần ghi sẽ nhắm tới — base, một breakpoint, hoặc một trong hai nơi lưu của một state — nhờ đó mọi finding nêu "xoá override đi" làm cách sửa giờ có công cụ để thực sự làm điều đó. `keys` giờ có thể bỏ qua khi `unset` đã làm phần việc, và một lần xoá thuần tuý được miễn khỏi kiểm tra sticky-host để nó có thể sửa một finding `stuck_no_host` thay vì bị chính kiểm tra đó từ chối.
+
+### Fixed
+- Kiểm tra `stuck_no_host` của sb_review giờ đếm số key bên trong slot trạng thái stuck thay vì chỉ kiểm tra slot có tồn tại hay không, khớp với `HasStuckOverrides` của chính nền tảng; một slot rỗng (trạng thái mà một lần sửa bằng `unset` để lại) không còn tiếp tục báo cáo finding mà nó vừa được dùng để khắc phục.
+
 ## [0.9.2] - 2026-09-09
 
 ### Added

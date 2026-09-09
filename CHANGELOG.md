@@ -6,6 +6,14 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.10.0] - 2026-09-09
+
+### Added
+- sb_set now takes `unset`, an array of key names removed from the same slot a write would target — base, a breakpoint, or either home of a state — giving every finding that names "remove the override" as its fix a tool that can actually perform it. `keys` is now optional when `unset` carries the work, and a pure removal is exempt from the sticky-host guard so it can repair a `stuck_no_host` finding rather than being refused by it.
+
+### Fixed
+- sb_review's `stuck_no_host` check now counts the keys inside a stuck state slot instead of only checking whether the slot exists, matching the platform's own `HasStuckOverrides`; an empty slot (the state a repair with `unset` leaves behind) no longer keeps reporting the finding it was used to fix.
+
 ## [0.9.2] - 2026-09-09
 
 ### Added
