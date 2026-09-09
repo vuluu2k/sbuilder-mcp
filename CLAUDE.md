@@ -1157,12 +1157,25 @@ tools. Its spec also records the two axes it deliberately did NOT take, so the m
 are not re-derived. BOTH HAVE MOVED, and the Phase 7 numbers are kept only as the before:
 REACH was 75 operations unreachable and is now zero for the annotated surface (see the OpenAPI
 bullet above); CAPABILITY was 45 of 180 write operations declaring a body, and measured
-2026-09-09 is **276 write operations, 157 shaped, 119 not** — of which 64 are DELETEs that
+2026-09-09 is **276 write operations, 162 shaped, 114 not** — of which 64 are DELETEs that
 take no body and 14 are action endpoints with a verb tail. The genuinely risky remainder is
-**8 PUTs with no shape**, every one of them a whole-object replace an agent would have to
-guess: `/api/sites/{siteId}/roles/{roleId}`, `…/products/{productId}/categories`,
-`…/pages/{pageId}/default-template`, `…/sites/{siteId}/org`, `…/sites/{siteID}/preview`, the
-two app-version endpoints and `/_wb/account/course-note`. `sb_undo` cannot prepare an undo for
+**5 PUTs with no shape**, down from 8 once the parser learned three readings it was
+getting wrong — and NOT all of them are guesses: `…/pages/{pageId}/default-template` decodes
+nothing at all, so "no shape" is the correct answer there rather than a gap. The three that
+came back are the ones that mattered — `roles/{roleId}`, `products/{productId}/categories`
+(filing a product under a collection) and `sites/{siteId}/org`. The three readings, each
+pinned by `test/shapes.test.ts` against the real catalog:
+  - **a case arm may list SEVERAL methods.** `case http.MethodPatch, http.MethodPut:` is how
+    this platform spells "the same body either way", and matching only the first name left the
+    arm unrecognised entirely — the trailing `:` never followed it.
+  - **A DOC BLOCK IS NOT ALWAYS ABOVE ITS FUNCTION.** `products/rest/rest.go` stacks
+    handleProductLinks's block and handleProductBundles's together and then declares the two
+    functions in the OPPOSITE order, so walking up from a function reaches the block
+    documenting the other one. That is worse than a miss: a route takes the wrong handler's
+    body. Blocks are now attributed by the name they OPEN with — Go's own convention — and
+    only fall back to "the function below" when the block names nothing.
+  - a dispatcher that routes by PATH rather than by method has no arm to read at all; the
+    route's own trailing literal segment picks the callee, which is exact rather than a guess. `sb_undo` cannot prepare an undo for
 any of them either, because it needs the shape to know which fields to carry back. The 33
 unshaped POSTs left over are almost entirely the SHOPPER's surface (`/_wb/account/*`,
 `/_wb/checkout/*`), webhooks and multipart uploads — not an agent's to call.

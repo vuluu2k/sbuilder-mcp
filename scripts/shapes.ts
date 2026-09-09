@@ -414,7 +414,18 @@ function flatten(
 // ---------------------------------------------------------------------------
 
 const ROUTER = /@Router\s+(\S+)\s+\[(\w+)\]/;
-const CASE_METHOD = /case\s+http\.Method([A-Z]\w*)\s*:/;
+/**
+ * A case arm, and it may list SEVERAL methods.
+ *
+ * `case http.MethodPatch, http.MethodPut:` is how this platform spells "the same
+ * body either way", and matching only the first name left the arm unrecognised
+ * entirely — the trailing `:` never followed it — so every decode inside
+ * belonged to no method and was dropped. Ten such arms, two write methods each:
+ * that is where most of the PUTs with no shape were, `PUT /roles/{roleId}` among
+ * them, whose body is an inline struct the parser could already read.
+ */
+const CASE_METHOD = /case\s+((?:http\.Method[A-Z]\w*\s*,\s*)*http\.Method[A-Z]\w*)\s*:/;
+const METHOD_NAME = /http\.Method([A-Z]\w*)/g;
 const IF_METHOD = /r\.Method\s*==\s*http\.Method([A-Z]\w*)/;
 const VAR_TYPED = /^\s*var\s+(\w+)\s+(\*?\[?\]?[\w.[\]]+)\s*$/;
 const VAR_ANON = /^\s*var\s+(\w+)\s+struct\s*\{\s*$/;
@@ -464,22 +475,78 @@ interface GoFunc {
 }
 
 function readFuncs(lines: string[]): GoFunc[] {
+  const SIG = /^func\s+(?:\([^)]*\)\s*)?([A-Za-z_]\w*)\s*\(/;
+  const declared = new Set<string>();
+  for (const l of lines) {
+    const m = SIG.exec(l);
+    if (m) declared.add(m[1]);
+  }
+
+  // THE DOC BLOCK IS NOT ALWAYS ABOVE ITS FUNCTION, and reading it that way
+  // attributes routes to the wrong handler — which is worse than missing them,
+  // because the wrong handler's decode becomes that route's body.
+  //
+  // `products/rest/rest.go` stacks handleProductLinks's block and
+  // handleProductBundles's block together, then declares the two functions in
+  // the OPPOSITE order. Walking up from a function reaches the block documenting
+  // the other one; walking up from handleProductLinks reaches no comment at all,
+  // because the function above it is code. `PUT /products/{productId}/categories`
+  // — the call that files a product under a collection — was unreachable either
+  // way.
+  //
+  // Go's own convention is the fix and it needs no positional assumption: a doc
+  // comment opens with the name of what it documents. A block that names a
+  // function declared in this file belongs to THAT function wherever it sits; a
+  // block that names nothing (the `// @Summary …` style) still belongs to the
+  // function below it, which is how most of this codebase is written.
+  const routesFor = new Map<string, Array<{ path: string; method: string }>>();
+  const add = (owner: string, r: { path: string; method: string }) => {
+    const list = routesFor.get(owner) ?? [];
+    list.push(r);
+    routesFor.set(owner, list);
+  };
+  const OPENS = /^\s*\/\/\s*([A-Za-z_]\w*)\s/;
+
+  for (let i = 0; i < lines.length; i++) {
+    if (!/^\s*\/\//.test(lines[i])) continue;
+    // One block: from here to the next block opening or the end of the run.
+    const first = OPENS.exec(lines[i]);
+    const named = first && declared.has(first[1]) ? first[1] : null;
+    const found: Array<{ path: string; method: string }> = [];
+    let j = i;
+    for (; j < lines.length && /^\s*\/\//.test(lines[j]); j++) {
+      if (j > i) {
+        const o = OPENS.exec(lines[j]);
+        if (o && declared.has(o[1])) break; // the next block starts here
+      }
+      const r = ROUTER.exec(lines[j]);
+      if (r) found.push({ path: r[1], method: r[2].toUpperCase() });
+    }
+    if (found.length > 0) {
+      let owner = named;
+      if (!owner) {
+        // The unnamed style: the function that follows the whole comment run.
+        let k = j;
+        while (k < lines.length && /^\s*\/\//.test(lines[k])) k++;
+        const sig = SIG.exec(lines[k] ?? '');
+        owner = sig ? sig[1] : null;
+      }
+      if (owner) for (const r of found) add(owner, r);
+    }
+    i = j - 1;
+  }
+
   const out: GoFunc[] = [];
   let i = 0;
   while (i < lines.length) {
-    const sig = /^func\s+(?:\([^)]*\)\s*)?([A-Za-z_]\w*)\s*\(/.exec(lines[i]);
+    const sig = SIG.exec(lines[i]);
     if (!sig) {
       i++;
       continue;
     }
-    const routes: Array<{ path: string; method: string }> = [];
-    for (let k = i - 1; k >= 0 && /^\s*\/\//.test(lines[k]); k--) {
-      const r = ROUTER.exec(lines[k]);
-      if (r) routes.push({ path: r[1], method: r[2].toUpperCase() });
-    }
     let end = i + 1;
     for (; end < lines.length && !/^\}/.test(lines[end]); end++);
-    out.push({ name: sig[1], routes, body: lines.slice(i, end) });
+    out.push({ name: sig[1], routes: routesFor.get(sig[1]) ?? [], body: lines.slice(i, end) });
     i = end + 1;
   }
   return out;
@@ -487,13 +554,19 @@ function readFuncs(lines: string[]): GoFunc[] {
 
 /** The lines belonging to one `case http.Method*` arm, or the whole body if there are none. */
 function armLines(body: string[], method: string): string[] {
-  const marks: Array<{ at: number; method: string }> = [];
+  // An arm carries a SET of methods, because one arm may serve several.
+  const marks: Array<{ at: number; methods: string[] }> = [];
   for (let n = 0; n < body.length; n++) {
-    const c = CASE_METHOD.exec(body[n]) ?? IF_METHOD.exec(body[n]);
-    if (c) marks.push({ at: n, method: c[1].toUpperCase() });
+    const c = CASE_METHOD.exec(body[n]);
+    if (c) {
+      marks.push({ at: n, methods: [...c[1].matchAll(METHOD_NAME)].map((m) => m[1].toUpperCase()) });
+      continue;
+    }
+    const i = IF_METHOD.exec(body[n]);
+    if (i) marks.push({ at: n, methods: [i[1].toUpperCase()] });
   }
   if (marks.length === 0) return body;
-  const hit = marks.findIndex((m) => m.method === method);
+  const hit = marks.findIndex((m) => m.methods.includes(method));
   if (hit === -1) return [];
   const from = marks[hit].at;
   const to = marks[hit + 1]?.at ?? body.length;
@@ -554,6 +627,55 @@ function extractDecodes(
  * at all — had no shape while every other page route did. When an arm decodes
  * nothing itself, the functions it CALLS in this file are read instead.
  */
+/**
+ * THE SEGMENT-DIRECTED HOP, for a dispatcher that routes by PATH rather than by
+ * method.
+ *
+ * `products/rest` has no `case http.Method*` at all: it switches on
+ * `parts[3] == "categories"` and calls `handleProductLinks`, which is where the
+ * decode lives. The method-arm hop cannot reach that — there is no arm — and the
+ * unambiguous-callee hop cannot either, because the whole dispatcher calls a
+ * dozen helpers.
+ *
+ * The disambiguator is a literal the ROUTE ITSELF supplies: the trailing static
+ * segment of its path. Matching `"categories"` in the dispatcher body and taking
+ * the callee on that line is exact, not a guess — and if the segment matches
+ * lines naming two different callees, it says nothing, exactly as the other hops
+ * do. Tried longest-tail first, so a generic `"sites"` is only ever reached after
+ * the specific segments have failed, and ambiguity guards it there too.
+ */
+function segmentHop(
+  fn: GoFunc,
+  byName: Map<string, GoFunc>,
+  route: { method: string; path: string },
+  dir: string,
+): Array<{ ref: string | null; inline: GoStruct | null }> {
+  const segs = route.path.split('/').filter((x) => x && !x.startsWith('{'));
+  for (const seg of [...segs].reverse()) {
+    const names = new Set<string>();
+    for (let i = 0; i < fn.body.length; i++) {
+      if (!fn.body[i].includes(`"${seg}"`)) continue;
+      // The call may sit on the matching line or on the next few, which is how
+      // a `case "x":` arm is written.
+      for (const m of fn.body.slice(i, i + 4).join('\n').matchAll(/\.([a-z]\w*)\(/g)) {
+        const callee = byName.get(m[1]);
+        if (!callee || callee === fn || callee.routes.length > 0) continue;
+        names.add(callee.name);
+      }
+    }
+    if (names.size !== 1) continue;
+    const callee = byName.get([...names][0]);
+    if (!callee) continue;
+    // Inside the callee, the method arm still decides: handleProductLinks serves
+    // GET and PUT and decodes only in one of them.
+    let body = armLines(callee.body, route.method);
+    if (body.length === 0) body = callee.body;
+    const got = extractDecodes(body, dir);
+    if (got.length > 0) return got;
+  }
+  return [];
+}
+
 function readDecodeSites(file: string, dir: string): DecodeSite[] {
   const funcs = readFuncs(readFileSync(file, 'utf8').split('\n'));
   const byName = new Map(funcs.map((f) => [f.name, f]));
@@ -571,8 +693,13 @@ function readDecodeSites(file: string, dir: string): DecodeSite[] {
       // reached at all.
       let arm = armLines(fn.body, route.method);
       if (arm.length === 0 && writeRoutes.length === 1) arm = fn.body;
-      if (arm.length === 0) continue;
-      let decodes = extractDecodes(arm, dir);
+      let decodes = arm.length > 0 ? extractDecodes(arm, dir) : [];
+      if (decodes.length === 0) {
+        // A dispatcher with no method arm at all — see segmentHop.
+        const bySeg = segmentHop(fn, byName, route, dir);
+        if (bySeg.length > 0) decodes = bySeg;
+      }
+      if (arm.length === 0 && decodes.length === 0) continue;
       if (decodes.length === 0) {
         // One hop, and only when it is UNAMBIGUOUS: every callee of this file's
         // own that decodes is collected, and two candidates means neither is

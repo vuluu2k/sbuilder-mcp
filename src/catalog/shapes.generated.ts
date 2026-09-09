@@ -5,8 +5,8 @@ import type { RequestShape } from './types.js';
 
 export const SHAPE_SOURCE = {
   "writeOperations": 212,
-  "shaped": 157,
-  "fromHandlers": 157,
+  "shaped": 162,
+  "fromHandlers": 162,
   "fromSwaggerOnly": 0,
   "withReadOnly": 26,
   "structsRead": 1597
@@ -126,6 +126,110 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
     "goType": "versionInput"
   },
   "put:/api/orgs/{orgId}/apps/{appId}/versions/{versionId}": {
+    "fields": [
+      {
+        "name": "version",
+        "type": "string"
+      },
+      {
+        "name": "scopes",
+        "type": "string[]"
+      },
+      {
+        "name": "embedUrl",
+        "type": "string"
+      },
+      {
+        "name": "redirectUri",
+        "type": "string"
+      },
+      {
+        "name": "summary",
+        "type": "string"
+      },
+      {
+        "name": "description",
+        "type": "string"
+      },
+      {
+        "name": "category",
+        "type": "string",
+        "note": "Category is the marketplace shelf, from apps."
+      },
+      {
+        "name": "pricingModel",
+        "type": "string",
+        "note": "PricingModel, PriceCents, PriceCurrency and BillingInterval are what this version costs a merchant. THIS ROUTE IS A FULL REPLACEMENT, and that includes the price: a client that omits `pricingModel` is saying free, exactly as one that…"
+      },
+      {
+        "name": "priceCents",
+        "type": "number"
+      },
+      {
+        "name": "priceCurrency",
+        "type": "string"
+      },
+      {
+        "name": "billingInterval",
+        "type": "string"
+      }
+    ],
+    "source": "go",
+    "goType": "versionInput"
+  },
+  "post:/api/orgs/{orgId}/apps/{appId}/versions/{versionId}/withdraw": {
+    "fields": [
+      {
+        "name": "version",
+        "type": "string"
+      },
+      {
+        "name": "scopes",
+        "type": "string[]"
+      },
+      {
+        "name": "embedUrl",
+        "type": "string"
+      },
+      {
+        "name": "redirectUri",
+        "type": "string"
+      },
+      {
+        "name": "summary",
+        "type": "string"
+      },
+      {
+        "name": "description",
+        "type": "string"
+      },
+      {
+        "name": "category",
+        "type": "string",
+        "note": "Category is the marketplace shelf, from apps."
+      },
+      {
+        "name": "pricingModel",
+        "type": "string",
+        "note": "PricingModel, PriceCents, PriceCurrency and BillingInterval are what this version costs a merchant. THIS ROUTE IS A FULL REPLACEMENT, and that includes the price: a client that omits `pricingModel` is saying free, exactly as one that…"
+      },
+      {
+        "name": "priceCents",
+        "type": "number"
+      },
+      {
+        "name": "priceCurrency",
+        "type": "string"
+      },
+      {
+        "name": "billingInterval",
+        "type": "string"
+      }
+    ],
+    "source": "go",
+    "goType": "versionInput"
+  },
+  "post:/api/orgs/{orgId}/apps/{appId}/versions/{versionId}/images": {
     "fields": [
       {
         "name": "version",
@@ -1796,49 +1900,6 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
     "source": "go",
     "goType": "courses.Course"
   },
-  "put:/api/sites/{siteId}/courses/{courseId}/sections/{sectionId}": {
-    "fields": [
-      {
-        "name": "id",
-        "type": "string"
-      },
-      {
-        "name": "siteId",
-        "type": "string"
-      },
-      {
-        "name": "courseId",
-        "type": "string"
-      },
-      {
-        "name": "title",
-        "type": "string"
-      },
-      {
-        "name": "summary",
-        "type": "string"
-      },
-      {
-        "name": "position",
-        "type": "number"
-      },
-      {
-        "name": "accessScope",
-        "type": "string",
-        "note": "AccessScope names the entitlement tier that unlocks this section."
-      },
-      {
-        "name": "createdAt",
-        "type": "string (RFC3339)"
-      },
-      {
-        "name": "updatedAt",
-        "type": "string (RFC3339)"
-      }
-    ],
-    "source": "go",
-    "goType": "courses.Section"
-  },
   "post:/api/sites/{siteId}/courses/{courseId}/sections": {
     "fields": [
       {
@@ -1882,7 +1943,50 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
     "source": "go",
     "goType": "courses.Section"
   },
-  "put:/api/sites/{siteId}/courses/{courseId}/lessons/{lessonId}": {
+  "put:/api/sites/{siteId}/courses/{courseId}/sections/{sectionId}": {
+    "fields": [
+      {
+        "name": "id",
+        "type": "string"
+      },
+      {
+        "name": "siteId",
+        "type": "string"
+      },
+      {
+        "name": "courseId",
+        "type": "string"
+      },
+      {
+        "name": "title",
+        "type": "string"
+      },
+      {
+        "name": "summary",
+        "type": "string"
+      },
+      {
+        "name": "position",
+        "type": "number"
+      },
+      {
+        "name": "accessScope",
+        "type": "string",
+        "note": "AccessScope names the entitlement tier that unlocks this section."
+      },
+      {
+        "name": "createdAt",
+        "type": "string (RFC3339)"
+      },
+      {
+        "name": "updatedAt",
+        "type": "string (RFC3339)"
+      }
+    ],
+    "source": "go",
+    "goType": "courses.Section"
+  },
+  "post:/api/sites/{siteId}/courses/{courseId}/lessons": {
     "fields": [
       {
         "name": "id",
@@ -1978,7 +2082,7 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
     "source": "go",
     "goType": "courses.Lesson"
   },
-  "post:/api/sites/{siteId}/courses/{courseId}/lessons": {
+  "put:/api/sites/{siteId}/courses/{courseId}/lessons/{lessonId}": {
     "fields": [
       {
         "name": "id",
@@ -4768,7 +4872,17 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
       "updatedAt"
     ]
   },
-  "put:/api/sites/{siteId}/product-categories/{id}/products": {
+  "put:/api/sites/{siteId}/products/{productId}/categories": {
+    "fields": [
+      {
+        "name": "categoryIds",
+        "type": "string[]"
+      }
+    ],
+    "source": "go",
+    "goType": "(inline)"
+  },
+  "post:/api/sites/{siteId}/product-categories/{id}/products": {
     "fields": [
       {
         "name": "productIds",
@@ -4778,7 +4892,7 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
     "source": "go",
     "goType": "(inline)"
   },
-  "post:/api/sites/{siteId}/product-categories/{id}/products": {
+  "put:/api/sites/{siteId}/product-categories/{id}/products": {
     "fields": [
       {
         "name": "productIds",
@@ -6338,6 +6452,30 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
       {
         "name": "permissions",
         "type": "site.Permission[]"
+      }
+    ],
+    "source": "go",
+    "goType": "(inline)"
+  },
+  "put:/api/sites/{siteId}/roles/{roleId}": {
+    "fields": [
+      {
+        "name": "name",
+        "type": "string"
+      },
+      {
+        "name": "permissions",
+        "type": "site.Permission[]"
+      }
+    ],
+    "source": "go",
+    "goType": "(inline)"
+  },
+  "put:/api/sites/{siteId}/org": {
+    "fields": [
+      {
+        "name": "orgId",
+        "type": "string"
       }
     ],
     "source": "go",
