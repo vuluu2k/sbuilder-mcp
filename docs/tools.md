@@ -523,6 +523,56 @@ shop it can never let anyone buy from — which is the first gap `sb_review` rep
 `sb_publish` **cascades**: a page sharing a global section with others republishes them too,
 because a header edited once must not go live on one page and stay stale on the rest.
 
+## Working with the other MCP servers
+
+These tools answer three of the five questions a site raises. The other two need a design
+source and a browser you can drive, and reaching for the wrong server costs either a browser
+launch inside an edit loop or an hour proving something one call would have settled.
+
+| Server | Answers | Reach for it |
+| --- | --- | --- |
+| **Figma MCP** | what the design SAYS — the token, its name, its variants, its hover value | tokens IN, before the first section |
+| **Google Stitch MCP** | a design system already decided — palette, type, radius, light/dark | tokens IN, when there is no Figma file |
+| **`sb_look`** | what the page looks like now, three widths, ~900ms warm | after every edit. This is the loop |
+| **Chrome DevTools MCP** | WHY it looks like that — computed style, the linked stylesheet, console, network, Lighthouse | the tree is right and the page is wrong |
+| **Playwright MCP** | what happens when somebody USES it — click, scroll, fill, submit | anything a screenshot cannot show without being told |
+
+**tokens in → build → look → diagnose → prove.** Do not put a browser server inside the edit
+loop: `sb_look` is ~900ms warm because it pools its browser for the process lifetime, while
+DevTools and Playwright attach or launch per session.
+
+Six questions only a browser server can settle, all of them real to this platform:
+
+1. **Does the sticky header actually stick?** A screenshot is one scroll position. Open the
+   published page, scroll, and read `classList` for `wb-stuck` — the class the platform's own
+   island toggles, and the entire contract behind the `stuck` state. If it never appears,
+   every stuck override on the page is stored and never painted. `sb_look` says so once, in
+   `stuck_note`, on any page that pins something.
+2. **"The style did not apply."** It almost always did: the page's CSS is a LINKED stylesheet
+   (`static-*.css`, `desktop-*.css`), so grepping the HTML proves nothing. Ask the browser
+   what it computed — `getComputedStyle(el)` — never the markup what it said.
+3. **Does the cart drawer open when a shopper clicks?** `sb_look` photographs it by adding the
+   platform's own `is-open` class itself, which says nothing about the trigger. Click the real
+   control instead; an untriggerable drawer is a store nobody can buy from.
+4. **Does the checkout take an order?** `sb_store` builds it and `sb_review` reports the gaps;
+   neither submits anything. Fill the form and check the shopper lands on `/checkout/complete`
+   — against a **sandbox** gateway, never live credentials.
+5. **What does an entity template look like with a real record?** Entity routing lives in
+   `ServeHost`, not `ServePreview`, so a product or category TEMPLATE previews bound to
+   nothing. Use the published `/products/{slug}`.
+6. **Is it fast, and does it hold still?** Lighthouse on the published storefront. CLS is the
+   one that matters here — the renderer writes intrinsic `width`/`height` on every `<img>` to
+   keep it at zero, so a frame whose `aspect-ratio` fights those attributes shows up as
+   layout shift and not in a still screenshot.
+
+Two things not to do: run DevTools MCP and Playwright MCP against the same page at once (they
+are two browsers, not one view of one), and point either at the draft preview when the
+question is about data or routing. Check each server is exposed in THIS session before
+planning around it — an MCP server can be configured project-scoped, and an unauthenticated
+Figma exposes only `authenticate`.
+
+---
+
 ## Hover, and other states
 
 `sb_set` takes `state` — `hover` is the one the inspector offers. A state has **two homes**,

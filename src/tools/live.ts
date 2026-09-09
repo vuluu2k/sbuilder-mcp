@@ -8,6 +8,7 @@ import { uploadMedia } from '../transport/media.js';
 import { request } from '../transport/http.js';
 import { shoot, DEFAULT_WIDTHS } from '../vision/shoot.js';
 import { measure, MEASURE_NOTICE } from '../vision/measure.js';
+import { isPinnedNode } from '../domains/site/sticky.js';
 import { compactFindings } from '../domains/site/findings.js';
 import { reviewField } from './page.js';
 import { boxesForResponse, BOXES_FORMAT } from '../vision/boxes.js';
@@ -403,10 +404,35 @@ export function registerLiveTools(
                 'not the page. Pass a published storefront URL as `url` to judge a template.',
             )
           : undefined;
+      // A STILL PICTURE CANNOT SHOW A PINNED ELEMENT ENGAGING, and this is the
+      // one tool a caller would expect to. `position: sticky` looks identical at
+      // rest and while stuck — that is the whole reason the platform needs a
+      // runtime class for it — so a page carrying a pinned node has a look this
+      // tool is structurally unable to photograph, however many widths it shoots.
+      //
+      // Gated on the document actually carrying one, and said once, for the same
+      // reason `preview_note` is: a directive that fires on pages it cannot
+      // apply to is noise, and noise is what makes the real notes unread.
+      const pinned = Object.values(session.current().doc.nodes).some((n) =>
+        isPinnedNode(n as never),
+      );
+      const stuckNote = pinned
+        ? ctx.notices.once(
+            'stuck-scroll',
+            'This page pins something (position sticky/fixed). A screenshot is ONE scroll ' +
+              'position, so nothing here can show whether it engages or what it looks like ' +
+              'once it does — the platform styles that moment through a class a runtime island ' +
+              'toggles, "wb-stuck", and CSS alone cannot express it. To check: open the ' +
+              'PUBLISHED page in a browser server (Playwright or Chrome DevTools MCP), scroll, ' +
+              'and read classList for "wb-stuck". If it never appears, every stuck override on ' +
+              'the page is stored and never painted.',
+          )
+        : undefined;
       return images(shots.map((s) => ({ dataBase64: s.imageBase64, mimeType: s.mimeType })), {
         widths: shots.map((s) => s.width),
         ...(url ? { shot: url } : {}),
         ...(previewNote ? { preview_note: previewNote } : {}),
+        ...(stuckNote ? { stuck_note: stuckNote } : {}),
         ...(node_id ? { framed: node_id } : {}),
         ...(with_boxes === false
           ? {}

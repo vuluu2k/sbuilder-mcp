@@ -318,3 +318,24 @@ describe('config.stuckAfter', () => {
     expect(() => setKeys(d, section, { gap: '8px' }, { namespace: 'config' })).not.toThrow();
   });
 });
+
+/**
+ * The one thing sb_look is structurally unable to photograph. A still shot is
+ * one scroll position, and a pinned element looks identical at rest and while
+ * stuck — which is the whole reason the platform needs a runtime class for it.
+ */
+describe('the stuck-scroll notice', () => {
+  it('fires only for a document that pins something, and only once', async () => {
+    const { Notices } = await import('../src/mcp/notices.js');
+    const plain = page();
+    const notices = new Notices();
+    const has = (d: PageDoc) =>
+      Object.values(d.doc.nodes).some((n) => isPinnedNode(n as never));
+
+    expect(has(plain.d)).toBe(false);
+    pin(plain.d, plain.section, 'sticky');
+    expect(has(plain.d)).toBe(true);
+    expect(notices.once('stuck-scroll', 'x')).toBe('x');
+    expect(notices.once('stuck-scroll', 'x')).toBeUndefined();
+  });
+});

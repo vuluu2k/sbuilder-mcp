@@ -1,6 +1,6 @@
 ---
 name: sbuilder-site-design
-description: How to build a storefront with the sb_* tools that can actually take money — the ordered build recipe (catalogue before pages, delivery before payment, paths that resolve by page type), where the design comes from (a Figma or Stitch source outranks invention), what separates a real site from a generated one, the three widths, the responsive cascade's tail, the satellites that hold an element's look, the form's two-level field skin, and which artifact to judge a page from. Triggers when designing or editing pages through sb_add / sb_set / sb_look / sb_review, when porting a Figma or Stitch design onto a site, or when a rendered page looks wrong.
+description: How to build a storefront with the sb_* tools that can actually take money — the ordered build recipe (catalogue before pages, delivery before payment, paths that resolve by page type), where the design comes from (a Figma or Stitch source outranks invention), what separates a real site from a generated one, the three widths, the responsive cascade's tail, the satellites that hold an element's look, the form's two-level field skin, which artifact to judge a page from, and which of the other MCP servers answers which question (Figma and Stitch for tokens in; Chrome DevTools MCP for why a page looks wrong; Playwright MCP for scroll, click and submit). Triggers when designing or editing pages through sb_add / sb_set / sb_look / sb_review, when porting a Figma or Stitch design onto a site, when a rendered page looks wrong, or when checking a pinned header, a cart drawer or a checkout in a real browser.
 ---
 
 # Building and designing a site with the `sb_*` tools
@@ -198,6 +198,90 @@ a matter of taste — each is something a shopper meets.
 6. **One accent, used for one job.** If the primary button, the price and the active link are
    all the accent, the accent has stopped pointing at anything.
 
+## The other servers, and which question each one answers
+
+Five tools can look at a page and they are not interchangeable. Reaching for the wrong one
+costs either a browser launch inside an edit loop, or an hour spent proving something a
+single call would have answered.
+
+| Server | Answers | Reach for it |
+| --- | --- | --- |
+| **Figma MCP** | what the design SAYS — the token, its name, its variants, its hover value | tokens IN, before the first section |
+| **Google Stitch MCP** | a design system already decided — palette, type, radius, light/dark | tokens IN, when there is no Figma file |
+| **`sb_look`** | what the page looks like RIGHT NOW, at three widths, in ~900ms warm | after every edit. This is the loop |
+| **Chrome DevTools MCP** | WHY it looks like that — computed style, the linked stylesheet, console, network, Lighthouse | the tree is right and the page is wrong |
+| **Playwright MCP** | what happens when somebody USES it — click, scroll, fill, submit | anything a screenshot cannot show without being told |
+
+The order is: **tokens in → build → look → diagnose → prove.** Do not put a browser server
+inside the edit loop. `sb_look` is ~900ms warm because it pools its browser for the process;
+DevTools and Playwright attach or launch per session, and a vision loop that pays that on
+every edit is the whole latency budget gone. Look with `sb_look`; escalate only when it
+cannot answer.
+
+**Check each server is exposed in THIS session before planning around it.** An MCP server can
+be configured project-scoped — Stitch is, in this workspace, under one sibling repo — so
+`claude mcp list` reports it connected while a session in another directory has none of its
+tools. An unauthenticated Figma exposes only `authenticate` / `complete_authentication`.
+
+### Six things only a browser server can answer
+
+Each is a real question this platform raises and `sb_look` + `sb_review` genuinely cannot
+settle. Everything else, prefer the cheap tools.
+
+1. **Does the sticky header actually stick?** A screenshot is one scroll position, so
+   `sb_look` cannot see it at all. Playwright: open the **published** URL, scroll, then read
+   the class the platform's own island toggles —
+   `el.classList.contains('wb-stuck')` — and screenshot after. That class is the entire
+   contract behind the `stuck` state (rule 9); if it never appears, nothing you wrote for the
+   pinned look will ever paint, and no other tool will tell you.
+
+2. **"The style did not apply."** It almost always did. The page's CSS is a LINKED
+   stylesheet — `static-*.css`, `desktop-*.css`, `tablet-*.css` off the assets host — so
+   grepping the HTML for a rule proves nothing, and it has read as a missing style twice in
+   this repo's own build. DevTools MCP settles it in one call:
+   `getComputedStyle(el).boxShadow` on the live node. Ask the browser what it computed, never
+   the markup what it said.
+
+3. **Does the cart drawer open when a shopper clicks?** `sb_look` photographs a drawer by
+   adding the platform's own `is-open` class itself, which is a picture of the drawer and
+   says nothing about the trigger. Playwright clicks the real control, which tests the
+   `open_cart` event as well as the design — and an untriggerable drawer is a store nobody
+   can buy from.
+
+4. **Does the checkout take an order?** `sb_store` builds it in four ordered writes and
+   `sb_review` reports the five gaps, but neither submits anything. Playwright fills the form,
+   submits, and checks the shopper lands on `/checkout/complete`. Run it against a **sandbox**
+   gateway; never against live credentials.
+
+5. **What does an entity template look like with a real record?** The draft preview does
+   thread store data, but entity ROUTING lives in `ServeHost`, not `ServePreview`, so a
+   product or category TEMPLATE previews bound to nothing — blank title, zero price, and the
+   variant picker showing its seed options ("Color / Size"), which reads exactly like a
+   defect and is not one. Open the published `/products/{slug}` instead, and use Playwright
+   when the question needs a variant picked.
+
+6. **Is it fast, and does it hold still?** Lighthouse through DevTools MCP, on the published
+   storefront. CLS is the one worth watching here: the renderer writes intrinsic
+   `width`/`height` attributes on every `<img>` precisely to keep it at zero, so a frame whose
+   `aspect-ratio` fights those attributes shows up as layout shift rather than as anything
+   visible in a still screenshot (rule 6).
+
+### Before an import, look at the source
+
+`sb_import` reads a page in a browser and reduces it to six element kinds. A source that
+builds itself with scripts after load, or one behind a login, comes back thin — and the
+result says what it skipped, but not what was there. Point Playwright or DevTools MCP at the
+source URL first when an import returns less than you expected: it is the difference between
+"the importer is broken" and "that page had nothing in it when it loaded".
+
+### Two things not to do
+
+- **Do not run DevTools MCP and Playwright MCP against the same page at once.** They are two
+  browsers, not one view of one browser. Pick the server per question.
+- **Do not point either at the draft preview when the question is about data or routing.**
+  Publish and use the storefront URL. Half the "this is broken" findings in this repo's build
+  were the wrong artifact, not a wrong page.
+
 ## Before you call a page done
 
 Run these four, in this order. Three of them catch things `sb_review` cannot see.
@@ -213,6 +297,11 @@ Run these four, in this order. Three of them catch things `sb_review` cannot see
    but a picture still catches what no rule states.
 5. `sb_review` last, for the store gaps — they survive publish silently and a shopper is
    what finds them.
+
+Then, once — not per edit — the three questions no still picture answers: **scroll** the
+published page and check the pinned header takes `wb-stuck`, **click** the cart trigger, and
+**submit** the checkout against a sandbox gateway. Playwright for all three; DevTools MCP when
+one of them looks wrong and you need the computed style or the console behind it.
 
 ## The nine rules
 

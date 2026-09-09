@@ -499,6 +499,57 @@ danh sách rỗng.
 `sb_publish` **lan**: trang dùng chung global section với trang khác sẽ publish luôn các
 trang đó, vì header sửa một lần không được lên live ở trang này mà cũ ở trang kia.
 
+## Dùng chung với các MCP server khác
+
+Bộ tool này trả lời ba trong năm câu hỏi mà một site đặt ra. Hai câu còn lại cần một nguồn
+thiết kế và một trình duyệt điều khiển được, và chọn nhầm server thì hoặc phải trả giá bằng
+một lần khởi động trình duyệt ngay giữa vòng lặp sửa, hoặc mất cả tiếng để chứng minh thứ mà
+một lệnh gọi đã trả lời xong.
+
+| Server | Trả lời | Dùng khi |
+| --- | --- | --- |
+| **Figma MCP** | thiết kế NÓI gì — token, tên nó, các biến thể, giá trị hover | đưa token VÀO, trước section đầu tiên |
+| **Google Stitch MCP** | một design system đã chốt — bảng màu, chữ, bo góc, nền sáng/tối | đưa token VÀO, khi không có file Figma |
+| **`sb_look`** | trang trông thế nào lúc này, ba khổ màn hình, ~900ms khi đã ấm | sau mỗi lần sửa. Đây là vòng lặp |
+| **Chrome DevTools MCP** | TẠI SAO nó trông như vậy — computed style, stylesheet liên kết, console, network, Lighthouse | cây đúng mà trang sai |
+| **Playwright MCP** | chuyện gì xảy ra khi có người DÙNG nó — click, cuộn, điền, gửi | thứ ảnh chụp không thể cho thấy nếu không được bảo trước |
+
+**token vào → dựng → nhìn → chẩn đoán → chứng minh.** Đừng đặt browser server vào trong vòng
+lặp sửa: `sb_look` chỉ ~900ms khi ấm vì nó gộp trình duyệt dùng chung suốt vòng đời tiến
+trình, còn DevTools và Playwright thì gắn hoặc khởi động theo phiên.
+
+Sáu câu hỏi chỉ browser server mới trả lời được, tất cả đều có thật trên nền tảng này:
+
+1. **Header sticky có dính thật không?** Ảnh chụp là MỘT vị trí cuộn. Mở trang đã publish,
+   cuộn, rồi đọc `classList` xem có `wb-stuck` — class do chính island của nền tảng bật, và là
+   toàn bộ giao kèo phía sau trạng thái `stuck`. Nếu nó không bao giờ xuất hiện thì mọi
+   override stuck trên trang đều được lưu và không bao giờ vẽ. `sb_look` nói điều này một lần,
+   ở `stuck_note`, trên bất kỳ trang nào có ghim.
+2. **"Style không ăn."** Hầu như lúc nào nó cũng ăn: CSS của trang là stylesheet LIÊN KẾT
+   (`static-*.css`, `desktop-*.css`), nên grep HTML không chứng minh được gì. Hãy hỏi trình
+   duyệt nó tính ra cái gì — `getComputedStyle(el)` — đừng hỏi markup nó viết gì.
+3. **Cart drawer có mở khi khách bấm không?** `sb_look` chụp nó bằng cách tự thêm class
+   `is-open` của nền tảng, nên không nói gì về cái nút. Hãy bấm đúng control thật; một drawer
+   không bấm mở được là một cửa hàng không ai mua được.
+4. **Checkout có nhận đơn không?** `sb_store` dựng nó và `sb_review` báo các lỗ hổng; không
+   cái nào gửi đơn cả. Hãy điền form và kiểm tra khách có đến `/checkout/complete` — trên cổng
+   **sandbox**, tuyệt đối không dùng credential thật.
+5. **Trang mẫu thực thể trông thế nào với bản ghi thật?** Định tuyến thực thể nằm ở
+   `ServeHost` chứ không phải `ServePreview`, nên MẪU sản phẩm hay danh mục xem trước với
+   không gì được bind. Dùng `/products/{slug}` đã publish.
+6. **Nó có nhanh và có đứng yên không?** Lighthouse trên storefront đã publish. CLS mới là thứ
+   đáng quan tâm ở đây — renderer ghi `width`/`height` nội tại lên mọi `<img>` chính là để giữ
+   nó bằng 0, nên một khung có `aspect-ratio` đánh nhau với hai thuộc tính đó sẽ lộ ra dưới
+   dạng dịch chuyển bố cục chứ không lộ trong ảnh tĩnh.
+
+Hai điều không nên làm: chạy DevTools MCP và Playwright MCP cùng lúc trên cùng một trang
+(chúng là hai trình duyệt, không phải hai góc nhìn của một), và trỏ một trong hai vào bản xem
+trước nháp khi câu hỏi là về dữ liệu hay định tuyến. Hãy kiểm tra từng server có được expose
+trong PHIÊN NÀY trước khi lên kế hoạch quanh nó — một MCP server có thể được cấu hình theo
+phạm vi dự án, và Figma chưa xác thực chỉ lộ ra `authenticate`.
+
+---
+
 ## Hover và các trạng thái khác
 
 `sb_set` nhận `state` — `hover` là cái inspector có. Một trạng thái có **hai chỗ ở**, và
