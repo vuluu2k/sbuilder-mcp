@@ -6,6 +6,15 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.11.0] - 2026-09-09
+
+### Added
+- sb_set's `state:"hover"` now routes each write to the home its element's own renderer actually reads, since the platform's universal hover compiler deliberately stands aside for twelve element types that declare their own Hover variant; a `button` write now lands in `config.stateHover` (flat, base-only) instead of the unread `states.hover` slot, and the response reports where it went so a caller reading the node back is not surprised.
+- sb_set refuses a `state:"parentHover"` write on a node with no box to key off — a satellite, a direct child of the page root, or an orphan — naming the reason instead of storing a rule the platform would never match.
+- sb_set refuses `config.revealOnHover` on a node with no such box for the same reason, since the platform emits neither half of the reveal without one and the element would simply stay visible.
+- sb_set now translates `hidden: true` under a hover state into `display: none`, and refuses any other config key or a `false` value, matching the same contract already enforced for the `stuck` state.
+- sb_set warns when a write targets `product-image-list`'s hover state: its meta promises `states.hover`, but measured on 2026-09-09 nothing in the platform compiles it yet, so the override is stored where it belongs and will start painting once the platform closes the gap.
+
 ## [0.10.0] - 2026-09-09
 
 ### Added

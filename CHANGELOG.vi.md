@@ -6,6 +6,15 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.11.0] - 2026-09-09
+
+### Added
+- `state:"hover"` của sb_set giờ định tuyến mỗi lần ghi tới đúng nơi mà renderer của element đó thực sự đọc, vì bộ biên dịch hover phổ quát của nền tảng chủ động đứng ngoài đối với mười hai loại element tự khai báo biến thể Hover riêng; một lần ghi trên `button` giờ vào `config.stateHover` (dạng phẳng, chỉ ở base) thay vì slot `states.hover` không ai đọc, và kết quả trả về cho biết giá trị đã đi vào đâu để người gọi đọc lại node không bị bất ngờ.
+- sb_set từ chối ghi `state:"parentHover"` trên một node không có "hộp" nào để dựa vào — một satellite, một con trực tiếp của root trang, hoặc một node mồ côi — nêu rõ lý do thay vì lưu một rule mà nền tảng sẽ không bao giờ khớp.
+- sb_set từ chối `config.revealOnHover` trên một node không có hộp như vậy vì cùng lý do, vì nền tảng sẽ không phát ra cả hai nửa của hiệu ứng reveal nếu thiếu nó, khiến phần tử đơn giản là luôn hiển thị.
+- sb_set giờ dịch `hidden: true` dưới một hover state thành `display: none`, và từ chối mọi config key khác hoặc giá trị `false`, khớp với đúng quy tắc đã áp dụng cho trạng thái `stuck`.
+- sb_set cảnh báo khi một lần ghi nhắm vào hover state của `product-image-list`: meta của nó hứa hẹn `states.hover`, nhưng đo được vào ngày 2026-09-09 thì chưa có gì trong nền tảng biên dịch nó cả, nên override vẫn được lưu đúng chỗ meta quy định và sẽ bắt đầu hiển thị khi nền tảng khắc phục xong khoảng trống này.
+
 ## [0.10.0] - 2026-09-09
 
 ### Added
