@@ -6,6 +6,14 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.9.2] - 2026-09-09
+
+### Added
+- sb_look now reports `stuck_note` once per process when the page pins something (`position: sticky` or `fixed`), explaining that a screenshot cannot show whether the element is actually stuck and pointing at a browser server (Playwright MCP or Chrome DevTools MCP) to scroll and check for the `wb-stuck` class.
+
+### Internal
+- docs/tools.md and the sbuilder-site-design skill now document which of the other MCP servers (Figma, Google Stitch, Chrome DevTools, Playwright) answers which question, alongside sb_look, covering six cases a screenshot alone cannot settle: a sticky header actually engaging, a style that "did not apply", a cart drawer's click trigger, a checkout submission, an entity template previewed with a real record, and layout stability (CLS).
+
 ## [0.9.1] - 2026-09-09
 
 ### Fixed

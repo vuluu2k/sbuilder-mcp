@@ -6,6 +6,14 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.9.2] - 2026-09-09
+
+### Added
+- sb_look giờ báo cáo `stuck_note` một lần mỗi tiến trình khi trang có ghim một phần tử (`position: sticky` hoặc `fixed`), giải thích rằng một ảnh chụp màn hình không thể cho biết phần tử đó có thực sự bị "stuck" hay không, và chỉ ra một trình duyệt server (Playwright MCP hoặc Chrome DevTools MCP) để cuộn trang và kiểm tra class `wb-stuck`.
+
+### Internal
+- docs/tools.md và skill sbuilder-site-design giờ ghi lại server MCP nào (Figma, Google Stitch, Chrome DevTools, Playwright) trả lời câu hỏi nào, bên cạnh sb_look, bao quát sáu trường hợp mà chỉ riêng ảnh chụp màn hình không thể trả lời: một header sticky có thực sự ghim hay không, một style "không được áp dụng", nút bấm mở giỏ hàng, việc submit checkout, xem trước một template entity với dữ liệu thật, và độ ổn định bố cục (CLS).
+
 ## [0.9.1] - 2026-09-09
 
 ### Fixed
