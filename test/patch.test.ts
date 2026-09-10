@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { isSyncablePath, isSyncablePatch, applyPatches, syncable } from '../src/core/patch.js';
+import { isSyncablePath, isSyncablePatch, applyPatches, syncable, type Patch } from '../src/core/patch.js';
 
 describe('isSyncablePath()', () => {
   it('accepts a real node path', () => {
@@ -84,5 +84,55 @@ describe('applyPatches()', () => {
       applyPatches(s, [{ op: 'set', path: ['nodes', '__proto__', 'polluted'], value: true }]),
     ).toThrow(/inadmissible/i);
     expect(({} as Record<string, unknown>).polluted).toBeUndefined();
+  });
+});
+
+/**
+ * A PATCH MUST NOT ALIAS THE CALLER'S OBJECT INTO THE DOCUMENT.
+ *
+ * `addSubtree` emits `set nodes/<id>` carrying the node it just built, then
+ * `insert` patches that push child ids into that node's own `data.nodes`. With
+ * the reference assigned straight in, the first apply mutates the PATCH — and
+ * `applyAndSave` applies every batch twice by design, once through `preview` to
+ * judge the write and once for real. The second pass then re-established a node
+ * that already held its children and inserted them again.
+ *
+ * Silent in every direction: the tree is well formed, every id resolves, the
+ * platform accepts the save, and the page just renders its content twice.
+ */
+describe('applying a batch twice', () => {
+  const batch = (): Patch[] => {
+    const node = { id: 'n1', data: { type: 'flex-block', nodes: [] as string[] } };
+    return [
+      { op: 'set', path: ['nodes', 'n1'], value: node },
+      { op: 'insert', path: ['nodes', 'n1', 'data', 'nodes'], index: 0, value: 'kid_a' },
+      { op: 'insert', path: ['nodes', 'n1', 'data', 'nodes'], index: 1, value: 'kid_b' },
+    ] as Patch[];
+  };
+
+  it('lands the same tree the first apply did', () => {
+    const state = { nodes: {} as Record<string, { data: { nodes: string[] } }> };
+    const patches = batch();
+    applyPatches(state, patches);
+    const once = [...state.nodes.n1.data.nodes];
+    applyPatches(state, patches);
+    expect(state.nodes.n1.data.nodes).toEqual(once);
+    expect(once).toEqual(['kid_a', 'kid_b']);
+  });
+
+  it('leaves the patch itself untouched, which is why', () => {
+    const state = { nodes: {} as Record<string, unknown> };
+    const patches = batch();
+    const value = (patches[0] as { value: { data: { nodes: string[] } } }).value;
+    applyPatches(state, patches);
+    expect(value.data.nodes).toEqual([]);
+  });
+
+  it('does not share the stored object with the caller either', () => {
+    const state = { nodes: {} as Record<string, { data: { nodes: string[] } }> };
+    const patches = batch();
+    applyPatches(state, patches);
+    state.nodes.n1.data.nodes.push('written-into-the-document');
+    expect((patches[0] as { value: { data: { nodes: string[] } } }).value.data.nodes).toEqual([]);
   });
 });

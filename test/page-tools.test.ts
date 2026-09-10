@@ -342,3 +342,73 @@ describe('a refused write', () => {
     expect(ps.current().node('mid').specials.touched).toBe(1);
   });
 });
+
+/**
+ * WHAT A NESTED `sb_add` ACTUALLY STORES.
+ *
+ * Driven end to end and asserted on the BODY THAT GOES TO THE PLATFORM, because
+ * that is the only place the defect was visible: the tool answered success, the
+ * local tree was well formed, every id resolved, and the document on the wire
+ * listed each child twice. `applyAndSave` applies its batch twice by design —
+ * once through `preview` to judge the write, once for real — so any patch that
+ * aliases a live object compounds, and nothing else in this suite applies a
+ * batch more than once.
+ */
+describe('a nested add stores each child exactly once', () => {
+  function serving(saved: Array<Record<string, unknown>>) {
+    return (async (input: string | URL, init?: RequestInit) => {
+      const u = String(input);
+      if (init?.method === 'PUT' && u.includes('/source')) {
+        saved.push(JSON.parse(String(init.body)) as Record<string, unknown>);
+        return new Response('{}', { status: 200, headers: { 'content-type': 'application/json' } });
+      }
+      if (u.includes('/source')) {
+        return new Response(
+          JSON.stringify({ source: { document: { schema_version: 2, root_node_id: '', nodes: {} } } }),
+          { status: 200, headers: { 'content-type': 'application/json' } },
+        );
+      }
+      return new Response('{}', { status: 200, headers: { 'content-type': 'application/json' } });
+    }) as unknown as typeof fetch;
+  }
+
+  it('sends a document whose child lists hold no id twice', async () => {
+    const saved: Array<Record<string, unknown>> = [];
+    const f = serving(saved);
+    const session = new Session('http://x', f);
+    (session as unknown as { access: string }).access = 'jwt';
+    const { client, close } = await connectedClient({ fetchImpl: f, session });
+
+    await client.callTool({
+      name: 'sb_page_open',
+      arguments: { site_id: 's1', page_id: 'pg_1' },
+    });
+    await client.callTool({
+      name: 'sb_add',
+      arguments: {
+        parent_id: 'ROOT',
+        dry_run: false,
+        spec: {
+          type: 'flex-section',
+          children: [
+            { type: 'flex-block', children: [{ type: 'heading' }, { type: 'text' }] },
+            { type: 'flex-block', children: [{ type: 'button' }] },
+          ],
+        },
+      },
+    });
+
+    expect(saved.length).toBe(1);
+    const doc = (saved[0] as { document: { nodes: Record<string, { data?: { nodes?: string[] } }> } })
+      .document;
+    const offenders = Object.entries(doc.nodes)
+      .map(([id, n]) => [id, n.data?.nodes ?? []] as const)
+      .filter(([, kids]) => kids.length !== new Set(kids).size);
+    expect(offenders).toEqual([]);
+    // And the shape is the one that was asked for, not merely duplicate-free.
+    const root = doc.nodes.ROOT.data!.nodes!;
+    expect(root.length).toBe(1);
+    expect(doc.nodes[root[0]].data!.nodes!.length).toBe(2);
+    await close();
+  });
+});

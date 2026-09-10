@@ -93,6 +93,17 @@ function parentOf(state: object, path: Path): { holder: Record<string, unknown>;
  * half-edited with nothing anywhere to say so — which is the exact failure shape
  * this whole repo exists to rule out.
  */
+/**
+ * A patch's value, detached from whatever the caller still holds.
+ *
+ * Primitives are returned as they are — a style key is a string, and cloning
+ * one on every `sb_set` would be pure cost. Only a structure can be aliased,
+ * and only an alias can be mutated behind the batch's back.
+ */
+function clone<T>(value: T): T {
+  return value !== null && typeof value === 'object' ? (structuredClone(value) as T) : value;
+}
+
 export function applyPatches(state: object, patches: Patch[]): void {
   for (const p of patches) {
     if (!isSyncablePatch(p)) {
@@ -101,7 +112,27 @@ export function applyPatches(state: object, patches: Patch[]): void {
     const { holder, key } = parentOf(state, p.path);
     switch (p.op) {
       case 'set':
-        holder[key] = p.value;
+        // THE VALUE IS NEVER ALIASED INTO THE DOCUMENT.
+        //
+        // `addSubtree` builds a node, emits `set nodes/<id>` carrying THAT
+        // object, and then emits `insert` patches that push child ids into
+        // `data.nodes`. Assigning the reference means the first apply MUTATES
+        // the patch's own value, so the batch is no longer the thing it was: a
+        // second apply re-establishes a node that already holds its children and
+        // then inserts them again.
+        //
+        // Applying a batch twice is not hypothetical — `applyAndSave` does it by
+        // design, once through `preview` to judge the write and once for real.
+        // Between v0.16.1 (which introduced that check) and this fix, EVERY
+        // nested `sb_add` stored each child twice, and `sb_import` three times.
+        // It is silent: the tree is well-formed, every id resolves, the save is
+        // accepted, and the page simply renders its content twice. Measured on
+        // a real import — 106 of 231 containers listing one child id three
+        // times.
+        //
+        // A copy makes the batch idempotent for this shape: the re-`set` puts a
+        // pristine node back, and the inserts that follow rebuild the same list.
+        holder[key] = clone(p.value);
         break;
       case 'unset':
         delete holder[key];
@@ -109,7 +140,7 @@ export function applyPatches(state: object, patches: Patch[]): void {
       case 'insert': {
         const arr = holder[key];
         if (!Array.isArray(arr)) break;
-        arr.splice(p.index, 0, p.value);
+        arr.splice(p.index, 0, clone(p.value));
         break;
       }
       case 'remove': {
