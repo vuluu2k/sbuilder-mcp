@@ -857,6 +857,49 @@ that accounts for them.
   an import is rare, slow and runs untrusted script, and coupling that to the tool a vision
   loop calls every few hundred milliseconds is how the fast path gets slow.
 
+- **A PATCH CARRIED THE NODE BY REFERENCE, AND `applyAndSave` APPLIES EVERY BATCH TWICE.**
+  `addSubtree` emits `set nodes/<id>` whose value IS the node object it just built, then
+  `insert` patches that push child ids into that node's own `data.nodes`. Assigning the
+  reference means the first apply MUTATES THE PATCH: the batch is no longer the batch, and the
+  second pass re-establishes a node that already holds its children and inserts them again.
+
+  The second pass is not hypothetical — `6980ebb` (v0.16.1) added
+  `validateForSave(d.preview(patches))` in front of `applyAndPublish(patches)` precisely so a
+  refused write never lands, and that is a second application of the same objects. So from
+  v0.16.1 until this fix, **every nested `sb_add` stored each child TWICE and every
+  `sb_import` THREE times** (a third pass, through the staging copy). Measured on a real
+  import: 106 of 231 containers listing one child id three times.
+
+  It is silent in every direction. The tree is well formed, every id resolves, `validateForSave`
+  passes, the platform accepts the save, and the page simply renders its content twice — so
+  neither `sb_review` nor `sb_look` can name it. **No test caught it because nothing else in
+  the suite applies a batch more than once**; the tests build patches and apply them exactly
+  once, which is the one arrangement that is correct either way.
+
+  `applyPatches` now clones an object value on `set` and `insert`, which makes the batch
+  IDEMPOTENT for this shape: the re-`set` puts a pristine node back and the inserts rebuild the
+  same list. Primitives pass through — a style key is a string, and cloning one on every
+  `sb_set` would be pure cost. Pinned in `test/patch.test.ts` (the property) and
+  `test/page-tools.test.ts` (the document that actually goes over the wire, which is the only
+  place the defect was ever visible).
+
+- **A GRID IS NOT A ROW, AND A ROW OF 279 IS NOT A ROW EITHER.** The import's flatness fix
+  reads `display:flex|grid` and turns a container with two or more children into a real row.
+  Every grid was taken as a single row with no upper bound, so a documentation site — whose
+  content wrapper IS a grid — came back as one flex row of 279 columns: each column a sliver,
+  every line of prose broken to one word, 80 nodes hanging past the viewport, on a page whose
+  tree was perfect. A design row is a feature trio, a card shelf, a logo wall; past a dozen
+  the container is the page's own content column and the browser is wrapping it. Capped at 12,
+  and a grid now carries `wrap: true` — `flexWrap` reads `nowrap` on a grid because the
+  property does not apply, and carrying that literally gave the columns nowhere to go.
+
+- **WALKING INTO A CODE BLOCK PRODUCES RUBBLE.** Every syntax highlighter wraps each token in
+  its own `<span>`, so the leaf walk took them one at a time: a twenty-line JSON config
+  arrived as forty text nodes — `{`, `"mcpServers"`, `: {` — each its own block on its own
+  line, and forty of the node budget spent to say what one node says. `PRE` and `CODE` are
+  taken whole. Whitespace collapses like any other text, because this platform has no code
+  element to preserve it in.
+
 - **THE IMPORT COULD READ A PAGE AND NOT A SITE, and the missing half was never the
   capture.** `sb_import` takes a URL and writes into the OPEN page, so "here is our website,
   put it on Store Builder" — the thing people actually ask for — was a loop the agent had to

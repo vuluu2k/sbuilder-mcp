@@ -250,6 +250,24 @@ function capturePage(limits: { maxSections: number; maxImages: number; maxTextCh
         taken.nodes++;
         return [{ kind: 'list', items }];
       }
+      // A CODE BLOCK IS ONE THING, and walking into it produces rubble.
+      //
+      // Every syntax highlighter wraps each token in its own <span>, so the leaf
+      // walk took them one at a time: a twenty-line JSON config arrived as forty
+      // separate text nodes — `{`, `"mcpServers"`, `: {` — each its own block on
+      // its own line. Measured on a real import; it also ate forty of the node
+      // budget to say what one node says.
+      //
+      // Whitespace is collapsed like any other text because this platform has no
+      // code element to preserve it in — the six kinds are what can cross — so
+      // the honest translation is one paragraph the merchant can then restyle,
+      // not a shredded imitation of a listing.
+      if (tag === 'PRE' || tag === 'CODE') {
+        const text = clean(el.textContent);
+        if (!text) return [];
+        taken.nodes++;
+        return [{ kind: 'text', text }];
+      }
       if (tag === 'P' || tag === 'BLOCKQUOTE') {
         const text = clean(el.textContent);
         if (!text) return [];
@@ -265,12 +283,34 @@ function capturePage(limits: { maxSections: number; maxImages: number; maxTextCh
           cs.display === 'inline-flex' || cs.display === 'inline-grid';
         // A ROW is worth keeping; a column is what the page already is, so
         // wrapping one in a group would add a level that renders identically.
-        const row = cs.display.indexOf('grid') >= 0
-          ? true
-          : cs.flexDirection === 'row' || cs.flexDirection === 'row-reverse';
-        if (lays && row && kids.length >= 2) {
+        const grid = cs.display.indexOf('grid') >= 0;
+        const row = grid || cs.flexDirection === 'row' || cs.flexDirection === 'row-reverse';
+        // A ROW OF 279 IS NOT A ROW.
+        //
+        // Measured on a real import of a documentation site: its content wrapper
+        // is a GRID, every grid was read as a single row, and the whole page came
+        // back as one flex row of 279 columns — each column a sliver, every line
+        // of prose broken to one word, and 80 nodes hanging past the viewport.
+        // The page was structurally perfect and visually destroyed.
+        //
+        // A design row is a feature trio, a card shelf, a logo wall: a handful of
+        // columns, chosen. Past that the container is not arranging things side
+        // by side, it is the page's own content column and the browser is
+        // wrapping it — so the honest translation is the stack it already reads
+        // as. Twelve is above any real row seen here and far below a content
+        // grid.
+        const ROW_MAX = 12;
+        if (lays && row && kids.length >= 2 && kids.length <= ROW_MAX) {
           taken.nodes++;
-          return [{ kind: 'group', direction: 'row', wrap: cs.flexWrap === 'wrap', children: kids }];
+          return [{
+            kind: 'group',
+            direction: 'row',
+            // A GRID ALWAYS WRAPS — that is what a grid IS — and `flexWrap` reads
+            // `nowrap` on one because the property does not apply. Carrying that
+            // literally gave the columns nowhere to go at any width.
+            wrap: grid || cs.flexWrap === 'wrap',
+            children: kids,
+          }];
         }
         return kids;
       }

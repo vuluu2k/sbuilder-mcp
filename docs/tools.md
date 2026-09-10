@@ -871,7 +871,15 @@ real elements dressed in **this page's** tokens.
 children out — `display:flex` or `grid` — with two or more of them becomes a real row, and
 the row carries a **mobile stack** because nothing catches a too-narrow column for you: the
 columns shrink, no box overflows, and `measure` stays silent while a photo becomes a sliver.
-A `<div>` that merely wraps is flattened, because it is not a design decision.
+A `<div>` that merely wraps is flattened, because it is not a design decision. A row is
+capped at **12 columns** — past that the container is the page's own content column and the
+browser is wrapping it, not arranging things side by side — and a CSS grid always arrives
+wrapping, since `flexWrap` reads `nowrap` on one only because the property does not apply.
+
+**A code block is taken whole.** Every syntax highlighter wraps each token in its own
+`<span>`, so walking into one turns a twenty-line config into forty separate text blocks.
+Whitespace collapses like any other text: this platform has no code element to preserve it
+in, so the honest result is one paragraph you can restyle.
 
 **A pinned section stays pinned.** It is the one thing the importer reads off computed style
 rather than off the tree, because it is a layout DECISION — a sticky category bar or a fixed

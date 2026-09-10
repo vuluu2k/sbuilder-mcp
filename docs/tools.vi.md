@@ -846,7 +846,15 @@ mở**, dưới dạng element thật mang token của **chính trang này**.
 nó — `display:flex` hoặc `grid` — với từ hai con trở lên sẽ thành một hàng thật, và hàng đó
 mang sẵn **điểm gãy dọc ở mobile**, vì không có gì bắt hộ bạn một cột quá hẹp: các cột co lại,
 không hộp nào tràn, `measure` im lặng trong khi tấm ảnh mỏng như sợi chỉ. Một `<div>` chỉ để
-bọc thì bị làm phẳng, vì nó không phải một quyết định thiết kế.
+bọc thì bị làm phẳng, vì nó không phải một quyết định thiết kế. Một hàng bị chặn ở **12 cột** —
+quá con số đó thì container ấy là cột nội dung của chính trang, và trình duyệt đang xuống dòng
+chứ không phải xếp cạnh nhau — còn CSS grid thì luôn về ở chế độ xuống dòng, vì `flexWrap` đọc
+ra `nowrap` trên grid chỉ vì thuộc tính đó không áp dụng.
+
+**Khối code được lấy nguyên khối.** Mọi bộ tô màu cú pháp đều bọc từng token trong một `<span>`
+riêng, nên đi vào bên trong sẽ biến một đoạn config hai mươi dòng thành bốn mươi khối văn bản
+rời. Khoảng trắng bị gộp như mọi văn bản khác: nền tảng này không có element code để giữ lại,
+nên kết quả trung thực là một đoạn văn bạn có thể tự định dạng lại.
 
 **Section đã ghim vẫn ghim.** Đây là thứ duy nhất importer đọc từ computed style thay vì từ
 cây, vì nó là một QUYẾT ĐỊNH bố cục — thanh danh mục sticky hay thanh mua hàng fixed nằm đó để
