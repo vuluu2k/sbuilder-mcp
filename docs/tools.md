@@ -856,6 +856,21 @@ reader learns to ignore.
 
 ## `sb_media_list` / `sb_media_upload`
 
+**It can also SEARCH for one.** `query` returns real photographs, each with the description its
+photographer wrote — "Cute child wearing a black t-shirt and hat standing near a doorway" — and
+`pick: <id>` uploads the one you chose into this site's library. It never uploads an unread
+result: rule 7 records what a keyword glued into a URL returns (`loremflickr` answered
+"kids,clothing" with a cat statue), and the fault was never stock photography but that nobody
+looked. `orientation` asks the search for the SHAPE, which is far cheaper than cropping
+afterwards.
+
+Pexels, because it is already this family's answer — `webcake-landing-mcp` ships the same
+client down to the shared proxy — and its licence is free for commercial use with attribution
+appreciated rather than required, so a storefront can carry one without printing a credit line
+nobody asked for. The photographer and their profile come back anyway. `PEXELS_API_KEY` (free
+at pexels.com/api) calls Pexels directly; WITHOUT one it uses the shared proxy the sibling repo
+runs, so an `npx` install with no configuration at all still finds images.
+
 `sb_media_upload` is the **only** way to add an image. The endpoint takes multipart
 (`file:formData/file`), and `sb_api_call` JSON-encodes every body — so reaching it that way
 sent JSON to a multipart handler and got a rejection nothing could act on. A page with no

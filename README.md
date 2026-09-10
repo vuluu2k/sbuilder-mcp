@@ -93,7 +93,7 @@ make, because those mean "this person's account".
 | `sb_publish` | Compile the draft into the live page (cascades to shared globals) |
 | `sb_review` | Every defect a visitor would see, each with its fix, plus the five gaps between this store and a paid order |
 | `sb_media_list` | The site's media library |
-| `sb_media_upload` | Add an image and get its URL — the only route, the upload is multipart |
+| `sb_media_upload` | Add an image and get its URL — a local path, a URL the platform fetches, or a SEARCH for real photographs you read and pick from |
 | `sb_live_join` | Join the editor's live-edit room as a visible peer — edits then appear live |
 | `sb_look` | Save, render, and return screenshots plus measured node boxes and layout defects measured on the render |
 | `sb_event` | Give a node a click action — open the cart, go to a page, open a pop-up |

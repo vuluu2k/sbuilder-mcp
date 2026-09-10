@@ -831,6 +831,20 @@ lặng** thay vì báo một khoảng trống cửa hàng có thể không có. 
 
 ## `sb_media_list` / `sb_media_upload`
 
+**Nó còn TÌM được ảnh.** `query` trả về ảnh chụp thật, mỗi tấm kèm mô tả do chính người chụp
+viết — "Cute child wearing a black t-shirt and hat standing near a doorway" — và `pick: <id>`
+upload đúng tấm bạn chọn vào thư viện của site. Nó không bao giờ upload một kết quả chưa ai đọc:
+rule 7 ghi lại chuyện một từ khoá dán vào URL trả về cái gì (`loremflickr` đáp "kids,clothing"
+bằng một bức tượng mèo), và lỗi chưa bao giờ nằm ở ảnh stock mà ở chỗ không ai nhìn.
+`orientation` hỏi thẳng bộ tìm kiếm về HÌNH DẠNG, rẻ hơn nhiều so với cắt lại sau.
+
+Dùng Pexels vì đó vốn là chuẩn của nhà mình — `webcake-landing-mcp` chạy đúng client này, kể cả
+proxy chung — và giấy phép của nó cho dùng thương mại tự do, ghi công là "được hoan nghênh" chứ
+không bắt buộc, nên storefront mang ảnh mà không phải in một dòng credit chẳng ai đặt hàng. Tên
+người chụp và trang cá nhân vẫn được trả về. `PEXELS_API_KEY` (miễn phí ở pexels.com/api) thì gọi
+thẳng Pexels; KHÔNG có key thì dùng proxy chung mà repo anh em đang chạy, nên một bản cài `npx`
+không cấu hình gì vẫn tìm được ảnh.
+
 `sb_media_upload` là cách **duy nhất** để thêm ảnh. Endpoint nhận multipart
 (`file:formData/file`), còn `sb_api_call` mã hoá mọi body bằng JSON — nên đi đường đó là gửi
 JSON vào một handler multipart và nhận một lỗi không làm gì được. Một trang không có ảnh thì

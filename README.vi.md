@@ -65,6 +65,12 @@ là "tài khoản của người này".
 
 `SB_API` mặc định `http://localhost:8080`. Bí mật chỉ đọc từ biến môi trường.
 
+`PEXELS_API_KEY` là **tuỳ chọn**, chỉ ảnh hưởng phần tìm ảnh của `sb_media_upload`: có key thì gọi
+thẳng Pexels (key miễn phí ở <https://www.pexels.com/api/>), không có thì dùng proxy chung mà nhà
+mình đang chạy (`PEXELS_PROXY_BASE`, mặc định `https://mcp.toolvn.io.vn`) — nên bản cài không cấu
+hình gì vẫn tìm được ảnh. Proxy giữ key của chính nó và không bao giờ gửi key về client; đó là ưu
+ái chứ không phải cam kết, và kết quả nói rõ cửa nào đã trả lời.
+
 ## Bộ tool
 
 | Tool | Làm gì |
@@ -90,7 +96,7 @@ là "tài khoản của người này".
 | `sb_publish` | Biên dịch bản nháp thành trang live (lan sang global dùng chung) |
 | `sb_review` | Mọi khiếm khuyết người xem sẽ thấy, kèm lệnh sửa từng cái, và năm khoảng trống chắn giữa cửa hàng với một đơn đã thanh toán |
 | `sb_media_list` | Thư viện ảnh của site |
-| `sb_media_upload` | Thêm ảnh và lấy URL — đường duy nhất, vì upload là multipart |
+| `sb_media_upload` | Thêm ảnh và lấy URL — file trên máy, một URL để nền tảng tự tải, hoặc TÌM ảnh chụp thật để đọc mô tả rồi chọn |
 | `sb_live_join` | Vào phòng live-edit của editor như một peer nhìn thấy được — sửa gì hiện ngay |
 | `sb_look` | Lưu, render, trả về ảnh chụp kèm box đo được của node và lỗi bố cục đo trên bản render |
 | `sb_event` | Gắn click action cho một node — mở giỏ, sang trang, mở pop-up |

@@ -943,6 +943,31 @@ that accounts for them.
   to read: a page created without its chrome is one a person can fix, and a page created with
   the WRONG chrome is one nobody notices.
 
+- **A SEARCH IS NOT A GUESS, and that distinction is the whole of rule 7.** The rule says
+  "keyword stock imagery is not a source" and proves it — `loremflickr` answered
+  "kids,clothing" with a cat statue and a photo of an adult. The fault was never stock
+  photography: it was GUESSING. A keyword glued into a URL returns something nobody looked at.
+  A search API returns results that each carry WHAT THEY SHOW, so the caller reads the
+  descriptions and CHOOSES, which is what a person does. `sb_media_upload` takes a `query` and
+  refuses to upload anything without a `pick` — uploading the first hit unread would rebuild the
+  cat statue with better plumbing.
+
+  **PEXELS, BECAUSE IT IS ALREADY THIS FAMILY'S ANSWER.** `webcake-landing-mcp` ships the same
+  client — down to the shared proxy at `mcp.toolvn.io.vn/api/images/search`, which holds a key
+  so an `npx` install with no configuration finds images anyway — and a second house standard
+  for one job is a second place for it to drift. Its licence is free for commercial use with
+  attribution APPRECIATED rather than required, which is what lets a storefront carry a photo
+  without printing a credit line the merchant did not ask for.
+
+  **LUMMI WAS THE OTHER CANDIDATE AND THE READING OF IT MATTERS.** Its licence page says
+  outright "You don't have to ask for permission or credit the creator or Lummi", commercial use
+  with no limits, forbidding only resale, bundling into a competing stock service, and claiming
+  ownership. Its API reference separately says developers MUST attribute every image displayed.
+  Those are two different obligations — one on the IMAGE (none) and one on API ACCESS (a
+  guideline whose sanction is your key) — and conflating them, which the first reading here did,
+  turns a free image into an imagined legal burden on the merchant. What actually ruled it out
+  was operational: 10 requests per minute by default and an API key granted by application.
+
 - **A PICTURE SLOT TAKES A REAL IMAGE OR SAYS SO IN WORDS — never a grey box, never stock.**
   A pattern library invites a placeholder, and both kinds are worse than an empty slot: rule 7
   already records that keyword stock is not a source (`loremflickr` answered "kids,clothing"

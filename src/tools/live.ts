@@ -31,6 +31,7 @@ import type { PageDoc } from '../domains/site/document.js';
 import { refuseAppBlockInterior } from '../domains/site/builder.js';
 import { childrenOf, isOverlay, overlayRoot, subtreeIds } from '../core/tree.js';
 import { siteToken } from './credentialpick.js';
+import { searchStock } from '../transport/stock.js';
 import { siteFor, type ToolContext } from './context.js';
 import { projectList, MEDIA_FIELDS } from './project.js';
 import type { PageSession } from './page.js';
@@ -489,21 +490,97 @@ export function registerLiveTools(
     {
       description:
         'Put an image into the media library and get its URL back, ready for sb_set. Takes a ' +
-          'local file path or a URL to fetch. This is the ONLY way to add an image: the upload ' +
-          'is multipart, which sb_api_call cannot send.',
+          'local path, a URL, or a SEARCH — `query` returns real photographs with their own ' +
+          'descriptions, and `pick` uploads the one you chose. The only way to add an image.',
       inputSchema: {
       site_id: z.string().optional(),
       path: z.string().optional().describe('A file on this machine'),
       url: z.string().optional().describe('Fetched, then uploaded'),
+      query: z.string().optional().describe('Search real photographs; read the descriptions, then pick'),
+      orientation: z.enum(['landscape', 'portrait', 'square']).optional(),
+      pick: z.number().int().optional().describe('The id of the search result to upload'),
       name: z.string().optional(),
       folder_id: z.string().optional(),
       dry_run: z.boolean().optional(),
     },
       annotations: { readOnlyHint: false, destructiveHint: false },
     },
-    async ({ site_id: given, path, url, name, folder_id, dry_run }) => {
+    async ({ site_id: given, path, url, name, folder_id, query, orientation, pick, dry_run }) => {
       const site_id = siteFor(ctx, given);
-      if (!path && !url) throw new Error('sbuilder: give sb_media_upload either a path or a url');
+
+      // A SEARCH IS NOT A GUESS, and the difference is the whole reason this is
+      // two steps. Rule 7 records what a keyword glued into a URL returns —
+      // `loremflickr` answered "kids,clothing" with a cat statue — and the fault
+      // was never stock photography, it was that nobody looked. Every result
+      // here carries what it actually SHOWS, so the caller reads the
+      // descriptions and CHOOSES; uploading the first hit unread would rebuild
+      // the cat statue with better plumbing.
+      if (query) {
+        const found = await searchStock(ctx.fetchImpl ?? fetch, query, {
+          perPage: 8,
+          orientation,
+        });
+        const chosen = pick !== undefined ? found.photos.find((p) => p.id === pick) : undefined;
+        if (!chosen) {
+          return text({
+            ...(pick !== undefined ? { no_such_pick: pick } : {}),
+            found: found.photos.map((p) => ({
+              pick: p.id,
+              shows: p.alt || '(the photographer left no description)',
+              size: `${p.width}x${p.height}`,
+              by: p.photographer,
+            })),
+            via: found.via,
+            next:
+              'Read what each one SHOWS, then re-call with pick:<id> and dry_run:false. The photo ' +
+              "is uploaded into this site's own library, never hotlinked.",
+            ...(found.via === 'proxy'
+              ? {
+                  key:
+                    'No PEXELS_API_KEY, so this used the shared proxy — a courtesy, not a ' +
+                    'guarantee. A free key at https://www.pexels.com/api/ calls Pexels directly.',
+                }
+              : {}),
+            licence:
+              ctx.notices.once(
+                'stock_licence',
+                'Pexels photographs are free for commercial use and attribution is appreciated ' +
+                  'rather than required, so a storefront can carry one without printing a credit ' +
+                  'line. The photographer and the photo page come back with each result if you ' +
+                  'want to credit anyway.',
+              ),
+          });
+        }
+        if (dry_run !== false) {
+          return text({
+            dry_run: true,
+            would_upload: chosen.url,
+            shows: chosen.alt,
+            by: chosen.photographer,
+            into: site_id,
+            note: 'Nothing was sent. Re-call with dry_run:false to upload.',
+          });
+        }
+        const asset = await uploadMedia(ctx, site_id, {
+          url: chosen.url,
+          // THE DESCRIPTION BECOMES THE NAME, so the library is searchable by
+          // what the photographs show and the alt on the page means something.
+          name: name ?? chosen.alt ?? undefined,
+          folderId: folder_id,
+        });
+        return text({
+          asset,
+          shows: chosen.alt,
+          credit: { by: chosen.photographer, profile: chosen.photographer_url, photo: chosen.page_url },
+          next: asset.url
+            ? `Use it: sb_set id "<node>", namespace specials, keys { "src": ${JSON.stringify(asset.url)} }`
+            : 'Uploaded, but the server returned no url — read it back with sb_media_list.',
+        });
+      }
+
+      if (!path && !url) {
+        throw new Error('sbuilder: give sb_media_upload a path, a url, or a query to search');
+      }
       if (dry_run !== false) {
         return text({
           dry_run: true,
