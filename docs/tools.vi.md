@@ -453,9 +453,20 @@ với mỗi control nền tảng có khai báo, nó ghi vào đâu:
 { type, hints: { useWhen, avoidWhen, contentTips },
   inspector: [{ tab, groups: [{ group, controls: ["font_size", …] }] }],
   declared: { font_size: { label, writes, defaults? }, … },
-  defaults, config_values?, isContainer, isRootOnly, childAllows,
+  defaults, translatable?, config_values?, isContainer, isRootOnly, childAllows,
   undeclared_note, style_is_open_css }
 ```
+
+`translatable` nêu special nào của element này được phép dịch, và special nào nó đang mang mà
+TUYỆT ĐỐI không được dịch — dịch nhầm không làm trang xấu đi mà LÀM HỎNG render (`name` là id
+icon lucide, `src` là URL, `filterSource` là id registry mà renderer switch theo). Danh sách
+`specials` RỖNG là câu trả lời đầy đủ chứ không phải thiếu: chuỗi duy nhất của icon là một id
+icon. Phần entity nằm trong call sheet của mọi operation `/translations`.
+
+`sb_set` cũng cảnh báo khi một key FIELD-SKIN rơi vào form node không render nó — FORM khoác
+bộ input vocabulary cho mọi field nó chứa, còn payment card, choice group, timeslot hay file
+field mang bộ riêng, và knob đặt nhầm chỗ thì được lưu mà không ai đọc. Cảnh báo nêu luôn node
+nào sẽ render key đó.
 
 `config_values` nêu GIÁ TRỊ HỢP LỆ của vài config key mà đoán sai thì hỏng trong im lặng. Mọi
 trait trong registry của nền tảng đều khai `schema: string`, nên từ vựng của control nằm trong

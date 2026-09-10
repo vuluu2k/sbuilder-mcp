@@ -1,5 +1,6 @@
 import { API_OPERATIONS, API_DEFINITIONS } from './api.generated.js';
 import { REQUEST_SHAPES } from './shapes.generated.js';
+import { translationCallSheet } from '../domains/site/translate.js';
 import type { ApiOperation } from './types.js';
 
 /**
@@ -87,6 +88,15 @@ export function describeOperation(op: ApiOperation): Record<string, unknown> {
   // The two warnings below are dropped when a shape is present: they exist
   // because the shape was unknown, and keeping them once it is known is prose
   // the model has to read past on its way to the answer.
+  // A TRANSLATIONS OPERATION IS REACHABLE AND WAS UNSAFE. Every route here is in
+  // the catalog, so an agent could call them all and had no way to know which
+  // fields are content — and translating the wrong special BREAKS the render
+  // rather than degrading it. Attached to the call sheet because that is where
+  // the agent already is when it decides what to send.
+  if (/\/translations(\/|$)/.test(op.path)) {
+    out.translation_fields = translationCallSheet();
+  }
+
   const shape = REQUEST_SHAPES[op.id];
   if (shape) {
     out.body_shape = shape;

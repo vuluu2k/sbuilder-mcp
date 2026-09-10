@@ -1611,6 +1611,253 @@ export const STORE_PAGE_SEEDS: Record<string, { schema_version: number; root_nod
       ' nodes)',
   );
 
+  // ---- Which form node reads which skin knob ---------------------------
+  //
+  // A FORM'S FIELDS ARE STYLED BY CONFIG KEYS, AND THE WRONG LEVEL IS SILENT.
+  // CLAUDE.md has carried the rule in PROSE — "form/css.go emits only
+  // FieldKnobs, so payCard* written on the form is stored and rendered nowhere"
+  // — and a hand-kept list of a table this size is the thing this generator
+  // exists to replace. `fieldSkin.ts`'s own comment makes the argument against
+  // hand mirrors for exactly this table.
+  //
+  // THE GROUPS COME FROM TS AND THE MAPPING FROM GO, because each side owns its
+  // half: `fieldSkin.ts` is the pure-data vocabulary, and which node emits which
+  // group is a fact about the RENDERER, read off the `fieldskin.<Group>`
+  // identifier in each `css.go`.
+  //
+  // The composition for radio/checkbox/timeslot/file lives only in Go
+  // (`withChrome(append(...))`), so it is rebuilt here from the TS groups AND
+  // THEN ASSERTED against the Go group's own `Key:` literals. That assertion is
+  // what makes this a verified mirror rather than a second copy: if either side
+  // moves, codegen fails naming the group.
+  const skinMod = (await import(resolve(repo, 'schema/src/elements/fieldSkin.ts'))) as Record<
+    string,
+    ReadonlyArray<{ key: string }>
+  >;
+  const grp = (name: string): string[] => {
+    const g = skinMod[name];
+    if (!Array.isArray(g)) {
+      console.error(`fieldSkin.ts no longer exports ${name}`);
+      process.exit(1);
+    }
+    return g.map((k) => k.key);
+  };
+  // Group name in Go -> the key list, composed from the TS tables.
+  const GO_GROUPS: Record<string, string[]> = {
+    // `Rules` is the default path: FieldKnobs = ChromeKnobs + Knobs, mirrored by
+    // FIELD_NODE_SKIN_KNOBS. This is what the FORM itself emits.
+    Rules: grp('FIELD_NODE_SKIN_KNOBS'),
+    RadioFieldKnobs: [...grp('FIELD_CHROME_KNOBS'), ...grp('CHOICE_SKIN_KNOBS'), ...grp('RADIO_ONLY_SKIN_KNOBS')],
+    CheckboxFieldKnobs: [...grp('FIELD_CHROME_KNOBS'), ...grp('CHOICE_SKIN_KNOBS'), ...grp('CHECKBOX_ONLY_SKIN_KNOBS')],
+    TimeslotFieldKnobs: [...grp('FIELD_CHROME_KNOBS'), ...grp('TIMESLOT_SKIN_KNOBS'), ...grp('TIMESLOT_MARKER_SKIN_KNOBS')],
+    FileFieldKnobs: [...grp('FIELD_CHROME_KNOBS'), ...grp('FILE_SKIN_KNOBS')],
+    PayFieldKnobs: grp('PAY_FIELD_SKIN_KNOBS'),
+  };
+
+  // THE CROSS-CHECK, and it deliberately does NOT parse the Go composition.
+  //
+  // A first version resolved each Go group by walking `withChrome(append(...))`
+  // and comparing key-for-key. It was wrong twice in a row — a name pattern that
+  // could not match the group literally called `Knobs`, then a body slice that
+  // ran past a one-line var inside a `var (...)` block and swept in half the
+  // file. A parser that fragile asserting a lockstep mirror is worse than no
+  // assertion: it fails on its own bugs, and an assertion that cries wolf
+  // teaches the next reader to bypass it.
+  //
+  // What actually drifts here is the VOCABULARY — the platform adds a knob or
+  // renames one — and that is checkable without parsing structure at all: every
+  // `Key:` literal in the Go file must appear in the TS tables, and every TS key
+  // must appear in Go. The COMPOSITION comes from the TS groups, which are pure
+  // data and the side that owns the vocabulary, and the node MAPPING from each
+  // `css.go`'s `fieldskin.<Group>` identifier, which is a plain read.
+  const goSrc = readFileSync(resolve(repo, 'server/render/nodes/fieldskin/fieldskin.go'), 'utf8');
+  const goKeyLiterals = new Set([...goSrc.matchAll(/Key:\s*"([^"]+)"/g)].map((m) => m[1]));
+  const tsKeyUnion = new Set(Object.values(GO_GROUPS).flat());
+  const missingInTs = [...goKeyLiterals].filter((k) => !tsKeyUnion.has(k));
+  const missingInGo = [...tsKeyUnion].filter((k) => !goKeyLiterals.has(k));
+  if (missingInTs.length || missingInGo.length) {
+    console.error(
+      'the field-skin vocabulary has drifted between schema/src/elements/fieldSkin.ts and ' +
+        'server/render/nodes/fieldskin/fieldskin.go:',
+    );
+    if (missingInTs.length) console.error(`  in Go, absent from the TS tables: ${missingInTs.join(', ')}`);
+    if (missingInGo.length) console.error(`  in the TS tables, absent from Go: ${missingInGo.join(', ')}`);
+    process.exit(1);
+  }
+
+  // WHICH NODE EMITS WHICH, from the identifier each css.go names.
+  const skinByNode: Record<string, string[]> = {};
+  const nodesDir = resolve(repo, 'server/render/nodes');
+  for (const entry of readdirSync(nodesDir, { withFileTypes: true })) {
+    if (!entry.isDirectory() || !entry.name.startsWith('form')) continue;
+    const css = resolve(nodesDir, entry.name, 'css.go');
+    if (!existsSync(css)) continue;
+    const src = readFileSync(css, 'utf8');
+    const named = new Set([...src.matchAll(/fieldskin\.([A-Z][A-Za-z]*)/g)].map((m) => m[1]));
+    const keys = new Set<string>();
+    for (const n of named) {
+      // `RulesFor` is the generic emitter a node passes its own group to; the
+      // group is named beside it, so it carries no keys of its own.
+      if (n === 'RulesFor') continue;
+      for (const k of GO_GROUPS[n] ?? []) keys.add(k);
+    }
+    if (keys.size) skinByNode[entry.name] = [...keys];
+  }
+  if (!skinByNode.form?.includes('fieldBg') || skinByNode.form.includes('payCardBg')) {
+    console.error('the FORM node no longer emits the input vocabulary, or now emits payCard* — check fieldskin');
+    process.exit(1);
+  }
+
+  const skinOut = `// GENERATED by scripts/gen-catalog.ts — do not edit by hand.
+// Source: <WB_REPO>/schema/src/elements/fieldSkin.ts (the vocabulary) and each
+// server/render/nodes/form*/css.go (which node emits which group).
+
+export const FIELD_SKIN_SOURCE = ${JSON.stringify(
+    {
+      nodes: Object.keys(skinByNode).length,
+      keys: [...new Set(Object.values(skinByNode).flat())].length,
+    },
+    null,
+    2,
+  )} as const;
+
+/**
+ * The field-skin config keys each form node's renderer actually reads.
+ *
+ * A knob written on a node that is not in its list is stored, saved, published
+ * and rendered NOWHERE — the documented case being payCard* on the FORM, which
+ * emits only the input vocabulary. Composed from the TS groups and asserted
+ * against the Go's own key literals at codegen.
+ */
+export const FIELD_SKIN_BY_NODE: Record<string, string[]> = ${JSON.stringify(skinByNode, null, 2)};
+`;
+  emit(resolve(process.cwd(), 'src/catalog/fieldskin.generated.ts'), skinOut);
+  console.error(
+    `${VERB} fieldskin.generated.ts: ${Object.keys(skinByNode).length} form nodes, ` +
+      `${[...new Set(Object.values(skinByNode).flat())].length} distinct skin keys`,
+  );
+
+  // ---- What a translation may rewrite ----------------------------------
+  //
+  // A MULTI-LANGUAGE STORE WAS REACHABLE AND UNSAFE. Every translations route is
+  // in the catalog — read, write, auto-fill, the review queue — so an agent can
+  // call them and had NO WAY to know which fields are content.
+  //
+  // The platform's own registry says why that matters, in its opening comment:
+  // the element registry declares 117 `(element, special)` pairs across 66 keys
+  // and they are INTERLEAVED in one object —
+  //
+  //   text · label · alt · emptyText · searchPlaceholder            ← content
+  //   htmlTag · videoId · filterSource · contentType · src · name   ← NOT
+  //
+  // — and translating one of the second group does not degrade the page, it
+  // BREAKS the render: `name` is a lucide icon id, `src` is a URL,
+  // `filterSource` is a registry id the Go predicate switches on. An agent
+  // machine-translating a page's specials would hit all three.
+  //
+  // 156 keys are classified NEVER, and the registry's tripwire asserts every
+  // special is classified — translatable, deferred, or never — rather than
+  // asserting the translatable ones are listed, because "a positive-only test
+  // stays green forever while new elements quietly add strings". Taking the
+  // whole classification rather than the allow-list keeps that property here.
+  //
+  // PURE DATA with no imports (the element registry pulls it in, so reaching
+  // back would close a cycle), which is what makes it safe to import directly.
+  const trMod = (await import(
+    resolve(repo, 'schema/src/elements/translatableFields.ts')
+  )) as {
+    TRANSLATABLE_SPECIALS: Record<string, ReadonlyArray<{ key: string }>>;
+    NEVER_TRANSLATED: readonly string[];
+    TRANSLATION_ENTITY_TYPES: readonly string[];
+    translatableEntityFieldsFor: (
+      entityId: string,
+    ) => ReadonlyArray<{ key: string; html?: boolean; list?: string; multiline?: boolean }>;
+    isTranslatableSpecial: (elementType: string, key: string) => boolean;
+  };
+
+  // The KEYS only. `labelKey` is an i18n key for the merchant's panel — it names
+  // a string in the editor's locale files and answers nothing an agent can act
+  // on, so carrying it would be weight without reach.
+  const trSpecials: Record<string, string[]> = {};
+  for (const [type, fields] of Object.entries(trMod.TRANSLATABLE_SPECIALS)) {
+    const keys = fields.map((f) => f.key);
+    if (keys.length) trSpecials[type] = keys;
+  }
+  const trEntities: Record<string, unknown[]> = {};
+  for (const t of trMod.TRANSLATION_ENTITY_TYPES) {
+    const fields = trMod.translatableEntityFieldsFor(t);
+    // `node` is in the type list and has no entity fields on purpose: a node
+    // translation is keyed by (node id, special), which TRANSLATABLE_SPECIALS
+    // is. Recording the empty answer would read as "nothing is translatable".
+    if (!fields.length) continue;
+    trEntities[t] = fields.map((f) => ({
+      key: f.key,
+      ...(f.html ? { html: true } : {}),
+      ...(f.multiline ? { multiline: true } : {}),
+      ...(f.list ? { list: f.list } : {}),
+    }));
+  }
+
+  // THE TRAP THIS TABLE EXISTS FOR, asserted rather than trusted: an icon's
+  // `name` is a lucide id and must never be translated, and a heading's `text`
+  // must be. If either flips, the table is describing a different platform.
+  if (trMod.isTranslatableSpecial('icon', 'name')) {
+    console.error('icon.name is now translatable — it is a lucide icon id; check the registry');
+    process.exit(1);
+  }
+  if (!trMod.isTranslatableSpecial('heading', 'text')) {
+    console.error('heading.text is no longer translatable — the registry shape moved');
+    process.exit(1);
+  }
+
+  const trOut = `// GENERATED by scripts/gen-catalog.ts — do not edit by hand.
+// Source: <WB_REPO>/schema/src/elements/translatableFields.ts
+
+export const TRANSLATION_SOURCE = ${JSON.stringify(
+    {
+      elements: Object.keys(trSpecials).length,
+      pairs: Object.values(trSpecials).reduce((n, v) => n + v.length, 0),
+      neverKeys: trMod.NEVER_TRANSLATED.length,
+      entityTypes: Object.keys(trEntities).length,
+    },
+    null,
+    2,
+  )} as const;
+
+/** Every entity type a translation record can name, including "node". */
+export const TRANSLATION_ENTITY_TYPES: string[] = ${JSON.stringify([...trMod.TRANSLATION_ENTITY_TYPES], null, 2)};
+
+/**
+ * The specials a translation MAY rewrite, per element type.
+ *
+ * An element absent here has none. That is not an oversight: an icon's only
+ * string is a lucide id.
+ */
+export const TRANSLATABLE_SPECIALS: Record<string, string[]> = ${JSON.stringify(trSpecials, null, 2)};
+
+/**
+ * Specials keys that must NEVER be translated, across every element.
+ *
+ * Translating one of these does not degrade the page — it BREAKS the render.
+ * Kept as the platform's whole classification rather than an allow-list,
+ * because a positive-only list goes stale silently as elements ship new strings.
+ */
+export const NEVER_TRANSLATED: string[] = ${JSON.stringify([...trMod.NEVER_TRANSLATED].sort(), null, 2)};
+
+/** The columns a translation may rewrite on each entity, SEO fields included. */
+export const TRANSLATABLE_ENTITY_FIELDS: Record<
+  string,
+  Array<{ key: string; html?: boolean; multiline?: boolean; list?: string }>
+> = ${JSON.stringify(trEntities, null, 2)};
+`;
+  emit(resolve(process.cwd(), 'src/catalog/translations.generated.ts'), trOut);
+  console.error(
+    `${VERB} translations.generated.ts: ${Object.keys(trSpecials).length} elements / ` +
+      `${Object.values(trSpecials).reduce((n, v) => n + v.length, 0)} translatable specials, ` +
+      `${trMod.NEVER_TRANSLATED.length} never-translated keys, ` +
+      `${Object.keys(trEntities).length} entity types`,
+  );
+
   // ---- The theme -------------------------------------------------------
   //
   // DESIGN RULE 0 FAILS BY CONSTRUCTION ON NINE ELEMENTS, and this is the half

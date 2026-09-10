@@ -1,5 +1,6 @@
 import { ELEMENTS, TRAIT_WRITES } from './elements.generated.js';
 import { vocabulariesForWrites } from '../domains/site/vocabulary.js';
+import { neverTranslatedOn, translatableSpecials } from '../domains/site/translate.js';
 
 /** Eight to choose from; the hints for the chosen one come with sb_traits_for. */
 export const DEFAULT_CATALOG_LIMIT = 8;
@@ -121,6 +122,23 @@ export function traitsFor(type: string, control?: string): Record<string, unknow
     // which, unlike `style`, are NOT open — this is the machine-readable
     // answer to "what does this element store", and often the only one.
     defaults: el.defaults,
+    // WHICH OF THIS ELEMENT'S STRINGS A TRANSLATION MAY REWRITE. Translating one
+    // of the others does not degrade the page, it BREAKS the render — `name` is
+    // a lucide icon id, `src` a URL, `filterSource` a registry id the renderer
+    // switches on. An empty list is the complete answer for an element whose
+    // only string is one of those, so it is reported rather than omitted.
+    ...(() => {
+      const may = translatableSpecials(el.type);
+      const own = Object.keys(el.defaults?.specials ?? {});
+      const never = neverTranslatedOn(el.type, own);
+      if (!may.length && !never.length) return {};
+      return {
+        translatable: {
+          specials: may,
+          ...(never.length ? { never_translate: never } : {}),
+        },
+      };
+    })(),
     // WHAT THOSE KEYS ARE ALLOWED TO HOLD, for the few where guessing wrong is
     // silent. Attached to the ELEMENT rather than to a control, because the keys
     // that most need it are exactly the UNDECLARED ones: `collectionType` is in

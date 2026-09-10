@@ -462,6 +462,9 @@ Two levels, one vocabulary — but the FORM emits only a subset.
 - **On the FORM node** (dresses every field): `fieldBg`, `fieldBorderColor`,
   `fieldBorderWidth`, `fieldRadius`, `fieldPadY`, `fieldPadX`, `fieldStackGap`,
   `fieldReqColor`, `fieldHintOpacity`.
+`sb_set` now warns when a skin key lands on a node that renders none of it, and names the node
+that would — so you do not have to hold this table in your head.
+
 - **On the FIELD node only**: `payCard*`, `choice*`, `slot*`, `file*`. Written on the form
   they are stored and rendered NOWHERE — `form/css.go` emits `FieldKnobs`
   (`ChromeKnobs + Knobs`) and nothing else.

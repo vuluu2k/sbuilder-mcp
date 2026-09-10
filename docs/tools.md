@@ -471,9 +471,20 @@ names** — and, for each control the platform declares, what it writes:
 { type, hints: { useWhen, avoidWhen, contentTips },
   inspector: [{ tab, groups: [{ group, controls: ["font_size", …] }] }],
   declared: { font_size: { label, writes, defaults? }, … },
-  defaults, config_values?, isContainer, isRootOnly, childAllows,
+  defaults, translatable?, config_values?, isContainer, isRootOnly, childAllows,
   undeclared_note, style_is_open_css }
 ```
+
+`translatable` names which of this element's specials a translation may rewrite, and which of
+the ones it carries must NEVER be — translating those does not degrade the page, it BREAKS the
+render (`name` is a lucide icon id, `src` a URL, `filterSource` a registry id the renderer
+switches on). An EMPTY `specials` list is the complete answer, not an omission: an icon's only
+string is an icon id. Any `/translations` operation's call sheet carries the entity half.
+
+`sb_set` also warns when a FIELD-SKIN key lands on a form node that renders none of it — the
+FORM dresses every field it holds with the input vocabulary, while a payment card, choice group,
+timeslot or file field carries its own, and a knob on the wrong one is stored and read by
+nothing. The warning names the node that would render it.
 
 `config_values` names the LEGAL VALUES of the few config keys where guessing wrong is silent.
 Every trait in the platform's registry declares schema type `string`, so a control's

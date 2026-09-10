@@ -1178,6 +1178,46 @@ that accounts for them.
   it does not have and would block a caller writing a word a newer deployment understands and
   this catalog does not.
 
+- **A MULTI-LANGUAGE STORE WAS REACHABLE AND UNSAFE, and the unsafe half breaks the page
+  rather than degrading it.** Every translations route is in the catalog — read, write,
+  `/auto`, `/pending`, `/progress`, `/review` — so an agent could call all of them and had NO
+  way to know which fields are content.
+
+  `schema/src/elements/translatableFields.ts` is the registry, and its opening comment states
+  the danger: the element registry declares 117 `(element, special)` pairs across 66 keys and
+  they are INTERLEAVED in one object —
+
+  ```
+  text · label · alt · emptyText · searchPlaceholder            ← content
+  htmlTag · videoId · filterSource · contentType · src · name   ← NOT
+  ```
+
+  — and translating one of the second group "does not degrade the page, it breaks the
+  render": `name` is a lucide ICON id, `src` is a URL, `filterSource` is a registry id the Go
+  predicate switches on. An agent walking a page document and translating every string it
+  finds hits all three, and the page it hands back renders wrong with nothing saying why.
+
+  Generated whole rather than as an allow-list — 141 translatable specials across 58 elements,
+  **156 keys classified NEVER**, 12 entity types with their columns and SEO fields — because
+  the registry's own tripwire asserts every special is CLASSIFIED rather than asserting the
+  translatable ones are listed: "a positive-only test stays green forever while new elements
+  quietly add strings that are untranslatable by omission". Taking the classification keeps
+  that property on this side. Codegen asserts the two poles — `icon.name` still never,
+  `heading.text` still yes — because if either flips the table describes a different platform.
+
+  AN EMPTY ANSWER IS THE COMPLETE ANSWER. `icon` has no translatable special at all, and
+  `sb_traits_for` reports the empty list rather than omitting the field, so a caller cannot
+  read silence as "nobody classified this yet".
+
+  `node` is in the entity-type list with NO column list, deliberately: a node translation is
+  keyed by (node id, specials key), so its vocabulary is per element and lives in
+  `sb_traits_for`. Recording an empty answer for it would read as "nothing on a node is
+  translatable", which is the opposite of true — so the call sheet says that in a sentence.
+
+  **NO NEW TOOL.** It rides inside `sb_traits_for`'s result as `translatable` and on the call
+  sheet `sb_api_find` already prints for any `/translations` operation — the surface the agent
+  is already reading when it decides what to send.
+
 ## The five traps
 
 Each fails SILENTLY. Each is encoded in `src/domains/site/traps.ts` (trap 5 in
@@ -1333,6 +1373,21 @@ design file at all — they are exactly the surfaces that shipped platform-grey 
    `form/css.go` emits only `FieldKnobs` (`ChromeKnobs + Knobs`), so those written on the
    form are stored and rendered nowhere. They belong on the field node, which lives in the FORM DOCUMENT,
    as does the submit button.
+
+   **THAT RULE IS GENERATED NOW, NOT PROSE.** It summarised a 55-key table across 11 form nodes
+   by hand, which is what this repo's codegen exists to replace. `FIELD_SKIN_BY_NODE` records
+   which keys each node's `css.go` actually emits — the groups from `fieldSkin.ts` (pure data),
+   the mapping from each `css.go`'s `fieldskin.<Group>` identifier — and `sb_set` warns once per
+   node type, NAMING THE NODE THAT WOULD RENDER THE KEY. That half is what makes it a fix rather
+   than a complaint: `payCardBg` is real and rendered on `form-payment`, and dead on `form`.
+
+   The cross-check is a VOCABULARY check, not a composition parse, and the reason is worth
+   keeping. A first version walked Go's `withChrome(append(...))` and compared key-for-key; it
+   was wrong twice — a name pattern that could not match the group literally called `Knobs`, and
+   a body slice that ran past a one-line var inside a `var (…)` block and swept in half the
+   file. An assertion that fails on its own bugs teaches the next reader to bypass it. What
+   actually drifts is the vocabulary, and matching every `Key:` literal in the Go against the TS
+   tables both ways catches that with nothing to get wrong.
 
 6. **Match a frame's aspect ratio to the asset it holds.** `aspectRatio: 4 / 5` with
    `objectFit: cover` over 900×1100 artwork cropped the garment out of its own product photo.

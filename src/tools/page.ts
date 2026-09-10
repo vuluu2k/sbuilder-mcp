@@ -21,6 +21,7 @@ import { detachNote, presetIdOf, presetLayer } from '../domains/site/theme.js';
 import { inertHintsFor } from '../domains/site/inert.js';
 import { hasSeed, seedDocument, seedSummary, seededTypes } from '../domains/site/storepage.js';
 import { unknownValueNote } from '../domains/site/vocabulary.js';
+import { skinLevelNote } from '../domains/site/fieldskin.js';
 import { siteTheme } from '../domains/site/theme-fetch.js';
 import { request, redact } from '../transport/http.js';
 import { siteToken } from './credentialpick.js';
@@ -510,6 +511,24 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
         }
       }
       const valueNote = valueNotes.join(' ');
+      // A FIELD-SKIN KNOB ON THE WRONG NODE renders nowhere. The FORM dresses
+      // every field it holds with the input vocabulary; a payment card, choice
+      // group, timeslot or file field carries its own, and a knob written on a
+      // node whose css.go does not name that group is stored and read by
+      // nothing. Once per node TYPE, because the answer is about the type.
+      const skinNotes: string[] = [];
+      const skinSeen = new Set<string>();
+      for (const e of batch) {
+        if (e.namespace !== 'config') continue;
+        const type = d.doc.nodes[e.id]?.data.type ?? '';
+        if (!type || skinSeen.has(type)) continue;
+        const n = skinLevelNote(type, Object.keys(e.keys));
+        if (!n) continue;
+        skinSeen.add(type);
+        const once = ctx.notices.once(`field-skin:${type}`, n);
+        if (once) skinNotes.push(once);
+      }
+      const skinNote = skinNotes.join(' ');
       // THE STICKY WARNING IS COMPUTED AGAINST THE DOCUMENT AS IT WILL BE, so
       // the dry run and the real run say the same thing. A caller who is told
       // only after committing has already shipped a header that does not move.
@@ -545,6 +564,7 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
           ...(baseNote ? { base_only: baseNote } : {}),
           ...(presetNote ? { preset: presetNote } : {}),
           ...(valueNote ? { value: valueNote } : {}),
+          ...(skinNote ? { field_skin: skinNote } : {}),
           ...(Object.keys(hostNotes).length ? { hover_host: hostNotes } : {}),
           ...(note ? { note } : {}),
         });
@@ -566,6 +586,7 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
           ...(baseNote ? { base_only: baseNote } : {}),
           ...(presetNote ? { preset: presetNote } : {}),
           ...(valueNote ? { value: valueNote } : {}),
+          ...(skinNote ? { field_skin: skinNote } : {}),
           ...(hostNotes[batch[0].id] ? { hover_host: hostNotes[batch[0].id] } : {}),
         });
       }
@@ -577,6 +598,7 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
         ...(baseNote ? { base_only: baseNote } : {}),
         ...(presetNote ? { preset: presetNote } : {}),
         ...(valueNote ? { value: valueNote } : {}),
+        ...(skinNote ? { field_skin: skinNote } : {}),
         ...(Object.keys(hostNotes).length ? { hover_host: hostNotes } : {}),
       });
     },
