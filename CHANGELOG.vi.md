@@ -6,6 +6,24 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.15.0] - 2026-09-10
+
+### Added
+- sb_set giờ ghi một config key mà renderer `html.go` của trang chỉ đọc ở base (13 key, gồm cả trục dữ liệu của repeater `datasetSource`, `kind`, `collectionId`, `collectionType`) xuống base thay vì breakpoint hiện tại, và báo cáo việc chuyển này là `base_only`, vì trước đây ghi theo breakpoint lên một trong các key này chỉ cập nhật canvas của editor rồi âm thầm biến mất khi publish.
+- sb_traits_for giờ trả về `config_values` cho các config key mà renderer của nền tảng coi một giá trị không nhận diện được là một cách viết khác (alias) thay vì báo lỗi, liệt kê các giá trị hợp lệ và alias của chúng (`category` là một cách viết khác của `collection`, chẳng hạn), vì trước đây một repeater đặt giá trị nghe hợp lý như "bestseller" sẽ publish và render toàn bộ catalogue dưới một tiêu đề sai mà không báo lỗi ở đâu cả.
+- sb_set giờ cảnh báo một lần cho mỗi cặp config key/giá trị khi một lần ghi đặt một trong các giá trị config này thành thứ mà renderer không nhận diện được.
+- sb_node_read giờ trả về một khối `preset` nêu tên theme preset mà một node dùng để vẽ, các giá trị màu và thuộc tính khác của nó với mọi chuỗi var() đã được làm phẳng, cùng những key mà node đã override, khép lại khoảng trống ở chín loại element (gồm icon, button, heading, text, image) mà giao diện mặc định của chúng giờ nằm trong một theme preset của site chứ không phải trong style riêng của node, và trước đây đọc lại không thấy màu nào trên một trang rõ ràng đang tô màu đó.
+- sb_set giờ cảnh báo một lần cho mỗi theme preset khi một lần ghi style thuần sắp làm một node tách khỏi preset đó vĩnh viễn, vì giá trị riêng của node từ đó sẽ luôn thắng preset ở mọi lần đổi bảng màu sau này.
+- sb_add giờ trả về một ghi chú `inert` khi một subtree chứa locale-switcher (vẽ ra một chip ngôn ngữ giả và không chuyển đổi gì cả khi site có dưới hai locale được cấu hình) hoặc breadcrumb (nhãn "Home" ở gốc có thể chỉnh sửa và mặc định là tiếng Anh), vì cả hai element đều hiển thị thuyết phục trong khi không được nối với gì cả, theo cách mà cả sb_review lẫn sb_look đều không thể phát hiện sau khi đã thêm.
+- sb_page_create giờ gieo sẵn nội dung cho một loại trang store (product, category, search, blog, post, complete) bằng đúng document mà editor của nền tảng đưa cho merchant — một trang product sẽ có sẵn cả buy box, bao gồm cả binding `add_to_cart` — thay vì một trang trống; truyền `seed:false` để có trang trống, và `locale`/`headline` để chọn câu cảm ơn của trang hoàn tất đơn hàng.
+- npm run codegen và npm run codegen:check giờ cảnh báo (không làm fail) khi một route được annotate trong code server của nền tảng nhưng lại vắng mặt trong swagger.json, nêu tên các route còn thiếu, vì khoảng trống này không thể khắc phục bằng cách regenerate bất cứ thứ gì trong repo này.
+
+### Fixed
+- Catalog element và operation được làm mới theo đúng bản `8e40bbab` của nền tảng: năm relation-slot operation (tạo/sửa/xoá kệ hàng tuyển chọn và cả hai endpoint picks) trước đây có thể gọi được nhưng dùng chung một annotation với endpoint danh sách, giờ được ghi tài liệu riêng; và toàn bộ bề mặt cấu hình của trợ lý chat AI (`GET /api/chat-providers`, `GET/PUT/DELETE /api/sites/{siteId}/chat-settings`) lần đầu tiên được ghi tài liệu; catalog giờ bao phủ 495 operation, 166 trong số 216 write operation có shape body request.
+
+### Internal
+- Catalog được sinh ra giờ có thêm bảng seed trang store (`storepages.generated.ts`) và bảng theme preset (`theme.generated.ts`), cả hai được tạo ra bằng cách gọi trực tiếp các hàm dựng seed và theme preset của chính nền tảng thay vì sao chép kết quả của chúng, để lần platform thay đổi tiếp theo ở một trong hai chỗ đó tự động được phản ánh vào lần codegen kế tiếp của server này.
+
 ## [0.14.1] - 2026-09-09
 
 ### Added

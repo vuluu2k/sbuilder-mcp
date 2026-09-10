@@ -6,6 +6,24 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.15.0] - 2026-09-10
+
+### Added
+- sb_set now writes a config key that a page's `html.go` renderer reads only at base (13 keys, including the repeater data axis `datasetSource`, `kind`, `collectionId`, `collectionType`) to base instead of the current breakpoint, and reports the move as `base_only`, since a per-breakpoint write to one of these keys updated the editor canvas and silently vanished on publish.
+- sb_traits_for now returns `config_values` for the config keys whose platform renderer treats an unrecognized value as a silent alias rather than an error, listing the accepted values and aliases (`category` as a working spelling of `collection`, among them), since a repeater set to a plausible-sounding word like "bestseller" previously published and rendered the whole catalogue under the wrong heading with no error anywhere.
+- sb_set now warns once per config key/value pair when a write sets one of these config values to something the renderer does not recognize.
+- sb_node_read now returns a `preset` block naming the theme preset a node paints through, its resolved colors and other values with every var() chain flattened, and which keys the node has already overridden, closing nine element types (including icon, button, heading, text, image) whose default look now lives in a site theme preset rather than the node's own style, and which previously read back as no color at all on a page visibly painting one.
+- sb_set now warns once per theme preset when a plain style write is about to permanently detach a node from that preset, since the node's own value then outranks the preset on every future palette change.
+- sb_add now returns an `inert` note when a subtree includes a locale-switcher (which paints a fabricated locale chip and switches nothing below two configured site locales) or a breadcrumb (whose root "Home" label is authorable and defaults to English), since both elements render convincingly while wired to nothing, in a way neither sb_review nor sb_look can detect after the fact.
+- sb_page_create now seeds a store page type (product, category, search, blog, post, complete) with the same document the platform's editor gives a merchant — a product page arrives with its whole buy box, including the `add_to_cart` binding — instead of an empty page; pass `seed:false` for a blank page, and `locale`/`headline` to pick the completion page's thank-you line.
+- npm run codegen and npm run codegen:check now warn (without failing) when a route is annotated in the platform's server code but absent from swagger.json, naming the missing routes, since this gap does not get fixed by regenerating anything in this repo.
+
+### Fixed
+- The element and operation catalog is refreshed to the platform's `8e40bbab`: five relation-slot operations (curated-shelf create/update/delete and both picks endpoints) that were reachable but shared one annotation with the list endpoint are now separately documented, and the AI chat assistant's whole configuration surface (`GET /api/chat-providers`, `GET/PUT/DELETE /api/sites/{siteId}/chat-settings`) is documented for the first time; the catalog now covers 495 operations, 166 of 216 write operations with a request body shape.
+
+### Internal
+- The generated catalog gained a store-page-seed table (`storepages.generated.ts`) and a theme-preset table (`theme.generated.ts`), both produced by calling the platform's own seed and theme-preset builders rather than by copying their output, so the next platform change to either reaches this server's next codegen run automatically.
+
 ## [0.14.1] - 2026-09-09
 
 ### Added
