@@ -6,6 +6,16 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.17.0] - 2026-09-10
+
+### Added
+- sb_import_site giờ đọc toàn bộ một site từ một URL — ưu tiên sitemap của chính nhà xuất bản, chỉ crawl link có giới hạn khi không có sitemap — rồi tạo và điền một draft page ở đây cho từng trang tìm được, thay cho vòng lặp thủ công gọi sb_import từng trang một.
+- sb_import_site giờ báo cáo mọi tiền tố đường dẫn lặp lại (như `/products/{slug}`) là một template gắn với nền tảng trước khi tạo bất cứ gì, vì import các URL đó thành trang tĩnh sẽ tạo ra một catalogue mà không gì có thể mua được.
+- sb_import_site giờ xem trước từng trang sẽ nằm ở đâu, gồm cả URL nào sẽ gộp vào trang chủ hiện có của site và slug nào đã bị chiếm, rồi bỏ qua trang có slug trùng thay vì để nền tảng âm thầm đổi tên nó.
+
+### Fixed
+- sb_import và sb_import_site giờ chèn nội dung import vào giữa các band, trước global footer đầu tiên, thay vì nối vào cuối trang, vì việc nối vào cuối trước đây phá vỡ quy tắc thứ tự band của nền tảng trên mọi trang có global footer.
+
 ## [0.16.1] - 2026-09-10
 
 ### Fixed

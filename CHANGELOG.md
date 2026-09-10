@@ -6,6 +6,16 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.17.0] - 2026-09-10
+
+### Added
+- sb_import_site reads a whole site from one URL — the publisher's own sitemap first, a bounded link crawl only when there is none — and creates and fills a draft page here for every page it finds, replacing the by-hand loop of one sb_import call per page.
+- sb_import_site reports every repeated path prefix (such as `/products/{slug}`) as one bound template before creating anything, since importing those URLs as static pages would produce a catalogue where nothing is buyable.
+- sb_import_site previews where each page will land, including which URL merges into the site's existing home page and which slug is already taken, and skips a page whose slug collides instead of letting the platform silently rename it.
+
+### Fixed
+- sb_import and sb_import_site now insert imported content into the middle band, before the first global footer, instead of appending it to the end of the page, since appending broke the platform's band-order rule on every page carrying a global footer.
+
 ## [0.16.1] - 2026-09-10
 
 ### Fixed
