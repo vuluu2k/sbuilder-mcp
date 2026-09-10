@@ -69,6 +69,32 @@ export function checkBandOrder(doc: DocLike): string | null {
   return null;
 }
 
+/**
+ * WHERE NEW PAGE CONTENT MAY BE ADDED among ROOT's children: before the first
+ * global footer, or at the end when there is none.
+ *
+ * APPENDING TO ROOT IS THE OBVIOUS THING AND IT IS WRONG ON A REAL PAGE. Every
+ * site that has a global footer has one as a ROOT child, so `data.nodes.length`
+ * puts the new section AFTER it — `checkBandOrder` then refuses the save, the
+ * platform would have refused it too, and the caller is told about a band rule
+ * they did not knowingly break. Measured on the one path where it is the
+ * DEFAULT: `sb_import_site` imports the entry URL into the site's existing home
+ * page, which is exactly the page most likely to carry both globals.
+ *
+ * The index is into `data.nodes` RAW, overlays included, because that is what
+ * `addSubtree` takes. Overlays are skipped when deciding, never when counting:
+ * the platform strips them before it checks the bands, so where one sits says
+ * nothing about where content may go.
+ */
+export function middleEnd(doc: DocLike): number {
+  const kids = doc.nodes[doc.root_node_id]?.data?.nodes ?? [];
+  for (let i = 0; i < kids.length; i += 1) {
+    if (isOverlay(doc, kids[i])) continue;
+    if (bandOf(doc, kids[i]) === 'footer') return i;
+  }
+  return kids.length;
+}
+
 /** Is this node a composed GLOBAL SECTION master — a shared header or footer? */
 export function isGlobal(doc: DocLike, id: string): boolean {
   return doc.nodes[id]?.specials?.[SPEC_GLOBAL_ID] !== undefined;

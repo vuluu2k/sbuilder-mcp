@@ -901,8 +901,80 @@ own defaults — inventing a palette for it is the invention rule 0 exists to pr
 and the node points at the copy; a source whose upload fails keeps its original URL, because
 a visible image beats an empty frame. Pass `upload_images: false` to skip.
 
+**What arrives lands INSIDE the middle band** — before the first global footer, after the
+header. Appending to ROOT is the obvious thing and it breaks trap 3 on every page that has a
+global footer: the platform refuses the whole save, and the caller is told about a band rule
+they did not knowingly break.
+
 A page that builds itself with scripts after load, or one behind a login, reads as thin or
 empty — the result says what was skipped and why.
+
+## `sb_import_site`
+
+Read a **whole site** from one URL and give each page it finds its own **draft page** here.
+`sb_import` reads one page into the page you have open; this one finds out what the pages
+ARE, creates one for each, and fills it.
+
+| Arg | Type | Notes |
+| --- | --- | --- |
+| `url` | string | Any page of the site |
+| `site_id` | string? | Falls back to `SB_SITE` |
+| `max_pages` | number? | Default 12 |
+| `depth` | number? | No sitemap: how far to follow links, default 1 |
+| `include` | string[]? | Path substrings to keep — **outranks** the plumbing filter |
+| `exclude` | string[]? | Path substrings to drop |
+| `max_images` | number? | Default 24, across the **whole** import |
+| `max_nodes` | number? | Per page, default 300 |
+| `upload_images` | boolean? | Default **true** |
+| `homepage` | boolean? | The entry URL lands on this site's own home page, default **true** |
+| `dry_run` | boolean? | Defaults to **true** — returns the page list and creates nothing |
+
+**The publisher's own list first, a crawl second.** `robots.txt` is read for a `Sitemap:`
+line before `/sitemap.xml` is guessed, because plenty of real sitemaps are somewhere else —
+a shop platform names `/sitemap_products_1.xml`, a CMS a dated path. A sitemap is one fetch,
+no browser, and it lists pages nothing links to. Only when there is none (or it lists a
+single page, which is what a half-configured generator emits) does the link crawl run, one
+browser navigation per page, bounded by `depth` and by the page budget. There is no knob to
+force the crawl: a caller who wants fewer pages than the sitemap offers wants `include` or
+`max_pages`, not a slower way to find the same list.
+
+**Order is part of the answer.** A sitemap can list five thousand URLs and the cap takes a
+dozen; taking the first dozen in file order gives a site made of whatever the generator
+emitted first, which on a shop is twelve product pages and no home page. Shallowest first —
+the root, then `/about`, then `/blog/a-post` — is the site's own outline.
+
+**Repeated prefixes are reported, because they are not pages here.** Forty URLs under
+`/products/` are ONE bound template plus a catalogue on this platform: `/products/{slug}`
+resolves to the published page of type `product`. Imported as static pages they produce a
+shop where every price is a literal and nothing is buyable. The result names the prefix and
+its count before anything is created; `exclude` leaves them out.
+
+**The preview says where each page will LAND**, not just what was found: which one merges
+into this site's existing home page, and which slug is already taken (that page is skipped,
+because the platform renames a collision and answers 200). Reading this site's own pages
+needs a credential and asking what is on a stranger's website does not, so a dry run that
+cannot read the site reports `landing_unknown` rather than guessing.
+
+**One page failing does not end the run.** A site import cannot be atomic — each page is its
+own create and its own save — so the honest shape is per-page outcomes: `built` lists what
+landed, `failed` lists each URL with the reason. A page whose slug is already taken is left
+alone rather than created, because the platform RENAMES a colliding slug and answers 200,
+which on a second run would silently double the site.
+
+**The tokens come off this site, once.** `sb_import` reads them off the open page; here most
+targets do not exist yet and the rest are blank, so reading per page would give the first
+page element defaults and every later page the defaults of the blank page before it. The
+open page if there is one, this site's home page otherwise.
+
+**Images are uploaded once for the whole import.** A logo, a payment strip and a footer badge
+appear on every page of a real site; uploading each per page would fill the merchant's
+library with twelve copies of each.
+
+**Nothing is published, and three things the import cannot do for you.** The source's header
+and footer are skipped on purpose — this site has its own as globals, and a second menu
+pointing at somebody else's site is worse than none. No menu links the new pages together.
+And nothing has been seen at 390px. `sb_look` each page at the three widths, then
+`sb_publish`.
 
 ## `sb_store`
 

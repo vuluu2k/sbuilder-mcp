@@ -96,6 +96,7 @@ là "tài khoản của người này".
 | `sb_event` | Gắn click action cho một node — mở giỏ, sang trang, mở pop-up |
 | `sb_bind` | Gắn nội dung một node vào dữ liệu cửa hàng thật, hoặc biến một nút thành nút thêm vào giỏ |
 | `sb_import` | Đọc một trang từ URL công khai bất kỳ và thêm cấu trúc + nội dung của nó vào trang đang mở dưới dạng element thật, mang token của CHÍNH trang này — là dịch lại, không phải sao chép |
+| `sb_import_site` | Đọc CẢ website từ một URL — sitemap của nó, hoặc các link trên trang đó — và tạo cho mỗi trang tìm được một trang nháp riêng ở đây, dựng bằng token của site này |
 | `sb_store` | Chạy một luồng cửa hàng bắt buộc đúng thứ tự — bốn lệnh ghi tạo nên trang thanh toán, hoặc gieo bất kỳ template nào trong 17 form của nền tảng (login, register, forgot, contact, subscribe …) kèm field document của nó |
 | `sb_undo` | Trả lại thứ mà một lệnh PUT đã ghi đè — nền tảng không có lịch sử trang hay restore, nên đây là đường về duy nhất |
 

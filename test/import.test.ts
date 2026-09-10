@@ -1,5 +1,11 @@
-import { describe, it, expect } from 'vitest';
-import { capture } from '../src/vision/capture.js';
+import { describe, it, expect, beforeAll, afterAll } from 'vitest';
+import { createServer } from 'node:http';
+import type { AddressInfo } from 'node:net';
+import { capture, captureMany, crawlLinks } from '../src/vision/capture.js';
+import { canonFor } from '../src/domains/site/discover.js';
+import { checkBandOrder, middleEnd } from '../src/domains/site/traps.js';
+import { validateForSave } from '../src/domains/site/validate.js';
+import type { Patch } from '../src/core/patch.js';
 import { PageDoc } from '../src/domains/site/document.js';
 import { addSubtree, setKeys } from '../src/domains/site/builder.js';
 import {
@@ -455,5 +461,133 @@ describe.runIf(process.env.SB_BROWSER_TEST === '1')('capture()', () => {
     const r = await capture(page);
     const button = (r.sections[0].children ?? []).find((c) => c.kind === 'button');
     expect(button?.href).toBe('/shop');
+  }, 60_000);
+});
+
+/**
+ * WHERE AN IMPORT LANDS ON A PAGE THAT ALREADY HAS GLOBALS.
+ *
+ * Trap 3 is not a style rule: the platform refuses EVERY save whose ROOT
+ * children do not read [header*][middle*][footer*]. So appending — the obvious
+ * thing, and what both importers used to do — costs the whole page on any site
+ * that has a global footer, which is most of them.
+ */
+describe('an import lands inside the middle band', () => {
+  function pageWithGlobals() {
+    const d = emptyDoc();
+    d.apply(
+      addSubtree(d, 'ROOT', { type: 'flex-section', name: 'header' }).patches,
+    );
+    d.apply(addSubtree(d, 'ROOT', { type: 'flex-section', name: 'footer' }).patches,);
+    const [header, footer] = d.node('ROOT').data.nodes;
+    // Stamped the way the platform stamps a composed master.
+    d.apply([
+      { op: 'set', path: ['nodes', header, 'specials', 'globalId'], value: 'g1' },
+      { op: 'set', path: ['nodes', header, 'specials', 'globalKind'], value: 'header' },
+      { op: 'set', path: ['nodes', footer, 'specials', 'globalId'], value: 'g2' },
+      { op: 'set', path: ['nodes', footer, 'specials', 'globalKind'], value: 'footer' },
+    ] as Patch[]);
+    return d;
+  }
+
+  it('appending to ROOT would break the band order — this is the trap, stated', () => {
+    const d = pageWithGlobals();
+    const naive = d.preview([]);
+    naive.apply(addSubtree(naive, 'ROOT', { type: 'flex-section' }).patches);
+    expect(checkBandOrder(naive.doc)).toMatch(/after a global footer/);
+  });
+
+  it('so content goes in at middleEnd — before the footer, after the header', () => {
+    const d = pageWithGlobals();
+    const at = middleEnd(d.doc);
+    expect(at).toBe(1);
+    d.apply(addSubtree(d, 'ROOT', { type: 'flex-section' }, at).patches);
+    expect(checkBandOrder(d.doc)).toBeNull();
+    expect(validateForSave(d)).toEqual([]);
+    // Header first, imported section second, footer last.
+    expect(d.node('ROOT').data.nodes.length).toBe(3);
+    expect(d.node(d.node('ROOT').data.nodes[2]).specials?.globalKind).toBe('footer');
+  });
+
+  it('a page with no footer still appends at the end', () => {
+    const d = emptyDoc();
+    d.apply(addSubtree(d, 'ROOT', { type: 'flex-section' }).patches);
+    expect(middleEnd(d.doc)).toBe(1);
+  });
+});
+
+/**
+ * THE CRAWL, AGAINST A REAL SERVER.
+ *
+ * `capturePage` and `linksOnPage` are SERIALIZED into the browser, so anything
+ * they close over is not there on the other side — it compiles, every pure test
+ * passes, and it dies on the first real page (measured once already, as
+ * `ReferenceError: HEADINGS is not defined`). Nothing cheaper than a browser
+ * catches it, so every evaluate site in this repo has a test here.
+ *
+ * A LOCAL SERVER rather than the `data:` URLs the capture tests use: a data page
+ * has no origin, so `new URL('/a', base)` throws there and a crawl of one would
+ * find nothing at all — which is a property of the fixture, not of the crawl.
+ */
+describe.runIf(process.env.SB_BROWSER_TEST === '1')('crawlLinks() and captureMany()', () => {
+  const pages: Record<string, string> = {
+    '/':
+      '<title>Trang chủ | Cửa hàng</title><main><section><h1>Trang chủ</h1>' +
+      '<a href="/a">A</a><a href="/a/">A lần nữa</a><a href="/b">B</a>' +
+      '<a href="https://elsewhere.example/x">Ngoài</a>' +
+      '<a href="/tai-lieu.pdf">PDF</a><a href="/cart">Giỏ</a>' +
+      '</section></main>',
+    '/a': '<title>Trang A</title><main><section><h2>Trang A</h2><p>Nội dung A.</p></section></main>',
+    '/b': '<title>Trang B</title><main><section><h2>Trang B</h2><a href="/c">C</a></section></main>',
+    '/c': '<title>Trang C</title><main><section><h2>Trang C</h2><p>Sâu hai tầng.</p></section></main>',
+  };
+
+  let base = '';
+  let server: ReturnType<typeof createServer>;
+
+  beforeAll(async () => {
+    server = createServer((req, res) => {
+      const path = (req.url ?? '/').split('?')[0].replace(/\/$/, '') || '/';
+      const body = pages[path];
+      res.writeHead(body ? 200 : 404, { 'content-type': 'text/html; charset=utf-8' });
+      res.end(body ?? 'not found');
+    });
+    await new Promise<void>((ok) => server.listen(0, '127.0.0.1', ok));
+    const addr = server.address() as AddressInfo;
+    base = `http://127.0.0.1:${addr.port}`;
+  });
+
+  afterAll(async () => {
+    await new Promise<void>((ok) => server.close(() => ok()));
+  });
+
+  it('walks the site\'s own links, in ONE spelling, and spends nothing on what cannot be a page', async () => {
+    const got = await crawlLinks(`${base}/`, { depth: 1, maxVisits: 10, canon: canonFor(`${base}/`) });
+    expect([...got.urls].sort()).toEqual([`${base}/`, `${base}/a`, `${base}/b`]);
+    // /a and /a/ are one page; the PDF, the cart and the other site are not this
+    // crawl's to visit — and each of them would have cost a navigation.
+    expect(got.visited).toBe(1);
+    // The crawl opened the entry to read its links and got its `<title>` for
+    // free — which is the name the plan shows, rather than one derived from a
+    // slug.
+    expect(got.titles.get(`${base}/`)).toBe('Trang chủ | Cửa hàng');
+  }, 60_000);
+
+  it('depth is what decides how far from the entry a page may be', async () => {
+    const shallow = await crawlLinks(`${base}/`, { depth: 1, maxVisits: 10, canon: canonFor(`${base}/`) });
+    expect(shallow.urls).not.toContain(`${base}/c`);
+    const deep = await crawlLinks(`${base}/`, { depth: 2, maxVisits: 10, canon: canonFor(`${base}/`) });
+    expect(deep.urls).toContain(`${base}/c`);
+  }, 120_000);
+
+  it('a page that will not open is an outcome, not the end of the run', async () => {
+    // Half the reason to import a site rather than a page is that the caller does
+    // not know what is at each URL. Throwing would discard everything that read
+    // fine and leave nothing to act on.
+    const got = await captureMany([`${base}/a`, 'http://127.0.0.1:1/nope']);
+    expect(got[0].ok).toBe(true);
+    expect(got[0].ok && got[0].result.sections.length).toBe(1);
+    expect(got[1].ok).toBe(false);
+    expect(got[1].ok === false && got[1].why.length).toBeGreaterThan(0);
   }, 60_000);
 });

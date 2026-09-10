@@ -45,11 +45,29 @@ describe('token budget — a diet without a scale comes back', () => {
     // hatch that would clone it (`custom-code` embeds raw markup) and a caller
     // who reaches for that gets a page no inspector can edit.
     //
-    // 20,500 rather than 19,500: a ceiling set just above the current
+    // 20,500 -> 23,000 buys `sb_import_site` (~1,360, measured at 21,751).
+    //
+    // It is the most expensive tool here and the cost is its ARGUMENTS, not its
+    // description: eleven of them, because it points at a stranger's site and
+    // every bound is a decision the caller has to be able to make — how many
+    // pages, how deep to follow links when there is no sitemap, which paths to
+    // keep or drop, how many images to copy, and whether the entry URL lands on
+    // this site's own home page. A crawl with those hard-coded imports the wrong
+    // twelve pages of a forty-page shop and there is nothing the caller can do
+    // about it but delete them.
+    //
+    // What it buys back is the gap this server had at the top of the funnel:
+    // `sb_import` reads ONE page into the OPEN page, so "here is our site, put it
+    // on Store Builder" was a loop the agent had to run by hand — discover the
+    // pages, create each, open each, import each — and getting one step wrong
+    // (creating over a taken slug, reading tokens off the blank page it just
+    // made) fails silently in the ways this repo keeps a file about.
+    //
+    // 23,000 rather than 21,800: a ceiling set just above the current
     // measurement gets raised again on the next honest tool, which trains a
     // reader to raise it without reading. This has room for one more and still
     // refuses a schema dump.
-    expect(JSON.stringify(tools).length).toBeLessThan(20_500);
+    expect(JSON.stringify(tools).length).toBeLessThan(23_000);
     for (const t of tools) expect(t.description, t.name).not.toMatch(/vanishes on publish/);
     const instructions = client.getInstructions() ?? '';
     expect(instructions.length).toBeGreaterThan(200);

@@ -876,8 +876,77 @@ nó chính là thứ rule 0 sinh ra để ngăn.
 trỏ vào bản chép; ảnh nào upload hỏng thì giữ URL gốc, vì một tấm ảnh hiện được vẫn hơn một
 khung trống. Truyền `upload_images: false` để bỏ qua.
 
+**Nội dung rơi vào TRONG dải giữa** — trước global footer đầu tiên, sau header. Nối thêm vào
+cuối ROOT là cách hiển nhiên và nó phá bẫy 3 trên mọi trang có global footer: nền tảng từ chối
+cả lần lưu, còn người gọi thì bị báo về một luật dải mà họ không hề cố ý vi phạm.
+
 Trang tự dựng bằng script sau khi load, hoặc trang sau đăng nhập, sẽ đọc ra mỏng hoặc rỗng —
 kết quả nói rõ đã bỏ qua những gì và vì sao.
+
+## `sb_import_site`
+
+Đọc **cả một website** từ một URL và tạo cho mỗi trang tìm được một **trang nháp** riêng ở
+đây. `sb_import` đọc một trang vào trang đang mở; tool này tìm ra website đó CÓ NHỮNG TRANG
+NÀO, tạo một trang cho mỗi cái, rồi đổ nội dung vào.
+
+| Tham số | Kiểu | Ghi chú |
+| --- | --- | --- |
+| `url` | string | Một trang bất kỳ của website đó |
+| `site_id` | string? | Không truyền thì lấy `SB_SITE` |
+| `max_pages` | number? | Mặc định 12 |
+| `depth` | number? | Không có sitemap: đi theo link sâu mấy tầng, mặc định 1 |
+| `include` | string[]? | Chuỗi con của path cần giữ — **thắng** bộ lọc hạ tầng |
+| `exclude` | string[]? | Chuỗi con của path cần bỏ |
+| `max_images` | number? | Mặc định 24, cho **toàn bộ** lần import |
+| `max_nodes` | number? | Mỗi trang, mặc định 300 |
+| `upload_images` | boolean? | Mặc định **true** |
+| `homepage` | boolean? | URL vào rơi vào trang chủ sẵn có của site này, mặc định **true** |
+| `dry_run` | boolean? | Mặc định **true** — trả về danh sách trang và không tạo gì cả |
+
+**Danh sách của chính chủ site trước, bò link sau.** `robots.txt` được đọc để tìm dòng
+`Sitemap:` trước khi đoán `/sitemap.xml`, vì rất nhiều sitemap thật nằm chỗ khác — nền tảng
+bán hàng đặt tên `/sitemap_products_1.xml`, CMS đặt theo ngày. Một sitemap tốn đúng một lần
+fetch, không cần trình duyệt, và nó liệt kê cả những trang không có link nào trỏ tới. Chỉ khi
+không có sitemap (hoặc sitemap chỉ liệt kê đúng một trang — thứ mà một generator cấu hình dở
+sinh ra) thì mới bò link, mỗi trang một lần mở trình duyệt, chặn bởi `depth` và bởi số trang
+tối đa. Không có nút để ép bò link: người gọi muốn ít trang hơn sitemap thì cần `include` hoặc
+`max_pages`, chứ không phải một cách chậm hơn để ra cùng danh sách đó.
+
+**Thứ tự là một phần của câu trả lời.** Một sitemap có thể liệt kê năm nghìn URL còn trần chỉ
+lấy một tá; lấy một tá đầu theo thứ tự trong file thì được một website gồm bất cứ thứ gì
+generator sinh ra trước — với một shop thì đó là mười hai trang sản phẩm và không có trang
+chủ. Nông trước — gốc, rồi `/about`, rồi `/blog/mot-bai` — chính là dàn ý của website đó.
+
+**Tiền tố lặp lại được báo, vì ở đây chúng không phải là trang.** Bốn mươi URL dưới
+`/products/` trên nền tảng này là MỘT template có binding cộng với một danh mục hàng:
+`/products/{slug}` trỏ về trang đã publish thuộc type `product`. Import chúng thành trang tĩnh
+sẽ ra một shop mà mọi giá đều là chữ chết và không mua được gì. Kết quả nêu tên tiền tố và số
+lượng trước khi tạo bất cứ thứ gì; `exclude` để loại chúng ra.
+
+**Bản xem trước nói rõ từng trang sẽ RƠI VÀO ĐÂU**, không chỉ tìm được gì: trang nào nhập vào
+trang chủ sẵn có, slug nào đã bị chiếm (trang đó bị bỏ qua, vì nền tảng đổi tên slug trùng rồi
+trả 200). Đọc danh sách trang của site này thì cần credential, còn hỏi một website lạ có gì thì
+không — nên lượt dry run không đọc được site sẽ báo `landing_unknown` thay vì đoán bừa.
+
+**Một trang hỏng không làm dừng cả lượt.** Import cả site không thể nguyên tử — mỗi trang là
+một lần tạo và một lần lưu riêng — nên hình dạng trung thực là kết quả theo từng trang: `built`
+liệt kê cái đã xong, `failed` liệt kê từng URL kèm lý do. Trang có slug đã tồn tại thì được để
+yên chứ không tạo, vì nền tảng ĐỔI TÊN slug trùng rồi trả 200 — chạy lại lần hai sẽ âm thầm
+nhân đôi cả website.
+
+**Token lấy từ site này, một lần.** `sb_import` đọc token từ trang đang mở; ở đây phần lớn
+trang đích chưa tồn tại và số còn lại thì trắng, nên đọc theo từng trang sẽ cho trang đầu tiên
+mặc định của element và mọi trang sau đó mặc định của trang trắng ngay trước nó. Lấy từ trang
+đang mở nếu có, không thì từ trang chủ của site này.
+
+**Ảnh upload một lần cho cả lượt import.** Logo, dải phương thức thanh toán, huy hiệu ở footer
+xuất hiện trên mọi trang của một website thật; upload theo từng trang sẽ nhét vào media library
+của merchant mười hai bản mỗi thứ.
+
+**Không publish gì cả, và ba việc lần import không làm hộ bạn.** Header và footer của trang
+nguồn bị bỏ có chủ đích — site này có header/footer riêng dạng global, và một menu thứ hai trỏ
+sang website người khác còn tệ hơn là không có. Không có menu nào nối các trang mới lại với
+nhau. Và chưa có gì được nhìn ở 390px. `sb_look` từng trang ở ba khổ, rồi mới `sb_publish`.
 
 ## `sb_store`
 

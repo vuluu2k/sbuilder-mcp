@@ -183,6 +183,19 @@ export class PageSession {
   }
 
   /**
+   * The open document, or null.
+   *
+   * `current()` throws, correctly: every editing tool needs a page and the
+   * message names the call that opens one. A site import is the one caller for
+   * which "no page open" is an ordinary answer rather than a mistake — it reads
+   * the design tokens off whatever page is open, and falls back to the site's
+   * home page when the caller has not opened one.
+   */
+  peek(): PageDoc | null {
+    return this.doc;
+  }
+
+  /**
    * Validate, then save.
    *
    * The validation is not belt-and-braces. The platform refuses a band-order

@@ -857,6 +857,67 @@ that accounts for them.
   an import is rare, slow and runs untrusted script, and coupling that to the tool a vision
   loop calls every few hundred milliseconds is how the fast path gets slow.
 
+- **THE IMPORT COULD READ A PAGE AND NOT A SITE, and the missing half was never the
+  capture.** `sb_import` takes a URL and writes into the OPEN page, so "here is our website,
+  put it on Store Builder" — the thing people actually ask for — was a loop the agent had to
+  run by hand: find the pages, create each, open each, import each, and get every step right
+  with no tool checking any of them. `sb_import_site` runs it. What the work taught, each of
+  which fails quietly:
+
+  - **APPENDING TO ROOT BREAKS TRAP 3 ON ANY PAGE THAT HAS A GLOBAL FOOTER**, and this is the
+    DEFAULT path: the entry URL is imported into the site's existing home page, which is
+    exactly the page most likely to carry both globals. `data.nodes.length` puts the section
+    after the footer, `checkBandOrder` refuses the save, and the caller is told about a band
+    rule they did not knowingly break. `middleEnd()` is the index to add at — before the first
+    footer-banded ROOT child — and `sb_import` had the same append, predating this.
+  - **`URL.pathname` IS PERCENT-ENCODED, and this platform is Vietnamese first.** A slug
+    derived from it turns `/trang-chủ` into `trang-ch-e1-bb-a7`, and an `include: ['/tin-tức']`
+    matches nothing. `pathOf` decodes, guarded — a malformed sequence throws, and a path that
+    cannot be decoded is better matched raw than not at all. NFD does not decompose `đ`
+    either: it is a letter, not a d with a stroke, so `Đẹp` strips to `ep` without the
+    explicit replacement.
+  - **A SUBSTRING TEST DROPS REAL PAGES.** The plumbing list (`/cart`, `/feed`, `/comments`)
+    matched with `includes`, so `/cartier-watches`, `/feedback` and `/comments-policy` were all
+    thrown away and reported only as a number. A plain entry matches at a BOUNDARY — end, `/`,
+    or `.` so `/wp-login.php` is still caught — and an entry written with a trailing slash
+    matches that segment anywhere, which is how `/blog/tag/x` is caught. **Anchoring it at the
+    START of the path was the first fix and it was half a fix**: a locale prefix is the
+    ordinary shape of the sites this is pointed at and this platform's market is Vietnamese,
+    so `/en/cart` and `/vi/account` sailed through. The needle begins with `/`, so its left
+    boundary comes free — scan anywhere, test the right boundary only.
+  - **FILTERING TWICE AND COUNTING ONCE IS HOW A REASON DISAPPEARS.** `canonFor` exists to
+    stop a CRAWL spending a navigation on a PDF; `choosePages` decides what becomes a page and
+    counts every rejection. A sitemap costs no navigation, so running it through the crawl
+    filter saved nothing and meant the cart page vanished with no line in `skipped` saying so.
+  - **ORDER IS PART OF THE ANSWER.** A sitemap lists what its generator emitted first, which
+    on a shop is a hundred products; taking the first twelve gives a site with no home page.
+    Shallowest first, entry always first.
+  - **N URLS UNDER ONE PREFIX ARE NOT N PAGES HERE.** `/products/{slug}` resolves to the
+    published page of type `product`. Imported as static pages they render a shop where every
+    price is a literal and nothing is buyable, and `sb_review` then reports a missing purchase
+    action on forty pages at once. The prefix and its count are reported BEFORE anything is
+    created, because afterwards the fix is forty deletes.
+  - **A COLLIDING SLUG IS SKIPPED, NOT CREATED.** The platform renames and answers 200 (the
+    `uniqueSlug` trap this file already records), so a second run of the tool would silently
+    double the site.
+  - **TOKENS COME OFF THE SITE ONCE, NOT OFF EACH TARGET PAGE.** Most targets do not exist yet
+    and the rest are blank, so per-page reading gives the first page element defaults and
+    every later page the defaults of the blank page before it — rule 0 failing on every page
+    at once.
+  - **IT IS NOT ATOMIC AND MUST NOT PRETEND TO BE.** Each page is its own create and its own
+    save, so one failure is an OUTCOME (`built` / `failed`, per URL with a reason), never an
+    abort that leaves three pages built, nine not, and no report saying which.
+  - **`depth` IS HOW FAR FROM THE ENTRY A PAGE MAY BE**, so the pages at that distance are
+    results and are never opened — opening them would pay a navigation each for links the
+    bound has already ruled out. The import pass opens them anyway.
+  - **A SITEMAP FETCH LEAVES THE PLATFORM, so it carries no credential.** Every path through
+    `request()` attaches one; a sitemap read through it would hand this install's `SB_TOKEN`
+    to a stranger's server because the caller pasted a link.
+
+  It publishes nothing, and it says so once: the source's header and footer are skipped on
+  purpose (this site has its own as globals), no menu links the new pages together, and
+  nothing has been seen at 390px.
+
 - **A FUNCTION PASSED TO `page.evaluate` IS SERIALIZED, so anything it closes over is not
   there.** It compiles, every pure test passes, and it dies on the first real page. Measured:
   `capturePage` closed over a module-level `const HEADINGS` and threw

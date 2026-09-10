@@ -377,22 +377,20 @@ function capturePage(limits: { maxSections: number; maxImages: number; maxTextCh
 }
 
 /**
- * Open a URL and capture it.
+ * ONE BROWSER FOR THE WHOLE CALL.
  *
- * `load` plus a short settle rather than `networkidle`, for the same reason
- * `shoot.ts` gives: a page with a poller never goes idle, and waiting for that
- * spends the whole budget on a timeout that cannot resolve.
+ * A site import reads a dozen pages, and launching Chrome once per page pays
+ * the launch a dozen times for nothing. It is still a launch of its OWN rather
+ * than `shoot.ts`'s pooled one, for the reason that module gives: an import is
+ * rare, slow and runs untrusted script, and coupling that to the tool a vision
+ * loop calls every few hundred milliseconds is how the fast path gets slow.
+ *
+ * Closed in a `finally`, always. `shoot()` pools for the process lifetime and a
+ * caller that forgets `closeBrowser()` never exits — there is no `beforeExit`
+ * rescue, because an open browser connection is precisely what stops the event
+ * loop draining.
  */
-export async function capture(
-  url: string,
-  opts: { maxSections?: number; maxImages?: number; maxTextChars?: number; maxNodes?: number; width?: number } = {},
-): Promise<CaptureResult> {
-  const limits = {
-    maxSections: opts.maxSections ?? 24,
-    maxImages: opts.maxImages ?? 24,
-    maxTextChars: opts.maxTextChars ?? 1200,
-    maxNodes: opts.maxNodes ?? 400,
-  };
+async function withBrowser<T>(fn: (browser: Browser) => Promise<T>): Promise<T> {
   let browser: Browser | undefined;
   try {
     browser = await chromium.launch({ channel: 'chrome' });
@@ -402,9 +400,29 @@ export async function capture(
         `browser (playwright-core, channel "chrome") and did not find one: ${(e as Error).message}`,
     );
   }
+  try {
+    return await fn(browser);
+  } finally {
+    await browser.close().catch(() => undefined);
+  }
+}
+
+/**
+ * Open one URL in an existing browser, let it settle, and run one evaluate.
+ *
+ * `load` plus a short settle rather than `networkidle`, for the same reason
+ * `shoot.ts` gives: a page with a poller never goes idle, and waiting for that
+ * spends the whole budget on a timeout that cannot resolve.
+ */
+async function readPage<T>(
+  browser: Browser,
+  url: string,
+  width: number,
+  work: (page: Page) => Promise<T>,
+): Promise<T> {
   let page: Page | undefined;
   try {
-    page = await browser.newPage({ viewport: { width: opts.width ?? 1440, height: 900 } });
+    page = await browser.newPage({ viewport: { width, height: 900 } });
     await page.goto(url, { waitUntil: 'load', timeout: 30_000 });
     // THE SAME SETTLE `sb_look` USES, not a flat sleep. A fixed 600ms is wrong
     // at both ends: example.com is finished long before it, and a page that
@@ -413,9 +431,160 @@ export async function capture(
     // question actually being asked (has the page stopped changing) and answers
     // when it becomes true, bounded so a page that never settles is still read.
     await settleDom(page);
-    return (await page.evaluate(capturePage, limits)) as CaptureResult;
+    return await work(page);
   } finally {
     await page?.close().catch(() => undefined);
-    await browser.close().catch(() => undefined);
   }
+}
+
+function limitsFrom(opts: CaptureOpts) {
+  return {
+    maxSections: opts.maxSections ?? 24,
+    maxImages: opts.maxImages ?? 24,
+    maxTextChars: opts.maxTextChars ?? 1200,
+    maxNodes: opts.maxNodes ?? 400,
+  };
+}
+
+export interface CaptureOpts {
+  maxSections?: number;
+  maxImages?: number;
+  maxTextChars?: number;
+  maxNodes?: number;
+  width?: number;
+}
+
+/** Open a URL and capture it. */
+export async function capture(url: string, opts: CaptureOpts = {}): Promise<CaptureResult> {
+  const limits = limitsFrom(opts);
+  return withBrowser((browser) =>
+    readPage(browser, url, opts.width ?? 1440, (page) =>
+      page.evaluate(capturePage, limits) as Promise<CaptureResult>,
+    ),
+  );
+}
+
+/** One page's outcome in a multi-page read: what was captured, or why it was not. */
+export type CaptureOutcome =
+  | { url: string; ok: true; result: CaptureResult }
+  | { url: string; ok: false; why: string };
+
+/**
+ * Capture several pages through one browser.
+ *
+ * A PAGE THAT FAILS MUST NOT END THE RUN. Half the reason to import a site
+ * rather than a page is that the caller does not know what is at each URL: one
+ * of them is behind a login, one 404s, one hangs. Throwing would discard the
+ * eleven that read fine and give the caller nothing to act on, so each outcome
+ * is carried and the tool reports the failures by reason.
+ */
+export async function captureMany(urls: string[], opts: CaptureOpts = {}): Promise<CaptureOutcome[]> {
+  const limits = limitsFrom(opts);
+  return withBrowser(async (browser) => {
+    const out: CaptureOutcome[] = [];
+    for (const url of urls) {
+      try {
+        const result = (await readPage(browser, url, opts.width ?? 1440, (page) =>
+          page.evaluate(capturePage, limits),
+        )) as CaptureResult;
+        out.push({ url, ok: true, result });
+      } catch (e) {
+        out.push({ url, ok: false, why: (e as Error).message.slice(0, 160) });
+      }
+    }
+    return out;
+  });
+}
+
+/**
+ * Every link on a page, absolute.
+ *
+ * A SECOND, TINY EVALUATE RATHER THAN A FIELD ON `capturePage`. Discovery
+ * visits pages the import may never take — that is what a depth-2 crawl IS —
+ * and running the whole leaf walk on each of them would pay for content that is
+ * thrown away. This asks the one question discovery has.
+ *
+ * Everything it uses is declared INSIDE it: the function is serialized, so a
+ * module-level constant it closes over simply is not there on the other side.
+ */
+function linksOnPage(): { title: string; links: string[] } {
+  const here = location.href;
+  const links: string[] = [];
+  const anchors = Array.from(document.querySelectorAll('a[href]'));
+  for (const a of anchors) {
+    const h = a.getAttribute('href');
+    if (!h) continue;
+    try {
+      links.push(new URL(h, here).href);
+    } catch {
+      // `new URL(rel, base)` THROWS on a non-hierarchical base (a data: page).
+      // One unresolvable href must not kill the crawl.
+    }
+  }
+  return { title: document.title, links };
+}
+
+/**
+ * Walk a site's own links from one entry page, breadth first.
+ *
+ * THE FALLBACK, never the first choice — every step is a browser navigation, so
+ * the sitemap path exists to avoid this entirely. Bounded on both axes: `depth`
+ * limits how far from the entry a page may be, `maxVisits` limits how many
+ * navigations the whole crawl may spend, and the queue is filtered by the
+ * caller's own `keep` so the bound is spent on pages that could actually become
+ * pages.
+ */
+export async function crawlLinks(
+  entry: string,
+  opts: {
+    depth?: number;
+    maxVisits?: number;
+    /**
+     * Called with a raw absolute href: returns its ONE canonical spelling, or
+     * null to drop it before it costs a navigation.
+     *
+     * A predicate is not enough. `/a`, `/a/` and `/a#top` are one page under
+     * three names, so a crawl that dedupes on the raw href visits it three times
+     * and reports three pages — and the caller is the half that knows how this
+     * platform folds them.
+     */
+    canon: (url: string) => string | null;
+  },
+): Promise<{ urls: string[]; titles: Map<string, string>; visited: number }> {
+  const depth = Math.max(0, opts.depth ?? 1);
+  const maxVisits = opts.maxVisits ?? 24;
+  const found = new Set<string>([entry]);
+  const titles = new Map<string, string>();
+  let visited = 0;
+  await withBrowser(async (browser) => {
+    let frontier = [entry];
+    // NAVIGATE ONLY WHILE THE LINKS CAN STILL BE USED. `depth` is how far from
+    // the entry a discovered page may be, so the pages AT that distance are
+    // results and are never opened: opening them would pay a navigation each for
+    // links the bound has already ruled out. The import pass opens them anyway.
+    for (let level = 0; level < depth && frontier.length > 0; level += 1) {
+      const next: string[] = [];
+      for (const url of frontier) {
+        if (visited >= maxVisits) break;
+        visited += 1;
+        try {
+          const got = await readPage(browser, url, 1440, (page) => page.evaluate(linksOnPage));
+          if (got.title) titles.set(url, got.title);
+          // A LEVEL BELOW THE LAST IS WALKED FOR ITS LINKS AND NOT QUEUED: at
+          // `depth` the crawl still wants what that page points at, it just
+          // must not navigate any further.
+          for (const raw of got.links) {
+            const url2 = opts.canon(raw);
+            if (!url2 || found.has(url2)) continue;
+            found.add(url2);
+            next.push(url2);
+          }
+        } catch {
+          // A page that will not open contributes nothing and ends nothing.
+        }
+      }
+      frontier = next;
+    }
+  });
+  return { urls: [...found], titles, visited };
 }
