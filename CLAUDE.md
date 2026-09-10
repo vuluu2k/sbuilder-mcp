@@ -926,6 +926,23 @@ that accounts for them.
   satellite `createNode` mints on its own. The label is OMITTED when the source had none rather
   than defaulted, because inventing one ships English copy into a store that is not in English.
 
+- **A PAGE AN AGENT CREATED WAS NOT PART OF THE SITE.** A page created through the editor
+  carries the site's header and footer; `sb_page_create` attached NEITHER, so a site built with
+  these tools was a stack of pages with no navigation and no footer — on a site that has both.
+  Nothing reported it: `sb_review` reads the page and the page is fine, `siteChrome` asks
+  whether the SITE has globals and it does, and `measure` sees no defect in a band that is
+  simply absent. Measured by building one: three pages, every one bare, beside a store page
+  carrying its header as ROOT's first child.
+
+  **READ OFF THE HOME PAGE, never picked by name or by order.** A site can hold several globals
+  of each kind — the store measured here holds four headers and two footers, most of them
+  experiments — so "the first header" is a guess and a name is a label nobody promised to keep.
+  Whatever chrome the home page wears IS this site's chrome. The reference is the platform's own
+  shape (`decompose.go:382`) and goes in FIRST and LAST, because compose turns them into real
+  bands and ROOT's children must read header, middle, footer. Silent when there is no home page
+  to read: a page created without its chrome is one a person can fix, and a page created with
+  the WRONG chrome is one nobody notices.
+
 - **A PICTURE SLOT TAKES A REAL IMAGE OR SAYS SO IN WORDS — never a grey box, never stock.**
   A pattern library invites a placeholder, and both kinds are worse than an empty slot: rule 7
   already records that keyword stock is not a source (`loremflickr` answered "kids,clothing"

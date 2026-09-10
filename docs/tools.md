@@ -576,6 +576,16 @@ line, read from the platform's own i18n so a Vietnamese store does not open in E
 seed is a second write: if it fails, the page exists and is blank, and the result says so
 rather than failing the create.
 
+**The new page WEARS THE SITE'S CHROME.** A page created through the editor carries the site's
+header and footer; one created here carried neither, so an agent building a site produced pages
+with no navigation and no footer on a site that has both — and nothing reported it, because
+`sb_review` reads the page and the page is fine while `siteChrome` asks whether the SITE has
+globals and it does. The header and footer are read off the HOME PAGE rather than picked by
+name or by order: a site can hold several of each (the store measured here holds four headers),
+and the home page is the site's own answer to which one is its chrome. The reference goes in
+first and last, which is the band order every save is checked against. `chrome: false` opts
+out, and a site with no home page to read is left alone rather than guessed at.
+
 `sb_publish` **cascades**: a page sharing a global section with others republishes them too,
 because a header edited once must not go live on one page and stay stale on the rest.
 

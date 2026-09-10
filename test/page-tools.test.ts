@@ -412,3 +412,93 @@ describe('a nested add stores each child exactly once', () => {
     await close();
   });
 });
+
+/**
+ * A PAGE AN AGENT CREATES IS PART OF THE SITE, or it is a stray.
+ *
+ * A page created through the editor carries the site's header and footer; one
+ * created here carried NEITHER — so an agent building a site produced pages with
+ * no navigation and no footer on a site that has both, and nothing reported it:
+ * `sb_review` reads the page and the page is fine, while `siteChrome` asks
+ * whether the SITE has globals and it does. Measured on a live store — three
+ * pages built with these tools, every one bare, beside a store page carrying its
+ * header as ROOT's first child.
+ */
+describe('a created page wears the site chrome', () => {
+  const homeDoc = {
+    schema_version: 2,
+    root_node_id: 'ROOT',
+    nodes: {
+      ROOT: { id: 'ROOT', data: { type: 'root', parent: null, nodes: ['h', 'mid', 'f'] }, specials: {} },
+      h: { id: 'h', data: { type: 'flex-section', parent: 'ROOT', nodes: [] }, specials: { globalId: 'gs_head', globalKind: 'header' } },
+      mid: { id: 'mid', data: { type: 'flex-section', parent: 'ROOT', nodes: [] }, specials: {} },
+      f: { id: 'f', data: { type: 'flex-section', parent: 'ROOT', nodes: [] }, specials: { globalId: 'gs_foot', globalKind: 'footer' } },
+    },
+  };
+
+  function siteServing(saved: Array<Record<string, unknown>>, homepage = true) {
+    return (async (input: string | URL, init?: RequestInit) => {
+      const u = String(input);
+      const json = (b: unknown, status = 200) =>
+        new Response(JSON.stringify(b), { status, headers: { 'content-type': 'application/json' } });
+      if (init?.method === 'PUT' && u.includes('/source')) {
+        saved.push(JSON.parse(String(init.body)) as Record<string, unknown>);
+        // The envelope the save reads back: it re-stamps each shared master's
+        // new revision from it, and a bare {} is not a shape the platform ever
+        // sends.
+        return json({ source: { globals: [], overlays: [] } });
+      }
+      if (init?.method === 'POST' && u.endsWith('/pages')) return json({ page: { id: 'pg_new', slug: 'x' } });
+      if (u.endsWith('/pages')) {
+        return json({ pages: [{ id: 'pg_home', slug: '', isHomepage: homepage }] });
+      }
+      if (u.includes('/pages/pg_home/source')) return json({ source: { document: homeDoc } });
+      if (u.includes('/source')) {
+        return json({ source: { document: { schema_version: 2, root_node_id: '', nodes: {} } } });
+      }
+      return json({});
+    }) as unknown as typeof fetch;
+  }
+
+  async function create(f: typeof fetch, args: Record<string, unknown> = {}) {
+    const session = new Session('http://x', f);
+    (session as unknown as { access: string }).access = 'jwt';
+    const { client, close } = await connectedClient({ fetchImpl: f, session });
+    const res = (await client.callTool({
+      name: 'sb_page_create',
+      arguments: { site_id: 's1', name: 'Liên hệ', dry_run: false, ...args },
+    })) as { content: Array<{ text?: string }> };
+    await close();
+    return JSON.parse(res.content[0].text!);
+  }
+
+  it('carries the HOME PAGE\'s header and footer, first and last', async () => {
+    // A site can hold several globals of each kind — the live one holds four
+    // headers — so "the first header" is a guess and a name is a label nobody
+    // promised to keep. The home page is the site's own answer.
+    const saved: Array<Record<string, unknown>> = [];
+    const out = await create(siteServing(saved));
+    expect(out.chrome.carries).toEqual(['header', 'footer']);
+
+    const doc = (saved.at(-1) as { document: { root_node_id: string; nodes: Record<string, { specials?: Record<string, unknown> }> } }).document;
+    const kids = (doc.nodes[doc.root_node_id] as unknown as { data: { nodes: string[] } }).data.nodes;
+    // Header FIRST and footer LAST, because compose turns them into real bands
+    // and ROOT's children must read header, middle, footer or every save is
+    // refused.
+    expect(doc.nodes[kids[0]].specials).toMatchObject({ globalRef: 'gs_head', globalKind: 'header' });
+    expect(doc.nodes[kids[kids.length - 1]].specials).toMatchObject({ globalRef: 'gs_foot', globalKind: 'footer' });
+    // The REFERENCE key, never the composed stamp — authoring globalId makes the
+    // next save decompose the node over the master and empty it for every page.
+    for (const k of kids) expect(doc.nodes[k].specials?.globalId).toBeUndefined();
+  });
+
+  it('is silent when the site has no home page to read it off', async () => {
+    const out = await create(siteServing([], false));
+    expect(out.chrome).toBeUndefined();
+  });
+
+  it('takes no for an answer', async () => {
+    const out = await create(siteServing([]), { chrome: false });
+    expect(out.chrome).toBeUndefined();
+  });
+});

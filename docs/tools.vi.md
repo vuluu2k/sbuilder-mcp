@@ -546,7 +546,16 @@ danh sách rỗng.
 và `complete` mở ra với đúng tài liệu mà editor đưa cho người bán — sinh bằng cách GỌI các card
 của palette chứ không chép lại, nên hôm nào card thêm mảnh thì cả hai cửa cùng có. Trang product
 mang nguyên buy box (gallery, tiêu đề, giá, chọn biến thể, mô tả, bộ tăng giảm số lượng, Thêm vào
-giỏ, Mua ngay) đã bind sẵn, kèm BINDING `add_to_cart` — thứ khó đoán nhất. Truyền `seed:false`
+giỏ, Mua ngay) đã bind sẵn, kèm BINDING `add_to_cart` — thứ khó đoán nhất. **Trang mới MANG CHROME CỦA SITE.** Trang tạo qua editor thì có sẵn header và footer của site;
+trang tạo ở đây thì không có gì cả — nên agent dựng site sẽ ra những trang không menu, không
+footer, trên một site có đủ cả hai, và không gì báo cả: `sb_review` đọc trang thì trang không
+sai, còn `siteChrome` hỏi SITE có global không thì có. Header và footer được đọc từ **TRANG
+CHỦ** chứ không chọn theo tên hay thứ tự: một site có thể giữ nhiều cái mỗi loại (store đo được
+ở đây có bốn header), và trang chủ là câu trả lời của chính site cho câu hỏi cái nào là chrome.
+Tham chiếu đặt ở đầu và cuối — đúng thứ tự dải mà mọi lần lưu đều bị kiểm. `chrome: false` để
+tắt, và site không có trang chủ để đọc thì được để yên chứ không đoán.
+
+Truyền `seed:false`
 nếu muốn trang trắng. `locale` (mặc định `vi`, hoặc `en`) và `headline` chọn câu cảm ơn của trang
 complete, đọc từ i18n của nền tảng để cửa hàng tiếng Việt không mở ra bằng tiếng Anh. Seed là lệnh
 ghi THỨ HAI: nếu nó hỏng thì trang vẫn được tạo và đang trắng, kết quả nói rõ điều đó chứ không

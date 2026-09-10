@@ -263,6 +263,48 @@ const specSchema: z.ZodType<NodeSpec> = z.lazy(() =>
   }),
 );
 
+/**
+ * THE SITE'S OWN HEADER AND FOOTER, read off the page that already answers it.
+ *
+ * A site can hold several globals of each kind — this one holds four headers and
+ * two footers, most of them experiments — so "the first header" is a guess and
+ * a name is a label nobody promised to keep. The HOME PAGE is the site's own
+ * answer: whatever chrome it carries is the chrome this site wears.
+ *
+ * Silent on anything it cannot read. A page created without its chrome is a page
+ * a person can fix; a page created with the WRONG chrome is one nobody notices.
+ */
+async function siteChrome(
+  ctx: ToolContext,
+  siteId: string,
+): Promise<{ header?: string; footer?: string }> {
+  try {
+    const listed = (await request({
+      base: ctx.base,
+      method: 'GET',
+      path: `/api/sites/${encodeURIComponent(siteId)}/pages`,
+      token: siteToken(ctx),
+      fetchImpl: ctx.fetchImpl,
+    })) as { pages?: Array<Record<string, unknown>> };
+    const home = (listed.pages ?? []).find((p) => p.isHomepage === true);
+    if (!home || typeof home.id !== 'string') return {};
+    const src = await loadSource(ctx, siteId, home.id);
+    const doc = PageDoc.from(src.document);
+    const out: { header?: string; footer?: string } = {};
+    for (const id of doc.node(doc.doc.root_node_id).data.nodes) {
+      const sp = doc.doc.nodes[id]?.specials as Record<string, unknown> | undefined;
+      const gid = sp?.globalId;
+      const kind = sp?.globalKind;
+      if (typeof gid !== 'string') continue;
+      if (kind === 'header' && !out.header) out.header = gid;
+      if (kind === 'footer' && !out.footer) out.footer = gid;
+    }
+    return out;
+  } catch {
+    return {};
+  }
+}
+
 export function registerPageTools(server: McpServer, ctx: ToolContext): PageSession {
   const session = new PageSession(ctx);
 
@@ -955,13 +997,14 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
       is_homepage: z.boolean().optional(),
       settings: z.record(z.unknown()).optional(),
       seed: z.boolean().optional().describe('Default true; false creates a blank page.'),
+      chrome: z.boolean().optional().describe("Carry the site's header and footer, default true"),
       locale: z.string().optional().describe("vi (default) or en — the complete page's wording."),
       headline: z.string().optional().describe("The complete page's thank-you line."),
       dry_run: z.boolean().optional(),
     },
       annotations: { readOnlyHint: false, destructiveHint: false },
     },
-    async ({ site_id: given, name, type, slug, is_homepage, settings, seed, locale, headline, dry_run }) => {
+    async ({ site_id: given, name, type, slug, is_homepage, settings, seed, chrome, locale, headline, dry_run }) => {
       const site_id = siteFor(ctx, given);
       const path = `/api/sites/${encodeURIComponent(site_id)}/pages`;
       // TYPE IS THE ROUTE for several kinds of page: /checkout and
@@ -986,12 +1029,25 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
       // exists.
       const willSeed = seed !== false && hasSeed(type);
       const summary = willSeed && type ? seedSummary(type) : null;
+      // WHAT MAKES THE NEW PAGE PART OF THE SITE.
+      //
+      // A page created through the editor carries the site's header and footer;
+      // one created here carried NEITHER, so an agent building a site produced
+      // pages with no navigation and no footer on a site that has both — and
+      // nothing reported it, because `sb_review` reads the page and the page is
+      // fine, while `siteChrome` asks whether the SITE has globals and it does.
+      // Measured: three pages built with these tools, every one of them bare,
+      // beside a store page carrying its header as ROOT's first child.
+      const wear = chrome !== false ? await siteChrome(ctx, site_id) : {};
       if (dry_run !== false) {
         return text({
           dry_run: true,
           would_post: path,
           body: redact(body),
           ...(summary ? { would_seed: { type, ...summary } } : {}),
+          ...(wear.header || wear.footer
+            ? { would_wear: { ...(wear.header ? { header: wear.header } : {}), ...(wear.footer ? { footer: wear.footer } : {}) } }
+            : {}),
         });
       }
       const res = redact(
@@ -1046,9 +1102,48 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
         }
       }
 
+      // THE REFERENCE SHAPE IS THE PLATFORM'S OWN (decompose.go:382): a
+      // flex-section carrying `globalRef` + `globalKind`. Header FIRST and
+      // footer LAST, because compose turns them into real bands and ROOT's
+      // children must read header, middle, footer or every save is refused.
+      let wearing: Record<string, unknown> | undefined;
+      if ((wear.header || wear.footer) && typeof newId === 'string' && newId) {
+        try {
+          await session.open(site_id, newId);
+          const doc = session.current();
+          const patches: Patch[] = [];
+          const ids: string[] = [];
+          if (wear.header) {
+            const made = addSubtree(doc, doc.doc.root_node_id, {
+              type: 'flex-section',
+              specials: { globalRef: wear.header, globalKind: 'header' },
+            }, 0);
+            doc.apply(made.patches);
+            ids.push('header');
+          }
+          if (wear.footer) {
+            const made = addSubtree(doc, doc.doc.root_node_id, {
+              type: 'flex-section',
+              specials: { globalRef: wear.footer, globalKind: 'footer' },
+            });
+            doc.apply(made.patches);
+            ids.push('footer');
+          }
+          void patches;
+          await session.save();
+          wearing = { carries: ids, open: newId };
+        } catch (e) {
+          wearing = {
+            failed: (e as Error).message.replace(/^sbuilder:\s*/, '').slice(0, 160),
+            note: 'The page exists. Attach the chrome by hand, or create it again.',
+          };
+        }
+      }
+
       return text({
         ...res,
         ...(seeded ? { seeded } : {}),
+        ...(wearing ? { chrome: wearing } : {}),
         ...(renamed
           ? {
               slug_renamed: `The slug "${slug}" was already taken, so the platform stored ` +
