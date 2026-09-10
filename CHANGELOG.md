@@ -6,6 +6,16 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.30.0] - 2026-09-10
+
+### Added
+- A new tool, sb_theme, reads the site's colour tokens and text styles and can now write them: `colors` and `text_styles` patch the saved theme document, keeping every field you do not name, and an unknown token id or style slug is refused with the real ones listed. A site that has never saved a theme reads back the starter theme rather than an empty document.
+- sb_traits_for now describes `config.animation` on every element that offers it (73 of 111), naming the four ways a write silently renders nothing: it must be an object rather than a bare string, `active: true` is required, the `type` value is spelled with underscores, and the write is base-only.
+- sb_set now warns when a `config.animation` write will not animate: a value that is not an object, a missing `active: true`, an unrecognised `type`, or an unrecognised `easing` (which falls back to a curve you did not choose) are each named individually.
+
+### Fixed
+- sb_set now routes a `config.animation` write to the base breakpoint instead of a per-breakpoint slot the renderer never reads, closing the fourth silent way to lose the animation.
+
 ## [0.29.0] - 2026-09-10
 
 ### Added

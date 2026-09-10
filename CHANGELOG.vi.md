@@ -6,6 +6,16 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.30.0] - 2026-09-10
+
+### Added
+- Một tool mới, sb_theme, đọc bảng màu và text style của site và giờ có thể ghi chúng: `colors` và `text_styles` patch vào theme document đã lưu, giữ nguyên mọi trường không được nêu tên, còn một token id hay style slug không tồn tại sẽ bị từ chối kèm danh sách các id thật. Một site chưa từng lưu theme sẽ đọc lại theme mặc định (starter) thay vì một document rỗng.
+- sb_traits_for giờ mô tả `config.animation` trên mọi element có cung cấp nó (73 trong 111 element), nêu rõ bốn cách khiến việc ghi âm thầm không tạo ra hiệu ứng nào: nó phải là một object thay vì một chuỗi đơn thuần, `active: true` là bắt buộc, giá trị `type` được viết bằng dấu gạch dưới, và việc ghi chỉ áp dụng ở base breakpoint.
+- sb_set giờ cảnh báo khi một lệnh ghi `config.animation` sẽ không tạo hiệu ứng: giá trị không phải object, thiếu `active: true`, `type` không nhận diện được, hoặc `easing` không nhận diện được (sẽ rơi về một đường cong bạn không hề chọn) — mỗi trường hợp được nêu tên riêng.
+
+### Fixed
+- sb_set giờ định tuyến lệnh ghi `config.animation` vào breakpoint base thay vì một vị trí theo từng breakpoint mà renderer không bao giờ đọc tới, khép lại cách thứ tư khiến hiệu ứng bị mất một cách âm thầm.
+
 ## [0.29.0] - 2026-09-10
 
 ### Added
