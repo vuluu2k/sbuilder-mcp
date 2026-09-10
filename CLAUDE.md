@@ -926,6 +926,19 @@ that accounts for them.
   satellite `createNode` mints on its own. The label is OMITTED when the source had none rather
   than defaulted, because inventing one ships English copy into a store that is not in English.
 
+- **A PICTURE SLOT TAKES A REAL IMAGE OR SAYS SO IN WORDS — never a grey box, never stock.**
+  A pattern library invites a placeholder, and both kinds are worse than an empty slot: rule 7
+  already records that keyword stock is not a source (`loremflickr` answered "kids,clothing"
+  with a cat statue), and a grey box reads as unfinished because it is. The site's OWN library
+  is the honest source — measured on a live store, 164 assets, 50 of them images — so
+  `sb_template_use` reads it and hands the pattern what the merchant already owns. A landscape
+  is preferred where the layout wants one, which is rule 6 before the fact rather than after
+  it. An empty library produces a sentence naming `sb_media_upload`, not a frame.
+
+  **AND WHAT THE PAGE IS ALREADY SHOWING COMES OUT OF THE POOL.** Each call starts its own
+  selection, so a hero added first and a gallery added second both reached for the same best
+  landscape and the page showed one photo twice — which reads as a mistake because it is one.
+
 - **AN AGENT ASKED FOR "A HERO" HAD 111 ELEMENTS AND NO LAYOUT.** Every band was invented from
   flex-blocks on the spot, which is why a generated page reads as generated — the elements are
   right, the composition is a guess, and the guess is different on every section of the same

@@ -519,6 +519,13 @@ thì lấy theo **theme của site**, mang dạng `var(--wb-color-…)` chứ kh
 cứng trên node sẽ vĩnh viễn thắng style preset bên dưới, nên một band đóng đinh màu hôm nay sẽ
 ngừng đi theo theme ngay khi theme đổi.
 
+**Ô ảnh lấy ẢNH THẬT, từ thư viện của chính site.** `sb_template_use` đọc thư viện rồi đưa cho
+mẫu những ảnh merchant đã có, ưu tiên ảnh ngang ở chỗ bố cục cần, và không lặp lại ảnh mà trang
+đang hiển thị. Đây là nguồn trung thực duy nhất: ảnh stock theo từ khoá thì không phải (chính
+lần dựng của repo này từng nhận về một bức tượng mèo cho "kids,clothing"), còn hộp xám thì đọc
+ra là chưa làm xong — vì đúng là chưa xong. Site có thư viện rỗng sẽ nhận một câu chỉ tới
+`sb_media_upload` thay vì một placeholder.
+
 Các mẫu được dựng dưới dạng cây capture rồi đi qua đúng mapper mà một lần import đi qua, nên mỗi
 mẫu tự thừa hưởng câu trả lời cho rule 0, 1 và 3 — token của trang, điểm gãy dọc trên mọi hàng,
 và cột cao đúng bằng nội dung khi hàng xuống dọc.

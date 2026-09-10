@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { LAYOUT_PATTERNS, PATTERN_BY_ID, THEME_TOKENS } from '../src/domains/site/patterns.js';
+import { LAYOUT_PATTERNS, PATTERN_BY_ID, THEME_TOKENS, type MediaPick } from '../src/domains/site/patterns.js';
 import { PageDoc } from '../src/domains/site/document.js';
 import { addSubtree } from '../src/domains/site/builder.js';
 import { validateForSave } from '../src/domains/site/validate.js';
@@ -96,5 +96,65 @@ describe('a centred band centres its BUTTON too', () => {
     const band = PATTERN_BY_ID.get('sb_cta_band')!.build(tokens)!;
     expect(band.style?.alignItems).toBe('center');
     expect(band.children![0].style?.alignItems).toBe('center');
+  });
+});
+
+/**
+ * A REAL IMAGE, OR WORDS — never a grey box and never stock.
+ *
+ * The instinct a pattern library invites is a placeholder, and both kinds are
+ * worse than an empty slot: this repo already records that keyword stock is not
+ * a source (`loremflickr` answered "kids,clothing" with a cat statue), and a
+ * grey box reads as unfinished because it is. The site's own library is the
+ * honest source — measured on a live store, 164 assets, 50 of them images.
+ */
+describe('the picture slot', () => {
+  const wide: MediaPick = { url: 'https://cdn/wide.jpg', name: 'Bờ biển', width: 1200, height: 600 };
+  const tall: MediaPick = { url: 'https://cdn/tall.jpg', name: 'Chân dung', width: 600, height: 1200 };
+  const hero = () => PATTERN_BY_ID.get('sb_hero_split')!;
+  const gallery = () => PATTERN_BY_ID.get('sb_gallery')!;
+
+  it("uses an image the site owns, with the library's own name as its alt", () => {
+    const json = JSON.stringify(hero().build(tokens, [wide]));
+    expect(json).toContain('https://cdn/wide.jpg');
+    expect(json).toContain('Bờ biển');
+  });
+
+  it('prefers a LANDSCAPE for a hero panel, which is rule 6 before the fact', () => {
+    // A hero panel filled with a portrait crop is the aspect-ratio mistake, so
+    // the shape is asked for — and it degrades to any unused image rather than
+    // to none.
+    expect(JSON.stringify(hero().build(tokens, [tall, wide]))).toContain('wide.jpg');
+    expect(JSON.stringify(hero().build(tokens, [tall]))).toContain('tall.jpg');
+  });
+
+  it('says so IN WORDS when the library is empty, rather than shipping a grey box', () => {
+    const json = JSON.stringify(hero().build(tokens, []));
+    expect(json).not.toContain('"image"');
+    expect(json).toMatch(/sb_media_upload/);
+  });
+
+  it('never shows the same photo twice in one band', () => {
+    const pool: MediaPick[] = Array.from({ length: 6 }, (_, i) => ({
+      url: `https://cdn/${i}.jpg`,
+      width: 800,
+      height: 600,
+    }));
+    const json = JSON.stringify(gallery().build(tokens, pool));
+    const used = (json.match(/https:\/\/cdn\/\d\.jpg/g) ?? []);
+    expect(used.length).toBe(new Set(used).size);
+    expect(used.length).toBeGreaterThan(1);
+  });
+
+  it('bounds the gallery — a merchant with 164 assets does not want 164 in one band', () => {
+    const pool: MediaPick[] = Array.from({ length: 40 }, (_, i) => ({ url: `https://cdn/${i}.jpg` }));
+    const used = JSON.stringify(gallery().build(tokens, pool)).match(/https:\/\/cdn\//g) ?? [];
+    expect(used.length).toBeLessThanOrEqual(6);
+  });
+
+  it('a gallery with nothing to show is a sentence, not an empty band', () => {
+    const json = JSON.stringify(gallery().build(tokens, []));
+    expect(json).toMatch(/sb_media_upload/);
+    expect(json).not.toContain('"image"');
   });
 });

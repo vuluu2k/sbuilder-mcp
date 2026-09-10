@@ -4,12 +4,12 @@
 import type { RequestShape } from './types.js';
 
 export const SHAPE_SOURCE = {
-  "writeOperations": 216,
-  "shaped": 166,
-  "fromHandlers": 166,
+  "writeOperations": 218,
+  "shaped": 168,
+  "fromHandlers": 168,
   "fromSwaggerOnly": 0,
   "withReadOnly": 26,
-  "structsRead": 1647
+  "structsRead": 1649
 } as const;
 
 export const REQUEST_SHAPES: Record<string, RequestShape> = {
@@ -3675,6 +3675,24 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
     "source": "go",
     "goType": "(inline)"
   },
+  "post:/api/media/{siteId}/from-url": {
+    "fields": [
+      {
+        "name": "url",
+        "type": "string"
+      },
+      {
+        "name": "folderId",
+        "type": "string"
+      },
+      {
+        "name": "name",
+        "type": "string"
+      }
+    ],
+    "source": "go",
+    "goType": "fromURLRequest"
+  },
   "put:/api/sites/{siteId}/media/assets/{assetId}": {
     "fields": [
       {
@@ -6785,6 +6803,33 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
       },
       {
         "name": "field",
+        "type": "string"
+      }
+    ],
+    "source": "go",
+    "goType": "(inline)"
+  },
+  "post:/api/sites/{siteId}/translations/review/bulk": {
+    "fields": [
+      {
+        "name": "locale",
+        "type": "string"
+      },
+      {
+        "name": "Entries",
+        "type": "object"
+      },
+      {
+        "name": "all",
+        "type": "boolean",
+        "note": "All asks for the whole match set instead of a list."
+      },
+      {
+        "name": "search",
+        "type": "string"
+      },
+      {
+        "name": "entity",
         "type": "string"
       }
     ],

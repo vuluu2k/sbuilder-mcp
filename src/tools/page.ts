@@ -32,7 +32,12 @@ import { readinessGaps, READINESS_NOTICE } from '../domains/site/readiness.js';
 import { gatherReadiness } from '../domains/site/readiness-fetch.js';
 import { globalWarning, restampPatches, RESPONSIVE_NOTICE } from '../domains/site/traps.js';
 import { catalogMatches, traitsFor } from '../catalog/element-search.js';
-import { LAYOUT_PATTERNS, PATTERN_BY_ID, THEME_TOKENS } from '../domains/site/patterns.js';
+import {
+  LAYOUT_PATTERNS,
+  PATTERN_BY_ID,
+  THEME_TOKENS,
+  type MediaPick,
+} from '../domains/site/patterns.js';
 import { tokensFromPage } from '../domains/site/importmap.js';
 import { middleEnd } from '../domains/site/traps.js';
 import { applyPatches, type Patch } from '../core/patch.js';
@@ -809,7 +814,43 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
         // goes on following the theme instead of freezing today's hex into it.
         const fromTheme = Object.keys(read).length === 0;
         const tokens = fromTheme ? THEME_TOKENS : read;
-        const spec = pattern.build(tokens);
+        // REAL IMAGES, from the site's own library. The instinct a pattern
+        // library invites is a placeholder — a grey box or a stock photo keyed
+        // off a word — and this repo already records why the second is not a
+        // source (`loremflickr` answered "kids,clothing" with a cat statue). The
+        // merchant's own uploads are the honest answer, and a failure to read
+        // them costs the picture, never the band.
+        let pool: MediaPick[] = [];
+        try {
+          const listed = (await request({
+            base: ctx.base,
+            method: 'GET',
+            path: `/api/sites/${encodeURIComponent(site_id)}/media?limit=50`,
+            token: siteToken(ctx),
+            fetchImpl: ctx.fetchImpl,
+          })) as { media?: Array<Record<string, unknown>>; assets?: Array<Record<string, unknown>> };
+          const rows = listed.media ?? listed.assets ?? [];
+          pool = rows
+            .filter((m) => m.mediaType === 'image' && typeof m.url === 'string' && m.state !== 'deleted')
+            .map((m) => ({
+              url: String(m.url),
+              name: typeof m.name === 'string' ? m.name : undefined,
+              width: typeof m.width === 'number' ? m.width : undefined,
+              height: typeof m.height === 'number' ? m.height : undefined,
+            }));
+        } catch {
+          // A library that cannot be read leaves the picture slot saying so.
+        }
+        // WHAT THE PAGE IS ALREADY SHOWING comes out of the pool. Each call
+        // starts its own selection, so a hero added first and a gallery added
+        // second both reached for the same best landscape — and the page then
+        // showed one photo twice, which reads as a mistake because it is one.
+        const onPage = new Set(
+          Object.values(doc.doc.nodes)
+            .map((n) => (n as { specials?: Record<string, unknown> }).specials?.src)
+            .filter((v): v is string => typeof v === 'string' && v.length > 0),
+        );
+        const spec = pattern.build(tokens, pool.filter((m) => !onPage.has(m.url)));
         if (!spec) {
           throw new Error(`sbuilder: the built-in "${template_id}" produced nothing to add.`);
         }
@@ -821,6 +862,7 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
             nodes: ids.length,
             into: page_id,
             tokens_from: fromTheme ? "this site's theme — the page has no look of its own yet" : 'this page',
+            images_available: pool.length,
             note:
               'Composed against THIS page\'s tokens, not copied — the same heading ink, button ' +
               'fill and section padding the page already uses. Pass dry_run:false to add it.',
@@ -833,6 +875,14 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
           nodes: ids.length,
           into: page_id,
           rev: doc.rev,
+          ...(pool.length === 0
+            ? {
+                images:
+                  'This site has no images in its library, so any picture slot in this band says ' +
+                  'so in words rather than showing a grey box. sb_media_upload takes a URL and ' +
+                  'the platform fetches it server-side.',
+              }
+            : {}),
           ...(fromTheme
             ? {
                 tokens_from:

@@ -28,7 +28,39 @@ export interface LayoutPattern {
   name: string;
   /** What it is for, in the words a caller would use to look for it. */
   use: string;
-  build: (t: PageTokens) => NodeSpec | null;
+  build: (t: PageTokens, pool?: MediaPick[]) => NodeSpec | null;
+}
+
+/** One image the site already owns. */
+export interface MediaPick {
+  url: string;
+  name?: string;
+  width?: number;
+  height?: number;
+}
+
+/**
+ * A REAL IMAGE, from the site's own library, or nothing.
+ *
+ * The instinct a pattern library invites is a placeholder — a grey box, a stock
+ * photo keyed off a word — and both are worse than an empty slot. This repo
+ * already records why stock is not a source: `loremflickr` answered
+ * "kids,clothing" with a cat statue and a photo of an adult, and ten photos from
+ * ten sources read as a scrape. A grey box reads as unfinished, which it is.
+ *
+ * The library is the honest source: those are the merchant's own images, already
+ * uploaded, already the right subject. Measured on a live store: 164 assets, 50
+ * of them images. A `want` of "landscape" is a shape request, not a subject one —
+ * a hero panel filled with a portrait crop is the aspect-ratio mistake rule 6 is
+ * about — and it degrades to any unused image rather than to none.
+ */
+function pick(pool: MediaPick[] | undefined, used: Set<string>, want: 'landscape' | 'any'): MediaPick | null {
+  if (!pool?.length) return null;
+  const free = pool.filter((m) => m.url && !used.has(m.url));
+  const wide = free.filter((m) => (m.width ?? 0) > (m.height ?? 0));
+  const chosen = (want === 'landscape' && wide[0]) || free[0] || null;
+  if (chosen) used.add(chosen.url);
+  return chosen;
 }
 
 /**
@@ -84,15 +116,18 @@ const row = (children: Captured[], wrap = false): Captured => ({
 const h = (text: string, level = 2): Captured => ({ kind: 'heading', level, text });
 const p = (text: string): Captured => ({ kind: 'text', text });
 const cta = (text: string, href = '#'): Captured => ({ kind: 'button', variant: 'cta', text, href });
-const img = (alt: string): Captured => ({
-  // A PLACEHOLDER WITH NO SRC IS DROPPED by the mapper, which is right — an
-  // empty frame is not content. So a pattern that wants a picture says so in
-  // words and the caller points sb_set at it, rather than the page shipping a
-  // grey box nobody chose.
-  kind: 'image',
-  src: '',
-  alt,
-});
+/**
+ * The picture slot: a real image when the site has one, and WORDS when it does
+ * not.
+ *
+ * An image with no src is dropped by the mapper, which is right — an empty frame
+ * is not content — so the fallback is a sentence naming the call that fills it,
+ * not a grey box. A grey box reads as unfinished because it is.
+ */
+const img = (m: MediaPick | null, alt: string, hint: string): Captured =>
+  m
+    ? { kind: 'image', src: m.url, alt: m.name ?? alt }
+    : { kind: 'text', text: hint };
 
 /**
  * The set. Deliberately small and deliberately ordinary: these are the bands
@@ -104,16 +139,28 @@ export const LAYOUT_PATTERNS: LayoutPattern[] = [
     id: 'sb_hero_split',
     name: 'Hero — hai cột',
     use: 'Mở đầu trang: tiêu đề, một câu, nút hành động bên trái; chỗ cho ảnh bên phải',
-    build: (t) =>
-      section(
+    build: (t, pool) => {
+      const used = new Set<string>();
+      return section(
         [
           row([
             { kind: 'group', direction: 'column', children: [h('Tiêu đề chính', 1), p('Một câu nói rõ bạn bán gì và cho ai.'), cta('Mua ngay')] },
-            { kind: 'group', direction: 'column', children: [p('Đặt ảnh vào đây — sb_add một image, hoặc sb_set src lên khối này.')] },
+            {
+              kind: 'group',
+              direction: 'column',
+              children: [
+                img(
+                  pick(pool, used, 'landscape'),
+                  'Ảnh mở đầu',
+                  'Chưa có ảnh nào trong thư viện — sb_media_upload một URL, rồi sb_set src lên khối này.',
+                ),
+              ],
+            },
           ]),
         ],
         t,
-      ),
+      );
+    },
   },
   {
     id: 'sb_hero_centered',
@@ -173,6 +220,33 @@ export const LAYOUT_PATTERNS: LayoutPattern[] = [
         { alignItems: 'center', textAlign: 'center' },
         { alignItems: 'center' },
       ),
+  },
+  {
+    id: 'sb_gallery',
+    name: 'Dải ảnh',
+    use: 'Một hàng ảnh cuốn dòng, lấy từ thư viện ảnh của chính site',
+    build: (t, pool) => {
+      const used = new Set<string>();
+      const shots: Captured[] = [];
+      // SIX IS A WALL, THREE IS A ROW. Bounded because a gallery is a design
+      // decision and not a dump of the library — a merchant with 164 assets does
+      // not want 164 of them in one band.
+      for (let i = 0; i < 6; i += 1) {
+        const m = pick(pool, used, 'any');
+        if (!m) break;
+        shots.push({ kind: 'image', src: m.url, alt: m.name ?? 'Ảnh' });
+      }
+      if (shots.length === 0) {
+        return section(
+          [
+            h('Thư viện ảnh'),
+            p('Chưa có ảnh nào trong thư viện — sb_media_upload một URL rồi dựng lại dải này.'),
+          ],
+          t,
+        );
+      }
+      return section([h('Thư viện ảnh'), row(shots, true)], t);
+    },
   },
   {
     id: 'sb_faq',

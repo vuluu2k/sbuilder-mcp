@@ -537,6 +537,13 @@ it falls back to the SITE'S THEME, carried as `var(--wb-color-…)` rather than 
 resolve to: a literal on a node outranks the style preset beneath it permanently, so a band
 that baked today's colour in would stop following the theme the moment it changed.
 
+**A picture slot takes a REAL image, from the site's own library.** `sb_template_use` reads the
+library and hands the pattern what the merchant already owns, preferring a landscape where the
+layout wants one and never repeating a photo the page is already showing. It is the only honest
+source: keyword stock is not one (this repo's own build got a cat statue for "kids,clothing"),
+and a grey box reads as unfinished because it is. A site with an empty library gets a sentence
+naming `sb_media_upload` instead of a placeholder.
+
 The patterns are built as capture trees through the same mapper an import goes through, so each
 one inherits its answers to rules 0, 1 and 3 — the page's tokens, a stack breakpoint on every
 row, and a column that is as tall as its content once the row stacks.

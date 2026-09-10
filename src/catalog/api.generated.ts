@@ -3,10 +3,10 @@
 import type { ApiOperation } from './types.js';
 
 export const SWAGGER_SOURCE = {
-  "operations": 495,
+  "operations": 498,
   "definitions": 104,
-  "bodyCarrying": 177,
-  "bodyUndescribed": 63,
+  "bodyCarrying": 178,
+  "bodyUndescribed": 64,
   "generatedFrom": "server/docs/swagger.json"
 } as const;
 
@@ -1881,6 +1881,34 @@ export const API_OPERATIONS: ApiOperation[] = [
         "required": false,
         "type": "string",
         "description": "Display name (default: the file name)"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/api/media/{siteId}/from-url",
+    "method": "POST",
+    "path": "/api/media/{siteId}/from-url",
+    "tags": [
+      "media"
+    ],
+    "summary": "Upload media by URL, fetched server-side",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "body",
+        "in": "body",
+        "required": true,
+        "type": "object",
+        "description": "url, and optionally folderId and name"
       }
     ],
     "bodyDescribed": false,
@@ -6652,6 +6680,41 @@ export const API_OPERATIONS: ApiOperation[] = [
         "required": false,
         "type": "string",
         "description": "Address to remove (DELETE only)"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/sites/{siteId}/forms/submissions",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/forms/submissions",
+    "tags": [
+      "forms"
+    ],
+    "summary": "Search a site's responses across all of its forms",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site id"
+      },
+      {
+        "name": "q",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Folded substring over every answer"
+      },
+      {
+        "name": "limit",
+        "in": "query",
+        "required": false,
+        "type": "integer",
+        "description": "Page size (max 200)"
       }
     ],
     "bodyDescribed": false,
@@ -12500,6 +12563,19 @@ export const API_OPERATIONS: ApiOperation[] = [
       "translations"
     ],
     "summary": "Mark a machine-written value as reviewed",
+    "params": [],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/api/sites/{siteId}/translations/review/bulk",
+    "method": "POST",
+    "path": "/api/sites/{siteId}/translations/review/bulk",
+    "tags": [
+      "translations"
+    ],
+    "summary": "Approve many machine-written values at once",
     "params": [],
     "bodyDescribed": false,
     "bodyRef": null,

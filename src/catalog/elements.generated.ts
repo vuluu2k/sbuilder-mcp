@@ -18200,8 +18200,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
         "overflow": "hidden"
       },
       "config": {
-        "defaultNum": 1,
-        "activeButton": ""
+        "defaultNum": 1
       },
       "specials": {
         "button": true
@@ -19105,7 +19104,6 @@ export const ELEMENTS: Record<string, CatalogElement> = {
               "quantity_default",
               "toggle_button",
               "defaultNum",
-              "activeButton",
               "quantityButtonId",
               "quantityInputId"
             ]
@@ -19184,7 +19182,6 @@ export const ELEMENTS: Record<string, CatalogElement> = {
       "quantity_default",
       "toggle_button",
       "defaultNum",
-      "activeButton",
       "quantityButtonId",
       "quantityInputId",
       "width_select",
