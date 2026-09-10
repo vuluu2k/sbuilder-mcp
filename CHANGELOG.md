@@ -6,6 +6,12 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.16.1] - 2026-09-10
+
+### Fixed
+- sb_add, sb_set, sb_move, sb_remove, sb_duplicate, sb_event and sb_bind now judge a write against a throwaway copy of the page before applying it, so a save the platform refuses is never applied to the draft or broadcast to a live session; previously the refused node stayed in the document and every later command was validated against a tree the caller never asked for, repeating the same complaint about an id it had never typed. A write is still refused only for problems it introduces, not for damage the page already had when the session opened it.
+- sb_import_page now builds its whole run of sections on a copy and commits them in one save, so a refusal partway through no longer leaves a page half imported with no way to tell which sections landed.
+
 ## [0.16.0] - 2026-09-10
 
 ### Added

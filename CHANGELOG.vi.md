@@ -6,6 +6,12 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.16.1] - 2026-09-10
+
+### Fixed
+- sb_add, sb_set, sb_move, sb_remove, sb_duplicate, sb_event và sb_bind giờ đánh giá một lần ghi trên một bản sao tạm của trang trước khi áp dụng thật, để một lần save bị nền tảng từ chối không bao giờ được áp vào draft hay phát ra cho một phiên live đang xem; trước đây node bị từ chối vẫn ở lại trong document và mọi lệnh sau đó đều bị kiểm tra dựa trên một tree mà người gọi chưa từng yêu cầu, lặp lại cùng một lời phàn nàn về một id mà họ chưa từng gõ. Một lần ghi vẫn chỉ bị từ chối vì vấn đề do chính nó gây ra, không phải vì hư hỏng trang đã có sẵn từ trước khi phiên làm việc mở nó.
+- sb_import_page giờ dựng toàn bộ các section trong một lượt import trên một bản sao và commit chúng trong một lần save duy nhất, để một lần từ chối giữa chừng không còn để lại một trang import dở dang mà không cách nào biết những section nào đã vào được.
+
 ## [0.16.0] - 2026-09-10
 
 ### Added
