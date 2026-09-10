@@ -911,6 +911,23 @@ that accounts for them.
   satellite `createNode` mints on its own. The label is OMITTED when the source had none rather
   than defaulted, because inventing one ships English copy into a store that is not in English.
 
+- **AN IMPORTED SITE'S MENU LED BACK TO THE SITE IT WAS COPIED FROM.** A captured link keeps
+  the source's ABSOLUTE URL, so `sb_import_site` built twelve pages and left no way to reach any
+  of them — every click went off to the original. The most basic feature a website has, and the
+  import was working against it. `relink` rewrites only the targets that were ACTUALLY
+  imported: a same-origin link the page cap left out keeps its original URL and is COUNTED,
+  because an off-site link that works beats a local one that 404s, and the count is what tells
+  the caller to raise `max_pages`. The map is built before the first page is written, since
+  page two's link to page seven has to work and page seven does not exist yet.
+
+- **A FORM IS SEEN AND NOT REBUILT.** `FORM` sat in the ignore list, so a contact page arrived
+  with no way to contact anybody and nothing saying why. Rebuilding one means guessing the
+  `mapTo` vocabulary the server validates, which is the guess this catalog exists to remove —
+  and `sb_store action:"form"` already owns it with all 17 templates. So the capture RECORDS
+  what it saw (`forms_found`: field count and labels) and the result names the tool. The
+  controls stay in the ignore list: a stray input outside a form is chrome, and the fields of a
+  form that IS reported are counted rather than walked into.
+
 - **THE IMPORT'S BIGGEST LOSS WAS A `<div class="footer-navigation">`.** Page chrome was
   detected by asking whether a `<header>`/`<footer>` was a DIRECT CHILD of `<body>`, which
   almost no real site satisfies — one wrapper div defeats it — and blender.org marks its site

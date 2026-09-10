@@ -65,6 +65,18 @@ export interface CaptureResult {
   url: string;
   title: string;
   /**
+   * The forms this page carried, which are NOT nodes here.
+   *
+   * A form on this platform lives in its own document — created, PUT back whole
+   * and filled in by `sb_store action:"form"`, whose 17 templates carry field
+   * `mapTo` values the server validates. Reproducing one from captured markup
+   * would mean guessing that vocabulary, which is the guess the catalog exists
+   * to remove. So the form is REPORTED rather than rebuilt: a contact page that
+   * silently arrives with no way to contact anybody is the failure worth
+   * avoiding, and naming the tool that makes one is the fix that works.
+   */
+  forms?: Array<{ fields: number; labels: string[] }>;
+  /**
    * What the page says its own address is, when it says.
    *
    * `<link rel="canonical">` is how a site declares that several URLs are ONE
@@ -150,8 +162,13 @@ function capturePage(limits: { maxSections: number; maxImages: number; maxTextCh
   // one kind of content that could not survive the trip at all.
   const IGNORE = new Set([
     'SCRIPT', 'STYLE', 'NOSCRIPT', 'TEMPLATE', 'SVG', 'PATH', 'CANVAS',
-    'NAV', 'FORM', 'INPUT', 'SELECT', 'TEXTAREA', 'BUTTON',
+    // FORM is NOT here: its own branch below records it before returning
+    // nothing, so a contact page says it had one. The CONTROLS stay ignored —
+    // a stray input outside a form is chrome, and the fields of a form that IS
+    // reported are counted there rather than walked into.
+    'NAV', 'INPUT', 'SELECT', 'TEXTAREA', 'BUTTON',
   ]);
+  const forms: Array<{ fields: number; labels: string[] }> = [];
 
   /** The provider and id behind an embed URL, or null if this platform has no element for it. */
   const embedOf = (raw: string): { provider: string; videoId?: string; src?: string } | null => {
@@ -393,6 +410,21 @@ function capturePage(limits: { maxSections: number; maxImages: number; maxTextCh
         return [{ kind: 'accordion', children: [{ kind: 'accordion-item', text: label, children: body }] }];
       }
       // A RULE BETWEEN SECTIONS IS A DESIGN DECISION, and it is one node.
+      // A FORM IS SEEN AND NOT REBUILT. Its fields are a vocabulary the server
+      // validates (`mapTo`), and `sb_store action:"form"` owns that; what this
+      // walk can honestly do is say the page had one, so a contact page does not
+      // arrive with no way to contact anybody and nothing saying why.
+      if (tag === 'FORM') {
+        const controls = Array.from(el.querySelectorAll('input, textarea, select'));
+        const labels: string[] = [];
+        for (const l of Array.from(el.querySelectorAll('label'))) {
+          const t = clean(l.textContent);
+          if (t && labels.length < 10) labels.push(t);
+        }
+        if (controls.length > 0) forms.push({ fields: controls.length, labels });
+        skip('form');
+        return [];
+      }
       if (tag === 'HR') {
         taken.nodes++;
         return [{ kind: 'divider' }];
@@ -682,6 +714,7 @@ function capturePage(limits: { maxSections: number; maxImages: number; maxTextCh
     url: here,
     title: clean(document.title),
     ...(canonical ? { canonical: abs(canonical) } : {}),
+    ...(forms.length ? { forms } : {}),
     sections,
     skipped,
   };

@@ -9,6 +9,7 @@ import type { Patch } from '../src/core/patch.js';
 import { PageDoc } from '../src/domains/site/document.js';
 import { addSubtree, setKeys } from '../src/domains/site/builder.js';
 import {
+  relink,
   toSpecs,
   tokensFromPage,
   imageSources,
@@ -369,6 +370,23 @@ describe.runIf(process.env.SB_BROWSER_TEST === '1')('capture()', () => {
     expect(kids.every((c) => c.kind === 'icon')).toBe(true);
   }, 60_000);
 
+  it('reports a form rather than dropping it, because rebuilding one means guessing mapTo', async () => {
+    // A contact page that silently arrives with no way to contact anybody is the
+    // failure worth avoiding. The fields are a vocabulary the server validates
+    // and `sb_store action:"form"` owns it, so the honest move is to say the
+    // page had one and name the tool that makes it.
+    const contact = `data:text/html,${encodeURIComponent(
+      '<meta charset="utf-8"><main><section><h2>Liên hệ</h2>' +
+        '<form><label>Tên</label><input><label>Email</label><input type="email">' +
+        '<label>Nội dung</label><textarea></textarea></form></section></main>',
+    )}`;
+    const r = await capture(contact);
+    expect(r.forms).toEqual([{ fields: 3, labels: ['Tên', 'Email', 'Nội dung'] }]);
+    // The heading around it is still content, and no field became a node.
+    expect((r.sections[0].children ?? []).map((c) => c.kind)).toEqual(['heading']);
+    expect(r.skipped.form).toBe(1);
+  }, 60_000);
+
   it('flattens a nested list instead of taking it twice', async () => {
     // `querySelectorAll('li')` returns nested items as well as outer ones, and an
     // outer item's textContent already contains its sublist — so every nested
@@ -659,6 +677,59 @@ describe('media and rules map to the elements that render them', () => {
  * thing, and what both importers used to do — costs the whole page on any site
  * that has a global footer, which is most of them.
  */
+/**
+ * A SITE WHOSE MENU LEAVES FOR THE SITE IT WAS COPIED FROM IS NOT A SITE.
+ *
+ * A captured link keeps the source's absolute URL, so twelve pages were built
+ * here and not one way to reach any of them — every click went back to the
+ * original. The most basic feature a website has, and the import was working
+ * against it.
+ */
+describe('imported links point at the imported pages', () => {
+  const sections: Captured[] = [
+    {
+      kind: 'section',
+      children: [
+        { kind: 'button', text: 'Về', href: 'https://src.example/about/' },
+        { kind: 'button', text: 'Blog', href: 'https://src.example/blog' },
+        { kind: 'button', text: 'Ngoài', href: 'https://other.example/x' },
+        { kind: 'group', children: [{ kind: 'button', text: 'Trang chủ', href: 'https://src.example' }] },
+      ],
+    },
+  ];
+  const local = new Map([
+    ['https://src.example/', '/'],
+    ['https://src.example/about', '/gioi-thieu'],
+  ]);
+
+  it('rewrites a link to a page that was imported, in any of its spellings', () => {
+    const r = relink(sections, local, 'https://src.example');
+    const kids = r.sections[0].children!;
+    expect(kids[0].href).toBe('/gioi-thieu');
+    // Nested as well as top level, and the entry resolves to the home page.
+    expect(kids[3].children![0].href).toBe('/');
+    expect(r.rewritten).toBe(2);
+  });
+
+  it('leaves a same-origin page the cap left out alone, and COUNTS it', () => {
+    // An off-site link that works beats a local one that 404s, and the count is
+    // what tells the caller to raise max_pages.
+    const r = relink(sections, local, 'https://src.example');
+    expect(r.sections[0].children![1].href).toBe('https://src.example/blog');
+    expect(r.unimported).toBe(1);
+  });
+
+  it('does not touch a genuinely external link', () => {
+    const r = relink(sections, local, 'https://src.example');
+    expect(r.sections[0].children![2].href).toBe('https://other.example/x');
+  });
+
+  it('leaves the captured input untouched', () => {
+    relink(sections, local, 'https://src.example');
+    expect(sections[0].children![0].href).toBe('https://src.example/about/');
+  });
+});
+
 describe('an icon is looked up, never guessed', () => {
   const kid = (c: Captured) =>
     toSpecs([{ kind: 'section', children: [c] }] as Captured[], {})[0]?.children![0].children![0];

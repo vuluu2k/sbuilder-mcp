@@ -985,6 +985,18 @@ resolves to the published page of type `product`. Imported as static pages they 
 shop where every price is a literal and nothing is buyable. The result names the prefix and
 its count before anything is created; `exclude` leaves them out.
 
+**Links between the imported pages point HERE, not back at the source.** A captured link keeps
+the source's absolute URL, so before this a site arrived with twelve pages and not one way to
+reach any of them — every click left for the site it was copied from. Only targets that were
+actually imported are rewritten: a same-origin link the page cap left out keeps its original
+URL and is counted under `links.still_off_site`, because an off-site link that works beats a
+local one that 404s, and the count is what says to raise `max_pages`.
+
+**A form is reported, not rebuilt.** Its fields are a `mapTo` vocabulary the server validates,
+and `sb_store action:"form"` owns that — so `forms_found` names what the page carried and the
+note names the tool. A contact page that silently arrives with no way to contact anybody is
+the failure worth avoiding.
+
 **The preview says where each page will LAND**, not just what was found: which one merges
 into this site's existing home page, and which slug is already taken (that page is skipped,
 because the platform renames a collision and answers 200). Reading this site's own pages

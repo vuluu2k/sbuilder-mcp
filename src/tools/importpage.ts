@@ -11,6 +11,7 @@ import {
   tokensFromPage,
   imageSources,
   rehostImages,
+  relink,
   type Captured,
 } from '../domains/site/importmap.js';
 import {
@@ -247,6 +248,7 @@ export function registerImportTools(
           title: shot.title,
           sections: specs.length,
           images: images.length,
+          ...(shot.forms?.length ? { forms_found: shot.forms } : {}),
           tokens,
           skipped: shot.skipped,
           note:
@@ -328,6 +330,7 @@ export function registerImportTools(
       return text({
         read: shot.url,
         added_sections: added,
+        ...(shot.forms?.length ? { forms_found: shot.forms } : {}),
         // WHAT WAS LEFT BEHIND, on the real run too. The dry run said it and the
         // real one did not, which is the wrong way round: a caller who skipped
         // the preview is exactly the caller who needs to be told that 21 nodes
@@ -563,6 +566,20 @@ export function registerImportTools(
       // cannot be — each page is its own create and its own save — so the honest
       // shape is per-page outcomes. Aborting on the fourth of twelve would leave
       // three pages built, nine not, and no report saying which.
+      // WHERE EACH IMPORTED PAGE WILL LIVE HERE, decided before the first one is
+      // built — page two's link to page seven has to work, and page seven does
+      // not exist yet. The entry resolves to "/" when it merges into the site's
+      // own home page, because that is the address it will answer on.
+      const origin = new URL(entry).origin;
+      const localPath = new Map<string, string>();
+      for (const p of plan.pages) {
+        const isEntry = p.url === entry;
+        localPath.set(
+          p.url,
+          isEntry && homepage !== false && home ? '/' : `/${p.slug}`,
+        );
+      }
+
       const built: Array<Record<string, unknown>> = [];
       const failed: Array<{ url: string; why: string }> = [];
       // WHAT EACH PAGE SAYS ITS OWN ADDRESS IS. A sitemap cannot tell you that
@@ -572,6 +589,9 @@ export function registerImportTools(
       // under two slugs, and nothing in the plan looks wrong.
       const identities = new Set<string>();
       const aliased: Array<{ url: string; same_as: string }> = [];
+      let relinked = 0;
+      let unimported = 0;
+      const formsSeen: Array<{ page: string; fields: number; labels: string[] }> = [];
       let lastOpened = '';
 
       for (const p of plan.pages as Planned[]) {
@@ -587,9 +607,13 @@ export function registerImportTools(
         }
         identities.add(identity);
         try {
-          const sections =
+          const hosted =
             rehosted.size > 0 ? rehostImages(shot.result.sections, rehosted) : shot.result.sections;
-          const specs = toSpecs(sections, tokens);
+          for (const f of shot.result.forms ?? []) formsSeen.push({ page: p.slug, ...f });
+          const linked = relink(hosted, localPath, origin);
+          relinked += linked.rewritten;
+          unimported += linked.unimported;
+          const specs = toSpecs(linked.sections, tokens);
           if (specs.length === 0) {
             failed.push({
               url: p.url,
@@ -676,6 +700,20 @@ export function registerImportTools(
         built,
         ...(failed.length ? { failed } : {}),
         ...(aliased.length ? { same_page: aliased } : {}),
+        links: {
+          rewritten: relinked,
+          ...(unimported ? { still_off_site: unimported } : {}),
+        },
+        ...(formsSeen.length
+          ? {
+              forms_found: formsSeen,
+              forms_note:
+                'A form is NOT a page node here — it lives in its own document, and its fields ' +
+                'are a vocabulary the server validates. sb_store action:"form" seeds any of the ' +
+                "platform's 17 templates (contact, subscribe, booking, login, register …) with " +
+                'that document already correct; place the form on the page after.',
+            }
+          : {}),
         ...(Object.keys(plan.skipped).length || found.aliases
           ? { skipped: { ...plan.skipped, ...(found.aliases ? { 'canonical-alias': found.aliases } : {}) } }
           : {}),

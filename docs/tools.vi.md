@@ -958,6 +958,18 @@ chủ. Nông trước — gốc, rồi `/about`, rồi `/blog/mot-bai` — chín
 sẽ ra một shop mà mọi giá đều là chữ chết và không mua được gì. Kết quả nêu tên tiền tố và số
 lượng trước khi tạo bất cứ thứ gì; `exclude` để loại chúng ra.
 
+**Link giữa các trang import về trỏ vào ĐÂY, không dẫn ngược sang nguồn.** Link bắt được vốn giữ
+URL tuyệt đối của trang nguồn, nên trước đây site về có mười hai trang mà không có đường nào tới
+được trang nào — mọi cú bấm đều rời sang website đã sao chép. Chỉ những đích **thật sự được
+import** mới bị viết lại: link cùng origin mà trần số trang bỏ lại thì giữ nguyên URL gốc và được
+đếm ở `links.still_off_site`, vì một link ra ngoài chạy được vẫn hơn một link nội bộ 404, và con
+số đó chính là thứ bảo bạn nâng `max_pages`.
+
+**Form được báo lại chứ không dựng lại.** Các trường của nó là bộ từ vựng `mapTo` mà server kiểm
+tra, và `sb_store action:"form"` mới là chỗ nắm việc đó — nên `forms_found` nêu trang đã có gì và
+ghi chú nêu tên công cụ. Một trang liên hệ về mà không có cách nào liên hệ, lại chẳng nói vì sao,
+mới là thất bại đáng tránh.
+
 **Bản xem trước nói rõ từng trang sẽ RƠI VÀO ĐÂU**, không chỉ tìm được gì: trang nào nhập vào
 trang chủ sẵn có, slug nào đã bị chiếm (trang đó bị bỏ qua, vì nền tảng đổi tên slug trùng rồi
 trả 200). Đọc danh sách trang của site này thì cần credential, còn hỏi một website lạ có gì thì

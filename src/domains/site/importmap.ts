@@ -2,6 +2,7 @@ import type { NodeSpec } from './builder.js';
 import type { DocLike, NodeLike } from '../../core/tree.js';
 import { walk } from '../../core/tree.js';
 import { stickySeeds } from './sticky.js';
+import { normalizeUrl } from './discover.js';
 import { ICON_NAMES } from '../../catalog/icons.generated.js';
 
 /**
@@ -499,4 +500,44 @@ export function rehostImages(captured: Captured[], map: Map<string, string>): Ca
     ...(c.children ? { children: c.children.map(visit) } : {}),
   });
   return captured.map(visit);
+}
+
+/**
+ * POINT THE IMPORTED LINKS AT THE IMPORTED PAGES.
+ *
+ * A captured link keeps the SOURCE's absolute URL, so a site brought over with
+ * `sb_import_site` had a menu that sent every visitor back to the website it was
+ * copied from — twelve pages built here and not one way to reach any of them.
+ * The most basic feature a website has, and the import was quietly working
+ * against it.
+ *
+ * Only the links whose target was ACTUALLY IMPORTED are rewritten. A same-origin
+ * link to a page the cap left out is counted rather than pointed at a slug that
+ * does not exist here: an off-site link that works beats a local one that 404s,
+ * and the count is what tells the caller to raise `max_pages`. A genuinely
+ * external link is left alone and is not interesting.
+ */
+export function relink(
+  captured: Captured[],
+  local: Map<string, string>,
+  origin: string,
+): { sections: Captured[]; rewritten: number; unimported: number } {
+  let rewritten = 0;
+  let unimported = 0;
+  const one = (c: Captured): Captured => {
+    let href = c.href;
+    if (href) {
+      const norm = normalizeUrl(href);
+      const to = norm ? local.get(norm) : undefined;
+      if (to) {
+        href = to;
+        rewritten += 1;
+      } else if (norm && norm.indexOf(origin) === 0) {
+        unimported += 1;
+      }
+    }
+    const kids = c.children ? c.children.map(one) : undefined;
+    return { ...c, ...(href ? { href } : {}), ...(kids ? { children: kids } : {}) };
+  };
+  return { sections: captured.map(one), rewritten, unimported };
 }
