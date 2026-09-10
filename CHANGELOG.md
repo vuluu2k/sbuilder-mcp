@@ -6,6 +6,12 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.23.0] - 2026-09-10
+
+### Added
+- sb_templates now lists six built-in layout patterns (two hero variants, a feature trio, a stats row, a CTA band, and an FAQ) under `built_in`, alongside the site's own saved section templates, so a page can start from a designed composition instead of an invented one.
+- sb_template_use can now instantiate a built-in layout by id: the section is composed against the target page's own tokens (heading color, button fill, section padding) instead of being copied verbatim, and falls back to the site's theme tokens, carried as `var(--wb-color-…)`, when the page has no look of its own yet.
+
 ## [0.22.1] - 2026-09-10
 
 ### Fixed

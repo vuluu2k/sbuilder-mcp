@@ -6,6 +6,12 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.23.0] - 2026-09-10
+
+### Added
+- sb_templates giờ liệt kê sáu layout dựng sẵn (hai kiểu hero, ba lợi ích, dải số liệu, dải kêu gọi hành động và FAQ) trong `built_in`, cùng với các section template đã lưu của chính site, để một trang có thể bắt đầu từ một bố cục được thiết kế thay vì tự bịa ra.
+- sb_template_use giờ có thể thả một layout dựng sẵn theo id: section được soạn theo token của chính trang đích (màu chữ tiêu đề, nền nút, padding section) thay vì được copy nguyên văn, và lấy theo token theme của site, mang dạng `var(--wb-color-…)`, khi trang chưa có phong cách riêng.
+
 ## [0.22.1] - 2026-09-10
 
 ### Fixed
