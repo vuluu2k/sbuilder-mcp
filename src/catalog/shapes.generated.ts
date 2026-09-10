@@ -4,12 +4,12 @@
 import type { RequestShape } from './types.js';
 
 export const SHAPE_SOURCE = {
-  "writeOperations": 212,
-  "shaped": 162,
-  "fromHandlers": 162,
+  "writeOperations": 216,
+  "shaped": 166,
+  "fromHandlers": 166,
   "fromSwaggerOnly": 0,
   "withReadOnly": 26,
-  "structsRead": 1610
+  "structsRead": 1637
 } as const;
 
 export const REQUEST_SHAPES: Record<string, RequestShape> = {
@@ -1029,6 +1029,65 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
     ],
     "source": "go",
     "goType": "blog.Category"
+  },
+  "put:/api/sites/{siteId}/chat-settings": {
+    "fields": [
+      {
+        "name": "siteId",
+        "type": "string"
+      },
+      {
+        "name": "provider",
+        "type": "string"
+      },
+      {
+        "name": "model",
+        "type": "string"
+      },
+      {
+        "name": "apiKey",
+        "type": "string | null"
+      },
+      {
+        "name": "baseUrl",
+        "type": "string"
+      },
+      {
+        "name": "systemPrompt",
+        "type": "string"
+      },
+      {
+        "name": "knowledge",
+        "type": "string | null",
+        "note": "Knowledge, Temperature and MaxReplyTokens are POINTERS for the reason APIKey is: a Manage screen that sends only what it changed must be able to say \"leave this alone\", and zero is a MEANINGFUL value for two of them — temperature 0 is \"be…"
+      },
+      {
+        "name": "temperature",
+        "type": "number | null"
+      },
+      {
+        "name": "maxReplyTokens",
+        "type": "number | null"
+      },
+      {
+        "name": "dailyCallLimit",
+        "type": "number | null"
+      },
+      {
+        "name": "greeting",
+        "type": "string"
+      },
+      {
+        "name": "placeholder",
+        "type": "string"
+      },
+      {
+        "name": "enabled",
+        "type": "boolean"
+      }
+    ],
+    "source": "go",
+    "goType": "chatbot.Input"
   },
   "post:/api/sites/{siteId}/code-files": {
     "fields": [
@@ -5814,6 +5873,68 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
     ],
     "source": "go",
     "goType": "WebhookInput"
+  },
+  "post:/api/sites/{siteId}/relation-slots": {
+    "fields": [
+      {
+        "name": "key",
+        "type": "string"
+      },
+      {
+        "name": "name",
+        "type": "string"
+      },
+      {
+        "name": "ownerType",
+        "type": "string"
+      },
+      {
+        "name": "itemType",
+        "type": "string"
+      },
+      {
+        "name": "position",
+        "type": "number"
+      }
+    ],
+    "source": "go",
+    "goType": "slotBody"
+  },
+  "put:/api/sites/{siteId}/relation-slots/{id}": {
+    "fields": [
+      {
+        "name": "key",
+        "type": "string"
+      },
+      {
+        "name": "name",
+        "type": "string"
+      },
+      {
+        "name": "ownerType",
+        "type": "string"
+      },
+      {
+        "name": "itemType",
+        "type": "string"
+      },
+      {
+        "name": "position",
+        "type": "number"
+      }
+    ],
+    "source": "go",
+    "goType": "slotBody"
+  },
+  "put:/api/sites/{siteId}/relation-slots/{id}/picks": {
+    "fields": [
+      {
+        "name": "itemIds",
+        "type": "string[]"
+      }
+    ],
+    "source": "go",
+    "goType": "picksBody"
   },
   "post:/api/sites/{siteId}/returns": {
     "fields": [

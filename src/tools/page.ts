@@ -8,6 +8,7 @@ import {
   addSubtree,
   setKeys,
   setMany,
+  baseOnlyKeys,
   moveNode,
   removeNode,
   duplicateNode,
@@ -15,6 +16,12 @@ import {
   type Breakpoint,
   type SetEdit,
 } from '../domains/site/builder.js';
+import { baseOnlyNote } from '../domains/site/baseonly.js';
+import { detachNote, presetIdOf, presetLayer } from '../domains/site/theme.js';
+import { inertHintsFor } from '../domains/site/inert.js';
+import { hasSeed, seedDocument, seedSummary, seededTypes } from '../domains/site/storepage.js';
+import { unknownValueNote } from '../domains/site/vocabulary.js';
+import { siteTheme } from '../domains/site/theme-fetch.js';
 import { request, redact } from '../transport/http.js';
 import { siteToken } from './credentialpick.js';
 import { validateForSave } from '../domains/site/validate.js';
@@ -261,7 +268,15 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
       const d = session.current();
       const node = d.node(id);
       const warn = globalWarning(d.doc, id);
-      return text({ node, ...(warn ? { warning: warn } : {}) });
+      // THE STYLE LAYER THIS NODE'S `style` DOES NOT CONTAIN. Nine element types
+      // keep their defaults in a theme PRESET rather than in the meta, so an
+      // icon's colour and a button's fill are simply absent from what this tool
+      // used to return — on a page visibly painting them. Design rule 0 told the
+      // agent to read the pattern off what is there, and there was nothing
+      // there to read, so it invented one. See domains/site/theme.ts.
+      const { theme, from } = await siteTheme(ctx, session.location().siteId);
+      const preset = presetLayer(theme, from, node as never);
+      return text({ node, ...(preset ? { preset } : {}), ...(warn ? { warning: warn } : {}) });
     },
   );
 
@@ -314,12 +329,33 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
     async ({ parent_id, spec, index, dry_run }) => {
       const d = session.current();
       const { patches, ids } = addSubtree(d, parent_id, spec, index);
+      // ELEMENTS THAT RENDER CONVINCINGLY WHILE WIRED TO NOTHING. The add
+      // succeeds completely, the tree is correct and the page photographs
+      // right, so neither sb_review nor sb_look can see the gap — the moment
+      // the element is added is the only cheap place to say it. In the dry run
+      // too, so the caller is not told after committing.
+      const types: string[] = [];
+      const walkSpec = (n: { type: string; children?: unknown[] }): void => {
+        types.push(n.type);
+        for (const c of n.children ?? []) walkSpec(c as { type: string; children?: unknown[] });
+      };
+      walkSpec(spec as { type: string; children?: unknown[] });
+      const inert = inertHintsFor(types)
+        .map((h) => ctx.notices.once(`inert:${h.type}`, h.note))
+        .filter((n): n is string => !!n)
+        .join(' ');
+
       if (dry_run !== false) {
-        return text({ dry_run: true, would_add: ids.length, patches: patches.length });
+        return text({
+          dry_run: true,
+          would_add: ids.length,
+          patches: patches.length,
+          ...(inert ? { inert } : {}),
+        });
       }
       session.applyAndPublish(patches);
       await session.save();
-      return text({ added: ids, rev: d.rev });
+      return text({ added: ids, rev: d.rev, ...(inert ? { inert } : {}) });
     },
   );
 
@@ -410,6 +446,70 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
         .map((t) => ctx.notices.once(`hover-home:${t}`, hoverRoutingNote(t) as string))
         .filter((n): n is string => !!n)
         .join(' ');
+      // CONFIG THAT WENT TO BASE BECAUSE PUBLISH READS IT NOWHERE ELSE. Keyed on
+      // the KEY, not the node and not the element type: "iconSize is base-only"
+      // is the whole answer, true of every icon on the page, so a batch fixing
+      // ten of them must not carry ten copies of it. Same reason the hover note
+      // keys on the type.
+      const movedToBase = new Set<string>();
+      for (const e of batch) {
+        for (const k of baseOnlyKeys(d, e.id, e.keys, e)) movedToBase.add(k);
+      }
+      const baseNote = [...movedToBase]
+        .map((k) =>
+          ctx.notices.once(`base-only:${k}`, baseOnlyNote([k], batch[0].breakpoint ?? 'desktop')),
+        )
+        .filter((n): n is string => !!n)
+        .join(' ');
+      // A LITERAL OVER A PRESET DETACHES THE NODE FROM THE THEME, permanently.
+      // The node's own slot outranks its preset, so this is how one button
+      // differs from the rest — an ordinary, correct thing to do. What is not
+      // ordinary is doing it without knowing: the next palette change moves
+      // every other node and not this one, and nothing anywhere says why.
+      // Once per PRESET per process, because the answer is about the preset.
+      const detachNotes: string[] = [];
+      // GATED BEFORE THE FETCH, for the reason `stuck()` below is gated before
+      // the clone: sb_set is the hottest write in this server, and `siteTheme`
+      // is an HTTP round trip on its first call. Only a plain STYLE write on a
+      // node that actually wears a preset can change this answer, and
+      // `presetIdOf` decides that from the document alone — no theme needed. A
+      // page of flex-blocks, or any config-only write, now pays nothing.
+      const wearers = batch.filter((e) => {
+        if (e.namespace !== 'style' || e.state) return false;
+        const n = d.doc.nodes[e.id];
+        return !!n && presetIdOf(n as never) !== null;
+      });
+      if (wearers.length) {
+        const { theme, from } = await siteTheme(ctx, session.location().siteId);
+        const seen = new Set<string>();
+        for (const e of wearers) {
+          const layer = presetLayer(theme, from, d.doc.nodes[e.id] as never);
+          if (!layer || seen.has(layer.id)) continue;
+          const note = detachNote(layer, Object.keys(e.keys));
+          if (!note) continue;
+          seen.add(layer.id);
+          const once = ctx.notices.once(`preset-detach:${layer.id}`, note);
+          if (once) detachNotes.push(once);
+        }
+      }
+      const presetNote = detachNotes.join(' ');
+      // A CONFIG VALUE THE RENDERER DOES NOT KNOW. `EffectiveCollectionType` and
+      // its two siblings are NORMALISERS, not validators: an unrecognised word
+      // collapses to a default, so a repeater set to "bestseller" publishes and
+      // renders the whole catalogue under whatever heading is above it. Keyed on
+      // key+value, because the answer is about that pair and a batch fixing ten
+      // repeaters the same wrong way should say it once.
+      const valueNotes: string[] = [];
+      for (const e of batch) {
+        if (e.namespace !== 'config') continue;
+        for (const [k, v] of Object.entries(e.keys)) {
+          const n = unknownValueNote(k, v);
+          if (!n) continue;
+          const once = ctx.notices.once(`config-value:${k}=${String(v)}`, n);
+          if (once) valueNotes.push(once);
+        }
+      }
+      const valueNote = valueNotes.join(' ');
       // THE STICKY WARNING IS COMPUTED AGAINST THE DOCUMENT AS IT WILL BE, so
       // the dry run and the real run say the same thing. A caller who is told
       // only after committing has already shipped a header that does not move.
@@ -442,6 +542,9 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
           patches,
           ...(Object.keys(sw).length ? { warnings: sw } : {}),
           ...(hoverNote ? { hover: hoverNote } : {}),
+          ...(baseNote ? { base_only: baseNote } : {}),
+          ...(presetNote ? { preset: presetNote } : {}),
+          ...(valueNote ? { value: valueNote } : {}),
           ...(Object.keys(hostNotes).length ? { hover_host: hostNotes } : {}),
           ...(note ? { note } : {}),
         });
@@ -460,6 +563,9 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
           rev: d.rev,
           ...(warn ? { warning: warn } : {}),
           ...(hoverNote ? { hover: hoverNote } : {}),
+          ...(baseNote ? { base_only: baseNote } : {}),
+          ...(presetNote ? { preset: presetNote } : {}),
+          ...(valueNote ? { value: valueNote } : {}),
           ...(hostNotes[batch[0].id] ? { hover_host: hostNotes[batch[0].id] } : {}),
         });
       }
@@ -468,6 +574,9 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
         rev: d.rev,
         ...(Object.keys(warnings).length ? { warnings } : {}),
         ...(hoverNote ? { hover: hoverNote } : {}),
+        ...(baseNote ? { base_only: baseNote } : {}),
+        ...(presetNote ? { preset: presetNote } : {}),
+        ...(valueNote ? { value: valueNote } : {}),
         ...(Object.keys(hostNotes).length ? { hover_host: hostNotes } : {}),
       });
     },
@@ -660,9 +769,10 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
     'sb_page_create',
     {
       description:
-        'Create a page. It arrives empty; sb_page_open seeds its ROOT. TYPE is the route for ' +
-          'checkout, product, category, post and course: /checkout and /products/{slug} need a ' +
-          'PUBLISHED page of that type or they 404.',
+        `A store type (${seededTypes().join(', ')}) arrives with the document the editor ` +
+          'gives a merchant — product carries the whole bound buy box; seed:false for blank. ' +
+          'Any other type is empty and sb_page_open seeds its ROOT. TYPE is the route: ' +
+          '/checkout and /products/{slug} need a PUBLISHED page of that type or they 404.',
       inputSchema: {
       site_id: z.string().optional(),
       name: z.string(),
@@ -670,11 +780,14 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
       slug: z.string().optional(),
       is_homepage: z.boolean().optional(),
       settings: z.record(z.unknown()).optional(),
+      seed: z.boolean().optional().describe('Default true; false creates a blank page.'),
+      locale: z.string().optional().describe("vi (default) or en — the complete page's wording."),
+      headline: z.string().optional().describe("The complete page's thank-you line."),
       dry_run: z.boolean().optional(),
     },
       annotations: { readOnlyHint: false, destructiveHint: false },
     },
-    async ({ site_id: given, name, type, slug, is_homepage, settings, dry_run }) => {
+    async ({ site_id: given, name, type, slug, is_homepage, settings, seed, locale, headline, dry_run }) => {
       const site_id = siteFor(ctx, given);
       const path = `/api/sites/${encodeURIComponent(site_id)}/pages`;
       // TYPE IS THE ROUTE for several kinds of page: /checkout and
@@ -692,7 +805,21 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
       // `settings` is the one free-form object a caller hands this server, so the
       // preview and the echo both go through redact — everything else on this
       // path is built from narrow arguments.
-      if (dry_run !== false) return text({ dry_run: true, would_post: path, body: redact(body) });
+      // WHAT THIS PAGE WILL OPEN WITH. Reported in the dry run too: "it arrives
+      // empty" was this tool's own description for as long as the editor has
+      // been seeding, so a caller planning a build needs to know before it
+      // commits whether it is about to hand-assemble a buy box that already
+      // exists.
+      const willSeed = seed !== false && hasSeed(type);
+      const summary = willSeed && type ? seedSummary(type) : null;
+      if (dry_run !== false) {
+        return text({
+          dry_run: true,
+          would_post: path,
+          body: redact(body),
+          ...(summary ? { would_seed: { type, ...summary } } : {}),
+        });
+      }
       const res = redact(
         await request({
           base: ctx.base,
@@ -711,8 +838,43 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
       // authors to the slug it requested is dead.
       const got = res.page?.slug;
       const renamed = slug && typeof got === 'string' && got !== slug;
+
+      // THE SEED IS A SECOND WRITE, and it must not turn a created page into a
+      // failed call. The page EXISTS the moment the POST answered; a refused
+      // source PUT leaves it blank, which is exactly what the caller had before
+      // and can fix with one sb_page_open. Reporting the failure beats
+      // unwinding a page the caller asked for.
+      let seeded: Record<string, unknown> | null = null;
+      const newId = res.page?.id;
+      if (willSeed && type && typeof newId === 'string' && newId) {
+        const document = seedDocument(type, { locale, headline });
+        if (document) {
+          try {
+            await request({
+              base: ctx.base,
+              method: 'PUT',
+              // `{ document, schemaVersion }`, never `{ document }` — the shape
+              // the editor's own saveSource sends.
+              path: `/api/sites/${encodeURIComponent(site_id)}/pages/${encodeURIComponent(newId)}/source`,
+              token: siteToken(ctx),
+              body: { document, schemaVersion: document.schema_version },
+              fetchImpl: ctx.fetchImpl,
+            });
+            seeded = { type, nodes: Object.keys(document.nodes).length };
+          } catch (e) {
+            seeded = {
+              failed: e instanceof Error ? e.message : String(e),
+              note:
+                'The page was created and is BLANK. Nothing was lost — open it with ' +
+                'sb_page_open and build it, or create it again.',
+            };
+          }
+        }
+      }
+
       return text({
         ...res,
+        ...(seeded ? { seeded } : {}),
         ...(renamed
           ? {
               slug_renamed: `The slug "${slug}" was already taken, so the platform stored ` +

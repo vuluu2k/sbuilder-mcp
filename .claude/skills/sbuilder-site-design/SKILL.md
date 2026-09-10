@@ -40,14 +40,33 @@ shows a required-looking field with nothing in it. Then a gateway:
 it — the field document's `mapTo` values are a vocabulary the server validates
 (`customer.fullName`, not `customer.name`). See CLAUDE.md's checkout entry.
 
-**5b. A category page shows every product unless you say which one.** `/collections/{slug}`
-falls back to the DEFAULT TEMPLATE for the `category` type, and nothing on that template
-narrows the product feed to the category in the URL — a repeater left on
-`collectionType: "all_products"` repeats the whole catalogue on every category. Give each
-category its own page and set that repeater to `collectionType: "collection"` +
-`collectionId`, linking them with `POST /api/sites/{siteId}/page-links/bulk`
-(`{linkType: "productCategory", linkIds: [...], pageId}`). The blog twin IS automatic; this
-one is not, and nothing warns you.
+**5b. ONE category template serves every category — leave the repeater on `all_products`.**
+`/collections/{slug}` falls back to the DEFAULT TEMPLATE for the `category` type, and since
+2026-09-09 that template narrows itself: `all_products` on a category page means THAT
+category. So the right build is one page, one repeater, on the kind it is born with. A
+repeater you point at a NAMED collection (`collectionType: "collection"` + `collectionId`)
+keeps naming it, which is how a "you may also like" shelf of a different category survives on
+a category page — so set that only when you mean it. Giving every category its own page
+through `POST /api/sites/{siteId}/page-links/bulk` still works and is still right when a
+category needs a genuinely different LAYOUT; it is no longer needed to get the right products.
+Two caveats: the scope is empty in the DRAFT PREVIEW, so a correct template previews listing
+the whole catalogue — judge it at `/collections/{slug}` on the published storefront. And this
+rule said the opposite until today, so do not trust an older copy of it.
+
+**5c. DO NOT HAND-BUILD A BUY BOX.** `sb_page_create` seeds `product`, `category`, `search`,
+`blog`, `post` and `complete` with the editor's own starting document — a product page arrives
+with gallery, title, price, variant picker, description, quantity stepper, Add to cart and Buy
+it now, already bound, including the `add_to_cart` BINDING (not a click action) that is the
+part nothing on screen tells you about. Create the page, `sb_page_open` it, then RESTYLE what
+is there. Building those seven pieces by hand is the work the seed exists to remove, and the
+binding is the piece a hand build gets wrong.
+
+**5d. A REPEATER'S SOURCE IS A FIXED VOCABULARY, and a wrong word is silent.**
+`config.collectionType` takes `all_products`, `collection` (+ `collectionId`), `related` (the
+page product's neighbours), `featured` (the merchant's own flag) or `slot` (a curated shelf,
+with `relationSlotKey`). Anything else — `bestseller`, `newest` — normalises to `all_products`
+and repeats the whole catalogue under your heading, with no error. `sb_traits_for` lists the
+legal values under `config_values`; read them rather than guessing.
 
 **6. The pages, BY TYPE.** Four paths resolve by page type and ignore slugs
 entirely: `/checkout`, `/checkout/complete`, `/account`, `/search`. Plus
@@ -341,6 +360,19 @@ sb_node_read <a card>              # border colour, radius, inner padding
 sb_node_read <a section>           # the page's vertical rhythm and max-width
 ```
 
+**Read the `preset` block, not only `style`.** Since `THEME_VERSION` 6 nine element types —
+`icon`, `button`, `heading`, `text`, `image`, `flex-section`, `text-dataset`, `quantity-input`,
+`search-input` — keep their defaults in a theme PRESET rather than in the element, so a node's
+own `style` can be SILENT about a colour the page is visibly painting. `sb_node_read` now
+returns the preset alongside: what it paints (with the `var()` chain flattened to a real
+colour), and which keys the node has already overridden. Take the value from there.
+
+And know what you are doing when you override one: a literal on the node OUTRANKS the preset
+permanently, so that node stops following the theme and the next palette change moves
+everything except it. That is right for a deliberate one-off and wrong for "make it match the
+page" — to match, reuse the preset's value, or edit the preset itself through
+`PUT /api/sites/{siteId}/theme`. `sb_set` warns once per preset when a write would detach.
+
 Then reuse those exact values. Not "a pink", THE pink. Not "rounded", the same
 `999px` every other button uses. A number that appears twice on a page is a
 token; inventing a third value for the same job is how a build ends up with four
@@ -383,6 +415,15 @@ are consulted LAST but they ARE consulted, so a key written only at `tablet` rea
 sb_set fl_x style breakpoint:tablet { flexWrap: "wrap" }     # also hits desktop
 sb_set fl_x style base:true        { flexWrap: "nowrap" }    # ← say the wide answer too
 ```
+
+**This is a STYLE rule. Some CONFIG has no breakpoint to be written at.** `html.go` reads
+`node.Config[key]` with no responsive merge and one HTML document serves every width, so 13
+keys exist only at base — `iconSize`, `layout`, `htmlTag`, `descriptionLines`, `quantity`,
+`rowLimit`, `activeIndex`, `activeTab`, `openItems`, and the whole data axis (`datasetSource`,
+`kind`, `collectionId`, `collectionType`). Written per breakpoint they show on the editor
+canvas and vanish on publish. `sb_set` now moves them to base for you and says so as
+`base_only`; what it cannot do is make them respond. If one of these has to differ by width,
+the answer is a style key or a different element — not a breakpoint.
 
 ### 3. A flex row with 2+ real columns needs an explicit stack breakpoint
 

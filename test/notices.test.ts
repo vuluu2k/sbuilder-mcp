@@ -40,7 +40,7 @@ describe('the hover-home note', () => {
     // Nine more buttons in the same batch, and the same button next time.
     for (let i = 0; i < 9; i += 1) expect(say('button')).toBeUndefined();
     // A DIFFERENT type still gets its own, because it says something else.
-    expect(say('product-image-list')).toMatch(/paints nothing/);
+    expect(say('product-image-list')).toMatch(/CONFIG rather than its STYLE/);
     expect(say('product-image-list')).toBeUndefined();
   });
 });

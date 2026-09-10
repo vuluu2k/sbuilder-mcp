@@ -232,11 +232,12 @@ that accounts for them.
   OpenAPI document declares no body for it at all, so the shape was read off the editor's
   own `saveSource` (`editor/src/features/pages/api.ts:115`), including its
   `schema_version ?? 1` fallback. Copy the working client; never guess a body.
-- **The element registry holds 107 types, and `getElementAI` covers 107/107** (106 until
-  `order-receipt` landed — codegen asserts the coverage, so this number moves with the
-  platform and a stale one here is caught by the next run, not by a reader). The
+- **The element registry holds 111 types, and `getElementAI` covers 111/111** (106 when
+  `order-receipt` landed, 107, then `rating-stars`, `chat-widget` and `cart-count` — codegen
+  asserts the coverage, so this number moves with the platform and a stale one here is caught
+  by the next run, not by a reader). The
   directory has more entries than that because the loose `.ts` files beside the elements
-  are not elements. 77 binding sources, read from BOTH renderers — the Go scope and the
+  are not elements. 78 binding sources, read from BOTH renderers — the Go scope and the
   editor's own binding context, which carries keys the Go side never spells out
   (`product.moneyOverride`, `site.*`, `course.*`). Reading one alone made `sb_review` call
   the platform's own seeded pricing binding dead on every page that showed a price.
@@ -289,12 +290,20 @@ that accounts for them.
   and `validateForSave` checks ATTACHMENT — reachable, or hanging off something reachable —
   not reachability. The two stricter rules that used to live there refused every save of
   every real page, and only a live run could show it.
-- **A SATELLITE hangs off `config[key]`, and the editor mints it on ADD.** Eight elements own
+- **A SATELLITE hangs off `config[key]`, and the editor mints it on ADD.** Nine elements own
   one — `accordion`, `tab`, `menu`, `list-dataset`, `dataset-block`, `cart-order`,
-  `product-variants`, `quantity-dataset`. The table is generated from the element METAS
-  (`SATELLITE_RULES`), never from Go's `SatelliteConfigKeys`, because only the metas carry
-  `optional` — and `list-loading` is the single opt-in satellite in the platform, because a
-  list with no loading design shows a silhouette of its own cards. `schema_gen.go:245` states
+  `product-variants`, `quantity-dataset` and `icon`. The table is generated from the element
+  METAS (`SATELLITE_RULES`), never from Go's `SatelliteConfigKeys`, because only the metas carry
+  `optional` — and TWO are now opt-in rather than one: `list-loading` (`loadingStateId`), because
+  a list with no loading design shows a silhouette of its own cards, and `cart-count`
+  (`cartCountId`), the basket badge on the corner of a cart glyph. The second is why the flag
+  matters. `open_cart` is an ACTION any element can carry, not an element type, so there is no
+  "cart icon" type to give a badge to by default — minting it unasked would put one on every
+  social glyph in every footer. An `icon` that never asks renders exactly the bytes it did
+  before. So a header cart icon ships WITHOUT a count unless something adds the satellite, and a
+  shopper who adds an item gets a toast that fades and no evidence anywhere on the page that
+  their basket holds anything: the defect the platform shipped `cart-count` to fix is the
+  default state of every icon this server authors. `schema_gen.go:245` states
   the walk contract outright: subtree collection, copy and delete must consult the table.
   `createNode` mints them, `walk` follows them, and `duplicateNode` deep-copies them with the
   owner's pointer rewritten — before which a duplicated accordion pointed at the ORIGINAL's
@@ -329,18 +338,52 @@ that accounts for them.
   asked for, and every link authored to the requested one is dead.
 
 - **The OpenAPI document is not a complete map of the platform**, and `sb_api_call` is a
-  CLOSED LIST (`src/tools/api.ts:191`), so what it omits is UNREACHABLE. **THE ANNOTATED HALF
-  OF THAT GAP IS NOW CLOSED, measured 2026-09-09: 486 `@Router` annotations, 486 operations in
-  the checked-in `swagger.json`, 486 in this catalog.** The 34 that used to be annotated and
-  missing came back when `swag init` was finally re-run, payment-gateway config among them.
-  Re-measure with the three counts rather than trusting this paragraph — a stale number here
-  sends somebody to fix something already fixed, which cost a session once:
+  CLOSED LIST (`src/tools/api.ts:191`), so what it omits is UNREACHABLE. The annotated half of
+  that gap closed on 2026-09-09 — 486 `@Router` annotations, 486 operations in the checked-in
+  `swagger.json`, 486 in this catalog — when `swag init` was finally re-run after being un-run
+  long enough to hide 34 operations, payment-gateway config among them.
 
-  ```bash
-  grep -rho '@Router' --include='*.go' server/internal | wc -l          # annotated
-  node -e "s=require('./server/docs/swagger.json');…"                   # in the document
-  node -e "require('sbuilder-mcp/dist/catalog/api.generated.js').SWAGGER_SOURCE"
-  ```
+  **IT RE-OPENED THE NEXT DAY, AND IT IS NOW CLOSED AT THE SOURCE — 495 = 495 = 495, measured
+  2026-09-10 after the platform commit below.** This paragraph is why it took a hand-count to
+  notice the first time. The
+  fix it recorded was a three-command shell recipe and an instruction to re-measure rather than
+  trust the number — which is a thing a reader skips, and which over-counted anyway, because
+  the platform stacks one doc block over several `@Router` lines and `courses/rest/rest.go`
+  declares the same two enrollment routes in two blocks, so a raw `grep | wc -l` reads 492 for
+  490 distinct routes. Measured 2026-09-10: 490 annotated, 486 documented. The four missing were
+  `GET /api/chat-providers` and `GET/PUT/DELETE /api/sites/{siteId}/chat-settings` — the AI chat
+  assistant's ENTIRE configuration surface, mounted and live
+  (`server/internal/server/router.go` wires `chatbotrest`), describable by nothing. The
+  `chat-widget` element had already shipped in the catalog, so an agent could put a chat
+  launcher on a page, publish it, and hand over a storefront whose chat answers 404 —
+  `chatbot/public/public.go:220` collapses "never configured" and "switched off" into one — with
+  no call anywhere in its reach that could turn it on.
+
+  **AND THE CHECK THEN FOUND A SECOND, OLDER GAP THAT NO COUNT COULD SEE: a surface annotated so
+  PARTIALLY that the totals agreed.** `relations/rest/rest.go` carried ONE `@Router`, on the list
+  GET, over a dispatcher that also serves create, update, delete and both pick verbs — so
+  curated shelves were readable and unmanageable, and nothing in the 490-vs-486 arithmetic
+  pointed at them. Fixed upstream in `8e40bbab` (web_builder) by annotating the five and
+  re-running `swag init`, which recovered all nine at once: **495 annotated, 495 documented, 495
+  in this catalog**, no removals. `slotBody` and `picksBody` arrived with shapes automatically,
+  and so did `chat-settings`' PUT — an INLINE anonymous struct, which `scripts/shapes.ts`
+  already handled. The lesson for the next re-measure: equal totals prove nothing about a
+  dispatcher that routes several verbs behind one annotated method.
+
+  **So the recipe is now a CHECK.** `reportUndocumentedRoutes` in `scripts/gen-catalog.ts` asks
+  the question on every `codegen` and every `codegen:check`, comparing DISTINCT annotated routes
+  against the document and matching on route SHAPE, so a path parameter spelled `{siteID}` in
+  one place and `{siteId}` in the other is not a false gap. There are two staleness questions
+  and `--check` only ever asked the second:
+
+  - is the catalog current against `swagger.json`? — `reportDrift`, and it exits 1;
+  - is `swagger.json` current against the ROUTES? — this, and it WARNS without failing.
+
+  The asymmetry is deliberate. This drift is not fixable by regenerating anything here, so
+  failing `--check` would send the caller to run the one command that cannot help. The message
+  names the upstream fix instead: `swag init` in `web_builder/server`, commit `server/docs/`,
+  then regenerate this catalog against that commit. Pinned by
+  `test/codegen-undocumented.test.ts`.
 
   What remains unmeasured is the routes with NO annotation at all. The old count (41) was
   never re-verified and is not repeated here: the dispatchers mount wildcard subtrees
@@ -389,10 +432,24 @@ that accounts for them.
   setup that works — which is worse than no guard, because it sends the caller to fix
   something that was never broken.
 
-- **On the canvas the agent's avatar is the KEY, not a person.** `realtime.go` returns
-  `key.ID` and `key.Name` rather than the minter's name, deliberately: an avatar borrowing a
-  human's name would tell the room a person is editing when a machine is. So the merchant
-  watches the label they chose for the key move around the page.
+- **On the canvas the agent's avatar is the KEY, not a person — AND SINCE `8e40bbab` it also
+  says so.** `realtime.go` returns `key.ID` and `key.Name` rather than the minter's name,
+  deliberately: an avatar borrowing a human's name would tell the room a person is editing when
+  a machine is. But it stopped there, so the only thing separating an agent from a colleague was
+  the WORDING the merchant happened to choose for the key — a key named "Trang" put a convincing
+  person in the room, moving a cursor around the page, and the editor had no signal it could
+  draw a badge from.
+
+  `realtime.Peer.Kind` carries it now (`PeerKindAgent`), and A PERSON IS THE ZERO VALUE: with
+  `omitempty` a human peer serializes byte-identically to the one before the field existed, so
+  the addition could not break a client that has not been taught it. The editor draws a GLYPH
+  rather than a word — no i18n key, same in every language — on the avatar and on the CURSOR,
+  which is the surface a merchant actually watches.
+
+  What this server sends is unchanged: `sb_live_join` still publishes `ops`, and `cursor` /
+  `select` still only move when a real `sb_look` measurement exists (`PageSession.noteBoxes`),
+  because presence with an invented coordinate is theatre. The read path is still HTTP — the
+  socket BROADCASTS edits, it does not fetch or save them.
 
 - **THE DATA AXIS OF A REPEATER WAS UNREACHABLE THROUGH EITHER TOOL, silently.** `sb_add`
   with `config.datasetSource: "category"` minted a `list-dataset` still bound to
@@ -940,33 +997,186 @@ that accounts for them.
   them — exactly what the exclusion exists to prevent. The absence of a string is evidence about
   the string, not about the behaviour; only rendering a node answers "does this paint".
 
-  What the probe DID find is one real platform gap: **`product-image-list` declares
-  `storage: 'node'` and nothing compiles its `states.hover`** — the one element that promises the
-  state slot and paints nothing from it.
+  What the probe DID find looked like a platform gap and was a SECOND namespace mistake of the
+  same kind: **`product-image-list` declares `storage: 'node'`, and nothing compiles its
+  `states.hover.style`** — but its own compiler was already reading the state slot's CONFIG.
+  `render/style/satellite.go`'s `CompileImageListItemBorderCSS` takes
+  `MergeStateNs(node, state, "config", bp)` and emits
+  `.wb-product-image-list__item:hover::after`, for exactly `listItemBorderWidth` (which must be
+  PRESENT on the state, even 0, or the whole rule is skipped — the state is read RAW, with no
+  fallback to base), `listItemBorderColor` and `listItemBorderStyle`. So the probe was right
+  about the namespace it probed and wrong about the element, and the note it produced told
+  callers to give up and style a wrapper. `hoverRoutingNote` now names the route that works.
+  The lesson is the probe's own, applied one level down: rendering a node answers "does this
+  paint" only for the namespace you rendered.
 
-- **A CATEGORY TEMPLATE DOES NOT SCOPE ITSELF TO THE CATEGORY IN THE URL, and its blog twin
-  does.** `/collections/{slug}` (the prefix is `collections`, not `categories`) resolves through
-  `PublishedForEntity`: the category's OWN page when a page-link names one, else the DEFAULT
-  TEMPLATE for the `category` page type. On that shared template nothing narrows the product
-  feed — `entityScope` threads the entity into three feeds and only three
-  (`linkType == "blogCategory"` → the article feed, `linkType == "product"` → the review feed,
-  and the curated slots), so `productCategory` reaches the products feed as nothing at all. A
-  repeater left on `collectionType: "all_products"` then does exactly what the platform's own
-  comment says it does: "repeats the whole catalog whatever id is left behind". Every category
-  shows every product, on every category, with no error anywhere.
+- **A CATEGORY TEMPLATE NOW SCOPES ITSELF TO THE CATEGORY IN THE URL, and this file said the
+  opposite for a day.** `/collections/{slug}` (the prefix is `collections`, not `categories`)
+  resolves through `PublishedForEntity`: the category's OWN page when a page-link names one,
+  else the DEFAULT TEMPLATE for the `category` page type. That template is one document serving
+  every category, and until 2026-09-09 nothing narrowed its product feed — `entityScope` threaded
+  the entity into the ARTICLE feed for a `blogCategory` and the REVIEW feed for a `product`, and
+  `productCategory` reached the products feed as nothing at all, so every category listed the
+  whole catalogue with no error anywhere.
 
-  Two shapes work today, and an agent has to pick one deliberately:
-  - **A page per category.** `PUT /api/sites/{siteId}/page-links/{linkType}/{linkId}` with
-    `{pageId}` links one category to one page — `POST …/page-links/bulk` with
-    `{linkType, linkIds, pageId}` does many at once — and that page's repeater carries
-    `collectionType: "collection"` + its own `collectionId`.
-  - **One template, one collection.** `PUT /api/sites/{siteId}/pages/{pageId}/default-template`
-    (it decodes NO body) makes a page the type's default; the repeater on it still needs a fixed
-    `collectionId`, so the shared template can only ever be right for one category.
+  `b4ca5645` closed it, and closed it where the product KINDS are decided rather than by
+  narrowing the feed. `pagerender.go:2264` threads the entity as `pageCollection` for
+  `linkType == "productCategory"`; `render/nodes/list-dataset/html.go:328` reads it. So:
 
-  What does NOT work is leaving `all_products` on the default template and expecting the slug to
-  narrow it. The asymmetry with `blogCategory` — which IS automatic — is the platform's, not
-  this client's, and is worth reporting rather than working around.
+  - **`all_products` on a category page means THAT category.** The shared default template is
+    now correct for every category, which is what an agent should reach for first — one page,
+    one repeater, left on the kind it is born with.
+  - **A repeater pointed at a NAMED collection keeps naming it** (`collectionType: "collection"`
+    + its own `collectionId`). Deliberate: a "you may also like" shelf of another category on a
+    category page is a real design, and the page must not overrule it.
+  - `related` / `featured` / the curated slots read no `collectionId` at all, so the scope
+    reaches none of them.
+
+  The two older shapes still WORK and are still the way to give one category a page of its own —
+  `PUT /api/sites/{siteId}/page-links/{linkType}/{linkId}` with `{pageId}` (or
+  `POST …/page-links/bulk` with `{linkType, linkIds, pageId}` for many), and
+  `PUT /api/sites/{siteId}/pages/{pageId}/default-template`, which decodes NO body. They are no
+  longer required for correct scoping, and building a page per category to get it is now work
+  for nothing.
+
+  **THE SCOPE IS EMPTY IN THE DRAFT PREVIEW** (`render/html.go:637` answers "" with no scope),
+  so a category template previews listing the whole catalogue however right it is — the same
+  population of pages the `sb_look` entity-template caveat already covers. Judge it at
+  `/collections/{slug}` on the published storefront.
+
+  This entry is kept in the shape "it used to be X, it is now Y" on purpose. The previous
+  version was written the same afternoon the platform fixed it and prescribed a page per
+  category as the remedy, which is exactly the stale-hint cost this file records for agent keys
+  and for storefront accounts: a fact verified once is not a constant, and a hint that says
+  "you cannot" outlives the thing that made it true.
+
+- **DESIGN RULE 0 FAILED BY CONSTRUCTION ON NINE ELEMENTS, and nothing said so.** "Read the
+  page's pattern off what is there" assumes a node's `style` HOLDS what it paints. Since
+  `THEME_VERSION` 6 that is false: element defaults are moving OUT of `meta.defaults.style` and
+  into theme PRESETS the element wears, and `icon/meta.ts` states it outright — "The COLOUR
+  lives in the `icon-default` style preset, not here: a node's own slot outranks its preset, so
+  seeding it made every other icon preset unable to repaint it." Nine metas already carry one
+  (`icon`, `button`, `heading`, `text`, `image`, `flex-section`, `text-dataset`,
+  `quantity-input`, `search-input`), and `DEFAULT_THEME` ships 58 presets.
+
+  A preset compiles to a CLASS rule BENEATH the node's own values (`compilePresetCSS`), so the
+  layer is real and ordered — and it was invisible to every tool here. `sb_node_read` on an icon
+  returned a style with no colour, on a page visibly painting one, so an agent following rule 0
+  read nothing and invented a literal. That literal then OUTRANKS the preset permanently: the
+  node stops following the theme, and the next palette change moves every other node and not
+  that one.
+
+  `sb_node_read` now returns a `preset` block — what it paints, with every `var()` chain
+  flattened, plus which keys the node has already overridden — and `sb_set` says once per preset
+  when a literal is about to detach a node. The chain is three deep in the ordinary case
+  (`var(--wb-sc-heading, var(--wb-color-heading))` → scheme role → palette token → `#111827`),
+  which is why the raw string is not an answer.
+
+  **THE SITE'S THEME IS THE AUTHORITY AND THE STARTER IS NOT.** `GET /api/sites/{siteId}/theme`
+  is fetched and cached per site; `STARTER_THEME` is the fallback and the origin travels with
+  the value, because handing an agent the starter's `#111827` for a site whose heading token is
+  rose is a confident wrong colour — worse than none. A node naming a preset the theme does not
+  hold is reported by id rather than resolving to nothing, which is the exact failure
+  `THEME_VERSION` 6 was bumped for. `src/domains/site/theme.ts`, pinned by
+  `test/theme-preset.test.ts`.
+
+- **TWO ELEMENTS RENDER CONVINCINGLY WHILE WIRED TO NOTHING, and it is the one silent shape
+  neither check can catch.** `sb_review` reads the tree and the tree is correct; `sb_look`
+  photographs the page and the page looks right. So the fact has to be delivered when the
+  element is ADDED, which is what `src/domains/site/inert.ts` does.
+  - `locale-switcher` below two locales gets a FABRICATED chip. `localeSwitchPayload` returns ""
+    and the renderer falls back to `sample = {Code:"VI", Name:"Tiếng Việt", Currency:"VND",
+    Flag:"🌐"}`, deliberately, "so the element is never an empty box". It names a language and
+    switches nothing.
+  - `breadcrumb`'s ROOT crumb is the one word no entity supplies: `specials.homeLabel`,
+    defaulting to the English "Home". **The trail itself IS derived and the labels ARE
+    authorable** — the hardcoded "Home" / "Product detail" in `html.go:126,132` is the PRE-TRAIL
+    branch, kept byte for byte so that adding the trail republished nobody's page differently,
+    and reading it as the live path was a misreading worth recording: the element's own AI hint
+    ("Always start with 'Home'") is CORRECT, not stale.
+
+- **EVERY STORE PAGE TYPE OPENED PRE-BUILT FOR A MERCHANT AND BLANK FOR AN AGENT, and this
+  server's own tool description asserted the blank as if it were the platform's.**
+  `sb_page_create` said "It arrives empty" for as long as `editor/src/element/storePageSeeds.ts`
+  has been seeding — a product page opens with "gallery, title, price, variant picker,
+  description, quantity stepper, Add to cart and Buy it now — already arranged and already
+  bound".
+
+  That file's opening comment is the argument for taking it, and it is about the AUTHOR rather
+  than the canvas: "the blank was not the problem — what the author had to already know was."
+  An agent was in exactly the position the merchant was rescued from, and worse — it cannot see
+  the palette card it is failing to reproduce, and the button's `add_to_cart` is a BINDING
+  rather than a click action, which is the single thing hardest to guess.
+
+  `STORE_PAGE_SEEDS` is generated by CALLING `buildStorePageDocument`, never by copying it, so
+  the day a palette card gains a piece it arrives at both doors. Six types: product (24 nodes),
+  category, search, blog, post, complete. Codegen asserts the buy box still carries
+  `add_to_cart` AND `bind-product-action`, because "it has nodes" is not proof a product page
+  still buys anything. `sb_page_create` seeds by default and takes `seed:false`; the seed is a
+  SECOND write and a refused one leaves the page created and blank rather than failing the call.
+
+  **AND IT FOUND THE ROOT CAUSE OF A DEFECT THIS FILE ONLY HAD THE SYMPTOM OF.** The `rootId`
+  entry above records that a page document carrying the alias "renders an EMPTY `<body>` with a
+  200 — the order-complete page of a real store did exactly that", and never said where the
+  alias came from. It came from the platform's own seed:
+  `editor/src/element/completionPage.ts:91` was `return { rootId: 'ROOT', nodes }` — no
+  `root_node_id`, and no `schema_version` either. So that real store got its blank page from the
+  editor, and so did every merchant who created a completion page through it; the canvas reads
+  the alias, and only the RENDERER disagrees.
+
+  FIXED UPSTREAM in `8e40bbab` (web_builder), which is where it belonged — this client could
+  only ever repair its own copy while the editor kept minting blank pages. The type system had
+  forbidden that line the whole time (`PageDocument` requires both fields, `schema/src/node.ts`),
+  and it survived because `npm test` there is `vitest run` and never typechecks; only
+  `npm run build` does. **A generated catalog is a typechecker pointed at the platform**: this
+  surfaced as a TS error the moment the seed was captured into a typed table, which is the
+  argument for capturing rather than copying.
+
+  The normaliser stays, and it now passes the fixed source through byte-identically — which is
+  what a good normaliser should do. The OTHER five seeds are asserted alias-free so it can never
+  become a blanket coercion that hides the next one.
+
+  The thank-you sentence is read from `editor/src/i18n/locales/{vi,en}/payments.json` rather
+  than defaulted here: seeding an English line into a Vietnamese store is the defect
+  `default_seed_copy` reports on everybody else's seeds.
+
+- **A CONFIG KEY'S LEGAL VALUES WERE UNREADABLE, AND GUESSING ONE FAILS SILENTLY.**
+  `sb_traits_for` names 471 controls, 138 with a declared write target — and NOT ONE said what
+  that target accepts, because every trait in `schema/src/traits/registry.ts` declares
+  `schema: { type: 'string' }`. The vocabulary lives in the Vue component that draws the picker,
+  which is a place no agent can read.
+
+  The platform's own test states the consequence:
+  `EffectiveCollectionType("bestseller")` returns `all_products`
+  (`render/tests/collection_test.go:227`). `EffectiveX` is a NORMALISER, not a validator — so a
+  repeater set to a plausible word (`bestseller`, `featured_products`, `newest`) stores, saves,
+  publishes and renders THE WHOLE CATALOGUE under whatever heading the author wrote above it,
+  with no error at any step. Same shape for the two siblings: an unknown `articleSourceType`
+  reads as `category`, an unknown `collectionListType` as every collection.
+
+  `CONFIG_VALUES` is generated from the GO normalizers rather than the editor's frozen objects,
+  because the Go is what RENDERS — `EffectiveX(stored)` IS the answer to "what will this do".
+  Each is a run of `if stored == Const { return Const }` arms over a trailing `return Fallback`,
+  which recovers the vocabulary AND the value a guess collapses to. It also recovers the
+  ALIASES, which are half the answer: `category` is a working spelling of `collection` that the
+  picker never writes, so a document holding it is CORRECT and an agent told otherwise would
+  "fix" a working page.
+
+  Two things this closes that nothing else did. `slot` and `featured` were **unnameable through
+  any tool** — the curated-shelf and merchandising kinds existed in the renderer and in no
+  catalog. And the keys that most need a vocabulary are the UNDECLARED ones: `collectionType` is
+  in `list-dataset`'s defaults and its control list with no `TRAIT_WRITES` entry, so the first
+  version of this — attaching a vocabulary to the control that declares the write — reached
+  exactly none of them. It attaches to the ELEMENT, over its own config keys.
+
+  **NO NEW TOOL, deliberately.** It rides inside `sb_traits_for`'s result as `config_values` and
+  `sb_set`'s `value` warning; `tools/list` did not grow by a byte and the budget test still
+  passes. This server answers 495 operations through one call sheet rather than a tool per
+  surface — a vocabulary is knowledge, not a verb, and knowledge belongs in a result.
+
+  A WARNING, never a refusal: the platform accepts the value, so refusing would invent a rule
+  it does not have and would block a caller writing a word a newer deployment understands and
+  this catalog does not.
 
 ## The five traps
 
@@ -992,10 +1202,44 @@ platform treats an unproven guard as indistinguishable from an absent one.
    The platform's mandate ("if a key CAN be responsive it MUST be") is about ELEMENT
    IMPLEMENTATION: an element whose Go renderer reads `n.Config[...]` directly — `nodes.ConfigInt`
    in `html.go`, an SVG `width=` attribute — bypasses the cascade, so a per-breakpoint value the
-   author sets renders on the canvas and never reaches publish. Nothing a DOCUMENT stores can
-   cause that. `server/render/style/cascade.go`'s MergeNamespace resolves a key
+   author sets renders on the canvas and never reaches publish.
+   `server/render/style/cascade.go`'s MergeNamespace resolves a key
    *current slot → wider slots → BASE → narrower slots*, so base is the fallback layer, and
    every element's `meta.defaults.style` is seeded straight into it.
+
+   **AND THIS ENTRY THEN SAID "NOTHING A DOCUMENT STORES CAN CAUSE THAT", WHICH IS FALSE — the
+   document is exactly what causes it.** `ConfigInt` and `ConfigString`
+   (`render/nodes/helpers.go:1421,1433`) index `node.Config[key]` with no responsive merge, and
+   ONE html document serves all three widths, so a key an `html.go` decides can only ever come
+   from base. `setKeys` writes config per breakpoint unless the caller passes `base`. For those
+   keys that default IS the bug the paragraph above describes — the value updates the editor
+   canvas and vanishes on publish, with no error at any step — reached not by writing a bad
+   element but by writing an ordinary document.
+
+   The platform keeps the list, as a deliberate MIGRATION ledger
+   (`schema/test/responsive-defaults.test.ts`, `BASE_ONLY_CONFIG`, 13 keys), and its own comment
+   records three that shipped and had to be reverted: `icon` iconSize, `text-dataset`
+   descriptionLines, `media-dataset` layout. It also protects the human and not the agent — the
+   editor's `MediaLayoutPickerRow` and `AccountRowLimitRow.vue` force `desktop` explicitly, so a
+   merchant cannot make this mistake through the inspector and an agent could make it on every
+   call.
+
+   THE DATA AXIS IS THE WORST OF THEM, and this repo had already paid for it from the other
+   direction. `datasetSource`, `kind`, `collectionId` and `collectionType` are all on the list,
+   while `rebindPatch` writes the derived bindings at NODE level. So
+   `sb_set config {datasetSource:"category"}` left the bindings saying category and the config
+   in `responsive.desktop`, where `dataset-block/html.go` never looks — it read base and still
+   said product. Both halves reported success: the same shape as "THE DATA AXIS OF A REPEATER
+   WAS UNREACHABLE THROUGH EITHER TOOL" above, re-entering through the breakpoint layer instead
+   of the kind axis.
+
+   `src/domains/site/baseonly.ts` splits a config write across the two layers and `sb_set`
+   reports the move as `base_only`, once per KEY per process — routed and said rather than
+   refused or silently done, which is the `hoverRoutingNote` precedent. The table is GENERATED
+   from the platform's ledger, never copied, because that ledger is meant to shrink: a stale
+   copy would keep forcing a key to base long after the platform made it responsive. The
+   EXCEPTIONS are per `type:key` and load-bearing — `quantity-button:iconSize` really is
+   per-breakpoint, through the satellite compiler's `--icon-size` var.
 
    THE TAIL OF THAT ORDER BITES. Because narrower slots are consulted last but ARE consulted,
    a key written only at `tablet` reaches `desktop` whenever neither desktop nor base declares

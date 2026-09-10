@@ -27,6 +27,7 @@ import {
   refuseReveal,
   requireHoverHost,
 } from './hover.js';
+import { splitBaseOnly, splitBaseOnlyKeys } from './baseonly.js';
 import { genId } from './ids.js';
 import type { PageDoc } from './document.js';
 
@@ -474,15 +475,58 @@ export function setKeys(
   }
 
   const bp = opts.breakpoint ?? 'desktop';
+
+  // SOME CONFIG HAS NO BREAKPOINT TO LAND IN. `html.go` reads node.Config[key]
+  // directly, so a key it decides can only come from base — written per
+  // breakpoint it updates the canvas and vanishes on publish. Split rather than
+  // refused, and reported through `baseOnlyKeys` below, which is the hover
+  // routing precedent: the caller's intent is not in doubt, but a caller who
+  // reads the node back must not have to hunt for the keys.
+  const type = doc.node(id).data.type;
+  const split =
+    namespace === 'config' ? splitBaseOnly(type, keys) : { base: {}, responsive: keys };
+  const unsetSplit =
+    namespace === 'config'
+      ? splitBaseOnlyKeys(type, opts.unset ?? [])
+      : { base: [], responsive: opts.unset ?? [] };
+
   return [
-    ...Object.entries(keys).map(([k, v]) => ({
+    ...Object.entries(split.responsive).map(([k, v]) => ({
       op: 'set' as const,
       path: ['nodes', id, 'responsive', bp, namespace, k],
       value: v,
     })),
-    ...removals,
+    ...Object.entries(split.base).map(([k, v]) => ({
+      op: 'set' as const,
+      path: ['nodes', id, namespace, k],
+      value: v,
+    })),
+    ...unsetSplit.responsive.map((k) => ({
+      op: 'unset' as const,
+      path: ['nodes', id, 'responsive', bp, namespace, k],
+    })),
+    ...unsetSplit.base.map((k) => ({ op: 'unset' as const, path: ['nodes', id, namespace, k] })),
     ...(rebind ? [rebind] : []),
   ];
+}
+
+/**
+ * The config keys of this write that had to go to base, for the caller's note.
+ *
+ * Computed beside the write rather than read out of it, because a patch list
+ * says only where things landed and not that anything MOVED — and "it moved" is
+ * the half worth saying.
+ */
+export function baseOnlyKeys(
+  doc: PageDoc,
+  id: string,
+  keys: Record<string, unknown>,
+  opts: { namespace: string; base?: boolean; state?: string },
+): string[] {
+  if (opts.namespace !== 'config' || opts.base || opts.state) return [];
+  const node = doc.doc.nodes[id];
+  if (!node) return [];
+  return Object.keys(splitBaseOnly(node.data.type, keys).base);
 }
 
 /**

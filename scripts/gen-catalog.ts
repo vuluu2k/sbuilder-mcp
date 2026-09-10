@@ -165,6 +165,88 @@ function readDocSchemaVersion(repo: string): number {
 }
 
 /**
+ * CONFIG KEYS THE PUBLISH PATH READS FROM BASE ONLY.
+ *
+ * A node's `config` is per-breakpoint only where the renderer reads it through
+ * the MERGED namespace. `css.go` does — `cfgPx(cfg, key)` inside the breakpoint
+ * loop. `html.go` does NOT: `nodes.ConfigInt` and `ConfigString`
+ * (`render/nodes/helpers.go:1421,1433`) index `node.Config[key]` directly. One
+ * HTML document serves all three widths, so anything an `html.go` decides can
+ * only come from base.
+ *
+ * WHY THIS MATTERS HERE: `setKeys` writes config per breakpoint unless the
+ * caller passes `base`, because a design should respond. For these keys that
+ * default is silently wrong — the value updates the editor canvas and vanishes
+ * on publish, with no error at any step. The platform's own ledger names the
+ * consequence: mobile seeds for `icon` iconSize, `text-dataset`
+ * descriptionLines and `media-dataset` layout all shipped and all had to be
+ * reverted.
+ *
+ * The worst of them is the DATA AXIS, which this repo has already fixed once
+ * from the other side. `datasetSource`, `kind`, `collectionId` and
+ * `collectionType` are all on the list, and `rebindPatch` writes the derived
+ * bindings at NODE level. So `sb_set config {datasetSource:"category"}` without
+ * `base` used to leave the bindings saying category and the config saying
+ * nothing the renderer reads — `dataset-block/html.go` reads base and still says
+ * product. Both halves reported success. That is the same defect CLAUDE.md
+ * records under "THE DATA AXIS OF A REPEATER WAS UNREACHABLE THROUGH EITHER
+ * TOOL", re-entering through the breakpoint layer instead of the kind axis.
+ *
+ * READ FROM THE PLATFORM, not hand-kept. `schema/test/responsive-defaults.test.ts`
+ * maintains `BASE_ONLY_CONFIG` as a deliberate MIGRATION LEDGER — its own comment
+ * says the list may SHRINK as each key moves to a per-breakpoint CSS var, and
+ * that any addition fails the platform's build. A copy here would drift in the
+ * one direction that matters: a key the platform FIXED would keep being forced
+ * to base, quietly costing the responsive answer this server exists to write.
+ *
+ * Read by regex, for the reason `DOC_SCHEMA_VERSION` is: importing a vitest file
+ * would drag the platform's test runner into a build script for two string sets.
+ *
+ * EXCEPTIONS are per `type:key`, not per key, and are load-bearing rather than
+ * pedantic. `quantity-button:iconSize` is genuinely responsive — the SATELLITE
+ * css compiler emits it as the `--icon-size` var per breakpoint — so forcing it
+ * to base would take a working per-breakpoint control away.
+ */
+function readBaseOnlyConfig(repo: string): { keys: string[]; exceptions: string[] } {
+  const path = resolve(repo, 'schema/test/responsive-defaults.test.ts');
+  const src = readFileSync(path, 'utf8');
+  const setOf = (name: string, shape: RegExp): string[] => {
+    const m = new RegExp(`const ${name} = new Set\\(\\[([\\s\\S]*?)\\]\\)`).exec(src);
+    if (!m) {
+      console.error(`${name} not found in schema/test/responsive-defaults.test.ts`);
+      process.exit(1);
+    }
+    // STRIP THE COMMENTS FIRST. The ledger's reasoning lives in dense per-key
+    // prose, and that prose is English: "order-history's row COUNT", "the
+    // editor's own AccountRowLimitRow.vue". Matching quoted entries across it
+    // pairs one apostrophe with the next and yields whole sentences as keys —
+    // which this generator did, and wrote, and a reader had to catch by eye.
+    const body = m[1].replace(/\/\/[^\n]*/g, '');
+    const found = [...body.matchAll(/'([^'\n]+)'/g)].map((q) => q[1]);
+    // A key is an identifier. Anything else means the ledger's format moved, and
+    // a generator that shrugs at that writes a table nothing matches — silently,
+    // which is the entire class of defect this table exists to prevent.
+    const bad = found.filter((k) => !shape.test(k));
+    if (bad.length) {
+      console.error(
+        `${name} in schema/test/responsive-defaults.test.ts parsed ${bad.length} entr(ies) ` +
+          'that are not keys — the ledger format moved:',
+      );
+      for (const b of bad.slice(0, 5)) console.error(`  ${JSON.stringify(b)}`);
+      process.exit(1);
+    }
+    return found;
+  };
+  const keys = setOf('BASE_ONLY_CONFIG', /^[A-Za-z][A-Za-z0-9_]*$/);
+  const exceptions = setOf('EXCEPTIONS', /^[a-z][a-z0-9-]*:[A-Za-z][A-Za-z0-9_]*$/);
+  if (keys.length === 0) {
+    console.error('BASE_ONLY_CONFIG parsed as empty — the ledger format moved');
+    process.exit(1);
+  }
+  return { keys, exceptions };
+}
+
+/**
  * The binding source keys the RENDERER provides, read out of the Go scope
  * builder. A `source` this list does not contain is a binding that resolves to
  * nothing and renders as the element's own placeholder — indistinguishable from
@@ -346,6 +428,112 @@ function reportDrift(): void {
 
 
 /**
+ * THE SWAGGER DOCUMENT IS GENERATED TOO, AND UPSTREAM FORGETS TO RE-RUN IT.
+ *
+ * `sb_api_call` is a CLOSED LIST built from this catalog, which is built from
+ * `server/docs/swagger.json` — and that file is itself the output of a MANUAL
+ * `swag init`. So there are two staleness questions, not one, and `--check`
+ * only ever asked the second:
+ *
+ *   is the catalog current against swagger.json?   ← reportDrift
+ *   is swagger.json current against the ROUTES?    ← this
+ *
+ * The second failure is the worse one, because it is invisible from inside this
+ * repo: every count agrees, `--check` says "catalog is current", and the
+ * operation is simply absent from a list nobody can see the end of. CLAUDE.md
+ * has recorded this happening twice. `swag init` was once un-run for long enough
+ * to hide 44 operations, three of them the payment-gateway config a store needs
+ * to switch a gateway on — reachable to a browser and to nothing else, for want
+ * of a comment. It recorded the gap "closed, measured 2026-09-09: 486 = 486 =
+ * 486", and told the reader to re-measure with three shell commands rather than
+ * trust the number.
+ *
+ * Measured 2026-09-10, the day after: 490 annotated, 486 in the document. The
+ * four were `GET /api/chat-providers` and `GET/PUT/DELETE
+ * /api/sites/{siteId}/chat-settings` — every write that configures the AI chat
+ * assistant, mounted and live, describable by nothing. A `chat-widget` element
+ * had ALREADY shipped in the catalog, so an agent could add a chat launcher to a
+ * page, publish it, and hand a merchant a storefront whose chat answers 404
+ * (`chatbot/public/public.go:220` collapses "not configured" and "switched off"
+ * into one), with no call anywhere in its reach that could turn it on.
+ *
+ * A three-command shell recipe in prose is what we had, and it is what a reader
+ * skips. This asks the question on every run instead.
+ *
+ * It WARNS rather than refusing, and does not fail `--check`. The distinction is
+ * the point: drift here is not fixable by `npm run codegen`, so failing the
+ * check would leave a caller running the one command that cannot help. The fix
+ * is upstream — `swag init` in web_builder, and commit `server/docs/` — so the
+ * message names that instead.
+ *
+ * Duplicate annotations are real and must not be counted twice: the platform
+ * stacks one doc block over several `@Router` lines, and `courses/rest/rest.go`
+ * declares the same two enrollment routes in two blocks. A raw `grep | wc -l`
+ * therefore over-counts, which is exactly how the prose recipe reads — take the
+ * DISTINCT set instead.
+ */
+function reportUndocumentedRoutes(repo: string, spec: { paths: Record<string, unknown> }): void {
+  const dir = resolve(repo, 'server/internal');
+  if (!existsSync(dir)) return;
+
+  // `@Router /api/sites/{siteId}/chat-settings [put]` — the path may carry any
+  // number of `{param}` segments, and the method is the bracketed tail.
+  const ROUTER = /@Router\s+(\S+)\s+\[([a-z]+)\]/g;
+  // Two paths naming the same route differ only in what they call the
+  // parameter: `{siteId}` here, `{siteID}` in swagger's own copy of the same
+  // route. Compare on shape.
+  const shape = (path: string, method: string): string =>
+    `${method.toUpperCase()} ${path.replace(/\{[^}]*\}/g, '{}')}`;
+
+  const annotated = new Map<string, string>();
+  const walk = (d: string): void => {
+    for (const e of readdirSync(d, { withFileTypes: true })) {
+      const full = resolve(d, e.name);
+      if (e.isDirectory()) {
+        walk(full);
+        continue;
+      }
+      if (!e.name.endsWith('.go')) continue;
+      const src = readFileSync(full, 'utf8');
+      for (const m of src.matchAll(ROUTER)) {
+        const key = shape(m[1], m[2]);
+        if (!annotated.has(key)) annotated.set(key, `${m[2].toUpperCase()} ${m[1]}`);
+      }
+    }
+  };
+  walk(dir);
+
+  const documented = new Set<string>();
+  for (const [path, item] of Object.entries(spec.paths)) {
+    for (const method of Object.keys(item as Record<string, unknown>)) {
+      documented.add(shape(path, method));
+    }
+  }
+
+  const missing = [...annotated.entries()]
+    .filter(([key]) => !documented.has(key))
+    .map(([, pretty]) => pretty)
+    .sort();
+  if (missing.length === 0) return;
+
+  console.error(
+    `warning: ${missing.length} route(s) are ANNOTATED in server/internal and absent from ` +
+      `server/docs/swagger.json (${annotated.size} annotated, ${documented.size} documented). ` +
+      'They are mounted and live, and this catalog cannot describe them — so sb_api_call, ' +
+      'which is a closed list, cannot reach them at all:',
+  );
+  for (const line of missing.slice(0, 12)) console.error(`  ${line}`);
+  if (missing.length > 12) console.error(`  …and ${missing.length - 12} more`);
+  console.error(
+    'Fix it UPSTREAM, not here — re-running codegen cannot recover a route the document ' +
+      'does not carry:\n' +
+      '  cd <web_builder>/server && swag init -g cmd/server/main.go -o docs \\\n' +
+      '      --parseInternal --parseDependency --parseDepth 2\n' +
+      '  git add docs && git commit   # then regenerate this catalog against that commit',
+  );
+}
+
+/**
  * REFUSE A CHECKOUT SOMEBODY IS MID-EDIT IN.
  *
  * The catalog is COMMITTED, so whatever this script reads ships to every
@@ -484,6 +672,9 @@ async function main(): Promise<void> {
     paths: Record<string, Record<string, unknown>>;
     definitions?: Record<string, unknown>;
   };
+  // Asked BEFORE the catalog is built, so a caller reading a wall of "wrote …"
+  // lines sees the one thing those lines cannot tell them first.
+  reportUndocumentedRoutes(repo, spec);
 
   const ops: ApiOperation[] = [];
   for (const [path, item] of Object.entries(spec.paths)) {
@@ -868,6 +1059,111 @@ export const API_DEFINITIONS: Record<string, unknown> = ${JSON.stringify(
   const bindingSources = readBindingSources(repo);
   const boundSpecials = readBoundSpecials(repo);
   const firstChildOnly = readFirstChildOnly(repo);
+  const baseOnly = readBaseOnlyConfig(repo);
+
+  // ---- What a config key is ALLOWED to hold ----------------------------
+  //
+  // `sb_traits_for` names 138 controls with a declared write target, and NOT ONE
+  // of them says what values that target accepts — every trait in the registry
+  // declares `schema: { type: 'string' }`, because the vocabulary lives in the
+  // Vue component that renders the picker, which is a place no agent can read.
+  //
+  // So an agent could be told "this control writes `config.collectionType`" and
+  // had to guess the word. The guess FAILS SILENTLY, and the platform's own test
+  // says so: `EffectiveCollectionType("bestseller")` returns `all_products`
+  // (render/tests/collection_test.go:227). A repeater set to a plausible word —
+  // `bestseller`, `featured_products`, `newest` — stores, saves, publishes and
+  // renders THE WHOLE CATALOGUE, under whatever heading the author wrote above
+  // it. Same shape for the other two: an unknown `articleSourceType` reads as
+  // `category`, an unknown `collectionListType` as every collection.
+  //
+  // READ FROM THE GO, not from the editor's frozen objects, because the Go is
+  // what RENDERS — `EffectiveX(stored)` IS the answer to "what will this do".
+  // Each function is a run of `if stored == Const { return Const }` arms over a
+  // trailing `return Fallback`, which is exactly enough to recover the whole
+  // vocabulary AND the value an unrecognised one collapses to.
+  //
+  // ALIASES ARE PART OF THE ANSWER: `EffectiveCollectionType` accepts "category"
+  // for "collection", a compatibility spelling that works and is not what the
+  // picker writes. An agent told only the canonical list would read a document
+  // holding the alias as broken.
+  //
+  // NO NEW TOOL. This lands inside `sb_traits_for`'s result, on the control that
+  // writes the key — the tool list does not grow by a byte.
+  const readConfigValues = (): Record<
+    string,
+    { values: string[]; fallback: string; aliases: Record<string, string>; readBy: string }
+  > => {
+    const src = readFileSync(resolve(repo, 'server/render/nodes/collection.go'), 'utf8');
+    // The const block: `CollectionTypeSlot   = "slot"`.
+    const consts = new Map<string, string>();
+    for (const m of src.matchAll(/^\s*([A-Z][A-Za-z0-9]*)\s*=\s*"([^"]*)"/gm)) {
+      consts.set(m[1], m[2]);
+    }
+    // Which CONFIG KEY each normalizer is applied to, read from its call sites
+    // rather than guessed from the function name — `EffectiveCollectionType` is
+    // applied to a variable called `kind`, and only the call site says the key.
+    const KEY_FOR: Record<string, string> = {
+      EffectiveCollectionType: 'collectionType',
+      EffectiveArticleSourceType: 'articleSourceType',
+      EffectiveCollectionListType: 'collectionListType',
+    };
+    const out: Record<
+      string,
+      { values: string[]; fallback: string; aliases: Record<string, string>; readBy: string }
+    > = {};
+    for (const [fn, key] of Object.entries(KEY_FOR)) {
+      const at = src.indexOf(`func ${fn}(`);
+      if (at < 0) {
+        console.error(`${fn} is gone from server/render/nodes/collection.go`);
+        process.exit(1);
+      }
+      const end = src.indexOf('\n}', at);
+      const body = src.slice(at, end);
+      const values: string[] = [];
+      const aliases: Record<string, string> = {};
+      // `if stored == A || stored == "category" { return B }` — every literal or
+      // named constant on the left is accepted; the RETURN is what it becomes,
+      // so a left-hand value that differs from the return is an alias.
+      for (const arm of body.matchAll(/if\s+stored\s*==\s*([^{]+)\{\s*return\s+([A-Za-z0-9_]+)/g)) {
+        const becomes = consts.get(arm[2]) ?? arm[2];
+        for (const t of arm[1].split('||')) {
+          const lit = /"([^"]*)"/.exec(t);
+          const named = /([A-Za-z][A-Za-z0-9]*)/.exec(t.trim());
+          const v = lit ? lit[1] : consts.get(named?.[1] ?? '');
+          if (v === undefined) continue;
+          if (v === becomes) values.push(v);
+          else aliases[v] = becomes;
+        }
+      }
+      const tail = /return\s+([A-Za-z0-9_]+)\s*$/.exec(body.trimEnd());
+      const fallback = tail ? (consts.get(tail[1]) ?? tail[1]) : '';
+      if (!values.length || !fallback) {
+        console.error(`${fn} no longer reads as a vocabulary — the normalizer shape moved`);
+        process.exit(1);
+      }
+      // The fallback is a legal value too, and the arms never name it: it is the
+      // `else` of the whole function.
+      if (!values.includes(fallback)) values.unshift(fallback);
+      out[key] = { values: values.sort(), fallback, aliases, readBy: fn };
+    }
+    return out;
+  };
+  const configValues = readConfigValues();
+  // The vocabulary this whole table exists for. A regression here is a repeater
+  // that lists the wrong things with no error, so it is asserted rather than
+  // trusted.
+  for (const [key, expect] of Object.entries({
+    collectionType: 'slot',
+    articleSourceType: 'slot',
+    collectionListType: 'custom_collections',
+  })) {
+    if (!configValues[key]?.values.includes(expect)) {
+      console.error(`config.${key} no longer offers "${expect}" — check collection.go`);
+      process.exit(1);
+    }
+  }
+
   const elementsOut = `// GENERATED by scripts/gen-catalog.ts — do not edit by hand.
 // Source: <WB_REPO>/schema/src/elements/** and editor/src/theme/legacyScopes.ts
 import type { CatalogElement, NodeSeed, SatelliteRule, TraitDescription } from './element-types.js';
@@ -889,13 +1185,52 @@ export const ELEMENT_SEEDS: Record<string, NodeSeed[]> = ${JSON.stringify(elemen
 export const FIRST_CHILD_ONLY: string[] = ${JSON.stringify(firstChildOnly, null, 2)};
 
 export const HOVER_HOMES: Record<string, { home: 'legacy' | 'state' }> = ${JSON.stringify(hoverHomes, null, 2)};
+
+/**
+ * What a config key is ALLOWED to hold, and what an unrecognised value becomes.
+ *
+ * Every trait in the platform's registry declares schema type "string", so the
+ * vocabulary lives in the Vue picker — a place no agent can read. The guess
+ * fails SILENTLY: the platform's own test pins
+ * EffectiveCollectionType("bestseller") == "all_products", so a repeater set to
+ * a plausible word renders the whole catalogue under whatever heading is above
+ * it.
+ *
+ * Read from the GO normalizers, because those are what render. "aliases" are
+ * spellings that work but are not what the picker writes.
+ */
+export const CONFIG_VALUES: Record<
+  string,
+  { values: string[]; fallback: string; aliases: Record<string, string>; readBy: string }
+> = ${JSON.stringify(configValues, null, 2)};
+
+/**
+ * Config keys the PUBLISH path reads from base only — html.go indexes
+ * node.Config[key] with no responsive merge, and one HTML document serves all
+ * three widths. Written per breakpoint they update the editor canvas and vanish
+ * on publish, with no error anywhere.
+ *
+ * The platform's own migration ledger (schema/test/responsive-defaults.test.ts),
+ * read rather than copied: it may SHRINK as each key moves to a per-breakpoint
+ * CSS var, and a stale copy here would keep forcing a fixed key to base.
+ */
+export const BASE_ONLY_CONFIG: string[] = ${JSON.stringify(baseOnly.keys, null, 2)};
+
+/**
+ * "type:key" pairs that are responsive DESPITE the shared key name, so the rule
+ * above must not touch them. quantity-button:iconSize is compiled per
+ * breakpoint by the satellite CSS compiler as the --icon-size var.
+ */
+export const BASE_ONLY_EXCEPTIONS: string[] = ${JSON.stringify(baseOnly.exceptions, null, 2)};
 `;
   emit(resolve(process.cwd(), 'src/catalog/elements.generated.ts'), elementsOut);
   console.error(
     `${VERB} elements.generated.ts: ${types.length} elements, ${allControls.size} controls ` +
       `(${Object.keys(traits).length} with a declared write target), ` +
       `${bindingSources.length} binding sources, ${Object.keys(boundSpecials).length} bound-special elements, ` +
-      `${Object.keys(satellites).length} satellite owners, ${firstChildOnly.length} first-child-only, doc schema v${docVersion}`,
+      `${Object.keys(satellites).length} satellite owners, ${firstChildOnly.length} first-child-only, ` +
+      `${baseOnly.keys.length} base-only config keys, ${Object.keys(configValues).length} config vocabularies, ` +
+      `doc schema v${docVersion}`,
   );
 
   // ---- Request shapes --------------------------------------------------
@@ -1096,6 +1431,317 @@ export type FormTemplateKey = keyof typeof FORM_TEMPLATES;
       `${Object.keys((checkoutPageDoc as { nodes: object }).nodes).length} page nodes, ` +
       `${Object.keys(checkoutText).length} locales, ` +
       `${templateCount} form templates`,
+  );
+
+  // THE COMPLETION PAGE SEED EMITS `rootId`, AND THAT IS THE BUG THIS REPO
+  // ALREADY RECORDED THE SYMPTOM OF.
+  //
+  // CLAUDE.md has carried this for phases: "`rootId` is the app-block key for
+  // the same idea `root_node_id` names in a page. A page document carrying it
+  // renders an EMPTY <body> with a 200 — the order-complete page of a real store
+  // did exactly that." What it never named was WHERE the alias came from.
+  //
+  // `editor/src/element/completionPage.ts:91` is where: `return { rootId:
+  // 'ROOT', nodes }` — no `root_node_id` and no `schema_version` either. So the
+  // real store whose order-complete page rendered blank got that document from
+  // the platform's own seed, and every merchant who creates a completion page
+  // through the editor gets the same one. It is invisible in the editor because
+  // the canvas reads the alias; only the RENDERER disagrees.
+  //
+  // Normalised here rather than passed through, because this seed is about to be
+  // PUT to a real page: shipping the alias would make `sb_page_create` mint the
+  // very blank page `sb_page_open` has a repair path for. The other five seeds
+  // come out correct and are asserted so, which is what keeps this from becoming
+  // a blanket coercion that hides the next one.
+  const normalizeSeed = (
+    type: string,
+    doc: Record<string, unknown>,
+  ): { schema_version: number; root_node_id: string; nodes: Record<string, unknown> } => {
+    const nodes = doc.nodes as Record<string, unknown>;
+    const alias = doc.rootId;
+    const root = doc.root_node_id ?? alias;
+    if (typeof root !== 'string' || !root || !nodes?.[root]) {
+      console.error(`the ${type} page seed names no usable root (root_node_id/rootId)`);
+      process.exit(1);
+    }
+    if (alias !== undefined && type !== 'complete') {
+      // A NEW seed growing the alias must be seen, not absorbed.
+      console.error(
+        `the ${type} page seed now emits rootId — the alias renders an empty <body>. ` +
+          'Fix it in editor/src/element/, not here.',
+      );
+      process.exit(1);
+    }
+    return {
+      schema_version: (doc.schema_version as number) ?? docVersion,
+      root_node_id: root,
+      nodes,
+    };
+  };
+
+  // ---- What a store page opens with ------------------------------------
+  //
+  // EVERY STORE PAGE TYPE OPENS PRE-BUILT FOR A HUMAN AND BLANK FOR AN AGENT,
+  // and `sb_page_create` said so in its own description: "It arrives empty."
+  // For a merchant it has not been empty since `storePageSeeds.ts` landed — a
+  // product page opens with the whole buy box, "gallery, title, price, variant
+  // picker, description, quantity stepper, Add to cart and Buy it now — already
+  // arranged and already bound".
+  //
+  // That file's opening comment is the argument for taking it: "the blank was
+  // not the problem — what the author had to already know was", listing the
+  // seven pieces, in which order, inside which container, with a button whose
+  // BINDING rather than click action is add_to_cart. An agent was in exactly the
+  // position the merchant was rescued from, and worse: it cannot see the palette
+  // card it is failing to reproduce.
+  //
+  // IDS ARE RESTAMPED, for the reason the checkout seed is: `createElement`
+  // mints a random id per node, so a straight capture would rewrite this file on
+  // every run and `--check` would report drift that is not drift.
+  //
+  // The completion page takes a HEADLINE, which exists only at runtime — the
+  // same sentinel shape the checkout page uses, asserted to appear exactly once
+  // so a substitution that silently matched nothing cannot ship a page whose
+  // thank-you line is a placeholder.
+  const storeSeedMod = (await import(
+    resolve(repo, 'editor/src/element/storePageSeeds.ts')
+  )) as {
+    buildStorePageDocument: (type: string, headline: string) => { nodes: Record<string, unknown> } | undefined;
+    hasStorePageSeed: (type: string) => boolean;
+  };
+  const HEADLINE_SENTINEL = '__SB_COMPLETION_HEADLINE__';
+  const STORE_TYPES = ['product', 'category', 'search', 'blog', 'post', 'complete'] as const;
+  const storeSeeds: Record<string, unknown> = {};
+  for (const type of STORE_TYPES) {
+    const doc = storeSeedMod.buildStorePageDocument(type, HEADLINE_SENTINEL);
+    // A seed the platform RETIRED must vanish from here rather than linger as a
+    // stale copy — the whole point of reading the palette's own cards is that
+    // the day a card gains a piece it arrives at both doors.
+    if (!doc) continue;
+    storeSeeds[type] = normalizeSeed(
+      type,
+      stableIds(doc as { nodes: Record<string, unknown> }, `sp${type.slice(0, 3)}`),
+    );
+  }
+  if (!storeSeeds.product) {
+    console.error('no product page seed — has editor/src/element/storePageSeeds.ts moved?');
+    process.exit(1);
+  }
+  const completeJson = JSON.stringify(storeSeeds.complete ?? {});
+  if (completeJson.split(HEADLINE_SENTINEL).length - 1 !== 1) {
+    console.error('the completion page seed no longer carries exactly one headline');
+    process.exit(1);
+  }
+  // THE THANK-YOU LINE IN THE MERCHANT'S OWN LANGUAGE, read from the editor's
+  // i18n rather than defaulted here. Defaulting would hardcode English into a
+  // seeded page and ship the exact defect `default_seed_copy` exists to report —
+  // and the platform already ships the sentence in both languages.
+  const completionHeadline: Record<string, string> = {};
+  for (const lang of ['vi', 'en']) {
+    const raw = JSON.parse(
+      readFileSync(resolve(repo, `editor/src/i18n/locales/${lang}/payments.json`), 'utf8'),
+    ) as Record<string, unknown>;
+    const payments = (raw.payments as Record<string, unknown>) ?? raw;
+    const h = payments.completionPageHeadline;
+    if (typeof h !== 'string' || !h) {
+      console.error(`${lang}/payments.json is missing completionPageHeadline`);
+      process.exit(1);
+    }
+    completionHeadline[lang] = h;
+  }
+  // The buy box is the seed that matters, and "it has nodes" is not proof it
+  // still buys anything: the button's BINDING is what makes it add to cart, and
+  // a card that lost it would still look like a product page here.
+  const productJson = JSON.stringify(storeSeeds.product);
+  for (const required of ['add_to_cart', 'bind-product-action']) {
+    if (!productJson.includes(required)) {
+      console.error(`the product page seed no longer carries ${required} — the buy box is broken`);
+      process.exit(1);
+    }
+  }
+
+  const storeOut = `// GENERATED by scripts/gen-catalog.ts — do not edit by hand.
+// Source: <WB_REPO>/editor/src/element/storePageSeeds.ts (the palette's own cards).
+
+export const STORE_SEED_SOURCE = ${JSON.stringify(
+    {
+      types: Object.keys(storeSeeds),
+      nodes: Object.fromEntries(
+        Object.entries(storeSeeds).map(([t, d]) => [
+          t,
+          Object.keys((d as { nodes: Record<string, unknown> }).nodes).length,
+        ]),
+      ),
+    },
+    null,
+    2,
+  )} as const;
+
+/** The token the completion page's thank-you headline is substituted into. */
+export const COMPLETION_HEADLINE_SENTINEL = ${JSON.stringify(HEADLINE_SENTINEL)};
+
+/**
+ * The thank-you sentence, per locale, as the editor ships it.
+ *
+ * Read from the platform rather than defaulted, so a Vietnamese store does not
+ * get an English seeded page — the defect \`default_seed_copy\` reports.
+ */
+export const COMPLETION_HEADLINE: Record<string, string> = ${JSON.stringify(completionHeadline, null, 2)};
+
+/**
+ * The document a new page of each type opens with in the EDITOR.
+ *
+ * Not a copy of the palette — built by calling the palette's own cards, so an
+ * agent that creates a product page and a merchant who drags the Product card
+ * end up looking at the same thing. A type absent here starts blank, which is
+ * the right default for \`page\` itself.
+ */
+export const STORE_PAGE_SEEDS: Record<string, { schema_version: number; root_node_id: string; nodes: Record<string, unknown> }> = ${JSON.stringify(
+    storeSeeds,
+    null,
+    2,
+  )};
+`;
+  emit(resolve(process.cwd(), 'src/catalog/storepages.generated.ts'), storeOut);
+  console.error(
+    `${VERB} storepages.generated.ts: ${Object.keys(storeSeeds).length} seeded page types (` +
+      Object.entries(storeSeeds)
+        .map(([t, d]) => `${t} ${Object.keys((d as { nodes: object }).nodes).length}`)
+        .join(', ') +
+      ' nodes)',
+  );
+
+  // ---- The theme -------------------------------------------------------
+  //
+  // DESIGN RULE 0 FAILS BY CONSTRUCTION ON NINE ELEMENTS, and this is the half
+  // that makes it fail. "Read the page's pattern off what is there" assumes a
+  // node's style HOLDS what it paints. Since THEME_VERSION 6 that is no longer
+  // true: element defaults are moving OUT of `meta.defaults.style` and into
+  // theme PRESETS the element wears, and `icon/meta.ts` says so outright — "The
+  // COLOUR lives in the `icon-default` style preset, not here: a node's own slot
+  // outranks its preset, so seeding it made every other icon preset unable to
+  // repaint it."
+  //
+  // So `sb_node_read` on an icon returns a style with no colour in it, on a page
+  // that is visibly painting one. An agent following rule 0 reads nothing and
+  // invents — and the literal it then writes OUTRANKS the preset permanently,
+  // detaching that node from the theme for every future palette change.
+  //
+  // A preset compiles to a CLASS rule beneath the node's own values
+  // (`compilePresetCSS`), so the node keeps overriding it the ordinary way. The
+  // layer is real, ordered, and was invisible here.
+  //
+  // WHAT IS GENERATED IS THE STARTER THEME, AND IT IS NOT THE SITE'S. A site
+  // stores its own, and `GET /api/sites/{siteId}/theme` is the authority — which
+  // is why `src/domains/site/theme.ts` resolves against a FETCHED theme and
+  // falls back to this one only for a site that has never customised. Shipping
+  // the starter as if it were the answer would hand an agent a confident wrong
+  // colour, which is worse than none.
+  const themeMod = (await import(resolve(repo, 'schema/src/theme.ts'))) as {
+    THEME_VERSION: number;
+    DEFAULT_THEME: {
+      colors: Array<{ id: string; name: string; value: string }>;
+      textStyles: Array<{ id: string; name: string; slug?: string }>;
+      schemes?: Array<{ id: string; name: string; roles?: Record<string, string> }>;
+      presets?: Array<{
+        id: string;
+        name: string;
+        kind: string;
+        draft?: boolean;
+        base: Record<string, string>;
+        responsive?: Record<string, Record<string, string>>;
+        states?: { hover?: Record<string, string> };
+      }>;
+      lightSchemeId?: string;
+      darkSchemeId?: string;
+    };
+    PRESET_KINDS: readonly string[];
+  };
+  const dt = themeMod.DEFAULT_THEME;
+  // Drafts are a LISTING rule, never a rendering one — a draft still resolves
+  // for a node that already references it — so they are kept, with the flag.
+  const starterPresets = (dt.presets ?? []).map((p) => ({
+    id: p.id,
+    name: p.name,
+    kind: p.kind,
+    ...(p.draft ? { draft: true } : {}),
+    base: p.base,
+    ...(p.responsive ? { responsive: p.responsive } : {}),
+    ...(p.states?.hover ? { states: { hover: p.states.hover } } : {}),
+  }));
+
+  // WHICH ELEMENT WEARS WHICH PRESET, read off `meta.defaults.specials`. That is
+  // where the platform stores it, so `createNode` already seeds it correctly —
+  // the gap was never minting, it was READING BACK.
+  const elementPresets: Record<string, string> = {};
+  for (const [type, meta] of Object.entries(registry.ELEMENTS)) {
+    const preset = (meta as { defaults?: { specials?: Record<string, unknown> } }).defaults?.specials
+      ?.stylePreset;
+    if (typeof preset === 'string' && preset) elementPresets[type] = preset;
+  }
+  // A default naming a preset the starter theme does not hold resolves to
+  // nothing and renders unstyled — the exact failure THEME_VERSION 6 was bumped
+  // for. Refuse rather than ship a table with a dangling reference in it.
+  const presetIds = new Set(starterPresets.map((p) => p.id));
+  const danglingPresets = Object.entries(elementPresets).filter(([, id]) => !presetIds.has(id));
+  if (danglingPresets.length) {
+    console.error('element defaults name a preset the starter theme does not hold:');
+    for (const [t, id] of danglingPresets) console.error(`  ${t} → ${id}`);
+    process.exit(1);
+  }
+
+  const themeOut = `// GENERATED by scripts/gen-catalog.ts — do not edit by hand.
+// Source: <WB_REPO>/schema/src/theme.ts (DEFAULT_THEME) and the element metas.
+import type { StarterTheme } from './theme-types.js';
+
+export const THEME_SOURCE = ${JSON.stringify(
+    {
+      themeVersion: themeMod.THEME_VERSION,
+      presets: starterPresets.length,
+      colors: dt.colors.length,
+      textStyles: dt.textStyles.length,
+      schemes: (dt.schemes ?? []).length,
+      elementsWearingOne: Object.keys(elementPresets).length,
+    },
+    null,
+    2,
+  )} as const;
+
+export const PRESET_KINDS: string[] = ${JSON.stringify([...themeMod.PRESET_KINDS], null, 2)};
+
+/**
+ * The element type -> style preset its meta.defaults.specials names.
+ *
+ * createNode already seeds this, so a node minted here wears the right preset.
+ * The table exists for the READ side: it says which elements have a style layer
+ * their own "style" object does not contain.
+ */
+export const ELEMENT_PRESETS: Record<string, string> = ${JSON.stringify(elementPresets, null, 2)};
+
+/**
+ * The STARTER theme — what a site that has never customised its theme resolves
+ * against. NOT the authority for a live site: GET /api/sites/{siteId}/theme is,
+ * and domains/site/theme.ts prefers it whenever it can be fetched.
+ */
+export const STARTER_THEME: StarterTheme = ${JSON.stringify(
+    {
+      version: themeMod.THEME_VERSION,
+      colors: dt.colors,
+      textStyles: dt.textStyles,
+      schemes: dt.schemes ?? [],
+      lightSchemeId: dt.lightSchemeId,
+      darkSchemeId: dt.darkSchemeId,
+      presets: starterPresets,
+    },
+    null,
+    2,
+  )};
+`;
+  emit(resolve(process.cwd(), 'src/catalog/theme.generated.ts'), themeOut);
+  console.error(
+    `${VERB} theme.generated.ts: theme v${themeMod.THEME_VERSION}, ${starterPresets.length} presets, ` +
+      `${dt.colors.length} colors, ${dt.textStyles.length} text styles, ` +
+      `${(dt.schemes ?? []).length} schemes, ${Object.keys(elementPresets).length} elements wearing one`,
   );
 
   const dest = resolve(process.cwd(), 'src/catalog/api.generated.ts');

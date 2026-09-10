@@ -1,4 +1,5 @@
 import { ELEMENTS, TRAIT_WRITES } from './elements.generated.js';
+import { vocabulariesForWrites } from '../domains/site/vocabulary.js';
 
 /** Eight to choose from; the hints for the chosen one come with sb_traits_for. */
 export const DEFAULT_CATALOG_LIMIT = 8;
@@ -120,6 +121,17 @@ export function traitsFor(type: string, control?: string): Record<string, unknow
     // which, unlike `style`, are NOT open — this is the machine-readable
     // answer to "what does this element store", and often the only one.
     defaults: el.defaults,
+    // WHAT THOSE KEYS ARE ALLOWED TO HOLD, for the few where guessing wrong is
+    // silent. Attached to the ELEMENT rather than to a control, because the keys
+    // that most need it are exactly the UNDECLARED ones: `collectionType` is in
+    // this element's defaults and in its control list, and no TRAIT_WRITES entry
+    // names it — so a per-control attachment reaches none of them, which is how
+    // the first version of this was wrong.
+    ...(() => {
+      const keys = new Set([...Object.keys(el.defaults?.config ?? {}), ...el.controls]);
+      const vocab = vocabulariesForWrites([...keys]);
+      return Object.keys(vocab).length ? { config_values: vocab } : {};
+    })(),
     isContainer: el.isContainer,
     isRootOnly: el.isRootOnly,
     childAllows: el.childAllows,

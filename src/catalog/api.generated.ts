@@ -3,9 +3,9 @@
 import type { ApiOperation } from './types.js';
 
 export const SWAGGER_SOURCE = {
-  "operations": 486,
-  "definitions": 102,
-  "bodyCarrying": 172,
+  "operations": 495,
+  "definitions": 104,
+  "bodyCarrying": 177,
   "bodyUndescribed": 63,
   "generatedFrom": "server/docs/swagger.json"
 } as const;
@@ -1517,6 +1517,19 @@ export const API_OPERATIONS: ApiOperation[] = [
     "bodyDescribed": false,
     "bodyRef": null,
     "credential": "none"
+  },
+  {
+    "id": "get:/api/chat-providers",
+    "method": "GET",
+    "path": "/api/chat-providers",
+    "tags": [
+      "chatbot"
+    ],
+    "summary": "List the AI providers this server can talk to",
+    "params": [],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
   },
   {
     "id": "post:/api/course-uploads/{siteId}",
@@ -3938,6 +3951,69 @@ export const API_OPERATIONS: ApiOperation[] = [
         "required": true,
         "type": "string",
         "description": "App key (mail | multilingual)"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/sites/{siteId}/chat-settings",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/chat-settings",
+    "tags": [
+      "chatbot"
+    ],
+    "summary": "Get, save or clear a site's AI chat configuration",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "put:/api/sites/{siteId}/chat-settings",
+    "method": "PUT",
+    "path": "/api/sites/{siteId}/chat-settings",
+    "tags": [
+      "chatbot"
+    ],
+    "summary": "Get, save or clear a site's AI chat configuration",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "delete:/api/sites/{siteId}/chat-settings",
+    "method": "DELETE",
+    "path": "/api/sites/{siteId}/chat-settings",
+    "tags": [
+      "chatbot"
+    ],
+    "summary": "Get, save or clear a site's AI chat configuration",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
       }
     ],
     "bodyDescribed": false,
@@ -10711,6 +10787,34 @@ export const API_OPERATIONS: ApiOperation[] = [
     "credential": "siteScoped"
   },
   {
+    "id": "post:/api/sites/{siteId}/relation-slots",
+    "method": "POST",
+    "path": "/api/sites/{siteId}/relation-slots",
+    "tags": [
+      "relations"
+    ],
+    "summary": "Create a curated relation slot",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "slot",
+        "in": "body",
+        "required": true,
+        "type": "object",
+        "description": "Slot"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "internal_relations_rest.slotBody",
+    "credential": "siteScoped"
+  },
+  {
     "id": "get:/api/sites/{siteId}/relation-slots/usage",
     "method": "GET",
     "path": "/api/sites/{siteId}/relation-slots/usage",
@@ -10736,6 +10840,160 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "put:/api/sites/{siteId}/relation-slots/{id}",
+    "method": "PUT",
+    "path": "/api/sites/{siteId}/relation-slots/{id}",
+    "tags": [
+      "relations"
+    ],
+    "summary": "Update or delete one curated relation slot",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Slot ID"
+      },
+      {
+        "name": "slot",
+        "in": "body",
+        "required": true,
+        "type": "object",
+        "description": "Slot"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "internal_relations_rest.slotBody",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "delete:/api/sites/{siteId}/relation-slots/{id}",
+    "method": "DELETE",
+    "path": "/api/sites/{siteId}/relation-slots/{id}",
+    "tags": [
+      "relations"
+    ],
+    "summary": "Update or delete one curated relation slot",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Slot ID"
+      },
+      {
+        "name": "slot",
+        "in": "body",
+        "required": true,
+        "type": "object",
+        "description": "Slot"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "internal_relations_rest.slotBody",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/sites/{siteId}/relation-slots/{id}/picks",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/relation-slots/{id}/picks",
+    "tags": [
+      "relations"
+    ],
+    "summary": "Read or replace one owner's picks in a curated slot",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Slot ID"
+      },
+      {
+        "name": "ownerId",
+        "in": "query",
+        "required": true,
+        "type": "string",
+        "description": "Product or article id whose picks these are"
+      },
+      {
+        "name": "picks",
+        "in": "body",
+        "required": true,
+        "type": "object",
+        "description": "The WHOLE list, every time"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "internal_relations_rest.picksBody",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "put:/api/sites/{siteId}/relation-slots/{id}/picks",
+    "method": "PUT",
+    "path": "/api/sites/{siteId}/relation-slots/{id}/picks",
+    "tags": [
+      "relations"
+    ],
+    "summary": "Read or replace one owner's picks in a curated slot",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Slot ID"
+      },
+      {
+        "name": "ownerId",
+        "in": "query",
+        "required": true,
+        "type": "string",
+        "description": "Product or article id whose picks these are"
+      },
+      {
+        "name": "picks",
+        "in": "body",
+        "required": true,
+        "type": "object",
+        "description": "The WHOLE list, every time"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "internal_relations_rest.picksBody",
     "credential": "siteScoped"
   },
   {
@@ -17487,6 +17745,37 @@ export const API_DEFINITIONS: Record<string, unknown> = {
     "properties": {
       "webhook": {
         "$ref": "#/definitions/internal_publicapi.Webhook"
+      }
+    }
+  },
+  "internal_relations_rest.picksBody": {
+    "type": "object",
+    "properties": {
+      "itemIds": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      }
+    }
+  },
+  "internal_relations_rest.slotBody": {
+    "type": "object",
+    "properties": {
+      "itemType": {
+        "type": "string"
+      },
+      "key": {
+        "type": "string"
+      },
+      "name": {
+        "type": "string"
+      },
+      "ownerType": {
+        "type": "string"
+      },
+      "position": {
+        "type": "integer"
       }
     }
   }

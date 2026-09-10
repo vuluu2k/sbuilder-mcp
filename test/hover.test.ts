@@ -45,9 +45,19 @@ describe('HOVER_HOMES', () => {
   });
 
   // Measured, not derived: nothing in the metas says which slots a renderer
-  // actually reads.
-  it('names the element that promises states.hover and paints nothing', () => {
-    expect(hoverRoutingNote('product-image-list')).toMatch(/paints nothing/);
+  // actually reads — nor which NAMESPACE of a slot, which is the half the first
+  // measurement missed. product-image-list's own compiler
+  // (render/style/satellite.go CompileImageListItemBorderCSS) reads the state's
+  // CONFIG and never its STYLE, so a style hover on it is dead and a config one
+  // paints. The note has to name the route that works, not send the caller away.
+  it('sends a style hover on product-image-list to the config route', () => {
+    const note = hoverRoutingNote('product-image-list');
+    expect(note).toMatch(/CONFIG rather than its STYLE/);
+    expect(note).toMatch(/listItemBorderWidth/);
+    // The stale claim, pinned so it cannot come back: it told callers to give up
+    // and style a wrapper, three months after the platform closed the gap.
+    expect(note).not.toMatch(/paints nothing\./);
+    expect(note).not.toMatch(/wrapper/);
     expect(hoverHome('product-image-list')).toBe('state');
   });
 });

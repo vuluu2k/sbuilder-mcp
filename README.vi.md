@@ -86,7 +86,7 @@ là "tài khoản của người này".
 | `sb_templates` | Section template đã lưu của cửa hàng — section thiết kế sẵn để bắt đầu |
 | `sb_template_use` | Thả một template vào trang |
 | `sb_page_list` | Mọi trang của site |
-| `sb_page_create` | Tạo một trang; `type` là đường đi cho checkout, product, category, post, course |
+| `sb_page_create` | Tạo một trang — trang cửa hàng sinh ra đã có sẵn tài liệu như trong editor; `type` là đường đi cho checkout, product, category, post, course |
 | `sb_publish` | Biên dịch bản nháp thành trang live (lan sang global dùng chung) |
 | `sb_review` | Mọi khiếm khuyết người xem sẽ thấy, kèm lệnh sửa từng cái, và năm khoảng trống chắn giữa cửa hàng với một đơn đã thanh toán |
 | `sb_media_list` | Thư viện ảnh của site |
@@ -99,8 +99,8 @@ là "tài khoản của người này".
 | `sb_store` | Chạy một luồng cửa hàng bắt buộc đúng thứ tự — bốn lệnh ghi tạo nên trang thanh toán, hoặc gieo bất kỳ template nào trong 17 form của nền tảng (login, register, forgot, contact, subscribe …) kèm field document của nó |
 | `sb_undo` | Trả lại thứ mà một lệnh PUT đã ghi đè — nền tảng không có lịch sử trang hay restore, nên đây là đường về duy nhất |
 
-Hai mươi tám tool, **484 operation API** (158 trong 212 lệnh ghi có hình dạng body đọc thẳng
-từ handler), 107 element, 77 nguồn binding. `sb_api_find` là
+Hai mươi tám tool, **495 operation API** (166 trong 216 lệnh ghi có hình dạng body đọc thẳng
+từ handler), 111 element, 78 nguồn binding. `sb_api_find` là
 một chỉ mục chứ không phải mỗi endpoint một tool, nên danh sách tool vẫn ngắn trong khi mọi
 thứ nền tảng làm được vẫn với tới — và operation mới thêm bên nền tảng sẽ tự có sau lần
 `npm run codegen` kế tiếp.

@@ -64,20 +64,46 @@ export function hoverHome(type: string): 'state' | 'legacy' {
 }
 
 /**
- * Element types that PROMISE `states.hover` and whose hover nothing compiles.
+ * Element types whose hover paints from the state slot's CONFIG and never from
+ * its STYLE.
  *
  * Measured 2026-09-09 by rendering one node per Hover-variant type with a
- * `states.hover` override and looking for the value in `BundleCSS`: every other
- * type painted, `product-image-list` did not. Its meta declares
- * `storage: 'node'`, so the value goes where the meta says — and the universal
- * compiler stands aside for it, while nothing element-specific picks it up.
+ * `states.hover` override and looking for the value in `BundleCSS`, every other
+ * type painted and `product-image-list` did not — and the note written from that
+ * measurement told callers the slot "paints nothing" and would start working
+ * "when the platform closes the gap". THE PLATFORM HAD ALREADY CLOSED IT, the
+ * same day: `render/style/satellite.go`'s CompileImageListItemBorderCSS reads
+ * `MergeStateNs(node, state, "config", bp)` — the state slot's CONFIG namespace,
+ * per breakpoint — and emits
+ *
+ *   <scope> .wb-product-image-list__item:hover::after{border-…}
+ *
+ * for exactly three keys: `listItemBorderWidth` (which must be PRESENT, even 0,
+ * or the whole rule is skipped), `listItemBorderColor` and `listItemBorderStyle`.
+ * The state is read RAW — no base fallback — so a hover that does not restate
+ * the width inherits nothing and paints nothing.
+ *
+ * So the measurement was right about the namespace it probed and wrong about the
+ * element, which is the failure this repo keeps closing from the other side: a
+ * hint saying "you cannot" outlives the thing that made it true, and costs more
+ * than no hint, because it sends the caller to style a wrapper instead of the
+ * control that works.
  *
  * A LIST, not a derivation, because there is nothing in the metas to derive it
- * from: the fact lives in which Go renderer happens to read the slot. It is
- * therefore a measurement with a date on it, and the note says so rather than
- * pretending the platform still behaves this way.
+ * from: the fact lives in which Go renderer happens to read which namespace of
+ * the slot. It is therefore a measurement with a date on it, and the note says
+ * so rather than pretending the platform still behaves this way.
  */
-const HOVER_UNCOMPILED = new Set(['product-image-list']);
+const HOVER_CONFIG_ONLY = new Set(['product-image-list']);
+
+/** The item-border keys `product-image-list` compiles out of a state slot, in
+ * the order its renderer reads them. The first is load-bearing: the rule is
+ * emitted only when the state itself sets a width. */
+const IMAGE_LIST_ITEM_BORDER_KEYS = [
+  'listItemBorderWidth',
+  'listItemBorderColor',
+  'listItemBorderStyle',
+] as const;
 
 /**
  * The specials key naming WHICH ancestor a parent-hover rule hangs off, 1-based
@@ -277,13 +303,14 @@ export function refuseReveal(doc: DocLike, id: string, keys: Record<string, unkn
  * them.
  */
 export function hoverRoutingNote(type: string): string | null {
-  if (HOVER_UNCOMPILED.has(type)) {
+  if (HOVER_CONFIG_ONLY.has(type)) {
     return (
       `"${type}" declares a Hover variant, so the platform's universal hover compiler stands ` +
-      'aside for it — and measured on 2026-09-09, no element-specific compiler picks the slot ' +
-      'up either, so this override paints nothing. Written where its meta says it belongs ' +
-      '(states.hover), which is where it will start painting when the platform closes the gap. ' +
-      'Style a wrapper around it if the hover has to be visible now.'
+      'aside for it, and its own compiler reads the state slot\'s CONFIG rather than its STYLE ' +
+      '— so these style keys are stored where nobody reads them. What paints is namespace ' +
+      `"config" on the same state, and only ${IMAGE_LIST_ITEM_BORDER_KEYS.join(', ')} (the ` +
+      'thumbnail\'s ::after border overlay). The width must be PRESENT on the state, even 0, ' +
+      'or the whole rule is skipped: the state is read raw, with no fallback to base.'
     );
   }
   if (hoverHome(type) !== 'legacy') return null;

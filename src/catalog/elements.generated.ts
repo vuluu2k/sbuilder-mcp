@@ -12429,7 +12429,22 @@ export const ELEMENTS: Record<string, CatalogElement> = {
       },
       "specials": {
         "htmlTag": "p",
-        "icon": "ArrowRightSFill"
+        "icon": "ArrowRightSFill",
+        "source": "auto",
+        "showCurrent": true,
+        "homeLabel": "Home",
+        "crumbs": [
+          {
+            "id": "bc_home",
+            "label": "Home",
+            "href": "/"
+          },
+          {
+            "id": "bc_current",
+            "label": "Product detail",
+            "href": ""
+          }
+        ]
       },
       "style": {
         "display": "inline-flex",
@@ -12454,6 +12469,18 @@ export const ELEMENTS: Record<string, CatalogElement> = {
       {
         "tab": "general",
         "groups": [
+          {
+            "key": "breadcrumb",
+            "label": "Breadcrumb",
+            "controls": [
+              "breadcrumb_source",
+              "breadcrumb_items",
+              "breadcrumb_home_label",
+              "breadcrumb_show_current",
+              "breadcrumb_max_items",
+              "breadcrumb_current_color"
+            ]
+          },
           {
             "key": "size",
             "label": "Size",
@@ -12546,6 +12573,12 @@ export const ELEMENTS: Record<string, CatalogElement> = {
       }
     ],
     "controls": [
+      "breadcrumb_source",
+      "breadcrumb_items",
+      "breadcrumb_home_label",
+      "breadcrumb_show_current",
+      "breadcrumb_max_items",
+      "breadcrumb_current_color",
       "width_select",
       "size_bounds",
       "breadcrumb_icon",
@@ -35447,6 +35480,39 @@ export const TRAIT_WRITES: Record<string, TraitDescription> = {
         "type": "string"
       }
     ]
+  },
+  "breadcrumb_source": {
+    "key": "breadcrumb_source",
+    "label": "Trail",
+    "writes": [
+      {
+        "target": "specials",
+        "writeKey": "source",
+        "type": "string"
+      }
+    ]
+  },
+  "breadcrumb_home_label": {
+    "key": "breadcrumb_home_label",
+    "label": "Home label",
+    "writes": [
+      {
+        "target": "specials",
+        "writeKey": "homeLabel",
+        "type": "string"
+      }
+    ]
+  },
+  "breadcrumb_show_current": {
+    "key": "breadcrumb_show_current",
+    "label": "Last step",
+    "writes": [
+      {
+        "target": "specials",
+        "writeKey": "showCurrent",
+        "type": "boolean"
+      }
+    ]
   }
 };
 
@@ -36067,3 +36133,89 @@ export const HOVER_HOMES: Record<string, { home: 'legacy' | 'state' }> = {
     "home": "state"
   }
 };
+
+/**
+ * What a config key is ALLOWED to hold, and what an unrecognised value becomes.
+ *
+ * Every trait in the platform's registry declares schema type "string", so the
+ * vocabulary lives in the Vue picker — a place no agent can read. The guess
+ * fails SILENTLY: the platform's own test pins
+ * EffectiveCollectionType("bestseller") == "all_products", so a repeater set to
+ * a plausible word renders the whole catalogue under whatever heading is above
+ * it.
+ *
+ * Read from the GO normalizers, because those are what render. "aliases" are
+ * spellings that work but are not what the picker writes.
+ */
+export const CONFIG_VALUES: Record<
+  string,
+  { values: string[]; fallback: string; aliases: Record<string, string>; readBy: string }
+> = {
+  "collectionType": {
+    "values": [
+      "all_products",
+      "collection",
+      "featured",
+      "related",
+      "slot"
+    ],
+    "fallback": "all_products",
+    "aliases": {
+      "category": "collection"
+    },
+    "readBy": "EffectiveCollectionType"
+  },
+  "articleSourceType": {
+    "values": [
+      "category",
+      "slot"
+    ],
+    "fallback": "category",
+    "aliases": {},
+    "readBy": "EffectiveArticleSourceType"
+  },
+  "collectionListType": {
+    "values": [
+      "all_collections",
+      "custom_collections"
+    ],
+    "fallback": "all_collections",
+    "aliases": {},
+    "readBy": "EffectiveCollectionListType"
+  }
+};
+
+/**
+ * Config keys the PUBLISH path reads from base only — html.go indexes
+ * node.Config[key] with no responsive merge, and one HTML document serves all
+ * three widths. Written per breakpoint they update the editor canvas and vanish
+ * on publish, with no error anywhere.
+ *
+ * The platform's own migration ledger (schema/test/responsive-defaults.test.ts),
+ * read rather than copied: it may SHRINK as each key moves to a per-breakpoint
+ * CSS var, and a stale copy here would keep forcing a fixed key to base.
+ */
+export const BASE_ONLY_CONFIG: string[] = [
+  "iconSize",
+  "descriptionLines",
+  "layout",
+  "htmlTag",
+  "activeIndex",
+  "activeTab",
+  "openItems",
+  "kind",
+  "datasetSource",
+  "collectionId",
+  "collectionType",
+  "quantity",
+  "rowLimit"
+];
+
+/**
+ * "type:key" pairs that are responsive DESPITE the shared key name, so the rule
+ * above must not touch them. quantity-button:iconSize is compiled per
+ * breakpoint by the satellite CSS compiler as the --icon-size var.
+ */
+export const BASE_ONLY_EXCEPTIONS: string[] = [
+  "quantity-button:iconSize"
+];

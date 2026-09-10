@@ -1,6 +1,6 @@
 # Bộ tool
 
-Bốn tool với tới 484 operation của nền tảng, và 158 trong 212 lệnh ghi trong số đó mang theo
+Bốn tool với tới 495 operation của nền tảng, và 166 trong 216 lệnh ghi trong số đó mang theo
 hình dạng body đọc thẳng từ handler decode chúng. `sb_api_find` là một chỉ mục, không phải mỗi
 endpoint một tool — [lý do](../README.vi.md#bộ-tool).
 
@@ -453,9 +453,18 @@ với mỗi control nền tảng có khai báo, nó ghi vào đâu:
 { type, hints: { useWhen, avoidWhen, contentTips },
   inspector: [{ tab, groups: [{ group, controls: ["font_size", …] }] }],
   declared: { font_size: { label, writes, defaults? }, … },
-  defaults, isContainer, isRootOnly, childAllows,
+  defaults, config_values?, isContainer, isRootOnly, childAllows,
   undeclared_note, style_is_open_css }
 ```
+
+`config_values` nêu GIÁ TRỊ HỢP LỆ của vài config key mà đoán sai thì hỏng trong im lặng. Mọi
+trait trong registry của nền tảng đều khai `schema: string`, nên từ vựng của control nằm trong
+component Vue vẽ picker — agent không đọc được — và `EffectiveCollectionType` là NORMALISER chứ
+không phải validator: chính test của nền tảng ghim `"bestseller"` → `all_products`, nên repeater
+đặt một từ nghe hợp lý sẽ lặp cả catalogue dưới heading bạn viết, không lỗi ở bước nào. Sinh từ
+Go nên mang theo cả giá trị mặc định khi không nhận ra và các alias (`category` là cách viết
+chạy được của `collection`). Nó gắn vào ELEMENT chứ không vào control, vì đúng những key cần
+nhất — `collectionType` trong đó — lại là những key KHÔNG được khai báo.
 
 `hints` là chính AI hints của nền tảng cho element, đặt ở đây vì đây là lệnh agent gọi sau
 khi đã chọn xong. `declared` chỉ chứa các control có đích ghi khai báo sẵn — 118 trên 435
@@ -496,6 +505,16 @@ Ba tool liệt kê đều chiếu theo whitelist. Tài liệu OpenAPI không mô
 sách, nên tên trường được đọc từ json tag của các struct Go; một mục không phải object thì
 trả về nguyên vẹn, nên nền tảng đổi hình dạng sẽ lùi về hành vi hôm qua chứ không thành một
 danh sách rỗng.
+
+**TRANG CỬA HÀNG SINH RA ĐÃ CÓ SẴN NỘI DUNG.** `product`, `category`, `search`, `blog`, `post`
+và `complete` mở ra với đúng tài liệu mà editor đưa cho người bán — sinh bằng cách GỌI các card
+của palette chứ không chép lại, nên hôm nào card thêm mảnh thì cả hai cửa cùng có. Trang product
+mang nguyên buy box (gallery, tiêu đề, giá, chọn biến thể, mô tả, bộ tăng giảm số lượng, Thêm vào
+giỏ, Mua ngay) đã bind sẵn, kèm BINDING `add_to_cart` — thứ khó đoán nhất. Truyền `seed:false`
+nếu muốn trang trắng. `locale` (mặc định `vi`, hoặc `en`) và `headline` chọn câu cảm ơn của trang
+complete, đọc từ i18n của nền tảng để cửa hàng tiếng Việt không mở ra bằng tiếng Anh. Seed là lệnh
+ghi THỨ HAI: nếu nó hỏng thì trang vẫn được tạo và đang trắng, kết quả nói rõ điều đó chứ không
+làm hỏng cả lệnh tạo.
 
 `sb_publish` **lan**: trang dùng chung global section với trang khác sẽ publish luôn các
 trang đó, vì header sửa một lần không được lên live ở trang này mà cũ ở trang kia.
