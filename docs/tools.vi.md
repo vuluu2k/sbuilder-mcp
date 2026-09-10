@@ -505,6 +505,24 @@ báo client này không hiển thị.
 một cái vào trang — server tự copy, nên section tới đúng như lúc được thiết kế. Nhớ mở lại
 trang sau đó; phiên đang mở vẫn giữ cây cũ.
 
+### Layout dựng sẵn
+
+`sb_templates` liệt kê section template của chính site trước, rồi tới bộ layout DỰNG SẴN ở
+`built_in`. Template do merchant thiết kế là câu trả lời của site này; những cái kia là mặc định
+cho một trang chưa có gì — đo trên site thật, thư viện của nền tảng có **hai** mẫu, và đó là lý
+do agent được yêu cầu "một hero" phải tự bịa từ flex-block mỗi lần.
+
+`sb_template_use` nhận cả hai loại id. Template của site do **server** sao chép, nên section về
+đúng như đã thiết kế. Layout dựng sẵn thì được **soạn tại chỗ**, theo token của chính trang đích
+— cùng màu chữ tiêu đề, cùng nền nút, cùng padding section mà trang đang dùng. Trang chưa có gì
+thì lấy theo **theme của site**, mang dạng `var(--wb-color-…)` chứ không phải mã màu: một giá trị
+cứng trên node sẽ vĩnh viễn thắng style preset bên dưới, nên một band đóng đinh màu hôm nay sẽ
+ngừng đi theo theme ngay khi theme đổi.
+
+Các mẫu được dựng dưới dạng cây capture rồi đi qua đúng mapper mà một lần import đi qua, nên mỗi
+mẫu tự thừa hưởng câu trả lời cho rule 0, 1 và 3 — token của trang, điểm gãy dọc trên mọi hàng,
+và cột cao đúng bằng nội dung khi hàng xuống dọc.
+
 ## `sb_page_list` / `sb_page_create` / `sb_publish`
 
 Vòng đời trang, thành tool hạng nhất thay vì đi vòng qua `sb_api_call`. `sb_page_list` trả

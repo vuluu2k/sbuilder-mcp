@@ -83,7 +83,7 @@ là "tài khoản của người này".
 | `sb_move` | Chuyển node sang cha khác |
 | `sb_remove` | Xoá node và cả cây con |
 | `sb_duplicate` | Nhân bản một node và cả cây con dưới id mới, ngay sau bản gốc |
-| `sb_templates` | Section template đã lưu của cửa hàng — section thiết kế sẵn để bắt đầu |
+| `sb_templates` | Section template đã lưu của cửa hàng, cộng bộ layout DỰNG SẴN — hero, ba lợi ích, số liệu, FAQ, dải kêu gọi — soạn theo token của chính trang |
 | `sb_template_use` | Thả một template vào trang |
 | `sb_page_list` | Mọi trang của site |
 | `sb_page_create` | Tạo một trang — trang cửa hàng sinh ra đã có sẵn tài liệu như trong editor; `type` là đường đi cho checkout, product, category, post, course |

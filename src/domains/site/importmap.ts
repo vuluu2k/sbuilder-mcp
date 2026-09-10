@@ -379,6 +379,22 @@ function one(c: Captured, t: PageTokens): NodeSpec | null {
     case 'group': {
       const kids = (c.children ?? []).map((k) => one(k, t)).filter((n): n is NodeSpec => n !== null);
       if (kids.length === 0) return null;
+      // A COLUMN IS A STACK, NOT A ROW, and this was read by nothing.
+      //
+      // The capture never emits one — a column is what a page already is, so it
+      // is flattened in the browser — and `direction` sat in `Captured` unread
+      // for exactly that reason. The moment a caller composes a tree by hand
+      // (a layout pattern, a design ported out of Figma or Stitch) that stops
+      // being true, and every column it asked for came back as a row: a hero's
+      // heading, its sentence and its button side by side instead of stacked.
+      if (c.direction === 'column') {
+        if (kids.length === 1) return kids[0];
+        return {
+          type: 'flex-block',
+          style: { width: '100%', display: 'flex', flexDirection: 'column', gap: '12px' },
+          children: kids,
+        };
+      }
       if (kids.length === 1) return kids[0];
       // A ROW OF TWO OR MORE COLUMNS NEEDS AN EXPLICIT STACK BREAKPOINT, and
       // nothing catches it for you: the columns SHRINK to fit, so no box

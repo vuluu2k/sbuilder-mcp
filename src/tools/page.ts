@@ -32,6 +32,9 @@ import { readinessGaps, READINESS_NOTICE } from '../domains/site/readiness.js';
 import { gatherReadiness } from '../domains/site/readiness-fetch.js';
 import { globalWarning, restampPatches, RESPONSIVE_NOTICE } from '../domains/site/traps.js';
 import { catalogMatches, traitsFor } from '../catalog/element-search.js';
+import { LAYOUT_PATTERNS, PATTERN_BY_ID, THEME_TOKENS } from '../domains/site/patterns.js';
+import { tokensFromPage } from '../domains/site/importmap.js';
+import { middleEnd } from '../domains/site/traps.js';
 import { applyPatches, type Patch } from '../core/patch.js';
 import { stickyWarning } from '../domains/site/sticky.js';
 import { HOVER_STATE, PARENT_HOVER_STATE, hoverHostNote, hoverRoutingNote } from '../domains/site/hover.js';
@@ -749,28 +752,36 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
       inputSchema: { site_id: z.string().optional() },
       annotations: { readOnlyHint: true },
     },
-    async ({ site_id: given }) =>
-      text(
-        projectList(
-          await request({
+    async ({ site_id: given }) => {
+      const listed = projectList(
+        await request({
           base: ctx.base,
           method: 'GET',
           path: `/api/sites/${encodeURIComponent(siteFor(ctx, given))}/section-templates`,
           token: siteToken(ctx),
           fetchImpl: ctx.fetchImpl,
         }),
-          'sectionTemplates',
-          TEMPLATE_FIELDS,
-        ),
-      ),
+        'sectionTemplates',
+        TEMPLATE_FIELDS,
+      ) as Record<string, unknown>;
+      // THE SITE'S OWN FIRST, ALWAYS. A template a merchant designed is this
+      // site's answer; these are defaults for a page that has none. Measured on
+      // a live site, the platform's library held TWO — which is why an agent
+      // asked for "a hero" was inventing one from flex-blocks every time.
+      return text({
+        ...listed,
+        built_in: LAYOUT_PATTERNS.map((p) => ({ id: p.id, name: p.name, use: p.use })),
+      });
+    },
   );
 
   server.registerTool(
     'sb_template_use',
     {
       description:
-        'Instantiate a saved section template into a page. The server does the copy, so the ' +
-          'section arrives exactly as it was designed — then re-open the page to see it.',
+        'Instantiate a section template into a page — the site\'s own (the server copies it) or ' +
+          'one of the BUILT-IN layouts sb_templates lists, which are composed against this ' +
+          "page's own tokens rather than copied.",
       inputSchema: {
       site_id: z.string().optional(),
       template_id: z.string(),
@@ -781,6 +792,58 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
     },
     async ({ site_id: given, template_id, page_id, dry_run }) => {
       const site_id = siteFor(ctx, given);
+
+      // A BUILT-IN IS NOT A SERVER COPY. The platform's own templates are
+      // instantiated by the platform, which is why the section arrives exactly
+      // as designed; a built-in has no row on the server, so it is composed HERE
+      // — against the target page's own tokens, which is the whole point of it
+      // being a pattern rather than a snapshot.
+      const pattern = PATTERN_BY_ID.get(template_id);
+      if (pattern) {
+        await session.open(site_id, page_id);
+        const doc = session.current();
+        const read = tokensFromPage(doc.doc);
+        // A BLANK PAGE HAS NO PATTERN TO READ, and the next authority is the
+        // site's THEME rather than nothing — every element's style preset
+        // resolves from it anyway. Carried as `var(--wb-color-…)`, so the band
+        // goes on following the theme instead of freezing today's hex into it.
+        const fromTheme = Object.keys(read).length === 0;
+        const tokens = fromTheme ? THEME_TOKENS : read;
+        const spec = pattern.build(tokens);
+        if (!spec) {
+          throw new Error(`sbuilder: the built-in "${template_id}" produced nothing to add.`);
+        }
+        const { patches, ids } = addSubtree(doc, doc.doc.root_node_id, spec, middleEnd(doc.doc));
+        if (dry_run !== false) {
+          return text({
+            dry_run: true,
+            would_add: pattern.name,
+            nodes: ids.length,
+            into: page_id,
+            tokens_from: fromTheme ? "this site's theme — the page has no look of its own yet" : 'this page',
+            note:
+              'Composed against THIS page\'s tokens, not copied — the same heading ink, button ' +
+              'fill and section padding the page already uses. Pass dry_run:false to add it.',
+          });
+        }
+        await session.applyAndSave(patches);
+        return text({
+          added: pattern.name,
+          section: ids[0],
+          nodes: ids.length,
+          into: page_id,
+          rev: doc.rev,
+          ...(fromTheme
+            ? {
+                tokens_from:
+                  "this site's theme — the page had no heading, button or section to read a look " +
+                  'off, so the band carries var(--wb-color-…) and follows the theme rather than a ' +
+                  'frozen colour. Style this first band and every pattern after it reads THAT.',
+              }
+            : {}),
+        });
+      }
+
       const path = `/api/sites/${encodeURIComponent(site_id)}/section-templates/${encodeURIComponent(template_id)}/instantiate`;
       if (dry_run !== false) {
         return text({ dry_run: true, would_post: path, body: { pageId: page_id } });

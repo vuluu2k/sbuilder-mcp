@@ -86,7 +86,7 @@ make, because those mean "this person's account".
 | `sb_move` | Move a node to another parent |
 | `sb_remove` | Remove a node and its subtree |
 | `sb_duplicate` | Copy a node and its subtree under fresh ids, right after the original |
-| `sb_templates` | The store's saved section templates — designed sections to start from |
+| `sb_templates` | The store's saved section templates, plus the BUILT-IN layouts — hero, feature trio, stats, FAQ, CTA band — composed against the page's own tokens |
 | `sb_template_use` | Instantiate a template into a page |
 | `sb_page_list` | Every page on the site |
 | `sb_page_create` | Create a page — a store type arrives with the editor's own starting document; `type` is the route for checkout, product, category, post, course |

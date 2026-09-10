@@ -911,6 +911,36 @@ that accounts for them.
   satellite `createNode` mints on its own. The label is OMITTED when the source had none rather
   than defaulted, because inventing one ships English copy into a store that is not in English.
 
+- **AN AGENT ASKED FOR "A HERO" HAD 111 ELEMENTS AND NO LAYOUT.** Every band was invented from
+  flex-blocks on the spot, which is why a generated page reads as generated — the elements are
+  right, the composition is a guess, and the guess is different on every section of the same
+  site. The platform's own library is the first place to look and it is THIN: measured on a live
+  site, TWO section templates. `LAYOUT_PATTERNS` adds six defaults, listed by `sb_templates`
+  under `built_in` (the site's own always first) and applied by `sb_template_use`, which needed
+  no new tool and no new argument.
+
+  **BUILT AS `Captured` TREES THROUGH `toSpecs`, never hand-assembled** — that is the whole
+  design. The mapper already knows how to dress a section in the page's own tokens, give a row
+  a stack breakpoint, and stop a stacked column becoming 280px of air; a pattern written by hand
+  would re-derive all of it and drift from it on the next fix. The test pins the PROPERTY rather
+  than any pattern's shape: every one is storable, every row has a mobile answer, and no pattern
+  contains a colour that is not a token it was given.
+
+  **AND A BLANK PAGE'S LOOK IS THE SITE'S THEME, NOT NOTHING.** Rule 0 says read the page's own
+  pattern; a page that has none is the case the rule does not cover, and the next authority is
+  the theme every element's style preset already resolves from — not invention. Carried as
+  `var(--wb-color-…)` rather than the hex it resolves to, because a literal on a node OUTRANKS
+  the preset beneath it permanently: a band that baked today's colour in would stop following
+  the theme the moment the merchant changed it, which is the detachment this file already
+  records for imported icons.
+
+- **A `column` GROUP WAS BUILT AS A ROW, and `direction` had been read by nothing.** The capture
+  never emits one — a column is what a page already IS, so it is flattened in the browser — so
+  the field sat in `Captured` unread. The moment a caller composes a tree BY HAND (a layout
+  pattern, a design ported out of Figma or Stitch) that stops being true, and every column came
+  back as a row: a hero's heading, its sentence and its button side by side instead of stacked.
+  Found by rendering the first pattern, not by reading the mapper.
+
 - **A STACKED ROW'S COLUMNS WERE 280px TALL WHATEVER WAS IN THEM, and nothing could see it.**
   An imported row gives each column `flex: 1 1 280px`, which sizes the MAIN axis — and the
   row's own mobile override turns the main axis from width into HEIGHT. So at 390 a paragraph

@@ -523,6 +523,24 @@ client does not surface.
 instantiates one into a page — the server does the copy, so the section arrives exactly as
 designed. Re-open the page afterwards; the open session still holds the older tree.
 
+### Built-in layouts
+
+`sb_templates` lists the site's own section templates first and a set of BUILT-IN layouts
+second, under `built_in`. A template a merchant designed is this site's answer; these are
+defaults for a page that has none — measured on a live site, the platform's own library held
+**two**, which is why an agent asked for "a hero" was inventing one from flex-blocks every time.
+
+`sb_template_use` takes either id. The site's own is copied BY THE SERVER, so it arrives exactly
+as designed. A built-in is **composed here**, against the target page's own tokens — the same
+heading ink, button fill and section padding the page already uses. On a page that has none yet
+it falls back to the SITE'S THEME, carried as `var(--wb-color-…)` rather than the hex those
+resolve to: a literal on a node outranks the style preset beneath it permanently, so a band
+that baked today's colour in would stop following the theme the moment it changed.
+
+The patterns are built as capture trees through the same mapper an import goes through, so each
+one inherits its answers to rules 0, 1 and 3 — the page's tokens, a stack breakpoint on every
+row, and a column that is as tall as its content once the row stacks.
+
 ## `sb_page_list` / `sb_page_create` / `sb_publish`
 
 The page lifecycle, first-class rather than through `sb_api_call`. `sb_page_list` returns
