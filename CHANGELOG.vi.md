@@ -6,6 +6,14 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.26.0] - 2026-09-10
+
+### Added
+- sb_media_upload giờ có thể tìm ảnh chụp thật: `query` trả về ảnh chụp thật kèm mô tả do chính người chụp viết, và `pick` upload đúng tấm được chọn vào thư viện của site thay vì hotlink.
+- Phần tìm ảnh của sb_media_upload nhận `orientation` (landscape, portrait, square) để hỏi thẳng bộ tìm kiếm về hình dạng phù hợp thay vì cắt ảnh lại sau đó.
+- Kết quả tìm ảnh của sb_media_upload mang theo thông tin ghi công (tên người chụp, trang cá nhân, trang ảnh), và tên của asset sau khi upload mặc định lấy theo mô tả của bức ảnh để thư viện tìm được theo nội dung ảnh.
+- `PEXELS_API_KEY` là tuỳ chọn, dùng để gọi thẳng Pexels cho phần tìm ảnh; không có key thì dùng một proxy chung, nên một bản cài `npx` không cấu hình gì vẫn tìm được ảnh thật.
+
 ## [0.25.0] - 2026-09-10
 
 ### Added

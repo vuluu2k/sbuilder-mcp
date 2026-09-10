@@ -6,6 +6,14 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.26.0] - 2026-09-10
+
+### Added
+- sb_media_upload can now search for a real photograph: `query` returns real photographs with the description each photographer wrote, and `pick` uploads the chosen one into the site's own library instead of hotlinking it.
+- sb_media_upload's search takes `orientation` (landscape, portrait, square) to ask the search itself for the right shape instead of cropping the result afterward.
+- sb_media_upload's search results carry photographer credit (name, profile, photo page), and the uploaded asset's name defaults to the photograph's own description so the library stays searchable by what each image shows.
+- An optional `PEXELS_API_KEY` calls Pexels directly for the image search; without one it falls back to a shared proxy, so an `npx` install with no configuration still finds real images.
+
 ## [0.25.0] - 2026-09-10
 
 ### Added
