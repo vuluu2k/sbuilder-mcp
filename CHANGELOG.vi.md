@@ -6,6 +6,16 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.16.0] - 2026-09-10
+
+### Added
+- sb_traits_for giờ trả về một khối `translatable` nêu tên những special nào của element có thể an toàn để một bản dịch ghi đè, và những special riêng của nó không bao giờ được dịch, vì dịch một special không phải nội dung (một `name` icon lucide, một URL `src`, một id registry `filterSource`) không làm trang xấu đi, mà làm hỏng hẳn phần render.
+- sb_api_find và sb_api_call giờ đính kèm một call sheet `translation_fields` vào mọi operation `/translations`, liệt kê các cột có thể dịch cho từng loại entity và trỏ tới sb_traits_for để lấy vocabulary riêng theo từng element cho entity `node`, vì trước đây mọi route translations đều đã gọi được mà không có cách nào biết field nào an toàn để gửi.
+- sb_set giờ cảnh báo một lần cho mỗi loại node khi một config key thuộc field-skin (`payCardBg`, `choice*`, `slot*`, `file*`, và phần còn lại trong vocabulary 55 key) được ghi trên một form node mà renderer của nó không đọc key đó, nêu tên field node thực sự render nó, vì việc ghi này vẫn được lưu, save và publish nhưng không được render ở đâu cả.
+
+### Internal
+- Catalog được sinh ra giờ có thêm bảng translations (`translations.generated.ts`, 141 special có thể dịch trên 58 element, 156 key được phân loại không bao giờ dịch, 12 loại entity cùng các cột của chúng) và bảng field-skin (`fieldskin.generated.ts`), cả hai đều được đối chiếu chéo lúc codegen với chính các registry của nền tảng thay vì giữ thủ công.
+
 ## [0.15.0] - 2026-09-10
 
 ### Added

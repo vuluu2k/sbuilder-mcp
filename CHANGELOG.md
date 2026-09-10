@@ -6,6 +6,16 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.16.0] - 2026-09-10
+
+### Added
+- sb_traits_for now returns a `translatable` block naming which of an element's specials a translation may safely rewrite, and which of its own specials must never be translated, since translating a non-content special (a lucide icon `name`, a `src` URL, a `filterSource` registry id) does not degrade the page, it breaks the render.
+- sb_api_find and sb_api_call now attach a `translation_fields` call sheet to every `/translations` operation, listing the translatable columns for each entity type and pointing to sb_traits_for for the per-element `node` vocabulary, since every translations route was already reachable with no way to know which fields were safe to send.
+- sb_set now warns once per node type when a field-skin config key (`payCardBg`, `choice*`, `slot*`, `file*`, and the rest of the 55-key vocabulary) is written on a form node whose renderer does not read it, naming the field node that actually renders it, since such a write is stored, saved and published but rendered nowhere.
+
+### Internal
+- The generated catalog gained a translations table (`translations.generated.ts`, 141 translatable specials across 58 elements, 156 keys classified as never-translate, 12 entity types with their columns) and a field-skin table (`fieldskin.generated.ts`), both cross-checked at codegen time against the platform's own registries rather than hand-kept.
+
 ## [0.15.0] - 2026-09-10
 
 ### Added
