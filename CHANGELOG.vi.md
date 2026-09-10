@@ -6,6 +6,14 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.21.0] - 2026-09-10
+
+### Added
+- sb_import và sb_import_site giờ phát hiện `<form>` trên trang nguồn và báo cáo qua `forms_found` (số field và nhãn) thay vì âm thầm bỏ qua, đồng thời chỉ người gọi tới `sb_store action:"form"` để dựng lại form với vocabulary field hợp lệ.
+
+### Fixed
+- sb_import_site giờ viết lại các link giữa các trang mà nó import, để menu của site mới trỏ về chính nó thay vì trỏ ngược về site nguồn đã copy, và báo cáo các link cùng origin còn trỏ ra ngoài qua `links.still_off_site` để người gọi biết cần tăng `max_pages`.
+
 ## [0.20.0] - 2026-09-10
 
 ### Added

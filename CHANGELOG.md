@@ -6,6 +6,14 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.21.0] - 2026-09-10
+
+### Added
+- sb_import and sb_import_site now detect a `<form>` on the source page and report it as `forms_found` (field count and labels) instead of silently dropping it, pointing the caller at `sb_store action:"form"` to rebuild it with a valid field vocabulary.
+
+### Fixed
+- sb_import_site now rewrites links between the pages it imports so the new site's menu points at itself instead of back at the source it was copied from, and reports any same-origin links left pointing off-site under `links.still_off_site` so the caller knows to raise `max_pages`.
+
 ## [0.20.0] - 2026-09-10
 
 ### Added
