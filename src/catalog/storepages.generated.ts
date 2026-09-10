@@ -855,7 +855,6 @@ export const STORE_PAGE_SEEDS: Record<string, { schema_version: number; root_nod
         },
         "config": {
           "defaultNum": 1,
-          "activeButton": "",
           "quantityButtonId": "sppro_16",
           "quantityInputId": "sppro_17"
         },
