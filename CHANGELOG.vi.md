@@ -6,6 +6,12 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.20.0] - 2026-09-10
+
+### Added
+- sb_review giờ báo gap `siteChrome` khi một site có từ hai trang trở lên mà không có global section nào, nghĩa là mỗi trang đang tự mang header và footer riêng, không có cách nào đổi menu ở một chỗ duy nhất.
+- sb_review giờ báo gap `cartCount` khi có thứ mở được giỏ hàng nhưng không có element `cart-count` nào cho thấy trong giỏ có gì, vì khách thêm hàng vào giỏ chỉ thấy một toast tắt đi mà không còn dấu hiệu lâu dài nào cho thấy giỏ không rỗng.
+
 ## [0.19.0] - 2026-09-10
 
 ### Added

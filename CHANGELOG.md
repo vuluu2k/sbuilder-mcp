@@ -6,6 +6,12 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.20.0] - 2026-09-10
+
+### Added
+- sb_review now reports a `siteChrome` gap when a site has two or more pages and no global section, so each page is carrying its own header and footer with no way to change the menu in one place.
+- sb_review now reports a `cartCount` gap when something opens the cart but no `cart-count` element shows what is in it, since a shopper who adds an item otherwise sees a toast fade with no lasting sign their basket is not empty.
+
 ## [0.19.0] - 2026-09-10
 
 ### Added
