@@ -17,8 +17,10 @@ import {
   canonFor,
   choosePages,
   normalizeUrl,
+  robotsRules,
   robotsSitemaps,
   sitemapUrls,
+  type RobotsRules,
   type Found,
   type Planned,
 } from '../domains/site/discover.js';
@@ -66,15 +68,9 @@ async function fetchForeign(ctx: ToolContext, url: string): Promise<string | nul
  * One fetch and no browser, and it lists pages nothing links to — which is why
  * it is tried before the crawl rather than after it.
  */
-export async function fromSitemap(ctx: ToolContext, entry: string): Promise<Found[] | null> {
+export async function fromSitemap(ctx: ToolContext, entry: string, declaredIn: string[]): Promise<Found[] | null> {
   const origin = new URL(entry).origin;
-  const declared = new Set<string>();
-  // ROBOTS.TXT IS WHERE A SITE SAYS WHERE ITS SITEMAP REALLY IS, and plenty of
-  // real ones are not at /sitemap.xml — a shop platform names
-  // /sitemap_products_1.xml, a CMS a dated path. Guessing only the default is how
-  // a site with a perfectly good sitemap gets crawled instead.
-  const robots = await fetchForeign(ctx, `${origin}/robots.txt`);
-  if (robots) for (const u of robotsSitemaps(robots)) declared.add(u);
+  const declared = new Set<string>(declaredIn);
   for (const guess of ['/sitemap.xml', '/sitemap_index.xml', '/sitemap-index.xml']) {
     declared.add(`${origin}${guess}`);
   }
@@ -150,21 +146,44 @@ async function discoverSite(
   ctx: ToolContext,
   entry: string,
   opts: { depth?: number; maxVisits?: number },
-): Promise<{ source: 'sitemap' | 'links'; urls: Found[]; titles: Map<string, string>; visited: number }> {
-  const listed = await fromSitemap(ctx, entry);
-  if (listed) return { source: 'sitemap', urls: listed, titles: new Map(), visited: 0 };
+): Promise<{
+  source: 'sitemap' | 'links';
+  urls: Found[];
+  titles: Map<string, string>;
+  visited: number;
+  robots?: RobotsRules;
+  /** How many crawled URLs turned out to be another page under a different address. */
+  aliases: number;
+}> {
+  // ROBOTS.TXT ANSWERS TWO QUESTIONS AND IS FETCHED ONCE. Where the sitemap
+  // really is — plenty are not at /sitemap.xml, a shop platform names
+  // /sitemap_products_1.xml and a CMS a dated path — and which paths a general
+  // crawler is asked to leave alone.
+  const origin = new URL(entry).origin;
+  const txt = await fetchForeign(ctx, `${origin}/robots.txt`);
+  const robots = txt ? robotsRules(txt) : undefined;
+  const listed = await fromSitemap(ctx, entry, txt ? robotsSitemaps(txt) : []);
+  if (listed) return { source: 'sitemap', urls: listed, titles: new Map(), visited: 0, robots, aliases: 0 };
 
   const crawled = await crawlLinks(entry, {
     depth: opts.depth ?? 1,
     maxVisits: opts.maxVisits ?? 24,
     canon: canonFor(entry),
   });
-  return {
-    source: 'links',
-    urls: crawled.urls.map((u) => ({ url: u, from: u === entry ? 'entry' : 'links' }) as Found),
-    titles: crawled.titles,
-    visited: crawled.visited,
-  };
+  // A PAGE THAT NAMES ANOTHER ADDRESS AS ITS OWN IS THAT PAGE. Folded here, on
+  // the crawl path, where the answer is already in hand — the sitemap path has
+  // no canonical until the page is opened, and the import pass folds that one.
+  const seen = new Set<string>();
+  const urls: Found[] = [];
+  let aliases = 0;
+  for (const u of crawled.urls) {
+    const real = crawled.canonical.get(u) ?? u;
+    if (real !== u) aliases += 1;
+    if (seen.has(real)) continue;
+    seen.add(real);
+    urls.push({ url: real, from: real === entry ? 'entry' : 'links' });
+  }
+  return { source: 'links', urls, titles: crawled.titles, visited: crawled.visited, robots, aliases };
 }
 
 export function registerImportTools(
@@ -383,6 +402,7 @@ export function registerImportTools(
         maxPages: max_pages,
         include,
         exclude,
+        robots: found.robots,
       });
       // A CRAWL ALREADY READ THE TITLE. `nameFor` derives a name from the slug
       // because a sitemap offers nothing else, but the link crawl opened every
@@ -466,7 +486,9 @@ export function registerImportTools(
           discovered_by: found.source,
           ...(found.visited ? { pages_read_to_find_them: found.visited } : {}),
           pages: plan.pages.map((p) => ({ url: p.url, slug: p.slug, name: p.name, ...lands(p) })),
-          ...(Object.keys(plan.skipped).length ? { skipped: plan.skipped } : {}),
+          ...(Object.keys(plan.skipped).length || found.aliases
+            ? { skipped: { ...plan.skipped, ...(found.aliases ? { 'canonical-alias': found.aliases } : {}) } }
+            : {}),
           ...(unlistable
             ? {
                 landing_unknown:
@@ -543,6 +565,13 @@ export function registerImportTools(
       // three pages built, nine not, and no report saying which.
       const built: Array<Record<string, unknown>> = [];
       const failed: Array<{ url: string; why: string }> = [];
+      // WHAT EACH PAGE SAYS ITS OWN ADDRESS IS. A sitemap cannot tell you that
+      // two of its entries are one page — only the page can, and only once it is
+      // open. Measured: modelcontextprotocol.io's home page declares a dated
+      // docs path as its canonical, so `/` and that path are the same content
+      // under two slugs, and nothing in the plan looks wrong.
+      const identities = new Set<string>();
+      const aliased: Array<{ url: string; same_as: string }> = [];
       let lastOpened = '';
 
       for (const p of plan.pages as Planned[]) {
@@ -551,6 +580,12 @@ export function registerImportTools(
           failed.push({ url: p.url, why: shot ? shot.why : 'was not read' });
           continue;
         }
+        const identity = normalizeUrl(shot.result.canonical ?? p.url) ?? p.url;
+        if (identities.has(identity)) {
+          aliased.push({ url: p.url, same_as: identity });
+          continue;
+        }
+        identities.add(identity);
         try {
           const sections =
             rehosted.size > 0 ? rehostImages(shot.result.sections, rehosted) : shot.result.sections;
@@ -640,7 +675,10 @@ export function registerImportTools(
         discovered_by: found.source,
         built,
         ...(failed.length ? { failed } : {}),
-        ...(Object.keys(plan.skipped).length ? { skipped: plan.skipped } : {}),
+        ...(aliased.length ? { same_page: aliased } : {}),
+        ...(Object.keys(plan.skipped).length || found.aliases
+          ? { skipped: { ...plan.skipped, ...(found.aliases ? { 'canonical-alias': found.aliases } : {}) } }
+          : {}),
         images: {
           copied: rehosted.size,
           ...(failedImages.length ? { failed: failedImages } : {}),

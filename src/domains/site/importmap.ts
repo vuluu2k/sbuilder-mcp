@@ -16,12 +16,31 @@ import { stickySeeds } from './sticky.js';
  * element choices.
  */
 export interface Captured {
-  kind: 'section' | 'group' | 'heading' | 'text' | 'image' | 'button' | 'list';
+  kind:
+    | 'section'
+    | 'group'
+    | 'heading'
+    | 'text'
+    | 'image'
+    | 'button'
+    | 'list'
+    /** A `<video>` with a file behind it — `src`, and `poster` when the page gave one. */
+    | 'video'
+    /** A provider this platform has an element for: youtube, vimeo, soundcloud, map. */
+    | 'embed'
+    /** An `<hr>`. One node, and a design decision. */
+    | 'divider';
   /** For a group: the arrangement the source actually used. */
   direction?: 'row' | 'column';
   wrap?: boolean;
   /** For a button: whether the source painted it as a call to action, or it is prose's link. */
   variant?: 'cta' | 'link';
+  /** For an embed: which of the platform's own media elements renders it. */
+  provider?: 'youtube' | 'vimeo' | 'soundcloud' | 'map';
+  /** For a youtube or vimeo embed: the id its element stores, never the whole URL. */
+  videoId?: string;
+  /** For a video: the still the page showed before playback. */
+  poster?: string;
   /** For a section the source kept in view while the page scrolled. */
   pinned?: 'sticky' | 'fixed';
   /** 1-6 for a heading, so `htmlTag` survives the trip. */
@@ -155,6 +174,42 @@ function one(c: Captured, t: PageTokens): NodeSpec | null {
           ...(t.textSize ? { fontSize: t.textSize } : {}),
         },
       };
+    }
+    case 'divider': {
+      return { type: 'divider', style: { width: '100%' } };
+    }
+    case 'video': {
+      if (!c.src) return null;
+      // NO STYLE OF OUR OWN. Every media element here already seeds
+      // `width: 100%` + `height: fit-content` and `google-map` seeds a height
+      // per breakpoint; writing a literal over that detaches the node from the
+      // element's own responsive answer to be less correct than it.
+      //
+      // `videoRatio` is seeded 16 / 9, which is right for almost every file a
+      // page embeds — and markup that does not state the real ratio is not
+      // something to guess a crop from.
+      return {
+        type: 'video',
+        specials: { videoSrc: c.src, ...(c.poster ? { poster: c.poster } : {}) },
+      };
+    }
+    case 'embed': {
+      // AN EMBED IS A PROVIDER, NOT A URL. `youtube` and `vimeo` store the ID
+      // alone — handing them a whole watch URL renders nothing — while
+      // `google-map` takes the embed URL its own hint asks for and `soundcloud`
+      // takes a track URL under a different key again.
+      if (c.provider === 'youtube' || c.provider === 'vimeo') {
+        if (!c.videoId) return null;
+        return { type: c.provider, specials: { videoId: c.videoId } };
+      }
+      if (!c.src) return null;
+      if (c.provider === 'map') {
+        return { type: 'google-map', specials: { src: c.src, mapType: 'location' } };
+      }
+      if (c.provider === 'soundcloud') {
+        return { type: 'soundcloud', specials: { trackUrl: c.src } };
+      }
+      return null;
     }
     case 'image': {
       if (!c.src) return null;

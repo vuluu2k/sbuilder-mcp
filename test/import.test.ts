@@ -280,6 +280,100 @@ describe.runIf(process.env.SB_BROWSER_TEST === '1')('capture()', () => {
     expect(kinds).toEqual(['heading', 'text', 'image', 'list', 'button']);
   }, 60_000);
 
+  it('takes an embed, a video and a rule — and drops an iframe this platform cannot render', async () => {
+    // `IFRAME` used to be in the ignore list wholesale, so every embedded video
+    // and every map arrived as a skip count. What genuinely has no element here
+    // — an advert, a tracker, a comment system — still does, counted rather than
+    // guessed at.
+    const media = `data:text/html,${encodeURIComponent(
+      '<main><section>' +
+        '<iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ?si=abc"></iframe>' +
+        '<iframe src="https://player.vimeo.com/video/76979871"></iframe>' +
+        '<iframe src="https://www.google.com/maps/embed?pb=!1m18"></iframe>' +
+        '<iframe src="https://ads.example/banner.html"></iframe>' +
+        '<video src="https://x.example/a.mp4" poster="https://x.example/p.jpg"></video>' +
+        '<hr>' +
+        '<p>Sau đường kẻ.</p>' +
+        '</section></main>',
+    )}`;
+    const r = await capture(media);
+    const kids = r.sections[0].children ?? [];
+    expect(kids.map((c) => c.kind)).toEqual([
+      'embed', 'embed', 'embed', 'video', 'divider', 'text',
+    ]);
+    expect(kids[0]).toMatchObject({ provider: 'youtube', videoId: 'dQw4w9WgXcQ' });
+    expect(kids[1]).toMatchObject({ provider: 'vimeo', videoId: '76979871' });
+    expect(kids[2]).toMatchObject({ provider: 'map' });
+    expect(kids[3]).toMatchObject({ poster: expect.stringContaining('p.jpg') });
+    expect(r.skipped.iframe).toBe(1);
+  }, 60_000);
+
+  it('drops the site footer even when it is a div, and keeps the hero that merely says "header"', async () => {
+    // MEASURED ON blender.org: its site map is `<div class="footer-navigation">`
+    // with no <footer> tag anywhere near it, so a spec-only rule let eleven
+    // sections of somebody else's links through as the page. The same trick on
+    // the header side would eat heroes — blender's first band is
+    // `<div class="hero header-size-large">` — so a class name is evidence for a
+    // footer and not for a header.
+    const page = `data:text/html,${encodeURIComponent(
+      '<meta charset="utf-8">' +
+        '<div class="hero header-size-large"><section><h1>Hero</h1></section></div>' +
+        '<main><section><p>Nội dung thật.</p>' +
+        '<div class="card-footer"><p>Chân thẻ, vẫn là nội dung.</p></div>' +
+        '</section></main>' +
+        '<div class="footer-navigation"><section><ul><li>Điều khoản</li><li>Bảo mật</li></ul></section></div>' +
+        '<footer class="footer-note"><p>© 2026</p></footer>',
+    )}`;
+    const r = await capture(page);
+    const all = JSON.stringify(r.sections);
+    expect(all).toContain('Hero');
+    expect(all).toContain('Nội dung thật.');
+    // `card-footer` does not START with "footer", so it is not swept up.
+    expect(all).toContain('Chân thẻ');
+    expect(all).not.toContain('Điều khoản');
+    expect(all).not.toContain('© 2026');
+    expect(r.skipped['page-chrome']).toBeGreaterThan(0);
+  }, 60_000);
+
+  it('flattens a nested list instead of taking it twice', async () => {
+    // `querySelectorAll('li')` returns nested items as well as outer ones, and an
+    // outer item's textContent already contains its sublist — so every nested
+    // entry arrived once inside its parent's line and once again on its own.
+    // Measured on a real import: one section repeated five sublists that way.
+    const nested = `data:text/html,${encodeURIComponent(
+      '<meta charset="utf-8"><main><section><ul>' +
+        '<li>Cha một<ul><li>Con A</li><li>Con B</li></ul></li><li>Cha hai</li>' +
+        '</ul></section></main>',
+    )}`;
+    const r = await capture(nested);
+    expect((r.sections[0].children ?? [])[0].items).toEqual(['Cha một', 'Con A', 'Con B', 'Cha hai']);
+  }, 60_000);
+
+  it('skips what the page itself marks as not content', async () => {
+    // `aria-hidden="true"` is the author's own mark for decoration and for
+    // duplicates — a carousel's clones, the mobile copy of a menu the desktop
+    // layout also carries. Nothing here reads the accessibility tree, so the
+    // attribute is the only place that answer exists.
+    const marked = `data:text/html,${encodeURIComponent(
+      // A `data:` page declares no charset, so the bytes come back as latin-1
+      // without this — the fixture's own encoding, not the walk's.
+      '<meta charset="utf-8"><main><section><p>Thật.</p>' +
+        '<div aria-hidden="true"><p>Trang trí.</p></div></section></main>',
+    )}`;
+    const r = await capture(marked);
+    const texts = (r.sections[0].children ?? []).map((c) => c.text);
+    expect(texts).toEqual(['Thật.']);
+    expect(r.skipped['aria-hidden']).toBe(1);
+  }, 60_000);
+
+  it('reports the page\'s own canonical address', async () => {
+    const canon = `data:text/html,${encodeURIComponent(
+      '<link rel="canonical" href="https://shop.example/real"><main><section><p>Nội dung.</p></section></main>',
+    )}`;
+    const r = await capture(canon);
+    expect(r.canonical).toBe('https://shop.example/real');
+  }, 60_000);
+
   it('skips what cannot be rendered, and says so', async () => {
     const r = await capture(page);
     // A hidden paragraph and a script are not content; a capture that silently
@@ -465,6 +559,65 @@ describe.runIf(process.env.SB_BROWSER_TEST === '1')('capture()', () => {
 });
 
 /**
+ * THE KINDS THAT HAD NO ELEMENT, AND NOW DO.
+ *
+ * An embedded video, a map and a rule were the one class of content that could
+ * not survive the trip at all: `IFRAME` sat in the ignore list, so a hero video
+ * and a contact page's map arrived as a skip count. The platform has had
+ * `video`, `youtube`, `vimeo`, `soundcloud`, `google-map` and `divider` the
+ * whole time.
+ */
+describe('media and rules map to the elements that render them', () => {
+  const t = {};
+
+  it('a youtube or vimeo embed stores the ID, never the URL', () => {
+    // The elements read `specials.videoId`. Handing them a watch URL renders an
+    // empty frame — the failure looks like the embed being unsupported.
+    expect(toSpecs([{ kind: 'section', children: [
+      { kind: 'embed', provider: 'youtube', videoId: 'dQw4w9WgXcQ' },
+      { kind: 'embed', provider: 'vimeo', videoId: '76979871' },
+    ] }] as Captured[], t)[0].children![0].children!.map((n) => [n.type, n.specials])).toEqual([
+      ['youtube', { videoId: 'dQw4w9WgXcQ' }],
+      ['vimeo', { videoId: '76979871' }],
+    ]);
+  });
+
+  it('a map takes the embed URL, and soundcloud takes it under a different key again', () => {
+    const kids = toSpecs([{ kind: 'section', children: [
+      { kind: 'embed', provider: 'map', src: 'https://www.google.com/maps/embed?pb=x' },
+      { kind: 'embed', provider: 'soundcloud', src: 'https://w.soundcloud.com/player/?url=y' },
+    ] }] as Captured[], t)[0].children![0].children!;
+    expect(kids[0]).toMatchObject({ type: 'google-map', specials: { src: expect.stringContaining('maps/embed'), mapType: 'location' } });
+    expect(kids[1]).toMatchObject({ type: 'soundcloud', specials: { trackUrl: expect.stringContaining('soundcloud') } });
+  });
+
+  it('a video carries its poster, and neither carries a style of its own', () => {
+    // Every media element seeds `width: 100%` + `height: fit-content`, and
+    // google-map seeds a height per breakpoint. A literal over that detaches the
+    // node from the element's own responsive answer to be less correct than it.
+    const [video] = toSpecs(
+      [{ kind: 'section', children: [{ kind: 'video', src: 'https://x/a.mp4', poster: 'https://x/p.jpg' }] }] as Captured[],
+      t,
+    )[0].children![0].children!;
+    expect(video).toEqual({ type: 'video', specials: { videoSrc: 'https://x/a.mp4', poster: 'https://x/p.jpg' } });
+  });
+
+  it('an embed with nothing behind it is dropped rather than added empty', () => {
+    const empty = toSpecs(
+      [{ kind: 'section', children: [{ kind: 'embed', provider: 'youtube' }, { kind: 'video' }] }] as Captured[],
+      t,
+    );
+    expect(empty).toEqual([]);
+  });
+
+  it('a rule between sections is one node', () => {
+    const [rule] = toSpecs([{ kind: 'section', children: [{ kind: 'divider' }] }] as Captured[], t)[0]
+      .children![0].children!;
+    expect(rule.type).toBe('divider');
+  });
+});
+
+/**
  * WHERE AN IMPORT LANDS ON A PAGE THAT ALREADY HAS GLOBALS.
  *
  * Trap 3 is not a style rule: the platform refuses EVERY save whose ROOT
@@ -536,9 +689,14 @@ describe.runIf(process.env.SB_BROWSER_TEST === '1')('crawlLinks() and captureMan
       '<a href="/a">A</a><a href="/a/">A lần nữa</a><a href="/b">B</a>' +
       '<a href="https://elsewhere.example/x">Ngoài</a>' +
       '<a href="/tai-lieu.pdf">PDF</a><a href="/cart">Giỏ</a>' +
+      '<a href="/dup">A dưới tên khác</a>' +
       '</section></main>',
     '/a': '<title>Trang A</title><main><section><h2>Trang A</h2><p>Nội dung A.</p></section></main>',
     '/b': '<title>Trang B</title><main><section><h2>Trang B</h2><a href="/c">C</a></section></main>',
+    // `/dup` is `/a` under a second address: the crawl must not import it twice.
+    '/dup':
+      '<title>Bản sao</title><link rel="canonical" href="/a">' +
+      '<main><section><h2>Trang A</h2></section></main>',
     '/c': '<title>Trang C</title><main><section><h2>Trang C</h2><p>Sâu hai tầng.</p></section></main>',
   };
 
@@ -562,11 +720,15 @@ describe.runIf(process.env.SB_BROWSER_TEST === '1')('crawlLinks() and captureMan
   });
 
   it('walks the site\'s own links, in ONE spelling, and spends nothing on what cannot be a page', async () => {
-    const got = await crawlLinks(`${base}/`, { depth: 1, maxVisits: 10, canon: canonFor(`${base}/`) });
-    expect([...got.urls].sort()).toEqual([`${base}/`, `${base}/a`, `${base}/b`]);
+    const got = await crawlLinks(`${base}/`, { depth: 2, maxVisits: 10, canon: canonFor(`${base}/`) });
+    expect([...got.urls].sort()).toEqual([`${base}/`, `${base}/a`, `${base}/b`, `${base}/c`, `${base}/dup`]);
     // /a and /a/ are one page; the PDF, the cart and the other site are not this
     // crawl's to visit — and each of them would have cost a navigation.
-    expect(got.visited).toBe(1);
+    expect(got.visited).toBe(4);
+    // AND `/dup` SAYS IT IS `/a`. Recorded rather than acted on in the crawl: it
+    // is still walked for its links, and the caller folds the two when it builds
+    // the plan.
+    expect(got.canonical.get(`${base}/dup`)).toBe(`${base}/a`);
     // The crawl opened the entry to read its links and got its `<title>` for
     // free — which is the name the plan shows, rather than one derived from a
     // slug.

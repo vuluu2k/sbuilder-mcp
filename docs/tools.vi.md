@@ -851,6 +851,14 @@ quá con số đó thì container ấy là cột nội dung của chính trang, 
 chứ không phải xếp cạnh nhau — còn CSS grid thì luôn về ở chế độ xuống dòng, vì `flexWrap` đọc
 ra `nowrap` trên grid chỉ vì thuộc tính đó không áp dụng.
 
+**Header và footer của trang nguồn không bao giờ được mang sang**, và "cấp trang" là câu hỏi
+theo chuẩn HTML chứ không theo độ sâu: `<header>`/`<footer>` thuộc về phần tử sectioning gần
+nhất, nên cái nào không có phần tử đó ở trên thì là của cả trang, dù bị bọc sâu bao nhiêu.
+Footer còn được nhận ra qua class hoặc id bắt đầu bằng `footer` — rất nhiều site thật đánh dấu
+kiểu đó chứ không dùng thẻ — nhưng header thì không, vì chữ `header` trong tên class thường là
+hero. Thứ gì trang tự đánh dấu `aria-hidden="true"` đều bị bỏ: đó là dấu của chính tác giả cho
+phần trang trí và phần lặp.
+
 **Khối code được lấy nguyên khối.** Mọi bộ tô màu cú pháp đều bọc từng token trong một `<span>`
 riêng, nên đi vào bên trong sẽ biến một đoạn config hai mươi dòng thành bốn mươi khối văn bản
 rời. Khoảng trắng bị gộp như mọi văn bản khác: nền tảng này không có element code để giữ lại,
@@ -910,6 +918,12 @@ NÀO, tạo một trang cho mỗi cái, rồi đổ nội dung vào.
 | `upload_images` | boolean? | Mặc định **true** |
 | `homepage` | boolean? | URL vào rơi vào trang chủ sẵn có của site này, mặc định **true** |
 | `dry_run` | boolean? | Mặc định **true** — trả về danh sách trang và không tạo gì cả |
+
+**Mỗi trang chỉ một lần.** URL được gộp về địa chỉ mà chính trang khai trong
+`<link rel="canonical">`; bản dịch được gộp về bản gốc, nhưng chỉ khi tìm thấy cả hai, nên site
+phục vụ mọi thứ dưới một locale vẫn giữ nguyên; `/blog/page/2` bị bỏ vì nền tảng này tự render
+phân trang của nó; và `robots.txt` của site được tôn trọng, khớp dài nhất thắng, trừ đúng URL mà
+người gọi đã nhập.
 
 **Danh sách của chính chủ site trước, bò link sau.** `robots.txt` được đọc để tìm dòng
 `Sitemap:` trước khi đoán `/sitemap.xml`, vì rất nhiều sitemap thật nằm chỗ khác — nền tảng

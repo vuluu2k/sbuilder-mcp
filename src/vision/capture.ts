@@ -46,6 +46,7 @@ declare const document: {
   body: El;
   querySelectorAll(selector: string): ArrayLike<El>;
 };
+declare const console: { error(...args: unknown[]): void };
 declare function getComputedStyle(el: El): {
   display: string;
   visibility: string;
@@ -62,6 +63,15 @@ declare const location: { href: string };
 export interface CaptureResult {
   url: string;
   title: string;
+  /**
+   * What the page says its own address is, when it says.
+   *
+   * `<link rel="canonical">` is how a site declares that several URLs are ONE
+   * page, and it is not a rare flourish: modelcontextprotocol.io's home page
+   * points at a dated docs path. Without it a crawl imports the same content
+   * twice under two slugs and nothing in the plan looks wrong.
+   */
+  canonical?: string;
   sections: Captured[];
   /** What was skipped and why, so a thin capture explains itself. */
   skipped: Record<string, number>;
@@ -132,10 +142,29 @@ function capturePage(limits: { maxSections: number; maxImages: number; maxTextCh
     return cs.display !== 'inline' && (filled || bordered);
   };
 
+  // IFRAME IS NOT HERE ANY MORE. It was, and it took every embedded video, every
+  // map and every audio player with it — silently, as a skip count. The platform
+  // has `video`, `youtube`, `vimeo`, `soundcloud` and `google-map`; a hero video
+  // and a contact page's map are ordinary things to import, and they were the
+  // one kind of content that could not survive the trip at all.
   const IGNORE = new Set([
-    'SCRIPT', 'STYLE', 'NOSCRIPT', 'TEMPLATE', 'SVG', 'PATH', 'IFRAME', 'CANVAS',
+    'SCRIPT', 'STYLE', 'NOSCRIPT', 'TEMPLATE', 'SVG', 'PATH', 'CANVAS',
     'NAV', 'FORM', 'INPUT', 'SELECT', 'TEXTAREA', 'BUTTON',
   ]);
+
+  /** The provider and id behind an embed URL, or null if this platform has no element for it. */
+  const embedOf = (raw: string): { provider: string; videoId?: string; src?: string } | null => {
+    const u = raw.split('?')[0];
+    let m = /(?:youtube(?:-nocookie)?\.com\/(?:embed|v|shorts)\/|youtu\.be\/)([A-Za-z0-9_-]{6,})/.exec(u);
+    if (m) return { provider: 'youtube', videoId: m[1] };
+    m = /player\.vimeo\.com\/video\/(\d+)/.exec(u);
+    if (m) return { provider: 'vimeo', videoId: m[1] };
+    if (/(?:google\.[a-z.]+|maps\.google\.[a-z.]+)\/maps?\/embed/.test(u)) {
+      return { provider: 'map', src: raw };
+    }
+    if (/w\.soundcloud\.com\/player/.test(u)) return { provider: 'soundcloud', src: raw };
+    return null;
+  };
 
   /**
    * The renderable content under one section, AS A TREE.
@@ -153,6 +182,76 @@ function capturePage(limits: { maxSections: number; maxImages: number; maxTextCh
    * merely wraps is not a design decision and reproducing it would nest the
    * result ten deep for nothing.
    */
+  // THE SOURCE'S OWN HEADER AND FOOTER ARE NEVER WANTED. The target site has its
+  // own, as shared globals, and importing somebody else's navigation onto a
+  // storefront is a second menu pointing at a different website.
+  //
+  // NOT NAMED `chrome`: that is a BROWSER GLOBAL (the extension API), so a
+  // `const chrome` declared in a nested scope left every OTHER scope resolving
+  // the name to `window.chrome` — `chrome.has is not a function`, thrown inside
+  // `evaluate`, which kills the whole capture. The same shape as the closure
+  // trap this file already carries, reached from the opposite direction.
+  //
+  // PAGE-LEVEL, BY THE SPEC'S OWN DEFINITION rather than by depth. This used to
+  // ask whether the element was a DIRECT child of `<body>`, which almost no real
+  // site satisfies — one wrapper div is enough — so blender.org's footer came
+  // through as eleven sections of link columns and the page a merchant asked for
+  // was its site map. `<header>` and `<footer>` belong to their nearest
+  // SECTIONING ancestor (article, aside, nav, section), so one with none of
+  // those above it is the page's, however deeply it is wrapped; one inside an
+  // `<article>` is that article's byline, and one inside a `<section>` is the
+  // hero the old comment was right to protect. `<main>` is not sectioning
+  // content, so it does not shield a footer.
+  const sectioning = Array.from(document.querySelectorAll('article, section, aside, nav'));
+  // A CLASS NAME IS EVIDENCE FOR A FOOTER AND NOT FOR A HEADER, and the
+  // asymmetry is the whole point. blender.org marks its site map
+  // `<div class="footer-navigation">` — no `<footer>` tag anywhere near it — so
+  // the spec rule alone let eleven sections of somebody else's links through as
+  // the page a merchant asked for. The same trick on the header side would eat
+  // HEROES: blender's own first band is `<div class="hero header-size-large">`,
+  // and losing the first thing on a landing page costs more than a stray footer.
+  // A header is caught by its tag or its ARIA role, and its links are `<nav>`,
+  // which is ignored already.
+  //
+  // The token must START with `footer` (footer, footer-note, footer__inner) so
+  // `card-footer` inside an ordinary div is not swept up with it.
+  const footerish = (el: El): boolean => {
+    const words = `${el.getAttribute('id') ?? ''} ${String(el.className ?? '')}`.toLowerCase();
+    for (const w of words.split(/[\s]+/)) {
+      if (!w) continue;
+      if (w === 'colophon' || w === 'site-footer' || w === 'page-footer') return true;
+      if (w === 'footer' || w.indexOf('footer-') === 0 || w.indexOf('footer_') === 0) return true;
+    }
+    return false;
+  };
+  const pageChromeRoots: El[] = [];
+  const chromeCandidates = Array.from(
+    document.querySelectorAll('header, footer, [role="banner"], [role="contentinfo"], [class*="footer"], [id*="footer"]'),
+  );
+  for (const el of chromeCandidates) {
+    const role = el.getAttribute('role');
+    const isChrome =
+      el.tagName === 'HEADER' ||
+      el.tagName === 'FOOTER' ||
+      role === 'banner' ||
+      role === 'contentinfo' ||
+      footerish(el);
+    if (!isChrome) continue;
+    if (sectioning.some((sec) => sec !== el && sec.contains(el))) continue;
+    // A NESTED ONE ADDS NOTHING: the outer root already covers it, and keeping
+    // both makes the containment test scan the same subtree twice.
+    if (pageChromeRoots.some((c) => c.contains(el))) continue;
+    pageChromeRoots.push(el);
+  }
+  // INSIDE the chrome, not equal to it. A real footer holds `<section>`s, and
+  // the candidate walk deliberately takes the INNERMOST sections — so on
+  // blender.org the candidates were the footer's own link columns, none of which
+  // IS the footer, and eleven sections of somebody else's site map came through
+  // as the page. Asking about containment is the same question the candidate
+  // list already answers for nesting.
+  const inPageChrome = (el: El): boolean =>
+    pageChromeRoots.some((c) => c === el || c.contains(el));
+
   const leaves = (root: El): Captured[] => {
     const walkChildren = (el: El): Captured[] => {
       const kids: Captured[] = [];
@@ -173,7 +272,24 @@ function capturePage(limits: { maxSections: number; maxImages: number; maxTextCh
         skip('over-node-limit');
         return [];
       }
+      if (inPageChrome(el)) {
+        skip('page-chrome');
+        return [];
+      }
       const tag = el.tagName;
+      // WHAT THE PAGE ITSELF SAYS IS NOT CONTENT.
+      //
+      // `aria-hidden="true"` is the author's own mark for decoration and for
+      // duplicates — a carousel's cloned slides, the mobile copy of a menu that
+      // the desktop layout also carries, an icon that repeats the label beside
+      // it. Measured on real pages before this: 53 such elements on one, 15 on
+      // another, every one of them walked and some of them captured twice.
+      // Nothing here reads the accessibility tree, so this attribute is the only
+      // place that answer exists.
+      if (el.getAttribute('aria-hidden') === 'true') {
+        skip('aria-hidden');
+        return [];
+      }
       if (IGNORE.has(tag)) {
         skip(tag.toLowerCase());
         return [];
@@ -181,6 +297,40 @@ function capturePage(limits: { maxSections: number; maxImages: number; maxTextCh
       if (!visible(el)) {
         skip('hidden');
         return [];
+      }
+      // A RULE BETWEEN SECTIONS IS A DESIGN DECISION, and it is one node.
+      if (tag === 'HR') {
+        taken.nodes++;
+        return [{ kind: 'divider' }];
+      }
+      if (tag === 'VIDEO') {
+        const direct = el.getAttribute('src');
+        const source = Array.from(el.querySelectorAll('source'))[0];
+        const src = direct || (source ? source.getAttribute('src') : null);
+        if (!src) {
+          skip('video-without-src');
+          return [];
+        }
+        taken.nodes++;
+        const poster = el.getAttribute('poster');
+        return [{
+          kind: 'video',
+          src: abs(src),
+          ...(poster ? { poster: abs(poster) } : {}),
+        }];
+      }
+      if (tag === 'IFRAME') {
+        const src = el.getAttribute('src');
+        const embed = src ? embedOf(abs(src)) : null;
+        if (!embed) {
+          // An advert, a tracking pixel, a chat widget, a comment system: real
+          // pages carry several, and this platform has an element for none of
+          // them. Counted rather than guessed at.
+          skip('iframe');
+          return [];
+        }
+        taken.nodes++;
+        return [{ kind: 'embed', ...embed } as Captured];
       }
 
       if (HEADINGS.has(tag)) {
@@ -243,9 +393,38 @@ function capturePage(limits: { maxSections: number; maxImages: number; maxTextCh
         return [];
       }
       if (tag === 'UL' || tag === 'OL') {
-        const items = Array.from(el.querySelectorAll('li'))
-          .map((li) => clean(li.textContent))
-          .filter(Boolean);
+        // A NESTED LIST WAS TAKEN TWICE, and the duplication reads as a page
+        // that stutters. `querySelectorAll('li')` returns the nested items as
+        // well as the outer ones, and an outer item's `textContent` ALREADY
+        // contains its sublist — so every nested entry arrived once inside its
+        // parent's line and once again on its own. Measured on a real import:
+        // one section of blender.org repeated five sublists that way.
+        //
+        // Walked by DIRECT children instead, with each item's own words
+        // separated from its sublist's and the sublist flattened after it. This
+        // platform's `list` is flat, so flattening is the honest translation —
+        // and the order a reader sees is preserved.
+        const items: string[] = [];
+        const collect = (list: El): void => {
+          for (const li of Array.from(list.children)) {
+            if (li.tagName !== 'LI') continue;
+            const sublists = Array.from(li.children).filter(
+              (c) => c.tagName === 'UL' || c.tagName === 'OL',
+            );
+            let text = clean(li.textContent);
+            for (const sub of sublists) {
+              const inner = clean(sub.textContent);
+              // textContent runs in document order, so a sublist's words are the
+              // tail of its parent's. Only strip what is actually there.
+              if (inner && text.length > inner.length && text.slice(-inner.length) === inner) {
+                text = clean(text.slice(0, text.length - inner.length));
+              }
+            }
+            if (text) items.push(text);
+            for (const sub of sublists) collect(sub);
+          }
+        };
+        collect(el);
         if (!items.length) return [];
         taken.nodes++;
         return [{ kind: 'list', items }];
@@ -357,20 +536,10 @@ function capturePage(limits: { maxSections: number; maxImages: number; maxTextCh
   // single band. The finest ones are the page's actual bands.
   candidates = candidates.filter((el) => !candidates.some((o) => o !== el && el.contains(o)));
 
-  // THE SOURCE'S OWN HEADER AND FOOTER ARE NEVER WANTED. The target site has its
-  // own, as shared globals, and importing somebody else's navigation onto a
-  // storefront is a second menu pointing at a different website. Only the
-  // PAGE-LEVEL ones are dropped — a `<header>` inside a section is a hero, and
-  // excluding those would lose the first thing on most landing pages.
-  const chrome = new Set<El>();
-  for (const el of Array.from(document.body.children)) {
-    if (el.tagName === 'HEADER' || el.tagName === 'FOOTER') chrome.add(el);
-  }
-
   const build = (from: El[]): Captured[] => {
     const acc: Captured[] = [];
     for (const el of from) {
-      if (chrome.has(el)) {
+      if (inPageChrome(el)) {
         skip('page-chrome');
         continue;
       }
@@ -413,7 +582,15 @@ function capturePage(limits: { maxSections: number; maxImages: number; maxTextCh
     sections = build(Array.from(main.children));
   }
 
-  return { url: here, title: clean(document.title), sections, skipped };
+  const link = Array.from(document.querySelectorAll('link[rel="canonical"]'))[0];
+  const canonical = link ? (link.getAttribute('href') ?? '') : '';
+  return {
+    url: here,
+    title: clean(document.title),
+    ...(canonical ? { canonical: abs(canonical) } : {}),
+    sections,
+    skipped,
+  };
 }
 
 /**
@@ -547,7 +724,7 @@ export async function captureMany(urls: string[], opts: CaptureOpts = {}): Promi
  * Everything it uses is declared INSIDE it: the function is serialized, so a
  * module-level constant it closes over simply is not there on the other side.
  */
-function linksOnPage(): { title: string; links: string[] } {
+function linksOnPage(): { title: string; canonical: string; links: string[] } {
   const here = location.href;
   const links: string[] = [];
   const anchors = Array.from(document.querySelectorAll('a[href]'));
@@ -561,7 +738,19 @@ function linksOnPage(): { title: string; links: string[] } {
       // One unresolvable href must not kill the crawl.
     }
   }
-  return { title: document.title, links };
+  const link = Array.from(document.querySelectorAll('link[rel="canonical"]'))[0];
+  let canonical = '';
+  if (link) {
+    const href = link.getAttribute('href');
+    if (href) {
+      try {
+        canonical = new URL(href, here).href;
+      } catch {
+        canonical = '';
+      }
+    }
+  }
+  return { title: document.title, canonical, links };
 }
 
 /**
@@ -590,11 +779,12 @@ export async function crawlLinks(
      */
     canon: (url: string) => string | null;
   },
-): Promise<{ urls: string[]; titles: Map<string, string>; visited: number }> {
+): Promise<{ urls: string[]; titles: Map<string, string>; canonical: Map<string, string>; visited: number }> {
   const depth = Math.max(0, opts.depth ?? 1);
   const maxVisits = opts.maxVisits ?? 24;
   const found = new Set<string>([entry]);
   const titles = new Map<string, string>();
+  const canonical = new Map<string, string>();
   let visited = 0;
   await withBrowser(async (browser) => {
     let frontier = [entry];
@@ -610,6 +800,13 @@ export async function crawlLinks(
         try {
           const got = await readPage(browser, url, 1440, (page) => page.evaluate(linksOnPage));
           if (got.title) titles.set(url, got.title);
+          if (got.canonical) {
+            const c = opts.canon(got.canonical);
+            // A PAGE THAT NAMES ANOTHER ADDRESS AS ITS OWN is that page. Recorded
+            // rather than acted on here: the crawl still walks this copy for its
+            // links, and the caller folds the two when it builds the plan.
+            if (c && c !== url) canonical.set(url, c);
+          }
           // A LEVEL BELOW THE LAST IS WALKED FOR ITS LINKS AND NOT QUEUED: at
           // `depth` the crawl still wants what that page points at, it just
           // must not navigate any further.
@@ -626,5 +823,5 @@ export async function crawlLinks(
       frontier = next;
     }
   });
-  return { urls: [...found], titles, visited };
+  return { urls: [...found], titles, canonical, visited };
 }

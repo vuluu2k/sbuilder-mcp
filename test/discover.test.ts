@@ -4,6 +4,7 @@ import {
   choosePages,
   nameFor,
   normalizeUrl,
+  robotsRules,
   robotsSitemaps,
   sitemapUrls,
   slugFor,
@@ -136,7 +137,7 @@ describe('choosePages — which URLs become pages', () => {
     // plumbing — a locale prefix is the ordinary shape of the sites this tool is
     // pointed at. The needle begins with `/`, so only the right boundary has to
     // be checked, anywhere in the path.
-    const keep = ['/feedback', '/cartier-watches', '/comments-policy', '/registered-office', '/en/feedback'];
+    const keep = ['/feedback', '/cartier-watches', '/comments-policy', '/registered-office'];
     const drop = ['/cart', '/en/cart', '/vi/account', '/shop/checkout', '/en/wp-login.php', '/blog/tag/x'];
     const got = choosePages(
       entry,
@@ -147,6 +148,80 @@ describe('choosePages — which URLs become pages', () => {
     for (const k of keep) expect(paths, k).toContain(k);
     for (const d of drop) expect(paths, d).not.toContain(d);
     expect(got.skipped['not-content']).toBe(drop.length);
+  });
+
+  it('drops page 2 of a list — this platform renders its own pagination', () => {
+    const got = choosePages(
+      entry,
+      links('https://shop.example/blog', 'https://shop.example/blog/page/2', 'https://shop.example/blog/2024'),
+      {},
+    );
+    const paths = got.pages.map((p) => new URL(p.url).pathname);
+    expect(paths).toContain('/blog');
+    // A year archive is a real page; only an explicit `page` segment is not.
+    expect(paths).toContain('/blog/2024');
+    expect(paths).not.toContain('/blog/page/2');
+    expect(got.skipped.pagination).toBe(1);
+  });
+
+  it('keeps ONE page per page, not one per language — and only when they collide', () => {
+    // A multilingual sitemap lists every translation, so the same page arrives
+    // three times under three slugs, spending the budget on content this
+    // platform has a translations surface for.
+    const many = choosePages(
+      entry,
+      links(
+        'https://shop.example/about',
+        'https://shop.example/en/about',
+        'https://shop.example/vi/about',
+        'https://shop.example/en/pricing',
+      ),
+      {},
+    );
+    const paths = many.pages.map((p) => new URL(p.url).pathname);
+    expect(paths).toContain('/about');
+    expect(paths).not.toContain('/en/about');
+    expect(paths).not.toContain('/vi/about');
+    // `/en/pricing` has no counterpart, so nothing folds it away.
+    expect(paths).toContain('/en/pricing');
+    expect(many.skipped['other-locale']).toBe(2);
+  });
+
+  it('a site that serves EVERY page under one locale keeps all of them', () => {
+    // The rule that simply dropped a `/xx/` prefix would empty this plan.
+    // nodejs.org is the real case: every page lives under /en.
+    const all = choosePages(
+      'https://nodejs.org/en',
+      links('https://nodejs.org/en/about', 'https://nodejs.org/en/download'),
+      {},
+    );
+    expect(all.pages.map((p) => new URL(p.url).pathname).sort()).toEqual([
+      '/en',
+      '/en/about',
+      '/en/download',
+    ]);
+    expect(all.skipped['other-locale']).toBeUndefined();
+  });
+
+  it('honours the site\'s robots.txt, but never for the URL the caller named', () => {
+    const rules = robotsRules('User-agent: *\nDisallow: /internal\nAllow: /internal/press\n');
+    const got = choosePages(
+      'https://shop.example/internal',
+      links(
+        'https://shop.example/internal/secret',
+        'https://shop.example/internal/press',
+        'https://shop.example/about',
+      ),
+      { robots: rules },
+    );
+    const paths = got.pages.map((p) => new URL(p.url).pathname);
+    // The entry is exempt: the caller typed it.
+    expect(paths).toContain('/internal');
+    // Longest match wins, so an Allow under a Disallow is honoured.
+    expect(paths).toContain('/internal/press');
+    expect(paths).toContain('/about');
+    expect(paths).not.toContain('/internal/secret');
+    expect(got.skipped['robots-disallow']).toBe(1);
   });
 
   it('an explicit include outranks the plumbing list; exclude drops what it names', () => {

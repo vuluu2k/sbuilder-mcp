@@ -857,6 +857,71 @@ that accounts for them.
   an import is rare, slow and runs untrusted script, and coupling that to the tool a vision
   loop calls every few hundred milliseconds is how the fast path gets slow.
 
+- **THE IMPORT'S BIGGEST LOSS WAS A `<div class="footer-navigation">`.** Page chrome was
+  detected by asking whether a `<header>`/`<footer>` was a DIRECT CHILD of `<body>`, which
+  almost no real site satisfies — one wrapper div defeats it — and blender.org marks its site
+  map with a class rather than the tag at all. Measured on `/about`: eleven sections of
+  somebody else's link columns arrived as the page, and the page's own eleven headings and
+  twenty-five paragraphs did not. Three corrections, each of which was necessary and none of
+  which was sufficient:
+  - **PAGE-LEVEL IS A SPEC QUESTION, NOT A DEPTH ONE.** A `<header>`/`<footer>` belongs to its
+    nearest SECTIONING ancestor (`article`, `aside`, `nav`, `section`), so one with none of
+    those above it is the page's however deeply wrapped. `<main>` is not sectioning content and
+    does not shield a footer.
+  - **ASK ABOUT CONTAINMENT, NOT EQUALITY.** The candidate walk deliberately takes the
+    INNERMOST sections, and a real footer holds `<section>`s — so the candidates were the
+    footer's own columns, none of which IS the footer.
+  - **A CLASS NAME IS EVIDENCE FOR A FOOTER AND NOT FOR A HEADER.** The token must START with
+    `footer` (so `card-footer` is not swept up), and the same trick on the header side would
+    eat HEROES — blender's first band is `<div class="hero header-size-large">`. Losing the
+    first thing on a landing page costs more than a stray footer, so a header is caught by its
+    tag or `role="banner"` only; its links are `<nav>`, which is ignored already.
+
+  **AND THE FIX'S OWN FIRST ATTEMPT NAMED THE SET `chrome`, WHICH IS A BROWSER GLOBAL.** The
+  `const` landed in a nested scope, so every other scope resolved the name to `window.chrome`
+  and threw `chrome.has is not a function` inside `evaluate` — killing the whole capture. Same
+  shape as the closure trap this file already records for `page.evaluate`, reached from the
+  opposite direction: not a name that is missing, a name that is already taken.
+
+- **IFRAME WAS IN THE IGNORE LIST, so every embedded video and every map was unimportable.**
+  The platform has `video`, `youtube`, `vimeo`, `soundcloud` and `google-map`, and a hero video
+  or a contact page's map is an ordinary thing to bring over — it was the one class of content
+  that could not survive the trip at all, and it left as a skip count. `youtube` and `vimeo`
+  store the ID ALONE (`specials.videoId`); a whole watch URL renders an empty frame.
+  `google-map` takes the embed URL under `src`, `soundcloud` takes it under `trackUrl`, and
+  `<hr>` is a `divider`. None of them is given a style: every one seeds `width: 100%` +
+  `height: fit-content` and `google-map` seeds a height per breakpoint, so a literal detaches
+  the node from the element's own responsive answer to be less correct than it. What still has
+  no element — an advert, a tracker, a comment system — is counted rather than guessed at.
+
+- **FOUR MORE THINGS A CRAWL GOT WRONG, all measured on real sites.**
+  - **`<link rel="canonical">` IS NOT A FLOURISH.** modelcontextprotocol.io's home page names a
+    dated docs path as its own address, so `/` and that path are one page — imported twice
+    under two slugs, with nothing in the plan looking wrong. Folded on the crawl path (where
+    the answer is in hand) and again in the import pass (a sitemap cannot know it; only the
+    open page can).
+  - **ONE PAGE PER PAGE, NOT ONE PER LANGUAGE.** A multilingual sitemap lists every
+    translation. Folded ONLY on a collision — a rule that simply dropped a `/xx/` prefix would
+    empty the plan for nodejs.org, which serves everything under `/en`.
+  - **PAGE 2 OF A LIST IS NOT A PAGE.** nodejs.org offered 539 of them. Narrow on purpose: an
+    explicit `page` segment only, because `/blog/2024` is a year archive and a real page.
+  - **`robots.txt` IS THE SITE'S OWN ANSWER** to the question the plumbing list guesses at, and
+    a tool that fetches a dozen pages should obey it. Longest match wins, so an `Allow` under a
+    `Disallow` is honoured; an empty `Disallow:` means allow everything and reading it as the
+    empty prefix would block every path. The ENTRY is exempt — the caller typed it.
+  - **`aria-hidden="true"` IS THE AUTHOR'S OWN MARK** for decoration and for duplicates: a
+    carousel's clones, the mobile copy of a menu the desktop layout also carries. Measured 53
+    on one page and 15 on another, every one walked. Nothing here reads the accessibility tree,
+    so the attribute is the only place that answer exists — and re-measuring after showed it
+    reclassifies rather than loses: the captured content was unchanged.
+
+- **A NESTED LIST WAS TAKEN TWICE.** `querySelectorAll('li')` returns nested items as well as
+  outer ones, and an outer item's `textContent` ALREADY contains its sublist — so every nested
+  entry arrived once inside its parent's line and once again on its own, which on an imported
+  page reads as a stutter nobody typed. Walked by DIRECT children, each item's own words
+  separated from its sublist's, the sublist flattened after it. This platform's `list` is flat,
+  so flattening is the honest translation and the reader's order survives.
+
 - **A PATCH CARRIED THE NODE BY REFERENCE, AND `applyAndSave` APPLIES EVERY BATCH TWICE.**
   `addSubtree` emits `set nodes/<id>` whose value IS the node object it just built, then
   `insert` patches that push child ids into that node's own `data.nodes`. Assigning the

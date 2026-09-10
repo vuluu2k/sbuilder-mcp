@@ -35,6 +35,8 @@ export interface Planned extends Found {
 
 export interface ChooseOpts {
   maxPages?: number;
+  /** The site's own robots.txt rules. The ENTRY is never dropped by them — the caller named it. */
+  robots?: RobotsRules;
   /** Path substrings a URL must contain. An explicit include OUTRANKS the not-content list. */
   include?: string[];
   exclude?: string[];
@@ -77,6 +79,80 @@ const NOT_CONTENT = [
   // as often /blog/tag/x as /tag/x.
   '/tag/', '/tags/', '/author/', '/authors/',
 ];
+
+/**
+ * PAGE 2 OF A LIST IS NOT A PAGE.
+ *
+ * `/blog/page/2` is the same design as `/blog` holding the next twenty records,
+ * and this platform renders a list from its own catalogue rather than from
+ * somebody else's pagination. Importing them spends the page budget on repeats
+ * of a layout already taken. Narrow on purpose: `/blog/2024` is a year archive
+ * and a real page, so only an explicit `page` segment counts.
+ */
+const PAGINATION = /\/(?:page|pages|p)\/\d+(?:\/|$)/i;
+
+/** A leading path segment that is a language tag: `/en`, `/vi`, `/en-us`, `/zh-hans`. */
+const LOCALE_SEG = /^[a-z]{2}(?:-[a-z]{2,4})?$/i;
+
+/** A path split into the language it is written in and the page it names. */
+function localeOf(path: string): { lang: string; key: string } {
+  const segs = path.split('/').filter(Boolean);
+  if (segs.length > 0 && LOCALE_SEG.test(segs[0])) {
+    return { lang: segs[0].toLowerCase(), key: `/${segs.slice(1).join('/')}` };
+  }
+  return { lang: '', key: path };
+}
+
+/**
+ * ONE PAGE PER PAGE, not one per language.
+ *
+ * A multilingual site lists every translation in its sitemap, so `/about`,
+ * `/en/about` and `/vi/about` all arrive and all describe the same page. Import
+ * them and the merchant gets the same content three times under three slugs,
+ * with the page budget spent on translations of a page already taken — and this
+ * platform has a translations surface for exactly that job.
+ *
+ * FOLDED ONLY ON A CONFLICT. A rule that simply dropped every `/xx/` prefix
+ * would empty the plan for a site that serves ALL its pages under one — which
+ * nodejs.org does, everything under `/en`. So a group forms only when two URLs
+ * name the same page in different languages, which means the list can never
+ * come back shorter than the number of distinct pages.
+ *
+ * The entry's own language wins, because that is the one the caller pointed at.
+ */
+function foldLocales(kept: Found[], entry: string, skip: (why: string) => void): Found[] {
+  const entryLang = localeOf(pathOf(entry)).lang;
+  const groups = new Map<string, Found[]>();
+  for (const f of kept) {
+    const { key } = localeOf(pathOf(f.url));
+    const g = groups.get(key);
+    if (g) g.push(f);
+    else groups.set(key, [f]);
+  }
+  const out: Found[] = [];
+  for (const group of groups.values()) {
+    if (group.length === 1) {
+      out.push(group[0]);
+      continue;
+    }
+    const langs = group.map((f) => localeOf(pathOf(f.url)).lang);
+    if (new Set(langs).size === 1) {
+      // Same language, same key: not translations at all, so nothing to choose
+      // between. `/en/a` and `/en/a` cannot both be here — `seen` dropped that —
+      // so this is a key collision the fold has no opinion about.
+      out.push(...group);
+      continue;
+    }
+    const pick =
+      group.find((f) => f.url === entry) ??
+      group.find((f) => localeOf(pathOf(f.url)).lang === entryLang) ??
+      group.find((f) => localeOf(pathOf(f.url)).lang === '') ??
+      group[0];
+    for (const f of group) if (f !== pick) skip('other-locale');
+    out.push(pick);
+  }
+  return out;
+}
 
 /**
  * Is this path the site's plumbing rather than one of its pages?
@@ -203,6 +279,76 @@ export function robotsSitemaps(txt: string): string[] {
   return out;
 }
 
+/** What a site's robots.txt asks a general crawler not to fetch. */
+export interface RobotsRules {
+  allow: string[];
+  disallow: string[];
+}
+
+/**
+ * The `User-agent: *` group's rules.
+ *
+ * HONOURED, not read for interest. A merchant importing their own site is one
+ * caller; the other points this at somebody else's server, and a tool that
+ * fetches a dozen pages should obey the file that exists to say which. It is
+ * also an accuracy win on its own terms — what a site disallows is almost always
+ * its plumbing, and the plumbing list here is a guess where robots.txt is the
+ * site's own answer.
+ *
+ * `Allow` is collected too, because the standard resolves a conflict by the
+ * LONGEST match and a site that disallows `/blog/` and allows `/blog/public/`
+ * means the second.
+ */
+export function robotsRules(txt: string): RobotsRules {
+  const allow: string[] = [];
+  const disallow: string[] = [];
+  let applies = false;
+  for (const line of txt.split(/\r?\n/)) {
+    const clean = line.replace(/#.*$/, '').trim();
+    if (!clean) continue;
+    const m = /^([A-Za-z-]+)\s*:\s*(.*)$/.exec(clean);
+    if (!m) continue;
+    const field = m[1].toLowerCase();
+    const value = m[2].trim();
+    if (field === 'user-agent') {
+      applies = value === '*';
+      continue;
+    }
+    if (!applies || !value) continue;
+    // AN EMPTY `Disallow:` MEANS ALLOW EVERYTHING, and treating it as the empty
+    // prefix would block every path on the site — the one parsing mistake in
+    // this file that turns a polite crawler into a crawler that finds nothing.
+    if (field === 'disallow') disallow.push(value);
+    else if (field === 'allow') allow.push(value);
+  }
+  return { allow, disallow };
+}
+
+/** Does the site ask a general crawler to leave this path alone? */
+export function blockedByRobots(path: string, rules: RobotsRules): boolean {
+  const match = (rule: string): number => {
+    // `*` and `$` are the two wildcards every major crawler honours. Anything
+    // else in a rule is a literal prefix.
+    const pattern = rule
+      .replace(/[.+?^${}()|[\]\\]/g, '\\$&')
+      .replace(/\*/g, '.*')
+      .replace(/\\\$$/, '$');
+    let re: RegExp;
+    try {
+      re = new RegExp(`^${pattern}`);
+    } catch {
+      return path.startsWith(rule) ? rule.length : -1;
+    }
+    return re.test(path) ? rule.length : -1;
+  };
+  const deny = Math.max(-1, ...rules.disallow.map(match));
+  if (deny < 0) return false;
+  const permit = Math.max(-1, ...rules.allow.map(match));
+  // LONGEST MATCH WINS, and a tie goes to the crawler — that is what the
+  // standard says and what every implementation does.
+  return deny > permit;
+}
+
 /** A slug this platform will accept, from a path. The root is the home page. */
 export function slugFor(url: string, taken: Set<string>): string {
   const path = pathOf(url);
@@ -308,6 +454,16 @@ export function choosePages(entry: string, urls: Found[], opts: ChooseOpts = {})
         skip('not-content');
         continue;
       }
+      if (PAGINATION.test(path)) {
+        skip('pagination');
+        continue;
+      }
+      // THE ENTRY IS EXEMPT. The caller typed that URL, and a merchant whose own
+      // robots.txt disallows their own home page has still asked for it.
+      if (opts.robots && norm !== entry && blockedByRobots(path, opts.robots)) {
+        skip('robots-disallow');
+        continue;
+      }
     }
     if (new URL(norm).search) {
       // A query string is nearly always a filter, a sort or a page number over
@@ -328,28 +484,30 @@ export function choosePages(entry: string, urls: Found[], opts: ChooseOpts = {})
     kept.push({ url: norm, from: norm === entry ? 'entry' : f.from });
   }
 
+  const folded = foldLocales(kept, entry, skip);
+
   // GROUPS ARE COUNTED BEFORE THE CAP, because the whole point of reporting them
   // is to say what the cap is about to hide.
   const groups: Record<string, number> = {};
-  for (const f of kept) {
+  for (const f of folded) {
     const seg = pathOf(f.url).split('/').filter(Boolean)[0];
     if (seg) groups[seg] = (groups[seg] ?? 0) + 1;
   }
   for (const k of Object.keys(groups)) if (groups[k] < 3) delete groups[k];
 
   const depthOf = (u: string) => pathOf(u).split('/').filter(Boolean).length;
-  kept.sort((a, b) => {
+  folded.sort((a, b) => {
     if (a.url === entry) return -1;
     if (b.url === entry) return 1;
     const d = depthOf(a.url) - depthOf(b.url);
     return d !== 0 ? d : a.url.localeCompare(b.url);
   });
 
-  const over = Math.max(0, kept.length - maxPages);
+  const over = Math.max(0, folded.length - maxPages);
   if (over > 0) skipped['over-page-limit'] = over;
 
   const taken = new Set<string>();
-  const pages = kept.slice(0, maxPages).map((f) => {
+  const pages = folded.slice(0, maxPages).map((f) => {
     const slug = slugFor(f.url, taken);
     return { ...f, slug, name: nameFor(slug), depth: depthOf(f.url) };
   });
@@ -374,6 +532,7 @@ export function canonFor(entry: string): (raw: string) => string | null {
     const path = pathOf(norm).toLowerCase();
     if (ASSET.test(path)) return null;
     if (isPlumbing(path)) return null;
+    if (PAGINATION.test(path)) return null;
     return norm;
   };
 }

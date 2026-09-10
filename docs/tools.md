@@ -876,6 +876,14 @@ capped at **12 columns** — past that the container is the page's own content c
 browser is wrapping it, not arranging things side by side — and a CSS grid always arrives
 wrapping, since `flexWrap` reads `nowrap` on one only because the property does not apply.
 
+**The source's own header and footer never come over**, and "page-level" is the spec's
+question rather than a depth one: a `<header>`/`<footer>` belongs to its nearest sectioning
+ancestor, so one with none above it is the page's however deeply wrapped. A footer is also
+recognised by a class or id starting with `footer` — plenty of real sites mark it that way and
+not with the tag — but a header is not, because `header` in a class name is as often a hero.
+Anything the page marks `aria-hidden="true"` is skipped: that is the author's own mark for
+decoration and for duplicates.
+
 **A code block is taken whole.** Every syntax highlighter wraps each token in its own
 `<span>`, so walking into one turns a twenty-line config into forty separate text blocks.
 Whitespace collapses like any other text: this platform has no code element to preserve it
@@ -936,6 +944,12 @@ ARE, creates one for each, and fills it.
 | `upload_images` | boolean? | Default **true** |
 | `homepage` | boolean? | The entry URL lands on this site's own home page, default **true** |
 | `dry_run` | boolean? | Defaults to **true** — returns the page list and creates nothing |
+
+**One page per page.** A URL is folded onto the address the page itself declares in
+`<link rel="canonical">`; a translation is folded onto its counterpart, but only when both are
+found, so a site that serves everything under one locale keeps all of it; `/blog/page/2` is
+dropped, since this platform renders its own pagination; and the site's `robots.txt` is
+honoured, longest match winning, except for the entry URL the caller named.
 
 **The publisher's own list first, a crawl second.** `robots.txt` is read for a `Sitemap:`
 line before `/sitemap.xml` is guessed, because plenty of real sitemaps are somewhere else —
