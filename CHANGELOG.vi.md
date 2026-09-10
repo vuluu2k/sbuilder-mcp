@@ -6,6 +6,19 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.19.0] - 2026-09-10
+
+### Added
+- sb_import và sb_import_site giờ có thể biến một `<svg>` trên trang nguồn thành element `icon`, bằng cách tra cứu tên mà trang tự sử dụng (một sprite reference, một `aria-label`, một `<title>`, một class của icon set) đối chiếu với vocabulary 3.227 icon của chính nền tảng, và bỏ qua thay vì đoán khi không có tên nào khớp.
+- sb_import và sb_import_site giờ có thể biến một hoặc nhiều `<details>` liên tiếp thành một `accordion` duy nhất, mỗi `<details>` trở thành một item `accordion-content` được gắn nhãn từ `<summary>` của nó.
+
+### Fixed
+- sb_import và sb_import_site giờ không còn bỏ lỡ mọi icon `<svg>` trên trang: `tagName` báo `"svg"` bằng chữ thường, nên trước đây không bao giờ khớp với ignore list của bước capture, và việc đọc thuộc tính `class` của một element SVG qua `.className` trả về đúng chuỗi ký tự `"[object SVGAnimatedString]"` thay vì danh sách class.
+- sb_import và sb_import_site giờ mở một `<details>` đang thu gọn trước khi đo, để một mục FAQ không còn bị import thành danh sách câu hỏi mà không có câu trả lời.
+
+### Internal
+- Catalog được sinh ra giờ có thêm bảng tên icon (`icons.generated.ts`, 3.227 id RemixIcon đọc từ manifest của chính nền tảng), dùng để đối chiếu với bước tra cứu icon của importer.
+
 ## [0.18.0] - 2026-09-10
 
 ### Added

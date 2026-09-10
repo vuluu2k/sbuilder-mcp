@@ -6,6 +6,19 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.19.0] - 2026-09-10
+
+### Added
+- sb_import and sb_import_site can now turn a source page's `<svg>` into an `icon` element, looking up the name the page itself uses (a sprite reference, an `aria-label`, a `<title>`, an icon-set class) against the platform's own 3,227-icon vocabulary and skipping it rather than guessing when no name matches.
+- sb_import and sb_import_site can now turn one or more consecutive `<details>` elements into a single `accordion`, with each `<details>` becoming one `accordion-content` item labeled from its `<summary>`.
+
+### Fixed
+- sb_import and sb_import_site no longer miss every `<svg>` icon on a page: `tagName` reports `"svg"` in lowercase, which never matched the capture's ignore list, and reading an SVG element's `class` attribute through `.className` returned the literal string `"[object SVGAnimatedString]"` instead of the class list.
+- sb_import and sb_import_site now expand a collapsed `<details>` before measuring it, so an FAQ section no longer imports as a list of questions with no answers.
+
+### Internal
+- The generated catalog gained an icon-name table (`icons.generated.ts`, 3,227 RemixIcon ids read from the platform's own manifest) that the importer's icon lookup is checked against.
+
 ## [0.18.0] - 2026-09-10
 
 ### Added
