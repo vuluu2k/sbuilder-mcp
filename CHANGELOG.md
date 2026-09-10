@@ -6,6 +6,15 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.29.0] - 2026-09-10
+
+### Added
+- sb_media_upload's `pick` argument now accepts several ids at once, so stocking a new site's empty library from one search result takes one upload call instead of one per photo; a picked id the search did not return refuses the whole call rather than uploading part of it.
+- A layout pattern now declares how many picture slots it has, and sb_template_use reports how many the site's library could fill and names the sb_media_upload calls (query, then pick with several ids) that fill the rest.
+
+### Changed
+- sb_template_use's result field for a library with too few images is now `pictures`, naming the exact shortfall (slots wanted vs. images offered) instead of the old `images` field, which only ever said the library was completely empty.
+
 ## [0.28.0] - 2026-09-10
 
 ### Added

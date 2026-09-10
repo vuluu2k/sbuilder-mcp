@@ -6,6 +6,15 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.29.0] - 2026-09-10
+
+### Added
+- Tham số `pick` của sb_media_upload giờ nhận nhiều id cùng lúc, nên việc lấp đầy thư viện trống của một site mới từ một lần tìm kiếm chỉ cần một lệnh upload thay vì một lệnh cho mỗi ảnh; một id được chọn mà kết quả tìm kiếm không trả về sẽ từ chối toàn bộ lệnh thay vì chỉ upload một phần.
+- Một layout dựng sẵn giờ khai báo số ô chứa ảnh nó có, và sb_template_use báo lại thư viện của site lấp được bao nhiêu ô cùng tên các lệnh sb_media_upload (query, rồi pick với nhiều id) để lấp phần còn lại.
+
+### Changed
+- Trường kết quả của sb_template_use khi thư viện thiếu ảnh giờ là `pictures`, nêu đúng phần còn thiếu (số ô cần vs. số ảnh có) thay cho trường `images` cũ, vốn chỉ báo khi thư viện hoàn toàn trống.
+
 ## [0.28.0] - 2026-09-10
 
 ### Added
