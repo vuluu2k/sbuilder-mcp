@@ -52,12 +52,96 @@ function typeForName(name: string): string {
   return dot < 0 ? '' : (TYPE_BY_EXT[name.slice(dot).toLowerCase()] ?? '');
 }
 
+/**
+ * Ask the platform to fetch the URL itself.
+ *
+ * Returns the asset when the server took it, or null when the ROUTE is not
+ * there — an older deployment — which is the one case the caller may answer by
+ * downloading the bytes and posting them the old way.
+ *
+ * A REFUSAL IS TERMINAL, and that is a security rule rather than tidiness. The
+ * server refuses an address that is not on the public internet (`remote_blocked`
+ * — loopback, private ranges, the cloud metadata endpoint), and a client that
+ * answered by fetching that same URL from its OWN machine and uploading the
+ * bytes would walk straight around the guard. The agent's network is not the
+ * server's, but "the caller does it instead" is exactly the bypass the check
+ * exists to prevent, so the error is raised rather than worked around.
+ */
+async function fromUrl(
+  ctx: ToolContext,
+  siteId: string,
+  url: string,
+  source: { name?: string; folderId?: string },
+): Promise<UploadedAsset | null> {
+  const doFetch = ctx.fetchImpl ?? fetch;
+  const res = await doFetch(`${ctx.base.replace(/\/$/, '')}/api/media/${encodeURIComponent(siteId)}/from-url`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${siteToken(ctx)}`,
+      'Content-Type': 'application/json',
+      Accept: 'application/json',
+      ...identityHeaders(),
+    },
+    body: JSON.stringify({
+      url,
+      ...(source.name ? { name: source.name } : {}),
+      ...(source.folderId ? { folderId: source.folderId } : {}),
+    }),
+  });
+  // 404/405 is "this build has no such route". Anything else is an answer.
+  if (res.status === 404 || res.status === 405) return null;
+
+  const raw = await res.text();
+  let parsed: unknown = {};
+  try {
+    parsed = raw ? JSON.parse(raw) : {};
+  } catch {
+    // A build that routes this path to something else entirely. Fall back rather
+    // than reporting a parse error the caller cannot act on.
+    return null;
+  }
+  if (!res.ok) {
+    const env = (parsed ?? {}) as { error?: string; code?: string; details?: unknown };
+    if (env.code === 'remote_blocked') {
+      throw new ApiError(
+        res.status,
+        'remote_blocked',
+        `sbuilder: the platform refuses to fetch ${url} — it is not an address on the public ` +
+          'internet. This server will not fetch it on the platform\'s behalf either: that would ' +
+          'walk around the check rather than satisfy it. Give a public URL, or upload the file ' +
+          'with a local path.',
+      );
+    }
+    if (env.code === 'remote_unreachable') {
+      throw new ApiError(res.status, 'remote_unreachable', `sbuilder: the platform could not read ${url}.`);
+    }
+    // Any OTHER refusal — 401, 403, 413, an unsupported type — is one the older
+    // path answers with its own, better-worded diagnosis. Let it try.
+    return null;
+  }
+  const body = (parsed ?? {}) as { asset?: UploadedAsset };
+  return body.asset ?? (parsed as UploadedAsset);
+}
+
 export async function uploadMedia(
   ctx: ToolContext,
   siteId: string,
   source: { path?: string; url?: string; name?: string; folderId?: string },
 ): Promise<UploadedAsset> {
   const doFetch = ctx.fetchImpl ?? fetch;
+
+  // THE SERVER'S OWN DOOR FIRST, when the source is a URL.
+  //
+  // `POST /api/media/{siteId}/from-url` fetches it where the platform already
+  // guards outbound requests, so the bytes make ONE hop instead of two and the
+  // content type is decided by the origin's own answer rather than reconstructed
+  // here. Everything below this is the older path, kept because a deployment
+  // without that route must still be able to upload — the same shape the partner
+  // -surface retry below has, and for the same reason.
+  if (source.url) {
+    const viaServer = await fromUrl(ctx, siteId, source.url, source);
+    if (viaServer) return viaServer;
+  }
 
   let bytes: Uint8Array;
   let filename: string;

@@ -945,6 +945,15 @@ its "fill" would give every imported button none), the first section's padding a
 block's max-width. An empty target page yields no tokens and every element falls back to its
 own defaults — inventing a palette for it is the invention rule 0 exists to prevent.
 
+**The PLATFORM fetches the image when it can.** `sb_media_upload` and every image an import
+copies now ask `POST /api/media/{siteId}/from-url` first: the bytes make one hop instead of
+two, and the content type is decided by the origin's own answer rather than reconstructed here.
+A deployment without that route falls through to downloading the file and posting it multipart,
+unchanged. A REFUSED ADDRESS IS TERMINAL — the platform will not fetch anything off the public
+internet (loopback, private ranges, the cloud metadata endpoint), and this server will not
+fetch it on the platform's behalf either, because that would walk around the check rather than
+satisfy it.
+
 **Images are copied, not hotlinked.** Each source is uploaded into this site's media library
 and the node points at the copy; a source whose upload fails keeps its original URL, because
 a visible image beats an empty frame. Pass `upload_images: false` to skip.

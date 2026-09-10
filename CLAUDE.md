@@ -607,6 +607,21 @@ that accounts for them.
   node is the right tool and it works; `refuseOverlay` fires only on the overlay ROOT, which
   is correct, because moving or removing THAT is not a page-level fact.
 
+- **THE PLATFORM CAN NOW FETCH THE IMAGE ITSELF, and the client asks it to first.**
+  `POST /api/media/{siteId}/from-url` takes `{ url, folderId?, name? }` and runs the same
+  `media.Ingest` the multipart door does — added upstream (web_builder `46b4d8b1`) because an
+  agent bringing a page over from elsewhere has the image as a URL and never as bytes. Two hops
+  became one, and the content type is decided by the origin's own answer rather than
+  reconstructed here from a header and an extension.
+
+  **A REFUSED ADDRESS IS TERMINAL, and that is a security rule rather than tidiness.** The
+  platform refuses anything that is not on the public internet — loopback, private ranges, the
+  cloud metadata endpoint — checked at CONNECT time so a name that resolves inward is caught
+  too. A client that answered `remote_blocked` by fetching that same URL from its OWN machine
+  and uploading the bytes would walk straight around the guard, so `uploadMedia` raises instead.
+  Only a MISSING ROUTE (404/405) falls through to the old download-and-post path, which is the
+  same deployment-age shape the `/api/v1/media` retry below already has.
+
 - **`POST /api/v1/media` is a SECOND upload door, and it is the key's own.** `/api/media`
   takes a `wbk_` key only since `feat(media): a wbk_ API key may upload`, so a deployment
   older than that commit refuses a valid key — measured against a server binary 26 minutes

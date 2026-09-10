@@ -919,6 +919,14 @@ không có nền), padding của section đầu tiên và max-width của block 
 thì không có token nào và mọi element rơi về mặc định của chính nó — bịa ra một bảng màu cho
 nó chính là thứ rule 0 sinh ra để ngăn.
 
+**NỀN TẢNG tự tải ảnh khi có thể.** `sb_media_upload` và mọi ảnh mà một lần import chép về giờ
+hỏi `POST /api/media/{siteId}/from-url` trước: byte đi một chặng thay vì hai, và content type do
+chính origin trả lời chứ không phải dựng lại ở đây. Deployment chưa có route đó thì rơi về đường
+cũ — tải file rồi post multipart, không đổi gì. **ĐỊA CHỈ BỊ TỪ CHỐI LÀ ĐIỂM DỪNG** — nền tảng
+không tải bất cứ thứ gì ngoài internet công cộng (loopback, dải nội bộ, endpoint metadata của
+cloud), và server này cũng sẽ không tải hộ nó, vì làm vậy là đi vòng qua kiểm tra chứ không phải
+thoả mãn kiểm tra.
+
 **Ảnh được chép về, không hotlink.** Mỗi ảnh được upload vào media library của site và node
 trỏ vào bản chép; ảnh nào upload hỏng thì giữ URL gốc, vì một tấm ảnh hiện được vẫn hơn một
 khung trống. Truyền `upload_images: false` để bỏ qua.
