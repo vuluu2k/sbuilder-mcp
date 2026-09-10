@@ -164,7 +164,13 @@ describe('readinessGaps() — the catalogue', () => {
     liveGateways: 1,
     shippingMethods: 1,
     pageNodes: [],
-    globalNodes: [{ data: { type: 'button' }, events: [{ action: 'open_cart' }] }],
+    // The badge too, so this fixture isolates the CATALOGUE question: a cart
+    // opener with no `cart-count` beside it is its own gap, and a site that is
+    // "otherwise ready" has one.
+    globalNodes: [
+      { data: { type: 'button' }, events: [{ action: 'open_cart' }] },
+      { data: { type: 'cart-count' } },
+    ],
   };
   const ids = (products: unknown) =>
     readinessGaps({ ...ready, products } as never).map((g) => g.id);
@@ -236,5 +242,82 @@ describe('categoryScope', () => {
   it('says nothing when the counts are unknown', () => {
     expect(store({ categories: null, categoryPageLinks: null })).not.toContain('categoryScope');
     expect(store({})).not.toContain('categoryScope');
+  });
+});
+
+/**
+ * THE TWO QUESTIONS THAT ARE NOT ABOUT MONEY.
+ *
+ * Everything else here asks what stands between the site and a paid order.
+ * These ask whether the pages are one SITE, and whether a shopper can see their
+ * own basket — both true of every website, both invisible to `sb_review`, which
+ * reads ONE page and finds it perfect.
+ */
+describe('readinessGaps() — is this a site at all', () => {
+  const store = {
+    pages: [
+      { type: 'page', status: 'published' },
+      { type: 'product', status: 'published' },
+      { type: 'checkout', status: 'published' },
+    ],
+    liveGateways: 1,
+    shippingMethods: 1,
+    products: { active: 3, purchasable: 3 },
+    pageNodes: [],
+    globalNodes: [
+      { data: { type: 'button' }, events: [{ action: 'open_cart' }] },
+      { data: { type: 'cart-count' } },
+    ],
+  };
+  const ids = (over: Record<string, unknown>) =>
+    readinessGaps({ ...store, ...over } as never).map((g) => g.id);
+
+  it('reports a multi-page site with no shared section at all', () => {
+    expect(ids({ globalKinds: [] })).toContain('siteChrome');
+  });
+
+  it('says nothing once the site has one', () => {
+    expect(ids({ globalKinds: ['header'] })).not.toContain('siteChrome');
+  });
+
+  it('is SILENT on a one-page site — there is nothing to share with', () => {
+    expect(ids({ globalKinds: [], pages: [{ type: 'page', status: 'published' }] })).not.toContain(
+      'siteChrome',
+    );
+  });
+
+  it('is SILENT when the list could not be read, rather than inventing an empty one', () => {
+    expect(ids({ globalKinds: null })).not.toContain('siteChrome');
+    expect(ids({})).not.toContain('siteChrome');
+  });
+
+  it('asks it of a plain site too, not only a store', () => {
+    // The gate below it returns early for anything that is not a store, and this
+    // question is true of every website — so it is asked before the gate.
+    const plain = readinessGaps({
+      pages: [
+        { type: 'page', status: 'published' },
+        { type: 'page', status: 'published' },
+      ],
+      liveGateways: null,
+      shippingMethods: null,
+      pageNodes: [],
+      globalNodes: null,
+      globalKinds: [],
+    } as never);
+    expect(plain.map((g) => g.id)).toEqual(['siteChrome']);
+  });
+
+  it('reports a cart that opens with nothing showing what is in it', () => {
+    const noBadge = ids({
+      globalNodes: [{ data: { type: 'button' }, events: [{ action: 'open_cart' }] }],
+    });
+    expect(noBadge).toContain('cartCount');
+  });
+
+  it('does not say it twice — nothing opens the cart is a different finding', () => {
+    const nothingOpens = ids({ globalNodes: [] });
+    expect(nothingOpens).toContain('cartTrigger');
+    expect(nothingOpens).not.toContain('cartCount');
   });
 });

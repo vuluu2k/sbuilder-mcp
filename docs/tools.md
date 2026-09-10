@@ -807,6 +807,8 @@ publish panel then listed five gaps.
 | `productPage` | No published `product` page, so every link out of a product card 404s |
 | `shipping` | No delivery option: the checkout's select is empty and every order ships free |
 | `cartTrigger` | Nothing opens the cart on its own; a shopper who closes the drawer cannot get back |
+| `siteChrome` | Two or more pages and NO global section, so each page carries its own header and footer. Changing the menu is one edit per page, the copies drift, and a visitor meets a slightly different site on every click. Asked of every site, not only a store — it is the one question here that is not about money |
+| `cartCount` | Something opens the cart but nothing shows what is in it. `cart-count` is opt-in because `open_cart` is an ACTION any element can carry, so a site built with these tools never gets one: a shopper adds an item, sees a toast fade, and then no evidence anywhere that their basket is not empty |
 | `categoryScope` | Two or more product categories and none points at a page of its own, so `/collections/{slug}` serves one default template for every one — and nothing on it narrows the product feed to the category in the URL. A shopper who picks a category sees the whole catalogue. The blog twin auto-scopes by slug; this one does not |
 
 Each gap carries `draft: true` when the page EXISTS but is unpublished, because "publish the
@@ -1049,7 +1051,7 @@ there. Place the form with `sb_add` and point `specials.formId` at the id this r
 
 ### `action: "checkout"`
 
-`sb_review` names eight readiness gaps. Seven are now one call each — a delivery option, a
+`sb_review` names ten readiness gaps. Seven are now one call each — a delivery option, a
 gateway, a product, a page of the right type — because the call sheet says what those calls
 take. The checkout is the one that is not, because it is four writes whose order is the
 whole contract, written down only in `editor/src/features/pages/checkoutPage.ts`:

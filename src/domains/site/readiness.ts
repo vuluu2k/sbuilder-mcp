@@ -42,7 +42,9 @@ export type ReadinessGapId =
   | 'accountPage'
   | 'searchPage'
   | 'catalogue'
-  | 'categoryScope';
+  | 'categoryScope'
+  | 'siteChrome'
+  | 'cartCount';
 
 export interface ReadinessGap {
   id: ReadinessGapId;
@@ -88,6 +90,13 @@ export interface ReadinessInput {
   pageNodes: NodeLike[];
   /** Every node of every global section master; null when unread. */
   globalNodes: NodeLike[] | null;
+  /**
+   * The KIND of each shared section the site has — header, footer, or neither.
+   *
+   * `globalNodes` answers what is inside them and cannot tell an empty list from
+   * an unread one, which is the whole question here. Null when unread.
+   */
+  globalKinds?: string[] | null;
 }
 
 /** Does this node carry a purchase action (add to cart, buy now)? */
@@ -130,11 +139,46 @@ const published = (pages: ReadinessPage[], type: string) =>
 const drafted = (pages: ReadinessPage[], type: string) =>
   pages.some((p) => p.type === type && p.status !== 'published');
 
-/** What stands between this site and a paid order, most-blocking first. */
+/**
+ * What stands between this site and a paid order, most-blocking first — and,
+ * asked FIRST because it is not about money at all, whether these pages are one
+ * SITE.
+ *
+ * The precedent is `accountPage` and `searchPage`, already here on the same
+ * reasoning: a shop with no account page still takes orders, so they are a
+ * different question asked second. Shared chrome is a different question asked
+ * FIRST, because it is true of every site and not only of a store.
+ */
 export function readinessGaps(input: ReadinessInput): ReadinessGap[] {
-  if (!isStore(input)) return [];
   const gaps: ReadinessGap[] = [];
   const pages = input.pages;
+
+  // A SITE WITH NO SHARED SECTION IS NOT A SITE, IT IS A STACK OF PAGES.
+  //
+  // Nothing asked this. Every tool here authors ONE page, so a build that never
+  // reaches for a global section gives each page its own header and footer —
+  // and then a change to the nav is one edit per page, the copies drift, and a
+  // visitor meets a slightly different site on every click. It is the most
+  // basic thing a website has that a generated one does not, and it is
+  // invisible to `sb_review`, which reads one page and finds it perfect.
+  //
+  // Two pages is the threshold: a one-page site has nothing to share with.
+  if (pages && pages.length >= 2 && input.globalKinds !== null && input.globalKinds?.length === 0) {
+    gaps.push({
+      id: 'siteChrome',
+      draft: false,
+      problem:
+        `This site has ${pages.length} pages and no global section, so each one carries its own ` +
+        'header and footer. Changing the menu is that many edits, the copies drift apart, and a ' +
+        'visitor meets a slightly different site on every page.',
+      fix:
+        'Make them shared: POST /api/sites/{siteId}/global-sections with { name, kind: "header" | ' +
+        '"footer", document }, then PUT .../{id}/document with { subtree }. A page then carries a ' +
+        'globalRef instead of a copy, and one edit reaches every page.',
+    });
+  }
+
+  if (!isStore(input)) return gaps;
 
   if (pages && !published(pages, 'checkout')) {
     const draft = drafted(pages, 'checkout');
@@ -253,6 +297,32 @@ export function readinessGaps(input: ReadinessInput): ReadinessGap[] {
       draft,
       problem: what,
       fix: draft ? `Publish the ${type} page that already exists.` : fix,
+    });
+  }
+
+  const everywhere = input.globalNodes !== null ? [...input.pageNodes, ...input.globalNodes] : null;
+
+  // A BASKET WITH NO NUMBER ON IT. The platform shipped `cart-count` to fix
+  // exactly this, and made it OPT-IN: `open_cart` is an ACTION any element can
+  // carry, not an element type, so there is no "cart icon" to give a badge to by
+  // default — minting one unasked would put a number on every social glyph in
+  // every footer. The cost of that decision is that a site authored through
+  // these tools never has one: a shopper adds an item, gets a toast that fades,
+  // and nothing anywhere on the page says their basket holds anything.
+  //
+  // Only asked when something DOES open the cart — otherwise `cartTrigger`
+  // below is the finding, and this would be a second sentence about the same
+  // missing control.
+  if (everywhere && opensCart(everywhere) && !everywhere.some((n) => n.data.type === 'cart-count')) {
+    gaps.push({
+      id: 'cartCount',
+      draft: false,
+      problem:
+        'Something opens the cart, but nothing shows what is in it. A shopper who adds an item ' +
+        'sees a toast that fades and then no evidence anywhere that their basket is not empty.',
+      fix:
+        'Give the control that opens the cart a cart-count satellite — sb_set on it with config ' +
+        '{ cartCountId: … } mints one, or add a cart-count beside it.',
     });
   }
 

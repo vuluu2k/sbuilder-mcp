@@ -268,6 +268,25 @@ that accounts for them.
   `/api/sites/{siteId}/products` rather than `/api/v1/products`, because that one takes either
   credential and the check must answer for a session install as well as a key-only one.
 
+- **NOTHING ASKED WHETHER THE PAGES WERE ONE SITE.** Every tool here authors ONE page, so a
+  build that never reaches for a global section gives each page its own header and footer — and
+  then changing the menu is one edit per page, the copies drift, and a visitor meets a slightly
+  different site on every click. It is the most basic thing a website has that a generated one
+  does not, and it is INVISIBLE to `sb_review`, which reads one page and finds it perfect.
+  `siteChrome` reports it, asked BEFORE the `isStore` gate because it is true of every site;
+  the precedent is `accountPage` / `searchPage`, already there on the same reasoning in the
+  other direction. Two pages is the threshold — a one-page site has nothing to share with — and
+  an unread list is silent rather than an empty one. The list was ALREADY being fetched for
+  `cartTrigger`; only its length was thrown away.
+
+- **AND THE BASKET HAD NO NUMBER ON IT.** `cart-count` is opt-in by design — `open_cart` is an
+  ACTION any element can carry, not an element type, so there is no "cart icon" to badge by
+  default and minting one unasked would put a number on every social glyph in every footer.
+  This file already recorded the consequence ("the defect the platform shipped `cart-count` to
+  fix is the default state of every icon this server authors") and nothing checked for it.
+  `cartCount` fires only when something DOES open the cart, so it never doubles up with
+  `cartTrigger`.
+
 - **Store readiness lives ONLY in the editor.** `editor/src/editor/storeReadiness.ts` computes
   five gaps between a site and a paid order — no checkout page, no live gateway, no published
   product template, no delivery option, nothing that opens the cart — and no API exposes any

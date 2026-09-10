@@ -38,7 +38,7 @@ export async function gatherReadiness(
       `/api/sites/${site}/payment-gateways`,
     ),
     get<{ shippingMethods?: unknown[]; methods?: unknown[] }>(`/api/sites/${site}/shipping-methods`),
-    get<{ globalSections?: Array<{ document?: { nodes?: Record<string, unknown> } }> }>(
+    get<{ globalSections?: Array<{ kind?: string; document?: { nodes?: Record<string, unknown> } }> }>(
       `/api/sites/${site}/global-sections`,
     ),
     // The SITE-SCOPED list, not /api/v1/products: this one takes either
@@ -85,6 +85,12 @@ export async function gatherReadiness(
         Object.values(g.document?.nodes ?? {}),
       ) as ReadinessInput['globalNodes']
     : null;
+  // HOW MANY SHARED SECTIONS THE SITE HAS, not just what is in them. An empty
+  // list is the answer to a question nothing asked: a site whose pages each
+  // carry their own header is not one site.
+  const globalKinds = globals?.globalSections
+    ? globals.globalSections.map((g) => g.kind ?? '')
+    : null;
 
   // ACTIVE means a shopper can see it; PURCHASABLE adds a price above zero. A
   // product priced at zero renders, adds to the cart, and totals nothing — which
@@ -106,6 +112,7 @@ export async function gatherReadiness(
     shippingMethods,
     pageNodes,
     globalNodes,
+    globalKinds,
     categories,
     categoryPageLinks,
   };

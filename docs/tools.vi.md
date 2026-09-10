@@ -783,6 +783,8 @@ hoàn toàn bằng bộ tool này review sạch, publish và render đúng; bả
 | `productPage` | Chưa publish trang `product`, nên mọi liên kết từ thẻ sản phẩm đều 404 |
 | `shipping` | Không có phương thức giao: ô chọn ở trang thanh toán trống và mọi đơn miễn phí ship |
 | `cartTrigger` | Không gì mở được giỏ; khách đóng ngăn giỏ rồi không quay lại được |
+| `siteChrome` | Từ hai trang trở lên mà KHÔNG có global section nào, nên mỗi trang tự mang header/footer riêng. Đổi menu là sửa từng trang, các bản sao lệch dần, và khách gặp một site hơi khác ở mỗi lần bấm. Hỏi cho mọi site chứ không riêng cửa hàng — đây là câu hỏi duy nhất ở đây không liên quan tới tiền |
+| `cartCount` | Có thứ mở được giỏ nhưng không có gì cho thấy trong giỏ có gì. `cart-count` là tuỳ chọn vì `open_cart` là một HÀNH ĐỘNG mà element nào cũng mang được, nên site dựng bằng bộ công cụ này không bao giờ tự có: khách thêm hàng, thấy một toast tắt đi, rồi không còn dấu hiệu nào cho thấy giỏ không rỗng |
 | `categoryScope` | Từ hai danh mục sản phẩm trở lên mà không cái nào trỏ tới trang riêng, nên `/collections/{slug}` phục vụ chung một default template — và không gì trên đó thu hẹp feed sản phẩm theo danh mục trong URL. Khách bấm một danh mục thấy toàn bộ catalogue. Danh mục blog tự thu hẹp theo slug, cái này thì không |
 
 Mỗi khoảng trống mang `draft: true` khi trang ĐÃ CÓ nhưng chưa publish, vì "publish cái đã
