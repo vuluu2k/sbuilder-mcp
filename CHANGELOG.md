@@ -6,6 +6,17 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.27.0] - 2026-09-10
+
+### Changed
+- sb_media_upload's photo search now runs through the platform (`GET /api/sites/{siteId}/images/search`) instead of calling Pexels or a shared proxy directly, so the provider key lives in one place and no install shares its quota with another product.
+
+### Removed
+- sb_media_upload no longer reads a `PEXELS_API_KEY` or a proxy base from the environment; this client keeps no stock-photo key of its own.
+
+### Added
+- sb_media_upload now reports `search_unavailable` with an explicit next step (pass a URL to sb_media_upload instead) when the platform has no image search configured, rather than raising an error.
+
 ## [0.26.0] - 2026-09-10
 
 ### Added

@@ -6,6 +6,17 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.27.0] - 2026-09-10
+
+### Changed
+- Phần tìm ảnh của sb_media_upload giờ chạy qua platform (`GET /api/sites/{siteId}/images/search`) thay vì gọi thẳng Pexels hay một proxy chung, nên key của nhà cung cấp nằm ở một nơi duy nhất và không bản cài nào phải chia sẻ quota với sản phẩm khác.
+
+### Removed
+- sb_media_upload không còn đọc `PEXELS_API_KEY` hay proxy base từ biến môi trường; client này không giữ key ảnh stock nào của riêng nó nữa.
+
+### Added
+- sb_media_upload giờ trả về `search_unavailable` kèm bước tiếp theo rõ ràng (truyền URL cho sb_media_upload thay vì tìm) khi platform chưa cấu hình tìm ảnh, thay vì báo lỗi.
+
 ## [0.26.0] - 2026-09-10
 
 ### Added
