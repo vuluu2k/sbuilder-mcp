@@ -113,7 +113,15 @@ async function fromUrl(
       );
     }
     if (env.code === 'remote_unreachable') {
-      throw new ApiError(res.status, 'remote_unreachable', `sbuilder: the platform could not read ${url}.`);
+      // THE PLATFORM'S OWN REASON, not a sentence of ours over the top of it. It
+      // says which host answered what — a 404 is a wrong URL, a 403 is an origin
+      // refusing this fetcher, a timeout is worth retrying — and replacing that
+      // with "could not read it" sends all of them to check their network.
+      throw new ApiError(
+        res.status,
+        'remote_unreachable',
+        `sbuilder: the platform could not fetch ${url} — ${env.error ?? 'no reason given'}.`,
+      );
     }
     // Any OTHER refusal — 401, 403, 413, an unsupported type — is one the older
     // path answers with its own, better-worded diagnosis. Let it try.
