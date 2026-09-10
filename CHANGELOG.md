@@ -6,6 +6,17 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.23.1] - 2026-09-10
+
+### Added
+- sb_media_upload now asks the platform to fetch a URL source itself (`POST /api/media/{siteId}/from-url`) before falling back to downloading and re-uploading the bytes, so the file makes one network hop instead of two and its content type comes from the origin's own answer instead of being guessed from a header or extension.
+
+### Changed
+- sb_media_upload now raises rather than working around it when the platform refuses a URL source as `remote_blocked` (an address outside the public internet, such as a private range or the cloud metadata endpoint), since fetching that same URL from this server's own machine would defeat the platform's guard rather than respect it.
+
+### Fixed
+- sb_media_upload now reports the platform's own reason when it cannot reach a URL source (for example, "www.blender.org answered 404") instead of the generic "the platform could not read it".
+
 ## [0.23.0] - 2026-09-10
 
 ### Added

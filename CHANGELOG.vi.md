@@ -6,6 +6,17 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.23.1] - 2026-09-10
+
+### Added
+- sb_media_upload giờ yêu cầu chính nền tảng tải nguồn URL trước (`POST /api/media/{siteId}/from-url`) rồi mới lùi về cách cũ là tải xuống rồi upload lại, nên file chỉ đi một chặng mạng thay vì hai, và content type được lấy từ câu trả lời của chính nguồn thay vì đoán từ header hay phần mở rộng.
+
+### Changed
+- sb_media_upload giờ báo lỗi thay vì tìm cách lách khi nền tảng từ chối một nguồn URL với mã `remote_blocked` (địa chỉ không thuộc internet công khai, như dải private hoặc endpoint metadata của cloud), vì việc tự tải URL đó từ máy chạy server này sẽ phá vỡ lớp bảo vệ của nền tảng thay vì tuân theo nó.
+
+### Fixed
+- sb_media_upload giờ báo đúng lý do của chính nền tảng khi không tải được một nguồn URL (ví dụ "www.blender.org answered 404") thay vì thông báo chung "the platform could not read it".
+
 ## [0.23.0] - 2026-09-10
 
 ### Added
