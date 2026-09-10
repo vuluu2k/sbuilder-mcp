@@ -911,6 +911,16 @@ that accounts for them.
   satellite `createNode` mints on its own. The label is OMITTED when the source had none rather
   than defaulted, because inventing one ships English copy into a store that is not in English.
 
+- **A STACKED ROW'S COLUMNS WERE 280px TALL WHATEVER WAS IN THEM, and nothing could see it.**
+  An imported row gives each column `flex: 1 1 280px`, which sizes the MAIN axis — and the
+  row's own mobile override turns the main axis from width into HEIGHT. So at 390 a paragraph
+  of two lines sat in a 280px box, and one real import measured **6,009px of page with most of
+  it empty**. Zero review findings and zero layout findings at every width, because no box
+  overflowed and no two boxes overlapped: **`measure` cannot see AIR**. Rule 3's mirror image —
+  the stack breakpoint was there and correct, and the thing it changed underneath was the axis
+  a basis applies to. Mobile-only reset to `0 1 auto`, base keeping the wide answer, because
+  the row is still a row at tablet. 6,009px → 3,884px, same content.
+
 - **AND THEN NOTHING LINKED THE IMPORTED PAGES TOGETHER, which the directive had been saying
   out loud since the tool shipped.** `sb_import_site` now builds ONE global `header` from the
   pages it created and gives every one of them a reference to it. Built from THOSE pages, never

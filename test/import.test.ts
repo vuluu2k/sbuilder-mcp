@@ -753,6 +753,54 @@ describe('imported links point at the imported pages', () => {
  * that one points at the site this was copied from, half of it at pages the cap
  * left out, and its structure is somebody else's.
  */
+/**
+ * AIR IS A DEFECT THAT NOTHING MEASURES.
+ *
+ * `measure` reports a box that overflows and two boxes that overlap. A column
+ * three times taller than its own content breaks neither rule, so a page can be
+ * 6,000px of mostly nothing and review clean at every width.
+ */
+describe("a stacked row's columns are as tall as their content", () => {
+  const row = (n: number) =>
+    toSpecs(
+      [
+        {
+          kind: 'section',
+          children: [
+            {
+              kind: 'group',
+              direction: 'row',
+              children: Array.from({ length: n }, (_, i) => ({
+                kind: 'text' as const,
+                text: `Cột ${i + 1}`,
+              })),
+            },
+          ],
+        },
+      ] as Captured[],
+      {},
+    )[0].children![0].children![0];
+
+  it('keeps the basis that makes a ROW work, and drops it where the row is a column', () => {
+    // `flex: 1 1 280px` sizes the MAIN axis, and the row's own mobile override
+    // turns the main axis from width into HEIGHT — so every stacked column came
+    // out 280px tall whatever was in it. Measured at 390 on a real import: 6,009
+    // px of page, most of it empty, with zero findings.
+    const columns = row(3).children!;
+    expect(columns).toHaveLength(3);
+    for (const col of columns) {
+      expect(col.style?.flex).toBe('1 1 280px');
+      expect((col.responsive as { mobile?: { style?: Record<string, unknown> } })?.mobile?.style?.flex).toBe(
+        '0 1 auto',
+      );
+    }
+  });
+
+  it('a single child is not a row at all, so it carries neither', () => {
+    expect(row(1).style?.flex).toBeUndefined();
+  });
+});
+
 describe('the shared header', () => {
   it('names a page the way the page names itself, minus the site it belongs to', () => {
     // A title is written for a browser tab — "Example Servers — Model Context

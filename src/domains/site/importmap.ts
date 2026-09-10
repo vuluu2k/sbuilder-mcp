@@ -401,9 +401,22 @@ function one(c: Captured, t: PageTokens): NodeSpec | null {
           gap: '24px',
         },
         responsive: { mobile: { style: { flexDirection: 'column', gap: '16px' } } },
+        // A COLUMN'S BASIS BECOMES ITS HEIGHT THE MOMENT THE ROW STACKS, and that
+        // is the whole reason this needs a mobile answer of its own.
+        //
+        // `flex: 1 1 280px` sizes the MAIN axis; the row's own mobile override
+        // turns the main axis from width into height, so every stacked column
+        // came out 280px tall whatever was in it. Measured at 390 on a real
+        // import: a paragraph of two lines sat in a 280px box, and the page ran
+        // 6,009px with most of it empty — and NOTHING reported it, because no box
+        // overflowed and no two boxes overlapped. `measure` cannot see air.
+        //
+        // Mobile only, and base keeps the wide answer, which is the cascade's
+        // tail rule the right way round: the row is still a row at tablet.
         children: kids.map((k) => ({
           type: 'flex-block',
           style: { flex: '1 1 280px', minWidth: '0', display: 'flex', flexDirection: 'column', gap: '12px' },
+          responsive: { mobile: { style: { flex: '0 1 auto' } } },
           children: [k],
         })),
       };
