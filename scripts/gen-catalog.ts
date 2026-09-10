@@ -1061,6 +1061,75 @@ export const API_DEFINITIONS: Record<string, unknown> = ${JSON.stringify(
   const firstChildOnly = readFirstChildOnly(repo);
   const baseOnly = readBaseOnlyConfig(repo);
 
+  // ---- The ENTRANCE ANIMATION, and its three silent misses --------------
+  //
+  // `animation` is offered by 73 of the 111 element types — a first-class
+  // design control on nearly everything a visitor sees — and NOTHING in this
+  // catalog said what to write into it. Every miss is silent in exactly the way
+  // CONFIG_VALUES above exists to close, and there are three of them:
+  //
+  //   - it is an OBJECT, not the string the name invites:
+  //     `{active, type, easing, delay, duration}` (readAnimConfig). A string
+  //     fails the `map[string]interface{}` assertion and reads as the zero
+  //     value.
+  //   - `active: true` is REQUIRED, and a stored `type` is not consent. The
+  //     platform says why: the panel keeps `type` when the switch goes off (so
+  //     switching back restores the choice), "so treating a stored type as
+  //     consent would animate a node the author had explicitly turned off".
+  //   - `type` must be one of the four KEYFRAME KEYS, spelled with UNDERSCORES.
+  //     `AnimKeyframes`'s own comment flags the trap: "keyed by the STORED
+  //     value (`fade_in`, not `fade-in`)".
+  //
+  // AnimationTypeOf returns "" for every one of them: no keyframes, no rule, no
+  // error, through save, publish and render. `easing` is the mild case — an
+  // unrecognised value falls back to `ease` rather than killing the animation.
+  //
+  // Read from the GO for the same reason CONFIG_VALUES is: the Go is what
+  // renders. Its own comment says the table is byte-identical to the canvas's,
+  // and a parity test holds them together, so reading either is reading both.
+  const readAnimation = (): {
+    types: string[];
+    easings: string[];
+    easingFallback: string;
+    durationDefault: number;
+    readBy: string;
+  } => {
+    const at = resolve(repo, 'server/render/style/animation.go');
+    const src = readFileSync(at, 'utf8');
+    const block = (name: string): string => {
+      const from = src.indexOf(`var ${name} =`);
+      if (from < 0) {
+        console.error(`${name} is gone from server/render/style/animation.go`);
+        process.exit(1);
+      }
+      const end = src.indexOf('\n}', from);
+      return src.slice(from, end < 0 ? src.indexOf('\n\n', from) : end);
+    };
+    // `"fade_in": "@keyframes …"` — the KEY is the stored value. Matched at the
+    // start of a line so the keyframe bodies (which quote plenty of their own
+    // strings, across continuation lines) cannot contribute one.
+    const types = [...block('AnimKeyframes').matchAll(/^\s*"([a-z_]+)":/gm)].map((m) => m[1]);
+    const easings = [...(/var AnimEasings = \[\]string\{([^}]*)\}/.exec(src)?.[1] ?? '').matchAll(/"([^"]+)"/g)].map(
+      (m) => m[1],
+    );
+    // The `|| 0.5` the compiler applies to a stored 0, mirrored from the canvas
+    // so the two agree — a 0s animation would leave the node on its `from`
+    // keyframe for a frame and read as a flash.
+    const dur = /dur == 0 \{\s*dur = ([0-9.]+)/.exec(src);
+    if (types.length < 2 || easings.length < 2 || !dur) {
+      console.error('server/render/style/animation.go no longer reads as a vocabulary — its shape moved');
+      process.exit(1);
+    }
+    return {
+      types: types.sort(),
+      easings,
+      easingFallback: 'ease',
+      durationDefault: Number(dur[1]),
+      readBy: 'AnimationTypeOf + CompileEntranceAnimationCSS',
+    };
+  };
+  const animation = readAnimation();
+
   // ---- What a config key is ALLOWED to hold ----------------------------
   //
   // `sb_traits_for` names 138 controls with a declared write target, and NOT ONE
@@ -1222,6 +1291,30 @@ export const BASE_ONLY_CONFIG: string[] = ${JSON.stringify(baseOnly.keys, null, 
  * breakpoint by the satellite CSS compiler as the --icon-size var.
  */
 export const BASE_ONLY_EXCEPTIONS: string[] = ${JSON.stringify(baseOnly.exceptions, null, 2)};
+
+/**
+ * The ENTRANCE ANIMATION's vocabulary — config.animation, offered by 73 of the
+ * 111 element types and describable by nothing until now.
+ *
+ * Three ways to miss, all silent (AnimationTypeOf answers "" and no keyframes,
+ * no rule and no error are emitted, through save, publish and render):
+ *   - it is an OBJECT, not a string: {active, type, easing, delay, duration}
+ *   - active:true is REQUIRED; a stored type is deliberately NOT consent,
+ *     because the panel keeps the type when the switch goes off
+ *   - type is a keyframe key spelled with UNDERSCORES: fade_in, never fade-in
+ *
+ * easing is the mild one: an unrecognised value falls back to "ease".
+ *
+ * It is also BASE-ONLY (see BASE_ONLY_CONFIG) — render/css.go emits it into the
+ * base lane because the config object is read with no responsive merge.
+ */
+export const ANIMATION: {
+  types: string[];
+  easings: string[];
+  easingFallback: string;
+  durationDefault: number;
+  readBy: string;
+} = ${JSON.stringify(animation, null, 2)};
 `;
   emit(resolve(process.cwd(), 'src/catalog/elements.generated.ts'), elementsOut);
   console.error(
@@ -1230,6 +1323,7 @@ export const BASE_ONLY_EXCEPTIONS: string[] = ${JSON.stringify(baseOnly.exceptio
       `${bindingSources.length} binding sources, ${Object.keys(boundSpecials).length} bound-special elements, ` +
       `${Object.keys(satellites).length} satellite owners, ${firstChildOnly.length} first-child-only, ` +
       `${baseOnly.keys.length} base-only config keys, ${Object.keys(configValues).length} config vocabularies, ` +
+      `animation ${animation.types.length} types / ${animation.easings.length} easings, ` +
       `doc schema v${docVersion}`,
   );
 

@@ -13,6 +13,7 @@ import { registerLiveTools } from './tools/live.js';
 import { registerStoreTools } from './tools/store.js';
 import { registerImportTools } from './tools/importpage.js';
 import { registerUndoTools } from './tools/undo.js';
+import { registerThemeTools } from './tools/theme.js';
 import type { ToolContext } from './tools/context.js';
 
 /**
@@ -77,6 +78,7 @@ export function createServer(ctx: ToolContext = buildContext()): McpServer {
   const pageSession = registerPageTools(server, ctx);
   registerLiveTools(server, ctx, pageSession);
   registerStoreTools(server, ctx);
+  registerThemeTools(server, ctx);
   registerImportTools(server, ctx, pageSession);
   registerUndoTools(server, ctx);
   return server;

@@ -4,8 +4,8 @@ import type { ApiOperation } from './types.js';
 
 export const SWAGGER_SOURCE = {
   "operations": 501,
-  "definitions": 104,
-  "bodyCarrying": 178,
+  "definitions": 105,
+  "bodyCarrying": 179,
   "bodyUndescribed": 64,
   "generatedFrom": "server/docs/swagger.json"
 } as const;
@@ -12963,18 +12963,25 @@ export const API_OPERATIONS: ApiOperation[] = [
     "tags": [
       "templates"
     ],
-    "summary": "The site templates a new store can be created from",
+    "summary": "Create a site from a template",
     "params": [
       {
         "name": "siteId",
         "in": "path",
         "required": true,
         "type": "string",
-        "description": "Site to apply the template to (POST)"
+        "description": "Template site to start from"
+      },
+      {
+        "name": "body",
+        "in": "body",
+        "required": true,
+        "type": "object",
+        "description": "The new site's name"
       }
     ],
-    "bodyDescribed": false,
-    "bodyRef": null,
+    "bodyDescribed": true,
+    "bodyRef": "internal_templates_rest.useBody",
     "credential": "siteScoped"
   },
   {
@@ -17927,6 +17934,15 @@ export const API_DEFINITIONS: Record<string, unknown> = {
       },
       "position": {
         "type": "integer"
+      }
+    }
+  },
+  "internal_templates_rest.useBody": {
+    "type": "object",
+    "properties": {
+      "name": {
+        "description": "Name is the new site's name. Required rather than defaulted to the\ntemplate's own name: a default would quietly produce two sites called\n\"Fashion starter\" for a user who pressed the button twice.",
+        "type": "string"
       }
     }
   }

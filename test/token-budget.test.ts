@@ -63,11 +63,14 @@ describe('token budget — a diet without a scale comes back', () => {
     // (creating over a taken slug, reading tokens off the blank page it just
     // made) fails silently in the ways this repo keeps a file about.
     //
-    // 23,000 rather than 21,800: a ceiling set just above the current
-    // measurement gets raised again on the next honest tool, which trains a
-    // reader to raise it without reading. This has room for one more and still
-    // refuses a schema dump.
-    expect(JSON.stringify(tools).length).toBeLessThan(23_000);
+    // 24,500 rather than 23,400. The previous ceiling said in as many words
+    // that it had "room for one more" — `sb_theme` is that one, so the room is
+    // spent and the same discipline applies again rather than a ceiling set
+    // just above today's number. A palette write earns its bytes: it is the
+    // layer every style preset resolves from, so one token repaints every page,
+    // and the alternative an agent reaches for without it — a literal on each
+    // node — detaches that node from the theme permanently.
+    expect(JSON.stringify(tools).length).toBeLessThan(24_500);
     for (const t of tools) expect(t.description, t.name).not.toMatch(/vanishes on publish/);
     const instructions = client.getInstructions() ?? '';
     expect(instructions.length).toBeGreaterThan(200);
@@ -83,7 +86,13 @@ describe('token budget — a diet without a scale comes back', () => {
     const catalog = await client.callTool({ name: 'sb_catalog_search', arguments: { query: 'hero' } });
     expect(chars(catalog)).toBeLessThan(2_500);
     const traits = await client.callTool({ name: 'sb_traits_for', arguments: { type: 'list-dataset' } });
-    expect(chars(traits)).toBeLessThan(12_000);
+    // 13,000 rather than 12,300: the entrance animation's vocabulary now rides
+    // on the 73 element types that offer the control, and this is the result an
+    // agent reads before every styling decision. The FIRST attempt at it was a
+    // six-field object and this ceiling caught it at 12,396 — correctly, since
+    // 400 bytes across two thirds of the catalog is dilution. It is one line
+    // now, carrying all four ways the write fails silently.
+    expect(chars(traits)).toBeLessThan(13_000);
     await close();
   });
 

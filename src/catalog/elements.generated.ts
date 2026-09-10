@@ -36205,6 +36205,7 @@ export const BASE_ONLY_CONFIG: string[] = [
   "collectionId",
   "collectionType",
   "quantity",
+  "animation",
   "rowLimit"
 ];
 
@@ -36216,3 +36217,43 @@ export const BASE_ONLY_CONFIG: string[] = [
 export const BASE_ONLY_EXCEPTIONS: string[] = [
   "quantity-button:iconSize"
 ];
+
+/**
+ * The ENTRANCE ANIMATION's vocabulary — config.animation, offered by 73 of the
+ * 111 element types and describable by nothing until now.
+ *
+ * Three ways to miss, all silent (AnimationTypeOf answers "" and no keyframes,
+ * no rule and no error are emitted, through save, publish and render):
+ *   - it is an OBJECT, not a string: {active, type, easing, delay, duration}
+ *   - active:true is REQUIRED; a stored type is deliberately NOT consent,
+ *     because the panel keeps the type when the switch goes off
+ *   - type is a keyframe key spelled with UNDERSCORES: fade_in, never fade-in
+ *
+ * easing is the mild one: an unrecognised value falls back to "ease".
+ *
+ * It is also BASE-ONLY (see BASE_ONLY_CONFIG) — render/css.go emits it into the
+ * base lane because the config object is read with no responsive merge.
+ */
+export const ANIMATION: {
+  types: string[];
+  easings: string[];
+  easingFallback: string;
+  durationDefault: number;
+  readBy: string;
+} = {
+  "types": [
+    "fade_in",
+    "slide_down",
+    "slide_up",
+    "zoom_in"
+  ],
+  "easings": [
+    "ease",
+    "ease-in",
+    "ease-out",
+    "linear"
+  ],
+  "easingFallback": "ease",
+  "durationDefault": 0.5,
+  "readBy": "AnimationTypeOf + CompileEntranceAnimationCSS"
+};

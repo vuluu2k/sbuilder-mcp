@@ -1,5 +1,5 @@
 import { ELEMENTS, TRAIT_WRITES } from './elements.generated.js';
-import { vocabulariesForWrites } from '../domains/site/vocabulary.js';
+import { animationVocabulary, vocabulariesForWrites } from '../domains/site/vocabulary.js';
 import { neverTranslatedOn, translatableSpecials } from '../domains/site/translate.js';
 
 /** Eight to choose from; the hints for the chosen one come with sb_traits_for. */
@@ -150,6 +150,12 @@ export function traitsFor(type: string, control?: string): Record<string, unknow
       const vocab = vocabulariesForWrites([...keys]);
       return Object.keys(vocab).length ? { config_values: vocab } : {};
     })(),
+    // THE ENTRANCE ANIMATION, for the 73 element types that offer it. It does
+    // not ride in `config_values` because it is not a word — it is an OBJECT
+    // with a required gate, and the three ways to get it wrong all render
+    // NOTHING rather than something else. An element that does not offer the
+    // control says nothing, so this is silent on the other 38.
+    ...(el.controls.includes('animation') ? { animation: animationVocabulary() } : {}),
     isContainer: el.isContainer,
     isRootOnly: el.isRootOnly,
     childAllows: el.childAllows,

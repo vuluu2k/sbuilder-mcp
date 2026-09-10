@@ -10,11 +10,12 @@ describe('tool annotations', () => {
   it('every tool carries annotations; the read set is readOnlyHint', async () => {
     const { client, close } = await connectedClient();
     const { tools } = await client.listTools();
-    // 30 since sb_import_site. The count is asserted rather than left open
-    // because the tools/list ceiling below is per-LIST, so a tool added without a
-    // look at its own description is how that ceiling gets tripped by somebody
-    // else.
-    expect(tools.length).toBe(30);
+    // 31 since sb_theme. The count is asserted rather than left open because the
+    // tools/list ceiling below is per-LIST, so a tool added without a look at its
+    // own description is how that ceiling gets tripped by somebody else — which
+    // is exactly what sb_theme did, and this pair of assertions is what caught
+    // it in the same run.
+    expect(tools.length).toBe(31);
     for (const t of tools) expect(t.annotations, t.name).toBeDefined();
     for (const name of READ_ONLY) {
       expect(tools.find((t) => t.name === name)!.annotations!.readOnlyHint, name).toBe(true);

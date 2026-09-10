@@ -1116,6 +1116,62 @@ pointing at somebody else's site is worse than none. No menu links the new pages
 And nothing has been seen at 390px. `sb_look` each page at the three widths, then
 `sb_publish`.
 
+### The entrance animation, and its four silent misses
+
+`config.animation` is offered by **73 of the 111 element types** and was describable by
+nothing. Every way of getting it wrong renders NOTHING — no keyframes, no rule, no error —
+through save, publish and render. `sb_traits_for` now carries the answer on every element that
+offers the control, and `sb_set` warns on each miss:
+
+- **It is an OBJECT, not the string the control's name invites:**
+  `{ active: true, type, easing, delay, duration }`. The renderer reads it as
+  `map[string]interface{}`, so a bare `"fade_in"` is the zero value.
+- **`active: true` is REQUIRED, and a stored `type` is deliberately not consent.** The panel
+  keeps `type` when the switch goes off so switching back restores the choice — treating a
+  stored type as consent would animate a node the author had explicitly turned off.
+- **The type is UNDERSCORED** — `fade_in`, `slide_up`, `slide_down`, `zoom_in`. `fade-in` is
+  what every other web tool spells it and the platform's own table comments on the trap.
+- **It is BASE-ONLY**, and this one is ROUTED rather than warned about: `render/css.go` emits
+  the rule into the base lane because the config object is read with no responsive merge, so
+  `sb_set` writes it to base. It reached the platform's migration ledger late — it is not a key
+  any element seeds — which meant a per-breakpoint write landed where nothing looks.
+
+`easing` is the mild case and is reported differently: an unrecognised value falls back to
+`ease`, so the animation still runs, wearing a curve nobody chose. The renderer emits its own
+`prefers-reduced-motion` rule per animated node, so you do not have to.
+
+**What has no answer at all is reveal-on-scroll.** These are ENTRANCE animations, fired at first
+paint; the only scroll hooks in the runtime are the pinned element's `wb-stuck` class and
+`popup`'s scroll trigger. A section that fades in as the visitor reaches it cannot be authored
+here, by any tool, because the platform has nowhere to put it.
+
+## `sb_theme`
+
+**The one design decision that reaches every page.** A style preset compiles to a class rule
+*beneath* a node's own values, so every node that has not been given a literal follows the
+site's colour tokens and text styles. Changing one token here is the cheapest way to restyle a
+whole site — and it was the one lever the tools pushed you away from: `sb_node_read` reported
+what a node paints, and nothing could write the layer underneath it.
+
+Call it with nothing to READ what the site actually has, keyed the way a preset resolves —
+by token id (`heading`, `primary`) and by text-style slug. A site that has never saved a theme
+answers with the STARTER and says so, because handing back the starter's `#111827` for a site
+whose heading token is rose is a confident wrong colour.
+
+`colors` and `text_styles` PATCH the saved document: **what you do not name is kept**. That is
+not politeness, it is the only safe way to spell a patch on this endpoint. The write is a
+WHOLE-DOCUMENT REPLACE and there is no theme history on either surface — no versions, no
+restore — so a body missing `colors` used to store happily and take the palette, the text
+styles and all 58 presets with it. (The platform now refuses a document that is not
+recognisably a theme at all, which closes the worst of it and does not make a partial write
+safe.) There is deliberately no argument here that can express "drop everything else".
+
+A token id or style slug the site does not have is **refused**, with the real ones named: every
+preset resolves through those ids, so an invented one would be stored and read by nothing.
+
+Republish afterwards. A theme is compiled into each page's stylesheet, so a saved page keeps
+the old palette until it is published again.
+
 ## `sb_store`
 
 Run a store flow that must happen in a **fixed order**.

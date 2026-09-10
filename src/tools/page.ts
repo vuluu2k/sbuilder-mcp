@@ -20,7 +20,7 @@ import { baseOnlyNote } from '../domains/site/baseonly.js';
 import { detachNote, presetIdOf, presetLayer } from '../domains/site/theme.js';
 import { inertHintsFor } from '../domains/site/inert.js';
 import { hasSeed, seedDocument, seedSummary, seededTypes } from '../domains/site/storepage.js';
-import { unknownValueNote } from '../domains/site/vocabulary.js';
+import { animationNote, unknownValueNote } from '../domains/site/vocabulary.js';
 import { skinLevelNote } from '../domains/site/fieldskin.js';
 import { siteTheme } from '../domains/site/theme-fetch.js';
 import { request, redact } from '../transport/http.js';
@@ -597,9 +597,14 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
       for (const e of batch) {
         if (e.namespace !== 'config') continue;
         for (const [k, v] of Object.entries(e.keys)) {
-          const n = unknownValueNote(k, v);
+          // THE ENTRANCE ANIMATION IS ITS OWN QUESTION, because it is an object
+          // rather than a word and every way of missing it renders NOTHING
+          // rather than a normalised something. Keyed on the whole value: two
+          // nodes given the same wrong animation deserve one answer, and two
+          // given different wrong ones deserve two.
+          const n = k === 'animation' ? animationNote(v) : unknownValueNote(k, v);
           if (!n) continue;
-          const once = ctx.notices.once(`config-value:${k}=${String(v)}`, n);
+          const once = ctx.notices.once(`config-value:${k}=${JSON.stringify(v)}`, n);
           if (once) valueNotes.push(once);
         }
       }

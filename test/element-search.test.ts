@@ -31,7 +31,10 @@ describe('traitsFor()', () => {
     expect(typeof t.inspector[0].groups[0].controls[0]).toBe('string');
     expect(typeof t.undeclared_note).toBe('string');
     expect(Array.isArray(t.hints.useWhen)).toBe(true);
-    expect(JSON.stringify(t).length).toBeLessThan(12_000); // was 74,190; what remains is hints and names
+    // 13,000 since the entrance animation's vocabulary rides on the 73 element
+    // types that offer the control. Was 74,190 before the diet; what remains is
+    // hints, names and the four ways config.animation fails silently.
+    expect(JSON.stringify(t).length).toBeLessThan(13_000);
   });
 
   it('still describes one control in full', () => {

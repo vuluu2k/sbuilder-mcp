@@ -1594,6 +1594,68 @@ that accounts for them.
   sheet `sb_api_find` already prints for any `/translations` operation — the surface the agent
   is already reading when it decides what to send.
 
+- **THE ENTRANCE ANIMATION WAS OFFERED BY 73 OF 111 ELEMENTS AND DESCRIBED BY NOTHING, and all
+  FOUR ways of missing it are silent.** `config.animation` is the panel every visible element
+  carries, and `AnimationTypeOf` answers `""` for each miss — no keyframes, no per-node rule, no
+  error — through save, publish and render. The catalog now carries `ANIMATION`, read from
+  `server/render/style/animation.go` for the reason `CONFIG_VALUES` is read from the Go: that is
+  what RENDERS.
+  - **It is an OBJECT, not the string the control's name invites** —
+    `{active, type, easing, delay, duration}`. `readAnimConfig` asserts
+    `map[string]interface{}`, so a bare `"fade_in"` is the zero value.
+  - **`active: true` is REQUIRED and a stored `type` is deliberately NOT consent.** The panel
+    keeps `type` when the switch goes off so switching back restores the choice; the platform's
+    own comment says treating it as consent "would animate a node the author had explicitly
+    turned off".
+  - **The type is UNDERSCORED.** `AnimKeyframes`'s comment flags it outright — "keyed by the
+    STORED value (`fade_in`, not `fade-in`)" — and `fade-in` is what every other web tool spells
+    it, so it is the spelling an agent reaches for first.
+  - **It is BASE-ONLY, and that one is ROUTED rather than warned about.** `render/css.go:359`
+    emits it into the base lane under the comment "Base-only, because the config object is
+    base-only". It was ABSENT from the platform's migration ledger because it is not a key any
+    element SEEDS, so the ledger's seed check never had an opinion about it — while the ledger's
+    other consumer, this catalog, uses it to decide which layer a config write belongs in. So
+    `sb_set` wrote it per breakpoint, into a slot the renderer never reads. Fixed upstream by
+    adding `animation` to `BASE_ONLY_CONFIG`, which `baseonly.ts` then picks up for free.
+
+  `easing` is the mild case and is reported differently: an unrecognised value falls back to
+  `ease`, so the animation RUNS wearing a curve nobody chose. The first version of the trait
+  attachment was a six-field object on 73 of 111 elements; `test/token-budget.test.ts` caught it
+  at 12,396 bytes, correctly — the four facts fit in one line, and the long form belongs in
+  `sb_set`'s warning, which fires at the moment the mistake is made.
+
+  **WHAT HAS NO ANSWER AT ALL IS REVEAL-ON-SCROLL.** These are ENTRANCE animations, fired at
+  first paint ("runs unbidden at every visitor's first paint"). The only scroll hooks in the
+  runtime are the pinned element's `wb-stuck` class and `popup`'s `scroll` trigger — the
+  `IntersectionObserver` in `boot.ts` hydrates islands. A section that fades in as the visitor
+  reaches it cannot be authored by any tool here, because the platform has nowhere to put it.
+
+- **THE SITE'S THEME WAS READABLE AND, IN PRACTICE, UNWRITABLE — the highest-leverage design act
+  was the one thing the tools pushed an agent away from.** `src/domains/site/theme.ts` carried
+  read helpers only, and `PUT /api/sites/{siteId}/theme` has the body shape `{theme: object}`
+  because the SERVER genuinely does not know the shape (`sitetheme.Theme.Data` is a
+  `json.RawMessage`; its comment says the editor owns it). So an agent wanting a rose-and-ink
+  storefront had exactly one move — paint literals on nodes — which this file already records as
+  detaching each node from its preset PERMANENTLY.
+
+  `sb_theme` is a tool rather than a call-sheet entry for one reason: the write is a
+  WHOLE-DOCUMENT REPLACE against a surface with NO HISTORY, and the operation an author actually
+  wants is a PATCH. The only safe way to spell a patch on a replace-only endpoint is to read the
+  document, change the named fields and send the whole thing back — so there is deliberately no
+  argument here that can express "drop everything else". A token id or style slug the site does
+  not have is REFUSED with the real ones named, because every preset resolves through those ids
+  and an invented one would be stored and read by nothing.
+
+  A site that has never saved a theme answers `200 {"theme": null}` — the platform calls that
+  "the NORMAL first-visit state" — so the first write is built from `STARTER_THEME` and stores a
+  COMPLETE theme rather than a palette with one token in it.
+
+  **AND THE PLATFORM USED TO ACCEPT `{}`.** `validTheme` asked only "is this a JSON object", so a
+  body missing `colors` was stored: the site lost every colour token, every text style and all 58
+  presets, with a 200 and nothing to restore from. Fixed upstream — the gate is deliberately WEAK
+  (one recognised top-level key, not a required set), because requiring `colors` would refuse a
+  shape the editor has not shipped yet, and the colour/text-style shape stays the editor's to own.
+
 ## The five traps
 
 Each fails SILENTLY. Each is encoded in `src/domains/site/traps.ts` (trap 5 in

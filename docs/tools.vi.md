@@ -1080,6 +1080,62 @@ nguồn bị bỏ có chủ đích — site này có header/footer riêng dạng
 sang website người khác còn tệ hơn là không có. Không có menu nào nối các trang mới lại với
 nhau. Và chưa có gì được nhìn ở 390px. `sb_look` từng trang ở ba khổ, rồi mới `sb_publish`.
 
+### Hiệu ứng vào, và bốn cách trượt câm của nó
+
+`config.animation` được **73 trên 111 loại phần tử** cung cấp, mà không gì mô tả nổi nó. Mọi cách
+làm sai đều render RA KHÔNG GÌ CẢ — không keyframes, không rule, không lỗi — qua save, publish và
+render. Giờ `sb_traits_for` mang sẵn câu trả lời trên mọi phần tử có control này, còn `sb_set`
+cảnh báo từng cách trượt:
+
+- **Nó là OBJECT, không phải chuỗi như cái tên gợi ra:**
+  `{ active: true, type, easing, delay, duration }`. Renderer đọc nó bằng
+  `map[string]interface{}`, nên một chuỗi trần `"fade_in"` chính là giá trị zero.
+- **`active: true` là BẮT BUỘC, và `type` đã lưu cố ý không được coi là đồng ý.** Panel giữ lại
+  `type` khi tắt công tắc để bật lại thì khôi phục lựa chọn cũ — coi type đã lưu là đồng ý sẽ làm
+  chuyển động một node mà tác giả đã tắt hẳn.
+- **Type dùng GẠCH DƯỚI** — `fade_in`, `slide_up`, `slide_down`, `zoom_in`. `fade-in` mới là cách
+  mọi công cụ web khác viết, và chính bảng của nền tảng có ghi chú cảnh báo cái bẫy này.
+- **Nó là BASE-ONLY**, và cái này được ĐỊNH TUYẾN chứ không cảnh báo: `render/css.go` phát rule
+  vào làn base vì object config được đọc không qua merge responsive, nên `sb_set` ghi thẳng vào
+  base. Khoá này vào sổ migration của nền tảng muộn — nó không phải khoá mà phần tử nào seed — nên
+  trước đó một lệnh ghi theo breakpoint rơi vào chỗ không ai nhìn.
+
+`easing` là ca nhẹ và được báo khác đi: giá trị lạ rơi về `ease`, nên hiệu ứng vẫn chạy, chỉ mang
+đường cong không ai chọn. Renderer tự phát rule `prefers-reduced-motion` cho từng node, bạn không
+phải lo.
+
+**Thứ hoàn toàn không có lời giải là hiện-dần-khi-cuộn.** Đây là hiệu ứng VÀO, bắn ở lần vẽ đầu
+tiên; hai móc cuộn duy nhất trong runtime là class `wb-stuck` của phần tử ghim và trigger cuộn của
+`popup`. Một dải hiện dần khi khách cuộn tới không thể dựng ở đây bằng bất kỳ công cụ nào, vì nền
+tảng không có chỗ nào để đặt nó.
+
+## `sb_theme`
+
+**Quyết định thiết kế duy nhất chạm tới mọi trang.** Một style preset biên dịch thành rule class
+nằm *dưới* giá trị riêng của node, nên mọi node chưa bị ghi literal đều đi theo token màu và text
+style của site. Đổi một token ở đây là cách rẻ nhất để thay diện mạo cả site — và trước đây đó
+lại là đòn bẩy duy nhất mà bộ công cụ đẩy bạn ra xa: `sb_node_read` báo được node đang tô gì,
+còn tầng bên dưới nó thì không gì ghi được.
+
+Gọi không tham số để ĐỌC những gì site thực sự có, khoá theo đúng cách preset phân giải — theo id
+token (`heading`, `primary`) và theo slug text style. Site chưa từng lưu theme sẽ trả về theme
+KHỞI ĐẦU và nói rõ điều đó, vì đưa `#111827` của starter cho một site có token heading màu hồng
+là một màu sai đầy tự tin.
+
+`colors` và `text_styles` **VÁ** vào tài liệu đã lưu: **thứ bạn không nêu tên thì được giữ
+nguyên**. Đó không phải phép lịch sự mà là cách an toàn duy nhất để diễn đạt một phép vá trên
+endpoint này. Lệnh ghi là THAY TOÀN BỘ TÀI LIỆU và không mặt nào có lịch sử theme — không
+version, không restore — nên một body thiếu `colors` từng được lưu ngon lành, mang theo cả bảng
+màu, toàn bộ text style và cả 58 preset. (Nền tảng giờ từ chối tài liệu không ra hình một theme,
+việc đó chặn phần tệ nhất nhưng không làm cho một lệnh ghi thiếu trở nên an toàn.) Ở đây cố ý
+không có tham số nào diễn đạt được ý "bỏ hết phần còn lại".
+
+Id token hoặc slug mà site không có sẽ bị **từ chối**, kèm danh sách những cái có thật: mọi preset
+phân giải qua các id đó, nên một id bịa ra sẽ được lưu và không gì đọc.
+
+Publish lại sau khi đổi. Theme được biên dịch vào stylesheet của từng trang, nên trang đã lưu vẫn
+giữ bảng màu cũ cho tới khi được publish lần nữa.
+
 ## `sb_store`
 
 Chạy một luồng cửa hàng bắt buộc **đúng thứ tự**.
