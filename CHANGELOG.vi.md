@@ -6,6 +6,11 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.25.0] - 2026-09-10
+
+### Added
+- sb_page_create giờ mặc định gắn header và footer của chính site vào trang mới tạo, đọc từ trang chủ của site, nên một trang được dựng bằng các tool này mang cùng menu điều hướng và footer với phần còn lại của site thay vì trống trơn; truyền chrome:false để bỏ qua.
+
 ## [0.24.0] - 2026-09-10
 
 ### Added
