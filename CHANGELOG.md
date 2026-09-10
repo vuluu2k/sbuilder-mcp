@@ -6,6 +6,13 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.17.1] - 2026-09-10
+
+### Fixed
+- sb_add and sb_import no longer store a nested node's children twice: a patch batch that gets applied more than once (as every write already is, to validate it before it lands) mutated itself on the first pass by carrying an added node by reference, so the second pass re-inserted its children into a node that already held them.
+- sb_import and sb_import_site now cap a flattened row at 12 columns and treat a grid container as wrapping rather than single-line, so a page whose content wrapper is a CSS grid (a documentation site, for example) no longer imports as one row of hundreds of slivered columns.
+- sb_import and sb_import_site now capture a `<pre>`/`<code>` block as one node instead of one node per syntax-highlighting `<span>`, so a code sample no longer arrives broken into dozens of single-token fragments.
+
 ## [0.17.0] - 2026-09-10
 
 ### Added

@@ -6,6 +6,13 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.17.1] - 2026-09-10
+
+### Fixed
+- sb_add và sb_import giờ không còn lưu nhân đôi các con của một node lồng nhau: một batch patch bị áp dụng nhiều hơn một lần (như mọi lần ghi vẫn vậy, để kiểm tra trước khi áp thật) trước đây tự làm thay đổi chính nó ngay ở lượt đầu vì mang theo một node vừa thêm bằng tham chiếu, khiến lượt thứ hai chèn lại các con vào một node đã sẵn có chúng.
+- sb_import và sb_import_site giờ giới hạn một row được làm phẳng ở tối đa 12 cột và coi container dạng grid là tự xuống dòng thay vì nằm trên một hàng, để một trang có content wrapper là CSS grid (chẳng hạn một trang tài liệu kỹ thuật) không còn bị import thành một row hàng trăm cột mỏng dính.
+- sb_import và sb_import_site giờ lấy một khối `<pre>`/`<code>` thành một node duy nhất thay vì một node cho mỗi `<span>` tô cú pháp, để một đoạn code không còn bị vỡ thành hàng chục mảnh một-token-một-node.
+
 ## [0.17.0] - 2026-09-10
 
 ### Added
