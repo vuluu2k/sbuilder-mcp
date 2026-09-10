@@ -911,6 +911,28 @@ that accounts for them.
   satellite `createNode` mints on its own. The label is OMITTED when the source had none rather
   than defaulted, because inventing one ships English copy into a store that is not in English.
 
+- **AND THEN NOTHING LINKED THE IMPORTED PAGES TOGETHER, which the directive had been saying
+  out loud since the tool shipped.** `sb_import_site` now builds ONE global `header` from the
+  pages it created and gives every one of them a reference to it. Built from THOSE pages, never
+  from the source's own nav — that one points at the site this was copied from, half of it at
+  pages the cap left out, and its structure is somebody else's, which is why the capture skips
+  page chrome in the first place.
+
+  The shapes, both read off the platform rather than guessed and both verified against a live
+  server: a global's `document` is page-document SHAPED but its `root_node_id` IS THE SECTION —
+  compose carries its nodes over and re-parents that root onto the page's ROOT
+  (`compose.go:133`) — so the section is built under a throwaway ROOT and lifted out with its
+  parent cleared. A page REFERENCES one with a ROOT child that is a `flex-section` carrying
+  `specials.globalRef` + `globalKind`, which is exactly what the platform's own decompose writes
+  (`decompose.go:382`). It goes in FIRST: compose turns it into a real header, and a header
+  after middle content is a band-order refusal on the next save. Measured end to end — create
+  201, save 200, and the re-read page came back with the reference expanded into a stamped
+  header whose menu carried the local paths.
+
+  SKIPPED WHEN THE SITE ALREADY HAS A HEADER, because a second one is two headers rather than a
+  menu, and under two pages, because a menu to one page is a link to itself. A page that will
+  not take the header does not undo the header: the master exists and the others carry it.
+
 - **AN IMPORTED SITE'S MENU LED BACK TO THE SITE IT WAS COPIED FROM.** A captured link keeps
   the source's ABSOLUTE URL, so `sb_import_site` built twelve pages and left no way to reach any
   of them — every click went off to the original. The most basic feature a website has, and the

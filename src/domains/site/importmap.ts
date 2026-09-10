@@ -548,3 +548,64 @@ export function relink(
   };
   return { sections: captured.map(one), rewritten, unimported };
 }
+
+/**
+ * A menu label from a page's own `<title>`.
+ *
+ * A title is written for a browser tab and a search result — "Example Servers —
+ * Model Context Protocol" — and a menu row of those wraps to three lines. The
+ * part before the first separator is what the page calls itself; the cap is
+ * what keeps one long name from owning the row.
+ */
+export function menuLabel(name: string): string {
+  const head = name.split(/\s+[|—–·:]\s+/)[0].trim() || name.trim();
+  return head.length > 28 ? `${head.slice(0, 27).trimEnd()}…` : head;
+}
+
+/**
+ * THE SHARED HEADER, built from the pages that were actually created.
+ *
+ * NOT from the source's own nav, deliberately. Its links point at the site it
+ * was copied from, half of them at pages the cap left out, and its structure is
+ * somebody else's — three reasons the capture skips page chrome in the first
+ * place. What the merchant needs is a way to reach THESE pages, and that list is
+ * already known exactly.
+ *
+ * Built through `toSpecs` rather than hand-assembled so it wears the same tokens
+ * every imported section does — a header that answers the accent differently is
+ * rule 0 broken on the one band that appears on every page. Only the padding is
+ * overridden: a section's 64px is right for a band of content and absurd for a
+ * menu.
+ */
+export function navSpec(
+  links: Array<{ text: string; href: string }>,
+  t: PageTokens,
+): NodeSpec | null {
+  if (links.length === 0) return null;
+  const [section] = toSpecs(
+    [
+      {
+        kind: 'section',
+        children: [
+          {
+            kind: 'group',
+            direction: 'row',
+            wrap: true,
+            children: links.map((l) => ({
+              kind: 'button' as const,
+              variant: 'link' as const,
+              text: l.text,
+              href: l.href,
+            })),
+          },
+        ],
+      },
+    ],
+    t,
+  );
+  if (!section) return null;
+  return {
+    ...section,
+    style: { ...section.style, padding: '16px 24px' },
+  };
+}

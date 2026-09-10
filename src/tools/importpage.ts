@@ -10,10 +10,14 @@ import {
   toSpecs,
   tokensFromPage,
   imageSources,
+  menuLabel,
+  navSpec,
   rehostImages,
   relink,
   type Captured,
 } from '../domains/site/importmap.js';
+import type { NodeSpec } from '../domains/site/builder.js';
+import { subtreeIds } from '../core/tree.js';
 import {
   canonFor,
   choosePages,
@@ -185,6 +189,30 @@ async function discoverSite(
     urls.push({ url: real, from: real === entry ? 'entry' : 'links' });
   }
   return { source: 'links', urls, titles: crawled.titles, visited: crawled.visited, robots, aliases };
+}
+
+/**
+ * A built subtree as the document a GLOBAL SECTION stores.
+ *
+ * A global's document is page-document SHAPED but its `root_node_id` IS the
+ * section — compose carries its nodes over and re-parents that root onto the
+ * page's ROOT (`server/internal/page/compose.go:133`). So the section is built
+ * the ordinary way, under a throwaway ROOT, and then lifted out with its parent
+ * cleared: a master has no parent until a page composes it.
+ */
+export function globalDocumentFrom(spec: NodeSpec): {
+  schema_version: number;
+  root_node_id: string;
+  nodes: Record<string, unknown>;
+} {
+  const scratch = PageDoc.from({ schema_version: 2, root_node_id: '', nodes: {} });
+  const { patches, ids } = addSubtree(scratch, scratch.doc.root_node_id, spec);
+  scratch.apply(patches);
+  const rootId = ids[0];
+  const nodes: Record<string, unknown> = {};
+  for (const id of subtreeIds(scratch.doc, rootId)) nodes[id] = scratch.doc.nodes[id];
+  (nodes[rootId] as { data: { parent: unknown } }).data.parent = null;
+  return { schema_version: 2, root_node_id: rootId, nodes };
 }
 
 export function registerImportTools(
@@ -370,6 +398,7 @@ export function registerImportTools(
         max_nodes: z.number().int().min(1).max(1000).optional().describe('Per page, default 300'),
         upload_images: z.boolean().optional(),
         homepage: z.boolean().optional().describe("Entry into this site's home page, default true"),
+        nav: z.boolean().optional().describe('Shared header linking the new pages, default true'),
         dry_run: z.boolean().optional(),
       },
       annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: true },
@@ -385,6 +414,7 @@ export function registerImportTools(
       max_nodes,
       upload_images,
       homepage,
+      nav,
       dry_run,
     }) => {
       const siteId = siteFor(ctx, given);
@@ -694,6 +724,88 @@ export function registerImportTools(
         }
       }
 
+      // THE MENU THAT LINKS THEM TOGETHER — the last thing the directive said this
+      // could not do for you.
+      //
+      // Built from the pages that were ACTUALLY created, never from the source's
+      // own nav: that one points at the site this was copied from, half of it at
+      // pages the cap left out, and its structure is somebody else's. What the
+      // merchant needs is a way to reach THESE pages, and that list is known
+      // exactly.
+      //
+      // Skipped when the site already has a header, because a second one is not
+      // an improvement — it is two headers. Also skipped below two pages: a menu
+      // to one page is a link to itself.
+      let chrome: Record<string, unknown> | undefined;
+      if (nav !== false && built.length >= 2) {
+        try {
+          const existingGlobals = (await request({
+            base: ctx.base,
+            method: 'GET',
+            path: `/api/sites/${encodeURIComponent(siteId)}/global-sections`,
+            token: siteToken(ctx),
+            fetchImpl: ctx.fetchImpl,
+          })) as { globalSections?: Array<{ kind?: string }> };
+          const hasHeader = (existingGlobals.globalSections ?? []).some((g) => g.kind === 'header');
+          if (hasHeader) {
+            chrome = {
+              skipped: 'this site already has a header global section — a second one is two headers, not a menu',
+            };
+          } else {
+            const links = built
+              .map((b) => {
+                const planned = plan.pages.find((p) => p.url === b.url);
+                const to = localPath.get(String(b.url));
+                return planned && to ? { text: menuLabel(planned.name), href: to } : null;
+              })
+              .filter((l): l is { text: string; href: string } => l !== null);
+            const spec = navSpec(links, tokens);
+            if (spec) {
+              const made = (await request({
+                base: ctx.base,
+                method: 'POST',
+                path: `/api/sites/${encodeURIComponent(siteId)}/global-sections`,
+                token: siteToken(ctx),
+                body: { name: 'Header', kind: 'header', document: globalDocumentFrom(spec) },
+                fetchImpl: ctx.fetchImpl,
+              })) as { globalSection?: { id?: unknown } };
+              const gid = made.globalSection?.id;
+              if (typeof gid === 'string' && gid) {
+                // A PAGE REFERENCES a master with a ROOT child carrying
+                // `globalRef` — the shape the platform's own decompose writes
+                // (`decompose.go:382`), down to the flex-section type and the
+                // `globalKind` beside it. FIRST, because compose turns it into a
+                // real header and a header after middle content is a band-order
+                // refusal on the next save.
+                const carried: string[] = [];
+                for (const b of built) {
+                  try {
+                    await session.open(siteId, String(b.page_id));
+                    const doc = session.current();
+                    const { patches } = addSubtree(
+                      doc,
+                      doc.doc.root_node_id,
+                      { type: 'flex-section', specials: { globalRef: gid, globalKind: 'header' } },
+                      0,
+                    );
+                    await session.applyAndSave(patches);
+                    carried.push(String(b.slug));
+                  } catch {
+                    // One page that will not take the header does not undo the
+                    // header: the master exists and the others carry it.
+                  }
+                }
+                chrome = { header: gid, on: carried, links: links.length };
+              }
+            }
+          }
+        } catch (e) {
+          // The pages are built and correct; a header that could not be made is
+          // a thing to report, never a reason to fail the import.
+          chrome = { failed: (e as Error).message.replace(/^sbuilder:\s*/, '').slice(0, 160) };
+        }
+      }
+
       return text({
         entry,
         discovered_by: found.source,
@@ -704,6 +816,7 @@ export function registerImportTools(
           rewritten: relinked,
           ...(unimported ? { still_off_site: unimported } : {}),
         },
+        ...(chrome ? { shared_header: chrome } : {}),
         ...(formsSeen.length
           ? {
               forms_found: formsSeen,

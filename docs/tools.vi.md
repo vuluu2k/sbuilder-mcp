@@ -958,6 +958,14 @@ chủ. Nông trước — gốc, rồi `/about`, rồi `/blog/mot-bai` — chín
 sẽ ra một shop mà mọi giá đều là chữ chết và không mua được gì. Kết quả nêu tên tiền tố và số
 lượng trước khi tạo bất cứ thứ gì; `exclude` để loại chúng ra.
 
+**Một header dùng chung mang menu.** Các trang vừa tạo được gom vào một global `header` — sửa
+một lần là cả site đổi — dựng từ CHÍNH những trang đó chứ không từ nav của trang nguồn, vì nav đó
+trỏ sang website đã sao chép và một nửa trỏ vào những trang mà trần số trang đã bỏ lại. Mỗi trang
+sau đó mang một tham chiếu tới nó, đứng đầu trong các con của ROOT — đúng hình dạng mà chính
+decompose của nền tảng ghi ra. Bỏ qua khi site đã có header, vì thêm cái nữa là hai header chứ
+không phải một menu; `nav: false` để tắt. Dưới hai trang thì không chạy — menu tới một trang là
+link trỏ vào chính nó.
+
 **Link giữa các trang import về trỏ vào ĐÂY, không dẫn ngược sang nguồn.** Link bắt được vốn giữ
 URL tuyệt đối của trang nguồn, nên trước đây site về có mười hai trang mà không có đường nào tới
 được trang nào — mọi cú bấm đều rời sang website đã sao chép. Chỉ những đích **thật sự được

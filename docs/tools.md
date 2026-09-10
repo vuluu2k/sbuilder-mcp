@@ -985,6 +985,14 @@ resolves to the published page of type `product`. Imported as static pages they 
 shop where every price is a literal and nothing is buyable. The result names the prefix and
 its count before anything is created; `exclude` leaves them out.
 
+**A shared header carries the menu.** The pages that were created become one global `header`
+section — edit it once and every page changes — built from THOSE pages and never from the
+source's own nav, which points at the site this was copied from and half of it at pages the cap
+left out. Each page then carries a reference to it, first among ROOT's children, which is the
+shape the platform's own decompose writes. Skipped when the site already has a header, because
+a second one is two headers rather than a menu; `nav: false` turns it off. Under two pages it
+does not fire — a menu to one page is a link to itself.
+
 **Links between the imported pages point HERE, not back at the source.** A captured link keeps
 the source's absolute URL, so before this a site arrived with twelve pages and not one way to
 reach any of them — every click left for the site it was copied from. Only targets that were

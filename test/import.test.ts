@@ -4,11 +4,14 @@ import type { AddressInfo } from 'node:net';
 import { capture, captureMany, crawlLinks } from '../src/vision/capture.js';
 import { canonFor } from '../src/domains/site/discover.js';
 import { checkBandOrder, middleEnd } from '../src/domains/site/traps.js';
+import { globalDocumentFrom } from '../src/tools/importpage.js';
 import { validateForSave } from '../src/domains/site/validate.js';
 import type { Patch } from '../src/core/patch.js';
 import { PageDoc } from '../src/domains/site/document.js';
 import { addSubtree, setKeys } from '../src/domains/site/builder.js';
 import {
+  menuLabel,
+  navSpec,
   relink,
   toSpecs,
   tokensFromPage,
@@ -739,6 +742,53 @@ describe('imported links point at the imported pages', () => {
   it('leaves the captured input untouched', () => {
     relink(sections, local, 'https://src.example');
     expect(sections[0].children![0].href).toBe('https://src.example/about/');
+  });
+});
+
+/**
+ * THE MENU THAT LINKS THE IMPORTED PAGES TOGETHER.
+ *
+ * The last thing `sb_import_site`'s directive said it could not do. It is built
+ * from the pages that were ACTUALLY created and never from the source's own nav:
+ * that one points at the site this was copied from, half of it at pages the cap
+ * left out, and its structure is somebody else's.
+ */
+describe('the shared header', () => {
+  it('names a page the way the page names itself, minus the site it belongs to', () => {
+    // A title is written for a browser tab — "Example Servers — Model Context
+    // Protocol" — and a menu row of those wraps to three lines.
+    expect(menuLabel('Example Servers — Model Context Protocol')).toBe('Example Servers');
+    expect(menuLabel('Giới thiệu')).toBe('Giới thiệu');
+    expect(menuLabel('Trang chủ | Cửa hàng')).toBe('Trang chủ');
+    expect(menuLabel('x'.repeat(40))).toHaveLength(28);
+  });
+
+  it('wears the same tokens every imported section does', () => {
+    // A header that answers the accent differently is rule 0 broken on the one
+    // band that appears on every page.
+    const spec = navSpec([{ text: 'Về', href: '/gioi-thieu' }], { headingColor: '#2E2A3B' })!;
+    expect(spec.type).toBe('flex-section');
+    // A section's 64px is right for a band of content and absurd for a menu.
+    expect(spec.style?.padding).toBe('16px 24px');
+    expect(JSON.stringify(spec)).toContain('/gioi-thieu');
+  });
+
+  it('is nothing at all when there is nothing to link', () => {
+    expect(navSpec([], {})).toBeNull();
+  });
+
+  it('lifts the section into the document shape a global stores', () => {
+    // A global's document is page-document SHAPED but its root_node_id IS the
+    // section: compose carries its nodes over and re-parents that root onto the
+    // page's ROOT, so a master has no parent until a page composes it.
+    const doc = globalDocumentFrom(navSpec([{ text: 'Về', href: '/a' }], {})!);
+    expect(doc.schema_version).toBe(2);
+    const root = doc.nodes[doc.root_node_id] as { data: { type: string; parent: unknown } };
+    expect(root.data.type).toBe('flex-section');
+    expect(root.data.parent).toBeNull();
+    // Every node of the subtree came with it, and the throwaway ROOT did not.
+    expect(Object.keys(doc.nodes).length).toBeGreaterThan(2);
+    expect(doc.nodes.ROOT).toBeUndefined();
   });
 });
 
