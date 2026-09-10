@@ -6,6 +6,11 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.22.1] - 2026-09-10
+
+### Fixed
+- sb_import và sb_import_site giờ không còn định kích thước các cột đã xếp chồng của một row đã import theo chiều cao ở mobile: basis `flex: 1 1 280px` của mỗi cột được reset về `0 1 auto` chỉ ở breakpoint mobile, nên một đoạn văn ngắn không còn bị nằm trong một khung cao cố định 280px trong khi phần còn lại của trang là khoảng trống.
+
 ## [0.22.0] - 2026-09-10
 
 ### Added
