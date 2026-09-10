@@ -6,6 +6,11 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.21.1] - 2026-09-10
+
+### Fixed
+- sb_import_site now keeps the fragment (e.g. `#community`) when it rewrites a same-page section link to point at the imported page, instead of dropping it and sending every such link to the top of the page.
+
 ## [0.21.0] - 2026-09-10
 
 ### Added

@@ -6,6 +6,11 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.21.1] - 2026-09-10
+
+### Fixed
+- sb_import_site giờ giữ lại fragment (ví dụ `#community`) khi viết lại một link trỏ tới section trong cùng trang đã import, thay vì bỏ mất nó và khiến mọi link kiểu này đều trỏ về đầu trang.
+
 ## [0.21.0] - 2026-09-10
 
 ### Added
