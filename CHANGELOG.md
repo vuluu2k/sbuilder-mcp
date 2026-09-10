@@ -6,6 +6,15 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.28.0] - 2026-09-10
+
+### Added
+- The API catalog gained the platform's own image-search route, `GET /api/sites/{siteId}/images/search`, reachable through sb_api_call as well as through sb_media_upload.
+- The API catalog gained the admin key-pool pair, `GET/POST /api/admin/image-keys`, for managing the platform's Pexels credentials.
+
+### Changed
+- sb_media_upload's "search unavailable" instruction now names the admin Settings area's Pexels keys screen as the way to turn image search on, alongside the PEXELS_API_KEYS server variable, and notes that several keys are walked round-robin because the provider rate-limits per key.
+
 ## [0.27.0] - 2026-09-10
 
 ### Changed

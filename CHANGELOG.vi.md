@@ -6,6 +6,15 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.28.0] - 2026-09-10
+
+### Added
+- Catalog API có thêm route tìm ảnh của chính nền tảng, `GET /api/sites/{siteId}/images/search`, gọi được qua sb_api_call cũng như qua sb_media_upload.
+- Catalog API có thêm cặp quản lý pool key phía admin, `GET/POST /api/admin/image-keys`, để quản lý key Pexels của nền tảng.
+
+### Changed
+- Chỉ dẫn "chưa cấu hình tìm ảnh" của sb_media_upload giờ nêu tên màn Cài đặt phía admin (khoá Pexels) như một cách bật tìm ảnh, bên cạnh biến môi trường PEXELS_API_KEYS trên server, và ghi chú rằng nhiều khoá được xoay vòng vì nhà cung cấp giới hạn theo từng khoá.
+
 ## [0.27.0] - 2026-09-10
 
 ### Changed
