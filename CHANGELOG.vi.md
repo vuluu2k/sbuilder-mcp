@@ -6,6 +6,12 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.22.0] - 2026-09-10
+
+### Added
+- sb_import_site giờ dựng một global section `header` dùng chung từ các trang nó đã tạo và cho mỗi trang một tham chiếu tới đó, nên sửa menu một lần là đổi trên mọi trang thay vì mỗi trang tự mang một bản riêng.
+- sb_import_site nhận tham số `nav` (mặc định true) để bỏ qua header dùng chung, và báo kết quả qua `shared_header` trong output.
+
 ## [0.21.1] - 2026-09-10
 
 ### Fixed

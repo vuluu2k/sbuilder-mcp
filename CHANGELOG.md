@@ -6,6 +6,12 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.22.0] - 2026-09-10
+
+### Added
+- sb_import_site now builds one shared global `header` section from the pages it created and gives every page a reference to it, so editing the menu once changes it on every page instead of leaving each page to carry its own copy.
+- sb_import_site takes a `nav` argument (default true) to skip the shared header, and reports what happened under `shared_header` in its result.
+
 ## [0.21.1] - 2026-09-10
 
 ### Fixed
