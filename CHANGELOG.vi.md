@@ -6,6 +6,19 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.18.0] - 2026-09-10
+
+### Added
+- sb_import và sb_import_site giờ có thể mang theo một element `<video>`, một player nhúng YouTube, Vimeo, Google Map hoặc SoundCloud, và một divider `<hr>`, thay vì âm thầm bỏ qua mọi iframe vì không hỗ trợ.
+
+### Fixed
+- sb_import và sb_import_site giờ không còn lấy nhầm header hoặc footer điều hướng của chính site nguồn khi nó nằm trong một element bọc ngoài thay vì là con trực tiếp của `<body>`, và không còn nhầm một footer chỉ được đánh dấu bằng class CSS (không có thẻ `<footer>`) là nội dung trang.
+- sb_import_site giờ không còn import cùng một trang hai lần dưới hai slug khác nhau khi trang nguồn khai báo `<link rel="canonical">` trỏ tới một URL đã có trong kế hoạch, hoặc khi sitemap/crawl liệt kê các bản dịch theo ngôn ngữ của cùng một trang (`/about`, `/en/about`, `/vi/about`); ngôn ngữ của trang nhập vào được giữ lại.
+- sb_import_site giờ không còn import các trang phân trang như `/blog/page/2` thành các trang riêng.
+- sb_import_site giờ tuân theo các quy tắc Disallow trong robots.txt của site khi crawl hoặc đọc sitemap, trừ URL mà người gọi đã chỉ định rõ ràng.
+- sb_import và sb_import_site giờ không còn nhân đôi các mục của một list lồng nhau: một `<ul>` bên trong `<li>` trước đây bị lấy một lần trong text của mục cha và lấy lại lần nữa như một mục list riêng.
+- sb_import và sb_import_site giờ bỏ qua mọi element được đánh dấu `aria-hidden="true"`, để các bản sao carousel và bản sao ẩn của menu mobile không còn bị lấy thành nội dung trùng lặp.
+
 ## [0.17.1] - 2026-09-10
 
 ### Fixed

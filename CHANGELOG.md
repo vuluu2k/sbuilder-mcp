@@ -6,6 +6,19 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.18.0] - 2026-09-10
+
+### Added
+- sb_import and sb_import_site can now bring over a `<video>` element, an embedded YouTube, Vimeo, Google Map or SoundCloud player, and an `<hr>` divider, instead of silently dropping every iframe as unsupported.
+
+### Fixed
+- sb_import and sb_import_site no longer capture a source site's own header or footer navigation when it sits inside a wrapper element rather than directly under `<body>`, and no longer mistake a footer marked only by a CSS class (with no `<footer>` tag) for page content.
+- sb_import_site no longer imports the same page twice under two different slugs when the source declares a `<link rel="canonical">` pointing at a URL already in the plan, or when a sitemap or crawl lists per-language copies of the same page (`/about`, `/en/about`, `/vi/about`); the entry page's own language is kept.
+- sb_import_site no longer imports pagination pages such as `/blog/page/2` as separate pages.
+- sb_import_site now honors the site's robots.txt Disallow rules while crawling or reading a sitemap, except for the URL the caller explicitly named.
+- sb_import and sb_import_site no longer duplicate a nested list's items: a `<ul>` inside an `<li>` was previously captured once inside its parent item's text and again as its own list item.
+- sb_import and sb_import_site now skip any element marked `aria-hidden="true"`, so carousel clones and hidden mobile-menu copies no longer come through as duplicated content.
+
 ## [0.17.1] - 2026-09-10
 
 ### Fixed
