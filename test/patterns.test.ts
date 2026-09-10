@@ -158,3 +158,43 @@ describe('the picture slot', () => {
     expect(json).not.toContain('"image"');
   });
 });
+
+/**
+ * THE DECLARED COUNT IS A PROMISE TO THE CALLER, and the only thing that keeps
+ * it honest is asking the band itself.
+ *
+ * `images` exists so an agent knows how many photographs to go and get BEFORE
+ * it builds — a site this server has just built has an empty library, so
+ * without the number it discovers how short it was by reading a sentence where
+ * a photo should be. A declared number that drifts from what `build` actually
+ * consumes is worse than none: it sends the caller to fetch six for a band that
+ * takes three, or three for a band that takes six and still shows a sentence.
+ *
+ * Saturated with a pool far larger than any slot count, so the answer is the
+ * band's own appetite rather than the pool's size.
+ */
+describe('a pattern that declares picture slots', () => {
+  const saturated: MediaPick[] = Array.from({ length: 40 }, (_, i) => ({
+    url: `https://cdn/sat-${i}.jpg`,
+    width: 1200,
+    height: 600,
+  }));
+
+  it('fills exactly as many as it says it can', () => {
+    for (const p of LAYOUT_PATTERNS) {
+      if (!p.images) continue;
+      const used = JSON.stringify(p.build(tokens, saturated)).match(/https:\/\/cdn\/sat-\d+\.jpg/g) ?? [];
+      expect(new Set(used).size, `${p.id} declares ${p.images}`).toBe(p.images);
+    }
+  });
+
+  it('is declared by every pattern that takes a picture at all, and by no other', () => {
+    // The negative half is the one that rots quietly: a new band with a picture
+    // slot and no `images` reports nothing to fill, so the agent is never told
+    // to go and get anything and the slot ships as a sentence forever.
+    for (const p of LAYOUT_PATTERNS) {
+      const takesOne = JSON.stringify(p.build(tokens, saturated)).includes('https://cdn/sat-');
+      expect(Boolean(p.images), `${p.id}`).toBe(takesOne);
+    }
+  });
+});

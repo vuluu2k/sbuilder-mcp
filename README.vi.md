@@ -98,7 +98,7 @@ nhét ngược lại vào mọi bản cài.
 | `sb_publish` | Biên dịch bản nháp thành trang live (lan sang global dùng chung) |
 | `sb_review` | Mọi khiếm khuyết người xem sẽ thấy, kèm lệnh sửa từng cái, và năm khoảng trống chắn giữa cửa hàng với một đơn đã thanh toán |
 | `sb_media_list` | Thư viện ảnh của site |
-| `sb_media_upload` | Thêm ảnh và lấy URL — file trên máy, một URL để nền tảng tự tải, hoặc TÌM ảnh chụp thật để đọc mô tả rồi chọn |
+| `sb_media_upload` | Thêm ảnh và lấy URL — file trên máy, một URL để nền tảng tự tải, hoặc TÌM ảnh chụp thật để đọc mô tả rồi chọn, một hoặc nhiều tấm một lượt |
 | `sb_live_join` | Vào phòng live-edit của editor như một peer nhìn thấy được — sửa gì hiện ngay |
 | `sb_look` | Lưu, render, trả về ảnh chụp kèm box đo được của node và lỗi bố cục đo trên bản render |
 | `sb_event` | Gắn click action cho một node — mở giỏ, sang trang, mở pop-up |

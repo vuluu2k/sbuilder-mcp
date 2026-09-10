@@ -905,6 +905,7 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
             into: page_id,
             tokens_from: fromTheme ? "this site's theme — the page has no look of its own yet" : 'this page',
             images_available: pool.length,
+            ...(pattern.images ? { pictures_wanted: pattern.images } : {}),
             note:
               'Composed against THIS page\'s tokens, not copied — the same heading ink, button ' +
               'fill and section padding the page already uses. Pass dry_run:false to add it.',
@@ -917,12 +918,20 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
           nodes: ids.length,
           into: page_id,
           rev: doc.rev,
-          ...(pool.length === 0
+          // A SHORT LIBRARY IS THE ORDINARY STATE OF A SITE THIS SERVER BUILT,
+          // not an edge case — nothing has been uploaded yet, so every picture
+          // slot in every pattern is a sentence. Saying "there are no images"
+          // and stopping leaves the agent to rediscover the fix; saying how
+          // many this band wanted and naming the two calls that fill them is
+          // the same fact with the next step attached.
+          ...(pattern.images && pool.length < pattern.images
             ? {
-                images:
-                  'This site has no images in its library, so any picture slot in this band says ' +
-                  'so in words rather than showing a grey box. sb_media_upload takes a URL and ' +
-                  'the platform fetches it server-side.',
+                pictures:
+                  `This band has ${pattern.images} picture slot${pattern.images > 1 ? 's' : ''} and the ` +
+                  `library offered ${pool.length}; the rest say so in words rather than showing a grey ` +
+                  'box. Fill them: sb_media_upload query:"<what the band should show>" reads back real ' +
+                  'photographs with their own descriptions, then pick:[…] uploads the ones you chose in ' +
+                  'one call. Re-run this pattern afterwards and it takes them.',
               }
             : {}),
           ...(fromTheme

@@ -864,6 +864,20 @@ result: rule 7 records what a keyword glued into a URL returns (`loremflickr` an
 looked. `orientation` asks the search for the SHAPE, which is far cheaper than cropping
 afterwards.
 
+**`pick` also takes SEVERAL — `pick: [8633662, 35993723, …]` — and that is how a site this
+server just built gets its pictures.** A new site's library is empty, so every picture slot in
+every layout pattern is a sentence until somebody fills it; one search answers with eight
+photographs and `sb_gallery` wants six of them, which at one pick per call was twelve round
+trips for one band. Taking several does not weaken rule 7: what that rule protects is that
+somebody LOOKED, and reading eight descriptions and choosing six is the same act of choosing as
+reading eight and choosing one. No `pick` still uploads nothing.
+
+It is **not atomic and does not pretend to be** — each photo is its own upload, so the answer
+carries `uploaded` and, when anything went wrong, `failed` with the pick and the reason. A
+partial *pick* is different and is refused whole: naming an id the search did not return uploads
+nothing at all, because delivering half a set leaves the caller to work out which slots they can
+still fill. One pick keeps the single-photo answer it has always had.
+
 **The provider key is the PLATFORM'S, not this server's.** The search is
 `GET /api/sites/{siteId}/images/search`, a rotated pool of Pexels keys behind the credential this
 server already holds — so no second secret in every install, no quota shared with another

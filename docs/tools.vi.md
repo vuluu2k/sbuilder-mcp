@@ -838,6 +838,18 @@ rule 7 ghi lại chuyện một từ khoá dán vào URL trả về cái gì (`l
 bằng một bức tượng mèo), và lỗi chưa bao giờ nằm ở ảnh stock mà ở chỗ không ai nhìn.
 `orientation` hỏi thẳng bộ tìm kiếm về HÌNH DẠNG, rẻ hơn nhiều so với cắt lại sau.
 
+**`pick` còn nhận NHIỀU — `pick: [8633662, 35993723, …]` — và đó là cách một site vừa được server
+này dựng lên có ảnh.** Site mới có thư viện rỗng, nên mọi ô ảnh trong mọi layout pattern chỉ là
+một câu chữ cho tới khi có người lấp; một lần tìm trả về tám tấm còn `sb_gallery` muốn sáu, mà
+mỗi lần chỉ chọn được một thì lấp một dải mất mười hai lượt gọi. Nhận nhiều không làm yếu rule 7:
+điều rule đó bảo vệ là **có người đã nhìn**, mà đọc tám mô tả rồi chọn sáu cũng là cùng một hành
+vi chọn như đọc tám rồi chọn một. Không truyền `pick` thì vẫn không upload gì cả.
+
+Nó **không nguyên tử và không giả vờ là thế** — mỗi tấm là một lần upload riêng, nên kết quả trả
+về `uploaded` và, khi có trục trặc, `failed` kèm pick cùng lý do. Một *pick* thiếu thì khác, và bị
+từ chối trọn gói: nêu một id mà lần tìm không trả về thì không upload gì hết, vì giao nửa bộ là để
+người gọi tự đoán còn ô nào lấp được. Chọn một tấm thì câu trả lời vẫn y như cũ.
+
 **Key nhà cung cấp là của NỀN TẢNG, không phải của server này.** Tìm kiếm đi qua
 `GET /api/sites/{siteId}/images/search` — một pool key Pexels xoay vòng nằm sau đúng credential mà
 server này đang cầm — nên không có secret thứ hai trong mọi bản cài, không chia quota với sản phẩm

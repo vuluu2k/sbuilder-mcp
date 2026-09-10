@@ -491,14 +491,18 @@ export function registerLiveTools(
       description:
         'Put an image into the media library and get its URL back, ready for sb_set. Takes a ' +
           'local path, a URL, or a SEARCH — `query` returns real photographs with their own ' +
-          'descriptions, and `pick` uploads the one you chose. The only way to add an image.',
+          'descriptions, and `pick` uploads the one you chose, or several at once to stock a ' +
+          'site you just built. The only way to add an image.',
       inputSchema: {
       site_id: z.string().optional(),
       path: z.string().optional().describe('A file on this machine'),
       url: z.string().optional().describe('Fetched, then uploaded'),
       query: z.string().optional().describe('Search real photographs; read the descriptions, then pick'),
       orientation: z.enum(['landscape', 'portrait', 'square']).optional(),
-      pick: z.number().int().optional().describe('The id of the search result to upload'),
+      pick: z
+        .union([z.number().int(), z.array(z.number().int())])
+        .optional()
+        .describe('The id of the search result to upload — or several ids, which stocks a site in one call'),
       name: z.string().optional(),
       folder_id: z.string().optional(),
       dry_run: z.boolean().optional(),
@@ -533,10 +537,29 @@ export function registerLiveTools(
           }
           throw e;
         }
-        const chosen = pick !== undefined ? photos.find((p) => p.id === pick) : undefined;
-        if (!chosen) {
+        // STOCKING A SITE IS WHY THIS TAKES SEVERAL. One search answers with
+        // eight photographs and a gallery band wants six of them — and a site
+        // this server has just built has an EMPTY library, so every picture
+        // slot in every pattern is a sentence until somebody fills it. One
+        // pick per call made that twelve round trips for one band, which is
+        // how a correct rule becomes a rule nobody follows.
+        //
+        // It does NOT weaken rule 7. What that rule protects is that somebody
+        // LOOKED: reading eight descriptions and choosing six is the same act
+        // of choosing as reading eight and choosing one. What it forbids is
+        // uploading a hit nobody read, and no `pick` still uploads nothing.
+        const wanted = pick === undefined ? [] : Array.isArray(pick) ? pick : [pick];
+        const chosen = wanted
+          .map((id) => photos.find((p) => p.id === id))
+          .filter((p): p is StockPhoto => p !== undefined);
+        const absent = wanted.filter((id) => !photos.some((p) => p.id === id));
+        // A PARTIAL PICK IS REFUSED WHOLE rather than half-uploaded. The caller
+        // named a set; delivering some of it and reporting the rest as a note
+        // leaves them to work out which slots they can still fill.
+        if (chosen.length === 0 || absent.length > 0) {
           return text({
-            ...(pick !== undefined ? { no_such_pick: pick } : {}),
+            ...(absent.length === 1 ? { no_such_pick: absent[0] } : {}),
+            ...(absent.length > 1 ? { no_such_picks: absent } : {}),
             found: photos.map((p) => ({
               pick: p.id,
               shows: p.alt || '(the photographer left no description)',
@@ -544,8 +567,9 @@ export function registerLiveTools(
               by: p.photographer,
             })),
             next:
-              'Read what each one SHOWS, then re-call with pick:<id> and dry_run:false. The photo ' +
-              "is uploaded into this site's own library, never hotlinked.",
+              'Read what each one SHOWS, then re-call with pick:<id> and dry_run:false — or ' +
+              'pick:[<id>,<id>,…] to take several in one call, which is what fills a gallery ' +
+              "band. Each photo is uploaded into this site's own library, never hotlinked.",
             licence: ctx.notices.once(
               'stock_licence',
               'These are Pexels photographs: free for commercial use, with attribution ' +
@@ -555,30 +579,67 @@ export function registerLiveTools(
             ),
           });
         }
+        // ONE PICK KEEPS THE SHAPE IT HAS ALWAYS HAD. A caller that asked for
+        // one photograph gets one answer about one photograph; only a caller
+        // that asked for several is handed a list to read.
+        const solo = chosen.length === 1 ? chosen[0] : undefined;
         if (dry_run !== false) {
           return text({
             dry_run: true,
-            would_upload: chosen.url,
-            shows: chosen.alt,
-            by: chosen.photographer,
+            would_upload: solo ? solo.url : chosen.map((c) => c.url),
+            shows: solo ? solo.alt : chosen.map((c) => c.alt),
+            by: solo ? solo.photographer : chosen.map((c) => c.photographer),
             into: site_id,
             note: 'Nothing was sent. Re-call with dry_run:false to upload.',
           });
         }
-        const asset = await uploadMedia(ctx, site_id, {
-          url: chosen.url,
-          // THE DESCRIPTION BECOMES THE NAME, so the library is searchable by
-          // what the photographs show and the alt on the page means something.
-          name: name ?? chosen.alt ?? undefined,
-          folderId: folder_id,
-        });
+        // NOT ATOMIC, AND IT MUST NOT PRETEND TO BE. Each photo is its own
+        // upload, so the fifth failing does not un-upload the four that
+        // landed — throwing here would leave the caller with four images in
+        // the library, no idea which, and an error that names none of them.
+        // The same reasoning `sb_import_site` records for its per-page report.
+        const uploaded: Array<Record<string, unknown>> = [];
+        const failed: Array<{ pick: number; why: string }> = [];
+        for (const one of chosen) {
+          try {
+            const asset = await uploadMedia(ctx, site_id, {
+              url: one.url,
+              // THE DESCRIPTION BECOMES THE NAME, so the library is searchable
+              // by what the photographs show and the alt on the page means
+              // something. A caller-supplied name can only speak for ONE photo,
+              // so it is honoured only when one was picked.
+              name: (solo ? name : undefined) ?? one.alt ?? undefined,
+              folderId: folder_id,
+            });
+            uploaded.push({
+              asset,
+              shows: one.alt,
+              credit: { by: one.photographer, profile: one.photographer_url, photo: one.page_url },
+            });
+          } catch (e) {
+            failed.push({ pick: one.id, why: (e as Error).message });
+          }
+        }
+        if (solo) {
+          const only = uploaded[0];
+          if (!only) throw new Error(`sbuilder: ${failed[0]?.why ?? 'the upload failed'}`);
+          const asset = only.asset as { url?: string };
+          return text({
+            asset,
+            shows: solo.alt,
+            credit: only.credit,
+            next: asset.url
+              ? `Use it: sb_set id "<node>", namespace specials, keys { "src": ${JSON.stringify(asset.url)} }`
+              : 'Uploaded, but the server returned no url — read it back with sb_media_list.',
+          });
+        }
         return text({
-          asset,
-          shows: chosen.alt,
-          credit: { by: chosen.photographer, profile: chosen.photographer_url, photo: chosen.page_url },
-          next: asset.url
-            ? `Use it: sb_set id "<node>", namespace specials, keys { "src": ${JSON.stringify(asset.url)} }`
-            : 'Uploaded, but the server returned no url — read it back with sb_media_list.',
+          uploaded,
+          ...(failed.length ? { failed } : {}),
+          next:
+            `${uploaded.length} in this site's library now. A layout pattern reads the library ` +
+            'when it builds, so sb_template_use will put these into its picture slots — or set ' +
+            'one on a node directly with sb_set namespace specials, keys { "src": "<url>" }.',
         });
       }
 

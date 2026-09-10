@@ -125,3 +125,87 @@ describe('sb_media_upload — searching', () => {
     expect(out.next).toMatch(/PEXELS_API_KEYS/);
   });
 });
+
+/**
+ * STOCKING A SITE THIS SERVER JUST BUILT.
+ *
+ * A new site's library is EMPTY, so every picture slot in every layout pattern
+ * is a sentence until somebody fills it — and one search answers with eight
+ * photographs while a gallery band wants six. At one pick per call that is
+ * twelve round trips for one band, which is how a correct rule becomes a rule
+ * nobody follows.
+ *
+ * Taking several does not weaken rule 7. What that rule protects is that
+ * somebody LOOKED: reading eight descriptions and choosing six is the same act
+ * of choosing as reading eight and choosing one. What it forbids is uploading a
+ * hit nobody read — and no `pick` still uploads nothing.
+ */
+describe('sb_media_upload — stocking a library in one call', () => {
+  const eight = { photos: Array.from({ length: 8 }, (_, i) => photo({ id: i + 1, alt: `Shot ${i + 1}` })) };
+
+  async function call(args: Record<string, unknown>) {
+    const sent: string[] = [];
+    const f = (async (input: string | URL) => {
+      const at = String(input);
+      sent.push(at);
+      if (at.includes('/images/search')) {
+        return new Response(JSON.stringify(eight), { status: 200, headers: { 'content-type': 'application/json' } });
+      }
+      if (at.includes('/from-url')) {
+        const n = sent.filter((u) => u.includes('/from-url')).length;
+        return new Response(JSON.stringify({ asset: { id: `mda_${n}`, url: `https://cdn/site/${n}.jpg` } }), {
+          status: 200,
+          headers: { 'content-type': 'application/json' },
+        });
+      }
+      return new Response('{}', { status: 200, headers: { 'content-type': 'application/json' } });
+    }) as unknown as typeof fetch;
+    const session = new Session('http://x', f);
+    (session as unknown as { access: string }).access = 'jwt';
+    const { client, close } = await connectedClient({ fetchImpl: f, session });
+    const res = (await client.callTool({
+      name: 'sb_media_upload',
+      arguments: { site_id: 's1', ...args },
+    })) as { content: Array<{ text?: string }> };
+    await close();
+    return { out: JSON.parse(res.content[0].text!), sent };
+  }
+
+  it('uploads every photo the caller chose, and only those', async () => {
+    const { out, sent } = await call({ query: 'x', pick: [2, 4, 6], dry_run: false });
+    expect(out.uploaded).toHaveLength(3);
+    expect(sent.filter((u) => u.includes('/from-url'))).toHaveLength(3);
+    expect(out.uploaded.map((u: { shows: string }) => u.shows)).toEqual(['Shot 2', 'Shot 4', 'Shot 6']);
+  });
+
+  it('names the library as what a pattern reads, because that is the next step', async () => {
+    const { out } = await call({ query: 'x', pick: [1, 2], dry_run: false });
+    expect(out.next).toMatch(/sb_template_use/);
+  });
+
+  it('still dry-runs first, and shows every photo it would take', async () => {
+    const { out, sent } = await call({ query: 'x', pick: [1, 3] });
+    expect(out.dry_run).toBe(true);
+    expect(out.would_upload).toHaveLength(2);
+    expect(sent.some((u) => u.includes('/from-url'))).toBe(false);
+  });
+
+  it('REFUSES A PARTIAL PICK WHOLE rather than uploading the half it recognised', async () => {
+    // The caller named a set. Delivering some of it and reporting the rest as a
+    // note leaves them to work out which slots they can still fill — and the
+    // photos that did land are already in the library by then.
+    const { out, sent } = await call({ query: 'x', pick: [1, 999], dry_run: false });
+    expect(out.no_such_pick).toBe(999);
+    expect(out.uploaded).toBeUndefined();
+    expect(sent.some((u) => u.includes('/from-url'))).toBe(false);
+  });
+
+  it('keeps the ONE-photo answer exactly as it was', async () => {
+    // A caller that asked about one photograph gets one answer about one
+    // photograph; only a caller that asked for several is handed a list.
+    const { out } = await call({ query: 'x', pick: 5, dry_run: false });
+    expect(out.asset.id).toBe('mda_1');
+    expect(out.uploaded).toBeUndefined();
+    expect(out.next).toMatch(/sb_set/);
+  });
+});

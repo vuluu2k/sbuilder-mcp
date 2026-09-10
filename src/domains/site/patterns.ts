@@ -28,6 +28,17 @@ export interface LayoutPattern {
   name: string;
   /** What it is for, in the words a caller would use to look for it. */
   use: string;
+  /**
+   * How many PICTURE SLOTS this band can fill, when the library has that many.
+   *
+   * Declared rather than derived, because the count is only discoverable by
+   * building the band against a pool big enough to saturate it — and the caller
+   * needs it BEFORE that, to know how many photographs to go and get. A site
+   * this server has just built has an empty library, so without the number the
+   * agent finds out how short it was by reading a sentence where a photo
+   * should be.
+   */
+  images?: number;
   build: (t: PageTokens, pool?: MediaPick[]) => NodeSpec | null;
 }
 
@@ -139,6 +150,7 @@ export const LAYOUT_PATTERNS: LayoutPattern[] = [
     id: 'sb_hero_split',
     name: 'Hero — hai cột',
     use: 'Mở đầu trang: tiêu đề, một câu, nút hành động bên trái; chỗ cho ảnh bên phải',
+    images: 1,
     build: (t, pool) => {
       const used = new Set<string>();
       return section(
@@ -224,6 +236,7 @@ export const LAYOUT_PATTERNS: LayoutPattern[] = [
   {
     id: 'sb_gallery',
     name: 'Dải ảnh',
+    images: 6,
     use: 'Một hàng ảnh cuốn dòng, lấy từ thư viện ảnh của chính site',
     build: (t, pool) => {
       const used = new Set<string>();
