@@ -918,7 +918,11 @@ that accounts for them.
   imported: a same-origin link the page cap left out keeps its original URL and is COUNTED,
   because an off-site link that works beats a local one that 404s, and the count is what tells
   the caller to raise `max_pages`. The map is built before the first page is written, since
-  page two's link to page seven has to work and page seven does not exist yet.
+  page two's link to page seven has to work and page seven does not exist yet. **The FRAGMENT
+  survives the rewrite**: `normalizeUrl` drops it because it is not part of a page's IDENTITY —
+  that is exactly what folds `/a` and `/a#top` into one page — but it is very much part of the
+  link, and blender.org's community page carries sixteen of them (`#vi`, `#de`, one per
+  language section) that would all have collapsed onto the top of the page.
 
 - **A FORM IS SEEN AND NOT REBUILT.** `FORM` sat in the ignore list, so a contact page arrived
   with no way to contact anybody and nothing saying why. Rebuilding one means guessing the

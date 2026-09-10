@@ -724,6 +724,18 @@ describe('imported links point at the imported pages', () => {
     expect(r.sections[0].children![2].href).toBe('https://other.example/x');
   });
 
+  it('keeps the fragment, which is part of the link even though it is not part of the page', () => {
+    // `normalizeUrl` drops it because it is not part of a page's IDENTITY — that
+    // is what folds /a and /a#top into one page — but a "jump to the forums"
+    // link that lands at the top of the page looks broken.
+    const r = relink(
+      [{ kind: 'section', children: [{ kind: 'button', text: 'Diễn đàn', href: 'https://src.example/about#forums' }] }],
+      local,
+      'https://src.example',
+    );
+    expect(r.sections[0].children![0].href).toBe('/gioi-thieu#forums');
+  });
+
   it('leaves the captured input untouched', () => {
     relink(sections, local, 'https://src.example');
     expect(sections[0].children![0].href).toBe('https://src.example/about/');

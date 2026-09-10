@@ -530,7 +530,14 @@ export function relink(
       const norm = normalizeUrl(href);
       const to = norm ? local.get(norm) : undefined;
       if (to) {
-        href = to;
+        // THE FRAGMENT SURVIVES. `normalizeUrl` drops it because it is not part
+        // of a page's IDENTITY — that is what folds `/a` and `/a#top` into one
+        // page — but it is very much part of the link, and a source page's
+        // "jump to the forums" section link would otherwise land at the top of
+        // the page and look broken. Measured on a real import: six of them on
+        // one page.
+        const hash = href.indexOf('#');
+        href = hash >= 0 ? `${to}${href.slice(hash)}` : to;
         rewritten += 1;
       } else if (norm && norm.indexOf(origin) === 0) {
         unimported += 1;
