@@ -6,6 +6,17 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.24.0] - 2026-09-10
+
+### Added
+- sb_template_use now fills a picture slot in a built-in layout with a real image from the site's own media library, preferring a landscape image where the layout wants one, instead of leaving a placeholder note asking the caller to add one by hand.
+- sb_templates gained a new built-in layout, sb_gallery, a row of up to six images pulled from the site's media library.
+- The API catalog gained three operations: `POST /api/media/{siteId}/from-url` (reachable through sb_api_call as well as sb_media_upload), `GET /api/sites/{siteId}/forms/submissions`, and `POST /api/sites/{siteId}/translations/review/bulk`.
+
+### Changed
+- sb_template_use no longer repeats a photo already placed on the page: each picture slot it fills draws only from images the page is not already showing, so a hero added first and a gallery added second no longer show the same image twice.
+- sb_template_use now reports `images_available` (the count of unused images in the site's library) in its dry-run preview, and names sb_media_upload in its result when the site's library has no images to draw from.
+
 ## [0.23.1] - 2026-09-10
 
 ### Added

@@ -6,6 +6,17 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.24.0] - 2026-09-10
+
+### Added
+- sb_template_use giờ lấp ô chứa ảnh trong một layout dựng sẵn bằng ảnh thật từ thư viện media của chính site, ưu tiên ảnh nằm ngang khi layout cần, thay vì để lại một ghi chú yêu cầu người gọi tự thêm ảnh.
+- sb_templates có thêm một layout dựng sẵn mới, sb_gallery, một hàng tối đa sáu ảnh lấy từ thư viện media của site.
+- Catalog API có thêm ba operation: `POST /api/media/{siteId}/from-url` (gọi được qua sb_api_call cũng như qua sb_media_upload), `GET /api/sites/{siteId}/forms/submissions`, và `POST /api/sites/{siteId}/translations/review/bulk`.
+
+### Changed
+- sb_template_use giờ không còn lặp lại một ảnh đã đặt trên trang: mỗi ô chứa ảnh nó lấp chỉ lấy từ những ảnh trang chưa hiển thị, nên một hero thêm trước và một dải ảnh thêm sau không còn hiện cùng một ảnh hai lần.
+- sb_template_use giờ báo `images_available` (số ảnh chưa dùng trong thư viện site) trong bản xem trước dry-run, và nêu tên sb_media_upload trong kết quả khi thư viện site không có ảnh nào để lấy.
+
 ## [0.23.1] - 2026-09-10
 
 ### Added
