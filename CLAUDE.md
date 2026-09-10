@@ -857,6 +857,41 @@ that accounts for them.
   an import is rare, slow and runs untrusted script, and coupling that to the tool a vision
   loop calls every few hundred milliseconds is how the fast path gets slow.
 
+- **`tagName` ON AN SVG ELEMENT IS LOWERCASE, so the ignore list's `'SVG'` and `'PATH'` had
+  never once matched.** `tagName` preserves case for XML-namespaced elements while every HTML
+  element reports uppercase. The entry looked like it worked because an `<svg>` that falls
+  through to the text fallback contributes nothing — its `textContent` is empty. The walk now
+  uppercases the tag, which is also what let `<svg>` be handled at all. Its sibling trap:
+  `el.className` on an SVG element is an `SVGAnimatedString`, so `String(el.className)` is the
+  literal `"[object SVGAnimatedString]"` and every class-named icon went unrecognised —
+  `getAttribute('class')` is the only form that answers for both.
+
+- **AN ICON IS LOOKED UP, NEVER GUESSED — `ICON_NAMES` is generated for exactly that.**
+  `specials.name` is a PascalCase RemixIcon id and the platform ships 3,227 of them
+  (`schema/src/iconManifest.json`, the same JSON the editor's picker and the Go renderer
+  share). Nothing in this catalog carried them, so an `<svg>` could not become an `icon` at
+  all. The name is read the way a page writes it — a sprite `<use>`, an `aria-label`, a
+  `<title>`, an icon set's class — normalised, and tried as itself, `…Line` and `…Fill`.
+  ANYTHING THAT DOES NOT LAND IS SKIPPED, and there is deliberately no last-word fallback:
+  "Open main menu" → `MenuLine` would be right and "Acme Store" → `StoreLine` would put a shop
+  glyph where a wordmark was, which is a WRONG icon and indistinguishable downstream from a
+  right one. The colour is never written either — it lives in the `icon-default` preset, and a
+  literal detaches every imported icon from the theme permanently.
+
+  **AND THE `aria-hidden` RULE HAD TO YIELD TO IT.** Almost every real icon carries
+  `aria-hidden="true"` — that is correct authoring, the label beside it does the talking — so
+  testing the attribute before the svg branch would put the `icon` element permanently out of
+  reach of a real page. An aria-hidden CONTAINER is still skipped before the walk descends.
+
+- **A COLLAPSED `<details>` MEASURES AS ZERO**, so an FAQ imported as questions with no
+  answers. The source's collapsed state is not content — this platform's accordion has its own
+  `openItems` — so every one is opened before anything is measured. Consecutive `<details>`
+  merge into ONE accordion: eight siblings is one list to the author, and eight accordions is
+  seven wrappers nobody asked for with no shared open/close behaviour. `accordion` accepts only
+  `accordion-content`, whose `specials.label` is the summary; the `accordion-item` skin is a
+  satellite `createNode` mints on its own. The label is OMITTED when the source had none rather
+  than defaulted, because inventing one ships English copy into a store that is not in English.
+
 - **THE IMPORT'S BIGGEST LOSS WAS A `<div class="footer-navigation">`.** Page chrome was
   detected by asking whether a `<header>`/`<footer>` was a DIRECT CHILD of `<body>`, which
   almost no real site satisfies — one wrapper div defeats it — and blender.org marks its site

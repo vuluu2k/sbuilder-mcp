@@ -859,6 +859,17 @@ kiểu đó chứ không dùng thẻ — nhưng header thì không, vì chữ `h
 hero. Thứ gì trang tự đánh dấu `aria-hidden="true"` đều bị bỏ: đó là dấu của chính tác giả cho
 phần trang trí và phần lặp.
 
+**`<svg>` chỉ thành `icon` khi nền tảng có đúng tên đó.** Tên được đọc theo cách trang nguồn
+viết — `<use href="#ri-search-line">`, `aria-label`, `<title>`, hoặc class của bộ icon (`ri-`,
+`fa-`, `lucide-`, `bi-`) — chuẩn hoá rồi TRA trong 3.227 tên RemixIcon nền tảng có sẵn. Cái nào
+không khớp thì bỏ, vì icon sai còn tệ hơn không có: "Acme Store" ra icon cửa hàng ở chỗ vốn là
+logo chữ thì không cách nào phân biệt với một kết quả đúng. Màu của nó không bao giờ bị ghi, nên
+icon import về vẫn đi theo theme.
+
+**Các `<details>` liền nhau gộp thành MỘT accordion**, mỗi `<summary>` là nhãn của một mục — và
+tất cả được mở ra trước khi đo, vì `<details>` đang đóng đo ra bằng 0 và một trang FAQ sẽ về chỉ
+có câu hỏi không có câu trả lời.
+
 **Khối code được lấy nguyên khối.** Mọi bộ tô màu cú pháp đều bọc từng token trong một `<span>`
 riêng, nên đi vào bên trong sẽ biến một đoạn config hai mươi dòng thành bốn mươi khối văn bản
 rời. Khoảng trắng bị gộp như mọi văn bản khác: nền tảng này không có element code để giữ lại,

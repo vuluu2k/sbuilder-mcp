@@ -2,6 +2,7 @@ import type { NodeSpec } from './builder.js';
 import type { DocLike, NodeLike } from '../../core/tree.js';
 import { walk } from '../../core/tree.js';
 import { stickySeeds } from './sticky.js';
+import { ICON_NAMES } from '../../catalog/icons.generated.js';
 
 /**
  * A page read off SOMEBODY ELSE'S SITE, reduced to the six things this platform
@@ -29,7 +30,13 @@ export interface Captured {
     /** A provider this platform has an element for: youtube, vimeo, soundcloud, map. */
     | 'embed'
     /** An `<hr>`. One node, and a design decision. */
-    | 'divider';
+    | 'divider'
+    /** An `<svg>` this platform may have an icon for. `name` is a CANDIDATE, not a verdict. */
+    | 'icon'
+    /** One or more consecutive `<details>`, which is what this platform's accordion is. */
+    | 'accordion'
+    /** One `<details>`: `text` is its `<summary>`, `children` the body. */
+    | 'accordion-item';
   /** For a group: the arrangement the source actually used. */
   direction?: 'row' | 'column';
   wrap?: boolean;
@@ -41,6 +48,16 @@ export interface Captured {
   videoId?: string;
   /** For a video: the still the page showed before playback. */
   poster?: string;
+  /**
+   * For an icon: the words the source page called it, before any lookup.
+   *
+   * Raw on purpose. The browser half knows what the page SAYS — a
+   * `<use href="#ri-search-line">`, an `aria-label`, a `ri-search-line` class —
+   * and this side owns the question of whether this platform has an icon by
+   * that name. `ICON_NAMES` is the only answer to that, and it does not exist
+   * inside the page.
+   */
+  name?: string;
   /** For a section the source kept in view while the page scrolled. */
   pinned?: 'sticky' | 'fixed';
   /** 1-6 for a heading, so `htmlTag` survives the trip. */
@@ -140,6 +157,39 @@ function headingTag(level: number | undefined): string {
 }
 
 /**
+ * This platform's own spelling of an icon the source page named, or null.
+ *
+ * A LOOKUP, NOT A GUESS. `specials.name` is a PascalCase RemixIcon id and the
+ * catalog holds 3,227 of them; a name outside that set renders nothing. So the
+ * words the page used are normalised and TRIED — exactly, then as the `Line`
+ * and `Fill` variants every icon in the set comes in — and anything that does
+ * not land is skipped.
+ *
+ * Deliberately no last-word fallback. "Open main menu" resolving to `MenuLine`
+ * would be right, and "Acme Store" resolving to `StoreLine` would put a shop
+ * glyph where a wordmark was — a WRONG icon, which is worse than none, and
+ * indistinguishable from a right one to everything downstream.
+ */
+function iconFor(raw: string): string | null {
+  if (raw.length > 40) return null;
+  const words = raw
+    .replace(/^(?:ri|fa[srlbd]?|lucide|bi|feather|icon|icons|material|mdi|ion|hero)[-_]/i, '')
+    .split(/[^A-Za-z0-9]+/)
+    .filter(Boolean);
+  if (!words.length) return null;
+  const base = words
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+    .join('');
+  for (const candidate of [base, `${base}Line`, `${base}Fill`]) {
+    if (ICON_NAMES.has(candidate)) return candidate;
+  }
+  // A source that already writes the id lowercase — `ri-shopping-cart-line`
+  // arrives as words, but `shoppingcartline` as one — cannot be split back, so
+  // the exact form is all there is to try.
+  return null;
+}
+
+/**
  * One captured node as the element that can render it.
  *
  * Returns null for anything with nothing to show — an image with no source, a
@@ -173,6 +223,39 @@ function one(c: Captured, t: PageTokens): NodeSpec | null {
           ...(t.textColor ? { color: t.textColor } : {}),
           ...(t.textSize ? { fontSize: t.textSize } : {}),
         },
+      };
+    }
+    case 'icon': {
+      const name = c.name ? iconFor(c.name) : null;
+      // NO NAME, NO NODE. An `icon` whose `specials.name` this platform does not
+      // hold renders nothing, so the page carries an empty box where the source
+      // had a glyph — worse than the `<svg>` being skipped, because nobody put
+      // it there on purpose. The COLOUR is deliberately not set either: it lives
+      // in the `icon-default` style preset, and a literal here would detach
+      // every imported icon from the theme permanently.
+      if (!name) return null;
+      return { type: 'icon', specials: { name } };
+    }
+    case 'accordion': {
+      const items = (c.children ?? [])
+        .map((item) => one(item, t))
+        .filter((n): n is NodeSpec => n !== null);
+      if (!items.length) return null;
+      return { type: 'accordion', children: items };
+    }
+    case 'accordion-item': {
+      const label = c.text?.trim();
+      const body = (c.children ?? [])
+        .map((k) => one(k, t))
+        .filter((n): n is NodeSpec => n !== null);
+      if (!label && !body.length) return null;
+      // The label is omitted rather than defaulted when the source had no
+      // `<summary>`: `accordion-content` seeds its own, and inventing one here
+      // would ship English copy into a store that is not in English.
+      return {
+        type: 'accordion-content',
+        ...(label ? { specials: { label } } : {}),
+        children: body,
       };
     }
     case 'divider': {

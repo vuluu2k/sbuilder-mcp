@@ -37,6 +37,7 @@ interface El {
   textContent: string | null;
   children: ArrayLike<El>;
   getAttribute(name: string): string | null;
+  setAttribute(name: string, value: string): void;
   querySelectorAll(selector: string): ArrayLike<El>;
   getBoundingClientRect(): { width: number; height: number };
   contains(other: El): boolean;
@@ -202,6 +203,46 @@ function capturePage(limits: { maxSections: number; maxImages: number; maxTextCh
   // `<article>` is that article's byline, and one inside a `<section>` is the
   // hero the old comment was right to protect. `<main>` is not sectioning
   // content, so it does not shield a footer.
+  // A COLLAPSED `<details>` MEASURES AS ZERO, so its body would read as hidden and
+  // an FAQ would import as a list of questions with no answers. The source's
+  // collapsed state is not content — this platform's accordion has its own
+  // `openItems` — so every one is opened before anything is measured. The page is
+  // a throwaway tab that is closed straight after.
+  for (const d of Array.from(document.querySelectorAll('details'))) d.setAttribute('open', '');
+
+  /**
+   * What the page CALLS this icon, in its own words. A candidate, never a verdict.
+   *
+   * Four places a real page says it, in falling order of how much it means:
+   * a sprite reference names the icon outright; an `aria-label` or `<title>` is
+   * what a screen reader is told; a class is the icon set's own id. The mapper
+   * decides whether this platform has one by that name — nothing in the page can
+   * answer that.
+   */
+  const iconName = (el: El): string => {
+    const use = Array.from(el.querySelectorAll('use'))[0];
+    const ref = use ? use.getAttribute('href') ?? use.getAttribute('xlink:href') : null;
+    if (ref && ref.charAt(0) === '#' && ref.length > 1) return ref.slice(1);
+    const label = clean(el.getAttribute('aria-label'));
+    if (label) return label;
+    const title = Array.from(el.querySelectorAll('title'))[0];
+    const titled = title ? clean(title.textContent) : '';
+    if (titled) return titled;
+    const dataIcon = clean(el.getAttribute('data-icon'));
+    if (dataIcon) return dataIcon;
+    // A class list holds the icon set's id and a pile of layout classes with it.
+    // The longest hyphenated token is the id in every set seen here — `ri-…`,
+    // `fa-…`, `lucide-…`, `bi-…` — and a bare `w-4` cannot outrank it.
+    // `getAttribute('class')`, NOT `className`: on an SVG element the property is
+    // an SVGAnimatedString, so `String(el.className)` is the literal
+    // "[object SVGAnimatedString]" and every class-named icon went unrecognised.
+    let best = '';
+    for (const w of (el.getAttribute('class') ?? '').split(/\s+/)) {
+      if (w.indexOf('-') > 0 && w.length > best.length) best = w;
+    }
+    return best;
+  };
+
   const sectioning = Array.from(document.querySelectorAll('article, section, aside, nav'));
   // A CLASS NAME IS EVIDENCE FOR A FOOTER AND NOT FOR A HEADER, and the
   // asymmetry is the whole point. blender.org marks its site map
@@ -216,7 +257,7 @@ function capturePage(limits: { maxSections: number; maxImages: number; maxTextCh
   // The token must START with `footer` (footer, footer-note, footer__inner) so
   // `card-footer` inside an ordinary div is not swept up with it.
   const footerish = (el: El): boolean => {
-    const words = `${el.getAttribute('id') ?? ''} ${String(el.className ?? '')}`.toLowerCase();
+    const words = `${el.getAttribute('id') ?? ''} ${el.getAttribute('class') ?? ''}`.toLowerCase();
     for (const w of words.split(/[\s]+/)) {
       if (!w) continue;
       if (w === 'colophon' || w === 'site-footer' || w === 'page-footer') return true;
@@ -258,7 +299,20 @@ function capturePage(limits: { maxSections: number; maxImages: number; maxTextCh
       for (const child of Array.from(el.children)) {
         for (const c of walk(child)) kids.push(c);
       }
-      return kids;
+      // CONSECUTIVE `<details>` ARE ONE ACCORDION. An FAQ is written as eight
+      // siblings, and eight separate accordions is eight containers where the
+      // author had one list — the same content, with seven wrappers nobody asked
+      // for and no shared open/close behaviour.
+      const merged: Captured[] = [];
+      for (const c of kids) {
+        const last = merged[merged.length - 1];
+        if (c.kind === 'accordion' && last && last.kind === 'accordion') {
+          last.children = (last.children ?? []).concat(c.children ?? []);
+          continue;
+        }
+        merged.push(c);
+      }
+      return merged;
     };
     const walk = (el: El): Captured[] => {
       // ONE BOUND, on the whole import. There used to be a second, per section,
@@ -276,7 +330,31 @@ function capturePage(limits: { maxSections: number; maxImages: number; maxTextCh
         skip('page-chrome');
         return [];
       }
-      const tag = el.tagName;
+      // UPPERCASED, because an SVG element's `tagName` is not.
+      //
+      // `tagName` preserves case for XML-namespaced elements, so an inline
+      // `<svg>` reports "svg" while every HTML element reports "P", "DIV". The
+      // ignore list had held 'SVG' and 'PATH' since it was written and neither
+      // had ever matched — the icons were falling through to the text fallback,
+      // contributing nothing because an svg's textContent is empty, which is why
+      // it looked like the entry was working.
+      const tag = el.tagName.toUpperCase();
+      // AN ICON IS DECORATION, WHICH IS THE ONE THING `aria-hidden` MARKS AND
+      // THIS PLATFORM HAS AN ELEMENT FOR. Almost every real icon carries the
+      // attribute — that is correct authoring, the label beside it does the
+      // talking — so testing it before this branch would mean the `icon` element
+      // could never be reached from a real page. The attribute still governs
+      // everything else, and an aria-hidden CONTAINER is skipped before the walk
+      // ever descends to the svg inside it.
+      if (tag === 'SVG') {
+        const name = iconName(el);
+        if (!name) {
+          skip('svg');
+          return [];
+        }
+        taken.nodes++;
+        return [{ kind: 'icon', name }];
+      }
       // WHAT THE PAGE ITSELF SAYS IS NOT CONTENT.
       //
       // `aria-hidden="true"` is the author's own mark for decoration and for
@@ -297,6 +375,22 @@ function capturePage(limits: { maxSections: number; maxImages: number; maxTextCh
       if (!visible(el)) {
         skip('hidden');
         return [];
+      }
+      if (tag === 'DETAILS') {
+        const kids2 = Array.from(el.children);
+        const summary = kids2.filter((c) => c.tagName === 'SUMMARY')[0];
+        const label = summary ? clean(summary.textContent) : '';
+        const body: Captured[] = [];
+        for (const child of kids2) {
+          if (child.tagName === 'SUMMARY') continue;
+          for (const c of walk(child)) body.push(c);
+        }
+        if (!label && body.length === 0) {
+          skip('empty-details');
+          return [];
+        }
+        taken.nodes++;
+        return [{ kind: 'accordion', children: [{ kind: 'accordion-item', text: label, children: body }] }];
       }
       // A RULE BETWEEN SECTIONS IS A DESIGN DECISION, and it is one node.
       if (tag === 'HR') {

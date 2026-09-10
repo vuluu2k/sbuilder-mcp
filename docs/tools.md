@@ -884,6 +884,18 @@ not with the tag — but a header is not, because `header` in a class name is as
 Anything the page marks `aria-hidden="true"` is skipped: that is the author's own mark for
 decoration and for duplicates.
 
+**An `<svg>` becomes an `icon` only when this platform has one by that name.** The name is read
+the way the page writes it — a `<use href="#ri-search-line">`, an `aria-label`, a `<title>`, or
+an icon set's own class (`ri-`, `fa-`, `lucide-`, `bi-`) — normalised, and LOOKED UP against the
+3,227 RemixIcon names the platform ships. Anything that does not land is skipped, because a
+wrong icon is worse than none: "Acme Store" resolving to a shop glyph where a wordmark was is
+indistinguishable from a right answer. Its colour is never set, so an imported icon keeps
+following the theme.
+
+**Consecutive `<details>` become ONE accordion**, each `<summary>` its item's label — and every
+one is opened before anything is measured, since a collapsed `<details>` measures as zero and
+an FAQ would otherwise arrive as questions with no answers.
+
 **A code block is taken whole.** Every syntax highlighter wraps each token in its own
 `<span>`, so walking into one turns a twenty-line config into forty separate text blocks.
 Whitespace collapses like any other text: this platform has no code element to preserve it

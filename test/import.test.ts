@@ -335,6 +335,40 @@ describe.runIf(process.env.SB_BROWSER_TEST === '1')('capture()', () => {
     expect(r.skipped['page-chrome']).toBeGreaterThan(0);
   }, 60_000);
 
+  it('an FAQ of <details> becomes ONE accordion, opened so the answers survive', async () => {
+    // A COLLAPSED `<details>` MEASURES AS ZERO, so its body reads as hidden and
+    // the import would keep the questions and lose every answer. And eight
+    // siblings is one list to the author, not eight containers.
+    const faq = `data:text/html,${encodeURIComponent(
+      '<meta charset="utf-8"><main><section>' +
+        '<details><summary>Giao hàng bao lâu?</summary><p>Hai đến ba ngày.</p></details>' +
+        '<details><summary>Đổi trả thế nào?</summary><p>Trong bảy ngày.</p></details>' +
+        '</section></main>',
+    )}`;
+    const r = await capture(faq);
+    const kids = r.sections[0].children ?? [];
+    expect(kids.map((c) => c.kind)).toEqual(['accordion']);
+    const items = kids[0].children ?? [];
+    expect(items.map((i) => i.text)).toEqual(['Giao hàng bao lâu?', 'Đổi trả thế nào?']);
+    expect(items[0].children?.[0]).toMatchObject({ kind: 'text', text: 'Hai đến ba ngày.' });
+  }, 60_000);
+
+  it('names an icon the way the source page does, and skips one it cannot place', async () => {
+    const icons = `data:text/html,${encodeURIComponent(
+      '<meta charset="utf-8"><main><section>' +
+        '<svg class="ri-search-line" aria-hidden="true"></svg>' +
+        '<svg aria-label="Acme Store"></svg>' +
+        '<svg><title>Menu</title></svg>' +
+        '</section></main>',
+    )}`;
+    const r = await capture(icons);
+    const kids = r.sections[0].children ?? [];
+    // An icon is DECORATION, which is what `aria-hidden` marks — testing that
+    // first would put this element permanently out of reach of a real page.
+    expect(kids.map((c) => c.name)).toEqual(['ri-search-line', 'Acme Store', 'Menu']);
+    expect(kids.every((c) => c.kind === 'icon')).toBe(true);
+  }, 60_000);
+
   it('flattens a nested list instead of taking it twice', async () => {
     // `querySelectorAll('li')` returns nested items as well as outer ones, and an
     // outer item's textContent already contains its sublist — so every nested
@@ -625,6 +659,73 @@ describe('media and rules map to the elements that render them', () => {
  * thing, and what both importers used to do — costs the whole page on any site
  * that has a global footer, which is most of them.
  */
+describe('an icon is looked up, never guessed', () => {
+  const kid = (c: Captured) =>
+    toSpecs([{ kind: 'section', children: [c] }] as Captured[], {})[0]?.children![0].children![0];
+
+  it('resolves the id every icon set writes, and the Line/Fill variants', () => {
+    expect(kid({ kind: 'icon', name: 'ri-search-line' })).toMatchObject({ specials: { name: 'SearchLine' } });
+    expect(kid({ kind: 'icon', name: 'lucide-menu' })).toMatchObject({ specials: { name: 'MenuLine' } });
+    expect(kid({ kind: 'icon', name: 'fa-twitter' })).toMatchObject({ specials: { name: 'TwitterLine' } });
+    expect(kid({ kind: 'icon', name: 'ri-twitter-x-fill' })).toMatchObject({ specials: { name: 'TwitterXFill' } });
+    expect(kid({ kind: 'icon', name: 'Search' })).toMatchObject({ specials: { name: 'SearchLine' } });
+  });
+
+  it('drops a name this platform does not hold rather than inventing one', () => {
+    // A WRONG icon is worse than none — "Acme Store" resolving to a shop glyph
+    // where a wordmark was is indistinguishable from a right answer to
+    // everything downstream. There is deliberately no last-word fallback.
+    expect(kid({ kind: 'icon', name: 'Acme Store' })).toBeUndefined();
+    expect(kid({ kind: 'icon', name: 'Open main menu' })).toBeUndefined();
+    expect(kid({ kind: 'icon', name: '' })).toBeUndefined();
+  });
+
+  it('sets no colour, so an imported icon still follows the theme', () => {
+    // The colour lives in the `icon-default` style preset; a literal on the node
+    // outranks it permanently and the next palette change moves every other icon
+    // and not this one.
+    expect(kid({ kind: 'icon', name: 'ri-home-line' })).toEqual({
+      type: 'icon',
+      specials: { name: 'HomeLine' },
+    });
+  });
+});
+
+describe('a details list becomes an accordion', () => {
+  it('one container, one accordion-content per question, the summary as its label', () => {
+    const spec = toSpecs(
+      [{
+        kind: 'section',
+        children: [{
+          kind: 'accordion',
+          children: [
+            { kind: 'accordion-item', text: 'Câu một', children: [{ kind: 'text', text: 'Đáp một' }] },
+            { kind: 'accordion-item', text: 'Câu hai', children: [{ kind: 'text', text: 'Đáp hai' }] },
+          ],
+        }],
+      }] as Captured[],
+      {},
+    );
+    const acc = spec[0].children![0].children![0];
+    expect(acc.type).toBe('accordion');
+    expect(acc.children!.map((c) => [c.type, c.specials?.label])).toEqual([
+      ['accordion-content', 'Câu một'],
+      ['accordion-content', 'Câu hai'],
+    ]);
+    expect(acc.children![0].children![0]).toMatchObject({ type: 'text' });
+  });
+
+  it('omits the label when the source had no summary, rather than inventing English', () => {
+    const acc = toSpecs(
+      [{ kind: 'section', children: [{ kind: 'accordion', children: [
+        { kind: 'accordion-item', children: [{ kind: 'text', text: 'Chỉ có thân' }] },
+      ] }] }] as Captured[],
+      {},
+    )[0].children![0].children![0];
+    expect(acc.children![0].specials).toBeUndefined();
+  });
+});
+
 describe('an import lands inside the middle band', () => {
   function pageWithGlobals() {
     const d = emptyDoc();
