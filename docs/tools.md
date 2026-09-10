@@ -864,12 +864,18 @@ result: rule 7 records what a keyword glued into a URL returns (`loremflickr` an
 looked. `orientation` asks the search for the SHAPE, which is far cheaper than cropping
 afterwards.
 
-Pexels, because it is already this family's answer — `webcake-landing-mcp` ships the same
-client down to the shared proxy — and its licence is free for commercial use with attribution
-appreciated rather than required, so a storefront can carry one without printing a credit line
-nobody asked for. The photographer and their profile come back anyway. `PEXELS_API_KEY` (free
-at pexels.com/api) calls Pexels directly; WITHOUT one it uses the shared proxy the sibling repo
-runs, so an `npx` install with no configuration at all still finds images.
+**The provider key is the PLATFORM'S, not this server's.** The search is
+`GET /api/sites/{siteId}/images/search`, a rotated pool of Pexels keys behind the credential this
+server already holds — so no second secret in every install, no quota shared with another
+product, and one place for an operator to add a key (`PEXELS_API_KEYS` on the server). Pexels
+because its licence is free for commercial use with attribution appreciated rather than required,
+so a storefront can carry a photograph without printing a credit line nobody asked for; the
+photographer comes back anyway.
+
+**When the platform cannot search, this client does not try to.** There is no fallback provider
+here on purpose: one would put the very key the platform exists to hold back into every install.
+The answer is an instruction instead — find a photograph by your own means and pass its URL, and
+the platform fetches it server-side exactly as it would have.
 
 `sb_media_upload` is the **only** way to add an image. The endpoint takes multipart
 (`file:formData/file`), and `sb_api_call` JSON-encodes every body — so reaching it that way

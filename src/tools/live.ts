@@ -31,7 +31,7 @@ import type { PageDoc } from '../domains/site/document.js';
 import { refuseAppBlockInterior } from '../domains/site/builder.js';
 import { childrenOf, isOverlay, overlayRoot, subtreeIds } from '../core/tree.js';
 import { siteToken } from './credentialpick.js';
-import { searchStock } from '../transport/stock.js';
+import { searchStock, SearchUnavailable, NO_SEARCH_NEXT, type StockPhoto } from '../transport/stock.js';
 import { siteFor, type ToolContext } from './context.js';
 import { projectList, MEDIA_FIELDS } from './project.js';
 import type { PageSession } from './page.js';
@@ -516,39 +516,43 @@ export function registerLiveTools(
       // descriptions and CHOOSES; uploading the first hit unread would rebuild
       // the cat statue with better plumbing.
       if (query) {
-        const found = await searchStock(ctx.fetchImpl ?? fetch, query, {
-          perPage: 8,
-          orientation,
-        });
-        const chosen = pick !== undefined ? found.photos.find((p) => p.id === pick) : undefined;
+        let photos: StockPhoto[];
+        try {
+          photos = await searchStock(ctx, site_id, query, { perPage: 8, orientation });
+        } catch (e) {
+          if (e instanceof SearchUnavailable) {
+            // NOT AN ERROR, AN INSTRUCTION. There is deliberately no fallback
+            // provider here: one would put the very key the platform exists to
+            // hold back into every install. An agent with a web search of its
+            // own loses nothing — it finds a photograph and passes the URL, and
+            // the platform fetches it server-side exactly as it would have.
+            return text({
+              search_unavailable: e.why,
+              next: NO_SEARCH_NEXT,
+            });
+          }
+          throw e;
+        }
+        const chosen = pick !== undefined ? photos.find((p) => p.id === pick) : undefined;
         if (!chosen) {
           return text({
             ...(pick !== undefined ? { no_such_pick: pick } : {}),
-            found: found.photos.map((p) => ({
+            found: photos.map((p) => ({
               pick: p.id,
               shows: p.alt || '(the photographer left no description)',
               size: `${p.width}x${p.height}`,
               by: p.photographer,
             })),
-            via: found.via,
             next:
               'Read what each one SHOWS, then re-call with pick:<id> and dry_run:false. The photo ' +
               "is uploaded into this site's own library, never hotlinked.",
-            ...(found.via === 'proxy'
-              ? {
-                  key:
-                    'No PEXELS_API_KEY, so this used the shared proxy — a courtesy, not a ' +
-                    'guarantee. A free key at https://www.pexels.com/api/ calls Pexels directly.',
-                }
-              : {}),
-            licence:
-              ctx.notices.once(
-                'stock_licence',
-                'Pexels photographs are free for commercial use and attribution is appreciated ' +
-                  'rather than required, so a storefront can carry one without printing a credit ' +
-                  'line. The photographer and the photo page come back with each result if you ' +
-                  'want to credit anyway.',
-              ),
+            licence: ctx.notices.once(
+              'stock_licence',
+              'These are Pexels photographs: free for commercial use, with attribution ' +
+                'appreciated rather than required, so a storefront can carry one without printing ' +
+                'a credit line nobody asked for. The photographer comes back with each result if ' +
+                'you want to credit anyway.',
+            ),
           });
         }
         if (dry_run !== false) {

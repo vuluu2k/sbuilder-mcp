@@ -68,6 +68,14 @@ make, because those mean "this person's account".
 
 `SB_API` defaults to `http://localhost:8080`. Secrets are read from the environment only.
 
+`sb_media_upload`'s photo search needs **no key here**: it calls the platform's own
+`GET /api/sites/{siteId}/images/search`, which runs a rotated pool of provider keys behind the
+credential this server already holds. An operator enables it by setting `PEXELS_API_KEYS` on the
+SERVER (comma separated; free keys at <https://www.pexels.com/api/>). With none configured the
+search answers "unavailable" and tells the caller to find a photograph by its own means and pass
+the URL — which the platform then fetches server-side. There is deliberately no fallback provider
+in this client: one would put the very key the platform exists to hold back into every install.
+
 ## Tools
 
 | Tool | What it does |

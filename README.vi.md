@@ -65,11 +65,13 @@ là "tài khoản của người này".
 
 `SB_API` mặc định `http://localhost:8080`. Bí mật chỉ đọc từ biến môi trường.
 
-`PEXELS_API_KEY` là **tuỳ chọn**, chỉ ảnh hưởng phần tìm ảnh của `sb_media_upload`: có key thì gọi
-thẳng Pexels (key miễn phí ở <https://www.pexels.com/api/>), không có thì dùng proxy chung mà nhà
-mình đang chạy (`PEXELS_PROXY_BASE`, mặc định `https://mcp.toolvn.io.vn`) — nên bản cài không cấu
-hình gì vẫn tìm được ảnh. Proxy giữ key của chính nó và không bao giờ gửi key về client; đó là ưu
-ái chứ không phải cam kết, và kết quả nói rõ cửa nào đã trả lời.
+Phần tìm ảnh của `sb_media_upload` **không cần key ở đây**: nó gọi route của chính nền tảng,
+`GET /api/sites/{siteId}/images/search`, nơi có một pool key xoay vòng nằm sau đúng credential mà
+server này đang cầm. Operator bật nó bằng cách đặt `PEXELS_API_KEYS` **trên SERVER** (ngăn cách
+bằng dấu phẩy; key miễn phí ở <https://www.pexels.com/api/>). Không cấu hình gì thì tìm kiếm trả
+lời "không khả dụng" và bảo người gọi tự tìm ảnh rồi đưa URL — nền tảng sẽ tự tải về. Client này
+cố ý **không có nhà cung cấp dự phòng**: có nó là đem đúng cái key mà nền tảng sinh ra để giữ,
+nhét ngược lại vào mọi bản cài.
 
 ## Bộ tool
 

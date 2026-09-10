@@ -838,12 +838,16 @@ rule 7 ghi lại chuyện một từ khoá dán vào URL trả về cái gì (`l
 bằng một bức tượng mèo), và lỗi chưa bao giờ nằm ở ảnh stock mà ở chỗ không ai nhìn.
 `orientation` hỏi thẳng bộ tìm kiếm về HÌNH DẠNG, rẻ hơn nhiều so với cắt lại sau.
 
-Dùng Pexels vì đó vốn là chuẩn của nhà mình — `webcake-landing-mcp` chạy đúng client này, kể cả
-proxy chung — và giấy phép của nó cho dùng thương mại tự do, ghi công là "được hoan nghênh" chứ
-không bắt buộc, nên storefront mang ảnh mà không phải in một dòng credit chẳng ai đặt hàng. Tên
-người chụp và trang cá nhân vẫn được trả về. `PEXELS_API_KEY` (miễn phí ở pexels.com/api) thì gọi
-thẳng Pexels; KHÔNG có key thì dùng proxy chung mà repo anh em đang chạy, nên một bản cài `npx`
-không cấu hình gì vẫn tìm được ảnh.
+**Key nhà cung cấp là của NỀN TẢNG, không phải của server này.** Tìm kiếm đi qua
+`GET /api/sites/{siteId}/images/search` — một pool key Pexels xoay vòng nằm sau đúng credential mà
+server này đang cầm — nên không có secret thứ hai trong mọi bản cài, không chia quota với sản phẩm
+khác, và operator chỉ phải thêm key ở một chỗ (`PEXELS_API_KEYS` trên server). Chọn Pexels vì giấy
+phép cho dùng thương mại tự do, ghi công là "được hoan nghênh" chứ không bắt buộc, nên storefront
+mang ảnh mà không phải in dòng credit chẳng ai đặt hàng; tên người chụp vẫn được trả về.
+
+**Nền tảng không tìm được thì client này cũng không tự tìm.** Cố ý không có nhà cung cấp dự phòng:
+có nó là đem đúng cái key mà nền tảng sinh ra để giữ, nhét ngược lại vào mọi bản cài. Thay vào đó
+là một chỉ dẫn — tự tìm ảnh bằng cách của bạn rồi đưa URL, nền tảng sẽ tải về đúng như nó vẫn làm.
 
 `sb_media_upload` là cách **duy nhất** để thêm ảnh. Endpoint nhận multipart
 (`file:formData/file`), còn `sb_api_call` mã hoá mọi body bằng JSON — nên đi đường đó là gửi
