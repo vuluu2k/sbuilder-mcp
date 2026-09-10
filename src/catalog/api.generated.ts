@@ -3,7 +3,7 @@
 import type { ApiOperation } from './types.js';
 
 export const SWAGGER_SOURCE = {
-  "operations": 498,
+  "operations": 501,
   "definitions": 104,
   "bodyCarrying": 178,
   "bodyUndescribed": 64,
@@ -1211,6 +1211,32 @@ export const API_OPERATIONS: ApiOperation[] = [
       "admin"
     ],
     "summary": "Manage the platform's Geoapify credentials",
+    "params": [],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/admin/image-keys",
+    "method": "GET",
+    "path": "/api/admin/image-keys",
+    "tags": [
+      "admin"
+    ],
+    "summary": "Manage the platform's Pexels credentials",
+    "params": [],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/api/admin/image-keys",
+    "method": "POST",
+    "path": "/api/admin/image-keys",
+    "tags": [
+      "admin"
+    ],
+    "summary": "Manage the platform's Pexels credentials",
     "params": [],
     "bodyDescribed": false,
     "bodyRef": null,
@@ -7541,6 +7567,55 @@ export const API_OPERATIONS: ApiOperation[] = [
         "required": true,
         "type": "string",
         "description": "Global section ID"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/sites/{siteId}/images/search",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/images/search",
+    "tags": [
+      "images"
+    ],
+    "summary": "Search stock photographs",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "query",
+        "in": "query",
+        "required": true,
+        "type": "string",
+        "description": "What to search for"
+      },
+      {
+        "name": "per_page",
+        "in": "query",
+        "required": false,
+        "type": "integer",
+        "description": "1-30, default 8"
+      },
+      {
+        "name": "orientation",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "landscape, portrait or square"
+      },
+      {
+        "name": "locale",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Provider locale, e.g. vi-VN"
       }
     ],
     "bodyDescribed": false,

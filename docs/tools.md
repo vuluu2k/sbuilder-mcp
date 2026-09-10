@@ -872,6 +872,11 @@ because its licence is free for commercial use with attribution appreciated rath
 so a storefront can carry a photograph without printing a credit line nobody asked for; the
 photographer comes back anyway.
 
+An operator turns it on by adding a key in the admin Settings area (**Pexels keys**) or by
+setting `PEXELS_API_KEYS` on the server. Several keys are walked round-robin — that provider
+rate-limits per key, so each one added is another share of the limit — and a key it refuses sits
+out for five minutes and comes back.
+
 **When the platform cannot search, this client does not try to.** There is no fallback provider
 here on purpose: one would put the very key the platform exists to hold back into every install.
 The answer is an instruction instead — find a photograph by your own means and pass its URL, and

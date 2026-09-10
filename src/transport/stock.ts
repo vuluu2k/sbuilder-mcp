@@ -50,8 +50,10 @@ export class SearchUnavailable extends Error {
 export const NO_SEARCH_NEXT =
   'This platform has no image search available, so find a photograph by your own means and pass ' +
   'its URL to sb_media_upload — the platform fetches it server-side and it lands in this site\'s ' +
-  'own library, never hotlinked. An operator enables the search by setting PEXELS_API_KEYS on the ' +
-  'server; the key belongs there rather than here, so one place holds it and one quota is spent.';
+  'own library, never hotlinked. An operator turns the search on by adding a Pexels key in the ' +
+  'admin Settings area (Pexels keys), or by setting PEXELS_API_KEYS on the server; several keys ' +
+  'are walked round-robin, because that provider rate-limits per key. Either way the key lives ' +
+  'there rather than here, so one place holds it and one quota is spent.';
 
 export async function searchStock(
   ctx: ToolContext,

@@ -4,12 +4,12 @@
 import type { RequestShape } from './types.js';
 
 export const SHAPE_SOURCE = {
-  "writeOperations": 218,
-  "shaped": 168,
-  "fromHandlers": 168,
+  "writeOperations": 219,
+  "shaped": 169,
+  "fromHandlers": 169,
   "fromSwaggerOnly": 0,
   "withReadOnly": 26,
-  "structsRead": 1649
+  "structsRead": 1658
 } as const;
 
 export const REQUEST_SHAPES: Record<string, RequestShape> = {
@@ -4673,6 +4673,21 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
         "name": "key",
         "type": "string",
         "note": "`key`, not `secret`: it is what Geoapify's own dashboard calls the value the operator is copying, and a form field named for the thing you are pasting is one less thing to guess at."
+      }
+    ],
+    "source": "go",
+    "goType": "(inline)"
+  },
+  "post:/api/admin/image-keys": {
+    "fields": [
+      {
+        "name": "label",
+        "type": "string"
+      },
+      {
+        "name": "key",
+        "type": "string",
+        "note": "`key`, not `secret`: it is what Pexels's own dashboard calls the value the operator is copying, and a form field named for the thing you are pasting is one less thing to guess at."
       }
     ],
     "source": "go",

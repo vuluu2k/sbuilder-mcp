@@ -121,6 +121,7 @@ describe('sb_media_upload — searching', () => {
     const out = await call({ code: 'image_search_unavailable' }, { query: 'x' }, 503);
     expect(out.search_unavailable).toBeTruthy();
     expect(out.next).toMatch(/pass its URL to sb_media_upload/);
+    expect(out.next).toMatch(/admin Settings area/);
     expect(out.next).toMatch(/PEXELS_API_KEYS/);
   });
 });

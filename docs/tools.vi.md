@@ -845,6 +845,11 @@ khác, và operator chỉ phải thêm key ở một chỗ (`PEXELS_API_KEYS` tr
 phép cho dùng thương mại tự do, ghi công là "được hoan nghênh" chứ không bắt buộc, nên storefront
 mang ảnh mà không phải in dòng credit chẳng ai đặt hàng; tên người chụp vẫn được trả về.
 
+Operator bật nó bằng cách thêm khoá ở khu Cài đặt của admin (**Khoá Pexels**) hoặc đặt
+`PEXELS_API_KEYS` trên server. Nhiều khoá được xoay vòng — nhà cung cấp này tính giới hạn theo
+từng khoá, nên mỗi khoá thêm vào là thêm một phần hạn mức — và khoá bị từ chối sẽ nghỉ 5 phút rồi
+quay lại.
+
 **Nền tảng không tìm được thì client này cũng không tự tìm.** Cố ý không có nhà cung cấp dự phòng:
 có nó là đem đúng cái key mà nền tảng sinh ra để giữ, nhét ngược lại vào mọi bản cài. Thay vào đó
 là một chỉ dẫn — tự tìm ảnh bằng cách của bạn rồi đưa URL, nền tảng sẽ tải về đúng như nó vẫn làm.
