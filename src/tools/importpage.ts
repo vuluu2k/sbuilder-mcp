@@ -4,6 +4,7 @@ import { text } from '../mcp/response.js';
 import { capture } from '../vision/capture.js';
 import { uploadMedia } from '../transport/media.js';
 import { addSubtree } from '../domains/site/builder.js';
+import type { Patch } from '../core/patch.js';
 import {
   toSpecs,
   tokensFromPage,
@@ -144,13 +145,24 @@ export function registerImportTools(
         );
       }
 
+      // STAGED ON A COPY, committed once.
+      //
+      // Each section's patch set is computed from the tree the previous one
+      // left, so they have to be applied in order — but applying them to the
+      // REAL document means a refusal at the end leaves the page half imported,
+      // with no way for the caller to tell which half. Building on a throwaway
+      // and committing the whole run through `applyAndSave` keeps the import
+      // all-or-nothing, and keeps it to one save and one live frame.
       const added: string[] = [];
+      const all: Patch[] = [];
+      const staged = doc.preview([]);
       for (const spec of specs) {
-        const { patches, ids } = addSubtree(doc, doc.doc.root_node_id, spec);
-        session.applyAndPublish(patches);
+        const { patches, ids } = addSubtree(staged, staged.doc.root_node_id, spec);
+        staged.apply(patches);
+        all.push(...patches);
         added.push(ids[0]);
       }
-      await session.save();
+      await session.applyAndSave(all);
 
       return text({
         read: shot.url,

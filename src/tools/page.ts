@@ -119,6 +119,37 @@ export class PageSession {
     }
   }
 
+  /**
+   * The only sanctioned way to write: judge, then apply, publish and save.
+   *
+   * SPLITTING THESE WAS THE BUG. Every tool used to call `applyAndPublish` and
+   * then `save()`, and a save the platform would refuse threw with the patches
+   * already in the draft — and already broadcast to anyone watching the page
+   * live. The refused node then sat there, so the NEXT command was validated
+   * against a tree the caller had never asked for and got the same complaint
+   * about an id they had never typed. Three `sb_add` calls in a row, three
+   * identical refusals, and three copies of the element quietly in the page.
+   *
+   * The check runs on a COPY (`PageDoc.preview`), so a write that cannot be
+   * stored is never applied at all — no rollback to get wrong, and no phantom
+   * frame for a peer in the room to have to un-see.
+   *
+   * IT REFUSES ONLY WHAT THIS WRITE INTRODUCES. A page that arrived broken —
+   * damage stored before this session opened it — must not become a page nobody
+   * can edit, because the edit that repairs it is also a write. Pre-existing
+   * problems are left to `save()`, which names them.
+   */
+  async applyAndSave(patches: Patch[]): Promise<void> {
+    const d = this.current();
+    const before = new Set(validateForSave(d));
+    const introduced = validateForSave(d.preview(patches)).filter((p) => !before.has(p));
+    if (introduced.length > 0) {
+      throw new Error(`sbuilder: refusing to save — ${introduced.join(' ')}`);
+    }
+    this.applyAndPublish(patches);
+    await this.save();
+  }
+
   applyRemote(patches: Patch[]): void {
     this.doc?.apply(patches);
   }
@@ -354,8 +385,7 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
           ...(inert ? { inert } : {}),
         });
       }
-      session.applyAndPublish(patches);
-      await session.save();
+      await session.applyAndSave(patches);
       return text({ added: ids, rev: d.rev, ...(inert ? { inert } : {}) });
     },
   );
@@ -570,8 +600,7 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
         });
       }
       const warnings: Record<string, string> = stuck();
-      session.applyAndPublish(patches);
-      await session.save();
+      await session.applyAndSave(patches);
       for (const t of touched) {
         const w = globalWarning(d.doc, t.id);
         if (w) warnings[t.id] = warnings[t.id] ? `${warnings[t.id]} ${w}` : w;
@@ -621,8 +650,7 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
       const d = session.current();
       const patches = moveNode(d, id, parent_id, index);
       if (dry_run !== false) return text({ dry_run: true, patches });
-      session.applyAndPublish(patches);
-      await session.save();
+      await session.applyAndSave(patches);
       return text({ moved: id, rev: d.rev });
     },
   );
@@ -639,8 +667,7 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
       const d = session.current();
       const patches = removeNode(d, id);
       if (dry_run !== false) return text({ dry_run: true, removing: patches.length });
-      session.applyAndPublish(patches);
-      await session.save();
+      await session.applyAndSave(patches);
       return text({ removed: id, rev: d.rev });
     },
   );
@@ -695,8 +722,7 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
       const d = session.current();
       const { patches, ids } = duplicateNode(d, id);
       if (dry_run !== false) return text({ dry_run: true, would_copy: ids.length });
-      session.applyAndPublish(patches);
-      await session.save();
+      await session.applyAndSave(patches);
       return text({ duplicated: id, into: ids[0], nodes: ids.length, rev: d.rev });
     },
   );

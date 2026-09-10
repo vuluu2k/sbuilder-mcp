@@ -543,8 +543,7 @@ export function registerLiveTools(
       const d = session.current();
       const patches = setEvent(d, id, trigger ?? 'click', action, payload);
       if (dry_run !== false) return text({ dry_run: true, patches });
-      session.applyAndPublish(patches);
-      await session.save();
+      await session.applyAndSave(patches);
       return text({ node: id, trigger: trigger ?? 'click', action, rev: d.rev });
     },
   );
@@ -578,8 +577,7 @@ export function registerLiveTools(
       const d = session.current();
       const patches = bindNode(d, id, source, field, action);
       if (dry_run !== false) return text({ dry_run: true, patches });
-      session.applyAndPublish(patches);
-      await session.save();
+      await session.applyAndSave(patches);
       return text({ bound: id, source, field, ...(action ? { action } : {}), rev: d.rev });
     },
   );

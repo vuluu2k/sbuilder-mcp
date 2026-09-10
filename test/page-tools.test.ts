@@ -205,3 +205,140 @@ describe('the signals the platform sends that used to be dropped', () => {
     expect(out).toContain('gs_7');
   });
 })
+
+// A REFUSED SAVE MUST LEAVE NOTHING BEHIND.
+//
+// Found from the outside, driving the real server: three `sb_add` calls in a
+// row, each answering with the SAME complaint about a node id the caller had
+// never seen, while the page quietly collected three copies of the element.
+// Reading it back showed why — the add had applied locally and only the SAVE
+// was refused, so the offending node stayed in the draft and poisoned every
+// later operation. From the caller's side it reads as "my command did nothing",
+// which is the one message that is both false and untestable.
+function docWithFooter() {
+  const node = (id: string, specials: Record<string, unknown> = {}) => ({
+    id,
+    data: { type: 'flex-section', parent: 'rt', nodes: [], isCanvas: false, hidden: false, custom: {} },
+    style: {},
+    config: {},
+    specials,
+    responsive: {},
+    events: [],
+    bindings: [],
+  });
+  return {
+    schema_version: 2,
+    root_node_id: 'rt',
+    nodes: {
+      rt: {
+        id: 'rt',
+        data: { type: 'root', parent: null, nodes: ['mid', 'foot'], isCanvas: true, hidden: false, custom: {} },
+        style: {},
+        config: {},
+        specials: {},
+        responsive: {},
+        events: [],
+        bindings: [],
+      },
+      mid: node('mid'),
+      foot: node('foot', { globalId: 'g_foot', globalKind: 'footer' }),
+    },
+  };
+}
+
+function servingFooterDoc() {
+  const saved: Array<Record<string, unknown>> = [];
+  const f = vi.fn(async (_url: unknown, init?: RequestInit) => {
+    if (init?.method === 'PUT') saved.push(JSON.parse(String(init.body)));
+    return new Response(
+      JSON.stringify({
+        source: { pageId: 'pg_1', siteId: 's1', document: docWithFooter(), schemaVersion: 2, updatedAt: 'now' },
+      }),
+      { status: 200, headers: { 'content-type': 'application/json' } },
+    );
+  }) as unknown as typeof fetch;
+  return { f, saved };
+}
+
+/** The patch an `sb_add` at the end of ROOT produces — content after a footer. */
+const addAfterFooter = (id: string) => [
+  {
+    op: 'set' as const,
+    path: ['nodes', id],
+    value: {
+      id,
+      data: { type: 'chat-widget', parent: 'rt', nodes: [], isCanvas: false, hidden: false, custom: {} },
+      style: {},
+      config: {},
+      specials: {},
+      responsive: {},
+      events: [],
+      bindings: [],
+    },
+  },
+  { op: 'set' as const, path: ['nodes', 'rt', 'data', 'nodes'], value: ['mid', 'foot', id] },
+];
+
+describe('a refused write', () => {
+  it('leaves the draft exactly as it found it', async () => {
+    const { f, saved } = servingFooterDoc();
+    const ps = new PageSession(ctxWith(f));
+    await ps.open('s1', 'pg_1');
+
+    await expect(ps.applyAndSave(addAfterFooter('ch_1'))).rejects.toThrow(/after a global footer/i);
+    expect(saved.length).toBe(0);
+    // THE POINT. Not "the save was refused" — that already worked — but that the
+    // node is gone, so the next command is judged on its own merits.
+    expect(ps.current().has('ch_1')).toBe(false);
+    expect(ps.current().node('rt').data.nodes).toEqual(['mid', 'foot']);
+  });
+
+  it('does not blame the next command for the last one', async () => {
+    const { f, saved } = servingFooterDoc();
+    const ps = new PageSession(ctxWith(f));
+    await ps.open('s1', 'pg_1');
+
+    await expect(ps.applyAndSave(addAfterFooter('ch_1'))).rejects.toThrow();
+    // The same element, placed correctly this time — before the footer.
+    await ps.applyAndSave([
+      {
+        op: 'set',
+        path: ['nodes', 'ch_2'],
+        value: {
+          id: 'ch_2',
+          data: { type: 'chat-widget', parent: 'rt', nodes: [], isCanvas: false, hidden: false, custom: {} },
+          style: {},
+          config: {},
+          specials: {},
+          responsive: {},
+          events: [],
+          bindings: [],
+        },
+      },
+      { op: 'set', path: ['nodes', 'rt', 'data', 'nodes'], value: ['mid', 'ch_2', 'foot'] },
+    ]);
+    expect(saved.length).toBe(1);
+    expect(ps.current().has('ch_2')).toBe(true);
+    expect(ps.current().has('ch_1')).toBe(false);
+  });
+
+  // A PAGE THAT ARRIVED BROKEN IS NOT THE CALLER'S FAULT, and must not become a
+  // page nobody can edit. The pre-check refuses only what THIS write introduces;
+  // damage already in the document is left to `save()` to report, so the one
+  // edit that might fix it is still possible to make.
+  it('refuses only what this write breaks, not what it inherited', async () => {
+    const { f } = servingFooterDoc();
+    const ps = new PageSession(ctxWith(f));
+    await ps.open('s1', 'pg_1');
+    // Pre-existing damage: content after the footer, already in the document.
+    ps.current().apply(addAfterFooter('inherited'));
+
+    // A write that adds nothing new must not be refused for the old problem —
+    // it gets as far as the save, which names it.
+    await expect(
+      ps.applyAndSave([{ op: 'set', path: ['nodes', 'mid', 'specials', 'touched'], value: 1 }]),
+    ).rejects.toThrow(/after a global footer/i);
+    // And its own edit survived, because it was never the problem.
+    expect(ps.current().node('mid').specials.touched).toBe(1);
+  });
+});

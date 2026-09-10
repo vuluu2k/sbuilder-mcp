@@ -167,6 +167,30 @@ export class PageDoc {
   }
 
   /**
+   * What this document WOULD be with these patches applied — a throwaway copy,
+   * so the real one is untouched.
+   *
+   * It exists so a write can be judged before it is made. Applying first and
+   * validating after leaves a refused edit sitting in the draft: the platform
+   * declines the save, the node stays, and every later command is then judged
+   * against a tree the caller never asked for and cannot see. Driving the real
+   * server, that arrived as three `sb_add` calls in a row all answering with the
+   * same complaint about a node id the caller had never typed.
+   *
+   * A JSON round-trip rather than anything cleverer. A page is hundreds of KB,
+   * which is a millisecond, and it is paid only on a write that is actually
+   * being committed — never on a dry run, never on a read.
+   */
+  preview(patches: Patch[]): PageDoc {
+    const copy = new PageDoc(JSON.parse(JSON.stringify(this.doc)) as DocLike, this.revision);
+    // Carried, not re-derived: a validator that saw a different root key on the
+    // copy than on the original would be judging a different page.
+    copy.adoptedRootKey = this.adoptedRootKey;
+    copy.apply(patches);
+    return copy;
+  }
+
+  /**
    * A compressed tree — id, type, name, child count, and the flags that change
    * what a caller may safely do with a node.
    *
