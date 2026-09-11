@@ -1188,6 +1188,28 @@ only place the installable set exists on the wire, because `GET /builtin-apps` a
 app installs through an OAuth consent screen a person has to approve, so the honest answer there
 is to ask the merchant and then read `/apps/blocks` again.
 
+**`action: "chrome"` gives every page ONE shared header.** `sb_review` reports `siteChrome` on
+any site with two pages and no global section — each page carries its own header, changing the
+menu is that many edits, the copies drift apart, and a visitor meets a slightly different site on
+every click. It is the most basic thing a website has that a generated one does not.
+
+The flow that fixes it already existed and was reachable by nobody outside ONE tool:
+`sb_import_site` builds exactly this from the pages it just made. A site built any other way —
+patterns, `sb_add`, a store seeded by `sb_store` — had to reproduce it by hand: create the
+master, know that its `document` is page-shaped but rooted at the SECTION, then give every page a
+ROOT child carrying `globalRef` + `globalKind`, FIRST, because a header after middle content is a
+band-order refusal on the next save.
+
+The menu is built from the pages the site ALREADY HAS, home first, each named the way a menu
+would name it rather than the way a database does. The look comes off the HOME page — rule 0,
+applied to the one page the rest of the site already follows. Pass `footer: true` for a shared
+footer instead, which goes in LAST for the same band-order reason.
+
+Skipped when the site already shares one of that kind, because a second header is two headers
+rather than a menu, and below two pages, because a menu to one page is a link to itself. It is
+**not atomic and does not pretend to be**: one page that will not take the header does not undo
+the header — the master exists, the others carry it, and the refusal is reported per page.
+
 ## `sb_theme`
 
 **The one design decision that reaches every page.** A style preset compiles to a class rule

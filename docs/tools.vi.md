@@ -1148,6 +1148,27 @@ cài được tồn tại trên đường truyền, vì `GET /builtin-apps` tr�
 tám cho tới khi chú thích bên nền tảng được sửa. App marketplace cài qua màn hình đồng ý OAuth cần
 người duyệt, nên câu trả lời thành thật là nhờ chủ shop cài rồi đọc lại `/apps/blocks`.
 
+**`action: "chrome"` cho mọi trang MỘT header dùng chung.** `sb_review` báo `siteChrome` với bất
+kỳ site nào có hai trang trở lên mà không có global section — mỗi trang tự mang header riêng, đổi
+menu là bấy nhiêu lần sửa, các bản sao trôi dạt, và khách gặp một site hơi khác nhau ở mỗi cú
+nhấp. Đó là thứ cơ bản nhất mà một website có còn trang tự sinh thì không.
+
+Luồng sửa việc này **đã tồn tại** và không ai ngoài MỘT tool với tới được: `sb_import_site` dựng
+đúng thứ đó từ các trang nó vừa tạo. Site dựng bằng cách khác — pattern, `sb_add`, cửa hàng gieo
+từ `sb_store` — phải làm lại bằng tay: tạo master, biết rằng `document` của nó có dạng tài liệu
+trang nhưng gốc là SECTION, rồi cho mỗi trang một con của ROOT mang `globalRef` + `globalKind`,
+đặt ĐẦU TIÊN, vì header nằm sau nội dung giữa là lỗi thứ tự band ở lần lưu kế tiếp.
+
+Menu dựng từ **chính những trang site đang có**, trang chủ trước, mỗi trang gọi tên theo cách một
+menu gọi chứ không theo cách cơ sở dữ liệu gọi. Diện mạo lấy từ TRANG CHỦ — rule 0, áp cho trang
+mà cả site vốn đã đi theo. Truyền `footer: true` để làm footer dùng chung, và nó đặt CUỐI vì cùng
+lý do thứ tự band.
+
+Bỏ qua khi site đã có sẵn loại đó, vì hai header không phải là một menu, và bỏ qua khi dưới hai
+trang, vì menu tới một trang là link tới chính nó. Nó **không nguyên tử và không giả vờ là thế**:
+một trang không nhận header thì không huỷ cái header — master vẫn còn, các trang khác vẫn mang, và
+việc từ chối được báo theo từng trang.
+
 ## `sb_theme`
 
 **Quyết định thiết kế duy nhất chạm tới mọi trang.** Một style preset biên dịch thành rule class

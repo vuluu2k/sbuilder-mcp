@@ -34,6 +34,9 @@ import { request, redact } from '../transport/http.js';
 import { siteToken } from './credentialpick.js';
 import { siteFor, type ToolContext } from './context.js';
 import { genId } from '../domains/site/ids.js';
+import type { PageSession } from './page.js';
+import { chromeLinks, hasGlobal, shareChrome, sitePages } from './chrome.js';
+import { tokensFromPage } from '../domains/site/importmap.js';
 import {
   CHECKOUT_FORM,
   CHECKOUT_FORM_DOCUMENT,
@@ -346,7 +349,7 @@ async function seedForm(
   };
 }
 
-export function registerStoreTools(server: McpServer, ctx: ToolContext): void {
+export function registerStoreTools(server: McpServer, ctx: ToolContext, session: PageSession): void {
   server.registerTool(
     'sb_store',
     {
@@ -356,10 +359,11 @@ export function registerStoreTools(server: McpServer, ctx: ToolContext): void {
         'options, then creates and PUBLISHES the checkout page — /checkout 404s without all ' +
         'four. action:"form" seeds any of the platform\'s other form templates (login, ' +
         'register, forgot, reset, verify, contact, subscribe, booking, review and more) with ' +
-        'its own field document, which is the part that cannot be guessed. Dry run returns ' +
-        'the plan.',
+        'its own field document, which is the part that cannot be guessed. action:"chrome" ' +
+        'gives every page ONE shared header, built from the pages this site already has — the ' +
+        'gap sb_review reports as siteChrome. Dry run returns the plan.',
       inputSchema: {
-        action: z.enum(['checkout', 'form']),
+        action: z.enum(['checkout', 'form', 'chrome']),
         site_id: z.string().optional(),
         language: z.enum(['vi', 'en']).optional().describe('Copy language, default vi'),
         page_name: z.string().optional(),
@@ -369,12 +373,58 @@ export function registerStoreTools(server: McpServer, ctx: ToolContext): void {
           .optional()
           .describe('action:"form" — which of the platform\'s own form templates to seed'),
         name: z.string().optional().describe('action:"form" — the form\'s name in the merchant\'s list'),
+        footer: z
+          .boolean()
+          .optional()
+          .describe('action:"chrome" — build a shared FOOTER instead of a header'),
         dry_run: z.boolean().optional(),
       },
       annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: true },
     },
-    async ({ action, site_id: given, language, page_name, headline, template, name, dry_run }) => {
+    async ({ action, site_id: given, language, page_name, headline, template, name, footer, dry_run }) => {
       const siteId = siteFor(ctx, given);
+      if (action === 'chrome') {
+        // SKIPPED WHEN THE SITE ALREADY SHARES ONE, because a second header is
+        // two headers rather than a menu — and below two pages, because a menu
+        // to one page is a link to itself. Both are `sb_import_site`'s own
+        // rules, kept because they were right there.
+        const kind = footer === true ? 'footer' : 'header';
+        if (await hasGlobal(ctx, siteId, kind)) {
+          return text({
+            skipped: `this site already shares a ${kind} — a second one is two of them, not a menu`,
+          });
+        }
+        const pages = await sitePages(ctx, siteId);
+        if (pages.length < 2) {
+          return text({ skipped: 'a menu to one page is a link to itself' });
+        }
+        const links = chromeLinks(pages);
+        // RULE 0: the look comes off the HOME page, which is the one page whose
+        // pattern the rest of the site already follows. A site with nothing on
+        // its home page yields no tokens rather than an invented palette.
+        const home = pages.find((p) => p.isHome) ?? pages[0];
+        await session.open(siteId, home.id);
+        const tokens = tokensFromPage(session.current().doc);
+        if (dry_run !== false) {
+          return text({
+            dry_run: true,
+            would_create: kind,
+            menu: links,
+            onto: pages.map((p) => p.slug),
+            tokens_from: Object.keys(tokens).length ? 'the home page' : 'nothing — the home page is blank',
+            note:
+              'Nothing was sent. This creates ONE shared master and gives every page a reference ' +
+              'to it, so the menu becomes one edit instead of one per page.',
+          });
+        }
+        const out = await shareChrome(ctx, session, siteId, kind, links, pages, tokens);
+        return text({
+          ...out,
+          next:
+            'Publish the pages: a global section reaches a visitor through each page it is ' +
+            'composed onto, so a saved page keeps the old chrome until it is published again.',
+        });
+      }
       if (action === 'form') {
         if (!template) {
           throw new Error(

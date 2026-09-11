@@ -77,7 +77,7 @@ export function createServer(ctx: ToolContext = buildContext()): McpServer {
   registerApiTools(server, ctx);
   const pageSession = registerPageTools(server, ctx);
   registerLiveTools(server, ctx, pageSession);
-  registerStoreTools(server, ctx);
+  registerStoreTools(server, ctx, pageSession);
   registerThemeTools(server, ctx);
   registerImportTools(server, ctx, pageSession);
   registerUndoTools(server, ctx);

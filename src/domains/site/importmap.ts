@@ -94,6 +94,16 @@ export interface Captured {
    * shape.
    */
   ratio?: string;
+  /**
+   * For a row: its columns take their CONTENT width instead of an equal share.
+   *
+   * The two are different shapes and the difference is visible. A feature trio
+   * wants equal columns; a NAV wants its links packed against each other with a
+   * gap. Measured on a shared header built from three pages: the links landed at
+   * x=120, x=428 and x=735, each in its own third of a 1200px row, because the
+   * row mapping had one answer and it was the content answer.
+   */
+  pack?: boolean;
   /** For a button: whether the source painted it as a call to action, or it is prose's link. */
   variant?: 'cta' | 'link';
   /** For an embed: which of the platform's own media elements renders it. */
@@ -559,6 +569,35 @@ function one(c: Captured, t: PageTokens): NodeSpec | null {
       // Mobile gets one column by name. The flex path's `flexDirection: column`
       // says nothing to a grid, and a mobile answer that silently does nothing
       // is rule 3 failing with a value in the document to prove it tried.
+      // A PACKED ROW IS NOT A GRID AND NOT AN EQUAL-SHARE ROW. It wraps, so it
+      // needs no stack breakpoint of its own — a menu that runs out of width
+      // starts a second line, which is what a menu should do.
+      if (c.pack) {
+        return {
+          type: 'flex-block',
+          style: {
+            width: '100%',
+            display: 'flex',
+            flexDirection: 'row',
+            flexWrap: 'wrap',
+            alignItems: 'center',
+            gap: '24px',
+            ...(c.align === 'center' ? { justifyContent: 'center' } : {}),
+          },
+          // `width: auto` IS THE LOAD-BEARING HALF, and leaving it out looked
+          // like the whole idea had failed. `flex-block` seeds `width: 100%`
+          // from its element defaults, and `flex: 0 0 auto` only says "do not
+          // grow or shrink from the BASIS" — the basis being `auto`, which
+          // reads the width. So every packed cell stayed 100% wide and the
+          // menu came out as a vertical list: measured, three links stacked in
+          // a 140px header where the equal-share version had been 52.
+          children: kids.map((k) => ({
+            type: 'flex-block',
+            style: { flex: '0 0 auto', width: 'auto', display: 'flex', flexDirection: 'column' },
+            children: [k],
+          })),
+        };
+      }
       if (c.wrap) {
         return {
           type: 'flex-block',
@@ -799,7 +838,8 @@ export function navSpec(
           {
             kind: 'group',
             direction: 'row',
-            wrap: true,
+            // PACKED, not an equal share: a menu's links sit against each other.
+            pack: true,
             children: links.map((l) => ({
               kind: 'button' as const,
               variant: 'link' as const,

@@ -1753,6 +1753,31 @@ that accounts for them.
   indistinguishable from one a human built; uniqueness comes from REMEMBERING what has been
   issued, which is the right scope since one process builds one document.
 
+- **THE ONE THING A SITE HAS THAT A GENERATED ONE DOES NOT WAS REACHABLE BY EXACTLY ONE TOOL.**
+  `sb_review` has reported `siteChrome` since it learned to ask — two pages and no global section
+  means every page carries its own header, changing the menu is that many edits, and a visitor
+  meets a slightly different site on every click. The FIX existed and was locked inside
+  `sb_import_site`, which builds exactly this from the pages it just created. A site built any
+  other way — patterns, `sb_add`, a store seeded by `sb_store` — had to reproduce it by hand:
+  create the master, know its `document` is page-shaped but rooted at the SECTION, then give every
+  page a ROOT child carrying `globalRef` + `globalKind`, FIRST, because a header after middle
+  content is a band-order refusal on the next save. So a check that named the gap sat beside a
+  tool that could close it and no way to ask. `sb_store action:"chrome"` asks; the flow itself
+  moved to `src/tools/chrome.ts` and both callers share it rather than one copying the other.
+
+  **AND BUILDING IT SHOWED THAT A ROW HAD ONE ANSWER FOR TWO SHAPES.** The menu came out with its
+  three links at x=120, x=428 and x=735 — each in its own third of a 1200px row — because the
+  group mapping gives every column an equal share, which is right for a feature trio and wrong
+  for a nav. `Captured.pack` is the other shape: columns at their CONTENT width, wrapping when
+  they run out, which is what a menu should do and needs no stack breakpoint of its own.
+
+  `width: auto` is the load-bearing half of that and leaving it out looked like the whole idea had
+  failed. `flex-block` seeds `width: 100%` from its element defaults, and `flex: 0 0 auto` only
+  says "do not grow or shrink from the BASIS" — the basis being `auto`, which reads the width. So
+  every packed cell stayed full width and the menu came out as a vertical list: measured, three
+  links stacked in a 140px header where the equal-share version had been 52. Only the render
+  showed it; the spec was correct to read at every step.
+
 ## The five traps
 
 Each fails SILENTLY. Each is encoded in `src/domains/site/traps.ts` (trap 5 in

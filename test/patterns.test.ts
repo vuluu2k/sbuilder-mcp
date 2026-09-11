@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { LAYOUT_PATTERNS, PATTERN_BY_ID, THEME_TOKENS, type MediaPick } from '../src/domains/site/patterns.js';
+import { navSpec } from '../src/domains/site/importmap.js';
 import { PageDoc } from '../src/domains/site/document.js';
 import { addSubtree } from '../src/domains/site/builder.js';
 import { validateForSave } from '../src/domains/site/validate.js';
@@ -321,5 +322,38 @@ describe('the two defects the render showed after the first pass', () => {
     const json = spec('sb_gallery', unknown);
     expect(json).not.toContain('aspectRatio');
     expect(json).toContain('"objectFit":"contain"');
+  });
+});
+
+describe('a shared header is a packed row, not an equal share', () => {
+  it('packs its links against each other instead of thirds of the width', () => {
+    // Measured on a header built from three pages: the links landed at x=120,
+    // x=428 and x=735 — each in its own third of a 1200px row, because the row
+    // mapping had one answer and it was the CONTENT answer. A feature trio
+    // wants equal columns; a menu wants its links together.
+    const spec = navSpec(
+      [
+        { text: 'Trang chủ', href: '/' },
+        { text: 'Giới thiệu', href: '/gioi-thieu' },
+        { text: 'Liên hệ', href: '/lien-he' },
+      ],
+      THEME_TOKENS,
+    );
+    const json = JSON.stringify(spec);
+    expect(json).toContain('"flex":"0 0 auto"');
+    expect(json).not.toContain('1 1 280px');
+    // `width: auto` is the LOAD-BEARING half and leaving it out looked like the
+    // whole idea had failed: flex-block seeds `width: 100%` from its element
+    // defaults, and `flex: 0 0 auto` only says "do not grow or shrink from the
+    // BASIS" — which is `auto`, which reads the width. Measured: three links
+    // stacked into a 140px header where the equal-share version had been 52.
+    expect(json).toContain('"width":"auto"');
+    // It still wraps: a menu that runs out of width starts a second line rather
+    // than shrinking its words, and needs no stack breakpoint of its own.
+    expect(json).toContain('"flexWrap":"wrap"');
+  });
+
+  it('is nothing at all with no links', () => {
+    expect(navSpec([], THEME_TOKENS)).toBeNull();
   });
 });
