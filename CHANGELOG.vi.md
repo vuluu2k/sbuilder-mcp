@@ -6,6 +6,14 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.35.0] - 2026-09-11
+
+### Added
+- Catalog giờ mang theo năm operation lịch sử trang từng có mặt trên trình duyệt của nền tảng và trong swagger.json nhưng chưa từng được gắn annotation `@Router`, nên trước đây server này không thể thấy chúng: `GET`/`POST .../pages/{pageId}/versions` (liệt kê và gắn nhãn một bản chụp của bản nháp hiện tại), `POST .../pages/{pageId}/versions/{versionId}/restore`, `GET .../pages/{pageId}/history` (các checkpoint autosave được ghi ở mỗi lần lưu bản nháp), và `POST .../pages/{pageId}/history/{historyId}/restore`.
+
+### Changed
+- Mô tả của sb_undo giờ trỏ tới bề mặt lịch sử và khôi phục trang này như cách tốt hơn để phục hồi một trang, vì nó tồn tại qua cả khi tiến trình thoát, trong khi ngăn xếp undo của chính sb_undo chỉ nằm trong tiến trình, có giới hạn, và mất đi khi thoát; nó không còn khẳng định nền tảng hoàn toàn không có lịch sử trang.
+
 ## [0.34.0] - 2026-09-11
 
 ### Added

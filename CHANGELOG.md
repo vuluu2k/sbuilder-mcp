@@ -6,6 +6,14 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.35.0] - 2026-09-11
+
+### Added
+- The catalog now carries five page-history operations that reached the platform's own browser and swagger.json but had never carried an `@Router` annotation, so they were invisible to this server: `GET`/`POST .../pages/{pageId}/versions` (list and label a snapshot of the current draft), `POST .../pages/{pageId}/versions/{versionId}/restore`, `GET .../pages/{pageId}/history` (the autosave checkpoints written on every draft save), and `POST .../pages/{pageId}/history/{historyId}/restore`.
+
+### Changed
+- sb_undo's description now points to this page history and restore surface as the better way to recover a page, since it survives process exit while sb_undo's own undo stack is in-process, capped, and gone on exit; it no longer claims the platform has no page history at all.
+
 ## [0.34.0] - 2026-09-11
 
 ### Added
