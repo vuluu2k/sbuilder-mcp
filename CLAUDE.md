@@ -404,11 +404,44 @@ that accounts for them.
   then regenerate this catalog against that commit. Pinned by
   `test/codegen-undocumented.test.ts`.
 
-  What remains unmeasured is the routes with NO annotation at all. The old count (41) was
-  never re-verified and is not repeated here: the dispatchers mount wildcard subtrees
-  (`/*rest`, `/site/*rest`) and each context routes internally, so there is no mechanical way
-  to enumerate them from the router, and the running server is in release mode with no route
-  table in its log.
+  **THE ROUTES WITH NO ANNOTATION AT ALL ARE NOW MEASURABLE, and measuring them found 16.**
+  This paragraph used to say there was "no mechanical way to enumerate them from the router" —
+  true, and the wrong place to look. The dispatchers mount wildcard subtrees and route
+  internally, so the router says nothing; but every rest package in this platform OPENS WITH A
+  ROUTE-MAP COMMENT, a house convention (`//  GET  /chat-conversations  the inbox, newest
+  first`), and that map is the package's own statement of what it serves. Diffing each map
+  against that package's `@Router` lines is exact, needs no running server, and is what the
+  count could never do: swag reads annotations, so a surface with NONE is invisible to
+  `swagger.json`, to this catalog and to the arithmetic that is supposed to notice.
+
+  Measured 2026-09-12 and fixed upstream (`ed0b869f`), 508 → 524 operations, nothing removed:
+
+  - **chatbot (9) — the AI assistant's ENTIRE conversation surface.** The inbox, one thread's
+    messages, a human's reply, bot/closed, the unread badge, the worklist stats, plus
+    `chat-settings/test`, `/models` and `/usage`. `chat-settings` itself WAS annotated, which
+    is precisely what made the package look finished. Same shape as `relations/rest`.
+  - **payments (4) — INCLUDING BOTH REFUNDS.** `/refund` records one a human made elsewhere;
+    `/refund-via-gateway` asks the gateway to send the money back and moves the record only if
+    it confirms. Also `POST /payment-transactions`, which opens a pay link for an order — the
+    route map said GET/POST and only the GET was annotated. Refunding a customer is the most
+    basic thing that happens after a sale, and no tool here could name it.
+  - **sitedomain (3)** — canonical (www vs bare), redirect, and redirect-code (301 vs 302).
+    The last was missing from the package's own route map too, and that is now corrected.
+
+  Four routes registered DIRECTLY on the gin router are also outside the catalog, and only one
+  of them is a gap worth closing: `/api/permissions` answers the RBAC matrix, the content
+  domains, and `scopes` — the delegation vocabulary a marketplace app may ask for. This file
+  has recorded a credential rule too strictly TWICE; that endpoint is the platform's own answer
+  and would end the guessing. `/api/plans` and `/api/locales` are public catalogues (pricing,
+  the language list with each locale's currency — the latter is what a caller needs before
+  configuring a multilingual store's locales). `/api/realtime/ws` is the socket `sb_live_join`
+  already speaks and is correctly not an HTTP operation.
+
+  The false positives are worth knowing so the next run is not re-litigated: a route map that
+  writes its query string (`/translations?locale=`, `/relation-slots/{id}/picks?ownerId=`,
+  `/media/assets/by-url?url=`, `/wishlist-demand?limit=50`) does not match a documented path by
+  string, and all of those ARE annotated. `/_wb/feed/*`, `/_wb/css/*` and `/_wb/runtime/*` are
+  the shopper and asset surfaces, correctly absent.
 
   **AND A PUT NOW READS BEFORE IT WRITES, because every whole-document replace is one-way.**
   `PUT /settings` is not a patch and a partial body erases the store's configuration. A

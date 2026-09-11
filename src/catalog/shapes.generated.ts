@@ -4,9 +4,9 @@
 import type { RequestShape } from './types.js';
 
 export const SHAPE_SOURCE = {
-  "writeOperations": 223,
-  "shaped": 170,
-  "fromHandlers": 170,
+  "writeOperations": 234,
+  "shaped": 175,
+  "fromHandlers": 175,
   "fromSwaggerOnly": 0,
   "withReadOnly": 26,
   "structsRead": 1658
@@ -1064,6 +1064,26 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
     ],
     "source": "go",
     "goType": "blog.Category"
+  },
+  "post:/api/sites/{siteId}/chat-conversations/{conversationId}/reply": {
+    "fields": [
+      {
+        "name": "body",
+        "type": "string"
+      }
+    ],
+    "source": "go",
+    "goType": "(inline)"
+  },
+  "post:/api/sites/{siteId}/chat-conversations/{conversationId}/status": {
+    "fields": [
+      {
+        "name": "status",
+        "type": "string"
+      }
+    ],
+    "source": "go",
+    "goType": "(inline)"
   },
   "put:/api/sites/{siteId}/chat-settings": {
     "fields": [
@@ -4697,6 +4717,48 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
     ],
     "source": "go",
     "goType": "payments.GatewayInput"
+  },
+  "post:/api/sites/{siteId}/payment-transactions": {
+    "fields": [
+      {
+        "name": "orderId",
+        "type": "string"
+      },
+      {
+        "name": "provider",
+        "type": "string"
+      }
+    ],
+    "source": "go",
+    "goType": "chargeRequest"
+  },
+  "post:/api/sites/{siteId}/payment-transactions/{transactionId}/refund": {
+    "fields": [
+      {
+        "name": "orderId",
+        "type": "string"
+      },
+      {
+        "name": "provider",
+        "type": "string"
+      }
+    ],
+    "source": "go",
+    "goType": "chargeRequest"
+  },
+  "post:/api/sites/{siteId}/payment-transactions/{transactionId}/refund-via-gateway": {
+    "fields": [
+      {
+        "name": "orderId",
+        "type": "string"
+      },
+      {
+        "name": "provider",
+        "type": "string"
+      }
+    ],
+    "source": "go",
+    "goType": "chargeRequest"
   },
   "post:/api/admin/geo-keys": {
     "fields": [

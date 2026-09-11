@@ -112,7 +112,7 @@ in this client: one would put the very key the platform exists to hold back into
 | `sb_store` | Run a store flow that must happen in a fixed order — the four writes that make a working checkout, or any of the platform's 17 form templates (login, register, forgot, contact, subscribe …) with its own field document |
 | `sb_undo` | Put back what a PUT replaced. The SECOND answer for a page, not the only one: the platform has versions, history and restore (`sb_api_find` "page versions"), which outlive this process — reach for those first and use this for every other shaped PUT |
 
-Twenty-eight tools, **508 API operations** (170 of the 223 writes carrying a body shape read
+Twenty-eight tools, **524 API operations** (175 of the 234 writes carrying a body shape read
 off the handler), 112 elements, 78 binding sources. `sb_api_find`
 is an index rather than a tool per endpoint, so the tool list stays short while everything
 the platform can do stays reachable — and operations added to the platform arrive with the

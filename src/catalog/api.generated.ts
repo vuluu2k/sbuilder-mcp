@@ -3,10 +3,10 @@
 import type { ApiOperation } from './types.js';
 
 export const SWAGGER_SOURCE = {
-  "operations": 508,
-  "definitions": 105,
-  "bodyCarrying": 183,
-  "bodyUndescribed": 68,
+  "operations": 524,
+  "definitions": 107,
+  "bodyCarrying": 192,
+  "bodyUndescribed": 73,
   "generatedFrom": "server/docs/swagger.json"
 } as const;
 
@@ -4012,6 +4012,181 @@ export const API_OPERATIONS: ApiOperation[] = [
     "credential": "siteScoped"
   },
   {
+    "id": "get:/api/sites/{siteId}/chat-conversations",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/chat-conversations",
+    "tags": [
+      "chatbot"
+    ],
+    "summary": "List this store's AI chat conversations, newest activity first",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "status",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Filter: bot | human | closed"
+      },
+      {
+        "name": "limit",
+        "in": "query",
+        "required": false,
+        "type": "integer",
+        "description": "Page size"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/sites/{siteId}/chat-conversations/stats",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/chat-conversations/stats",
+    "tags": [
+      "chatbot"
+    ],
+    "summary": "Chat volume, handoffs and the worklist for a window",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "days",
+        "in": "query",
+        "required": false,
+        "type": "integer",
+        "description": "Window in days; a junk value is the default window"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/sites/{siteId}/chat-conversations/{conversationId}",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/chat-conversations/{conversationId}",
+    "tags": [
+      "chatbot"
+    ],
+    "summary": "Read one conversation's messages",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "conversationId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Conversation ID"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/api/sites/{siteId}/chat-conversations/{conversationId}/read",
+    "method": "POST",
+    "path": "/api/sites/{siteId}/chat-conversations/{conversationId}/read",
+    "tags": [
+      "chatbot"
+    ],
+    "summary": "Clear a conversation's unread badge",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "conversationId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Conversation ID"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/api/sites/{siteId}/chat-conversations/{conversationId}/reply",
+    "method": "POST",
+    "path": "/api/sites/{siteId}/chat-conversations/{conversationId}/reply",
+    "tags": [
+      "chatbot"
+    ],
+    "summary": "Answer a conversation as a human, which also hands the thread over",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "conversationId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Conversation ID"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/api/sites/{siteId}/chat-conversations/{conversationId}/status",
+    "method": "POST",
+    "path": "/api/sites/{siteId}/chat-conversations/{conversationId}/status",
+    "tags": [
+      "chatbot"
+    ],
+    "summary": "Hand a conversation back to the bot, or close it",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "conversationId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Conversation ID"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
     "id": "get:/api/sites/{siteId}/chat-settings",
     "method": "GET",
     "path": "/api/sites/{siteId}/chat-settings",
@@ -4061,6 +4236,69 @@ export const API_OPERATIONS: ApiOperation[] = [
       "chatbot"
     ],
     "summary": "Get, save or clear a site's AI chat configuration",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/api/sites/{siteId}/chat-settings/models",
+    "method": "POST",
+    "path": "/api/sites/{siteId}/chat-settings/models",
+    "tags": [
+      "chatbot"
+    ],
+    "summary": "List the models this merchant's provider account can actually run",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/api/sites/{siteId}/chat-settings/test",
+    "method": "POST",
+    "path": "/api/sites/{siteId}/chat-settings/test",
+    "tags": [
+      "chatbot"
+    ],
+    "summary": "Ask the configured provider to answer, using the merchant's own credential",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/sites/{siteId}/chat-settings/usage",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/chat-settings/usage",
+    "tags": [
+      "chatbot"
+    ],
+    "summary": "What this shop's assistant has spent today",
     "params": [
       {
         "name": "siteId",
@@ -6265,13 +6503,16 @@ export const API_OPERATIONS: ApiOperation[] = [
     "credential": "siteScoped"
   },
   {
-    "id": "post:/api/sites/{siteId}/domains/{id}/primary",
+    "id": "post:/api/sites/{siteId}/domains/{id}/canonical",
     "method": "POST",
-    "path": "/api/sites/{siteId}/domains/{id}/primary",
+    "path": "/api/sites/{siteId}/domains/{id}/canonical",
     "tags": [
-      "domains"
+      "domains",
+      "sitedomain",
+      "sitedomain",
+      "sitedomain"
     ],
-    "summary": "Verify domain ownership or elect the primary domain",
+    "summary": "Set the HTTP status a redirecting domain answers with",
     "params": [
       {
         "name": "siteId",
@@ -6286,6 +6527,351 @@ export const API_OPERATIONS: ApiOperation[] = [
         "required": true,
         "type": "string",
         "description": "Domain ID"
+      },
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Domain ID"
+      },
+      {
+        "name": "canonical",
+        "in": "body",
+        "required": true,
+        "type": "object",
+        "description": "{\\"
+      },
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Domain ID"
+      },
+      {
+        "name": "redirect",
+        "in": "body",
+        "required": true,
+        "type": "object",
+        "description": "{\\"
+      },
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Domain ID"
+      },
+      {
+        "name": "code",
+        "in": "body",
+        "required": true,
+        "type": "object",
+        "description": "{\\"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/api/sites/{siteId}/domains/{id}/primary",
+    "method": "POST",
+    "path": "/api/sites/{siteId}/domains/{id}/primary",
+    "tags": [
+      "domains",
+      "sitedomain",
+      "sitedomain",
+      "sitedomain"
+    ],
+    "summary": "Set the HTTP status a redirecting domain answers with",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Domain ID"
+      },
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Domain ID"
+      },
+      {
+        "name": "canonical",
+        "in": "body",
+        "required": true,
+        "type": "object",
+        "description": "{\\"
+      },
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Domain ID"
+      },
+      {
+        "name": "redirect",
+        "in": "body",
+        "required": true,
+        "type": "object",
+        "description": "{\\"
+      },
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Domain ID"
+      },
+      {
+        "name": "code",
+        "in": "body",
+        "required": true,
+        "type": "object",
+        "description": "{\\"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/api/sites/{siteId}/domains/{id}/redirect",
+    "method": "POST",
+    "path": "/api/sites/{siteId}/domains/{id}/redirect",
+    "tags": [
+      "domains",
+      "sitedomain",
+      "sitedomain",
+      "sitedomain"
+    ],
+    "summary": "Set the HTTP status a redirecting domain answers with",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Domain ID"
+      },
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Domain ID"
+      },
+      {
+        "name": "canonical",
+        "in": "body",
+        "required": true,
+        "type": "object",
+        "description": "{\\"
+      },
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Domain ID"
+      },
+      {
+        "name": "redirect",
+        "in": "body",
+        "required": true,
+        "type": "object",
+        "description": "{\\"
+      },
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Domain ID"
+      },
+      {
+        "name": "code",
+        "in": "body",
+        "required": true,
+        "type": "object",
+        "description": "{\\"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/api/sites/{siteId}/domains/{id}/redirect-code",
+    "method": "POST",
+    "path": "/api/sites/{siteId}/domains/{id}/redirect-code",
+    "tags": [
+      "domains",
+      "sitedomain",
+      "sitedomain",
+      "sitedomain"
+    ],
+    "summary": "Set the HTTP status a redirecting domain answers with",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Domain ID"
+      },
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Domain ID"
+      },
+      {
+        "name": "canonical",
+        "in": "body",
+        "required": true,
+        "type": "object",
+        "description": "{\\"
+      },
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Domain ID"
+      },
+      {
+        "name": "redirect",
+        "in": "body",
+        "required": true,
+        "type": "object",
+        "description": "{\\"
+      },
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Domain ID"
+      },
+      {
+        "name": "code",
+        "in": "body",
+        "required": true,
+        "type": "object",
+        "description": "{\\"
       }
     ],
     "bodyDescribed": false,
@@ -6297,9 +6883,12 @@ export const API_OPERATIONS: ApiOperation[] = [
     "method": "POST",
     "path": "/api/sites/{siteId}/domains/{id}/verify",
     "tags": [
-      "domains"
+      "domains",
+      "sitedomain",
+      "sitedomain",
+      "sitedomain"
     ],
-    "summary": "Verify domain ownership or elect the primary domain",
+    "summary": "Set the HTTP status a redirecting domain answers with",
     "params": [
       {
         "name": "siteId",
@@ -6314,6 +6903,69 @@ export const API_OPERATIONS: ApiOperation[] = [
         "required": true,
         "type": "string",
         "description": "Domain ID"
+      },
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Domain ID"
+      },
+      {
+        "name": "canonical",
+        "in": "body",
+        "required": true,
+        "type": "object",
+        "description": "{\\"
+      },
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Domain ID"
+      },
+      {
+        "name": "redirect",
+        "in": "body",
+        "required": true,
+        "type": "object",
+        "description": "{\\"
+      },
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Domain ID"
+      },
+      {
+        "name": "code",
+        "in": "body",
+        "required": true,
+        "type": "object",
+        "description": "{\\"
       }
     ],
     "bodyDescribed": false,
@@ -10101,6 +10753,333 @@ export const API_OPERATIONS: ApiOperation[] = [
     "params": [],
     "bodyDescribed": false,
     "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/api/sites/{siteId}/payment-transactions",
+    "method": "POST",
+    "path": "/api/sites/{siteId}/payment-transactions",
+    "tags": [
+      "payments",
+      "payments",
+      "payments",
+      "payments"
+    ],
+    "summary": "ASK the gateway to send the money back",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "charge",
+        "in": "body",
+        "required": true,
+        "type": "object",
+        "description": "The order and provider to charge; the amount is read from the order, never from the body"
+      },
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "refund",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "An optional merchant note; a missing body is not an error"
+      },
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "refund",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "An optional merchant note"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "internal_payments_rest.refundRequest",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/sites/{siteId}/payment-transactions/{transactionId}",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/payment-transactions/{transactionId}",
+    "tags": [
+      "payments",
+      "payments",
+      "payments",
+      "payments"
+    ],
+    "summary": "ASK the gateway to send the money back",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "charge",
+        "in": "body",
+        "required": true,
+        "type": "object",
+        "description": "The order and provider to charge; the amount is read from the order, never from the body"
+      },
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "transactionId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Transaction ID"
+      },
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "transactionId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Transaction ID"
+      },
+      {
+        "name": "refund",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "An optional merchant note; a missing body is not an error"
+      },
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "transactionId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Transaction ID"
+      },
+      {
+        "name": "refund",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "An optional merchant note"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "internal_payments_rest.refundRequest",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/api/sites/{siteId}/payment-transactions/{transactionId}/refund",
+    "method": "POST",
+    "path": "/api/sites/{siteId}/payment-transactions/{transactionId}/refund",
+    "tags": [
+      "payments",
+      "payments",
+      "payments",
+      "payments"
+    ],
+    "summary": "ASK the gateway to send the money back",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "charge",
+        "in": "body",
+        "required": true,
+        "type": "object",
+        "description": "The order and provider to charge; the amount is read from the order, never from the body"
+      },
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "transactionId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Transaction ID"
+      },
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "transactionId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Transaction ID"
+      },
+      {
+        "name": "refund",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "An optional merchant note; a missing body is not an error"
+      },
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "transactionId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Transaction ID"
+      },
+      {
+        "name": "refund",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "An optional merchant note"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "internal_payments_rest.refundRequest",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/api/sites/{siteId}/payment-transactions/{transactionId}/refund-via-gateway",
+    "method": "POST",
+    "path": "/api/sites/{siteId}/payment-transactions/{transactionId}/refund-via-gateway",
+    "tags": [
+      "payments",
+      "payments",
+      "payments",
+      "payments"
+    ],
+    "summary": "ASK the gateway to send the money back",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "charge",
+        "in": "body",
+        "required": true,
+        "type": "object",
+        "description": "The order and provider to charge; the amount is read from the order, never from the body"
+      },
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "transactionId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Transaction ID"
+      },
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "transactionId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Transaction ID"
+      },
+      {
+        "name": "refund",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "An optional merchant note; a missing body is not an error"
+      },
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "transactionId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Transaction ID"
+      },
+      {
+        "name": "refund",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "An optional merchant note"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "internal_payments_rest.refundRequest",
     "credential": "siteScoped"
   },
   {
@@ -17137,6 +18116,25 @@ export const API_DEFINITIONS: Record<string, unknown> = {
       },
       "note": {
         "description": "Note is required. An unexplained movement of money is the one thing a\nledger exists to prevent.",
+        "type": "string"
+      }
+    }
+  },
+  "internal_payments_rest.chargeRequest": {
+    "type": "object",
+    "properties": {
+      "orderId": {
+        "type": "string"
+      },
+      "provider": {
+        "type": "string"
+      }
+    }
+  },
+  "internal_payments_rest.refundRequest": {
+    "type": "object",
+    "properties": {
+      "note": {
         "type": "string"
       }
     }
