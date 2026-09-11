@@ -6,6 +6,12 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.38.1] - 2026-09-11
+
+### Fixed
+- sb_look no longer photographs a reveal-on-scroll band (config.animation trigger:"view") as blank; every animation is now stopped before the shutter opens, since the lazy-image walk returns to the top of the page and would otherwise catch the band back at its opacity:0 starting keyframe.
+- sb_import and sb_import_site no longer drop a `<video>` element that carries a poster image and no explicit width/height, which previously measured as a zero-size box and was skipped like a genuinely hidden element.
+
 ## [0.38.0] - 2026-09-11
 
 ### Added

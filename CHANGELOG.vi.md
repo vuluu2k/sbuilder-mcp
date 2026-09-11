@@ -6,6 +6,12 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.38.1] - 2026-09-11
+
+### Fixed
+- sb_look không còn chụp một band hiệu ứng xuất hiện khi cuộn (config.animation trigger:"view") thành ảnh trống nữa; mọi animation giờ được dừng lại trước khi chụp, vì bước quét ảnh lazy-load quay về đầu trang và trước đây sẽ bắt band đó đứng yên ở keyframe khởi đầu opacity:0.
+- sb_import và sb_import_site không còn bỏ sót phần tử `<video>` có ảnh poster nhưng không khai báo width/height tường minh, trước đây phần tử này đo được kích thước bằng 0 nên bị bỏ qua như một phần tử thực sự ẩn.
+
 ## [0.38.0] - 2026-09-11
 
 ### Added
