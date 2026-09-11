@@ -6,6 +6,14 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.37.0] - 2026-09-11
+
+### Added
+- sb_import và sb_import_site giờ nhận thêm tham số `nav_timeout_ms` (5.000-120.000ms, mặc định 30.000) để tăng thời gian chờ trang trả lời khi nguồn phản hồi chậm.
+
+### Fixed
+- Lỗi timeout của sb_import_site giờ báo đúng số giây trang thực sự đã chờ và gợi ý tăng `nav_timeout_ms`, thay vì luôn nêu giá trị mặc định chưa đổi ngay cả khi caller đã tự tăng nó.
+
 ## [0.36.0] - 2026-09-11
 
 ### Added

@@ -6,6 +6,14 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.37.0] - 2026-09-11
+
+### Added
+- sb_import and sb_import_site now take a `nav_timeout_ms` argument (5,000-120,000ms, default 30,000) to raise how long a capture waits for a slow origin to answer at all.
+
+### Fixed
+- sb_import_site's timeout failure now reports the number of seconds the page actually waited and suggests raising `nav_timeout_ms`, instead of always naming the unmodified default even after a caller had already raised it.
+
 ## [0.36.1] - 2026-09-11
 
 - fix(import,api): a capture waited on iframes, and a recovery list was unreadable
