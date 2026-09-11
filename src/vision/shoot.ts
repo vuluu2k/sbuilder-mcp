@@ -248,7 +248,7 @@ export async function shoot(
  * polling widget from holding the shot forever. A page that never settles is
  * photographed anyway — a late picture beats none.
  */
-export async function settleDom(page: Page): Promise<void> {
+export async function settleDom(page: Page, capMs = 2_000): Promise<void> {
   await page
     .evaluate(
       ({ quiet, cap }) =>
@@ -273,7 +273,13 @@ export async function settleDom(page: Page): Promise<void> {
             }
           }, 50);
         }),
-      { quiet: 250, cap: 2_000 },
+      // The CAP is a knob because 2,000 ms is right for a healthy origin and
+      // wrong for a struggling one. MEASURED on ttgshop.vn while it was taking
+      // 45s to answer: the capture returned 6 text nodes and 114 characters of
+      // a page that holds 2,396 — 4.8% — and reported NO error, because
+      // settling is not failing. A silent thin import is worse than a refused
+      // one, and the shoot path keeps the default it was tuned for.
+      { quiet: 250, cap: capMs },
     )
     .catch(() => {});
 }

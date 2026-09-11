@@ -1260,3 +1260,55 @@ describe('a panel set becomes a tab', () => {
     expect(JSON.stringify(spec)).not.toContain('"tab"');
   });
 });
+
+/**
+ * SETTLING IS NOT FAILING, which is the one outcome a capture could not express.
+ *
+ * A page read while it is still building returns a small, correct-looking
+ * result: `skipped` empty, no error, a handful of nodes. MEASURED on ttgshop.vn
+ * while the origin was taking 45 SECONDS to answer — 6 text nodes and 114
+ * characters — and nothing in the answer said the import was thin. A thin
+ * import that says so is one a caller retries; a silent one ships.
+ *
+ * The denominator is the honest one this file already argues for: page chrome
+ * is skipped ON PURPOSE, so counting it would make every correct import of a
+ * nav-heavy site look broken.
+ */
+describe.runIf(process.env.SB_BROWSER_TEST === '1')('capture() reporting how much it kept', () => {
+  const page = (body: string) => `data:text/html;charset=utf-8,${encodeURIComponent(body)}`;
+
+  it('reports a high number when it took the page', async () => {
+    const got = await capture(
+      page('<body><main><section><p>Một đoạn văn khá dài để đo đạc cho tử tế.</p>' +
+        '<p>Và một đoạn nữa, cũng dài không kém gì đoạn ở trên kia.</p></section></main></body>'),
+      { maxImages: 5, maxNodes: 200 },
+    );
+    expect(got.coverage).toBeGreaterThan(80);
+  }, BROWSER_TIMEOUT);
+
+  it('DOES NOT COUNT PAGE CHROME against the result', async () => {
+    // A nav-heavy site imported correctly must not look like a failure: the
+    // header and footer are skipped deliberately, so they are not in the
+    // denominator either.
+    const got = await capture(
+      page(
+        '<body><header><nav><a href="/a">Trang chủ</a><a href="/b">Giới thiệu</a>' +
+          '<a href="/c">Sản phẩm</a><a href="/d">Liên hệ</a></nav></header>' +
+          '<main><section><p>Nội dung thật của trang nằm ở đây.</p></section></main>' +
+          '<footer><p>Bản quyền và một dòng dài dằng dặc ở chân trang.</p></footer></body>',
+      ),
+      { maxImages: 5, maxNodes: 200 },
+    );
+    expect(got.coverage).toBeGreaterThan(70);
+  }, BROWSER_TIMEOUT);
+
+  it('answers 100 for a page with no text to measure against', async () => {
+    // Not 0: an empty page is not a failed import, and a zero here would send a
+    // caller to fix something that is already right.
+    const got = await capture(page('<body><main><section><hr></section></main></body>'), {
+      maxImages: 5,
+      maxNodes: 200,
+    });
+    expect(got.coverage).toBe(100);
+  }, BROWSER_TIMEOUT);
+});

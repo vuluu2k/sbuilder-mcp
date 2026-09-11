@@ -238,6 +238,13 @@ export function registerImportTools(
           .max(100)
           .optional()
           .describe('Default 24 — every image is an upload'),
+        nav_timeout_ms: z
+          .number()
+          .int()
+          .min(5_000)
+          .max(120_000)
+          .optional()
+          .describe('How long to wait for a page to answer at all. Default 30000; raise it for a slow origin'),
         max_nodes: z
           .number()
           .int()
@@ -253,7 +260,7 @@ export function registerImportTools(
       },
       annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: true },
     },
-    async ({ url, site_id: given, max_sections, max_images, max_nodes, upload_images, dry_run }) => {
+    async ({ url, site_id: given, max_sections, max_images, max_nodes, nav_timeout_ms, upload_images, dry_run }) => {
       const siteId = siteFor(ctx, given);
       // THE TARGET PAGE MUST BE OPEN, and not only because that is where the
       // nodes go: its own heading, button and section are where the tokens come
@@ -264,6 +271,7 @@ export function registerImportTools(
         maxSections: max_sections,
         maxImages: max_images,
         maxNodes: max_nodes,
+        navTimeoutMs: nav_timeout_ms,
       });
       const tokens = tokensFromPage(doc.doc);
       const images = imageSources(shot.sections);
@@ -396,6 +404,13 @@ export function registerImportTools(
         exclude: z.array(z.string()).optional(),
         max_images: z.number().int().min(0).max(200).optional().describe('Default 24, whole import'),
         max_nodes: z.number().int().min(1).max(1000).optional().describe('Per page, default 300'),
+        nav_timeout_ms: z
+          .number()
+          .int()
+          .min(5_000)
+          .max(120_000)
+          .optional()
+          .describe('How long to wait for a page to answer at all. Default 30000; raise it for a slow origin'),
         upload_images: z.boolean().optional(),
         homepage: z.boolean().optional().describe("Entry into this site's home page, default true"),
         nav: z.boolean().optional().describe('Shared header linking the new pages, default true'),
@@ -412,6 +427,7 @@ export function registerImportTools(
       exclude,
       max_images,
       max_nodes,
+      nav_timeout_ms,
       upload_images,
       homepage,
       nav,
@@ -565,7 +581,7 @@ export function registerImportTools(
         // 9,829px of catalogue across a dozen collection bands, and 300 cut it
         // off in the middle of the third. A cap is here to stop a runaway page,
         // not to decide how much of an ordinary one survives.
-        { maxImages: max_images ?? 60, maxNodes: max_nodes ?? 900 },
+        { maxImages: max_images ?? 60, maxNodes: max_nodes ?? 900, navTimeoutMs: nav_timeout_ms },
       );
       const byUrl = new Map(shots.map((s) => [s.url, s]));
 

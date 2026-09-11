@@ -99,6 +99,15 @@ export interface CaptureResult {
   sections: Captured[];
   /** What was skipped and why, so a thin capture explains itself. */
   skipped: Record<string, number>;
+  /**
+   * Per cent of the page's own NON-CHROME text that survived the walk.
+   *
+   * The one number a caller cannot work out for itself and cannot do without:
+   * settling is not failing, so a page captured while it was still building
+   * returns a small, correct-looking result with an empty `skipped` and no
+   * error. 100 when the page carries no text to measure against.
+   */
+  coverage: number;
 }
 
 /**
@@ -1136,6 +1145,20 @@ function capturePage(limits: { maxSections: number; maxImages: number; maxTextCh
     restore(bestState);
   }
 
+  // WHAT FRACTION OF THE PAGE A READER SEES SURVIVED, reported rather than
+  // assumed. Both halves are already computed above for the fallback decision,
+  // so this costs nothing and closes the one failure a capture cannot express:
+  // SETTLING IS NOT FAILING. MEASURED on ttgshop.vn while the origin was taking
+  // 45s to answer — 6 text nodes and 114 characters of a page holding 2,396,
+  // 4.8%, `skipped` empty, no error anywhere. A thin import that says so is one
+  // a caller retries; a silent one ships.
+  //
+  // Against the honest denominator this file already argues for: page chrome is
+  // skipped ON PURPOSE, so counting it would make every correct import of a
+  // nav-heavy site look broken.
+  const kept = textOf(sections);
+  const coverage = contentChars > 0 ? Math.round((kept / contentChars) * 100) : 100;
+
   const link = Array.from(document.querySelectorAll('link[rel="canonical"]'))[0];
   const canonical = link ? (link.getAttribute('href') ?? '') : '';
   return {
@@ -1145,6 +1168,7 @@ function capturePage(limits: { maxSections: number; maxImages: number; maxTextCh
     ...(forms.length ? { forms } : {}),
     sections,
     skipped,
+    coverage,
   };
 }
 
@@ -1186,11 +1210,30 @@ async function withBrowser<T>(fn: (browser: Browser) => Promise<T>): Promise<T> 
  * `shoot.ts` gives: a page with a poller never goes idle, and waiting for that
  * spends the whole budget on a timeout that cannot resolve.
  */
+/**
+ * How long to wait for a page to answer AT ALL, and why it is a knob.
+ *
+ * Thirty seconds is right for the web and wrong for one site on one afternoon.
+ * MEASURED on ttgshop.vn, the same shop this importer was built against: it
+ * answered in 4.6s all morning and then took 45 SECONDS for 151 KB, with the
+ * next request not answering inside 45s at all. Nothing about the page changed
+ * — the origin was simply having a bad day, which is the ordinary condition of
+ * the sites a merchant actually asks to import.
+ *
+ * The default stays 30s, because a caller who says nothing wants a bound rather
+ * than a hang. What was wrong was that the number could not be raised at all:
+ * an import of your OWN slow site had no recourse, and the failure arrives as a
+ * bare Playwright timeout that names the browser rather than the remedy.
+ */
+const NAV_TIMEOUT_MS = 30_000;
+
 async function readPage<T>(
   browser: Browser,
   url: string,
   width: number,
   work: (page: Page) => Promise<T>,
+  navMs = NAV_TIMEOUT_MS,
+  settleMs?: number,
 ): Promise<T> {
   let page: Page | undefined;
   try {
@@ -1210,14 +1253,14 @@ async function readPage<T>(
     // earlier: the right question is "has the DOM stopped changing", and
     // `settleDom` answers it directly and bounded. A page that genuinely needs
     // its images is the SHOOT path's problem, and that one still waits.
-    await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 30_000 });
+    await page.goto(url, { waitUntil: 'domcontentloaded', timeout: navMs });
     // THE SAME SETTLE `sb_look` USES, not a flat sleep. A fixed 600ms is wrong
     // at both ends: example.com is finished long before it, and a page that
     // builds itself with scripts is not finished after it — which is exactly the
     // page an import is most likely to be pointed at. `settleDom` asks the
     // question actually being asked (has the page stopped changing) and answers
     // when it becomes true, bounded so a page that never settles is still read.
-    await settleDom(page);
+    await settleDom(page, settleMs);
     return await work(page);
   } finally {
     await page?.close().catch(() => undefined);
@@ -1239,14 +1282,54 @@ export interface CaptureOpts {
   maxTextChars?: number;
   maxNodes?: number;
   width?: number;
+  /** Milliseconds to wait for the page to answer at all. Default 30,000. */
+  navTimeoutMs?: number;
+  /**
+   * How long to let the DOM keep changing before reading it. Default 2,000.
+   *
+   * Raise it for an origin that is slow to render: the walk reads whatever is
+   * there when this expires, so a page still building itself is captured half
+   * made — and that is not an error, which is why it needs saying out loud.
+   */
+  settleMs?: number;
+}
+
+/**
+ * A read that failed, said in the caller's terms.
+ *
+ * Playwright's own timeout names the browser and the wait — "page.goto: Timeout
+ * 30000ms exceeded" — which is true and tells a merchant nothing they can act
+ * on. The remedy is a number they can raise, so the message carries it.
+ */
+function readFailure(e: unknown): string {
+  const msg = (e as Error).message ?? String(e);
+  // THE NUMBER COMES OUT OF THE ERROR, never out of the default. The first
+  // version of this printed NAV_TIMEOUT_MS, so a caller who had already raised
+  // the budget to 90s was told the page "did not answer within 30s" — a
+  // confidently wrong number, and one that sends them to change a setting they
+  // had just changed.
+  const hit = /Timeout (\d+)ms exceeded/.exec(msg);
+  if (hit) {
+    const secs = Math.round(Number(hit[1]) / 1000);
+    return (
+      `the page did not answer within ${secs}s. A slow origin is ordinary — raise ` +
+      'nav_timeout_ms and try again, or import fewer pages at once.'
+    );
+  }
+  return msg.slice(0, 160);
 }
 
 /** Open a URL and capture it. */
 export async function capture(url: string, opts: CaptureOpts = {}): Promise<CaptureResult> {
   const limits = limitsFrom(opts);
   return withBrowser((browser) =>
-    readPage(browser, url, opts.width ?? 1440, (page) =>
-      page.evaluate(capturePage, limits) as Promise<CaptureResult>,
+    readPage(
+      browser,
+      url,
+      opts.width ?? 1440,
+      (page) => page.evaluate(capturePage, limits) as Promise<CaptureResult>,
+      opts.navTimeoutMs,
+      opts.settleMs,
     ),
   );
 }
@@ -1271,12 +1354,17 @@ export async function captureMany(urls: string[], opts: CaptureOpts = {}): Promi
     const out: CaptureOutcome[] = [];
     for (const url of urls) {
       try {
-        const result = (await readPage(browser, url, opts.width ?? 1440, (page) =>
-          page.evaluate(capturePage, limits),
+        const result = (await readPage(
+          browser,
+          url,
+          opts.width ?? 1440,
+          (page) => page.evaluate(capturePage, limits),
+          opts.navTimeoutMs,
+          opts.settleMs,
         )) as CaptureResult;
         out.push({ url, ok: true, result });
       } catch (e) {
-        out.push({ url, ok: false, why: (e as Error).message.slice(0, 160) });
+        out.push({ url, ok: false, why: readFailure(e) });
       }
     }
     return out;

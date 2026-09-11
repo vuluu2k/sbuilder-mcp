@@ -1852,6 +1852,34 @@ that accounts for them.
   And the projected listing shows something worth knowing: the platform writes a `__pre_restore`
   version of its own before restoring, so a RESTORE is itself undoable.
 
+- **A CAPTURE COULD NOT SAY IT HAD READ ALMOST NOTHING, because SETTLING IS NOT FAILING.** A
+  page read while it is still building returns a small, correct-looking result: `skipped` empty,
+  no error, a handful of nodes. MEASURED on ttgshop.vn on an afternoon it was taking 45 SECONDS
+  to answer for 151 KB, having served the same page in 4.6s all morning — the capture kept 6 text
+  nodes and 114 characters, and nothing in the answer said so. A thin import that says so is one
+  a caller retries; a silent one ships.
+
+  `coverage` is the per cent of the page's own NON-CHROME text that survived, against the
+  denominator this file already argues for — chrome is skipped ON PURPOSE, so counting it would
+  make every correct import of a nav-heavy site look broken. Both halves were already computed
+  for the fallback decision, so it costs nothing. 100 for a page with no text, because an empty
+  page is not a failed import and a zero would send a caller to fix what is already right.
+
+  **AND THE NUMBER THEN EARNED ITS KEEP IMMEDIATELY, by exonerating the importer.** `/tin-tuc`
+  came back with 7 text nodes and reported 20%, which reads as a defect — and the page itself
+  holds SEVEN content links, all of them breadcrumb and category tabs, with no article rendered
+  at all. The tool was right and the page was empty. Without the number that is indistinguishable
+  from a thin import, and the afternoon goes into the walk.
+
+  Two knobs arrived with it, both because a bound tuned for a healthy origin is wrong for a
+  struggling one and neither could be reached: `nav_timeout_ms` (how long to wait for an answer
+  at all, default 30,000 — a merchant importing their OWN slow site had no recourse) and
+  `settleMs` (how long to let the DOM keep changing, default 2,000). The timeout message names
+  the remedy rather than the browser — and it reads the number OUT OF THE ERROR, because the
+  first version printed the default and told a caller who had already raised the budget to 90s
+  that the page "did not answer within 30s", which is a confidently wrong number that sends them
+  to change the setting they just changed.
+
 ## The five traps
 
 Each fails SILENTLY. Each is encoded in `src/domains/site/traps.ts` (trap 5 in
