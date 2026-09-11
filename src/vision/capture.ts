@@ -35,6 +35,13 @@ interface El {
   tagName: string;
   className: unknown;
   textContent: string | null;
+  /**
+   * VISIBLE text, which is what a coverage measure has to be made of.
+   * `textContent` counts a hidden menu's every entry and a <script> body, so
+   * measuring against it would call a correct import a failure on any site with
+   * an off-canvas nav.
+   */
+  innerText?: string;
   children: ArrayLike<El>;
   getAttribute(name: string): string | null;
   setAttribute(name: string, value: string): void;
@@ -166,7 +173,16 @@ function capturePage(limits: { maxSections: number; maxImages: number; maxTextCh
     // nothing, so a contact page says it had one. The CONTROLS stay ignored —
     // a stray input outside a form is chrome, and the fields of a form that IS
     // reported are counted there rather than walked into.
-    'NAV', 'INPUT', 'SELECT', 'TEXTAREA', 'BUTTON',
+    //
+    // BUTTON IS NOT HERE EITHER, AND USED TO BE — filed with the form controls,
+    // on the reasoning that fits `input` and does not fit it. A `<button>` with
+    // words in it is a CALL TO ACTION, which on a shop is the most important
+    // interactive thing on the page: MEASURED on ttgshop.vn, 27 of them dropped
+    // in one capture, every "Mua ngay" and "Thêm vào giỏ" among them. A button
+    // that really is a form control is unreachable anyway — the FORM branch
+    // returns without walking its children — so the only ones this reaches are
+    // the ones a reader would press.
+    'NAV', 'INPUT', 'SELECT', 'TEXTAREA',
   ]);
   const forms: Array<{ fields: number; labels: string[] }> = [];
 
@@ -227,6 +243,83 @@ function capturePage(limits: { maxSections: number; maxImages: number; maxTextCh
   // a throwaway tab that is closed straight after.
   for (const d of Array.from(document.querySelectorAll('details'))) d.setAttribute('open', '');
 
+  // A TAB PANEL THAT IS NOT THE OPEN ONE MEASURES AS ZERO, and on a shop that
+  // is most of the page.
+  //
+  // Same principle as the `<details>` pass above and the same sentence decides
+  // it: the source's collapsed state is not content. MEASURED on ttgshop.vn —
+  // a homepage that lays its catalogue out in tabs (PC GAMING, WORKSTATION,
+  // AMD, MINI, …) — 73% of the page's own text was in panels carrying
+  // `display:none`, so the import kept one tab's products and silently dropped
+  // every other tab: product names, prices, discounts, stock. Nothing reported
+  // it, because a hidden element is indistinguishable from an absent one once
+  // it has been skipped.
+  //
+  // REVEALED BY THE SHAPE OF A PANEL SET, never by unhiding what is hidden. A
+  // `display:none` element with no visible SIBLING is a modal, a drop-down, an
+  // off-canvas menu or a mobile-only copy of a desktop bar — showing those is
+  // how an import grows a navigation drawer in the middle of a page. What marks
+  // a panel is that it sits beside a peer of the same kind that IS shown: one
+  // tab open, the rest waiting. So the reveal needs a visible sibling, real
+  // content of its own, and a parent that is not page chrome.
+  //
+  // The display value is COPIED from that visible sibling rather than forced to
+  // `block`: a flex row of cards revealed as a block would stack, and the walk
+  // reads `display` to decide what is a row.
+  const revealPanels = (): void => {
+    const parents = new Set<El>();
+    for (const el of Array.from(document.querySelectorAll('[style*="display"], .hidden, [hidden], [aria-hidden]'))) {
+      const p = (el as { parentElement?: El | null }).parentElement;
+      if (p) parents.add(p);
+    }
+    // Any container can hold a panel set; the attribute scan above only finds
+    // the common spellings, so the sweep below is over every parent of more
+    // than one element, bounded by the document itself.
+    for (const el of Array.from(document.querySelectorAll('*'))) {
+      if (el.children.length > 1) parents.add(el);
+    }
+    for (const parent of parents) {
+      if (inPageChrome(parent)) continue;
+      const kids = Array.from(parent.children);
+      if (kids.length < 2) continue;
+      // A VISIBLE PEER IS NOT ENOUGH, and the first version of this stopped
+      // there — which reveals every hidden thing on the page, because anything
+      // in a content flow has visible siblings. A pinned test caught it: a
+      // `<p style="display:none">` beside a visible paragraph came back as
+      // content, and that `<p>` is hidden because its author hid it.
+      //
+      // A PANEL IS A CONTAINER THAT MATCHES ITS PEER. Same tag as a sibling
+      // that IS shown, and children of its own — which is what a tab body, a
+      // carousel track or a filtered grid always is, and what a hidden
+      // paragraph, a stray span and an empty slot never are.
+      const shownByTag: Record<string, string> = {};
+      const hidden: El[] = [];
+      for (const k of kids) {
+        const cs = getComputedStyle(k);
+        const r = k.getBoundingClientRect();
+        if (cs.display === 'none') hidden.push(k);
+        else if (!shownByTag[k.tagName] && r.width > 0 && r.height > 0) {
+          shownByTag[k.tagName] = cs.display;
+        }
+      }
+      if (!hidden.length) continue;
+      for (const k of hidden) {
+        // Real content only — an empty slot or a script-filled placeholder is
+        // not a panel worth showing, and revealing it costs a skip either way.
+        // Low floor on purpose: a panel whose whole content is a price —
+        // "1.490.000 VNĐ", thirteen characters — is exactly the panel a shop
+        // hides, and a threshold tuned for prose skipped it.
+        const shownDisplay = shownByTag[k.tagName];
+        if (!shownDisplay || k.children.length === 0) continue;
+        const holds = clean(k.textContent).length > 2 || k.querySelectorAll('img').length > 0;
+        if (!holds) continue;
+        const was = k.getAttribute('style') ?? '';
+        k.setAttribute('style', `${was};display:${shownDisplay} !important`);
+      }
+    }
+  };
+
+
   /**
    * What the page CALLS this icon, in its own words. A candidate, never a verdict.
    *
@@ -236,6 +329,61 @@ function capturePage(limits: { maxSections: number; maxImages: number; maxTextCh
    * decides whether this platform has one by that name — nothing in the page can
    * answer that.
    */
+  /**
+   * THE REAL FILE, wherever the page put it — and on a shop that is almost never
+   * `src`.
+   *
+   * MEASURED on ttgshop.vn: 100 images, and 84 of them carry `data-src` with no
+   * `src` at all. Those 84 are the PRODUCT PHOTOS. Reading `src` alone imported
+   * a shop with a sixth of its pictures and reported the rest as
+   * `image-without-src`, which reads like the page's fault rather than ours.
+   *
+   * Lazy loading is not an edge case, it is how the web ships images: every
+   * mainstream loader (lazysizes, lozad, and most CMS themes) parks the URL in a
+   * data attribute and fills `src` only when the image nears the viewport — and
+   * a full-page screenshot does not scroll, which is the same reason `sb_look`
+   * walks the page before it fires.
+   *
+   * `srcset` is read for its LARGEST candidate rather than its first: the
+   * platform re-encodes what it is given, so handing it the 350w thumbnail when
+   * the page also offers 1400w throws away detail nothing can recover. A
+   * `data:` URI is refused wherever it appears — it is the 1x1 placeholder the
+   * loader is displaying until the real one arrives, which is precisely the
+   * placeholder this import must not ship.
+   */
+  const LAZY_SRC = ['data-src', 'data-original', 'data-lazy-src', 'data-lazy', 'data-echo', 'data-url'];
+  const widest = (srcset: string): string => {
+    let best = '';
+    let bestW = -1;
+    for (const part of srcset.split(',')) {
+      const bits = part.trim().split(/\s+/);
+      if (!bits[0]) continue;
+      const w = /^([0-9]+)w$/.exec(bits[1] ?? '');
+      const n = w ? Number(w[1]) : 0;
+      if (n >= bestW) {
+        bestW = n;
+        best = bits[0];
+      }
+    }
+    return best;
+  };
+  const realSrc = (el: El): string => {
+    const direct = el.getAttribute('src');
+    if (direct && !direct.startsWith('data:')) return direct;
+    for (const a of LAZY_SRC) {
+      const v = el.getAttribute(a);
+      if (v && !v.startsWith('data:')) return v;
+    }
+    for (const a of ['srcset', 'data-srcset']) {
+      const v = el.getAttribute(a);
+      if (v) {
+        const w = widest(v);
+        if (w && !w.startsWith('data:')) return w;
+      }
+    }
+    return '';
+  };
+
   const iconName = (el: El): string => {
     const use = Array.from(el.querySelectorAll('use'))[0];
     const ref = use ? use.getAttribute('href') ?? use.getAttribute('xlink:href') : null;
@@ -466,8 +614,8 @@ function capturePage(limits: { maxSections: number; maxImages: number; maxTextCh
         return [{ kind: 'heading', level: Number(tag.slice(1)), text }];
       }
       if (tag === 'IMG') {
-        const src = el.getAttribute('src');
-        if (!src || src.startsWith('data:')) {
+        const src = realSrc(el);
+        if (!src) {
           skip('image-without-src');
           return [];
         }
@@ -478,6 +626,30 @@ function capturePage(limits: { maxSections: number; maxImages: number; maxTextCh
         taken.images++;
         taken.nodes++;
         return [{ kind: 'image', src: abs(src), alt: clean(el.getAttribute('alt')) }];
+      }
+      if (tag === 'BUTTON') {
+        // Read exactly as an `<a>` is, minus the href: painted is a call to
+        // action, unpainted is a plain control, and the variant is what stops
+        // every one of them arriving as a pink pill — the defect the anchor
+        // branch below records from a documentation sidebar.
+        const text = clean(el.textContent);
+        // A BUTTON WITH MARKUP INSIDE IT IS A CARD, not a label — the same
+        // reading the anchor branch below already applies, and taking the text
+        // whole instead COST coverage rather than gaining it: a product tile
+        // wrapped in a `<button>` came back as one run-on string with the name,
+        // the price and the discount glued together, replacing three nodes that
+        // had been captured separately. Measured: 89.7% down to 82.7% on
+        // ttgshop.vn, recovered by descending first.
+        if (el.children.length > 0) {
+          const inner = walkChildren(el);
+          if (inner.length > 0) return inner;
+        }
+        if (!text) {
+          skip('button-without-words');
+          return [];
+        }
+        taken.nodes++;
+        return [{ kind: 'button', variant: looksLikeButton(el) ? 'cta' : 'link', text }];
       }
       if (tag === 'A') {
         const text = clean(el.textContent);
@@ -604,7 +776,20 @@ function capturePage(limits: { maxSections: number; maxImages: number; maxTextCh
         // wrapping it — so the honest translation is the stack it already reads
         // as. Twelve is above any real row seen here and far below a content
         // grid.
-        const ROW_MAX = 12;
+        // THE CAP IS ABOUT SLIVERS, so it belongs on the containers that make
+        // them. A NOWRAP row divides one width by its column count — that is
+        // how 279 columns became 279 slivers — but a container that WRAPS never
+        // does: it lays out as many as fit and starts a new line, which is the
+        // same thing a twenty-card product shelf wants and exactly what the
+        // source was already showing.
+        //
+        // Twelve on a wrapping shelf was a rule coercing the layout rather than
+        // reading it: a shop's collection band came back as a vertical stack of
+        // cards because it had more than a dozen. The bound that remains is the
+        // whole-import node budget, which is the honest place for "this page is
+        // enormous".
+        const wraps = grid || cs.flexWrap === 'wrap';
+        const ROW_MAX = wraps ? 60 : 12;
         if (lays && row && kids.length >= 2 && kids.length <= ROW_MAX) {
           taken.nodes++;
           return [{
@@ -613,7 +798,7 @@ function capturePage(limits: { maxSections: number; maxImages: number; maxTextCh
             // A GRID ALWAYS WRAPS — that is what a grid IS — and `flexWrap` reads
             // `nowrap` on one because the property does not apply. Carrying that
             // literally gave the columns nowhere to go at any width.
-            wrap: grid || cs.flexWrap === 'wrap',
+            wrap: wraps,
             children: kids,
           }];
         }
@@ -639,6 +824,13 @@ function capturePage(limits: { maxSections: number; maxImages: number; maxTextCh
     };
     return walk(root);
   };
+
+  // AFTER `inPageChrome` exists, and that ordering is load-bearing: the reveal
+  // asks whether a container is page chrome, and a `const` arrow read before
+  // its own definition throws inside `evaluate`, which kills the whole capture.
+  // The same class as the closure trap this file already carries — a name that
+  // exists but is not yet initialised.
+  revealPanels();
 
   // SECTION CANDIDATES, widest first: a page that marks its bands up
   // semantically is read that way, and one that does not falls back to the
@@ -697,15 +889,111 @@ function capturePage(limits: { maxSections: number; maxImages: number; maxTextCh
   };
 
   let sections = build(candidates);
-  // THE FALLBACK HAS TO FIRE ON AN EMPTY RESULT, not only on an empty candidate
-  // LIST. A page can offer `<section>` elements that hold nothing this platform
-  // renders — a wrapper around a canvas, a slot filled by script later — and the
-  // old order took "we found candidates" as "we found content", so the whole
-  // page came back empty. Measured: tailwindcss.com kept 0 of 6,004 characters
-  // while reporting one skipped empty section.
-  if (sections.length === 0) {
+
+  // THE FALLBACK HAS TO FIRE ON A DERISORY RESULT, not only on an empty one —
+  // and this entry has now been widened TWICE, each time by a real page.
+  //
+  // First it fired only on an empty candidate LIST, so a page offering
+  // `<section>`s that hold nothing this platform renders came back empty
+  // (tailwindcss.com: 0 of 6,004 characters, one skipped empty section). That
+  // was fixed by firing on an empty RESULT.
+  //
+  // An empty result is still the wrong test, because it treats "we captured
+  // something" as "we captured the page". MEASURED on ttgshop.vn, a shop with
+  // 2,856 divs, 602 paragraphs, 110 headings and 100 images: the whole page
+  // lives in `div.homepage`, and the document's only two `<section>` elements
+  // are a BREADCRUMB and one more. The selector privileges `<section>`
+  // absolutely, so the breadcrumb WAS the result — one section, one text node,
+  // 34 of 4,993 characters — and because that is not empty, nothing fell back.
+  // A shop imported as its own breadcrumb, with no error at any step.
+  //
+  // So the question is coverage, against the denominator this file already
+  // records as the honest one: page chrome is skipped ON PURPOSE and must not
+  // count against the result, or every correct import of a nav-heavy site would
+  // look like a failure. Below half of the non-chrome text, the candidate set
+  // was simply the wrong reading of the page, and the body walk is tried and
+  // kept only if it does better — so a page where the sections really are the
+  // content pays one comparison and keeps its own answer.
+  const textOf = (nodes: Captured[]): number => {
+    let n = 0;
+    const walk = (c: Captured): void => {
+      if (typeof (c as { text?: string }).text === 'string') n += (c as { text: string }).text.length;
+      for (const k of (c as { children?: Captured[] }).children ?? []) walk(k);
+    };
+    for (const c of nodes) walk(c);
+    return n;
+  };
+  let chromeChars = 0;
+  for (const el of Array.from(document.querySelectorAll('header, nav, footer'))) {
+    if (inPageChrome(el)) chromeChars += (el.innerText ?? '').length;
+  }
+  const contentChars = Math.max(0, (document.body.innerText ?? '').length - chromeChars);
+  // NO SIZE FLOOR ON THE CHECK. An earlier version only asked the question on
+  // pages with more than 400 characters, which is the guard you write when you
+  // fear a fallback firing too often — but the fallback cannot do harm here: it
+  // BUILDS the alternative and keeps it only if it captured more, so the worst
+  // case is one wasted walk on a page that was already right. A small page is
+  // also exactly where one stray band is the whole import.
+  if (sections.length === 0 || (contentChars > 0 && textOf(sections) < contentChars * 0.5)) {
+    // THE CONTENT ROOT, not `body` — otherwise the whole page comes back as ONE
+    // band and every arrangement the source had is gone. Measured on
+    // ttgshop.vn: `body` yields `div.homepage`, one candidate holding 9,829px of
+    // shop, so the import produced a single section with 467 text nodes in it.
+    //
+    // A real page wraps its content two or three deep before the bands start
+    // (`body > div.homepage > div.container > div.section-collection…`), so the
+    // root is found by DESCENDING while one child still holds nearly all the
+    // text. That child is a wrapper by definition — it has siblings that are
+    // scripts, chrome and empty slots — and its children are the bands.
+    // Bounded, and it stops the moment the text spreads out, which is exactly
+    // when the bands have been reached.
+    const textLen = (el: El): number => (el.innerText ?? el.textContent ?? '').length;
+    let root: El = document.querySelectorAll('main')[0] ?? document.body;
+    for (let depth = 0; depth < 6; depth += 1) {
+      const kids = Array.from(root.children).filter((k) => !inPageChrome(k));
+      if (kids.length === 0) break;
+      const total = textLen(root);
+      let biggest = kids[0];
+      for (const k of kids) if (textLen(k) > textLen(biggest)) biggest = k;
+      if (total < 200 || textLen(biggest) < total * 0.7) break;
+      root = biggest;
+    }
+    // BOTH READINGS, AND THE ONE THAT COVERS MORE WINS. Descending finds the
+    // band split on a page that wraps its content; it LOSES material on a page
+    // whose content is spread across two wrappers, because everything outside
+    // the biggest one is left behind — measured here as 89.7% falling to 82.7%.
+    // Neither rule is right for every page and the comparison costs one walk,
+    // so the page decides rather than the heuristic.
+    // A SPECULATIVE BUILD MUST LEAVE NO TRACE, and the first version of this
+    // left three. `build` is not pure — it pushes every `<form>` it meets onto
+    // the shared list, counts every skip, and spends the image and node budget
+    // — so trying a second reading REPORTED a one-form page as having three and
+    // trebled every skip count. Caught by two tests that were already there,
+    // which is the argument for asserting side effects and not only results.
+    const snap = (): { forms: number; skipped: Record<string, number>; taken: { images: number; nodes: number } } => ({
+      forms: forms.length,
+      skipped: { ...skipped },
+      taken: { ...taken },
+    });
+    const restore = (was: ReturnType<typeof snap>): void => {
+      forms.length = was.forms;
+      for (const k of Object.keys(skipped)) delete skipped[k];
+      Object.assign(skipped, was.skipped);
+      taken.images = was.taken.images;
+      taken.nodes = was.taken.nodes;
+    };
+    const before = snap();
+    let bestState = snap();
     const main = document.querySelectorAll('main')[0] ?? document.body;
-    sections = build(Array.from(main.children));
+    for (const from of [root, main]) {
+      restore(before);
+      const wider = build(Array.from(from.children));
+      if (textOf(wider) > textOf(sections)) {
+        sections = wider;
+        bestState = snap();
+      }
+    }
+    restore(bestState);
   }
 
   const link = Array.from(document.querySelectorAll('link[rel="canonical"]'))[0];

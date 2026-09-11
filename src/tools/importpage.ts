@@ -560,7 +560,12 @@ export function registerImportTools(
 
       const shots = await captureMany(
         plan.pages.map((p) => p.url),
-        { maxImages: max_images ?? 24, maxNodes: max_nodes ?? 300 },
+        // 900, not 300. The old ceiling was chosen against marketing pages;
+        // a real shop's homepage is a different quantity — ttgshop.vn measured
+        // 9,829px of catalogue across a dozen collection bands, and 300 cut it
+        // off in the middle of the third. A cap is here to stop a runaway page,
+        // not to decide how much of an ordinary one survives.
+        { maxImages: max_images ?? 60, maxNodes: max_nodes ?? 900 },
       );
       const byUrl = new Map(shots.map((s) => [s.url, s]));
 

@@ -1035,3 +1035,84 @@ describe.runIf(process.env.SB_BROWSER_TEST === '1')('crawlLinks() and captureMan
     expect(got[1].ok === false && got[1].why.length).toBeGreaterThan(0);
   }, 60_000);
 });
+
+/**
+ * WHAT A REAL SHOP LOOKS LIKE, and the four ways an import used to lose it.
+ *
+ * Measured on ttgshop.vn — a PC shop with 2,856 divs, 602 paragraphs, 110
+ * headings and 100 images. Before these four, the import kept 0% of its
+ * content: the document's only two `<section>` elements are a BREADCRUMB and
+ * one more, the selector privileged `<section>` absolutely, and because a
+ * breadcrumb is not an EMPTY result nothing fell back. A shop imported as its
+ * own breadcrumb, with no error at any step.
+ */
+describe.runIf(process.env.SB_BROWSER_TEST === '1')('capture() on a shop-shaped page', () => {
+  const shop = `data:text/html,${encodeURIComponent(
+    '<body>' +
+      // The page's only <section> is a breadcrumb, exactly as the real shop.
+      '<section class="crumb"><span>Trang chủ</span></section>' +
+      '<div class="homepage"><div class="container">' +
+      '<div class="band"><h2>PC GAMING</h2>' +
+      // The open tab.
+      '<div class="panel"><div class="p-item">' +
+      '<img data-src="/media/pc-1.jpg" alt="PC một" style="width:40px;height:40px">' +
+      '<p class="price">69.980.000 VNĐ</p>' +
+      '<button class="btn" style="background:#e33;display:block">Mua ngay</button>' +
+      '</div></div>' +
+      // The tabs nobody clicked: display:none, beside a visible peer.
+      '<div class="panel" style="display:none"><div class="p-item">' +
+      '<img data-src="/media/pc-2.jpg" alt="PC hai" style="width:40px;height:40px">' +
+      '<p class="price">10.280.000 VNĐ</p>' +
+      '</div></div>' +
+      '<div class="panel" style="display:none"><div class="p-item">' +
+      '<p class="price">1.490.000 VNĐ</p></div></div>' +
+      '</div></div></div>' +
+      // A modal has NO visible peer, so it must stay hidden.
+      '<div style="display:none"><p>Bản tin — đăng ký ngay để nhận ưu đãi</p></div>' +
+      '</body>',
+  )}`;
+
+  const strings = (got: Awaited<ReturnType<typeof capture>>): string => JSON.stringify(got.sections);
+
+  it('does not import a shop as its breadcrumb', async () => {
+    // The fallback has to fire on a DERISORY result, not only an empty one:
+    // "we captured something" is not "we captured the page".
+    const got = await capture(shop, { maxImages: 20, maxNodes: 400 });
+    expect(strings(got)).toContain('69.980.000');
+  });
+
+  it('reads the image a lazy loader parked in data-src', async () => {
+    // 84 of ttgshop.vn's 100 images carry data-src and no src, and those 84 are
+    // the product photos. Reading src alone imported a shop with a sixth of its
+    // pictures and blamed the page for the rest.
+    const got = await capture(shop, { maxImages: 20, maxNodes: 400 });
+    expect(strings(got)).toContain('pc-1.jpg');
+    expect(got.skipped['image-without-src']).toBeUndefined();
+  });
+
+  it('opens the TABS NOBODY CLICKED, which on a shop is most of the catalogue', async () => {
+    // Same sentence as the <details> pass: the source's collapsed state is not
+    // content. 73% of the real page's text sat in panels carrying display:none.
+    const got = await capture(shop, { maxImages: 20, maxNodes: 400 });
+    expect(strings(got)).toContain('10.280.000');
+    expect(strings(got)).toContain('1.490.000');
+    expect(strings(got)).toContain('pc-2.jpg');
+  });
+
+  it('leaves a modal hidden, because a panel is known by its VISIBLE PEER', async () => {
+    // Unhiding whatever is hidden is how an import grows a newsletter pop-up and
+    // a navigation drawer in the middle of a page. What marks a panel is that it
+    // sits beside a peer of the same kind that IS shown.
+    const got = await capture(shop, { maxImages: 20, maxNodes: 400 });
+    expect(strings(got)).not.toContain('đăng ký ngay');
+  });
+
+  it('captures a real <button>, which on a shop is the whole point of the page', async () => {
+    // BUTTON was filed with the form controls, on reasoning that fits `input`
+    // and does not fit it: 27 dropped in one capture of the real shop, every
+    // "Mua ngay" among them. A button inside a form is still unreachable — that
+    // branch returns without walking its children.
+    const got = await capture(shop, { maxImages: 20, maxNodes: 400 });
+    expect(strings(got)).toContain('Mua ngay');
+  });
+});
