@@ -6,6 +6,12 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.38.3] - 2026-09-11
+
+### Fixed
+- README.md and README.vi.md now report the catalog's real size, 508 API operations (170 of 223 writes shaped) and 112 elements, instead of the stale 495 and 111 left over from an earlier regen.
+- sb_undo's row in both READMEs and its section in both tool references no longer claim the platform has no page history or restore; they now point to the page versions/history/restore surface (`sb_api_find` "page versions") as the first place to look when a page is wrecked, with sb_undo as the second answer for every other shaped PUT.
+
 ## [0.38.2] - 2026-09-11
 
 ### Added

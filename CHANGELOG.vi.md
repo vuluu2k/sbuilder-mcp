@@ -6,6 +6,12 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.38.3] - 2026-09-11
+
+### Fixed
+- README.md và README.vi.md giờ báo đúng quy mô thật của catalog, 508 operation API (170 trong 223 lệnh ghi có shape) và 112 element, thay vì con số cũ 495 và 111 còn sót lại từ lần regen trước.
+- Dòng của sb_undo trong cả hai README và mục của nó trong cả hai tài liệu tool không còn khẳng định nền tảng không có lịch sử trang hay restore; giờ chúng trỏ tới bề mặt page versions/history/restore (`sb_api_find` "page versions") như nơi cần tìm trước tiên khi một trang bị hỏng, còn sb_undo là đường về thứ hai cho mọi PUT có shape khác.
+
 ## [0.38.2] - 2026-09-11
 
 ### Added
