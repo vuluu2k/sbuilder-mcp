@@ -138,8 +138,12 @@ export function registerUndoTools(server: McpServer, ctx: ToolContext): void {
     'sb_undo',
     {
       description:
-        'Put back what a PUT through sb_api_call replaced. The platform has no page history ' +
-        'or restore, so this is the only way back. No argument lists what is undoable.',
+        'Put back what a PUT through sb_api_call replaced — settings, a product, a form, ' +
+        'anything with a shape. IN THIS PROCESS ONLY, capped, and gone when it exits. For a ' +
+        'PAGE the platform keeps its own: GET .../pages/{pageId}/history lists the autosave ' +
+        'checkpoint it writes on every draft save, versions lists the labelled snapshots, and ' +
+        'either restores. That one survives everything and is the better answer whenever the ' +
+        'thing to recover is a page. No argument lists what is undoable here.',
       inputSchema: {
         index: z.number().int().min(1).optional().describe('1 is the most recent write'),
         dry_run: z.boolean().optional(),

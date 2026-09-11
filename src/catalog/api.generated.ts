@@ -3,10 +3,10 @@
 import type { ApiOperation } from './types.js';
 
 export const SWAGGER_SOURCE = {
-  "operations": 501,
+  "operations": 506,
   "definitions": 105,
-  "bodyCarrying": 179,
-  "bodyUndescribed": 64,
+  "bodyCarrying": 182,
+  "bodyUndescribed": 67,
   "generatedFrom": "server/docs/swagger.json"
 } as const;
 
@@ -9538,6 +9538,113 @@ export const API_OPERATIONS: ApiOperation[] = [
     "credential": "siteScoped"
   },
   {
+    "id": "get:/api/sites/{siteId}/pages/{pageId}/history",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/pages/{pageId}/history",
+    "tags": [
+      "pages",
+      "pages"
+    ],
+    "summary": "Restore a page's draft from an autosave checkpoint",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "pageId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Page ID"
+      },
+      {
+        "name": "limit",
+        "in": "query",
+        "required": false,
+        "type": "integer",
+        "description": "1-… , default 50"
+      },
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "pageId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Page ID"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/api/sites/{siteId}/pages/{pageId}/history/{historyId}/restore",
+    "method": "POST",
+    "path": "/api/sites/{siteId}/pages/{pageId}/history/{historyId}/restore",
+    "tags": [
+      "pages",
+      "pages"
+    ],
+    "summary": "Restore a page's draft from an autosave checkpoint",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "pageId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Page ID"
+      },
+      {
+        "name": "limit",
+        "in": "query",
+        "required": false,
+        "type": "integer",
+        "description": "1-… , default 50"
+      },
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "pageId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Page ID"
+      },
+      {
+        "name": "historyId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "History ID from the list"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
     "id": "get:/api/sites/{siteId}/pages/{pageId}/preview",
     "method": "GET",
     "path": "/api/sites/{siteId}/pages/{pageId}/preview",
@@ -9615,6 +9722,250 @@ export const API_OPERATIONS: ApiOperation[] = [
         "required": true,
         "type": "string",
         "description": "Page ID"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/sites/{siteId}/pages/{pageId}/versions",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/pages/{pageId}/versions",
+    "tags": [
+      "pages",
+      "pages",
+      "pages"
+    ],
+    "summary": "Restore a page's draft from a version snapshot",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "pageId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Page ID"
+      },
+      {
+        "name": "limit",
+        "in": "query",
+        "required": false,
+        "type": "integer",
+        "description": "1-… , default 50"
+      },
+      {
+        "name": "offset",
+        "in": "query",
+        "required": false,
+        "type": "integer",
+        "description": "default 0"
+      },
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "pageId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Page ID"
+      },
+      {
+        "name": "body",
+        "in": "body",
+        "required": true,
+        "type": "object",
+        "description": "{label, document?}"
+      },
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "pageId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Page ID"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/api/sites/{siteId}/pages/{pageId}/versions",
+    "method": "POST",
+    "path": "/api/sites/{siteId}/pages/{pageId}/versions",
+    "tags": [
+      "pages",
+      "pages",
+      "pages"
+    ],
+    "summary": "Restore a page's draft from a version snapshot",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "pageId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Page ID"
+      },
+      {
+        "name": "limit",
+        "in": "query",
+        "required": false,
+        "type": "integer",
+        "description": "1-… , default 50"
+      },
+      {
+        "name": "offset",
+        "in": "query",
+        "required": false,
+        "type": "integer",
+        "description": "default 0"
+      },
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "pageId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Page ID"
+      },
+      {
+        "name": "body",
+        "in": "body",
+        "required": true,
+        "type": "object",
+        "description": "{label, document?}"
+      },
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "pageId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Page ID"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/api/sites/{siteId}/pages/{pageId}/versions/{versionId}/restore",
+    "method": "POST",
+    "path": "/api/sites/{siteId}/pages/{pageId}/versions/{versionId}/restore",
+    "tags": [
+      "pages",
+      "pages",
+      "pages"
+    ],
+    "summary": "Restore a page's draft from a version snapshot",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "pageId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Page ID"
+      },
+      {
+        "name": "limit",
+        "in": "query",
+        "required": false,
+        "type": "integer",
+        "description": "1-… , default 50"
+      },
+      {
+        "name": "offset",
+        "in": "query",
+        "required": false,
+        "type": "integer",
+        "description": "default 0"
+      },
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "pageId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Page ID"
+      },
+      {
+        "name": "body",
+        "in": "body",
+        "required": true,
+        "type": "object",
+        "description": "{label, document?}"
+      },
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "pageId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Page ID"
+      },
+      {
+        "name": "versionId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Version ID from the list"
       }
     ],
     "bodyDescribed": false,

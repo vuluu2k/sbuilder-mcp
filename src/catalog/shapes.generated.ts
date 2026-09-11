@@ -4,7 +4,7 @@
 import type { RequestShape } from './types.js';
 
 export const SHAPE_SOURCE = {
-  "writeOperations": 219,
+  "writeOperations": 222,
   "shaped": 169,
   "fromHandlers": 169,
   "fromSwaggerOnly": 0,

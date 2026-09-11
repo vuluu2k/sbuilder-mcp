@@ -410,11 +410,10 @@ that accounts for them.
   to enumerate them from the router, and the running server is in release mode with no route
   table in its log.
 
-  **AND A PUT NOW READS BEFORE IT WRITES, because that gap is the one with no route at all.**
-  Page versions / history / restore exist on neither surface, so every whole-document replace
-  this server can make is one-way — `PUT /settings` is not a patch and a partial body erases
-  the store's configuration. A merchant clicking through the editor has undo; an agent had
-  nothing, and one call does more damage. `sb_api_call` therefore GETs before any PUT that
+  **AND A PUT NOW READS BEFORE IT WRITES, because every whole-document replace is one-way.**
+  `PUT /settings` is not a patch and a partial body erases the store's configuration. A
+  merchant clicking through the editor has undo; an agent had nothing, and one call does more
+  damage. `sb_api_call` therefore GETs before any PUT that
   has both a shape and a matching GET, and `sb_undo` puts one state back through the same
   operation, carrying only the fields that operation's handler decodes. In process, capped at
   20, silent when the read fails — an undo that could not be prepared must never stop the
@@ -430,10 +429,35 @@ that accounts for them.
   DESCRIBED body (`internal_publicapi.PagePatch`), plus full CRUD for products, articles,
   blog categories, customers, media, orders, translations and webhooks. So a page CAN be
   read, patched and deleted, and a catalogue CAN be filled — through the key, not the
-  session. What genuinely has no route on either surface is page VERSIONS / HISTORY /
-  RESTORE: the only `restore` in `/api/v1` is `media/{id}/restore`. So a wrecked draft is
-  still unrecoverable, and a page delete is still one-way. See
-  `docs/superpowers/specs/2026-09-07-phase-7-drop-time-and-signals-design.md`.
+  session. See `docs/superpowers/specs/2026-09-07-phase-7-drop-time-and-signals-design.md`.
+
+  **AND THIS FILE SAID FOR THREE PHASES THAT A WRECKED DRAFT WAS UNRECOVERABLE. IT WAS NOT.**
+  Page versions and history were recorded here, repeatedly, as having "no route on either
+  surface" — which was true of the DOCUMENT and false of the platform. `saveDraftRaw` appends
+  an autosave checkpoint on EVERY draft save, bounded by the service's own keep count;
+  `SaveVersion` mints a labelled snapshot; `RestoreVersion` and `RestoreHistory` put either
+  back; and `pageSub` has routed `versions` and `history` all along. Five working operations,
+  carrying no `@Router` line — so they reached a browser and reached `swagger.json`, this
+  catalog and every call sheet by no route at all. The same shape as `relations/rest/rest.go`,
+  with a worse consequence: this is the surface that recovers a page somebody overwrote.
+
+  Annotated upstream (`beb4562f`), 501 → 506 operations:
+
+  - `GET .../pages/{pageId}/versions` and `POST` the same path — list, and snapshot the
+    current draft under a label. The POST's `document` is OPTIONAL, and omitting it is the
+    ordinary use: label what is there before changing it.
+  - `POST .../pages/{pageId}/versions/{versionId}/restore`
+  - `GET .../pages/{pageId}/history` — the checkpoints nobody asked for and everybody needs.
+  - `POST .../pages/{pageId}/history/{historyId}/restore`
+
+  A RESTORE CHANGES THE DRAFT. Publish afterwards, or the merchant reloads the storefront
+  after a successful restore and sees the old page. And `sb_undo` is now the SECOND answer
+  rather than the only one: it covers any shaped PUT but lives in this process and dies with
+  it, while the page surface is the platform's own and survives everything. Its description
+  said "the platform has no page history or restore, so this is the only way back" — which
+  would have steered an agent away from the better answer, and is corrected.
+
+  A page DELETE is still one-way.
 
 - **An AGENT KEY now opens media upload AND the live-edit socket. Both of this repo's
   "session only" rules are DEAD, and the corrections are recorded because the old ones read
@@ -2038,7 +2062,7 @@ framed it: 46 of 212 write operations carried a body schema, so every merchant o
 through `sb_api_call` was a guess, while the editor exposes 58 feature areas and this server
 covered about six. It shipped `REQUEST_SHAPES` (46 → 158, read off the handlers), `sb_store`
 (the four ordered writes that make a checkout) and `sb_undo` (a PUT reads before it writes,
-because the platform has no history). It did NOT add a tool per surface: the finishing
+because a PUT is not a patch). It did NOT add a tool per surface: the finishing
 surfaces — theme, fonts, menus, translations, settings, blog, orders, customers, shipping,
 discounts — became reachable the moment the shapes landed, and what is still unshaped there
 is action endpoints that take no JSON body.
