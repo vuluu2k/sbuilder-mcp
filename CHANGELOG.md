@@ -6,6 +6,11 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.38.2] - 2026-09-11
+
+### Added
+- sb_traits_for's config_values for list-dataset now lists a sixth config.collectionType value, page_collection, which renders the collection the page itself resolves to (the one a /collections/{slug} URL names), so one collection template can serve every collection explicitly instead of relying on all_products to narrow itself.
+
 ## [0.38.1] - 2026-09-11
 
 ### Fixed

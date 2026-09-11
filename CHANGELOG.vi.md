@@ -6,6 +6,11 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.38.2] - 2026-09-11
+
+### Added
+- config_values của sb_traits_for dành cho list-dataset giờ liệt kê thêm giá trị thứ sáu của config.collectionType, page_collection, giá trị này render đúng collection mà trang tự phân giải tới (collection được đặt tên bởi một URL /collections/{slug}), nhờ đó một collection template có thể phục vụ mọi collection một cách tường minh thay vì dựa vào all_products tự thu hẹp phạm vi.
+
 ## [0.38.1] - 2026-09-11
 
 ### Fixed
