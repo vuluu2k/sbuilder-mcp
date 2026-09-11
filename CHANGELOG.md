@@ -6,6 +6,17 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.39.0] - 2026-09-11
+
+### Added
+- The catalog grew from 508 to 524 API operations (175 of 234 writes now carrying a body shape, up from 170 of 223), closing sixteen routes that were live on the platform but carried no `@Router` annotation, so a browser could reach them and nothing here could.
+- sb_api_find now covers the AI chat assistant's whole conversation surface: the inbox, a thread's messages, sending a human reply, marking a conversation bot or closed, the unread badge, the worklist stats, and chat-settings' test/models/usage operations.
+- sb_api_find now covers both refund paths for a payment — recording a refund made elsewhere, and asking the gateway to send the money back with the record moving only once the gateway confirms — plus opening a pay link for an existing order.
+- sb_api_find now covers three domain operations: the canonical domain (www vs bare), its redirect, and its redirect code (301 vs 302).
+
+### Changed
+- README.md and README.vi.md now report the catalog's current size, 524 API operations (175 of 234 writes shaped), instead of the 508 left over before this regen.
+
 ## [0.38.3] - 2026-09-11
 
 ### Fixed

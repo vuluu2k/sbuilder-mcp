@@ -6,6 +6,17 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.39.0] - 2026-09-11
+
+### Added
+- Catalog tăng từ 508 lên 524 operation API (175 trong 234 lệnh ghi có shape, tăng từ 170 trong 223), khép lại mười sáu route đã sống trên nền tảng nhưng chưa từng có annotation `@Router`, nên trình duyệt chạm tới được còn server này thì không.
+- sb_api_find giờ bao phủ toàn bộ bề mặt hội thoại của trợ lý chat AI: hộp thư đến, tin nhắn của một luồng, gửi phản hồi của con người, đánh dấu một hội thoại là bot hoặc đã đóng, huy hiệu tin chưa đọc, số liệu worklist, cùng các operation test/models/usage của chat-settings.
+- sb_api_find giờ bao phủ cả hai đường hoàn tiền — ghi nhận một khoản hoàn tiền đã thực hiện ở nơi khác, và yêu cầu cổng thanh toán gửi trả tiền với bản ghi chỉ chuyển trạng thái khi cổng xác nhận — cùng việc mở link thanh toán cho một đơn hàng đã có.
+- sb_api_find giờ bao phủ ba operation quản lý domain: domain chính thức (www hay không www), redirect của nó, và mã redirect (301 hay 302).
+
+### Changed
+- README.md và README.vi.md giờ báo đúng quy mô hiện tại của catalog, 524 operation API (175 trong 234 lệnh ghi có shape), thay vì con số 508 còn sót lại trước lần regen này.
+
 ## [0.38.3] - 2026-09-11
 
 ### Fixed
