@@ -1092,6 +1092,12 @@ export const API_DEFINITIONS: Record<string, unknown> = ${JSON.stringify(
     easings: string[];
     easingFallback: string;
     durationDefault: number;
+    intensities: string[];
+    intensityDurations: Record<string, number>;
+    triggers: string[];
+    rangeDefault: number;
+    repeatMax: number;
+    alternateNeedsInfinite: boolean;
     readBy: string;
   } => {
     // THE KEYFRAME TABLE MOVES, AND THE READER MUST NOT CARE WHICH FILE IT IS IN.
@@ -1143,11 +1149,110 @@ export const API_DEFINITIONS: Record<string, unknown> = ${JSON.stringify(
       );
       process.exit(1);
     }
+    // ---- THE FIVE FIELDS THE OBJECT GREW ON 2026-09-11 --------------------
+    //
+    // `config.animation` went from five keys to ten, and the catalog describing
+    // five of them is worse than describing none: an agent reads the table,
+    // sees the shape it names, and concludes the rest does not exist. That is
+    // the stale-hint cost this repo keeps paying — "a hint that says you cannot
+    // outlives the thing that made it true" — and here it would hide the
+    // headline feature, a reveal-on-scroll that the platform can finally do.
+    //
+    // EACH IS READ UNDER ONE RULE: a name that is ABSENT from the source means
+    // this deployment does not have the field, and the catalog says nothing
+    // about it; a name that is PRESENT but no longer parses means the shape
+    // moved, and the table would be WRONG rather than missing, so that exits 1.
+    // The same split the duration default already makes, applied per field.
+    const optional = <T>(name: string, parse: (src: string) => T | null, absent: T): T => {
+      if (!src.includes(name)) return absent;
+      const got = parse(src);
+      if (got === null) {
+        console.error(
+          `${name} is still in server/render/style but no longer reads as a vocabulary — ` +
+            'the animation table would be wrong rather than missing',
+        );
+        process.exit(1);
+      }
+      return got;
+    };
+
+    // AnimIntensityVars keys the three intensities. ABSENCE IS NOT `medium`:
+    // the platform's own comment says a document with no intensity keeps the
+    // old 0.5s fallback, which is why the duration table is read beside it.
+    const intensities = optional<string[]>(
+      'AnimIntensityVars',
+      (s) => {
+        const from = s.indexOf('var AnimIntensityVars =');
+        if (from < 0) return null;
+        const body = s.slice(from, s.indexOf('\n}', from));
+        const keys = [...body.matchAll(/^\s*"([a-z]+)":\s*\{/gm)].map((m) => m[1]);
+        return keys.length ? keys : null;
+      },
+      [],
+    );
+    // What each intensity implies when no duration is stored — `strong` travels
+    // 64px, and the 0.5s meant for 30px would make it look wrong rather than
+    // strong.
+    const intensityDurations = optional<Record<string, number>>(
+      'AnimIntensityDuration',
+      (s) => {
+        const m = /var AnimIntensityDuration = map\[string\]float64\{([^}]*)\}/.exec(s);
+        if (!m) return null;
+        const out: Record<string, number> = {};
+        for (const p of m[1].matchAll(/"([a-z]+)":\s*([0-9.]+)/g)) out[p[1]] = Number(p[2]);
+        return Object.keys(out).length ? out : null;
+      },
+      {},
+    );
+    // THE SCROLL TRIGGER, which this repo's own notes said had no answer at all.
+    // Read off the COMPILER's comparison rather than a table, because there is
+    // no table — one value is special-cased into an `@supports` override, and
+    // the file's header says a second ("play once on entry") will arrive as a
+    // third value rather than by redefining this one.
+    const triggers = optional<string[]>(
+      'a.trigger ==',
+      (s) => {
+        const vals = [...s.matchAll(/a\.trigger == "([a-z_]+)"/g)].map((m) => m[1]);
+        return vals.length ? [...new Set(vals)] : null;
+      },
+      [],
+    );
+    const rangeDefault = optional<number>(
+      'AnimRangeDefault',
+      (s) => {
+        const m = /AnimRangeDefault = ([0-9]+)/.exec(s);
+        return m ? Number(m[1]) : null;
+      },
+      60,
+    );
+    const repeatMax = optional<number>(
+      'AnimRepeatMax',
+      (s) => {
+        const m = /AnimRepeatMax = ([0-9]+)/.exec(s);
+        return m ? Number(m[1]) : null;
+      },
+      0,
+    );
+    // THE GUARD WORTH CARRYING, because it is the one new field whose obvious
+    // use ends with the node INVISIBLE. `alternate` with an EVEN finite count
+    // finishes on the `from` keyframe, and every entrance keyframe starts at
+    // opacity:0 — so "fade in, twice, reversing" publishes a node the author
+    // can see on the canvas and cannot see on the page. animRepeat enforces
+    // `alternate` only alongside `infinite`; a caller who does not know that
+    // writes a reverse that is silently dropped.
+    const alternateNeedsInfinite = /if a\.alternate \{\s*return "infinite", "alternate"/.test(src);
+
     return {
       types: types.sort(),
       easings,
       easingFallback: 'ease',
       durationDefault: dur ? Number(dur[1]) : 0.5,
+      intensities,
+      intensityDurations,
+      triggers,
+      rangeDefault,
+      repeatMax,
+      alternateNeedsInfinite,
       readBy: 'AnimationTypeOf + CompileEntranceAnimationCSS',
     };
   };
@@ -1355,20 +1460,38 @@ export const BASE_ONLY_CONFIG: string[] = ${JSON.stringify(baseOnly.keys, null, 
 export const BASE_ONLY_EXCEPTIONS: string[] = ${JSON.stringify(baseOnly.exceptions, null, 2)};
 
 /**
- * The ENTRANCE ANIMATION's vocabulary — config.animation, offered by 73 of the
- * 111 element types and describable by nothing until now.
+ * The ENTRANCE ANIMATION's vocabulary — config.animation, offered by most of
+ * the element library and describable by nothing until this table existed.
  *
  * Three ways to miss, all silent (AnimationTypeOf answers "" and no keyframes,
  * no rule and no error are emitted, through save, publish and render):
- *   - it is an OBJECT, not a string: {active, type, easing, delay, duration}
+ *   - it is an OBJECT, not a string
  *   - active:true is REQUIRED; a stored type is deliberately NOT consent,
  *     because the panel keeps the type when the switch goes off
  *   - type is a keyframe key spelled with UNDERSCORES: fade_in, never fade-in
  *
  * easing is the mild one: an unrecognised value falls back to "ease".
  *
- * It is also BASE-ONLY (see BASE_ONLY_CONFIG) — render/css.go emits it into the
- * base lane because the config object is read with no responsive merge.
+ * TWO THINGS THIS TABLE USED TO SAY THAT ARE NO LONGER TRUE, kept as a
+ * correction because both were recorded here as settled facts:
+ *
+ *   - IT IS NOT BASE-ONLY ANY MORE. The compiler reads config through
+ *     MergeNamespace and emits per lane, so the key left the platform's
+ *     base-only ledger — and the side effect is the thing merchants ask for
+ *     most, an animation that is off on mobile. A caller still writing it to
+ *     base gets the cascade's fallback layer, which is correct but cannot vary.
+ *   - REVEAL-ON-SCROLL HAS AN ANSWER. trigger:"view" compiles to
+ *     animation-timeline: view() inside an @supports override, so it costs no
+ *     JavaScript and the engines without it keep animating at first paint.
+ *
+ * The object now carries ten keys. intensity travels as CSS variables (a
+ * distance is a quantity, so it reaches the page per breakpoint) and ABSENCE IS
+ * NOT medium — a document with no intensity keeps the old 0.5s fallback.
+ *
+ * alternateNeedsInfinite is the guard worth reading before using repeat:
+ * alternate with an EVEN finite count finishes on the from keyframe, and every
+ * entrance keyframe starts at opacity:0 — so the node publishes INVISIBLE. The
+ * compiler honours alternate only alongside an infinite repeat.
  */
 /**
  * The eight node-style keys a THEME TEXT STYLE controls, and the var prop each
@@ -1389,6 +1512,12 @@ export const ANIMATION: {
   easings: string[];
   easingFallback: string;
   durationDefault: number;
+  intensities: string[];
+  intensityDurations: Record<string, number>;
+  triggers: string[];
+  rangeDefault: number;
+  repeatMax: number;
+  alternateNeedsInfinite: boolean;
   readBy: string;
 } = ${JSON.stringify(animation, null, 2)};
 `;
@@ -1399,7 +1528,8 @@ export const ANIMATION: {
       `${bindingSources.length} binding sources, ${Object.keys(boundSpecials).length} bound-special elements, ` +
       `${Object.keys(satellites).length} satellite owners, ${firstChildOnly.length} first-child-only, ` +
       `${baseOnly.keys.length} base-only config keys, ${Object.keys(configValues).length} config vocabularies, ` +
-      `animation ${animation.types.length} types / ${animation.easings.length} easings, ` +
+      `animation ${animation.types.length} types / ${animation.easings.length} easings / ` +
+      `${animation.intensities.length} intensities / ${animation.triggers.length} triggers, ` +
       `${textStyleKeys.length} text-style keys, ` +
       `doc schema v${docVersion}`,
   );

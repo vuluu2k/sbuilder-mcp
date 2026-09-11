@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { inertHint, inertHintsFor } from '../src/domains/site/inert.js';
+import { ELEMENTS } from '../src/catalog/elements.generated.js';
 
 /**
  * The other silent-failure shape: not a value stored where nothing reads it, but
@@ -27,6 +28,27 @@ describe('elements that render convincingly while doing nothing', () => {
     expect(n).toMatch(/homeLabel/);
     expect(n).toMatch(/derives its trail from the page/);
     expect(n).not.toMatch(/Product detail/);
+  });
+
+  it("warns that a spline-scene is born pointing at SOMEBODY ELSE'S scene", () => {
+    // The seed is not a placeholder — specials.sceneUrl defaults to a live
+    // prod.spline.design link, so an unset one loads, moves, responds to the
+    // mouse and publishes. It is the only entry in this table where the element
+    // is not merely unfinished but is another party's work on the merchant's
+    // domain, and it is the one a screenshot most convincingly endorses.
+    const n = inertHint('spline-scene')!;
+    expect(n).toMatch(/sceneUrl/);
+    expect(n).toMatch(/scene\.splinecode/);
+    expect(n).toMatch(/posterUrl/);
+  });
+
+  it('pins the seeded scene against the catalog, so a real default cannot go quiet', () => {
+    // If the platform ever seeds an EMPTY sceneUrl, this hint becomes a lie in
+    // the direction this repo keeps paying for — a warning about a trap that is
+    // gone, steering a caller away from a working default.
+    const seeded = ELEMENTS['spline-scene']?.defaults?.specials?.sceneUrl;
+    expect(typeof seeded).toBe('string');
+    expect(seeded).toMatch(/spline\.design/);
   });
 
   it('says nothing about an element with no such trap', () => {

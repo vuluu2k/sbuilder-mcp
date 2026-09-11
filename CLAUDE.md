@@ -1338,10 +1338,12 @@ that accounts for them.
   element's own static CSS to the UA default. `config.stuckAfter` (px of page scroll, per
   breakpoint) overrides when the island decides, and is refused on a node that cannot pin —
   `stuckAfterCss` emits it only for one that can, so it is the FOURTH silent drop in the same
-  feature. IT IS ALSO THE ONLY GENERAL SCROLL HOOK THE PLATFORM HAS: the island toggles
-  `wb-stuck` on a PINNED element and nothing else, so "reveal this section as it scrolls into
-  view" has no answer here at all — the only other scroll-driven behaviour in the runtime is
-  `popup`'s `triggerType: "scroll"`, which opens a pop-up rather than styling anything. `sb_import` carries `sticky`/`fixed` off a
+  feature. IT USED TO BE THE ONLY GENERAL SCROLL HOOK THE PLATFORM HAD — the island toggles
+  `wb-stuck` on a PINNED element and nothing else, and the only other scroll-driven behaviour in
+  the runtime was `popup`'s `triggerType: "scroll"`, which opens a pop-up rather than styling
+  anything. **That is no longer true**: `config.animation`'s `trigger: "view"` is reveal-on-
+  scroll, compiled as `animation-timeline: view()` with no island at all. See the entrance
+  animation entry below — and do not reach for a sticky host to fake one. `sb_import` carries `sticky`/`fixed` off a
   source page's computed style with all three keys, because a section pinned to stay in view
   is a layout decision and a copy that scrolls away is not the same section.
 
@@ -1480,7 +1482,7 @@ that accounts for them.
   `THEME_VERSION` 6 was bumped for. `src/domains/site/theme.ts`, pinned by
   `test/theme-preset.test.ts`.
 
-- **TWO ELEMENTS RENDER CONVINCINGLY WHILE WIRED TO NOTHING, and it is the one silent shape
+- **THREE ELEMENTS RENDER CONVINCINGLY WHILE WIRED TO NOTHING, and it is the one silent shape
   neither check can catch.** `sb_review` reads the tree and the tree is correct; `sb_look`
   photographs the page and the page looks right. So the fact has to be delivered when the
   element is ADDED, which is what `src/domains/site/inert.ts` does.
@@ -1494,6 +1496,14 @@ that accounts for them.
     branch, kept byte for byte so that adding the trail republished nobody's page differently,
     and reading it as the live path was a misreading worth recording: the element's own AI hint
     ("Always start with 'Home'") is CORRECT, not stale.
+  - `spline-scene` — the platform's 112th element, and the SHARPEST of the three, because its
+    placeholder is not a placeholder. `specials.sceneUrl` is seeded with a REAL
+    `prod.spline.design` link, so a scene added and never configured loads, renders, responds
+    to the mouse and publishes — somebody else's 3D work, on the merchant's domain, looking
+    completely finished. The other two describe an element that is unfinished; a screenshot
+    ENDORSES this one. Set it to the merchant's own export (Spline: Export → Viewer, the
+    `…/scene.splinecode` link) and set `posterUrl`, or the box is blank until the ~600 KB
+    engine chunk arrives.
 
 - **EVERY STORE PAGE TYPE OPENED PRE-BUILT FOR A MERCHANT AND BLANK FOR AN AGENT, and this
   server's own tool description asserted the blank as if it were the platform's.**
@@ -1634,25 +1644,71 @@ that accounts for them.
   - **The type is UNDERSCORED.** `AnimKeyframes`'s comment flags it outright — "keyed by the
     STORED value (`fade_in`, not `fade-in`)" — and `fade-in` is what every other web tool spells
     it, so it is the spelling an agent reaches for first.
-  - **It is BASE-ONLY, and that one is ROUTED rather than warned about.** `render/css.go:359`
-    emits it into the base lane under the comment "Base-only, because the config object is
-    base-only". It was ABSENT from the platform's migration ledger because it is not a key any
-    element SEEDS, so the ledger's seed check never had an opinion about it — while the ledger's
-    other consumer, this catalog, uses it to decide which layer a config write belongs in. So
-    `sb_set` wrote it per breakpoint, into a slot the renderer never reads. Fixed upstream by
-    adding `animation` to `BASE_ONLY_CONFIG`, which `baseonly.ts` then picks up for free.
+  - **IT WAS BASE-ONLY AND IS NOT ANY MORE — this bullet is kept as a correction because it
+    was written here as a settled fact.** `render/css.go` used to emit it into the base lane
+    under the comment "Base-only, because the config object is base-only", and `readAnimConfig`
+    indexed `node.Config["animation"]` with no responsive merge, so `sb_set` wrote it per
+    breakpoint into a slot the renderer never read. That was fixed upstream by adding
+    `animation` to `BASE_ONLY_CONFIG` so `baseonly.ts` would ROUTE it to base.
+
+    Then intensity arrived and ended the justification, in the platform's own words: the old
+    defence was "one behaviour declaration, not a quantity", and **a distance IS a quantity**,
+    which this repo's mandate says must reach the page per breakpoint.
+    `CompileEntranceAnimationCSS` took a `bp`, the key LEFT the ledger, and the routing stopped
+    on its own — because the table is GENERATED rather than copied, which is the whole argument
+    for generating it. What the caller gains is the thing merchants ask for most: an animation
+    that is off on mobile.
+
+    The tripwire that caught this was written on BOTH sides and fired on the platform side
+    first (`schema/test/responsive-defaults.test.ts` pinned the ledger entry to the compiler's
+    signature, and the platform's own commit records that it was "caught by the tripwire rather
+    than by review"). The mirror here now pins the key OUT of the ledger, so a reappearance —
+    which would silently force every animation back to base and drop the mobile answer — is
+    caught from the other direction.
 
   `easing` is the mild case and is reported differently: an unrecognised value falls back to
   `ease`, so the animation RUNS wearing a curve nobody chose. The first version of the trait
-  attachment was a six-field object on 73 of 111 elements; `test/token-budget.test.ts` caught it
-  at 12,396 bytes, correctly — the four facts fit in one line, and the long form belongs in
+  attachment was a six-field object on 73 elements; `test/token-budget.test.ts` caught it
+  at 12,396 bytes, correctly — the facts fit in one line, and the long form belongs in
   `sb_set`'s warning, which fires at the moment the mistake is made.
 
-  **WHAT HAS NO ANSWER AT ALL IS REVEAL-ON-SCROLL.** These are ENTRANCE animations, fired at
-  first paint ("runs unbidden at every visitor's first paint"). The only scroll hooks in the
-  runtime are the pinned element's `wb-stuck` class and `popup`'s `scroll` trigger — the
-  `IntersectionObserver` in `boot.ts` hydrates islands. A section that fades in as the visitor
-  reaches it cannot be authored by any tool here, because the platform has nowhere to put it.
+  **AND THE OBJECT IS NOW TEN KEYS, NOT FIVE — `intensity`, `trigger`, `range`, `repeat`,
+  `alternate`.** A catalog describing five of ten is worse than one describing none: an agent
+  reads the table, sees the shape it names, and concludes the rest does not exist. Two of them
+  change what is POSSIBLE rather than how it looks, and one publishes a node nobody can see:
+
+  - **`trigger: "view"` IS REVEAL-ON-SCROLL, and this file said for months that it had no
+    answer at all** ("a section that fades in as the visitor reaches it cannot be authored by
+    any tool here, because the platform has nowhere to put it"). It has one:
+    `animation-timeline: view()` now ships in all four engines, so the trigger compiles to an
+    `@supports` OVERRIDE on top of the plain rule — no island, no JavaScript, no HTML change,
+    and the engines that lack it keep animating at first paint, so nobody gets nothing. `range`
+    is the completion point as a percentage of entry, clamped 1-100, default 60.
+
+    THIS IS THE THIRD TIME A "YOU CANNOT" HERE OUTLIVED THE THING THAT MADE IT TRUE — after the
+    agent-key rules and storefront customer accounts. The pattern is now unmistakable enough to
+    state as a rule: a capability this file reports as ABSENT is worth re-measuring before
+    building around its absence, because the cost is not a wrong fact, it is work designed
+    around a limit that is gone.
+
+    What genuinely has no answer is a FIXED-DURATION play-once on entry: a view timeline
+    scrubs with the scroll, and the platform's own comment says that mode needs JavaScript and
+    will arrive as a THIRD trigger value rather than by redefining `view`.
+  - **`alternate` with a FINITE repeat publishes an INVISIBLE node**, which is why the renderer
+    refuses it rather than shipping it. An even iteration count finishes on the `from` keyframe
+    and every entrance keyframe starts at `opacity: 0` — so the author watches it play on the
+    canvas and the visitor sees a node that is never shown, with nothing on screen to explain
+    it. `alternate` is honoured only alongside `repeat: "infinite"`; `sb_set` warns.
+  - **An absent `intensity` is NOT `medium`.** It keeps the old 0.5s duration fallback rather
+    than the one the intensity implies (0.4 / 0.6 / 0.9), because a node marked `strong` would
+    otherwise travel 64px in the time meant for 30.
+
+  All ten are generated (`ANIMATION`), each under one rule: a field ABSENT from the platform
+  means this deployment lacks it and the catalog says nothing; a field PRESENT but no longer
+  parsing exits 1, because the table would then be WRONG rather than missing. The 46 type names
+  ride in `sb_traits_for` as DATA (`animation_values`) rather than in prose — the budget test
+  caught this same field a second time, at 14,347, and the fix was to cut the explanation, not
+  the names: a name is the one part an agent cannot author an animation without.
 
 - **THE SITE'S THEME WAS READABLE AND, IN PRACTICE, UNWRITABLE — the highest-leverage design act
   was the one thing the tools pushed an agent away from.** `src/domains/site/theme.ts` carried

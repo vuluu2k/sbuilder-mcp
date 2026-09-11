@@ -86,13 +86,21 @@ describe('token budget — a diet without a scale comes back', () => {
     const catalog = await client.callTool({ name: 'sb_catalog_search', arguments: { query: 'hero' } });
     expect(chars(catalog)).toBeLessThan(2_500);
     const traits = await client.callTool({ name: 'sb_traits_for', arguments: { type: 'list-dataset' } });
-    // 13,000 rather than 12,300: the entrance animation's vocabulary now rides
-    // on the 73 element types that offer the control, and this is the result an
-    // agent reads before every styling decision. The FIRST attempt at it was a
-    // six-field object and this ceiling caught it at 12,396 — correctly, since
-    // 400 bytes across two thirds of the catalog is dilution. It is one line
-    // now, carrying all four ways the write fails silently.
-    expect(chars(traits)).toBeLessThan(13_000);
+    // 16,000 rather than 13,000, and this ceiling has now caught the SAME field
+    // twice, which is the argument for keeping it rather than for freezing it.
+    //
+    //   - the first catch, at 12,396: a six-field animation object repeated on
+    //     two thirds of the catalog. That was dilution, and it was compacted.
+    //   - the second, at 14,347: the platform shipped 4 entrance effects → 46.
+    //     That is not dilution — 643 bytes of type NAMES an agent cannot author
+    //     an animation without, on one element per call. The prose around them
+    //     was still fat and went from 1,842 to 1,347; the names stayed.
+    //
+    // So the rule the budget exists for held both times: it caught real growth
+    // and real waste, and only the waste was removed. Raised WITH HEADROOM
+    // (measured 13,852) rather than to just above today's number, because a
+    // ceiling set at the measurement gets raised again without anybody looking.
+    expect(chars(traits)).toBeLessThan(16_000);
     await close();
   });
 

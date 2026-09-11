@@ -116,9 +116,31 @@ export function unknownValueNote(key: string, value: unknown): string | null {
  * falls back to `ease`, so the animation still runs — it is a wrong answer, not
  * a missing one.
  *
- * And it is BASE-ONLY, which is a fourth way to lose it — but that one is
- * ROUTED rather than warned about, by `baseonly.ts`, because the platform's
- * ledger names the key and `sb_set` can simply write it to the right layer.
+ * IT WAS BASE-ONLY AND IS NOT ANY MORE, and the correction is kept in that
+ * shape because this file stated it as a settled fact. The compiler used to
+ * index `node.Config["animation"]` with no responsive merge, so a per-breakpoint
+ * write landed where nothing looked and `baseonly.ts` ROUTED it. Adding an
+ * intensity ended that: a distance is a QUANTITY, and this repo's own mandate is
+ * that a quantity reaches the page per breakpoint. `CompileEntranceAnimationCSS`
+ * now takes a `bp` and emits per lane, the key left the platform's ledger, and
+ * the routing stopped on its own — the table is generated, which is exactly why
+ * it could. What the caller gains is the thing merchants ask for most: an
+ * animation that is off on mobile.
+ *
+ * THE OBJECT ALSO GREW TO TEN KEYS, and two of them change what is possible
+ * rather than merely how it looks:
+ *
+ *   - `trigger: "view"` IS REVEAL-ON-SCROLL, which this repo recorded as having
+ *     no answer at all ("the platform has nowhere to put it"). It does now:
+ *     `animation-timeline: view()` inside an `@supports` override, no island and
+ *     no JavaScript, with the engines that lack it still animating at first
+ *     paint. A note that says "you cannot" outlives the thing that made it true,
+ *     and this is the third time that has cost something here.
+ *   - `repeat` + `alternate` is the one combination that publishes an INVISIBLE
+ *     node. `alternate` with an EVEN finite count finishes on the `from`
+ *     keyframe and every entrance keyframe starts at `opacity: 0`, so the author
+ *     sees it on the canvas and a visitor never sees it at all. The compiler
+ *     honours `alternate` only alongside `"infinite"`.
  */
 export const ANIMATION_VOCAB = ANIMATION;
 
@@ -135,11 +157,70 @@ export const ANIMATION_VOCAB = ANIMATION;
  */
 export function animationVocabulary(): string {
   return (
-    `config.animation is an OBJECT: { active: true, type: ${ANIMATION.types.join('|')}, ` +
-    `easing?: ${ANIMATION.easings.join('|')}, delay?, duration? }. active:true is REQUIRED ` +
-    '(a type alone is not consent), the type is UNDERSCORED, and it is base-only. Anything ' +
-    'else renders no animation at all, with no error.'
+    'config.animation is an OBJECT, never a string: { active: true, type, easing?, intensity?, ' +
+    'trigger?, delay?, duration?, repeat?, alternate?, range? }. active:true is REQUIRED (a type ' +
+    'alone is not consent) and the type is UNDERSCORED (fade_in, never fade-in); either miss ' +
+    'renders no animation at all, with no error. Written per breakpoint like any config, so it ' +
+    'can be off on mobile. See animation_values below for what each key accepts.'
   );
+}
+
+/**
+ * THE SAME FACTS AS DATA, because forty-six type names are not a sentence.
+ *
+ * The line above used to enumerate every type, which worked while there were
+ * four and became 848 bytes of prose the moment the platform shipped 46 — and
+ * the budget test caught it, correctly, for the second time on this same field.
+ * The first catch (a six-field object, 12,396 bytes) moved the long form OUT of
+ * the trait sheet; this one moves the ENUMERATION out of the prose. What is left
+ * in the sentence is what decides whether a write does anything at all.
+ *
+ * It rides on `sb_traits_for`, which answers for ONE element per call, and not
+ * on `sb_catalog_search`, which answers for many — so the cost is paid once by
+ * the caller who has already chosen the element it is about to animate.
+ *
+ * Every value here is GENERATED from the Go that renders, so a platform that
+ * adds a trigger or an intensity brings it to this sheet on the next codegen,
+ * and one that drops a field stops claiming it.
+ */
+export function animationValues(): Record<string, unknown> {
+  const a = ANIMATION;
+  const mid = a.intensities[Math.floor(a.intensities.length / 2)];
+  return {
+    type: a.types,
+    easing: { values: a.easings, unknown_falls_back_to: a.easingFallback },
+    // `absence is not the middle setting` is the platform's own point and the
+    // one reading a caller gets wrong without being told; the rest of the
+    // intensity story is a duration table, which speaks for itself.
+    ...(a.intensities.length
+      ? {
+          intensity: {
+            values: a.intensities,
+            implies_duration_s: a.intensityDurations,
+            note: `omitting it is NOT "${mid}" — it keeps the ${a.durationDefault}s default instead`,
+          },
+        }
+      : {}),
+    // THE ONE ENTRY THAT MUST BE PROACTIVE. Every other trap here is caught by
+    // animationNote at the moment of the mistake — but there is no mistake to
+    // catch in never knowing a capability exists, so reveal-on-scroll has to be
+    // discoverable from the sheet itself.
+    ...(a.triggers.length
+      ? {
+          trigger: {
+            values: a.triggers,
+            default: 'omitted = runs at first paint',
+            view: `reveal-on-scroll (animation-timeline), range = % of entry, default ${a.rangeDefault}`,
+          },
+        }
+      : {}),
+    ...(a.repeatMax ? { repeat: `1-${a.repeatMax} or "infinite"; above that is clamped` } : {}),
+    ...(a.alternateNeedsInfinite
+      ? { alternate: 'requires repeat:"infinite" — DROPPED on a finite count, which would end invisible' }
+      : {}),
+    duration_default_s: a.durationDefault,
+    read_by: a.readBy,
+  };
 }
 
 /**
@@ -186,6 +267,41 @@ export function animationNote(value: unknown): string | null {
     notes.push(
       `easing ${JSON.stringify(e)} is outside ${ANIMATION.easings.join(', ')}, so the renderer ` +
         `uses "${ANIMATION.easingFallback}" — the animation runs, with a curve you did not choose`,
+    );
+  }
+  const i = value.intensity;
+  if (i !== undefined && (typeof i !== 'string' || !ANIMATION.intensities.includes(i))) {
+    // Same family as easing — it runs — but the miss is quieter still: no
+    // variables are emitted and the keyframes fall back to their own literals,
+    // so the node animates at a distance nobody chose and nothing looks broken.
+    notes.push(
+      `intensity ${JSON.stringify(i)} is outside ${ANIMATION.intensities.join(', ')}, so no ` +
+        'intensity variables are emitted and the keyframes use their built-in distances',
+    );
+  }
+  const tr = value.trigger;
+  if (tr !== undefined && (typeof tr !== 'string' || !ANIMATION.triggers.includes(tr))) {
+    notes.push(
+      `trigger ${JSON.stringify(tr)} is not ${ANIMATION.triggers.map((v) => JSON.stringify(v)).join(' or ')}, ` +
+        'so the animation runs at first paint rather than on scroll — stored, published, and ignored',
+    );
+  }
+  // THE ONE THAT PUBLISHES AN INVISIBLE NODE. `alternate` is honoured only
+  // alongside an infinite repeat: with an even finite count the animation
+  // finishes on the `from` keyframe, and every entrance keyframe starts at
+  // opacity:0. The author sees it play on the canvas and the visitor sees
+  // nothing at all, with no error anywhere to explain it.
+  if (ANIMATION.alternateNeedsInfinite && value.alternate === true && value.repeat !== 'infinite') {
+    notes.push(
+      'alternate:true is DROPPED unless repeat is "infinite" — with an even finite count the ' +
+        'animation would finish on the from keyframe, which is opacity:0, and publish a node no ' +
+        'visitor can see; the renderer refuses that rather than shipping it',
+    );
+  }
+  if (typeof value.repeat === 'number' && ANIMATION.repeatMax && value.repeat > ANIMATION.repeatMax) {
+    notes.push(
+      `repeat ${value.repeat} is clamped to ${ANIMATION.repeatMax} — the count reaches CSS as a ` +
+        'number, and a document is not a trusted source',
     );
   }
   if (!notes.length) return null;

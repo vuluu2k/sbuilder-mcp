@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { ANIMATION, BASE_ONLY_CONFIG, ELEMENTS } from '../src/catalog/elements.generated.js';
-import { animationNote, animationVocabulary } from '../src/domains/site/vocabulary.js';
+import { animationNote, animationValues, animationVocabulary } from '../src/domains/site/vocabulary.js';
 import { isBaseOnlyConfig } from '../src/domains/site/baseonly.js';
 
 /**
@@ -27,13 +27,40 @@ describe('the entrance animation vocabulary', () => {
     expect(offering.length).toBeGreaterThan(50);
   });
 
-  it('IS BASE-ONLY, which is the miss no warning could fix', () => {
-    // render/css.go emits the rule into the base lane — "Base-only, because the
-    // config object is base-only" — and readAnimConfig indexes
-    // node.Config["animation"] with no responsive merge. Written per
-    // breakpoint, as sb_set does by default, it lands where nothing looks.
-    expect(BASE_ONLY_CONFIG).toContain('animation');
-    expect(isBaseOnlyConfig('flex-section', 'animation')).toBe(true);
+  it('IS NO LONGER BASE-ONLY, and this is the tripwire for that', () => {
+    // IT USED TO BE, and this assertion used to say so. readAnimConfig indexed
+    // node.Config["animation"] with no responsive merge, so a per-breakpoint
+    // write landed where nothing looked and baseonly.ts ROUTED it to base.
+    //
+    // Adding an intensity ended that defence — a distance is a QUANTITY, and a
+    // quantity reaches the page per breakpoint — so the compiler took a `bp`,
+    // the key left the platform's ledger, and the routing stopped on its own
+    // because the table is generated rather than copied.
+    //
+    // Pinned in the NEW direction rather than deleted: if `animation` ever
+    // reappears in the ledger, sb_set would start forcing every animation to
+    // base and silently drop the mobile answer, which is the feature this
+    // change exists to give. The lie is caught from either side.
+    expect(BASE_ONLY_CONFIG).not.toContain('animation');
+    expect(isBaseOnlyConfig('flex-section', 'animation')).toBe(false);
+  });
+
+  it('carries the keys the object grew, read from the platform', () => {
+    // Five new fields on 2026-09-11. A catalog describing five of ten is worse
+    // than one describing none: an agent reads it, sees the shape it names, and
+    // concludes the rest does not exist.
+    expect(ANIMATION.intensities).toContain('medium');
+    expect(ANIMATION.intensityDurations.medium).toBeGreaterThan(0);
+    expect(ANIMATION.repeatMax).toBeGreaterThan(1);
+    expect(ANIMATION.rangeDefault).toBeGreaterThan(0);
+  });
+
+  it('KNOWS REVEAL-ON-SCROLL EXISTS, which this repo recorded as impossible', () => {
+    // "A section that fades in as the visitor reaches it cannot be authored by
+    // any tool here, because the platform has nowhere to put it." It has one
+    // now — animation-timeline: view() in an @supports override — and a note
+    // that says "you cannot" outlives the thing that made it true.
+    expect(ANIMATION.triggers).toContain('view');
   });
 });
 
@@ -73,16 +100,66 @@ describe('what sb_set says about a bad animation', () => {
     expect(n).not.toMatch(/will not animate/);
   });
 
-  it('hands sb_traits_for all four facts in ONE LINE', () => {
-    // It rides on 73 of 111 elements, in the result an agent reads before every
-    // styling decision — the six-field object this started as was 400 bytes of
-    // dilution across two thirds of the catalog, and the budget test said so.
+  it('catches an unknown INTENSITY, which is quieter than a bad easing', () => {
+    // It still runs: no variables are emitted and the keyframes fall back to
+    // their own literals, so the node moves a distance nobody chose.
+    const n = animationNote({ active: true, type: 'fade_in', intensity: 'huge' })!;
+    expect(n).toMatch(/intensity/);
+    expect(n).toMatch(/built-in distances/);
+  });
+
+  it('catches a trigger that is not the scroll one, since it is silent', () => {
+    const n = animationNote({ active: true, type: 'fade_in', trigger: 'scroll' })!;
+    expect(n).toMatch(/first paint/);
+  });
+
+  it('CATCHES THE COMBINATION THAT PUBLISHES AN INVISIBLE NODE', () => {
+    // alternate with an even finite count finishes on the `from` keyframe, and
+    // every entrance keyframe starts at opacity:0. The author watches it play
+    // on the canvas; the visitor gets a node that is never shown. The renderer
+    // refuses it — so the write is stored, accepted, and does not do what it
+    // says, which is exactly the family this note exists for.
+    const n = animationNote({ active: true, type: 'fade_in', repeat: 2, alternate: true })!;
+    expect(n).toMatch(/alternate:true is DROPPED/);
+    expect(n).toMatch(/no visitor can see/);
+    // The legal spelling says nothing at all.
+    expect(animationNote({ active: true, type: 'fade_in', repeat: 'infinite', alternate: true })).toBeNull();
+  });
+
+  it('says nothing about the new keys when they are right', () => {
+    expect(
+      animationNote({
+        active: true,
+        type: 'slide_in_up',
+        easing: 'spring',
+        intensity: 'strong',
+        trigger: 'view',
+        range: 40,
+      }),
+    ).toBeNull();
+  });
+
+  it('keeps the TRAPS in one line and moves the 46 names out of the prose', () => {
+    // This assertion used to require every type name IN the sentence, which was
+    // true at four and became 848 bytes at forty-six — the budget test caught
+    // it, for the second time on this same field. The first catch moved the
+    // long form out of the trait sheet; this one moves the ENUMERATION out of
+    // the prose. What stays in the sentence is what decides whether a write
+    // does anything at all.
     const v = animationVocabulary();
     expect(v).toMatch(/active: true/);
     expect(v).toMatch(/REQUIRED/);
     expect(v).toMatch(/UNDERSCORED/);
-    expect(v).toMatch(/base-only/);
-    for (const t of ANIMATION.types) expect(v).toContain(t);
-    expect(v.length).toBeLessThan(320);
+    // The fact that replaced "base-only", and the reason the change was worth
+    // making: an animation that is off on mobile.
+    expect(v).toMatch(/per breakpoint/);
+    expect(v).not.toMatch(/base-only/);
+    expect(v.length).toBeLessThan(480);
+
+    // The names live here instead, as data, generated from the Go that renders.
+    const vals = animationValues() as Record<string, any>;
+    expect(vals.type).toEqual(ANIMATION.types);
+    expect(vals.trigger.values).toContain('view');
+    expect(vals.alternate).toMatch(/infinite/);
   });
 });

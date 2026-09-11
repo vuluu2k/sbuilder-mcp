@@ -47,6 +47,21 @@ export const INERT_ON_ADD: Record<string, InertHint> = {
       'store that is not in English, set it (e.g. "Trang chủ") or the trail reads half-translated ' +
       'on every product page.',
   },
+
+  // THE SHARPEST OF THE THREE, because the placeholder is not a placeholder: it
+  // is a REAL scene on Spline's own servers, and it loads, renders and responds
+  // to the mouse. The other two entries here describe an element that looks
+  // finished; this one looks finished AND is somebody else's work, published on
+  // the merchant's domain. `sb_review` reads a correct tree, `sb_look`
+  // photographs a convincing 3D hero, and nothing anywhere says whose it is.
+  'spline-scene': {
+    note:
+      "A spline-scene is born pointing at SPLINE'S OWN DEMO SCENE (specials.sceneUrl defaults to " +
+      'a real prod.spline.design link), so an unset one publishes a 3D hero that loads, moves, ' +
+      "and belongs to somebody else — it looks finished, so no check can flag it. Set sceneUrl " +
+      'to the merchant\'s own export (Spline: Export → Viewer → the …/scene.splinecode link), and ' +
+      'set specials.posterUrl too or the box is blank until the engine chunk arrives.',
+  },
 };
 
 /** The hint for a type, or null. */

@@ -31,10 +31,13 @@ describe('traitsFor()', () => {
     expect(typeof t.inspector[0].groups[0].controls[0]).toBe('string');
     expect(typeof t.undeclared_note).toBe('string');
     expect(Array.isArray(t.hints.useWhen)).toBe(true);
-    // 13,000 since the entrance animation's vocabulary rides on the 73 element
-    // types that offer the control. Was 74,190 before the diet; what remains is
-    // hints, names and the four ways config.animation fails silently.
-    expect(JSON.stringify(t).length).toBeLessThan(13_000);
+    // 16,000 since the platform took the entrance animation from 4 effects to
+    // 46 and the object from five keys to ten. Was 74,190 before the diet; what
+    // remains is hints, control names, the ways config.animation fails
+    // silently, and the 46 type names themselves — which are the one part an
+    // agent cannot author an animation without. See token-budget.test.ts for
+    // why this moved and what was trimmed instead.
+    expect(JSON.stringify(t).length).toBeLessThan(16_000);
   });
 
   it('still describes one control in full', () => {

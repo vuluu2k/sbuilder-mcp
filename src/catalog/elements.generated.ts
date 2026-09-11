@@ -3,7 +3,7 @@
 import type { CatalogElement, NodeSeed, SatelliteRule, TraitDescription } from './element-types.js';
 
 export const ELEMENT_SOURCE = {
-  "count": 111,
+  "count": 112,
   "docSchemaVersion": 2
 } as const;
 
@@ -3689,6 +3689,146 @@ export const ELEMENTS: Record<string, CatalogElement> = {
       "embed",
       "media",
       "player"
+    ]
+  },
+  "spline-scene": {
+    "type": "spline-scene",
+    "label": "Spline scene",
+    "category": "media",
+    "isContainer": false,
+    "isRootOnly": false,
+    "locked": false,
+    "hideInLayer": false,
+    "childAllows": [],
+    "defaults": {
+      "specials": {
+        "sceneUrl": "https://prod.spline.design/HqdfCmOueigtautT/scene.splinecode",
+        "posterUrl": "",
+        "sceneControls": []
+      },
+      "style": {
+        "width": "100%",
+        "height": "480px"
+      },
+      "config": {
+        "background": "transparent",
+        "eventsTarget": "local",
+        "mobileMode": "scene"
+      }
+    },
+    "inspector": [
+      {
+        "tab": "general",
+        "groups": [
+          {
+            "key": "size",
+            "label": "Size",
+            "controls": [
+              "width_select",
+              "size_bounds"
+            ]
+          },
+          {
+            "key": "spline",
+            "label": "Spline",
+            "controls": [
+              "spline_source"
+            ]
+          },
+          {
+            "key": "scene_display",
+            "label": "Display",
+            "controls": [
+              "scene_display"
+            ]
+          },
+          {
+            "key": "scene_controls",
+            "label": "Scene controls",
+            "controls": [
+              "scene_controls"
+            ]
+          },
+          {
+            "key": "shape",
+            "label": "Shape",
+            "controls": [
+              "border",
+              "corner",
+              "shadow"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "advanced",
+        "groups": [
+          {
+            "key": "spacing",
+            "label": "Spacing",
+            "controls": [
+              "padding_margin"
+            ]
+          },
+          {
+            "key": "display",
+            "label": "Display",
+            "controls": [
+              "display"
+            ]
+          },
+          {
+            "key": "animation",
+            "label": "Animation",
+            "controls": [
+              "animation"
+            ]
+          },
+          {
+            "key": "class_css",
+            "label": "Class",
+            "controls": [
+              "class_css"
+            ]
+          }
+        ]
+      }
+    ],
+    "controls": [
+      "width_select",
+      "size_bounds",
+      "spline_source",
+      "scene_display",
+      "scene_controls",
+      "border",
+      "corner",
+      "shadow",
+      "padding_margin",
+      "display",
+      "animation",
+      "class_css"
+    ],
+    "description": "An interactive 3D scene made in Spline, embedded from its viewer URL.",
+    "useWhen": [
+      "For a hero or product moment that should move in 3D as the visitor scrolls or hovers",
+      "When the merchant already designs in Spline and has a .splinecode link"
+    ],
+    "avoidWhen": [
+      "For a plain product photo — use image",
+      "For a video — use video / youtube / vimeo",
+      "More than three 3D scenes on one page (each one costs ~600 KB of JS once it scrolls into view)"
+    ],
+    "contentTips": [
+      "Paste the link from Spline: Export → Viewer → copy link (…/scene.splinecode)",
+      "Add a poster image so the box is not blank while the scene loads"
+    ],
+    "semantics": [
+      "3d",
+      "spline",
+      "scene",
+      "webgl",
+      "animation",
+      "interactive"
     ]
   },
   "vimeo": {
@@ -36212,7 +36352,6 @@ export const BASE_ONLY_CONFIG: string[] = [
   "collectionId",
   "collectionType",
   "quantity",
-  "animation",
   "rowLimit"
 ];
 
@@ -36226,20 +36365,38 @@ export const BASE_ONLY_EXCEPTIONS: string[] = [
 ];
 
 /**
- * The ENTRANCE ANIMATION's vocabulary — config.animation, offered by 73 of the
- * 111 element types and describable by nothing until now.
+ * The ENTRANCE ANIMATION's vocabulary — config.animation, offered by most of
+ * the element library and describable by nothing until this table existed.
  *
  * Three ways to miss, all silent (AnimationTypeOf answers "" and no keyframes,
  * no rule and no error are emitted, through save, publish and render):
- *   - it is an OBJECT, not a string: {active, type, easing, delay, duration}
+ *   - it is an OBJECT, not a string
  *   - active:true is REQUIRED; a stored type is deliberately NOT consent,
  *     because the panel keeps the type when the switch goes off
  *   - type is a keyframe key spelled with UNDERSCORES: fade_in, never fade-in
  *
  * easing is the mild one: an unrecognised value falls back to "ease".
  *
- * It is also BASE-ONLY (see BASE_ONLY_CONFIG) — render/css.go emits it into the
- * base lane because the config object is read with no responsive merge.
+ * TWO THINGS THIS TABLE USED TO SAY THAT ARE NO LONGER TRUE, kept as a
+ * correction because both were recorded here as settled facts:
+ *
+ *   - IT IS NOT BASE-ONLY ANY MORE. The compiler reads config through
+ *     MergeNamespace and emits per lane, so the key left the platform's
+ *     base-only ledger — and the side effect is the thing merchants ask for
+ *     most, an animation that is off on mobile. A caller still writing it to
+ *     base gets the cascade's fallback layer, which is correct but cannot vary.
+ *   - REVEAL-ON-SCROLL HAS AN ANSWER. trigger:"view" compiles to
+ *     animation-timeline: view() inside an @supports override, so it costs no
+ *     JavaScript and the engines without it keep animating at first paint.
+ *
+ * The object now carries ten keys. intensity travels as CSS variables (a
+ * distance is a quantity, so it reaches the page per breakpoint) and ABSENCE IS
+ * NOT medium — a document with no intensity keeps the old 0.5s fallback.
+ *
+ * alternateNeedsInfinite is the guard worth reading before using repeat:
+ * alternate with an EVEN finite count finishes on the from keyframe, and every
+ * entrance keyframe starts at opacity:0 — so the node publishes INVISIBLE. The
+ * compiler honours alternate only alongside an infinite repeat.
  */
 /**
  * The eight node-style keys a THEME TEXT STYLE controls, and the var prop each
@@ -36260,21 +36417,88 @@ export const ANIMATION: {
   easings: string[];
   easingFallback: string;
   durationDefault: number;
+  intensities: string[];
+  intensityDurations: Record<string, number>;
+  triggers: string[];
+  rangeDefault: number;
+  repeatMax: number;
+  alternateNeedsInfinite: boolean;
   readBy: string;
 } = {
   "types": [
+    "blur_in",
+    "bounce",
+    "bounce_in",
+    "elastic_in",
     "fade_in",
+    "fade_in_bottom_left",
+    "fade_in_bottom_right",
+    "fade_in_down",
+    "fade_in_left",
+    "fade_in_right",
+    "fade_in_top_left",
+    "fade_in_top_right",
+    "fade_in_up",
+    "flash",
+    "flip",
+    "flip_in_x",
+    "flip_in_y",
+    "head_shake",
+    "heart_beat",
+    "jack_in_the_box",
+    "jello",
+    "light_speed_in_left",
+    "light_speed_in_right",
+    "pulse",
+    "roll_in",
+    "rotate_in",
+    "rotate_in_down_left",
+    "rotate_in_down_right",
+    "rotate_in_up_left",
+    "rotate_in_up_right",
+    "rubber_band",
+    "shake_x",
+    "shake_y",
     "slide_down",
+    "slide_in_down",
+    "slide_in_left",
+    "slide_in_right",
+    "slide_in_up",
+    "slide_left",
+    "slide_right",
     "slide_up",
-    "zoom_in"
+    "swing",
+    "tada",
+    "wobble",
+    "zoom_in",
+    "zoom_out"
   ],
   "easings": [
     "ease",
     "ease-in",
     "ease-out",
-    "linear"
+    "ease-in-out",
+    "linear",
+    "spring",
+    "bounce"
   ],
   "easingFallback": "ease",
   "durationDefault": 0.5,
+  "intensities": [
+    "soft",
+    "medium",
+    "strong"
+  ],
+  "intensityDurations": {
+    "soft": 0.4,
+    "medium": 0.6,
+    "strong": 0.9
+  },
+  "triggers": [
+    "view"
+  ],
+  "rangeDefault": 60,
+  "repeatMax": 100,
+  "alternateNeedsInfinite": true,
   "readBy": "AnimationTypeOf + CompileEntranceAnimationCSS"
 };
