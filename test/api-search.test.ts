@@ -249,10 +249,29 @@ describe('the app-block call sheet', () => {
     expect(app.interior).toMatch(/stored nowhere/);
   });
 
-  it('says which apps this server can install and which need a person', () => {
+  it('says which apps this server can install', () => {
     const app = sheetFor('post:/api/sites/{siteId}/builtin-apps/{key}').app_blocks as Record<string, string>;
     expect(app.installing).toMatch(/BUILT-IN/);
-    expect(app.installing).toMatch(/OAuth consent/);
+  });
+
+  it('answers a MARKETPLACE app with what to show and what the credential allows', () => {
+    // Neither "ask a human" nor "just install it". Suggesting is always
+    // available; installing is the platform's own line — consent parses an
+    // ACCESS TOKEN, so a session reaches it and an agent key does not, because
+    // the app holds SCOPES against the store.
+    const app = sheetFor('get:/api/sites/{siteId}/apps').app_blocks as Record<string, string>;
+    expect(app.marketplace).toMatch(/authorize-info/);
+    expect(app.marketplace).toMatch(/SCOPES/);
+    expect(app.marketplace).toMatch(/SESSION/);
+    // A paid app is refused without an accepted price rather than assumed, so
+    // nothing automated can commit a merchant to a subscription.
+    expect(app.marketplace).toMatch(/PAID one is refused/);
+  });
+
+  it('has both OAuth routes in the catalog at all, which is the point', () => {
+    for (const id of ['get:/oauth/authorize-info', 'post:/oauth/authorize']) {
+      expect(API_OPERATIONS.find((o) => o.id === id), id).toBeTruthy();
+    }
   });
 
   it('NAMES EVERY INSTALLABLE KEY, because no route lists what is installable', () => {

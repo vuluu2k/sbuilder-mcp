@@ -3,10 +3,10 @@
 import type { ApiOperation } from './types.js';
 
 export const SWAGGER_SOURCE = {
-  "operations": 506,
+  "operations": 508,
   "definitions": 105,
-  "bodyCarrying": 182,
-  "bodyUndescribed": 67,
+  "bodyCarrying": 183,
+  "bodyUndescribed": 68,
   "generatedFrom": "server/docs/swagger.json"
 } as const;
 
@@ -15244,6 +15244,62 @@ export const API_OPERATIONS: ApiOperation[] = [
     "bodyDescribed": false,
     "bodyRef": null,
     "credential": "apiKey"
+  },
+  {
+    "id": "post:/oauth/authorize",
+    "method": "POST",
+    "path": "/oauth/authorize",
+    "tags": [
+      "apps"
+    ],
+    "summary": "Agree to an app's scopes and install it on a site",
+    "params": [
+      {
+        "name": "body",
+        "in": "body",
+        "required": true,
+        "type": "object",
+        "description": "{siteId, clientId, versionId, redirectUri, scopes, state, acceptedPrice?}"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/oauth/authorize-info",
+    "method": "GET",
+    "path": "/oauth/authorize-info",
+    "tags": [
+      "apps"
+    ],
+    "summary": "What an app is asking for, before anyone agrees to it",
+    "params": [
+      {
+        "name": "client_id",
+        "in": "query",
+        "required": true,
+        "type": "string",
+        "description": "The app's client id"
+      },
+      {
+        "name": "version_id",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "A specific version; the current one otherwise"
+      },
+      {
+        "name": "redirect_uri",
+        "in": "query",
+        "required": true,
+        "type": "string",
+        "description": "Must match one the app registered"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
   }
 ];
 

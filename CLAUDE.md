@@ -1691,10 +1691,26 @@ that accounts for them.
 
   The install half splits cleanly and the split is the platform's, not this client's.
   `POST /api/sites/{siteId}/builtin-apps/{key}` is reachable and takes one of EIGHT keys — mail,
-  multilingual, agent, chat, booking, loyalty, payments, courses. A MARKETPLACE app installs
-  through `appinstalls/rest/oauth.go`: authorize → a consent screen the editor SPA renders →
-  consent → token. That is a human approving a permission grant, it carries no `@Router`
-  annotation at all, and it is not something to work around.
+  multilingual, agent, chat, booking, loyalty, payments, courses.
+
+  **AND "A MARKETPLACE APP NEEDS A HUMAN" WAS TOO COARSE, WHICH IS THE SECOND TIME THIS FILE
+  HAS RECORDED A CREDENTIAL RULE MORE STRICTLY THAN THE PLATFORM HOLDS IT.** Two of the five
+  `/oauth` routes are the MERCHANT's rather than the app's, and reading them says exactly who
+  may do what:
+  - `GET /oauth/authorize-info` answers the app, its publisher, its privacy policy, the SCOPES
+    it would hold, and the money half — `paid` is always present, so "free" is an answer rather
+    than a missing key. SUGGESTING an app is therefore always available, on any credential.
+  - `POST /oauth/authorize` records the grant, and `Authenticate` parses an ACCESS TOKEN — so a
+    SESSION reaches it and a `wbk_` agent key does not. That is a deliberate line, not an
+    oversight: an installed app holds scopes against the store, so the decision belongs to
+    whoever owns the account. With `SB_EMAIL`/`SB_PASSWORD` this server can complete one.
+  - `acceptedPrice` is a POINTER. Omitting it means a FREE app; omitting it for a PAID one is
+    REFUSED rather than having a price assumed on the merchant's behalf. Nothing automated can
+    commit anybody to a subscription.
+
+  So the answer is neither "ask a human" nor "just install it": always be able to SUGGEST, show
+  the scopes, and install only what the credential in hand is allowed to install. Both routes
+  carried no `@Router` line until `831801fa`, so the flow was findable only by reading Go.
 
   **AND THE ONE PLACE THE INSTALLABLE SET EXISTS ON THE WIRE NAMED TWO OF THE EIGHT.**
   `GET /builtin-apps` answers what is INSTALLED, so the `key` parameter's own description is the

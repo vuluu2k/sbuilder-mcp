@@ -4,9 +4,9 @@
 import type { RequestShape } from './types.js';
 
 export const SHAPE_SOURCE = {
-  "writeOperations": 222,
-  "shaped": 169,
-  "fromHandlers": 169,
+  "writeOperations": 223,
+  "shaped": 170,
+  "fromHandlers": 170,
   "fromSwaggerOnly": 0,
   "withReadOnly": 26,
   "structsRead": 1658
@@ -36,6 +36,41 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
     ],
     "source": "go",
     "goType": "versionChoice"
+  },
+  "post:/oauth/authorize": {
+    "fields": [
+      {
+        "name": "siteId",
+        "type": "string"
+      },
+      {
+        "name": "clientId",
+        "type": "string"
+      },
+      {
+        "name": "versionId",
+        "type": "string"
+      },
+      {
+        "name": "redirectUri",
+        "type": "string"
+      },
+      {
+        "name": "scopes",
+        "type": "string[]"
+      },
+      {
+        "name": "state",
+        "type": "string"
+      },
+      {
+        "name": "AcceptedPrice",
+        "type": "object",
+        "note": "AcceptedPrice is the amount the merchant was LOOKING AT when they pressed the button, echoed back from the authorize response above."
+      }
+    ],
+    "source": "go",
+    "goType": "(inline)"
   },
   "post:/api/orgs/{orgId}/apps": {
     "fields": [

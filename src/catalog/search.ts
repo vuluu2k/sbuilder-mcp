@@ -124,9 +124,30 @@ export function describeOperation(op: ApiOperation): Record<string, unknown> {
         'props/slots, never by editing what it rendered.',
       installing:
         'A BUILT-IN app installs with POST /api/sites/{siteId}/builtin-apps/{key} and that key ' +
-        "parameter's description names every installable one. A MARKETPLACE app cannot be " +
-        'installed from here at all: it goes through an OAuth consent screen a person has to ' +
-        'approve, so ask the merchant to install it and then read /apps/blocks again.',
+        "parameter's description names every installable one.",
+      // A MARKETPLACE APP IS A PERMISSION GRANT, and who may make it is the
+      // platform's line rather than this client's caution. `consent`
+      // authenticates as a USER — the platform parses an ACCESS TOKEN, so a
+      // session reaches it and a `wbk_` key does not — because an installed app
+      // holds SCOPES against the store. And `acceptedPrice` is a pointer:
+      // omitting it means a free app, and omitting it for a paid one is REFUSED
+      // rather than assumed, so nothing automated can commit a merchant to a
+      // subscription.
+      //
+      // So the honest answer is neither "ask a human" nor "just install it". It
+      // is: always be able to SUGGEST, and install only what the credential in
+      // hand is allowed to install, having shown what it grants.
+      marketplace:
+        'SUGGESTING one is always available: GET /api/sites/{siteId}/apps lists what this store ' +
+        'can install, and GET /oauth/authorize-info?client_id=… answers with the app, its ' +
+        'publisher, its privacy policy, the SCOPES it would hold and whether it is paid. Show ' +
+        'that to whoever is accountable for it. INSTALLING is POST /oauth/authorize with ' +
+        '{siteId, clientId, versionId, redirectUri, scopes} — it needs a SESSION ' +
+        '(SB_EMAIL/SB_PASSWORD), because an agent key is not an access token and the platform ' +
+        'refuses it by design: the app holds scopes against the store. A FREE app installs with ' +
+        'no acceptedPrice; a PAID one is refused without it rather than having a price assumed ' +
+        'on the merchant\'s behalf, so never send one they have not seen. Then read ' +
+        '/apps/blocks again for what it contributed.',
     };
   }
 
