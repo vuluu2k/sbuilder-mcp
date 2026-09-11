@@ -6,6 +6,17 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.38.0] - 2026-09-11
+
+### Added
+- Catalog có thêm element thứ 112, spline-scene: một cảnh 3D tương tác được nhúng từ link viewer của Spline, mặc định được gán sẵn một cảnh thật từ project demo của chính Spline, kèm cảnh báo ngay lúc tạo yêu cầu caller thay bằng file export của merchant trước khi publish.
+- config.animation tăng từ năm key lên mười key (intensity, trigger, range, repeat và alternate được thêm bên cạnh active, type, easing, delay và duration), trong đó có `trigger: "view"` mới cho hiệu ứng xuất hiện khi cuộn trang, được biên dịch thành một override CSS thuần bằng animation-timeline, không cần thêm script.
+- sb_traits_for giờ trả về thêm trường animation_values liệt kê mọi giá trị hợp lệ cho từng key của config.animation (đủ 46 type, 7 easing, mọi intensity và trigger) với bất kỳ element nào có control animation.
+- sb_set giờ cảnh báo khi config.animation kết hợp alternate:true với một số lần repeat hữu hạn, vì tổ hợp này publish một node kết thúc ở keyframe opacity:0 và không visitor nào nhìn thấy được, cũng như khi intensity hoặc trigger được đặt một giá trị mà nền tảng không nhận ra.
+
+### Changed
+- config.animation không còn base-only nữa: sb_set giờ ghi giá trị này theo từng breakpoint như mọi config key khác, thay vì luôn dồn về base, nên giờ có thể tắt animation riêng trên mobile.
+
 ## [0.37.0] - 2026-09-11
 
 ### Added

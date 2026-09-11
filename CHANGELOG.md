@@ -6,6 +6,17 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.38.0] - 2026-09-11
+
+### Added
+- The catalog gained a 112th element, spline-scene: an interactive 3D scene embedded from a Spline viewer link, seeded by default with a real scene from Spline's own demo project, with a warning at creation time telling the caller to replace it with the merchant's own export before publishing.
+- config.animation grew from five keys to ten (intensity, trigger, range, repeat, and alternate join active, type, easing, delay, and duration), including a new `trigger: "view"` for reveal-on-scroll animation, compiled as a pure-CSS animation-timeline override with no added script.
+- sb_traits_for now returns an animation_values field listing every legal value for each config.animation key (all 46 types, 7 easings, every intensity and trigger) for any element that carries an animation control.
+- sb_set now warns when config.animation combines alternate:true with a finite repeat count, since that combination publishes a node that finishes on its opacity:0 keyframe and is invisible to every visitor, and when intensity or trigger is set to a value the platform does not recognize.
+
+### Changed
+- config.animation is no longer base-only: sb_set now writes it per breakpoint like any other config key, instead of always routing it to base, so an animation can now be turned off on mobile.
+
 ## [0.37.0] - 2026-09-11
 
 ### Added
