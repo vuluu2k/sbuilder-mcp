@@ -36234,6 +36234,20 @@ export const BASE_ONLY_EXCEPTIONS: string[] = [
  * It is also BASE-ONLY (see BASE_ONLY_CONFIG) — render/css.go emits it into the
  * base lane because the config object is read with no responsive merge.
  */
+/**
+ * The eight node-style keys a THEME TEXT STYLE controls, and the var prop each
+ * compiles to: a node wears a style by setting these to
+ * var(--wb-ts-<slug>-<prop>), never by writing the value.
+ *
+ * The theme ships heading-1 (48px) through heading-6, and text-1..3 — a real
+ * type scale that every page built by these tools was ignoring, because the
+ * mapper wrote only htmlTag and the heading-default preset pins 48px flat.
+ *
+ * BY REFERENCE, NEVER BY LITERAL. A literal outranks the preset beneath it
+ * permanently and stops the node following the theme.
+ */
+export const TEXT_STYLE_KEYS: ReadonlyArray<readonly [string, string]> = [["fontFamily","family"],["fontSize","size"],["fontWeight","weight"],["fontStyle","style"],["lineHeight","line-height"],["letterSpacing","letter-spacing"],["textTransform","transform"],["color","color"]];
+
 export const ANIMATION: {
   types: string[];
   easings: string[];

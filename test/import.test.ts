@@ -1046,6 +1046,13 @@ describe.runIf(process.env.SB_BROWSER_TEST === '1')('crawlLinks() and captureMan
  * breadcrumb is not an EMPTY result nothing fell back. A shop imported as its
  * own breadcrumb, with no error at any step.
  */
+// A CAPTURE LAUNCHES ITS OWN CHROME, deliberately — `capture.ts` does not share
+// the pooled browser a vision loop keeps warm, because an import is rare, slow
+// and runs untrusted script. So each of these pays a launch, and the 5s default
+// assumes none: under parallel load one of them ran over and failed a suite
+// that was otherwise green. The timeout is the honest number for what the test
+// actually does, not a way to quieten a real failure.
+const BROWSER_TIMEOUT = 30_000;
 describe.runIf(process.env.SB_BROWSER_TEST === '1')('capture() on a shop-shaped page', () => {
   const shop = `data:text/html,${encodeURIComponent(
     '<body>' +
@@ -1079,7 +1086,7 @@ describe.runIf(process.env.SB_BROWSER_TEST === '1')('capture() on a shop-shaped 
     // "we captured something" is not "we captured the page".
     const got = await capture(shop, { maxImages: 20, maxNodes: 400 });
     expect(strings(got)).toContain('69.980.000');
-  });
+  }, BROWSER_TIMEOUT);
 
   it('reads the image a lazy loader parked in data-src', async () => {
     // 84 of ttgshop.vn's 100 images carry data-src and no src, and those 84 are
@@ -1088,7 +1095,7 @@ describe.runIf(process.env.SB_BROWSER_TEST === '1')('capture() on a shop-shaped 
     const got = await capture(shop, { maxImages: 20, maxNodes: 400 });
     expect(strings(got)).toContain('pc-1.jpg');
     expect(got.skipped['image-without-src']).toBeUndefined();
-  });
+  }, BROWSER_TIMEOUT);
 
   it('opens the TABS NOBODY CLICKED, which on a shop is most of the catalogue', async () => {
     // Same sentence as the <details> pass: the source's collapsed state is not
@@ -1097,7 +1104,7 @@ describe.runIf(process.env.SB_BROWSER_TEST === '1')('capture() on a shop-shaped 
     expect(strings(got)).toContain('10.280.000');
     expect(strings(got)).toContain('1.490.000');
     expect(strings(got)).toContain('pc-2.jpg');
-  });
+  }, BROWSER_TIMEOUT);
 
   it('leaves a modal hidden, because a panel is known by its VISIBLE PEER', async () => {
     // Unhiding whatever is hidden is how an import grows a newsletter pop-up and
@@ -1105,7 +1112,7 @@ describe.runIf(process.env.SB_BROWSER_TEST === '1')('capture() on a shop-shaped 
     // sits beside a peer of the same kind that IS shown.
     const got = await capture(shop, { maxImages: 20, maxNodes: 400 });
     expect(strings(got)).not.toContain('đăng ký ngay');
-  });
+  }, BROWSER_TIMEOUT);
 
   it('captures a real <button>, which on a shop is the whole point of the page', async () => {
     // BUTTON was filed with the form controls, on reasoning that fits `input`
@@ -1114,7 +1121,7 @@ describe.runIf(process.env.SB_BROWSER_TEST === '1')('capture() on a shop-shaped 
     // branch returns without walking its children.
     const got = await capture(shop, { maxImages: 20, maxNodes: 400 });
     expect(strings(got)).toContain('Mua ngay');
-  });
+  }, BROWSER_TIMEOUT);
 });
 
 /**
@@ -1164,7 +1171,7 @@ describe.runIf(process.env.SB_BROWSER_TEST === '1')('capture() reading tabs', ()
     );
     expect(kinds(got)).toContain('tab');
     expect(tabOf(got)!.children!.map((c) => c.text)).toEqual(['Máy tính', 'Màn hình']);
-  });
+  }, BROWSER_TIMEOUT);
 
   it('pairs through a SHARED data-* value, which is how most tab scripts wire up', async () => {
     const got = await capture(
@@ -1179,7 +1186,7 @@ describe.runIf(process.env.SB_BROWSER_TEST === '1')('capture() reading tabs', ()
     // Deliberately out of document order relative to the bar: a shared value
     // survives reordering, which is the reason it outranks position.
     expect(tabOf(got)!.children!.map((c) => c.text)).toEqual(['Khuyến mãi', 'Hàng mới']);
-  });
+  }, BROWSER_TIMEOUT);
 
   it('falls back to POSITION only when the row holds exactly as many items', async () => {
     const got = await capture(
@@ -1191,7 +1198,7 @@ describe.runIf(process.env.SB_BROWSER_TEST === '1')('capture() reading tabs', ()
       { maxImages: 5, maxNodes: 200 },
     );
     expect(tabOf(got)!.children!.map((c) => c.text)).toEqual(['Một', 'Hai']);
-  });
+  }, BROWSER_TIMEOUT);
 
   it('IS NOT A TAB WITHOUT LABELS — and keeps every panel as content anyway', async () => {
     // ttgshop.vn is this case: its tab buttons are empty in the DOM and filled
@@ -1211,7 +1218,7 @@ describe.runIf(process.env.SB_BROWSER_TEST === '1')('capture() reading tabs', ()
     const json = JSON.stringify(got.sections);
     expect(json).toContain('Sản phẩm khuyến mãi');
     expect(json).toContain('Sản phẩm mới về');
-  });
+  }, BROWSER_TIMEOUT);
 });
 
 describe('a panel set becomes a tab', () => {

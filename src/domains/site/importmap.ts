@@ -2,6 +2,7 @@ import type { NodeSpec } from './builder.js';
 import type { DocLike, NodeLike } from '../../core/tree.js';
 import { walk } from '../../core/tree.js';
 import { stickySeeds } from './sticky.js';
+import { TEXT_STYLE_KEYS } from '../../catalog/elements.generated.js';
 import { normalizeUrl } from './discover.js';
 import { ICON_NAMES } from '../../catalog/icons.generated.js';
 
@@ -52,6 +53,16 @@ export interface Captured {
   /** For a group: the arrangement the source actually used. */
   direction?: 'row' | 'column';
   wrap?: boolean;
+  /**
+   * How a row lines its columns up on the cross axis.
+   *
+   * `flex-start` is the right default for a row of equal-weight columns — three
+   * feature blurbs of different lengths should share a top edge. It is the
+   * WRONG default for a row of unequal ones: MEASURED on a hero built by these
+   * tools, a 154px text column sat beside a 420px photograph with 266px of dead
+   * space under it, because the row top-aligned them both.
+   */
+  align?: 'start' | 'center' | 'end' | 'stretch';
   /** For a button: whether the source painted it as a call to action, or it is prose's link. */
   variant?: 'cta' | 'link';
   /** For an embed: which of the platform's own media elements renders it. */
@@ -209,16 +220,61 @@ function iconFor(raw: string): string | null {
  * empty node is the difference between an imported page and an imported page
  * plus twenty findings from `sb_review`.
  */
+/**
+ * THE SITE'S OWN TYPE SCALE, worn by reference.
+ *
+ * The theme ships `heading-1` (48px) through `heading-6` (16px) and `text-1`..
+ * `text-3`, and every page these tools built ignored all of it: the mapper
+ * wrote `htmlTag` and nothing else, so a heading took the `heading-default`
+ * preset, which pins `fontSize: 48px` FLAT. MEASURED on a real build — a
+ * section title and the three item titles beneath it came out identical, on a
+ * page whose document correctly said h2 and h3. "About four type sizes" is the
+ * checklist item; the page had one.
+ *
+ * BY REFERENCE, NEVER BY LITERAL — `var(--wb-ts-<slug>-<prop>)` is what the
+ * editor's own picker stamps. A literal `36px` would outrank the preset beneath
+ * it permanently and stop the node following the theme, which is the detachment
+ * this repo already records for imported icons.
+ *
+ * SIZE AND LINE HEIGHT ONLY, of the eight keys a style controls. Colour and
+ * weight are already answered by the tokens read off the target page (rule 0),
+ * and overwriting those here would make an imported band stop matching the page
+ * it landed on — which is the one thing the token pass exists to prevent. The
+ * editor supports exactly this partial state: the pick is recorded so the
+ * picker shows it, and it can also show that the style has drifted.
+ *
+ * A theme with no such style leaves the var undefined, so every ref carries the
+ * element's own former answer as its CSS fallback: a site on a slimmer theme
+ * renders exactly as it did before this existed.
+ */
+function textScale(slug: string, fallback: Record<string, string>): {
+  style: Record<string, string>;
+  config: Record<string, string>;
+} {
+  const style: Record<string, string> = {};
+  for (const [key, prop] of TEXT_STYLE_KEYS) {
+    if (key !== 'fontSize' && key !== 'lineHeight') continue;
+    const fb = fallback[key];
+    style[key] = `var(--wb-ts-${slug}-${prop}${fb ? `, ${fb}` : ''})`;
+  }
+  return { style, config: { textGlobalStyle: slug } };
+}
+
 function one(c: Captured, t: PageTokens): NodeSpec | null {
   switch (c.kind) {
     case 'heading': {
       const text = c.text?.trim();
       if (!text) return null;
+      // The level is already decided and already correct in the document; it
+      // simply reached no CSS. heading-1..6 are the theme's own slugs.
+      const scale = textScale(`heading-${Math.min(6, Math.max(1, c.level ?? 2))}`, {});
       return {
         type: 'heading',
         specials: { htmlTag: headingTag(c.level), text },
+        config: scale.config,
         style: {
           margin: '0',
+          ...scale.style,
           ...(t.headingColor ? { color: t.headingColor } : {}),
           ...(t.headingWeight ? { fontWeight: t.headingWeight } : {}),
         },
@@ -428,6 +484,41 @@ function one(c: Captured, t: PageTokens): NodeSpec | null {
         };
       }
       if (kids.length === 1) return kids[0];
+      // A WRAPPING ROW IS A GRID, because flex cannot wrap into EQUAL CELLS.
+      //
+      // `flex: 1 1 <basis>` lets every item absorb the free space on ITS OWN
+      // LINE, so a short last line is a disaster: MEASURED on a page built by
+      // these tools, a gallery of five photographs came out as four cells of
+      // 330x220 and a fifth of 1392x420 — the same picture, four times the size,
+      // under the others. Nothing reported it, because no box overflowed and no
+      // two boxes overlapped; `measure` cannot see a cell that is merely wrong.
+      //
+      // Dropping the grow factor instead (`0 1 280px`) fixes the blow-up and
+      // buys a ragged right edge on every full line. `repeat(auto-fill,
+      // minmax(280px, 1fr))` is the thing actually wanted and the platform
+      // renders it — verified against a live server before this was written:
+      // as many cells as fit, all equal, the last line cell-sized like the rest.
+      //
+      // Mobile gets one column by name. The flex path's `flexDirection: column`
+      // says nothing to a grid, and a mobile answer that silently does nothing
+      // is rule 3 failing with a value in the document to prove it tried.
+      if (c.wrap) {
+        return {
+          type: 'flex-block',
+          style: {
+            width: '100%',
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
+            gap: '24px',
+          },
+          responsive: { mobile: { style: { gridTemplateColumns: '1fr', gap: '16px' } } },
+          children: kids.map((k) => ({
+            type: 'flex-block',
+            style: { width: '100%', minWidth: '0', display: 'flex', flexDirection: 'column', gap: '12px' },
+            children: [k],
+          })),
+        };
+      }
       // A ROW OF TWO OR MORE COLUMNS NEEDS AN EXPLICIT STACK BREAKPOINT, and
       // nothing catches it for you: the columns SHRINK to fit, so no box
       // overflows and `measure` stays silent while a photo becomes a sliver and
@@ -444,8 +535,8 @@ function one(c: Captured, t: PageTokens): NodeSpec | null {
           width: '100%',
           display: 'flex',
           flexDirection: 'row',
-          flexWrap: c.wrap ? 'wrap' : 'nowrap',
-          alignItems: 'flex-start',
+          flexWrap: 'nowrap',
+          alignItems: c.align && c.align !== 'start' ? c.align : 'flex-start',
           gap: '24px',
         },
         responsive: { mobile: { style: { flexDirection: 'column', gap: '16px' } } },

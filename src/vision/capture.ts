@@ -59,6 +59,7 @@ declare const document: {
 declare const console: { error(...args: unknown[]): void };
 declare function getComputedStyle(el: El): {
   display: string;
+  alignItems: string;
   visibility: string;
   opacity: string;
   backgroundColor: string;
@@ -898,6 +899,17 @@ function capturePage(limits: { maxSections: number; maxImages: number; maxTextCh
         // cards because it had more than a dozen. The bound that remains is the
         // whole-import node budget, which is the honest place for "this page is
         // enormous".
+        // THE SOURCE'S OWN CROSS-AXIS ANSWER. A hero that centres its words
+        // against a tall photograph is making a layout decision, and a copy
+        // that top-aligns them is not the same band — the same reasoning the
+        // `pinned` read already carries. Only the three values that mean
+        // something here; `stretch` is the browser's default and saying it
+        // would put a value in every imported row for nothing.
+        const av = cs.alignItems;
+        const align =
+          av === 'center' ? ('center' as const)
+          : av === 'flex-end' || av === 'end' ? ('end' as const)
+          : undefined;
         const wraps = grid || cs.flexWrap === 'wrap';
         const ROW_MAX = wraps ? 60 : 12;
         if (lays && row && kids.length >= 2 && kids.length <= ROW_MAX) {
@@ -909,6 +921,7 @@ function capturePage(limits: { maxSections: number; maxImages: number; maxTextCh
             // `nowrap` on one because the property does not apply. Carrying that
             // literally gave the columns nowhere to go at any width.
             wrap: wraps,
+            ...(align ? { align } : {}),
             children: kids,
           }];
         }

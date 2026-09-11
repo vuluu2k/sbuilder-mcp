@@ -198,3 +198,67 @@ describe('a pattern that declares picture slots', () => {
     }
   });
 });
+
+/**
+ * WHAT A PAGE BUILT ENTIRELY BY THESE TOOLS ACTUALLY LOOKED LIKE.
+ *
+ * Every rule below is a defect measured on a real build against a live server,
+ * photographed at 1440 — and `sb_review` reported "nothing a visitor would
+ * notice" for all of them, because it reads the tree and a tree cannot be
+ * badly proportioned.
+ */
+describe('the defects a built page had, measured on the render', () => {
+  const spec = (id: string, pool?: MediaPick[]): string =>
+    JSON.stringify(PATTERN_BY_ID.get(id)!.build(THEME_TOKENS, pool));
+
+  it('gives a blank page a MEASURE — 1392px lines are not an unstyled page', () => {
+    // Measured at 1440: every block 1392 wide, every heading and paragraph set
+    // on a 1392px line. That is ~200 characters where prose reads at 60-75.
+    // Unbounded was a decision too, and the worse one.
+    expect(THEME_TOKENS.sectionMaxWidth).toBeTruthy();
+    expect(spec('sb_cta_band')).toContain('maxWidth');
+  });
+
+  it('WRAPS INTO EQUAL CELLS, because flex cannot', () => {
+    // Five photographs came out as four cells of 330x220 and a fifth of
+    // 1392x420 — the same picture, four times the size, under the others.
+    // `flex: 1 1 <basis>` lets every item absorb its own line's free space.
+    const pool: MediaPick[] = Array.from({ length: 5 }, (_, i) => ({ url: `https://cdn/${i}.jpg`, width: 800, height: 600 }));
+    const json = spec('sb_gallery', pool);
+    expect(json).toContain('"display":"grid"');
+    expect(json).toContain('repeat(auto-fill, minmax(280px, 1fr))');
+    expect(json).not.toContain('1 1 280px');
+  });
+
+  it('still gives that grid a mobile answer, by NAME', () => {
+    // `flexDirection: column` says nothing to a grid, and a mobile override
+    // that silently does nothing is rule 3 failing with a value in the
+    // document to prove it tried.
+    const pool: MediaPick[] = Array.from({ length: 5 }, (_, i) => ({ url: `https://cdn/${i}.jpg` }));
+    expect(spec('sb_gallery', pool)).toContain('"gridTemplateColumns":"1fr"');
+  });
+
+  it('CENTRES the hero, whose two columns are unequal by design', () => {
+    // A 154px text column sat beside a 420px photograph with 266px of dead
+    // space under it, because the row top-aligned them both.
+    expect(spec('sb_hero_split', [{ url: 'https://cdn/a.jpg', width: 1200, height: 800 }]))
+      .toContain('"alignItems":"center"');
+  });
+
+  it('leaves a row of EQUAL columns top-aligned, which is the right default', () => {
+    // Three blurbs of different lengths should share a top edge. Centring
+    // every row would trade one defect for another.
+    expect(spec('sb_feature_trio')).toContain('"alignItems":"flex-start"');
+  });
+
+  it('wears the theme TYPE SCALE by reference, never as a literal', () => {
+    // Every heading rendered at 48px whatever its level: the mapper wrote only
+    // htmlTag, and heading-default pins fontSize 48px flat. A literal would
+    // outrank the preset permanently and stop the node following the theme.
+    const json = spec('sb_feature_trio');
+    expect(json).toContain('var(--wb-ts-heading-2-size)');
+    expect(json).toContain('var(--wb-ts-heading-3-size)');
+    expect(json).toContain('"textGlobalStyle":"heading-3"');
+    expect(json).not.toMatch(/"fontSize":"\d+px"/);
+  });
+});

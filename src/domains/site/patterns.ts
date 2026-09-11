@@ -93,6 +93,19 @@ export const THEME_TOKENS: PageTokens = {
   textColor: 'var(--wb-color-text)',
   buttonBg: 'var(--wb-color-primary)',
   buttonColor: '#ffffff',
+  // A PAGE WITH NO MEASURE IS NOT AN UNSTYLED PAGE, IT IS A WRONGLY STYLED ONE.
+  //
+  // `sectionMaxWidth` is read off the TARGET page so an imported band matches
+  // what is already there — and a blank page offers nothing to read, so it came
+  // out unbounded. MEASURED at 1440 on a page built entirely by these tools:
+  // every block 1392px wide, every heading and paragraph set on a 1392px line.
+  // That is roughly 200 characters where prose is readable at 60-75, and it is
+  // the single loudest way a generated page announces itself.
+  //
+  // Unbounded was a decision too, and the worse one. This is the same class of
+  // answer as the `64px 24px` padding and the `16px` gap the mapper already
+  // commits to for a page that cannot answer for itself.
+  sectionMaxWidth: '1200px',
 };
 
 /** One section, through the same mapper an import goes through. */
@@ -117,10 +130,11 @@ function section(
   };
 }
 
-const row = (children: Captured[], wrap = false): Captured => ({
+const row = (children: Captured[], wrap = false, align?: Captured['align']): Captured => ({
   kind: 'group',
   direction: 'row',
   wrap,
+  ...(align ? { align } : {}),
   children,
 });
 
@@ -155,6 +169,10 @@ export const LAYOUT_PATTERNS: LayoutPattern[] = [
       const used = new Set<string>();
       return section(
         [
+          // CENTRED, because a hero's two columns are unequal BY DESIGN: a few
+          // words on one side, a photograph on the other. Top-aligned they
+          // measured 154px beside 420px, and the band read as a caption that
+          // had slipped off the picture.
           row([
             { kind: 'group', direction: 'column', children: [h('Tiêu đề chính', 1), p('Một câu nói rõ bạn bán gì và cho ai.'), cta('Mua ngay')] },
             {
@@ -168,7 +186,7 @@ export const LAYOUT_PATTERNS: LayoutPattern[] = [
                 ),
               ],
             },
-          ]),
+          ], false, 'center'),
         ],
         t,
       );

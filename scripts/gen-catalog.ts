@@ -1130,6 +1130,45 @@ export const API_DEFINITIONS: Record<string, unknown> = ${JSON.stringify(
   };
   const animation = readAnimation();
 
+  // ---- THE SITE'S TYPE SCALE, which every generated page was ignoring ------
+  //
+  // The theme ships `heading-1` (48px) through `heading-6` (16px) and `text-1`
+  // through `text-3`. MEASURED on a page built entirely by these tools: every
+  // heading rendered at 48px whatever its level, because the mapper wrote only
+  // `htmlTag` and the element's `heading-default` preset pins `fontSize: 48px`
+  // flat. A section title and the three item titles under it came out the same
+  // size — "about four type sizes rather than a fifth that differs by 2px" is
+  // the checklist item, and the page had ONE.
+  //
+  // A node wears a style by REFERENCE, never by literal: the editor stamps
+  // `var(--wb-ts-<slug>-<prop>)` into the style namespace and records the pick
+  // in `config.textGlobalStyle`. A literal would outrank the preset beneath it
+  // permanently and stop the node following the theme — the detachment this
+  // repo already records for imported icons.
+  //
+  // Read from the editor's own table by regex rather than imported, for the
+  // reason `legacyScopes.ts` is: the module reaches `../trait/values`, which
+  // would drag Vue into a build script for eight pairs.
+  const readTextStyleKeys = (): Array<[string, string]> => {
+    const at = resolve(repo, 'editor/src/theme/textStyle.ts');
+    const src = readFileSync(at, 'utf8');
+    const from = src.indexOf('TEXT_STYLE_KEYS');
+    const end = src.indexOf('] as const', from);
+    if (from < 0 || end < 0) {
+      console.error('TEXT_STYLE_KEYS is gone from editor/src/theme/textStyle.ts');
+      process.exit(1);
+    }
+    const pairs = [...src.slice(from, end).matchAll(/\[\s*'([A-Za-z]+)'\s*,\s*'([a-z-]+)'\s*\]/g)].map(
+      (m) => [m[1], m[2]] as [string, string],
+    );
+    if (pairs.length < 6) {
+      console.error(`TEXT_STYLE_KEYS parsed ${pairs.length} pairs — the table's shape moved`);
+      process.exit(1);
+    }
+    return pairs;
+  };
+  const textStyleKeys = readTextStyleKeys();
+
   // ---- What a config key is ALLOWED to hold ----------------------------
   //
   // `sb_traits_for` names 138 controls with a declared write target, and NOT ONE
@@ -1308,6 +1347,20 @@ export const BASE_ONLY_EXCEPTIONS: string[] = ${JSON.stringify(baseOnly.exceptio
  * It is also BASE-ONLY (see BASE_ONLY_CONFIG) — render/css.go emits it into the
  * base lane because the config object is read with no responsive merge.
  */
+/**
+ * The eight node-style keys a THEME TEXT STYLE controls, and the var prop each
+ * compiles to: a node wears a style by setting these to
+ * var(--wb-ts-<slug>-<prop>), never by writing the value.
+ *
+ * The theme ships heading-1 (48px) through heading-6, and text-1..3 — a real
+ * type scale that every page built by these tools was ignoring, because the
+ * mapper wrote only htmlTag and the heading-default preset pins 48px flat.
+ *
+ * BY REFERENCE, NEVER BY LITERAL. A literal outranks the preset beneath it
+ * permanently and stops the node following the theme.
+ */
+export const TEXT_STYLE_KEYS: ReadonlyArray<readonly [string, string]> = ${JSON.stringify(textStyleKeys)};
+
 export const ANIMATION: {
   types: string[];
   easings: string[];
@@ -1324,6 +1377,7 @@ export const ANIMATION: {
       `${Object.keys(satellites).length} satellite owners, ${firstChildOnly.length} first-child-only, ` +
       `${baseOnly.keys.length} base-only config keys, ${Object.keys(configValues).length} config vocabularies, ` +
       `animation ${animation.types.length} types / ${animation.easings.length} easings, ` +
+      `${textStyleKeys.length} text-style keys, ` +
       `doc schema v${docVersion}`,
   );
 

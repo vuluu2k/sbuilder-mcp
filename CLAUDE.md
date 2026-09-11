@@ -1680,6 +1680,56 @@ that accounts for them.
   `builtinapps.Keys` rather than a retyped list. The lesson is the one this file keeps for stale
   hints: a description is not a comment when a generator reads it.
 
+- **A PAGE BUILT ENTIRELY BY THESE TOOLS WAS MEASURABLY WRONG, AND `sb_review` CALLED IT
+  CLEAN.** Four bands from the built-in patterns, real photographs, the theme's own palette —
+  and photographed at 1440 it carried four defects, every one of them invisible to a check that
+  reads the tree. This is rule 1 restated from the other end: a tree cannot be badly
+  proportioned, so only the render can report proportion.
+  - **NO MEASURE.** Every block came out 1392px wide, so every heading and paragraph was set on
+    a 1392px line — around 200 characters where prose reads at 60-75. `sectionMaxWidth` existed
+    and is read off the TARGET page, which answers nothing on a blank one. Unbounded was a
+    decision too, and the worse one; `THEME_TOKENS` now carries `1200px`, the same class of
+    answer as the `64px 24px` padding the mapper already commits to.
+  - **A WRAPPING ROW CANNOT MAKE EQUAL CELLS.** `flex: 1 1 <basis>` lets every item absorb the
+    free space on ITS OWN LINE, so a gallery of five photographs came out as four cells of
+    330×220 and a fifth of **1392×420** — the same picture, four times the size, under the
+    others. Dropping the grow factor buys a ragged right edge on every full line;
+    `repeat(auto-fill, minmax(280px, 1fr))` is the thing actually wanted, and the platform
+    renders it (verified against a live server before it was written). Mobile gets
+    `gridTemplateColumns: 1fr` BY NAME, because `flexDirection: column` says nothing to a grid
+    and a mobile override that silently does nothing is rule 3 failing with a value in the
+    document to prove it tried.
+  - **THE PAGE HAD ONE TYPE SIZE.** The theme ships `heading-1` (48px) through `heading-6` and
+    `text-1`..`text-3` — a real scale — and every heading rendered at 48px whatever its level,
+    because the mapper wrote `htmlTag` and nothing else and the `heading-default` preset pins
+    `fontSize: 48px` FLAT. A section title and the three item titles beneath it came out
+    identical on a document that correctly said h2 and h3. "About four type sizes rather than a
+    fifth that differs by 2px" is the checklist item; the page had ONE. Worn BY REFERENCE —
+    `var(--wb-ts-<slug>-<prop>)`, which is what the editor's own picker stamps, plus
+    `config.textGlobalStyle` to record the pick — because a literal `36px` would outrank the
+    preset permanently. SIZE AND LINE HEIGHT ONLY of the eight keys a style controls: colour and
+    weight are already answered by the tokens read off the target page, and overwriting those
+    would make an imported band stop matching the page it landed on. `TEXT_STYLE_KEYS` is
+    generated from `editor/src/theme/textStyle.ts`; every ref carries the element's former
+    answer as its CSS fallback, so a slimmer theme renders exactly as it did before.
+  - **A ROW HAD ONE CROSS-AXIS ANSWER FOR TWO DIFFERENT SHAPES.** `alignItems: flex-start` is
+    right for a row of equal-weight columns — three blurbs of different lengths should share a
+    top edge — and wrong for a row of unequal ones: the hero's 154px text column sat beside a
+    420px photograph with 266px of dead space under it. `Captured.align` carries the answer, the
+    hero asks for `center`, and `capture` now reads the SOURCE's own `alignItems` for the same
+    reason it reads `position` — a hero that centres its words against a tall photograph is
+    making a layout decision, and a copy that top-aligns them is not the same band.
+
+- **`genId` COULD REPEAT ITSELF, and the suite proved it rather than argued it.** Four random
+  bytes is 32 bits, which puts a collision at roughly 1 in 34,000 across 500 draws — and the
+  uniqueness test HIT one in an ordinary run, 499 of 500. One `sb_import_site` mints thousands.
+  The consequence has no error attached: two nodes sharing an id means one OVERWRITES the other
+  in `doc.nodes`, the parent's child list points at the survivor, and the document validates,
+  saves and publishes with content silently gone. The width stays four bytes, because the
+  platform's own ids are eight hex characters and a document this server builds should be
+  indistinguishable from one a human built; uniqueness comes from REMEMBERING what has been
+  issued, which is the right scope since one process builds one document.
+
 ## The five traps
 
 Each fails SILENTLY. Each is encoded in `src/domains/site/traps.ts` (trap 5 in
