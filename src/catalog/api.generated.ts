@@ -3976,7 +3976,7 @@ export const API_OPERATIONS: ApiOperation[] = [
         "in": "path",
         "required": true,
         "type": "string",
-        "description": "App key (mail | multilingual)"
+        "description": "App key: mail | multilingual | agent | chat | booking | loyalty | payments | courses"
       }
     ],
     "bodyDescribed": false,
@@ -4004,7 +4004,7 @@ export const API_OPERATIONS: ApiOperation[] = [
         "in": "path",
         "required": true,
         "type": "string",
-        "description": "App key (mail | multilingual)"
+        "description": "App key: mail | multilingual | agent | chat | booking | loyalty | payments | courses"
       }
     ],
     "bodyDescribed": false,

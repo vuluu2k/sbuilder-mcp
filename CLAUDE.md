@@ -1656,6 +1656,30 @@ that accounts for them.
   (one recognised top-level key, not a required set), because requiring `colors` would refuse a
   shape the editor has not shipped yet, and the colour/text-style shape stays the editor's to own.
 
+- **AN APP'S BLOCKS WERE REACHABLE AND UNUSABLE, and a marketplace app cannot be installed from
+  here at all.** Trap 5 already records what an app block IS; what nothing recorded is how to
+  make one. `page/appblocks.go` holds the format — `specials.appBlockRef` is
+  `"<installId>/<blockKey>"` — and both halves come back on every row of
+  `GET /api/sites/{siteId}/apps/blocks`. So an agent had the list, the route, and no way to turn
+  a row into a node. It rides on the `/apps` and `/builtin-apps` call sheets now, with the two
+  silent traps beside it (never author the composed stamp; an edit inside a composed block is
+  stored nowhere), because placing one is `sb_add` and no tool needed adding.
+
+  The install half splits cleanly and the split is the platform's, not this client's.
+  `POST /api/sites/{siteId}/builtin-apps/{key}` is reachable and takes one of EIGHT keys — mail,
+  multilingual, agent, chat, booking, loyalty, payments, courses. A MARKETPLACE app installs
+  through `appinstalls/rest/oauth.go`: authorize → a consent screen the editor SPA renders →
+  consent → token. That is a human approving a permission grant, it carries no `@Router`
+  annotation at all, and it is not something to work around.
+
+  **AND THE ONE PLACE THE INSTALLABLE SET EXISTS ON THE WIRE NAMED TWO OF THE EIGHT.**
+  `GET /builtin-apps` answers what is INSTALLED, so the `key` parameter's own description is the
+  whole answer to "what can I install" — and it read `"App key (mail | multilingual)"`, written
+  when those were the only two. swag copies that string into `swagger.json`, this catalog copies
+  it out, and it reached the call sheet verbatim. Fixed upstream and pinned there against
+  `builtinapps.Keys` rather than a retyped list. The lesson is the one this file keeps for stale
+  hints: a description is not a comment when a generator reads it.
+
 ## The five traps
 
 Each fails SILENTLY. Each is encoded in `src/domains/site/traps.ts` (trap 5 in

@@ -1165,6 +1165,29 @@ paint; the only scroll hooks in the runtime are the pinned element's `wb-stuck` 
 `popup`'s scroll trigger. A section that fades in as the visitor reaches it cannot be authored
 here, by any tool, because the platform has nowhere to put it.
 
+### Apps, and the one string that made their blocks unusable
+
+Every app route is in the catalog and `GET /api/sites/{siteId}/apps/blocks` returns the palette
+rows an installed app contributes — but the one thing needed to PLACE one exists only in Go.
+`page/appblocks.go` spells it: `specials.appBlockRef` is `"<installId>/<blockKey>"`, and both
+halves come back on every block row. An agent had the list, the route, and no way to turn a row
+into a node. `sb_api_find` now carries it on any `/apps` or `/builtin-apps` call sheet — placing
+one is `sb_add`, which already takes the specials it needs, so no tool was added.
+
+The sheet carries the two traps with it. **Never author `appBlockId` or `appBlockHash`**: those
+are the stamps the SERVER writes when it composes, and writing one makes the next save decompose
+your node over the app. And **an edit inside a composed block is stored nowhere and reported
+nowhere** — the save reduces the subtree back to the reference, so a block is configured through
+its own props and slots, never by editing what it rendered.
+
+**A built-in app this server CAN install; a marketplace app it cannot.**
+`POST /api/sites/{siteId}/builtin-apps/{key}` takes one of eight keys — mail, multilingual,
+agent, chat, booking, loyalty, payments, courses — and that parameter's own description is the
+only place the installable set exists on the wire, because `GET /builtin-apps` answers what is
+*installed*. It named two of the eight until the platform's annotation was fixed. A marketplace
+app installs through an OAuth consent screen a person has to approve, so the honest answer there
+is to ask the merchant and then read `/apps/blocks` again.
+
 ## `sb_theme`
 
 **The one design decision that reaches every page.** A style preset compiles to a class rule

@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { searchOperations, describeOperation, summarizeOperation, findOperation } from '../src/catalog/search.js';
 import { REQUEST_SHAPES } from '../src/catalog/shapes.generated.js';
+import { API_OPERATIONS } from '../src/catalog/api.generated.js';
 
 describe('searchOperations()', () => {
   it('finds menu operations from the word "menu"', () => {
@@ -218,6 +219,50 @@ describe('the scanner refuses rather than guesses', () => {
   it('leaves no shape with an empty field list', () => {
     for (const [id, shape] of Object.entries(REQUEST_SHAPES)) {
       expect(shape.fields.length, id).toBeGreaterThan(0);
+    }
+  });
+});
+
+/**
+ * AN APP'S BLOCKS WERE REACHABLE AND UNUSABLE.
+ *
+ * Every route is in the catalog and `/apps/blocks` returns the rows, but the
+ * one thing needed to PLACE one is a string format that exists only in Go:
+ * `page/appblocks.go` spells SpecAppBlockRef as "<installId>/<blockKey>". An
+ * agent had the list, the route, and no way to turn a row into a node.
+ */
+describe('the app-block call sheet', () => {
+  const sheetFor = (id: string): Record<string, unknown> =>
+    describeOperation(API_OPERATIONS.find((o) => o.id === id)!) as Record<string, unknown>;
+
+  it('spells the reference format, which lives nowhere else on the wire', () => {
+    const app = sheetFor('get:/api/sites/{siteId}/apps/blocks').app_blocks as Record<string, string>;
+    expect(app.place).toContain('specials.appBlockRef');
+    expect(app.place).toContain('<installId>/<blockKey>');
+  });
+
+  it('carries the two traps that fail silently', () => {
+    // Authoring the composed stamp makes the next save decompose the node OVER
+    // the app; an edit inside a composed block is stored nowhere at all.
+    const app = sheetFor('get:/api/sites/{siteId}/apps').app_blocks as Record<string, string>;
+    expect(app.never).toContain('appBlockId');
+    expect(app.interior).toMatch(/stored nowhere/);
+  });
+
+  it('says which apps this server can install and which need a person', () => {
+    const app = sheetFor('post:/api/sites/{siteId}/builtin-apps/{key}').app_blocks as Record<string, string>;
+    expect(app.installing).toMatch(/BUILT-IN/);
+    expect(app.installing).toMatch(/OAuth consent/);
+  });
+
+  it('NAMES EVERY INSTALLABLE KEY, because no route lists what is installable', () => {
+    // GET /builtin-apps answers what is INSTALLED. The key parameter's own
+    // description is the only place the installable set exists on the wire, and
+    // it named two of eight until the platform's annotation was fixed.
+    const op = API_OPERATIONS.find((o) => o.id === 'post:/api/sites/{siteId}/builtin-apps/{key}')!;
+    const key = op.params!.find((p) => p.name === 'key')!;
+    for (const k of ['mail', 'multilingual', 'agent', 'chat', 'booking', 'loyalty', 'payments', 'courses']) {
+      expect(key.description, k).toContain(k);
     }
   });
 });

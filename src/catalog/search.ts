@@ -97,6 +97,39 @@ export function describeOperation(op: ApiOperation): Record<string, unknown> {
     out.translation_fields = translationCallSheet();
   }
 
+  // AN APP'S BLOCKS WERE REACHABLE AND UNUSABLE, because the one thing needed to
+  // place one is a string format that exists only in Go. `page/appblocks.go`
+  // spells it out — SpecAppBlockRef is "<installId>/<blockKey>" — and every
+  // field to build it comes back from `/apps/blocks` (`installId`, `key`). An
+  // agent had the list of blocks, the route that returns it, and no way to turn
+  // a row into a node.
+  //
+  // Attached to the call sheet for the same reason the translation table is:
+  // that is where the agent already is when it decides what to send. No new
+  // tool — placing one is `sb_add`, which already takes the specials it needs.
+  if (/\/(apps|builtin-apps)(\/|$)/.test(op.path)) {
+    out.app_blocks = {
+      place:
+        'A block from an installed app goes on a page as ONE node carrying ' +
+        'specials.appBlockRef = "<installId>/<blockKey>" — both fields come back from ' +
+        'GET /api/sites/{siteId}/apps/blocks. Add it with sb_add; the platform composes the ' +
+        "app's markup underneath on read.",
+      never:
+        'Never author specials.appBlockId or appBlockHash. Those are the stamps the SERVER ' +
+        'writes when it composes, and writing one makes the next save decompose your node over ' +
+        'the app instead.',
+      interior:
+        'An edit INSIDE a composed block is stored nowhere and reported nowhere — the save ' +
+        'reduces the subtree back to the reference. Configure the block through its own ' +
+        'props/slots, never by editing what it rendered.',
+      installing:
+        'A BUILT-IN app installs with POST /api/sites/{siteId}/builtin-apps/{key} and that key ' +
+        "parameter's description names every installable one. A MARKETPLACE app cannot be " +
+        'installed from here at all: it goes through an OAuth consent screen a person has to ' +
+        'approve, so ask the merchant to install it and then read /apps/blocks again.',
+    };
+  }
+
   const shape = REQUEST_SHAPES[op.id];
   if (shape) {
     out.body_shape = shape;

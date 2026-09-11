@@ -1126,6 +1126,28 @@ tiên; hai móc cuộn duy nhất trong runtime là class `wb-stuck` của phầ
 `popup`. Một dải hiện dần khi khách cuộn tới không thể dựng ở đây bằng bất kỳ công cụ nào, vì nền
 tảng không có chỗ nào để đặt nó.
 
+### App, và một chuỗi ký tự khiến block của chúng không dùng được
+
+Mọi route về app đều có trong catalog, và `GET /api/sites/{siteId}/apps/blocks` trả về các hàng
+palette mà app đã cài đóng góp — nhưng thứ duy nhất cần để ĐẶT một block thì chỉ tồn tại trong Go.
+`page/appblocks.go` ghi rõ: `specials.appBlockRef` là `"<installId>/<blockKey>"`, và cả hai nửa
+đều trở về trên mỗi hàng block. Agent có danh sách, có route, và không có cách nào biến một hàng
+thành một node. Giờ `sb_api_find` mang nó trên mọi call sheet `/apps` hoặc `/builtin-apps` — đặt
+block là việc của `sb_add`, vốn đã nhận đúng specials cần, nên không thêm tool nào.
+
+Call sheet mang theo hai cái bẫy. **Đừng bao giờ tự viết `appBlockId` hay `appBlockHash`**: đó là
+dấu SERVER đóng khi nó compose, viết vào thì lần lưu sau sẽ decompose node của bạn đè lên app. Và
+**sửa bên trong một block đã compose thì không được lưu ở đâu và không được báo ở đâu** — lần lưu
+rút cả cây con về lại tham chiếu, nên block được cấu hình qua props/slot của chính nó, không phải
+bằng cách sửa thứ nó đã render.
+
+**App built-in thì server này CÀI được; app marketplace thì không.**
+`POST /api/sites/{siteId}/builtin-apps/{key}` nhận một trong tám khoá — mail, multilingual, agent,
+chat, booking, loyalty, payments, courses — và mô tả của chính tham số đó là nơi duy nhất tập khoá
+cài được tồn tại trên đường truyền, vì `GET /builtin-apps` trả lời thứ *đã cài*. Nó ghi hai trên
+tám cho tới khi chú thích bên nền tảng được sửa. App marketplace cài qua màn hình đồng ý OAuth cần
+người duyệt, nên câu trả lời thành thật là nhờ chủ shop cài rồi đọc lại `/apps/blocks`.
+
 ## `sb_theme`
 
 **Quyết định thiết kế duy nhất chạm tới mọi trang.** Một style preset biên dịch thành rule class
