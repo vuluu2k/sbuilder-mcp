@@ -6,6 +6,11 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.31.0] - 2026-09-11
+
+### Added
+- sb_import and sb_import_site now turn a set of panels with a button row into a real `tab` element instead of flattening it, as long as every panel's label can be read off the page (via `aria-controls`, a shared `data-*` pairing, or position when the button row's clickable count matches the panel count); a panel set whose labels are filled in by script rather than present in the DOM is reported as `panel-set-without-labels` and left flattened rather than guessed at.
+
 ## [0.30.1] - 2026-09-11
 
 ### Changed

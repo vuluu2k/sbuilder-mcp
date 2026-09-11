@@ -6,6 +6,11 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.31.0] - 2026-09-11
+
+### Added
+- sb_import và sb_import_site giờ biến một bộ panel có hàng nút thành một element `tab` thật thay vì làm phẳng nó, miễn là nhãn của mọi panel đọc được trên trang (qua `aria-controls`, một cặp giá trị `data-*` chung, hoặc theo vị trí khi số phần tử bấm được trong hàng nút khớp với số panel); một bộ panel có nhãn do script điền vào chứ không có sẵn trong DOM sẽ được báo là `panel-set-without-labels` và giữ nguyên dạng làm phẳng thay vì bị đoán mò.
+
 ## [0.30.1] - 2026-09-11
 
 ### Changed
