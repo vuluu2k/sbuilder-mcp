@@ -6,6 +6,15 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.32.1] - 2026-09-11
+
+### Fixed
+- sb_import, sb_import_site, và các layout pattern có sẵn được sb_template_use áp dụng giờ giới hạn chiều rộng mỗi section ở 1200px thay vì để không giới hạn, nên một band được nhập hoặc dựng sẵn không còn đặt đoạn văn trên một dòng dài 1392px.
+- Một hàng bị wrap gồm hai cột trở lên (một dải ảnh, một kệ thẻ sản phẩm) giờ được dựng bằng CSS grid thay vì hàng flex, nên mọi ô đều có cùng kích thước thay vì dòng cuối ngắn hơn bị kéo giãn để lấp đầy hàng.
+- Các heading do sb_import, sb_import_site, và các layout pattern có sẵn dựng ra giờ mang text style của theme site (heading-1 đến heading-6, theo tham chiếu) thay vì cỡ 48px cố định, nên một h2 và một h3 không còn hiển thị cùng một cỡ chữ.
+- Một hàng gồm hai cột có trọng số khác nhau (phần chữ của hero cạnh ảnh của nó) giờ giữ nguyên cách căn theo trục ngang của trang nguồn, ví dụ căn giữa, thay vì luôn căn lên trên và để lại khoảng trống bên dưới cột ngắn hơn.
+- Id của node được tạo trong lúc dựng trang (sb_add, sb_import, sb_import_site) giờ không thể trùng nhau nữa: mỗi tiến trình ghi nhớ mọi id đã cấp và tạo lại nếu bị trùng thay vì để một node âm thầm ghi đè lên node khác.
+
 ## [0.32.0] - 2026-09-11
 
 ### Added

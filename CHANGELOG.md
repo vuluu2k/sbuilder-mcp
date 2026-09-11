@@ -6,6 +6,15 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.32.1] - 2026-09-11
+
+### Fixed
+- sb_import, sb_import_site, and the built-in layout patterns applied by sb_template_use now cap every section's width at 1200px instead of leaving it unbounded, so an imported or generated band no longer sets prose on a 1392px line.
+- A wrapping row of two or more columns (a photo gallery, a card shelf) is now built as a CSS grid instead of a flex row, so every cell comes out the same size instead of the last, shorter line stretching to fill the row.
+- Headings built by sb_import, sb_import_site, and the built-in layout patterns now wear the site's own theme text style (heading-1 through heading-6, by reference) instead of the flat 48px default, so an h2 and an h3 no longer render at an identical size.
+- A row of two unequal-weight columns (a hero's text beside its photograph) now keeps the source page's own cross-axis alignment, such as centering, instead of always aligning to the top and leaving dead space under the shorter column.
+- Node ids generated during a build (sb_add, sb_import, sb_import_site) can no longer collide: each process now remembers every id it has issued and redraws on a repeat instead of risking one node silently overwriting another.
+
 ## [0.32.0] - 2026-09-11
 
 ### Added
