@@ -110,10 +110,10 @@ in this client: one would put the very key the platform exists to hold back into
 | `sb_import_site` | Read a WHOLE site from one URL — its sitemap, or the links on that page — and give each page found its own draft page here, built from this site's tokens |
 | `sb_theme` | Read or patch the site's palette and type scale — the layer every style preset resolves from, so one token repaints every page |
 | `sb_store` | Run a store flow that must happen in a fixed order — the four writes that make a working checkout, or any of the platform's 17 form templates (login, register, forgot, contact, subscribe …) with its own field document |
-| `sb_undo` | Put back what a PUT replaced — the platform has no page history or restore, so this is the only way back |
+| `sb_undo` | Put back what a PUT replaced. The SECOND answer for a page, not the only one: the platform has versions, history and restore (`sb_api_find` "page versions"), which outlive this process — reach for those first and use this for every other shaped PUT |
 
-Twenty-eight tools, **495 API operations** (166 of the 216 writes carrying a body shape read
-off the handler), 111 elements, 78 binding sources. `sb_api_find`
+Twenty-eight tools, **508 API operations** (170 of the 223 writes carrying a body shape read
+off the handler), 112 elements, 78 binding sources. `sb_api_find`
 is an index rather than a tool per endpoint, so the tool list stays short while everything
 the platform can do stays reachable — and operations added to the platform arrive with the
 next `npm run codegen`.

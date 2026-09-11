@@ -1347,12 +1347,20 @@ Put back what a `PUT` through `sb_api_call` replaced.
 | `index` | number? | 1 is the most recent write. Omit to **list** what is undoable |
 | `dry_run` | boolean? | Defaults to **true** |
 
-The platform has no page history, no versions and no restore — the only `restore` in
-`/api/v1` is `media/{id}/restore`. So every whole-document replace this server can make is
-one-way: `PUT /settings` is not a patch and a partial body erases the store's configuration;
-`PUT .../forms/{id}/document` replaces a checkout's fields; `PUT .../pages/{id}/source`
-replaces a page. A merchant clicking through the editor has undo. An agent had nothing, and
-one call does more damage.
+Every whole-document replace this server can make is one-way: `PUT /settings` is not a patch
+and a partial body erases the store's configuration; `PUT .../forms/{id}/document` replaces a
+checkout's fields; `PUT .../pages/{id}/source` replaces a page. A merchant clicking through
+the editor has undo. An agent had nothing, and one call does more damage.
+
+**FOR A PAGE THIS IS THE SECOND ANSWER, NOT THE ONLY ONE — and this page said otherwise for
+three phases.** It read "the platform has no page history, no versions and no restore", which
+was true of the OpenAPI document and false of the platform: `saveDraftRaw` appends an autosave
+checkpoint on every draft save, `SaveVersion` mints a labelled snapshot, and both restore.
+They carried no `@Router` line, so they reached a browser and reached nothing else — now
+annotated and on the call sheet (`sb_api_find "page versions"`). Reach for them first when a
+page is what was wrecked: they are the platform's own and survive everything, while the log
+below lives in this process and dies with it. A RESTORE CHANGES THE DRAFT, so publish
+afterwards. A page DELETE is still one-way.
 
 **A PUT therefore reads before it writes.** A PUT is a replace by definition, so what it is
 about to destroy is exactly what the matching GET returns — one extra round trip on a write,

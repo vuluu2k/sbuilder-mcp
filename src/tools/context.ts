@@ -25,8 +25,14 @@ export interface ToolContext {
   /**
    * What a PUT replaced, so `sb_undo` can put it back.
    *
-   * The platform has no page history and no restore, so every whole-document
-   * replace is one-way. See tools/undo.ts.
+   * Every whole-document replace is one-way, which is what this exists for: a
+   * merchant clicking through the editor has undo and an agent had nothing.
+   *
+   * IT IS NOT THE ONLY WAY BACK FOR A PAGE, and this comment used to say it
+   * was. The platform has versions, history and restore — they carried no
+   * `@Router` line for a long time, which is why they were recorded here as
+   * absent, and they are on the call sheet now. Those outlive the process;
+   * this log dies with it. See tools/undo.ts.
    */
   undo: UndoLog;
 }

@@ -1305,12 +1305,20 @@ Trả lại thứ mà một lệnh `PUT` qua `sb_api_call` đã ghi đè.
 | `index` | number? | 1 là lần ghi gần nhất. Bỏ trống để **liệt kê** những gì hoàn tác được |
 | `dry_run` | boolean? | Mặc định **true** |
 
-Nền tảng không có lịch sử trang, không có version, không có restore — `restore` duy nhất
-trong `/api/v1` là `media/{id}/restore`. Nên mọi lệnh thay-toàn-bộ-tài-liệu mà server này có
-thể gửi đều là một chiều: `PUT /settings` không phải patch, body thiếu trường là xoá cấu hình
-cửa hàng; `PUT .../forms/{id}/document` thay toàn bộ trường của trang thanh toán;
-`PUT .../pages/{id}/source` thay cả trang. Người bán bấm trong editor thì có undo. Agent thì
-không có gì, mà một lệnh của nó phá được nhiều hơn.
+Mọi lệnh thay-toàn-bộ-tài-liệu mà server này có thể gửi đều là một chiều: `PUT /settings`
+không phải patch, body thiếu trường là xoá cấu hình cửa hàng; `PUT .../forms/{id}/document`
+thay toàn bộ trường của trang thanh toán; `PUT .../pages/{id}/source` thay cả trang. Người bán
+bấm trong editor thì có undo. Agent thì không có gì, mà một lệnh của nó phá được nhiều hơn.
+
+**VỚI MỘT TRANG, ĐÂY LÀ ĐƯỜNG VỀ THỨ HAI CHỨ KHÔNG PHẢI DUY NHẤT — và trang này đã nói ngược
+lại suốt ba giai đoạn.** Nó từng viết "nền tảng không có lịch sử trang, không có version,
+không có restore", điều đó đúng với tài liệu OpenAPI và sai với nền tảng: `saveDraftRaw` ghi
+một checkpoint tự động ở mỗi lần lưu nháp, `SaveVersion` tạo một bản chụp có nhãn, và cả hai
+đều khôi phục được. Chúng không có dòng `@Router` nào, nên tới được trình duyệt mà không tới
+được gì khác — giờ đã được chú thích và có trên call sheet (`sb_api_find "page versions"`).
+Khi thứ bị hỏng là một trang thì hãy dùng chúng trước: chúng là của chính nền tảng và sống
+lâu hơn mọi thứ, còn nhật ký bên dưới nằm trong tiến trình này và chết cùng nó. RESTORE LÀM
+ĐỔI BẢN NHÁP, nên nhớ publish sau đó. Xoá một trang thì vẫn là một chiều.
 
 **Vì vậy một PUT sẽ đọc trước khi ghi.** PUT theo định nghĩa là thay thế, nên thứ nó sắp phá
 chính là thứ lệnh GET tương ứng trả về — thêm đúng một round trip trên lệnh ghi, không có
