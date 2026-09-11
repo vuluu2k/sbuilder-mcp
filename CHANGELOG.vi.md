@@ -6,6 +6,15 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.36.0] - 2026-09-11
+
+### Added
+- Call sheet của `/apps` giờ giải thích việc cài một app từ marketplace như hai câu hỏi tách biệt: gợi ý một app luôn khả thi với bất kỳ credential nào (`GET /api/sites/{siteId}/apps` cùng `GET /oauth/authorize-info` để lấy nhà phát hành, chính sách riêng tư, scope và giá của app), còn cài đặt thì cần một session (`POST /oauth/authorize`) vì agent key không phải access token và nền tảng cố tình từ chối nó. Call sheet cũng ghi rõ một app trả phí sẽ bị từ chối nếu thiếu `acceptedPrice` tường minh, nên server này không bao giờ tự ý khiến merchant phải trả tiền cho một gói đăng ký.
+- Catalog giờ mang theo hai operation `/oauth` phía sau luồng đó, `GET /oauth/authorize-info` và `POST /oauth/authorize`, kèm request shape cho operation thứ hai.
+
+### Changed
+- Call sheet của `builtin-apps` không còn nói với caller rằng một app marketplace "không thể cài từ đây được"; câu đó khắt khe hơn mức nền tảng thực sự yêu cầu.
+
 ## [0.35.0] - 2026-09-11
 
 ### Added

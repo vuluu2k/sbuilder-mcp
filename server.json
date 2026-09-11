@@ -8,13 +8,13 @@
     "source": "github"
   },
   "websiteUrl": "https://github.com/vuluu2k/sbuilder-mcp#readme",
-  "version": "0.35.0",
+  "version": "0.36.0",
   "packages": [
     {
       "registryType": "npm",
       "registryBaseUrl": "https://registry.npmjs.org",
       "identifier": "sbuilder-mcp",
-      "version": "0.35.0",
+      "version": "0.36.0",
       "runtimeHint": "npx",
       "transport": {
         "type": "stdio"

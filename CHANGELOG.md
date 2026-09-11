@@ -6,6 +6,15 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.36.0] - 2026-09-11
+
+### Added
+- The `/apps` call sheet now explains marketplace app installation as two separate questions: suggesting one is always possible on any credential (`GET /api/sites/{siteId}/apps` plus `GET /oauth/authorize-info` for the app's publisher, privacy policy, scopes, and price), while installing one requires a session (`POST /oauth/authorize`) because an agent key is not an access token and the platform refuses it by design. It also documents that a paid app is refused without an explicit `acceptedPrice`, so this server can never commit a merchant to a subscription on its own.
+- The catalog now carries the two `/oauth` operations behind that flow, `GET /oauth/authorize-info` and `POST /oauth/authorize`, including the request shape for the latter.
+
+### Changed
+- The `builtin-apps` call sheet no longer tells the caller that a marketplace app "cannot be installed from here at all"; that line was stricter than the platform actually enforces.
+
 ## [0.35.0] - 2026-09-11
 
 ### Added
