@@ -6,6 +6,12 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.32.2] - 2026-09-11
+
+### Fixed
+- A centred section built by sb_import, sb_import_site, or the built-in layout patterns applied by sb_template_use no longer renders half left-aligned: the theme's heading preset overrides inherited text alignment, so headings and paragraphs now carry `textAlign` directly on the node when the source (or pattern) centers or right-aligns them.
+- The gallery-wall layout pattern applied by sb_template_use now frames every photo to a shared aspect ratio measured as the median of the pictures actually picked, instead of leaving each tile its own shape, so a wall of portraits or landscapes no longer renders with mismatched row heights.
+
 ## [0.32.1] - 2026-09-11
 
 ### Fixed

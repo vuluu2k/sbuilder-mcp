@@ -6,6 +6,12 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.32.2] - 2026-09-11
+
+### Fixed
+- Một section được căn giữa do sb_import, sb_import_site, hoặc các layout pattern có sẵn được sb_template_use áp dụng giờ không còn hiển thị nửa căn trái nữa: preset heading của theme ghi đè cách căn chữ được kế thừa, nên heading và đoạn văn giờ mang `textAlign` trực tiếp trên node khi trang nguồn (hoặc pattern) căn giữa hay căn phải chúng.
+- Layout pattern dạng tường ảnh do sb_template_use áp dụng giờ đóng khung mọi ảnh theo một tỉ lệ khung hình chung, tính bằng trung vị của các ảnh thực sự được chọn, thay vì để mỗi ô giữ nguyên hình dạng riêng, nên một tường ảnh chân dung hay ảnh ngang không còn hiển thị với chiều cao các hàng lệch nhau.
+
 ## [0.32.1] - 2026-09-11
 
 ### Fixed
