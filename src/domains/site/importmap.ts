@@ -37,7 +37,18 @@ export interface Captured {
     /** One or more consecutive `<details>`, which is what this platform's accordion is. */
     | 'accordion'
     /** One `<details>`: `text` is its `<summary>`, `children` the body. */
-    | 'accordion-item';
+    | 'accordion-item'
+    /**
+     * A set of panels with a button row, which is what this platform's `tab` is.
+     *
+     * Produced ONLY when every panel's label could be READ off the page —
+     * `tab` synthesizes its whole button row from each child's
+     * `specials.label`, so a tab without them is a stack of panels wearing a
+     * control nobody can use.
+     */
+    | 'tab'
+    /** One panel: `text` is its button's label, `children` the panel body. */
+    | 'tab-item';
   /** For a group: the arrangement the source actually used. */
   direction?: 'row' | 'column';
   wrap?: boolean;
@@ -258,6 +269,27 @@ function one(c: Captured, t: PageTokens): NodeSpec | null {
         ...(label ? { specials: { label } } : {}),
         children: body,
       };
+    }
+    case 'tab': {
+      const items = (c.children ?? [])
+        .map((item) => one(item, t))
+        .filter((n): n is NodeSpec => n !== null);
+      // Two is the floor for a tab: one panel with a button over it is a
+      // heading the visitor cannot dismiss.
+      if (items.length < 2) return null;
+      return { type: 'tab', children: items };
+    }
+    case 'tab-item': {
+      const label = c.text?.trim();
+      const body = (c.children ?? [])
+        .map((k) => one(k, t))
+        .filter((n): n is NodeSpec => n !== null);
+      // NO LABEL, NO PANEL — and this is stricter than the accordion beside it
+      // on purpose. `accordion-content` seeds its own summary, so an unlabelled
+      // one still opens; `tab` builds its BUTTON ROW from these labels, so an
+      // unlabelled panel is one the visitor has no way to reach.
+      if (!label || !body.length) return null;
+      return { type: 'tab-content', specials: { label }, children: body };
     }
     case 'divider': {
       return { type: 'divider', style: { width: '100%' } };

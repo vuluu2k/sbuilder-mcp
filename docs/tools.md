@@ -1116,6 +1116,26 @@ pointing at somebody else's site is worse than none. No menu links the new pages
 And nothing has been seen at 390px. `sb_look` each page at the three widths, then
 `sb_publish`.
 
+**A SET OF PANELS WITH A BUTTON ROW BECOMES A `tab`, and the labels decide it.** The platform
+synthesizes a tab's whole button row from each `tab-content` child's `specials.label`
+(`render/nodes/tab/html.go`), so a tab without labels is a stack of panels wearing a control
+nobody can use. That makes "can the labels be read" both the right question and the right
+DISCRIMINATOR — the panel-set stamp also lands on a product grid that happens to hide one card,
+and a label row is exactly what that grid has not got.
+
+Three pairings, strongest first, because a wrong label is worse than none — it puts one
+collection's name over another's products: **ARIA** (`[role=tab][aria-controls]`) says it
+outright; a **shared `data-*` value** (`<button data-id="7">` beside `<div data-id="7">`) is how
+most hand-rolled tab scripts wire themselves and survives reordering; **position**, only from a
+row holding exactly as many clickable items as there are panels. Every panel must come out with
+a label or it is not a tab — the panels are still captured, flattened, and the skip says
+`panel-set-without-labels`.
+
+Measured on ttgshop.vn: 93 panel sets, none of them labelled, because that site's tab buttons
+are empty in the DOM and filled by script. Deriving a label from the `data-url` slug was
+available and refused: a Vietnamese slug comes back stripped of its diacritics, which is the
+invented-copy defect `default_seed_copy` reports on everybody else's seeds.
+
 ### The entrance animation, and its four silent misses
 
 `config.animation` is offered by **73 of the 111 element types** and was describable by

@@ -1116,3 +1116,140 @@ describe.runIf(process.env.SB_BROWSER_TEST === '1')('capture() on a shop-shaped 
     expect(strings(got)).toContain('Mua ngay');
   });
 });
+
+/**
+ * A SET OF PANELS WITH A BUTTON ROW IS A `tab`, and the labels decide it.
+ *
+ * The platform synthesizes a tab's whole button row from each `tab-content`
+ * child's `specials.label`, so a tab without labels is a stack of panels
+ * wearing a control nobody can use. That makes "can the labels be read" both
+ * the right question and the right DISCRIMINATOR — the panel-set stamp also
+ * lands on a product grid that happens to hide one card, and a label row is
+ * exactly what that grid has not got.
+ */
+describe.runIf(process.env.SB_BROWSER_TEST === '1')('capture() reading tabs', () => {
+  // charset=utf-8 or the Vietnamese arrives as mojibake and every label
+  // assertion compares two different strings.
+  const page = (bar: string, panels: string) =>
+    `data:text/html;charset=utf-8,${encodeURIComponent(`<body><div class="wrap">${bar}${panels}</div></body>`)}`;
+
+  const kinds = (got: Awaited<ReturnType<typeof capture>>): string[] => {
+    const out: string[] = [];
+    const walk = (c: { kind: string; children?: unknown[] }): void => {
+      out.push(c.kind);
+      for (const k of (c.children ?? []) as typeof c[]) walk(k);
+    };
+    for (const s of got.sections) walk(s as never);
+    return out;
+  };
+  const tabOf = (got: Awaited<ReturnType<typeof capture>>): { children?: Array<{ text?: string }> } | null => {
+    let found: never | null = null;
+    const walk = (c: { kind: string; children?: unknown[] }): void => {
+      if (c.kind === 'tab') found = c as never;
+      for (const k of (c.children ?? []) as typeof c[]) walk(k);
+    };
+    for (const s of got.sections) walk(s as never);
+    return found;
+  };
+
+  it('pairs a panel with its button through ARIA, which says it outright', async () => {
+    const got = await capture(
+      page(
+        '<div role="tablist"><button role="tab" aria-controls="p1">Máy tính</button>' +
+          '<button role="tab" aria-controls="p2">Màn hình</button></div>',
+        '<div id="p1"><p>Nội dung máy tính ở đây.</p></div>' +
+          '<div id="p2" style="display:none"><p>Nội dung màn hình ở đây.</p></div>',
+      ),
+      { maxImages: 5, maxNodes: 200 },
+    );
+    expect(kinds(got)).toContain('tab');
+    expect(tabOf(got)!.children!.map((c) => c.text)).toEqual(['Máy tính', 'Màn hình']);
+  });
+
+  it('pairs through a SHARED data-* value, which is how most tab scripts wire up', async () => {
+    const got = await capture(
+      page(
+        '<ul><li><button data-id="7">Khuyến mãi</button></li>' +
+          '<li><button data-id="9">Hàng mới</button></li></ul>',
+        '<div data-id="7"><p>Các sản phẩm khuyến mãi.</p></div>' +
+          '<div data-id="9" style="display:none"><p>Các sản phẩm mới về.</p></div>',
+      ),
+      { maxImages: 5, maxNodes: 200 },
+    );
+    // Deliberately out of document order relative to the bar: a shared value
+    // survives reordering, which is the reason it outranks position.
+    expect(tabOf(got)!.children!.map((c) => c.text)).toEqual(['Khuyến mãi', 'Hàng mới']);
+  });
+
+  it('falls back to POSITION only when the row holds exactly as many items', async () => {
+    const got = await capture(
+      page(
+        '<ul><li><button>Một</button></li><li><button>Hai</button></li></ul>',
+        '<div class="pane"><p>Nội dung thứ nhất.</p></div>' +
+          '<div class="pane" style="display:none"><p>Nội dung thứ hai.</p></div>',
+      ),
+      { maxImages: 5, maxNodes: 200 },
+    );
+    expect(tabOf(got)!.children!.map((c) => c.text)).toEqual(['Một', 'Hai']);
+  });
+
+  it('IS NOT A TAB WITHOUT LABELS — and keeps every panel as content anyway', async () => {
+    // ttgshop.vn is this case: its tab buttons are empty in the DOM and filled
+    // by script. Deriving a label from the `data-url` slug was available and
+    // refused — a Vietnamese slug comes back stripped of its diacritics, which
+    // is the invented-copy defect this repo reports on everybody else's seeds.
+    const got = await capture(
+      page(
+        '<ul><li><button data-url="/collection/hot-sale"></button></li>' +
+          '<li><button data-url="/collection/moi"></button></li></ul>',
+        '<div data-id="7"><p>Sản phẩm khuyến mãi.</p></div>' +
+          '<div data-id="9" style="display:none"><p>Sản phẩm mới về.</p></div>',
+      ),
+      { maxImages: 5, maxNodes: 200 },
+    );
+    expect(kinds(got)).not.toContain('tab');
+    const json = JSON.stringify(got.sections);
+    expect(json).toContain('Sản phẩm khuyến mãi');
+    expect(json).toContain('Sản phẩm mới về');
+  });
+});
+
+describe('a panel set becomes a tab', () => {
+  const build = (children: Captured[]): ReturnType<typeof toSpecs> =>
+    toSpecs([{ kind: 'section', children: [{ kind: 'tab', children }] }] as Captured[], {});
+
+  it('one tab container, one tab-content per panel, the button text as its label', () => {
+    // The platform synthesizes the whole button row from these labels
+    // (render/nodes/tab/html.go), so the label is not decoration — it is the
+    // only way a visitor reaches the panel.
+    const spec = build([
+      { kind: 'tab-item', text: 'Máy tính', children: [{ kind: 'text', text: 'Nội dung một' }] },
+      { kind: 'tab-item', text: 'Màn hình', children: [{ kind: 'text', text: 'Nội dung hai' }] },
+    ] as Captured[]);
+    const tab = spec[0].children![0].children![0];
+    expect(tab.type).toBe('tab');
+    expect(tab.children).toHaveLength(2);
+    expect(tab.children!.map((c) => c.type)).toEqual(['tab-content', 'tab-content']);
+    expect(tab.children![0].specials).toEqual({ label: 'Máy tính' });
+  });
+
+  it('DROPS AN UNLABELLED PANEL, which is stricter than the accordion beside it', () => {
+    // accordion-content seeds its own summary, so an unlabelled one still
+    // opens. `tab` builds its button row from the labels, so an unlabelled
+    // panel is one the visitor has no way to reach at all.
+    const spec = build([
+      { kind: 'tab-item', text: 'Có nhãn', children: [{ kind: 'text', text: 'Một' }] },
+      { kind: 'tab-item', children: [{ kind: 'text', text: 'Hai' }] },
+      { kind: 'tab-item', text: 'Cũng có', children: [{ kind: 'text', text: 'Ba' }] },
+    ] as Captured[]);
+    const tab = spec[0].children![0].children![0];
+    expect(tab.children!.map((c) => c.specials)).toEqual([{ label: 'Có nhãn' }, { label: 'Cũng có' }]);
+  });
+
+  it('is no tab at all below two panels — one pane under a button is a heading', () => {
+    const spec = build([
+      { kind: 'tab-item', text: 'Một mình', children: [{ kind: 'text', text: 'Nội dung' }] },
+    ] as Captured[]);
+    expect(JSON.stringify(spec)).not.toContain('"tab"');
+  });
+});

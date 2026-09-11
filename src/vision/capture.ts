@@ -46,6 +46,8 @@ interface El {
   getAttribute(name: string): string | null;
   setAttribute(name: string, value: string): void;
   querySelectorAll(selector: string): ArrayLike<El>;
+  /** Read to pair a tab panel with its button by a shared data-* value. */
+  attributes?: ArrayLike<{ name: string; value: string }>;
   getBoundingClientRect(): { width: number; height: number };
   contains(other: El): boolean;
 }
@@ -303,6 +305,19 @@ function capturePage(limits: { maxSections: number; maxImages: number; maxTextCh
         }
       }
       if (!hidden.length) continue;
+      // STAMPED WHILE WE STILL KNOW. Once revealed, a panel is indistinguishable
+      // from an ordinary visible child, so the split is recorded here — and
+      // ONLY the ones that were actually hidden. A first version stamped every
+      // child that shared a tag with a visible peer, which swept in the BUTTON
+      // ROW itself: it is a `<div>` with children like the panels are, so the
+      // tab came out with its own controls as one of its panes.
+      let stamped = 0;
+      for (const k of hidden) {
+        if (!shownByTag[k.tagName] || k.children.length === 0) continue;
+        k.setAttribute('data-sb-panel', '');
+        stamped += 1;
+      }
+      if (stamped >= 1) parent.setAttribute('data-sb-panelset', '');
       for (const k of hidden) {
         // Real content only — an empty slot or a script-filled placeholder is
         // not a panel worth showing, and revealing it costs a skip either way.
@@ -540,6 +555,101 @@ function capturePage(limits: { maxSections: number; maxImages: number; maxTextCh
       if (!visible(el)) {
         skip('hidden');
         return [];
+      }
+      // A TAB SET, WHEN — AND ONLY WHEN — ITS LABELS CAN BE READ.
+      //
+      // The platform's `tab` synthesizes its whole button row from each
+      // `tab-content` child's `specials.label` (render/nodes/tab/html.go), so a
+      // tab with no labels is a stack of panels wearing a control nobody can
+      // use. That makes "are there labels" the right question AND the right
+      // discriminator: MEASURED on ttgshop.vn, the panel-set stamp also lands on
+      // a `grid-cols-5` product grid that happens to hide one card, and a label
+      // row is exactly what that grid does not have.
+      //
+      // Three pairings, strongest first, because a wrong label is worse than
+      // none — it puts one collection's name over another's products:
+      //   1. ARIA. `[role=tab][aria-controls=<panel id>]` says it outright.
+      //   2. A SHARED data-* VALUE. `<button data-id="7">` beside
+      //      `<div data-id="7">` is how most hand-rolled tab scripts wire
+      //      themselves, and it survives reordering.
+      //   3. POSITION, and only from a row that holds exactly as many
+      //      clickable items as there are panels — anything else is a guess
+      //      dressed as a match.
+      //
+      // Every panel must come out with a label or this is not a tab. ttgshop.vn
+      // itself does NOT become one: its tab buttons are empty in the DOM and
+      // filled by script, and its section titles are images. Deriving a label
+      // from the `data-url` slug was available and refused — "hot-sale" is not
+      // what the page says, and a Vietnamese slug comes back stripped of its
+      // diacritics, which is the invented-copy defect this repo reports on
+      // everybody else's seeds.
+      const tabSetOf = (host: El): Captured | null => {
+        const kids = Array.from(host.children);
+        const revealed = kids.filter((c) => c.getAttribute('data-sb-panel') !== null);
+        if (revealed.length === 0) return null;
+        // THE BUTTON ROW IS A SIBLING OF THE PANELS, and it has to be taken out
+        // of the set before anything is counted — it is a container of the same
+        // shape, and leaving it in makes the panel count wrong and the pairing
+        // meaningless. It is the child that holds the clickable words.
+        // INNERMOST ONLY. `<li><button>Một</button></li>` is the ordinary way a
+        // tab bar is written, and counting both gives four clickables for two
+        // panels — which fails the count test that position pairing depends on,
+        // so a perfectly labelled tab bar read as unlabelled.
+        const clicksIn = (c: El): El[] => {
+          const all = Array.from(c.querySelectorAll('button, a, li, [role="tab"]')).filter(
+            (b) => clean(b.textContent).length > 0,
+          );
+          return all.filter((b) => !all.some((o) => o !== b && b.contains(o)));
+        };
+        let bar: El | null = null;
+        for (const c of kids) {
+          if (c.getAttribute('data-sb-panel') !== null) continue;
+          if (clicksIn(c).length >= 2) { bar = c; break; }
+        }
+        const tagOf = revealed[0].tagName;
+        const panels = kids.filter(
+          (c) => c !== bar && c.tagName === tagOf && c.children.length > 0,
+        );
+        if (panels.length < 2) return null;
+        const clickable = bar ? clicksIn(bar) : [];
+        const labels: string[] = [];
+        for (let i = 0; i < panels.length; i += 1) {
+          const panel = panels[i];
+          const id = panel.getAttribute('id');
+          let label = '';
+          if (id) {
+            for (const b of Array.from(host.querySelectorAll(`[aria-controls="${id}"]`))) {
+              const t = clean(b.textContent);
+              if (t) { label = t; break; }
+            }
+          }
+          if (!label) {
+            for (const attr of Array.from(panel.attributes ?? [])) {
+              if (attr.name.indexOf('data-') !== 0 || attr.name === 'data-sb-panel' || !attr.value) continue;
+              for (const b of clickable) {
+                if (b.getAttribute(attr.name) === attr.value) { label = clean(b.textContent); break; }
+              }
+              if (label) break;
+            }
+          }
+          if (!label && clickable.length === panels.length) label = clean(clickable[i].textContent);
+          if (!label) return null;
+          labels.push(label);
+        }
+        const children: Captured[] = [];
+        for (let i = 0; i < panels.length; i += 1) {
+          const body = walk(panels[i]);
+          if (body.length === 0) continue;
+          children.push({ kind: 'tab-item', text: labels[i], children: body });
+        }
+        if (children.length < 2) return null;
+        taken.nodes++;
+        return { kind: 'tab', children };
+      };
+      if (el.getAttribute('data-sb-panelset') !== null) {
+        const asTabs = tabSetOf(el);
+        if (asTabs) return [asTabs];
+        skip('panel-set-without-labels');
       }
       if (tag === 'DETAILS') {
         const kids2 = Array.from(el.children);

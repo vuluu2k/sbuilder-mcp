@@ -1080,6 +1080,23 @@ nguồn bị bỏ có chủ đích — site này có header/footer riêng dạng
 sang website người khác còn tệ hơn là không có. Không có menu nào nối các trang mới lại với
 nhau. Và chưa có gì được nhìn ở 390px. `sb_look` từng trang ở ba khổ, rồi mới `sb_publish`.
 
+**MỘT BỘ PANEL KÈM HÀNG NÚT TRỞ THÀNH `tab`, và nhãn là thứ quyết định.** Nền tảng tổng hợp toàn
+bộ hàng nút của tab từ `specials.label` của từng `tab-content` (`render/nodes/tab/html.go`), nên
+một tab không nhãn là một chồng panel đeo bộ điều khiển không ai bấm được. Vì thế "có đọc được
+nhãn không" vừa là câu hỏi đúng vừa là DẤU HIỆU PHÂN BIỆT đúng — dấu panel-set cũng rơi vào một
+lưới sản phẩm tình cờ ẩn một thẻ, mà thứ lưới đó không có chính là hàng nhãn.
+
+Ba cách ghép, mạnh nhất trước, vì một nhãn SAI còn tệ hơn không nhãn — nó đặt tên bộ sưu tập này
+lên sản phẩm của bộ khác: **ARIA** (`[role=tab][aria-controls]`) nói thẳng ra; **giá trị `data-*`
+dùng chung** (`<button data-id="7">` cạnh `<div data-id="7">`) là cách phần lớn script tab tự nối
+dây và nó sống sót qua việc đảo thứ tự; **vị trí**, chỉ khi hàng nút có đúng bằng số panel. Mọi
+panel phải ra được nhãn, không thì không phải tab — panel vẫn được giữ, trải phẳng, và phần bỏ
+qua ghi `panel-set-without-labels`.
+
+Đo trên ttgshop.vn: 93 bộ panel, không bộ nào có nhãn, vì nút tab của trang đó rỗng trong DOM và
+do script điền. Có thể suy nhãn từ slug `data-url` nhưng đã từ chối: slug tiếng Việt trả về mất
+sạch dấu, đúng là lỗi tự-bịa-nội-dung mà `default_seed_copy` báo trên seed của mọi nơi khác.
+
 ### Hiệu ứng vào, và bốn cách trượt câm của nó
 
 `config.animation` được **73 trên 111 loại phần tử** cung cấp, mà không gì mô tả nổi nó. Mọi cách
