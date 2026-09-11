@@ -6,6 +6,18 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.30.1] - 2026-09-11
+
+### Changed
+- sb_import and sb_import_site's default `max_images` and `max_nodes` rise from 24/300 to 60/900, so a real shop homepage's full catalogue is no longer cut off mid-band.
+- A flex or grid container that wraps is now capped at 60 columns per row instead of 12, so a wide product shelf is captured as its own row instead of being coerced into a vertical stack.
+
+### Fixed
+- sb_import and sb_import_site no longer read images from `src` alone: a lazy-loaded `data-src`/`data-original`/`data-lazy-src`/`srcset` (widest candidate) is now read as the real photo, so a lazy-loaded product gallery is no longer imported as a handful of pictures with the rest reported as missing.
+- Content hidden inside a tab panel, carousel slide or filtered grid (`display:none` beside a visible sibling of the same kind) is now revealed and captured, so a homepage that lays its catalogue out in tabs no longer loses every tab but the one shown at load.
+- `<button>` elements are no longer skipped as form controls: a button with words in it is now captured as a call-to-action or link the same way an `<a>` is, so "Add to cart"-style buttons are no longer dropped from the import.
+- The section-candidate fallback now fires whenever the chosen sections cover under half of the page's non-chrome text, not only when they capture nothing at all, so a page whose only `<section>` elements are a breadcrumb no longer imports as that breadcrumb alone.
+
 ## [0.30.0] - 2026-09-10
 
 ### Added

@@ -6,6 +6,18 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.30.1] - 2026-09-11
+
+### Changed
+- Giá trị mặc định `max_images` và `max_nodes` của sb_import và sb_import_site tăng từ 24/300 lên 60/900, nên toàn bộ catalogue trên trang chủ một shop thật không còn bị cắt cụt giữa chừng một band.
+- Một container flex hoặc grid có wrap giờ được giới hạn 60 cột mỗi hàng thay vì 12, nên một kệ sản phẩm rộng được chụp lại đúng thành một hàng thay vì bị ép thành một cột dọc.
+
+### Fixed
+- sb_import và sb_import_site không còn chỉ đọc ảnh từ `src`: một ảnh lazy-load qua `data-src`/`data-original`/`data-lazy-src`/`srcset` (chọn ứng viên rộng nhất) giờ được đọc như ảnh thật, nên một thư viện ảnh sản phẩm lazy-load không còn bị nhập vào với vài tấm còn lại bị báo là thiếu.
+- Nội dung ẩn trong một tab panel, slide carousel hay lưới lọc (`display:none` cạnh một anh em cùng loại đang hiển thị) giờ được hiện ra và chụp lại, nên một trang chủ trình bày catalogue theo dạng tab không còn mất hết các tab trừ tab đang mở lúc tải.
+- Phần tử `<button>` không còn bị bỏ qua như một control của form: một button có chữ bên trong giờ được chụp lại như một nút kêu gọi hành động hoặc liên kết, giống cách một `<a>` được xử lý, nên các nút kiểu "Thêm vào giỏ" không còn bị rớt khỏi bản nhập.
+- Cơ chế dự phòng chọn section giờ kích hoạt bất cứ khi nào các section được chọn chỉ phủ dưới một nửa nội dung chữ không phải chrome của trang, chứ không chỉ khi chúng không chụp được gì cả, nên một trang mà các phần tử `<section>` duy nhất là một breadcrumb sẽ không còn bị nhập vào chỉ như breadcrumb đó.
+
 ## [0.30.0] - 2026-09-10
 
 ### Added
