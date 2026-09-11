@@ -60,6 +60,7 @@ declare const console: { error(...args: unknown[]): void };
 declare function getComputedStyle(el: El): {
   display: string;
   alignItems: string;
+  textAlign: string;
   visibility: string;
   opacity: string;
   backgroundColor: string;
@@ -367,6 +368,22 @@ function capturePage(limits: { maxSections: number; maxImages: number; maxTextCh
    * loader is displaying until the real one arrives, which is precisely the
    * placeholder this import must not ship.
    */
+  /**
+   * The SOURCE'S OWN text alignment, and only when it is not the default.
+   *
+   * A hero that centres its copy is making a decision; a copy that left-aligns
+   * it is not the same band. `start`/`left` is the browser's answer and saying
+   * it out loud would put a value on every imported paragraph for nothing —
+   * and worse, would override the target page's own centred preset with a
+   * literal.
+   */
+  const alignOf = (el: El): { textAlign?: 'center' | 'right' } => {
+    const a = getComputedStyle(el).textAlign;
+    if (a === 'center') return { textAlign: 'center' };
+    if (a === 'right' || a === 'end') return { textAlign: 'right' };
+    return {};
+  };
+
   const LAZY_SRC = ['data-src', 'data-original', 'data-lazy-src', 'data-lazy', 'data-echo', 'data-url'];
   const widest = (srcset: string): string => {
     let best = '';
@@ -722,7 +739,7 @@ function capturePage(limits: { maxSections: number; maxImages: number; maxTextCh
         const text = clean(el.textContent);
         if (!text) return [];
         taken.nodes++;
-        return [{ kind: 'heading', level: Number(tag.slice(1)), text }];
+        return [{ kind: 'heading', level: Number(tag.slice(1)), text, ...alignOf(el) }];
       }
       if (tag === 'IMG') {
         const src = realSrc(el);
@@ -860,7 +877,7 @@ function capturePage(limits: { maxSections: number; maxImages: number; maxTextCh
         const text = clean(el.textContent);
         if (!text) return [];
         taken.nodes++;
-        return [{ kind: 'text', text }];
+        return [{ kind: 'text', text, ...alignOf(el) }];
       }
 
       const kids = walkChildren(el);

@@ -63,6 +63,37 @@ export interface Captured {
    * space under it, because the row top-aligned them both.
    */
   align?: 'start' | 'center' | 'end' | 'stretch';
+  /**
+   * How the WORDS line up inside a heading, a paragraph or a button label.
+   *
+   * It has to be written on the NODE, and inheritance is why. A centred band
+   * sets `textAlign: center` on its section, which every descendant would
+   * inherit — except `heading-default` declares `textAlign: left` in the theme
+   * preset, and a class rule beats an inherited value. MEASURED on a centred
+   * call-to-action band: the heading and the sentence sat hard left at x=120
+   * while the button, being `width: fit-content` under `alignItems: center`,
+   * sat in the middle. One band, two alignments, and nothing reported it.
+   *
+   * Carried off the SOURCE on an import for the same reason `align` and
+   * `pinned` are: a hero that centres its copy is making a decision, and a copy
+   * that left-aligns it is not the same band.
+   */
+  textAlign?: 'left' | 'center' | 'right';
+  /**
+   * For an image: the frame it should fill, as a CSS `aspect-ratio`.
+   *
+   * Rule 6 says match a frame's ratio to the ASSET, and warns what happens when
+   * you do not — `4 / 5` over 900x1100 artwork cropped the garment out of its
+   * own product photo. A WALL of photographs is the case that rule does not
+   * cover: there is no single asset, and leaving every tile its own shape gives
+   * a grid whose rows are different heights, which reads as unfinished.
+   *
+   * So the ratio is not invented, it is MEASURED — the median of the pictures
+   * actually being shown, so most of them crop by nothing and the outliers
+   * crop least. Absent means what it has always meant: the image keeps its own
+   * shape.
+   */
+  ratio?: string;
   /** For a button: whether the source painted it as a call to action, or it is prose's link. */
   variant?: 'cta' | 'link';
   /** For an embed: which of the platform's own media elements renders it. */
@@ -275,6 +306,10 @@ function one(c: Captured, t: PageTokens): NodeSpec | null {
         style: {
           margin: '0',
           ...scale.style,
+          // ON THE NODE, never left to inheritance: the theme's heading preset
+          // declares its own textAlign, and a class rule beats an inherited
+          // value.
+          ...(c.textAlign ? { textAlign: c.textAlign } : {}),
           ...(t.headingColor ? { color: t.headingColor } : {}),
           ...(t.headingWeight ? { fontWeight: t.headingWeight } : {}),
         },
@@ -288,6 +323,7 @@ function one(c: Captured, t: PageTokens): NodeSpec | null {
         specials: { htmlTag: 'p', text },
         style: {
           lineHeight: '1.7',
+          ...(c.textAlign ? { textAlign: c.textAlign } : {}),
           ...(t.textColor ? { color: t.textColor } : {}),
           ...(t.textSize ? { fontSize: t.textSize } : {}),
         },
@@ -398,6 +434,27 @@ function one(c: Captured, t: PageTokens): NodeSpec | null {
       // a width/height ATTRIBUTE is a used height, and without this the cap below
       // would be the thing ignored. `contain` because the source's crop is not
       // ours to guess.
+      // A FRAME, WHEN THE CALLER MEASURED ONE. `height: auto` is what makes
+      // `aspect-ratio` work here at all — the platform writes the intrinsic
+      // width/height ATTRIBUTES onto every <img>, and a presentational height is
+      // a USED height, so the ratio would otherwise be ignored. That is the same
+      // fix the platform applied to its own media CSS.
+      //
+      // `cover` only inside a frame: filling one means cropping, which is the
+      // trade a wall of tiles makes on purpose. With no frame the answer stays
+      // `contain` — the source's crop is not ours to guess.
+      if (c.ratio) {
+        return {
+          type: 'image',
+          specials: { src: c.src, alt: c.alt ?? '' },
+          style: {
+            width: '100%',
+            height: 'auto',
+            aspectRatio: c.ratio,
+            objectFit: 'cover',
+          },
+        };
+      }
       return {
         type: 'image',
         specials: { src: c.src, alt: c.alt ?? '' },

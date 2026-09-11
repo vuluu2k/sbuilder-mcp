@@ -1720,6 +1720,29 @@ that accounts for them.
     reason it reads `position` — a hero that centres its words against a tall photograph is
     making a layout decision, and a copy that top-aligns them is not the same band.
 
+- **TWO MORE THE RENDER SHOWED ONLY AFTER THE FIRST PASS WAS FIXED.**
+  - **A CENTRED BAND WAS CENTRED IN ONE PLACE AND NOT THE OTHER.** The pattern set
+    `textAlign: center` on its section, and every descendant should have inherited it — except
+    the theme's `heading-default` preset declares `textAlign: left`, and a CLASS RULE BEATS AN
+    INHERITED VALUE. Measured: the heading and the sentence sat hard left at x=120 while the
+    button, being `width: fit-content` under `alignItems: center`, sat in the middle. One band,
+    two alignments, and nothing reported it. `Captured.textAlign` writes it on the NODE, where
+    it outranks the preset — and `capture` reads the source's own for the same reason it reads
+    `position`. `left`/`start` is deliberately NOT carried: stamping a literal on every
+    imported paragraph would override the target page's own centred preset, which is rule 0
+    inverted.
+  - **A GALLERY WALL HAD NO FRAME.** Rule 6 says match a frame's ratio to the ASSET, and a wall
+    of photographs is the case that rule does not cover: there is no single asset. Left alone
+    every tile keeps its own shape and the grid's rows come out different heights, which reads
+    as unfinished. The frame is MEASURED rather than invented — the MEDIAN of the pictures
+    actually being shown, so most crop by nothing, the outliers crop least, and a library of
+    portraits gets a portrait wall rather than a landscape one imposed on it. A picture whose
+    size the library did not report votes for nothing, and a wall with no measurements at all
+    keeps `contain`. `height: auto` rides with every framed image, because the platform writes
+    intrinsic width/height ATTRIBUTES and a presentational height is a USED height that would
+    otherwise make `aspect-ratio` ignored — the same fix the platform applied to its own media
+    CSS.
+
 - **`genId` COULD REPEAT ITSELF, and the suite proved it rather than argued it.** Four random
   bytes is 32 bits, which puts a collision at roughly 1 in 34,000 across 500 draws — and the
   uniqueness test HIT one in an ordinary run, 499 of 500. One `sb_import_site` mints thousands.

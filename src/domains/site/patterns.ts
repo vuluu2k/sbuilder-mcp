@@ -138,8 +138,17 @@ const row = (children: Captured[], wrap = false, align?: Captured['align']): Cap
   children,
 });
 
-const h = (text: string, level = 2): Captured => ({ kind: 'heading', level, text });
-const p = (text: string): Captured => ({ kind: 'text', text });
+const h = (text: string, level = 2, textAlign?: Captured['textAlign']): Captured => ({
+  kind: 'heading',
+  level,
+  text,
+  ...(textAlign ? { textAlign } : {}),
+});
+const p = (text: string, textAlign?: Captured['textAlign']): Captured => ({
+  kind: 'text',
+  text,
+  ...(textAlign ? { textAlign } : {}),
+});
 const cta = (text: string, href = '#'): Captured => ({ kind: 'button', variant: 'cta', text, href });
 /**
  * The picture slot: a real image when the site has one, and WORDS when it does
@@ -198,7 +207,9 @@ export const LAYOUT_PATTERNS: LayoutPattern[] = [
     use: 'Mở đầu trang khi chưa có ảnh: tiêu đề lớn, một câu, một nút',
     build: (t) =>
       section(
-        [h('Tiêu đề chính', 1), p('Một câu nói rõ bạn bán gì và cho ai.'), cta('Mua ngay')],
+        // Centred on the NODES, not left to the section's inherited textAlign —
+        // the theme's heading preset declares its own and wins.
+        [h('Tiêu đề chính', 1, 'center'), p('Một câu nói rõ bạn bán gì và cho ai.', 'center'), cta('Mua ngay')],
         t,
         { alignItems: 'center', textAlign: 'center' },
         { alignItems: 'center' },
@@ -229,9 +240,9 @@ export const LAYOUT_PATTERNS: LayoutPattern[] = [
       section(
         [
           row([
-            { kind: 'group', direction: 'column', children: [h('1.000+', 2), p('Khách hàng')] },
-            { kind: 'group', direction: 'column', children: [h('4,9/5', 2), p('Đánh giá trung bình')] },
-            { kind: 'group', direction: 'column', children: [h('24h', 2), p('Giao trong nội thành')] },
+            { kind: 'group', direction: 'column', children: [h('1.000+', 2, 'center'), p('Khách hàng', 'center')] },
+            { kind: 'group', direction: 'column', children: [h('4,9/5', 2, 'center'), p('Đánh giá trung bình', 'center')] },
+            { kind: 'group', direction: 'column', children: [h('24h', 2, 'center'), p('Giao trong nội thành', 'center')] },
           ]),
         ],
         t,
@@ -245,7 +256,10 @@ export const LAYOUT_PATTERNS: LayoutPattern[] = [
     use: 'Một câu và một nút, đặt cuối trang hoặc giữa hai band nội dung',
     build: (t) =>
       section(
-        [h('Sẵn sàng bắt đầu?'), p('Một câu nhắc lại lời hứa chính.'), cta('Mua ngay')],
+        // CENTRED ON THE NODES. The section's own `textAlign` is inherited, and
+        // the theme's heading preset declares its own — so the band came out
+        // with its words hard left and only the button in the middle.
+        [h('Sẵn sàng bắt đầu?', 2, 'center'), p('Một câu nhắc lại lời hứa chính.', 'center'), cta('Mua ngay')],
         t,
         { alignItems: 'center', textAlign: 'center' },
         { alignItems: 'center' },
@@ -262,10 +276,31 @@ export const LAYOUT_PATTERNS: LayoutPattern[] = [
       // SIX IS A WALL, THREE IS A ROW. Bounded because a gallery is a design
       // decision and not a dump of the library — a merchant with 164 assets does
       // not want 164 of them in one band.
+      const picked: MediaPick[] = [];
       for (let i = 0; i < 6; i += 1) {
         const m = pick(pool, used, 'any');
         if (!m) break;
-        shots.push({ kind: 'image', src: m.url, alt: m.name ?? 'Ảnh' });
+        picked.push(m);
+      }
+      // ONE FRAME FOR THE WALL, MEASURED RATHER THAN INVENTED.
+      //
+      // Rule 6 says match a frame's ratio to the ASSET, and a wall of
+      // photographs is the case it does not cover: there is no single asset.
+      // Left alone, every tile keeps its own shape and the grid's rows come out
+      // different heights — measured on a real build, four tiles at 330x220 and
+      // a fifth noticeably taller, which reads as unfinished.
+      //
+      // The MEDIAN of the pictures actually being shown is the honest frame:
+      // most crop by nothing, the outliers crop least, and a library of
+      // portraits gets a portrait wall rather than a landscape one imposed on
+      // it. A picture whose size the library did not report votes for nothing.
+      const ratios = picked
+        .map((m) => (m.width && m.height ? m.width / m.height : 0))
+        .filter((r) => r > 0)
+        .sort((a, b) => a - b);
+      const frame = ratios.length ? ratios[Math.floor(ratios.length / 2)].toFixed(2) : undefined;
+      for (const m of picked) {
+        shots.push({ kind: 'image', src: m.url, alt: m.name ?? 'Ảnh', ...(frame ? { ratio: frame } : {}) });
       }
       if (shots.length === 0) {
         return section(

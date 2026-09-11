@@ -262,3 +262,64 @@ describe('the defects a built page had, measured on the render', () => {
     expect(json).not.toMatch(/"fontSize":"\d+px"/);
   });
 });
+
+describe('the two defects the render showed after the first pass', () => {
+  const spec = (id: string, pool?: MediaPick[]): string =>
+    JSON.stringify(PATTERN_BY_ID.get(id)!.build(THEME_TOKENS, pool));
+
+  it('CENTRES A CENTRED BAND ON ITS NODES, because inheritance loses to the preset', () => {
+    // The band set `textAlign: center` on its section and every descendant
+    // should have inherited it — except `heading-default` declares
+    // `textAlign: left`, and a class rule beats an inherited value. Measured:
+    // the heading and sentence sat hard left at x=120 while the button, being
+    // fit-content under `alignItems: center`, sat in the middle. One band, two
+    // alignments.
+    for (const id of ['sb_cta_band', 'sb_hero_centered', 'sb_stats_row']) {
+      const json = spec(id);
+      expect(json, id).toContain('"textAlign":"center"');
+      // On the nodes, not only on the section: more than one occurrence.
+      expect(json.match(/"textAlign":"center"/g)!.length, id).toBeGreaterThan(1);
+    }
+  });
+
+  it('leaves a left-aligned band alone rather than stamping a literal on it', () => {
+    // A literal on every node would override the target page's own centred
+    // preset on an import, which is the opposite of rule 0.
+    expect(spec('sb_feature_trio')).not.toContain('"textAlign"');
+  });
+
+  it('FRAMES A GALLERY WALL FROM THE PICTURES IT IS SHOWING, never from a guess', () => {
+    // Rule 6 says match a frame's ratio to the ASSET, and a wall is the case it
+    // does not cover: there is no single asset. The median crops most tiles by
+    // nothing and the outliers least — and a library of portraits gets a
+    // portrait wall rather than a landscape one imposed on it.
+    const portraits: MediaPick[] = Array.from({ length: 5 }, (_, i) => ({
+      url: `https://cdn/p${i}.jpg`, width: 600, height: 800,
+    }));
+    const json = spec('sb_gallery', portraits);
+    expect(json).toContain('"aspectRatio":"0.75"');
+    expect(json).toContain('"objectFit":"cover"');
+    // `height: auto` is what makes aspect-ratio work at all: the platform
+    // writes intrinsic width/height ATTRIBUTES, and a presentational height is
+    // a used height that would otherwise win.
+    expect(json).toContain('"height":"auto"');
+  });
+
+  it('takes the MEDIAN, so one odd picture cannot set the wall', () => {
+    const mixed: MediaPick[] = [
+      { url: 'https://cdn/a.jpg', width: 1200, height: 800 },
+      { url: 'https://cdn/b.jpg', width: 1200, height: 800 },
+      { url: 'https://cdn/c.jpg', width: 300, height: 1800 },
+    ];
+    expect(spec('sb_gallery', mixed)).toContain('"aspectRatio":"1.50"');
+  });
+
+  it('frames nothing when the library reported no sizes', () => {
+    // A picture whose size the library did not report votes for nothing, and a
+    // wall with no measurements gets no invented one.
+    const unknown: MediaPick[] = [{ url: 'https://cdn/x.jpg' }, { url: 'https://cdn/y.jpg' }];
+    const json = spec('sb_gallery', unknown);
+    expect(json).not.toContain('aspectRatio');
+    expect(json).toContain('"objectFit":"contain"');
+  });
+});
