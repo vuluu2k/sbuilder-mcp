@@ -1094,8 +1094,21 @@ export const API_DEFINITIONS: Record<string, unknown> = ${JSON.stringify(
     durationDefault: number;
     readBy: string;
   } => {
-    const at = resolve(repo, 'server/render/style/animation.go');
-    const src = readFileSync(at, 'utf8');
+    // THE KEYFRAME TABLE MOVES, AND THE READER MUST NOT CARE WHICH FILE IT IS IN.
+    // It began beside the compiler in `animation.go`; once four effects became
+    // forty-six the platform generated it into `keyframes_gen.go` from the
+    // editor's own table. Both are `render/style`, both declare the same
+    // `AnimKeyframes` map, and a reader pinned to one filename fails the next
+    // regen for a reason that has nothing to do with the catalog.
+    const src = ['server/render/style/animation.go', 'server/render/style/keyframes_gen.go']
+      .map((rel) => {
+        try {
+          return readFileSync(resolve(repo, rel), 'utf8');
+        } catch {
+          return '';
+        }
+      })
+      .join('\n');
     const block = (name: string): string => {
       const from = src.indexOf(`var ${name} =`);
       if (from < 0) {
@@ -1115,16 +1128,26 @@ export const API_DEFINITIONS: Record<string, unknown> = ${JSON.stringify(
     // The `|| 0.5` the compiler applies to a stored 0, mirrored from the canvas
     // so the two agree — a 0s animation would leave the node on its `from`
     // keyframe for a frame and read as a flash.
+    //
+    // OPTIONAL, deliberately. It is the one INFORMATIONAL field here: the types
+    // and the easings decide whether a write does anything at all, and this only
+    // says what a caller gets for leaving a number out. It moved into a helper
+    // the moment intensity arrived (`animDuration`), and failing the whole
+    // catalog over a default nobody has to know is the brittleness this reader
+    // exists to avoid — the LOAD-BEARING halves still exit 1 when they move.
     const dur = /dur == 0 \{\s*dur = ([0-9.]+)/.exec(src);
-    if (types.length < 2 || easings.length < 2 || !dur) {
-      console.error('server/render/style/animation.go no longer reads as a vocabulary — its shape moved');
+    if (types.length < 2 || easings.length < 2) {
+      console.error(
+        'AnimKeyframes / AnimEasings no longer read as a vocabulary in server/render/style — ' +
+          'the shape moved, and the animation table would be wrong rather than missing',
+      );
       process.exit(1);
     }
     return {
       types: types.sort(),
       easings,
       easingFallback: 'ease',
-      durationDefault: Number(dur[1]),
+      durationDefault: dur ? Number(dur[1]) : 0.5,
       readBy: 'AnimationTypeOf + CompileEntranceAnimationCSS',
     };
   };
