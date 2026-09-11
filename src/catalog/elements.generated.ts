@@ -32998,7 +32998,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
       "Always add exactly one dataset-block child as the repeated item template; every row clones that exact structure and styling",
       "The dataset-block template — and every dataset node inside it — must carry the SAME config.datasetSource as this repeater. Each node reads its OWN key, so a collection list whose card omits it leaves that card on the product default: it binds product.url, no product context reaches a collection row, and the card publishes with no link, so clicking it does nothing",
       "config.datasetSource picks the ENTITY: \"product\" for a product list, \"category\" for a collection list. It is what derives the node's binding target (product::product_list / category::collection_list)",
-      "Product lists: config.collectionType \"all_products\" renders the whole catalog, \"collection\" renders the one named by config.collectionId, \"related\" renders the PAGE PRODUCT's neighbours — the products sharing one of its collections, minus itself",
+      "Product lists: config.collectionType \"page_collection\" renders THE COLLECTION THE PAGE IS (the one /collections/{slug} named) so a single collection template serves every collection, \"all_products\" renders the whole catalog and narrows to the page collection on a collection template, \"collection\" renders the one named by config.collectionId, \"related\" renders the PAGE PRODUCT's neighbours — the products sharing one of its collections, minus itself",
       "Use \"related\" for a cross-sell shelf on a product page (\"Sản phẩm liên quan\" / \"You may also like\"). It reads no collectionId — its axis is whatever collections the page product is filed under — and it renders nothing on a page that names no product, so pair it with an emptyStateId if the section must never be blank",
       "Collection lists: config.collectionListType \"all_collections\" renders every collection; \"custom_collections\" renders specials.collectionIds, in that order",
       "config.quantity caps how many records render; config.itemsPerRow is the row size (grid columns / slide page size) and style.gap is the space between cards — both are per-breakpoint",
@@ -36300,6 +36300,7 @@ export const CONFIG_VALUES: Record<
       "all_products",
       "collection",
       "featured",
+      "page_collection",
       "related",
       "slot"
     ],

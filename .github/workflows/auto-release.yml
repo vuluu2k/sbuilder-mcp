@@ -183,10 +183,24 @@ jobs:
       - name: Install deps
         run: npm ci --ignore-scripts
 
+      # THE SYSTEM CHROME, for the browser half of the gate below. A release
+      # that has not looked through its own eye is a release that can ship a
+      # blind one: `capture()` dropped every <video> carrying a poster for an
+      # unknown number of versions, because the only tests that could see it
+      # were opt-in and nothing opted in.
+      - name: Install Chrome for the browser gate
+        run: npx playwright-core install --with-deps chrome
+
       - name: Build + test + smoke gate
         run: |
           npm run build
           npm test
+          # SB_BROWSER_REQUIRED goes on THIS LINE ONLY, never on the step: the
+          # plain `npm test` above deliberately runs without Chrome, and a
+          # step-level variable would make test/browser-gate refuse it and fail
+          # every release. Scoped here it says what it means — this one command
+          # is the one that must actually exercise the browser.
+          SB_BROWSER_REQUIRED=1 npm run test:browser
           npm run smoke
 
       - name: Install Claude Code CLI

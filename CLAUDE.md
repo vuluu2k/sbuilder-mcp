@@ -1428,6 +1428,14 @@ that accounts for them.
   - **`all_products` on a category page means THAT category.** The shared default template is
     now correct for every category, which is what an agent should reach for first — one page,
     one repeater, left on the kind it is born with.
+  - **AND THERE IS NOW AN EXPLICIT SPELLING OF IT: `page_collection`.** It renders the
+    collection the PAGE IS — the one `/collections/{slug}` named — so one template serves them
+    all by saying so rather than by relying on `all_products` narrowing itself. Reach for it
+    when a repeater must FOLLOW THE URL; keep `collection` + `collectionId` when it must name
+    one of its own. It arrived in the catalog on the 2026-09-11 regen and is generated like the
+    rest of the vocabulary, so it needed no hand-kept list — but the test that pinned the five
+    older values as an exact array went red for it, which is the wrong shape for a generated
+    table and is now an assertion about the values that must be PRESENT.
   - **A repeater pointed at a NAMED collection keeps naming it** (`collectionType: "collection"`
     + its own `collectionId`). Deliberate: a "you may also like" shelf of another category on a
     category page is a real design, and the page must not overrule it.

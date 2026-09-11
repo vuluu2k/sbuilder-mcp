@@ -18,7 +18,45 @@ jobs:
       - run: npm run build
       - run: npm test
       - run: npm run smoke
-    # The browser test (SB_BROWSER_TEST=1) is deliberately NOT run here: it
-    # launches the system Chrome, and a runner without one would either fail a
-    # green build or be skipped into a false pass. It is a local gate, and
-    # CLAUDE.md says to run it after touching src/vision/**.
+
+  # THE EYE, RUN AGAINST A REAL BROWSER.
+  #
+  # This job used to not exist, and the comment where it should have been argued
+  # for its absence: "a runner without Chrome would either fail a green build or
+  # be skipped into a false pass". The second half is right and is the reason
+  # `browser-gate` below exists. The first half was never true — a runner's
+  # Chrome is something you INSTALL, not something you hope for.
+  #
+  # The cost of leaving it out was measured: `capture()` dropped every `<video>`
+  # carrying a poster, on main, with the test that names that exact case sitting
+  # green because nothing ran it. 47 tests across 8 describe blocks — the whole
+  # of `src/vision/**`, which is the half of this server that cannot be checked
+  # by reading — were in that position. It is the "a skip that reads as green"
+  # failure CLAUDE.md keeps closing, and it closed on this repo's own suite.
+  #
+  # SEPARATE JOB rather than another step in `gate`: it needs a browser install
+  # the rest does not, it is the slowest thing here, and a red eye should say
+  # "the eye is red" rather than failing a job named for the unit tests.
+  browser:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      # The SYSTEM Chrome, matching `channel: 'chrome'` in src/vision/shoot.ts.
+      # Installed explicitly rather than relying on the runner image shipping
+      # one: an image that quietly stops doing so would take this suite with it,
+      # and the whole point of this job is not to depend on luck.
+      - run: npx playwright-core install --with-deps chrome
+      # SB_BROWSER_REQUIRED says what this job is FOR, and test/browser-gate
+      # refuses a run where that intent was not carried out. Without it the
+      # failure this job exists to prevent simply moves: `test:browser` loses
+      # its env var in some future edit, every gated describe skips, vitest
+      # reports all green, and the job goes on passing while checking nothing.
+      - run: npm run test:browser
+        env:
+          SB_BROWSER_REQUIRED: '1'

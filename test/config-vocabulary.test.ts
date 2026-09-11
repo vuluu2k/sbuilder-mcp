@@ -16,13 +16,44 @@ import { traitsFor } from '../src/catalog/element-search.js';
 describe('what a config key is allowed to hold', () => {
   it('reads the renderer vocabulary, including the values with no picker entry', () => {
     const v = vocabularyFor('collectionType')!;
-    // `slot` (curated shelves) and `featured` were unnameable through any tool.
-    expect(v.values).toEqual(['all_products', 'collection', 'featured', 'related', 'slot']);
+    // ASSERTED AS A PROPERTY, NOT AS A LIST. This pinned the exact five values
+    // and went red the day the platform added a sixth (`page_collection`) —
+    // which is noise, not a finding: the vocabulary is GENERATED precisely so it
+    // can grow with the renderer, and a test that fails on every addition
+    // teaches the next reader to update the array without looking at it.
+    //
+    // What is worth holding is what the entry was written for: this table
+    // recovers values that exist in the renderer and in NO picker, so an agent
+    // can name them at all. `slot` (curated shelves) and `featured` were
+    // unreachable through any tool before it.
+    for (const must of ['all_products', 'collection', 'featured', 'related', 'slot']) {
+      expect(v.values).toContain(must);
+    }
+    expect(v.values).toEqual([...v.values].sort());
     expect(v.fallback).toBe('all_products');
     expect(v.readBy).toBe('EffectiveCollectionType');
     expect(vocabularyKeys().sort()).toEqual(
       ['articleSourceType', 'collectionListType', 'collectionType'].sort(),
     );
+  });
+
+  /**
+   * THE VALUE THAT MAKES ONE TEMPLATE SERVE EVERY COLLECTION.
+   *
+   * `page_collection` renders the collection the PAGE IS — the one
+   * `/collections/{slug}` named — so a single collection template is correct for
+   * all of them. It arrived after the scoping work this repo already records
+   * (where `all_products` on a collection template narrows itself), and it is
+   * the explicit spelling of the same idea: reach for it when a repeater must
+   * follow the URL rather than name a collection of its own.
+   *
+   * Pinned by NAME rather than by position, because the one thing that must not
+   * happen is it quietly disappearing from the table: a repeater set to a value
+   * the renderer no longer knows falls back to `all_products` and lists the
+   * whole catalogue under whatever heading the author wrote, with no error.
+   */
+  it('carries the value that scopes a repeater to the page own collection', () => {
+    expect(vocabularyFor('collectionType')!.values).toContain('page_collection');
   });
 
   // AN ALIAS IS NOT A MISTAKE. `category` is a working spelling of `collection`
