@@ -90,6 +90,7 @@ export const STORE_PAGE_SEEDS: Record<string, { schema_version: number; root_nod
         },
         "config": {
           "contentWidth": "fill_container",
+          "contentWidthCustom": 0,
           "emptyStateId": "sppro_20"
         },
         "specials": {},
@@ -665,6 +666,7 @@ export const STORE_PAGE_SEEDS: Record<string, { schema_version: number; root_nod
             "direction": "vertical",
             "gap": 8
           },
+          "optionGap": "",
           "variantLabelId": "sppro_12",
           "variantOptionId": "sppro_13"
         },
@@ -1262,6 +1264,7 @@ export const STORE_PAGE_SEEDS: Record<string, { schema_version: number; root_nod
         },
         "config": {
           "datasetSource": "product",
+          "articleSourceType": "category",
           "loadingMode": "none",
           "layout": "grid",
           "quantity": 4,
@@ -1345,6 +1348,7 @@ export const STORE_PAGE_SEEDS: Record<string, { schema_version: number; root_nod
         },
         "config": {
           "contentWidth": "fill_container",
+          "contentWidthCustom": 0,
           "datasetSource": "product"
         },
         "specials": {},
@@ -1931,6 +1935,7 @@ export const STORE_PAGE_SEEDS: Record<string, { schema_version: number; root_nod
         },
         "config": {
           "datasetSource": "product",
+          "articleSourceType": "category",
           "loadingMode": "none",
           "layout": "grid",
           "quantity": 4,
@@ -2014,6 +2019,7 @@ export const STORE_PAGE_SEEDS: Record<string, { schema_version: number; root_nod
         },
         "config": {
           "contentWidth": "fill_container",
+          "contentWidthCustom": 0,
           "datasetSource": "product"
         },
         "specials": {},
@@ -2606,6 +2612,7 @@ export const STORE_PAGE_SEEDS: Record<string, { schema_version: number; root_nod
         },
         "config": {
           "datasetSource": "article",
+          "articleSourceType": "category",
           "loadingMode": "none",
           "layout": "grid",
           "quantity": 4,
@@ -2690,6 +2697,7 @@ export const STORE_PAGE_SEEDS: Record<string, { schema_version: number; root_nod
         },
         "config": {
           "contentWidth": "fill_container",
+          "contentWidthCustom": 0,
           "datasetSource": "article"
         },
         "specials": {},

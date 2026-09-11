@@ -63,8 +63,13 @@ describe('what a config key is allowed to hold', () => {
   it('rides inside sb_traits_for rather than growing the tool list', () => {
     const out = traitsFor('list-dataset') as { config_values?: Record<string, unknown> };
     expect(out.config_values).toBeDefined();
+    // `articleSourceType` joined the other two once the platform DECLARED it.
+    // It was always normalised by Go and always had a vocabulary here — and the
+    // element never listed the key, so the vocabulary reached nobody. That is
+    // the shape this table exists for, caught on the element that owns all
+    // three.
     expect(Object.keys(out.config_values!).sort()).toEqual(
-      ['collectionListType', 'collectionType'].sort(),
+      ['articleSourceType', 'collectionListType', 'collectionType'].sort(),
     );
     expect(JSON.stringify(out.config_values)).toMatch(/slot/);
   });

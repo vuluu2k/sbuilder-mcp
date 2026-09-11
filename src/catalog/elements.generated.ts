@@ -1613,7 +1613,8 @@ export const ELEMENTS: Record<string, CatalogElement> = {
       "config": {
         "imageRatio": "auto",
         "customImageRatioWidth": 16,
-        "customImageRatioHeight": 9
+        "customImageRatioHeight": 9,
+        "imageEager": false
       }
     },
     "inspector": [
@@ -12462,7 +12463,9 @@ export const ELEMENTS: Record<string, CatalogElement> = {
       "config": {
         "iconSize": 16,
         "iconColor": "#000000",
-        "textGlobalStyle": "text-1"
+        "textGlobalStyle": "text-1",
+        "currentColor": "",
+        "maxItems": 0
       }
     },
     "inspector": [
@@ -12659,7 +12662,8 @@ export const ELEMENTS: Record<string, CatalogElement> = {
         "contentWidth": "fill_container",
         "dropdownIcon": "down",
         "expandType": "click",
-        "submenuStyle": "dropdown"
+        "submenuStyle": "dropdown",
+        "activeColor": ""
       },
       "specials": {
         "menuId": "",
@@ -19473,7 +19477,8 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "active": true,
           "direction": "vertical",
           "gap": 8
-        }
+        },
+        "optionGap": ""
       },
       "specials": {
         "displayType": "select",
@@ -30079,7 +30084,8 @@ export const ELEMENTS: Record<string, CatalogElement> = {
         "height": "fit-content"
       },
       "config": {
-        "contentWidth": "fill_container"
+        "contentWidth": "fill_container",
+        "contentWidthCustom": 0
       },
       "bindings": [
         {
@@ -31523,6 +31529,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
       },
       "config": {
         "datasetSource": "product",
+        "articleSourceType": "category",
         "loadingMode": "none",
         "layout": "grid",
         "quantity": 4,
