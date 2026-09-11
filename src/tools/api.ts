@@ -63,6 +63,34 @@ function pickFields(item: unknown, fields: string[]): unknown {
  * it would have been and how to narrow the call. A non-list answer is never
  * cut: there is no honest place to stop inside one object.
  */
+/**
+ * LIST OPERATIONS WHOSE EVERY ROW CARRIES A WHOLE PAGE DOCUMENT.
+ *
+ * The page recovery surface answers with the documents themselves — which is
+ * right, since a restore has to have something to restore from — and useless to
+ * read. MEASURED against a live server: one version of a TWO-NODE page is 1,690
+ * bytes, so a realistic 120-node page runs about 70 KB per version and a listing
+ * of twenty is **1.4 MB in one answer**. An agent choosing which version to
+ * restore would be handed a truncated blob and no reliable way to pick.
+ *
+ * `sb_publish` already had this exact problem and the same answer: a published
+ * row carries `document`, `html` and `css` for every page the cascade touched,
+ * so it PROJECTS the rows. This is that, applied where the caller cannot know to
+ * ask — and it is a DEFAULT rather than a rule: an explicit `pick` still wins,
+ * so the document is one argument away for a caller that wants to read one.
+ */
+const LIST_PROJECTIONS: Record<string, string[]> = {
+  'get:/api/sites/{siteId}/pages/{pageId}/versions': [
+    'id',
+    'versionNo',
+    'label',
+    'createdBy',
+    'createdAt',
+    'isLive',
+  ],
+  'get:/api/sites/{siteId}/pages/{pageId}/history': ['id', 'createdBy', 'createdAt'],
+};
+
 export function shapeResponse(raw: unknown, opts: { pick?: string[]; max_items?: number }): unknown {
   const asked = opts.pick !== undefined || opts.max_items !== undefined;
   const isObj = (v: unknown): v is Record<string, unknown> =>
@@ -301,7 +329,10 @@ export async function callOperation(ctx: ToolContext, args: CallArgs): Promise<u
   if (raw === null || raw === undefined) {
     return { ok: true, method: op.method, path, note: 'The platform answered with no content.' };
   }
-  return shapeResponse(raw, { pick: args.pick, max_items: args.max_items });
+  // The caller's own `pick` outranks the default: asking for `document` is how
+  // you read a version rather than merely choose one.
+  const projection = args.pick ?? LIST_PROJECTIONS[op.id];
+  return shapeResponse(raw, { pick: projection, max_items: args.max_items });
 }
 
 export function registerApiTools(server: McpServer, ctx: ToolContext): void {

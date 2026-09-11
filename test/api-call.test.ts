@@ -212,3 +212,52 @@ describe('shapeResponse() — the edges the review found', () => {
     expect(out._truncated).toMatchObject({ shown: 1, of: 3 });
   });
 });
+
+/**
+ * THE RECOVERY SURFACE ANSWERS WITH THE DOCUMENTS THEMSELVES.
+ *
+ * Which is right — a restore has to have something to restore from — and
+ * useless to read. MEASURED against a live server: one version of a TWO-NODE
+ * page is 1,690 bytes, so a realistic 120-node page runs about 70 KB per
+ * version and a listing of twenty is 1.4 MB in ONE answer. An agent choosing
+ * which version to restore would be handed a truncated blob and no reliable way
+ * to pick.
+ *
+ * `sb_publish` had this exact problem and the same answer: a published row
+ * carries document, html and css for every page the cascade touched, so it
+ * projects the rows. This is that, applied where the caller cannot know to ask.
+ */
+describe('a listing whose every row is a whole page', () => {
+  const versions = {
+    total: 2,
+    versions: [
+      { id: 'pv_2', versionNo: 2, label: 'b', createdBy: 'u', createdAt: 't', isLive: false, document: { nodes: { ROOT: {} } } },
+      { id: 'pv_1', versionNo: 1, label: 'a', createdBy: 'u', createdAt: 't', isLive: true, document: { nodes: { ROOT: {} } } },
+    ],
+  };
+
+  it('keeps what a caller needs to CHOOSE and drops what it cannot read', () => {
+    const out = shapeResponse(versions, {
+      pick: ['id', 'versionNo', 'label', 'createdBy', 'createdAt', 'isLive'],
+    }) as { versions: Array<Record<string, unknown>> };
+    expect(Object.keys(out.versions[0]).sort()).toEqual(
+      ['createdAt', 'createdBy', 'id', 'isLive', 'label', 'versionNo'].sort(),
+    );
+    expect(JSON.stringify(out)).not.toContain('nodes');
+  });
+
+  it('still carries the version NUMBER and the label, which are how a human picks', () => {
+    // An id alone is not a choice: "restore the one before I broke it" is
+    // answered by the label somebody typed and by the order.
+    const out = shapeResponse(versions, { pick: ['id', 'versionNo', 'label'] }) as {
+      versions: Array<{ versionNo: number; label: string }>;
+    };
+    expect(out.versions.map((v) => v.versionNo)).toEqual([2, 1]);
+    expect(out.versions.map((v) => v.label)).toEqual(['b', 'a']);
+  });
+
+  it('leaves the total alone, because a truncated list that lies about its size is worse', () => {
+    const out = shapeResponse(versions, { pick: ['id'] }) as { total: number };
+    expect(out.total).toBe(2);
+  });
+});

@@ -1818,6 +1818,40 @@ that accounts for them.
   links stacked in a 140px header where the equal-share version had been 52. Only the render
   showed it; the spec was correct to read at every step.
 
+- **AN IMPORT WAITED FOR THIRD-PARTY IFRAMES IT NEVER READS.** `capture` navigated with
+  `waitUntil: 'load'`, which waits for every SUBRESOURCE — and the walk reads an iframe's `src`
+  ATTRIBUTE and never needs the frame to render at all. So a page carrying an ad frame, a chat
+  widget or a slow video embed stalled the whole capture for up to thirty seconds and then
+  THREW, losing an import whose DOM had been ready the entire time.
+
+  Found by this repo's own suite rather than by reading: the embed test's fixture carries real
+  YouTube, Vimeo and Google Maps frames, and it began failing at exactly 30,000 ms with nothing
+  about the page or the test having changed. A network dependency inside what reads as a pure
+  DOM test — which is the second lesson, and the reason the failure looked like a regression in
+  code that had not moved.
+
+  `domcontentloaded` plus `settleDom`, which is the SAME correction `sb_look` already paid for
+  one wait earlier: the right question is "has the DOM stopped changing", and the MutationObserver
+  answers it directly and bounded. ttgshop.vn is unchanged to the node — 4 sections, 1,617 texts,
+  96 images, 83 buttons. The SHOOT path still waits for `load`, because a photograph genuinely
+  wants its images.
+
+- **THE RECOVERY LISTING WAS TOO BIG TO READ.** `GET .../versions` and `.../history` answer with
+  the DOCUMENTS — right, since a restore has to have something to restore from, and useless to
+  read. MEASURED against a live server: one version of a TWO-NODE page is 1,690 bytes, so a
+  realistic 120-node page runs about 70 KB per version and a listing of twenty is **1.4 MB in one
+  answer**. An agent choosing which version to restore would be handed a truncated blob and no
+  reliable way to pick.
+
+  `sb_publish` had this exact problem and the same answer — a published row carries `document`,
+  `html` and `css` for every page the cascade touched, so it PROJECTS the rows. `LIST_PROJECTIONS`
+  in `src/tools/api.ts` is that, applied where the caller cannot know to ask: id, versionNo,
+  label, createdBy, createdAt, isLive. 392 bytes for two versions instead of kilobytes each. A
+  DEFAULT rather than a rule — an explicit `pick` still wins, so `pick: ["document"]` reads one.
+
+  And the projected listing shows something worth knowing: the platform writes a `__pre_restore`
+  version of its own before restoring, so a RESTORE is itself undoable.
+
 ## The five traps
 
 Each fails SILENTLY. Each is encoded in `src/domains/site/traps.ts` (trap 5 in

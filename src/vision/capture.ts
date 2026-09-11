@@ -1195,7 +1195,22 @@ async function readPage<T>(
   let page: Page | undefined;
   try {
     page = await browser.newPage({ viewport: { width, height: 900 } });
-    await page.goto(url, { waitUntil: 'load', timeout: 30_000 });
+    // `domcontentloaded`, NOT `load`, and `settleDom` does the rest.
+    //
+    // `load` waits for every SUBRESOURCE — including third-party iframes, which
+    // an import has no use for: this walk reads the iframe's `src` ATTRIBUTE and
+    // never needs the frame to render. So a page carrying an ad frame, a chat
+    // widget or a slow video embed stalled the whole capture for up to thirty
+    // seconds and then THREW, losing an import whose DOM had been ready the
+    // entire time. Caught by this repo's own test, whose fixture embeds real
+    // YouTube, Vimeo and Google Maps frames: it started failing at exactly 30s
+    // with nothing about the page having changed.
+    //
+    // The same lesson `sb_look` already paid for with `networkidle`, one wait
+    // earlier: the right question is "has the DOM stopped changing", and
+    // `settleDom` answers it directly and bounded. A page that genuinely needs
+    // its images is the SHOOT path's problem, and that one still waits.
+    await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 30_000 });
     // THE SAME SETTLE `sb_look` USES, not a flat sleep. A fixed 600ms is wrong
     // at both ends: example.com is finished long before it, and a page that
     // builds itself with scripts is not finished after it — which is exactly the
