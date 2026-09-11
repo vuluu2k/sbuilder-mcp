@@ -6,6 +6,14 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.34.0] - 2026-09-11
+
+### Added
+- Hành động mới `action: "chrome"` của sb_store dựng một header dùng chung (hoặc, với `footer: true`, một footer dùng chung) từ các trang site đã có sẵn, khép lại khoảng trống `siteChrome` mà sb_review đã báo cáo kể từ khi biết hỏi câu này: nhãn và liên kết của menu lấy từ chính các trang của site (trang chủ trước tiên), giao diện được đọc từ trang chủ, và master được gán cho mọi trang dưới dạng tham chiếu thay vì sao chép riêng vào từng trang. Lệnh này bỏ qua nếu site đã có sẵn header hoặc footer dùng chung, và nếu site có ít hơn hai trang. dry_run (mặc định bật) trả về menu dự kiến và các trang sẽ bị tác động mà không ghi gì cả.
+
+### Fixed
+- Menu được dựng cho header hoặc footer dùng chung (bởi `action: "chrome"` mới của sb_store, và bởi sb_import_site — vốn đã dựng sẵn menu này) giờ xếp các liên kết sát nhau theo đúng chiều rộng nội dung của chúng thay vì chia hàng thành các cột bằng nhau, nên ba liên kết không còn bị dàn trải ra ba phần bằng nhau của một header rộng với khoảng trống lớn giữa chúng.
+
 ## [0.33.0] - 2026-09-11
 
 ### Added

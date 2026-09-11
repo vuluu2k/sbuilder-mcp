@@ -6,6 +6,14 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.34.0] - 2026-09-11
+
+### Added
+- sb_store's new `action: "chrome"` builds one shared header (or, with `footer: true`, a shared footer) from the pages a site already has, closing the `siteChrome` gap sb_review has reported since it learned to ask: the menu labels and links come from the site's own pages (home first), the look is read off the home page, and the master is given to every page as a reference instead of copied onto each one. It skips a site that already shares a header or footer, and a site with fewer than two pages. dry_run (the default) returns the planned menu and which pages it would touch without writing anything.
+
+### Fixed
+- The menu built for a shared header or footer (by sb_store's new `action: "chrome"` and by sb_import_site, which already built one) now packs its links against each other at their own width instead of splitting the row into equal-width columns, so three links no longer land spread across the thirds of a wide header with large gaps between them.
+
 ## [0.33.0] - 2026-09-11
 
 ### Added
