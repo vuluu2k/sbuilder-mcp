@@ -6,6 +6,12 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.33.0] - 2026-09-11
+
+### Added
+- The catalog now declares seven config keys the platform's renderers always read but had never been listed anywhere: `image`'s `imageEager` (the override for a hero image that is not first, deciding the page's `<link rel=preload>` target), `menu`'s `activeColor`, `dataset-block`'s `contentWidthCustom`, `breadcrumb`'s `currentColor` and `maxItems`, `product-variants`' `optionGap`, and `list-dataset`'s `articleSourceType`. `sb_add`, `sb_set`, and `sb_traits_for` can now read and write all seven.
+- `sb_traits_for`'s `config_values` vocabulary for `list-dataset`'s `articleSourceType` is now reachable: the value vocabulary already existed but the element had never listed the key, so no call could reach it.
+
 ## [0.32.2] - 2026-09-11
 
 ### Fixed

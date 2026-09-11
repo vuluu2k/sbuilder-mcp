@@ -6,6 +6,12 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.33.0] - 2026-09-11
+
+### Added
+- Catalog giờ khai báo bảy config key mà renderer của nền tảng luôn đọc nhưng chưa từng được liệt kê ở đâu cả: `imageEager` của `image` (giá trị ghi đè cho ảnh hero không phải ảnh đầu tiên, quyết định đích `<link rel=preload>` của trang), `activeColor` của `menu`, `contentWidthCustom` của `dataset-block`, `currentColor` và `maxItems` của `breadcrumb`, `optionGap` của `product-variants`, và `articleSourceType` của `list-dataset`. sb_add, sb_set và sb_traits_for giờ đọc và ghi được cả bảy key này.
+- Bảng từ vựng `config_values` của sb_traits_for cho `articleSourceType` thuộc `list-dataset` giờ có thể truy cập được: từ vựng giá trị này đã tồn tại từ trước nhưng element chưa từng liệt kê key này, nên không lệnh gọi nào chạm tới được nó.
+
 ## [0.32.2] - 2026-09-11
 
 ### Fixed
