@@ -6,6 +6,16 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.32.0] - 2026-09-11
+
+### Added
+- Call sheet của sb_api_find cho mọi operation `/apps` hoặc `/builtin-apps` giờ giải thích cách đặt block của một app đã cài lên trang: dựng `specials.appBlockRef` dạng `"<installId>/<blockKey>"` từ một dòng của `GET /api/sites/{siteId}/apps/blocks` rồi thêm bằng sb_add — điều trước đây chỉ có thể biết được qua mã nguồn Go của nền tảng.
+- Cùng call sheet đó nêu rõ hai cái bẫy âm thầm quanh một block đã đặt: không bao giờ tự viết `specials.appBlockId` hay `appBlockHash` (đây là các dấu server tự gắn khi compose), và một chỉnh sửa bên trong subtree đã compose sẽ không được lưu ở đâu cả.
+- Call sheet cũng giải thích cách cài app: một app tích hợp sẵn cài bằng `POST /api/sites/{siteId}/builtin-apps/{key}`, còn một app từ marketplace cần merchant tự duyệt màn hình xác nhận OAuth và không thể cài qua server này.
+
+### Fixed
+- Tham số `key` trên các operation cài và liệt kê app tích hợp sẵn giờ ghi đủ tám key có thể cài (mail, multilingual, agent, chat, booking, loyalty, payments, courses) thay vì chỉ hai key đầu tiên từng có.
+
 ## [0.31.0] - 2026-09-11
 
 ### Added

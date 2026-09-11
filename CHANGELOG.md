@@ -6,6 +6,16 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.32.0] - 2026-09-11
+
+### Added
+- sb_api_find's call sheet for any `/apps` or `/builtin-apps` operation now explains how to place an installed app's block on a page: build `specials.appBlockRef` as `"<installId>/<blockKey>"` from a row of `GET /api/sites/{siteId}/apps/blocks` and add it with sb_add, which was previously reachable only in the platform's Go source.
+- The same call sheet names the two silent traps around a placed block: never author `specials.appBlockId` or `appBlockHash` (the server's own composition stamps), and an edit made inside a composed block's subtree is stored nowhere.
+- The call sheet also explains installing an app: a built-in app installs with `POST /api/sites/{siteId}/builtin-apps/{key}`, while a marketplace app requires a merchant to approve an OAuth consent screen and cannot be installed through this server.
+
+### Fixed
+- The `key` parameter on the built-in app install and list operations now documents all eight installable keys (mail, multilingual, agent, chat, booking, loyalty, payments, courses) instead of only the first two ever shipped.
+
 ## [0.31.0] - 2026-09-11
 
 ### Added
