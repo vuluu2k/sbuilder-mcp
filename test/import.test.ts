@@ -289,6 +289,18 @@ describe.runIf(process.env.SB_BROWSER_TEST === '1')('capture()', () => {
     // and every map arrived as a skip count. What genuinely has no element here
     // — an advert, a tracker, a comment system — still does, counted rather than
     // guessed at.
+    //
+    // THE `<video>` HERE IS LOAD-BEARING, and it caught a real regression while
+    // reading as an ordinary line of the list. A video sizes itself from its
+    // MEDIA, and a `poster` is what it measures before any media loads — so this
+    // one, carrying a poster and no explicit width/height, measured 0×0 and was
+    // dropped as `hidden` with nothing but a count. The identical element with
+    // `width`/`height`, or with no poster at all, came through: the one video
+    // most worth importing was the one that disappeared.
+    //
+    // It survived because the browser suite is opt-in (`SB_BROWSER_TEST=1`) and
+    // the standard gate does not run it — the "a skip that reads as green"
+    // failure this repo keeps closing, found by finally running it.
     const media = `data:text/html,${encodeURIComponent(
       '<main><section>' +
         '<iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ?si=abc"></iframe>' +

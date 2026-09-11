@@ -332,6 +332,13 @@ lệch nào — lỗ trong `seq` của server, checkpoint đến đúng seq củ
 | `node_id` | string? | Chỉ đóng khung element này thay vì cả trang |
 | `format` | `"jpeg"` \| `"png"`? | `jpeg` (mặc định) nhỏ hơn và nhanh hơn; `png` khi cần màu chính xác từng pixel |
 
+**Nó chụp trang đã LẮNG.** Mọi animation đều bị dừng trước khi cửa trập mở, vì một bức ảnh
+tĩnh muốn thứ khách rốt cuộc nhìn thấy — không có bước này, một băng mang hiệu ứng hiện-dần-
+khi-cuộn (`trigger: "view"`) sẽ chụp ra TRẮNG. Tiến độ của nó gắn với vị trí phần tử trong
+khung cuộn, mà cú walk nạp ảnh lazy cuộn xong lại về đầu trang, nên băng đó quay về
+`opacity: 0` đúng lúc chụp. Đo được: một băng trên bốn chụp ra rỗng trên một trang hoàn toàn
+đúng. Script tự viết nào có chụp màn hình cũng phải làm y vậy.
+
 **Lưu trước**, rồi mint link preview đã ký và render trang bằng chính renderer Go của nền
 tảng — nên bức ảnh là của *bản nháp đã lưu*, không bao giờ là của sửa đổi chưa lưu. Trả về
 một ảnh mỗi bề rộng, kèm `boxes`: một mảng các bộ `[id, type, x, y, w, h]` tính bằng CSS px
@@ -1097,34 +1104,50 @@ qua ghi `panel-set-without-labels`.
 do script điền. Có thể suy nhãn từ slug `data-url` nhưng đã từ chối: slug tiếng Việt trả về mất
 sạch dấu, đúng là lỗi tự-bịa-nội-dung mà `default_seed_copy` báo trên seed của mọi nơi khác.
 
-### Hiệu ứng vào, và bốn cách trượt câm của nó
+### Hiệu ứng vào, và những cách trượt câm của nó
 
-`config.animation` được **73 trên 111 loại phần tử** cung cấp, mà không gì mô tả nổi nó. Mọi cách
+`config.animation` được hầu hết thư viện phần tử cung cấp, mà không gì mô tả nổi nó. Mọi cách
 làm sai đều render RA KHÔNG GÌ CẢ — không keyframes, không rule, không lỗi — qua save, publish và
-render. Giờ `sb_traits_for` mang sẵn câu trả lời trên mọi phần tử có control này, còn `sb_set`
-cảnh báo từng cách trượt:
+render. `sb_traits_for` mang sẵn câu trả lời trên mọi phần tử có control này (`animation_values`
+liệt kê đủ 46 type cùng giá trị hợp lệ của từng khoá), còn `sb_set` cảnh báo từng cách trượt:
 
 - **Nó là OBJECT, không phải chuỗi như cái tên gợi ra:**
-  `{ active: true, type, easing, delay, duration }`. Renderer đọc nó bằng
-  `map[string]interface{}`, nên một chuỗi trần `"fade_in"` chính là giá trị zero.
+  `{ active: true, type, easing, intensity, trigger, delay, duration, repeat, alternate, range }`.
+  Renderer đọc nó bằng `map[string]interface{}`, nên một chuỗi trần `"fade_in"` chính là giá trị
+  zero.
 - **`active: true` là BẮT BUỘC, và `type` đã lưu cố ý không được coi là đồng ý.** Panel giữ lại
   `type` khi tắt công tắc để bật lại thì khôi phục lựa chọn cũ — coi type đã lưu là đồng ý sẽ làm
   chuyển động một node mà tác giả đã tắt hẳn.
 - **Type dùng GẠCH DƯỚI** — `fade_in`, `slide_up`, `slide_down`, `zoom_in`. `fade-in` mới là cách
   mọi công cụ web khác viết, và chính bảng của nền tảng có ghi chú cảnh báo cái bẫy này.
-- **Nó là BASE-ONLY**, và cái này được ĐỊNH TUYẾN chứ không cảnh báo: `render/css.go` phát rule
-  vào làn base vì object config được đọc không qua merge responsive, nên `sb_set` ghi thẳng vào
-  base. Khoá này vào sổ migration của nền tảng muộn — nó không phải khoá mà phần tử nào seed — nên
-  trước đó một lệnh ghi theo breakpoint rơi vào chỗ không ai nhìn.
+- **Nó ghi THEO BREAKPOINT, như mọi config khác.** Trước đây nó base-only và trang này từng nói
+  vậy: compiler đọc object không qua merge responsive, nên `sb_set` định tuyến lệnh ghi về base.
+  Việc thêm `intensity` chấm dứt điều đó — một khoảng cách là một *đại lượng*, mà đại lượng thì
+  phải đi theo breakpoint — nên khoá rời sổ migration của nền tảng và việc định tuyến tự dừng.
+  Cái bạn được là thứ merchant hỏi nhiều nhất: **tắt hiệu ứng trên mobile.**
+- **`alternate` đi với `repeat` hữu hạn sẽ bị bỏ, và lý do đáng biết.** Số lần lặp chẵn kết thúc
+  ở keyframe `from`, mà mọi keyframe hiệu ứng vào đều bắt đầu ở `opacity: 0` — nên node sẽ xuất
+  bản ra VÔ HÌNH: chạy đúng trên canvas và không bao giờ hiện với khách. Nó chỉ được tôn trọng
+  khi đi cùng `repeat: "infinite"`.
+- **Thiếu `intensity` KHÔNG phải là `medium`.** Nó giữ mức dự phòng 0.5s thay vì mức mà intensity
+  hàm ý (soft 0.4 / medium 0.6 / strong 0.9).
 
 `easing` là ca nhẹ và được báo khác đi: giá trị lạ rơi về `ease`, nên hiệu ứng vẫn chạy, chỉ mang
-đường cong không ai chọn. Renderer tự phát rule `prefers-reduced-motion` cho từng node, bạn không
-phải lo.
+đường cong không ai chọn. `intensity` lạ cũng vậy — không biến nào được phát và keyframe dùng
+khoảng cách có sẵn của chính nó. Renderer tự phát rule `prefers-reduced-motion` cho từng node,
+bạn không phải lo.
 
-**Thứ hoàn toàn không có lời giải là hiện-dần-khi-cuộn.** Đây là hiệu ứng VÀO, bắn ở lần vẽ đầu
-tiên; hai móc cuộn duy nhất trong runtime là class `wb-stuck` của phần tử ghim và trigger cuộn của
-`popup`. Một dải hiện dần khi khách cuộn tới không thể dựng ở đây bằng bất kỳ công cụ nào, vì nền
-tảng không có chỗ nào để đặt nó.
+**Hiện-dần-khi-cuộn chính là `trigger: "view"`.** Trang này suốt mấy tháng nói rằng nó hoàn toàn
+không có lời giải — rằng đây là hiệu ứng VÀO bắn ở lần vẽ đầu tiên, và một dải hiện dần khi khách
+cuộn tới không thể dựng ở đây bằng bất kỳ công cụ nào. Dựng được: `animation-timeline: view()`
+giờ đã có ở cả bốn engine, nên trigger biên dịch thành một override `@supports` đặt trên rule
+thường — không JavaScript, không island, và những engine chưa có thì vẫn chạy hiệu ứng ở lần vẽ
+đầu, nên không ai mất gì. `range` là điểm hoàn tất tính theo phần trăm quãng phần tử đi vào khung
+nhìn, kẹp trong 1-100, mặc định 60.
+
+Thứ vẫn chưa có lời giải là kiểu chạy-một-lần-với-thời-lượng-cố-định khi cuộn tới: view timeline
+tua theo cuộn, và nền tảng sẽ thêm kiểu đó thành giá trị trigger thứ ba chứ không định nghĩa lại
+giá trị này.
 
 ### App, và một chuỗi ký tự khiến block của chúng không dùng được
 

@@ -345,6 +345,14 @@ every disagreement.
 | `node_id` | string? | Frame just this element instead of the whole page |
 | `format` | `"jpeg"` \| `"png"`? | `jpeg` (default) is smaller and faster; `png` for pixel-exact colour |
 
+**It photographs the SETTLED page.** Every animation is stopped before the shutter opens,
+because a still picture wants what a visitor ends up looking at — and without that a band
+carrying a reveal-on-scroll entrance (`trigger: "view"`) comes back BLANK. Its progress is
+tied to where the element sits in the scrollport, and the lazy-image walk scrolls and then
+returns to the top, so the band is back at `opacity: 0` at the moment of the shot. Measured:
+one band of four came out empty on a page that was entirely correct. A script of your own
+that screenshots a page must do the same.
+
 **Saves first**, then mints a signed preview link and renders the page through the
 platform's own Go renderer — so the picture is of the *stored draft*, never of unsaved local
 edits. Returns one image per width plus `boxes`: an array of `[id, type, x, y, w, h]`
@@ -1136,34 +1144,51 @@ are empty in the DOM and filled by script. Deriving a label from the `data-url` 
 available and refused: a Vietnamese slug comes back stripped of its diacritics, which is the
 invented-copy defect `default_seed_copy` reports on everybody else's seeds.
 
-### The entrance animation, and its four silent misses
+### The entrance animation, and the ways it fails silently
 
-`config.animation` is offered by **73 of the 111 element types** and was describable by
-nothing. Every way of getting it wrong renders NOTHING — no keyframes, no rule, no error —
-through save, publish and render. `sb_traits_for` now carries the answer on every element that
-offers the control, and `sb_set` warns on each miss:
+`config.animation` is offered by most of the element library and was describable by nothing.
+Every way of getting it wrong renders NOTHING — no keyframes, no rule, no error — through save,
+publish and render. `sb_traits_for` carries the answer on every element that offers the control
+(`animation_values` lists all 46 types with what each key accepts), and `sb_set` warns on each
+miss:
 
 - **It is an OBJECT, not the string the control's name invites:**
-  `{ active: true, type, easing, delay, duration }`. The renderer reads it as
-  `map[string]interface{}`, so a bare `"fade_in"` is the zero value.
+  `{ active: true, type, easing, intensity, trigger, delay, duration, repeat, alternate, range }`.
+  The renderer reads it as `map[string]interface{}`, so a bare `"fade_in"` is the zero value.
 - **`active: true` is REQUIRED, and a stored `type` is deliberately not consent.** The panel
   keeps `type` when the switch goes off so switching back restores the choice — treating a
   stored type as consent would animate a node the author had explicitly turned off.
 - **The type is UNDERSCORED** — `fade_in`, `slide_up`, `slide_down`, `zoom_in`. `fade-in` is
   what every other web tool spells it and the platform's own table comments on the trap.
-- **It is BASE-ONLY**, and this one is ROUTED rather than warned about: `render/css.go` emits
-  the rule into the base lane because the config object is read with no responsive merge, so
-  `sb_set` writes it to base. It reached the platform's migration ledger late — it is not a key
-  any element seeds — which meant a per-breakpoint write landed where nothing looks.
+- **It is written PER BREAKPOINT, like any other config.** It used to be base-only and this
+  page said so: the compiler read the object with no responsive merge, so `sb_set` routed the
+  write to base. Adding an intensity ended that — a distance is a quantity, and a quantity
+  belongs per breakpoint — so the key left the platform's migration ledger and the routing
+  stopped. What you gain is the thing merchants ask for most: **an animation that is off on
+  mobile.**
+- **`alternate` with a FINITE `repeat` is dropped, and the reason is worth knowing.** An even
+  iteration count finishes on the `from` keyframe, and every entrance keyframe starts at
+  `opacity: 0` — so the node would publish INVISIBLE, playing correctly on the canvas and never
+  appearing for a visitor. It is honoured only alongside `repeat: "infinite"`.
+- **An absent `intensity` is not `medium`.** It keeps the 0.5s duration fallback rather than
+  the one the intensity implies (soft 0.4 / medium 0.6 / strong 0.9).
 
 `easing` is the mild case and is reported differently: an unrecognised value falls back to
-`ease`, so the animation still runs, wearing a curve nobody chose. The renderer emits its own
-`prefers-reduced-motion` rule per animated node, so you do not have to.
+`ease`, so the animation still runs, wearing a curve nobody chose. Same for an unknown
+`intensity` — no variables are emitted and the keyframes use their own built-in distances. The
+renderer emits its own `prefers-reduced-motion` rule per animated node, so you do not have to.
 
-**What has no answer at all is reveal-on-scroll.** These are ENTRANCE animations, fired at first
-paint; the only scroll hooks in the runtime are the pinned element's `wb-stuck` class and
-`popup`'s scroll trigger. A section that fades in as the visitor reaches it cannot be authored
-here, by any tool, because the platform has nowhere to put it.
+**Reveal-on-scroll is `trigger: "view"`.** This page said for months that it had no answer at
+all — that these were entrance animations fired at first paint, and a section that fades in as
+the visitor reaches it could not be authored here by any tool. It can:
+`animation-timeline: view()` ships in all four engines now, so the trigger compiles to an
+`@supports` override on top of the plain rule — no JavaScript, no island, and the engines
+without it keep animating at first paint, so nobody gets nothing. `range` is the completion
+point as a percentage of the element's entry, clamped 1-100, default 60.
+
+What still has no answer is a FIXED-DURATION play-once on entry: a view timeline scrubs with
+the scroll, and the platform will add that as a third trigger value rather than redefine this
+one.
 
 ### Apps, and the one string that made their blocks unusable
 

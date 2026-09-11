@@ -132,7 +132,23 @@ function capturePage(limits: { maxSections: number; maxImages: number; maxTextCh
     const cs = getComputedStyle(el);
     if (cs.display === 'none' || cs.visibility === 'hidden' || cs.opacity === '0') return false;
     const r = el.getBoundingClientRect();
-    return r.width > 0 && r.height > 0;
+    if (r.width > 0 && r.height > 0) return true;
+    // A ZERO BOX MEANS "HIDDEN" ONLY FOR AN ELEMENT THAT SIZES ITSELF FROM ITS
+    // CONTENT. A `<video>` sizes itself from its MEDIA, and a `poster` is what
+    // it measures before any media loads — so a video whose poster has not
+    // resolved measures 0×0 while being perfectly present, and Chrome only
+    // falls back to 300×150 once that load has actually failed.
+    //
+    // MEASURED: `<video src poster>` with no explicit width/height was dropped
+    // with nothing but a `hidden` count, while the identical element carrying
+    // `width`/`height` — or carrying NO poster — came through. So the one video
+    // most worth importing, the one with a still frame on it, was the one that
+    // disappeared, and only on the pages slow enough for the race to be lost.
+    //
+    // Narrow on purpose: a `<video>` alone, and only when it names something to
+    // play or to show. An empty `<video></video>` is a genuinely empty box and
+    // goes on being skipped.
+    return el.tagName === 'VIDEO' && !!(el.getAttribute('src') || el.getAttribute('poster'));
   };
 
   const clean = (s: string | null): string => (s ?? '').replace(/\s+/g, ' ').trim();

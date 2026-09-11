@@ -527,3 +527,11 @@ Three ways a correct page reads as broken:
 - **A fullPage screenshot does not scroll**, so `loading="lazy"` images below the fold never
   load and photograph as empty boxes. `sb_look` walks the page first; a script of your own
   must do the same.
+- **A reveal-on-scroll band would photograph BLANK, and `sb_look` settles it for you.** An
+  entrance animation with `trigger: "view"` has its progress tied to where the element sits in
+  the scrollport, so after the walk returns to the top it is back at `opacity: 0` — measured,
+  one band of four came out entirely empty on a page that was correct. `sb_look` now stops
+  every animation before the shutter opens, so what you get is the settled page. **A script of
+  your own must do the same** (`animation: none` on everything, not `animation-timeline: auto`
+  — that restarts the animation and catches it mid-flight). If you ever see an empty band where
+  you authored motion, check that before changing the page.

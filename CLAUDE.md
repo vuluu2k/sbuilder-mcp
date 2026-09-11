@@ -1694,6 +1694,28 @@ that accounts for them.
     What genuinely has no answer is a FIXED-DURATION play-once on entry: a view timeline
     scrubs with the scroll, and the platform's own comment says that mode needs JavaScript and
     will arrive as a THIRD trigger value rather than by redefining `view`.
+
+    **AND ENABLING IT IMMEDIATELY BROKE `sb_look`, which is worth reading before adding any
+    other motion.** A view timeline's progress is a function of where the element sits in the
+    SCROLLPORT — and `shoot`'s lazy-image walk scrolls the page and then RETURNS TO THE TOP, so
+    every revealed section is back at its `from` keyframe, `opacity: 0`, at the moment the
+    shutter opens. MEASURED on a four-band probe: the revealed band photographed ENTIRELY
+    BLANK and the other three came out correct. The honest reading of that picture is "this
+    band is broken", which sends the caller to fix a page that works — the same cost the walk
+    itself exists to prevent, arriving by a route the walk CANNOT fix, because the walk's own
+    return to the top is what causes it. `fill: both` gives a second way in: it applies the
+    `from` keyframe during a `delay`, so a long enough delay photographs blank too.
+
+    `settleAnimations` puts `animation: none` on everything before the shot, because a still
+    picture wants the page a visitor ENDS UP looking at and the settled state of every entrance
+    effect is "visible". Forcing `animation-timeline: auto` instead was tried and is wrong: it
+    RESTARTS the animation against the document timeline and the shot catches it mid-flight,
+    measured at opacity 0.317.
+
+    The test diffs two shots — the same page with and without the `@supports` block — because
+    they must photograph identically once settled. The FIRST version applied the override
+    inside the test and asserted on the result, which stays green with the fix deleted from
+    `shoot.ts` entirely; it was replaced after checking that the new one actually goes red.
   - **`alternate` with a FINITE repeat publishes an INVISIBLE node**, which is why the renderer
     refuses it rather than shipping it. An even iteration count finishes on the `from` keyframe
     and every entrance keyframe starts at `opacity: 0` — so the author watches it play on the
@@ -1873,6 +1895,26 @@ that accounts for them.
   every packed cell stayed full width and the menu came out as a vertical list: measured, three
   links stacked in a 140px header where the equal-share version had been 52. Only the render
   showed it; the spec was correct to read at every step.
+
+- **A `<video>` WITH A POSTER WAS DROPPED, AND IT WAS THE ONE MOST WORTH TAKING.** `visible()`
+  treated a zero box as hidden, which is right for an element that sizes itself from its
+  CONTENT and wrong for one that sizes itself from its MEDIA: a `<video>` measures its
+  `poster` before anything plays, so one whose poster has not resolved measures 0×0 while
+  being perfectly present — Chrome only falls back to 300×150 once that load has actually
+  FAILED. Measured across four spellings: `<video src poster>` with no width/height was
+  skipped with nothing but a `hidden` count, while the same element carrying `width`/`height`
+  — or carrying NO poster — came through. So the import kept the bare videos and lost the ones
+  with a still frame on them, on exactly the pages slow enough to lose the race.
+
+  The fix is narrow on purpose — a `<video>` only, and only when it names something to play or
+  to show, so an empty `<video></video>` goes on being skipped.
+
+  **IT HAD BEEN BROKEN ON THE COMMITTED TREE AND NOTHING SAID SO.** The browser suite is
+  opt-in (`SB_BROWSER_TEST=1`) and the standard gate — `build && test && smoke` — does not run
+  it, so the test that names this case sat green-by-absence. That is the "a skip that reads as
+  green" failure this file already records about `src/vision/**`, caught this time only
+  because the suite was finally run. Run `SB_BROWSER_TEST=1 npx vitest run` after touching
+  anything under `src/vision/`, and periodically even when you have not.
 
 - **AN IMPORT WAITED FOR THIRD-PARTY IFRAMES IT NEVER READS.** `capture` navigated with
   `waitUntil: 'load'`, which waits for every SUBRESOURCE — and the walk reads an iframe's `src`
@@ -2144,6 +2186,11 @@ Three ways this build read a correct page as broken, and each cost real time:
 - **A fullPage screenshot does not scroll**, so `loading="lazy"` images below the fold never
   enter the viewport and photograph as empty boxes. `sb_look` walks the page before it fires;
   any script of your own must do the same.
+- **A REVEAL-ON-SCROLL BAND WOULD PHOTOGRAPH BLANK**, and `sb_look` settles it. `trigger:
+  "view"` ties an animation's progress to the element's place in the scrollport, so after the
+  walk returns to the top it is back at `opacity: 0` — measured, one band of four came out
+  empty on a correct page. Every animation is stopped before the shutter opens; a script of
+  your own must do the same.
 
 ## The yield rule
 

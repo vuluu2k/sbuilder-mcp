@@ -334,6 +334,43 @@ async function settleLazyImages(page: Page): Promise<void> {
     .catch(() => {});
 }
 
+/**
+ * SETTLE EVERY ENTRANCE ANIMATION, or photograph a band that is not there.
+ *
+ * A still picture wants the page a visitor ends up looking at, and the settled
+ * state of every entrance animation is "visible". Two ways a correct page
+ * photographs BLANK without this, both of them new since the platform shipped
+ * 46 effects and a scroll trigger, and both silent:
+ *
+ *   - `trigger: "view"` compiles to `animation-timeline: view()`, whose progress
+ *     is a function of where the element sits in the scrollport. The walk above
+ *     scrolls and then RETURNS TO THE TOP, so every revealed section is back at
+ *     its `from` keyframe — `opacity: 0` — at the moment the shutter opens.
+ *     MEASURED: a four-band page photographed with the third band entirely
+ *     empty, the other three correct.
+ *   - `fill: both` applies the `from` keyframe during a `delay`, so a section
+ *     with a delay long enough to outlast the settle photographs blank too.
+ *
+ * The honest reading of either picture is "this band is broken", which sends
+ * the caller to fix a page that works — the same failure the lazy-image walk
+ * above exists to prevent, arriving by a different route that the walk cannot
+ * fix because the walk's own return to the top is what causes it.
+ *
+ * `animation: none` rather than forcing the timeline to `auto`: that one
+ * RESTARTS the animation against the document timeline and the shot catches it
+ * mid-flight (measured at opacity 0.317). Removing the animation drops the
+ * element to its own declared style, which for every entrance effect here is
+ * exactly the end state — measured back at opacity 1, with the band's text on
+ * screen.
+ *
+ * Best-effort: a page that refuses a stylesheet is still worth photographing.
+ */
+async function settleAnimations(page: Page): Promise<void> {
+  await page
+    .addStyleTag({ content: '*,*::before,*::after{animation:none !important}' })
+    .catch(() => {});
+}
+
 async function shootOne(
   page: Page,
   url: string,
@@ -381,6 +418,7 @@ async function shootOne(
 
   await settleDom(page);
   await settleLazyImages(page);
+  await settleAnimations(page);
   // A RENDERED page carries its node ids as the HTML `id` attribute — not as
   // `data-node-id`, which is the editor CANVAS's hook and never reaches the
   // renderer. Selecting the canvas attribute here returned an empty box list

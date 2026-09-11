@@ -200,6 +200,50 @@ describe.runIf(process.env.SB_BROWSER_TEST === '1')('shoot()', () => {
       shoot(`data:text/html,${encodeURIComponent(collapsed)}`, { widths: [1440], node: 'fs_1a2b3c4d' }),
     ).rejects.toThrow(/no size/i);
   }, 30_000);
+
+  /**
+   * A REVEAL-ON-SCROLL SECTION PHOTOGRAPHED AS AN EMPTY BAND.
+   *
+   * `trigger: "view"` compiles to `animation-timeline: view()`, whose progress
+   * is a function of where the element sits in the scrollport — and the lazy-
+   * image walk scrolls and then RETURNS TO THE TOP, so a revealed section is
+   * back at its `from` keyframe (`opacity: 0`) when the shutter opens. The walk
+   * cannot fix it; the walk's own return is what causes it.
+   *
+   * MEASURED before the fix: a four-band page came back with the revealed band
+   * entirely blank and the other three correct. The honest reading of that
+   * picture is "this band is broken", which sends the caller to fix a page that
+   * works — the same cost the lazy-image walk exists to prevent.
+   *
+   * ASSERTED BY DIFFING TWO SHOTS, which is what makes this able to fail. The
+   * two pages are byte-for-byte identical apart from the `@supports` block that
+   * turns the entrance into a reveal — so once animations are settled they must
+   * PHOTOGRAPH identically. They do not when the band is invisible, and the
+   * first version of this test missed that: it applied the override inside the
+   * test and asserted on the result, which stays green with the fix removed
+   * from `shoot.ts` entirely. An assertion that cannot go red is the "green
+   * suite over a defect" this repo keeps closing.
+   */
+  it('settles a reveal-on-scroll band instead of photographing it blank', async () => {
+    const body =
+      '<div style="height:1200px"></div>' +
+      '<section id="fs_5e5e5e5e" class="wb-flex-section" ' +
+      'style="height:300px;background:#E8557A">revealed</section>';
+    const keyframes = '<style>@keyframes fade_in{from{opacity:0}to{opacity:1}}' +
+      '#fs_5e5e5e5e{animation:fade_in .5s ease both}';
+    const plain = `${keyframes}</style>${body}`;
+    const reveal =
+      `${keyframes}@supports (animation-timeline: view()){#fs_5e5e5e5e{` +
+      `animation-timeline:view();animation-range:entry 0% entry 60%}}</style>${body}`;
+
+    const shotOf = async (html: string) =>
+      (await shoot(`data:text/html,${encodeURIComponent(html)}`, { widths: [1440] }))[0]
+        .imageBase64;
+
+    // A plain entrance has finished by the time the shutter opens, so it is the
+    // control: whatever it looks like is what the revealed one must look like.
+    expect(await shotOf(reveal)).toBe(await shotOf(plain));
+  }, 40_000);
 });
 
 // Opt-in: the measurements only mean anything against a real layout engine.
