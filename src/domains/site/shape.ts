@@ -27,6 +27,33 @@
  * `section → block → [a,b,c]` and `section → [a,b,c]` produce the same
  * histogram. A node with zero or two-or-more children is never transparent —
  * it is either a real leaf or a real arrangement decision.
+ *
+ * THE TRANSPARENCY RULE HAS A BLIND SPOT, AND IT IS WORTH NAMING RATHER THAN
+ * REDISCOVERING. A lost container that was its parent's ONLY child is
+ * invisible to this measure, because the collapse removes it from the
+ * SOURCE side too. `section → row → [c1,c2,c3]` losing `row` entirely (its
+ * three children promoted straight onto `section`) is exactly this case:
+ * `section` has one child, so it collapses and `row` (3 children) takes its
+ * place at depth 0 — which is then histogram-identical to a built tree that
+ * never had a `row` at all, `section → [c1,c2,c3]`. The genuine loss and the
+ * compensating collapse cancel each other out.
+ *
+ * The trade is still the right one. BEFORE this rule, every page paid for
+ * the mapper's own construction rather than for anything about the page:
+ * `example.com` — a heading and two sentences — scored 40 against its own
+ * correctly-built copy, purely from the one constant wrapper `toSpecs`
+ * always inserts. A metric that reports ~40-49 on every page, good imports
+ * and bad ones alike, cannot answer the question it exists for at all. A
+ * narrow blind spot — one specific shape of loss, only when the lost
+ * container was an only child — costs less than a number that is mostly its
+ * own construction.
+ *
+ * And the blind spot is not a NEW hole this rule cut. `shapeOf` has never
+ * read DIRECTION — a `row` and a `column` with the same children count the
+ * same — so a container's own arrangement AXIS was already outside what
+ * this measures, only-child or not. The collapse does not introduce that
+ * limitation; it makes one more case of it visible, in the one place where a
+ * lost container's fanout happens to match what replaced it.
  */
 export interface TreeLike {
   children?: TreeLike[];
