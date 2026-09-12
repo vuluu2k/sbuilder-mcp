@@ -1055,6 +1055,25 @@ perfectly on two of the three, which is why there are three.
 It writes to a LIVE site and refuses to run without the flag. Scratch pages are named
 `zz-fidelity-*` and deleted by the id the create returned, in a `finally`.
 
+**Only the MOVEMENT of `visual` and `structure` is meaningful — never read the absolute
+number.** Both carry a permanent floor: the scratch page is created with a bare
+`{name, slug, type}` body, which attaches no global header or footer (that comes from
+`sb_page_create`'s own `siteChrome` logic, bypassed here), so the source's screenshot carries
+chrome the build never gets a chance to match; and `toSpecs` wraps every capture in a section,
+so the built tree is structurally deeper than the captured one by construction. Neither floor
+is a bug to chase.
+
+`visual` has a second, LESS stable source of noise on top of that floor: `diffImages` divides
+by `width × max(sourceHeight, builtHeight)`, so the reported percentage is a function of the
+SOURCE page's own total height. A taller promo band, a carousel on a different slide, a lazy
+image that resolved a moment later than last time — any of those changes the denominator and
+moves `visual` with nothing in the importer having changed.
+
+Run the first baseline TWICE against an unchanged tree before trusting a single-run
+difference as a regression, to see how much `visual` and `structure` move on their own.
+Nobody has done this yet — `scoreboard.ts`'s 1.5-point tolerance is the only thing currently
+absorbing that noise, and whether that is the right order of magnitude is unmeasured.
+
 ## `sb_import_site`
 
 Read a **whole site** from one URL and give each page it finds its own **draft page** here.

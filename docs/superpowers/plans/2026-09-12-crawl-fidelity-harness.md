@@ -921,16 +921,19 @@ so no comparison is printed.
 Run: `SB_SITE` is already in the environment; list the pages and confirm no `zz-fidelity-*`
 survived.
 
+`require('./dist/server.js')` fails on this package: `"type": "module"` makes that file ESM,
+and `require(esm)` is unflagged only from Node 22.12 while `engines` here allows `>=22`. Use
+native `import` instead — this is the command a Node 22.0–22.11 install would otherwise fail
+on with no clue why:
+
 ```bash
-node -e "
-const { buildContext } = require('./dist/server.js');
-const { callOperation } = require('./dist/tools/api.js');
-(async () => {
-  const ctx = buildContext();
-  const out = await callOperation(ctx, { id: 'get:/api/sites/{siteId}/pages', dry_run: false, pick: ['slug'] });
-  const left = JSON.stringify(out).match(/zz-fidelity-[a-z0-9-]*/g) ?? [];
-  console.log(left.length ? 'LEFT BEHIND: ' + left.join(', ') : 'clean');
-})();
+node --input-type=module -e "
+import { buildContext } from './dist/server.js';
+import { callOperation } from './dist/tools/api.js';
+const ctx = buildContext();
+const out = await callOperation(ctx, { id: 'get:/api/sites/{siteId}/pages', dry_run: false, pick: ['slug'] });
+const left = JSON.stringify(out).match(/zz-fidelity-[a-z0-9-]*/g) ?? [];
+console.log(left.length ? 'LEFT BEHIND: ' + left.join(', ') : 'clean');
 "
 ```
 Expected: `clean`. If anything survived, delete it by id and fix the `finally` before

@@ -23,7 +23,7 @@
     "access": "public"
   },
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && tsc --noEmit -p tsconfig.fidelity.json",
     "dev": "tsc --watch",
     "start": "node dist/index.js",
     "smoke": "node dist/smoke.js",

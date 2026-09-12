@@ -2278,6 +2278,20 @@ the source, lower is better), `content` (`coverage`, higher is better) and `stru
 (tree-shape distance from the source, lower is better). A blank page scores perfectly on two
 of the three, which is why one number would lie.
 
+**AND THE ABSOLUTE NUMBER IS NOT THE THING TO READ — ONLY ITS MOVEMENT IS.** `visual` and
+`structure` both carry a permanent floor: the scratch page is created with a bare
+`{name, slug, type}` body, so it gets none of `sb_page_create`'s `siteChrome` global header or
+footer, while the source screenshot keeps its own chrome, which `capture` skips on purpose —
+no importer change can ever close that gap. `toSpecs` wraps every capture in a section, so the
+built tree is structurally deeper than the captured one by construction, a second floor of
+the same kind. `visual` moves for a THIRD reason that is not even stable: `diffImages` divides
+by `width × max(sourceHeight, builtHeight)`, so a source page that got taller between runs — a
+carousel on a different slide, a lazy image that resolved — re-scales the denominator and
+reports a different number with nothing in the importer having changed. Run the first
+baseline TWICE against an unchanged tree before trusting a single-run difference as a
+regression; nobody has, and `scoreboard.ts`'s 1.5-point tolerance is the only thing currently
+absorbing that noise, its correctness unmeasured.
+
 **THE BASELINE IS NOT RECORDED YET.** The first run has to write real scratch pages to a real
 storefront (`SB_SITE`) before there is anything to score, and that write is refused at the
 PERMISSION LAYER before it reaches the network — checked from two separate sessions, denied

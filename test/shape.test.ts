@@ -30,13 +30,17 @@ describe('shapeDistance', () => {
     // as one flat column — every leaf present, the arrangement gone.
     const nested = shapeOf([node(node(leaf(), leaf()), node(leaf(), leaf()), node(leaf(), leaf()))]);
     const flat = shapeOf([node(leaf(), leaf(), leaf(), leaf(), leaf(), leaf())]);
-    expect(shapeDistance(nested, flat)).toBeGreaterThan(20);
+    // PINNED, not bracketed: this number is the `structure` column of the
+    // recorded fidelity baseline, so the formula must not be free to drift to
+    // a different value inside a threshold and still read as unchanged.
+    expect(shapeDistance(nested, flat)).toBeCloseTo(50, 1);
   });
 
   it('is small for a tree that differs by one wrapper', () => {
     const a = shapeOf([node(leaf(), leaf(), leaf())]);
     const b = shapeOf([node(leaf(), leaf(), leaf()), node(leaf())]);
-    expect(shapeDistance(a, b)).toBeLessThan(20);
+    // PINNED, not bracketed — see the comment on the flattened-tree case above.
+    expect(shapeDistance(a, b)).toBeCloseTo(12.5, 1);
   });
 
   it('answers 0 for two empty trees rather than dividing by nothing', () => {

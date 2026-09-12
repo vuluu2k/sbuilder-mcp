@@ -69,14 +69,25 @@ async function main(): Promise<void> {
   try {
     for (const fx of pages) {
       try {
-        const shotSource = await capture(fx.url, {});
+        const shotSource = await capture(fx.url);
         const made = (await callOperation(ctx, {
           id: 'post:/api/sites/{siteId}/pages',
           body: { name: slugFor(fx.url), slug: slugFor(fx.url), type: 'page' },
           dry_run: false,
         })) as { page?: { id?: string }; id?: string };
         const pageId = made.page?.id ?? made.id;
-        if (!pageId) throw new Error('the create returned no page id');
+        if (!pageId) {
+          // The POST answered 200 and named no id to clean up by — `created` never
+          // gets it, so the `finally` below cannot delete it either. Unlikely
+          // (`src/tools/page.ts`'s create answers `{ page: { id, slug } }` and no
+          // projection layer here can strip it) but not impossible, so the message
+          // is the fix: it names the slug this run asked for, because that is the
+          // only handle left to find the page by on the live site.
+          throw new Error(
+            `the create answered but named no page id — a page may exist as ${slugFor(fx.url)} ` +
+              'on the live site; find it and delete it by hand',
+          );
+        }
         created.push(pageId);
 
         const session = new PageSession(ctx);
@@ -139,6 +150,18 @@ async function main(): Promise<void> {
     // src/vision/capture.ts's withBrowser) — there is no closeCaptureBrowser to
     // call here, unlike shoot.ts's pooled browser and imagediff.ts's shared one.
     await Promise.all([closeDiffBrowser(), closeBrowser()]);
+  }
+
+  // A run where every fixture failed still reaches here — the per-fixture
+  // `catch` above is what lets ONE bad fixture cost one row instead of the
+  // whole run, and that is correct. But writing THIS out would overwrite a
+  // good baseline with an empty one and still exit 0, so the next person sees
+  // a fresh timestamp, a blank scoreboard and success. A PARTIAL run (some
+  // fixtures failed, not all) is not this case and must stay allowed:
+  // `compareBaseline` already reports a missing row as `removed`, by design.
+  if (scores.length === 0) {
+    console.error('\nevery fixture failed — refusing to write an empty baseline over a real one');
+    process.exit(1);
   }
 
   const next: Baseline = { generated: new Date().toISOString(), scores };

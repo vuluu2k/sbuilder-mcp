@@ -1020,6 +1020,25 @@ Nó viết vào một site ĐANG SỐNG và từ chối chạy nếu thiếu c�
 bản nháp để giữ lại, mà là dùng xong thì xoá — mang tên `zz-fidelity-*` và bị xoá theo id mà
 lệnh tạo trả về, trong một `finally`.
 
+**Chỉ có SỰ DI CHUYỂN của `visual` và `structure` là có ý nghĩa — đừng bao giờ đọc con số tuyệt
+đối.** Cả hai đều mang một mức sàn cố định: trang tạm được tạo bằng một body trần
+`{name, slug, type}`, nên không có header hay footer chung nào được gắn vào (chuyện đó nằm
+trong `siteChrome` của `sb_page_create`, và ở đây bị bỏ qua), nên ảnh chụp của trang gốc mang
+theo phần khung mà bản dựng không bao giờ có cơ hội khớp; còn `toSpecs` bọc mỗi lần chụp trong
+một section, nên cây được dựng luôn sâu hơn cây đã chụp một cách có chủ đích từ thiết kế. Không
+mức sàn nào trong hai cái đó là lỗi cần đi sửa.
+
+`visual` còn có thêm một nguồn nhiễu KHÔNG ỔN ĐỊNH nằm trên cả mức sàn đó: `diffImages` chia
+cho `width × max(chiều cao gốc, chiều cao dựng)`, nên phần trăm báo ra là một hàm của TỔNG
+CHIỀU CAO trang gốc. Một băng khuyến mãi cao hơn, một carousel dừng ở slide khác, một ảnh lazy
+load xong muộn hơn lần trước — bất cứ thay đổi nào trong số đó cũng đổi mẫu số và làm `visual`
+di chuyển mà trình import chẳng có gì thay đổi cả.
+
+Hãy chạy baseline đầu tiên HAI LẦN trên một cây không đổi trước khi tin một lần chạy duy nhất
+là hồi quy, để biết `visual` và `structure` tự dao động bao nhiêu. Chưa ai làm việc này —
+ngưỡng dung sai 1.5 điểm trong `scoreboard.ts` hiện là thứ duy nhất đang hấp thụ nhiễu đó, và
+liệu đó có phải bậc độ lớn đúng hay không thì vẫn chưa được đo.
+
 ## `sb_import_site`
 
 Đọc **cả một website** từ một URL và tạo cho mỗi trang tìm được một **trang nháp** riêng ở

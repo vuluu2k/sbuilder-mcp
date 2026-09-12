@@ -1,4 +1,11 @@
-/** One page at one width. */
+/**
+ * One page at one width.
+ *
+ * Only `visual` actually varies by width — it comes from a screenshot taken at
+ * that width. `content` and `structure` come off ONE capture and ONE tree per
+ * page, so both repeat identically across every width row for that `url`; a
+ * regression on either is therefore reported once per width, not once per page.
+ */
 export interface PageScore {
   url: string;
   width: number;
