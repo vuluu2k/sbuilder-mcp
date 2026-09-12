@@ -1361,3 +1361,67 @@ describe.runIf(process.env.SB_BROWSER_TEST === '1')('capture() reporting how muc
     expect(got.coverage).toBe(100);
   }, BROWSER_TIMEOUT);
 });
+
+describe.runIf(process.env.SB_BROWSER_TEST === '1')('capture() sampling the source design', () => {
+  const page = (body: string) => `data:text/html;charset=utf-8,${encodeURIComponent(body)}`;
+
+  it('samples the computed colour, size and weight of a heading', async () => {
+    const got = await capture(
+      page(
+        '<body style="background:#fffaf5"><main><section>' +
+          '<h1 style="color:#b3123a;font-size:44px;font-weight:800">Tiêu đề</h1>' +
+          '<p style="color:#4b5563;font-size:17px">Một đoạn văn để đo.</p>' +
+          '</section></main></body>',
+      ),
+      { maxImages: 5, maxNodes: 200 },
+    );
+    const flat: Captured[] = [];
+    const walk = (c: Captured): void => {
+      flat.push(c);
+      for (const k of c.children ?? []) walk(k);
+    };
+    got.sections.forEach(walk);
+
+    const heading = flat.find((c) => c.kind === 'heading');
+    expect(heading?.sample?.color).toBe('rgb(179, 18, 58)');
+    expect(heading?.sample?.fontSize).toBe('44px');
+    expect(heading?.sample?.fontWeight).toBe('800');
+
+    const text = flat.find((c) => c.kind === 'text');
+    expect(text?.sample?.color).toBe('rgb(75, 85, 99)');
+    expect(text?.sample?.fontSize).toBe('17px');
+  }, BROWSER_TIMEOUT);
+
+  it('samples a painted button\'s fill and radius', async () => {
+    const got = await capture(
+      page(
+        '<body><main><section>' +
+          '<a href="/x" style="display:block;background:#b3123a;color:#fff;border-radius:999px;padding:12px 28px">Mua ngay</a>' +
+          '</section></main></body>',
+      ),
+      { maxImages: 5, maxNodes: 200 },
+    );
+    const flat: Captured[] = [];
+    const walk = (c: Captured): void => {
+      flat.push(c);
+      for (const k of c.children ?? []) walk(k);
+    };
+    got.sections.forEach(walk);
+    const button = flat.find((c) => c.kind === 'button');
+    expect(button?.sample?.backgroundColor).toBe('rgb(179, 18, 58)');
+    expect(button?.sample?.borderRadius).toBe('999px');
+  }, BROWSER_TIMEOUT);
+
+  it('DOES NOT change what the mapper produces', async () => {
+    // The samples are observations for Task 2. `toSpecs` must go on ignoring
+    // them: stamping a source colour onto a node is P3's decision, and if it
+    // leaked in here every imported node would silently detach from its preset.
+    const got = await capture(
+      page('<body><main><section><h1 style="color:#b3123a">Tiêu đề</h1></section></main></body>'),
+      { maxImages: 5, maxNodes: 200 },
+    );
+    const specs = toSpecs(got.sections, {});
+    expect(JSON.stringify(specs)).not.toContain('b3123a');
+    expect(JSON.stringify(specs)).not.toContain('179, 18, 58');
+  }, BROWSER_TIMEOUT);
+});

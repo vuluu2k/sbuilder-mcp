@@ -7,6 +7,27 @@ import { normalizeUrl } from './discover.js';
 import { ICON_NAMES } from '../../catalog/icons.generated.js';
 
 /**
+ * What the SOURCE painted, as computed values — raw observations, not decisions.
+ *
+ * Read so the extractor in `sourcetokens.ts` can recover the page's design
+ * system. `toSpecs` deliberately ignores every one of these: a colour stamped
+ * onto a node OUTRANKS the theme preset beneath it permanently, which is the
+ * detachment `THEME_VERSION` 6 was bumped to fix. What the source painted
+ * becomes theme TOKENS, and the nodes follow the theme.
+ */
+export interface StyleSample {
+  color?: string;
+  backgroundColor?: string;
+  fontFamily?: string;
+  fontSize?: string;
+  fontWeight?: string;
+  lineHeight?: string;
+  borderRadius?: string;
+  padding?: string;
+  gap?: string;
+}
+
+/**
  * A page read off SOMEBODY ELSE'S SITE, reduced to the six things this platform
  * can actually render.
  *
@@ -79,6 +100,8 @@ export interface Captured {
    * that left-aligns it is not the same band.
    */
   textAlign?: 'left' | 'center' | 'right';
+  /** Computed values read off the source node — see `StyleSample`. */
+  sample?: StyleSample;
   /**
    * For an image: the frame it should fill, as a CSS `aspect-ratio`.
    *

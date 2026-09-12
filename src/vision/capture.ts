@@ -69,6 +69,14 @@ declare function getComputedStyle(el: El): {
   flexDirection: string;
   flexWrap: string;
   position: string;
+  color: string;
+  fontFamily: string;
+  fontSize: string;
+  fontWeight: string;
+  lineHeight: string;
+  borderRadius: string;
+  padding: string;
+  gap: string;
 };
 declare const location: { href: string };
 
@@ -407,6 +415,34 @@ function capturePage(limits: { maxSections: number; maxImages: number; maxTextCh
     if (a === 'center') return { textAlign: 'center' };
     if (a === 'right' || a === 'end') return { textAlign: 'right' };
     return {};
+  };
+
+  // WHAT THE SOURCE ACTUALLY PAINTED, as raw computed values — an observation
+  // for Task 2's clustering, never a decision this file makes itself. EVERY
+  // value here is computed in-page. This function is serialized; a
+  // module-scope constant it closed over would not exist on the other side.
+  const sampleOf = (el: El): Record<string, string> => {
+    const cs = getComputedStyle(el);
+    const out: Record<string, string> = {};
+    const put = (k: string, v: string): void => {
+      // `transparent` and the UA's own zero values say nothing about the
+      // design, and carrying them would put a fake sample into the clustering.
+      if (v && v !== 'none' && v !== 'normal' && v !== 'rgba(0, 0, 0, 0)' && v !== '0px') out[k] = v;
+    };
+    put('color', cs.color);
+    put('backgroundColor', cs.backgroundColor);
+    put('fontFamily', cs.fontFamily);
+    put('fontSize', cs.fontSize);
+    put('fontWeight', cs.fontWeight);
+    put('lineHeight', cs.lineHeight);
+    put('borderRadius', cs.borderRadius);
+    put('padding', cs.padding);
+    put('gap', cs.gap);
+    return out;
+  };
+  const sampleFor = (el: El): { sample?: Record<string, string> } => {
+    const s = sampleOf(el);
+    return Object.keys(s).length > 0 ? { sample: s } : {};
   };
 
   const LAZY_SRC = ['data-src', 'data-original', 'data-lazy-src', 'data-lazy', 'data-echo', 'data-url'];
@@ -764,7 +800,7 @@ function capturePage(limits: { maxSections: number; maxImages: number; maxTextCh
         const text = clean(el.textContent);
         if (!text) return [];
         taken.nodes++;
-        return [{ kind: 'heading', level: Number(tag.slice(1)), text, ...alignOf(el) }];
+        return [{ kind: 'heading', level: Number(tag.slice(1)), text, ...alignOf(el), ...sampleFor(el) }];
       }
       if (tag === 'IMG') {
         const src = realSrc(el);
@@ -802,7 +838,7 @@ function capturePage(limits: { maxSections: number; maxImages: number; maxTextCh
           return [];
         }
         taken.nodes++;
-        return [{ kind: 'button', variant: looksLikeButton(el) ? 'cta' : 'link', text }];
+        return [{ kind: 'button', variant: looksLikeButton(el) ? 'cta' : 'link', text, ...sampleFor(el) }];
       }
       if (tag === 'A') {
         const text = clean(el.textContent);
@@ -821,12 +857,19 @@ function capturePage(limits: { maxSections: number; maxImages: number; maxTextCh
             variant: looksLikeButton(el) ? 'cta' : 'link',
             text,
             ...(href ? { href: abs(href) } : {}),
+            ...sampleFor(el),
           }];
         }
         if (looksLikeButton(el) && text) {
           const href = el.getAttribute('href');
           taken.nodes++;
-          return [{ kind: 'button', variant: 'cta', text, ...(href ? { href: abs(href) } : {}) }];
+          return [{
+            kind: 'button',
+            variant: 'cta',
+            text,
+            ...(href ? { href: abs(href) } : {}),
+            ...sampleFor(el),
+          }];
         }
         // A LINK WITH MARKUP INSIDE IT IS STILL A LINK. `<a><span>Docs</span></a>`
         // has children, so it fell through to the child walk — and when those
@@ -839,7 +882,13 @@ function capturePage(limits: { maxSections: number; maxImages: number; maxTextCh
         if (text) {
           const href = el.getAttribute('href');
           taken.nodes++;
-          return [{ kind: 'button', variant: 'link', text, ...(href ? { href: abs(href) } : {}) }];
+          return [{
+            kind: 'button',
+            variant: 'link',
+            text,
+            ...(href ? { href: abs(href) } : {}),
+            ...sampleFor(el),
+          }];
         }
         return [];
       }
@@ -896,13 +945,13 @@ function capturePage(limits: { maxSections: number; maxImages: number; maxTextCh
         const text = clean(el.textContent);
         if (!text) return [];
         taken.nodes++;
-        return [{ kind: 'text', text }];
+        return [{ kind: 'text', text, ...sampleFor(el) }];
       }
       if (tag === 'P' || tag === 'BLOCKQUOTE') {
         const text = clean(el.textContent);
         if (!text) return [];
         taken.nodes++;
-        return [{ kind: 'text', text, ...alignOf(el) }];
+        return [{ kind: 'text', text, ...alignOf(el), ...sampleFor(el) }];
       }
 
       const kids = walkChildren(el);
@@ -964,6 +1013,7 @@ function capturePage(limits: { maxSections: number; maxImages: number; maxTextCh
             // literally gave the columns nowhere to go at any width.
             wrap: wraps,
             ...(align ? { align } : {}),
+            ...sampleFor(el),
             children: kids,
           }];
         }
@@ -982,7 +1032,7 @@ function capturePage(limits: { maxSections: number; maxImages: number; maxTextCh
       const own = clean(el.textContent);
       if (own && own.length <= limits.maxTextChars) {
         taken.nodes++;
-        return [{ kind: 'text', text: own }];
+        return [{ kind: 'text', text: own, ...sampleFor(el) }];
       }
       if (own) skip('text-too-long');
       return [];
@@ -1048,7 +1098,7 @@ function capturePage(limits: { maxSections: number; maxImages: number; maxTextCh
       // would place a section against coordinates that no longer exist.
       const pos = getComputedStyle(el).position;
       const pinned = pos === 'sticky' || pos === 'fixed' ? pos : undefined;
-      acc.push({ kind: 'section', children, ...(pinned ? { pinned } : {}) });
+      acc.push({ kind: 'section', children, ...(pinned ? { pinned } : {}), ...sampleFor(el) });
     }
     return acc;
   };
