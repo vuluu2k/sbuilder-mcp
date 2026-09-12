@@ -51,6 +51,16 @@ async function main(): Promise<void> {
     console.error('refusing to run: SB_SITE names no site.');
     process.exit(2);
   }
+  // BEFORE THE FIRST CREATE, not near cleanup — the point is nothing exists to
+  // leak. Create is siteScoped (session or key); the only page delete this
+  // platform has is on /api/v1, gated on an API key alone (credentialFor in
+  // src/transport/credential.ts). A session-only install would create every
+  // scratch page fine and then fail every delete — logged by the `.catch`
+  // below, not thrown — leaving them on the live storefront.
+  if (!ctx.apiKey) {
+    console.error('refusing to run: cleanup deletes through /api/v1, which needs SB_TOKEN set to an API key.');
+    process.exit(2);
+  }
 
   const scores: PageScore[] = [];
   // EVERY id this run created, so cleanup deletes what it made and nothing
@@ -114,11 +124,10 @@ async function main(): Promise<void> {
     //
     // The site-scoped surface has NO page delete at all — the catalog's only
     // one is `delete:/api/v1/pages/{id}`, the PARTNER surface, gated on
-    // `apiKey` alone (credentialFor in src/transport/credential.ts). So SB_TOKEN
-    // must be set to an API key for cleanup to actually reach the platform; a
-    // session-only install (SB_EMAIL/SB_PASSWORD, no SB_TOKEN) creates pages
-    // fine and then fails every delete here, logged below rather than thrown,
-    // leaving scratch pages on the live site.
+    // `apiKey` alone (credentialFor in src/transport/credential.ts). The guard
+    // above already refused to run without SB_TOKEN, so this loop is not the
+    // caller's only defence — but the `.catch` stays: one failed delete must
+    // never stop the rest.
     for (const id of created) {
       await callOperation(ctx, {
         id: 'delete:/api/v1/pages/{id}',
