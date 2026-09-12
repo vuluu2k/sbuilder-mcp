@@ -1034,10 +1034,18 @@ CHIỀU CAO trang gốc. Một băng khuyến mãi cao hơn, một carousel dừ
 load xong muộn hơn lần trước — bất cứ thay đổi nào trong số đó cũng đổi mẫu số và làm `visual`
 di chuyển mà trình import chẳng có gì thay đổi cả.
 
-Hãy chạy baseline đầu tiên HAI LẦN trên một cây không đổi trước khi tin một lần chạy duy nhất
-là hồi quy, để biết `visual` và `structure` tự dao động bao nhiêu. Chưa ai làm việc này —
-ngưỡng dung sai 1.5 điểm trong `scoreboard.ts` hiện là thứ duy nhất đang hấp thụ nhiễu đó, và
-liệu đó có phải bậc độ lớn đúng hay không thì vẫn chưa được đo.
+Độ nhiễu riêng của `visual` vẫn chưa đo được — nó cần quyền ghi vào site mà môi trường này từ
+chối — nhưng nửa offline (`content` và `structure`) đã được chạy 13 lần trên một cây không đổi,
+cách nhau vài phút. Bốn trong năm fixture ra kết quả GIỐNG TUYỆT ĐỐI mỗi lần. Fixture thứ năm,
+`modelcontextprotocol.io/` (trang này tự dựng bằng script), KHÔNG phải một lần lệch giữa nhiều
+lần chạy ổn định — nó dao động giữa đúng hai trạng thái: `content 71 / structure 9.6` bảy lần,
+`content 73 / structure 11.9` sáu lần, vì cửa sổ lắng của `capture` bắt trang ở một điểm khác
+nhau trong một phần số lần chạy. Khoảng cách giữa hai trạng thái đó (2.0 điểm ở `content`, 2.3
+ở `structure`) LỚN HƠN ngưỡng dung sai 1.5 điểm của `scoreboard.ts`, nên hai lần chạy bình
+thường so với nhau đôi khi sẽ báo một sự di chuyển ảo trên đúng fixture này mà trình import
+chẳng có gì thay đổi. Đừng nâng ngưỡng dung sai để che nó đi — nhiễu hai trạng thái của một
+trang không phải là mẫu để đặt một ngưỡng chung, và cách sửa khả dĩ hơn là làm cho việc lắng của
+`capture` ổn định hơn với một trang còn đang tự dựng, không phải nới rộng scoreboard.
 
 **`SB_FIDELITY_OFFLINE=1 npm run fidelity` chấm `content` và `structure` mà không cần site
 nào cả.** Cả hai đều lấy ra chỉ từ `capture()` — `content` chính là `coverage`, `structure` là

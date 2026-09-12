@@ -1069,10 +1069,19 @@ SOURCE page's own total height. A taller promo band, a carousel on a different s
 image that resolved a moment later than last time — any of those changes the denominator and
 moves `visual` with nothing in the importer having changed.
 
-Run the first baseline TWICE against an unchanged tree before trusting a single-run
-difference as a regression, to see how much `visual` and `structure` move on their own.
-Nobody has done this yet — `scoreboard.ts`'s 1.5-point tolerance is the only thing currently
-absorbing that noise, and whether that is the right order of magnitude is unmeasured.
+`visual`'s own noise floor is still unmeasured — it needs the site-write permission this
+environment refuses — but the offline half (`content` and `structure`) has been run 13 times
+on an unchanged tree, minutes apart. Four of five fixtures came back byte-identical every
+time. The fifth, `modelcontextprotocol.io/` (it builds itself with scripts), is NOT one
+outlier among stable runs: it alternates between exactly two states — `content 71 / structure
+9.6` seven times, `content 73 / structure 11.9` six times — because `capture`'s settle window
+catches it at a different point some fraction of the time. The gap between those two states
+(2.0 on `content`, 2.3 on `structure`) is BIGGER than `scoreboard.ts`'s 1.5-point tolerance, so
+two ordinary runs compared against each other will sometimes report a phantom move on this one
+fixture with nothing in the importer having changed. Do not raise the tolerance to cover it —
+one page's bimodal noise is not a sample to set a global threshold from, and the likelier fix
+is a more deterministic settle for a page that is still building itself, not a wider
+scoreboard.
 
 **`SB_FIDELITY_OFFLINE=1 npm run fidelity` scores `content` and `structure` with no site at
 all.** Both come off `capture()` alone — `content` is `coverage` directly, `structure` is

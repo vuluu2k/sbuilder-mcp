@@ -2285,10 +2285,35 @@ screenshot keeps its own chrome, which `capture` skips on purpose — no importe
 ever close that gap. `visual` moves for a SECOND reason that is not even stable: `diffImages`
 divides by `width × max(sourceHeight, builtHeight)`, so a source page that got taller between
 runs — a carousel on a different slide, a lazy image that resolved — re-scales the denominator
-and reports a different number with nothing in the importer having changed. Run the first
-baseline TWICE against an unchanged tree before trusting a single-run difference as a
-regression; nobody has, and `scoreboard.ts`'s 1.5-point tolerance is the only thing currently
-absorbing that noise, its correctness unmeasured.
+and reports a different number with nothing in the importer having changed. `visual`'s own
+noise floor is still unmeasured — it needs the site-write permission this environment refuses
+— but the OFFLINE half (`content` and `structure`) has now been run enough times on an
+unchanged tree to answer the question for itself, and the answer is not what a first look
+suggested.
+
+**MEASURED: 13 offline runs on an unchanged tree, minutes apart. Four of five fixtures were
+BYTE-IDENTICAL every single time** — `ttgshop.vn/quy-dinh-bao-hanh` (100/21.7),
+`ttgshop.vn/` (18/0), `rust-lang.org/` (90/0), `example.com/` (97/0). The fifth,
+`modelcontextprotocol.io/`, is NOT one outlier among many stable runs — it alternates between
+exactly two states, both of which recur: `content 71 / structure 9.6` seven times, `content 73
+/ structure 11.9` six times, no third value seen. The page builds itself with scripts, and
+`capture`'s settle window (`settleDom`) catches it at a different point some fraction of the
+runs — plausibly one slow-loading section that either finishes inside the window or does not,
+rather than continuous jitter, which is why the split is two sharp values rather than a spread.
+
+The excursion between the two states — 2.0 points on `content`, 2.3 on `structure` — is BIGGER
+than `scoreboard.ts`'s `DEFAULT_TOLERANCE` of 1.5. So comparing two ordinary runs against each
+other on this one fixture will sometimes report a phantom move that is pure measurement noise,
+roughly as often as not, with nothing in the importer having changed either time.
+
+**DO NOT RAISE THE TOLERANCE TO COVER THIS.** One page's bimodal noise is not a sample to set
+a global threshold from, and this repo's own rule about raising a ceiling — leave headroom,
+write the reason down, and a ceiling set just above today's measurement gets raised again
+without anybody looking — cuts against picking 2.3 (or anything just above it) because it
+happens to clear this one number today. The more likely right answer is to make `capture`'s
+settle more deterministic for a page that is still building itself, not to widen what the
+scoreboard accepts as unchanged; that decision needs more data than one fixture's two states
+and is left to whoever gathers it.
 
 `structure` USED TO carry the same kind of floor, and it was fixed rather than merely noted.
 `toSpecs` always inserts exactly one `flex-block` between a section and its children — a
