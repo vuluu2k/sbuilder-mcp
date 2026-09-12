@@ -1079,10 +1079,29 @@ function capturePage(limits: { maxSections: number; maxImages: number; maxTextCh
   // was simply the wrong reading of the page, and the body walk is tried and
   // kept only if it does better — so a page where the sections really are the
   // content pays one comparison and keeps its own answer.
+  // A LIST'S WORDS ARE WORDS, and counting only `text` said they were not.
+  //
+  // A list Captured carries `items: string[]` and NEVER a `text`, so every list
+  // scored zero — and this measure does three jobs, so the zero did three kinds
+  // of damage. MEASURED on ttgshop.vn/quy-dinh-bao-hanh: 800 characters counted
+  // against 4,012 characters of list, on a capture that had taken the page
+  // nearly whole.
+  //
+  //   - it REPORTS coverage, which read 28% for that page;
+  //   - it decides whether the wider-root fallback runs at all, so a
+  //     list-heavy page always tripped the 50% trigger and paid for a walk it
+  //     did not need;
+  //   - it picks WHICH OF THE TWO TREES WINS, and that is the half that loses
+  //     content rather than merely miscounting it. Measured on a heading over a
+  //     four-item list: the correct capture scored 0, the wider root scored the
+  //     four items as four loose paragraphs and won, and the page came back with
+  //     its heading GONE and each item its own section.
   const textOf = (nodes: Captured[]): number => {
     let n = 0;
     const walk = (c: Captured): void => {
       if (typeof (c as { text?: string }).text === 'string') n += (c as { text: string }).text.length;
+      const items = (c as { items?: string[] }).items;
+      if (Array.isArray(items)) for (const it of items) n += it.length;
       for (const k of (c as { children?: Captured[] }).children ?? []) walk(k);
     };
     for (const c of nodes) walk(c);
@@ -1173,7 +1192,13 @@ function capturePage(limits: { maxSections: number; maxImages: number; maxTextCh
   // skipped ON PURPOSE, so counting it would make every correct import of a
   // nav-heavy site look broken.
   const kept = textOf(sections);
-  const coverage = contentChars > 0 ? Math.round((kept / contentChars) * 100) : 100;
+  // CLAMPED, because a caller reads this as a percentage and acts on it. The
+  // numerator is the walk's own text and the denominator is `innerText`, and the
+  // two do not agree byte for byte — a list's items are joined by the walk while
+  // innerText separates them, so a page that is almost all list can land just
+  // over. A number above 100 reads as a broken measure and makes the honest ones
+  // untrustworthy too.
+  const coverage = contentChars > 0 ? Math.min(100, Math.round((kept / contentChars) * 100)) : 100;
 
   const link = Array.from(document.querySelectorAll('link[rel="canonical"]'))[0];
   const canonical = link ? (link.getAttribute('href') ?? '') : '';

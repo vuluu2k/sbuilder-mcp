@@ -996,6 +996,15 @@ cả lần lưu, còn người gọi thì bị báo về một luật dải mà 
 Trang tự dựng bằng script sau khi load, hoặc trang sau đăng nhập, sẽ đọc ra mỏng hoặc rỗng —
 kết quả nói rõ đã bỏ qua những gì và vì sao.
 
+**`coverage` là nửa mà `skipped` không nói được.** LẮNG XUỐNG KHÔNG PHẢI LÀ HỎNG: một trang
+đọc lúc nó còn đang tự dựng sẽ trả về nhỏ gọn, trông rất đúng, `skipped` RỖNG và không lỗi ở
+đâu cả. Nên mọi kết quả — dry run, lần chạy thật, và từng trang của `sb_import_site` — đều
+mang theo phần trăm chữ của chính trang đó còn sống sót. Mẫu số đã trừ phần khung trang, thứ
+bị bỏ qua có chủ đích, để một bản import đúng của site nhiều menu không bị đọc thành thất bại.
+Số thấp đáng để chạy lại trước khi đáng để đi điều tra; đôi khi nó cũng là câu trả lời thật
+thà và khi đó nó minh oan cho trình import — một trang danh mục chỉ có breadcrumb thì đúng là
+rỗng thế. Trang không có chữ nào để đo thì trả 100, vì trang rỗng không phải là import hỏng.
+
 ## `sb_import_site`
 
 Đọc **cả một website** từ một URL và tạo cho mỗi trang tìm được một **trang nháp** riêng ở

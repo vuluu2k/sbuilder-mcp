@@ -1031,6 +1031,16 @@ they did not knowingly break.
 A page that builds itself with scripts after load, or one behind a login, reads as thin or
 empty — the result says what was skipped and why.
 
+**`coverage` is the half `skipped` cannot tell you.** SETTLING IS NOT FAILING: a page read
+while it is still building comes back small, correct-looking and with an EMPTY `skipped`, no
+error anywhere. So every result — the dry run, the real run, and each page of
+`sb_import_site` — carries the per cent of the page's own text that survived. The denominator
+leaves out page chrome, which is skipped on purpose, so a correct import of a nav-heavy site
+does not read as a failure. A low number is worth a retry before it is worth an
+investigation; it is also sometimes the honest answer, and then it exonerates the importer —
+a category page holding nothing but breadcrumbs really is that empty. 100 for a page with no
+text to measure against, because an empty page is not a failed import.
+
 ## `sb_import_site`
 
 Read a **whole site** from one URL and give each page it finds its own **draft page** here.

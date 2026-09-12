@@ -1314,6 +1314,43 @@ describe.runIf(process.env.SB_BROWSER_TEST === '1')('capture() reporting how muc
     expect(got.coverage).toBeGreaterThan(70);
   }, BROWSER_TIMEOUT);
 
+  /**
+   * A LIST'S WORDS ARE WORDS. `textOf` counted `c.text` alone and a list
+   * Captured carries `items: string[]` and never a `text`, so every list scored
+   * ZERO. MEASURED on ttgshop.vn/quy-dinh-bao-hanh: 800 characters counted
+   * against 4,012 characters of list, reported 28% for a capture that had taken
+   * the page nearly whole.
+   *
+   * It is not only the report. The same measure decides whether the wider-root
+   * fallback runs at all, and then which of the two trees WINS — so a correct
+   * capture full of lists loses to a worse one made of paragraphs.
+   */
+  it('counts the words inside a list', async () => {
+    const got = await capture(
+      page(
+        '<body><main><section><h2>Điều kiện bảo hành</h2><ul>' +
+          '<li>Sản phẩm còn trong thời hạn bảo hành của nhà sản xuất.</li>' +
+          '<li>Tem bảo hành còn nguyên vẹn, không rách, không tẩy xóa.</li>' +
+          '<li>Ngoại hình không bị va đập, không có dấu hiệu vào nước.</li>' +
+          '<li>Có đầy đủ hộp và phụ kiện đi kèm theo sản phẩm.</li>' +
+          '</ul></section></main></body>',
+      ),
+      { maxImages: 5, maxNodes: 200 },
+    );
+    expect(got.sections.flatMap((s) => s.children ?? []).some((c) => c.kind === 'list')).toBe(true);
+    expect(got.coverage).toBeGreaterThan(80);
+  }, BROWSER_TIMEOUT);
+
+  it('never answers more than 100', async () => {
+    // A caller reads this as a percentage and acts on it; a number above 100
+    // reads as a broken measure and makes the honest ones untrustworthy too.
+    const got = await capture(
+      page('<body><main><section><ul><li>Một</li><li>Hai</li><li>Ba</li></ul></section></main></body>'),
+      { maxImages: 5, maxNodes: 200 },
+    );
+    expect(got.coverage).toBeLessThanOrEqual(100);
+  }, BROWSER_TIMEOUT);
+
   it('answers 100 for a page with no text to measure against', async () => {
     // Not 0: an empty page is not a failed import, and a zero here would send a
     // caller to fix something that is already right.

@@ -284,6 +284,12 @@ export function registerImportTools(
           title: shot.title,
           sections: specs.length,
           images: images.length,
+          // HOW MUCH OF THE PAGE SURVIVED, because settling is not failing. A
+          // page read while it is still building comes back small, correct
+          // looking and with an EMPTY `skipped` — the one thin import that
+          // explains itself nowhere else. Measured rather than assumed since
+          // the capture learned to count it, and reported nowhere until now.
+          coverage: shot.coverage,
           ...(shot.forms?.length ? { forms_found: shot.forms } : {}),
           tokens,
           skipped: shot.skipped,
@@ -366,6 +372,10 @@ export function registerImportTools(
       return text({
         read: shot.url,
         added_sections: added,
+        // On the real run too, and for the same reason `skipped` is: the caller
+        // who skipped the preview is exactly the caller who needs to be told
+        // the page came back thin.
+        coverage: shot.coverage,
         ...(shot.forms?.length ? { forms_found: shot.forms } : {}),
         // WHAT WAS LEFT BEHIND, on the real run too. The dry run said it and the
         // real one did not, which is the wrong way round: a caller who skipped
@@ -737,6 +747,10 @@ export function registerImportTools(
             slug: p.slug,
             page_id: pageId,
             sections: added.length,
+            // PER PAGE, not for the run: a crawl reads a dozen origins' worth of
+            // rendering luck, and one page that came back thin is invisible in
+            // any average of twelve.
+            coverage: shot.result.coverage,
             ...(into ? { into } : {}),
             ...(Object.keys(shot.result.skipped).length ? { skipped: shot.result.skipped } : {}),
           });

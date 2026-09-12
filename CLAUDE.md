@@ -2019,6 +2019,34 @@ that accounts for them.
   that the page "did not answer within 30s", which is a confidently wrong number that sends them
   to change the setting they just changed.
 
+- **AND THAT NUMBER THEN REACHED NOBODY FOR AS LONG AS IT EXISTED, while the measure behind it
+  scored every list at ZERO.** `coverage` was computed, typed on `CaptureResult` and asserted by
+  three tests — and not ONE of the three places that answer a caller carried it: the dry run, the
+  real single-page run, and each page of `sb_import_site`. The same shape this file already
+  records for the compose `warnings` ("typed on the response and read by nothing for three
+  phases"), on the one field whose whole purpose is to say the import was thin. Found by crawling
+  ttgshop.vn and having to read it out of `dist/` with a script to see it at all.
+
+  The measure was also wrong wherever a list appeared. `textOf` summed `c.text` alone, and a list
+  `Captured` carries `items: string[]` and NEVER a `text` — so a page's lists counted for nothing.
+  Measured on `ttgshop.vn/quy-dinh-bao-hanh`: 800 characters counted against 4,012 characters of
+  list, reported **28%** for a capture that had taken the page nearly whole.
+
+  **And the report was the least of it, because that function does three jobs.** It decides
+  whether the wider-root fallback runs (`< contentChars * 0.5`, which a list-heavy page could not
+  help tripping), and then WHICH OF THE TWO TREES WINS — where a zero does not miscount, it
+  LOSES CONTENT. Measured on a heading over a four-item list: the correct capture scored 0, the
+  wider root scored the four items as four loose paragraphs and won, and the page came back with
+  its heading GONE and each item its own section. A structural loss, caused by a reporting bug,
+  on a page whose `skipped` said nothing.
+
+  The order matters and is worth keeping: printing `coverage` FIRST would have been worse than
+  silence, telling callers to retry the imports that were already right. Fixed the measure, then
+  the report — 28% → 100% on that page, 18% unchanged on the shop's home, which is the node
+  ceiling doing its job on a 2,400-product catalogue. Clamped at 100, because the numerator is
+  the walk's own text and the denominator is `innerText`, and a number above 100 makes the
+  honest ones untrustworthy too.
+
 ## The five traps
 
 Each fails SILENTLY. Each is encoded in `src/domains/site/traps.ts` (trap 5 in
