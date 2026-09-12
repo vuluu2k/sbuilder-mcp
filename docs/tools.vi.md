@@ -1005,6 +1005,21 @@ Số thấp đáng để chạy lại trước khi đáng để đi điều tra;
 thà và khi đó nó minh oan cho trình import — một trang danh mục chỉ có breadcrumb thì đúng là
 rỗng thế. Trang không có chữ nào để đo thì trả 100, vì trang rỗng không phải là import hỏng.
 
+### Đo một lần import
+
+`SB_FIDELITY=1 npm run fidelity` đọc các fixture trong `test/fidelity/fixtures.json`, dựng mỗi
+trang thành một trang TẠM trên site mà `SB_SITE` chỉ định, chụp cả trang gốc và trang dựng ở
+từng bề rộng, rồi ghi ra `test/fidelity/baseline.json`.
+
+Ba chỉ số, vì chúng hỏng độc lập với nhau: `visual` là phần trăm pixel khác nhau (thấp hơn thì
+tốt hơn), `content` là `coverage` (cao hơn thì tốt hơn), `structure` là khoảng cách giữa cây
+của trang gốc và cây của trang dựng (thấp hơn thì tốt hơn). Một trang trắng đạt điểm hoàn hảo
+ở hai trong ba chỉ số, và đó là lý do phải có cả ba.
+
+Nó viết vào một site ĐANG SỐNG và từ chối chạy nếu thiếu cờ. Các trang tạm này — không phải
+bản nháp để giữ lại, mà là dùng xong thì xoá — mang tên `zz-fidelity-*` và bị xoá theo id mà
+lệnh tạo trả về, trong một `finally`.
+
 ## `sb_import_site`
 
 Đọc **cả một website** từ một URL và tạo cho mỗi trang tìm được một **trang nháp** riêng ở

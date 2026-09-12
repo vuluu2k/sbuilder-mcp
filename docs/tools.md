@@ -1041,6 +1041,20 @@ investigation; it is also sometimes the honest answer, and then it exonerates th
 a category page holding nothing but breadcrumbs really is that empty. 100 for a page with no
 text to measure against, because an empty page is not a failed import.
 
+### Measuring an import
+
+`SB_FIDELITY=1 npm run fidelity` reads the fixtures in `test/fidelity/fixtures.json`, builds
+each page into a scratch page on the site `SB_SITE` names, photographs the source and the
+build at each width, and writes `test/fidelity/baseline.json`.
+
+Three numbers, because they fail independently: `visual` is the per cent of pixels that
+differ (lower is better), `content` is `coverage` (higher is better), `structure` is the
+distance between the source's tree and the built one (lower is better). A blank page scores
+perfectly on two of the three, which is why there are three.
+
+It writes to a LIVE site and refuses to run without the flag. Scratch pages are named
+`zz-fidelity-*` and deleted by the id the create returned, in a `finally`.
+
 ## `sb_import_site`
 
 Read a **whole site** from one URL and give each page it finds its own **draft page** here.

@@ -2261,6 +2261,36 @@ Three ways this build read a correct page as broken, and each cost real time:
   empty on a correct page. Every animation is stopped before the shutter opens; a script of
   your own must do the same.
 
+### Measuring whether an import actually got closer
+
+Every defect on this list, including the four bullets above it, was found by a PERSON looking
+at ONE screenshot. That is also the method's ceiling: "A PAGE BUILT ENTIRELY BY THESE TOOLS
+WAS MEASURABLY WRONG, AND `sb_review` CALLED IT CLEAN" (above, under "The platform facts that
+shaped this code") reviewed clean and carried four defects anyway — no measure, unequal grid
+cells, one type size instead of four, one cross-axis answer for two different shapes — every
+one invisible to a check that reads the tree, all four visible only in the render. Until
+something scored the RENDER rather than the document, no change to `capture` or `toSpecs`
+could be shown to have helped rather than merely felt like it should.
+
+`SB_FIDELITY=1 npm run fidelity` (`test/fidelity/run.ts`) is that score. Three numbers per
+page per width, because they fail independently: `visual` (per cent of pixels differing from
+the source, lower is better), `content` (`coverage`, higher is better) and `structure`
+(tree-shape distance from the source, lower is better). A blank page scores perfectly on two
+of the three, which is why one number would lie.
+
+**THE BASELINE IS NOT RECORDED YET.** The first run has to write real scratch pages to a real
+storefront (`SB_SITE`) before there is anything to score, and that write is refused at the
+PERMISSION LAYER before it reaches the network — checked from two separate sessions, denied
+both times, so it is not one session's quirk. The ruler exists and is not yet calibrated.
+Whoever can grant that permission (or run it outside this harness) should run
+`SB_FIDELITY=1 npm run fidelity`, read the two checks Task 5 of
+`docs/superpowers/plans/2026-09-12-crawl-fidelity-harness.md` names before trusting the
+numbers (`content` for `https://example.com/` should be high; `visual` must not be identical
+across every page — either failing means the harness is wrong, not the importer), and commit
+the `test/fidelity/baseline.json` it writes. Finding this section with no baseline committed
+and no explanation is not a sign the harness was abandoned — it is a sign nobody with that
+permission has run it yet.
+
 ## The yield rule
 
 The live-edit client is NEVER the authority on a document. It does not answer `snapreq` for
