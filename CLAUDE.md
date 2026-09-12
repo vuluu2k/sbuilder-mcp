@@ -2327,24 +2327,33 @@ fidelity` to add `visual`, reading the two checks Task 5 of
 numbers (`content` for `https://example.com/` should be high; `visual` must not be identical
 across every page — either failing means the harness is wrong, not the importer).
 
-**AND `npm run fidelity` ITSELF DOES NOT RUN UNDER `tsx` IN EVERY ENVIRONMENT, independent of
-any of the above.** `tsx` (v4.23.12, this repo's devDependency) hardcodes `keepNames: true` in
-its esbuild transform for every file it loads, unconditionally — not a tsconfig setting, not
-an env var, baked into `tsx`'s own bundle. `keepNames` wraps every named function and class
-declaration, INCLUDING NESTED ones, in a call to an injected `__name` helper that lives in the
-transformed module's scope. `capturePage` (`src/vision/capture.ts`) is exactly the shape that
-breaks: it is handed to `page.evaluate`, which serializes it via `.toString()` and re-evaluates
-that source in an isolated browser context that never had the enclosing module — so every
-`__name(...)` call left inside its nested helpers' source throws `ReferenceError: __name is
-not defined`, on EVERY fixture, in BOTH modes, before either ever reaches a site. Measured on
-Node v26.7.0 with the tsx/esbuild versions this repo currently pins. Running the identical,
-unmodified `test/fidelity/run.ts` compiled by plain `tsc` (which adds no such wrapper) and
-executed with plain `node` works — that is how the committed baseline above was produced — so
-this is a `tsx` invocation problem, not a defect in the harness or in `capture.ts`. Left
-unfixed here deliberately: repointing `package.json`'s `"fidelity"` script at compiled output
-touches shared build plumbing this note's author was not asked to change, and the workaround
-above is enough to keep producing real baselines until someone decides how the script itself
-should invoke it.
+**AND `npm run fidelity` USED TO NOT RUN AT ALL, in every environment, on every fixture, in
+both modes — the same trap the bullet above already names, reached this time from the
+TRANSPILER's side rather than the author's.** That bullet is about a function closing over a
+module-scope constant it does not carry with it once serialized. This is the second way to
+reach the identical failure without writing a closure at all: `tsx` (this repo's
+devDependency) hardcodes `keepNames: true` in its esbuild transform for every file it loads —
+not a tsconfig setting, not an env var, nothing a caller can turn off — and `keepNames` wraps
+every named function and class declaration, INCLUDING NESTED ones, in a call to an injected
+`__name` helper that lives in the TRANSFORMED MODULE's scope. `capturePage`
+(`src/vision/capture.ts`) is handed to `page.evaluate`, which takes its source via
+`.toString()` and re-evaluates that text inside Playwright's isolated browser context — a
+context that never had the module `__name` was injected into — so every `__name(...)` call
+left inside `capturePage`'s nested helpers threw `ReferenceError: __name is not defined`,
+before either mode ever reached a site. THE LESSON IS GENERAL, NOT ABOUT `tsx` SPECIFICALLY:
+any function handed to `page.evaluate` is unsafe under ANY transpiler that rewrites function
+bodies, whether the rewrite is something the author wrote (a closure over `HEADINGS`, above)
+or something the tool injected on its own (`__name`, here) — this repo has now paid for both
+shapes of the same mistake. If a THIRD one ever appears, look for exactly this pattern:
+something the evaluated function's own source text depends on that is not IN that text.
+
+Fixed rather than merely documented: `npm run fidelity` (`scripts/run-fidelity.mjs`) now
+compiles `test/fidelity/run.ts` and everything it reaches with plain `tsc` — which adds no
+`__name` wrapper — into a scratch directory (`.fidelity-run/`, gitignored, deleted before and
+after every run so nothing can measure against a stale compile), and runs the result with
+plain `node`. `tsx` never touches this path at all any more. `SB_FIDELITY_OFFLINE=1 npm run
+fidelity` now runs to completion from a clean checkout with no manual compile step, which is
+how the committed baseline above is kept current.
 
 ## The yield rule
 

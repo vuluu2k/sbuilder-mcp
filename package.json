@@ -37,7 +37,7 @@
     "release:major": "node scripts/release.mjs major",
     "release:dry": "node scripts/release.mjs --dry",
     "codegen:check": "tsx scripts/gen-catalog.ts --check",
-    "fidelity": "tsx test/fidelity/run.ts"
+    "fidelity": "node scripts/run-fidelity.mjs"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.30.0",

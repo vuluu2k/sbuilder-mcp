@@ -1,0 +1,10 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "outDir": ".fidelity-run",
+    "rootDir": ".",
+    "declaration": false,
+    "noEmit": false
+  },
+  "include": ["src/**/*.ts", "test/fidelity/run.ts"]
+}
