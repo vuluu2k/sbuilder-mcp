@@ -127,7 +127,13 @@ describe.runIf(process.env.SB_BROWSER_TEST === '1')('diffImages', () => {
   it('counts the area one image has and the other does not', async () => {
     // A page that stops half way is not "the same down to where it stops": the
     // missing half is the whole point of the measurement.
-    const got = await diffImages(solid('#ffffff', 200, 300), solid('#ffffff', 200, 900));
+    //
+    // THE FIXTURE MUST NOT BE WHITE. `paint()` fills the canvas white so an
+    // unpainted region reads as blank page — so a white fixture makes the
+    // missing region indistinguishable from the fill, both canvases come out
+    // byte-identical, and the test measures 0 by construction. Tidying this
+    // colour back to white does not fail the test, it empties it.
+    const got = await diffImages(solid('#ff0000', 200, 300), solid('#ff0000', 200, 900));
     expect(got.differing).toBeGreaterThan(60);
   }, BROWSER_TIMEOUT);
 });
