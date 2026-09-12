@@ -1,0 +1,75 @@
+{
+  "generated": "2026-09-12T03:48:34.674Z",
+  "scores": [
+    {
+      "url": "https://ttgshop.vn/quy-dinh-bao-hanh",
+      "width": 1440,
+      "content": 100,
+      "structure": 21.7,
+      "mode": "offline"
+    },
+    {
+      "url": "https://ttgshop.vn/quy-dinh-bao-hanh",
+      "width": 390,
+      "content": 100,
+      "structure": 21.7,
+      "mode": "offline"
+    },
+    {
+      "url": "https://ttgshop.vn/",
+      "width": 1440,
+      "content": 18,
+      "structure": 0,
+      "mode": "offline"
+    },
+    {
+      "url": "https://ttgshop.vn/",
+      "width": 390,
+      "content": 18,
+      "structure": 0,
+      "mode": "offline"
+    },
+    {
+      "url": "https://modelcontextprotocol.io/",
+      "width": 1440,
+      "content": 71,
+      "structure": 9.6,
+      "mode": "offline"
+    },
+    {
+      "url": "https://modelcontextprotocol.io/",
+      "width": 390,
+      "content": 71,
+      "structure": 9.6,
+      "mode": "offline"
+    },
+    {
+      "url": "https://www.rust-lang.org/",
+      "width": 1440,
+      "content": 90,
+      "structure": 0,
+      "mode": "offline"
+    },
+    {
+      "url": "https://www.rust-lang.org/",
+      "width": 390,
+      "content": 90,
+      "structure": 0,
+      "mode": "offline"
+    },
+    {
+      "url": "https://example.com/",
+      "width": 1440,
+      "content": 97,
+      "structure": 0,
+      "mode": "offline"
+    },
+    {
+      "url": "https://example.com/",
+      "width": 390,
+      "content": 97,
+      "structure": 0,
+      "mode": "offline"
+    }
+  ]
+}

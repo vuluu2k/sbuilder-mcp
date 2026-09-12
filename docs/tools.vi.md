@@ -1039,6 +1039,28 @@ là hồi quy, để biết `visual` và `structure` tự dao động bao nhiêu
 ngưỡng dung sai 1.5 điểm trong `scoreboard.ts` hiện là thứ duy nhất đang hấp thụ nhiễu đó, và
 liệu đó có phải bậc độ lớn đúng hay không thì vẫn chưa được đo.
 
+**`SB_FIDELITY_OFFLINE=1 npm run fidelity` chấm `content` và `structure` mà không cần site
+nào cả.** Cả hai đều lấy ra chỉ từ `capture()` — `content` chính là `coverage`, `structure` là
+`shapeDistance` giữa cây của trang gốc và đầu ra của `toSpecs` — nên không cần tạo trang, lưu,
+chụp ảnh hay xoá gì hết. `visual` cần một bản dựng đã render để so khớp, và việc dựng đó chính
+là cái ghi mà tầng phân quyền của repo này từ chối ở một số môi trường; chế độ offline là thứ
+vẫn trả lời được hai chỉ số còn lại ở đó. Mỗi dòng thiếu `visual` — KHÔNG PHẢI BẰNG KHÔNG — vì
+số không sẽ đọc thành một khớp pixel hoàn hảo mà chẳng có gì được đo cả — và mỗi dòng đều mang
+`mode: 'offline'` để một lần chạy `full` sau này không bao giờ bị đọc nhầm thành hồi quy trên
+một chỉ số mà lần chạy offline chưa từng chạm tới. Không cần `SB_SITE` hay `SB_TOKEN` ở chế độ
+này, vì không có gì trong đó chạm vào site cả. `test/fidelity/baseline.json` đã commit hiện chỉ
+là baseline offline, vì lần chạy đầy đủ cần tạo trang trên site — thứ bị tầng phân quyền từ
+chối ở môi trường đã tạo ra nó.
+
+Chính `structure` cũng đổi ở bên dưới: `shapeOf` (`src/domains/site/shape.ts`) giờ coi một nút
+có đúng một con là TRONG SUỐT — con của nó thế chỗ nó, không thêm độ sâu, không thêm mục fanout
+nào — vì `toSpecs` luôn chèn đúng một lớp bọc như vậy (`flex-block`) giữa một section và các
+con của nó, và hằng số này của riêng cách dựng của mapper từng lấn át điểm số của một trang nhỏ:
+`example.com` đo được khoảng cách `structure` là 40 so với chính bản dựng đúng của nó, chỉ vì
+một lớp bọc đó. Luật này cũng gộp cả một CHUỖI lớp bọc như vậy, và nó không che giấu một mất mát
+thật — một container thật sự biến mất (khác với một cái chỉ bọc một con duy nhất) vẫn có nhiều
+hơn một con của riêng nó và không bao giờ trong suốt.
+
 ## `sb_import_site`
 
 Đọc **cả một website** từ một URL và tạo cho mỗi trang tìm được một **trang nháp** riêng ở

@@ -2278,32 +2278,73 @@ the source, lower is better), `content` (`coverage`, higher is better) and `stru
 (tree-shape distance from the source, lower is better). A blank page scores perfectly on two
 of the three, which is why one number would lie.
 
-**AND THE ABSOLUTE NUMBER IS NOT THE THING TO READ — ONLY ITS MOVEMENT IS.** `visual` and
-`structure` both carry a permanent floor: the scratch page is created with a bare
-`{name, slug, type}` body, so it gets none of `sb_page_create`'s `siteChrome` global header or
-footer, while the source screenshot keeps its own chrome, which `capture` skips on purpose —
-no importer change can ever close that gap. `toSpecs` wraps every capture in a section, so the
-built tree is structurally deeper than the captured one by construction, a second floor of
-the same kind. `visual` moves for a THIRD reason that is not even stable: `diffImages` divides
-by `width × max(sourceHeight, builtHeight)`, so a source page that got taller between runs — a
-carousel on a different slide, a lazy image that resolved — re-scales the denominator and
-reports a different number with nothing in the importer having changed. Run the first
+**AND THE ABSOLUTE NUMBER IS NOT THE THING TO READ — ONLY ITS MOVEMENT IS.** `visual` carries
+a permanent floor: the scratch page is created with a bare `{name, slug, type}` body, so it
+gets none of `sb_page_create`'s `siteChrome` global header or footer, while the source
+screenshot keeps its own chrome, which `capture` skips on purpose — no importer change can
+ever close that gap. `visual` moves for a SECOND reason that is not even stable: `diffImages`
+divides by `width × max(sourceHeight, builtHeight)`, so a source page that got taller between
+runs — a carousel on a different slide, a lazy image that resolved — re-scales the denominator
+and reports a different number with nothing in the importer having changed. Run the first
 baseline TWICE against an unchanged tree before trusting a single-run difference as a
 regression; nobody has, and `scoreboard.ts`'s 1.5-point tolerance is the only thing currently
 absorbing that noise, its correctness unmeasured.
 
-**THE BASELINE IS NOT RECORDED YET.** The first run has to write real scratch pages to a real
-storefront (`SB_SITE`) before there is anything to score, and that write is refused at the
-PERMISSION LAYER before it reaches the network — checked from two separate sessions, denied
-both times, so it is not one session's quirk. The ruler exists and is not yet calibrated.
-Whoever can grant that permission (or run it outside this harness) should run
-`SB_FIDELITY=1 npm run fidelity`, read the two checks Task 5 of
+`structure` USED TO carry the same kind of floor, and it was fixed rather than merely noted.
+`toSpecs` always inserts exactly one `flex-block` between a section and its children — a
+constant of the MAPPER's construction, not a fact about the page — and `shapeOf` counted it as
+a real level, so the built tree was structurally deeper than the captured one BY CONSTRUCTION,
+on every page, regardless of how good the import was. Measured directly: `example.com` — one
+heading, two sentences — scored a `structure` distance of 40 against its own correctly-built
+copy, purely from that one wrapper; across five real fixtures the same artifact produced 40,
+42.2, 44.4, 48.1, 49.1, a nine-point spread driven by page size rather than fidelity. `shapeOf`
+(`src/domains/site/shape.ts`) now treats a single-child node as TRANSPARENT — the child takes
+its place, adding no depth and no fanout entry — collapsing a whole chain of such wrappers in
+both trees before the histograms are built, the same rule `src/vision/capture.ts` already
+applies on the way in for a `<div>` that merely wraps. Recomputed on the same five fixtures:
+40→0, 42.2→0, 44.4→9.6, 48.1→0, 49.1→21.7 — three of five now land on the wrapper floor exactly
+and the other two keep a real, non-artifact distance. The rule does not hide a genuine loss: a
+container that actually disappears is never a single-child wrapper of the thing that replaced
+it, so it keeps more than one child and is never transparent (`test/shape.test.ts` pins both
+the collapse and this guarantee).
+
+**A BASELINE IS NOW RECORDED, AND IT IS OFFLINE-ONLY.** Two of the three scores need no site at
+all: `content` comes straight off `capture()`, and `structure` needs `capture()` plus the pure
+`toSpecs()` — neither creates a page, saves, screenshots or deletes anything. Only `visual`
+needs a render to diff against, and building one needs the live-site write that the PERMISSION
+LAYER refuses in some environments — checked from two separate sessions before this one,
+denied both times, so it is not one session's quirk; this session did not attempt the full run
+again, on instruction. `SB_FIDELITY_OFFLINE=1 npm run fidelity` runs the first
+two and skips everything downstream of the create; `visual` is left ABSENT on those rows
+rather than reported as a fabricated zero, and every row carries `mode: 'offline'` so a later
+`SB_FIDELITY=1` (`full`) run's `visual` appearing is never misread as a regression against a
+metric the offline run never touched (`compareBaseline` in `scoreboard.ts` skips a metric
+either side is missing, rather than comparing a real number against an invented one). The
+committed `test/fidelity/baseline.json` was produced this way, and whoever can grant the
+site-write permission (or run it outside this harness) should run `SB_FIDELITY=1 npm run
+fidelity` to add `visual`, reading the two checks Task 5 of
 `docs/superpowers/plans/2026-09-12-crawl-fidelity-harness.md` names before trusting the
 numbers (`content` for `https://example.com/` should be high; `visual` must not be identical
-across every page — either failing means the harness is wrong, not the importer), and commit
-the `test/fidelity/baseline.json` it writes. Finding this section with no baseline committed
-and no explanation is not a sign the harness was abandoned — it is a sign nobody with that
-permission has run it yet.
+across every page — either failing means the harness is wrong, not the importer).
+
+**AND `npm run fidelity` ITSELF DOES NOT RUN UNDER `tsx` IN EVERY ENVIRONMENT, independent of
+any of the above.** `tsx` (v4.23.12, this repo's devDependency) hardcodes `keepNames: true` in
+its esbuild transform for every file it loads, unconditionally — not a tsconfig setting, not
+an env var, baked into `tsx`'s own bundle. `keepNames` wraps every named function and class
+declaration, INCLUDING NESTED ones, in a call to an injected `__name` helper that lives in the
+transformed module's scope. `capturePage` (`src/vision/capture.ts`) is exactly the shape that
+breaks: it is handed to `page.evaluate`, which serializes it via `.toString()` and re-evaluates
+that source in an isolated browser context that never had the enclosing module — so every
+`__name(...)` call left inside its nested helpers' source throws `ReferenceError: __name is
+not defined`, on EVERY fixture, in BOTH modes, before either ever reaches a site. Measured on
+Node v26.7.0 with the tsx/esbuild versions this repo currently pins. Running the identical,
+unmodified `test/fidelity/run.ts` compiled by plain `tsc` (which adds no such wrapper) and
+executed with plain `node` works — that is how the committed baseline above was produced — so
+this is a `tsx` invocation problem, not a defect in the harness or in `capture.ts`. Left
+unfixed here deliberately: repointing `package.json`'s `"fidelity"` script at compiled output
+touches shared build plumbing this note's author was not asked to change, and the workaround
+above is enough to keep producing real baselines until someone decides how the script itself
+should invoke it.
 
 ## The yield rule
 

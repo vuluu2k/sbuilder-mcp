@@ -9,12 +9,28 @@
 export interface PageScore {
   url: string;
   width: number;
-  /** Per cent of pixels that differ from the source. LOWER is better. */
-  visual: number;
+  /**
+   * Per cent of pixels that differ from the source. LOWER is better.
+   *
+   * ABSENT, not zero, on a row an offline run produced — a zero would read as
+   * a perfect pixel match, which is a lie: offline mode never rendered
+   * anything to diff. `compareBaseline` skips a metric that either side is
+   * missing rather than comparing a real number against an invented one.
+   */
+  visual?: number;
   /** `coverage` — per cent of the source's non-chrome text kept. HIGHER is better. */
   content: number;
   /** Tree-shape distance from the source's captured tree. LOWER is better. */
   structure: number;
+  /**
+   * Which run produced this row. `offline` scored `content` and `structure`
+   * only, from `capture()` alone — no site, no screenshot, no `visual`.
+   * `full` also built the page on a live site and diffed the render.
+   * Recorded per row so a baseline mixing both is never misread — an
+   * `offline` row's absent `visual` is the mode explaining itself, but a
+   * reader comparing two runs needs to know which kind either one was.
+   */
+  mode: 'offline' | 'full';
 }
 
 export interface Baseline {
@@ -71,10 +87,18 @@ export function compareBaseline(prev: Baseline, next: Baseline, tolerance = DEFA
     const was = before.get(k);
     if (!was) continue;
     for (const metric of ['visual', 'content', 'structure'] as Metric[]) {
-      const delta = now[metric] - was[metric];
+      const wasVal = was[metric];
+      const nowVal = now[metric];
+      // ABSENT ON EITHER SIDE IS NOT A MOVE. `visual` is missing on every
+      // offline row, and reading a missing value as 0 would report either a
+      // fabricated regression (a real `visual` compared against an invented
+      // perfect score) or a fabricated improvement (the reverse) — neither
+      // run measured anything to compare.
+      if (wasVal === undefined || nowVal === undefined) continue;
+      const delta = nowVal - wasVal;
       if (Math.abs(delta) < tolerance) continue;
       const worse = LOWER_IS_BETTER[metric] ? delta > 0 : delta < 0;
-      const move: Move = { url: now.url, width: now.width, metric, was: was[metric], now: now[metric], delta };
+      const move: Move = { url: now.url, width: now.width, metric, was: wasVal, now: nowVal, delta };
       (worse ? regressions : improvements).push(move);
     }
   }

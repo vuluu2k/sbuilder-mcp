@@ -1074,6 +1074,29 @@ difference as a regression, to see how much `visual` and `structure` move on the
 Nobody has done this yet — `scoreboard.ts`'s 1.5-point tolerance is the only thing currently
 absorbing that noise, and whether that is the right order of magnitude is unmeasured.
 
+**`SB_FIDELITY_OFFLINE=1 npm run fidelity` scores `content` and `structure` with no site at
+all.** Both come off `capture()` alone — `content` is `coverage` directly, `structure` is
+`shapeDistance` between the source's tree and `toSpecs`' own output — so neither needs a page
+created, saved, screenshotted or deleted. `visual` needs a rendered build to diff against, and
+building one is exactly the write this repo's own permission layer refuses in some
+environments; offline mode is what still answers the other two there. Each row's `visual` is
+**absent, not zero** — a zero would read as a perfect pixel match nothing measured — and every
+row carries `mode: 'offline'` so a later `full` run is never misread as a regression on a
+metric the offline run never touched. Neither `SB_SITE` nor `SB_TOKEN` is required in this
+mode, because nothing it does touches a site. The committed `test/fidelity/baseline.json` is
+currently offline-only, because the full run's site-writing create is refused at the
+permission layer in the environment that produced it.
+
+`structure` itself changed underneath this: `shapeOf` (`src/domains/site/shape.ts`) now
+treats a single-child node as transparent — the child takes its place, adding no depth and no
+fanout entry of its own — because `toSpecs` always inserts exactly one such wrapper
+(`flex-block`) between a section and its children, and that constant of the mapper's own
+construction used to dominate the score of a small page: `example.com` measured a `structure`
+distance of 40 against its own correctly-built copy, purely from that one wrapper. The same
+rule collapses a whole chain of such wrappers, and it does not hide a genuine loss — a
+container that actually disappears (rather than one that merely wrapped a single child) still
+has more than one child of its own and is never transparent.
+
 ## `sb_import_site`
 
 Read a **whole site** from one URL and give each page it finds its own **draft page** here.

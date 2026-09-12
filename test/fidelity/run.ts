@@ -1,13 +1,26 @@
 /**
  * THE RULER. Reads real pages, builds each one, photographs both, scores.
  *
- * Not part of the gate: it needs the network, a browser and a live site. Run it
- * on demand — `SB_FIDELITY=1 npx tsx test/fidelity/run.ts` — and commit the
- * baseline it writes.
+ * Not part of the gate: it needs the network, a browser and (in FULL mode) a
+ * live site. Run it on demand — `SB_FIDELITY=1 npx tsx test/fidelity/run.ts`,
+ * or `SB_FIDELITY_OFFLINE=1` for the mode below — and commit the baseline it
+ * writes.
  *
  * Every line of output is `console.error`. This file is not the MCP server, but
  * the rule is the repo's and a script that breaks it teaches the next reader
  * that the rule is soft.
+ *
+ * TWO OF THE THREE SCORES NEED NO SITE. `content` comes straight off
+ * `capture()`; `structure` needs `capture()` plus the pure mapper (`toSpecs`).
+ * Only `visual` needs a rendered page to diff against, and that render is what
+ * needs a live storefront to create a scratch page on. `SB_FIDELITY_OFFLINE=1`
+ * runs the first two and skips everything downstream of the create — no page,
+ * no save, no shoot, no diff, no cleanup — so a baseline can exist in an
+ * environment where writing to a live site is refused. `visual` is left
+ * ABSENT on those rows rather than reported as some placeholder number:
+ * `scoreboard.ts`'s `compareBaseline` already knows to skip a metric neither
+ * side has, and a 0 would read as a perfect pixel match that was never
+ * measured.
  */
 import { readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { resolve } from 'node:path';
@@ -24,6 +37,15 @@ import { diffImages, closeDiffBrowser } from '../../src/vision/imagediff.js';
 import { shapeOf, shapeDistance } from '../../src/domains/site/shape.js';
 import { compareBaseline, type Baseline, type PageScore } from '../../src/domains/site/scoreboard.js';
 import type { Patch } from '../../src/core/patch.js';
+import type { DocLike } from '../../src/core/tree.js';
+
+/**
+ * There is no scratch page to read tokens off in offline mode — nothing was
+ * created. An empty document is the documented fallback for "no target page":
+ * `tokensFromPage` finds no heading, text, button or section to read and
+ * answers `{}`, the same as opening this tool against a genuinely blank page.
+ */
+const EMPTY_DOC: DocLike = { schema_version: 2, root_node_id: 'root', nodes: {} };
 
 const HERE = resolve(import.meta.dirname);
 const BASELINE = resolve(HERE, 'baseline.json');
@@ -37,8 +59,12 @@ const slugFor = (url: string): string =>
   `zz-fidelity-${url.replace(/^https?:\/\//, '').replace(/[^a-z0-9]+/gi, '-').replace(/-+$/, '').slice(0, 40).toLowerCase()}`;
 
 async function main(): Promise<void> {
-  if (process.env.SB_FIDELITY !== '1') {
-    console.error('refusing to run: this writes pages to a live site. Set SB_FIDELITY=1 to mean it.');
+  const offline = process.env.SB_FIDELITY_OFFLINE === '1';
+  if (!offline && process.env.SB_FIDELITY !== '1') {
+    console.error(
+      'refusing to run: this writes pages to a live site. Set SB_FIDELITY=1 to mean it, ' +
+        'or SB_FIDELITY_OFFLINE=1 to score content and structure only, touching no site.',
+    );
     process.exit(2);
   }
   const { widths, pages } = JSON.parse(readFileSync(resolve(HERE, 'fixtures.json'), 'utf8')) as {
@@ -46,30 +72,52 @@ async function main(): Promise<void> {
     pages: Fixture[];
   };
   const ctx = buildContext();
-  const siteId = ctx.siteId;
-  if (!siteId) {
-    console.error('refusing to run: SB_SITE names no site.');
-    process.exit(2);
-  }
-  // BEFORE THE FIRST CREATE, not near cleanup — the point is nothing exists to
-  // leak. Create is siteScoped (session or key); the only page delete this
-  // platform has is on /api/v1, gated on an API key alone (credentialFor in
-  // src/transport/credential.ts). A session-only install would create every
-  // scratch page fine and then fail every delete — logged by the `.catch`
-  // below, not thrown — leaving them on the live storefront.
-  if (!ctx.apiKey) {
-    console.error('refusing to run: cleanup deletes through /api/v1, which needs SB_TOKEN set to an API key.');
-    process.exit(2);
+  // Declared as a definite `string`, never read in offline mode, so the guard
+  // below is the only place it is narrowed — the online-only code further
+  // down can rely on it without TypeScript losing that narrowing across the
+  // loop boundary in between.
+  let siteId = '';
+  // Both guards below are for the FULL path alone — offline mode creates no
+  // page and deletes nothing, so it needs neither credential.
+  if (!offline) {
+    if (!ctx.siteId) {
+      console.error('refusing to run: SB_SITE names no site.');
+      process.exit(2);
+    }
+    siteId = ctx.siteId;
+    // BEFORE THE FIRST CREATE, not near cleanup — the point is nothing exists to
+    // leak. Create is siteScoped (session or key); the only page delete this
+    // platform has is on /api/v1, gated on an API key alone (credentialFor in
+    // src/transport/credential.ts). A session-only install would create every
+    // scratch page fine and then fail every delete — logged by the `.catch`
+    // below, not thrown — leaving them on the live storefront.
+    if (!ctx.apiKey) {
+      console.error('refusing to run: cleanup deletes through /api/v1, which needs SB_TOKEN set to an API key.');
+      process.exit(2);
+    }
   }
 
   const scores: PageScore[] = [];
   // EVERY id this run created, so cleanup deletes what it made and nothing
-  // else. Never a slug scan.
+  // else. Never a slug scan. Stays empty in offline mode — nothing is ever
+  // created — so the cleanup loop in the `finally` below is a correct no-op.
   const created: string[] = [];
   try {
     for (const fx of pages) {
       try {
         const shotSource = await capture(fx.url);
+        if (offline) {
+          const specs = toSpecs(shotSource.sections, tokensFromPage(EMPTY_DOC));
+          const structure = shapeDistance(shapeOf(shotSource.sections), shapeOf(specs));
+          for (const width of widths) {
+            scores.push({ url: fx.url, width, content: shotSource.coverage, structure, mode: 'offline' });
+            console.error(
+              `${fx.url} @${width}  content ${shotSource.coverage}%  structure ${structure}  ` +
+                '(visual not measured — offline mode never rendered a page to diff)',
+            );
+          }
+          continue;
+        }
         const made = (await callOperation(ctx, {
           id: 'post:/api/sites/{siteId}/pages',
           body: { name: slugFor(fx.url), slug: slugFor(fx.url), type: 'page' },
@@ -119,6 +167,7 @@ async function main(): Promise<void> {
             visual: diff.differing,
             content: shotSource.coverage,
             structure: shapeDistance(source, built),
+            mode: 'full',
           });
           console.error(
             `${fx.url} @${widths[i]}  visual ${diff.differing}%  content ${shotSource.coverage}%  ` +
@@ -162,6 +211,13 @@ async function main(): Promise<void> {
   if (scores.length === 0) {
     console.error('\nevery fixture failed — refusing to write an empty baseline over a real one');
     process.exit(1);
+  }
+
+  if (offline) {
+    console.error(
+      '\noffline run: visual was NOT measured. It needs a rendered page to diff against, and building ' +
+        'one needs a live site — set SB_FIDELITY=1 (with SB_SITE and SB_TOKEN) for a full run.',
+    );
   }
 
   const next: Baseline = { generated: new Date().toISOString(), scores };

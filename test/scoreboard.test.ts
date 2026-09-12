@@ -3,7 +3,7 @@ import { compareBaseline, type Baseline } from '../src/domains/site/scoreboard.j
 
 const at = (visual: number, content: number, structure: number): Baseline => ({
   generated: '2026-09-12T00:00:00.000Z',
-  scores: [{ url: 'https://example.com/', width: 1440, visual, content, structure }],
+  scores: [{ url: 'https://example.com/', width: 1440, visual, content, structure, mode: 'full' }],
 });
 
 describe('compareBaseline', () => {
@@ -43,10 +43,30 @@ describe('compareBaseline', () => {
     const prev = at(25, 85, 12);
     const next: Baseline = {
       generated: '2026-09-13T00:00:00.000Z',
-      scores: [{ url: 'https://other.test/', width: 1440, visual: 30, content: 70, structure: 15 }],
+      scores: [{ url: 'https://other.test/', width: 1440, visual: 30, content: 70, structure: 15, mode: 'full' }],
     };
     const got = compareBaseline(prev, next);
     expect(got.added).toEqual(['https://other.test/ @1440']);
     expect(got.removed).toEqual(['https://example.com/ @1440']);
+  });
+
+  it('compares content and structure cleanly on a row with no visual, rather than throwing or reporting a phantom move', () => {
+    // An offline row never rendered anything, so it carries no `visual` at
+    // all — not a zero, which would read as a perfect pixel match against
+    // whatever the other side happened to measure.
+    const prev: Baseline = {
+      generated: '2026-09-12T00:00:00.000Z',
+      scores: [{ url: 'https://example.com/', width: 1440, content: 85, structure: 12, mode: 'offline' }],
+    };
+    const next: Baseline = {
+      generated: '2026-09-13T00:00:00.000Z',
+      scores: [{ url: 'https://example.com/', width: 1440, content: 70, structure: 12, mode: 'offline' }],
+    };
+    const got = compareBaseline(prev, next);
+    // content moved (85 -> 70, worse — coverage dropped) and structure did
+    // not; visual is absent on both sides and must not appear as either.
+    expect(got.regressions).toHaveLength(1);
+    expect(got.regressions[0].metric).toBe('content');
+    expect(got.improvements).toEqual([]);
   });
 });
