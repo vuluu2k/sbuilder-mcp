@@ -17,6 +17,21 @@ const WEIGHT = { tag: 5, path: 3, summary: 2 } as const;
 /** Eight is enough to choose from; twelve was measured at 44 KB once the schemas rode along. */
 export const DEFAULT_FIND_LIMIT = 8;
 
+/**
+ * The four operations that create or replace a whole product, on both
+ * credential surfaces — never a list, a delete, or the bulk import/categories
+ * routes beside them. Listed rather than matched by path pattern, because
+ * `/products/import` and `/products/{productId}/categories` sit right next to
+ * these and are not this trap: an import posts a file, and filing a product
+ * under a category touches neither its price, its slug, nor its photos.
+ */
+const PRODUCT_WRITE_IDS = new Set([
+  'post:/api/sites/{siteId}/products',
+  'put:/api/sites/{siteId}/products/{id}',
+  'post:/api/v1/products',
+  'put:/api/v1/products/{id}',
+]);
+
 export function findOperation(id: string): ApiOperation | undefined {
   return API_OPERATIONS.find((o) => o.id === id);
 }
@@ -148,6 +163,24 @@ export function describeOperation(op: ApiOperation): Record<string, unknown> {
         'no acceptedPrice; a PAID one is refused without it rather than having a price assumed ' +
         'on the merchant\'s behalf, so never send one they have not seen. Then read ' +
         '/apps/blocks again for what it contributed.',
+    };
+  }
+
+  // FILLING A CATALOGUE WAS REACHABLE AND THREE FACTS ABOUT IT WERE NOT, each
+  // failing silently. Attached to the call sheet for the same reason the
+  // translation table is: this is where the agent is when it decides what to
+  // send, on both credential surfaces a product can be created or replaced on.
+  if (PRODUCT_WRITE_IDS.has(op.id)) {
+    out.product_traps = {
+      price:
+        'Price lives on the VARIANT, not the product — variants[].priceCents. A product ' +
+        'posted with no variant renders a catalogue entry nobody can buy.',
+      slug:
+        'A colliding slug is RENAMED, not refused, and the write still answers 200/201. ' +
+        'Re-running an import does not error — it DOUBLES the catalogue in silence.',
+      images:
+        'POST /api/media/{siteId}/from-url ingests a photo straight from its URL, one hop ' +
+        'instead of downloading and re-uploading it.',
     };
   }
 

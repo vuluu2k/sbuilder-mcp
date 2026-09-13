@@ -86,6 +86,16 @@ Cách chấm điểm là đếm từ khoá có trọng số theo trường (tag 
 xếp theo id. Cố ý không dùng fuzzy — một danh sách rỗng thì dễ chữa, còn một operation sai
 mà trông chắc chắn thì không.
 
+### Lấp đầy một catalogue
+
+Bốn operation tạo hoặc thay toàn bộ một product mang thêm ghi chú `product_traps` — ba sự
+thật một body shape không nói được. **Giá nằm ở variant**: `products.Product` không có cột
+giá, nên một product gửi lên không kèm `variants[]` là một mục catalogue không ai mua được.
+**Slug trùng bị ĐỔI TÊN, không bị từ chối** — lệnh ghi vẫn trả 200/201, nên chạy lại một lần
+import không báo lỗi mà nhân đôi catalogue trong im lặng. **Ảnh có thể lấy trực tiếp từ
+URL**: `POST /api/media/{siteId}/from-url` chạy đúng luồng ingest mà cửa upload dùng, đi một
+chặng thay vì tải xuống rồi upload lại.
+
 ## `sb_api_call`
 
 Chạy một operation tìm được bằng `sb_api_find`.

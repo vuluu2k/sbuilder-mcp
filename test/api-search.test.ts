@@ -285,3 +285,51 @@ describe('the app-block call sheet', () => {
     }
   });
 });
+
+/**
+ * FILLING A CATALOGUE WAS REACHABLE AND THREE FACTS ABOUT IT WERE NOT: price
+ * lives on the variant, a colliding slug is renamed rather than refused (so a
+ * re-run doubles the catalogue in silence), and an image can be ingested from
+ * a URL in one hop. All three are recorded in CLAUDE.md and none of them
+ * reached the agent at the moment it decides what to send.
+ */
+describe('the product-write call sheet', () => {
+  const sheetFor = (id: string): Record<string, unknown> =>
+    describeOperation(API_OPERATIONS.find((o) => o.id === id)!) as Record<string, unknown>;
+
+  it('attaches the note to a product create', () => {
+    const traps = sheetFor('post:/api/sites/{siteId}/products').product_traps;
+    expect(traps).toBeDefined();
+  });
+
+  it('attaches the note to a product replace, on both credential surfaces', () => {
+    for (const id of ['put:/api/sites/{siteId}/products/{id}', 'post:/api/v1/products', 'put:/api/v1/products/{id}']) {
+      expect(sheetFor(id).product_traps, id).toBeDefined();
+    }
+  });
+
+  it('does not attach the note to a product listing', () => {
+    expect(sheetFor('get:/api/sites/{siteId}/products').product_traps).toBeUndefined();
+  });
+
+  it('does not attach the note to a DELETE, an import, or an unrelated write', () => {
+    for (const id of [
+      'delete:/api/sites/{siteId}/products/{id}',
+      'delete:/api/v1/products/{id}',
+      'post:/api/sites/{siteId}/products/import',
+      'put:/api/sites/{siteId}/products/{productId}/categories',
+      'post:/api/sites/{siteId}/orders',
+    ]) {
+      expect(sheetFor(id).product_traps, id).toBeUndefined();
+    }
+  });
+
+  it('names the three facts by substance, not by exact wording', () => {
+    const traps = sheetFor('post:/api/sites/{siteId}/products').product_traps as Record<string, string>;
+    const all = Object.values(traps).join(' ');
+    expect(all).toMatch(/variant/i);
+    expect(all.toLowerCase()).toContain('priceCents'.toLowerCase());
+    expect(all).toMatch(/renam/i);
+    expect(all).toMatch(/from-url/);
+  });
+});

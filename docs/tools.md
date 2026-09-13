@@ -82,6 +82,16 @@ Scoring is term hits weighted by field (tag 5, path 3, summary 2), ties broken b
 deliberately not fuzzy — an empty list is cheap to recover from, a confidently wrong
 operation is not.
 
+### Filling a catalogue
+
+The four operations that create or replace a whole product carry a `product_traps` note —
+three facts a body shape cannot say. **Price lives on the variant**: `products.Product` has
+no price column, so a product posted with no `variants[]` is a catalogue entry nobody can
+buy. **A colliding slug is renamed, not refused** — the write still answers 200/201, so
+re-running an import does not error, it doubles the catalogue in silence. **An image can be
+ingested from a URL**: `POST /api/media/{siteId}/from-url` runs the same ingest the upload
+door does, one hop instead of downloading and re-uploading it.
+
 ## `sb_api_call`
 
 Execute one operation found by `sb_api_find`.
