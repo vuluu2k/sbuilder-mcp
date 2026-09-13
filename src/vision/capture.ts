@@ -169,8 +169,13 @@ function capturePage(limits: { maxSections: number; maxImages: number; maxTextCh
    * with no further recursion into `el`'s children, so `el`'s own `innerText`
    * is the whole declined subtree, counted once.
    */
+  // `NAV`, `SELECT` and `TEXTAREA` are NOT in this set, even though the walk
+  // declines all three unconditionally. They are handled below instead, by
+  // `ignoredTextRoots` — a document-wide query, run once, that catches every
+  // instance whether the walk ever visits it or not. Leaving them in
+  // `DECLINED` as well would double-subtract the ones the walk DOES visit.
   const DECLINED = new Set([
-    'aria-hidden', 'hidden', 'nav', 'input', 'select', 'textarea', 'form',
+    'aria-hidden', 'hidden', 'input', 'form',
     'script', 'style', 'noscript', 'template', 'canvas', 'path', 'svg',
   ]);
   let declinedChars = 0;
@@ -597,6 +602,64 @@ function capturePage(limits: { maxSections: number; maxImages: number; maxTextCh
   // list already answers for nesting.
   const inPageChrome = (el: El): boolean =>
     pageChromeRoots.some((c) => c === el || c.contains(el));
+
+  // TEXT THE WALK CAN NEVER TAKE, EVEN WHEN IT NEVER VISITS THE ELEMENT AT
+  // ALL. `declinedChars` above only subtracts a decline the walk actually
+  // MADE — it runs inside `walk`, so an element the walk never reaches
+  // because it sits outside every section candidate AND outside
+  // `pageChromeRoots` contributes nothing to it. MEASURED on rust-lang.org: a
+  // bare top-level `<nav>` — not inside a `<header>`, so `inPageChrome`
+  // correctly does not call it chrome, and not inside `main > section,
+  // body > section, section, main > div` either, so the candidate scan never
+  // reaches it — sat in `body.innerText` as 180 uncounted characters with an
+  // EMPTY `skipped`, because nothing ever visited it to decline it. That is a
+  // third kind of gap, distinct from both a decline and a budget failure: not
+  // considered and rejected, simply never looked at.
+  //
+  // The walk's own `IGNORE` set already says which tags it will NEVER keep
+  // regardless of where they sit, so summing THEIR text the same way
+  // `chromeChars` sums `pageChromeRoots` closes this without waiting for a
+  // visit that may never happen. Not every member of `IGNORE` earns a query
+  // here: `SCRIPT`, `STYLE`, `NOSCRIPT` and `TEMPLATE` are never rendered (a
+  // `<template>`'s content is not even in this tree — `querySelectorAll`
+  // cannot reach into it), `CANVAS` and `PATH` carry no prose on any page
+  // this file has measured, `INPUT` is a void element with no children and
+  // so no text at all, and `SVG` is handled by its own branch above the
+  // `IGNORE` check and — when the walk does reach one — accounted for through
+  // `declinedChars` already. `NAV`, `SELECT` and `TEXTAREA` are the three
+  // that actually carry text worth taking out: a nav's own links, a
+  // `<select>`'s `<option>` text (rust-lang.org's own case names one: a
+  // language switcher whose options still surface through `innerText` even
+  // though the control itself shows only one at a time), a `<textarea>`'s
+  // filled-in content.
+  const ignoredTextRoots: El[] = [];
+  // ANY DECLINE THAT SWALLOWS A WHOLE SUBTREE, computed the same way and at
+  // the same time as `pageChromeRoots` — statically, before the walk runs —
+  // rather than by asking the walk what it did. A `<form>` or an
+  // `aria-hidden` block both return without recursing into their children
+  // the moment the walk visits them (`skip('form', …)` / `skip('aria-hidden',
+  // …)`), so `declinedChars` already carries the WHOLE subtree's text,
+  // `<select>`/`<textarea>`/`<nav>` included, the moment either ancestor IS
+  // visited — and this scan has no way to know in advance whether it will
+  // be. Excluding anything nested under one here is what keeps the two
+  // mechanisms from ever pricing the same characters twice.
+  const declineAncestors = Array.from(document.querySelectorAll('form, [aria-hidden="true"]'));
+  for (const el of Array.from(document.querySelectorAll('nav, select, textarea'))) {
+    // INSIDE CHROME IS ALREADY SUBTRACTED, by `chromeChars` below — a nav
+    // inside a `<header>` is counted once there and must not be counted
+    // again here.
+    if (inPageChrome(el)) continue;
+    if (declineAncestors.some((d) => d.contains(el))) continue;
+    // INSIDE ANOTHER IGNORED ROOT — a `<select>` inside a `<nav>` menu — is
+    // the same hazard `pageChromeRoots` already guards against, and the same
+    // fix applies: test against roots ADDED SO FAR ONLY, which is safe
+    // because `querySelectorAll` returns matches in DOCUMENT ORDER, so a
+    // parent is always pushed before any descendant that also matches.
+    if (ignoredTextRoots.some((c) => c.contains(el))) continue;
+    ignoredTextRoots.push(el);
+  }
+  let ignoredTextChars = 0;
+  for (const el of ignoredTextRoots) ignoredTextChars += stripWs(el.innerText ?? el.textContent ?? '').length;
 
   const leaves = (root: El): Captured[] => {
     const walkChildren = (el: El): Captured[] => {
@@ -1237,9 +1300,13 @@ function capturePage(limits: { maxSections: number; maxImages: number; maxTextCh
   // that block is done. Called once now for the trigger below and once more
   // after the fallback resolves, so the number this function eventually
   // REPORTS is never computed against a `sections`/`declinedChars` pair from
-  // two different builds.
+  // two different builds. `ignoredTextChars`, unlike `chromeChars`, is not
+  // re-derived here: it was already computed once, above, from a static scan
+  // of the document that runs before the walk and does not change while the
+  // walk or its speculative rebuilds do — `declined` is the only side of this
+  // subtraction that ever moves.
   const contentCharsFor = (declined: number): number =>
-    Math.max(0, stripWs(document.body.innerText ?? '').length - chromeChars - declined);
+    Math.max(0, stripWs(document.body.innerText ?? '').length - chromeChars - ignoredTextChars - declined);
   // NO SIZE FLOOR ON THE CHECK. An earlier version only asked the question on
   // pages with more than 400 characters, which is the guard you write when you
   // fear a fallback firing too often — but the fallback cannot do harm here: it

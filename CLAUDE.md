@@ -2133,37 +2133,71 @@ that accounts for them.
   id-matched footer distinct from the ones tag alone already catches. So this fix changed
   nothing on this page, and the gap below stayed open a while longer.
 
-  **`rust-lang.org` READ 92% FOR A DIFFERENT REASON, AND THE DECLINE FIX ABOVE DOES NOT TOUCH IT
-  EITHER — MEASURED, NOT ASSUMED, and this time the measurement names the cause.** Capturing the
-  page directly with a generous `maxNodes` returns `skipped: {}` — literally nothing the walk
-  ever visited was declined, so `declinedChars` is zero on this page and the fix in this entry
-  changes its number by construction. Diffing `body.innerText` against every top-level section
+  **`rust-lang.org` READ 92% FOR A DIFFERENT REASON, AND THE DECLINE FIX ABOVE DID NOT TOUCH IT
+  EITHER — MEASURED, NOT ASSUMED, and the measurement named the cause.** Capturing the page
+  directly with a generous `maxNodes` returns `skipped: {}` — literally nothing the walk ever
+  visited was declined, so `declinedChars` was zero on this page and the fix in this entry
+  changed its number by construction. Diffing `body.innerText` against every top-level section
   candidate PLUS every chrome root found the 180 missing characters by hand: `Install`, `Learn`,
   `Playground`, `Tools`, `Governance`, `Funding`, `Community`, `Blog`, and a hidden language
   `<select>` — the page's own top navigation. It is a bare `<nav>` sitting as a DIRECT CHILD OF
   `<body>`, not inside a `<header>` — so `inPageChrome` does not count it as chrome — and not
   inside any of `main > section, body > section, section, main > div` either, so it is never
-  among the section CANDIDATES. Its text sits in `body.innerText`, the denominator, and is
-  visited by NOTHING: never reaches a `skip()` call at all, which is exactly why it shows up as
-  a gap with an empty `skipped` rather than a `nav` count.
+  among the section CANDIDATES. Its text sits in `body.innerText`, the denominator, and was
+  visited by NOTHING: it never reached a `skip()` call at all, which is exactly why it showed up
+  as a gap with an empty `skipped` rather than a `nav` count.
 
-  That is a THIRD kind of gap, distinct from both halves this entry otherwise names: not a
+  That was a THIRD kind of gap, distinct from both halves this entry otherwise names: not a
   decline (the walk never looked at it to decline it) and not a budget failure (nothing ran
-  out) — a piece of the page the section-CANDIDATE scan simply never reaches. Left open rather
-  than folded into this fix: closing it well means deciding whether a bare top-level `<nav>`
-  should join `inPageChrome`'s definition of chrome, and that is a real question rather than an
-  obvious yes — a documentation page's own in-content table-of-contents `<nav>` is not page
-  chrome, and the two are not distinguishable by tag alone.
+  out) — a piece of the page the section-CANDIDATE scan simply never reaches. First left open
+  rather than folded into that fix, on the reasoning that closing it well meant deciding whether
+  a bare top-level `<nav>` should join `inPageChrome`'s definition of chrome — a documentation
+  page's own in-content table-of-contents `<nav>` is not page chrome, and the two are not
+  distinguishable by tag alone, so that looked like a real design question rather than an
+  obvious yes.
 
-  **So the three mysteries this file once treated as one turned out to be two.** The
-  `aria-hidden` residual and "coverage counts a decline as a loss" are the same mistake, and the
-  fix above closes both — every fixture with declinable content moved with it, which is the
-  confirmation the diagnosis was right about the part it was right about. `rust-lang.org`'s 92%
-  was never that mistake: an earlier pass through this file had already measured `aria-hidden`
-  at zero on this page and ruled it out, correctly. It is no longer unexplained, though — it is
-  now a named, structural gap in the candidate scan (a bare top-level `<nav>`) rather than an
-  unnamed one in the denominator, and the honest label for it changed from "nobody knows why" to
-  "known, and deliberately not fixed here."
+  **IT IS FIXED NOW, AND THE DESIGN QUESTION TURNED OUT TO BE THE WRONG ONE TO ASK.** Whether a
+  bare top-level `<nav>` is CHROME was never the thing the denominator needed to know — chrome
+  is a classification the WALK cares about (it decides what `sb_import` keeps), and coverage
+  only needs to know what the walk will NEVER keep, which the walk already states outright as
+  its own `IGNORE` set. A `<nav>` is unconditionally in it regardless of where it sits, whether
+  it is a docs page's table of contents or a shop's top menu — this platform's `sb_import`
+  builds no page chrome from either, ever. So the fix asks that question instead: `NAV`,
+  `SELECT` and `TEXTAREA` are the three `IGNORE` members that can carry real text (`SCRIPT`,
+  `STYLE`, `NOSCRIPT` and `TEMPLATE` are never rendered; `CANVAS` and `PATH` carry no prose on
+  any page measured here; `INPUT` is a void element with no children; `SVG` already routes
+  through `declinedChars` via its own branch whenever the walk reaches one), and a document-wide
+  scan for them — `ignoredTextRoots`, run once, statically, before the walk, the same treatment
+  `pageChromeRoots` already gives chrome — sums their text out of the denominator whether the
+  walk ever visits them or not. `SELECT` is not a guess either: the same diff that found the bare
+  `<nav>` found a "hidden" language `<select>` beside it, and a native `<select>`'s `<option>`
+  text turns out to surface through `innerText` even though the control shows only one value at
+  a time — a second, quieter instance of the identical gap.
+
+  Guarded against the same double-counting hazard `pageChromeRoots` already reasons about, and
+  by the same means: a candidate already inside `pageChromeRoots` is skipped (chrome already
+  subtracts it once, via `chromeChars`); a candidate inside a `<form>` or an `[aria-hidden="true"]`
+  block is skipped too, because either one swallows its WHOLE subtree — select, textarea and nav
+  included — into `declinedChars` the moment the walk actually visits it, and counting the same
+  characters again here would double them without this scan ever being able to tell whether that
+  visit will happen; and a candidate already inside another `ignoredTextRoots` entry (a
+  `<select>` inside a `<nav>` menu) is skipped for the reason `pageChromeRoots` itself relies on
+  — `querySelectorAll` returns matches in document order, so a parent is always pushed before
+  any descendant that also matches. `nav`, `select` and `textarea` came OUT of `DECLINED`
+  in the same motion, so the walk-time path and this static one never price the same
+  characters twice: whichever of the two ends up being the one that saw a given element, it is
+  the only one that ever will.
+
+  **So the three mysteries this file once treated as one turned out to be two, and now zero.**
+  The `aria-hidden` residual and "coverage counts a decline as a loss" were the same mistake,
+  and the earlier fix in this entry closed both — every fixture with declinable content moved
+  with it, which was the confirmation the diagnosis was right about the part it was right about.
+  `rust-lang.org`'s 92% was never that mistake: an earlier pass through this file had already
+  measured `aria-hidden` at zero on this page and ruled it out, correctly. It read 92% for the
+  reason traced above, and this fix closes it: measured offline, `www.rust-lang.org/` moved
+  92 → 100 on both widths, `structure` unmoved at 0 (this fix only changes how the same captured
+  tree is MEASURED, never what the walk keeps). The honest label for it went from "nobody knows
+  why" to "known, and deliberately not fixed here" to fixed.
 
 - **AN IMPORTED PAGE COULD LOOK LIKE ITS SOURCE, OR STAY RE-THEMABLE, BUT NOT BOTH — until the
   colour moved to the layer that outranks nothing.** A literal written on a node OUTRANKS its

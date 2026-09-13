@@ -1047,14 +1047,18 @@ while it is still building comes back small, correct-looking and with an EMPTY `
 error anywhere. So every result — the dry run, the real run, and each page of
 `sb_import_site` — carries the per cent of the page's own text that survived. The denominator
 leaves out every text the walk DECLINED, not only page chrome — an `aria-hidden` block, an
-element it judges hidden, a `<nav>`, a form control — because a decline is not a loss: the walk
-considered it and chose not to take it, the same as chrome, and counting either against the
-result would make a nav-heavy or decoration-heavy site read as a failed import when it is a
-correct one. What still counts against it is the walk FAILING to reach real content — a node
-budget exhausted partway down the page — so a low number is worth a retry before it is worth an
-investigation; it is also sometimes the honest answer, and then it exonerates the importer —
-a category page holding nothing but breadcrumbs really is that empty. 100 for a page with no
-text to measure against, because an empty page is not a failed import.
+element it judges hidden, a form control — because a decline is not a loss: the walk considered
+it and chose not to take it, the same as chrome, and counting either against the result would
+make a nav-heavy or decoration-heavy site read as a failed import when it is a correct one. It
+also leaves out text the walk can NEVER take at all, whether or not anything ever visits it — a
+`<nav>`'s links, a `<select>`'s option text, a `<textarea>`'s content — because those tags are
+unconditionally excluded regardless of where they sit on the page, including a bare top-level
+`<nav>` that is neither page chrome nor inside any section this server would ever capture. What
+still counts against it is the walk FAILING to reach real content — a node budget exhausted
+partway down the page — so a low number is worth a retry before it is worth an investigation;
+it is also sometimes the honest answer, and then it exonerates the importer — a category page
+holding nothing but breadcrumbs really is that empty. 100 for a page with no text to measure
+against, because an empty page is not a failed import.
 
 ### Measuring an import
 

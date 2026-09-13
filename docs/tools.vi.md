@@ -1012,13 +1012,17 @@ kết quả nói rõ đã bỏ qua những gì và vì sao.
 đâu cả. Nên mọi kết quả — dry run, lần chạy thật, và từng trang của `sb_import_site` — đều
 mang theo phần trăm chữ của chính trang đó còn sống sót. Mẫu số trừ đi MỌI chữ mà lượt quét đã
 CHỦ ĐỘNG BỎ QUA, không chỉ khung trang — một khối `aria-hidden`, một phần tử bị coi là ẩn, một
-`<nav>`, một control của form — vì bỏ qua có chủ đích không phải là mất: lượt quét đã nhìn thấy
-nó và chọn không lấy, giống hệt khung trang, và tính nó vào kết quả sẽ khiến một site nhiều menu
-hoặc nhiều phần trang trí đọc như một lần import hỏng trong khi nó đúng. Cái vẫn bị tính là mất
-là khi lượt quét THẤT BẠI trong việc chạm tới nội dung thật — hết ngân sách node giữa trang — nên
-số thấp đáng để chạy lại trước khi đáng để đi điều tra; đôi khi nó cũng là câu trả lời thật
-thà và khi đó nó minh oan cho trình import — một trang danh mục chỉ có breadcrumb thì đúng là
-rỗng thế. Trang không có chữ nào để đo thì trả 100, vì trang rỗng không phải là import hỏng.
+control của form — vì bỏ qua có chủ đích không phải là mất: lượt quét đã nhìn thấy nó và chọn
+không lấy, giống hệt khung trang, và tính nó vào kết quả sẽ khiến một site nhiều menu hoặc nhiều
+phần trang trí đọc như một lần import hỏng trong khi nó đúng. Mẫu số cũng trừ luôn chữ mà lượt
+quét KHÔNG BAO GIỜ lấy được, dù có ai chạm tới nó hay không — chữ trong một `<nav>`, trong các
+option của `<select>`, trong `<textarea>` — vì những tag đó bị loại vô điều kiện bất kể chúng
+nằm ở đâu trên trang, kể cả một `<nav>` trơ trọi ở cấp cao nhất mà không phải khung trang và
+cũng không nằm trong bất kỳ section nào server này từng lấy. Cái vẫn bị tính là mất là khi lượt
+quét THẤT BẠI trong việc chạm tới nội dung thật — hết ngân sách node giữa trang — nên số thấp
+đáng để chạy lại trước khi đáng để đi điều tra; đôi khi nó cũng là câu trả lời thật thà và khi đó
+nó minh oan cho trình import — một trang danh mục chỉ có breadcrumb thì đúng là rỗng thế. Trang
+không có chữ nào để đo thì trả 100, vì trang rỗng không phải là import hỏng.
 
 ### Đo một lần import
 

@@ -1470,6 +1470,36 @@ describe.runIf(process.env.SB_BROWSER_TEST === '1')('capture() reporting how muc
     expect(got.skipped['over-node-limit']).toBeGreaterThan(0);
     expect(got.coverage).toBeLessThan(50);
   }, BROWSER_TIMEOUT);
+
+  /**
+   * A THIRD KIND OF GAP: not a decline (the walk never looked at this element
+   * to decline it) and not a budget failure (nothing ran out) — text the
+   * section-candidate scan simply never reaches. `rust-lang.org`'s own top
+   * navigation is exactly this shape: a bare `<nav>` sitting as a DIRECT
+   * CHILD OF `<body>`, not inside a `<header>` (so `inPageChrome` correctly
+   * does not call it chrome) and not inside `main > section, body > section,
+   * section, main > div` either (so it is never a section candidate). Its
+   * text sits in `body.innerText`, the denominator, and `skip()` is never
+   * called on it at all — which is why it used to read as a gap with an
+   * empty `skipped` rather than a `nav` count.
+   */
+  it('does not count a bare top-level <nav> the walk never visits', async () => {
+    const got = await capture(
+      page(
+        '<body><nav><a href="/a">Install</a> <a href="/b">Learn</a> ' +
+          '<a href="/c">Playground</a> <a href="/d">Tools</a> ' +
+          '<a href="/e">Governance</a> <a href="/f">Funding</a> ' +
+          '<a href="/g">Community</a> <a href="/h">Blog</a></nav>' +
+          '<main><section><p>Nội dung thật của trang nằm ở đây và được giữ nguyên vẹn không mất một chữ nào cả.</p></section></main></body>',
+      ),
+      { maxImages: 5, maxNodes: 200 },
+    );
+    // NEVER VISITED, so it never reaches a `skip()` call — the tell that
+    // distinguishes this gap from the ordinary "declined during the walk"
+    // case the earlier tests in this block already cover.
+    expect(got.skipped.nav).toBeUndefined();
+    expect(got.coverage).toBeGreaterThanOrEqual(97);
+  }, BROWSER_TIMEOUT);
 });
 
 describe.runIf(process.env.SB_BROWSER_TEST === '1')('capture() sampling the source design', () => {

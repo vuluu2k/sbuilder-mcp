@@ -1,5 +1,5 @@
 {
-  "generated": "2026-09-13T06:25:57.251Z",
+  "generated": "2026-09-13T06:44:00.593Z",
   "scores": [
     {
       "url": "https://ttgshop.vn/quy-dinh-bao-hanh",
@@ -32,28 +32,28 @@
     {
       "url": "https://modelcontextprotocol.io/",
       "width": 1440,
-      "content": 87,
+      "content": 99,
       "structure": 11.9,
       "mode": "offline"
     },
     {
       "url": "https://modelcontextprotocol.io/",
       "width": 390,
-      "content": 87,
+      "content": 99,
       "structure": 11.9,
       "mode": "offline"
     },
     {
       "url": "https://www.rust-lang.org/",
       "width": 1440,
-      "content": 92,
+      "content": 100,
       "structure": 0,
       "mode": "offline"
     },
     {
       "url": "https://www.rust-lang.org/",
       "width": 390,
-      "content": 92,
+      "content": 100,
       "structure": 0,
       "mode": "offline"
     },
