@@ -1046,8 +1046,12 @@ empty — the result says what was skipped and why.
 while it is still building comes back small, correct-looking and with an EMPTY `skipped`, no
 error anywhere. So every result — the dry run, the real run, and each page of
 `sb_import_site` — carries the per cent of the page's own text that survived. The denominator
-leaves out page chrome, which is skipped on purpose, so a correct import of a nav-heavy site
-does not read as a failure. A low number is worth a retry before it is worth an
+leaves out every text the walk DECLINED, not only page chrome — an `aria-hidden` block, an
+element it judges hidden, a `<nav>`, a form control — because a decline is not a loss: the walk
+considered it and chose not to take it, the same as chrome, and counting either against the
+result would make a nav-heavy or decoration-heavy site read as a failed import when it is a
+correct one. What still counts against it is the walk FAILING to reach real content — a node
+budget exhausted partway down the page — so a low number is worth a retry before it is worth an
 investigation; it is also sometimes the honest answer, and then it exonerates the importer —
 a category page holding nothing but breadcrumbs really is that empty. 100 for a page with no
 text to measure against, because an empty page is not a failed import.
@@ -1081,20 +1085,21 @@ image that resolved a moment later than last time — any of those changes the d
 moves `visual` with nothing in the importer having changed.
 
 `visual`'s own noise floor is still unmeasured — it needs the site-write permission this
-environment refuses — but the offline half (`content` and `structure`) has been run 13 times
-on an unchanged tree, minutes apart. Four of five fixtures came back byte-identical every
-time. The fifth, `modelcontextprotocol.io/` (it builds itself with scripts), is NOT one
-outlier among stable runs: it alternates between exactly two states — `content 73 / structure
-9.6` and `content 75 / structure 11.9` — because `capture`'s settle window catches it at a
-different point some fraction of the time. (These `content` figures moved by the same +2 as
-every other fixture when `coverage`'s whitespace-units mismatch was fixed — see below — the
-GAP between the two states is what matters here and it did not change: 2.0 on `content`, 2.3
-on `structure`.) That gap is BIGGER than `scoreboard.ts`'s 1.5-point tolerance, so
-two ordinary runs compared against each other will sometimes report a phantom move on this one
-fixture with nothing in the importer having changed. Do not raise the tolerance to cover it —
-one page's bimodal noise is not a sample to set a global threshold from, and the likelier fix
-is a more deterministic settle for a page that is still building itself, not a wider
-scoreboard.
+environment refuses — but the offline half (`content` and `structure`) has been run many times
+on an unchanged tree, minutes apart. Four of five fixtures come back byte-identical every time.
+The fifth, `modelcontextprotocol.io/` (it builds itself with scripts), is NOT one outlier among
+stable runs: it alternates between exactly two states — `content 76 / structure 9.6` and
+`content 87 / structure 11.9` — because `capture`'s settle window catches it at a different
+point some fraction of the time. `structure` is untouched by `coverage`'s own fixes and has
+stayed at exactly these two values across every change made to how `content` is measured
+(the whitespace-units fix, then the declined-content fix below); only `content` moves, and by a
+DIFFERENT amount for each state, because the two DOM states differ in how much of their gap was
+decline-shaped and not only in how much was genuinely missing. The `structure` gap between the
+two states (2.3) is BIGGER than `scoreboard.ts`'s 1.5-point tolerance, so two ordinary runs
+compared against each other will sometimes report a phantom move on this one fixture with
+nothing in the importer having changed. Do not raise the tolerance to cover it — one page's
+bimodal noise is not a sample to set a global threshold from, and the likelier fix is a more
+deterministic settle for a page that is still building itself, not a wider scoreboard.
 
 **`SB_FIDELITY_OFFLINE=1 npm run fidelity` scores `content` and `structure` with no site at
 all.** Both come off `capture()` alone — `content` is `coverage` directly, `structure` is

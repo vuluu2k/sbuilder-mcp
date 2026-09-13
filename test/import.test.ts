@@ -1426,6 +1426,50 @@ describe.runIf(process.env.SB_BROWSER_TEST === '1')('capture() reporting how muc
     });
     expect(got.coverage).toBe(100);
   }, BROWSER_TIMEOUT);
+
+  /**
+   * A DECLINE IS NOT A LOSS. The denominator used to be page chrome alone, so
+   * every OTHER considered decline read as lost content too — `aria-hidden`
+   * is the clearest one, the author's own mark for decoration and duplicates,
+   * and it does not affect layout, so `innerText` counted it while the walk
+   * correctly skipped it. A page whose walk took EVERYTHING it was supposed to
+   * take must not read as a thin import just because it also carried a block
+   * the walk was right to decline.
+   */
+  it('reports near 100 when the only thing skipped was a considered decline', async () => {
+    const got = await capture(
+      page(
+        '<body><main><section>' +
+          '<p>Nội dung thật của trang, đầy đủ và được giữ nguyên vẹn không thiếu một chữ nào cả.</p>' +
+          '<div aria-hidden="true"><p>Một khối trang trí lặp lại được tác giả trang tự đánh dấu ẩn khỏi người đọc bằng thuộc tính riêng của nó.</p></div>' +
+          '</section></main></body>',
+      ),
+      { maxImages: 5, maxNodes: 200 },
+    );
+    expect(got.skipped['aria-hidden']).toBe(1);
+    expect(got.coverage).toBeGreaterThanOrEqual(97);
+  }, BROWSER_TIMEOUT);
+
+  /**
+   * A BUDGET RUNNING OUT IS THE OPPOSITE CASE, and the fix above must not
+   * blur into it: real content the walk never REACHED — here, a node budget
+   * exhausted partway down an ordinary page — has to keep pulling the number
+   * down. Without this test the denominator fix could collapse into
+   * subtracting everything and `coverage` would read 100 always, which is
+   * exactly the failure it exists to catch.
+   */
+  it('still reports low coverage when the walk fails to reach content', async () => {
+    const paragraphs = Array.from(
+      { length: 30 },
+      (_, i) => `<p>Đoạn nội dung số ${i} của trang, đủ dài để tính rõ vào phép đo phần trăm.</p>`,
+    ).join('');
+    const got = await capture(page(`<body><main><section>${paragraphs}</section></main></body>`), {
+      maxImages: 5,
+      maxNodes: 3,
+    });
+    expect(got.skipped['over-node-limit']).toBeGreaterThan(0);
+    expect(got.coverage).toBeLessThan(50);
+  }, BROWSER_TIMEOUT);
 });
 
 describe.runIf(process.env.SB_BROWSER_TEST === '1')('capture() sampling the source design', () => {

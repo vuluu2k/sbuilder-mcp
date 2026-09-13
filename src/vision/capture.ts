@@ -108,12 +108,21 @@ export interface CaptureResult {
   /** What was skipped and why, so a thin capture explains itself. */
   skipped: Record<string, number>;
   /**
-   * Per cent of the page's own NON-CHROME text that survived the walk.
+   * Per cent of the page's own text that survived the walk, once the text the
+   * walk DECLINED — page chrome, `aria-hidden` content, an element judged
+   * hidden, a `<nav>`, a form control, and more — is taken out of the
+   * question. A decline is not a loss: it is the walk considering something
+   * and choosing not to take it, and counting it against the result would
+   * make a page that is mostly navigation, or that marks its own duplicates
+   * `aria-hidden`, read as a failed import when it is a correct one.
    *
-   * The one number a caller cannot work out for itself and cannot do without:
-   * settling is not failing, so a page captured while it was still building
-   * returns a small, correct-looking result with an empty `skipped` and no
-   * error. 100 when the page carries no text to measure against.
+   * What still counts against it is the walk FAILING to reach real content —
+   * a node budget exhausted partway down the page, a page read before it
+   * finished building. Those stay in the denominator on purpose: this is the
+   * one number a caller cannot work out for itself and cannot do without,
+   * because settling is not failing, so a page captured mid-build returns a
+   * small, correct-looking result with an empty `skipped` and no error
+   * anywhere else. 100 when the page carries no text to measure against.
    */
   coverage: number;
 }
@@ -133,7 +142,44 @@ function capturePage(limits: { maxSections: number; maxImages: number; maxTextCh
   const HEADINGS = new Set(['H1', 'H2', 'H3', 'H4', 'H5', 'H6']);
   const taken = { images: 0, nodes: 0 };
   const skipped: Record<string, number> = {};
-  const skip = (why: string): void => void (skipped[why] = (skipped[why] ?? 0) + 1);
+  // STRIPPED OF WHITESPACE, so every character count this function keeps is in
+  // the same currency. Declared here — rather than beside its other use,
+  // further down, where it used to live alone — because `skip` needs it: a
+  // decline has to be measured in the units it is later subtracted in.
+  const stripWs = (s: string): string => s.replace(/\s+/g, '');
+  /**
+   * A DECLINE IS NOT A LOSS, and `coverage`'s denominator used to treat every
+   * one alike: page chrome was subtracted, and everything else the walk
+   * turned away — `aria-hidden` content, an element it judged hidden, a
+   * `<nav>`, a form control — read as content that went missing. It did not
+   * go missing; the walk looked at it and decided, the same way it decides
+   * about chrome.
+   *
+   * `DECLINED` is the set of reasons that ARE such a decision, and only those
+   * subtract from the denominator below. A reason that means the walk ran out
+   * of ROOM rather than ran out of interest — `over-node-limit`,
+   * `over-section-limit`, `over-image-limit`, `text-too-long` — is
+   * deliberately NOT in it: that text is real and reachable, the walk simply
+   * did not get to it, and it must keep pulling the number down or a page
+   * read before it finished building would look no different from one read
+   * whole.
+   *
+   * Safe against double counting for the same reason `pageChromeRoots` is:
+   * every reason in this set is a point in `walk` that returns immediately
+   * with no further recursion into `el`'s children, so `el`'s own `innerText`
+   * is the whole declined subtree, counted once.
+   */
+  const DECLINED = new Set([
+    'aria-hidden', 'hidden', 'nav', 'input', 'select', 'textarea', 'form',
+    'script', 'style', 'noscript', 'template', 'canvas', 'path', 'svg',
+  ]);
+  let declinedChars = 0;
+  const skip = (why: string, el?: El): void => {
+    skipped[why] = (skipped[why] ?? 0) + 1;
+    if (el && DECLINED.has(why)) {
+      declinedChars += stripWs(el.innerText ?? el.textContent ?? '').length;
+    }
+  };
   const here = location.href;
 
   const visible = (el: El): boolean => {
@@ -608,7 +654,7 @@ function capturePage(limits: { maxSections: number; maxImages: number; maxTextCh
       if (tag === 'SVG') {
         const name = iconName(el);
         if (!name) {
-          skip('svg');
+          skip('svg', el);
           return [];
         }
         taken.nodes++;
@@ -624,15 +670,15 @@ function capturePage(limits: { maxSections: number; maxImages: number; maxTextCh
       // Nothing here reads the accessibility tree, so this attribute is the only
       // place that answer exists.
       if (el.getAttribute('aria-hidden') === 'true') {
-        skip('aria-hidden');
+        skip('aria-hidden', el);
         return [];
       }
       if (IGNORE.has(tag)) {
-        skip(tag.toLowerCase());
+        skip(tag.toLowerCase(), el);
         return [];
       }
       if (!visible(el)) {
-        skip('hidden');
+        skip('hidden', el);
         return [];
       }
       // A TAB SET, WHEN — AND ONLY WHEN — ITS LABELS CAN BE READ.
@@ -759,7 +805,7 @@ function capturePage(limits: { maxSections: number; maxImages: number; maxTextCh
           if (t && labels.length < 10) labels.push(t);
         }
         if (controls.length > 0) forms.push({ fields: controls.length, labels });
-        skip('form');
+        skip('form', el);
         return [];
       }
       if (tag === 'HR') {
@@ -1081,7 +1127,7 @@ function capturePage(limits: { maxSections: number; maxImages: number; maxTextCh
         break;
       }
       if (!visible(el)) {
-        skip('hidden');
+        skip('hidden', el);
         continue;
       }
       const children = leaves(el);
@@ -1158,8 +1204,8 @@ function capturePage(limits: { maxSections: number; maxImages: number; maxTextCh
   // with every paragraph captured read 80%. Dropping every whitespace
   // character from BOTH sides — not collapsing it to one space, which would
   // still count the between-block gap as a character — removes exactly the
-  // difference that was never about content.
-  const stripWs = (s: string): string => s.replace(/\s+/g, '');
+  // difference that was never about content. `stripWs` is declared near the
+  // top of this function now, not here — `skip` needs it too.
   const textOf = (nodes: Captured[]): number => {
     let n = 0;
     const walk = (c: Captured): void => {
@@ -1185,14 +1231,25 @@ function capturePage(limits: { maxSections: number; maxImages: number; maxTextCh
   // double-counts nothing.
   let chromeChars = 0;
   for (const el of pageChromeRoots) chromeChars += stripWs(el.innerText ?? '').length;
-  const contentChars = Math.max(0, stripWs(document.body.innerText ?? '').length - chromeChars);
+  // A FUNCTION, NOT A CONSTANT, because `declinedChars` still moves below —
+  // the fallback tries speculative rebuilds of its own, each with its own
+  // declines, and `restore`/`bestState` settle on a final value only once
+  // that block is done. Called once now for the trigger below and once more
+  // after the fallback resolves, so the number this function eventually
+  // REPORTS is never computed against a `sections`/`declinedChars` pair from
+  // two different builds.
+  const contentCharsFor = (declined: number): number =>
+    Math.max(0, stripWs(document.body.innerText ?? '').length - chromeChars - declined);
   // NO SIZE FLOOR ON THE CHECK. An earlier version only asked the question on
   // pages with more than 400 characters, which is the guard you write when you
   // fear a fallback firing too often — but the fallback cannot do harm here: it
   // BUILDS the alternative and keeps it only if it captured more, so the worst
   // case is one wasted walk on a page that was already right. A small page is
   // also exactly where one stray band is the whole import.
-  if (sections.length === 0 || (contentChars > 0 && textOf(sections) < contentChars * 0.5)) {
+  if (
+    sections.length === 0 ||
+    (contentCharsFor(declinedChars) > 0 && textOf(sections) < contentCharsFor(declinedChars) * 0.5)
+  ) {
     // THE CONTENT ROOT, not `body` — otherwise the whole page comes back as ONE
     // band and every arrangement the source had is gone. Measured on
     // ttgshop.vn: `body` yields `div.homepage`, one candidate holding 9,829px of
@@ -1228,10 +1285,20 @@ function capturePage(limits: { maxSections: number; maxImages: number; maxTextCh
     // — so trying a second reading REPORTED a one-form page as having three and
     // trebled every skip count. Caught by two tests that were already there,
     // which is the argument for asserting side effects and not only results.
-    const snap = (): { forms: number; skipped: Record<string, number>; taken: { images: number; nodes: number } } => ({
+    // `declinedChars` is the same kind of side effect as `taken.nodes` and
+    // needs the same care — a speculative build that turned away an
+    // aria-hidden block would otherwise inflate the denominator's subtraction
+    // even when that reading loses to the original and is discarded.
+    const snap = (): {
+      forms: number;
+      skipped: Record<string, number>;
+      taken: { images: number; nodes: number };
+      declined: number;
+    } => ({
       forms: forms.length,
       skipped: { ...skipped },
       taken: { ...taken },
+      declined: declinedChars,
     });
     const restore = (was: ReturnType<typeof snap>): void => {
       forms.length = was.forms;
@@ -1239,6 +1306,7 @@ function capturePage(limits: { maxSections: number; maxImages: number; maxTextCh
       Object.assign(skipped, was.skipped);
       taken.images = was.taken.images;
       taken.nodes = was.taken.nodes;
+      declinedChars = was.declined;
     };
     const before = snap();
     let bestState = snap();
@@ -1255,17 +1323,22 @@ function capturePage(limits: { maxSections: number; maxImages: number; maxTextCh
   }
 
   // WHAT FRACTION OF THE PAGE A READER SEES SURVIVED, reported rather than
-  // assumed. Both halves are already computed above for the fallback decision,
-  // so this costs nothing and closes the one failure a capture cannot express:
-  // SETTLING IS NOT FAILING. MEASURED on ttgshop.vn while the origin was taking
-  // 45s to answer — 6 text nodes and 114 characters of a page holding 2,396,
-  // 4.8%, `skipped` empty, no error anywhere. A thin import that says so is one
-  // a caller retries; a silent one ships.
+  // assumed. Most of the work is already done above for the fallback
+  // decision, so this costs nothing and closes the one failure a capture
+  // cannot express: SETTLING IS NOT FAILING. MEASURED on ttgshop.vn while the
+  // origin was taking 45s to answer — 6 text nodes and 114 characters of a
+  // page holding 2,396, 4.8%, `skipped` empty, no error anywhere. A thin
+  // import that says so is one a caller retries; a silent one ships.
   //
-  // Against the honest denominator this file already argues for: page chrome is
-  // skipped ON PURPOSE, so counting it would make every correct import of a
-  // nav-heavy site look broken.
+  // Against the honest denominator this file argues for: page chrome and
+  // every OTHER considered decline are skipped ON PURPOSE, so counting either
+  // would make every correct import of a nav-heavy or decoration-heavy site
+  // look broken. RECOMPUTED here rather than reused from the trigger above,
+  // because `declinedChars` — and `sections` with it — can still have moved
+  // if the fallback ran a speculative rebuild: `kept` must be measured
+  // against the SAME build's declines, never a stale pre-fallback figure.
   const kept = textOf(sections);
+  const contentChars = contentCharsFor(declinedChars);
   // CLAMPED, because a caller reads this as a percentage and acts on it. The
   // whitespace strip above brings the two sides into the same units, but they
   // are still built by two different walks of the page — an `alt` attribute

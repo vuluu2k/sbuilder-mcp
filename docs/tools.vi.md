@@ -1010,9 +1010,13 @@ kết quả nói rõ đã bỏ qua những gì và vì sao.
 **`coverage` là nửa mà `skipped` không nói được.** LẮNG XUỐNG KHÔNG PHẢI LÀ HỎNG: một trang
 đọc lúc nó còn đang tự dựng sẽ trả về nhỏ gọn, trông rất đúng, `skipped` RỖNG và không lỗi ở
 đâu cả. Nên mọi kết quả — dry run, lần chạy thật, và từng trang của `sb_import_site` — đều
-mang theo phần trăm chữ của chính trang đó còn sống sót. Mẫu số đã trừ phần khung trang, thứ
-bị bỏ qua có chủ đích, để một bản import đúng của site nhiều menu không bị đọc thành thất bại.
-Số thấp đáng để chạy lại trước khi đáng để đi điều tra; đôi khi nó cũng là câu trả lời thật
+mang theo phần trăm chữ của chính trang đó còn sống sót. Mẫu số trừ đi MỌI chữ mà lượt quét đã
+CHỦ ĐỘNG BỎ QUA, không chỉ khung trang — một khối `aria-hidden`, một phần tử bị coi là ẩn, một
+`<nav>`, một control của form — vì bỏ qua có chủ đích không phải là mất: lượt quét đã nhìn thấy
+nó và chọn không lấy, giống hệt khung trang, và tính nó vào kết quả sẽ khiến một site nhiều menu
+hoặc nhiều phần trang trí đọc như một lần import hỏng trong khi nó đúng. Cái vẫn bị tính là mất
+là khi lượt quét THẤT BẠI trong việc chạm tới nội dung thật — hết ngân sách node giữa trang — nên
+số thấp đáng để chạy lại trước khi đáng để đi điều tra; đôi khi nó cũng là câu trả lời thật
 thà và khi đó nó minh oan cho trình import — một trang danh mục chỉ có breadcrumb thì đúng là
 rỗng thế. Trang không có chữ nào để đo thì trả 100, vì trang rỗng không phải là import hỏng.
 
@@ -1046,16 +1050,17 @@ load xong muộn hơn lần trước — bất cứ thay đổi nào trong số 
 di chuyển mà trình import chẳng có gì thay đổi cả.
 
 Độ nhiễu riêng của `visual` vẫn chưa đo được — nó cần quyền ghi vào site mà môi trường này từ
-chối — nhưng nửa offline (`content` và `structure`) đã được chạy 13 lần trên một cây không đổi,
-cách nhau vài phút. Bốn trong năm fixture ra kết quả GIỐNG TUYỆT ĐỐI mỗi lần. Fixture thứ năm,
-`modelcontextprotocol.io/` (trang này tự dựng bằng script), KHÔNG phải một lần lệch giữa nhiều
-lần chạy ổn định — nó dao động giữa đúng hai trạng thái: `content 73 / structure 9.6` và
-`content 75 / structure 11.9`, vì cửa sổ lắng của `capture` bắt trang ở một điểm khác nhau
-trong một phần số lần chạy. (Hai con số `content` này đã tăng thêm 2 điểm — giống mọi fixture
-khác — khi lỗi đơn vị đo của `coverage` được sửa, xem bên dưới; điều còn nguyên là KHOẢNG CÁCH
-giữa hai trạng thái.) Khoảng cách đó (2.0 điểm ở `content`, 2.3
-ở `structure`) LỚN HƠN ngưỡng dung sai 1.5 điểm của `scoreboard.ts`, nên hai lần chạy bình
-thường so với nhau đôi khi sẽ báo một sự di chuyển ảo trên đúng fixture này mà trình import
+chối — nhưng nửa offline (`content` và `structure`) đã được chạy nhiều lần trên một cây không
+đổi, cách nhau vài phút. Bốn trong năm fixture ra kết quả GIỐNG TUYỆT ĐỐI mỗi lần. Fixture thứ
+năm, `modelcontextprotocol.io/` (trang này tự dựng bằng script), KHÔNG phải một lần lệch giữa
+nhiều lần chạy ổn định — nó dao động giữa đúng hai trạng thái: `content 76 / structure 9.6` và
+`content 87 / structure 11.9`, vì cửa sổ lắng của `capture` bắt trang ở một điểm khác nhau
+trong một phần số lần chạy. `structure` không đổi qua mọi lần sửa cách đo `content` (lỗi đơn vị
+đo, rồi lỗi mẫu số bỏ sót phần bị chủ động bỏ qua bên dưới) — vẫn đúng hai giá trị đó; chỉ
+`content` di chuyển, và di chuyển KHÁC NHAU ở mỗi trạng thái, vì hai trạng thái DOM khác nhau ở
+lượng khoảng cách đó là do bị bỏ qua chứ không chỉ do thật sự mất. Khoảng cách giữa hai trạng
+thái ở `structure` (2.3) LỚN HƠN ngưỡng dung sai 1.5 điểm của `scoreboard.ts`, nên hai lần chạy
+bình thường so với nhau đôi khi sẽ báo một sự di chuyển ảo trên đúng fixture này mà trình import
 chẳng có gì thay đổi. Đừng nâng ngưỡng dung sai để che nó đi — nhiễu hai trạng thái của một
 trang không phải là mẫu để đặt một ngưỡng chung, và cách sửa khả dĩ hơn là làm cho việc lắng của
 `capture` ổn định hơn với một trang còn đang tự dựng, không phải nới rộng scoreboard.

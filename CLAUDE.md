@@ -2068,26 +2068,46 @@ that accounts for them.
   removes that specific cause; the clamp stays anyway, because the two sides are still built by
   two different walks of the page and a small positive drift on an unusual page is not ruled out.
 
-  **A SECOND CAUSE SURVIVES THE FIX, and the SHAPE of what is known about it matters more than
-  the number.** `aria-hidden="true"` does not affect layout, so `innerText` counts that text
-  while the walk deliberately skips it — the author's own mark for decoration and for duplicates.
-  MEASURED on `modelcontextprotocol.io`: 351 of 2,588 non-whitespace characters, 13.6%, which
-  accounts for that fixture reading 73-75% rather than the high eighties. Not a defect: the walk
-  is right to skip it and the denominator is right to be the page a reader sees.
+  **A SECOND CAUSE SURVIVED THE FIX, AND IT HAS SINCE BEEN CLOSED — IT WAS NEVER ONLY
+  `aria-hidden`.** `aria-hidden="true"` does not affect layout, so `innerText` counted that text
+  while the walk deliberately skipped it — the author's own mark for decoration and for
+  duplicates. MEASURED on `modelcontextprotocol.io`: 351 of 2,588 non-whitespace characters,
+  13.6%, which accounted for that fixture reading 73-75% rather than the high eighties. This was
+  recorded as a residual the denominator could not reach, because the denominator subtracted
+  page chrome ALONE — every other reason the walk turns something away (an element it judges
+  `hidden`, a `<nav>`, a form control and its labels, a `<script>`/`<style>` body, a panel set
+  with no readable labels) read as lost content by the exact same mistake, `aria-hidden` was
+  simply the loudest instance of it on this one fixture.
 
-  **THE BIMODAL FIXTURE IS NOT A SETTLE-TIMING PROBLEM, and that is worth knowing before anyone
-  spends an afternoon on it.** `modelcontextprotocol.io` settles into one of two `content` values
-  two points apart — 73 or 75 after the units fix, 71 or 73 before it — and the obvious suspect is
-  `settleDom`'s bounds, since the page builds itself with scripts. MEASURED and RULED OUT: four
-  captures each at `settleMs` of 2,000, 5,000 and 9,000 stayed bimodal at every setting, with both
-  values appearing at 9 seconds. Waiting longer does not converge it.
+  `DECLINED` in `capturePage` is now that whole set — every `skip()` reason that is the walk
+  DECIDING something is not content, as opposed to running OUT OF ROOM for content it never
+  disputed was real. `skip` sums each decline's own `innerText` into `declinedChars`, subtracted
+  from the denominator beside `chromeChars` — the exact treatment `pageChromeRoots` already gave
+  chrome, generalised to every other considered decline. What is deliberately NOT in `DECLINED`:
+  `over-node-limit`, `over-section-limit`, `over-image-limit`, `text-too-long` — a quota running
+  out is the walk FAILING to reach real content, not deciding it is not content, and it has to
+  keep pulling the number down or a page read before it finished building would look no
+  different from one read whole. Pinned by two tests in `test/import.test.ts`: a page the walk
+  takes entirely, plus an `aria-hidden` block holding real text, now reads at or near 100 where
+  it read 44 before the fix; a page whose `maxNodes` is set below its own paragraph count still
+  reads well under 50.
 
-  The second probe — capture repeatedly, keep the text of each state, diff them to find the ~50
-  characters that differ — could not be run: six consecutive captures all came back 75, so there
-  was no second state to diff against. So the cause is unidentified AND the excursion is rarer
-  than the first tally suggested (that one counted 7 and 6 across 13 runs). Two points on one
-  fixture is below the `DEFAULT_TOLERANCE` argument's worth of investigation; what is recorded
-  here is the dead end, so the next reader starts after it rather than at it.
+  **THE BIMODAL FIXTURE IS STILL BIMODAL, and that is the honest result of this fix rather than a
+  failure of it.** `modelcontextprotocol.io` used to settle into one of two `content` values two
+  points apart — 73 or 75 — because `capture`'s settle window catches a script-built page at one
+  of two DOM states some fraction of the time; RULED OUT as a `settleDom` bound before this work
+  (four captures each at `settleMs` 2,000/5,000/9,000 stayed bimodal at every setting, both
+  values appearing at 9 seconds). This fix changes how the SAME captured tree is MEASURED, never
+  which tree gets captured, so it could not touch that and did not: five offline runs after
+  landing it read 76/9.6 once and 87/11.9 four times — the same two `structure` values as
+  before, unmoved, which is exactly the property this fix is required to hold — each now paired
+  with a HIGHER `content` because both states carry declinable material the old denominator was
+  charging against them regardless. The gap between the two `content` readings widened, from 2
+  points to 11, which says the two DOM states differ in how much of THAT gap is decline-shaped
+  and not only in how much is genuinely missing — but the cause of the bimodality itself is
+  exactly as open as it was. This fix answers "how much of a captured page is honestly missing";
+  it was never going to answer "why does this one page settle into two different trees", and it
+  has not.
 
   **AND THE DENOMINATOR USED A NARROWER DEFINITION OF CHROME THAN THE WALK DID, on a fixture
   neither residual above is about.** `inPageChrome` recognises a footer by a class or id
@@ -2110,20 +2130,40 @@ that accounts for them.
   Re-measured against the live `rust-lang.org` page the same day this was fixed: the page's
   chrome sums to the identical 479 characters (one `<header>`, one `<footer>`, both already
   caught by tag) under the old rule and the new one, because it currently carries no class- or
-  id-matched footer distinct from the ones tag alone already catches. So this fix changes
-  nothing on this page, and the gap below is still open.
+  id-matched footer distinct from the ones tag alone already catches. So this fix changed
+  nothing on this page, and the gap below stayed open a while longer.
 
-  `rust-lang.org` reads 92% and NOBODY KNOWS WHY. The aria-hidden explanation is ruled OUT there
-  by measurement — zero such elements, zero characters — the chrome-denominator gap fixed above
-  turns out to be zero-width on this page too, measured — and no other cause has been found.
-  That sentence is the useful half: an unexplained gap recorded as unexplained costs the next
-  reader one paragraph, while the same gap attributed to the nearest plausible cause costs them
-  the afternoon it takes to eliminate a hypothesis that was already eliminated. The first draft
-  of this entry blamed aria-hidden for BOTH pages; one probe against the second page disproved
-  it, and a later draft nearly blamed the chrome denominator for this page too, on the strength
-  of a hand-computed "honest chrome" figure that did not match what the shipped rule actually
-  measures here — a reminder that a diagnosis is a hypothesis until it is run against the real
-  code, not a substitute for running it.
+  **`rust-lang.org` READ 92% FOR A DIFFERENT REASON, AND THE DECLINE FIX ABOVE DOES NOT TOUCH IT
+  EITHER — MEASURED, NOT ASSUMED, and this time the measurement names the cause.** Capturing the
+  page directly with a generous `maxNodes` returns `skipped: {}` — literally nothing the walk
+  ever visited was declined, so `declinedChars` is zero on this page and the fix in this entry
+  changes its number by construction. Diffing `body.innerText` against every top-level section
+  candidate PLUS every chrome root found the 180 missing characters by hand: `Install`, `Learn`,
+  `Playground`, `Tools`, `Governance`, `Funding`, `Community`, `Blog`, and a hidden language
+  `<select>` — the page's own top navigation. It is a bare `<nav>` sitting as a DIRECT CHILD OF
+  `<body>`, not inside a `<header>` — so `inPageChrome` does not count it as chrome — and not
+  inside any of `main > section, body > section, section, main > div` either, so it is never
+  among the section CANDIDATES. Its text sits in `body.innerText`, the denominator, and is
+  visited by NOTHING: never reaches a `skip()` call at all, which is exactly why it shows up as
+  a gap with an empty `skipped` rather than a `nav` count.
+
+  That is a THIRD kind of gap, distinct from both halves this entry otherwise names: not a
+  decline (the walk never looked at it to decline it) and not a budget failure (nothing ran
+  out) — a piece of the page the section-CANDIDATE scan simply never reaches. Left open rather
+  than folded into this fix: closing it well means deciding whether a bare top-level `<nav>`
+  should join `inPageChrome`'s definition of chrome, and that is a real question rather than an
+  obvious yes — a documentation page's own in-content table-of-contents `<nav>` is not page
+  chrome, and the two are not distinguishable by tag alone.
+
+  **So the three mysteries this file once treated as one turned out to be two.** The
+  `aria-hidden` residual and "coverage counts a decline as a loss" are the same mistake, and the
+  fix above closes both — every fixture with declinable content moved with it, which is the
+  confirmation the diagnosis was right about the part it was right about. `rust-lang.org`'s 92%
+  was never that mistake: an earlier pass through this file had already measured `aria-hidden`
+  at zero on this page and ruled it out, correctly. It is no longer unexplained, though — it is
+  now a named, structural gap in the candidate scan (a bare top-level `<nav>`) rather than an
+  unnamed one in the denominator, and the honest label for it changed from "nobody knows why" to
+  "known, and deliberately not fixed here."
 
 - **AN IMPORTED PAGE COULD LOOK LIKE ITS SOURCE, OR STAY RE-THEMABLE, BUT NOT BOTH — until the
   colour moved to the layer that outranks nothing.** A literal written on a node OUTRANKS its
