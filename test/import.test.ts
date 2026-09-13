@@ -1318,6 +1318,33 @@ describe.runIf(process.env.SB_BROWSER_TEST === '1')('capture() reporting how muc
   }, BROWSER_TIMEOUT);
 
   /**
+   * THE DENOMINATOR USED A NARROWER CHROME RULE THAN THE WALK DID.
+   *
+   * `inPageChrome` recognises a footer by TAG *or* by a class/id starting
+   * with `footer` — deliberately, since blender.org's site map carried no
+   * `<footer>` tag at all. The walk honours that and skips a
+   * `class="footer-…"` div correctly. The coverage denominator did not: it
+   * re-derived chrome with its own `querySelectorAll('header, nav, footer')`
+   * and filtered by tag, so a class-only footer was counted as real content
+   * lost — even though the walk never touched it. MEASURED on
+   * rust-lang.org this way: reported 92% while having lost nothing.
+   */
+  it('does not count a footer-shaped DIV against the denominator', async () => {
+    const got = await capture(
+      page(
+        '<body><div class="footer-navigation">' +
+          '<a href="/a">Điều khoản dịch vụ và chính sách bảo mật của chúng tôi về dữ liệu khách hàng</a>' +
+          '<a href="/b">Chính sách đổi trả hàng hóa trong vòng ba mươi ngày kể từ khi nhận hàng</a>' +
+          '<a href="/c">Hướng dẫn thanh toán và giao nhận hàng trên toàn quốc mọi lúc mọi nơi</a>' +
+          '</div>' +
+          '<main><section><p>Nội dung thật của trang nằm ở đây và được giữ nguyên vẹn không mất gì cả.</p></section></main></body>',
+      ),
+      { maxImages: 5, maxNodes: 200 },
+    );
+    expect(got.coverage).toBeGreaterThanOrEqual(97);
+  }, BROWSER_TIMEOUT);
+
+  /**
    * A LIST'S WORDS ARE WORDS. `textOf` counted `c.text` alone and a list
    * Captured carries `items: string[]` and never a `text`, so every list scored
    * ZERO. MEASURED on ttgshop.vn/quy-dinh-bao-hanh: 800 characters counted

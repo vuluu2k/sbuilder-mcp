@@ -1171,10 +1171,20 @@ function capturePage(limits: { maxSections: number; maxImages: number; maxTextCh
     for (const c of nodes) walk(c);
     return n;
   };
+  // OFF `pageChromeRoots` ITSELF, not a re-derived `header, nav, footer` tag
+  // query. `inPageChrome` recognises a footer by a class or id starting with
+  // `footer` as well as by tag — deliberately, since blender.org's site map
+  // carried no `<footer>` anywhere near it — and the walk above honours that.
+  // A denominator built from tags alone kept counting a class-only footer as
+  // lost content the walk had correctly skipped, which is what made
+  // rust-lang.org read 92% while having lost nothing.
+  //
+  // No membership test is needed here: `pageChromeRoots` is built so that no
+  // root it holds contains another (a nested candidate is dropped at
+  // construction, right above), so summing every root's own `innerText`
+  // double-counts nothing.
   let chromeChars = 0;
-  for (const el of Array.from(document.querySelectorAll('header, nav, footer'))) {
-    if (inPageChrome(el)) chromeChars += stripWs(el.innerText ?? '').length;
-  }
+  for (const el of pageChromeRoots) chromeChars += stripWs(el.innerText ?? '').length;
   const contentChars = Math.max(0, stripWs(document.body.innerText ?? '').length - chromeChars);
   // NO SIZE FLOOR ON THE CHECK. An earlier version only asked the question on
   // pages with more than 400 characters, which is the guard you write when you

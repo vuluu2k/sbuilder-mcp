@@ -1,5 +1,5 @@
 {
-  "generated": "2026-09-13T04:23:51.013Z",
+  "generated": "2026-09-13T05:23:04.129Z",
   "scores": [
     {
       "url": "https://ttgshop.vn/quy-dinh-bao-hanh",
@@ -18,15 +18,15 @@
     {
       "url": "https://ttgshop.vn/",
       "width": 1440,
-      "content": 19,
-      "structure": 0,
+      "content": 100,
+      "structure": 0.4,
       "mode": "offline"
     },
     {
       "url": "https://ttgshop.vn/",
       "width": 390,
-      "content": 19,
-      "structure": 0,
+      "content": 100,
+      "structure": 0.4,
       "mode": "offline"
     },
     {

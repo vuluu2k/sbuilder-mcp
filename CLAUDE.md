@@ -2089,12 +2089,41 @@ that accounts for them.
   fixture is below the `DEFAULT_TOLERANCE` argument's worth of investigation; what is recorded
   here is the dead end, so the next reader starts after it rather than at it.
 
+  **AND THE DENOMINATOR USED A NARROWER DEFINITION OF CHROME THAN THE WALK DID, on a fixture
+  neither residual above is about.** `inPageChrome` recognises a footer by a class or id
+  starting with `footer` as well as by tag — deliberately, since blender.org's own site map
+  carried no `<footer>` tag anywhere near it — and the walk honours that. The `chromeChars`
+  subtraction did not: it re-derived chrome with its own `querySelectorAll('header, nav,
+  footer')` and filtered by TAG, so a class-only footer the walk correctly skipped was still
+  counted as lost content in the denominator. Fixed by summing `pageChromeRoots` ITSELF rather
+  than re-deriving chrome by tag — one source of truth for what chrome is — with no membership
+  test needed on top of it, because `pageChromeRoots` is built so that no root it holds contains
+  another (a nested candidate is dropped at construction), so summing every root's own
+  `innerText` double-counts nothing.
+
+  MEASURED ON A SYNTHETIC FIXTURE: a `<div class="footer-navigation">` of link text beside a
+  `<main>` the walk kept whole read **25%** under the old rule, **≥97%** after —
+  `test/import.test.ts`'s `does not count a footer-shaped DIV against the denominator`. This was
+  a real, general defect, closed and tested.
+
+  **It is NOT the explanation for the paragraph below, though it looked like it should be.**
+  Re-measured against the live `rust-lang.org` page the same day this was fixed: the page's
+  chrome sums to the identical 479 characters (one `<header>`, one `<footer>`, both already
+  caught by tag) under the old rule and the new one, because it currently carries no class- or
+  id-matched footer distinct from the ones tag alone already catches. So this fix changes
+  nothing on this page, and the gap below is still open.
+
   `rust-lang.org` reads 92% and NOBODY KNOWS WHY. The aria-hidden explanation is ruled OUT there
-  by measurement — zero such elements, zero characters — and no other cause has been found. That
-  sentence is the useful half: an unexplained gap recorded as unexplained costs the next reader
-  one paragraph, while the same gap attributed to the nearest plausible cause costs them the
-  afternoon it takes to eliminate a hypothesis that was already eliminated. The first draft of
-  this entry blamed aria-hidden for BOTH pages; one probe against the second page disproved it.
+  by measurement — zero such elements, zero characters — the chrome-denominator gap fixed above
+  turns out to be zero-width on this page too, measured — and no other cause has been found.
+  That sentence is the useful half: an unexplained gap recorded as unexplained costs the next
+  reader one paragraph, while the same gap attributed to the nearest plausible cause costs them
+  the afternoon it takes to eliminate a hypothesis that was already eliminated. The first draft
+  of this entry blamed aria-hidden for BOTH pages; one probe against the second page disproved
+  it, and a later draft nearly blamed the chrome denominator for this page too, on the strength
+  of a hand-computed "honest chrome" figure that did not match what the shipped rule actually
+  measures here — a reminder that a diagnosis is a hypothesis until it is run against the real
+  code, not a substitute for running it.
 
 - **AN IMPORTED PAGE COULD LOOK LIKE ITS SOURCE, OR STAY RE-THEMABLE, BUT NOT BOTH — until the
   colour moved to the layer that outranks nothing.** A literal written on a node OUTRANKS its
