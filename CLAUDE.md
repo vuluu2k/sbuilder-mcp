@@ -2072,6 +2072,17 @@ that accounts for them.
   comparison, over a live network, of an imported page against its source before and after this
   patch — not a claim this file cannot back with a measurement.
 
+  **Measured after landing, offline, twice:** `SB_FIDELITY_OFFLINE=1 npm run fidelity` came back
+  with `content` and `structure` unchanged on four of five fixtures — the fifth,
+  `modelcontextprotocol.io/`, is the already-documented bimodal one (below) and both runs landed
+  on its `73 / 11.9` state, not a new one. That is the expected result, not a demonstrated
+  benefit: it confirms the mapper still ignores what `capture` samples (the property Task 1's own
+  test pins — `'DOES NOT change what the mapper produces'`, `test/import.test.ts`), which is a
+  check for a REGRESSION, not for whether an imported page now looks more like its source. This
+  phase's benefit STAYS unmeasured until someone runs `SB_FIDELITY=1` against a live site and
+  reads `visual`, before and after — no online run has happened in any environment this work has
+  had access to, so that number does not exist yet anywhere, not just here.
+
 ## The five traps
 
 Each fails SILENTLY. Each is encoded in `src/domains/site/traps.ts` (trap 5 in
