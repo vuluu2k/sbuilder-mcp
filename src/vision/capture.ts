@@ -540,15 +540,39 @@ function capturePage(limits: { maxSections: number; maxImages: number; maxTextCh
     if (titled) return titled;
     const dataIcon = clean(el.getAttribute('data-icon'));
     if (dataIcon) return dataIcon;
-    // A class list holds the icon set's id and a pile of layout classes with it.
-    // The longest hyphenated token is the id in every set seen here — `ri-…`,
-    // `fa-…`, `lucide-…`, `bi-…` — and a bare `w-4` cannot outrank it.
+    // A class list holds a pile of layout/utility classes and, IF the icon
+    // library stamps one, the set's own id. Ranking by LENGTH — the original
+    // rule here — was wrong: a utility framework's classes are routinely
+    // LONGER than an icon id, not shorter. MEASURED on
+    // modelcontextprotocol.io: the length rule picked
+    // ["shrink-0", "text-current", "text-current"] off that page's four
+    // icons — plain Tailwind utilities, none of which the mapper could ever
+    // build. And it is not merely a miss: running ten plausible class tokens
+    // through the mapper's lookup found six of ten resolve to a REAL icon
+    // (arrow-right, arrow-left, search-line, menu-fold, user-add,
+    // shopping-cart, close-circle all land) — so a class naming a wrapper's
+    // purpose or a layout role, not the glyph, can become a CONFIDENT WRONG
+    // icon, which this platform's own rule treats as worse than none.
+    //
+    // So a token is a candidate only when it carries a prefix a real icon
+    // set actually stamps — RemixIcon `ri-`, Font Awesome `fa-`/`fas-`/
+    // `far-`/`fal-`/`fab-`/`fad-`, Bootstrap Icons `bi-`, Lucide `lucide-`,
+    // Material Design Icons `mdi-`, Feather `feather-`, Ionicons `ion-`, and
+    // the generic icon-font convention `icon-`/`icons-` (Fontello, IcoMoon
+    // ship exactly that prefix, and no utility framework seen here claims
+    // it) — the same prefixes the mapper's own lookup already strips before
+    // matching. No utility framework uses any of these as a prefix, so
+    // requiring one costs nothing on a page that has a real icon set and
+    // drops nothing but noise on one that does not. Ranked by length only
+    // AMONG prefixed tokens, which is now just a tie-break rather than the
+    // whole rule.
     // `getAttribute('class')`, NOT `className`: on an SVG element the property is
     // an SVGAnimatedString, so `String(el.className)` is the literal
     // "[object SVGAnimatedString]" and every class-named icon went unrecognised.
+    const ICON_CLASS_PREFIX = /^(?:ri|fa[srlbd]?|lucide|bi|feather|icons?|material|mdi|ion|hero)[-_]/i;
     let best = '';
     for (const w of (el.getAttribute('class') ?? '').split(/\s+/)) {
-      if (w.indexOf('-') > 0 && w.length > best.length) best = w;
+      if (ICON_CLASS_PREFIX.test(w) && w.length > best.length) best = w;
     }
     return best;
   };

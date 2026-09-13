@@ -443,6 +443,65 @@ describe.runIf(process.env.SB_BROWSER_TEST === '1')('capture()', () => {
     expect(kids.every((c) => c.kind === 'icon')).toBe(true);
   }, 60_000);
 
+  it('takes a class token only when it carries a recognised icon-set prefix, never by length', async () => {
+    // MEASURED on modelcontextprotocol.io: ranking a class candidate by
+    // LENGTH picked "shrink-0" and "text-current" off that page's four
+    // icons — plain Tailwind utility classes sitting beside no icon-set
+    // class at all — and the mapper built zero icons from any of them. The
+    // honest outcome for a class list with no such prefix is to say so and
+    // drop the icon, the same one those pages get today, for a stated reason
+    // instead of a candidate that could have gone either way.
+    const icons = `data:text/html,${encodeURIComponent(
+      '<meta charset="utf-8"><main><section>' +
+        '<svg class="h-4 w-4 text-current shrink-0" aria-hidden="true"></svg>' +
+        '<svg class="ri-home-line" aria-hidden="true"></svg>' +
+        '</section></main>',
+    )}`;
+    const r = await capture(icons);
+    const kids = r.sections[0].children ?? [];
+    // The first svg carries no recognised prefix and is dropped entirely —
+    // the working case (a bare icon-set class) must not regress.
+    expect(kids.map((c) => c.name)).toEqual(['ri-home-line']);
+    expect(r.skipped.svg).toBe(1);
+  }, 60_000);
+
+  it('ranks a class candidate by its icon-set prefix, not by the longer utility class beside it', async () => {
+    // The false-positive path this heuristic used to open: running plausible
+    // class tokens through `iconFor` found six of ten resolve to a REAL
+    // icon (arrow-right, arrow-left, search-line, menu-fold, user-add,
+    // shopping-cart, close-circle all land; text-current, shrink-0,
+    // chevron-down do not) — so a utility or layout class can become a
+    // confident wrong icon, and because the old rule ranked by length, a
+    // longer utility class could outrank a genuine icon-set class sitting
+    // right beside it. Here the utility token is 47 characters and the
+    // icon-set token 12 — a length-ranked pick would have taken the utility
+    // class and built the wrong icon (or none at all).
+    const icons = `data:text/html,${encodeURIComponent(
+      '<meta charset="utf-8"><main><section>' +
+        '<svg class="totally-unrelated-and-much-longer-utility-class ri-home-line" aria-hidden="true"></svg>' +
+        '</section></main>',
+    )}`;
+    const r = await capture(icons);
+    const kids = r.sections[0].children ?? [];
+    expect(kids.map((c) => c.name)).toEqual(['ri-home-line']);
+  }, 60_000);
+
+  it('lets a sprite reference, an aria-label and a title win over the class, in that order', async () => {
+    // The sprite `<use>`, `aria-label` and `<title>` are deliberate statements
+    // by the page about what the icon IS, and they outrank the class for
+    // exactly that reason — a class fix must not change this ordering.
+    const icons = `data:text/html,${encodeURIComponent(
+      '<meta charset="utf-8"><main><section>' +
+        '<svg class="ri-wrong-icon"><use href="#ri-correct-icon"></use></svg>' +
+        '<svg class="ri-wrong-icon" aria-label="Đúng nhãn"></svg>' +
+        '<svg class="ri-wrong-icon"><title>Đúng tiêu đề</title></svg>' +
+        '</section></main>',
+    )}`;
+    const r = await capture(icons);
+    const kids = r.sections[0].children ?? [];
+    expect(kids.map((c) => c.name)).toEqual(['ri-correct-icon', 'Đúng nhãn', 'Đúng tiêu đề']);
+  }, 60_000);
+
   it('reports a form rather than dropping it, because rebuilding one means guessing mapTo', async () => {
     // A contact page that silently arrives with no way to contact anybody is the
     // failure worth avoiding. The fields are a vocabulary the server validates

@@ -974,6 +974,25 @@ that accounts for them.
   testing the attribute before the svg branch would put the `icon` element permanently out of
   reach of a real page. An aria-hidden CONTAINER is still skipped before the walk descends.
 
+  **AND THE CLASS BRANCH RANKED BY LENGTH, WHICH IS BACKWARDS FOR A UTILITY FRAMEWORK.** The
+  comment on that branch argued "the longest hyphenated token is the id in every set seen here
+  ... and a bare `w-4` cannot outrank it" — true of `w-4`, false of Tailwind. MEASURED on
+  `modelcontextprotocol.io`: the candidates it produced were `["shrink-0", "text-current",
+  "text-current"]`, plain utility classes, on a page whose four icons the mapper built zero of.
+  Worse than a miss: running ten plausible class tokens through `iconFor` found **six of ten
+  resolve to a REAL icon** (`arrow-right`, `arrow-left`, `search-line`, `menu-fold`, `user-add`,
+  `shopping-cart`, `close-circle` all land; `text-current`, `shrink-0`, `chevron-down` do not) —
+  so a class naming a wrapper's purpose or a layout role, not the glyph, can become a CONFIDENT
+  WRONG icon, and because the rule ranked by length, a longer utility class could outrank a
+  shorter genuine icon-set class sitting right beside it. The class branch now takes a token only
+  when it carries a prefix a real icon set actually stamps — `ri-`, `fa-`/`fas-`/`far-`/`fal-`/
+  `fab-`/`fad-`, `bi-`, `lucide-`, `mdi-`, `feather-`, `ion-`, and the generic icon-font
+  convention `icon-`/`icons-` (Fontello, IcoMoon ship exactly that prefix, and no utility
+  framework claims it) — the same prefixes `iconFor` already strips before matching — and ranks
+  by length only AMONG those, as a tie-break rather than the whole rule. No prefixed token means
+  no candidate, which is the same outcome those pages got before, now for a stated reason instead
+  of a guess that could have gone either way.
+
 - **A COLLAPSED `<details>` MEASURES AS ZERO**, so an FAQ imported as questions with no
   answers. The source's collapsed state is not content — this platform's accordion has its own
   `openItems` — so every one is opened before anything is measured. Consecutive `<details>`
