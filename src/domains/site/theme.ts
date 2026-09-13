@@ -197,7 +197,32 @@ export interface ThemePatch {
  * and an empty-looking patch is the shape that once let a live site lose its
  * entire palette with a 200 and nothing to restore from. Returning `null` is
  * what lets the caller send no request at all rather than an empty one.
+ *
+ * TWO FIELDS `SourceTokens.textStyles` CARRIES ARE NOT PATCHED HERE, DELIBERATELY:
+ *
+ * - `fontFamily` is a whole CSS stack (`Inter, "Segoe UI", ui-sans-serif,
+ *   sans-serif`, or a bundler's `__Inter_e8ce0c, __Inter_Fallback_e8ce0c,
+ *   sans-serif`) — `getComputedStyle` never hands back the bare registered
+ *   name the starter's slots hold (`"Inter"`), so writing it stores a family
+ *   the target site has no `@font-face` for, site-wide. This phase moves
+ *   colours and a type SCALE only, which is what the docs promise; carrying
+ *   a font is a later phase's decision.
+ * - `lineHeight` is converted rather than dropped: `getComputedStyle` resolves
+ *   it to px, and the starter's slots hold a PERCENTAGE
+ *   (`"lineHeight": "130%"`) on purpose, alongside a `responsive.mobile`
+ *   `fontSize` this patch never touches — a px value pins the desktop leading
+ *   onto whatever the mobile size ends up being, which is a different font
+ *   scale from a different site. `pctLineHeight` below re-derives the
+ *   percentage against the SAME sample's own `fontSize`, so the ratio the
+ *   source actually painted survives instead of one absolute number.
  */
+function pctLineHeight(lineHeight: string, fontSize: string): string | undefined {
+  const lh = parseFloat(lineHeight);
+  const fs = parseFloat(fontSize);
+  if (!lh || !fs) return undefined;
+  return `${Math.round((lh / fs) * 100)}%`;
+}
+
 export function themePatchFor(tokens: SourceTokens): ThemePatch | null {
   const colors = { ...tokens.colors };
   const text_styles: Record<string, Record<string, string>> = {};
@@ -205,8 +230,10 @@ export function themePatchFor(tokens: SourceTokens): ThemePatch | null {
     const style: Record<string, string> = {};
     if (decls.fontSize) style.fontSize = decls.fontSize;
     if (decls.fontWeight) style.fontWeight = decls.fontWeight;
-    if (decls.lineHeight) style.lineHeight = decls.lineHeight;
-    if (decls.fontFamily) style.fontFamily = decls.fontFamily;
+    if (decls.lineHeight && decls.fontSize) {
+      const pct = pctLineHeight(decls.lineHeight, decls.fontSize);
+      if (pct) style.lineHeight = pct;
+    }
     if (Object.keys(style).length) text_styles[slug] = style;
   }
   if (Object.keys(colors).length === 0 && Object.keys(text_styles).length === 0) return null;
@@ -222,6 +249,8 @@ export interface ThemeChange {
 
 /** What `applyThemePatch` did, and what it could not do anything with. */
 export interface ThemeApplyResult {
+  /** The mutated theme, ready to send back as the PUT body — see `applyThemePatch`. */
+  theme: StarterTheme;
   changes: ThemeChange[];
   /**
    * A colour id or text-style slug the patch named that this site's theme
@@ -236,12 +265,22 @@ export interface ThemeApplyResult {
 }
 
 /**
- * Apply a `ThemePatch` onto a `StarterTheme` IN PLACE and report what moved.
+ * Apply a `ThemePatch` onto a `StarterTheme` and report what moved.
  *
- * The caller supplies the theme to mutate — never the live document read by
- * `siteTheme`'s cache — so this is deliberately a pure, testable step ahead
- * of the actual PUT, the same read-modify-write shape `sb_theme` itself
- * follows against this replace-only endpoint.
+ * CLONES ITS INPUT rather than mutating it, and returns the clone as
+ * `.theme` — a caller sends THAT back as the PUT body, never the theme it
+ * passed in. This used to be documented as the caller's responsibility
+ * ("never the live document read by `siteTheme`'s cache") and that contract
+ * was one call away from being forgotten: `siteTheme` caches `STARTER_THEME`
+ * BY REFERENCE (`theme-fetch.ts`), so a caller that skipped the clone would
+ * mutate the module-level constant itself, and every later site in the same
+ * process would get a starter theme wearing some other site's palette. A
+ * contract a caller can forget is one that will eventually be forgotten;
+ * cloning here costs nothing and removes the way to get it wrong.
+ *
+ * Otherwise this is the same read-modify-write shape `sb_theme` itself
+ * follows against this replace-only endpoint, kept as a pure, testable step
+ * ahead of the actual PUT.
  *
  * Unlike `sb_theme`, an id or slug the theme does not carry is SKIPPED
  * rather than refused: every id and slug `themePatchFor` writes is one of
@@ -254,10 +293,11 @@ export interface ThemeApplyResult {
  * `muted` unmatched learns something true about their site.
  */
 export function applyThemePatch(theme: StarterTheme, patch: ThemePatch): ThemeApplyResult {
+  const draft = structuredClone(theme);
   const changes: ThemeChange[] = [];
   const skipped: string[] = [];
   for (const [id, value] of Object.entries(patch.colors)) {
-    const token = theme.colors?.find((c) => c.id === id);
+    const token = draft.colors?.find((c) => c.id === id);
     if (!token) {
       skipped.push(`colors.${id}`);
       continue;
@@ -267,7 +307,7 @@ export function applyThemePatch(theme: StarterTheme, patch: ThemePatch): ThemeAp
     token.value = value;
   }
   for (const [slug, decls] of Object.entries(patch.text_styles)) {
-    const style = theme.textStyles?.find((t) => t.slug === slug);
+    const style = draft.textStyles?.find((t) => t.slug === slug);
     if (!style) {
       skipped.push(`textStyles.${slug}`);
       continue;
@@ -280,7 +320,7 @@ export function applyThemePatch(theme: StarterTheme, patch: ThemePatch): ThemeAp
       style.base[prop] = value;
     }
   }
-  return { changes, skipped };
+  return { theme: draft, changes, skipped };
 }
 
 export { STARTER_THEME };

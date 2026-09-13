@@ -18,7 +18,8 @@ import {
 } from '../domains/site/importmap.js';
 import { sourceTokens } from '../domains/site/sourcetokens.js';
 import { themePatchFor, applyThemePatch } from '../domains/site/theme.js';
-import { siteTheme } from '../domains/site/theme-fetch.js';
+import { clearThemeCache } from '../domains/site/theme-fetch.js';
+import { readTheme } from './theme.js';
 import type { NodeSpec } from '../domains/site/builder.js';
 import { subtreeIds } from '../core/tree.js';
 import {
@@ -627,47 +628,90 @@ export function registerImportTools(
       // including ones this import never touches — a caller who wants the
       // source's STRUCTURE onto a site that already has its own brand must be
       // able to say so, and until now nothing let them.
-      let themeBlock: Record<string, unknown> | undefined;
+      // `theme` ALWAYS ENDS UP DEFINED — the dry run's `theme_note` promises a
+      // report, and a caller who was promised one and gets silence cannot tell
+      // "it never ran" from "it ran and found nothing". Every branch below
+      // names why, in the same vocabulary as `skipped`/`failed` elsewhere in
+      // this result.
+      let themeBlock: Record<string, unknown>;
       if (applyTheme === false) {
         themeBlock = { skipped: 'theme:false' };
-      }
-      const entryShot = applyTheme !== false ? byUrl.get(entry) : undefined;
-      if (entryShot?.ok) {
-        try {
+      } else {
+        const entryShot = byUrl.get(entry);
+        if (!entryShot?.ok) {
+          themeBlock = {
+            skipped: `${entry} could not be captured, so there was nothing to read a palette or ` +
+              'type scale from',
+          };
+        } else {
           const patch = themePatchFor(sourceTokens(entryShot.result.sections));
-          if (patch) {
-            const { theme: siteThemeDoc, from: themeOrigin } = await siteTheme(ctx, siteId);
-            const draft = structuredClone(siteThemeDoc);
-            const { changes, skipped } = applyThemePatch(draft, patch);
-            if (changes.length > 0) {
-              await request({
-                base: ctx.base,
-                method: 'PUT',
-                path: `/api/sites/${encodeURIComponent(siteId)}/theme`,
-                token: siteToken(ctx),
-                body: { theme: draft },
-                fetchImpl: ctx.fetchImpl,
-              });
-            }
-            // A MISS IS SKIPPED, NEVER SILENT. `applyThemePatch` cannot lose a
-            // token — it either lands in `changes` or is named in `skipped` —
-            // so this reports both rather than only the half that wrote.
-            if (changes.length > 0 || skipped.length > 0) {
+          if (!patch) {
+            themeBlock = { skipped: `${entry} expressed no readable colour or text style` };
+          } else {
+            try {
+              // NEVER `siteTheme` here — that reader is for read-only callers
+              // (`sb_node_read`'s preset resolution) and TOLERATES a failed GET
+              // by silently handing back the starter theme. On a write path
+              // that tolerance is destructive: a transient 401/500 would read
+              // as "this site has no theme yet" and this PUT would replace the
+              // merchant's own colours, text styles and presets with the
+              // starter's. `readTheme` (`./theme.ts`, `sb_theme`'s own reader)
+              // does not catch, so a failed GET throws here and lands in the
+              // `catch` below as a reported failure instead of a silent
+              // overwrite.
+              const { theme: siteThemeDoc, origin: themeOrigin } = await readTheme(ctx, siteId);
+              // `applyThemePatch` clones internally and hands the clone back
+              // as `.theme` — never mutate `siteThemeDoc` here, and never
+              // send it as the PUT body; send the returned one.
+              const { theme: draft, changes, skipped } = applyThemePatch(siteThemeDoc, patch);
+              if (changes.length > 0) {
+                await request({
+                  base: ctx.base,
+                  method: 'PUT',
+                  path: `/api/sites/${encodeURIComponent(siteId)}/theme`,
+                  token: siteToken(ctx),
+                  body: { theme: draft },
+                  fetchImpl: ctx.fetchImpl,
+                });
+                // THE CACHE NOW LIES, WITHOUT THIS. `siteTheme`'s process-wide
+                // cache (`theme-fetch.ts`) still holds the PRE-patch theme,
+                // and `sb_node_read`'s preset resolution
+                // (`presetLayer`/`resolveVars`) reads through it — so the
+                // very next call in this session would flatten
+                // `var(--wb-color-heading)` to the OLD colour, on a site
+                // whose write it just watched land. Cheap and unconditional:
+                // one write invalidates the one cache that could go stale
+                // from it.
+                clearThemeCache();
+              }
+              // A MISS IS SKIPPED, NEVER SILENT. `applyThemePatch` cannot lose
+              // a token — it either lands in `changes` or is named in
+              // `skipped` — so this reports both rather than only the half
+              // that wrote.
               themeBlock = {
-                ...(changes.length > 0 ? { changed: changes } : {}),
+                ...(changes.length > 0 ? { changed: changes } : { skipped: 'nothing matched' }),
                 ...(skipped.length > 0 ? { unmatched: skipped } : {}),
+                // 'starter' here can only mean the documented first-visit
+                // answer (`GET` returned no theme at all) — a failed GET now
+                // throws and is caught below instead. Said as what is known,
+                // not asserted as why: this reader does not distinguish "never
+                // saved one" from any other shape it could not read as a
+                // theme.
                 ...(themeOrigin === 'starter'
-                  ? { built_from: "the starter theme — this site had never saved one" }
+                  ? { built_from: "the starter theme, because this site's own theme could not be read as one" }
                   : {}),
               };
+            } catch (e) {
+              // THE PAGES ARE THE DELIVERABLE. A theme that did not take is a
+              // reported line, never a reason to fail the import — the same
+              // rule this tool already follows when an image upload fails and
+              // the node keeps the source's original URL instead. This is
+              // also where a FAILED read lands (see the comment above
+              // `readTheme`): nothing is written when the theme could not be
+              // read.
+              themeBlock = { failed: (e as Error).message.replace(/^sbuilder:\s*/, '').slice(0, 160) };
             }
           }
-        } catch (e) {
-          // THE PAGES ARE THE DELIVERABLE. A theme that did not take is a
-          // reported line, never a reason to fail the import — the same rule
-          // this tool already follows when an image upload fails and the
-          // node keeps the source's original URL instead.
-          themeBlock = { failed: (e as Error).message.replace(/^sbuilder:\s*/, '').slice(0, 160) };
         }
       }
 
@@ -948,7 +992,7 @@ export function registerImportTools(
         },
         ...(lastOpened ? { open: lastOpened } : {}),
         ...(templateNote ? { entity_pages: templateNote } : {}),
-        ...(themeBlock ? { theme: themeBlock } : {}),
+        theme: themeBlock,
         directive: ctx.notices.once(
           'import_site',
           'These pages are DRAFTS: nothing is live until sb_publish. Three things the import ' +

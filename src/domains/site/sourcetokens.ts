@@ -164,10 +164,13 @@ function metric(flat: Captured[], field: 'borderRadius' | 'padding' | 'gap', max
 
 /**
  * Cluster what `capture` measured a source page painting into the theme's own
- * vocabulary — five colour roles and a heading/text type scale, plus the
- * radii and spacings a later phase (P3) may draw a preset from. See the
- * module doc comment for why role assignment is first-of-kind and why
- * `background` alone departs from it.
+ * vocabulary — five colour roles and a heading/text type scale, plus `radii`
+ * and `spacings`. Those two are PROVISIONAL: nothing consumes them today
+ * (`themePatchFor` drops both — the theme has no standalone token for
+ * either), they are carried in case a later phase draws a preset from them,
+ * and their shape may change without that being a break. See the module doc
+ * comment for why role assignment is first-of-kind and why `background`
+ * alone departs from it.
  */
 export function sourceTokens(sections: Captured[]): SourceTokens {
   const flat = flatten(sections);

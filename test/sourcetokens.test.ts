@@ -53,6 +53,33 @@ describe('sourceTokens — colours', () => {
     ]);
     expect(got.colors.heading).toBeUndefined();
   });
+
+  // `muted` is the one role with no first-of-kind rule — it comes from
+  // FREQUENCY instead, gated on differing from the `text` role already
+  // chosen above. Every other role here is covered by a first-of-kind test;
+  // this is muted's own.
+  it('picks the SECOND-MOST-FREQUENT text colour as muted, when it differs from `text`', () => {
+    const got = sourceTokens([
+      section(
+        { kind: 'text', text: 'a', sample: { color: 'rgb(75, 85, 99)' } },
+        { kind: 'text', text: 'b', sample: { color: 'rgb(75, 85, 99)' } },
+        { kind: 'text', text: 'c', sample: { color: 'rgb(156, 163, 175)' } },
+      ),
+    ]);
+    expect(got.colors.text).toBe('#4b5563');
+    expect(got.colors.muted).toBe('#9ca3af');
+  });
+
+  it('leaves muted absent when the source paints only one text colour', () => {
+    const got = sourceTokens([
+      section(
+        { kind: 'text', text: 'a', sample: { color: 'rgb(75, 85, 99)' } },
+        { kind: 'text', text: 'b', sample: { color: 'rgb(75, 85, 99)' } },
+      ),
+    ]);
+    expect(got.colors.text).toBe('#4b5563');
+    expect('muted' in got.colors).toBe(false);
+  });
 });
 
 describe('sourceTokens — the type scale', () => {

@@ -1454,6 +1454,39 @@ describe('sb_import_site — the theme patch', () => {
     const patch = themePatchFor(sourceTokens([]));
     expect(patch).toBeNull();
   });
+
+  it('drops fontFamily and converts lineHeight to a percentage of the sample\'s own fontSize', () => {
+    // getComputedStyle hands back a whole CSS stack for fontFamily (or a
+    // bundler's mangled name) and a resolved PX lineHeight — neither is what
+    // the starter's text-style slots hold (a bare registered name; a
+    // percentage paired with a separate mobile fontSize this patch never
+    // touches), so writing either verbatim would detach the target site from
+    // its own font registration and pin its leading to the wrong scale.
+    const patch = themePatchFor(
+      sourceTokens([
+        {
+          kind: 'section',
+          children: [
+            {
+              kind: 'heading',
+              level: 1,
+              text: 'A',
+              sample: {
+                color: 'rgb(179, 18, 58)',
+                fontSize: '44px',
+                lineHeight: '57.2px',
+                fontFamily: '__Inter_e8ce0c, __Inter_Fallback_e8ce0c, sans-serif',
+              },
+            },
+          ],
+        },
+      ]),
+    );
+    expect(patch).not.toBeNull();
+    const h1 = patch!.text_styles['heading-1'];
+    expect(h1.fontFamily).toBeUndefined();
+    expect(h1.lineHeight).toBe('130%'); // 57.2 / 44 = 1.3
+  });
 });
 
 describe('applyThemePatch — a token the site theme does not carry', () => {
@@ -1487,5 +1520,23 @@ describe('applyThemePatch — a token the site theme does not carry', () => {
       text_styles: {},
     });
     expect(skipped).toEqual([]);
+  });
+
+  // The caller used to be the one required to clone before calling this —
+  // "never pass the live document" was a comment, not a guarantee. A future
+  // caller that forgot and passed `siteTheme`'s cached STARTER_THEME (held
+  // by reference) would corrupt that module constant for the rest of the
+  // process. Cloning INSIDE the function removes the way to get this wrong.
+  it('never mutates the theme it was given — the caller gets a fresh clone back', () => {
+    const input = theme();
+    const { theme: draft } = applyThemePatch(input, {
+      colors: { heading: '#b3123a' },
+      text_styles: { 'heading-1': { fontSize: '44px' } },
+    });
+    expect(input.colors[0].value).toBe('#111827');
+    expect(input.textStyles[0].base?.fontSize).toBe('40px');
+    expect(draft).not.toBe(input);
+    expect(draft.colors[0].value).toBe('#b3123a');
+    expect(draft.textStyles[0].base?.fontSize).toBe('44px');
   });
 });

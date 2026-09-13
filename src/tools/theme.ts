@@ -5,6 +5,7 @@ import { request } from '../transport/http.js';
 import { siteToken } from './credentialpick.js';
 import { siteFor, type ToolContext } from './context.js';
 import { STARTER_THEME } from '../domains/site/theme.js';
+import { clearThemeCache } from '../domains/site/theme-fetch.js';
 import type { StarterTheme } from '../catalog/theme-types.js';
 
 /**
@@ -43,8 +44,17 @@ interface ThemeReply {
   theme: StarterTheme | null;
 }
 
-/** The site's theme, or the starter when it has never saved one. */
-async function readTheme(
+/**
+ * The site's theme, or the starter when it has never saved one — READ, NEVER
+ * TOLERATED. Unlike `siteTheme` (`domains/site/theme-fetch.ts`), this does not
+ * catch: a failed GET propagates, because the only two callers that may reuse
+ * this are read-modify-write paths against the replace-only theme PUT, where a
+ * swallowed failure would write the starter over a site's own saved theme (see
+ * `sb_import_site`'s theme step). `siteTheme`'s tolerance is correct for its own
+ * callers — a read for `sb_node_read` — and wrong for a write; this is the
+ * non-swallowing alternative, not a stricter version of that one.
+ */
+export async function readTheme(
   ctx: ToolContext,
   siteId: string,
 ): Promise<{ theme: StarterTheme; origin: 'site' | 'starter' }> {
@@ -186,6 +196,11 @@ export function registerThemeTools(server: McpServer, ctx: ToolContext): void {
         body: { theme },
         fetchImpl: ctx.fetchImpl,
       });
+      // `siteTheme`'s process-wide cache (`theme-fetch.ts`) would otherwise
+      // keep answering with the PRE-patch theme, and `sb_node_read`'s preset
+      // resolution reads through it — the next call in this session would
+      // report the colour this write just replaced as what a node paints.
+      clearThemeCache();
       return text({
         changed: changes,
         on: site_id,

@@ -107,7 +107,7 @@ in this client: one would put the very key the platform exists to hold back into
 | `sb_event` | Give a node a click action — open the cart, go to a page, open a pop-up |
 | `sb_bind` | Bind a node's content to real store data, or make a button add to the cart |
 | `sb_import` | Read a page from any public URL and add its structure and content to the open page as real elements, styled with THIS page's own tokens — a translation, not a clone |
-| `sb_import_site` | Read a WHOLE site from one URL — its sitemap, or the links on that page — and give each page found its own draft page here, built from this site's tokens |
+| `sb_import_site` | Read a WHOLE site from one URL — its sitemap, or the links on that page — and give each page found its own draft page here, built from this site's tokens; the entry page's own colours and type scale also patch into this SITE'S theme, so it stops being purely a read |
 | `sb_theme` | Read or patch the site's palette and type scale — the layer every style preset resolves from, so one token repaints every page |
 | `sb_store` | Run a store flow that must happen in a fixed order — the four writes that make a working checkout, or any of the platform's 17 form templates (login, register, forgot, contact, subscribe …) with its own field document |
 | `sb_undo` | Put back what a PUT replaced. The SECOND answer for a page, not the only one: the platform has versions, history and restore (`sb_api_find` "page versions"), which outlive this process — reach for those first and use this for every other shaped PUT |
