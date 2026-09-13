@@ -26,7 +26,7 @@ import { readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { buildContext } from '../../src/server.js';
 import { callOperation } from '../../src/tools/api.js';
-import { capture } from '../../src/vision/capture.js';
+import { captureMany } from '../../src/vision/capture.js';
 import { toSpecs, tokensFromPage } from '../../src/domains/site/importmap.js';
 import { addSubtree } from '../../src/domains/site/builder.js';
 import { middleEnd } from '../../src/domains/site/traps.js';
@@ -102,10 +102,20 @@ async function main(): Promise<void> {
   // else. Never a slug scan. Stays empty in offline mode — nothing is ever
   // created — so the cleanup loop in the `finally` below is a correct no-op.
   const created: string[] = [];
+  // ONE BROWSER FOR ALL FIXTURES, not one launch per fixture. `captureMany`
+  // shares a single Chrome across the whole list and returns an outcome PER
+  // URL — `{ ok: true, result }` or `{ ok: false, why }`, in the same order as
+  // `pages` — which is exactly the per-fixture isolation the loop below
+  // already needs: a page that fails to capture costs that one fixture's
+  // `catch`, not the run, same as `capture()` throwing did.
+  const captures = await captureMany(pages.map((fx) => fx.url));
   try {
-    for (const fx of pages) {
+    for (let i = 0; i < pages.length; i += 1) {
+      const fx = pages[i];
       try {
-        const shotSource = await capture(fx.url);
+        const outcome = captures[i];
+        if (!outcome.ok) throw new Error(outcome.why);
+        const shotSource = outcome.result;
         if (offline) {
           const specs = toSpecs(shotSource.sections, tokensFromPage(EMPTY_DOC));
           const structure = shapeDistance(shapeOf(shotSource.sections), shapeOf(specs));
@@ -159,18 +169,18 @@ async function main(): Promise<void> {
 
         const built = shapeOf(specs);
         const source = shapeOf(shotSource.sections);
-        for (let i = 0; i < widths.length; i += 1) {
-          const diff = await diffImages(srcShots[i], builtShots[i]);
+        for (let w = 0; w < widths.length; w += 1) {
+          const diff = await diffImages(srcShots[w], builtShots[w]);
           scores.push({
             url: fx.url,
-            width: widths[i],
+            width: widths[w],
             visual: diff.differing,
             content: shotSource.coverage,
             structure: shapeDistance(source, built),
             mode: 'full',
           });
           console.error(
-            `${fx.url} @${widths[i]}  visual ${diff.differing}%  content ${shotSource.coverage}%  ` +
+            `${fx.url} @${widths[w]}  visual ${diff.differing}%  content ${shotSource.coverage}%  ` +
               `structure ${shapeDistance(source, built)}`,
           );
         }
@@ -195,9 +205,10 @@ async function main(): Promise<void> {
         dry_run: false,
       }).catch((e: Error) => console.error(`could not delete ${id}: ${e.message}`));
     }
-    // `capture()` opens and closes its own browser per call (see
-    // src/vision/capture.ts's withBrowser) — there is no closeCaptureBrowser to
-    // call here, unlike shoot.ts's pooled browser and imagediff.ts's shared one.
+    // `captureMany` already closed its OWN browser before this `finally` runs
+    // (src/vision/capture.ts's `withBrowser` closes on the way out of the
+    // call above) — there is no closeCaptureBrowser to call here, unlike
+    // shoot.ts's pooled browser and imagediff.ts's shared one.
     await Promise.all([closeDiffBrowser(), closeBrowser()]);
   }
 
