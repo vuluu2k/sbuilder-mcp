@@ -1087,6 +1087,7 @@ NÀO, tạo một trang cho mỗi cái, rồi đổ nội dung vào.
 | `max_nodes` | number? | Mỗi trang, mặc định 300 |
 | `upload_images` | boolean? | Mặc định **true** |
 | `homepage` | boolean? | URL vào rơi vào trang chủ sẵn có của site này, mặc định **true** |
+| `theme` | boolean? | Patch theme của site này từ màu của trang entry, mặc định **true** — TOÀN SITE |
 | `dry_run` | boolean? | Mặc định **true** — trả về danh sách trang và không tạo gì cả |
 
 **Mỗi trang chỉ một lần.** URL được gộp về địa chỉ mà chính trang khai trong
@@ -1164,6 +1165,16 @@ tô lại nó cùng mọi trang khác chứ không để nó kẹt lại với n
 `theme.changed` (`what`/`from`/`to`, đúng hình dạng của `sb_theme`) hoặc `theme.failed`; một
 lần ghi theme không thành công là một dòng báo, không bao giờ là lý do làm hỏng cả lượt import —
 đúng luật mà một lần upload ảnh thất bại đã theo, bằng cách giữ nguyên URL gốc của node.
+
+**Việc này TOÀN SITE, và `theme:false` để bỏ qua.** Lần ghi này chạm vào mọi trang site đã có
+sẵn, không chỉ những trang lượt import này tạo ra — người gọi muốn bê cấu trúc của một đối thủ
+lên một site đã có bộ nhận diện riêng của merchant cần nói điều đó TRƯỚC khi dựng bất cứ thứ gì,
+không phải phát hiện ra sau. Vì màu thật chỉ đọc được từ một lần capture bằng trình duyệt thật
+của trang entry, còn dry run phải giữ được tính rẻ, an toàn offline (một kế hoạch tìm ra từ
+sitemap không mở trình duyệt nào cả), nên dry run không thể cho xem giá trị sẽ đặt — nó trả về
+`theme_note` thay vào đó, nêu rằng một patch sắp tới và `theme:false` sẽ bỏ qua nó. Giá trị thật
+chỉ hiện ra khi bắt đầu dựng trang, dưới dạng `theme.changed`.
+
 **Giới hạn cần nói thẳng:** hai cách chấm điểm `content` và `structure` không thấy được màu,
 nên không cái nào chứng minh được việc này có ích; chỉ `visual` mới thấy, và môi trường này
 chưa chạy được `visual` qua mạng thật lần nào. Thứ cần để chốt việc này là một lần so sánh

@@ -1124,6 +1124,7 @@ ARE, creates one for each, and fills it.
 | `max_nodes` | number? | Per page, default 300 |
 | `upload_images` | boolean? | Default **true** |
 | `homepage` | boolean? | The entry URL lands on this site's own home page, default **true** |
+| `theme` | boolean? | Patch this site's theme from the entry's colours, default **true** — SITE-WIDE |
 | `dry_run` | boolean? | Defaults to **true** — returns the page list and creates nothing |
 
 **One page per page.** A URL is folded onto the address the page itself declares in
@@ -1202,7 +1203,18 @@ RE-THEMABLE — a later `sb_theme` edit repaints it along with everything else, 
 leaving it stranded on the day it was imported. Reported as `theme.changed` (`what` / `from` /
 `to`, `sb_theme`'s own shape) or `theme.failed`; a theme write that does not take is a reported
 line, never a reason to fail the import — the same rule an image upload failure follows by
-keeping the node's original URL. **The limit worth saying plainly:** `content` and `structure`
+keeping the node's original URL.
+
+**It is SITE-WIDE, and `theme:false` opts out.** This write reaches every page the site
+already has, not only the ones this import creates — a caller porting a competitor's
+structure onto a merchant's already-branded site needs to say so before anything is built, not
+discover it after. Because the actual colours can only be read off a real browser capture of
+the entry page, and the dry run must stay a cheap, offline-safe preview (a sitemap-discovered
+plan launches no browser at all), the dry run cannot show the values it would set — it says
+`theme_note` instead, naming that a patch is coming and that `theme:false` skips it. The
+real values only appear once building starts, as `theme.changed`.
+
+**The limit worth saying plainly:** `content` and `structure`
 scoring cannot see a colour at all, so neither can show this helped; only `visual` scoring
 could, and no online run of it has been possible in this environment. What would settle it is
 a `visual` comparison, on a live network, of an imported page against its source before and

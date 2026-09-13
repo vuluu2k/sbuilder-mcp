@@ -427,6 +427,13 @@ export function registerImportTools(
         upload_images: z.boolean().optional(),
         homepage: z.boolean().optional().describe("Entry into this site's home page, default true"),
         nav: z.boolean().optional().describe('Shared header linking the new pages, default true'),
+        theme: z
+          .boolean()
+          .optional()
+          .describe(
+            "Patch this site's theme from the entry page's colours and type scale, default " +
+              'true — SITE-WIDE, affecting pages outside this import too',
+          ),
         dry_run: z.boolean().optional(),
       },
       annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: true },
@@ -444,6 +451,7 @@ export function registerImportTools(
       upload_images,
       homepage,
       nav,
+      theme: applyTheme,
       dry_run,
     }) => {
       const siteId = siteFor(ctx, given);
@@ -560,6 +568,12 @@ export function registerImportTools(
               }
             : {}),
           ...(templateNote ? { entity_pages: templateNote } : {}),
+          theme_note:
+            applyTheme !== false
+              ? `A theme patch will also be computed from ${entry}'s own colours and type scale ` +
+                "and applied to this SITE'S THEME — every page, including ones outside this " +
+                'import. Pass theme:false to import the pages without touching it.'
+              : "Skipped: theme:false. This site's theme will not be touched.",
           note:
             'Nothing has been created. Each page above becomes a DRAFT page here, filled with the ' +
             "source's structure and text and styled with this site's own tokens — the source's CSS " +
@@ -608,14 +622,22 @@ export function registerImportTools(
       // typed, and its capture ABOVE — the one `captureMany` already took for
       // building the entry's OWN page — is reused rather than fetched again,
       // so the entry is read exactly once for the whole run.
+      //
+      // `theme:false` OPTS OUT. This write reaches every page on the site,
+      // including ones this import never touches — a caller who wants the
+      // source's STRUCTURE onto a site that already has its own brand must be
+      // able to say so, and until now nothing let them.
       let themeBlock: Record<string, unknown> | undefined;
-      const entryShot = byUrl.get(entry);
+      if (applyTheme === false) {
+        themeBlock = { skipped: 'theme:false' };
+      }
+      const entryShot = applyTheme !== false ? byUrl.get(entry) : undefined;
       if (entryShot?.ok) {
         try {
           const patch = themePatchFor(sourceTokens(entryShot.result.sections));
           if (patch) {
-            const { theme, from: themeOrigin } = await siteTheme(ctx, siteId);
-            const draft = structuredClone(theme);
+            const { theme: siteThemeDoc, from: themeOrigin } = await siteTheme(ctx, siteId);
+            const draft = structuredClone(siteThemeDoc);
             const changes = applyThemePatch(draft, patch);
             if (changes.length > 0) {
               await request({
