@@ -916,9 +916,20 @@ mở**, dưới dạng element thật mang token của **chính trang này**.
 | `site_id` | string? | Không truyền thì lấy `SB_SITE` |
 | `max_sections` | number? | Mặc định 24 |
 | `max_images` | number? | Mặc định 24 — mỗi ảnh là một lần upload |
-| `max_nodes` | number? | Mặc định 300 — trần cho toàn bộ lần import |
+| `max_nodes` | number? | Không có trần theo mặc định — chặn toàn bộ lần import nếu truyền |
 | `upload_images` | boolean? | Chép ảnh vào media library của site, mặc định **true** |
 | `dry_run` | boolean? | Mặc định **true** — trả về những gì tìm thấy |
+
+**Không còn trần số node theo mặc định.** Các trần cũ — 300 ở đây, 400 trong chính `capture()`
+— đang cắt bớt một trang dày đặc bình thường, không phải chặn một trang bất thường: một trang
+chủ shop 2.400 sản phẩm đo được **19% coverage khi có trần, 100% khi không**, với 2.095 node
+được lấy (2.680 spec dựng ra, ~420 KB, 2.4 giây). Việc duyệt đi qua một DOM hữu hạn, nên không
+có trần cũng không thể chạy mãi không dừng; ai muốn có trần thì vẫn truyền `max_nodes` — không
+truyền là cách duy nhất để nói "không trần". **Nhưng nhiều node hơn không đơn giản là tốt hơn.**
+Một lưới sản phẩm của shop đến dưới dạng hàng trăm ô tĩnh là nội dung không thể bán được gì — không
+giá, không tồn kho, không gắn gì vào catalogue cả — và nó thuộc về một repeater gắn vào catalogue
+(`list-dataset` / `dataset-block`), không phải các node chữ cứng. Hãy xem lại một lần import dày
+đặc trước khi publish; đó giờ là việc của người gọi, không phải của một cái trần.
 
 **Bố cục được giữ ở chỗ trang nguồn thật sự có khai báo.** Một container thật sự dàn con của
 nó — `display:flex` hoặc `grid` — với từ hai con trở lên sẽ thành một hàng thật, và hàng đó
@@ -1071,6 +1082,15 @@ một lớp bọc đó. Luật này cũng gộp cả một CHUỖI lớp bọc n
 thật — một container thật sự biến mất (khác với một cái chỉ bọc một con duy nhất) vẫn có nhiều
 hơn một con của riêng nó và không bao giờ trong suốt.
 
+**Bỏ trần số node đã làm baseline dịch chuyển, và đó chính là mục đích.** `ttgshop.vn/` tăng từ
+19% → 100% trên `content` khi mặc định không còn cắt ở 400 node nữa, và `structure` cũng dịch
+theo (0 → 0.4) — một số node khác đi là một cây khác, không chỉ là một số khác — nên `structure`
+dịch chuyển ở ĐÚNG fixture này do ĐÚNG thay đổi này là điều đã lường trước, không phải một hồi quy
+cần truy tìm. Bốn fixture còn lại không bị ảnh hưởng: `quy-dinh-bao-hanh` đã ở 100% ngay cả khi
+còn trần cũ (nội dung của nó chưa bao giờ chạm 400 node), còn `modelcontextprotocol.io/`,
+`rust-lang.org/` và `example.com/` đều còn cách trần rất xa — sự dịch chuyển nhỏ (hoặc không có)
+của chúng là nhiễu giữa các lần chạy mà phần trên đã ghi lại từ trước, không phải do thay đổi này.
+
 ## `sb_import_site`
 
 Đọc **cả một website** từ một URL và tạo cho mỗi trang tìm được một **trang nháp** riêng ở
@@ -1086,7 +1106,7 @@ NÀO, tạo một trang cho mỗi cái, rồi đổ nội dung vào.
 | `include` | string[]? | Chuỗi con của path cần giữ — **thắng** bộ lọc hạ tầng |
 | `exclude` | string[]? | Chuỗi con của path cần bỏ |
 | `max_images` | number? | Mặc định 24, cho **toàn bộ** lần import |
-| `max_nodes` | number? | Mỗi trang, mặc định 300 |
+| `max_nodes` | number? | Mỗi trang — không có trần theo mặc định, giống `sb_import` |
 | `upload_images` | boolean? | Mặc định **true** |
 | `homepage` | boolean? | URL vào rơi vào trang chủ sẵn có của site này, mặc định **true** |
 | `theme` | boolean? | Patch theme của site này từ màu của trang entry, mặc định **true** — TOÀN SITE |

@@ -948,9 +948,20 @@ real elements dressed in **this page's** tokens.
 | `site_id` | string? | Falls back to `SB_SITE` |
 | `max_sections` | number? | Default 24 |
 | `max_images` | number? | Default 24 — every image is an upload |
-| `max_nodes` | number? | Default 300 — the bound on the whole import |
+| `max_nodes` | number? | No cap by default — bounds the whole import if given |
 | `upload_images` | boolean? | Copy images into this site's media library, default **true** |
 | `dry_run` | boolean? | Defaults to **true** — returns what was found |
+
+**No node cap by default.** The old ceilings — 300 here, 400 inside `capture()` itself — were
+truncating ordinary dense pages, not guarding against pathological ones: a 2,400-product shop
+home measured **19% coverage capped, 100% uncapped**, at 2,095 captured nodes (2,680 built
+specs, ~420 KB, 2.4s). The walk is over a finite DOM, so an absent ceiling cannot run away; a
+caller who wants one still gets it by passing `max_nodes` — omitting it is the only way to ask
+for none. **More nodes is not simply better, though.** A shop's product grid arriving as
+hundreds of static tiles is content that cannot sell anything — no price, no stock, nothing
+bound to the catalogue — and belongs in a repeater bound to the catalogue instead
+(`list-dataset` / `dataset-block`), not as literal nodes. Look at a dense import before
+publishing it; that judgement is now the caller's, not a ceiling's.
 
 **Layout is kept where the source actually declared one.** A container that lays its
 children out — `display:flex` or `grid` — with two or more of them becomes a real row, and
@@ -1108,6 +1119,15 @@ rule collapses a whole chain of such wrappers, and it does not hide a genuine lo
 container that actually disappears (rather than one that merely wrapped a single child) still
 has more than one child of its own and is never transparent.
 
+**Removing the node cap moved the baseline, and that move was the point.** `ttgshop.vn/` went
+19% → 100% on `content` when the default stopped truncating it at 400 nodes, and `structure`
+moved with it (0 → 0.4) — a different node count is a different tree, not just a different
+count, so a `structure` move on THIS fixture from THIS change is expected rather than a
+regression to chase. The other four fixtures were unaffected: `quy-dinh-bao-hanh` was already
+at 100% under the old cap (its content never reached 400 nodes), and `modelcontextprotocol.io/`,
+`rust-lang.org/` and `example.com/` are all comfortably under it too — their small movement
+(or none) is the pre-existing run-to-run noise this section already documents, not this change.
+
 ## `sb_import_site`
 
 Read a **whole site** from one URL and give each page it finds its own **draft page** here.
@@ -1123,7 +1143,7 @@ ARE, creates one for each, and fills it.
 | `include` | string[]? | Path substrings to keep — **outranks** the plumbing filter |
 | `exclude` | string[]? | Path substrings to drop |
 | `max_images` | number? | Default 24, across the **whole** import |
-| `max_nodes` | number? | Per page, default 300 |
+| `max_nodes` | number? | Per page — no cap by default, same as `sb_import`'s |
 | `upload_images` | boolean? | Default **true** |
 | `homepage` | boolean? | The entry URL lands on this site's own home page, default **true** |
 | `theme` | boolean? | Patch this site's theme from the entry's colours, default **true** — SITE-WIDE |

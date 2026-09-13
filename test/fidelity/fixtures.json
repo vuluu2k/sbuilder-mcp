@@ -2,7 +2,7 @@
   "widths": [1440, 390],
   "pages": [
     { "url": "https://ttgshop.vn/quy-dinh-bao-hanh", "note": "Vietnamese shop, a real table, long lists" },
-    { "url": "https://ttgshop.vn/", "note": "dense shop home, carousels, hits the node ceiling" },
+    { "url": "https://ttgshop.vn/", "note": "dense shop home, carousels — 2,095 nodes at 100% coverage since the node cap was removed" },
     { "url": "https://modelcontextprotocol.io/", "note": "documentation, grid-heavy, code blocks" },
     { "url": "https://www.rust-lang.org/", "note": "marketing, hero and feature rows, nav-heavy chrome" },
     { "url": "https://example.com/", "note": "the floor: a page with almost nothing on it" }

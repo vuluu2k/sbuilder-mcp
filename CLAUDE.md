@@ -2494,6 +2494,46 @@ plain `node`. `tsx` never touches this path at all any more. `SB_FIDELITY_OFFLIN
 fidelity` now runs to completion from a clean checkout with no manual compile step, which is
 how the committed baseline above is kept current.
 
+- **THE NODE CEILING WAS A TRUNCATION, NOT A GUARD, AND IT IS GONE.** `sb_import` and
+  `sb_import_site` capped how many nodes a captured page could contribute — 400 inside
+  `capture()` itself, 300 named in `sb_import`'s own schema, 900 actually used (not 300) by
+  `sb_import_site` — three numbers for one idea, agreeing with none of each other. On an
+  ordinary marketing page that never mattered; on a real shop's home page it was the whole
+  story: `https://ttgshop.vn/`, a 2,400-product catalogue, measured **19% content coverage
+  capped, 100% uncapped** — 2,095 captured nodes, 2,680 built specs, ~420 KB of spec JSON, 2.4
+  seconds. The walk is over a finite DOM, so an absent ceiling cannot run away; it was chosen
+  against marketing pages and then quietly truncating a different kind of page it was never
+  measured against. `capture()`'s own default (`limitsFrom` in `src/vision/capture.ts`) is now
+  `Infinity`, and both tools pass `max_nodes` straight through with no fallback of their own —
+  a caller who wants a bound still gets one by passing the argument; omitting it is the only
+  way to ask for none, because a numeric `0` reads as "keep nothing" everywhere else a count
+  appears in this file. `max_images` is UNCHANGED and deliberately so: every image is an
+  upload — a network round trip each — which is a different cost with a different argument,
+  and the user asking for this asked about nodes.
+
+  **MORE NODES IS NOT SIMPLY BETTER, and that is now the caller's judgement rather than a
+  ceiling's.** A shop's product grid arriving as hundreds of static tiles is content that
+  cannot sell anything — no price update, no stock check, nothing bound to the catalogue — and
+  belongs in a repeater bound to the catalogue (`list-dataset` / `dataset-block`, see the
+  "FORTY URLS UNDER ONE PREFIX" bullet above for the platform-level reason why), not as literal
+  imported nodes. This server does not draw that line for you now that it no longer draws the
+  node line either; look at a dense import before publishing it.
+
+  `max_sections` (`sb_import`'s own top-level-band cap, default 24, unchanged) was checked
+  rather than assumed clean: on the fixture that motivated this change it was never the
+  binding constraint — a shop home's dozen-or-so collection BANDS sit well under 24, and it
+  was the hundreds of PRODUCT CARDS inside each band (nodes, not sections) that the old ceiling
+  was cutting off. A page whose density comes from having many top-level bands rather than many
+  cards within a few of them would hit `max_sections` first; nothing measured here showed that
+  shape, so the cap was left alone rather than raised without a reason.
+
+  Pinned by `test/import.test.ts`'s browser-gated suite: a fixture of 450 blocks (past the OLD
+  400 default) with no `max_nodes` given must arrive whole, with no `over-node-limit` in
+  `skipped`. The offline half of `SB_FIDELITY_OFFLINE=1 npm run fidelity` moved as predicted —
+  `ttgshop.vn/` 19 → 100 on `content`, 0 → 0.4 on `structure` (a different node count is a
+  different tree, so this `structure` move is the change working, not a regression) — and the
+  other four fixtures were unaffected, none of them close to the old ceiling.
+
 ## The yield rule
 
 The live-edit client is NEVER the authority on a document. It does not answer `snapreq` for

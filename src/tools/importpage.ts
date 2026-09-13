@@ -253,9 +253,8 @@ export function registerImportTools(
           .number()
           .int()
           .min(1)
-          .max(1000)
           .optional()
-          .describe('Default 300 — the bound on the whole import'),
+          .describe('No cap by default — bounds the whole import if given'),
         upload_images: z
           .boolean()
           .optional()
@@ -417,7 +416,12 @@ export function registerImportTools(
         include: z.array(z.string()).optional().describe('Path substrings to keep'),
         exclude: z.array(z.string()).optional(),
         max_images: z.number().int().min(0).max(200).optional().describe('Default 24, whole import'),
-        max_nodes: z.number().int().min(1).max(1000).optional().describe('Per page, default 300'),
+        max_nodes: z
+          .number()
+          .int()
+          .min(1)
+          .optional()
+          .describe('Per page. No cap by default'),
         nav_timeout_ms: z
           .number()
           .int()
@@ -604,12 +608,17 @@ export function registerImportTools(
 
       const shots = await captureMany(
         plan.pages.map((p) => p.url),
-        // 900, not 300. The old ceiling was chosen against marketing pages;
-        // a real shop's homepage is a different quantity — ttgshop.vn measured
-        // 9,829px of catalogue across a dozen collection bands, and 300 cut it
-        // off in the middle of the third. A cap is here to stop a runaway page,
-        // not to decide how much of an ordinary one survives.
-        { maxImages: max_images ?? 60, maxNodes: max_nodes ?? 900, navTimeoutMs: nav_timeout_ms },
+        // NO NODE CAP, unless the caller passes one. The old fixed ceilings —
+        // 300 in this tool's own schema, 900 actually used here, neither
+        // matching the other — were chosen against marketing pages; a real
+        // shop's homepage is a different quantity entirely. ttgshop.vn measured
+        // 2,095 captured nodes at 100% coverage (19% at the old 400 default),
+        // ~420 KB of specs, in 2.4s — the walk is over a finite DOM, so an
+        // absent cap cannot run away. `capture()`'s own default (`limitsFrom`
+        // in `../vision/capture.js`) is now unbounded for the same reason; this
+        // call passes `max_nodes` through unchanged rather than substituting a
+        // fallback, so omitting it here means what omitting it means there.
+        { maxImages: max_images ?? 60, maxNodes: max_nodes, navTimeoutMs: nav_timeout_ms },
       );
       const byUrl = new Map(shots.map((s) => [s.url, s]));
 

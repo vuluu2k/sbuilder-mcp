@@ -1388,7 +1388,17 @@ function limitsFrom(opts: CaptureOpts) {
     maxSections: opts.maxSections ?? 24,
     maxImages: opts.maxImages ?? 24,
     maxTextChars: opts.maxTextChars ?? 1200,
-    maxNodes: opts.maxNodes ?? 400,
+    // NO CAP BY DEFAULT. A page's node count is bounded by its own DOM — the
+    // walk is over a finite tree, so an absent ceiling cannot run away — and
+    // 400 was truncating an ordinary dense page rather than guarding against a
+    // pathological one: measured on a 2,400-product shop home, it cut a page
+    // that needed 2,095 nodes off at 400, losing 81% of its text for a saving
+    // that bought nothing (2,095 nodes captures in ~2.4s). A caller who wants a
+    // bound still gets one by passing `maxNodes`; omitting it is the only way
+    // to ask for none, because a numeric `0` reads as "keep nothing" everywhere
+    // else a count appears in this file (`maxImages: 0`, `maxSections` never
+    // goes below 1).
+    maxNodes: opts.maxNodes ?? Infinity,
   };
 }
 
@@ -1396,6 +1406,7 @@ export interface CaptureOpts {
   maxSections?: number;
   maxImages?: number;
   maxTextChars?: number;
+  /** No cap by default — see `limitsFrom`. Pass a number to bound the whole import. */
   maxNodes?: number;
   width?: number;
   /** Milliseconds to wait for the page to answer at all. Default 30,000. */

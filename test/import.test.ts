@@ -579,6 +579,21 @@ describe.runIf(process.env.SB_BROWSER_TEST === '1')('capture()', () => {
     expect(r.skipped['over-node-limit']).toBeGreaterThan(0);
   }, 60_000);
 
+  it('has no node cap by default', async () => {
+    // 450 is well past the OLD default of 400 — a caller who names no maxNodes
+    // at all must get every one of them, not the ceiling this file used to
+    // apply silently. Measured on a real shop home this bought 19% -> 100%
+    // coverage at ~2.4s for ~2,095 nodes; this fixture only needs to prove the
+    // cap itself is gone.
+    const many = `data:text/html,${encodeURIComponent(
+      `<main><section>${Array.from({ length: 450 }, (_, i) => `<div>Line ${i}</div>`).join('')}</section></main>`,
+    )}`;
+    const r = await capture(many);
+    const texts = (r.sections[0].children ?? []).filter((c) => c.kind === 'text');
+    expect(texts.length).toBe(450);
+    expect(r.skipped['over-node-limit']).toBeUndefined();
+  }, 60_000);
+
   it('tells a painted call to action from an ordinary link', async () => {
     // Both are kept — dropping the plain ones lost a whole page of story titles.
     // What must not blur is WHICH is which: painting every link produced 38 pink
