@@ -1344,6 +1344,27 @@ describe.runIf(process.env.SB_BROWSER_TEST === '1')('capture() reporting how muc
     expect(got.coverage).toBeGreaterThan(80);
   }, BROWSER_TIMEOUT);
 
+  /**
+   * THE NUMERATOR AND THE DENOMINATOR ARE NOT THE SAME UNITS.
+   *
+   * `kept` sums each node's own cleaned text, concatenated with no separator
+   * between blocks. `contentChars` is `body.innerText.length`, which DOES carry
+   * a newline (or more) between every block-level element. A page made of many
+   * separate blocks — every one of them kept, nothing dropped — reads under
+   * 100% anyway, and the gap widens with the block count rather than with
+   * anything actually missing. MEASURED against a whitespace-free ratio:
+   * rust-lang.org read 90% while having lost nothing.
+   */
+  it('reports at or near 100 for many separate blocks, all of them kept', async () => {
+    const paragraphs = Array.from({ length: 40 }, (_, i) => `<p>Đoạn ${i}.</p>`).join('');
+    const got = await capture(page(`<body><main><section>${paragraphs}</section></main></body>`), {
+      maxImages: 5,
+      maxNodes: 200,
+    });
+    expect(got.skipped).toEqual({});
+    expect(got.coverage).toBeGreaterThanOrEqual(97);
+  }, BROWSER_TIMEOUT);
+
   it('never answers more than 100', async () => {
     // A caller reads this as a percentage and acts on it; a number above 100
     // reads as a broken measure and makes the honest ones untrustworthy too.

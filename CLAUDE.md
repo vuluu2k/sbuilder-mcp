@@ -2043,9 +2043,30 @@ that accounts for them.
   The order matters and is worth keeping: printing `coverage` FIRST would have been worse than
   silence, telling callers to retry the imports that were already right. Fixed the measure, then
   the report — 28% → 100% on that page, 18% unchanged on the shop's home, which is the node
-  ceiling doing its job on a 2,400-product catalogue. Clamped at 100, because the numerator is
-  the walk's own text and the denominator is `innerText`, and a number above 100 makes the
-  honest ones untrustworthy too.
+  ceiling doing its job on a 2,400-product catalogue. Clamped at 100, because a number above 100
+  makes the honest ones untrustworthy too — see the entry below for what the clamp is guarding
+  against now.
+
+- **AND THEN `coverage` UNDER-REPORTED EVERY PAGE MADE OF MORE THAN ONE BLOCK, because the two
+  sides of the ratio were never the same units.** `kept` is every captured node's own text,
+  CONCATENATED WITH NO SEPARATOR; the denominator was `body.innerText`, which inserts a newline
+  between every block-level element. So a page built of many separate blocks — every one of them
+  kept, nothing dropped — read under 100% anyway, and the gap widened with the block count rather
+  than with anything actually missing. MEASURED: a 40-paragraph fixture with every paragraph
+  captured (`skipped: {}`) read 80%. On the offline fidelity baseline: rust-lang.org 90% → 92%,
+  example.com 97% → 100%, ttgshop.vn's warranty page unchanged at 100% (few enough blocks that
+  the old gap rounded away).
+
+  Fixed by stripping ALL whitespace — not collapsing it to one space, which would still count
+  the between-block gap as a character — from both `kept` and `contentChars` before dividing.
+  `structure` is untouched by construction: the fix only changes how the same captured tree is
+  MEASURED, never what the walk keeps.
+
+  The old clamp comment blamed "the numerator is the walk's own text and the denominator is
+  `innerText`" for the possibility of landing over 100 — which was really the whitespace mismatch
+  wearing a different hat, on a page that is almost all list. Stripping whitespace on both sides
+  removes that specific cause; the clamp stays anyway, because the two sides are still built by
+  two different walks of the page and a small positive drift on an unusual page is not ruled out.
 
 - **AN IMPORTED PAGE COULD LOOK LIKE ITS SOURCE, OR STAY RE-THEMABLE, BUT NOT BOTH — until the
   colour moved to the layer that outranks nothing.** A literal written on a node OUTRANKS its

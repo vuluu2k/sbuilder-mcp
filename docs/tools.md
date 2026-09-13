@@ -1073,10 +1073,12 @@ moves `visual` with nothing in the importer having changed.
 environment refuses — but the offline half (`content` and `structure`) has been run 13 times
 on an unchanged tree, minutes apart. Four of five fixtures came back byte-identical every
 time. The fifth, `modelcontextprotocol.io/` (it builds itself with scripts), is NOT one
-outlier among stable runs: it alternates between exactly two states — `content 71 / structure
-9.6` seven times, `content 73 / structure 11.9` six times — because `capture`'s settle window
-catches it at a different point some fraction of the time. The gap between those two states
-(2.0 on `content`, 2.3 on `structure`) is BIGGER than `scoreboard.ts`'s 1.5-point tolerance, so
+outlier among stable runs: it alternates between exactly two states — `content 73 / structure
+9.6` and `content 75 / structure 11.9` — because `capture`'s settle window catches it at a
+different point some fraction of the time. (These `content` figures moved by the same +2 as
+every other fixture when `coverage`'s whitespace-units mismatch was fixed — see below — the
+GAP between the two states is what matters here and it did not change: 2.0 on `content`, 2.3
+on `structure`.) That gap is BIGGER than `scoreboard.ts`'s 1.5-point tolerance, so
 two ordinary runs compared against each other will sometimes report a phantom move on this one
 fixture with nothing in the importer having changed. Do not raise the tolerance to cover it —
 one page's bimodal noise is not a sample to set a global threshold from, and the likelier fix

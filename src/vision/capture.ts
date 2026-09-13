@@ -1146,12 +1146,26 @@ function capturePage(limits: { maxSections: number; maxImages: number; maxTextCh
   //     four-item list: the correct capture scored 0, the wider root scored the
   //     four items as four loose paragraphs and won, and the page came back with
   //     its heading GONE and each item its own section.
+  //
+  // THE TWO SIDES OF THIS RATIO ARE NOT THE SAME UNITS, and stripping ALL
+  // whitespace before comparing is what makes them one. `kept` is every node's
+  // own text CONCATENATED WITH NO SEPARATOR; `contentChars` is `innerText`,
+  // which inserts a newline between every block-level element. So a page made
+  // of many separate blocks — every one of them kept, nothing dropped — read
+  // under 100% anyway, and the gap widened with the block count rather than
+  // with anything actually missing: MEASURED against a whitespace-free ratio,
+  // rust-lang.org read 90% while having lost nothing, and a 40-paragraph page
+  // with every paragraph captured read 80%. Dropping every whitespace
+  // character from BOTH sides — not collapsing it to one space, which would
+  // still count the between-block gap as a character — removes exactly the
+  // difference that was never about content.
+  const stripWs = (s: string): string => s.replace(/\s+/g, '');
   const textOf = (nodes: Captured[]): number => {
     let n = 0;
     const walk = (c: Captured): void => {
-      if (typeof (c as { text?: string }).text === 'string') n += (c as { text: string }).text.length;
+      if (typeof (c as { text?: string }).text === 'string') n += stripWs((c as { text: string }).text).length;
       const items = (c as { items?: string[] }).items;
-      if (Array.isArray(items)) for (const it of items) n += it.length;
+      if (Array.isArray(items)) for (const it of items) n += stripWs(it).length;
       for (const k of (c as { children?: Captured[] }).children ?? []) walk(k);
     };
     for (const c of nodes) walk(c);
@@ -1159,9 +1173,9 @@ function capturePage(limits: { maxSections: number; maxImages: number; maxTextCh
   };
   let chromeChars = 0;
   for (const el of Array.from(document.querySelectorAll('header, nav, footer'))) {
-    if (inPageChrome(el)) chromeChars += (el.innerText ?? '').length;
+    if (inPageChrome(el)) chromeChars += stripWs(el.innerText ?? '').length;
   }
-  const contentChars = Math.max(0, (document.body.innerText ?? '').length - chromeChars);
+  const contentChars = Math.max(0, stripWs(document.body.innerText ?? '').length - chromeChars);
   // NO SIZE FLOOR ON THE CHECK. An earlier version only asked the question on
   // pages with more than 400 characters, which is the guard you write when you
   // fear a fallback firing too often — but the fallback cannot do harm here: it
@@ -1243,11 +1257,12 @@ function capturePage(limits: { maxSections: number; maxImages: number; maxTextCh
   // nav-heavy site look broken.
   const kept = textOf(sections);
   // CLAMPED, because a caller reads this as a percentage and acts on it. The
-  // numerator is the walk's own text and the denominator is `innerText`, and the
-  // two do not agree byte for byte — a list's items are joined by the walk while
-  // innerText separates them, so a page that is almost all list can land just
-  // over. A number above 100 reads as a broken measure and makes the honest ones
-  // untrustworthy too.
+  // whitespace strip above brings the two sides into the same units, but they
+  // are still built by two different walks of the page — an `alt` attribute
+  // folded into an image's own text on one side, a text node split across an
+  // inline element's children on the other — so a small positive drift is
+  // still possible on an unusual page. A number above 100 reads as a broken
+  // measure and makes the honest ones untrustworthy too.
   const coverage = contentChars > 0 ? Math.min(100, Math.round((kept / contentChars) * 100)) : 100;
 
   const link = Array.from(document.querySelectorAll('link[rel="canonical"]'))[0];

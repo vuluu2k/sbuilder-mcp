@@ -1038,9 +1038,11 @@ di chuyển mà trình import chẳng có gì thay đổi cả.
 chối — nhưng nửa offline (`content` và `structure`) đã được chạy 13 lần trên một cây không đổi,
 cách nhau vài phút. Bốn trong năm fixture ra kết quả GIỐNG TUYỆT ĐỐI mỗi lần. Fixture thứ năm,
 `modelcontextprotocol.io/` (trang này tự dựng bằng script), KHÔNG phải một lần lệch giữa nhiều
-lần chạy ổn định — nó dao động giữa đúng hai trạng thái: `content 71 / structure 9.6` bảy lần,
-`content 73 / structure 11.9` sáu lần, vì cửa sổ lắng của `capture` bắt trang ở một điểm khác
-nhau trong một phần số lần chạy. Khoảng cách giữa hai trạng thái đó (2.0 điểm ở `content`, 2.3
+lần chạy ổn định — nó dao động giữa đúng hai trạng thái: `content 73 / structure 9.6` và
+`content 75 / structure 11.9`, vì cửa sổ lắng của `capture` bắt trang ở một điểm khác nhau
+trong một phần số lần chạy. (Hai con số `content` này đã tăng thêm 2 điểm — giống mọi fixture
+khác — khi lỗi đơn vị đo của `coverage` được sửa, xem bên dưới; điều còn nguyên là KHOẢNG CÁCH
+giữa hai trạng thái.) Khoảng cách đó (2.0 điểm ở `content`, 2.3
 ở `structure`) LỚN HƠN ngưỡng dung sai 1.5 điểm của `scoreboard.ts`, nên hai lần chạy bình
 thường so với nhau đôi khi sẽ báo một sự di chuyển ảo trên đúng fixture này mà trình import
 chẳng có gì thay đổi. Đừng nâng ngưỡng dung sai để che nó đi — nhiễu hai trạng thái của một
