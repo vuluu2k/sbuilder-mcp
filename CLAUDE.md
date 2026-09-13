@@ -2075,6 +2075,20 @@ that accounts for them.
   accounts for that fixture reading 73-75% rather than the high eighties. Not a defect: the walk
   is right to skip it and the denominator is right to be the page a reader sees.
 
+  **THE BIMODAL FIXTURE IS NOT A SETTLE-TIMING PROBLEM, and that is worth knowing before anyone
+  spends an afternoon on it.** `modelcontextprotocol.io` settles into one of two `content` values
+  two points apart — 73 or 75 after the units fix, 71 or 73 before it — and the obvious suspect is
+  `settleDom`'s bounds, since the page builds itself with scripts. MEASURED and RULED OUT: four
+  captures each at `settleMs` of 2,000, 5,000 and 9,000 stayed bimodal at every setting, with both
+  values appearing at 9 seconds. Waiting longer does not converge it.
+
+  The second probe — capture repeatedly, keep the text of each state, diff them to find the ~50
+  characters that differ — could not be run: six consecutive captures all came back 75, so there
+  was no second state to diff against. So the cause is unidentified AND the excursion is rarer
+  than the first tally suggested (that one counted 7 and 6 across 13 runs). Two points on one
+  fixture is below the `DEFAULT_TOLERANCE` argument's worth of investigation; what is recorded
+  here is the dead end, so the next reader starts after it rather than at it.
+
   `rust-lang.org` reads 92% and NOBODY KNOWS WHY. The aria-hidden explanation is ruled OUT there
   by measurement — zero such elements, zero characters — and no other cause has been found. That
   sentence is the useful half: an unexplained gap recorded as unexplained costs the next reader
