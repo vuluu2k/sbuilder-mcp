@@ -638,7 +638,7 @@ export function registerImportTools(
           if (patch) {
             const { theme: siteThemeDoc, from: themeOrigin } = await siteTheme(ctx, siteId);
             const draft = structuredClone(siteThemeDoc);
-            const changes = applyThemePatch(draft, patch);
+            const { changes, skipped } = applyThemePatch(draft, patch);
             if (changes.length > 0) {
               await request({
                 base: ctx.base,
@@ -648,8 +648,14 @@ export function registerImportTools(
                 body: { theme: draft },
                 fetchImpl: ctx.fetchImpl,
               });
+            }
+            // A MISS IS SKIPPED, NEVER SILENT. `applyThemePatch` cannot lose a
+            // token — it either lands in `changes` or is named in `skipped` —
+            // so this reports both rather than only the half that wrote.
+            if (changes.length > 0 || skipped.length > 0) {
               themeBlock = {
-                changed: changes,
+                ...(changes.length > 0 ? { changed: changes } : {}),
+                ...(skipped.length > 0 ? { unmatched: skipped } : {}),
                 ...(themeOrigin === 'starter'
                   ? { built_from: "the starter theme — this site had never saved one" }
                   : {}),

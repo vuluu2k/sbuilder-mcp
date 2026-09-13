@@ -10,7 +10,8 @@ import type { Patch } from '../src/core/patch.js';
 import { PageDoc } from '../src/domains/site/document.js';
 import { addSubtree, setKeys } from '../src/domains/site/builder.js';
 import { sourceTokens } from '../src/domains/site/sourcetokens.js';
-import { themePatchFor } from '../src/domains/site/theme.js';
+import { themePatchFor, applyThemePatch } from '../src/domains/site/theme.js';
+import type { StarterTheme } from '../src/catalog/theme-types.js';
 import {
   menuLabel,
   navSpec,
@@ -1452,5 +1453,39 @@ describe('sb_import_site — the theme patch', () => {
     // let a site lose its whole palette. Sending no request is the right answer.
     const patch = themePatchFor(sourceTokens([]));
     expect(patch).toBeNull();
+  });
+});
+
+describe('applyThemePatch — a token the site theme does not carry', () => {
+  const theme = (): StarterTheme => ({
+    version: 6,
+    colors: [{ id: 'heading', name: 'Heading', value: '#111827' }],
+    textStyles: [{ slug: 'heading-1', name: 'H1', base: { fontSize: '40px' } }],
+    schemes: [{ id: 'light', name: 'Light' }],
+    presets: [],
+  });
+
+  it('SKIPS a colour id and a text-style slug the theme lacks, and NAMES both', () => {
+    // The site's theme has no `text` colour role and no `heading-2` slug —
+    // `SourceTokens`' vocabulary is closed, so this cannot be a typo, only a
+    // narrower theme. Refusing the whole write over it would throw away the
+    // `heading` colour that DID match.
+    const { changes, skipped } = applyThemePatch(theme(), {
+      colors: { heading: '#b3123a', text: '#4b5563' },
+      text_styles: { 'heading-1': { fontSize: '44px' }, 'heading-2': { fontSize: '32px' } },
+    });
+    expect(changes).toEqual([
+      { what: 'colors.heading', from: '#111827', to: '#b3123a' },
+      { what: 'textStyles.heading-1.fontSize', from: '40px', to: '44px' },
+    ]);
+    expect(skipped).toEqual(['colors.text', 'textStyles.heading-2']);
+  });
+
+  it('reports nothing lost when every token in the patch matched', () => {
+    const { skipped } = applyThemePatch(theme(), {
+      colors: { heading: '#b3123a' },
+      text_styles: {},
+    });
+    expect(skipped).toEqual([]);
   });
 });

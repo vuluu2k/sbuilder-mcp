@@ -220,6 +220,21 @@ export interface ThemeChange {
   to: string;
 }
 
+/** What `applyThemePatch` did, and what it could not do anything with. */
+export interface ThemeApplyResult {
+  changes: ThemeChange[];
+  /**
+   * A colour id or text-style slug the patch named that this site's theme
+   * does not carry — `colors.<id>` or `textStyles.<slug>`, matching the
+   * `what` spelling in `changes` minus the property tail.
+   *
+   * SKIPPED rather than lost: the caller reports these alongside `changes`
+   * rather than the write disappearing them, which is what happened before —
+   * a miss here reached nobody.
+   */
+  skipped: string[];
+}
+
 /**
  * Apply a `ThemePatch` onto a `StarterTheme` IN PLACE and report what moved.
  *
@@ -230,21 +245,33 @@ export interface ThemeChange {
  *
  * Unlike `sb_theme`, an id or slug the theme does not carry is SKIPPED
  * rather than refused: every id and slug `themePatchFor` writes is one of
- * the theme's own five colour roles or nine text-style slugs, so a miss here
- * means this particular site's theme has fewer than the starter's — not a
- * typo worth stopping a whole-site import for.
+ * the theme's own five colour roles or nine text-style slugs — a CLOSED
+ * vocabulary — so a miss here cannot be a typo. It can only mean this
+ * particular site's theme has fewer roles or slugs than the starter's, and
+ * refusing the WHOLE write over that one absence would throw away every
+ * colour that DID match to punish the one that did not. So the miss is
+ * named in `skipped` instead — the caller who sees four colours applied and
+ * `muted` unmatched learns something true about their site.
  */
-export function applyThemePatch(theme: StarterTheme, patch: ThemePatch): ThemeChange[] {
+export function applyThemePatch(theme: StarterTheme, patch: ThemePatch): ThemeApplyResult {
   const changes: ThemeChange[] = [];
+  const skipped: string[] = [];
   for (const [id, value] of Object.entries(patch.colors)) {
     const token = theme.colors?.find((c) => c.id === id);
-    if (!token || token.value === value) continue;
+    if (!token) {
+      skipped.push(`colors.${id}`);
+      continue;
+    }
+    if (token.value === value) continue;
     changes.push({ what: `colors.${id}`, from: token.value, to: value });
     token.value = value;
   }
   for (const [slug, decls] of Object.entries(patch.text_styles)) {
     const style = theme.textStyles?.find((t) => t.slug === slug);
-    if (!style) continue;
+    if (!style) {
+      skipped.push(`textStyles.${slug}`);
+      continue;
+    }
     style.base = style.base ?? {};
     for (const [prop, value] of Object.entries(decls)) {
       const before = style.base[prop];
@@ -253,7 +280,7 @@ export function applyThemePatch(theme: StarterTheme, patch: ThemePatch): ThemeCh
       style.base[prop] = value;
     }
   }
-  return changes;
+  return { changes, skipped };
 }
 
 export { STARTER_THEME };
