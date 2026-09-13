@@ -6,6 +6,18 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.40.0] - 2026-09-13
+
+### Added
+- sb_import_site now reads the entry page's own colors and text-style scale and patches them onto the site's theme (five color roles plus a heading/text type scale), so an imported page keeps the source's look while its nodes stay re-themable instead of carrying literal colors. The write only touches named fields, never replaces the whole theme, and skips entirely — reporting `theme.failed` — if the site's own theme cannot be read, rather than falling back to the platform starter over a merchant's saved one. A new `theme` argument (default true) opts out of this site-wide write, the dry run reports a `theme_note` since the real values need a live capture, and the real run reports `theme.changed` and any `theme.unmatched` token the site's theme does not carry.
+- sb_import and sb_import_site's results (dry run, real run, and each page of a site import) now report `coverage`, the percentage of the source page's own text — chrome excluded — that survived the import, so a page read before it finished settling is visible instead of silently looking small and correct.
+
+### Changed
+- sb_import and sb_import_site no longer cap how many nodes a captured page can contribute by default; a page's whole content is imported unless the caller passes `max_nodes` explicitly (`max_images` and `max_sections` are unchanged).
+
+### Fixed
+- sb_theme's write now clears the in-process theme cache afterward, so a following sb_node_read in the same session reports the color a write just set instead of the one it replaced.
+
 ## [0.39.0] - 2026-09-11
 
 ### Added

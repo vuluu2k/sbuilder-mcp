@@ -6,6 +6,18 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.40.0] - 2026-09-13
+
+### Added
+- sb_import_site giờ đọc màu sắc và thang kiểu chữ (text style) của chính trang entry rồi ghi chúng vào theme của site (năm vai trò màu cộng với thang kiểu chữ cho heading/text), nhờ đó trang được import giữ được diện mạo của nguồn trong khi các node vẫn có thể đổi theme lại thay vì mang màu literal cố định. Bản ghi chỉ chạm vào các field được đặt tên, không bao giờ thay thế toàn bộ theme, và bỏ qua hoàn toàn — báo `theme.failed` — nếu không đọc được theme hiện có của site, thay vì rơi về theme mặc định của nền tảng đè lên theme đã lưu của merchant. Tham số mới `theme` (mặc định true) cho phép tắt bản ghi ảnh hưởng toàn site này, dry run báo `theme_note` vì giá trị thật cần một lần capture trình duyệt thực sự, còn lần chạy thật báo `theme.changed` cùng mọi token `theme.unmatched` mà theme của site không có.
+- Kết quả của sb_import và sb_import_site (dry run, lần chạy thật, và từng trang khi import cả site) giờ báo thêm `coverage`, phần trăm nội dung chữ của trang nguồn — không tính phần chrome — còn sống sót sau khi import, nhờ đó một trang bị đọc trước khi tải xong sẽ lộ ra thay vì trông nhỏ gọn và đúng một cách âm thầm.
+
+### Changed
+- sb_import và sb_import_site không còn giới hạn số node mà một trang capture được đóng góp theo mặc định; toàn bộ nội dung của trang được import trừ khi caller truyền `max_nodes` một cách tường minh (`max_images` và `max_sections` giữ nguyên).
+
+### Fixed
+- Bản ghi của sb_theme giờ xóa cache theme trong tiến trình ngay sau đó, để một lần gọi sb_node_read tiếp theo trong cùng phiên báo đúng màu vừa được ghi thay vì màu đã bị thay thế.
+
 ## [0.39.0] - 2026-09-11
 
 ### Added
