@@ -19,10 +19,21 @@
  * over offline. Fetching belongs to the caller.
  */
 
+/**
+ * What a child sitemap's OWN FILENAME says its `<loc>`s are, when the
+ * generator bothers to say so: `sitemap_product.xml` (ttgshop.vn),
+ * `product-sitemap.xml` (Yoast), `sitemap_products_1.xml` (Shopify). A
+ * generic name — `sitemap.xml`, `sitemap1.xml` — says nothing, and
+ * `undefined` is the honest answer for it rather than a guess.
+ */
+export type SitemapKind = 'product' | 'category' | 'collection' | 'brand' | 'tag' | 'page' | 'article' | 'post' | 'blog';
+
 /** A page the discovery believes exists, and where the belief came from. */
 export interface Found {
   url: string;
   from: 'entry' | 'sitemap' | 'links';
+  /** The kind of the SITEMAP this URL was read out of, when it named one. */
+  kind?: SitemapKind;
 }
 
 /** A page that survived the filters, with the identity it will take on this site. */
@@ -52,8 +63,99 @@ export interface Chosen {
    * `/products/` are not forty pages on this platform, they are ONE product
    * template plus a catalogue. Importing them as static pages would produce a
    * store where nothing is buyable and every price is a literal.
+   *
+   * A heuristic of last resort: it only ever sees a shared PATH PREFIX, so it
+   * is silent on a shop whose product URLs sit at the root with none — see
+   * `kinds` below, which is what the sitemap itself can say instead.
    */
   groups: Record<string, number>;
+  /**
+   * ENTITY kind → how many URLs the site's own sitemap named as that kind
+   * and this run therefore EXCLUDED from the plan — never merely counted the
+   * way `groups` is. A shop's product sitemap can hold thousands of these;
+   * they are one bound template plus real records here
+   * (`sb_page_create type:"product"`, the catalogue from the API), never one
+   * static page each. An explicit `include` still brings one in.
+   */
+  kinds: Record<string, number>;
+}
+
+/**
+ * RECORD-shaped kinds: individual entries in a catalogue this platform serves
+ * through ONE bound template plus real data, never as N static pages. Their
+ * words, checked FIRST — see `sitemapKind` below for why the order matters.
+ */
+const ENTITY_KIND_WORDS: ReadonlyArray<readonly [SitemapKind, readonly string[]]> = [
+  ['product', ['product', 'products']],
+  ['category', ['category', 'categories']],
+  ['collection', ['collection', 'collections']],
+  ['brand', ['brand', 'brands']],
+  ['tag', ['tag', 'tags']],
+];
+
+/** PAGE-shaped kinds: ordinary content, one static page each. */
+const PAGE_KIND_WORDS: ReadonlyArray<readonly [SitemapKind, readonly string[]]> = [
+  ['article', ['article', 'articles']],
+  ['post', ['post', 'posts']],
+  ['blog', ['blog', 'blogs']],
+  ['page', ['page', 'pages']],
+];
+
+/** The kinds `choosePages` excludes from a plan by default. */
+export const ENTITY_KINDS: ReadonlySet<SitemapKind> = new Set(ENTITY_KIND_WORDS.map(([k]) => k));
+
+/** How to name an entity kind's count in a sentence — "categories", not "categorys". */
+export const ENTITY_KIND_LABEL: Readonly<Record<string, string>> = {
+  product: 'products',
+  category: 'categories',
+  collection: 'collections',
+  brand: 'brands',
+  tag: 'tags',
+};
+
+/**
+ * What kind of `<loc>`s a child sitemap holds, read off its OWN FILENAME —
+ * never a guess about the URLs themselves. ttgshop.vn spells it
+ * `sitemap_product.xml`; Yoast writes `product-sitemap.xml`; Shopify numbers
+ * its shards `sitemap_products_1.xml`. All three are covered by testing
+ * whether the filename's own WORDS include one of the terms above.
+ *
+ * TOKENIZED, not a raw substring test. `"category"` as a plain substring can
+ * hit a coincidental run of letters inside an unrelated word (this repo has
+ * already paid once for exactly that mistake — `isPlumbing`'s boundary bug,
+ * above), and this catalog of kinds is short enough to name outright, so the
+ * filename is split on anything that is not a letter or digit and matched as
+ * whole TOKENS: a name has to actually SPELL "category" as its own word to
+ * read as one. A page sitemap never does.
+ *
+ * ENTITY words are checked before PAGE words. A filename naming both — a
+ * WordPress "blog categories" taxonomy archive, say — resolves to the
+ * entity: excluding a few thousand catalogue records is the safe direction
+ * to be wrong in, and importing them as static pages is the exact defect
+ * this function exists to prevent.
+ *
+ * A name with NEITHER — `sitemap.xml`, `sitemap1.xml`, `sitemap_index.xml` —
+ * returns `undefined`, which is what keeps every site shaped like that
+ * planning exactly as it always has.
+ */
+export function sitemapKind(sitemapUrl: string): SitemapKind | undefined {
+  let path: string;
+  try {
+    path = new URL(sitemapUrl).pathname;
+  } catch {
+    path = sitemapUrl;
+  }
+  const file = path.split('/').filter(Boolean).pop() ?? '';
+  const tokens = new Set(
+    file
+      .toLowerCase()
+      .replace(/\.xml(?:\.gz)?$/, '')
+      .split(/[^a-z0-9]+/)
+      .filter(Boolean),
+  );
+  for (const [kind, words] of ENTITY_KIND_WORDS) if (words.some((w) => tokens.has(w))) return kind;
+  for (const [kind, words] of PAGE_KIND_WORDS) if (words.some((w) => tokens.has(w))) return kind;
+  return undefined;
 }
 
 /** Anything whose extension says it is a file rather than a page. */
@@ -410,6 +512,7 @@ export function choosePages(entry: string, urls: Found[], opts: ChooseOpts = {})
   const exclude = (opts.exclude ?? []).map((s) => s.toLowerCase());
   const origin = originOf(entry);
   const skipped: Record<string, number> = {};
+  const kinds: Record<string, number> = {};
   const skip = (why: string) => {
     skipped[why] = (skipped[why] ?? 0) + 1;
   };
@@ -446,6 +549,16 @@ export function choosePages(entry: string, urls: Found[], opts: ChooseOpts = {})
     // about a stranger's site, and a caller who names `/account` knows something
     // this module does not.
     if (!wanted && norm !== entry) {
+      // RECORD-SHAPED KINDS ARE NOT PAGES HERE. Read off the sitemap that
+      // named it, never guessed at from the URL — see `sitemapKind`. A
+      // kindless `Found` (no child sitemap named it, or discovery fell
+      // through to the link crawl) is unaffected: this fires only when the
+      // site's own sitemap said so.
+      if (f.kind && ENTITY_KINDS.has(f.kind)) {
+        skip('entity-kind');
+        kinds[f.kind] = (kinds[f.kind] ?? 0) + 1;
+        continue;
+      }
       if (ASSET.test(path)) {
         skip('asset');
         continue;
@@ -481,7 +594,7 @@ export function choosePages(entry: string, urls: Found[], opts: ChooseOpts = {})
       continue;
     }
     seen.add(norm);
-    kept.push({ url: norm, from: norm === entry ? 'entry' : f.from });
+    kept.push({ url: norm, from: norm === entry ? 'entry' : f.from, ...(f.kind ? { kind: f.kind } : {}) });
   }
 
   const folded = foldLocales(kept, entry, skip);
@@ -511,7 +624,7 @@ export function choosePages(entry: string, urls: Found[], opts: ChooseOpts = {})
     const slug = slugFor(f.url, taken);
     return { ...f, slug, name: nameFor(slug), depth: depthOf(f.url) };
   });
-  return { pages, skipped, groups };
+  return { pages, skipped, groups, kinds };
 }
 
 /**

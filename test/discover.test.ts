@@ -6,6 +6,7 @@ import {
   normalizeUrl,
   robotsRules,
   robotsSitemaps,
+  sitemapKind,
   sitemapUrls,
   slugFor,
   type Found,
@@ -66,6 +67,51 @@ describe('sitemapUrls — the publisher\'s own list', () => {
     expect(robotsSitemaps('User-agent: *\nDisallow:\nSITEMAP: https://s.example/sm.xml\n')).toEqual([
       'https://s.example/sm.xml',
     ]);
+  });
+});
+
+describe('sitemapKind — what a child sitemap says its own <loc>s are', () => {
+  it('reads the ttgshop.vn shape: one word after the underscore', () => {
+    expect(sitemapKind('https://ttgshop.vn/sitemap_product.xml')).toBe('product');
+    expect(sitemapKind('https://ttgshop.vn/sitemap_category.xml')).toBe('category');
+    expect(sitemapKind('https://ttgshop.vn/sitemap_brand.xml')).toBe('brand');
+    expect(sitemapKind('https://ttgshop.vn/sitemap_article.xml')).toBe('article');
+    expect(sitemapKind('https://ttgshop.vn/sitemap_page.xml')).toBe('page');
+  });
+
+  it('reads the other generators\' spellings — Yoast\'s prefix and Shopify\'s numbered suffix', () => {
+    expect(sitemapKind('https://s.example/product-sitemap.xml')).toBe('product'); // Yoast
+    expect(sitemapKind('https://s.example/sitemap-products.xml')).toBe('product');
+    expect(sitemapKind('https://s.example/sitemap_products_1.xml')).toBe('product'); // Shopify
+    expect(sitemapKind('https://s.example/SITEMAP_Collections.xml')).toBe('collection');
+  });
+
+  it('says nothing about a generic index child — the case this must never change', () => {
+    // sitemap1.xml / sitemap2.xml is what a caller gets when the generator does
+    // not bother naming its own kinds. `undefined` here is what keeps every
+    // site shaped like that importing exactly as it did before this existed.
+    expect(sitemapKind('https://s.example/sitemap1.xml')).toBeUndefined();
+    expect(sitemapKind('https://s.example/sitemap2.xml')).toBeUndefined();
+    expect(sitemapKind('https://s.example/sitemap.xml')).toBeUndefined();
+    expect(sitemapKind('https://s.example/sitemap_index.xml')).toBeUndefined();
+  });
+
+  it('does not fire on a coincidental substring — only a whole word counts', () => {
+    // A raw substring test on "category" or "collection" risks a hit inside an
+    // unrelated word; matching whole tokens (split on anything that is not a
+    // letter or digit) means the filename has to actually SPELL the word.
+    expect(sitemapKind('https://s.example/recollections-sitemap.xml')).toBeUndefined();
+    expect(sitemapKind('https://s.example/vacation-guide-sitemap.xml')).toBeUndefined();
+  });
+
+  it('resolves a name carrying several kind words to the ENTITY, not the page', () => {
+    // A WordPress "blog categories" taxonomy archive sitemap names both a page
+    // word and an entity word. Entity words are checked first: excluding a
+    // pile of catalogue records is the safe direction to be wrong in, and
+    // importing them as static pages is the defect this function exists to
+    // prevent.
+    expect(sitemapKind('https://s.example/sitemap-blog-categories.xml')).toBe('category');
+    expect(sitemapKind('https://s.example/sitemap-post-tags.xml')).toBe('tag');
   });
 });
 
@@ -236,6 +282,75 @@ describe('choosePages — which URLs become pages', () => {
     const dropped = choosePages(entry, links('https://shop.example/blog/a'), { exclude: ['/blog'] });
     expect(dropped.pages.map((p) => p.url)).toEqual([entry]);
     expect(dropped.skipped.excluded).toBe(1);
+  });
+
+  /**
+   * A `Found` tagged with the KIND its own sitemap named — never a guess made
+   * here, always carried in from `fromSitemap` reading a child sitemap's
+   * filename.
+   */
+  const tagged = (kind: Found['kind'], ...urls: string[]): Found[] =>
+    urls.map((url) => ({ url, from: 'sitemap' as const, kind }));
+
+  it('excludes record-shaped kinds by default and reports their counts, keeping page-shaped ones', () => {
+    const found: Found[] = [
+      ...tagged('product', ...Array.from({ length: 2000 }, (_, i) => `https://shop.example/p-${i}`)),
+      ...tagged('category', ...Array.from({ length: 177 }, (_, i) => `https://shop.example/c-${i}`)),
+      ...tagged('brand', ...Array.from({ length: 116 }, (_, i) => `https://shop.example/b-${i}`)),
+      ...tagged('page', 'https://shop.example/dieu-khoan', 'https://shop.example/chinh-sach'),
+      ...tagged('article', 'https://shop.example/tin-tuc/a', 'https://shop.example/tin-tuc/b'),
+    ];
+    const got = choosePages(entry, found, { maxPages: 60 });
+    const paths = got.pages.map((p) => new URL(p.url).pathname);
+    expect(paths).toContain('/dieu-khoan');
+    expect(paths).toContain('/chinh-sach');
+    expect(paths).toContain('/tin-tuc/a');
+    expect(paths).toContain('/tin-tuc/b');
+    // None of the 2,293 record-shaped URLs became a page.
+    expect(got.pages.length).toBe(5); // entry + 2 pages + 2 articles
+    expect(got.kinds).toEqual({ product: 2000, category: 177, brand: 116 });
+    expect(got.skipped['entity-kind']).toBe(2293);
+    // NOT counted toward the cap this run never came close to hitting — an
+    // entity exclusion is not the same event as the page budget running out.
+    expect(got.skipped['over-page-limit']).toBeUndefined();
+  });
+
+  it('plans a kindless index EXACTLY as it always has — the regression this must never cause', () => {
+    // A sitemap whose children are named "sitemap1.xml" / "sitemap2.xml" — or
+    // one flat sitemap with no kind hint at all — carries no `kind` on any
+    // `Found`, and that is the entire test: nothing above may treat an
+    // undefined kind as anything other than an ordinary, unclassified URL.
+    const untagged = links(
+      'https://shop.example/products/a',
+      'https://shop.example/products/b',
+      'https://shop.example/products/c',
+      'https://shop.example/about',
+    );
+    const withKindField: Found[] = untagged.map((f) => ({ ...f, kind: undefined }));
+    const got = choosePages(entry, withKindField, { maxPages: 2 });
+    // Byte-for-byte the same plan `choosePages` already gives this fixture
+    // without any `kind` field at all (see "reports a repeated prefix" above):
+    // the products still show up as a path-prefix GROUP, not an entity
+    // exclusion, and the cap — not a kind rule — is what hides them.
+    expect(got.pages.map((p) => p.url)).toEqual([entry, 'https://shop.example/about']);
+    expect(got.groups).toEqual({ products: 3 });
+    expect(got.kinds).toEqual({});
+    expect(got.skipped['entity-kind']).toBeUndefined();
+    // entry + about + 3 products = 5 candidates, cap 2 → 3 hidden by the cap,
+    // not by any kind rule.
+    expect(got.skipped['over-page-limit']).toBe(3);
+  });
+
+  it('an explicit include still selects a product URL', () => {
+    const found = tagged(
+      'product',
+      'https://shop.example/hot-item',
+      'https://shop.example/other-item',
+    );
+    const got = choosePages(entry, found, { include: ['/hot-item'] });
+    expect(got.pages.map((p) => p.url)).toEqual(['https://shop.example/hot-item']);
+    expect(got.kinds).toEqual({});
+    expect(got.skipped['entity-kind']).toBeUndefined();
   });
 });
 
@@ -434,5 +549,89 @@ describe('sb_import_site — the plan, before anything is created', () => {
       '<url><loc>https://shop.example/about</loc></url></urlset>';
     const got = await fromSitemap(ctxWith(serve(two)), 'https://shop.example/');
     expect(got?.map((f) => f.url)).toContain('https://shop.example/about');
+  });
+});
+
+/**
+ * THE GAP THIS FILE EXISTS TO CLOSE, measured against the real shape of
+ * ttgshop.vn: a sitemap INDEX whose children are named by kind
+ * (`sitemap_product.xml`, `sitemap_category.xml`, …), pointing at ~2,000
+ * products and 177 categories that sit at the site's ROOT with no shared path
+ * prefix at all — so the old prefix-only `groups` heuristic could never have
+ * caught them, and every one used to be an ordinary candidate page fighting
+ * eleven static pages for a 12-page budget.
+ */
+describe('sb_import_site over a KIND-NAMED sitemap index — the ttgshop.vn shape', () => {
+  const ctxWith = (fetchImpl: typeof fetch) =>
+    ({ base: 'http://x', fetchImpl } as unknown as Parameters<typeof fromSitemap>[0]);
+
+  const index =
+    '<sitemapindex>' +
+    [
+      'https://ttgshop.vn/sitemap_product.xml',
+      'https://ttgshop.vn/sitemap_category.xml',
+      'https://ttgshop.vn/sitemap_brand.xml',
+      'https://ttgshop.vn/sitemap_article.xml',
+      'https://ttgshop.vn/sitemap_page.xml',
+    ]
+      .map((u) => `<sitemap><loc>${u}</loc></sitemap>`)
+      .join('') +
+    '</sitemapindex>';
+
+  const urlset = (paths: string[]) =>
+    '<urlset>' + paths.map((p) => `<url><loc>https://ttgshop.vn${p}</loc></url>`).join('') + '</urlset>';
+
+  const products = Array.from({ length: 5 }, (_, i) => `/san-pham-${i}`);
+  const categories = Array.from({ length: 4 }, (_, i) => `/danh-muc-${i}`);
+  const brands = Array.from({ length: 3 }, (_, i) => `/brand/hang-${i}`);
+  const articles = ['/tin-tuc/bai-1', '/tin-tuc/bai-2'];
+  const pages = [
+    '/chinh-sach-bao-mat',
+    '/chinh-sach-doi-tra',
+    '/chinh-sach-van-chuyen',
+    '/dieu-khoan-su-dung',
+    '/quy-dinh-bao-hanh',
+    '/phuong-thuc-thanh-toan',
+    '/tai-khoan-ngan-hang',
+    '/giai-phap-pc-doanh-nghiep-tron-goi',
+  ];
+
+  const serve = (async (input: string | URL) => {
+    const u = String(input);
+    if (u.endsWith('/sitemap.xml')) return new Response(index, { status: 200 });
+    if (u.endsWith('sitemap_product.xml')) return new Response(urlset(products), { status: 200 });
+    if (u.endsWith('sitemap_category.xml')) return new Response(urlset(categories), { status: 200 });
+    if (u.endsWith('sitemap_brand.xml')) return new Response(urlset(brands), { status: 200 });
+    if (u.endsWith('sitemap_article.xml')) return new Response(urlset(articles), { status: 200 });
+    if (u.endsWith('sitemap_page.xml')) return new Response(urlset(pages), { status: 200 });
+    return new Response('', { status: 404 });
+  }) as unknown as typeof fetch;
+
+  it('fromSitemap carries the CHILD sitemap\'s own kind onto every URL it lists', async () => {
+    const found = await fromSitemap(ctxWith(serve), 'https://ttgshop.vn/');
+    expect(found).not.toBeNull();
+    const kindOf = (path: string) => found!.find((f) => f.url === `https://ttgshop.vn${path}`)?.kind;
+    expect(kindOf('/san-pham-0')).toBe('product');
+    expect(kindOf('/danh-muc-0')).toBe('category');
+    expect(kindOf('/brand/hang-0')).toBe('brand');
+    expect(kindOf('/tin-tuc/bai-1')).toBe('article');
+    expect(kindOf('/chinh-sach-bao-mat')).toBe('page');
+  });
+
+  it('choosePages keeps the eleven real pages and reports the rest as records, not products lost to a cap', async () => {
+    const found = await fromSitemap(ctxWith(serve), 'https://ttgshop.vn/');
+    const got = choosePages('https://ttgshop.vn/', found!, { maxPages: 12 });
+    const paths = got.pages.map((p) => new URL(p.url).pathname).sort();
+    expect(paths).toEqual(
+      [
+        '/',
+        ...articles,
+        ...pages,
+      ].sort(),
+    );
+    expect(got.kinds).toEqual({ product: 5, category: 4, brand: 3 });
+    // Not one of the twelve kept slots was spent on a product or a category —
+    // the whole reason ttgshop planned eleven keyboards before this existed.
+    expect(got.skipped['over-page-limit']).toBeUndefined();
   });
 });

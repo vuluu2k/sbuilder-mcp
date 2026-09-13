@@ -2297,6 +2297,50 @@ that accounts for them.
   conflict with and stamping is what makes the page match the site at all. `sb_import` (single
   page, no theme write) is unaffected on purpose — matching rule 0 is correct there.
 
+- **A SHOP'S SITEMAP INDEX NAMES ITS OWN KINDS, AND THIS CLIENT READ THOSE NAMES AND THREW
+  THEM AWAY.** `sitemapUrls` has distinguished an index from a leaf since the sitemap path
+  existed — that is the whole reason `<sitemapindex>` locs come back as `sitemaps` and not
+  `pages` — but the loader in `fromSitemap` fetched every child and merged every URL into one
+  flat set, discarding the CHILD SITEMAP'S OWN FILENAME the moment it had been read. Measured
+  against `https://ttgshop.vn/` — a real shop, ~2,400 products and 177 categories —
+  `sb_import_site` planned the home page plus **eleven product-detail pages**: ten keyboards
+  and a mouse pad, chosen because their URLs sit at the site's ROOT with no shared prefix at
+  all, so the one existing defence (`groups`, a shared PATH PREFIX) never saw them and they
+  simply won the alphabetical tie-break inside the twelve-page cap. This file already records
+  why that shape is wrong — imported as static pages they render a shop where every price is a
+  literal and nothing is buyable, and the fix afterwards is forty deletes, not ten.
+
+  ttgshop's own `sitemap.xml` is an index naming its children exactly what they hold —
+  `sitemap_product.xml` (2,101 urls, measured), `sitemap_category.xml` (177),
+  `sitemap_brand.xml` (116), `sitemap_article.xml` (2), `sitemap_page.xml` (8) — and other
+  generators say the same thing in other words: `product-sitemap.xml` (Yoast),
+  `sitemap_products_1.xml` (Shopify). `Found` now carries a `kind` alongside `from`, read off
+  the CHILD SITEMAP'S FILENAME (`sitemapKind`, `discover.ts`) at the moment `fromSitemap`
+  reads it — never guessed from the URL itself. `choosePages` excludes every RECORD-shaped
+  kind (`product`, `category`, `collection`, `brand`, `tag`) from the plan by default, the
+  same reason the prefix rule exists, and reports each one's count (`kinds`, surfaced as
+  `entity_pages` beside any prefix groups); a PAGE-shaped kind (`page`, `article`, `post`,
+  `blog`) is left as an ordinary candidate. `include` still outranks it, same as the plumbing
+  list. Re-measured after the fix: the plan becomes the home page plus the eight static pages
+  (`/chinh-sach-*`, `/dieu-khoan-su-dung`, `/quy-dinh-bao-hanh`, `/phuong-thuc-thanh-toan`,
+  `/tai-khoan-ngan-hang`, `/giai-phap-pc-doanh-nghiep-tron-goi`) and one article — eleven pages,
+  none of them a keyboard — with `entity_pages` naming 2,101 products, 116 brands and 176
+  categories excluded (the 177th sitemap-tagged category URL normalizes to the site's own
+  root, so it becomes the home page instead, exempt from the entity rule the same way the
+  entry URL is exempt from every other filter in `choosePages`).
+
+  MATCHED BY WHOLE TOKEN, not a raw substring: the filename is split on anything that is not a
+  letter or digit, and a word has to appear on its own to count. A plain substring test on
+  `"category"` risks a coincidental hit inside an unrelated word (`isPlumbing`'s boundary bug,
+  above, is this repo's own precedent for exactly that mistake), and tokenizing is what lets
+  `sitemap-blog-categories.xml` — a filename naming BOTH a page word and an entity word —
+  resolve predictably: entity words are checked first, because excluding a few thousand
+  catalogue records is the safe direction to be wrong in and importing them as static pages is
+  the defect this exists to prevent. A sitemap that never names its own kinds
+  (`sitemap1.xml`, `sitemap2.xml`, one flat `sitemap.xml`) tags nothing, and every URL out of
+  it plans exactly as it always has — this rule fires only when the site's own sitemap says
+  so, never as a guess laid on top of one that stays silent.
+
 ## The five traps
 
 Each fails SILENTLY. Each is encoded in `src/domains/site/traps.ts` (trap 5 in

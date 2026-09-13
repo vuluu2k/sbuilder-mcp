@@ -1147,6 +1147,21 @@ chủ. Nông trước — gốc, rồi `/about`, rồi `/blog/mot-bai` — chín
 sẽ ra một shop mà mọi giá đều là chữ chết và không mua được gì. Kết quả nêu tên tiền tố và số
 lượng trước khi tạo bất cứ thứ gì; `exclude` để loại chúng ra.
 
+**Một sitemap INDEX tự nêu tên LOẠI của từng sitemap con, và cái tên đó được đọc chứ không bị
+vứt đi.** `sitemap.xml` của một shop hầu như luôn là một index, và các sitemap con của nó được
+đặt tên theo thứ chúng chứa — `sitemap_product.xml`, `sitemap_category.xml`,
+`sitemap_brand.xml` (đúng hình dạng của ttgshop.vn), hoặc `product-sitemap.xml` (Yoast),
+`sitemap_products_1.xml` (Shopify) — và quy tắc báo tiền tố ở trên lại mù trước đúng cái ca
+quan trọng nhất: một shop mà URL sản phẩm nằm ngay ở GỐC site, không chung tiền tố nào cả. Mọi
+URL lấy từ một sitemap con được đặt tên theo loại BẢN GHI — `product`, `category`,
+`collection`, `brand`, `tag` — bị **loại khỏi kế hoạch theo mặc định**, cùng lý do như quy tắc
+tiền tố: ở đây là một template có binding cộng với bản ghi thật, không phải N trang tĩnh. Kết
+quả báo từng loại kèm số lượng (`entity_pages`, nằm cạnh mọi nhóm tiền tố); `include` vẫn đưa
+được một cái cụ thể vào. Một sitemap con đặt tên theo loại TRANG — `page`, `article`, `post`,
+`blog` — vẫn được giữ như một ứng viên bình thường, không bị ảnh hưởng. Một sitemap không tự
+nêu tên loại nào (`sitemap1.xml`, `sitemap2.xml`, một `sitemap.xml` phẳng) thì lên kế hoạch
+đúng như trước nay — quy tắc này chỉ chạy khi chính sitemap của site nói ra.
+
 **Một header dùng chung mang menu.** Các trang vừa tạo được gom vào một global `header` — sửa
 một lần là cả site đổi — dựng từ CHÍNH những trang đó chứ không từ nav của trang nguồn, vì nav đó
 trỏ sang website đã sao chép và một nửa trỏ vào những trang mà trần số trang đã bỏ lại. Mỗi trang

@@ -1184,6 +1184,20 @@ resolves to the published page of type `product`. Imported as static pages they 
 shop where every price is a literal and nothing is buyable. The result names the prefix and
 its count before anything is created; `exclude` leaves them out.
 
+**A sitemap INDEX names its own children's KIND, and that is read rather than thrown away.**
+A shop's `sitemap.xml` is almost always an index whose children are named by what they hold —
+`sitemap_product.xml`, `sitemap_category.xml`, `sitemap_brand.xml` (ttgshop.vn's own shape),
+or `product-sitemap.xml` (Yoast), `sitemap_products_1.xml` (Shopify) — and the path-prefix
+report above is blind to exactly the case that matters most: a shop whose product URLs sit at
+the site's ROOT with no shared prefix at all. Every URL out of a child sitemap named for a
+RECORD kind — `product`, `category`, `collection`, `brand`, `tag` — is **excluded from the
+plan by default**, the same reason as the prefix rule: one bound template plus real records
+here, never N static pages. The result reports each kind and its count (`entity_pages`, next
+to any prefix groups); `include` still brings a specific one in. A child named for a PAGE
+kind — `page`, `article`, `post`, `blog` — is kept as an ordinary candidate, unaffected. A
+sitemap that never names its own kinds (`sitemap1.xml`, `sitemap2.xml`, one flat `sitemap.xml`)
+plans exactly as it always has — this only fires when the site's own sitemap says so.
+
 **A shared header carries the menu.** The pages that were created become one global `header`
 section — edit it once and every page changes — built from THOSE pages and never from the
 source's own nav, which points at the site this was copied from and half of it at pages the cap

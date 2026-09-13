@@ -26,13 +26,16 @@ import { subtreeIds } from '../core/tree.js';
 import {
   canonFor,
   choosePages,
+  ENTITY_KIND_LABEL,
   normalizeUrl,
   robotsRules,
   robotsSitemaps,
+  sitemapKind,
   sitemapUrls,
   type RobotsRules,
   type Found,
   type Planned,
+  type SitemapKind,
 } from '../domains/site/discover.js';
 import { loadSource } from '../transport/pages.js';
 import { PageDoc } from '../domains/site/document.js';
@@ -85,7 +88,12 @@ export async function fromSitemap(ctx: ToolContext, entry: string, declaredIn: s
     declared.add(`${origin}${guess}`);
   }
 
-  const pages = new Set<string>();
+  // KEYED, NOT A Set — the value is the KIND of the child sitemap a URL was
+  // read out of, read off THAT SITEMAP'S OWN FILENAME (`sitemapKind`), never
+  // guessed at from the URL itself. A generic index (`sitemap.xml`) or a
+  // kindless child (`sitemap1.xml`) carries no kind, which is what keeps a
+  // site shaped like that planning exactly as it always has.
+  const pages = new Map<string, SitemapKind | undefined>();
   let queue = [...declared].slice(0, 5);
   // ONE level of index expansion. A sitemap index of indexes exists and is rare;
   // the bound is what keeps a pathological one from becoming a fetch storm on
@@ -96,7 +104,11 @@ export async function fromSitemap(ctx: ToolContext, entry: string, declaredIn: s
       const xml = await fetchForeign(ctx, sm);
       if (!xml) continue;
       const got = sitemapUrls(xml);
-      for (const u of got.pages) pages.add(u);
+      const kind = sitemapKind(sm);
+      // FIRST WRITE WINS. A URL almost never appears under two child sitemaps
+      // of different kinds, and if it does, the first one read is as good an
+      // answer as the second.
+      for (const u of got.pages) if (!pages.has(u)) pages.set(u, kind);
       for (const u of got.sitemaps) next.push(u);
     }
     queue = next;
@@ -110,14 +122,14 @@ export async function fromSitemap(ctx: ToolContext, entry: string, declaredIn: s
   // adding it would arrive as a second copy and be counted as a dropped
   // duplicate — a phantom loss on every sitemap run.
   const urls: Found[] = [];
-  for (const u of pages) {
+  for (const [u, kind] of pages) {
     // NORMALIZED, NOT FILTERED. `canonFor` exists to stop a crawl spending a
     // NAVIGATION on a PDF; a sitemap costs no navigation, so there is nothing to
     // save by dropping one here — and dropping it here means `choosePages` never
     // sees it and never counts the reason. Filtering twice and reporting once is
     // how a caller ends up asking why the cart page vanished.
     const c = normalizeUrl(u, entry);
-    if (c) urls.push({ url: c, from: 'sitemap' });
+    if (c) urls.push({ url: c, from: 'sitemap', ...(kind ? { kind } : {}) });
   }
   return urls;
 }
@@ -508,13 +520,28 @@ export function registerImportTools(
       const heavy = Object.entries(plan.groups)
         .filter(([, n]) => n >= 3)
         .map(([seg, n]) => `${seg} (${n})`);
-      const templateNote =
+      const prefixNote =
         heavy.length > 0
           ? `Several URLs share a prefix — ${heavy.join(', ')}. If those are products, ` +
             'collections or posts, they are ONE template plus real records here, not one page ' +
             'each: sb_page_create type:"product" (or category/post) seeds the bound page, and ' +
             'the catalogue comes from the API. Pass exclude to leave them out of the import.'
-          : undefined;
+          : '';
+      // THE SAME FACT, SAID BY THE SITEMAP ITSELF rather than inferred from a
+      // shared path prefix — this is what catches a shop whose product URLs
+      // sit at the root with no prefix in common at all. These were already
+      // EXCLUDED from `plan.pages` by `choosePages`, not merely counted.
+      const kindEntries = Object.entries(plan.kinds);
+      const kindNote =
+        kindEntries.length > 0
+          ? `The sitemap itself names ${kindEntries
+              .map(([kind, n]) => `${ENTITY_KIND_LABEL[kind] ?? kind} (${n})`)
+              .join(', ')} — those are EXCLUDED from this plan by default, the same reason: one ` +
+            'bound template plus real records, not N static pages. sb_page_create ' +
+            'type:"product" (or category/collection) seeds the page and the catalogue comes ' +
+            'from the API. Pass include to bring a specific one in anyway.'
+          : '';
+      const templateNote = [kindNote, prefixNote].filter(Boolean).join(' ') || undefined;
 
       // BEST EFFORT IN THE PREVIEW, REQUIRED IN THE RUN.
       //
