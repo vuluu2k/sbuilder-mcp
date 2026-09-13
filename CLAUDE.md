@@ -2360,6 +2360,64 @@ that accounts for them.
   it plans exactly as it always has — this rule fires only when the site's own sitemap says
   so, never as a guess laid on top of one that stays silent.
 
+- **THE INERT-ON-ADD TABLE HAD THREE ENTRIES AGAINST 113 ELEMENTS, AND AN AUDIT OF ALL 113
+  FOUND SEVENTEEN MORE.** `src/domains/site/inert.ts` existed for elements that render
+  convincingly while wired to nothing — locale-switcher's fabricated chip, breadcrumb's
+  English root word, spline-scene's borrowed demo — and it only knew about the three it was
+  written for. `quickview` had ALREADY arrived and gone unnoticed: a site-level panel that
+  renders nothing until a product list's `quickviewId` points at it, exactly the shape the
+  table exists to catch, sitting undetected in the same catalog the table is checked against.
+
+  The audit read all 113 elements' own prose against the file's own criterion — the first
+  write succeeds completely, the element still does nothing useful, and a competent author
+  would be SURPRISED because neither the tree nor the screenshot says so — and rejected far
+  more matches than it kept. A crude regex over "renders nothing" / "hides itself" / "would be
+  inert" catches real traps (`bundle-items`, `chat-widget`, `currency-switcher`,
+  `theme-switcher`, `points-card`, `points-prompt`, `order-receipt`, `payment-status`,
+  `form-step-count`, `form-step-button`, `list-empty`, `list-loading`, `rating-stars`,
+  `menu-drawer`, `menu-panel`, `accordion-content`) and also catches ordinary "this control has
+  a placeholder" prose (`form-text`, `form-number`, `search-input`, `cart-total`) that is not
+  inert at all — the discriminator has to be read, not matched. Two distinctions did most of
+  the rejecting:
+
+  - **A list rendering ITS OWN empty state is not this.** An empty catalogue is a CORRECT list
+    waiting for data, honestly shown as such, and the catalogue check already reports it.
+    `rating-stars` is the opposite shape kept IN: it renders ZERO PIXELS with no reviews, no
+    empty state at all, so a right placement and a forgotten one look identical — and it has NO
+    config fix, since typing a fallback number "publishes a score nobody gave." That is worth
+    keeping despite the table's own stated contract ("names the SECOND write"): sometimes the
+    honest second fact is that no write helps, and staying silent about that would be worse.
+  - **A fact already in the always-visible `description` is not this either.** Eight satellite
+    types (`accordion-item`, `menu-dropdown`, `menu-item`, `product-variant-label`,
+    `product-variant-option`, `quantity-button`, `quantity-input`, `tab-item`) already say
+    "Never placed directly … a style-holder, not a rendered element" in the field
+    `sb_catalog_search` returns BY DEFAULT, with no `detail:true` needed — an inert-on-add
+    entry there would warn a caller of a fact they already have. `tab-content` and
+    `carousel-slide` were rejected on close reading for the same shape from the other
+    direction: their AVOID says "only VALID inside" (a semantic/wrong-tool note, the same
+    register as `flex-block`'s "as the outermost wrapper — use flex-section"), where every kept
+    entry's AVOID says "only RENDERS inside/through/as" — a claim about what actually happens
+    on screen, not about which element is more idiomatic. `accordion-content` keeps the
+    opposite of that sibling pair: its AVOID is the render-language ("it only renders as an
+    accordion child"), and nothing refuses placing it under a permissive parent instead, since
+    only `accordion` itself restricts its own children.
+
+  **It cannot be generated, and re-deriving why matters more than the conclusion.** Eighteen
+  element types appear in some parent's `childAllows`, and that set mixes genuine host-bound
+  components (`tab-content`, `list-item`, `carousel-slide`) with general elements a permissive
+  parent happens to accept (`heading` inside `search-input`, `image` inside `image-marquee`) —
+  no flag on the meta separates the two. `locked` is true for the eight hidden satellites
+  above and false on entries that belong just as much — `bundle-items`, `chat-widget` and
+  `theme-switcher` are none of those things: ordinary, unlocked, visible elements whose second
+  dependency is a site setting or an app, not a parent. `hideInLayer` is false on every entry
+  in the table. `category` puts a real trap (`menu-panel`) in the same bucket as ordinary
+  content (`heading`) that carries none of this. The durable fix is upstream: a flag on the
+  element meta saying it renders only through a named host, or only once a named condition (an
+  app installed, a locale count, a signed grant) is met. Until the platform declares that, this
+  table — hand-kept, and stale again the next time an element like `quickview` ships — is the
+  only place the fact lives, and the next audit should re-read all of it rather than trust the
+  count.
+
 ## The five traps
 
 Each fails SILENTLY. Each is encoded in `src/domains/site/traps.ts` (trap 5 in

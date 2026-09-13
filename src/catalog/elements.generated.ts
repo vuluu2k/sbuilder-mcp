@@ -3,7 +3,7 @@
 import type { CatalogElement, NodeSeed, SatelliteRule, TraitDescription } from './element-types.js';
 
 export const ELEMENT_SOURCE = {
-  "count": 112,
+  "count": 113,
   "docSchemaVersion": 2
 } as const;
 
@@ -694,7 +694,9 @@ export const ELEMENTS: Record<string, CatalogElement> = {
         "close_dropdown",
         "toggle_dropdown",
         "logout_customer",
-        "toggle_wishlist"
+        "toggle_wishlist",
+        "quick_view",
+        "close_quick_view"
       ]
     },
     "bindingEvents": {
@@ -1597,7 +1599,9 @@ export const ELEMENTS: Record<string, CatalogElement> = {
         "change_tab",
         "open_dropdown",
         "close_dropdown",
-        "toggle_dropdown"
+        "toggle_dropdown",
+        "quick_view",
+        "close_quick_view"
       ]
     },
     "defaults": {
@@ -1767,7 +1771,9 @@ export const ELEMENTS: Record<string, CatalogElement> = {
         "close_dropdown",
         "toggle_dropdown",
         "logout_customer",
-        "toggle_wishlist"
+        "toggle_wishlist",
+        "quick_view",
+        "close_quick_view"
       ]
     },
     "defaults": {
@@ -3693,7 +3699,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
   },
   "spline-scene": {
     "type": "spline-scene",
-    "label": "Spline scene",
+    "label": "3D scene",
     "category": "media",
     "isContainer": false,
     "isRootOnly": false,
@@ -3702,6 +3708,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
     "childAllows": [],
     "defaults": {
       "specials": {
+        "source": "effect",
         "sceneUrl": "https://prod.spline.design/HqdfCmOueigtautT/scene.splinecode",
         "posterUrl": "",
         "sceneControls": []
@@ -3713,13 +3720,28 @@ export const ELEMENTS: Record<string, CatalogElement> = {
       "config": {
         "background": "transparent",
         "eventsTarget": "local",
-        "mobileMode": "scene"
+        "mobileMode": "scene",
+        "effect": "gradient-mesh",
+        "speed": "normal",
+        "intensity": "normal",
+        "grain": false,
+        "effectColors": "theme",
+        "effectColor1": "#171717",
+        "effectColor2": "#ffffff",
+        "effectColor3": "#6b7280"
       }
     },
     "inspector": [
       {
         "tab": "general",
         "groups": [
+          {
+            "key": "scene_source",
+            "label": "Source",
+            "controls": [
+              "scene_source"
+            ]
+          },
           {
             "key": "size",
             "label": "Size",
@@ -3733,6 +3755,13 @@ export const ELEMENTS: Record<string, CatalogElement> = {
             "label": "Spline",
             "controls": [
               "spline_source"
+            ]
+          },
+          {
+            "key": "scene_effect",
+            "label": "Effect",
+            "controls": [
+              "scene_effect"
             ]
           },
           {
@@ -3795,9 +3824,11 @@ export const ELEMENTS: Record<string, CatalogElement> = {
       }
     ],
     "controls": [
+      "scene_source",
       "width_select",
       "size_bounds",
       "spline_source",
+      "scene_effect",
       "scene_display",
       "scene_controls",
       "border",
@@ -3808,25 +3839,35 @@ export const ELEMENTS: Record<string, CatalogElement> = {
       "animation",
       "class_css"
     ],
-    "description": "An interactive 3D scene made in Spline, embedded from its viewer URL.",
+    "description": "A 3D block whose source the merchant picks: a generated WebGL effect that needs no file and no account (~15 KB), or a Spline scene embedded from its viewer link (~600 KB).",
     "useWhen": [
+      "For a moving background behind a hero or a section — pick the effect source, which costs ~15 KB and needs nothing but the element",
       "For a hero or product moment that should move in 3D as the visitor scrolls or hovers",
-      "When the merchant already designs in Spline and has a .splinecode link"
+      "When the merchant already designs in Spline and has a .splinecode link — pick the Spline source"
     ],
     "avoidWhen": [
       "For a plain product photo — use image",
       "For a video — use video / youtube / vimeo",
-      "More than three 3D scenes on one page (each one costs ~600 KB of JS once it scrolls into view)"
+      "For a still gradient or a flat colour behind text — a background style on the section is free; this element runs a shader",
+      "More than one Spline scene on a page (each costs ~600 KB of JS once it scrolls into view). Several effects are cheap by comparison, but they each run their own animation loop"
     ],
     "contentTips": [
-      "Paste the link from Spline: Export → Viewer → copy link (…/scene.splinecode)",
-      "Add a poster image so the box is not blank while the scene loads"
+      "Choose the source first — the rest of the panel changes with it, and the budget line under the picker says what the page will download",
+      "Effect: four shaders (gradient mesh, floating particles, waves, aurora) with speed, intensity and a grain toggle. Its colours follow the site theme until you switch them to custom",
+      "Spline: paste the link from Spline — Export → Viewer → copy link (…/scene.splinecode)",
+      "Add a poster image so the box is not blank while a Spline scene loads; an effect draws immediately and needs none",
+      "Scene controls (rotate on scroll, tilt with the mouse) drive named objects, so they apply to a Spline scene and not to an effect, which has no objects"
     ],
     "semantics": [
       "3d",
       "spline",
       "scene",
       "webgl",
+      "shader",
+      "effect",
+      "gradient",
+      "particles",
+      "animated background",
       "animation",
       "interactive"
     ]
@@ -19572,6 +19613,190 @@ export const ELEMENTS: Record<string, CatalogElement> = {
       "input-skin"
     ]
   },
+  "quickview": {
+    "type": "quickview",
+    "label": "Quick view",
+    "category": "basic",
+    "isContainer": true,
+    "isRootOnly": false,
+    "locked": true,
+    "hideInLayer": false,
+    "childAllows": [],
+    "defaults": {
+      "style": {
+        "display": "flex",
+        "flexDirection": "column",
+        "gap": "16px",
+        "width": "720px",
+        "maxWidth": "calc(100% - 32px)",
+        "maxHeight": "calc(100vh - 64px)",
+        "padding": "24px",
+        "backgroundColor": "#ffffff",
+        "borderTopLeftRadius": "10px",
+        "borderTopRightRadius": "10px",
+        "borderBottomLeftRadius": "10px",
+        "borderBottomRightRadius": "10px",
+        "overflowX": "hidden",
+        "overflowY": "auto"
+      },
+      "config": {
+        "showOverlay": true,
+        "overlayColor": "#000000",
+        "clickToClose": true
+      }
+    },
+    "inspector": [
+      {
+        "tab": "general",
+        "groups": [
+          {
+            "key": "panel",
+            "label": "Panel",
+            "controls": [
+              "quickview_name"
+            ]
+          },
+          {
+            "key": "size",
+            "label": "Size",
+            "controls": [
+              "width_select",
+              "height_select",
+              "size_bounds"
+            ]
+          },
+          {
+            "key": "layout",
+            "label": "Layout",
+            "controls": [
+              "direction",
+              "gap",
+              "padding",
+              "margin",
+              "vertical",
+              "horizontal"
+            ]
+          },
+          {
+            "key": "quickview_position",
+            "label": "Position",
+            "controls": [
+              "popup_placement"
+            ]
+          },
+          {
+            "key": "quickview_overlay",
+            "label": "Overlay",
+            "controls": [
+              "quickview_scrim"
+            ]
+          },
+          {
+            "key": "background",
+            "label": "Background",
+            "controls": [
+              "bg_color",
+              "bg_image"
+            ]
+          },
+          {
+            "key": "shape",
+            "label": "Shape",
+            "controls": [
+              "border",
+              "corner",
+              "shadow"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "advanced",
+        "groups": [
+          {
+            "key": "state",
+            "label": "state",
+            "controls": []
+          },
+          {
+            "key": "spacing",
+            "label": "Spacing",
+            "controls": [
+              "padding_margin"
+            ]
+          },
+          {
+            "key": "display",
+            "label": "Display",
+            "controls": [
+              "display"
+            ]
+          },
+          {
+            "key": "animation",
+            "label": "Animation",
+            "controls": [
+              "animation"
+            ]
+          },
+          {
+            "key": "class_css",
+            "label": "Class",
+            "controls": [
+              "class_css"
+            ]
+          }
+        ]
+      }
+    ],
+    "controls": [
+      "quickview_name",
+      "width_select",
+      "height_select",
+      "size_bounds",
+      "direction",
+      "gap",
+      "padding",
+      "margin",
+      "vertical",
+      "horizontal",
+      "popup_placement",
+      "quickview_scrim",
+      "bg_color",
+      "bg_image",
+      "border",
+      "corner",
+      "shadow",
+      "padding_margin",
+      "display",
+      "animation",
+      "class_css"
+    ],
+    "description": "A QUICK VIEW panel: the surface a shopper opens from a product card to see enough to decide — gallery, title, price, variants, quantity, add to cart — without leaving the list they were browsing. Belongs to the site, not to a page; a product list points at one and several lists may share the same panel.",
+    "useWhen": [
+      "a catalogue page where shoppers compare several products and losing their scroll position costs a sale",
+      "a store whose products need one or two choices (size, colour) before they can be added to the cart",
+      "a site that wants a second, shorter product surface without maintaining a second product page"
+    ],
+    "avoidWhen": [
+      "as a standalone block: this panel only renders through the list that names it, hidden until a shopper opens it",
+      "as a replacement for the product page — search engines index the page, not this panel, and a long description belongs there",
+      "for products that need no decision at all: a one-click add-to-cart button on the card is faster than any panel"
+    ],
+    "contentTips": [
+      "show what the card could not: the other photos, the variants, the stock, the short description",
+      "keep an obvious way through to the full product page — a shopper who wants the detail should not have to close and hunt",
+      "put the add-to-cart control where it is visible without scrolling on a phone"
+    ],
+    "semantics": [
+      "quick-view",
+      "modal",
+      "product",
+      "listing",
+      "commerce",
+      "container"
+    ]
+  },
   "product-variants": {
     "type": "product-variants",
     "label": "Product variants",
@@ -32808,6 +33033,14 @@ export const ELEMENTS: Record<string, CatalogElement> = {
             ]
           },
           {
+            "key": "quickview",
+            "label": "Quick view",
+            "controls": [
+              "list_quickview",
+              "quickviewId"
+            ]
+          },
+          {
             "key": "narrowing",
             "label": "Narrowing",
             "controls": [
@@ -32968,6 +33201,8 @@ export const ELEMENTS: Record<string, CatalogElement> = {
       "list_loading_state",
       "emptyStateId",
       "loadingStateId",
+      "list_quickview",
+      "quickviewId",
       "list_searchable",
       "list_filterable",
       "width_select",
@@ -36120,6 +36355,11 @@ export const SATELLITE_RULES: Record<string, SatelliteRule[]> = {
       "type": "list-loading",
       "configKey": "loadingStateId",
       "optional": true
+    },
+    {
+      "type": "quickview",
+      "configKey": "quickviewNodeId",
+      "optional": true
     }
   ]
 };
@@ -36353,6 +36593,11 @@ export const BASE_ONLY_CONFIG: string[] = [
   "collectionId",
   "collectionType",
   "quantity",
+  "effect",
+  "speed",
+  "intensity",
+  "grain",
+  "effectColors",
   "rowLimit"
 ];
 
