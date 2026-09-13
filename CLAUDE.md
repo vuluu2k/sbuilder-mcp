@@ -2068,18 +2068,6 @@ that accounts for them.
   removes that specific cause; the clamp stays anyway, because the two sides are still built by
   two different walks of the page and a small positive drift on an unusual page is not ruled out.
 
-  `coverage` STILL UNDER-REPORTS ONE MORE WAY, and it is now the ENTIRE remaining gap on one
-  fixture and only PART of it on another — the two must not be given the same cause. Content
-  inside `aria-hidden="true"` is excluded from `kept` on purpose (a carousel's clones, a mobile
-  nav's duplicate copy — this file already records why), but `aria-hidden` does not affect layout,
-  so browser `innerText` includes it anyway and it stays in the denominator. MEASURED,
-  whitespace-free: `modelcontextprotocol.io/` carries 351 of 2,588 non-chrome characters (14%)
-  inside `aria-hidden="true"`, which lines up with its remaining gap after the units fix. `www.rust-lang.org/`
-  carries ZERO — 0 characters, 0 elements — and still reads 92 rather than 100; that gap has NO
-  IDENTIFIED CAUSE, aria-hidden is RULED OUT for it by this measurement, and it was not chased
-  further because the measure is fit for its purpose (relative comparison across runs, and a 100
-  that now genuinely means "kept everything").
-
   **A SECOND CAUSE SURVIVES THE FIX, and the SHAPE of what is known about it matters more than
   the number.** `aria-hidden="true"` does not affect layout, so `innerText` counts that text
   while the walk deliberately skips it — the author's own mark for decoration and for duplicates.
