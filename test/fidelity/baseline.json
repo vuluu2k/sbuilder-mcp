@@ -1,46 +1,46 @@
 {
-  "generated": "2026-09-13T09:29:13.367Z",
+  "generated": "2026-09-13T09:37:11.823Z",
   "scores": [
     {
       "url": "https://ttgshop.vn/quy-dinh-bao-hanh",
       "width": 1440,
       "content": 100,
-      "structure": 21.7,
+      "structure": 0,
       "mode": "offline"
     },
     {
       "url": "https://ttgshop.vn/quy-dinh-bao-hanh",
       "width": 390,
       "content": 100,
-      "structure": 21.7,
+      "structure": 0,
       "mode": "offline"
     },
     {
       "url": "https://ttgshop.vn/",
       "width": 1440,
       "content": 100,
-      "structure": 0.4,
+      "structure": 0.5,
       "mode": "offline"
     },
     {
       "url": "https://ttgshop.vn/",
       "width": 390,
       "content": 100,
-      "structure": 0.4,
+      "structure": 0.5,
       "mode": "offline"
     },
     {
       "url": "https://modelcontextprotocol.io/",
       "width": 1440,
       "content": 99,
-      "structure": 11.9,
+      "structure": 4.3,
       "mode": "offline"
     },
     {
       "url": "https://modelcontextprotocol.io/",
       "width": 390,
       "content": 99,
-      "structure": 11.9,
+      "structure": 4.3,
       "mode": "offline"
     },
     {

@@ -42,6 +42,21 @@ describe('shapeOf', () => {
     const bare = shapeOf([node(leaf(), leaf(), leaf())]);
     expect(chain).toEqual(bare);
   });
+
+  it('counts a captured list\'s `items` as leaf children — a `Captured` list stores its rows in `items: string[]`, never in `children`', () => {
+    // section -> list(items: [a,b,c]) must equal section -> [leaf, leaf, leaf]:
+    // a list's three rows are a real fanout-3 arrangement decision, exactly
+    // like three real child nodes would be.
+    const withItems = shapeOf([node({ items: ['a', 'b', 'c'] })]);
+    const withChildren = shapeOf([node(leaf(), leaf(), leaf())]);
+    expect(withItems).toEqual(withChildren);
+  });
+
+  it('treats a single-item list as transparent, same as a single-child node', () => {
+    const oneItem = shapeOf([node({ items: ['only'] })]);
+    const oneChild = shapeOf([node(leaf())]);
+    expect(oneItem).toEqual(oneChild);
+  });
 });
 
 describe('shapeDistance', () => {

@@ -2199,6 +2199,30 @@ that accounts for them.
   tree is MEASURED, never what the walk keeps). The honest label for it went from "nobody knows
   why" to "known, and deliberately not fixed here" to fixed.
 
+- **AND `shape.ts` REPEATED `textOf`'s EXACT MISTAKE, ON THE OTHER AXIS, BECAUSE NOTHING SAID A
+  CAPTURED TREE HAS TWO PLACES CONTENT CAN LIVE.** `textOf` above summed `c.text` alone and
+  scored a list's `items: string[]` as zero — this file's own record of that bug was written
+  first. `shapeOf` (`src/domains/site/shape.ts`) was written AFTER it and walked `children`
+  alone, which is the identical omission one level up: a captured `list` never carries
+  `children`, so every list counted as a LEAF in the histogram while the `list-item` nodes the
+  mapper actually builds from those same `items` are real children with a real fanout. The two
+  trees disagreed in shape BY CONSTRUCTION, on every page that has a list, and `structure`
+  reported the disagreement as arrangement lost when nothing was lost. Measured on
+  `ttgshop.vn/quy-dinh-bao-hanh` (7 captured lists): `structure` read **21.7**, the largest
+  non-zero value in the whole fixture set, entirely this artifact.
+
+  Fixed the same way `textOf` was: `TreeLike.items?: unknown[]` (structural, so the module still
+  takes both `Captured` and `NodeSpec` without importing either), each entry counted as a leaf
+  child, composing with the transparency rule rather than bypassing it — a list of exactly one
+  item is a single-child node like any other and collapses. Offline baseline:
+  `quy-dinh-bao-hanh` 21.7 → 0; `modelcontextprotocol.io` (which also carries lists) 11.9 → 4.3;
+  `content` unmoved on every fixture, because this touches only the shape histogram.
+
+  **The lesson is the pattern, not the bug**: a measure that walks a captured tree by `children`
+  and does not also check `items` will silently score every list as empty, on whichever axis it
+  measures. Two functions have now made that exact mistake independently. The next one written
+  against `Captured` should check both before it ships, not after a fixture measures it.
+
 - **AN IMPORTED PAGE COULD LOOK LIKE ITS SOURCE, OR STAY RE-THEMABLE, BUT NOT BOTH — until the
   colour moved to the layer that outranks nothing.** A literal written on a node OUTRANKS its
   style preset PERMANENTLY, which this file already records for a plain `sb_set` call; it is
