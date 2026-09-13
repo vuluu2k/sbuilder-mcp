@@ -1189,6 +1189,25 @@ targets do not exist yet and the rest are blank, so reading per page would give 
 page element defaults and every later page the defaults of the blank page before it. The
 open page if there is one, this site's home page otherwise.
 
+**The source's own colours and type scale move into the TARGET site's theme, not onto the
+nodes.** Read once, off the entry page's own capture — the same one already fetched to build
+that page's content, so nothing is fetched twice — as five colour roles
+(heading/text/primary/muted/background) and a heading/text type scale, and patched onto
+`PUT /api/sites/{siteId}/theme`. It patches NAMED fields and never replaces the document — a
+role the source did not express is left alone, never zeroed, because an empty-looking write
+against this replace-only endpoint is the shape that once cost a live site its whole palette.
+The imported nodes themselves carry no colour of their own: they wear the theme's presets, the
+same layer `sb_node_read` already flattens for you, which is what keeps an imported page
+RE-THEMABLE — a later `sb_theme` edit repaints it along with everything else, rather than
+leaving it stranded on the day it was imported. Reported as `theme.changed` (`what` / `from` /
+`to`, `sb_theme`'s own shape) or `theme.failed`; a theme write that does not take is a reported
+line, never a reason to fail the import — the same rule an image upload failure follows by
+keeping the node's original URL. **The limit worth saying plainly:** `content` and `structure`
+scoring cannot see a colour at all, so neither can show this helped; only `visual` scoring
+could, and no online run of it has been possible in this environment. What would settle it is
+a `visual` comparison, on a live network, of an imported page against its source before and
+after this patch.
+
 **Images are uploaded once for the whole import.** A logo, a payment strip and a footer badge
 appear on every page of a real site; uploading each per page would fill the merchant's
 library with twelve copies of each.

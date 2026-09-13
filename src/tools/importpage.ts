@@ -16,6 +16,9 @@ import {
   relink,
   type Captured,
 } from '../domains/site/importmap.js';
+import { sourceTokens } from '../domains/site/sourcetokens.js';
+import { themePatchFor, applyThemePatch } from '../domains/site/theme.js';
+import { siteTheme } from '../domains/site/theme-fetch.js';
 import type { NodeSpec } from '../domains/site/builder.js';
 import { subtreeIds } from '../core/tree.js';
 import {
@@ -595,6 +598,51 @@ export function registerImportTools(
       );
       const byUrl = new Map(shots.map((s) => [s.url, s]));
 
+      // THE SOURCE'S OWN PALETTE AND TYPE SCALE, READ ONCE FOR THE WHOLE SITE,
+      // BEFORE THE FIRST PAGE IS BUILT.
+      //
+      // Per-page reading would give the first page's colours to every later
+      // one — rule 0 failing on every page at once, the same reason `tokens`
+      // above is read off ONE page rather than each target. The entry is the
+      // page to read, because it is the one address the caller actually
+      // typed, and its capture ABOVE — the one `captureMany` already took for
+      // building the entry's OWN page — is reused rather than fetched again,
+      // so the entry is read exactly once for the whole run.
+      let themeBlock: Record<string, unknown> | undefined;
+      const entryShot = byUrl.get(entry);
+      if (entryShot?.ok) {
+        try {
+          const patch = themePatchFor(sourceTokens(entryShot.result.sections));
+          if (patch) {
+            const { theme, from: themeOrigin } = await siteTheme(ctx, siteId);
+            const draft = structuredClone(theme);
+            const changes = applyThemePatch(draft, patch);
+            if (changes.length > 0) {
+              await request({
+                base: ctx.base,
+                method: 'PUT',
+                path: `/api/sites/${encodeURIComponent(siteId)}/theme`,
+                token: siteToken(ctx),
+                body: { theme: draft },
+                fetchImpl: ctx.fetchImpl,
+              });
+              themeBlock = {
+                changed: changes,
+                ...(themeOrigin === 'starter'
+                  ? { built_from: "the starter theme — this site had never saved one" }
+                  : {}),
+              };
+            }
+          }
+        } catch (e) {
+          // THE PAGES ARE THE DELIVERABLE. A theme that did not take is a
+          // reported line, never a reason to fail the import — the same rule
+          // this tool already follows when an image upload fails and the
+          // node keeps the source's original URL instead.
+          themeBlock = { failed: (e as Error).message.replace(/^sbuilder:\s*/, '').slice(0, 160) };
+        }
+      }
+
       // ONE UPLOAD PER IMAGE FOR THE WHOLE SITE, not per page. A logo, a payment
       // strip and a footer badge appear on every page of a real site, and
       // uploading each of them twelve times would fill the merchant's library
@@ -872,6 +920,7 @@ export function registerImportTools(
         },
         ...(lastOpened ? { open: lastOpened } : {}),
         ...(templateNote ? { entity_pages: templateNote } : {}),
+        ...(themeBlock ? { theme: themeBlock } : {}),
         directive: ctx.notices.once(
           'import_site',
           'These pages are DRAFTS: nothing is live until sb_publish. Three things the import ' +

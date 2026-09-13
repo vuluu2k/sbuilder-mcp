@@ -9,6 +9,8 @@ import { validateForSave } from '../src/domains/site/validate.js';
 import type { Patch } from '../src/core/patch.js';
 import { PageDoc } from '../src/domains/site/document.js';
 import { addSubtree, setKeys } from '../src/domains/site/builder.js';
+import { sourceTokens } from '../src/domains/site/sourcetokens.js';
+import { themePatchFor } from '../src/domains/site/theme.js';
 import {
   menuLabel,
   navSpec,
@@ -1424,4 +1426,31 @@ describe.runIf(process.env.SB_BROWSER_TEST === '1')('capture() sampling the sour
     expect(JSON.stringify(specs)).not.toContain('b3123a');
     expect(JSON.stringify(specs)).not.toContain('179, 18, 58');
   }, BROWSER_TIMEOUT);
+});
+
+describe('sb_import_site — the theme patch', () => {
+  it('names only the roles the source expressed', () => {
+    const patch = themePatchFor(
+      sourceTokens([
+        {
+          kind: 'section',
+          children: [
+            { kind: 'heading', level: 1, text: 'A', sample: { color: 'rgb(179, 18, 58)', fontSize: '44px' } },
+            { kind: 'text', text: 'b', sample: { color: 'rgb(75, 85, 99)', fontSize: '17px' } },
+          ],
+        },
+      ]),
+    );
+    expect(patch).not.toBeNull();
+    expect(patch!.colors).toEqual({ heading: '#b3123a', text: '#4b5563' });
+    expect('primary' in patch!.colors).toBe(false);
+    expect(patch!.text_styles['heading-1'].fontSize).toBe('44px');
+  });
+
+  it('sends nothing at all when the source expressed no design', () => {
+    // A patch of `{}` against a replace-only endpoint is the shape that once
+    // let a site lose its whole palette. Sending no request is the right answer.
+    const patch = themePatchFor(sourceTokens([]));
+    expect(patch).toBeNull();
+  });
 });

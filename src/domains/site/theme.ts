@@ -1,5 +1,6 @@
 import { ELEMENT_PRESETS, STARTER_THEME } from '../../catalog/theme.generated.js';
 import type { StarterTheme, StylePreset } from '../../catalog/theme-types.js';
+import type { SourceTokens } from './sourcetokens.js';
 
 /**
  * THE STYLE LAYER A NODE'S OWN `style` DOES NOT CONTAIN.
@@ -165,6 +166,94 @@ export function detachNote(layer: PresetLayer, keys: string[]): string | null {
         'may not be what the site actually paints.'
       : '')
   );
+}
+
+/**
+ * THE SOURCE'S PALETTE, RESHAPED INTO WHAT THE THEME ENDPOINT PATCHES BY.
+ *
+ * `sb_import_site` reads a source page's own design once, as `SourceTokens`
+ * (see `sourcetokens.ts`), and this is the bridge from that observation to
+ * `sb_theme`'s own patch shape — `{colors, text_styles}` — the two fields
+ * `PUT /api/sites/{siteId}/theme` is safe to send as a partial change.
+ *
+ * There is no vocabulary to translate: `SourceTokens.colors`'s keys (heading,
+ * text, primary, muted, background) and `textStyles`'s keys (heading-1..6,
+ * text-1..3) ARE this theme's own colour ids and text-style slugs — that is
+ * the whole point of `sourcetokens.ts` clustering role assignment the way it
+ * does. `radii` and `spacings` are dropped: the theme has no standalone token
+ * for either, so P2 has nothing to patch them onto.
+ */
+export interface ThemePatch {
+  colors: Record<string, string>;
+  text_styles: Record<string, Record<string, string>>;
+}
+
+/**
+ * Build the patch, or `null` when the source expressed neither a colour nor
+ * a text style.
+ *
+ * `null` rather than `{colors: {}, text_styles: {}}` matters on THIS
+ * endpoint specifically — it is a whole-document REPLACE with no history,
+ * and an empty-looking patch is the shape that once let a live site lose its
+ * entire palette with a 200 and nothing to restore from. Returning `null` is
+ * what lets the caller send no request at all rather than an empty one.
+ */
+export function themePatchFor(tokens: SourceTokens): ThemePatch | null {
+  const colors = { ...tokens.colors };
+  const text_styles: Record<string, Record<string, string>> = {};
+  for (const [slug, decls] of Object.entries(tokens.textStyles)) {
+    const style: Record<string, string> = {};
+    if (decls.fontSize) style.fontSize = decls.fontSize;
+    if (decls.fontWeight) style.fontWeight = decls.fontWeight;
+    if (decls.lineHeight) style.lineHeight = decls.lineHeight;
+    if (decls.fontFamily) style.fontFamily = decls.fontFamily;
+    if (Object.keys(style).length) text_styles[slug] = style;
+  }
+  if (Object.keys(colors).length === 0 && Object.keys(text_styles).length === 0) return null;
+  return { colors, text_styles };
+}
+
+/** One field the patch moved, in `sb_theme`'s own reporting shape. */
+export interface ThemeChange {
+  what: string;
+  from: string;
+  to: string;
+}
+
+/**
+ * Apply a `ThemePatch` onto a `StarterTheme` IN PLACE and report what moved.
+ *
+ * The caller supplies the theme to mutate — never the live document read by
+ * `siteTheme`'s cache — so this is deliberately a pure, testable step ahead
+ * of the actual PUT, the same read-modify-write shape `sb_theme` itself
+ * follows against this replace-only endpoint.
+ *
+ * Unlike `sb_theme`, an id or slug the theme does not carry is SKIPPED
+ * rather than refused: every id and slug `themePatchFor` writes is one of
+ * the theme's own five colour roles or nine text-style slugs, so a miss here
+ * means this particular site's theme has fewer than the starter's — not a
+ * typo worth stopping a whole-site import for.
+ */
+export function applyThemePatch(theme: StarterTheme, patch: ThemePatch): ThemeChange[] {
+  const changes: ThemeChange[] = [];
+  for (const [id, value] of Object.entries(patch.colors)) {
+    const token = theme.colors?.find((c) => c.id === id);
+    if (!token || token.value === value) continue;
+    changes.push({ what: `colors.${id}`, from: token.value, to: value });
+    token.value = value;
+  }
+  for (const [slug, decls] of Object.entries(patch.text_styles)) {
+    const style = theme.textStyles?.find((t) => t.slug === slug);
+    if (!style) continue;
+    style.base = style.base ?? {};
+    for (const [prop, value] of Object.entries(decls)) {
+      const before = style.base[prop];
+      if (before === value) continue;
+      changes.push({ what: `textStyles.${slug}.${prop}`, from: before ?? '(unset)', to: value });
+      style.base[prop] = value;
+    }
+  }
+  return changes;
 }
 
 export { STARTER_THEME };

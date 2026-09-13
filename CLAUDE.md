@@ -2047,6 +2047,31 @@ that accounts for them.
   the walk's own text and the denominator is `innerText`, and a number above 100 makes the
   honest ones untrustworthy too.
 
+- **AN IMPORTED PAGE COULD LOOK LIKE ITS SOURCE, OR STAY RE-THEMABLE, BUT NOT BOTH — until the
+  colour moved to the layer that outranks nothing.** A literal written on a node OUTRANKS its
+  style preset PERMANENTLY, which this file already records for a plain `sb_set` call; it is
+  just as true of a colour an importer stamps onto every heading and every button. The only way
+  to get the source's own look without paying that price is to never touch the node at all: move
+  the source's design into the TARGET site's theme and leave the nodes referring to it, the same
+  layer `sb_node_read`'s preset flattening already reads from.
+
+  So `sb_import_site` now reads the entry page's own capture — the SAME one it already fetched to
+  build that page's content, never a second fetch — into `sourceTokens` (five colour roles:
+  heading, text, primary, muted, background; a heading/text type scale) and patches them onto
+  `PUT /api/sites/{siteId}/theme`. `themePatchFor` builds the patch and `null`s out rather than
+  sending `{}` when the source expressed nothing, because an empty-looking body against this
+  replace-only endpoint is the shape that once cost a live site its whole palette; a colour role
+  the source did not express is left alone, never zeroed. Reported as `theme.changed`
+  (`sb_theme`'s own `what`/`from`/`to` shape) and never allowed to fail the import — the pages are
+  the deliverable, and a theme write that does not take is a reported line, the same rule an
+  image-upload failure already follows by keeping the node's original URL.
+
+  **The limit worth saying plainly rather than papering over:** `content` and `structure` scoring
+  cannot see a colour at all, so neither can show this helped. Only `visual` scoring could, and no
+  online run of it has been possible in this environment. What would settle it is a `visual`
+  comparison, over a live network, of an imported page against its source before and after this
+  patch — not a claim this file cannot back with a measurement.
+
 ## The five traps
 
 Each fails SILENTLY. Each is encoded in `src/domains/site/traps.ts` (trap 5 in

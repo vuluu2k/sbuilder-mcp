@@ -1151,6 +1151,24 @@ trang đích chưa tồn tại và số còn lại thì trắng, nên đọc the
 mặc định của element và mọi trang sau đó mặc định của trang trắng ngay trước nó. Lấy từ trang
 đang mở nếu có, không thì từ trang chủ của site này.
 
+**Màu và cỡ chữ của trang NGUỒN chuyển vào theme của site ĐÍCH, không đóng cứng lên node.** Đọc
+đúng một lần, từ chính bản capture của trang entry — cùng một bản đã lấy để dựng nội dung trang
+đó, nên không fetch lại lần hai — thành năm vai màu (heading/text/primary/muted/background) và
+một thang cỡ chữ heading/text, rồi patch vào `PUT /api/sites/{siteId}/theme`. Nó patch ĐÚNG các
+field được nêu tên và không bao giờ thay cả document — vai nào trang nguồn không thể hiện thì
+được để yên, không bị xoá về rỗng, vì một patch trông như rỗng gửi vào endpoint chỉ-biết-thay-
+toàn-bộ này chính là hình dạng đã từng làm một site thật mất cả bảng màu. Các node được import
+tự thân không mang màu riêng: chúng đeo preset của theme — đúng lớp mà `sb_node_read` đã làm
+phẳng ra cho bạn xem — nên trang import được RE-THEME được, một lần sửa `sb_theme` sau này sẽ
+tô lại nó cùng mọi trang khác chứ không để nó kẹt lại với ngày nó được import. Báo qua
+`theme.changed` (`what`/`from`/`to`, đúng hình dạng của `sb_theme`) hoặc `theme.failed`; một
+lần ghi theme không thành công là một dòng báo, không bao giờ là lý do làm hỏng cả lượt import —
+đúng luật mà một lần upload ảnh thất bại đã theo, bằng cách giữ nguyên URL gốc của node.
+**Giới hạn cần nói thẳng:** hai cách chấm điểm `content` và `structure` không thấy được màu,
+nên không cái nào chứng minh được việc này có ích; chỉ `visual` mới thấy, và môi trường này
+chưa chạy được `visual` qua mạng thật lần nào. Thứ cần để chốt việc này là một lần so sánh
+`visual` — có mạng thật — giữa một trang import với trang nguồn, trước và sau khi patch.
+
 **Ảnh upload một lần cho cả lượt import.** Logo, dải phương thức thanh toán, huy hiệu ở footer
 xuất hiện trên mọi trang của một website thật; upload theo từng trang sẽ nhét vào media library
 của merchant mười hai bản mỗi thứ.
