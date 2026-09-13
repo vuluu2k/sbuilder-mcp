@@ -6,6 +6,8 @@ import { Notices } from '../src/mcp/notices.js';
 import { UndoLog } from '../src/tools/undo.js';
 import type { ToolContext } from '../src/tools/context.js';
 import type { CaptureOutcome } from '../src/vision/capture.js';
+import { PageDoc } from '../src/domains/site/document.js';
+import { addSubtree, setKeys } from '../src/domains/site/builder.js';
 
 /**
  * `sb_import_site`'s THEME WRITE, end to end, over the real tool call.
@@ -248,5 +250,196 @@ describe('sb_import_site — the theme_note and the theme:false opt-out', () => 
     // And it answers with what the import just wrote, not what was cached
     // before it ran.
     expect(after.theme.colors.find((c) => c.id === 'heading')?.value).toBe('#b3123a');
+  });
+});
+
+/**
+ * LET THE THEME WIN: the same run must not both patch the theme AND stamp
+ * the identical colours as literals on the pages it builds, because a
+ * literal on a node outranks the preset beneath it permanently — the theme
+ * write above would then be invisible on the very pages it was written for.
+ *
+ * These drive the WHOLE tool (create → open → build → save) rather than
+ * `toSpecs` directly, because the thing actually at risk is the wiring: does
+ * the handler pass the stripped tokens through when the theme write landed,
+ * and the full set when it did not.
+ */
+describe('sb_import_site — the theme write and the page build must not both claim the same colour', () => {
+  beforeEach(() => clearThemeCache());
+
+  type RawDoc = { schema_version: number; root_node_id: string; nodes: Record<string, unknown> };
+  type RawNode = { data: { type: string }; style?: Record<string, unknown>; specials?: Record<string, unknown> };
+
+  /**
+   * THE SITE'S OWN HOME PAGE — what `tokens` in the handler reads its
+   * headingColor/textColor/buttonBg/buttonColor from, since this site has no
+   * open page and `existing` reports one page marked `isHomepage`. Without a
+   * real heading/text/button here `tokensFromPage` returns `{}` and neither
+   * branch below would ever have a literal to stamp in the first place.
+   */
+  function homeDocument(): RawDoc {
+    const d = PageDoc.from({ schema_version: 2, root_node_id: '', nodes: {} });
+    d.apply(
+      addSubtree(d, 'ROOT', {
+        type: 'flex-section',
+        children: [
+          {
+            type: 'flex-block',
+            children: [{ type: 'heading' }, { type: 'text' }, { type: 'button' }],
+          },
+        ],
+      }).patches,
+    );
+    const block = d.node(d.node('ROOT').data.nodes[0]).data.nodes[0];
+    const [heading, text, button] = d.node(block).data.nodes;
+    d.apply(setKeys(d, heading, { color: '#2e2a3b' }, { namespace: 'style', base: true }));
+    d.apply(setKeys(d, text, { color: '#7c7389' }, { namespace: 'style', base: true }));
+    d.apply(
+      setKeys(d, button, { backgroundColor: '#e8557a', color: '#ffffff' }, { namespace: 'style', base: true }),
+    );
+    return d.doc as unknown as RawDoc;
+  }
+
+  const blankDocument: RawDoc = {
+    schema_version: 2,
+    root_node_id: 'rt',
+    nodes: {
+      rt: {
+        id: 'rt',
+        data: { type: 'root', parent: null, nodes: [], isCanvas: true, hidden: false, custom: {} },
+        style: {},
+        config: {},
+        specials: {},
+        responsive: {},
+        events: [],
+        bindings: [],
+      },
+    },
+  };
+
+  /** As `fetchFor` above, plus the existing-home-page, page create and save round trip. */
+  function fetchForPageBuild(
+    sent: Array<{ url: string; method?: string }>,
+    savedDocuments: RawDoc[],
+  ): typeof fetch {
+    let currentTheme = themeFixture;
+    let created = 0;
+    const home = homeDocument();
+    return (async (input: string | URL, init?: RequestInit) => {
+      const url = String(input);
+      sent.push({ url, method: init?.method });
+      if (url.endsWith('/robots.txt')) {
+        return new Response('Sitemap: https://shop.example/sm.xml', { status: 200 });
+      }
+      if (url.endsWith('/sm.xml')) return new Response(sitemap, { status: 200 });
+      if (url.includes('/pages') && init?.method === 'POST') {
+        created += 1;
+        return json({ page: { id: `pg_${created}`, slug: `page-${created}` } });
+      }
+      // ONE EXISTING PAGE, marked as home — this is what `home.id` resolves
+      // to below, both for reading tokens and for the entry merging into it
+      // rather than creating a new one.
+      if (url.endsWith('/pages')) {
+        return json({ pages: [{ id: 'home1', slug: '', isHomepage: true }] });
+      }
+      if (url.includes('/pages/home1/source') && init?.method === 'GET') {
+        return json({ source: { pageId: 'home1', siteId: 'S1', document: home, schemaVersion: 2, updatedAt: 'now' } });
+      }
+      if (url.includes('/source') && init?.method === 'GET') {
+        return json({
+          source: { pageId: 'pg', siteId: 'S1', document: blankDocument, schemaVersion: 2, updatedAt: 'now' },
+        });
+      }
+      if (url.includes('/source') && init?.method === 'PUT') {
+        const body = JSON.parse(init!.body as string) as { document: RawDoc };
+        savedDocuments.push(body.document);
+        return json({ source: { pageId: 'pg', siteId: 'S1', document: body.document, schemaVersion: 2, updatedAt: 'now' } });
+      }
+      if (url.includes('/theme') && init?.method === 'PUT') {
+        currentTheme = (JSON.parse(init.body as string) as { theme: typeof themeFixture }).theme;
+        return json({});
+      }
+      if (url.includes('/theme') && init?.method === 'GET') return json({ theme: currentTheme });
+      return json({});
+    }) as unknown as typeof fetch;
+  }
+
+  /**
+   * The heading `toSpecs` builds for a CAPTURED node, found by the text the
+   * capture mock paints ('A') rather than by "first heading in the
+   * document" — the home page read for tokens above already has one of its
+   * own, and document order between the two is not something to rely on.
+   */
+  function importedHeading(doc: RawDoc): RawNode | undefined {
+    return Object.values(doc.nodes as Record<string, RawNode>).find(
+      (n) => n.data.type === 'heading' && n.specials?.text === 'A',
+    );
+  }
+  function importedText(doc: RawDoc): RawNode | undefined {
+    return Object.values(doc.nodes as Record<string, RawNode>).find(
+      (n) => n.data.type === 'text' && n.specials?.text === 'b',
+    );
+  }
+
+  async function runBuild(args: Record<string, unknown>) {
+    const sent: Array<{ url: string; method?: string }> = [];
+    const savedDocuments: RawDoc[] = [];
+    const f = fetchForPageBuild(sent, savedDocuments);
+    const session = new Session('http://x', f);
+    (session as unknown as { access: string }).access = 'jwt';
+    const { client, close } = await connectedClient({ fetchImpl: f, session });
+    const res = (await client.callTool({
+      name: 'sb_import_site',
+      arguments: {
+        url: 'https://shop.example',
+        site_id: 'S1',
+        nav: false,
+        upload_images: false,
+        dry_run: false,
+        ...args,
+      },
+    })) as { content: Array<{ text?: string }>; isError?: boolean };
+    await close();
+    const out = JSON.parse(res.content[0].text!);
+    return { out, sent, savedDocuments };
+  }
+
+  it('the theme write applying (the default) stamps NO literal colour on the imported heading or text', async () => {
+    const { out, savedDocuments } = await runBuild({});
+    expect(out.theme.changed?.length).toBeGreaterThan(0);
+    expect(savedDocuments.length).toBeGreaterThan(0);
+    let sawHeading = false;
+    let sawText = false;
+    for (const doc of savedDocuments) {
+      const heading = importedHeading(doc);
+      const text = importedText(doc);
+      if (heading) {
+        sawHeading = true;
+        expect(heading.style?.color).toBeUndefined();
+      }
+      if (text) {
+        sawText = true;
+        expect(text.style?.color).toBeUndefined();
+      }
+    }
+    expect(sawHeading).toBe(true);
+    expect(sawText).toBe(true);
+  });
+
+  it("theme:false leaves the theme untouched AND keeps stamping the site's tokens as literals — no regression", async () => {
+    const { out, savedDocuments } = await runBuild({ theme: false });
+    expect(out.theme).toEqual({ skipped: 'theme:false' });
+    expect(savedDocuments.length).toBeGreaterThan(0);
+    // The home page's own heading paints `#2e2a3b` — see `homeDocument` —
+    // which is exactly what `tokensFromPage` should hand to every imported
+    // heading when there is no theme write to carry it instead.
+    let sawHeading = false;
+    for (const doc of savedDocuments) {
+      const heading = importedHeading(doc);
+      if (!heading) continue;
+      sawHeading = true;
+      expect(heading.style?.color).toBe('#2e2a3b');
+    }
+    expect(sawHeading).toBe(true);
   });
 });

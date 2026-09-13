@@ -1189,13 +1189,25 @@ mặc định của element và mọi trang sau đó mặc định của trang t
 một thang cỡ chữ heading/text, rồi patch vào `PUT /api/sites/{siteId}/theme`. Nó patch ĐÚNG các
 field được nêu tên và không bao giờ thay cả document — vai nào trang nguồn không thể hiện thì
 được để yên, không bị xoá về rỗng, vì một patch trông như rỗng gửi vào endpoint chỉ-biết-thay-
-toàn-bộ này chính là hình dạng đã từng làm một site thật mất cả bảng màu. Các node được import
-tự thân không mang màu riêng: chúng đeo preset của theme — đúng lớp mà `sb_node_read` đã làm
-phẳng ra cho bạn xem — nên trang import được RE-THEME được, một lần sửa `sb_theme` sau này sẽ
-tô lại nó cùng mọi trang khác chứ không để nó kẹt lại với ngày nó được import. Báo qua
+toàn-bộ này chính là hình dạng đã từng làm một site thật mất cả bảng màu. Báo qua
 `theme.changed` (`what`/`from`/`to`, đúng hình dạng của `sb_theme`) hoặc `theme.failed`; một
 lần ghi theme không thành công là một dòng báo, không bao giờ là lý do làm hỏng cả lượt import —
 đúng luật mà một lần upload ảnh thất bại đã theo, bằng cách giữ nguyên URL gốc của node.
+
+**Một khi lần ghi đó THỰC SỰ thành công, các node được import không còn mang màu riêng nào cả —
+chúng đeo preset của theme**, đúng lớp mà `sb_node_read` đã làm phẳng ra cho bạn xem, nên trang
+import được RE-THEME được: một lần sửa `sb_theme` sau này sẽ tô lại nó cùng mọi trang khác chứ
+không để nó kẹt lại với ngày nó được import. Đây là một lần SỬA LỖI thật, không phải thiết kế
+ban đầu: một giá trị đóng cứng trên node luôn thắng preset bên dưới nó VĨNH VIỄN, và tool này
+từng vừa patch theme vừa đóng cứng đúng quan sát đó lên mọi heading, text và button trong cùng
+một lượt chạy — nên lần ghi theme phía trên vô hình trên đúng những trang nó vừa được ghi cho.
+`headingColor`/`textColor`/`buttonBg`/`buttonColor` là những gì một preset mặc định phân giải
+qua theme; `headingWeight`/`textSize`/`buttonRadius` và `padding`/`maxWidth` của section thì
+KHÔNG — không preset nào mang độ đậm chữ hay cỡ chữ thân bài, và theme không có token nào cho
+hình khối hay khoảng cách cả — nên bốn giá trị đó vẫn được đóng cứng dù có ghi theme hay không.
+Khi `theme:false` được truyền, hoặc trang entry không thể hiện màu/kiểu chữ nào đọc được, hoặc
+lần ghi thất bại, thì không có preset nào để phân giải qua, và mọi field mà token của site này
+mang — kể cả màu — đều được đóng cứng lên node, giống như `sb_import`.
 
 **Việc này TOÀN SITE, và `theme:false` để bỏ qua.** Lần ghi này chạm vào mọi trang site đã có
 sẵn, không chỉ những trang lượt import này tạo ra — người gọi muốn bê cấu trúc của một đối thủ

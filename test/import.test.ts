@@ -18,9 +18,11 @@ import {
   relink,
   toSpecs,
   tokensFromPage,
+  stripThemeColors,
   imageSources,
   rehostImages,
   type Captured,
+  type PageTokens,
 } from '../src/domains/site/importmap.js';
 
 /**
@@ -1728,5 +1730,94 @@ describe('applyThemePatch — a token the site theme does not carry', () => {
     expect(draft).not.toBe(input);
     expect(draft.colors[0].value).toBe('#b3123a');
     expect(draft.textStyles[0].base?.fontSize).toBe('44px');
+  });
+});
+
+/**
+ * `sb_import_site` DOES TWO THINGS THAT FIGHT: it patches the site's THEME
+ * from the source's colours and type scale, and `toSpecs` stamps the same
+ * observations as LITERAL `color`/`fontSize` on every heading, text and
+ * button. A literal on a node outranks the preset beneath it permanently, so
+ * once the theme write lands, the literal is the reason it never shows —
+ * `sb_import_site` must withhold exactly the fields the theme write already
+ * covers and go on stamping the rest.
+ *
+ * `stripThemeColors` is that split, kept as a pure function so the boundary
+ * is testable without the whole handler: `heading-default` and `text-default`
+ * paint `color` through a var chain that resolves to `colors.heading` /
+ * `colors.text`, and `button-default` paints `backgroundColor`/`color`
+ * through a chain that resolves to `colors.primary` / `colors.background` —
+ * exactly the four ids `themePatchFor` writes. `headingWeight` and
+ * `textSize` are NOT in that list: neither preset carries a `fontWeight` or
+ * `fontSize` var (the type-scale wiring in `textScale` covers only a
+ * heading's `fontSize`/`lineHeight`), so withholding them would not hand the
+ * value to the theme, it would just drop it — same for `buttonRadius`,
+ * `sectionPadding` and `sectionMaxWidth`, which the theme has no token for
+ * at all (`themePatchFor` patches `colors` and `text_styles` only).
+ */
+describe('stripThemeColors — what a successful theme write already covers', () => {
+  it('drops exactly the four colours a preset resolves through the theme', () => {
+    const t: PageTokens = {
+      headingColor: '#b3123a',
+      headingWeight: '800',
+      textColor: '#4b5563',
+      textSize: '18px',
+      buttonBg: '#111827',
+      buttonColor: '#ffffff',
+      buttonRadius: '999px',
+      sectionPadding: '96px 24px',
+      sectionMaxWidth: '1200px',
+    };
+    expect(stripThemeColors(t)).toEqual({
+      headingWeight: '800',
+      textSize: '18px',
+      buttonRadius: '999px',
+      sectionPadding: '96px 24px',
+      sectionMaxWidth: '1200px',
+    });
+  });
+
+  it('is a no-op on a token set that never carried a colour', () => {
+    const t: PageTokens = { headingWeight: '700', buttonRadius: '4px' };
+    expect(stripThemeColors(t)).toEqual(t);
+  });
+
+  const bandFixture: Captured[] = [
+    {
+      kind: 'section',
+      children: [
+        { kind: 'heading', level: 1, text: 'Áo cho bé' },
+        { kind: 'text', text: 'Cotton mềm, đường may chắc.' },
+        { kind: 'button', text: 'Mua ngay', href: 'https://elsewhere.example/shop' },
+      ],
+    },
+  ];
+
+  it('feeding the stripped tokens to toSpecs leaves heading/text/button with no literal colour', () => {
+    const t = tokensFromPage(styledPage().doc);
+    const stripped = stripThemeColors(t);
+    const inner = toSpecs(bandFixture, stripped)[0].children![0];
+    const [heading, textNode, button] = inner.children!;
+    expect(heading.style?.color).toBeUndefined();
+    expect(textNode.style?.color).toBeUndefined();
+    expect(button.style?.backgroundColor).toBeUndefined();
+    expect(button.style?.color).toBeUndefined();
+    // The non-colour fields this site's tokens carried are UNCHANGED by the
+    // strip, and toSpecs still stamps them — nothing else supplies a radius,
+    // a section padding or a section measure.
+    expect(heading.style?.fontWeight).toBe('800');
+    expect(button.style?.borderRadius).toBe('999px');
+    expect(inner.style?.maxWidth).toBe('1200px');
+  });
+
+  it('feeding the FULL tokens to toSpecs (the sb_import, non-theme-write path) still stamps every field — no regression', () => {
+    const t = tokensFromPage(styledPage().doc);
+    const inner = toSpecs(bandFixture, t)[0].children![0];
+    const [heading, , button] = inner.children!;
+    expect(heading.style).toMatchObject({ color: '#2E2A3B', fontWeight: '800' });
+    expect(button.style).toMatchObject({
+      backgroundColor: '#E8557A',
+      borderRadius: '999px',
+    });
   });
 });

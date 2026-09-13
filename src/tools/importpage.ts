@@ -9,6 +9,7 @@ import type { Patch } from '../core/patch.js';
 import {
   toSpecs,
   tokensFromPage,
+  stripThemeColors,
   imageSources,
   menuLabel,
   navSpec,
@@ -642,6 +643,14 @@ export function registerImportTools(
       // "it never ran" from "it ran and found nothing". Every branch below
       // names why, in the same vocabulary as `skipped`/`failed` elsewhere in
       // this result.
+      // WHETHER THE THEME ACTUALLY WON, not merely whether it was attempted.
+      // Set only once the PUT below has landed with at least one real
+      // change — `changes.length === 0` (a patch that matched nothing) and a
+      // thrown request both leave this false, because in neither case does
+      // the site's theme carry anything new for a preset to resolve through.
+      // Read below to decide which of `tokens`' fields the per-page build
+      // may still stamp as a literal.
+      let themeApplied = false;
       let themeBlock: Record<string, unknown>;
       if (applyTheme === false) {
         themeBlock = { skipped: 'theme:false' };
@@ -692,6 +701,7 @@ export function registerImportTools(
                 // one write invalidates the one cache that could go stale
                 // from it.
                 clearThemeCache();
+                themeApplied = true;
               }
               // A MISS IS SKIPPED, NEVER SILENT. `applyThemePatch` cannot lose
               // a token — it either lands in `changes` or is named in
@@ -723,6 +733,16 @@ export function registerImportTools(
           }
         }
       }
+
+      // LET THE THEME WIN. `tokens` above and the patch this block just wrote
+      // are the SAME observation reduced two different ways — a literal on a
+      // node outranks the preset beneath it permanently, so stamping both
+      // would make the write above invisible on the very pages it was for.
+      // Every page this run builds gets the stripped set; `theme:false` and a
+      // patch that matched nothing leave `pageTokens` as `tokens` unchanged,
+      // which is what makes an imported page match the site at all when
+      // there is no theme write to match it through.
+      const pageTokens = themeApplied ? stripThemeColors(tokens) : tokens;
 
       // ONE UPLOAD PER IMAGE FOR THE WHOLE SITE, not per page. A logo, a payment
       // strip and a footer badge appear on every page of a real site, and
@@ -803,7 +823,7 @@ export function registerImportTools(
           const linked = relink(hosted, localPath, origin);
           relinked += linked.rewritten;
           unimported += linked.unimported;
-          const specs = toSpecs(linked.sections, tokens);
+          const specs = toSpecs(linked.sections, pageTokens);
           if (specs.length === 0) {
             failed.push({
               url: p.url,
@@ -923,7 +943,7 @@ export function registerImportTools(
                 return planned && to ? { text: menuLabel(planned.name), href: to } : null;
               })
               .filter((l): l is { text: string; href: string } => l !== null);
-            const spec = navSpec(links, tokens);
+            const spec = navSpec(links, pageTokens);
             if (spec) {
               const made = (await request({
                 base: ctx.base,

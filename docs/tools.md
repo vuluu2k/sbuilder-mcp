@@ -1228,13 +1228,24 @@ that page's content, so nothing is fetched twice — as five colour roles
 `PUT /api/sites/{siteId}/theme`. It patches NAMED fields and never replaces the document — a
 role the source did not express is left alone, never zeroed, because an empty-looking write
 against this replace-only endpoint is the shape that once cost a live site its whole palette.
-The imported nodes themselves carry no colour of their own: they wear the theme's presets, the
-same layer `sb_node_read` already flattens for you, which is what keeps an imported page
-RE-THEMABLE — a later `sb_theme` edit repaints it along with everything else, rather than
-leaving it stranded on the day it was imported. Reported as `theme.changed` (`what` / `from` /
-`to`, `sb_theme`'s own shape) or `theme.failed`; a theme write that does not take is a reported
-line, never a reason to fail the import — the same rule an image upload failure follows by
-keeping the node's original URL.
+Reported as `theme.changed` (`what` / `from` / `to`, `sb_theme`'s own shape) or `theme.failed`;
+a theme write that does not take is a reported line, never a reason to fail the import — the
+same rule an image upload failure follows by keeping the node's original URL.
+
+**Once that write actually lands, the imported nodes carry NO literal colour of their own —
+they wear the theme's presets instead**, the same layer `sb_node_read` already flattens for
+you, which is what keeps an imported page RE-THEMABLE: a later `sb_theme` edit repaints it
+along with everything else, rather than leaving it stranded on the day it was imported. This
+is a real fix, not the original design: a literal on a node outranks the preset beneath it
+PERMANENTLY, and this tool used to patch the theme AND stamp the same observation as a literal
+on every heading, text and button in the same run — so the write above was invisible on the
+very pages it was written for. `headingColor`/`textColor`/`buttonBg`/`buttonColor` are what a
+default preset resolves through the theme; `headingWeight`/`textSize`/`buttonRadius` and the
+section's own `padding`/`maxWidth` are NOT — no preset carries a weight or a body-text size,
+and the theme has no shape or spacing token at all — so those keep being stamped either way.
+When `theme:false` was passed, or the entry expressed no readable colour or text style, or the
+write failed, there is nothing for a preset to resolve through, and every field this site's own
+tokens carry — colour included — is stamped as a literal, same as `sb_import`.
 
 **It is SITE-WIDE, and `theme:false` opts out.** This write reaches every page the site
 already has, not only the ones this import creates — a caller porting a competitor's

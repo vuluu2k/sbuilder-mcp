@@ -2259,6 +2259,44 @@ that accounts for them.
   reads `visual`, before and after — no online run has happened in any environment this work has
   had access to, so that number does not exist yet anywhere, not just here.
 
+- **TWO CORRECT FEATURES CANCELLED EACH OTHER, AND THE CASCADE DECIDED WHICH WON.** The theme
+  write above and `tokensFromPage`/`toSpecs` (Task 2, `importmap.ts`) were built in different
+  phases, each unaware of the other, and each individually correct: one moves the source's
+  palette into the TARGET site's theme, the other dresses every imported heading, text and
+  button in that SAME site's own tokens so an import matches the page it lands on. Running
+  BOTH in one call means `toSpecs` stamps `color`/`fontSize` as a LITERAL on the very nodes the
+  theme write just gave a matching preset value to — and a literal on a node outranks the
+  preset beneath it PERMANENTLY (the THEME_VERSION 6 rule this file already keeps for icons).
+  So the theme write landed, correctly, and was invisible on every page built in the same run.
+
+  MEASURED on a live site this install points at: the theme's `colors.heading` sat at the
+  starter's untouched `#111827` while the hero heading carried `style.color: #d64569` as a
+  literal, `specials.stylePreset` unset (so it resolves to `heading-default`) — every visible
+  design decision on that site lived on nodes, and the theme had never been written at all.
+  `sb_import_site` would have reproduced exactly that shape: write the theme, then stamp the
+  same colours over it.
+
+  The symptom is SILENT in the same way the rest of this section's failures are: the theme PUT
+  answers 200 with `theme.changed` non-empty, the pages render with the right colours (because
+  the literal happens to hold the same value the preset would have resolved to), and nothing
+  anywhere reports that the palette the write just moved into the theme never actually reaches
+  the pages through it — a later `sb_theme` edit would repaint everything on the site except
+  the pages this tool just built.
+
+  `stripThemeColors` (`importmap.ts`) is the fix, and which fields it drops is not "all of
+  `PageTokens`": only `headingColor`/`textColor`/`buttonBg`/`buttonColor` resolve through a
+  DEFAULT preset's own `var()` chain to a theme colour id the patch writes
+  (`heading-default`/`text-default`'s `color`, `button-default`'s `backgroundColor`/`color`).
+  `headingWeight`, `textSize`, `buttonRadius`, and the section's own `padding`/`maxWidth` are
+  NOT stripped even when the theme write lands — no preset carries a font weight or a
+  body-text size, and the theme patch is `{colors, text_styles}` only (no shape or spacing
+  token exists to carry a radius or a measure), so withholding those would not hand the value
+  to the theme, it would just drop it. `sb_import_site` strips only once the write actually
+  produced `changes.length > 0`; `theme:false`, an entry with nothing readable, or a failed
+  write all leave the full token set in place, because then there is no preset for a literal to
+  conflict with and stamping is what makes the page match the site at all. `sb_import` (single
+  page, no theme write) is unaffected on purpose — matching rule 0 is correct there.
+
 ## The five traps
 
 Each fails SILENTLY. Each is encoded in `src/domains/site/traps.ts` (trap 5 in

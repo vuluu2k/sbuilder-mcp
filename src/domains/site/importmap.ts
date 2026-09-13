@@ -182,6 +182,45 @@ export interface PageTokens {
   sectionMaxWidth?: string;
 }
 
+/**
+ * THE FOUR FIELDS A SUCCESSFUL THEME WRITE ALREADY COVERS.
+ *
+ * `sb_import_site` does two things that fight: `themePatchFor` (`theme.ts`)
+ * patches the site's THEME from the same source observation this file
+ * reduces to `PageTokens`, and `toSpecs` stamps that observation as a
+ * LITERAL on every imported heading, text and button. A literal on a node
+ * outranks its style preset PERMANENTLY (`theme.ts`'s own opening comment),
+ * so once the theme write lands, the literal is the reason the new palette
+ * never reaches the pages it was written for — the write succeeds, the pages
+ * render, and nothing reports that the two never met.
+ *
+ * The caller strips these four before building specs, so the node wears the
+ * theme instead of a snapshot of it. Which four is not a guess: it is
+ * exactly the set a DEFAULT preset resolves through a `var()` chain the
+ * theme write actually reaches —
+ *
+ *   `heading-default` : color → `--wb-sc-heading`  → `colors.heading`
+ *   `text-default`    : color → `--wb-sc-text`     → `colors.text`
+ *   `button-default`  : backgroundColor → `--wb-sc-buttonBg`   → `colors.primary`
+ *                       color           → `--wb-sc-buttonText` → `colors.background`
+ *
+ * and `themePatchFor` writes precisely those ids. `headingWeight` and
+ * `textSize` are DELIBERATELY not in this list: neither preset carries a
+ * `fontWeight` or `fontSize` var (`textScale` below wires a var only for a
+ * heading's `fontSize`/`lineHeight`, never its weight, and a `text` node
+ * gets no var at all), so stripping them would not hand the value to the
+ * theme — it would just drop it, with nothing else on the page to supply
+ * it. Same reasoning for `buttonRadius`, `sectionPadding` and
+ * `sectionMaxWidth`: the theme patch is `{colors, text_styles}` only
+ * (`ThemePatch` in `theme.ts` — the theme has no shape or spacing token at
+ * all), so those three keep being stamped whether the theme write ran or
+ * not.
+ */
+export function stripThemeColors(t: PageTokens): PageTokens {
+  const { headingColor, textColor, buttonBg, buttonColor, ...rest } = t;
+  return rest;
+}
+
 /** Style keys read off a node, ignoring anything unset. */
 function styleOf(n: NodeLike | undefined): Record<string, unknown> {
   return ((n as unknown as { style?: Record<string, unknown> })?.style ?? {}) as Record<
