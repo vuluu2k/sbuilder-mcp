@@ -8,8 +8,14 @@
  * right) can see it. The only moment the fact is cheap to deliver is the moment
  * the element is ADDED, which is what this table is for.
  *
- * Each entry names the SECOND write the element needs, because in every case the
- * first one — dropping the element on the page — succeeds completely.
+ * Each entry names what the element still NEEDS, because in every case the first
+ * write — dropping it on the page — succeeds completely. For most that is a
+ * second WRITE: a config key to point at a host, an id to reference, a setting
+ * to turn on. For a few it is a CONDITION the agent cannot write at all —
+ * `rating-stars` renders zero pixels until the store has published reviews, and
+ * says so rather than offering a fix that does not exist. Both shapes belong;
+ * the header used to promise only the first, which stopped being true the day
+ * the table was audited from three entries to twenty.
  *
  * NOT every element that can render empty belongs here. A list with no products
  * yet is a CORRECT list waiting for data — it shows its own honest empty state,
