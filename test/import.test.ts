@@ -135,11 +135,64 @@ describe('toSpecs()', () => {
       'text',
       'image',
       'button',
-      'flex-block',
+      'list',
     ]);
     expect(inner.children![0].specials).toMatchObject({ htmlTag: 'h1', text: 'Áo cho bé' });
     expect(inner.children![2].specials).toMatchObject({ src: 'https://elsewhere.example/a.png' });
     expect(inner.children![3].specials).toMatchObject({ href: 'https://elsewhere.example/shop' });
+  });
+
+  /**
+   * `list` ACCEPTS ONLY `list-item` CHILDREN, and the element seeds the rest:
+   * its own marker icon (`StarFill`), size, colour and a `text-1` style on the
+   * list itself. The mapping used to build a `flex-block` of `text` nodes with
+   * a literal `• ` glued onto each one — losing the element entirely, along
+   * with its restylable bullet and its theme-following type.
+   */
+  it('builds a real list of list-item children carrying the exact words', () => {
+    const captured: Captured[] = [
+      { kind: 'section', children: [{ kind: 'list', items: ['One', 'Two', 'Three'] }] },
+    ];
+    const list = toSpecs(captured, {})[0].children![0].children![0];
+    expect(list.type).toBe('list');
+    expect(list.children!.map((c) => c.type)).toEqual(['list-item', 'list-item', 'list-item']);
+    expect(list.children!.map((c) => c.specials!.text)).toEqual(['One', 'Two', 'Three']);
+  });
+
+  it("puts no bullet character in an item's text — the element's own icon is the marker", () => {
+    const captured: Captured[] = [
+      { kind: 'section', children: [{ kind: 'list', items: ['Đổi size 7 ngày', 'Giao toàn quốc'] }] },
+    ];
+    const list = toSpecs(captured, {})[0].children![0].children![0];
+    for (const item of list.children!) {
+      expect(String(item.specials!.text)).not.toMatch(/[•▪●∙‣·]/);
+    }
+  });
+
+  it('leaves colour and size to the element and the theme — no literal on the list or its rows', () => {
+    const t = tokensFromPage(styledPage().doc);
+    const captured: Captured[] = [
+      { kind: 'section', children: [{ kind: 'list', items: ['One'] }] },
+    ];
+    // Dressed in the TARGET page's tokens (a real colour and size are on offer
+    // here, same as the heading/button test above), and the list still takes
+    // none of them: `list`'s own defaults already carry a colour, a size and a
+    // `text-1` config, and a literal here would detach it from the theme for
+    // good — the failure `THEME_VERSION` 6 was bumped to fix.
+    const list = toSpecs(captured, t)[0].children![0].children![0];
+    expect(list.style?.color).toBeUndefined();
+    expect(list.style?.fontSize).toBeUndefined();
+    expect(list.config).toBeUndefined();
+    for (const item of list.children!) {
+      expect(item.style?.color).toBeUndefined();
+      expect(item.style?.fontSize).toBeUndefined();
+    }
+  });
+
+  it('produces nothing for an empty list, same as before', () => {
+    const captured: Captured[] = [{ kind: 'section', children: [{ kind: 'list', items: [] }] }];
+    const out = toSpecs(captured, {});
+    expect(out.length).toBe(0);
   });
 
   it('dresses the import in the TARGET page\'s tokens, not the source\'s', () => {

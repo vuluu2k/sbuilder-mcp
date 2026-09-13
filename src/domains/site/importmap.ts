@@ -537,21 +537,22 @@ function one(c: Captured, t: PageTokens): NodeSpec | null {
     case 'list': {
       const items = (c.items ?? []).map((s) => s.trim()).filter(Boolean);
       if (items.length === 0) return null;
-      // A stack of text rather than the `list` element: `list` renders through
-      // `list-item` children with their own contract, and a bullet list of plain
-      // sentences is the one shape a column of text reproduces exactly.
+      // A REAL `list`, not a column of paragraphs wearing a glued-on `• `.
+      // `list.childAllows` is exactly `['list-item']` (verified against the
+      // generated catalog before writing this), and `createNode` seeds
+      // everything a row needs: `list-item`'s own marker icon (`StarFill`),
+      // `iconSize`/`iconColor`, and the list's own `color`/`fontSize` plus
+      // `config.textGlobalStyle: 'text-1'` — none of which this mapping has to
+      // repeat. Stamping the target page's colour/size here, the way every
+      // other kind in this file does, would detach every row from the theme
+      // PERMANENTLY (the failure `THEME_VERSION` 6 was bumped to fix), and it
+      // is exactly what the old flex-block-of-text shape did on top of losing
+      // the element, the bullet's restylability and the responsive gap
+      // (`list` ships 16px/14px/12px across the three widths; the old shape
+      // was 8px flat).
       return {
-        type: 'flex-block',
-        style: { width: '100%', display: 'flex', flexDirection: 'column', gap: '8px' },
-        children: items.map((text) => ({
-          type: 'text',
-          specials: { htmlTag: 'p', text: `• ${text}` },
-          style: {
-            lineHeight: '1.7',
-            ...(t.textColor ? { color: t.textColor } : {}),
-            ...(t.textSize ? { fontSize: t.textSize } : {}),
-          },
-        })),
+        type: 'list',
+        children: items.map((text) => ({ type: 'list-item', specials: { text } })),
       };
     }
     case 'group': {
