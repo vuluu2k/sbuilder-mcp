@@ -556,6 +556,27 @@ The patterns are built as capture trees through the same mapper an import goes t
 one inherits its answers to rules 0, 1 and 3 — the page's tokens, a stack breakpoint on every
 row, and a column that is as tall as its content once the row stacks.
 
+**Four of the eleven are STORE-shaped**, closing a gap this repo's own first seven left open one
+level up: a store builder shipped hero/feature/stats/CTA/gallery/FAQ layouts and not one of them
+was a shop. `sb_product_shelf` and `sb_category_strip` are a real `list-dataset` repeater bound
+to the catalogue — never static tiles wearing product photos, which is a shop where every price
+is a literal and nothing is buyable. Both name only `config.datasetSource` (and, where an
+element has a kind axis, `config.kind`); `createNode`'s own `bindingsForConfig` derives every
+binding at add time, so the pattern cannot drift from the platform's own factory the way a
+hand-copied binding has twice in this repo's history. `sb_brand_wall` is a picture-slot pattern
+like `sb_gallery` (real logos from the library, or a sentence naming `sb_media_upload`), framed
+with `contain` rather than a wall's median-ratio crop — a transparent logo forced into a
+photograph's crop loses its own shape. `sb_trust_band` is icon-plus-line reassurances (delivery,
+warranty, returns, payment), naming exact platform icon ids rather than guessing them the way an
+import's fuzzy lookup has to.
+
+A fifth store-shaped band — a newsletter signup — was judged and rejected. The platform's `form`
+element on a page is a bare reference to a SEPARATE form document (`specials.formId`); building
+one honestly means the multi-step write `sb_store action:"form"` already owns (create → PUT back
+whole → save the field document), not a `NodeSpec` a pattern can compose offline. Shipping a
+`form` node with no `formId`, or an input with a button that submits nowhere, is exactly the
+class of convincing-but-inert element this repo's `INERT_ON_ADD` table exists to stop adding.
+
 ## `sb_page_list` / `sb_page_create` / `sb_publish`
 
 The page lifecycle, first-class rather than through `sb_api_call`. `sb_page_list` returns

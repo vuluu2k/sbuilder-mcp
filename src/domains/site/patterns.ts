@@ -162,6 +162,71 @@ const img = (m: MediaPick | null, alt: string, hint: string): Captured =>
   m
     ? { kind: 'image', src: m.url, alt: m.name ?? alt }
     : { kind: 'text', text: hint };
+/** A link beside a heading, never a filled button — "see all", not "buy now". */
+const linkTo = (text: string, href = '#'): Captured => ({ kind: 'button', variant: 'link', text, href });
+/** A leaf icon, by its exact platform RemixIcon id — never a guess. */
+const icon = (name: string): Captured => ({ kind: 'icon', name });
+
+/**
+ * A CARD BOUND TO A REAL RECORD, never a static tile.
+ *
+ * `dataset-block`, `media-dataset`, `text-dataset` and `pricing-dataset` have no
+ * `Captured` kind, and cannot: nothing an import ever WALKS produces one — a
+ * repeater is a document's own data axis, not a shape a browser discovers. So
+ * these are raw `NodeSpec`, hand-assembled, and that is the honest exception to
+ * this file's own rule rather than a violation of it — the mapper has nothing
+ * to say about a shape it was never taught.
+ *
+ * What still must not be hand-assembled is the BINDING. This function names
+ * only `config.datasetSource` (and, where an element has a kind axis,
+ * `config.kind`) — never a `source`/`field`/`target` triple — because
+ * `bindingsForConfig` (through `createNode`, at `addSubtree` time) derives that
+ * from the platform's own factory. This repo has already paid twice for the
+ * alternative: a repeater switched to a category and left bound to
+ * `product_list`, and a `sb_import` list rendered its rows three times over,
+ * both because a binding was carried as a VALUE instead of being re-derived.
+ */
+function datasetCard(source: 'product' | 'category'): NodeSpec {
+  const children: NodeSpec[] = [
+    { type: 'media-dataset', config: { datasetSource: source } },
+    { type: 'text-dataset', config: { datasetSource: source, kind: 'title' } },
+  ];
+  // A category has no price. Binding one anyway would not fail loudly — it
+  // would read a product field off a category record and publish a card that
+  // says "$0.00" under every collection, the exact class of silent mismatch
+  // this repo keeps finding.
+  if (source === 'product') {
+    children.push({ type: 'pricing-dataset', config: { datasetSource: source, kind: 'prices' } });
+  }
+  return {
+    type: 'dataset-block',
+    config: { datasetSource: source },
+    style: { display: 'flex', flexDirection: 'column', gap: '16px', width: '100%', height: 'fit-content' },
+    children,
+  };
+}
+
+/**
+ * The repeater itself — the catalogue's own rows, not a guess at how many
+ * there are. `list-dataset`'s own defaults already answer the mobile axis
+ * (`itemsPerRow`: 4 desktop, 2 tablet, 1 mobile) and mint the list's empty
+ * state (`list-empty`, keyed to the same `datasetSource`), so nothing here
+ * repeats either.
+ */
+function datasetShelf(source: 'product' | 'category'): NodeSpec {
+  return { type: 'list-dataset', config: { datasetSource: source }, children: [datasetCard(source)] };
+}
+
+/**
+ * Splice a raw `NodeSpec` (one `Captured` cannot describe) in after a
+ * section's own `Captured` children, inside the same measured block.
+ */
+function withRepeater(built: NodeSpec | null, repeater: NodeSpec): NodeSpec | null {
+  if (!built) return null;
+  const [inner, ...rest] = built.children ?? [];
+  if (!inner) return built;
+  return { ...built, children: [{ ...inner, children: [...(inner.children ?? []), repeater] }, ...rest] };
+}
 
 /**
  * The set. Deliberately small and deliberately ordinary: these are the bands
@@ -330,6 +395,96 @@ export const LAYOUT_PATTERNS: LayoutPattern[] = [
               { kind: 'accordion-item', text: 'Thanh toán ra sao?', children: [p('Trả lời ngắn gọn.')] },
             ],
           },
+        ],
+        t,
+      ),
+  },
+  // ---------------------------------------------------------------------
+  // A STORE BUILDER SHIPPED SEVEN LAYOUT PATTERNS AND NONE OF THEM WAS A
+  // STORE. The seven above close "an agent asked for a hero had 111
+  // elements and no layout"; these four close the same gap one level up —
+  // an agent asked for a shelf of featured products had `list-dataset` and
+  // nothing telling it how to compose one.
+  // ---------------------------------------------------------------------
+  {
+    id: 'sb_product_shelf',
+    name: 'Kệ sản phẩm',
+    use: 'Tiêu đề, link "xem tất cả", và một dải sản phẩm THẬT lấy tự động từ danh mục — không phải ô tĩnh',
+    build: (t) =>
+      withRepeater(
+        section([row([h('Sản phẩm nổi bật', 2), linkTo('Xem tất cả')])], t),
+        datasetShelf('product'),
+      ),
+  },
+  {
+    id: 'sb_category_strip',
+    name: 'Dải danh mục',
+    use: 'Các danh mục của cửa hàng dưới dạng ô ảnh + tên, lấy tự động từ danh mục thật — không phải ô tĩnh',
+    build: (t) => withRepeater(section([h('Danh mục sản phẩm', 2)], t), datasetShelf('category')),
+  },
+  {
+    id: 'sb_brand_wall',
+    name: 'Dải logo thương hiệu',
+    use: 'Một hàng logo cuốn dòng, lấy từ thư viện ảnh của chính site — như dải ảnh, cho logo',
+    images: 8,
+    build: (t, pool) => {
+      const used = new Set<string>();
+      const shots: Captured[] = [];
+      // A brand wall is a longer row than a product gallery — a merchant
+      // collects partner logos over years, not per campaign.
+      for (let i = 0; i < 8; i += 1) {
+        const m = pick(pool, used, 'any');
+        if (!m) break;
+        // NO frame, deliberately. A gallery wall's median-ratio frame exists
+        // because a WALL of PHOTOGRAPHS reads as unfinished with rows of
+        // different heights — logos are a different problem: a transparent
+        // PNG wordmark forced into a photograph's crop loses its own shape.
+        // `contain`, the mapper's default with no `ratio` set, is the honest
+        // answer here.
+        shots.push({ kind: 'image', src: m.url, alt: m.name ?? 'Logo' });
+      }
+      if (shots.length === 0) {
+        return section(
+          [
+            h('Đối tác của chúng tôi'),
+            p('Chưa có logo nào trong thư viện — sb_media_upload từng logo rồi dựng lại dải này.'),
+          ],
+          t,
+        );
+      }
+      return section([h('Đối tác của chúng tôi'), row(shots, true)], t);
+    },
+  },
+  {
+    id: 'sb_trust_band',
+    name: 'Dải cam kết',
+    use: 'Ba đến bốn lý do nên mua — icon, tiêu đề nhỏ và một câu: giao hàng, bảo hành, đổi trả, thanh toán',
+    build: (t) =>
+      section(
+        [
+          h('Cam kết của chúng tôi'),
+          row([
+            {
+              kind: 'group',
+              direction: 'column',
+              children: [icon('TruckLine'), h('Giao hàng nhanh', 3), p('Giao toàn quốc trong 24-48h.')],
+            },
+            {
+              kind: 'group',
+              direction: 'column',
+              children: [icon('ShieldCheckLine'), h('Bảo hành chính hãng', 3), p('Đổi mới trong 7 ngày nếu lỗi.')],
+            },
+            {
+              kind: 'group',
+              direction: 'column',
+              children: [icon('RefreshLine'), h('Đổi trả dễ dàng', 3), p('30 ngày đổi ý, hoàn tiền nhanh.')],
+            },
+            {
+              kind: 'group',
+              direction: 'column',
+              children: [icon('BankCardLine'), h('Thanh toán an toàn', 3), p('Hỗ trợ nhiều hình thức thanh toán.')],
+            },
+          ]),
         ],
         t,
       ),

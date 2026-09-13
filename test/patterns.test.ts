@@ -2,8 +2,9 @@ import { describe, it, expect } from 'vitest';
 import { LAYOUT_PATTERNS, PATTERN_BY_ID, THEME_TOKENS, type MediaPick } from '../src/domains/site/patterns.js';
 import { navSpec } from '../src/domains/site/importmap.js';
 import { PageDoc } from '../src/domains/site/document.js';
-import { addSubtree } from '../src/domains/site/builder.js';
+import { addSubtree, type NodeSpec } from '../src/domains/site/builder.js';
 import { validateForSave } from '../src/domains/site/validate.js';
+import { INERT_ON_ADD } from '../src/domains/site/inert.js';
 
 /**
  * THE COMPOSITIONS A PAGE IS MADE OF.
@@ -355,5 +356,105 @@ describe('a shared header is a packed row, not an equal share', () => {
 
   it('is nothing at all with no links', () => {
     expect(navSpec([], THEME_TOKENS)).toBeNull();
+  });
+});
+
+/**
+ * A STORE BUILDER SHIPPED SEVEN LAYOUT PATTERNS AND NONE OF THEM WAS A STORE.
+ *
+ * The original seven close the gap "an agent asked for a hero had 111 elements
+ * and no layout" — and left it open one level up: an agent asked for a shelf of
+ * featured products had `list-dataset` and the same problem. These bands are
+ * the store-shaped half.
+ */
+describe('the store-shaped patterns', () => {
+  /** Every (type, immediate parent type) pair used anywhere in a built pattern. */
+  function typesIn(spec: NodeSpec | null, parent: string | null = null): Array<[string, string | null]> {
+    if (!spec) return [];
+    const out: Array<[string, string | null]> = [[spec.type, parent]];
+    for (const c of spec.children ?? []) out.push(...typesIn(c, spec.type));
+    return out;
+  }
+
+  it(
+    'never places an INERT_ON_ADD element without the second write that makes it live',
+    () => {
+      // The guard that stops this work from quietly adding beautiful bands
+      // that render nothing. `accordion-content` is the one exception
+      // already in the existing seven — it is inert only OUTSIDE an
+      // accordion (its own AVOID: "it only renders as an accordion's own
+      // child"), and `sb_faq` places it correctly, as an accordion's own
+      // child, which IS the compensating write. Everything else here is
+      // flagged unconditionally: none of the store-shaped patterns place any
+      // of the other nineteen inert-on-add elements today, and if a future
+      // one does, this test must be extended to check ITS compensating write
+      // rather than deleted.
+      for (const p of LAYOUT_PATTERNS) {
+        for (const [t, parent] of typesIn(p.build(THEME_TOKENS, []))) {
+          if (t === 'accordion-content' && parent === 'accordion') continue;
+          expect(INERT_ON_ADD[t], `${p.id} places inert "${t}" with no compensating write`).toBeUndefined();
+        }
+      }
+    },
+  );
+
+  it('a product shelf is a REAL repeater, never static tiles', () => {
+    // "listing products from the catalogue... is list-dataset, whose feed is
+    // known when the page is published" — a static row of tiles is a shop
+    // where every price is a literal and nothing is buyable, which this repo
+    // already records as a failure shipped twice.
+    const spec = PATTERN_BY_ID.get('sb_product_shelf')!.build(THEME_TOKENS)!;
+    const types = typesIn(spec).map(([t]) => t);
+    expect(types).toContain('list-dataset');
+    expect(types).toContain('dataset-block');
+    expect(types).toContain('media-dataset');
+    expect(types).toContain('pricing-dataset');
+    const json = JSON.stringify(spec);
+    expect(json).toContain('"datasetSource":"product"');
+  });
+
+  it('a category strip is bound to the catalogue too, not a guess at what exists', () => {
+    const spec = PATTERN_BY_ID.get('sb_category_strip')!.build(THEME_TOKENS)!;
+    const types = typesIn(spec).map(([t]) => t);
+    expect(types).toContain('list-dataset');
+    expect(types).toContain('dataset-block');
+    expect(types).toContain('media-dataset');
+    // A category has no price — a card that bound one would read a product
+    // field off a category record.
+    expect(types).not.toContain('pricing-dataset');
+    expect(JSON.stringify(spec)).toContain('"datasetSource":"category"');
+  });
+
+  it('the repeater card carries no bindings of its own — bindingsForConfig derives them at add time', () => {
+    // The mistake this repo already paid for twice: a hand-written binding
+    // value drifts from the platform's own factory the next time it changes.
+    // The pattern says only WHICH source and kind; `createNode` does the rest.
+    const json = JSON.stringify(PATTERN_BY_ID.get('sb_product_shelf')!.build(THEME_TOKENS));
+    expect(json).not.toContain('"bindings"');
+  });
+
+  it('a brand wall is a real image or words, never a static tile pretending to be one', () => {
+    const wall = () => PATTERN_BY_ID.get('sb_brand_wall')!;
+    const pool: MediaPick[] = Array.from({ length: 10 }, (_, i) => ({ url: `https://cdn/logo${i}.png` }));
+    expect(JSON.stringify(wall().build(THEME_TOKENS, pool))).toContain('https://cdn/logo0.png');
+    const empty = JSON.stringify(wall().build(THEME_TOKENS, []));
+    expect(empty).toMatch(/sb_media_upload/);
+    expect(empty).not.toContain('"image"');
+  });
+
+  it('a trust band names real platform icons, looked up rather than guessed', () => {
+    const json = JSON.stringify(PATTERN_BY_ID.get('sb_trust_band')!.build(THEME_TOKENS));
+    for (const name of ['TruckLine', 'ShieldCheckLine', 'RefreshLine', 'BankCardLine']) {
+      expect(json, name).toContain(name);
+    }
+  });
+
+  it('every store-shaped pattern is storable', () => {
+    for (const id of ['sb_product_shelf', 'sb_category_strip', 'sb_brand_wall', 'sb_trust_band']) {
+      const d = PageDoc.from({ schema_version: 2, root_node_id: '', nodes: {} });
+      const spec = PATTERN_BY_ID.get(id)!.build(THEME_TOKENS, [{ url: 'https://cdn/logo.png' }]);
+      d.apply(addSubtree(d, 'ROOT', spec!).patches);
+      expect(validateForSave(d), id).toEqual([]);
+    }
   });
 });

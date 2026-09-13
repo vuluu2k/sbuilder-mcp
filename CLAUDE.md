@@ -1080,6 +1080,35 @@ that accounts for them.
   the theme the moment the merchant changed it, which is the detachment this file already
   records for imported icons.
 
+- **A STORE BUILDER SHIPPED SEVEN LAYOUT PATTERNS AND NONE OF THEM WAS A STORE.** The bullet
+  above closes "an agent asked for a hero had 111 elements and no layout" and left the same gap
+  open one level up: an agent asked for a shelf of featured products had `list-dataset` and
+  nothing telling it how to compose one. `sb_product_shelf` and `sb_category_strip` fixed it as
+  a REAL `list-dataset` repeater bound to the catalogue — never static tiles, which is a shop
+  where every price is a literal and nothing is buyable, a failure this file already records
+  twice elsewhere. Both name only `config.datasetSource` (and, where an element has a kind
+  axis, `config.kind`); `bindingsForConfig` derives the actual binding at add time, so the
+  pattern cannot drift from the platform's own factory the way a hand-copied binding already has
+  twice in this repo's history.
+
+  `dataset-block` / `media-dataset` / `text-dataset` / `pricing-dataset` have no `Captured` kind
+  and cannot: nothing an IMPORT ever walks produces a repeater, since a browser discovers markup
+  and a repeater is a document's own data axis. So these four are the one deliberate exception to
+  "built as `Captured` trees, never hand-assembled" — raw `NodeSpec`, spliced in after a section's
+  own capture-built heading, because the mapper has nothing to say about a shape it was never
+  taught. `sb_brand_wall` (logos from the library, framed with `contain` rather than a wall's
+  median-ratio crop — a transparent logo forced into a photograph's crop loses its own shape) and
+  `sb_trust_band` (icon-plus-line reassurances, naming exact platform icon ids) needed no such
+  exception; both are ordinary `Captured` compositions.
+
+  A fifth candidate — a newsletter signup — was judged and rejected rather than faked. The
+  platform's `form` node on a page is a bare reference to a SEPARATE form document
+  (`specials.formId`); building one honestly is the multi-step write `sb_store action:"form"`
+  already owns (create → PUT back whole → save the field document), not a `NodeSpec` a pattern
+  can compose offline. A `form` with no `formId`, or an input whose button submits nowhere, is
+  exactly the class of convincing-but-inert element `INERT_ON_ADD` exists to stop this server
+  from adding.
+
 - **A `column` GROUP WAS BUILT AS A ROW, and `direction` had been read by nothing.** The capture
   never emits one — a column is what a page already IS, so it is flattened in the browser — so
   the field sat in `Captured` unread. The moment a caller composes a tree BY HAND (a layout

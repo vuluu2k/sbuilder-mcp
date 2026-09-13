@@ -537,6 +537,27 @@ Các mẫu được dựng dưới dạng cây capture rồi đi qua đúng mapp
 mẫu tự thừa hưởng câu trả lời cho rule 0, 1 và 3 — token của trang, điểm gãy dọc trên mọi hàng,
 và cột cao đúng bằng nội dung khi hàng xuống dọc.
 
+**Bốn trong mười một mẫu mang hình dáng CỬA HÀNG**, đóng lại một lỗ hổng mà bảy mẫu đầu của repo
+này để hở ở một tầng cao hơn: một store builder xuất bản layout hero/feature/stats/CTA/gallery/
+FAQ mà không cái nào là một cửa hàng. `sb_product_shelf` và `sb_category_strip` là một repeater
+`list-dataset` THẬT gắn vào danh mục — không phải ô tĩnh khoác ảnh sản phẩm, tức một cửa hàng mà
+mọi giá là chữ cứng và không gì mua được. Cả hai chỉ khai `config.datasetSource` (và, ở nơi
+element có trục kind, `config.kind`); `createNode` qua `bindingsForConfig` của nó tự suy ra mọi
+binding tại lúc thêm, nên mẫu không thể trôi khỏi factory của platform theo cách một binding
+chép tay đã từng trôi hai lần trong lịch sử repo này. `sb_brand_wall` là mẫu ô ảnh như
+`sb_gallery` (logo thật từ thư viện, hoặc một câu chỉ tới `sb_media_upload`), nhưng khung bằng
+`contain` chứ không phải khung tỷ lệ trung vị của một dải ảnh — một logo trong suốt bị ép vào
+khung crop của ảnh chụp sẽ mất hình dạng của chính nó. `sb_trust_band` là icon-kèm-dòng-chữ (giao
+hàng, bảo hành, đổi trả, thanh toán), gọi đúng id icon của platform chứ không đoán mò như bước dò
+icon mờ của import phải làm.
+
+Một band cửa hàng thứ năm — form đăng ký nhận tin — đã bị xét và loại. Element `form` trên trang
+chỉ là một tham chiếu trơ tới một TÀI LIỆU FORM RIÊNG (`specials.formId`); dựng nó cho đúng nghĩa
+là ba lần ghi có thứ tự mà `sb_store action:"form"` đã sở hữu (tạo → PUT lại toàn bộ → lưu tài
+liệu field), không phải một `NodeSpec` mà một mẫu có thể soạn offline. Xuất bản một node `form`
+không có `formId`, hay một ô nhập với nút bấm không gửi đi đâu, chính là loại element trông xong
+mà chết mà bảng `INERT_ON_ADD` của repo này sinh ra để chặn.
+
 ## `sb_page_list` / `sb_page_create` / `sb_publish`
 
 Vòng đời trang, thành tool hạng nhất thay vì đi vòng qua `sb_api_call`. `sb_page_list` trả
