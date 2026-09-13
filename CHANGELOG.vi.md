@@ -6,6 +6,21 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.41.0] - 2026-09-13
+
+### Added
+- `sb_templates` / `sb_template_use` có thêm bốn layout dựng sẵn — `sb_product_shelf` và `sb_category_strip` là repeater `list-dataset` thật, gắn vào catalogue thay vì các ô tĩnh; `sb_brand_wall` đóng khung logo lấy từ thư viện bằng `contain` thay vì crop theo tỉ lệ trung vị của ảnh chụp; `sb_trust_band` ghép các dòng cam kết icon-kèm-chữ từ đúng các id icon của nền tảng.
+- `sb_api_find` và `sb_api_call` giờ đính kèm ghi chú `product_traps` vào bốn operation tạo hoặc thay thế toàn bộ một sản phẩm, nêu rõ ba điều mà body `ProductInput` không tự nói lên được: giá nằm ở variant chứ không phải ở product, một slug trùng bị đổi tên âm thầm chứ không bị từ chối, và có thể nạp ảnh thẳng từ URL trong một bước thay vì hai.
+- Bảng phần tử "inert" tăng từ 3 lên 20 mục sau khi rà soát toàn bộ 113 phần tử trong catalog, thêm `quickview`, `bundle-items`, `chat-widget`, `currency-switcher`, `theme-switcher`, `form-step-count`, `form-step-button`, `order-receipt`, `payment-status`, `points-card`, `points-prompt`, `list-empty`, `list-loading`, `rating-stars`, `accordion-content`, `menu-drawer` và `menu-panel` — những phần tử trông có vẻ hoàn chỉnh ngay ở lần ghi đầu tiên nhưng không làm được gì cả, nên `sb_add` giờ có thể cảnh báo về chúng trước khi publish.
+- `sb_import_site` giờ đọc tên file của từng sitemap con trong một sitemap index để phân biệt trang dữ liệu (sản phẩm, danh mục, thương hiệu, tag) với trang nội dung thông thường, và mặc định loại các trang dữ liệu khỏi kế hoạch import thay vì chọn đại URL nào thắng giới hạn số trang.
+
+### Fixed
+- `sb_import` và `sb_import_site` không còn biến class wrapper hay class tiện ích của một `<svg>` thành một icon sai nhưng trông chắc chắn đúng; một class chỉ được xét khi mang tiền tố mà một bộ icon thật sự dùng, và chỉ xếp hạng theo độ dài như một cách phân định giữa các ứng viên đó.
+- `sb_import` và `sb_import_site` giờ dựng một danh sách đã capture thành `list` thật gồm các `list-item`, mang icon đánh dấu riêng của nền tảng, thay vì một cột các node văn bản mỗi cái gắn cứng một ký tự bullet.
+- Điểm `structure` trong đo lường fidelity không còn báo mất cấu trúc trên các trang có danh sách; phép so sánh hình dạng giờ tính các dòng của một danh sách đã capture là con thật thay vì tính danh sách đó như một lá rỗng.
+- Bản ghi theme của `sb_import_site` và việc gán màu/cỡ chữ literal lên từng node không còn triệt tiêu lẫn nhau; bốn field token mà một style preset mặc định vốn đã phân giải qua theme sẽ bị bỏ khỏi các literal được gán ngay khi bản ghi theme thực sự có hiệu lực, nhờ đó màu sắc của trang được import vẫn do theme kiểm soát thay vì một literal âm thầm đè lên nó mãi mãi.
+- Điểm `coverage` mà `sb_import` và `sb_import_site` báo cáo không còn tính phần chữ mà importer chủ động bỏ qua (chrome, phần tử ẩn, control của form, nội dung trang trí) là nội dung bị mất, và không còn bỏ sót chữ nằm trong một `<nav>` cấp cao nhất hay một `<select>` ẩn mà lượt duyệt theo section chưa bao giờ chạm tới.
+
 ## [0.40.0] - 2026-09-13
 
 ### Added

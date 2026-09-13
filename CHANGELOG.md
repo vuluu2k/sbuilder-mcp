@@ -6,6 +6,21 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.41.0] - 2026-09-13
+
+### Added
+- `sb_templates` / `sb_template_use` gain four new built-in layout patterns — `sb_product_shelf` and `sb_category_strip` are real `list-dataset` repeaters bound to the catalogue rather than static tiles, `sb_brand_wall` frames library logos with `contain` instead of a photograph's median-ratio crop, and `sb_trust_band` composes icon-plus-line reassurances from exact platform icon ids.
+- `sb_api_find` and `sb_api_call` now attach a `product_traps` note to the four operations that create or replace a whole product, naming three facts a `ProductInput` body cannot show on its own: price lives on the variant rather than the product, a colliding slug is silently renamed rather than refused, and an image can be ingested straight from a URL in one hop.
+- The inert-element table grew from 3 to 20 entries after an audit of all 113 catalog elements, adding `quickview`, `bundle-items`, `chat-widget`, `currency-switcher`, `theme-switcher`, `form-step-count`, `form-step-button`, `order-receipt`, `payment-status`, `points-card`, `points-prompt`, `list-empty`, `list-loading`, `rating-stars`, `accordion-content`, `menu-drawer` and `menu-panel` — elements that render convincingly on the first write while doing nothing useful, so `sb_add` can now warn about them before publish.
+- `sb_import_site` now reads a sitemap index's own child filenames to tell record pages (products, categories, brands, tags) from page-shaped ones, and excludes the record kinds from the import plan by default instead of picking whichever URLs happen to win the page cap.
+
+### Fixed
+- `sb_import` and `sb_import_site` no longer turn an `<svg>`'s wrapper or utility class into a confident wrong icon; a class candidate is only considered when it carries a prefix a real icon set actually stamps, ranked by length only as a tie-break among those.
+- `sb_import` and `sb_import_site` now build a captured list as a real `list` of `list-item` nodes carrying the platform's own marker icon, instead of a column of text nodes each with a literal bullet glyph glued on.
+- The `structure` fidelity score no longer reports arrangement loss on pages with lists; the shape comparison now counts a captured list's rows as real children instead of scoring the list as an empty leaf.
+- `sb_import_site`'s theme write and its per-node color/font-size stamping no longer fight each other; the four token fields a default style preset already resolves through the theme are dropped from the stamped literals once the theme write actually lands, so an imported page's colors stay controlled by the theme instead of a literal that silently outranks it forever.
+- The `coverage` score reported by `sb_import` and `sb_import_site` no longer counts text the importer deliberately declines (chrome, hidden elements, form controls, decorative content) as lost content, and no longer misses text in a bare top-level `<nav>` or a hidden `<select>` that the page-section walk never visits at all.
+
 ## [0.40.0] - 2026-09-13
 
 ### Added
