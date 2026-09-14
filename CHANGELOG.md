@@ -6,6 +6,11 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.46.2] - 2026-09-14
+
+### Fixed
+- A page save that was refused for a reason it did not cause used to still apply and publish its patches locally before the refusal surfaced, so the next successful save on that page silently committed the earlier refused edit as well; a save is now refused before anything is applied whenever it would leave the page still unstorable, while a save that repairs the page's pre-existing problems still goes through.
+
 ## [0.46.1] - 2026-09-14
 
 ### Fixed

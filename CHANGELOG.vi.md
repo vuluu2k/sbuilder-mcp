@@ -6,6 +6,11 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.46.2] - 2026-09-14
+
+### Fixed
+- Một lần lưu trang bị từ chối vì lý do nó không gây ra trước đây vẫn áp dụng và publish các patch cục bộ trước khi việc từ chối được báo, nên lần lưu thành công tiếp theo trên trang đó âm thầm gộp luôn cả chỉnh sửa đã bị từ chối trước đó; giờ đây việc lưu bị từ chối trước khi áp dụng bất cứ gì mỗi khi nó khiến trang vẫn không thể lưu được, còn một lần lưu khắc phục được vấn đề đã tồn tại sẵn của trang thì vẫn được thực hiện bình thường.
+
 ## [0.46.1] - 2026-09-14
 
 ### Fixed
