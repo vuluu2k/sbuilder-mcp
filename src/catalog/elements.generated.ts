@@ -36893,19 +36893,6 @@ export const CONFIG_VALUES: Record<
  * the key.
  */
 export const ELEMENT_VALUES: Record<string, Record<string, ValueVocabulary>> = {
-  "*": {
-    "backgroundSceneSource": {
-      "target": "config",
-      "writeKey": "backgroundSceneSource",
-      "values": [
-        "",
-        "effect",
-        "gallery"
-      ],
-      "fallback": "",
-      "readBy": "nodes/helpers.go:bgSceneColorRule"
-    }
-  },
   "media-dataset": {
     "mediaImageRatio": {
       "target": "config",
@@ -36996,6 +36983,426 @@ export const ELEMENT_VALUES: Record<string, Record<string, ValueVocabulary>> = {
       ],
       "fallback": "top",
       "readBy": "nodes/tab/html.go:position"
+    }
+  },
+  "spline-scene": {
+    "source": {
+      "target": "specials",
+      "writeKey": "source",
+      "values": [
+        "effect",
+        "gallery",
+        "model",
+        "spline"
+      ],
+      "readBy": "SCENE_SOURCES (schema/src/elements/spline-scene/meta.ts)"
+    },
+    "effect": {
+      "target": "config",
+      "writeKey": "effect",
+      "values": [
+        "aurora",
+        "gradient-mesh",
+        "particles",
+        "waves"
+      ],
+      "readBy": "EFFECT_IDS (runtime/src/services/effect-shaders.ts)"
+    },
+    "sceneGallery": {
+      "target": "specials",
+      "writeKey": "sceneGallery",
+      "values": [
+        "card",
+        "geometry",
+        "gift",
+        "podium",
+        "sphere",
+        "torus"
+      ],
+      "readBy": "GALLERY_CATALOGUE (runtime/src/services/gallery-scenes.ts)"
+    },
+    "speed": {
+      "target": "config",
+      "writeKey": "speed",
+      "values": [
+        "fast",
+        "normal",
+        "slow"
+      ],
+      "readBy": "SCENE_SPEEDS (schema/src/elements/spline-scene/meta.ts)"
+    },
+    "intensity": {
+      "target": "config",
+      "writeKey": "intensity",
+      "values": [
+        "normal",
+        "soft",
+        "strong"
+      ],
+      "readBy": "SCENE_INTENSITIES (schema/src/elements/spline-scene/meta.ts)"
+    },
+    "effectColors": {
+      "target": "config",
+      "writeKey": "effectColors",
+      "values": [
+        "custom",
+        "theme"
+      ],
+      "readBy": "COLOR_MODES (editor/src/components/inspector/ScenePaletteRows.vue)"
+    }
+  },
+  "*": {
+    "backgroundSceneSource": {
+      "target": "config",
+      "writeKey": "backgroundSceneSource",
+      "values": [
+        "",
+        "effect",
+        "gallery",
+        "model",
+        "spline"
+      ],
+      "readBy": "BACKGROUND_SCENE_SOURCES (schema/src/elements/backgroundScene.ts)"
+    },
+    "backgroundSceneEffect": {
+      "target": "config",
+      "writeKey": "backgroundSceneEffect",
+      "values": [
+        "aurora",
+        "gradient-mesh",
+        "particles",
+        "waves"
+      ],
+      "readBy": "EFFECT_IDS (runtime/src/services/effect-shaders.ts)"
+    },
+    "backgroundSceneGallery": {
+      "target": "config",
+      "writeKey": "backgroundSceneGallery",
+      "values": [
+        "card",
+        "geometry",
+        "gift",
+        "podium",
+        "sphere",
+        "torus"
+      ],
+      "readBy": "GALLERY_CATALOGUE (runtime/src/services/gallery-scenes.ts)"
+    },
+    "backgroundSceneSpeed": {
+      "target": "config",
+      "writeKey": "backgroundSceneSpeed",
+      "values": [
+        "fast",
+        "normal",
+        "slow"
+      ],
+      "readBy": "SCENE_SPEEDS (schema/src/elements/spline-scene/meta.ts)"
+    },
+    "backgroundSceneIntensity": {
+      "target": "config",
+      "writeKey": "backgroundSceneIntensity",
+      "values": [
+        "normal",
+        "soft",
+        "strong"
+      ],
+      "readBy": "SCENE_INTENSITIES (schema/src/elements/spline-scene/meta.ts)"
+    },
+    "backgroundSceneColors": {
+      "target": "config",
+      "writeKey": "backgroundSceneColors",
+      "values": [
+        "custom",
+        "theme"
+      ],
+      "readBy": "COLOR_MODES (editor/src/components/inspector/ScenePaletteRows.vue)"
+    }
+  },
+  "filter-checkbox": {
+    "filterSource": {
+      "target": "specials",
+      "writeKey": "filterSource",
+      "values": [
+        "attribute",
+        "availability",
+        "blog_category",
+        "brand",
+        "category",
+        "course_level",
+        "course_tag",
+        "custom",
+        "price",
+        "purchase_history",
+        "search",
+        "sort",
+        "tag"
+      ],
+      "readBy": "FILTER_SOURCES + SORT_SOURCE (schema/src/filters/sources.ts)"
+    },
+    "filterValueMode": {
+      "target": "specials",
+      "writeKey": "filterValueMode",
+      "values": [
+        "all",
+        "manual"
+      ],
+      "readBy": "FilterConfig.valueMode (editor/src/features/filters/types.ts)"
+    },
+    "filterMatch": {
+      "target": "specials",
+      "writeKey": "filterMatch",
+      "values": [
+        "all",
+        "any"
+      ],
+      "readBy": "FilterConfig.matchMode (editor/src/features/filters/types.ts)"
+    },
+    "filterArity": {
+      "target": "specials",
+      "writeKey": "filterArity",
+      "values": [
+        "",
+        "multi",
+        "single"
+      ],
+      "readBy": "FilterConfig.arity (editor/src/features/filters/types.ts)"
+    },
+    "filterBehavior": {
+      "target": "specials",
+      "writeKey": "filterBehavior",
+      "values": [
+        "event",
+        "filter"
+      ],
+      "readBy": "FilterConfig.behavior (editor/src/features/filters/types.ts)"
+    }
+  },
+  "filter-radio": {
+    "filterSource": {
+      "target": "specials",
+      "writeKey": "filterSource",
+      "values": [
+        "attribute",
+        "availability",
+        "blog_category",
+        "brand",
+        "category",
+        "course_level",
+        "course_tag",
+        "custom",
+        "price",
+        "purchase_history",
+        "search",
+        "sort",
+        "tag"
+      ],
+      "readBy": "FILTER_SOURCES + SORT_SOURCE (schema/src/filters/sources.ts)"
+    },
+    "filterValueMode": {
+      "target": "specials",
+      "writeKey": "filterValueMode",
+      "values": [
+        "all",
+        "manual"
+      ],
+      "readBy": "FilterConfig.valueMode (editor/src/features/filters/types.ts)"
+    },
+    "filterMatch": {
+      "target": "specials",
+      "writeKey": "filterMatch",
+      "values": [
+        "all",
+        "any"
+      ],
+      "readBy": "FilterConfig.matchMode (editor/src/features/filters/types.ts)"
+    },
+    "filterArity": {
+      "target": "specials",
+      "writeKey": "filterArity",
+      "values": [
+        "",
+        "multi",
+        "single"
+      ],
+      "readBy": "FilterConfig.arity (editor/src/features/filters/types.ts)"
+    },
+    "filterBehavior": {
+      "target": "specials",
+      "writeKey": "filterBehavior",
+      "values": [
+        "event",
+        "filter"
+      ],
+      "readBy": "FilterConfig.behavior (editor/src/features/filters/types.ts)"
+    }
+  },
+  "filter-color": {
+    "filterSource": {
+      "target": "specials",
+      "writeKey": "filterSource",
+      "values": [
+        "attribute",
+        "availability",
+        "blog_category",
+        "brand",
+        "category",
+        "course_level",
+        "course_tag",
+        "custom",
+        "price",
+        "purchase_history",
+        "search",
+        "sort",
+        "tag"
+      ],
+      "readBy": "FILTER_SOURCES + SORT_SOURCE (schema/src/filters/sources.ts)"
+    },
+    "filterValueMode": {
+      "target": "specials",
+      "writeKey": "filterValueMode",
+      "values": [
+        "all",
+        "manual"
+      ],
+      "readBy": "FilterConfig.valueMode (editor/src/features/filters/types.ts)"
+    },
+    "filterMatch": {
+      "target": "specials",
+      "writeKey": "filterMatch",
+      "values": [
+        "all",
+        "any"
+      ],
+      "readBy": "FilterConfig.matchMode (editor/src/features/filters/types.ts)"
+    },
+    "filterArity": {
+      "target": "specials",
+      "writeKey": "filterArity",
+      "values": [
+        "",
+        "multi",
+        "single"
+      ],
+      "readBy": "FilterConfig.arity (editor/src/features/filters/types.ts)"
+    },
+    "filterBehavior": {
+      "target": "specials",
+      "writeKey": "filterBehavior",
+      "values": [
+        "event",
+        "filter"
+      ],
+      "readBy": "FilterConfig.behavior (editor/src/features/filters/types.ts)"
+    }
+  },
+  "filter-tag": {
+    "filterSource": {
+      "target": "specials",
+      "writeKey": "filterSource",
+      "values": [
+        "attribute",
+        "availability",
+        "blog_category",
+        "brand",
+        "category",
+        "course_level",
+        "course_tag",
+        "custom",
+        "price",
+        "purchase_history",
+        "search",
+        "sort",
+        "tag"
+      ],
+      "readBy": "FILTER_SOURCES + SORT_SOURCE (schema/src/filters/sources.ts)"
+    },
+    "filterValueMode": {
+      "target": "specials",
+      "writeKey": "filterValueMode",
+      "values": [
+        "all",
+        "manual"
+      ],
+      "readBy": "FilterConfig.valueMode (editor/src/features/filters/types.ts)"
+    },
+    "filterMatch": {
+      "target": "specials",
+      "writeKey": "filterMatch",
+      "values": [
+        "all",
+        "any"
+      ],
+      "readBy": "FilterConfig.matchMode (editor/src/features/filters/types.ts)"
+    },
+    "filterArity": {
+      "target": "specials",
+      "writeKey": "filterArity",
+      "values": [
+        "",
+        "multi",
+        "single"
+      ],
+      "readBy": "FilterConfig.arity (editor/src/features/filters/types.ts)"
+    },
+    "filterBehavior": {
+      "target": "specials",
+      "writeKey": "filterBehavior",
+      "values": [
+        "event",
+        "filter"
+      ],
+      "readBy": "FilterConfig.behavior (editor/src/features/filters/types.ts)"
+    }
+  },
+  "select": {
+    "filterSource": {
+      "target": "specials",
+      "writeKey": "filterSource",
+      "values": [
+        "attribute",
+        "availability",
+        "blog_category",
+        "brand",
+        "category",
+        "course_level",
+        "course_tag",
+        "custom",
+        "price",
+        "purchase_history",
+        "search",
+        "sort",
+        "tag"
+      ],
+      "readBy": "FILTER_SOURCES + SORT_SOURCE (schema/src/filters/sources.ts)"
+    },
+    "filterBehavior": {
+      "target": "specials",
+      "writeKey": "filterBehavior",
+      "values": [
+        "event",
+        "filter"
+      ],
+      "readBy": "FilterConfig.behavior (editor/src/features/filters/types.ts)"
+    },
+    "dropdown_align": {
+      "target": "config",
+      "writeKey": "panelAlign",
+      "values": [
+        "left",
+        "center",
+        "right"
+      ],
+      "readBy": "dropdown_align (editor picker)"
+    }
+  },
+  "filter-slider": {
+    "filterSource": {
+      "target": "specials",
+      "writeKey": "filterSource",
+      "values": [
+        "price"
+      ],
+      "readBy": "FILTER_SOURCES valueMode:\"range\" (schema/src/filters/sources.ts)"
     }
   },
   "cart-total": {
@@ -37140,18 +37547,6 @@ export const ELEMENT_VALUES: Record<string, Record<string, ValueVocabulary>> = {
         "right"
       ],
       "readBy": "anchored_placement (editor picker)"
-    }
-  },
-  "select": {
-    "dropdown_align": {
-      "target": "config",
-      "writeKey": "panelAlign",
-      "values": [
-        "left",
-        "center",
-        "right"
-      ],
-      "readBy": "dropdown_align (editor picker)"
     }
   },
   "search-keywords": {

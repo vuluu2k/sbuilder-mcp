@@ -202,20 +202,36 @@ describe('what a key is allowed to hold, scoped to the element', () => {
     expect(note).toMatch(/grid-2/);
   });
 
-  // A FALLBACK IS CLAIMED ONLY WHERE THE SOURCE SAYS ONE. The editor's picker
-  // proves what an author may CHOOSE and is silent on what the renderer does
-  // with anything else; naming a fallback there would be the invention this
-  // table exists to remove. Every Go-read vocabulary carries one, because the
-  // `default:` arm IS that answer.
+  // A FALLBACK IS CLAIMED ONLY WHERE THE SOURCE SAYS ONE, AND ONLY THE GO
+  // `default:` ARM SAYS ONE. The editor's picker proves what an author may
+  // CHOOSE and the platform's own `as const` declarations prove what the key
+  // may HOLD; both are silent on what the renderer does with anything else, and
+  // naming a fallback there would be the invention this table exists to remove.
+  // So the rule is the READER, not a list of exceptions to it: a Go site
+  // (`<file>.go:<func>`) carries a fallback unless it is open, and nothing else
+  // ever does.
   it('claims a fallback only where the source states one', () => {
     for (const [type, table] of Object.entries(ELEMENT_VALUES)) {
       for (const [key, v] of Object.entries(table)) {
         const where = `${type}.${key}`;
         if (v.open) expect(v.fallback, where).toBeUndefined();
-        else if (v.readBy.endsWith('(editor picker)')) expect(v.fallback, where).toBeUndefined();
-        else expect(typeof v.fallback, where).toBe('string');
-        // A partial list is worse than none, so an empty one must never ship.
-        expect(v.values.length, where).toBeGreaterThan(1);
+        else if (/\.go:/.test(v.readBy)) expect(typeof v.fallback, where).toBe('string');
+        else expect(v.fallback, where).toBeUndefined();
+        // A partial list is worse than none, so an empty one must never ship —
+        // and a list of ONE is the shape a half-read source produces, so it is
+        // refused too, by NAME rather than by loosening the rule.
+        //
+        // `filter-slider.filterSource` is the one legitimate singleton and it
+        // is a singleton by DERIVATION, not by truncation: the element's own
+        // meta says "Its SOURCE is fixed to `price`, and that is identity
+        // rather than a setting … AND THEREFORE IT IS THE ONE FILTER THAT
+        // CANNOT SORT", and codegen reads the ids whose `valueMode` is `range`
+        // rather than copying the word, so a second range source would make it
+        // two on the next run. Saying it here instead of relaxing the bound
+        // keeps the guard for every other reader.
+        expect(v.values.length, where).toBeGreaterThan(
+          where === 'filter-slider.filterSource' ? 0 : 1,
+        );
         expect(v.target === 'config' || v.target === 'specials', where).toBe(true);
       }
     }
@@ -246,6 +262,62 @@ describe('what a key is allowed to hold, scoped to the element', () => {
     expect(Object.keys(heading.config_values ?? {})).not.toContain('backgroundSceneSource');
   });
 
+  // A GUARD IS NOT A VOCABULARY, AND THIS ONE SHIPPED ON npm AS IF IT WERE.
+  //
+  // `bgSceneColorRule` asks "does this source support custom colours" —
+  // `case "effect", "gallery":` with an EMPTY arm, falling through to the code
+  // after the switch, and a `default: return ""` that is an early exit
+  // returning a CSS string. The Go reader's rule ("a `default:` arm proves
+  // completeness") read that as a two-word vocabulary and published
+  // `['', 'effect', 'gallery']` for a key that holds five values, calling
+  // `spline` and `model` invalid on a live release.
+  //
+  // Both halves are pinned, because either alone would pass with the defect
+  // half-fixed: the guard must not be the source, AND the list must be whole.
+  it('reads the 3D background source from the declaration, never from the guard', () => {
+    const v = vocabularyForWrite('flex-section', 'config', 'backgroundSceneSource')!;
+    expect(v.readBy).not.toMatch(/bgSceneColorRule/);
+    expect(v.values).toEqual(['', 'effect', 'gallery', 'model', 'spline']);
+    // `''` is OFF — the seeded default every carrier stores — so a list built
+    // from "which sources DRAW something" would call every unconfigured
+    // section in the shop invalid.
+    expect(unknownWriteNote('flex-section', 'config', 'backgroundSceneSource', '')).toBeNull();
+    expect(unknownWriteNote('flex-section', 'config', 'backgroundSceneSource', 'spline')).toBeNull();
+    const note = unknownWriteNote('flex-section', 'config', 'backgroundSceneSource', 'threejs')!;
+    expect(note).toMatch(/"" \(unset\)/);
+    expect(note).toMatch(/model/);
+    // The guard states no fallback about this key, so none is claimed.
+    expect(note).not.toMatch(/renders as that/);
+  });
+
+  // THE 3D FEATURE'S OTHER TEN KEYS WERE IN NO CATALOG AT ALL, because both
+  // readers read an IMPLEMENTATION and this feature's lists live in the browser
+  // island and in `as const` declarations. Every one is a NAME an agent cannot
+  // author without the list.
+  it('names every 3D vocabulary on both surfaces', () => {
+    const bg = (key: string) => vocabularyForWrite('flex-section', 'config', key)!.values;
+    expect(bg('backgroundSceneEffect')).toEqual(['aurora', 'gradient-mesh', 'particles', 'waves']);
+    expect(bg('backgroundSceneGallery')).toContain('podium');
+    expect(bg('backgroundSceneSpeed')).toEqual(['fast', 'normal', 'slow']);
+    expect(bg('backgroundSceneIntensity')).toEqual(['normal', 'soft', 'strong']);
+    expect(bg('backgroundSceneColors')).toEqual(['custom', 'theme']);
+    // THE SAME KEY FAMILY UNDER SHORTER NAMES on the inline element, and in a
+    // different NAMESPACE for two of them — the mapping is read off
+    // `sceneKeys.ts` rather than guessed from the background spelling, which is
+    // the mistake a name-mangling shortcut would make here.
+    const inline = elementVocabularies('spline-scene');
+    expect(inline.source.target).toBe('specials');
+    expect(inline.source.values).toEqual(['effect', 'gallery', 'model', 'spline']);
+    expect(inline.sceneGallery.target).toBe('specials');
+    expect(inline.effect.values).toEqual(bg('backgroundSceneEffect'));
+    expect(inline.speed.values).toEqual(bg('backgroundSceneSpeed'));
+    expect(inline.intensity.values).toEqual(bg('backgroundSceneIntensity'));
+    expect(inline.effectColors.values).toEqual(bg('backgroundSceneColors'));
+    // The inline element's source list does NOT carry `''`: an unset `source`
+    // there means Spline (back-compat), where on the layer it means OFF.
+    expect(inline.source.values).not.toContain('');
+  });
+
   // A `specials` vocabulary needs its own home in the result: the field name is
   // the namespace, which is what lets every entry drop its own `target`.
   it('splits the result by the namespace the caller writes to', () => {
@@ -261,5 +333,121 @@ describe('what a key is allowed to hold, scoped to the element', () => {
     // `target`, which is the trait registry's shape and not this table's.)
     expect(JSON.stringify(out.config_values)).not.toMatch(/"target"/);
     expect(JSON.stringify(out.specials_values)).not.toMatch(/"target"/);
+  });
+
+  // THE STOREFRONT FILTER SURFACE — six elements, and the catalog named
+  // between 0 and 5 of the thirteen legal sources on any of them. The miss is
+  // silent and total: `getFilterSource` returns `undefined` without throwing,
+  // `filtershared.go` writes the stored word into `data-filter-source`
+  // verbatim, and the island hydrates owning a query parameter the server
+  // answers for nobody — a filter control that narrows nothing.
+  it('names every source a filter control may be pointed at', () => {
+    const src = (type: string) => vocabularyForWrite(type, 'specials', 'filterSource')!;
+    const facets = [
+      'attribute',
+      'availability',
+      'blog_category',
+      'brand',
+      'category',
+      'course_level',
+      'course_tag',
+      'custom',
+      'price',
+      'purchase_history',
+      'search',
+      'tag',
+    ];
+    for (const type of ['filter-checkbox', 'filter-color', 'filter-radio', 'filter-tag', 'select']) {
+      // ASSERTED AS A PROPERTY, not as an exact array: a row plus two i18n keys
+      // is the whole cost of a new source, and a test that goes red on every
+      // addition teaches the next reader to update the list without looking.
+      for (const id of facets) expect(src(type).values, type).toContain(id);
+      // THE THIRTEENTH. `sort` is deliberately NOT in `FILTER_SOURCES` —
+      // every consumer of that table would be wrong about it, since a sort
+      // writes `s=` rather than `f.<source>=` — and it is still a value this
+      // key legally holds: the config dialog's Sort | Filter tab writes it,
+      // and `select` SEEDS it. A twelve-value list would declare that
+      // element's own default invalid.
+      expect(src(type).values, type).toContain('sort');
+      expect(unknownWriteNote(type, 'specials', 'filterSource', 'sort')).toBeNull();
+    }
+    expect(src('select').values).toEqual(src('filter-checkbox').values);
+    // The seeded default of each carrier is in its own list, by construction.
+    expect(unknownWriteNote('filter-checkbox', 'specials', 'filterSource', 'category')).toBeNull();
+    const note = unknownWriteNote('filter-tag', 'specials', 'filterSource', 'bestseller')!;
+    expect(note).toMatch(/is not a value filter-tag's renderer knows/);
+    expect(note).toMatch(/purchase_history/);
+    // The registry proves what the platform HAS and is silent on what the
+    // renderer does with anything else, so no fallback is invented.
+    expect(note).not.toMatch(/renders as that/);
+  });
+
+  // THE SLIDER IS THE ONE FILTER THAT CANNOT SORT, and the one whose source is
+  // identity rather than a setting — it has no config dialog to put a choice
+  // in. Handing it the other five's thirteen would say a two-handle continuous
+  // control can be pointed at a colour swatch axis.
+  it('gives the slider only the sources it can express', () => {
+    const v = vocabularyForWrite('filter-slider', 'specials', 'filterSource')!;
+    expect(v.values).toEqual(['price']);
+    expect(v.readBy).toMatch(/valueMode:"range"/);
+    expect(unknownWriteNote('filter-slider', 'specials', 'filterSource', 'category')).toMatch(
+      /price/,
+    );
+    // And the keys it does not SEED are keys it does not have: a slider has no
+    // value list, so no match mode, no arity and no value mode.
+    for (const k of ['filterMatch', 'filterArity', 'filterValueMode']) {
+      expect(vocabularyForWrite('filter-slider', 'specials', k), k).toBeNull();
+    }
+  });
+
+  // THE FOUR SIBLING KEYS, whose vocabularies are joined to the dialog's own
+  // writes rather than derived from their names — nothing about `filterMatch`
+  // produces the draft field `matchMode`.
+  it('names the four keys the filter config dialog writes', () => {
+    const v = (type: string, key: string) => vocabularyForWrite(type, 'specials', key)!;
+    expect(v('filter-checkbox', 'filterValueMode').values).toEqual(['all', 'manual']);
+    expect(v('filter-checkbox', 'filterMatch').values).toEqual(['all', 'any']);
+    expect(v('filter-checkbox', 'filterBehavior').values).toEqual(['event', 'filter']);
+    // `''` IS LOAD-BEARING AND THE DIALOG NEVER WRITES IT. It means "follow the
+    // SHAPE" — a radio holds one value, everything else holds many — and it is
+    // what all four option-list filters SEED, while `FilterConfig.arity`
+    // resolves it away and names only the two an author picks. A list built
+    // from the union alone would call every filter in every shop invalid,
+    // which is the `backgroundSceneSource` defect one value smaller.
+    expect(v('filter-checkbox', 'filterArity').values).toEqual(['', 'multi', 'single']);
+    expect(unknownWriteNote('filter-checkbox', 'specials', 'filterArity', '')).toBeNull();
+    // A SELECT HOLDS ONE VALUE BY CONSTRUCTION, so it seeds no arity and no
+    // match mode and hears about neither; it does seed the behaviour.
+    expect(vocabularyForWrite('select', 'specials', 'filterArity')).toBeNull();
+    expect(vocabularyForWrite('select', 'specials', 'filterMatch')).toBeNull();
+    expect(v('select', 'filterBehavior').values).toEqual(['event', 'filter']);
+    // THE NAME COLLISION THE JOIN AVOIDS: `sources.ts` exports a type called
+    // `FilterValueMode` whose members are catalog | fixed | range | authored |
+    // text — a property of the SOURCE, not the value of
+    // `specials.filterValueMode`, whose seeded default is not one of them.
+    for (const wrong of ['catalog', 'fixed', 'range', 'authored', 'text']) {
+      expect(v('filter-checkbox', 'filterValueMode').values).not.toContain(wrong);
+    }
+    // A KEY WHOSE WRITE NAMES TWO DRAFT FIELDS SAYS NOTHING. `filterTargets` is
+    // written as `draft.value.behavior === 'event' ? [] : draft.value.targets`,
+    // and joining it to the first field it mentions would publish
+    // `filter | event` as the legal values of a list of node ids.
+    expect(vocabularyForWrite('filter-checkbox', 'specials', 'filterTargets')).toBeNull();
+    // Neither does a field the dialog writes that is not a closed union.
+    expect(vocabularyForWrite('filter-checkbox', 'specials', 'filterAxis')).toBeNull();
+    expect(vocabularyForWrite('filter-checkbox', 'specials', 'customName')).toBeNull();
+  });
+
+  // It rides in the RESULT an agent already reads, not in a new tool or a new
+  // argument — and the element the token budget measures is untouched, because
+  // a filter element is not a repeater.
+  it('reaches sb_traits_for without moving the budget', () => {
+    const out = traitsFor('filter-checkbox') as {
+      specials_values?: Record<string, { values: string[] }>;
+    };
+    expect(out.specials_values!.filterSource.values).toContain('sort');
+    expect(out.specials_values!.filterArity.values).toContain('');
+    expect(JSON.stringify(traitsFor('filter-checkbox')).length).toBeLessThan(16_000);
+    expect(JSON.stringify(traitsFor('list-dataset')).length).toBeLessThan(16_000);
   });
 });

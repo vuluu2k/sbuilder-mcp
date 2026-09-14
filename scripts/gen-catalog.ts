@@ -556,17 +556,24 @@ function reportUndocumentedRoutes(repo: string, spec: { paths: Record<string, un
  * whole argument for a check: the failure is silent, the output is plausible,
  * and the person running codegen is by definition not the person editing.
  *
- * Scoped to the FOUR directories this script actually reads, so an unrelated
+ * Scoped to the FIVE directories this script actually reads, so an unrelated
  * edit elsewhere in a big monorepo is not a reason to refuse. `--dirty` is the
  * deliberate override, for the one legitimate case: generating against a change
  * you are making yourself, to see what it would produce.
+ *
+ * `runtime/src` is the fifth and arrived last, with the 3D vocabularies read
+ * out of the browser island (Source C). It is the same file-for-file exposure
+ * the other four have: an agent told a shader id that only exists on somebody's
+ * unpushed branch is in exactly the position this check exists to prevent.
+ * `runtime/dist` is deliberately NOT covered — it is minified, it is generated,
+ * and nothing here reads it.
  */
 function assertCommitted(repo: string): void {
   if (process.argv.includes('--dirty')) {
     console.error('warning: --dirty — reading a working tree, so half-finished work can ship');
     return;
   }
-  const read = ['schema/src', 'editor/src', 'server/render', 'server/docs'];
+  const read = ['schema/src', 'editor/src', 'server/render', 'server/docs', 'runtime/src'];
   let out = '';
   try {
     out = execFileSync('git', ['-C', repo, 'status', '--porcelain', '--', ...read], {
@@ -1561,6 +1568,36 @@ export const API_DEFINITIONS: Record<string, unknown> = ${JSON.stringify(
           rejected.push(`${fn(at)} ${key}: no string case labels`);
           return;
         }
+        // A GUARD IS NOT A VOCABULARY, AND THE `default:` ARM DOES NOT TELL
+        // THEM APART. The ruling above — a switch with a `default:` proves
+        // completeness — is FALSE for a switch used as a FILTER, and this
+        // reader shipped a wrong list on npm because of it.
+        //
+        //   switch ConfigString(node, "backgroundSceneSource", "") {
+        //   case "effect", "gallery":   // ← EMPTY. no return, no value.
+        //   default:
+        //       return ""               // ← an early exit; "" is a CSS string
+        //   }                           //   here, not a value of the key.
+        //
+        // `bgSceneColorRule` asks "does this source support custom colours",
+        // which is a different question from "what may this key hold" — the
+        // answer to that one is five words (`nodes/helpers.go:bgSceneProps`
+        // switches on four of them, and `''` means OFF), so the reader
+        // published two of five and called the other three invalid.
+        //
+        // THE DISCRIMINATOR IS MECHANICAL: a normaliser's case arms RETURN; a
+        // guard's matching arm is EMPTY, because its whole purpose is to fall
+        // through to the code after the switch. Go has no implicit
+        // fallthrough, so an empty arm can mean nothing else. Checked against
+        // all seven sites this reader keeps — `popup/html.go:triggerType`,
+        // both `position` readers, `media-dataset`'s `layout` and
+        // `mediaRatioCss`, `product-image-feature`'s two — every one returns
+        // from every arm, and `bgSceneColorRule` was the only guard.
+        const empty = arms.find((a) => a.labels !== null && !a.lines.length);
+        if (empty) {
+          rejected.push(`${fn(at)} ${key}: a guard, not a normaliser — case "${empty.labels}" is empty`);
+          return;
+        }
         const one = (lines: string[]): string | null =>
           lines.length === 1 ? (/^return\s+(.+)$/.exec(lines[0])?.[1] ?? null) : null;
         const asString = (expr: string | null): { v: string } | { subject: true } | null => {
@@ -1709,6 +1746,558 @@ export const API_DEFINITIONS: Record<string, unknown> = ${JSON.stringify(
     return out;
   };
 
+  // ---- Source C: a DECLARED list, and the 3D feature that needed one ------
+  //
+  // A and B both read an IMPLEMENTATION — a renderer's switch, a picker's
+  // inline options — so each can only answer for a key whose implementation
+  // happens to enumerate it. The platform's 3D feature enumerates nothing
+  // either of them can see: the four shader ids live in the browser ISLAND
+  // (`runtime/`, a workspace this script had never read), the six built-in
+  // scenes are derived from a catalogue of builder functions, and the two word
+  // scales are `as const` arrays in the schema. Twelve keys across two
+  // surfaces, every one of them a NAME an agent cannot author without the list
+  // — the same argument that put 46 animation type names in this catalog.
+  //
+  // WHY A DECLARATION IS SAFE WHERE A GUARD IS NOT (see the rejection in
+  // `goVocab`): it is the platform's own statement of the COMPLETE set,
+  // written to be the one place the value is spelled. `BACKGROUND_SCENE_SOURCES`
+  // is the case that proves the difference in both directions — it carries
+  // FIVE values where `bgSceneProps` switches on four, because `''` means OFF
+  // and its own header calls that "the load-bearing state" that every carrier
+  // seeds. A reader that recovered `bgSceneProps`' four would have published a
+  // list calling the seeded default invalid, which is the same defect as the
+  // guard, one value smaller.
+  //
+  // THE KEY MAPPING IS READ, NEVER GUESSED. `editor/src/trait/sceneKeys.ts`
+  // declares both surfaces as `SceneVocabulary` objects whose every slot names
+  // its own namespace and key — `effect: cfg('effect')` on the inline element,
+  // `effect: cfg('backgroundSceneEffect')` behind a section, `source:
+  // special('source')` against `cfg('backgroundSceneSource')` — so one idea's
+  // two spellings come from the file that owns them. That is `KEY_FOR`'s rule
+  // one level up: a slot name is not a write key, and a surface that declares
+  // `null` for a slot (the background layer has no grain, the inline element
+  // no scrim) says so rather than being probed for a key it lacks.
+  //
+  // ABSENT IS SILENT, PRESENT-AND-UNPARSEABLE EXITS 1. `runtime/` is a
+  // standalone workspace; a checkout without it lacks the island, which is a
+  // deployment fact rather than a reason to publish a guess. A file that IS
+  // there and no longer yields its list means the table would be WRONG rather
+  // than missing, and this reader's whole defect history is wrong-not-missing.
+  const sceneVocab = (): Array<{ scope: string; vocab: ValueVocabulary }> => {
+    const file = (rel: string): string | null => {
+      const p = resolve(repo, rel);
+      return existsSync(p) ? readFileSync(p, 'utf8') : null;
+    };
+    // A flat `[...]` of single-quoted literals, by declaration name. `export`
+    // is OPTIONAL: `COLOR_MODES` is private to one inspector component and is
+    // still the complete set the author picks from, which is Source B's own
+    // proof of completeness reached through a `.vue` file instead of a `.ts`.
+    const listOf = (src: string, name: string): string[] | null => {
+      const m = new RegExp(`(?:^|\\n)\\s*(?:export\\s+)?const\\s+${name}\\b[^=\\n]*=\\s*\\[([^\\]]*)\\]`).exec(src);
+      if (!m) return null;
+      const v = [...m[1].matchAll(/'([^']*)'/g)].map((x) => x[1]);
+      return v.length ? v : null;
+    };
+    // The ids out of an array of OBJECTS. `GALLERY_SCENE_IDS` is derived
+    // (`GALLERY_CATALOGUE.map((s) => s.id)`) on purpose — its own comment says
+    // a seventh scene must be "one entry rather than an entry plus an id in a
+    // parallel list that nothing holds in step" — so the catalogue is what
+    // there is to read.
+    const idsOf = (src: string, name: string): string[] | null => {
+      const m = new RegExp(`(?:^|\\n)\\s*(?:export\\s+)?const\\s+${name}\\b[^=\\n]*=\\s*\\[`).exec(src);
+      if (!m) return null;
+      // The regex's own last character IS the opening bracket. Searching for
+      // the first `[` after the declaration instead finds the one inside the
+      // TYPE — `: readonly GalleryScene[]` — which matches and closes at once,
+      // and the catalogue reads as empty.
+      const open = m.index + m[0].length - 1;
+      // Bracket-matched rather than `braceBody`, which counts braces and would
+      // stop at the first `{ id: … }` — one scene of six.
+      let depth = 0;
+      for (let i = open; i < src.length; i++) {
+        const c = src[i];
+        if (c === "'" || c === '"' || c === '`') {
+          for (i++; i < src.length && src[i] !== c; i++) if (src[i] === '\\') i++;
+          continue;
+        }
+        if (c === '[') depth++;
+        else if (c === ']' && --depth === 0) {
+          const v = [...src.slice(open + 1, i).matchAll(/\bid:\s*'([^']*)'/g)].map((x) => x[1]);
+          return v.length ? v : null;
+        }
+      }
+      return null;
+    };
+    // THE ASSERTIONS LIVE HERE RATHER THAN IN THE TABLE-LEVEL BLOCK BELOW, and
+    // that placement is the whole of "absent is silent". An assertion outside
+    // this reader cannot tell a vocabulary that DRIFTED from one this
+    // deployment simply does not have, so it fires on both — and a checkout
+    // without `runtime/` would then be refused rather than described honestly.
+    // Measured: with `runtime/` absent the reader correctly falls to eight
+    // vocabularies, and an outer `gradient-mesh` assertion turned that into an
+    // exit 1. In here the file is in hand, so the question is answerable.
+    const named = (rel: string, name: string, how: 'list' | 'ids', must: string): string[] | null => {
+      const src = file(rel);
+      if (src === null) return null;
+      const v = how === 'ids' ? idsOf(src, name) : listOf(src, name);
+      if (!v) {
+        console.error(`${name} no longer reads as a list in ${rel} — a 3D vocabulary source moved`);
+        process.exit(1);
+      }
+      if (!v.includes(must)) {
+        console.error(`${name} in ${rel} no longer offers "${must}" — a 3D vocabulary source moved`);
+        process.exit(1);
+      }
+      return v;
+    };
+    // Each list in the file that OWNS it. The two word scales are read from
+    // the schema rather than from the island's own `SPEED`/`INTENSITY` tables:
+    // those are private, numeric, and hand-mirrored, while `SCENE_SPEEDS`'
+    // header records that they moved to the schema precisely so a second
+    // surface could share one declaration.
+    // `must` is one value that has to survive, so a shape change is caught by
+    // the RUN rather than by a reader noticing a short list months later.
+    const SLOTS: Record<string, { rel: string; name: string; how: 'list' | 'ids'; must: string }> = {
+      effect: { rel: 'runtime/src/services/effect-shaders.ts', name: 'EFFECT_IDS', how: 'list', must: 'gradient-mesh' },
+      gallery: { rel: 'runtime/src/services/gallery-scenes.ts', name: 'GALLERY_CATALOGUE', how: 'ids', must: 'podium' },
+      speed: { rel: 'schema/src/elements/spline-scene/meta.ts', name: 'SCENE_SPEEDS', how: 'list', must: 'slow' },
+      intensity: { rel: 'schema/src/elements/spline-scene/meta.ts', name: 'SCENE_INTENSITIES', how: 'list', must: 'soft' },
+      colors: { rel: 'editor/src/components/inspector/ScenePaletteRows.vue', name: 'COLOR_MODES', how: 'list', must: 'custom' },
+    };
+    // Which file each surface's `sources:` identifier lives in, the write key
+    // that surface must still produce, and one value that must still be in it.
+    // This is the slot the defect was in, and the only one whose list differs
+    // between the two surfaces: `''` is OFF on the layer and is absent from the
+    // inline element, where an unset `source` means Spline instead.
+    const SOURCE_LISTS: Record<string, { rel: string; must: string }> = {
+      SCENE_SOURCES: { rel: 'schema/src/elements/spline-scene/meta.ts', must: 'model' },
+      BACKGROUND_SCENE_SOURCES: { rel: 'schema/src/elements/backgroundScene.ts', must: '' },
+    };
+    const SOURCE_KEY: Record<string, string> = {
+      INLINE_SCENE_KEYS: 'source',
+      BACKGROUND_SCENE_KEYS: 'backgroundSceneSource',
+    };
+    const keysRel = 'editor/src/trait/sceneKeys.ts';
+    const keys = file(keysRel);
+    if (keys === null) return [];
+    const out: Array<{ scope: string; vocab: ValueVocabulary }> = [];
+    for (const [object, scope] of [
+      ['INLINE_SCENE_KEYS', 'spline-scene'],
+      ['BACKGROUND_SCENE_KEYS', '*'],
+    ] as const) {
+      const at = keys.indexOf(`export const ${object}`);
+      if (at < 0) {
+        console.error(`${object} is gone from ${keysRel} — the 3D key mapping moved`);
+        process.exit(1);
+      }
+      const body = braceBody(keys, keys.indexOf('{', at));
+      if (body === null) {
+        console.error(`${object} no longer reads as an object in ${keysRel}`);
+        process.exit(1);
+      }
+      const slot = (name: string): { target: 'config' | 'specials'; key: string } | null => {
+        const m = new RegExp(`\\n\\s*${name}:\\s*(cfg|special)\\('([^']+)'\\)`).exec(body);
+        return m ? { target: m[1] === 'cfg' ? 'config' : 'specials', key: m[2] } : null;
+      };
+      const add = (name: string, rel: string, list: string[] | null, from: string): string | null => {
+        const s = slot(name);
+        if (!s || !list) return null;
+        out.push({
+          scope,
+          vocab: {
+            target: s.target,
+            writeKey: s.key,
+            values: [...new Set(list)].sort(),
+            readBy: `${from} (${rel})`,
+          },
+        });
+        return s.key;
+      };
+      const sourcesName = /\n\s*sources:\s*([A-Z_]+)/.exec(body)?.[1];
+      if (!sourcesName || !SOURCE_LISTS[sourcesName]) {
+        console.error(`${object} no longer names a source list in ${keysRel}`);
+        process.exit(1);
+      }
+      const { rel, must } = SOURCE_LISTS[sourcesName];
+      const wrote = add('source', rel, named(rel, sourcesName, 'list', must), sourcesName);
+      // The source slot is the one every other slot hangs off, and it is the
+      // key `sb_set` warns on, so a rename that silently dropped it — or moved
+      // it to another key — would take the whole surface with it. Skipped only
+      // when the LIST's own file is absent, which is the deployment case.
+      if (wrote === null && file(rel) !== null) {
+        console.error(`${object} no longer declares its source slot in ${keysRel}`);
+        process.exit(1);
+      }
+      if (wrote !== null && wrote !== SOURCE_KEY[object]) {
+        console.error(`${object}'s source slot now writes "${wrote}", not "${SOURCE_KEY[object]}"`);
+        process.exit(1);
+      }
+      for (const [name, s] of Object.entries(SLOTS)) {
+        add(name, s.rel, named(s.rel, s.name, s.how, s.must), s.name);
+      }
+    }
+    console.error(`  3D vocabularies from the platform's own declarations: ${out.length}`);
+    return out;
+  };
+
+  // ---- Source C again: the STOREFRONT FILTER surface ----------------------
+  //
+  // `specials.filterSource` decides WHAT a filter control is pointed at, six
+  // elements seed it, and THIRTEEN values are legal — and the catalog carried
+  // none of them. Measured against each element's own prose (`contentTips` +
+  // `useWhen` + `avoidWhen` + `description`), the six named between 0 and 5 of
+  // the 13 and not one named the full set: filter-checkbox 5, filter-color 3,
+  // filter-radio 2, filter-slider 1, select 1, filter-tag 0.
+  //
+  // THE MISS IS SILENT, and worse than the normaliser cases this table was
+  // built for. `getFilterSource(id)` returns `undefined` for an unknown id —
+  // no throw — and `filtershared.go` writes `data-filter-source="<whatever was
+  // stored>"` verbatim into the published markup. The island then hydrates
+  // owning a query parameter the server answers for nobody, so the shopper gets
+  // a filter control that narrows NOTHING. Stored, saved, published, rendered.
+  //
+  // WHY THIS IS SOURCE C AND NOT A GO SWITCH OR A PICKER. `filters/sources.ts`
+  // opens by declaring itself "PURE DATA — no imports, and nothing here may
+  // import element meta", it is the one place a source is spelled, and it
+  // exports its own accessors. That is the same proof-of-completeness the 3D
+  // reader above relies on, and the opposite of the guard that produced this
+  // repo's `backgroundSceneSource` defect: a `switch` proves what one consumer
+  // BRANCHES on, a registry proves what the platform HAS.
+  //
+  // THE SORT IS THE THIRTEENTH AND IT IS DELIBERATELY NOT IN THE TABLE.
+  // `SORT_SOURCE` sits beside `FILTER_SOURCES` with a header explaining that
+  // every consumer of the table would be wrong about it — the facet endpoint
+  // would derive values from the catalogue, the query parsers would write
+  // `f.sort=` — while a sort actually writes `s=` / `s.<node>=`. It is still a
+  // value `specials.filterSource` legally holds: the config dialog's Sort |
+  // Filter tab writes exactly that word (`setKind`), and `select` SEEDS it. A
+  // twelve-value list would declare an element's own default invalid, which is
+  // the `backgroundSceneSource` defect arriving from the other direction.
+  //
+  // FOUR SIBLING KEYS RIDE ALONG, and they are NOT hand-listed. Every key the
+  // config dialog writes into `specials` from a draft field whose type in
+  // `FilterConfig` is a closed union of string literals is published with that
+  // union: `filterValueMode` (all | manual), `filterMatch` (any | all),
+  // `filterArity` ('' | single | multi) and `filterBehavior` (filter | event).
+  // The draft field is NOT derivable from the node key — `matchMode` writes
+  // `filterMatch`, `behavior` writes `filterBehavior`, `label` writes
+  // `customName` — so the mapping is read off the dialog's own `setNodeValue`
+  // calls, which is `KEY_FOR`'s rule one level up: a slot name is not a write
+  // key. A field typed `string` (source, axis, label) or `T[]` (targets,
+  // values) yields nothing and is silent rather than guessed at.
+  //
+  // AND THE NAME COLLISION IS THE TRAP THIS ARRANGEMENT AVOIDS. `sources.ts`
+  // exports a type called `FilterValueMode` whose members are
+  // `catalog | fixed | range | authored | text` — a property of the SOURCE, not
+  // the value of `specials.filterValueMode`, which is `all | manual` and lives
+  // under the same name in `editor/src/features/filters/types.ts`. A reader
+  // that matched on the type NAME would publish five words for a key whose
+  // seeded default is not one of them.
+  //
+  // THE SEEDED VALUE IS UNIONED IN, and that is `backgroundSceneSource`'s
+  // lesson stated as code rather than as a comment. `filterArity` seeds `''`
+  // on all four option-list filters and `''` is load-bearing — it means "follow
+  // the SHAPE", a radio holding one and everything else many — while the
+  // dialog RESOLVES it away and its union therefore names only the two the
+  // author picks. A value the platform itself seeds is legal by construction,
+  // so it can never be missing from a list this catalog publishes.
+  const filterVocab = (): Array<{ scope: string; vocab: ValueVocabulary }> => {
+    const SOURCES_REL = 'schema/src/filters/sources.ts';
+    const GROUPS_REL = 'schema/src/elements/filterGroups.ts';
+    const TYPES_REL = 'editor/src/features/filters/types.ts';
+    const DIALOG_REL = 'editor/src/components/filters/FilterConfigDialog.vue';
+    const file = (rel: string): string | null => {
+      const p = resolve(repo, rel);
+      return existsSync(p) ? readFileSync(p, 'utf8') : null;
+    };
+    const die = (why: string): never => {
+      console.error(`${why} — a storefront filter vocabulary source moved`);
+      process.exit(1);
+    };
+    // ABSENT IS SILENT, PRESENT-AND-UNPARSEABLE EXITS 1, the same discipline as
+    // above — with the honest caveat that this surface has no `runtime/`. That
+    // workspace is genuinely optional and a checkout really does arrive without
+    // it; `filters/sources.ts` is pulled in by the element registry itself (the
+    // filter elements seed a `filterSource` default), so a checkout missing it
+    // would fail long before this reader ran. The gate is kept anyway, because
+    // the alternative is a reader whose first line assumes a file exists, and
+    // every file BEHIND it exits 1: once the registry is in hand, a missing
+    // join partner means the table would be WRONG rather than missing, and
+    // wrong-not-missing is this reader's whole defect history.
+    const sourcesSrc = file(SOURCES_REL);
+    if (sourcesSrc === null) return [];
+
+    // The body of `= [` or `= Object.freeze([`, bracket-matched.
+    //
+    // COMMENTS ARE SKIPPED BEFORE STRINGS and that ordering is load-bearing
+    // rather than tidy: `FILTER_SOURCES` carries a dozen paragraphs of prose
+    // inside the array ("The BLOG's taxonomy", "the shopper's own words"), and
+    // a scanner that reads one of those apostrophes as a string opener runs
+    // past the closing bracket and returns the rest of the file. It is the same
+    // trap `braceBody` already records for `widgets.ts`, one delimiter over.
+    const arrayBody = (src: string, name: string, rel: string): string => {
+      const m = new RegExp(
+        `(?:^|\\n)\\s*(?:export\\s+)?const\\s+${name}\\b[^=\\n]*=\\s*(?:Object\\.freeze\\()?\\[`,
+      ).exec(src);
+      if (!m) return die(`${name} is gone from ${rel}`);
+      const open = m.index + m[0].length - 1;
+      let depth = 0;
+      for (let i = open; i < src.length; i++) {
+        const c = src[i];
+        const n = src[i + 1];
+        if (c === '/' && n === '/') {
+          i = src.indexOf('\n', i);
+          if (i < 0) break;
+          continue;
+        }
+        if (c === '/' && n === '*') {
+          i = src.indexOf('*/', i);
+          if (i < 0) break;
+          i += 1;
+          continue;
+        }
+        if (c === "'" || c === '"' || c === '`') {
+          for (i++; i < src.length && src[i] !== c; i++) if (src[i] === '\\') i++;
+          continue;
+        }
+        if (c === '[') depth++;
+        else if (c === ']' && --depth === 0) return src.slice(open + 1, i);
+      }
+      return die(`${name} no longer closes as an array in ${rel}`);
+    };
+    // The top-level `{ … }` objects of an array body, comments and strings
+    // skipped for the same reason.
+    const objectsIn = (body: string): string[] => {
+      const out: string[] = [];
+      for (let i = 0; i < body.length; i++) {
+        const c = body[i];
+        const n = body[i + 1];
+        if (c === '/' && n === '/') {
+          i = body.indexOf('\n', i);
+          if (i < 0) break;
+          continue;
+        }
+        if (c === '/' && n === '*') {
+          i = body.indexOf('*/', i);
+          if (i < 0) break;
+          i += 1;
+          continue;
+        }
+        if (c === "'" || c === '"' || c === '`') {
+          for (i++; i < body.length && body[i] !== c; i++) if (body[i] === '\\') i++;
+          continue;
+        }
+        if (c === '{') {
+          const b = braceBody(body, i);
+          if (b === null) break;
+          out.push(b);
+          i += b.length + 1;
+        }
+      }
+      return out;
+    };
+    const commentless = (body: string): string =>
+      body.replace(/\/\*[\s\S]*?\*\//g, ' ').replace(/\/\/[^\n]*/g, ' ');
+    // A frozen array of literals, with `...OTHER` spreads resolved against the
+    // lists already read. `FILTER_CONFIG_TYPES` is literally
+    // `[...FILTER_ELEMENT_TYPES, 'select']`, so a reader that took only the
+    // quoted words would report the select as the entire family.
+    const frozen = (src: string, name: string, rel: string, known: Map<string, string[]>): string[] => {
+      const body = commentless(arrayBody(src, name, rel));
+      const out: string[] = [];
+      for (const s of body.matchAll(/\.\.\.\s*([A-Za-z0-9_]+)/g)) {
+        const v = known.get(s[1]);
+        if (!v) return die(`${name} in ${rel} spreads ${s[1]}, which this reader has not read`);
+        out.push(...v);
+      }
+      out.push(...[...body.matchAll(/'([^']*)'/g)].map((x) => x[1]));
+      const uniq = [...new Set(out)];
+      if (!uniq.length) return die(`${name} in ${rel} reads as empty`);
+      return uniq;
+    };
+
+    // ---- the sources themselves ----
+    const rows = objectsIn(arrayBody(sourcesSrc, 'FILTER_SOURCES', SOURCES_REL)).map((o) => ({
+      id: /\bid:\s*'([^']*)'/.exec(o)?.[1],
+      valueMode: /\bvalueMode:\s*'([^']*)'/.exec(o)?.[1],
+    }));
+    if (!rows.length) die('FILTER_SOURCES reads as empty');
+    for (const r of rows) {
+      if (!r.id || !r.valueMode) die(`a FILTER_SOURCES row no longer declares id + valueMode`);
+    }
+    const facetIds = rows.map((r) => r.id as string);
+    const sortMatch = /\bexport const SORT_SOURCE\s*=\s*'([^']*)'/.exec(sourcesSrc);
+    const sortSource: string = sortMatch ? sortMatch[1] : die(`SORT_SOURCE is gone from ${SOURCES_REL}`);
+    // One value per shape that has to survive, so the run catches a drift
+    // rather than a reader noticing a short list months later. `category` is
+    // the seeded default of every option-list filter, `price` is the range
+    // source the slider is, and `search` is the one whose values a shopper
+    // rather than an author supplies.
+    for (const must of ['category', 'price', 'search']) {
+      if (!facetIds.includes(must)) die(`FILTER_SOURCES no longer offers "${must}"`);
+    }
+
+    // ---- who may hold one ----
+    const groupsSrc = file(GROUPS_REL);
+    if (groupsSrc === null) return die(`${GROUPS_REL} is gone`);
+    const known = new Map<string, string[]>();
+    const elementTypes = frozen(groupsSrc, 'FILTER_ELEMENT_TYPES', GROUPS_REL, known);
+    known.set('FILTER_ELEMENT_TYPES', elementTypes);
+    const configTypes = frozen(groupsSrc, 'FILTER_CONFIG_TYPES', GROUPS_REL, known);
+    if (!configTypes.includes('select')) die('FILTER_CONFIG_TYPES no longer holds the select');
+
+    // THE SLIDER IS THE ONE FILTER THAT CANNOT SORT, and its own meta says so
+    // outright: "Its SOURCE is fixed to `price`, and that is identity rather
+    // than a setting … AND THEREFORE IT IS THE ONE FILTER THAT CANNOT SORT.
+    // Since 2026-09-04 the other four plus the select open their config dialog
+    // on a Sort | Filter choice; this one has no dialog to put that choice in."
+    // A two-handle continuous control can only express a numeric range, so its
+    // vocabulary is DERIVED — the ids whose `valueMode` is `range` — rather
+    // than the literal `['price']` the meta names, because a second range
+    // source would reach this table on the next codegen and a copied literal
+    // would not. It renders `nodes.SpecialString(n, "filterSource", "price")`,
+    // so a slider pointed at `category` publishes a numeric range against a
+    // categorical facet and matches nothing, silently.
+    const RANGE_ONLY = 'filter-slider';
+    if (configTypes.includes(RANGE_ONLY)) {
+      die(`${RANGE_ONLY} now opens the config dialog, so its source is no longer identity`);
+    }
+    const rangeIds = rows.filter((r) => r.valueMode === 'range').map((r) => r.id as string);
+    if (!rangeIds.length) die('no FILTER_SOURCES row declares valueMode "range"');
+
+    // ---- the sibling keys, and the mapping that joins them ----
+    const typesSrc = file(TYPES_REL);
+    const dialogSrc = file(DIALOG_REL);
+    if (typesSrc === null) return die(`${TYPES_REL} is gone`);
+    if (dialogSrc === null) return die(`${DIALOG_REL} is gone`);
+    const cfgAt = typesSrc.indexOf('interface FilterConfig');
+    if (cfgAt < 0) die(`FilterConfig is gone from ${TYPES_REL}`);
+    const cfgBody = braceBody(typesSrc, typesSrc.indexOf('{', cfgAt));
+    if (cfgBody === null) die(`FilterConfig no longer reads as an interface in ${TYPES_REL}`);
+    // A closed union of single-quoted literals, or nothing. A right-hand side
+    // that is anything else — `string`, `T[]`, a union with a non-literal
+    // member — yields null, because publishing a "closed" list for a key that
+    // also takes free text is the confident wrong answer this table exists to
+    // remove.
+    const literalUnion = (rhs: string): string[] | null => {
+      const values = [...rhs.matchAll(/'([^']*)'/g)].map((x) => x[1]);
+      if (!values.length) return null;
+      return rhs.replace(/'[^']*'/g, '').replace(/[|\s]/g, '') === '' ? values : null;
+    };
+    const unionOf = (field: string): string[] | null => {
+      const m = new RegExp(`\\n\\s*${field}\\??:\\s*([^;\\n]+);`).exec(cfgBody as string);
+      if (!m) return null;
+      const rhs = m[1].trim();
+      const direct = literalUnion(rhs);
+      if (direct) return direct;
+      if (!/^[A-Za-z0-9_]+$/.test(rhs)) return null;
+      const alias = new RegExp(`\\n\\s*export type ${rhs}\\s*=\\s*([^;]+);`).exec(typesSrc);
+      return alias ? literalUnion(alias[1]) : null;
+    };
+    // `store.setNodeValue(id, 'specials', '<key>', <expression>)` — the
+    // platform's own statement of which draft field lands on which node key,
+    // taken from the WRITE rather than from the name, because no name-mangling
+    // produces `matchMode` from `filterMatch` or `label` from `customName`.
+    //
+    // THE VALUE EXPRESSION IS PAREN-MATCHED AND MUST NAME EXACTLY ONE FIELD,
+    // and both halves of that are a defect this reader already had. A fixed
+    // window instead of the real call is not merely imprecise: `matchAll`
+    // CONSUMES the window, so four of the thirteen calls fell inside an earlier
+    // one's tail and were never seen at all. And "the first `draft.value.X` in
+    // the call" is wrong on the one call that reads two — `filterTargets` is
+    // `draft.value.behavior === 'event' ? [] : draft.value.targets.slice()` —
+    // which joined the targets key to the BEHAVIOUR's union and would have
+    // published `filter | event` as the legal values of a list of node ids.
+    // Two fields is ambiguous, so it says nothing; one field inside a ternary
+    // (`filterMatch`) is not ambiguous and is kept.
+    const callTail = (src: string, from: number): string => {
+      let depth = 1;
+      for (let i = from; i < src.length; i++) {
+        const c = src[i];
+        const n = src[i + 1];
+        if (c === '/' && n === '/') {
+          i = src.indexOf('\n', i);
+          if (i < 0) break;
+          continue;
+        }
+        if (c === '/' && n === '*') {
+          i = src.indexOf('*/', i);
+          if (i < 0) break;
+          i += 1;
+          continue;
+        }
+        if (c === "'" || c === '"' || c === '`') {
+          for (i++; i < src.length && src[i] !== c; i++) if (src[i] === '\\') i++;
+          continue;
+        }
+        if (c === '(') depth++;
+        else if (c === ')' && --depth === 0) return src.slice(from, i);
+      }
+      return '';
+    };
+    const writes = new Map<string, string>();
+    const ambiguous = new Set<string>();
+    for (const m of dialogSrc.matchAll(/setNodeValue\(\s*id,\s*'specials',\s*'([A-Za-z0-9_]+)',/g)) {
+      const tail = callTail(dialogSrc, m.index + m[0].length);
+      const fields = new Set([...tail.matchAll(/draft\.value\.([A-Za-z0-9_]+)/g)].map((f) => f[1]));
+      if (fields.size !== 1) {
+        ambiguous.add(m[1]);
+        continue;
+      }
+      const field = [...fields][0];
+      // A key written twice from two different fields is the same ambiguity
+      // arriving across calls rather than within one.
+      if (writes.get(m[1]) !== undefined && writes.get(m[1]) !== field) ambiguous.add(m[1]);
+      writes.set(m[1], field);
+    }
+    for (const k of ambiguous) writes.delete(k);
+    if (!writes.size) die(`${DIALOG_REL} no longer writes specials through setNodeValue`);
+    const siblings = new Map<string, string[]>();
+    for (const [key, field] of writes) {
+      if (key === 'filterSource') continue;
+      const v = unionOf(field);
+      if (v) siblings.set(key, v);
+    }
+    // One assertion per key the dialog is known to carry, on a value that would
+    // be wrong if either half of the join drifted. `filterMatch` is the shape
+    // that proves the join itself: nothing about the name `filterMatch` would
+    // produce the draft field `matchMode`.
+    for (const [key, must] of [
+      ['filterValueMode', 'manual'],
+      ['filterMatch', 'any'],
+      ['filterArity', 'single'],
+      ['filterBehavior', 'event'],
+    ] as const) {
+      if (!siblings.get(key)?.includes(must)) {
+        die(`specials.${key} no longer joins to a union offering "${must}"`);
+      }
+    }
+
+    const out: Array<{ scope: string; vocab: ValueVocabulary }> = [];
+    const emit = (scope: string, writeKey: string, values: string[], readBy: string) => {
+      // A key an element does not SEED is a key it does not have — the rule
+      // `sharedVocabularies` already applies to the `*` scope, applied here so
+      // the slider never hears about a match mode it has no control for and the
+      // select never hears about an arity its island ignores by construction.
+      const seeded = elements[scope]?.defaults?.specials as Record<string, unknown> | undefined;
+      if (!seeded || !(writeKey in seeded)) return;
+      const seed = seeded[writeKey];
+      const all = [...new Set(typeof seed === 'string' ? [...values, seed] : values)];
+      out.push({ scope, vocab: { target: 'specials', writeKey, values: all.sort(), readBy } });
+    };
+    const sourceReadBy = `FILTER_SOURCES + SORT_SOURCE (${SOURCES_REL})`;
+    for (const type of configTypes) emit(type, 'filterSource', [...facetIds, sortSource], sourceReadBy);
+    emit(RANGE_ONLY, 'filterSource', rangeIds, `FILTER_SOURCES valueMode:"range" (${SOURCES_REL})`);
+    for (const [key, values] of siblings) {
+      const field = writes.get(key) as string;
+      for (const type of new Set([...configTypes, ...elementTypes, RANGE_ONLY])) {
+        emit(type, key, values, `FilterConfig.${field} (${TYPES_REL})`);
+      }
+    }
+    console.error(`  storefront filter vocabularies from the platform's own declarations: ${out.length}`);
+    return out;
+  };
+
   const elementValues: Record<string, Record<string, ValueVocabulary>> = {};
   const put = (scope: string, key: string, v: ValueVocabulary) => {
     (elementValues[scope] ??= {})[key] = v;
@@ -1718,6 +2307,15 @@ export const API_DEFINITIONS: Record<string, unknown> = ${JSON.stringify(
     else if (elements[scope]) put(scope, vocab.writeKey, vocab);
     // A renderer directory with no element of that name is a shared subtree
     // (`overlayplace`), not an element — it scopes to nothing and says nothing.
+  }
+  for (const { scope, vocab } of sceneVocab()) {
+    if (scope === '*') put('*', vocab.writeKey, vocab);
+    else if (elements[scope]) put(scope, vocab.writeKey, vocab);
+  }
+  // Element-scoped by construction — a filter key belongs to the elements that
+  // SEED it and to nothing else, so there is no `*` case to answer for.
+  for (const { scope, vocab } of filterVocab()) {
+    if (elements[scope]) put(scope, vocab.writeKey, vocab);
   }
   for (const [control, v] of editorVocab()) {
     for (const el of Object.values(elements)) {
@@ -1753,6 +2351,12 @@ export const API_DEFINITIONS: Record<string, unknown> = ${JSON.stringify(
     ['media-dataset', 'mediaImageRatio', 'auto'],
     // Source A, the ordinary closed normaliser, including its own fallback.
     ['tab', 'tabPosition', 'top'],
+    // Source C is asserted INSIDE `sceneVocab`, not here. Every list it reads
+    // may legitimately be absent — `runtime/` is a standalone workspace — and
+    // an assertion at this level cannot tell "the reader drifted" from "this
+    // deployment lacks the feature", so it would refuse the second. Measured:
+    // a checkout without `runtime/` falls to eight vocabularies correctly, and
+    // a `gradient-mesh` assertion placed here turned that into an exit 1.
   ] as const) {
     const v = elementValues[type]?.[key];
     if (!v?.values.includes(expect)) {

@@ -65,7 +65,7 @@ afternoon: 107 → 108 elements and 484 → 486 operations while this repo sat s
 WB_REPO=/path/to/web_builder npm run codegen:check
 ```
 
-**Codegen now REFUSES a checkout that is not published** — uncommitted changes in the four
+**Codegen now REFUSES a checkout that is not published** — uncommitted changes in the five
 directories it reads, OR commits those directories carry that the upstream does not have. The
 second half was added the day after the first, because the first had a hole exactly the size
 of the next thing that happened: a `hoverSwapImage` feature sat COMMITTED on a local main,
@@ -79,7 +79,8 @@ was on no remote branch, so the catalog described an element no deployment had. 
 remotes at all says nothing rather than refusing — nothing to measure against is not a
 failure. Originally, and still, for
 uncommitted changes
-(`schema/src`, `editor/src`, `server/render`, `server/docs`), naming the files and the worktree
+(`schema/src`, `editor/src`, `server/render`, `server/docs`, `runtime/src`), naming the files
+and the worktree
 command. It had to become a check rather than another paragraph: the warning below was written
 after a `bundle-items` element went in from one concurrent session, and a `cart-count` element
 plus 193 lines around it went in from another **on the day that warning was being read**. The
@@ -1676,6 +1677,144 @@ that accounts for them.
   A WARNING, never a refusal: the platform accepts the value, so refusing would invent a rule
   it does not have and would block a caller writing a word a newer deployment understands and
   this catalog does not.
+
+  **AND THIS ENTRY'S CENTRAL RULING WAS FALSE FOR ONE SHAPE OF SWITCH, WHICH SHIPPED A WRONG
+  VOCABULARY TO npm IN 0.42.0.** The reader that grew out of the paragraphs above took *a Go
+  `switch` over a config key with a `default:` arm is a complete vocabulary* — the `default:`
+  catches everything the cases do not, so the cases ARE the list. That is true of a NORMALISER
+  and false of a GUARD, and `nodes/helpers.go:bgSceneColorRule` is a guard:
+
+  ```go
+  switch ConfigString(node, "backgroundSceneSource", "") {
+  case "effect", "gallery":      // ← EMPTY ARM. no return, no value.
+  default:
+      return ""                  // ← an early exit; "" is a CSS string here,
+  }                              //   not a value of backgroundSceneSource.
+  ```
+
+  It asks *does this source support custom colours*, which is a different question from *what
+  may this key hold* — and the catalog published `['', 'effect', 'gallery']` for a key that
+  holds five words, so an agent was told `spline` and `model` were invalid. A partial list is
+  the failure this table exists to prevent, arriving through the thing that was supposed to
+  fix it.
+
+  **THE DISCRIMINATOR IS MECHANICAL, and it is the fix rather than the value: a normaliser's
+  case arms RETURN; a guard's matching arm is EMPTY**, because falling through to the code
+  after the switch is its whole purpose. Go has no implicit fallthrough, so an empty arm can
+  mean nothing else. Checked against all seven sites the reader kept — `popup`'s `triggerType`,
+  both `position` readers, `media-dataset`'s `layout` and `mediaRatioCss`,
+  `product-image-feature`'s two — every one returns from every arm, and this was the only
+  guard. A rejected switch falls back to SILENCE.
+
+  **THE RIGHT ANSWER WAS NOT IN THE GO AT ALL, and taking it from there would have been wrong
+  one value smaller.** `bgSceneProps` (`helpers.go:1686`) switches on the four sources that
+  DRAW something; the key's own declaration — `BACKGROUND_SCENE_SOURCES` in
+  `schema/src/elements/backgroundScene.ts` — carries FIVE, because `''` is OFF, is the seeded
+  default, and its header calls it "the load-bearing state". A list built from `bgSceneProps`
+  would have called every unconfigured section in the shop invalid.
+
+  So there is a **Source C: the platform's own declared list**, and it closed TEN more keys
+  that were in no catalog because both older readers read an IMPLEMENTATION. The 3D feature
+  enumerates nothing either can see — four shader ids in the browser ISLAND, six built-in
+  scenes derived from a catalogue of builder functions, two word scales as `as const` arrays —
+  and every one is a NAME an agent cannot author without the list, the same argument that put
+  46 animation type names here. `sb_traits_for` grew by ~900 bytes on the four carriers, on a
+  16,000 ceiling measured against `list-dataset` (14,385, unmoved).
+
+  **`runtime/src` IS THE FIFTH SOURCE DIRECTORY, and `runtime/dist` is deliberately not.** The
+  island's `EFFECT_IDS` and `GALLERY_CATALOGUE` live there; `dist` is minified and generated,
+  which is why the dead-key scan already skipped it. The published/dirty checks cover the new
+  directory exactly as they cover the other four — a vocabulary read from unpushed runtime work
+  is the same failure those checks exist to prevent — and `runtime/` had been read by the
+  dead-key scan while being covered by neither.
+
+  **THE KEY MAPPING IS READ, NEVER GUESSED.** `editor/src/trait/sceneKeys.ts` declares both
+  surfaces as `SceneVocabulary` objects naming each slot's own namespace and key, so one idea's
+  two spellings come from the file that owns them: `config.backgroundSceneEffect` behind a
+  section against `config.effect` on the inline `spline-scene`, and `config.backgroundSceneSource`
+  against `specials.source` — a NAMESPACE change no name-mangling would produce. That is
+  `KEY_FOR`'s rule one level up.
+
+  **ABSENT IS SILENT; PRESENT-AND-UNPARSEABLE EXITS 1 — and the assertions had to move for that
+  to be true.** `runtime/` is a standalone workspace a checkout may lack, so each list is read
+  independently and a missing one drops its own entry. The first version put the
+  `gradient-mesh` / `podium` assertions in codegen's table-level block, where they cannot tell
+  "the reader drifted" from "this deployment lacks the feature": measured, a checkout without
+  `runtime/` fell correctly to eight vocabularies and the assertion turned that into an exit 1.
+  They live inside the reader now, where the file is in hand.
+
+  **AND SOURCE C THEN CLOSED THE LARGEST HOLE LEFT, WHICH WAS THE STOREFRONT FILTER SURFACE —
+  six elements, thirteen values, and the catalog carried none of them.**
+  `specials.filterSource` decides what a filter control is POINTED AT. Measured against each
+  element's own prose (`contentTips` + `useWhen` + `avoidWhen` + `description`), the six named
+  between 0 and 5 of the 13 and not one named the full set: `filter-checkbox` 5,
+  `filter-color` 3, `filter-radio` 2, `filter-slider` 1, `select` 1, `filter-tag` 0.
+  `search-input` is the counter-example that proves the platform CAN do this — seven lines of
+  `contentTips` naming `searchEntity`, `searchBehavior`, `searchScope` and `searchDisplay` with
+  the meaning of each value — and it is prose, which is why its siblings have none.
+
+  The miss is worse than the normaliser cases above. `getFilterSource(id)` returns `undefined`
+  without throwing (`schema/src/filters/sources.ts`), and `filtershared.go:187` writes
+  `data-filter-source="<whatever was stored>"` VERBATIM into the published markup — so the
+  island hydrates owning a query parameter the server answers for nobody, and the shopper gets
+  a filter control that narrows NOTHING. Stored, saved, published, rendered.
+
+  `schema/src/filters/sources.ts` is the best source in the whole set: it opens by declaring
+  itself "PURE DATA — no imports, and nothing here may import element meta", it is the one
+  place a source is spelled, and it exports its own accessors. 57 element vocabularies across
+  23 scopes, from 34 across 18.
+
+  - **THE THIRTEENTH VALUE IS `sort`, AND IT IS DELIBERATELY NOT IN `FILTER_SOURCES`.** Its own
+    header says every consumer of that table would be wrong about it — the facet endpoint would
+    derive values from the catalogue, the query parsers would write `f.sort=` — while a sort
+    actually writes `s=` / `s.<node>=`. It is still a value the key legally holds: the config
+    dialog's Sort | Filter tab writes it, and `select` SEEDS it. A twelve-value list would
+    declare that element's own default invalid, which is `backgroundSceneSource` from the other
+    direction.
+  - **THE SLIDER IS THE ONE FILTER THAT CANNOT SORT, and it gets `price` ALONE.** Its meta says
+    so outright — "Its SOURCE is fixed to `price`, and that is identity rather than a setting …
+    the other four plus the select open their config dialog on a Sort | Filter choice; this one
+    has no dialog to put that choice in". It renders
+    `nodes.SpecialString(n, "filterSource", "price")`, so a slider aimed at `category` publishes
+    a numeric range against a categorical facet and matches nothing. DERIVED (the ids whose
+    `valueMode` is `range`) rather than the literal the meta names, so a second range source
+    reaches it on the next codegen. It is the only legitimate one-value vocabulary in the
+    table, and `test/config-vocabulary.test.ts` refuses singletons everywhere else BY NAME
+    rather than by loosening the bound.
+  - **FOUR SIBLING KEYS RIDE ALONG AND ARE NOT HAND-LISTED.** Every key the config dialog
+    writes into `specials` from a draft field whose type in `FilterConfig`
+    (`editor/src/features/filters/types.ts`) is a closed union of string literals is published
+    with that union: `filterValueMode` (all | manual), `filterMatch` (any | all), `filterArity`
+    ('' | single | multi), `filterBehavior` (filter | event).
+  - **THE JOIN IS READ OFF THE DIALOG'S OWN `setNodeValue` CALLS**, because no name-mangling
+    produces `matchMode` from `filterMatch` or `label` from `customName`. The value expression
+    is PAREN-MATCHED and must name exactly ONE draft field, and both halves of that were a
+    defect this reader had first: a fixed 200-character window does not merely lose precision,
+    `matchAll` CONSUMES it, so four of the thirteen calls fell inside an earlier one's tail and
+    were never seen. And "the first `draft.value.X`" is wrong on the one call that reads two —
+    `filterTargets` is `draft.value.behavior === 'event' ? [] : draft.value.targets.slice()` —
+    which joined a list of node ids to the BEHAVIOUR's union and would have published
+    `filter | event` as its legal values.
+  - **`''` ON `filterArity` IS LOAD-BEARING AND THE DIALOG NEVER WRITES IT.** It means "follow
+    the SHAPE" — a radio holds one value, everything else many — and it is what all four
+    option-list filters SEED, while `FilterConfig.arity` resolves it away and names only the
+    two an author picks. So the SEEDED value is unioned in: a value the platform itself seeds
+    is legal by construction and can never be missing from a list this catalog publishes. That
+    is `backgroundSceneSource`'s lesson stated as code rather than as a paragraph.
+  - **THE NAME COLLISION IS THE TRAP THE JOIN AVOIDS.** `sources.ts` exports a type called
+    `FilterValueMode` whose members are `catalog | fixed | range | authored | text` — a
+    property of the SOURCE. `specials.filterValueMode` is `all | manual`, under the same type
+    name in a different file. A reader that matched on the type NAME would publish five words
+    for a key whose seeded default is not one of them.
+  - **MEMBERSHIP IS THE SEED**, the rule `sharedVocabularies` already applies to the `*` scope:
+    a key an element does not seed is a key it does not have. So the slider never hears about a
+    match mode it has no control for, and the `select` — which holds one value by construction
+    — never hears about an arity its island ignores.
+
+  **NO NEW TOOL AND NO PROSE.** It rides in `sb_traits_for`'s `specials_values` and `sb_set`'s
+  warning. Measured: `filter-checkbox` 6,478 bytes, `filter-tag` 6,347, `select` 5,199,
+  `filter-slider` 5,452 — against a 16,000 ceiling the budget test measures on `list-dataset`,
+  still 14,385 and unmoved, because a filter element is not a repeater.
 
 - **A MULTI-LANGUAGE STORE WAS REACHABLE AND UNSAFE, and the unsafe half breaks the page
   rather than degrading it.** Every translations route is in the catalog — read, write,
