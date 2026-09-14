@@ -2298,6 +2298,32 @@ export const API_DEFINITIONS: Record<string, unknown> = ${JSON.stringify(
     return out;
   };
 
+  // A DECLARATION OUTRANKS A RENDERER, AND THE ORDER BELOW IS THAT RULE.
+  //
+  // `put` overwrites, so the LAST source to speak for a `scope + key` wins, and
+  // the sequence is deliberately Source A (Go) → Source C (declarations) →
+  // Source B (editor pickers). Reordering these loops would silently invert it.
+  //
+  // The platform states the reason, in the words of the person who owns that
+  // repo: "the schema is the vocabulary and `server/render` is only ever an
+  // emitter of it. Anything in `render/nodes/*.go` that looks like it enumerates
+  // a vocabulary is enumerating what it can DRAW, which is a SUBSET and drifts
+  // ON PURPOSE — `gallery` and `model` each spent a wave as declared-but-not-
+  // drawable." So a Go list is a floor, never a ceiling, and preferring it over
+  // a declaration under-reports by exactly the values the platform has declared
+  // and not yet drawn.
+  //
+  // That is not hypothetical: `backgroundSceneSource` shipped in 0.42.0 reading
+  // three values off a Go GUARD. Source C running after Source A is what
+  // replaced it with the declared five.
+  //
+  // NO CHECK GUARDS THIS, AND ONE CANNOT BE BUILT — which is why the rule is
+  // pinned by `test/config-vocabulary.test.ts` instead. Where a declaration
+  // exists this precedence already resolves it; where none exists there is
+  // nothing to compare a Go list against, so an under-report is undetectable by
+  // construction. Measured at this commit: all six remaining Source A entries
+  // have no competing declaration, and on the four whose element prose also
+  // names values, the prose names a SUBSET every time — no under-report today.
   const elementValues: Record<string, Record<string, ValueVocabulary>> = {};
   const put = (scope: string, key: string, v: ValueVocabulary) => {
     (elementValues[scope] ??= {})[key] = v;

@@ -451,3 +451,60 @@ describe('what a key is allowed to hold, scoped to the element', () => {
     expect(JSON.stringify(traitsFor('list-dataset')).length).toBeLessThan(16_000);
   });
 });
+
+/**
+ * A DECLARATION OUTRANKS A RENDERER, and nothing but this test says so.
+ *
+ * `gen-catalog.ts` establishes the rule by the ORDER it runs its readers in —
+ * Source A (Go) first, Source C (declarations) after, so the declaration
+ * overwrites. That is correct and it is INVISIBLE: reordering two loops would
+ * invert it with every test still green and the catalog quietly under-reporting.
+ *
+ * The platform's own owner states why, and the sentence is the whole reason
+ * this test exists: "the schema is the vocabulary and `server/render` is only
+ * ever an emitter of it. Anything in `render/nodes/*.go` that looks like it
+ * enumerates a vocabulary is enumerating what it can DRAW, which is a SUBSET
+ * and drifts on purpose — `gallery` and `model` each spent a wave as
+ * declared-but-not-drawable."
+ *
+ * `backgroundSceneSource` is the case that proves it rather than an example
+ * chosen to fit: 0.42.0 shipped it with three values read off a Go GUARD, and
+ * the declared answer is five. It is asserted here by VALUE and by SOURCE,
+ * because a list that happened to be right while being read from the renderer
+ * would pass a values-only check and fail the next time the platform declared
+ * something it had not drawn yet.
+ */
+describe('a declared vocabulary outranks the renderer that draws it', () => {
+  it('backgroundSceneSource comes from the declaration, not from the Go', () => {
+    const v = vocabularyForWrite('flex-section', 'config', 'backgroundSceneSource');
+    expect(v).not.toBeNull();
+    // The five the platform DECLARES. `''` is the OFF state and the seeded
+    // default of every carrier, so a list without it calls every unconfigured
+    // section invalid — the defect 0.42.0 shipped, one value smaller.
+    expect(v!.values).toEqual(expect.arrayContaining(['', 'effect', 'gallery', 'model', 'spline']));
+    // `model` and `spline` are exactly the two a renderer-derived list loses.
+    expect(v!.readBy).not.toMatch(/\.go\b/);
+    expect(v!.readBy).toMatch(/backgroundScene\.ts/);
+  });
+
+  it('no Go-sourced entry is contradicted by a declaration for the same key', () => {
+    // The rule as a PROPERTY rather than one fixture: wherever a key has a
+    // vocabulary at all, it must not be the renderer's copy if a declaration
+    // was available. A declaration-sourced entry naming a `.go` file as its
+    // origin is the inversion this test exists to catch.
+    const goSourced: string[] = [];
+    for (const [scope, table] of Object.entries(ELEMENT_VALUES)) {
+      for (const [key, v] of Object.entries(table)) {
+        if (/\.go\b/.test(v.readBy)) goSourced.push(`${scope}.${key}`);
+      }
+    }
+    // A floor, not a ceiling: Go entries are legitimate where nothing declares
+    // the key. What must never appear is a 3D or filter key among them, because
+    // both of those surfaces DO declare and the declaration must have won.
+    for (const id of goSourced) {
+      expect(id, `${id} is read from the renderer though its surface declares`).not.toMatch(
+        /backgroundScene|filterSource|filterBehavior|filterMatch|filterValueMode|filterArity/i,
+      );
+    }
+  });
+});
