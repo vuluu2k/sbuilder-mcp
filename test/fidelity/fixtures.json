@@ -1,10 +1,36 @@
 {
-  "widths": [1440, 390],
+  "widths": [
+    1440,
+    390
+  ],
   "pages": [
-    { "url": "https://ttgshop.vn/quy-dinh-bao-hanh", "note": "Vietnamese shop, a real table, long lists" },
-    { "url": "https://ttgshop.vn/", "note": "dense shop home, carousels — 2,095 nodes at 100% coverage since the node cap was removed" },
-    { "url": "https://modelcontextprotocol.io/", "note": "documentation, grid-heavy, code blocks" },
-    { "url": "https://www.rust-lang.org/", "note": "marketing, hero and feature rows, nav-heavy chrome" },
-    { "url": "https://example.com/", "note": "the floor: a page with almost nothing on it" }
+    {
+      "url": "https://ttgshop.vn/quy-dinh-bao-hanh",
+      "note": "Vietnamese shop, a real table, long lists"
+    },
+    {
+      "url": "https://ttgshop.vn/",
+      "note": "dense shop home, carousels — 2,095 nodes at 100% coverage since the node cap was removed"
+    },
+    {
+      "url": "https://modelcontextprotocol.io/",
+      "note": "documentation, grid-heavy, code blocks"
+    },
+    {
+      "url": "https://www.rust-lang.org/",
+      "note": "marketing, hero and feature rows, nav-heavy chrome"
+    },
+    {
+      "url": "https://example.com/",
+      "note": "the floor: a page with almost nothing on it"
+    },
+    {
+      "url": "https://ttgshop.vn/ban-phim",
+      "note": "a shop CATEGORY page — 960 text nodes of product grid, the shape the sitemap-kind rule excludes from a site import by default"
+    },
+    {
+      "url": "https://ttgshop.vn/ban-phim-co-atmos-87-dark-tone-switch-ansi",
+      "note": "a shop PRODUCT page — gallery, variants, buy box; the other 2,104-URL shape"
+    }
   ]
 }
