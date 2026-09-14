@@ -6,6 +6,11 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.46.3] - 2026-09-14
+
+### Fixed
+- Kiểm tra chồng lấn bố cục giờ đọc thuộc tính position đã tính toán của từng phần tử trước khi báo va chạm, nên một chi tiết trang trí đặt ở vị trí absolute, fixed hoặc sticky đè lên một khối — huy hiệu quickview, ruy băng khuyến mãi, trái tim yêu thích — không còn bị báo là lỗi; một phần tử relative đè lên phần tử anh em bên cạnh thì vẫn bị báo, vì nó vẫn chiếm chỗ trong luồng bố cục.
+
 ## [0.46.2] - 2026-09-14
 
 ### Fixed
