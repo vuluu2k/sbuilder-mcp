@@ -357,6 +357,42 @@ async function siteChrome(
 }
 
 /**
+ * Plain text, for a field the platform renders AS text.
+ *
+ * A page name is shown in the pages panel and in the browser tab and is never
+ * parsed as markup, so an HTML entity in one is always a mistake: text lifted
+ * from a page's source and handed on without being decoded. Measured on a real
+ * store, read back through sb_page_list: a page stored as "Chính sách giao hàng
+ * &amp; đổi trả" — which is what the merchant then reads in their own editor,
+ * and what a browser tab then shows.
+ *
+ * ONE PASS, and only over what escaping actually produces. "&amp;amp;" decodes to
+ * "&amp;" and stops there, because a second pass would be inventing an intent
+ * nobody expressed; an unknown entity is left exactly as it arrived. This
+ * un-escapes text that was escaped once. It does not interpret markup.
+ */
+const ENTITIES: Record<string, string> = {
+  amp: '&',
+  lt: '<',
+  gt: '>',
+  quot: '"',
+  apos: "'",
+  nbsp: ' ',
+};
+
+export function plainText(s: string): string {
+  return s.replace(/&(#x[0-9a-fA-F]+|#\d+|[a-zA-Z]+);/g, (whole, body: string) => {
+    if (body.startsWith('#')) {
+      const code = body.startsWith('#x') ? parseInt(body.slice(2), 16) : parseInt(body.slice(1), 10);
+      // A code point that is not one is not a reference — leave the text alone
+      // rather than writing a replacement character into somebody's page name.
+      return Number.isFinite(code) && code > 0 && code <= 0x10ffff ? String.fromCodePoint(code) : whole;
+    }
+    return ENTITIES[body.toLowerCase()] ?? whole;
+  });
+}
+
+/**
  * The site's own home page, or null when it genuinely has none.
  *
  * THROWS RATHER THAN GUESSES. Answering "none" for a listing that could not be
@@ -1144,6 +1180,8 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
     async ({ site_id: given, name, type, slug, is_homepage, settings, seed, chrome, locale, headline, dry_run }) => {
       const site_id = siteFor(ctx, given);
       const path = `/api/sites/${encodeURIComponent(site_id)}/pages`;
+      // The platform stores this verbatim and renders it as text — see plainText.
+      name = plainText(name);
       // TYPE IS THE ROUTE for several kinds of page: /checkout and
       // /products/{slug} resolve to the site's PUBLISHED page of that type and
       // fall through to a 404 when there is none. Without this argument the

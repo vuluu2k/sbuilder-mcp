@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { connectedClient } from './harness.js';
+import { plainText } from '../src/tools/page.js';
 import { Session } from '../src/transport/auth.js';
 import { Notices } from '../src/mcp/notices.js';
 import { UndoLog } from '../src/tools/undo.js';
@@ -129,5 +130,67 @@ describe('sb_page_create and the site that already has a home page', () => {
     const { isError } = await create(f);
     expect(isError).toBe(true);
     expect(calls.filter((c) => c.method === 'POST' && c.url.endsWith('/pages'))).toEqual([]);
+  });
+});
+
+describe('sb_page_create and the name it actually sends', () => {
+  // PROVING THE WIRING, not the function. plainText's own tests below pass
+  // whether or not the handler ever calls it — measured: deleting that one line
+  // left all of them green. This is the test that goes red for it.
+  it('sends the decoded name to the platform, not the escaping it arrived in', async () => {
+    const { f, calls } = platform([]);
+    await create(f, { name: 'Chính sách giao hàng &amp; đổi trả', is_homepage: undefined });
+    const posted = calls.find((c) => c.method === 'POST' && c.url.endsWith('/pages'));
+    expect(posted?.body).toMatchObject({ name: 'Chính sách giao hàng & đổi trả' });
+  });
+
+  // …and on the adopt path, where the name reaches the platform through a PATCH
+  // instead of a POST and could have been left un-decoded on its own.
+  it('renames the adopted home page to the decoded name', async () => {
+    const { f, calls } = platform([HOME]);
+    await create(f, { name: 'Trang ch&#7911;' });
+    const patched = calls.find((c) => c.method === 'PATCH');
+    expect(patched?.body).toEqual({ name: 'Trang chủ' });
+  });
+});
+
+describe('plainText — a page name is text, never markup', () => {
+  // THE MEASURED BUG. Read back through sb_page_list on a real store.
+  it('decodes the escaping that reaches a name from a page source', () => {
+    expect(plainText('Chính sách giao hàng &amp; đổi trả')).toBe(
+      'Chính sách giao hàng & đổi trả',
+    );
+    expect(plainText('&lt;Sale&gt; &quot;2026&quot; &apos;now&apos;')).toBe(
+      '<Sale> "2026" \'now\'',
+    );
+    expect(plainText('Giá&nbsp;tốt')).toBe('Giá tốt');
+    expect(plainText('Ph&#7909;&#32;ki&#x1EC7;n')).toBe('Phụ kiện');
+  });
+
+  // ONE PASS. A second would be inventing an intent nobody expressed.
+  it('decodes once, so a doubly-escaped name stops halfway rather than guessing', () => {
+    expect(plainText('A &amp;amp; B')).toBe('A &amp; B');
+  });
+
+  // THE LIVENESS ANCHORS. Without these the test above passes on a function
+  // that strips every ampersand it sees, which is a worse bug than the one it
+  // is here to fix.
+  it('leaves a name that was never escaped exactly as it arrived', () => {
+    for (const name of [
+      'Chính sách giao hàng & đổi trả',
+      'Q&A',
+      'Giá < 500k',
+      'AT&T; và bạn',
+      'Trang chủ',
+      '',
+    ]) {
+      expect(plainText(name)).toBe(name);
+    }
+  });
+
+  it('leaves an entity it does not know, and a number that is not a code point', () => {
+    expect(plainText('Bút &hellip; mực')).toBe('Bút &hellip; mực');
+    expect(plainText('Sai &#0; rồi')).toBe('Sai &#0; rồi');
+    expect(plainText('Sai &#1114112; rồi')).toBe('Sai &#1114112; rồi');
   });
 });
