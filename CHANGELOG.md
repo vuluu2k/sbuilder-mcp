@@ -6,6 +6,19 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.47.0] - 2026-09-14
+
+### Added
+- `sb_api_find`'s call sheet now names a `summary_covers` list whenever the platform wrote one sentence for several routes at once, so a call sheet is no longer read as if its summary belongs to that route alone; `sb_api_find` adds a one-time directive pointing at the sharpest case, `/refund` versus `/refund-via-gateway`, where reading the shared sentence would record a refund that never pays anybody.
+- `sb_api_find` and `sb_api_call` no longer inline a request body definition for a GET or DELETE operation whenever the document's declared body is a verbatim copy of a write operation's, naming the route it was copied from instead of describing a body the route cannot take.
+- `sb_api_find` and `sb_api_call` now list every path parameter a route actually needs, even when the document's own `@Param` list omits it, so a caller no longer has to make a failing call first to discover an argument the sheet never mentioned.
+- The catalog's legal-value vocabulary grows to cover 18 more elements read directly off the platform's own declarations, including `popup`'s trigger frequency and close position, `tab`'s alignment, `menu`'s expand type and submenu style, `theme-switcher` and `locale-switcher`'s variants, `chat-widget`'s corner, `cart-drawer` and `hamburger-menu`'s slide-in edge, and a new "Product viewer" mode on `spline-scene` for drag-to-turn, pinch-to-zoom inspection of a 3D model.
+
+### Fixed
+- Duplicate `@Param` entries copied onto an operation by a shared doc comment no longer appear more than once in `sb_api_find`'s call sheet.
+- `image-comparison`'s `splitDirection` config key is no longer reported as a dead key, because the platform itself has dropped the seed rather than leaving it unread.
+- The catalog's fallback note for a config or specials value now credits the renderer that actually normalises an unrecognised value, instead of crediting a platform vocabulary declaration that defines the legal words but says nothing about what happens to any other one.
+
 ## [0.46.3] - 2026-09-14
 
 ### Fixed

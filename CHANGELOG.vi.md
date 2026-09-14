@@ -6,6 +6,19 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.47.0] - 2026-09-14
+
+### Added
+- Call sheet của `sb_api_find` giờ nêu danh sách `summary_covers` mỗi khi nền tảng viết chung một câu mô tả cho nhiều route, nhờ đó một call sheet không còn bị đọc như thể câu mô tả đó chỉ dành riêng cho route ấy; `sb_api_find` thêm một chỉ dẫn phát một lần trỏ đến trường hợp gay gắt nhất, `/refund` so với `/refund-via-gateway`, nơi đọc theo câu mô tả dùng chung sẽ ghi nhận một khoản hoàn tiền mà không ai thực sự nhận được.
+- `sb_api_find` và `sb_api_call` không còn chèn nguyên định nghĩa request body cho một operation GET hoặc DELETE mỗi khi body được khai báo trong tài liệu là bản sao y nguyên của một operation ghi dữ liệu, mà thay vào đó nêu tên route đã bị sao chép từ đó thay vì mô tả một body mà route này không thể nhận.
+- `sb_api_find` và `sb_api_call` giờ liệt kê đầy đủ mọi path parameter mà một route thực sự cần, kể cả khi danh sách `@Param` của tài liệu bỏ sót nó, nhờ đó người gọi không còn phải thử gọi thất bại trước mới phát hiện ra một đối số mà call sheet chưa từng nhắc tới.
+- Bảng giá trị hợp lệ của catalog mở rộng để bao phủ thêm 18 phần tử, đọc trực tiếp từ các khai báo của chính nền tảng, gồm tần suất kích hoạt và vị trí nút đóng của `popup`, căn chỉnh của `tab`, kiểu mở rộng và kiểu submenu của `menu`, biến thể của `theme-switcher` và `locale-switcher`, góc đặt của `chat-widget`, cạnh trượt ra của `cart-drawer` và `hamburger-menu`, cùng một chế độ mới "Product viewer" trên `spline-scene` cho phép kéo để xoay, chụm để phóng to khi xem một mô hình 3D.
+
+### Fixed
+- Các mục `@Param` bị trùng do một đoạn chú thích tài liệu dùng chung sao chép vào một operation giờ không còn xuất hiện nhiều lần trong call sheet của `sb_api_find`.
+- Config key `splitDirection` của `image-comparison` không còn bị báo là dead key, vì chính nền tảng đã bỏ luôn giá trị seed đó thay vì để nó không ai đọc tới.
+- Ghi chú fallback của catalog cho một giá trị config hoặc specials giờ ghi công cho đúng renderer thực sự chuẩn hóa một giá trị không nhận diện được, thay vì ghi công cho một khai báo bảng giá trị của nền tảng — vốn chỉ định nghĩa các từ hợp lệ chứ không nói gì về việc điều gì xảy ra với một từ khác.
+
 ## [0.46.3] - 2026-09-14
 
 ### Fixed
