@@ -528,6 +528,41 @@ that accounts for them.
   because presence with an invented coordinate is theatre. The read path is still HTTP — the
   socket BROADCASTS edits, it does not fetch or save them.
 
+  **AND "WHICH MACHINE" HAD NO FIELD, so every agent in the room was the same robot.** `Kind`
+  answered person-or-machine and stopped there; the editor paints one glyph (`&#129302;`) for
+  every agent peer (`PresenceBar.vue:51`, `PeerCursors.vue:111`), so a merchant with Claude
+  Code, Cursor and a cron job installed watches their page move and cannot tell which of the
+  three is doing it. The answer already existed and could not get there: `identityHeaders`
+  puts `X-Agent-Client` on every HTTP call, and a browser cannot set a header on a WebSocket —
+  which is the very reason auth is a FRAME here. So the frame carries it:
+  `{t:'auth', token, client, clientVersion}`.
+
+  ADDITIVE AGAINST EVERY DEPLOYED SERVER, and that is a measured property rather than a hope:
+  `realtime.Decode` is a plain `json.Unmarshal` with no `DisallowUnknownFields`, so today's
+  servers ignore both fields. A client that identified nothing produces a frame BYTE-IDENTICAL
+  to the old one, so this is not a wire change for an install that never identified — the same
+  zero-value additivity `Peer.Kind` shipped on. Empty is omitted, never sent blank, because
+  `identityHeaders` draws that distinction on the HTTP side and two places must not disagree.
+
+  The names are not a choice: `site/rest/rest.go`'s `AgentIdentity` already reads those exact
+  headers into `Client` / `ClientVersion`, so the socket is catching up to a concept the
+  platform has, not minting a second vocabulary for one string.
+
+  **AND THE PLATFORM RULED THAT THE EDITOR MUST NOT DRAW A PRODUCT MARK FROM IT — text beside
+  the robot, never a vendor logo.** `client` is CALLER-ASSERTED (`kind` is trustworthy because
+  `auth.Authorize` derives it from the credential; anything can claim to be Claude Code), and
+  `agentIdentity`'s own comment says it outright: "Never trusted, only displayed." A logo drawn
+  from it would tell a merchant AT A GLANCE that a named vendor's tool is editing their page on
+  the strength of a field anything can send — which is the identity-borrowing `Kind` exists to
+  prevent, one level up, and a tooltip caveat does not repair it because a mark is read at a
+  glance and a tooltip is read on purpose. Text also degrades correctly: an unknown or absent
+  name falls back to the robot alone, which is exactly today's rendering, so there is no
+  allow-list of blessed harnesses and no "unrecognised vendor looks broken" state.
+
+  **IT MUST NEVER GATE ANYTHING.** Rate limits, permissions, feature flags, audit decisions —
+  none may read `client`. Written down because it is the line that comes under pressure the
+  first time somebody wants per-harness behaviour.
+
 - **THE DATA AXIS OF A REPEATER WAS UNREACHABLE THROUGH EITHER TOOL, silently.** `sb_add`
   with `config.datasetSource: "category"` minted a `list-dataset` still bound to
   `product_list`: `createNode` seeded the element's DEFAULT bindings and ignored the config

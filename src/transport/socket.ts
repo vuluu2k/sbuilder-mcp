@@ -6,6 +6,8 @@
  * chosen moment — with no network and no server. This is the editor's own
  * testing seam, and it is why every rule below has a test rather than a comment.
  */
+import { agentIdentity } from './identity.js';
+
 export interface SocketLike {
   send(data: string): void;
   close(): void;
@@ -65,7 +67,37 @@ export class RealtimeSocket {
       // Auth is the FIRST message, never a header (a browser cannot set one on a
       // WebSocket) and never a query parameter (a token in a URL lands in logs).
       // The server enforces a 5s deadline, so it goes out immediately.
-      ws.send(JSON.stringify({ t: 'auth', token: this.token() }));
+      //
+      // WHICH HARNESS, because the room draws one robot for all of them.
+      // `identityHeaders` rides on every HTTP call and CANNOT reach this socket
+      // — the header door is the very one the paragraph above closes — so the
+      // frame carries it instead. The editor paints 🤖 for `kind === 'agent'`
+      // (`PresenceBar.vue`, `PeerCursors.vue`) whether the peer is Claude Code,
+      // Cursor or a cron job, so a merchant watching their canvas move cannot
+      // tell which of their tools is doing it.
+      //
+      // ADDITIVE BY CONSTRUCTION, the same property `Peer.Kind` shipped on:
+      // `realtime.Decode` is a plain `json.Unmarshal` with no
+      // `DisallowUnknownFields`, so every deployed server IGNORES these two
+      // today and a later one reads them without this client changing again.
+      // Omitted rather than sent blank when the client named nothing — a client
+      // that identified itself and one that did not must not look alike, which
+      // is the same rule `identityHeaders` follows.
+      //
+      // A LABEL AND NEVER A CLAIM. `kind` is derived server-side from the
+      // credential (`auth.Authorize`), which is what makes it trustworthy;
+      // this is asserted by the caller and must never gate anything. It is the
+      // same string `X-Agent-Client` already puts on every HTTP request, so the
+      // socket is catching up with what the platform is told regardless.
+      const id = agentIdentity();
+      ws.send(
+        JSON.stringify({
+          t: 'auth',
+          token: this.token(),
+          ...(id.client ? { client: id.client } : {}),
+          ...(id.clientVersion ? { clientVersion: id.clientVersion } : {}),
+        }),
+      );
     };
 
     ws.onmessage = (ev) => {
