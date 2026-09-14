@@ -201,6 +201,66 @@ that accounts for them.
     block serves several `@Router` lines — `products/rest/rest.go:206` attaches
     `@Param product body products.Product` to the GET as well as the POST — so a listing
     claimed a body it does not take. A decode site sits inside one `case http.Method*`.
+
+    **AND THAT ONE SENTENCE WAS THE WHOLE OF WHAT GOT FIXED — the same block also copies the
+    SUMMARY, the DESCRIPTION and every `@Param`, and for three phases nothing corrected any of
+    them.** `REQUEST_SHAPES` answers "what shape is the body", so it repaired that and left the
+    rest of the block's fallout in the call sheet an agent actually reads. Measured
+    2026-09-14, and all three are now corrected in `src/catalog/search.ts`:
+
+    - **302 of 524 operations share a summary.** Most of it is harmless and must stay
+      unflagged: "List, create, update or delete a course's lessons" on all four CRUD routes
+      is an UMBRELLA, true of each member, and 105 of the 119 shared summaries are that shape
+      — flagging them would bury the rest. The discriminator is the TRAILING LITERAL SEGMENT,
+      the same signal `scripts/shapes.ts` already trusts to pick a handler out of a dispatcher
+      that routes by path: routes differing only by METHOD or by a trailing `{param}` are one
+      resource, routes whose literal tails DIFFER are separate ACTIONS and one sentence
+      describes at most one. That leaves 14 groups, 41 operations, and `summary_covers` names
+      the siblings rather than guessing the missing sentence.
+
+      THE COSTLIEST IS MONEY, and this file already records the distinction it erases:
+      `/refund` RECORDS a refund made outside the platform, `/refund-via-gateway` ASKS the
+      gateway to send it. The document gives both — and `POST /payment-transactions`, which
+      opens a pay link — the single summary "ASK the gateway to send the money back". An agent
+      told to refund a customer reaches for the obvious name, reads a sentence promising the
+      money moves, and records a refund that never pays anybody. `POST .../versions`
+      (snapshot) and `.../restore` share one summary while running in OPPOSITE directions, and
+      `/invitations/{id}/accept` and `/decline` are both described as "Withdraw an invitation".
+
+      THE PER-ROUTE TEXT EXISTS AND IS DELIBERATELY NOT READ. Each rest package's route-map
+      comment has it (`POST /payment-transactions/{id}/refund  RECORDS a refund made outside
+      this platform`), but those maps write paths relatively, abbreviate methods (`PATCH/DEL`),
+      append query strings and often carry no description at all — so recovering a summary
+      from them would invent exactly the confident wrong sentence this removes. `description`
+      is no use either: swag copies it to every route in the block AND MERGES the stacked
+      blocks' text, so the four payment routes share one description built from two of them.
+
+    - **90 GET and DELETE operations declare a request body**, and the call sheet inlined the
+      DEFINITION for each — ~83 KB, about 927 bytes apiece, describing a body the route cannot
+      take. `GET /api/sites/{siteId}/customers`, a listing, shipped the whole customer object
+      and reported `body: "described"`. The decode sites CANNOT answer this: `scripts/shapes.ts`
+      sets `WRITE_METHODS = POST | PUT | PATCH` and never looks at a read, so "0 of 90
+      confirmed" is structural silence, and reading it as a no would be this file's own
+      "the absence of a string is evidence about the string, not about the behaviour". The
+      test is the MECHANISM instead — a stacked block gives every route the same `@Param` byte
+      for byte — and all 90 carry a body param identical to some write's, with the donor on
+      the same path or resource for 86. A WRITE's body claim is still believed, because the
+      risk there runs the other way: most writes are UNDER-annotated and a shared `@Param` may
+      be the only description of a real body.
+
+    - **29 operations list a parameter more than once** (`POST /payment-transactions` reports
+      `siteId` three times), and **30 declare a `{param}` in their path that no `@Param`
+      mentions** — `POST /api/sites/{siteId}/pages` listed NONE of its own, and
+      `PUT .../courses/{id}/questions/{questionId}` listed every one but `questionId`. The
+      second half cost a round trip rather than a call: `callOperation` walks the PATH and not
+      this list, so it demanded an argument the sheet never mentioned. The path is the
+      authority and the sheet now agrees with it.
+
+    Net effect on what an agent reads: 61 KB off the 524 call sheets, and the sentences that
+    remain are about the route they sit on. A test that pinned the OPPOSITE of the body rule
+    was replaced rather than deleted — it asserted a GET's declared body is still reported,
+    behind an `if (odd)` guard, because its author took such a GET for a rarity that might not
+    exist. There are 90.
   - **A struct is keyed by DIRECTORY, not package name.** Every `internal/*/rest/*.go` file
     declares `package rest`, so `products/rest` and `loyalty/rest` both define
     `adjustRequest`; keying on the package name silently gave one of them the other's fields.

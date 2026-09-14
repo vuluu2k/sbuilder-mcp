@@ -81,6 +81,193 @@ export function searchOperations(
  * Saying "no body" for the second group would be the silent failure — the model
  * would send an empty PUT and wipe a page. So the two get different words.
  */
+/**
+ * ONE DOC BLOCK OVER SEVERAL `@Router` LINES, AND THE SUMMARY IS THE HALF
+ * NOTHING CORRECTED.
+ *
+ * This file already records the defect for BODIES — swag attaches one comment
+ * block's `@Param body` to every route beneath it, so a listing GET claimed a
+ * body it does not take — and the fix was to read the decode site instead. The
+ * SUMMARY is copied by the same mechanism and has no such correction: 302 of
+ * 524 operations share a summary with another operation.
+ *
+ * MOST OF THAT IS HARMLESS AND MUST NOT BE FLAGGED. "List, create, update or
+ * delete a course's lessons" on all four CRUD routes is an UMBRELLA — it names
+ * the whole group and is true of each member, and 105 of the 119 shared
+ * summaries are that shape. Flagging them would bury the ones that matter.
+ *
+ * THE DISCRIMINATOR IS THE TRAILING LITERAL SEGMENT, which is the same signal
+ * `scripts/shapes.ts` already trusts to pick a handler out of a dispatcher that
+ * routes by path ("the route's own trailing literal segment picks the callee").
+ * Operations sharing a summary while differing only by METHOD or by a trailing
+ * `{param}` are one resource; ones whose literal tails DIFFER are separate
+ * ACTIONS, and one sentence can describe at most one of them. That leaves 14
+ * groups and 41 operations.
+ *
+ * WHY THIS IS WORTH A FIELD. The costliest is money: this platform documents
+ * `/refund` as RECORDING a refund made elsewhere and `/refund-via-gateway` as
+ * ASKING the gateway to send it, and the catalog gives BOTH — plus `POST
+ * /payment-transactions`, which opens a pay link — the single summary "ASK the
+ * gateway to send the money back". An agent asked to refund a customer reaches
+ * for the obvious name, reads a sentence promising the money moves, and records
+ * a refund that never pays anybody. `POST .../versions` (snapshot) and
+ * `.../restore` share one summary while running in OPPOSITE directions, and
+ * `/invitations/{id}/accept` and `/decline` are both described as "Withdraw an
+ * invitation".
+ *
+ * IT REPORTS THE COVERAGE AND NEVER GUESSES THE MISSING SENTENCE. The per-route
+ * text does exist — in each package's route-map comment — but those maps write
+ * paths relatively, abbreviate methods (`PATCH/DEL`), carry query strings and
+ * often no description at all, so recovering a summary from them would invent
+ * exactly the kind of confident wrong sentence this exists to remove. Naming
+ * the routes the sentence covers is knowable, is enough for the agent to read
+ * the path instead, and cannot be wrong.
+ *
+ * Derived from the catalog rather than generated into it: it is a fact ABOUT
+ * the document, not one read off the platform, so generating it would ship a
+ * table restating data the same file already carries.
+ */
+const summaryCoverage = (() => {
+  let byId: Map<string, string[]> | null = null;
+  /** The last segment that is not a `{param}` — an action tail, or a resource. */
+  const tail = (path: string): string => {
+    const literal = path.split('/').filter((seg) => seg && !seg.startsWith('{'));
+    return literal[literal.length - 1] ?? '';
+  };
+  const build = (): Map<string, string[]> => {
+    const groups = new Map<string, ApiOperation[]>();
+    for (const op of API_OPERATIONS) {
+      if (!op.summary) continue;
+      const g = groups.get(op.summary);
+      if (g) g.push(op);
+      else groups.set(op.summary, [op]);
+    }
+    const out = new Map<string, string[]>();
+    for (const members of groups.values()) {
+      if (members.length < 2) continue;
+      if (new Set(members.map((m) => tail(m.path))).size < 2) continue;
+      for (const op of members) {
+        out.set(
+          op.id,
+          members.filter((m) => m.id !== op.id).map((m) => `${m.method} ${m.path}`),
+        );
+      }
+    }
+    return out;
+  };
+  return (id: string): string[] | undefined => (byId ??= build()).get(id);
+})();
+
+/** Whether this operation's summary is one the platform wrote for a group. */
+export function summaryIsShared(id: string): boolean {
+  return summaryCoverage(id) !== undefined;
+}
+
+/**
+ * THE PARAMS, ONCE EACH.
+ *
+ * The stacked block copies `@Param` lines as well as prose, so an operation in
+ * a group of four carries `siteId` four times: 29 operations list a parameter
+ * more than once, and `POST /payment-transactions` reports `siteId` three
+ * times. It is noise in the one field an agent reads to build the call, and it
+ * costs tokens on every search line.
+ *
+ * Deduplicated by NAME AND LOCATION, which is what identifies a parameter on
+ * the wire — two entries agreeing on both are one parameter however many blocks
+ * declared it. The first is kept, so a description is never invented or merged.
+ * No operation claims a path param its own path lacks (measured), so the
+ * deduplication only ever removes a repeat.
+ *
+ * AND THE PATH IS THE AUTHORITY ON WHAT THE CALL NEEDS, which is the other
+ * direction and was costing a round trip. THIRTY operations declare a `{param}`
+ * in their path that the document lists under no `@Param` at all —
+ * `POST /api/sites/{siteId}/pages` lists NONE of its own, and
+ * `PUT /api/sites/{siteId}/courses/{id}/questions/{questionId}` lists every one
+ * but `questionId`. `callOperation` already ignores this list and walks the
+ * PATH, so the call is not broken; what breaks is the agent, which reads
+ * `params`, sends what it says, and is told it is missing an argument the sheet
+ * never mentioned. Synthesised here so the sheet says what the call demands,
+ * and marked so nobody mistakes it for something the platform described.
+ */
+function visibleParams(op: ApiOperation): ApiOperation['params'] {
+  const seen = new Set<string>();
+  const out = op.params.filter((p) => {
+    if (p.in === 'body') return false;
+    const id = `${p.in}:${p.name}`;
+    if (seen.has(id)) return false;
+    seen.add(id);
+    return true;
+  });
+  for (const m of op.path.matchAll(/\{([^}]+)\}/g)) {
+    if (seen.has(`path:${m[1]}`)) continue;
+    seen.add(`path:${m[1]}`);
+    out.push({
+      name: m[1],
+      in: 'path',
+      required: true,
+      type: 'string',
+      description: 'In the path, and undocumented — recovered from the route itself.',
+    });
+  }
+  return out;
+}
+
+/**
+ * A READ THAT CLAIMS A BODY IS CLAIMING ITS NEIGHBOUR'S.
+ *
+ * The same stacking that copies a summary copies every `@Param` in the block,
+ * so 90 GET and DELETE operations declare a request body. `describeOperation`
+ * believed them and inlined the DEFINITION: measured, ~83 KB of body schema
+ * across those 90 call sheets — about 927 bytes each — describing a body the
+ * route cannot take. `GET /api/sites/{siteId}/customers`, a listing, ships the
+ * whole customer object and reports `body: "described"`.
+ *
+ * THE DECODE SITES CANNOT ANSWER THIS ONE, and reading their silence as a no
+ * would be the mistake this repo already records in another form ("the absence
+ * of a string is evidence about the string, not about the behaviour").
+ * `scripts/shapes.ts` sets `WRITE_METHODS = POST | PUT | PATCH` and never looks
+ * at a read, so "0 of 90 confirmed" is structural, not a finding.
+ *
+ * SO THE TEST IS THE MECHANISM ITSELF, which is visible in the document. A
+ * stacked block gives every route the SAME `@Param`, byte for byte — name, type
+ * and description. MEASURED: all 90 carry a body param identical to some write
+ * operation's, and for 86 that donor is on the same path or the same resource,
+ * which is a doc block covering several methods. That is the copy caught in the
+ * act, not an assumption about what a GET may carry.
+ *
+ * It answers only for reads. A WRITE's body claim stays believed: this file
+ * already records that most writes are UNDER-annotated, and `PUT
+ * /pages/{id}/source` carries a whole page document while declaring nothing —
+ * so the risk there runs the other way and a shared `@Param` may be the only
+ * description of a real body.
+ */
+const copiedBodyDonor = (() => {
+  let byId: Map<string, string> | null = null;
+  const sig = (p: { name: string; type?: string; description?: string }): string =>
+    JSON.stringify([p.name, p.type, p.description]);
+  const build = (): Map<string, string> => {
+    const donors = new Map<string, ApiOperation>();
+    for (const op of API_OPERATIONS) {
+      if (op.method !== 'POST' && op.method !== 'PUT' && op.method !== 'PATCH') continue;
+      for (const p of op.params) if (p.in === 'body' && !donors.has(sig(p))) donors.set(sig(p), op);
+    }
+    const out = new Map<string, string>();
+    for (const op of API_OPERATIONS) {
+      if (op.method !== 'GET' && op.method !== 'DELETE') continue;
+      const bodies = op.params.filter((p) => p.in === 'body');
+      if (!bodies.length) continue;
+      // EVERY one must be accounted for. A read carrying one copied param and
+      // one of its own would be a shape nothing here has seen, and the honest
+      // answer to that is to say nothing and leave the document's claim alone.
+      const found = bodies.map((p) => donors.get(sig(p)));
+      if (found.some((d) => d === undefined)) continue;
+      out.set(op.id, `${found[0]!.method} ${found[0]!.path}`);
+    }
+    return out;
+  };
+  return (id: string): string | undefined => (byId ??= build()).get(id);
+})();
+
 export function describeOperation(op: ApiOperation): Record<string, unknown> {
   const out: Record<string, unknown> = {
     id: op.id,
@@ -89,8 +276,15 @@ export function describeOperation(op: ApiOperation): Record<string, unknown> {
     summary: op.summary,
     tags: op.tags,
     credential: op.credential,
-    params: op.params.filter((p) => p.in !== 'body'),
+    params: visibleParams(op),
   };
+
+  // SAY WHO ELSE THE SENTENCE ABOVE IS ABOUT. Placed directly under `summary`
+  // because that is the field it qualifies: an agent that has read the sentence
+  // and moved on has already taken the wrong operation.
+  const covers = summaryCoverage(op.id);
+  if (covers) out.summary_covers = covers;
+
   const hasBody = op.params.some((p) => p.in === 'body');
   const isWrite = op.method === 'POST' || op.method === 'PUT' || op.method === 'PATCH';
 
@@ -190,6 +384,17 @@ export function describeOperation(op: ApiOperation): Record<string, unknown> {
     return out;
   }
 
+  // Said BEFORE the body branches, because the whole point is not to inline a
+  // definition for a body this route does not take.
+  const copiedFrom = copiedBodyDonor(op.id);
+  if (copiedFrom) {
+    out.body_note =
+      `The document declares a request body here, and it is a VERBATIM copy of ${copiedFrom}'s ` +
+      '— one doc comment over several @Router lines gives every route in the block the same ' +
+      '@Param. Send no body; the schema is that other route\'s.';
+    return out;
+  }
+
   if (hasBody && op.bodyDescribed && op.bodyRef) {
     out.body_schema = API_DEFINITIONS[op.bodyRef];
   } else if (hasBody) {
@@ -216,6 +421,8 @@ export interface OperationLine {
   /** Non-body parameter names; `?` prefixes an optional one. */
   params: string[];
   body?: 'described' | 'undescribed' | 'none_declared';
+  /** The summary describes several routes at once — read the path, not it. */
+  summary_shared?: true;
 }
 
 /**
@@ -237,9 +444,16 @@ export function summarizeOperation(op: ApiOperation): OperationLine {
     path: op.path,
     summary: op.summary,
     credential: op.credential,
-    params: op.params.filter((p) => p.in !== 'body').map((p) => (p.required ? p.name : `?${p.name}`)),
+    params: visibleParams(op).map((p) => (p.required ? p.name : `?${p.name}`)),
   };
-  if (hasBody) out.body = op.bodyDescribed && op.bodyRef ? 'described' : 'undescribed';
+  // ONE BOOLEAN, because this line is where the CHOICE is made and a search hit
+  // must stay a line. It says only "this sentence was written for a group of
+  // routes, so read the path"; the call sheet names the group.
+  if (summaryIsShared(op.id)) out.summary_shared = true;
+  // A copied body is not this route's, so the line says nothing rather than
+  // `described` — see `copiedBodyDonor`.
+  if (hasBody && !copiedBodyDonor(op.id))
+    out.body = op.bodyDescribed && op.bodyRef ? 'described' : 'undescribed';
   else if (isWrite) out.body = 'none_declared';
   return out;
 }

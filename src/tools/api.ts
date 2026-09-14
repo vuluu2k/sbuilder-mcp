@@ -335,6 +335,22 @@ export async function callOperation(ctx: ToolContext, args: CallArgs): Promise<u
   return shapeResponse(raw, { pick: projection, max_items: args.max_items });
 }
 
+/**
+ * WHY A SUMMARY CAN BE ABOUT A DIFFERENT ROUTE.
+ *
+ * The platform stacks ONE doc comment over several `@Router` lines and swag
+ * copies it to each, so the summary — and the description, which it also merges
+ * across blocks — belongs to the group rather than to the route. This repo
+ * already corrects the same defect for BODIES by reading the decode site; there
+ * is no such correction for prose, and no per-route sentence exists to recover.
+ */
+const SHARED_SUMMARY_NOTICE =
+  'summary_covers means the platform wrote that one sentence for several routes at once (one ' +
+  'doc comment over several @Router lines), so it may describe one of the listed routes rather ' +
+  'than this one — trust the PATH and the body shape, not the sentence. The sharpest case is ' +
+  'money: /payment-transactions/{id}/refund only RECORDS a refund made elsewhere, while ' +
+  '/refund-via-gateway is the one that asks the gateway to actually send it.';
+
 export function registerApiTools(server: McpServer, ctx: ToolContext): void {
   server.registerTool(
     'sb_api_find',
@@ -362,7 +378,13 @@ export function registerApiTools(server: McpServer, ctx: ToolContext): void {
       if (id) {
         const op = findOperation(id);
         if (!op) throw new Error(`sbuilder: unknown operation "${id}" — search with query first`);
-        return text(describeOperation(op));
+        const sheet = describeOperation(op);
+        // The WHY is a directive, so it is said once per process; the routes it
+        // covers are DATA and ride on every sheet that has them.
+        const why = sheet.summary_covers
+          ? ctx.notices.once('shared_summary', SHARED_SUMMARY_NOTICE)
+          : undefined;
+        return text(why ? { ...sheet, directive: why } : sheet);
       }
       if (!query) {
         throw new Error('sbuilder: sb_api_find needs a query (search) or an id (call sheet)');

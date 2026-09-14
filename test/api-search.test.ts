@@ -36,6 +36,8 @@ describe('searchOperations()', () => {
   });
 });
 
+const WRITE = new Set(['POST', 'PUT', 'PATCH']);
+
 describe('describeOperation()', () => {
   it('warns that a write op declaring no body may simply be un-annotated', () => {
     // NOT `PUT .../source` any more, and that is the point: the handler scan now
@@ -53,13 +55,39 @@ describe('describeOperation()', () => {
     expect(String(d.body_note)).toMatch(/declares NO request body/i);
   });
 
-  it('inlines the definition when the body IS described', () => {
-    const op = searchOperations('', { limit: 400 }).find(
-      (o) => o.bodyDescribed && !REQUEST_SHAPES[o.id],
-    )!;
-    const d = describeOperation(op) as Record<string, unknown>;
+  /**
+   * THE INLINE IS NOW A FALLBACK NOTHING REACHES, and that is a measurement
+   * rather than dead code.
+   *
+   * It used to be picked by "the first operation whose body is described and
+   * which has no decode-site shape". MEASURED after reads stopped being
+   * believed (`copiedBodyDonor`): NO operation is in that state — every WRITE
+   * whose body the document describes also has a shape read off its handler,
+   * and that wins above; every remaining candidate was a read carrying a copy.
+   *
+   * The branch stays because it is the honest answer for a handler the shape
+   * reader cannot read, which is a state the platform can re-enter at any time.
+   * It is exercised with a SYNTHETIC operation, so the test proves the
+   * behaviour instead of quietly proving nothing the day a specimen vanishes —
+   * which is exactly what happened here.
+   */
+  it('inlines the definition for a described body with no decode-site shape', () => {
+    expect(
+      API_OPERATIONS.filter(
+        (o) => o.bodyDescribed && WRITE.has(o.method) && !REQUEST_SHAPES[o.id],
+      ),
+    ).toHaveLength(0);
+    const donor = API_OPERATIONS.find((o) => o.bodyDescribed && o.bodyRef)!;
+    const synthetic = {
+      ...donor,
+      id: 'put:/synthetic/not-a-registered-route',
+      method: 'PUT',
+      path: '/synthetic/not-a-registered-route',
+    };
+    const d = describeOperation(synthetic) as Record<string, unknown>;
     expect(d.body_schema).toBeDefined();
     expect(d.body_warning).toBeUndefined();
+    expect(d.body_note).toBeUndefined();
   });
 
   it('never lists the body among plain params — it has its own field', () => {
@@ -70,7 +98,11 @@ describe('describeOperation()', () => {
 
   it('warns when a body IS declared but has no schema to resolve', () => {
     const op = searchOperations('', { limit: 400 }).find(
-      (o) => o.params.some((p) => p.in === 'body') && !o.bodyDescribed && !REQUEST_SHAPES[o.id],
+      (o) =>
+        o.params.some((p) => p.in === 'body') &&
+        !o.bodyDescribed &&
+        !REQUEST_SHAPES[o.id] &&
+        WRITE.has(o.method),
     )!;
     expect(op).toBeDefined();
     const d = describeOperation(op) as Record<string, unknown>;
@@ -103,20 +135,38 @@ describe('summarizeOperation()', () => {
       (o) => o.method === 'PUT' && o.path.endsWith('/source'),
     )!;
     expect(summarizeOperation(put).body).toBe('none_declared');
-    const described = searchOperations('', { limit: 500 }).find((o) => o.bodyDescribed)!;
+    const described = searchOperations('', { limit: 500 }).find(
+      (o) => o.bodyDescribed && WRITE.has(o.method),
+    )!;
     expect(summarizeOperation(described).body).toBe('described');
     const loose = searchOperations('', { limit: 500 }).find(
-      (o) => o.params.some((p) => p.in === 'body') && !o.bodyDescribed,
+      (o) => o.params.some((p) => p.in === 'body') && !o.bodyDescribed && WRITE.has(o.method),
     )!;
     expect(summarizeOperation(loose).body).toBe('undescribed');
   });
 
-  it('omits body on a read that declares none, and still reports one a GET declares', () => {
+  /**
+   * THIS REPLACES A TEST THAT PINNED THE OPPOSITE, and the reason it did is
+   * worth keeping. It asserted that a GET declaring a body still reports one,
+   * behind an `if (odd)` guard — the author was describing what the code then
+   * did and treating such a GET as a rarity that might not exist in the
+   * document at all. MEASURED, there are 90 of them, every one carrying a body
+   * param byte-identical to some write's, because one doc comment over several
+   * `@Router` lines gives every route in the block the same `@Param`. So it was
+   * never an oddity, it was the stacking this file already corrects for prose.
+   */
+  it('omits a body on a read, whether it declares one or not', () => {
     const all = searchOperations('', { limit: 500 });
     const plain = all.find((o) => o.method === 'GET' && !o.params.some((p) => p.in === 'body'))!;
     expect(summarizeOperation(plain).body).toBeUndefined();
-    const odd = all.find((o) => o.method === 'GET' && o.params.some((p) => p.in === 'body'));
-    if (odd) expect(summarizeOperation(odd).body).toBeDefined();
+    const copied = all.find((o) => o.method === 'GET' && o.params.some((p) => p.in === 'body'))!;
+    expect(copied, 'the document still stacks @Param onto reads').toBeDefined();
+    expect(summarizeOperation(copied).body).toBeUndefined();
+    // The call sheet says WHY rather than going silent, and names the donor so
+    // the schema is still findable if the caller wants it.
+    const d = describeOperation(copied) as Record<string, unknown>;
+    expect(d.body_schema).toBeUndefined();
+    expect(String(d.body_note)).toMatch(/VERBATIM copy of (GET|POST|PUT|PATCH) /);
   });
 
   it('defaults to eight matches', () => {
@@ -331,5 +381,89 @@ describe('the product-write call sheet', () => {
     expect(all.toLowerCase()).toContain('priceCents'.toLowerCase());
     expect(all).toMatch(/renam/i);
     expect(all).toMatch(/from-url/);
+  });
+});
+
+/**
+ * ONE DOC BLOCK OVER SEVERAL ROUTES — THE PROSE HALF.
+ *
+ * This file already pins the BODY correction (a decode site outranks the
+ * document). The same stacking copies the SUMMARY, and nothing corrected that:
+ * 302 of 524 operations share a summary. Most of it is an umbrella that is true
+ * of each member and must stay unflagged; what is flagged is a summary whose
+ * members have different literal path tails, so it can describe at most one.
+ */
+describe('a summary the platform wrote for several routes', () => {
+  /**
+   * THE COSTLIEST ONE IS MONEY. The platform documents `/refund` as RECORDING a
+   * refund made elsewhere and `/refund-via-gateway` as ASKING the gateway to
+   * send it; the document gives both — and `POST /payment-transactions`, which
+   * opens a pay link — the single sentence "ASK the gateway to send the money
+   * back". An agent that trusts it records a refund that never pays anybody.
+   */
+  it('names the other routes a shared summary covers', () => {
+    const op = findOperation(
+      'post:/api/sites/{siteId}/payment-transactions/{transactionId}/refund',
+    )!;
+    const d = describeOperation(op) as { summary_covers?: string[] };
+    expect(d.summary_covers).toBeDefined();
+    expect(d.summary_covers!.join(' ')).toContain('refund-via-gateway');
+    expect(summarizeOperation(op).summary_shared).toBe(true);
+  });
+
+  /**
+   * AN UMBRELLA IS NOT A DEFECT. "List, create, update or delete a course's
+   * lessons" is true of all four routes, and flagging 261 operations like it
+   * would bury the 41 that matter. The discriminator is the trailing literal
+   * segment — the same signal `scripts/shapes.ts` uses to pick a handler out of
+   * a dispatcher that routes by path.
+   */
+  it('leaves a summary alone when the routes are one resource', () => {
+    const op = findOperation('get:/api/sites/{siteId}/customers')!;
+    expect((describeOperation(op) as Record<string, unknown>).summary_covers).toBeUndefined();
+    expect(summarizeOperation(op).summary_shared).toBeUndefined();
+    // ...and it really is a shared summary, so this proves the filter and not
+    // merely that the operation is unremarkable.
+    const twin = findOperation('post:/api/sites/{siteId}/customers')!;
+    expect(twin.summary).toBe(op.summary);
+  });
+
+  /** Scoped, not sprayed: a flag on most of the surface is not a flag. */
+  it('stays a small share of the surface', () => {
+    const flagged = API_OPERATIONS.filter((o) => summarizeOperation(o).summary_shared);
+    expect(flagged.length).toBeGreaterThan(0);
+    expect(flagged.length).toBeLessThan(API_OPERATIONS.length * 0.15);
+  });
+});
+
+/**
+ * THE SAME STACKING COPIES `@Param`, AND THE PARAMS ARE WHAT AN AGENT BUILDS
+ * THE CALL FROM.
+ */
+describe('parameters the doc block duplicated', () => {
+  it('lists each parameter once', () => {
+    for (const op of API_OPERATIONS) {
+      const names = (describeOperation(op) as { params: Array<{ name: string; in: string }> }).params
+        .map((p) => `${p.in}:${p.name}`);
+      expect(new Set(names).size, `${op.method} ${op.path}`).toBe(names.length);
+    }
+  });
+
+  /**
+   * Deduplication may only ever REMOVE a repeat. A path parameter the operation
+   * genuinely needs must survive, and every `{param}` in a path must still be
+   * listed — otherwise a call cannot be built at all.
+   */
+  it('still lists every path parameter the path declares', () => {
+    for (const op of API_OPERATIONS) {
+      const listed = new Set(
+        (describeOperation(op) as { params: Array<{ name: string; in: string }> }).params
+          .filter((p) => p.in === 'path')
+          .map((p) => p.name),
+      );
+      for (const m of op.path.matchAll(/\{([^}]+)\}/g)) {
+        expect(listed, `${op.method} ${op.path} lost {${m[1]}}`).toContain(m[1]);
+      }
+    }
   });
 });

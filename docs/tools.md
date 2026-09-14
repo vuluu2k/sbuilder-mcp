@@ -46,11 +46,13 @@ chosen by argument — pass `query` or `id`.
 | `limit` | number? | Default 8, max 50 |
 
 **Search** returns `{ matches, next }`, one line per match:
-`{ id, method, path, summary, credential, params, body? }`. `params` lists the non-body
-parameter names with `?` prefixed on optional ones (`["siteID", "?limit"]`); `body` is one
-word — `described`, `undescribed` or `none_declared` — and absent on a read. No tags, no
-schemas: twelve matches with their schemas inlined were measured at 44 KB, for a list the
-agent calls one item of. `next` says to pass an id back for the call sheet.
+`{ id, method, path, summary, credential, params, body?, summary_shared? }`. `params` lists
+the non-body parameter names with `?` prefixed on optional ones (`["siteID", "?limit"]`);
+`body` is one word — `described`, `undescribed` or `none_declared` — and absent on a read.
+`summary_shared` marks a summary the platform wrote for several routes at once: read the
+path, not the sentence. No tags, no schemas: twelve matches with their schemas inlined were
+measured at 44 KB, for a list the agent calls one item of. `next` says to pass an id back
+for the call sheet.
 
 **Call sheet** (`id`) returns the operation in full — typed `params`, `tags`, `credential` —
 plus **one** body verdict:
@@ -60,13 +62,30 @@ plus **one** body verdict:
 | `body_shape` | The fields the handler actually decodes, read out of the platform's Go source: `{ fields: [{ name, type, note? }], readOnly?, goType, source: "go" }`. Covers 158 of 212 write operations |
 | `body_schema` | Swagger resolved a `$ref` and no handler shape was found |
 | `body_warning` | A body is declared but nothing describes its shape. Read the matching GET and modify a copy |
-| `body_note` | A write operation declares **no** body at all. Sometimes true — `POST /orgs/{id}/leave` is a pure action — and sometimes a missing annotation |
+| `body_note` | Either a write declaring **no** body — sometimes true (`POST /orgs/{id}/leave` is a pure action), sometimes a missing annotation — or a READ whose declared body is a verbatim copy of a neighbouring write's, naming that donor |
 
 Never more than one of the four, and `body_shape` outranks the rest. It outranks them
 because the handler is the code that runs: `swagger.json` describes 46 of 212 write bodies,
 and it attaches one doc comment's `@Param body` to **every** `@Router` line beneath it, so a
 listing GET can claim a body it does not take. A decode site sits inside one
 `case http.Method*`.
+
+That same stacking copies the **prose** and the **parameters**, and the call sheet now
+corrects both:
+
+- `summary_covers` names the other routes a shared summary was written for. 302 of 524
+  operations share a summary; most is an umbrella that is true of each member ("List,
+  create, update or delete a course's lessons"), so only the 41 whose routes have different
+  trailing path segments are flagged — one sentence can describe at most one of those. The
+  costliest is money: `/payment-transactions/{id}/refund` only RECORDS a refund made
+  elsewhere, while `/refund-via-gateway` asks the gateway to actually send it, and the
+  document gives both the same sentence.
+- A read that declares a body **byte-identical** to some write's is reported as a copy
+  rather than having the schema inlined — measured at ~83 KB of body schema across 90 GET
+  and DELETE call sheets, for bodies those routes cannot take.
+- `params` lists each parameter **once** (29 operations repeated one), and includes every
+  `{param}` the path declares — 30 operations named one in the path and in no `@Param`, so
+  the sheet asked for less than the call needs.
 
 `note` on a field is that field's own doc comment, trimmed to its first sentence plus any
 sentence that shouts — which is where this platform keeps what decides a body.

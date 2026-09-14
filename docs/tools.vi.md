@@ -52,11 +52,13 @@ tool, chọn bằng tham số — truyền `query` hoặc `id`.
 | `limit` | number? | Mặc định 8, tối đa 50 |
 
 **Tìm kiếm** trả về `{ matches, next }`, mỗi kết quả một dòng:
-`{ id, method, path, summary, credential, params, body? }`. `params` liệt kê tên các tham số
-không phải body, tham số tuỳ chọn có tiền tố `?` (`["siteID", "?limit"]`); `body` là một từ
-— `described`, `undescribed` hoặc `none_declared` — và vắng mặt với operation đọc. Không có
-tag, không có schema: mười hai kết quả kèm schema inline từng đo được 44 KB, cho một danh
-sách mà agent chỉ gọi đúng một mục. `next` nhắc truyền một id lại để lấy call sheet.
+`{ id, method, path, summary, credential, params, body?, summary_shared? }`. `params` liệt kê
+tên các tham số không phải body, tham số tuỳ chọn có tiền tố `?` (`["siteID", "?limit"]`);
+`body` là một từ — `described`, `undescribed` hoặc `none_declared` — và vắng mặt với
+operation đọc. `summary_shared` đánh dấu một summary mà nền tảng viết cho nhiều route cùng
+lúc: hãy đọc path, đừng tin câu chữ. Không có tag, không có schema: mười hai kết quả kèm
+schema inline từng đo được 44 KB, cho một danh sách mà agent chỉ gọi đúng một mục. `next`
+nhắc truyền một id lại để lấy call sheet.
 
 **Call sheet** (`id`) trả về operation đầy đủ — `params` có kiểu, `tags`, `credential` — kèm
 **một** kết luận về body:
@@ -66,12 +68,29 @@ sách mà agent chỉ gọi đúng một mục. `next` nhắc truyền một id 
 | `body_shape` | Các trường handler thật sự decode, đọc từ mã nguồn Go của nền tảng: `{ fields: [{ name, type, note? }], readOnly?, goType, source: "go" }`. Phủ 158 trong 212 write operation |
 | `body_schema` | Swagger giải được `$ref` và không tìm thấy shape từ handler |
 | `body_warning` | Có khai báo body nhưng không gì mô tả hình dạng. Hãy đọc GET tương ứng rồi sửa một bản sao |
-| `body_note` | Operation ghi mà **không** khai báo body nào. Đôi khi đúng — `POST /orgs/{id}/leave` là một hành động thuần — đôi khi chỉ là thiếu annotation |
+| `body_note` | Hoặc một operation ghi mà **không** khai báo body nào — đôi khi đúng (`POST /orgs/{id}/leave` là một hành động thuần), đôi khi chỉ là thiếu annotation — hoặc một operation ĐỌC mà body khai báo là bản sao nguyên văn của một write bên cạnh, và nó gọi tên route nguồn đó |
 
 Không bao giờ có quá một trong bốn, và `body_shape` được ưu tiên trước. Ưu tiên vì handler là
 mã thật sự chạy: `swagger.json` mô tả 46 trong 212 write body, và nó gắn `@Param body` của
 một khối doc comment cho **mọi** dòng `@Router` bên dưới, nên một GET danh sách có thể nhận
 là có body mà nó không nhận. Điểm decode thì nằm gọn trong đúng một `case http.Method*`.
+
+Chính kiểu chồng khối doc đó cũng sao chép **câu chữ** và **tham số**, và call sheet giờ sửa
+cả hai:
+
+- `summary_covers` gọi tên những route khác mà một summary dùng chung được viết cho. 302
+  trong 524 operation dùng chung summary; phần lớn là câu bao trùm và đúng với từng thành
+  viên ("List, create, update or delete a course's lessons"), nên chỉ 41 operation có đoạn
+  path cuối KHÁC nhau mới bị đánh dấu — một câu chỉ có thể mô tả nhiều nhất một trong số đó.
+  Tốn kém nhất là tiền: `/payment-transactions/{id}/refund` chỉ GHI NHẬN một khoản hoàn đã
+  trả ở nơi khác, còn `/refund-via-gateway` mới là cái yêu cầu cổng thanh toán chuyển tiền
+  về, mà tài liệu cho cả hai cùng một câu.
+- Một operation đọc khai báo body **giống hệt từng byte** với một write nào đó sẽ được báo là
+  bản sao thay vì inline schema — đo được ~83 KB schema body trên 90 call sheet GET và
+  DELETE, cho những body mà chính route đó không nhận.
+- `params` liệt kê mỗi tham số **một lần** (29 operation từng lặp lại), và bao gồm mọi
+  `{param}` mà path khai báo — 30 operation có tham số nằm trong path nhưng không có `@Param`
+  nào, nên call sheet đòi ít hơn thứ lệnh gọi thật sự cần.
 
 `note` của một trường là doc comment của chính trường đó, cắt còn câu đầu cộng mọi câu viết
 hoa nhấn mạnh — chỗ nền tảng này cất thứ quyết định một body. `shipping.Method` ghi
