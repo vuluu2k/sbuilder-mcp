@@ -396,3 +396,58 @@ describe('readinessGaps() — the 404 page', () => {
     expect(noChrome).toContain('errorPage');
   });
 });
+
+/**
+ * WHAT /account TELLS AN AGENT TO BUILD.
+ *
+ * This text is a RULE, not a description: agents follow it literally. It used
+ * to say "put login and register forms behind a member-gate with audience
+ * guests", and they did — one page carrying the profile, the login form and the
+ * register form, with no /login for a header to link to. Reported from a built
+ * store. The rule was the cause, so the rule is what these tests pin.
+ */
+describe('readinessGaps() — the account page tells an agent the right shape', () => {
+  const fix = () =>
+    readinessGaps({
+      pages: [
+        { type: 'product', status: 'published' },
+        { type: 'checkout', status: 'published' },
+        { type: 'error', status: 'published' },
+      ],
+      liveGateways: 1,
+      shippingMethods: 1,
+      products: { active: 1, purchasable: 1 },
+      pageNodes: [],
+      globalNodes: [
+        { data: { type: 'button' }, events: [{ action: 'open_cart' }] },
+        { data: { type: 'cart-count' } },
+      ],
+      globalKinds: ['header'],
+    } as never).find((g) => g.id === 'accountPage')!.fix;
+
+  it('names login, register and forgot as their own pages', () => {
+    for (const template of ['"login"', '"register"', '"forgot"']) {
+      expect(fix()).toContain(template);
+    }
+    expect(fix()).toMatch(/pages of type "page"/);
+  });
+
+  it('keeps the members gate, which is what makes /account answer a gated visitor', () => {
+    expect(fix()).toMatch(/member-gate/);
+    expect(fix()).toMatch(/"members"/);
+    expect(fix()).toMatch(/"guests"/);
+  });
+
+  // THE REGRESSION ITSELF. A future edit that puts the forms back on /account
+  // reads perfectly well and would pass every assertion above.
+  it('does not tell the agent to put the forms on /account', () => {
+    expect(fix()).toMatch(/not the forms themselves/i);
+    expect(fix()).not.toMatch(/put login and register forms behind/i);
+  });
+
+  // THE LIVENESS ANCHOR: the fixture really does produce this gap, so the
+  // assertions above are read off a real string rather than an empty one.
+  it('is a real gap on this fixture', () => {
+    expect(fix().length).toBeGreaterThan(80);
+  });
+});

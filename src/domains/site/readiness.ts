@@ -312,6 +312,18 @@ export function readinessGaps(input: ReadinessInput): ReadinessGap[] {
   // between the store and a PAID ORDER: a shop with no account page still takes
   // money. They stand between it and a finished website, which is the next
   // question a merchant asks.
+  //
+  // WHAT /account OWES A SIGNED-OUT VISITOR IS A WAY IN, NOT EVERY FORM AT ONCE.
+  // This fix used to read "put login and register forms behind a member-gate
+  // with audience guests", and agents did exactly that — one page carrying the
+  // profile, the login form and the register form, with nothing for a header to
+  // link to and no /login to bookmark. Reported from a built store as the pages
+  // coming out "ngáo": the rule was the cause, not the agent.
+  //
+  // The gate itself is load-bearing and stays: membersOnlyRedirectTarget sends
+  // every gated visitor to /account (and to "/" when there is none), so that
+  // page MUST answer a signed-out visitor with something. A prompt and a link
+  // is that something.
   for (const [type, id, what, fix] of [
     [
       'account',
@@ -319,8 +331,14 @@ export function readinessGaps(input: ReadinessInput): ReadinessGap[] {
       '/account 404s. A shopper has no way to see their orders, addresses or saved items, and ' +
         'the account elements (account-info, address-book, wishlist-list, points-card) have ' +
         'nowhere to live.',
-      'Create a page of type "account" and publish it. Put login and register forms behind a ' +
-        'member-gate with audience "guests", and the profile behind audience "members".',
+      'Create a page of type "account" and publish it: the profile behind a member-gate with ' +
+        'audience "members", and behind audience "guests" a short sign-in prompt LINKING to the ' +
+        'login page — not the forms themselves. Login, register and forgot-password are three ' +
+        'ordinary pages of type "page", each seeded by sb_store action:"form" with template ' +
+        '"login", "register" or "forgot". Putting all three inside /account hands a shopper one ' +
+        'crowded page and hands a header nothing to link to: a popup is a fine way to SIGN IN, ' +
+        'but only a page has an address, and /account is the address this platform already ' +
+        'sends every gated visitor to.',
     ],
     [
       'search',
