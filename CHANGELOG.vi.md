@@ -6,6 +6,14 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.44.0] - 2026-09-14
+
+### Changed
+- Frame xác thực của socket live-edit giờ nêu rõ harness đang gọi (client, clientVersion), nhờ đó thanh presence và con trỏ của editor có thể phân biệt Claude Code, Cursor hay một agent khác thay vì vẽ chung một biểu tượng robot cho tất cả; các trường này bị bỏ qua hoàn toàn khi không có gì tự nhận diện, nên một client chưa từng tự nhận diện vẫn gửi đúng frame như trước.
+
+### Fixed
+- Bảng giá trị config của codegen giờ chứng minh được là ưu tiên một khai báo của nền tảng hơn danh sách tự thân (vốn luôn chỉ là một phần) của renderer bất cứ khi nào cả hai cùng tồn tại cho một key, khép lại một thứ tự ưu tiên trước đây chỉ đúng nhờ tình cờ của thứ tự vòng lặp và có thể âm thầm đảo ngược ở lần sắp xếp lại kế tiếp; được ghim bằng một test mới thay vì một kiểm tra lúc chạy, vì việc báo thiếu từ một key chỉ có nguồn renderer là không thể phát hiện được về mặt cấu trúc.
+
 ## [0.43.0] - 2026-09-14
 
 ### Added

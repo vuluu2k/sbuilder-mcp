@@ -6,6 +6,14 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.44.0] - 2026-09-14
+
+### Changed
+- The live-edit socket's auth frame now names the calling harness (client, clientVersion), so the editor's presence bar and cursors can tell Claude Code, Cursor, or another agent apart instead of drawing the same robot glyph for all of them; the fields are omitted entirely when nothing identifies itself, so a client that never identified sends the exact same frame as before.
+
+### Fixed
+- Codegen's config-value vocabulary now provably prefers a platform declaration over a renderer's own (necessarily partial) list wherever both exist for the same key, closing a precedence that was only correct by accident of loop order and could have silently flipped on the next reshuffle; pinned by a new test rather than a runtime check, since an under-report from a renderer-only key is undetectable by construction.
+
 ## [0.43.0] - 2026-09-14
 
 ### Added
