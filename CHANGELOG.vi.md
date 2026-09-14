@@ -6,6 +6,11 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.48.1] - 2026-09-14
+
+### Fixed
+- Lỗi thiếu `accountPage` mà `sb_review` báo giờ không còn bảo agent đặt trực tiếp các form đăng nhập và đăng ký phía sau phần "guests" của member-gate trên `/account`; nội dung hướng dẫn giờ yêu cầu đặt ở đó một lời nhắc đăng nhập ngắn gọn, dẫn liên kết tới một trang đăng nhập riêng, còn đăng nhập, đăng ký và quên mật khẩu được dựng thành các trang riêng qua `sb_store action:"form"`, nhờ đó khách chưa đăng nhập có một trang để lưu lại và header có `/login` để liên kết tới, thay vì dồn hết mọi form vào một trang duy nhất.
+
 ## [0.48.0] - 2026-09-14
 
 ### Added

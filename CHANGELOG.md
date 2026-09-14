@@ -6,6 +6,11 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.48.1] - 2026-09-14
+
+### Fixed
+- `sb_review`'s `accountPage` readiness gap no longer tells an agent to put login and register forms directly behind the guest side of the `/account` member-gate; the fix text now calls for a short sign-in prompt there that links to a separate login page, with login, register, and forgot-password built as their own pages via `sb_store action:"form"`, so a signed-out visitor gets a page to bookmark and a header gets a `/login` to link to instead of one crowded page carrying every form at once.
+
 ## [0.48.0] - 2026-09-14
 
 ### Added
