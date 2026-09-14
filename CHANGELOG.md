@@ -6,6 +6,11 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.47.2] - 2026-09-14
+
+### Fixed
+- `sb_page_create` no longer stores an HTML entity verbatim in a page name; a name like `Chính sách giao hàng &amp; đổi trả`, lifted undecoded from a page's own source, is now decoded once before it is sent, on both the create and the home-page-adopt rename path.
+
 ## [0.47.1] - 2026-09-14
 
 ### Fixed

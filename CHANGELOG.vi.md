@@ -6,6 +6,11 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.47.2] - 2026-09-14
+
+### Fixed
+- `sb_page_create` không còn lưu nguyên một HTML entity trong tên trang; một tên như `Chính sách giao hàng &amp; đổi trả`, lấy chưa giải mã từ chính nguồn của một trang, giờ được giải mã một lần trước khi gửi đi, trên cả đường tạo trang lẫn đường đổi tên khi nhận lại trang chủ.
+
 ## [0.47.1] - 2026-09-14
 
 ### Fixed
