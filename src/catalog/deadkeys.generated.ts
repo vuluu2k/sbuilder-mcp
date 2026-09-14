@@ -4,10 +4,10 @@
 import type { DeadKey } from './element-types.js';
 
 export const DEAD_KEY_SOURCE = {
-  "files": 3966,
-  "identifiers": 76235,
+  "files": 3974,
+  "identifiers": 76582,
   "seededKeys": 384,
-  "dead": 1
+  "dead": 0
 } as const;
 
 /**
@@ -22,14 +22,4 @@ export const DEAD_KEY_SOURCE = {
  * because the platform accepts the value and a refusal here would invent a rule
  * it does not have.
  */
-export const DEAD_KEYS: Record<string, DeadKey> = {
-  "splitDirection": {
-    "key": "splitDirection",
-    "namespaces": [
-      "config"
-    ],
-    "seededBy": [
-      "image-comparison"
-    ]
-  }
-};
+export const DEAD_KEYS: Record<string, DeadKey> = {};

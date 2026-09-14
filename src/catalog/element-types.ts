@@ -109,6 +109,17 @@ export interface ValueVocabulary {
    */
   fallback?: string;
   /**
+   * WHERE THE FALLBACK CAME FROM, when that is not where `values` came from.
+   *
+   * A schema declaration says which words MEAN something; only a renderer can
+   * say what happens to a word outside the list. So when a declaration
+   * supersedes a Go reading for a key, `readBy` names the declaration and the
+   * renderer's `default:` arm survives underneath it — and a note attributing
+   * the normalising to `readBy` would credit a plain `as const` list with
+   * behaviour it has none of. Absent where the two are the same source.
+   */
+  fallbackReadBy?: string;
+  /**
    * The renderer hands anything unlisted straight through
    * (`default: return mode`), so `values` are the words with SPECIAL meaning
    * rather than the only legal ones — `mediaImageRatio` really does take a

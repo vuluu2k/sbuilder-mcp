@@ -3837,7 +3837,8 @@ export const ELEMENTS: Record<string, CatalogElement> = {
         "modelUrl": "",
         "posterUrl": "",
         "sceneControls": [],
-        "sceneGallery": "podium"
+        "sceneGallery": "podium",
+        "sceneViewer": "off"
       },
       "style": {
         "width": "100%",
@@ -3902,6 +3903,13 @@ export const ELEMENTS: Record<string, CatalogElement> = {
             "label": "Model",
             "controls": [
               "scene_model"
+            ]
+          },
+          {
+            "key": "scene_viewer",
+            "label": "Product viewer",
+            "controls": [
+              "scene_viewer"
             ]
           },
           {
@@ -3971,6 +3979,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
       "scene_effect",
       "scene_gallery",
       "scene_model",
+      "scene_viewer",
       "scene_display",
       "scene_controls",
       "border",
@@ -3998,7 +4007,8 @@ export const ELEMENTS: Record<string, CatalogElement> = {
       "Effect: four shaders (gradient mesh, floating particles, waves, aurora) with speed, intensity and a grain toggle. Its colours follow the site theme until you switch them to custom",
       "Spline: paste the link from Spline — Export → Viewer → copy link (…/scene.splinecode)",
       "Add a poster image so the box is not blank while a Spline scene loads; an effect draws immediately and needs none",
-      "Scene controls (rotate on scroll, tilt with the mouse) drive named objects, so they apply to a Spline scene and not to an effect, which has no objects"
+      "Scene controls (rotate on scroll, tilt with the mouse) drive named objects, so they apply to a Spline scene and not to an effect, which has no objects",
+      "For letting a shopper INSPECT a product, turn on Product viewer instead of building scene controls — it is drag to turn, wheel or pinch to zoom, and a slow idle spin, and it works on a phone where the mouse triggers do not. It is offered on the built-in scenes and on your own model, and it replaces the scene controls rather than joining them: both move the same object"
     ],
     "semantics": [
       "3d",
@@ -9782,7 +9792,6 @@ export const ELEMENTS: Record<string, CatalogElement> = {
         "afterSize": "cover",
         "afterPosition": "center center",
         "splitPosition": 50,
-        "splitDirection": "horizontal",
         "imageRatio": "auto"
       }
     },
@@ -36933,6 +36942,24 @@ export const ELEMENT_VALUES: Record<string, Record<string, ValueVocabulary>> = {
       ],
       "fallback": "",
       "readBy": "nodes/popup/html.go:triggerType"
+    },
+    "triggerFreq": {
+      "target": "config",
+      "writeKey": "triggerFreq",
+      "values": [
+        "always",
+        "once"
+      ],
+      "readBy": "POPUP_TRIGGER_FREQS (VOCAB in schema/src/elements/popup/meta.ts)"
+    },
+    "closePos": {
+      "target": "config",
+      "writeKey": "closePos",
+      "values": [
+        "inside",
+        "outside"
+      ],
+      "readBy": "POPUP_CLOSE_POSITIONS (VOCAB in schema/src/elements/popup/meta.ts)"
     }
   },
   "pricing-dataset": {
@@ -36961,6 +36988,15 @@ export const ELEMENT_VALUES: Record<string, Record<string, ValueVocabulary>> = {
       "open": true,
       "readBy": "nodes/product-image-feature/css.go:featureRatioCss"
     },
+    "featureClickAction": {
+      "target": "config",
+      "writeKey": "featureClickAction",
+      "values": [
+        "open_gallery",
+        "open_product_page"
+      ],
+      "readBy": "FEATURE_CLICK_ACTIONS (VOCAB in schema/src/elements/product-image-feature/meta.ts)"
+    },
     "main_image_source": {
       "target": "config",
       "writeKey": "mainImageSource",
@@ -36981,11 +37017,49 @@ export const ELEMENT_VALUES: Record<string, Record<string, ValueVocabulary>> = {
         "right",
         "top"
       ],
+      "readBy": "TAB_POSITIONS (VOCAB in schema/src/elements/tab/meta.ts)",
       "fallback": "top",
-      "readBy": "nodes/tab/html.go:position"
+      "fallbackReadBy": "nodes/tab/html.go:position"
+    },
+    "tabAlign": {
+      "target": "config",
+      "writeKey": "tabAlign",
+      "values": [
+        "center",
+        "left",
+        "right"
+      ],
+      "readBy": "TAB_ALIGNS (VOCAB in schema/src/elements/tab/meta.ts)"
     }
   },
   "spline-scene": {
+    "eventsTarget": {
+      "target": "config",
+      "writeKey": "eventsTarget",
+      "values": [
+        "global",
+        "local"
+      ],
+      "readBy": "SCENE_EVENTS_TARGETS (VOCAB in schema/src/elements/spline-scene/meta.ts)"
+    },
+    "mobileMode": {
+      "target": "config",
+      "writeKey": "mobileMode",
+      "values": [
+        "poster",
+        "scene"
+      ],
+      "readBy": "SCENE_MOBILE_MODES (VOCAB in schema/src/elements/spline-scene/meta.ts)"
+    },
+    "effectColors": {
+      "target": "config",
+      "writeKey": "effectColors",
+      "values": [
+        "custom",
+        "theme"
+      ],
+      "readBy": "SCENE_COLOR_MODES (VOCAB in schema/src/elements/spline-scene/meta.ts)"
+    },
     "source": {
       "target": "specials",
       "writeKey": "source",
@@ -36996,6 +37070,15 @@ export const ELEMENT_VALUES: Record<string, Record<string, ValueVocabulary>> = {
         "spline"
       ],
       "readBy": "SCENE_SOURCES (schema/src/elements/spline-scene/meta.ts)"
+    },
+    "sceneViewer": {
+      "target": "specials",
+      "writeKey": "sceneViewer",
+      "values": [
+        "off",
+        "on"
+      ],
+      "readBy": "SCENE_VIEWER_MODES (schema/src/elements/spline-scene/meta.ts)"
     },
     "effect": {
       "target": "config",
@@ -37029,7 +37112,7 @@ export const ELEMENT_VALUES: Record<string, Record<string, ValueVocabulary>> = {
         "normal",
         "slow"
       ],
-      "readBy": "SCENE_SPEEDS (schema/src/elements/spline-scene/meta.ts)"
+      "readBy": "SCENE_SPEEDS (VOCAB in schema/src/elements/spline-scene/meta.ts)"
     },
     "intensity": {
       "target": "config",
@@ -37039,16 +37122,41 @@ export const ELEMENT_VALUES: Record<string, Record<string, ValueVocabulary>> = {
         "soft",
         "strong"
       ],
-      "readBy": "SCENE_INTENSITIES (schema/src/elements/spline-scene/meta.ts)"
-    },
-    "effectColors": {
+      "readBy": "SCENE_INTENSITIES (VOCAB in schema/src/elements/spline-scene/meta.ts)"
+    }
+  },
+  "text-marquee": {
+    "marqueeDirection": {
       "target": "config",
-      "writeKey": "effectColors",
+      "writeKey": "marqueeDirection",
       "values": [
-        "custom",
-        "theme"
+        "left",
+        "right"
       ],
-      "readBy": "COLOR_MODES (editor/src/components/inspector/ScenePaletteRows.vue)"
+      "readBy": "MARQUEE_DIRECTIONS (VOCAB in schema/src/elements/text-marquee/meta.ts)"
+    }
+  },
+  "google-map": {
+    "mapType": {
+      "target": "specials",
+      "writeKey": "mapType",
+      "values": [
+        "code",
+        "location"
+      ],
+      "readBy": "MAP_TYPES (VOCAB in schema/src/elements/google-map/meta.ts)"
+    }
+  },
+  "form-file": {
+    "fileFormat": {
+      "target": "specials",
+      "writeKey": "fileFormat",
+      "values": [
+        "image",
+        "pdf",
+        "video"
+      ],
+      "readBy": "FILE_FORMATS (VOCAB in schema/src/elements/form-file/meta.ts)"
     }
   },
   "form-select": {
@@ -37075,6 +37183,17 @@ export const ELEMENT_VALUES: Record<string, Record<string, ValueVocabulary>> = {
         "product"
       ],
       "readBy": "OPTION_SOURCES (schema/src/elements/formOptionSource.ts)"
+    }
+  },
+  "form-payment": {
+    "logoShape": {
+      "target": "specials",
+      "writeKey": "logoShape",
+      "values": [
+        "auto",
+        "square"
+      ],
+      "readBy": "PAY_LOGO_SHAPES (VOCAB in schema/src/elements/form-payment/meta.ts)"
     }
   },
   "form-checkbox": {
@@ -37131,6 +37250,94 @@ export const ELEMENT_VALUES: Record<string, Record<string, ValueVocabulary>> = {
         "native"
       ],
       "readBy": "DATE_PICKERS (schema/src/elements/form-calendar/meta.ts)"
+    }
+  },
+  "locale-switcher": {
+    "variant": {
+      "target": "specials",
+      "writeKey": "variant",
+      "values": [
+        "dropdown",
+        "inline",
+        "panel",
+        "select"
+      ],
+      "readBy": "LOCALE_SWITCH_VARIANTS (VOCAB in schema/src/elements/locale-switcher/meta.ts)"
+    },
+    "locale_switch_label": {
+      "target": "specials",
+      "writeKey": "labelMode",
+      "values": [
+        "code",
+        "name",
+        "both",
+        "currency"
+      ],
+      "readBy": "locale_switch_label (editor picker)"
+    }
+  },
+  "theme-switcher": {
+    "variant": {
+      "target": "specials",
+      "writeKey": "variant",
+      "values": [
+        "icon",
+        "segmented",
+        "switch"
+      ],
+      "readBy": "THEME_SWITCH_VARIANTS (VOCAB in schema/src/elements/theme-switcher/meta.ts)"
+    }
+  },
+  "image-marquee": {
+    "marqueeDirection": {
+      "target": "config",
+      "writeKey": "marqueeDirection",
+      "values": [
+        "left",
+        "right"
+      ],
+      "readBy": "MARQUEE_DIRECTIONS (VOCAB in schema/src/elements/image-marquee/meta.ts)"
+    }
+  },
+  "menu": {
+    "expandType": {
+      "target": "config",
+      "writeKey": "expandType",
+      "values": [
+        "click",
+        "hover"
+      ],
+      "readBy": "EXPAND_TYPES (VOCAB in schema/src/elements/menu/meta.ts)"
+    },
+    "submenuStyle": {
+      "target": "config",
+      "writeKey": "submenuStyle",
+      "values": [
+        "cascade",
+        "collapse",
+        "dropdown"
+      ],
+      "readBy": "SUBMENU_STYLES (VOCAB in schema/src/elements/menu/meta.ts)"
+    }
+  },
+  "chat-widget": {
+    "side": {
+      "target": "config",
+      "writeKey": "side",
+      "values": [
+        "left",
+        "right"
+      ],
+      "readBy": "CHAT_HSIDES (VOCAB in schema/src/elements/chat-widget/meta.ts)"
+    },
+    "vside": {
+      "target": "config",
+      "writeKey": "vside",
+      "values": [
+        "bottom",
+        "top"
+      ],
+      "readBy": "CHAT_VSIDES (VOCAB in schema/src/elements/chat-widget/meta.ts)"
     }
   },
   "*": {
@@ -37197,7 +37404,7 @@ export const ELEMENT_VALUES: Record<string, Record<string, ValueVocabulary>> = {
         "custom",
         "theme"
       ],
-      "readBy": "COLOR_MODES (editor/src/components/inspector/ScenePaletteRows.vue)"
+      "readBy": "SCENE_COLOR_MODES (schema/src/elements/spline-scene/meta.ts)"
     }
   },
   "filter-checkbox": {
@@ -37504,19 +37711,6 @@ export const ELEMENT_VALUES: Record<string, Record<string, ValueVocabulary>> = {
       "readBy": "cart_total_part (editor picker)"
     }
   },
-  "locale-switcher": {
-    "locale_switch_label": {
-      "target": "specials",
-      "writeKey": "labelMode",
-      "values": [
-        "code",
-        "name",
-        "both",
-        "currency"
-      ],
-      "readBy": "locale_switch_label (editor picker)"
-    }
-  },
   "member-field": {
     "member_field_source": {
       "target": "specials",
@@ -37651,6 +37845,32 @@ export const ELEMENT_VALUES: Record<string, Record<string, ValueVocabulary>> = {
         "page"
       ],
       "readBy": "qr_source (editor picker)"
+    }
+  },
+  "cart-drawer": {
+    "direct": {
+      "target": "config",
+      "writeKey": "direct",
+      "values": [
+        "bottom",
+        "left",
+        "right",
+        "top"
+      ],
+      "readBy": "DRAWER_EDGES (VOCAB in schema/src/elements/cart-drawer/meta.ts)"
+    }
+  },
+  "hamburger-menu": {
+    "direct": {
+      "target": "config",
+      "writeKey": "direct",
+      "values": [
+        "bottom",
+        "left",
+        "right",
+        "top"
+      ],
+      "readBy": "DRAWER_EDGES (VOCAB in schema/src/elements/hamburger-menu/meta.ts)"
     }
   }
 };

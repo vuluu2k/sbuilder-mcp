@@ -233,12 +233,12 @@ that accounts for them.
   OpenAPI document declares no body for it at all, so the shape was read off the editor's
   own `saveSource` (`editor/src/features/pages/api.ts:115`), including its
   `schema_version ?? 1` fallback. Copy the working client; never guess a body.
-- **The element registry holds 111 types, and `getElementAI` covers 111/111** (106 when
+- **The element registry holds 113 types, and `getElementAI` covers 113/113** (106 when
   `order-receipt` landed, 107, then `rating-stars`, `chat-widget` and `cart-count` — codegen
   asserts the coverage, so this number moves with the platform and a stale one here is caught
   by the next run, not by a reader). The
   directory has more entries than that because the loose `.ts` files beside the elements
-  are not elements. 78 binding sources, read from BOTH renderers — the Go scope and the
+  are not elements. 79 binding sources, read from BOTH renderers — the Go scope and the
   editor's own binding context, which carries keys the Go side never spells out
   (`product.moneyOverride`, `site.*`, `course.*`). Reading one alone made `sb_review` call
   the platform's own seeded pricing binding dead on every page that showed a price.
@@ -1751,7 +1751,7 @@ that accounts for them.
   `default_seed_copy` reports on everybody else's seeds.
 
 - **A CONFIG KEY'S LEGAL VALUES WERE UNREADABLE, AND GUESSING ONE FAILS SILENTLY.**
-  `sb_traits_for` names 471 controls, 138 with a declared write target — and NOT ONE said what
+  `sb_traits_for` names 505 controls, 139 with a declared write target — and NOT ONE said what
   that target accepts, because every trait in `schema/src/traits/registry.ts` declares
   `schema: { type: 'string' }`. The vocabulary lives in the Vue component that draws the picker,
   which is a place no agent can read.
@@ -1787,6 +1787,75 @@ that accounts for them.
   A WARNING, never a refusal: the platform accepts the value, so refusing would invent a rule
   it does not have and would block a caller writing a word a newer deployment understands and
   this catalog does not.
+
+  **AND THE PLATFORM NOW DECLARES OUTRIGHT WHAT THIS REPO SPENT FOUR RULES INFERRING.** Every
+  reader here had to answer the hard half itself — not "what are the words" but "WHICH KEY do
+  they govern" — from the seeded value, the declaration's own name and its locality, and that
+  join provably cannot reach everything. `VOCAB` on an element's meta ends it:
+  `{ '<namespace>.<key>': LIST } satisfies ElementVocabulary`, attached to that meta's own
+  `meta.type` (web_builder `a401a1c5`). 35 entries across 18 metas at the 2026-09-14 regen.
+
+  Read as Source D, and it is worth more than the scan because it is GUARDED UPSTREAM:
+  `schema/test/element-vocabularies.test.ts` asks four things of every entry — is the seed a
+  member at base AND at every breakpoint, does the inspector row RENDER from the list rather
+  than merely import it, is every member reachable, and is it the RIGHT list, checked by array
+  IDENTITY against a second independent table because so many of these lists are
+  near-neighbours. Nothing on this side can prove any of that.
+
+  THREE VOCABULARIES WERE UNREACHABLE BY ANY AMOUNT OF INFERENCE, and they are ordinary keys:
+  `cart-drawer` and `hamburger-menu` write `config.direct` from the SHARED `DRAWER_EDGES`, and
+  no name rule turns `DRAWER_EDGES` into `direct` — which edge the cart drawer slides in from
+  is not exotic. `tab` seeds `tabAlign: 'left'` while carrying BOTH `TAB_ALIGNS` and
+  `TAB_POSITIONS`, which intersect at `left`, so the seed proves nothing and both candidates
+  are dropped; the platform's own guard names that exact pair as why it added the identity
+  check. 81 → 84 entries.
+
+  IT IS A MIGRATION IN PROGRESS, which is the real argument for reading the declaration rather
+  than patching the join. The platform audited its inspector and found 42 rows holding a value
+  list privately against 15 that imported one; 18 elements have moved. A reader keyed on the
+  declaration takes each of the rest on the next codegen with no edit here — every one of which
+  would otherwise arrive as another hole in the table or another special case in the join.
+
+  TWELVE OF THE 35 ARE SKIPPED AND THAT IS NOT A LOSS. The three carriers of the
+  background-scene layer declare its keys in their own `VOCAB`, and `sceneVocab` already
+  publishes them at `*`, which `vocabularyForWrite` falls through to for EVERY element. An
+  identical element-scoped copy answers nothing the table did not already answer. Skipped only
+  where the values MATCH — a carrier that narrowed its own layer would be real news.
+
+  **AND READING IT EXPOSED A LOSS THE OVERWRITE HAD BEEN MAKING SILENTLY: `values` AND
+  `fallback`/`open` ARE TWO DIFFERENT FACTS FROM TWO DIFFERENT PLACES.** A schema list says
+  which words MEAN something, and a declaration rightly outranks a Go list for that — a
+  renderer enumerates what it can DRAW, a subset that drifts on purpose. But only the renderer
+  can say what happens to a word OUTSIDE the list: `fallback` is the normaliser's trailing
+  `return Fallback`, `open` is its `default: return mode` passthrough, and a declaration is
+  silent on both. `put` overwrote the whole entry, so a superseding declaration threw away a
+  fact it never had.
+
+  MEASURED RATHER THAN ANTICIPATED: `tab.tabPosition` carried `fallback: "top"` from
+  `nodes/tab/html.go` until the platform moved that list into `TAB_POSITIONS`, after which
+  `sb_set` could no longer say what `tabPosition: "start"` renders as. NOTHING WENT RED — the
+  entry stayed correct and got less informative — which is exactly how this accumulates while
+  the platform keeps migrating vocabularies out of its renderers. `open` is the half that would
+  cost more: dropping a fallback costs a sentence, dropping `open` makes `unknownWriteNote`
+  report a CORRECT value as a mistake (`mediaImageRatio: "4 / 5"` really is handed to CSS) and
+  sends a caller to "fix" a working page. Nothing declares that key today, so the guard is in
+  place before the first declaration that would spring it.
+
+  THE ATTRIBUTION HAD TO RIDE WITH IT, and the existing suite is what caught that. `readBy` now
+  names the declaration that won the VALUES, so the note would have read "TAB_POSITIONS
+  normalises anything unrecognised to top" — crediting a plain `as const` list with behaviour
+  only `html.go` has. `fallbackReadBy` carries the Go site, set ONLY where it differs, and the
+  table-wide invariant still holds against it: a fallback comes from a Go `default:` arm or from
+  nowhere, never from a picker or a bare declaration. The carry is also CONDITIONAL — a fallback
+  the declared list no longer contains means the Go reading went stale, and naming it would tell
+  an agent a value the platform says is not one.
+
+  **AND THE FIRST SYMPTOM OF ALL THIS WAS `codegen:check` REFUSING TO RUN AT ALL**, which is the
+  reader working rather than failing. The same platform commit left `ScenePaletteRows.vue` with
+  `const COLOR_MODES = SCENE_COLOR_MODES` — an alias, not a list — and the 3D reader exited 1
+  naming the slot instead of publishing a short vocabulary. Absent is silent,
+  present-and-unparseable exits 1; the `colors` slot now reads `SCENE_COLOR_MODES` from the
+  schema beside the two word scales it belongs with.
 
   **AND THIS ENTRY'S CENTRAL RULING WAS FALSE FOR ONE SHAPE OF SWITCH, WHICH SHIPPED A WRONG
   VOCABULARY TO npm IN 0.42.0.** The reader that grew out of the paragraphs above took *a Go

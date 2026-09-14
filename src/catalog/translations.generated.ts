@@ -4,7 +4,7 @@
 export const TRANSLATION_SOURCE = {
   "elements": 58,
   "pairs": 142,
-  "neverKeys": 163,
+  "neverKeys": 164,
   "entityTypes": 12
 } as const;
 
@@ -421,6 +421,7 @@ export const NEVER_TRANSLATED: string[] = [
   "sceneControls",
   "sceneGallery",
   "sceneUrl",
+  "sceneViewer",
   "searchBehavior",
   "searchClearSwap",
   "searchDebounceMs",

@@ -2133,9 +2133,14 @@ export const API_DEFINITIONS: Record<string, unknown> = ${JSON.stringify(
       return existsSync(p) ? readFileSync(p, 'utf8') : null;
     };
     // A flat `[...]` of single-quoted literals, by declaration name. `export`
-    // is OPTIONAL: `COLOR_MODES` is private to one inspector component and is
-    // still the complete set the author picks from, which is Source B's own
-    // proof of completeness reached through a `.vue` file instead of a `.ts`.
+    // is OPTIONAL, and that latitude is now unused rather than wrong: the one
+    // slot that needed it read `COLOR_MODES` out of `ScenePaletteRows.vue`,
+    // where it was private to a single inspector component. The platform moved
+    // that list into the schema beside the two word scales it belongs with
+    // (`SCENE_COLOR_MODES`, web_builder `a401a1c5`), leaving the component with
+    // `const COLOR_MODES = SCENE_COLOR_MODES` — an alias, not a list — so this
+    // reader exited 1 naming the slot, which is wrong-not-missing working.
+    // Keeping the latitude costs nothing and the next private list will want it.
     const listOf = (src: string, name: string): string[] | null => {
       const m = new RegExp(`(?:^|\\n)\\s*(?:export\\s+)?const\\s+${name}\\b[^=\\n]*=\\s*\\[([^\\]]*)\\]`).exec(src);
       if (!m) return null;
@@ -2206,7 +2211,7 @@ export const API_DEFINITIONS: Record<string, unknown> = ${JSON.stringify(
       gallery: { rel: 'runtime/src/services/gallery-scenes.ts', name: 'GALLERY_CATALOGUE', how: 'ids', must: 'podium' },
       speed: { rel: 'schema/src/elements/spline-scene/meta.ts', name: 'SCENE_SPEEDS', how: 'list', must: 'slow' },
       intensity: { rel: 'schema/src/elements/spline-scene/meta.ts', name: 'SCENE_INTENSITIES', how: 'list', must: 'soft' },
-      colors: { rel: 'editor/src/components/inspector/ScenePaletteRows.vue', name: 'COLOR_MODES', how: 'list', must: 'custom' },
+      colors: { rel: 'schema/src/elements/spline-scene/meta.ts', name: 'SCENE_COLOR_MODES', how: 'list', must: 'custom' },
     };
     // Which file each surface's `sources:` identifier lives in, the write key
     // that surface must still produce, and one value that must still be in it.
@@ -2345,6 +2350,123 @@ export const API_DEFINITIONS: Record<string, unknown> = ${JSON.stringify(
   // dialog RESOLVES it away and its union therefore names only the two the
   // author picks. A value the platform itself seeds is legal by construction,
   // so it can never be missing from a list this catalog publishes.
+  // ---- Source D: THE META'S OWN `VOCAB` -----------------------------------
+  //
+  // THE PLATFORM NOW DECLARES WHAT THIS REPO HAD TO INFER, AND THE INFERENCE
+  // CANNOT REACH EVERYTHING.
+  //
+  // `declaredVocab` above scans for `as const` lists and then does the hard
+  // part — deciding WHICH KEY each one governs — from the seeded value, the
+  // declaration's own name and its locality. Its comment is honest about the
+  // cost: a shared list whose name does not correspond to the key is refused
+  // outright, and two lists that both contain one element's seed are both
+  // dropped. Neither is hypothetical. MEASURED on this tree, three vocabularies
+  // are unreachable by any amount of inference:
+  //
+  //   - `cart-drawer` and `hamburger-menu` write `config.direct` from the
+  //     SHARED `DRAWER_EDGES`, and no name-based rule turns `DRAWER_EDGES` into
+  //     `direct`, so rule 2b refuses it. Which edge the cart drawer slides in
+  //     from is not an exotic key.
+  //   - `tab` seeds `tabAlign: 'left'` while carrying BOTH `TAB_ALIGNS` and
+  //     `TAB_POSITIONS`, which intersect at `left` — so rule 3 drops both
+  //     candidates. The platform's own guard names that exact pair as why it
+  //     added an identity check ("`tab` now carries two lists that intersect at
+  //     each other's seeds").
+  //
+  // `VOCAB` ends the guessing by stating the mapping: a meta exports
+  // `{ '<namespace>.<key>': LIST } satisfies ElementVocabulary`, attached to
+  // that meta's own `meta.type`. There is no join left to get wrong.
+  //
+  // AND IT IS GUARDED UPSTREAM, which is what makes it worth more than the
+  // scan. `schema/test/element-vocabularies.test.ts` asks four things of every
+  // entry — is the seed a member (at base AND at every breakpoint), does the
+  // inspector row RENDER from the list rather than merely import it, is every
+  // member reachable, and is it the RIGHT list, checked by array IDENTITY
+  // against a second independent table because so many of these lists are
+  // near-neighbours. A scan on this side can prove none of that.
+  //
+  // THIS IS A MIGRATION IN PROGRESS, which is the real argument for reading the
+  // declaration rather than patching the join. The platform audited its
+  // inspector and found 42 rows holding a value list privately against 15 that
+  // imported one; 18 elements have moved so far. A reader keyed on the
+  // declaration takes each of the rest on the next codegen with no edit here,
+  // where every one would otherwise arrive as another hole in the table or
+  // another special case in the join.
+  //
+  // ABSENT IS SILENT, PRESENT-AND-MALFORMED EXITS 1, the rule every reader here
+  // follows. A checkout whose metas declare no `VOCAB` yields nothing and says
+  // so; a `VOCAB` that no longer parses into `<namespace>.<key>` pairs, or that
+  // hangs off a meta with no `type`, means this table would be WRONG rather
+  // than short.
+  //
+  // A NAMESPACE OUTSIDE config/specials IS A REFUSAL AND NOT A SKIP.
+  // `ElementVocabulary` is typed `Record<string, readonly string[]>`, so nothing
+  // upstream stops a `style.*` entry — and `vocabularyForWrite` answers for
+  // those two namespaces only, so one would be read by nothing here. A skip
+  // would under-report exactly the way the holes above do; the exit makes
+  // teaching this reader a new namespace a deliberate act.
+  const metaVocab = async (): Promise<Array<{ scope: string; vocab: ValueVocabulary }>> => {
+    const dir = resolve(repo, 'schema/src/elements');
+    if (!existsSync(dir)) return [];
+    const out: Array<{ scope: string; vocab: ValueVocabulary }> = [];
+    let metas = 0;
+    const dirs = readdirSync(dir, { withFileTypes: true })
+      .filter((e) => e.isDirectory())
+      .sort((a, b) => a.name.localeCompare(b.name));
+    for (const e of dirs) {
+      const rel = `schema/src/elements/${e.name}/meta.ts`;
+      const abs = resolve(repo, rel);
+      if (!existsSync(abs)) continue;
+      const mod = (await import(abs)) as {
+        meta?: { type?: string };
+        VOCAB?: Record<string, readonly string[]>;
+      };
+      if (!mod.VOCAB) continue;
+      metas++;
+      const type = mod.meta?.type;
+      if (!type) {
+        console.error(`${rel} exports VOCAB but no meta.type to attach it to`);
+        process.exit(1);
+      }
+      // The IDENTIFIER the entry points at, for `readBy` — `DRAWER_EDGES` is
+      // what a reader greps for and `VOCAB['config.direct']` is not. Read off
+      // the source because the imported object carries values and no names. A
+      // spread (`{ ...BACKGROUND_SCENE_VOCAB }`) names nothing per key and falls
+      // back to the path, which is still exact about where it came from.
+      const src = readFileSync(abs, 'utf8');
+      for (const [path, values] of Object.entries(mod.VOCAB)) {
+        const dot = path.indexOf('.');
+        const target = path.slice(0, dot);
+        const writeKey = path.slice(dot + 1);
+        if ((target !== 'config' && target !== 'specials') || !writeKey) {
+          console.error(
+            `${rel}: VOCAB key "${path}" is not a config/specials path — teach metaVocab the new namespace`,
+          );
+          process.exit(1);
+        }
+        if (!values.length) {
+          console.error(`${rel}: VOCAB["${path}"] is empty — a vocabulary source moved`);
+          process.exit(1);
+        }
+        const quoted = path.replace(/\./g, '\\.');
+        const named = new RegExp(`['"\`]${quoted}['"\`]\\s*:\\s*([A-Z][A-Z0-9_]*)`).exec(src)?.[1];
+        out.push({
+          scope: type,
+          vocab: {
+            target,
+            writeKey,
+            values: [...new Set(values)].sort(),
+            readBy: named ? `${named} (VOCAB in ${rel})` : `VOCAB["${path}"] (${rel})`,
+          },
+        });
+      }
+    }
+    console.error(
+      `  element vocabularies the metas declare outright: ${out.length} across ${metas} metas`,
+    );
+    return out;
+  };
+
   const filterVocab = (): Array<{ scope: string; vocab: ValueVocabulary }> => {
     const SOURCES_REL = 'schema/src/filters/sources.ts';
     const GROUPS_REL = 'schema/src/elements/filterGroups.ts';
@@ -2669,8 +2791,65 @@ export const API_DEFINITIONS: Record<string, unknown> = ${JSON.stringify(
   // have no competing declaration, and on the four whose element prose also
   // names values, the prose names a SUBSET every time — no under-report today.
   const elementValues: Record<string, Record<string, ValueVocabulary>> = {};
+  // A DECLARATION OUTRANKS A RENDERER ON THE VALUES AND ON NOTHING ELSE.
+  //
+  // `values` and `fallback`/`open` answer two different questions. A schema list
+  // says WHICH WORDS MEAN SOMETHING, and the precedence above is right that it
+  // outranks a Go list for that — a renderer enumerates what it can DRAW, a
+  // subset that drifts on purpose. But only the renderer can answer WHAT HAPPENS
+  // TO A WORD OUTSIDE THE LIST: `fallback` is the normaliser's trailing
+  // `return Fallback`, `open` is its `default: return mode` passthrough, and a
+  // declaration is silent on both. So a plain overwrite threw away a fact the
+  // superseding source never had.
+  //
+  // MEASURED, NOT ANTICIPATED. `tab.tabPosition` carried `fallback: "top"` from
+  // `nodes/tab/html.go` until the platform moved the list into `TAB_POSITIONS`
+  // (web_builder `a401a1c5`); the declaration won the key and `sb_set` stopped
+  // being able to say what `tabPosition: "start"` renders as. Nothing went red —
+  // the entry is still correct, only less informative — which is how this
+  // accumulates while the platform keeps migrating vocabularies out of its
+  // renderers.
+  //
+  // `open` IS THE HALF THAT WOULD COST MORE. Dropping a `fallback` costs a
+  // sentence; dropping `open` makes `unknownWriteNote` report a CORRECT value as
+  // a mistake — `mediaImageRatio: "4 / 5"` really is handed straight to CSS —
+  // and sends a caller to "fix" a working page, which this repo already records
+  // as worse than saying nothing. Nothing declares that key today, so the guard
+  // is in place before the first declaration that would spring it.
+  //
+  // THE FALLBACK IS DROPPED WHERE THE DECLARATION CONTRADICTS IT. One the
+  // declared list no longer contains means the Go reading went stale, and
+  // carrying it would name a value the platform says is not one.
+  //
+  // The prior entry is found by target+writeKey rather than by `key`, because
+  // the sources name their entries differently — a picker uses the CONTROL name
+  // (`divider_orientation`), the declaration readers use the write key — and
+  // what is being superseded is the key that gets written, not the label. It is
+  // deliberately NOT deleted under its old name: the duplicate guard below is
+  // what catches two controls writing one key with different words, and removing
+  // the loser here would make that check unreachable. Both copies end up
+  // carrying the renderer's facts, so whichever `vocabularyForWrite` reaches
+  // first answers the same.
   const put = (scope: string, key: string, v: ValueVocabulary) => {
-    (elementValues[scope] ??= {})[key] = v;
+    const table = (elementValues[scope] ??= {});
+    const prev = Object.values(table).find(
+      (p) => p.target === v.target && p.writeKey === v.writeKey,
+    );
+    if (prev) {
+      // The ATTRIBUTION rides with the value. `readBy` names the declaration
+      // that won the values, and a note reading "TAB_POSITIONS normalises
+      // anything unrecognised to top" would credit an `as const` list with
+      // behaviour only `nodes/tab/html.go` has.
+      if (
+        v.fallback === undefined &&
+        prev.fallback !== undefined &&
+        v.values.includes(prev.fallback)
+      ) {
+        v = { ...v, fallback: prev.fallback, fallbackReadBy: prev.fallbackReadBy ?? prev.readBy };
+      }
+      if (!v.open && prev.open) v = { ...v, open: prev.open };
+    }
+    table[key] = v;
   };
   for (const { scope, vocab } of goVocab()) {
     if (scope === '*') put('*', vocab.writeKey, vocab);
@@ -2702,6 +2881,33 @@ export const API_DEFINITIONS: Record<string, unknown> = ${JSON.stringify(
       if (el.controls.includes(control)) put(el.type, control, { ...v, readBy: `${control} (editor picker)` });
     }
   }
+  // Source D runs LAST because it is the only source that READS the mapping off
+  // the element itself. Every reader above either infers the key (the scan) or
+  // reads it from a surface that WRITES the key (the scene key table, the filter
+  // dialog, a picker's `setNodeValue`) — all exact, all narrower. Where D
+  // overlaps any of them the two agree today by construction, because the
+  // platform's guard forces the inspector row to render the meta's own list.
+  //
+  // A DUPLICATE OF THE `*` ANSWER IS NOT AN ADDITION. The three carriers of the
+  // background-scene layer declare its four keys in their own `VOCAB`, and
+  // `sceneVocab` already publishes those at `*`, which `vocabularyForWrite`
+  // falls through to for EVERY element. An element-scoped copy of an identical
+  // list answers nothing the table did not already answer and costs twelve
+  // entries, so it is skipped — and only where the values MATCH, because a
+  // carrier that narrowed its own layer would be real news.
+  let starDup = 0;
+  for (const { scope, vocab } of await metaVocab()) {
+    if (!elements[scope]) continue;
+    const star = Object.values(elementValues['*'] ?? {}).find(
+      (v) => v.target === vocab.target && v.writeKey === vocab.writeKey,
+    );
+    if (star && JSON.stringify(star.values) === JSON.stringify(vocab.values)) {
+      starDup++;
+      continue;
+    }
+    put(scope, vocab.writeKey, vocab);
+  }
+  if (starDup) console.error(`  (${starDup} of them already answered for every element at "*")`);
   // TWO CONTROLS ON ONE ELEMENT WRITING ONE KEY WITH DIFFERENT WORDS would make
   // `sb_set`'s warning a coin flip — it sees a namespace and a key, never a
   // control. It does not happen today (`specials.source`'s two controls sit on

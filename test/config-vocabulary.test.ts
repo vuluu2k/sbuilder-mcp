@@ -210,12 +210,30 @@ describe('what a key is allowed to hold, scoped to the element', () => {
   // So the rule is the READER, not a list of exceptions to it: a Go site
   // (`<file>.go:<func>`) carries a fallback unless it is open, and nothing else
   // ever does.
+  //
+  // THE READER IS NOT ALWAYS `readBy` ANY MORE, and that is the whole of the
+  // clause below rather than a loosening of the rule. A schema declaration
+  // SUPERSEDES a Go reading for a key — the list says which words mean
+  // something, which a renderer's enumeration only under-reports — and the
+  // renderer's `default:` arm survives underneath it, because nothing else can
+  // say what an unknown word renders as. The two halves then come from two
+  // places, so the entry carries `fallbackReadBy` naming the Go site it really
+  // came from, and the rule holds against THAT: still a Go site, still never a
+  // picker or a bare declaration, and `unknownWriteNote` credits the normalising
+  // to it rather than to a list that normalises nothing.
   it('claims a fallback only where the source states one', () => {
     for (const [type, table] of Object.entries(ELEMENT_VALUES)) {
       for (const [key, v] of Object.entries(table)) {
         const where = `${type}.${key}`;
+        const states = v.fallbackReadBy ?? v.readBy;
+        // Set ONLY where it differs, so it can never be a second name for the
+        // same source and can never appear without the fallback it explains.
+        if (v.fallbackReadBy !== undefined) {
+          expect(v.fallbackReadBy, where).not.toBe(v.readBy);
+          expect(typeof v.fallback, where).toBe('string');
+        }
         if (v.open) expect(v.fallback, where).toBeUndefined();
-        else if (/\.go:/.test(v.readBy)) expect(typeof v.fallback, where).toBe('string');
+        else if (/\.go:/.test(states)) expect(typeof v.fallback, where).toBe('string');
         else expect(v.fallback, where).toBeUndefined();
         // A partial list is worse than none, so an empty one must never ship —
         // and a list of ONE is the shape a half-read source produces, so it is
@@ -652,5 +670,141 @@ describe('a declaration the schema makes reaches the key it governs', () => {
     // sceneVocab's 12 vocabularies and 0 of filterVocab's 23, so both stay.
     expect(vocabularyForWrite('flex-section', 'config', 'backgroundSceneSource')).not.toBeNull();
     expect(vocabularyForWrite('filter-checkbox', 'specials', 'filterSource')).not.toBeNull();
+  });
+});
+
+/**
+ * SOURCE D — THE MAPPING THE PLATFORM DECLARES OUTRIGHT.
+ *
+ * Every reader above this one either INFERS which key a list governs (from the
+ * seeded value, the declaration's name, its locality) or reads it off a surface
+ * that WRITES the key. Both are exact where they reach and neither reaches
+ * everything: a shared list whose name does not correspond to the key is
+ * refused, and two lists that intersect at an element's seed are both dropped.
+ *
+ * `VOCAB` on an element's meta states the mapping — `'<namespace>.<key>': LIST`
+ * against that meta's own `meta.type` — so there is no join to get wrong, and
+ * the platform's own suite guards it four ways (the seed is a member, the
+ * inspector row RENDERS from the list, every member is reachable, and it is the
+ * right list by array identity).
+ *
+ * Asserted as REACH — this key is answered, by this declaration — rather than
+ * as a snapshot of the table, for the reason the `collectionType` entry at the
+ * top of this file records: these vocabularies are generated so they can grow,
+ * and a test that goes red on every platform addition teaches the next reader
+ * to update an array without looking at it.
+ */
+describe('the vocabularies a meta declares outright', () => {
+  /**
+   * `DRAWER_EDGES` is SHARED by two elements and is named for the idea rather
+   * than for the key it governs, so the inferring reader refuses it by rule —
+   * nothing turns `DRAWER_EDGES` into `direct`. Which edge the cart drawer
+   * slides in from is not an exotic key, and it was unreachable through any
+   * tool here until the declaration was read.
+   */
+  it('answers a key whose shared list is named for the idea, not for the key', () => {
+    for (const type of ['cart-drawer', 'hamburger-menu']) {
+      const v = vocabularyForWrite(type, 'config', 'direct');
+      expect(v, type).not.toBeNull();
+      for (const edge of ['left', 'right', 'top', 'bottom']) expect(v!.values, type).toContain(edge);
+      expect(v!.readBy, type).toMatch(/DRAWER_EDGES/);
+      expect(v!.readBy, type).toMatch(/VOCAB/);
+    }
+  });
+
+  /**
+   * `tab` carries TAB_ALIGNS and TAB_POSITIONS, which intersect at `left`, so
+   * the seed proves nothing about which list governs `tabAlign` and the
+   * inferring reader drops both candidates. The platform's own guard names this
+   * exact pair as why it added an identity check.
+   *
+   * The two must stay DISTINCT: `tabAlign` has no `top`/`bottom` and
+   * `tabPosition` has no `center`, so answering one with the other's list would
+   * tell an agent a working word is invalid and an invalid one works.
+   */
+  it('separates two lists on one element that intersect at each other seeds', () => {
+    const align = vocabularyForWrite('tab', 'config', 'tabAlign')!;
+    const position = vocabularyForWrite('tab', 'config', 'tabPosition')!;
+    expect(align.values).toContain('center');
+    expect(align.values).not.toContain('top');
+    expect(position.values).toContain('top');
+    expect(position.values).not.toContain('center');
+    expect(align.readBy).toMatch(/TAB_ALIGNS/);
+  });
+
+  /**
+   * THE SKIP THAT KEEPS THE TABLE HONEST RATHER THAN LARGE. The three carriers
+   * of the background-scene layer declare its keys in their own `VOCAB`, and
+   * `sceneVocab` already publishes them at `*`, which `vocabularyForWrite`
+   * falls through to for every element. Twelve identical element-scoped copies
+   * would answer nothing the table did not already answer.
+   *
+   * Asserted through the CONSUMER: the key is still answered for a carrier, and
+   * the answer is the shared one.
+   */
+  it('does not re-state per element what is already answered for every element', () => {
+    expect(vocabularyForWrite('flex-section', 'config', 'backgroundSceneSource')).not.toBeNull();
+    expect(ELEMENT_VALUES['flex-section']?.backgroundSceneSource).toBeUndefined();
+    expect(Object.values(ELEMENT_VALUES['*'] ?? {}).map((s) => s.writeKey)).toContain(
+      'backgroundSceneSource',
+    );
+  });
+});
+
+/**
+ * A DECLARATION OUTRANKS A RENDERER ON THE VALUES AND ON NOTHING ELSE.
+ *
+ * `values` and `fallback`/`open` answer two different questions. A schema list
+ * says which words MEAN something; only the renderer can say what happens to a
+ * word OUTSIDE the list. So when a declaration supersedes a Go reading, the
+ * renderer's half has to survive — a plain overwrite threw away a fact the
+ * winning source never had.
+ *
+ * MEASURED, NOT ANTICIPATED: `tab.tabPosition` carried `fallback: "top"` from
+ * `nodes/tab/html.go` until the platform moved the list into `TAB_POSITIONS`,
+ * and nothing went red — the entry stayed correct and got less informative,
+ * which is how this accumulates while the platform keeps migrating vocabularies
+ * out of its renderers.
+ */
+describe('what the renderer knows and a declaration does not', () => {
+  it('keeps the fallback when a declaration takes over the values', () => {
+    const v = vocabularyForWrite('tab', 'config', 'tabPosition')!;
+    // The declaration won the values...
+    expect(v.readBy).toMatch(/TAB_POSITIONS/);
+    // ...and the renderer's answer to "what does an unknown word render as"
+    // survived it, credited to the renderer rather than to the list.
+    expect(v.fallback).toBe('top');
+    expect(v.fallbackReadBy).toMatch(/\.go:/);
+    const note = unknownWriteNote('tab', 'config', 'tabPosition', 'start')!;
+    expect(note).toMatch(/normalises anything unrecognised to "top"/);
+    expect(note).toMatch(/\.go:/);
+    expect(note).not.toMatch(/TAB_POSITIONS normalises/);
+  });
+
+  /**
+   * `open` IS THE HALF THAT WOULD COST MORE. Dropping a fallback costs a
+   * sentence; dropping `open` makes the note report a CORRECT value as a
+   * mistake — `mediaImageRatio: "4 / 5"` really is handed straight to CSS — and
+   * sends a caller to "fix" a working page. Nothing declares that key today, so
+   * this pins the guard before the first declaration that would spring it.
+   */
+  it('stays silent on an open vocabulary whatever declares its named values', () => {
+    expect(vocabularyForWrite('media-dataset', 'config', 'mediaImageRatio')!.open).toBe(true);
+    expect(unknownWriteNote('media-dataset', 'config', 'mediaImageRatio', '4 / 5')).toBeNull();
+  });
+
+  /**
+   * The carry is CONDITIONAL, and this is the property that makes it safe: a
+   * fallback the declared list no longer contains would mean the Go reading has
+   * gone stale, and naming it would tell an agent a value the platform says is
+   * not one. Held over the whole table rather than over one entry.
+   */
+  it('never names a fallback outside its own list', () => {
+    for (const [scope, table] of Object.entries(ELEMENT_VALUES)) {
+      for (const [key, v] of Object.entries(table)) {
+        if (v.fallback === undefined) continue;
+        expect(v.values, `${scope}.${key}`).toContain(v.fallback);
+      }
+    }
   });
 });

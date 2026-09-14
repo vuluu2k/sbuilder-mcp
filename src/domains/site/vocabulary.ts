@@ -174,10 +174,15 @@ export function vocabularyForWrite(
  *     `mediaImageRatio: "4 / 5"` is CORRECT and reporting it would send a caller
  *     to "fix" a working page — the same cost this repo already records for the
  *     `category` alias. Nothing is said at all.
- *   - A FALLBACK IS ONLY CLAIMED WHERE THE SOURCE SAYS ONE. The editor's picker
- *     proves what an author may choose and is silent on what the renderer does
- *     with anything else. Naming a fallback there would be the invention this
- *     table exists to remove, so the note says what it knows and stops.
+ *   - A FALLBACK IS ONLY CLAIMED WHERE A SOURCE SAYS ONE, AND IT IS CREDITED TO
+ *     THAT SOURCE. The editor's picker proves what an author may choose and is
+ *     silent on what the renderer does with anything else. Naming a fallback
+ *     there would be the invention this table exists to remove, so the note says
+ *     what it knows and stops. Where a schema declaration has SUPERSEDED a Go
+ *     reading the two halves come from different places — the list says which
+ *     words mean something, the renderer's `default:` arm says what an unknown
+ *     one renders as — so the sentence names `fallbackReadBy`, not the
+ *     declaration, which normalises nothing.
  */
 export function unknownWriteNote(
   type: string,
@@ -193,7 +198,7 @@ export function unknownWriteNote(
   return (
     `${namespace}.${key} = ${JSON.stringify(value)} is not a value ${type}'s renderer knows. ` +
     (vocab.fallback !== undefined
-      ? `${vocab.readBy} normalises anything unrecognised to ${
+      ? `${vocab.fallbackReadBy ?? vocab.readBy} normalises anything unrecognised to ${
           vocab.fallback === '' ? '"" (unset)' : `"${vocab.fallback}"`
         }, so this stores, saves and publishes with no error and renders as that. `
       : `${vocab.readBy} is the source, and it is silent on what the renderer does with a word ` +
