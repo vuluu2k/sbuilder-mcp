@@ -6,6 +6,11 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.46.1] - 2026-09-14
+
+### Fixed
+- Dry run của sb_remove giờ báo removing là số node thực sự thay vì tổng số patch, vốn bị lệch một do việc xoá một subtree còn phát sinh thêm một patch để gỡ nó khỏi danh sách con của node cha; tổng số patch thô vẫn có sẵn qua trường patches mới.
+
 ## [0.46.0] - 2026-09-14
 
 ### Added
