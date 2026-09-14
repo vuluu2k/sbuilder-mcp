@@ -110,7 +110,7 @@ nhét ngược lại vào mọi bản cài.
 | `sb_undo` | Trả lại thứ mà một lệnh PUT đã ghi đè. Với TRANG thì đây là đường về thứ hai chứ không phải duy nhất: nền tảng có version, history và restore (`sb_api_find` "page versions"), và chúng sống lâu hơn tiến trình này — hãy dùng chúng trước, còn tool này cho mọi PUT có hình dạng khác |
 
 Hai mươi tám tool, **524 operation API** (175 trong 234 lệnh ghi có hình dạng body đọc thẳng
-từ handler), 113 element, 78 nguồn binding. `sb_api_find` là
+từ handler), 113 element, 79 nguồn binding. `sb_api_find` là
 một chỉ mục chứ không phải mỗi endpoint một tool, nên danh sách tool vẫn ngắn trong khi mọi
 thứ nền tảng làm được vẫn với tới — và operation mới thêm bên nền tảng sẽ tự có sau lần
 `npm run codegen` kế tiếp.

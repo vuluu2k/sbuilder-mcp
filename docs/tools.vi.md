@@ -470,8 +470,8 @@ với mỗi control nền tảng có khai báo, nó ghi vào đâu:
 { type, hints: { useWhen, avoidWhen, contentTips },
   inspector: [{ tab, groups: [{ group, controls: ["font_size", …] }] }],
   declared: { font_size: { label, writes, defaults? }, … },
-  defaults, translatable?, config_values?, isContainer, isRootOnly, childAllows,
-  undeclared_note, style_is_open_css }
+  defaults, translatable?, config_values?, specials_values?, isContainer, isRootOnly,
+  childAllows, undeclared_note, style_is_open_css }
 ```
 
 `translatable` nêu special nào của element này được phép dịch, và special nào nó đang mang mà
@@ -493,6 +493,36 @@ không phải validator: chính test của nền tảng ghim `"bestseller"` → 
 Go nên mang theo cả giá trị mặc định khi không nhận ra và các alias (`category` là cách viết
 chạy được của `collection`). Nó gắn vào ELEMENT chứ không vào control, vì đúng những key cần
 nhất — `collectionType` trong đó — lại là những key KHÔNG được khai báo.
+
+`specials_values` là câu trả lời tương tự cho namespace `specials`, tách riêng vì đó chính là
+namespace bạn ghi vào. Mọi entry ở cả hai đều nêu `writeKey` của nó, và đọc phần đó là bắt buộc:
+entry được đánh khoá theo CONTROL ở mọi chỗ picker của editor là nguồn, và tên control KHÔNG phải
+là key của nó — `divider_orientation` ghi `config.orientation`, và mười một trên mười ba control
+join được đều như vậy. Hai cờ nữa đáng biết: `open` nghĩa là renderer chuyển thẳng giá trị
+không có trong danh sách (`mediaImageRatio` thực sự nhận nguyên văn `4 / 5`, nên danh sách là những
+từ có Ý NGHĨA RIÊNG chứ không phải toàn bộ giá trị hợp lệ), và THIẾU `fallback` nghĩa là nguồn
+không nói — picker của editor chứng minh tác giả được chọn gì, và im lặng về việc renderer làm gì
+với một từ ngoài danh sách.
+
+`sb_set` còn cảnh báo khi CHÍNH KHOÁ đó không được gì đọc. Các từ vựng ở trên trả lời "giá trị
+này mang nghĩa khác điều bạn nghĩ"; cái này trả lời "không giá trị nào mang nghĩa gì". Element
+gieo sẵn khoá, `sb_node_read` trả nó về kèm một giá trị hợp lý, và một lệnh ghi vào nó vẫn lưu,
+vẫn save, vẫn publish và render y như cũ, không lỗi ở bước nào. Inspector không vẽ dòng nào cho
+khoá như vậy, nên chỉ agent mới với tới được. Sinh ra bằng cách quét mọi định danh nền tảng phát
+hành — 384 khoá được gieo đối chiếu 76.235 định danh trong 3.966 tệp, một khoá chết
+(`config.splitDirection` trên `image-comparison`). Khoá CHỈ do editor đọc là đúng và không bao
+giờ bị báo. Ghi chú nêu đúng chỗ gieo, vì chỗ sửa nằm ở thượng nguồn và không cách viết nào của
+khoá chạy được.
+
+**Gắn theo element, và đó không phải chi tiết vặt.** `config.layout` mang một bộ từ trên
+`media-dataset` và một bộ khác trên `list-dataset`; `specials.source` được ghi bởi
+`breadcrumb_source` (`auto|manual`) và bởi `qr_source` (`text|page`); ba renderer đọc
+`config.placement` với ba tập case khác nhau. Một bảng chỉ đánh khoá theo write key sẽ đưa cho
+element này từ vựng của element khác — đúng cái sai trong im lặng mà bảng này sinh ra để chặn.
+Không gì được công bố nếu nguồn không CHỨNG MINH danh sách là đủ — một `switch` trong Go có nhánh
+`default:` bắt hết phần còn lại, hoặc chính danh sách option của picker. Một phép so sánh bằng
+không chứng minh được điều nào, nên những key đó vắng mặt thay vì trả lời nửa vời: danh sách thiếu
+sẽ gọi một giá trị đang chạy là sai, và agent tin nó sẽ đi “sửa” một trang vốn đã đúng.
 
 `hints` là chính AI hints của nền tảng cho element, đặt ở đây vì đây là lệnh agent gọi sau
 khi đã chọn xong. `declared` chỉ chứa các control có đích ghi khai báo sẵn — 118 trên 435

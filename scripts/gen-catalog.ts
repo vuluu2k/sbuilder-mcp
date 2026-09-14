@@ -14,9 +14,17 @@ import { existsSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 import { join, resolve } from 'node:path';
 import { buildRequestShapes } from './shapes.js';
+import { reportInertDrift } from './inert-drift.js';
+import { deadKeysModule, reportDeadKeys, scanDeadKeys } from './deadkey-scan.js';
 import { credentialFor } from '../src/transport/credential.js';
 import type { ApiOperation, ApiParam } from '../src/catalog/types.js';
-import type { CatalogElement, NodeSeed, SatelliteRule, TraitDescription } from '../src/catalog/element-types.js';
+import type {
+  CatalogElement,
+  NodeSeed,
+  SatelliteRule,
+  TraitDescription,
+  ValueVocabulary,
+} from '../src/catalog/element-types.js';
 
 const METHODS = ['get', 'post', 'put', 'patch', 'delete'] as const;
 
@@ -812,6 +820,15 @@ export const API_DEFINITIONS: Record<string, unknown> = ${JSON.stringify(
       rules?: Record<string, unknown>;
       defaults?: Record<string, unknown>;
       traits?: unknown;
+      // The click-action allow-lists `declaredEvents` reads. They were MISSING
+      // from this annotation, which made that call a type error nothing ever
+      // saw: `scripts/**` is outside both tsconfigs, so `npm run build` never
+      // typechecks this file. It worked only because the cast is a lie the
+      // runtime object does not share — and the obvious way to silence the
+      // error would have been to drop the call, which would have emptied
+      // `events` for every element and taken `open_cart` with it.
+      events?: Record<string, string[] | undefined>;
+      bindingEvents?: Record<string, string[] | undefined>;
     };
     const a = (aiMod.getElementAI(type) ?? {}) as {
       description?: string;
@@ -1400,9 +1417,364 @@ export const API_DEFINITIONS: Record<string, unknown> = ${JSON.stringify(
     }
   }
 
+  // ---- The same question for the other 75 string keys -------------------
+  //
+  // `CONFIG_VALUES` answered three keys, because three `Effective*` normalizers
+  // are the only place the platform spells a vocabulary in the ONE shape that
+  // reader knows. 150 config keys are seeded across the catalog and 78 of them
+  // are string-valued, so 75 had no legal-value list anywhere an agent can read
+  // — and a guess fails silently, which is the entire reason that table exists.
+  //
+  // TWO MORE SOURCES, and the rule that decides between them is the whole of
+  // this block: PUBLISH A VOCABULARY ONLY WHEN ITS SOURCE PROVES COMPLETENESS.
+  // A partial list is worse than none — it tells an agent that a value which
+  // works is invalid, and an agent that believes it will "fix" a working page.
+  //
+  //   A. A Go `switch` over a config key. The `default:` arm is the proof: it
+  //      catches everything the cases do not, so the cases ARE the vocabulary
+  //      and the default says what an unrecognised value becomes. A switch with
+  //      no `default:` is accepted only when every arm RETURNS A STRING and a
+  //      `return` follows the switch — that is a normaliser, and the trailing
+  //      return is its else. Nothing else qualifies, and the rejections matter
+  //      more than the acceptances (see `rejected` below).
+  //
+  //   B. The editor's own picker. `schema/src/traits/registry.ts` declares each
+  //      trait's exact write target and `editor/src/trait/widgets.ts` carries the
+  //      inline `options` array the author picks from — the COMPLETE list by
+  //      construction, since it is what the control renders.
+  //
+  // KEYED BY ELEMENT, which is the correction that makes the table safe at all.
+  // A write-key-keyed table is what `CONFIG_VALUES` is, and it only works
+  // because its three keys happen to be globally unique. MEASURED, these are
+  // not: `config.layout` is seeded by BOTH `media-dataset` ("bottom") and
+  // `list-dataset` ("grid") and the two renderers read different words;
+  // `specials.source` is written by `breadcrumb_source` (auto|manual) AND
+  // `qr_source` (text|page); `config.placement` is read by three renderers with
+  // three different case sets. Any of those handed to the wrong element is a
+  // confident wrong answer. An element scope has none of that ambiguity, and it
+  // is what both callers already have — `sb_traits_for` answers for one element
+  // and `sb_set` knows the node's type.
+  //
+  // NEVER DERIVE THE WRITE KEY FROM THE CONTROL NAME. The obvious
+  // snake_case→camelCase guess was tested against all 13 joined controls and was
+  // wrong for 11: `divider_orientation` writes `config.orientation`,
+  // `dropdown_align` writes `config.panelAlign`, `cart_total_part` writes
+  // `specials.part`. The registry's own `writes[0]` is the only source.
+  // A brace-matched body for `<key>: {`, skipping strings AND comments. The
+  // comments are not a nicety: `widgets.ts` writes `// TRANSFORM_OPTIONS' text
+  // cells`, and a scanner that reads that apostrophe as a string opener runs
+  // past the entry and gives one control another control's options — measured,
+  // it handed `text_transform` the member-field vocabulary (name|email|phone).
+  const braceBody = (src: string, open: number): string | null => {
+    let depth = 0;
+    for (let i = open; i < src.length; i++) {
+      const c = src[i];
+      const n = src[i + 1];
+      if (c === '/' && n === '/') {
+        i = src.indexOf('\n', i);
+        if (i < 0) return null;
+        continue;
+      }
+      if (c === '/' && n === '*') {
+        i = src.indexOf('*/', i);
+        if (i < 0) return null;
+        i += 1;
+        continue;
+      }
+      if (c === "'" || c === '"' || c === '`') {
+        for (i++; i < src.length && src[i] !== c; i++) if (src[i] === '\\') i++;
+        continue;
+      }
+      if (c === '{') depth++;
+      else if (c === '}') {
+        depth--;
+        if (depth === 0) return src.slice(open + 1, i);
+      }
+    }
+    return null;
+  };
+  const topLevelEntries = (src: string): Map<string, string> => {
+    const out = new Map<string, string>();
+    for (const m of src.matchAll(/^ {2}([A-Za-z0-9_]+):\s*\{/gm)) {
+      const b = braceBody(src, m.index + m[0].length - 1);
+      if (b !== null) out.set(m[1], b);
+    }
+    return out;
+  };
+
+  // ---- Source A: the Go switch --------------------------------------------
+  const goVocab = (): Array<{ scope: string; vocab: ValueVocabulary }> => {
+    const root = resolve(repo, 'server/render');
+    const files: string[] = [];
+    const walk = (dir: string) => {
+      for (const e of readdirSync(dir, { withFileTypes: true })) {
+        const p = join(dir, e.name);
+        if (e.isDirectory()) walk(p);
+        else if (e.name.endsWith('.go') && !e.name.endsWith('_test.go')) files.push(p);
+      }
+    };
+    walk(root);
+    // Every candidate site, keyed by config key, so a key read by SEVERAL
+    // renderers with different case sets can be detected and dropped rather
+    // than resolved by whichever file the walk reached first.
+    const sites: Array<{ key: string; scope: string; vocab: ValueVocabulary }> = [];
+    const rejected: string[] = [];
+    for (const file of files) {
+      const src = readFileSync(file, 'utf8');
+      const rel = file.slice(root.length + 1);
+      // `nodes/<element>/…` names the element outright; anything else is a
+      // shared helper, which scopes to '*' and is offered to any element that
+      // actually carries the key.
+      const dir = /^nodes\/([a-z0-9-]+)\//.exec(rel);
+      const scope = dir ? dir[1] : '*';
+      const fn = (at: number): string => {
+        const f = src.lastIndexOf('\nfunc ', at);
+        const m = f < 0 ? null : /^\nfunc\s+(?:\([^)]*\)\s*)?([A-Za-z0-9_]+)/.exec(src.slice(f, f + 120));
+        return m ? `${rel}:${m[1]}` : rel;
+      };
+      const read = (key: string, subject: string | null, open: number, at: number) => {
+        const body = braceBody(src, open);
+        if (body === null) return;
+        // Arms, split at top-level `case`/`default` labels.
+        const arms: Array<{ labels: string | null; lines: string[] }> = [];
+        let depth = 0;
+        let cur: { labels: string | null; lines: string[] } | null = null;
+        for (const line of body.split('\n')) {
+          const t = line.trim();
+          const label = depth === 0 ? /^(?:case\s+(.*)|default)\s*:$/.exec(t) : null;
+          if (label) {
+            if (cur) arms.push(cur);
+            cur = { labels: label[1] ?? null, lines: [] };
+          } else if (cur && t && !t.startsWith('//')) cur.lines.push(t);
+          for (const ch of line) {
+            if (ch === '{' || ch === '(') depth++;
+            else if (ch === '}' || ch === ')') depth--;
+          }
+        }
+        if (cur) arms.push(cur);
+        const values: string[] = [];
+        for (const a of arms) {
+          if (a.labels === null) continue;
+          for (const lit of a.labels.matchAll(/"((?:[^"\\]|\\.)*)"/g)) values.push(lit[1]);
+        }
+        if (!values.length) {
+          rejected.push(`${fn(at)} ${key}: no string case labels`);
+          return;
+        }
+        const one = (lines: string[]): string | null =>
+          lines.length === 1 ? (/^return\s+(.+)$/.exec(lines[0])?.[1] ?? null) : null;
+        const asString = (expr: string | null): { v: string } | { subject: true } | null => {
+          if (expr === null) return null;
+          const lit = /^"((?:[^"\\]|\\.)*)"$/.exec(expr.trim());
+          if (lit) return { v: lit[1] };
+          if (subject && expr.trim() === subject) return { subject: true };
+          return null;
+        };
+        const dflt = arms.find((a) => a.labels === null);
+        let fallback: string | undefined;
+        let open_: true | undefined;
+        if (dflt) {
+          // A `default:` arm PROVES completeness whatever the other arms do,
+          // so the cases are taken as-is — but the default's own value must be
+          // readable. `product-image-list`'s is a guarded lookup against a
+          // preset list the switch never names, and its own comment warns that
+          // such a switch "looks like a closed enumeration and is not one": the
+          // vocabulary really does include seven ratio strings that are absent
+          // here, so it is rejected rather than half-published.
+          const d = asString(one(dflt.lines));
+          if (!d) {
+            rejected.push(`${fn(at)} ${key}: default arm is not a plain return`);
+            return;
+          }
+          if ('subject' in d) open_ = true;
+          else fallback = d.v;
+        } else {
+          // No default: this is only a vocabulary if it is a NORMALISER — every
+          // arm returns a string and a `return` follows the switch as its else.
+          // `dataset-block`'s `case "product", "category": return true` is the
+          // shape this rejects, and must: `datasetSource` has many more legal
+          // values and a two-word list would call the rest invalid.
+          for (const a of arms) {
+            if (a.labels === null) continue;
+            if (!asString(one(a.lines))) {
+              rejected.push(`${fn(at)} ${key}: no default arm and an arm does not return a string`);
+              return;
+            }
+          }
+          const after = src.slice(open + body.length + 2);
+          const tail = /^\s*return\s+("(?:[^"\\]|\\.)*")\s*$/m.exec(after.split('\n').slice(0, 2).join('\n'));
+          if (!tail) {
+            rejected.push(`${fn(at)} ${key}: no default arm and no trailing return`);
+            return;
+          }
+          fallback = tail[1].slice(1, -1);
+        }
+        if (fallback !== undefined && !values.includes(fallback)) values.unshift(fallback);
+        sites.push({
+          key,
+          scope,
+          vocab: {
+            target: 'config',
+            writeKey: key,
+            values: [...new Set(values)].sort(),
+            ...(fallback !== undefined ? { fallback } : {}),
+            ...(open_ ? { open: true as const } : {}),
+            readBy: fn(at),
+          },
+        });
+      };
+      // A1 — `switch [x := ]nodes.ConfigString(n, "key", "d") [; x] {`
+      for (const m of src.matchAll(
+        /switch\s+(?:([A-Za-z_][A-Za-z0-9_]*)\s*:=\s*)?(?:[A-Za-z]+\.)?ConfigString\(\s*[A-Za-z_][A-Za-z0-9_]*\s*,\s*"([^"]+)"\s*,\s*"([^"]*)"\s*\)\s*(?:;\s*([A-Za-z_][A-Za-z0-9_]*)\s*)?\{/g,
+      )) {
+        read(m[2], m[4] ?? m[1] ?? null, m.index + m[0].length - 1, m.index);
+      }
+      // A2 — the assign-then-switch the ratio helpers use:
+      // `mode, _ := cfg["mediaImageRatio"].(string)` … `switch mode {`.
+      // The assignment is looked for inside the ENCLOSING FUNCTION only: a
+      // 1500-character lookback attributed `PanelDown(align string)`'s switch to
+      // its caller's `cfg["panelAlign"]`, which was right by luck and would not
+      // be next time.
+      for (const m of src.matchAll(/switch\s+([A-Za-z_][A-Za-z0-9_]*)\s*\{/g)) {
+        const subject = m[1];
+        const from = src.lastIndexOf('\nfunc ', m.index);
+        const before = src.slice(from < 0 ? 0 : from, m.index);
+        const a = [
+          ...before.matchAll(
+            new RegExp(`${subject}\\s*,\\s*_\\s*:=\\s*[A-Za-z_][A-Za-z0-9_]*\\["([^"]+)"\\]\\.\\(string\\)`, 'g'),
+          ),
+        ].pop();
+        const b = [
+          ...before.matchAll(
+            new RegExp(
+              `${subject}\\s*:=\\s*(?:[A-Za-z]+\\.)?ConfigString\\(\\s*[A-Za-z_][A-Za-z0-9_]*\\s*,\\s*"([^"]+)"\\s*,\\s*"[^"]*"\\s*\\)`,
+              'g',
+            ),
+          ),
+        ].pop();
+        const key = a?.[1] ?? b?.[1];
+        if (!key) continue;
+        read(key, subject, m.index + m[0].length - 1, m.index);
+      }
+    }
+    // A KEY READ BY SEVERAL RENDERERS IS NOT ONE VOCABULARY. `config.placement`
+    // is read by `dropdown` (top|left|right), `popover` (bottom|left|right) and
+    // `overlayplace` (top|bottom) — each complete for its own element and none
+    // of them the answer for the others. Element-scoped they would each be
+    // right, but a disagreement that large says the renderers are reading
+    // different things, so the key is left to the editor's picker, which names
+    // all four. Kept per element only when every site agrees.
+    const byKey = new Map<string, typeof sites>();
+    for (const s of sites) byKey.set(s.key, [...(byKey.get(s.key) ?? []), s]);
+    const out: Array<{ scope: string; vocab: ValueVocabulary }> = [];
+    for (const [key, group] of byKey) {
+      if (new Set(group.map((s) => JSON.stringify(s.vocab.values))).size > 1) {
+        rejected.push(`config.${key}: ${group.length} renderers disagree on the case set`);
+        continue;
+      }
+      for (const s of group) out.push({ scope: s.scope, vocab: s.vocab });
+    }
+    console.error(
+      `  config vocabularies from server/render: ${out.length} kept, ${rejected.length} sites declined`,
+    );
+    return out;
+  };
+
+  // ---- Source B: registry ⋈ the editor's picker ----------------------------
+  const editorVocab = (): Map<string, { target: 'config' | 'specials'; writeKey: string; values: string[] }> => {
+    const reg = topLevelEntries(readFileSync(resolve(repo, 'schema/src/traits/registry.ts'), 'utf8'));
+    const wid = topLevelEntries(readFileSync(resolve(repo, 'editor/src/trait/widgets.ts'), 'utf8'));
+    if (reg.size < 100 || wid.size < 100) {
+      console.error(
+        `traits registry / widgets no longer parse as entries (${reg.size} / ${wid.size}) — the file shape moved`,
+      );
+      process.exit(1);
+    }
+    const out = new Map<string, { target: 'config' | 'specials'; writeKey: string; values: string[] }>();
+    for (const [key, body] of wid) {
+      // ONLY AN INLINE ARRAY. `text_transform` and `html_tag` name a shared
+      // const (`TRANSFORM_OPTIONS`, `htmlTagOptions()`), which this cannot read
+      // — and a source that is absent means say nothing, never guess.
+      const opts = /options:\s*\[([\s\S]*?)\n\s*\]/.exec(body);
+      if (!opts) continue;
+      const values = [...opts[1].matchAll(/\{\s*value:\s*'([^']*)'/g)].map((m) => m[1]);
+      if (!values.length) continue;
+      const w = /writes:\s*\[\s*\{\s*target:\s*'([a-z]+)'\s*,\s*writeKey:\s*'([^']+)'/.exec(reg.get(key) ?? '');
+      // `style` is OPEN CSS and needs no vocabulary; a control with no declared
+      // write has no target to attach one to.
+      if (!w || (w[1] !== 'config' && w[1] !== 'specials')) continue;
+      out.set(key, { target: w[1] as 'config' | 'specials', writeKey: w[2], values });
+    }
+    console.error(`  control vocabularies from the editor's pickers: ${out.size}`);
+    return out;
+  };
+
+  const elementValues: Record<string, Record<string, ValueVocabulary>> = {};
+  const put = (scope: string, key: string, v: ValueVocabulary) => {
+    (elementValues[scope] ??= {})[key] = v;
+  };
+  for (const { scope, vocab } of goVocab()) {
+    if (scope === '*') put('*', vocab.writeKey, vocab);
+    else if (elements[scope]) put(scope, vocab.writeKey, vocab);
+    // A renderer directory with no element of that name is a shared subtree
+    // (`overlayplace`), not an element — it scopes to nothing and says nothing.
+  }
+  for (const [control, v] of editorVocab()) {
+    for (const el of Object.values(elements)) {
+      if (el.controls.includes(control)) put(el.type, control, { ...v, readBy: `${control} (editor picker)` });
+    }
+  }
+  // TWO CONTROLS ON ONE ELEMENT WRITING ONE KEY WITH DIFFERENT WORDS would make
+  // `sb_set`'s warning a coin flip — it sees a namespace and a key, never a
+  // control. It does not happen today (`specials.source`'s two controls sit on
+  // different elements), and if it ever does the writes must stay unreported
+  // rather than reported wrongly.
+  for (const [type, table] of Object.entries(elementValues)) {
+    const seen = new Map<string, string>();
+    for (const [k, v] of Object.entries(table)) {
+      const at = `${v.target}.${v.writeKey}`;
+      const prev = seen.get(at);
+      if (prev && JSON.stringify(table[prev].values) !== JSON.stringify(v.values)) {
+        console.error(`${type}: controls "${prev}" and "${k}" both write ${at} with different values`);
+        process.exit(1);
+      }
+      seen.set(at, k);
+    }
+  }
+  // The same discipline the three `Effective*` keys get: a shape change upstream
+  // must fail the next codegen rather than quietly shrink the table. One
+  // assertion per SOURCE, each on a fact that would be wrong if the reader drifted.
+  for (const [type, key, expect] of [
+    // Source B, and the finding it exists for: the control is `divider_orientation`
+    // and the key it writes is `orientation`, which no name-mangling would produce.
+    ['divider', 'divider_orientation', 'horizontal'],
+    // Source A, the `default: return mode` passthrough — `auto` is a value, and
+    // the OPEN flag is what keeps "4 / 5" from being reported as a mistake.
+    ['media-dataset', 'mediaImageRatio', 'auto'],
+    // Source A, the ordinary closed normaliser, including its own fallback.
+    ['tab', 'tabPosition', 'top'],
+  ] as const) {
+    const v = elementValues[type]?.[key];
+    if (!v?.values.includes(expect)) {
+      console.error(`${type}.${key} no longer offers "${expect}" — the vocabulary readers drifted`);
+      process.exit(1);
+    }
+  }
+  if (!elementValues['divider']?.divider_orientation?.writeKey.match(/^orientation$/)) {
+    console.error('divider_orientation no longer writes config.orientation — check the registry join');
+    process.exit(1);
+  }
+  if (!elementValues['media-dataset']?.mediaImageRatio?.open) {
+    console.error('mediaImageRatio is no longer a passthrough — check mediaRatioCss');
+    process.exit(1);
+  }
+  console.error(
+    `  element vocabularies: ${Object.values(elementValues).reduce((n, t) => n + Object.keys(t).length, 0)} across ${Object.keys(elementValues).length} scopes`,
+  );
+
   const elementsOut = `// GENERATED by scripts/gen-catalog.ts — do not edit by hand.
 // Source: <WB_REPO>/schema/src/elements/** and editor/src/theme/legacyScopes.ts
-import type { CatalogElement, NodeSeed, SatelliteRule, TraitDescription } from './element-types.js';
+import type { CatalogElement, NodeSeed, SatelliteRule, TraitDescription, ValueVocabulary } from './element-types.js';
 
 export const ELEMENT_SOURCE = ${JSON.stringify({ count: types.length, docSchemaVersion: docVersion }, null, 2)} as const;
 
@@ -1439,6 +1811,40 @@ export const CONFIG_VALUES: Record<
   string,
   { values: string[]; fallback: string; aliases: Record<string, string>; readBy: string }
 > = ${JSON.stringify(configValues, null, 2)};
+
+/**
+ * The same question for the rest of the catalog, KEYED BY ELEMENT.
+ *
+ * CONFIG_VALUES above answers three keys and is keyed by the config key, which
+ * works only because those three names are globally unique. They are the
+ * exception: \`config.layout\` is seeded by media-dataset ("bottom") AND
+ * list-dataset ("grid") and the renderers read different words, \`specials.source\`
+ * is written by two controls with different vocabularies, and \`config.placement\`
+ * is read by three renderers with three case sets. Handed to the wrong element
+ * any of those is a confident wrong answer — so the scope is the element, which
+ * is what both callers already have.
+ *
+ * Two sources, one rule: PUBLISH ONLY WHAT THE SOURCE PROVES COMPLETE.
+ *   - a Go \`switch\` whose \`default:\` arm catches everything the cases do not
+ *     (or a normaliser whose arms all return a string over a trailing return)
+ *   - the editor picker's own inline \`options\` list, joined to the trait
+ *     registry's declared write target
+ * An equality test (\`ConfigString(n, "x", "a") == "b"\`) proves neither and is
+ * not read: it yields \`mainImageSource = first_variant\` where the picker offers
+ * \`first_variant|product_image\`, and a half-list calls a working value invalid.
+ *
+ * \`open\` marks a passthrough — \`default: return mode\` hands an unrecognised
+ * value straight to CSS, so \`mediaImageRatio\` really does take "4 / 5" and the
+ * listed values are the ones with SPECIAL meaning rather than the only legal
+ * ones. \`fallback\` is absent where the source does not say: the editor's picker
+ * proves what an author may choose and is silent on what the renderer does with
+ * anything else, and inventing that answer is the mistake this table prevents.
+ *
+ * \`*\` is the scope for a key read by a SHARED helper rather than by one
+ * element's renderer, and it applies only to an element that actually carries
+ * the key.
+ */
+export const ELEMENT_VALUES: Record<string, Record<string, ValueVocabulary>> = ${JSON.stringify(elementValues, null, 2)};
 
 /**
  * Config keys the PUBLISH path reads from base only — html.go indexes
@@ -1528,6 +1934,7 @@ export const ANIMATION: {
       `${bindingSources.length} binding sources, ${Object.keys(boundSpecials).length} bound-special elements, ` +
       `${Object.keys(satellites).length} satellite owners, ${firstChildOnly.length} first-child-only, ` +
       `${baseOnly.keys.length} base-only config keys, ${Object.keys(configValues).length} config vocabularies, ` +
+      `${Object.values(elementValues).reduce((n, t) => n + Object.keys(t).length, 0)} element vocabularies, ` +
       `animation ${animation.types.length} types / ${animation.easings.length} easings / ` +
       `${animation.intensities.length} intensities / ${animation.triggers.length} triggers, ` +
       `${textStyleKeys.length} text-style keys, ` +
@@ -2348,6 +2755,26 @@ export const ICON_NAMES: ReadonlySet<string> = new Set(${JSON.stringify(iconName
       `${Object.keys(spec.definitions ?? {}).length} definitions, ` +
       `${withBody.filter((o) => !o.bodyDescribed).length}/${withBody.length} with an undescribed body`,
   );
+
+  // Asked LAST, and about a table this generator does not write: INERT_ON_ADD is
+  // hand-kept, so no file it emits can report that the platform grew another
+  // element that renders only through something else. Said after the wall of
+  // "wrote …" lines rather than before it, because unlike the undocumented-route
+  // warning it is not a reason to distrust what those lines just said.
+  reportInertDrift(elements);
+
+  // AND THE FOURTH STALENESS QUESTION, asked last for the same reason: a seeded
+  // key nothing reads is a fact about the PLATFORM, not about anything the lines
+  // above wrote. Unlike INERT_ON_ADD this one is GENERATABLE, so it is generated
+  // — a table read off the platform on every run can never be the stale
+  // hand-kept list its neighbour is.
+  const scan = scanDeadKeys(repo, elements);
+  emit(resolve(process.cwd(), 'src/catalog/deadkeys.generated.ts'), deadKeysModule(scan));
+  console.error(
+    `${VERB} deadkeys.generated.ts: ${scan.dead.length} of ${scan.seededKeys} seeded keys read ` +
+      `by nothing (${scan.identifiers} identifiers, ${scan.files} files)`,
+  );
+  reportDeadKeys(scan);
 }
 
 /**

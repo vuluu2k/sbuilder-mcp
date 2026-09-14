@@ -8722,7 +8722,7 @@ export const API_OPERATIONS: ApiOperation[] = [
         "in": "query",
         "required": false,
         "type": "string",
-        "description": "image | video | font | other"
+        "description": "image | video | font | model | other"
       },
       {
         "name": "search",
@@ -17508,6 +17508,10 @@ export const API_DEFINITIONS: Record<string, unknown> = {
             "$ref": "#/definitions/github_com_webbuilder_server_internal_products.ProductKind"
           }
         ]
+      },
+      "modelUrl": {
+        "description": "ModelURL is the product's 3D model (.glb / .gltf), so a page can show the\nthing itself instead of photographs of it.\n\nONE model, not a gallery — which is why this is a scalar beside the two\nslices above rather than a third one. A product has one shape; a second\nmodel of the same product would be a different colourway or a different\nproduct, and both of those already have somewhere to live. Making it a\nlist \"for later\" would cost a migration to take back and would force\nevery reader to answer \"which one\" with no rule to answer it by.\n\nEmpty is the normal value and means \"no model\": every product that\nexisted before this field, and every product in every store that sells\nthings nobody has modelled.\n\nIt is a URL into this site's own media library in the ordinary case, but\nnothing here requires that — an externally hosted .glb is a legitimate\nvalue, and the usage adapter simply finds no match for one, which is the\ntrue answer.",
+        "type": "string"
       },
       "moneyOverride": {
         "description": "MoneyOverride is an opaque per-product money-display override (compact-convert\nrules + exchange-rate overrides), stored as a JSONB blob. The domain keeps it\nopaque — it is decoded at the render boundary (bindings.ProductSource →\nrender.ProductData) — so products stays decoupled from render/money, the same\nway the site settings document is an opaque blob. Empty ({}/null) → no override.",

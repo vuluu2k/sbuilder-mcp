@@ -560,7 +560,21 @@ export const CHECKOUT_PAGE_DOCUMENT = {
         "paddingTop": "48px",
         "paddingBottom": "48px"
       },
-      "config": {},
+      "config": {
+        "backgroundSceneSource": "",
+        "backgroundSceneEffect": "gradient-mesh",
+        "backgroundSceneGallery": "podium",
+        "backgroundSceneSpeed": "normal",
+        "backgroundSceneIntensity": "normal",
+        "backgroundSceneColors": "theme",
+        "backgroundSceneColor1": "#171717",
+        "backgroundSceneColor2": "#ffffff",
+        "backgroundSceneColor3": "#6b7280",
+        "backgroundSceneUrl": "",
+        "backgroundSceneModelUrl": "",
+        "backgroundSceneVeil": 0,
+        "backgroundSceneVeilColor": "#000000"
+      },
       "specials": {
         "stylePreset": "container-section"
       },

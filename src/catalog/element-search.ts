@@ -1,5 +1,11 @@
 import { ELEMENTS, TRAIT_WRITES } from './elements.generated.js';
-import { animationValues, animationVocabulary, vocabulariesForWrites } from '../domains/site/vocabulary.js';
+import {
+  animationValues,
+  animationVocabulary,
+  elementVocabularies,
+  sharedVocabularies,
+  vocabulariesForWrites,
+} from '../domains/site/vocabulary.js';
 import { neverTranslatedOn, translatableSpecials } from '../domains/site/translate.js';
 
 /** Eight to choose from; the hints for the chosen one come with sb_traits_for. */
@@ -145,10 +151,30 @@ export function traitsFor(type: string, control?: string): Record<string, unknow
     // this element's defaults and in its control list, and no TRAIT_WRITES entry
     // names it — so a per-control attachment reaches none of them, which is how
     // the first version of this was wrong.
+    //
+    // TWO FIELDS RATHER THAN ONE, because the caller writes two namespaces and
+    // `sb_set` takes them separately. Every entry names its `writeKey`, which is
+    // the half a control name does not give you: `divider_orientation` writes
+    // `orientation`, and eleven of the thirteen joined controls are like it.
     ...(() => {
       const keys = new Set([...Object.keys(el.defaults?.config ?? {}), ...el.controls]);
-      const vocab = vocabulariesForWrites([...keys]);
-      return Object.keys(vocab).length ? { config_values: vocab } : {};
+      // The globally-unique three keep their own key AS the write key; saying so
+      // is what lets a reader take every entry in this object the same way.
+      const config: Record<string, unknown> = Object.fromEntries(
+        Object.entries(vocabulariesForWrites([...keys])).map(([k, v]) => [k, { writeKey: k, ...v }]),
+      );
+      const specials: Record<string, unknown> = {};
+      const own = { ...sharedVocabularies(el.defaults ?? {}), ...elementVocabularies(el.type) };
+      for (const [k, { target, ...v }] of Object.entries(own)) {
+        // `target` is dropped rather than repeated: the field it lands in is the
+        // namespace, and a key restated on every entry is the dilution the token
+        // budget has already caught twice on this one result.
+        (target === 'specials' ? specials : config)[k] = v;
+      }
+      return {
+        ...(Object.keys(config).length ? { config_values: config } : {}),
+        ...(Object.keys(specials).length ? { specials_values: specials } : {}),
+      };
     })(),
     // THE ENTRANCE ANIMATION, for the 73 element types that offer it. It does
     // not ride in `config_values` because it is not a word — it is an OBJECT

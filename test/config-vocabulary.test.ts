@@ -1,10 +1,14 @@
 import { describe, it, expect } from 'vitest';
 import {
+  elementVocabularies,
   unknownValueNote,
+  unknownWriteNote,
   vocabulariesForWrites,
   vocabularyFor,
+  vocabularyForWrite,
   vocabularyKeys,
 } from '../src/domains/site/vocabulary.js';
+import { ELEMENT_VALUES } from '../src/catalog/elements.generated.js';
 import { traitsFor } from '../src/catalog/element-search.js';
 
 /**
@@ -99,14 +103,163 @@ describe('what a config key is allowed to hold', () => {
     // element never listed the key, so the vocabulary reached nobody. That is
     // the shape this table exists for, caught on the element that owns all
     // three.
-    expect(Object.keys(out.config_values!).sort()).toEqual(
-      ['articleSourceType', 'collectionListType', 'collectionType'].sort(),
-    );
+    // ASSERTED AS A PROPERTY, for the reason the first test in this file already
+    // gives: this pinned exactly three keys and went red the day the element
+    // gained a fourth vocabulary (`list_loading_mode`, from the editor's own
+    // picker), which is the table growing as designed rather than a finding.
+    for (const must of ['articleSourceType', 'collectionListType', 'collectionType']) {
+      expect(Object.keys(out.config_values!)).toContain(must);
+    }
     expect(JSON.stringify(out.config_values)).toMatch(/slot/);
   });
 
   it('leaves an element with no such key untouched', () => {
     const out = traitsFor('heading') as { config_values?: unknown };
     expect(out.config_values).toBeUndefined();
+  });
+});
+
+/**
+ * THE OTHER 75 STRING KEYS, AND WHY THE TABLE ABOVE COULD NOT SIMPLY GROW.
+ *
+ * `CONFIG_VALUES` is keyed by the config key and is right only because its three
+ * names are globally unique. The rest are not, and each assertion here pins one
+ * of the three findings that shaped the element-scoped table — as a PROPERTY,
+ * never as a snapshot of today's count, because the whole point of generating it
+ * is that it moves with the platform.
+ */
+describe('what a key is allowed to hold, scoped to the element', () => {
+  // FINDING 1: NEVER DERIVE THE WRITE KEY FROM THE CONTROL NAME. The obvious
+  // snake_case→camelCase guess was tested against all 13 joined controls and was
+  // wrong for 11 — `divider_orientation` writes `config.orientation`, not
+  // `dividerOrientation`, and a table built on the guess would attach eleven
+  // vocabularies to keys nothing reads.
+  it('takes the write key from the registry, never from the control name', () => {
+    const v = elementVocabularies('divider').divider_orientation;
+    expect(v.target).toBe('config');
+    expect(v.writeKey).toBe('orientation');
+    expect(v.values).toContain('horizontal');
+    // The same table, reached the way `sb_set` reaches it: by namespace and key.
+    expect(vocabularyForWrite('divider', 'config', 'orientation')?.values).toContain('vertical');
+    expect(vocabularyForWrite('divider', 'config', 'dividerOrientation')).toBeNull();
+  });
+
+  // FINDING 2: TWO CONTROLS SHARE ONE WRITE KEY. `breadcrumb_source` and
+  // `qr_source` both write `specials.source`, with different words — a
+  // write-key-keyed table hands one element the other's vocabulary, which is the
+  // exact silent-wrong-answer this catalog exists to prevent, arriving through
+  // the thing meant to fix it.
+  it('never lets two elements sharing a write key see each other vocabulary', () => {
+    expect(vocabularyForWrite('breadcrumb', 'specials', 'source')!.values.sort()).toEqual([
+      'auto',
+      'manual',
+    ]);
+    expect(vocabularyForWrite('qr-code', 'specials', 'source')!.values.sort()).toEqual([
+      'page',
+      'text',
+    ]);
+    // And the general form, over the whole table: an entry is never reachable
+    // from an element that does not own it.
+    expect(vocabularyForWrite('heading', 'specials', 'source')).toBeNull();
+  });
+
+  // FINDING 3: AN EQUALITY-ONLY GO COMPARISON IS NOT PROOF OF COMPLETENESS.
+  // `ConfigString(n, "mainImageSource", "first_variant") == "product_image"`
+  // yields one value where the picker offers two, and `dataset-block`'s
+  // `case "product", "category": return true` is a PREDICATE over a key with
+  // many more legal values. Publishing either half-list calls a working value
+  // invalid. `datasetSource` is the one to watch: it is read by a switch, in a
+  // renderer, and is still absent because that switch proves nothing.
+  it('publishes nothing from a source that does not prove completeness', () => {
+    expect(vocabularyForWrite('dataset-block', 'config', 'datasetSource')).toBeNull();
+    // The same key, read the other way: no element anywhere claims a
+    // datasetSource vocabulary.
+    for (const table of Object.values(ELEMENT_VALUES)) {
+      for (const v of Object.values(table)) expect(v.writeKey).not.toBe('datasetSource');
+    }
+    // And where the editor's picker DOES cover the equality key, the picker's
+    // complete list is what ships.
+    expect(vocabularyForWrite('product-image-feature', 'config', 'mainImageSource')!.values).toEqual(
+      ['first_variant', 'product_image'],
+    );
+  });
+
+  // A CLOSED VOCABULARY NAMES ITS FALLBACK; AN OPEN ONE HAS NONE TO NAME.
+  // `mediaRatioCss` ends `default: return mode`, so an unlisted value goes
+  // straight to CSS and `mediaImageRatio: "4 / 5"` is CORRECT — reporting it
+  // would send a caller to fix a working page, which is the cost this repo
+  // already records for the `category` alias.
+  it('says nothing about a value an open vocabulary passes through', () => {
+    const v = elementVocabularies('media-dataset').mediaImageRatio;
+    expect(v.open).toBe(true);
+    expect(v.fallback).toBeUndefined();
+    expect(unknownWriteNote('media-dataset', 'config', 'mediaImageRatio', '4 / 5')).toBeNull();
+    // Its closed sibling on the same element does answer, and names what the
+    // renderer will actually draw.
+    const note = unknownWriteNote('media-dataset', 'config', 'layout', 'carousel')!;
+    expect(note).toMatch(/renders as that/);
+    expect(note).toMatch(/"bottom"/);
+    expect(note).toMatch(/grid-2/);
+  });
+
+  // A FALLBACK IS CLAIMED ONLY WHERE THE SOURCE SAYS ONE. The editor's picker
+  // proves what an author may CHOOSE and is silent on what the renderer does
+  // with anything else; naming a fallback there would be the invention this
+  // table exists to remove. Every Go-read vocabulary carries one, because the
+  // `default:` arm IS that answer.
+  it('claims a fallback only where the source states one', () => {
+    for (const [type, table] of Object.entries(ELEMENT_VALUES)) {
+      for (const [key, v] of Object.entries(table)) {
+        const where = `${type}.${key}`;
+        if (v.open) expect(v.fallback, where).toBeUndefined();
+        else if (v.readBy.endsWith('(editor picker)')) expect(v.fallback, where).toBeUndefined();
+        else expect(typeof v.fallback, where).toBe('string');
+        // A partial list is worse than none, so an empty one must never ship.
+        expect(v.values.length, where).toBeGreaterThan(1);
+        expect(v.target === 'config' || v.target === 'specials', where).toBe(true);
+      }
+    }
+  });
+
+  // The picker's own list is silent on the renderer's fallback, so the note has
+  // to say what it knows and stop rather than inventing the missing half.
+  it('warns without a fallback when the picker is the only source', () => {
+    const note = unknownWriteNote('cart-total', 'specials', 'part', 'grand_total')!;
+    expect(note).toMatch(/is not a value cart-total's renderer knows/);
+    expect(note).not.toMatch(/renders as/);
+    expect(note).toMatch(/subtotal/);
+    expect(unknownWriteNote('cart-total', 'specials', 'part', 'total')).toBeNull();
+    expect(unknownWriteNote('cart-total', 'specials', 'part', 42)).toBeNull();
+  });
+
+  // A KEY A SHARED HELPER READS BELONGS TO WHICHEVER ELEMENTS STORE IT. The
+  // platform's 3D section background is seeded by three elements and read by
+  // `nodes/helpers.go`, so it has no element of its own to hang off — and
+  // offering it on all 113 would be the dilution the token budget exists for.
+  it('offers a shared-helper vocabulary only to the elements that seed the key', () => {
+    expect(vocabularyForWrite('flex-section', 'config', 'backgroundSceneSource')!.values).toContain(
+      'gallery',
+    );
+    const section = traitsFor('flex-section') as { config_values?: Record<string, unknown> };
+    expect(Object.keys(section.config_values ?? {})).toContain('backgroundSceneSource');
+    const heading = traitsFor('heading') as { config_values?: Record<string, unknown> };
+    expect(Object.keys(heading.config_values ?? {})).not.toContain('backgroundSceneSource');
+  });
+
+  // A `specials` vocabulary needs its own home in the result: the field name is
+  // the namespace, which is what lets every entry drop its own `target`.
+  it('splits the result by the namespace the caller writes to', () => {
+    const out = traitsFor('divider') as {
+      config_values?: Record<string, { writeKey: string }>;
+      specials_values?: Record<string, { writeKey: string }>;
+    };
+    expect(out.config_values!.divider_orientation.writeKey).toBe('orientation');
+    expect(out.specials_values!.divider_type.writeKey).toBe('contentType');
+    // `target` is dropped from every entry: the field it landed in IS the
+    // namespace, and a key restated on each one is the dilution this result's
+    // token budget has already caught twice. (`declared` carries its own
+    // `target`, which is the trait registry's shape and not this table's.)
+    expect(JSON.stringify(out.config_values)).not.toMatch(/"target"/);
+    expect(JSON.stringify(out.specials_values)).not.toMatch(/"target"/);
   });
 });

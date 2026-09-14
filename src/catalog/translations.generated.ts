@@ -3,8 +3,8 @@
 
 export const TRANSLATION_SOURCE = {
   "elements": 58,
-  "pairs": 141,
-  "neverKeys": 159,
+  "pairs": 142,
+  "neverKeys": 163,
   "entityTypes": 12
 } as const;
 
@@ -269,7 +269,8 @@ export const TRANSLATABLE_SPECIALS: Record<string, string[]> = {
     "menuItems"
   ],
   "chat-widget": [
-    "title"
+    "title",
+    "launcherText"
   ],
   "qr-code": [
     "alt",
@@ -318,6 +319,7 @@ export const NEVER_TRANSLATED: string[] = [
   "boundCompareCents",
   "boundHref",
   "boundHrefLabel",
+  "boundModel",
   "boundMoneyOverride",
   "boundPriceCents",
   "boundProductURL",
@@ -373,6 +375,7 @@ export const NEVER_TRANSLATED: string[] = [
   "keywordAction",
   "kind",
   "labelMode",
+  "launcherIcon",
   "learnHref",
   "limitChars",
   "lockedHref",
@@ -390,6 +393,7 @@ export const NEVER_TRANSLATED: string[] = [
   "minChars",
   "minLabelText",
   "minValue",
+  "modelUrl",
   "moneyPayload",
   "moreButtonEnabled",
   "multiline",
@@ -415,6 +419,7 @@ export const NEVER_TRANSLATED: string[] = [
   "reviewForm",
   "sameDefault",
   "sceneControls",
+  "sceneGallery",
   "sceneUrl",
   "searchBehavior",
   "searchClearSwap",

@@ -91,6 +91,19 @@ export const STORE_PAGE_SEEDS: Record<string, { schema_version: number; root_nod
         "config": {
           "contentWidth": "fill_container",
           "contentWidthCustom": 0,
+          "backgroundSceneSource": "",
+          "backgroundSceneEffect": "gradient-mesh",
+          "backgroundSceneGallery": "podium",
+          "backgroundSceneSpeed": "normal",
+          "backgroundSceneIntensity": "normal",
+          "backgroundSceneColors": "theme",
+          "backgroundSceneColor1": "#171717",
+          "backgroundSceneColor2": "#ffffff",
+          "backgroundSceneColor3": "#6b7280",
+          "backgroundSceneUrl": "",
+          "backgroundSceneModelUrl": "",
+          "backgroundSceneVeil": 0,
+          "backgroundSceneVeilColor": "#000000",
           "emptyStateId": "sppro_20"
         },
         "specials": {},
@@ -364,7 +377,20 @@ export const STORE_PAGE_SEEDS: Record<string, { schema_version: number; root_nod
           "gap": "16px"
         },
         "config": {
-          "contentWidth": "fill_container"
+          "contentWidth": "fill_container",
+          "backgroundSceneSource": "",
+          "backgroundSceneEffect": "gradient-mesh",
+          "backgroundSceneGallery": "podium",
+          "backgroundSceneSpeed": "normal",
+          "backgroundSceneIntensity": "normal",
+          "backgroundSceneColors": "theme",
+          "backgroundSceneColor1": "#171717",
+          "backgroundSceneColor2": "#ffffff",
+          "backgroundSceneColor3": "#6b7280",
+          "backgroundSceneUrl": "",
+          "backgroundSceneModelUrl": "",
+          "backgroundSceneVeil": 0,
+          "backgroundSceneVeilColor": "#000000"
         },
         "specials": {},
         "responsive": {
@@ -1168,7 +1194,21 @@ export const STORE_PAGE_SEEDS: Record<string, { schema_version: number; root_nod
           "paddingTop": "48px",
           "paddingBottom": "48px"
         },
-        "config": {},
+        "config": {
+          "backgroundSceneSource": "",
+          "backgroundSceneEffect": "gradient-mesh",
+          "backgroundSceneGallery": "podium",
+          "backgroundSceneSpeed": "normal",
+          "backgroundSceneIntensity": "normal",
+          "backgroundSceneColors": "theme",
+          "backgroundSceneColor1": "#171717",
+          "backgroundSceneColor2": "#ffffff",
+          "backgroundSceneColor3": "#6b7280",
+          "backgroundSceneUrl": "",
+          "backgroundSceneModelUrl": "",
+          "backgroundSceneVeil": 0,
+          "backgroundSceneVeilColor": "#000000"
+        },
         "specials": {
           "stylePreset": "container-section"
         },
@@ -1349,6 +1389,19 @@ export const STORE_PAGE_SEEDS: Record<string, { schema_version: number; root_nod
         "config": {
           "contentWidth": "fill_container",
           "contentWidthCustom": 0,
+          "backgroundSceneSource": "",
+          "backgroundSceneEffect": "gradient-mesh",
+          "backgroundSceneGallery": "podium",
+          "backgroundSceneSpeed": "normal",
+          "backgroundSceneIntensity": "normal",
+          "backgroundSceneColors": "theme",
+          "backgroundSceneColor1": "#171717",
+          "backgroundSceneColor2": "#ffffff",
+          "backgroundSceneColor3": "#6b7280",
+          "backgroundSceneUrl": "",
+          "backgroundSceneModelUrl": "",
+          "backgroundSceneVeil": 0,
+          "backgroundSceneVeilColor": "#000000",
           "datasetSource": "product"
         },
         "specials": {},
@@ -1845,7 +1898,21 @@ export const STORE_PAGE_SEEDS: Record<string, { schema_version: number; root_nod
           "paddingTop": "48px",
           "paddingBottom": "48px"
         },
-        "config": {},
+        "config": {
+          "backgroundSceneSource": "",
+          "backgroundSceneEffect": "gradient-mesh",
+          "backgroundSceneGallery": "podium",
+          "backgroundSceneSpeed": "normal",
+          "backgroundSceneIntensity": "normal",
+          "backgroundSceneColors": "theme",
+          "backgroundSceneColor1": "#171717",
+          "backgroundSceneColor2": "#ffffff",
+          "backgroundSceneColor3": "#6b7280",
+          "backgroundSceneUrl": "",
+          "backgroundSceneModelUrl": "",
+          "backgroundSceneVeil": 0,
+          "backgroundSceneVeilColor": "#000000"
+        },
         "specials": {
           "stylePreset": "container-section"
         },
@@ -2020,6 +2087,19 @@ export const STORE_PAGE_SEEDS: Record<string, { schema_version: number; root_nod
         "config": {
           "contentWidth": "fill_container",
           "contentWidthCustom": 0,
+          "backgroundSceneSource": "",
+          "backgroundSceneEffect": "gradient-mesh",
+          "backgroundSceneGallery": "podium",
+          "backgroundSceneSpeed": "normal",
+          "backgroundSceneIntensity": "normal",
+          "backgroundSceneColors": "theme",
+          "backgroundSceneColor1": "#171717",
+          "backgroundSceneColor2": "#ffffff",
+          "backgroundSceneColor3": "#6b7280",
+          "backgroundSceneUrl": "",
+          "backgroundSceneModelUrl": "",
+          "backgroundSceneVeil": 0,
+          "backgroundSceneVeilColor": "#000000",
           "datasetSource": "product"
         },
         "specials": {},
@@ -2516,7 +2596,21 @@ export const STORE_PAGE_SEEDS: Record<string, { schema_version: number; root_nod
           "paddingTop": "48px",
           "paddingBottom": "48px"
         },
-        "config": {},
+        "config": {
+          "backgroundSceneSource": "",
+          "backgroundSceneEffect": "gradient-mesh",
+          "backgroundSceneGallery": "podium",
+          "backgroundSceneSpeed": "normal",
+          "backgroundSceneIntensity": "normal",
+          "backgroundSceneColors": "theme",
+          "backgroundSceneColor1": "#171717",
+          "backgroundSceneColor2": "#ffffff",
+          "backgroundSceneColor3": "#6b7280",
+          "backgroundSceneUrl": "",
+          "backgroundSceneModelUrl": "",
+          "backgroundSceneVeil": 0,
+          "backgroundSceneVeilColor": "#000000"
+        },
         "specials": {
           "stylePreset": "container-section"
         },
@@ -2698,6 +2792,19 @@ export const STORE_PAGE_SEEDS: Record<string, { schema_version: number; root_nod
         "config": {
           "contentWidth": "fill_container",
           "contentWidthCustom": 0,
+          "backgroundSceneSource": "",
+          "backgroundSceneEffect": "gradient-mesh",
+          "backgroundSceneGallery": "podium",
+          "backgroundSceneSpeed": "normal",
+          "backgroundSceneIntensity": "normal",
+          "backgroundSceneColors": "theme",
+          "backgroundSceneColor1": "#171717",
+          "backgroundSceneColor2": "#ffffff",
+          "backgroundSceneColor3": "#6b7280",
+          "backgroundSceneUrl": "",
+          "backgroundSceneModelUrl": "",
+          "backgroundSceneVeil": 0,
+          "backgroundSceneVeilColor": "#000000",
           "datasetSource": "article"
         },
         "specials": {},
@@ -3040,7 +3147,21 @@ export const STORE_PAGE_SEEDS: Record<string, { schema_version: number; root_nod
           "paddingTop": "48px",
           "paddingBottom": "48px"
         },
-        "config": {},
+        "config": {
+          "backgroundSceneSource": "",
+          "backgroundSceneEffect": "gradient-mesh",
+          "backgroundSceneGallery": "podium",
+          "backgroundSceneSpeed": "normal",
+          "backgroundSceneIntensity": "normal",
+          "backgroundSceneColors": "theme",
+          "backgroundSceneColor1": "#171717",
+          "backgroundSceneColor2": "#ffffff",
+          "backgroundSceneColor3": "#6b7280",
+          "backgroundSceneUrl": "",
+          "backgroundSceneModelUrl": "",
+          "backgroundSceneVeil": 0,
+          "backgroundSceneVeilColor": "#000000"
+        },
         "specials": {
           "stylePreset": "container-section"
         },
@@ -3267,7 +3388,21 @@ export const STORE_PAGE_SEEDS: Record<string, { schema_version: number; root_nod
           "paddingTop": "48px",
           "paddingBottom": "48px"
         },
-        "config": {},
+        "config": {
+          "backgroundSceneSource": "",
+          "backgroundSceneEffect": "gradient-mesh",
+          "backgroundSceneGallery": "podium",
+          "backgroundSceneSpeed": "normal",
+          "backgroundSceneIntensity": "normal",
+          "backgroundSceneColors": "theme",
+          "backgroundSceneColor1": "#171717",
+          "backgroundSceneColor2": "#ffffff",
+          "backgroundSceneColor3": "#6b7280",
+          "backgroundSceneUrl": "",
+          "backgroundSceneModelUrl": "",
+          "backgroundSceneVeil": 0,
+          "backgroundSceneVeilColor": "#000000"
+        },
         "specials": {
           "stylePreset": "container-section"
         },
@@ -3324,7 +3459,21 @@ export const STORE_PAGE_SEEDS: Record<string, { schema_version: number; root_nod
           "paddingTop": "64px",
           "paddingBottom": "64px"
         },
-        "config": {},
+        "config": {
+          "backgroundSceneSource": "",
+          "backgroundSceneEffect": "gradient-mesh",
+          "backgroundSceneGallery": "podium",
+          "backgroundSceneSpeed": "normal",
+          "backgroundSceneIntensity": "normal",
+          "backgroundSceneColors": "theme",
+          "backgroundSceneColor1": "#171717",
+          "backgroundSceneColor2": "#ffffff",
+          "backgroundSceneColor3": "#6b7280",
+          "backgroundSceneUrl": "",
+          "backgroundSceneModelUrl": "",
+          "backgroundSceneVeil": 0,
+          "backgroundSceneVeilColor": "#000000"
+        },
         "specials": {
           "stylePreset": "container-section"
         },

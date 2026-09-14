@@ -9,7 +9,7 @@ export const SHAPE_SOURCE = {
   "fromHandlers": 175,
   "fromSwaggerOnly": 0,
   "withReadOnly": 26,
-  "structsRead": 1658
+  "structsRead": 1660
 } as const;
 
 export const REQUEST_SHAPES: Record<string, RequestShape> = {
@@ -4864,6 +4864,11 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
         "type": "string"
       },
       {
+        "name": "modelUrl",
+        "type": "string",
+        "note": "ModelURL is the product's 3D model (."
+      },
+      {
         "name": "status",
         "type": "ProductStatus"
       },
@@ -4972,6 +4977,11 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
       {
         "name": "sku",
         "type": "string"
+      },
+      {
+        "name": "modelUrl",
+        "type": "string",
+        "note": "ModelURL is the product's 3D model (."
       },
       {
         "name": "status",

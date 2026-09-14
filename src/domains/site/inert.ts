@@ -37,6 +37,15 @@
  * flag on the element meta saying it renders only through a host, or only once
  * a named condition (an app, a locale count, a signed grant) is met — until the
  * platform declares that, this table is the only place the fact lives.
+ *
+ * The staleness is DETECTED now, even though the table still cannot be
+ * generated: `scripts/inert-drift.ts` runs on every codegen and every
+ * `codegen:check`, matching each element's own prose against the render language
+ * every kept entry here uses ("only renders inside/through/as"), and warning
+ * about any that is in neither this table nor its `AUDIT_REJECTED` ledger. It
+ * catches 15 of the 20 below — enough to warn, nowhere near enough to generate —
+ * and it would have caught `quickview`. An element REJECTED after being read
+ * against the criterion above belongs in that ledger with its reason, not here.
  */
 export interface InertHint {
   /** Said once per process per element type. */

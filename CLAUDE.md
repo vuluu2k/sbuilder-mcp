@@ -2447,6 +2447,90 @@ that accounts for them.
   only place the fact lives, and the next audit should re-read all of it rather than trust the
   count.
 
+  **THE STALENESS IS DETECTABLE NOW, even though the table still cannot be generated.** The
+  paragraph above predicted the next `quickview`, and a prediction is not a check —
+  `quickview` itself was found by a person reading 113 elements' prose, not by anything that
+  runs. `reportInertDrift` (`scripts/inert-drift.ts`) asks on every `codegen` and every
+  `codegen:check`, using the discriminator the audit itself produced: every KEPT entry
+  describes itself in RENDER language ("only renders inside/through/as" — a claim about what
+  happens on screen), while every rejected one uses VALIDITY language ("only VALID inside" — a
+  note about which element is idiomatic). Measured against the 113-element catalog: **15 of
+  the 20 entries match, 5 do not** (`spline-scene`, `form-step-button`, `form-step-count`,
+  `theme-switcher`, `breadcrumb` — real traps described in other words), and **one element
+  outside the table matches** (`text-dataset`, whose avoid says the description kind "renders
+  only the product's own sanitized rich text" — render language about CONTENT, not about being
+  inert). 75% recall is nowhere near enough to GENERATE the table and plenty to WARN — and
+  `quickview`'s own avoid reads "this panel only renders through the list that names it", so
+  the check would have caught the one element that actually slipped through.
+
+  **DO NOT WIDEN THE PATTERN UNTIL IT CATCHES ALL TWENTY.** A pattern tuned to fit today's
+  twenty describes the twenty rather than the property — the same mistake this file already
+  records for the `node.States` grep that "found only four files" and produced a conclusion a
+  probe then disproved. The five misses are the check's stated limit, written into its header
+  and pinned by `test/inert-drift.test.ts` so a header that overstates its reach goes red.
+
+  It WARNS and does not fail `--check`, for the reason `reportUndocumentedRoutes` does not
+  either: this drift is not fixable by regenerating anything here, so failing would send the
+  caller to run the one command that cannot help. The message names the AUDIT instead — read
+  the element against the criterion above, then either add an entry naming the second write it
+  needs, or record the rejection in `AUDIT_REJECTED` with the reason. That ledger is the other
+  half of the fix, not a skip list: an unexplained line in it is indistinguishable from a bug
+  being hidden, which is why `text-dataset` carries its reasoning and not just its name.
+
+- **AN ELEMENT SEEDS A CONFIG KEY THAT NOTHING READS, AND WRITING IT DOES NOTHING AT ALL.**
+  Every silent failure above is "this value means something other than you think". This is the
+  quieter one: the KEY is read by nothing, so NO value means anything. `sb_node_read` returns
+  it with a plausible value, an agent following design rule 0 reads it off the node and writes
+  a different one, and the write stores, saves, publishes and renders EXACTLY AS BEFORE — no
+  error at any step, nothing on the page to see. Same family as a binding outside the
+  `specials` namespace, a `stuck` override with no host, and `payCard*` written on a `form`.
+
+  **IT PROTECTS THE HUMAN AND NOT THE AGENT**, which is the asymmetry trap 4 already records
+  for `BASE_ONLY_CONFIG`: the inspector draws no row for a key nothing renders, so a merchant
+  cannot reach it, and an agent can reach it on every call.
+
+  **THE PLATFORM'S OWN CENSUS CANNOT ANSWER THIS, and reaching for it is the first thing that
+  looks right.** `server/render/tests/testdata/config_keys.json` lists the config keys the Go
+  renderer reads and is INCOMPLETE: `config.panelBg` is read for real at
+  `server/render/nodes/chat-widget/css.go:115` — from a table rather than through a `cfg*`
+  helper — and is absent from it, and its own header comment records ten keys having left it
+  silently once before. A check built on that census would tell an agent a working key is
+  DEAD, which is strictly worse than saying nothing.
+
+  So the index is RAW: every identifier in `schema/src`, `editor/src`, `server` and `runtime`,
+  with one load-bearing exclusion — an element's own `meta.ts`, because A SEED IS NOT A READER
+  and every key would otherwise find itself. **READ ONLY BY THE EDITOR IS NOT A DEFECT AND IS
+  NOT REPORTED**: `config.textGlobalStyle` records the author's pick while the rendering
+  travels as a `var(--wb-ts-…)` in `style`, and `customImageRatio{Width,Height}` are the same
+  shape. The question is narrower and it is the only one worth asking — read by NOTHING,
+  ANYWHERE.
+
+  MEASURED against `origin/main` of 2026-09-14 (`3b9ade0c`): 3,966 files, 76,235 distinct
+  identifiers, **0.86 seconds**; 385 seeded `(namespace, key)` pairs over 384 distinct names;
+  **exactly one key read nowhere — `config.splitDirection` on `image-comparison`, zero false
+  positives.** The platform's own comment three lines above that seed confirms it — the
+  inspector editor that would write it "is still an inert placeholder" — and its sibling
+  `splitPosition` IS read, so the element renders a split at a direction no document can move.
+
+  It is GENERATABLE, which is what separates it from `INERT_ON_ADD` next door, so it is
+  GENERATED (`scripts/deadkey-scan.ts` → `src/catalog/deadkeys.generated.ts`) and never
+  hand-kept; `test/deadkey-scan.test.ts` pins the file against its own emitter, so a hand edit
+  goes red rather than surviving to the next codegen. Codegen WARNS and does not fail
+  `--check` — this drift is not fixable by regenerating anything here, so the message names
+  the two upstream fixes instead: wire the key up, or drop the seed from
+  `schema/src/elements/<type>/meta.ts`. `sb_set` says the same thing at the moment of the
+  write, once per key per process, as a WARNING and never a refusal, for the reason
+  `unknownValueNote` records: the platform stores what it is given, and a refusal would also
+  turn away the write a deployment newer than this catalog has finally wired up.
+
+  An identifier index cannot see a key assembled at runtime (`cfg['split' + 'Direction']`),
+  and it counts a MENTION as a read — an element's `ai.ts` prose naming a key it no longer
+  renders would keep that key out of the table. Both are stated in the header as a FLOOR
+  rather than chased: the measured configuration already finds the one real defect with no
+  false positives, and widening a scan until it can prove a negative is what this repo paid
+  for when a grep for `node.States` "found only four files" and produced a conclusion a probe
+  then disproved.
+
 ## The five traps
 
 Each fails SILENTLY. Each is encoded in `src/domains/site/traps.ts` (trap 5 in

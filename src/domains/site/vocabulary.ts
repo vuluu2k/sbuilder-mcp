@@ -1,4 +1,6 @@
-import { ANIMATION, CONFIG_VALUES } from '../../catalog/elements.generated.js';
+import { DEAD_KEYS } from '../../catalog/deadkeys.generated.js';
+import { ANIMATION, CONFIG_VALUES, ELEMENT_VALUES } from '../../catalog/elements.generated.js';
+import type { DeadKey, ValueVocabulary } from '../../catalog/element-types.js';
 
 /**
  * WHAT A CONFIG KEY IS ALLOWED TO HOLD, AND WHAT A GUESS BECOMES.
@@ -89,6 +91,115 @@ export function unknownValueNote(key: string, value: unknown): string | null {
           .join(', ')})`
       : '') +
     '.'
+  );
+}
+
+/* ------------------------------------------------------------------------ *
+ * THE SAME QUESTION FOR THE REST OF THE CATALOG, SCOPED TO AN ELEMENT.
+ *
+ * `CONFIG_VALUES` above answers three keys and is keyed by the config key. That
+ * works only because those three names happen to be globally unique, and the
+ * rest are not: `config.layout` means one set of words on `media-dataset` and
+ * another on `list-dataset`, `specials.source` is written by `breadcrumb_source`
+ * (auto|manual) and by `qr_source` (text|page), and three renderers read
+ * `config.placement` with three different case sets. A key-keyed table hands one
+ * element another element's answer — which is not a smaller version of the
+ * failure this file exists to prevent, it IS that failure, arriving through the
+ * thing that was supposed to fix it.
+ *
+ * So the scope is the ELEMENT, which is what both callers already hold:
+ * `sb_traits_for` answers for one element, and `sb_set` knows the node's type.
+ * ------------------------------------------------------------------------ */
+
+/** Every key on one element whose legal values this catalog knows. */
+export function elementVocabularies(type: string): Record<string, ValueVocabulary> {
+  return ELEMENT_VALUES[type] ?? {};
+}
+
+/**
+ * The `*` scope, narrowed to the element that actually carries the key.
+ *
+ * A shared renderer helper reads a key on behalf of MANY elements, so its
+ * vocabulary has no element to belong to. `backgroundSceneSource` is the live
+ * case: the platform's 3D section background is seeded by `flex-section`,
+ * `flex-block` and `dataset-block` and read by `nodes/helpers.go`, so it is real
+ * on three elements and noise on the other 110. The element's own SEEDED
+ * defaults decide — a key it does not store is a key it does not have.
+ */
+export function sharedVocabularies(defaults: {
+  config?: Record<string, unknown>;
+  specials?: Record<string, unknown>;
+}): Record<string, ValueVocabulary> {
+  const out: Record<string, ValueVocabulary> = {};
+  for (const [k, v] of Object.entries(ELEMENT_VALUES['*'] ?? {})) {
+    if (v.writeKey in (defaults[v.target] ?? {})) out[k] = v;
+  }
+  return out;
+}
+
+/**
+ * The vocabulary for one WRITE — a namespace and a key, which is what `sb_set`
+ * has and a control name is not.
+ *
+ * The `*` scope is a key read by a SHARED renderer helper rather than by one
+ * element's own (`backgroundSceneSource` is section background, offered by
+ * many), so it answers only where the element has nothing of its own to say.
+ */
+export function vocabularyForWrite(
+  type: string,
+  namespace: string,
+  key: string,
+): ValueVocabulary | null {
+  if (namespace !== 'config' && namespace !== 'specials') return null;
+  for (const table of [ELEMENT_VALUES[type], ELEMENT_VALUES['*']]) {
+    for (const v of Object.values(table ?? {})) {
+      if (v.target === namespace && v.writeKey === key) return v;
+    }
+  }
+  return null;
+}
+
+/**
+ * The warning for a write whose value is outside the element's vocabulary.
+ *
+ * A WARNING and never a refusal, for the reason `unknownValueNote` records: the
+ * platform stores what it is given, so a refusal would invent a rule it does
+ * not have and would block a caller writing a word a newer deployment knows.
+ *
+ * TWO THINGS THIS SAYS DIFFERENTLY FROM ITS SIBLING, both because the source is
+ * different rather than because the wording drifted:
+ *
+ *   - AN OPEN VOCABULARY IS NOT A LIST OF THE ONLY LEGAL VALUES. A renderer that
+ *     ends `default: return mode` hands anything unlisted straight to CSS, so
+ *     `mediaImageRatio: "4 / 5"` is CORRECT and reporting it would send a caller
+ *     to "fix" a working page — the same cost this repo already records for the
+ *     `category` alias. Nothing is said at all.
+ *   - A FALLBACK IS ONLY CLAIMED WHERE THE SOURCE SAYS ONE. The editor's picker
+ *     proves what an author may choose and is silent on what the renderer does
+ *     with anything else. Naming a fallback there would be the invention this
+ *     table exists to remove, so the note says what it knows and stops.
+ */
+export function unknownWriteNote(
+  type: string,
+  namespace: string,
+  key: string,
+  value: unknown,
+): string | null {
+  const vocab = vocabularyForWrite(type, namespace, key);
+  if (!vocab || typeof value !== 'string') return null;
+  if (vocab.open) return null;
+  if (vocab.values.includes(value)) return null;
+  const list = vocab.values.map((v) => (v === '' ? '"" (unset)' : v)).join(', ');
+  return (
+    `${namespace}.${key} = ${JSON.stringify(value)} is not a value ${type}'s renderer knows. ` +
+    (vocab.fallback !== undefined
+      ? `${vocab.readBy} normalises anything unrecognised to ${
+          vocab.fallback === '' ? '"" (unset)' : `"${vocab.fallback}"`
+        }, so this stores, saves and publishes with no error and renders as that. `
+      : `${vocab.readBy} is the source, and it is silent on what the renderer does with a word ` +
+        'outside the list — every comparable key in this catalog normalises silently rather ' +
+        'than erroring. ') +
+    `The values that do something: ${list}.`
   );
 }
 
@@ -306,4 +417,53 @@ export function animationNote(value: unknown): string | null {
   }
   if (!notes.length) return null;
   return `config.animation will not do what this says. ${notes.join('. ')}.`;
+}
+
+/* ------------------------------------------------------------------------ *
+ * AND THE KEY THAT IS NOT A WRONG WORD BUT A DEAD ONE.
+ *
+ * Everything above answers "this value means something other than you think".
+ * This answers the quieter one: the key itself is read by nothing, so NO value
+ * means anything. An element seeds it, `sb_node_read` returns it, an agent
+ * following design rule 0 reads it off the node and writes a different one —
+ * and the write stores, saves, publishes and renders exactly as before.
+ *
+ * IT PROTECTS THE HUMAN AND NOT THE AGENT, which is the asymmetry CLAUDE.md
+ * already records for `BASE_ONLY_CONFIG`: the inspector draws no row for a key
+ * nothing renders, so a merchant cannot reach it, and an agent can reach it on
+ * every call.
+ * ------------------------------------------------------------------------ */
+
+/** The dead key this write names, or null. `style` is out of scope — it is CSS. */
+export function deadKeyFor(namespace: string, key: string): DeadKey | null {
+  if (namespace !== 'config' && namespace !== 'specials') return null;
+  return DEAD_KEYS[key] ?? null;
+}
+
+/**
+ * The warning for a write to a key no renderer reads.
+ *
+ * A WARNING and never a refusal, for the reason `unknownValueNote` records: the
+ * platform stores what it is given, and refusing would invent a rule it does not
+ * have — here it would also refuse the write that a deployment newer than this
+ * catalog has finally wired up.
+ *
+ * It says what HAPPENS rather than that the key is unknown, because "unknown"
+ * invites a retry with a different spelling and there is no spelling that works.
+ */
+export function deadKeyNote(namespace: string, key: string): string | null {
+  const dead = deadKeyFor(namespace, key);
+  if (!dead) return null;
+  // The namespaces come from the SEED, not from this write: the index is flat,
+  // so `specials.splitDirection` is just as dead as the `config` one the element
+  // actually seeds, and claiming it was seeded where it was not would be a
+  // confident wrong fact inside a note about a silent one.
+  const seeds = `${dead.seededBy.join(', ')} (in ${dead.namespaces.join(' and ')})`;
+  return (
+    `${namespace}.${key} is seeded by ${seeds} and read by NOTHING in the platform — not the Go ` +
+    'renderer, not the editor, not the runtime. This write stores, saves and publishes with no ' +
+    'error and renders exactly as it did before; no value for it does anything. The inspector ' +
+    'draws no row for it either, so only an agent can reach it. Nothing here can fix that — the ' +
+    `fix is upstream, in schema/src/elements/${dead.seededBy[0]}/meta.ts.`
+  );
 }

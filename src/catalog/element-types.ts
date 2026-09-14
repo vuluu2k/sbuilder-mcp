@@ -81,6 +81,44 @@ export interface TraitWrite {
   unit?: string;
 }
 
+/**
+ * What one key on one element is ALLOWED to hold.
+ *
+ * The element is the scope because the key is not unique: `config.layout` means
+ * different words on `media-dataset` and `list-dataset`, `specials.source` is
+ * written by two controls with two vocabularies, and three renderers read
+ * `config.placement` with three case sets. A table keyed by the write key hands
+ * one of them another's answer — see `ELEMENT_VALUES`.
+ *
+ * The entry's own key is either the CONTROL (when the editor's picker is the
+ * source, since that is the name `sb_traits_for` lists) or the write key (when a
+ * Go switch is); `target` and `writeKey` always say where the value lands, so
+ * the reader never has to infer it. Deriving one from the other is the mistake
+ * this shape exists to prevent: `divider_orientation` writes `orientation`.
+ */
+export interface ValueVocabulary {
+  target: 'config' | 'specials';
+  writeKey: string;
+  /** Every value the source proves legal. Never a partial list. */
+  values: string[];
+  /**
+   * What an unrecognised value renders as — ABSENT where the source does not
+   * say. The editor's picker proves what an author may choose and is silent on
+   * what the renderer does with anything else, and inventing that answer is the
+   * failure this whole table exists to prevent.
+   */
+  fallback?: string;
+  /**
+   * The renderer hands anything unlisted straight through
+   * (`default: return mode`), so `values` are the words with SPECIAL meaning
+   * rather than the only legal ones — `mediaImageRatio` really does take a
+   * verbatim `4 / 5`. A value outside an open vocabulary is not a mistake and
+   * must never be reported as one.
+   */
+  open?: true;
+  readBy: string;
+}
+
 export interface TraitDescription {
   key: string;
   label: string;
@@ -127,4 +165,19 @@ export interface NodeSeed {
   config?: Record<string, unknown>;
   specials?: Record<string, unknown>;
   children?: NodeSeed[];
+}
+
+/**
+ * A key an element's `meta.defaults` seeds and no renderer anywhere reads.
+ *
+ * Keyed by the key NAME in `DEAD_KEYS`, because the scan behind it is a flat
+ * identifier index over everything the platform ships: it cannot tell
+ * `config.foo` from `specials.foo`, and a key read anywhere is read in both.
+ */
+export interface DeadKey {
+  key: string;
+  /** The namespaces it is seeded in — `config`, `specials`, or both. */
+  namespaces: string[];
+  /** Every element whose `meta.defaults` seeds it, sorted. */
+  seededBy: string[];
 }

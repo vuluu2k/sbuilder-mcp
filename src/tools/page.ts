@@ -20,7 +20,12 @@ import { baseOnlyNote } from '../domains/site/baseonly.js';
 import { detachNote, presetIdOf, presetLayer } from '../domains/site/theme.js';
 import { inertHintsFor } from '../domains/site/inert.js';
 import { hasSeed, seedDocument, seedSummary, seededTypes } from '../domains/site/storepage.js';
-import { animationNote, unknownValueNote } from '../domains/site/vocabulary.js';
+import {
+  animationNote,
+  deadKeyNote,
+  unknownValueNote,
+  unknownWriteNote,
+} from '../domains/site/vocabulary.js';
 import { skinLevelNote } from '../domains/site/fieldskin.js';
 import { siteTheme } from '../domains/site/theme-fetch.js';
 import { request, redact } from '../transport/http.js';
@@ -595,6 +600,34 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
       // repeaters the same wrong way should say it once.
       const valueNotes: string[] = [];
       for (const e of batch) {
+        // THE ELEMENT-SCOPED VOCABULARIES REACH `specials` TOO, and they have to:
+        // `specials.part` on a cart-total, `specials.source` on a breadcrumb and
+        // `specials.field` on a member-field are words with a fixed list, and a
+        // wrong one is the same silent normalisation a config key gets. Scoped
+        // by node TYPE because the key is not unique — two controls write
+        // `specials.source` with different vocabularies, and only the element
+        // says which one this node means.
+        const type = d.doc.nodes[e.id]?.data.type ?? '';
+        if (type) {
+          for (const [k, v] of Object.entries(e.keys)) {
+            const n = unknownWriteNote(type, e.namespace, k, v);
+            if (!n) continue;
+            const once = ctx.notices.once(`value:${type}.${e.namespace}.${k}=${JSON.stringify(v)}`, n);
+            if (once) valueNotes.push(once);
+          }
+        }
+        // AND THE QUIETER ONE: a key an element SEEDS that no renderer anywhere
+        // reads. The vocabularies above answer "this value means something other
+        // than you think"; this answers "no value means anything". Keyed on the
+        // KEY rather than on key+value, because the answer does not depend on
+        // what was written and a caller trying three spellings deserves one
+        // reply. Outside the type check, since a dead key is dead on every node.
+        for (const k of Object.keys(e.keys)) {
+          const n = deadKeyNote(e.namespace, k);
+          if (!n) continue;
+          const once = ctx.notices.once(`dead-key:${e.namespace}.${k}`, n);
+          if (once) valueNotes.push(once);
+        }
         if (e.namespace !== 'config') continue;
         for (const [k, v] of Object.entries(e.keys)) {
           // THE ENTRANCE ANIMATION IS ITS OWN QUESTION, because it is an object

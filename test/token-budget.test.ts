@@ -130,11 +130,20 @@ describe('token budget — a diet without a scale comes back', () => {
     // measurement has to be raised again on the next honest field, which trains
     // a reader to raise it without looking. This one has room for a comparable
     // addition and still refuses a schema dump.
+    //
+    // AND IT WAS RAISED AGAIN ANYWAY, which is the ceiling working rather than
+    // failing: the platform gave `products.Product` a `modelUrl` — the product's
+    // 3D model, the catalogue half of the same background-scene feature that
+    // arrived on `flex-section` — and the sheet landed on EXACTLY 3,500. One
+    // honest field, caught by a bound that had 554 characters of room and spent
+    // every one of them. 4,200 restores the headroom the paragraph above argues
+    // for; it is not a target, and a growth that reaches it is again a question
+    // about what the platform added rather than about this number.
     const products = await client.callTool({
       name: 'sb_api_find',
       arguments: { id: 'post:/api/sites/{siteId}/products' },
     });
-    expect(chars(products)).toBeLessThan(3_500);
+    expect(chars(products)).toBeLessThan(4_200);
     await close();
   });
 });
