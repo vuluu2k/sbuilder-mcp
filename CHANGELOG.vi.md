@@ -6,6 +6,12 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.45.0] - 2026-09-14
+
+### Added
+- Codegen giờ quét trực tiếp mọi bảng giá trị `as-const` mà nền tảng khai báo, thay vì chỉ dựa vào hai reader viết tay cho giá trị nền cảnh 3D và filter, nhờ đó một khai báo mới đến được catalog mà không cần viết thêm reader riêng ở đây.
+- Bảng giá trị hợp lệ của catalog tăng từ 57 lên 61 mục: key format của form-date (date-time/day-month-year/time), cùng các key defaultMode, acceptedDates và picker của form-calendar, đều tra được qua specials_values của sb_traits_for và cảnh báo giá trị nằm ngoài bảng của sb_set.
+
 ## [0.44.0] - 2026-09-14
 
 ### Changed

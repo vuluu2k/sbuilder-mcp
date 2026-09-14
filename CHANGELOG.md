@@ -6,6 +6,12 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.45.0] - 2026-09-14
+
+### Added
+- Codegen now scans every `as-const` vocabulary the platform declares directly, instead of relying only on the two hand-written readers for background-scene and filter values, so a new declaration reaches the catalog without a matching reader having to be written for it here.
+- The catalog's legal-value vocabulary grows from 57 to 61 entries: form-date's format key (date-time/day-month-year/time), and form-calendar's defaultMode, acceptedDates and picker keys, all reachable through sb_traits_for's specials_values and sb_set's out-of-vocabulary warning.
+
 ## [0.44.0] - 2026-09-14
 
 ### Changed
