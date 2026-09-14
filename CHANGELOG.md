@@ -6,6 +6,18 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.43.0] - 2026-09-14
+
+### Added
+- The catalog's legal-value vocabulary (sb_traits_for's config_values / specials_values, and sb_set's out-of-vocabulary warning) grows from 3 to 57 entries.
+- spline-scene and the shared background-scene config keys on flex-section, flex-block and dataset-block now carry a full vocabulary: source/effect/gallery/speed/intensity/effectColors, including the 3D shader ids and built-in scene names read out of the runtime island.
+- filter-checkbox, filter-radio, filter-color, filter-tag, select and filter-slider now carry a vocabulary for filterSource (13 values) plus the derived filterValueMode, filterMatch, filterArity and filterBehavior keys; filter-slider is correctly limited to price alone, since a range control cannot express a sort.
+- Codegen now reads a fifth source directory, runtime/src, so a 3D vocabulary that only exists in the browser island is no longer invisible to the catalog; the dirty-checkout and unpublished-commit checks now cover it too.
+
+### Fixed
+- backgroundSceneSource's vocabulary no longer omits its "model" and "spline" values; the previous release read a guard-shaped Go switch as a complete vocabulary and published only two of the key's five legal values, which would have told an agent that setting a spline scene was invalid.
+- Codegen now tells a normalizing switch (which enumerates every legal value) apart from a guard switch (which only tests a subset and falls through for everything else), so a filter-shaped switch can no longer be read as a complete vocabulary.
+
 ## [0.42.0] - 2026-09-14
 
 ### Added

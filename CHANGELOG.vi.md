@@ -6,6 +6,18 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.43.0] - 2026-09-14
+
+### Added
+- Bảng giá trị hợp lệ của catalog (config_values / specials_values của sb_traits_for, và cảnh báo giá trị nằm ngoài bảng của sb_set) tăng từ 3 lên 57 mục.
+- spline-scene và các config key nền cảnh 3D dùng chung trên flex-section, flex-block và dataset-block giờ có đầy đủ bảng giá trị: source/effect/gallery/speed/intensity/effectColors, bao gồm cả các id shader 3D và tên cảnh dựng sẵn đọc ra từ runtime island.
+- filter-checkbox, filter-radio, filter-color, filter-tag, select và filter-slider giờ có bảng giá trị cho filterSource (13 giá trị) cùng các key dẫn xuất filterValueMode, filterMatch, filterArity và filterBehavior; filter-slider được giới hạn đúng còn mỗi price, vì một control dạng khoảng không thể diễn đạt một phép sắp xếp.
+- Codegen giờ đọc thêm thư mục nguồn thứ năm, runtime/src, nhờ đó một bảng giá trị 3D chỉ tồn tại trong browser island không còn vô hình với catalog; các kiểm tra checkout-bẩn và commit-chưa-publish giờ cũng bao phủ thư mục này.
+
+### Fixed
+- Bảng giá trị của backgroundSceneSource không còn thiếu hai giá trị "model" và "spline"; bản phát hành trước đã đọc một switch Go dạng guard như thể một bảng giá trị đầy đủ và chỉ công bố hai trong năm giá trị hợp lệ của key này, khiến một agent tưởng rằng đặt cảnh spline là không hợp lệ.
+- Codegen giờ phân biệt được một switch chuẩn hóa (liệt kê đầy đủ mọi giá trị hợp lệ) với một switch dạng guard (chỉ kiểm tra một tập con rồi rơi qua nhánh mặc định cho mọi trường hợp còn lại), nhờ đó một switch dạng lọc không còn bị đọc nhầm thành một bảng giá trị đầy đủ.
+
 ## [0.42.0] - 2026-09-14
 
 ### Added
