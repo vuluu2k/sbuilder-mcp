@@ -99,6 +99,22 @@ export function measureShot(shot: Shot, skip: ReadonlySet<string> = new Set()): 
       // at those coordinates, and neither half of that pair is a defect.
       if (skip.has(b.id)) continue;
       if (a.w === 0 || a.h === 0 || b.w === 0 || b.h === 0) continue;
+      // AND THE COMMENT ABOVE IS NOW IMPLEMENTED. It has always said that "an
+      // absolutely-positioned decoration over a band is a design choice", and
+      // nothing checked: `Box` carried no `position`, so the rule could not tell
+      // a deliberate overlay from a collision. Every quickview badge, sale
+      // ribbon and wishlist heart on a product card is an overlay BY
+      // CONSTRUCTION, so this fired on storefronts that were built correctly —
+      // measured on a live home page, a `collection-media` reported against the
+      // `icon` sitting in its own corner.
+      //
+      // `static` is the only value that means "in the flow", which is what the
+      // rest of this rule is about: two boxes the LAYOUT put on top of each
+      // other. `relative` counts as in-flow too — it still takes its space, and
+      // a relative element overlapping a sibling is the negative-margin defect
+      // this check exists to find.
+      if (a.position && a.position !== 'static' && a.position !== 'relative') continue;
+      if (b.position && b.position !== 'static' && b.position !== 'relative') continue;
       const pairKey = `${a.id}|${b.id}`;
       if (seen.has(pairKey)) continue;
       // Skip ancestry: a box containing another is nesting, not collision.

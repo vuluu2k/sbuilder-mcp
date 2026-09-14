@@ -1214,6 +1214,29 @@ that accounts for them.
   a basis applies to. Mobile-only reset to `0 1 auto`, base keeping the wide answer, because
   the row is still a row at tablet. 6,009px → 3,884px, same content.
 
+- **AND `measure` REPORTED A COLLISION ON EVERY STOREFRONT CARD THAT HAS A BADGE, under a
+  comment saying it would not.** The overlap rule's own words are that "an absolutely-positioned
+  decoration over a band is a design choice" — and nothing checked, because `Box` carried no
+  `position`. Every quickview badge, sale ribbon and wishlist heart sits over its product image
+  BY CONSTRUCTION, so the rule fired on pages that were built correctly. MEASURED on a live home
+  page: `collection-media` reported against the `icon` in its own corner, at 390px, on a page
+  whose four category cards and four product cards were all exactly as designed.
+
+  A comment describing behaviour the code does not have is the shape this file keeps finding —
+  the same week as `sb_remove`'s `removing` counting patches, and as a guard being read as a
+  normaliser. `Box.position` is carried now and the pair is skipped when either side is out of
+  the flow.
+
+  `relative` IS STILL REPORTED, and the line matters: a relative box still takes its space, so
+  one overlapping a sibling is the negative-margin defect this check exists to find. The
+  exemption is `absolute`/`fixed`/`sticky` only, and a test pins both directions so it cannot
+  widen into "anything that is not static".
+
+  Touching `src/vision/**` means the browser suite: `SB_BROWSER_TEST=1 npm test`, 992 passing.
+  RUN IT FROM THE REPO ROOT — several tests resolve paths through `process.cwd()`, so
+  `npx vitest --root <repo>` from elsewhere fails 8 of them on cwd alone and the failure looks
+  like a code defect rather than an invocation one.
+
 - **AND THEN NOTHING LINKED THE IMPORTED PAGES TOGETHER, which the directive had been saying
   out loud since the tool shipped.** `sb_import_site` now builds ONE global `header` from the
   pages it created and gives every one of them a reference to it. Built from THOSE pages, never

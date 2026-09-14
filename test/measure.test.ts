@@ -50,6 +50,34 @@ describe('measureShot()', () => {
     expect(f).toEqual([]);
   });
 
+  // AN OVERLAY IS A DESIGN, NOT A COLLISION — and this rule's own comment said
+  // so long before anything checked it. Every quickview badge, sale ribbon and
+  // wishlist heart on a product card sits over its image BY CONSTRUCTION, so
+  // the rule fired on storefronts that were built correctly. Measured on a live
+  // home page: a `collection-media` reported against the `icon` in its corner.
+  it('does NOT call an absolutely-positioned overlay a collision', () => {
+    const f = measureShot(
+      shot(390, [
+        box('co_1', 41, 0, 308, 308),
+        box('ic_1', 300, 8, 32, 32, { position: 'absolute' }),
+      ]),
+    );
+    expect(f).toEqual([]);
+  });
+
+  it('still reports two IN-FLOW boxes on top of each other', () => {
+    // `relative` keeps its space in the flow, so a relative box overlapping a
+    // sibling is the negative-margin defect this check exists to find — the
+    // exemption must not widen into "anything that is not static".
+    const f = measureShot(
+      shot(390, [
+        box('a_1', 0, 0, 200, 100, { position: 'relative' }),
+        box('b_1', 50, 50, 200, 100, { position: 'static' }),
+      ]),
+    );
+    expect(f.map((x) => x.code)).toEqual(['overlap']);
+  });
+
   it('reports each overlapping pair once, not twice', () => {
     const f = measureShot(shot(1440, [box('a_1', 0, 0, 200, 100), box('b_1', 50, 50, 200, 100)]));
     expect(f.length).toBe(1);

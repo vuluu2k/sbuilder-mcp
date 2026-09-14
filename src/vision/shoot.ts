@@ -24,7 +24,7 @@ declare const document: {
   /** The MutationObserver root — the whole tree, so nothing that renders is missed. */
   documentElement: unknown;
 };
-declare function getComputedStyle(el: unknown): { fontSize: string };
+declare function getComputedStyle(el: unknown): { fontSize: string; position: string };
 declare const window: {
   innerWidth: number;
   innerHeight: number;
@@ -50,6 +50,16 @@ export interface Box {
   fontPx?: number;
   /** Whether this element carries visible text of its own. */
   hasText?: boolean;
+  /**
+   * The computed `position`, carried for ONE reason: `measure`'s overlap rule
+   * has always said in its own comment that "an absolutely-positioned
+   * decoration over a band is a design choice", and had no way to tell. Every
+   * quickview badge, sale ribbon and wishlist heart on a product card is an
+   * overlay by construction, so the rule reported a collision on storefronts
+   * that were built correctly — measured on a live home page, a `collection-media`
+   * against the `icon` sitting in its corner.
+   */
+  position?: string;
 }
 
 export type ShotFormat = 'jpeg' | 'png';
@@ -450,6 +460,7 @@ async function shootOne(
           h: Math.round(r.height),
           fontPx: Math.round(parseFloat(cs.fontSize) || 0),
           hasText: own.length > 0,
+          position: cs.position,
         };
       }),
   )) as Box[];
