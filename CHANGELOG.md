@@ -6,6 +6,11 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.48.0] - 2026-09-14
+
+### Added
+- `sb_review` now reports an `errorPage` gap on any site with two or more pages that has no published page of type `error`, since the platform's own fallback for a mistyped URL is a bare, unstyled "404 page not found" carrying none of the site's header, footer, or way back to the shop; the gap names whether an unpublished draft already exists.
+
 ## [0.47.2] - 2026-09-14
 
 ### Fixed

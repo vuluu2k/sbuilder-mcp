@@ -6,6 +6,11 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.48.0] - 2026-09-14
+
+### Added
+- `sb_review` giờ báo lỗi thiếu `errorPage` trên mọi site có từ hai trang trở lên mà chưa có trang loại `error` được publish, vì cách nền tảng tự xử lý khi gặp URL gõ sai chỉ là một trang "404 page not found" trần trụi, không kiểu dáng, không mang theo header, footer hay đường quay lại cửa hàng của site; lỗi này nêu rõ liệu đã có sẵn một bản nháp chưa publish hay chưa.
+
 ## [0.47.2] - 2026-09-14
 
 ### Fixed
