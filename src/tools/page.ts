@@ -155,12 +155,37 @@ export class PageSession {
   async applyAndSave(patches: Patch[]): Promise<void> {
     const d = this.current();
     const before = new Set(validateForSave(d));
-    const introduced = validateForSave(d.preview(patches)).filter((p) => !before.has(p));
+    const after = validateForSave(d.preview(patches));
+    const introduced = after.filter((p) => !before.has(p));
     if (introduced.length > 0) {
       throw new Error(`sbuilder: refusing to save — ${introduced.join(' ')}`);
     }
+    // AND REFUSE BEFORE APPLYING WHEN THE PAGE STILL CANNOT BE STORED.
+    //
+    // This used to apply, publish, and only then let `save()` discover the
+    // inherited damage — which left the patches in the draft AND on the wire,
+    // so the next save that did pass committed an edit the caller had been told
+    // was refused. MEASURED on a live page: removing an empty section was
+    // refused over four orphans it had nothing to do with, and the next
+    // successful remove then stored a document missing FIVE nodes — the four it
+    // was asked for, plus the section whose removal had been refused.
+    //
+    // `6980ebb` named this exact defect ("a refused write left its patches in
+    // the draft and blamed the next command") and closed half of it: it stopped
+    // the pre-check refusing INHERITED damage, and left the inherited damage
+    // being discovered one step too late.
+    //
+    // An edit that REPAIRS the page still passes, which is what keeps a broken
+    // page editable: `after` is the state this write would leave behind, so a
+    // write that clears the damage leaves it empty and goes through.
+    if (after.length > 0) {
+      throw new Error(
+        `sbuilder: refusing to save — this page already cannot be stored, and this write does ` +
+          `not repair it, so nothing was applied: ${after.join(' ')}`,
+      );
+    }
     this.applyAndPublish(patches);
-    await this.save();
+    await this.save(before);
   }
 
   applyRemote(patches: Patch[]): void {
@@ -216,7 +241,7 @@ export class PageSession {
    * autosave later means the agent has spent the interval editing a tree nobody
    * will ever store.
    */
-  async save(): Promise<void> {
+  async save(inherited: ReadonlySet<string> = new Set()): Promise<void> {
     if (this.stale) {
       // THE YIELD RULE. The room moved in a way this client cannot reconcile, so
       // it must not write its copy over whatever is there now. Re-pull, and make
@@ -232,7 +257,28 @@ export class PageSession {
     }
     const d = this.current();
     if (d.rev === this.savedRev) return;
-    const problems = validateForSave(d);
+    // THE SAME BASELINE `applyAndSave` USES, and the two gates disagreeing is
+    // precisely the defect `6980ebb` named and half-closed.
+    //
+    // That commit — "a refused write left its patches in the draft and blamed
+    // the next command" — taught `applyAndSave` to refuse only what an edit
+    // INTRODUCES, so a page that arrived broken can still be edited. It left
+    // this gate re-deriving the whole list from scratch, so the order became:
+    // applyAndSave passes, `applyAndPublish` APPLIES THE PATCHES LOCALLY, and
+    // then this throws over a problem that was already there. The patches stay
+    // in the draft, and the next save that does pass commits them.
+    //
+    // MEASURED ON A LIVE PAGE. Removing an empty section was refused here over
+    // four orphans it had nothing to do with; the next successful remove then
+    // saved a document missing FIVE nodes — the four it was asked for and the
+    // section whose removal had been refused. `rev: 3` after one command is the
+    // same fact from the other side.
+    //
+    // Rolling back after a failed save was the other candidate and is worse:
+    // `applyAndPublish` has already broadcast the patches over the live socket,
+    // so a local rollback would leave every watching editor showing an edit
+    // this session no longer has.
+    const problems = validateForSave(d).filter((p) => !inherited.has(p));
     if (problems.length > 0) {
       throw new Error(`sbuilder: refusing to save — ${problems.join(' ')}`);
     }

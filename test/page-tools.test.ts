@@ -323,23 +323,47 @@ describe('a refused write', () => {
   });
 
   // A PAGE THAT ARRIVED BROKEN IS NOT THE CALLER'S FAULT, and must not become a
-  // page nobody can edit. The pre-check refuses only what THIS write introduces;
-  // damage already in the document is left to `save()` to report, so the one
-  // edit that might fix it is still possible to make.
-  it('refuses only what this write breaks, not what it inherited', async () => {
+  // page nobody can edit. The pre-check refuses only what THIS write introduces
+  // — but a write that leaves the page still unstorable is refused BEFORE it is
+  // applied, so nothing waits in the draft for the next save to commit.
+  //
+  // THIS TEST USED TO ASSERT THE OPPOSITE OF ITS LAST LINE, and that assertion
+  // was the defect: it pinned "its own edit survived" after a refused save, and
+  // a surviving edit is exactly what the next successful save writes out. It
+  // cost five nodes on a live page — four that a command asked for and one
+  // whose removal had been refused an instant earlier.
+  it('refuses an unrepairing write BEFORE applying it, and names what it inherited', async () => {
     const { f } = servingFooterDoc();
     const ps = new PageSession(ctxWith(f));
     await ps.open('s1', 'pg_1');
     // Pre-existing damage: content after the footer, already in the document.
     ps.current().apply(addAfterFooter('inherited'));
 
-    // A write that adds nothing new must not be refused for the old problem —
-    // it gets as far as the save, which names it.
     await expect(
       ps.applyAndSave([{ op: 'set', path: ['nodes', 'mid', 'specials', 'touched'], value: 1 }]),
     ).rejects.toThrow(/after a global footer/i);
-    // And its own edit survived, because it was never the problem.
-    expect(ps.current().node('mid').specials.touched).toBe(1);
+    // NOTHING WAS APPLIED. The message says so, and the document proves it.
+    expect(ps.current().node('mid').specials.touched).toBeUndefined();
+  });
+
+  // The other half of the same rule: the page stays EDITABLE, so the one write
+  // that repairs it goes through rather than being refused for the damage it is
+  // about to clear.
+  it('lets a write that REPAIRS the inherited damage through', async () => {
+    const { f } = servingFooterDoc();
+    const ps = new PageSession(ctxWith(f));
+    await ps.open('s1', 'pg_1');
+    const added = addAfterFooter('inherited');
+    ps.current().apply(added);
+    const root = ps.current().doc.root_node_id;
+    const kids = [...ps.current().node(root).data.nodes];
+    // Take the offending child back out — the repair, and the write that must
+    // not be refused for the problem it removes.
+    await expect(
+      ps.applyAndSave([
+        { op: 'remove', path: ['nodes', root, 'data', 'nodes'], index: kids.length - 1 },
+      ]),
+    ).resolves.toBeUndefined();
   });
 });
 

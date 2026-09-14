@@ -652,6 +652,35 @@ that accounts for them.
   "a test that survives its own fix being deleted" shape this repo keeps closing, and it is
   why the distinction is asserted in the dry run's BYTES, where a caller meets it.
 
+- **AND THE DEFECT `6980ebb` NAMED WAS ONLY HALF CLOSED — a refused write still
+  landed on the next successful save.** That commit is titled "a refused write left its patches
+  in the draft and blamed the next command", and it taught `applyAndSave` to refuse only what a
+  write INTRODUCES, so a page that arrived broken stays editable. It left the INHERITED damage
+  to be discovered by `save()` — one step too late, because `applyAndPublish` has already run
+  by then. The patches sit in the draft and on the live socket, and the next save that passes
+  writes them out.
+
+  MEASURED ON A LIVE PAGE, and it is how this was found rather than an argument for why it
+  could happen. Removing an empty `flex-section` was refused over four orphaned nodes it had
+  nothing to do with. The next command removed the orphans, succeeded, and stored a document
+  missing FIVE nodes: the four it asked for and the section whose removal had been refused an
+  instant earlier. `rev: 3` after one command is the same fact from the other side, and a
+  diff of the page source before and after says 118 → 113.
+
+  `applyAndSave` now refuses BEFORE applying whenever the write would leave the page still
+  unstorable, naming what it inherited and saying nothing was applied. A write that REPAIRS the
+  damage still passes — the check is on the state the write would LEAVE, not on the state it
+  found — which is what keeps a broken page editable, the property `6980ebb` was protecting.
+
+  ROLLING BACK AFTER A FAILED SAVE WAS THE OTHER CANDIDATE AND IS WORSE: `applyAndPublish` has
+  already broadcast the patches over the live-edit socket, so a local rollback leaves every
+  watching editor showing an edit this session no longer holds.
+
+  The test that covered this ASSERTED THE DEFECT. Its last line read "its own edit survived,
+  because it was never the problem" — and a surviving edit is precisely what the next save
+  commits. It now asserts the opposite, plus a second case proving a repairing write still goes
+  through, and both were checked by removing the guard and watching them go red.
+
 - **A FORM'S FIELDS ARE STYLED BY CONFIG KEYS THAT BECOME CSS VARIABLES**, not by style on
   the field. `schema/src/elements/fieldSkin.ts` and its lockstep mirror
   `server/render/nodes/fieldskin/fieldskin.go` hold the vocabulary: `fieldBg`,
