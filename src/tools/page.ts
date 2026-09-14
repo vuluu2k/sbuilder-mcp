@@ -36,7 +36,7 @@ import { compactFindings } from '../domains/site/findings.js';
 import { readinessGaps, READINESS_NOTICE } from '../domains/site/readiness.js';
 import { gatherReadiness } from '../domains/site/readiness-fetch.js';
 import { globalWarning, restampPatches, RESPONSIVE_NOTICE } from '../domains/site/traps.js';
-import { catalogMatches, traitsFor } from '../catalog/element-search.js';
+import { catalogBrowse, catalogMatches, traitsFor } from '../catalog/element-search.js';
 import {
   LAYOUT_PATTERNS,
   PATTERN_BY_ID,
@@ -91,6 +91,8 @@ export class PageSession {
    * fence `restampPatches` exists to keep honest.
    */
   private savedRev = -1;
+  /** The open read handed back an empty document and a ROOT was invented for it. */
+  private openedSeeded = false;
   private warnings: ComposeWarning[] = [];
   private boxes: Box[] = [];
 
@@ -207,6 +209,12 @@ export class PageSession {
     this.warnings = composeWarnings(src.warnings);
     // Freshly pulled IS the stored state.
     this.savedRev = this.doc.rev;
+    // WHAT THE READ ACTUALLY RETURNED, kept so `save` can tell a page this
+    // session emptied from a page that arrived empty because the read failed
+    // open. `PageDoc.from` seeds a ROOT for `{ root_node_id: "", nodes: {} }`,
+    // which is right for a page just created and catastrophic for one that has
+    // content — and the two are identical bytes, so only the save can judge.
+    this.openedSeeded = this.doc.seededRoot === true;
     return this.doc.outline();
   }
 
@@ -281,6 +289,50 @@ export class PageSession {
     const problems = validateForSave(d).filter((p) => !inherited.has(p));
     if (problems.length > 0) {
       throw new Error(`sbuilder: refusing to save — ${problems.join(' ')}`);
+    }
+    // A READ THAT FAILED OPEN MUST NOT BECOME A WRITE THAT EMPTIES THE PAGE.
+    //
+    // `PageDoc.from` seeds a ROOT when the source comes back
+    // `{ root_node_id: "", nodes: {} }`. For a page the caller has just created
+    // that is the whole point. For a page that HAS content it is a blank tree
+    // this session now believes is the page, and the first save stores it over
+    // whatever the server holds — silently, because every later gate agrees a
+    // bare ROOT is a valid document.
+    //
+    // MEASURED, not reasoned about. A product template carrying 24 nodes plus a
+    // shared header and footer came back bare to one session and was stored
+    // bare. The PUBLISHED copy was untouched, so all 19 product pages kept
+    // rendering while the draft the editor opens was blank; the damage was
+    // invisible until a person opened the page, and one publish from that draft
+    // would have taken every one of those 19 down at once.
+    //
+    // So when the read was seeded, this asks the server what it actually holds
+    // before writing. The round trip is paid ONLY here — a seeded read is the
+    // first save of a new page or this bug, and nothing else. A page the server
+    // also reports as empty is genuinely new and the write goes through.
+    //
+    // Refusing rather than re-pulling and merging: the session cannot know which
+    // of its edits belong on the real tree, and a merge that guesses is how a
+    // caller ends up with a page that is neither what it built nor what was
+    // there. The caller re-opens and reapplies, which is the yield rule's answer
+    // to every other divergence and is already the reflex these tools teach.
+    if (this.openedSeeded) {
+      const stored = await loadSource(this.ctx, this.siteId, this.pageId);
+      const held = (stored.document ?? {}) as { nodes?: Record<string, unknown> };
+      const heldCount = Object.keys(held.nodes ?? {}).length;
+      if (heldCount > 0) {
+        this.openedSeeded = false;
+        await this.open(this.siteId, this.pageId);
+        throw new Error(
+          `sbuilder: refusing to save — this page was read as EMPTY and a ROOT was invented for ` +
+            `it, but the server holds ${heldCount} node(s). Writing would have erased the page. ` +
+            'It has been re-loaded from the server; re-read it with sb_outline and reapply your ' +
+            'change.',
+        );
+      }
+      // The server agrees the page is empty, so the seeded ROOT is this page's
+      // first real tree and every save after this one is an ordinary save.
+      this.openedSeeded = false;
     }
     const saved = await saveSource(
       this.ctx,
@@ -492,16 +544,31 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
     'sb_catalog_search',
     {
       description:
-        'Find an element type by what you want it to do. Four fields per match; pass detail:true ' +
-          "for the platform's AI hints, or read them with sb_traits_for once you have chosen.",
+        'Find an element type by what it does — or OMIT query to browse every type, the only ' +
+          'way to meet one you would not have searched for. detail:true adds the AI hints, as ' +
+          'does sb_traits_for.',
       inputSchema: {
-      query: z.string(),
+      query: z.string().optional(),
       limit: z.number().int().min(1).max(30).optional().describe('Default 8'),
       detail: z.boolean().optional().describe('Include useWhen / avoidWhen / contentTips per match'),
     },
       annotations: { readOnlyHint: true },
     },
-    async ({ query, limit, detail }) => text(catalogMatches(query, { limit, detail })),
+    // A SEARCH CANNOT INTRODUCE YOU TO ANYTHING. Omitting the query browses the
+    // whole catalogue instead — see catalogBrowse for the measurement that made
+    // this necessary: a store built with these tools used 17 element types and
+    // hand-assembled what a dozen purpose-built ones already do.
+    async ({ query, limit, detail }) =>
+      text(
+        query && query.trim()
+          ? catalogMatches(query, { limit, detail })
+          : {
+              elements: catalogBrowse(),
+              note:
+                'Every element type, grouped as the palette groups them. Pass one as query for ' +
+                'the fields to choose by, then sb_traits_for for its controls and hints.',
+            },
+      ),
   );
 
   server.registerTool(

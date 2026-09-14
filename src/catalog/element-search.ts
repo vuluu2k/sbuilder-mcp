@@ -24,6 +24,39 @@ export interface CatalogMatch {
 }
 
 /**
+ * EVERY element there is, grouped the way the palette files them.
+ *
+ * `catalogMatches` below is a SEARCH, and a search only returns what the caller
+ * already thought to ask for. Measured on a store built with these tools: the
+ * home page used 17 element types out of the hundred-odd here, and the ones it
+ * reached for were the five primitives any agent already knows — flex-block,
+ * text, heading, button, image. Four category cards were hand-assembled out of
+ * them; so were four feature blocks and a stats row. The header's navigation
+ * was SIX BUTTONS in a flex-block, on a platform carrying menu, menu-item,
+ * menu-dropdown, menu-panel, menu-drawer and hamburger-menu — so that site has
+ * no mobile menu at all, and nothing said so.
+ *
+ * None of that is the agent being careless. It is a catalogue you can only
+ * query by name refusing to tell anyone what is in it: rating-stars, carousel,
+ * tab, google-map, image-comparison, text-marquee, video, quickview,
+ * currency-switcher and popup cannot be searched for by someone who does not
+ * know they exist.
+ *
+ * TYPE AND LABEL ONLY, no descriptions. This is the list you read to find out
+ * what is POSSIBLE; `catalogMatches(type)` gives the four fields to choose by
+ * and `sb_traits_for` the hints, so repeating a description per element here
+ * would pay for the whole catalogue to answer a question about one element.
+ */
+export function catalogBrowse(): Record<string, string[]> {
+  const out: Record<string, string[]> = {};
+  for (const el of Object.values(ELEMENTS)) {
+    (out[el.category] ??= []).push(`${el.type} — ${el.label}`);
+  }
+  for (const k of Object.keys(out)) out[k].sort();
+  return out;
+}
+
+/**
  * Four fields to CHOOSE by.
  *
  * The old shape returned nine fields per element including three lists of
