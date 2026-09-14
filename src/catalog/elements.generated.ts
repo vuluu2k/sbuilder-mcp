@@ -37051,6 +37051,45 @@ export const ELEMENT_VALUES: Record<string, Record<string, ValueVocabulary>> = {
       "readBy": "COLOR_MODES (editor/src/components/inspector/ScenePaletteRows.vue)"
     }
   },
+  "form-select": {
+    "optionSource": {
+      "target": "config",
+      "writeKey": "optionSource",
+      "values": [
+        "article",
+        "category",
+        "manual",
+        "product"
+      ],
+      "readBy": "OPTION_SOURCES (schema/src/elements/formOptionSource.ts)"
+    }
+  },
+  "form-radio": {
+    "optionSource": {
+      "target": "config",
+      "writeKey": "optionSource",
+      "values": [
+        "article",
+        "category",
+        "manual",
+        "product"
+      ],
+      "readBy": "OPTION_SOURCES (schema/src/elements/formOptionSource.ts)"
+    }
+  },
+  "form-checkbox": {
+    "optionSource": {
+      "target": "config",
+      "writeKey": "optionSource",
+      "values": [
+        "article",
+        "category",
+        "manual",
+        "product"
+      ],
+      "readBy": "OPTION_SOURCES (schema/src/elements/formOptionSource.ts)"
+    }
+  },
   "form-date": {
     "format": {
       "target": "specials",

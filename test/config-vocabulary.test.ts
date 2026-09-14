@@ -543,15 +543,51 @@ describe('a declaration the schema makes reaches the key it governs', () => {
     expect(unknownWriteNote('form-calendar', 'specials', 'picker', 'grid')).toBeNull();
   });
 
-  // RULE 1, MEASURED RATHER THAN ASSUMED. Letting a SHARED module be a
-  // candidate for every element that seeds a matching value produced 17 joins
-  // on this tree and every one was wrong: `filterBehavior: "filter"` joined
-  // `HOVER_PRESET_STYLE_KEYS` (a list of CSS PROPERTY names), `qr-code`'s
-  // `source: "text"` joined `SCHEME_ROLES`, and `datasetSource: "product"` and
-  // `filterSource: "category"` both joined `TRANSLATION_ENTITY_TYPES`. An
-  // ordinary English word in an unrelated subsystem's list is indistinguishable
-  // from a governing vocabulary, so locality is REQUIRED and a shared
-  // declaration gets silence.
+  // THE SECOND DECLARATION SHAPE, AND THE ONE THE `as const` SCAN COULD NOT
+  // SEE. `OPTION_SOURCES: OptionSource[] = [OPTION_SOURCE.MANUAL, …]` spells its
+  // members through an `as const` OBJECT, and `form-select`, `form-radio` and
+  // `form-checkbox` all seed the key it governs. The platform declared it all
+  // along; this catalog simply was not reading that shape.
+  it('reads a typed array whose members are enum references', () => {
+    for (const type of ['form-select', 'form-radio', 'form-checkbox']) {
+      const v = vocabularyForWrite(type, 'config', 'optionSource')!;
+      expect(v.values, type).toEqual(['article', 'category', 'manual', 'product']);
+      expect(v.readBy, type).toMatch(/OPTION_SOURCES/);
+    }
+    // A MEMBER THAT CANNOT BE RESOLVED DROPS THE WHOLE LIST rather than
+    // shortening it — a vocabulary missing a value tells an agent that a working
+    // word is invalid. So a list of OBJECTS resolves to nothing and is turned
+    // away whole, which is what keeps `FIELD_SKIN_KNOBS`, `STARTER_PRESETS` and
+    // the `*_TARGET_FIELDS` set out with no name being special-cased. Pinned by
+    // the values, because what must never appear is one of their members as a
+    // legal VALUE of a key.
+    for (const table of Object.values(ELEMENT_VALUES)) {
+      for (const [key, v] of Object.entries(table)) {
+        for (const word of ['fieldBorderColor', 'payCardBg', 'boundHtml', 'tabId']) {
+          expect(v.values, key).not.toContain(word);
+        }
+      }
+    }
+    // `product-variant` IS NOT A SOURCE, and the platform's own note says that
+    // is a decision rather than an oversight: a variant list belongs to one
+    // product and a form field pins no product. A reader that widened the list
+    // on its own would offer a feed with nothing to be a list of.
+    expect(vocabularyForWrite('form-select', 'config', 'optionSource')!.values).not.toContain(
+      'product-variant',
+    );
+  });
+
+  // RULE 2b, MEASURED RATHER THAN ASSUMED. Letting a SHARED declaration join on
+  // the seeded value ALONE produced 17 joins on this tree and every one was
+  // wrong: `filterBehavior: "filter"` joined `HOVER_PRESET_STYLE_KEYS` (a list
+  // of CSS PROPERTY names), `qr-code`'s `source: "text"` joined `SCHEME_ROLES`,
+  // and `datasetSource: "product"` and `filterSource: "category"` both joined
+  // `TRANSLATION_ENTITY_TYPES` — four of them over correct entries another
+  // reader already publishes. An ordinary English word in an unrelated
+  // subsystem's list is indistinguishable from a governing vocabulary, so a
+  // shared list must ALSO be NAMED for the key (`OPTION_SOURCES` /
+  // `optionSource`). That is a refusal and never a derivation: it can only
+  // reject a value match the name contradicts, never invent a key.
   //
   // Pinned by the VALUES rather than by the reader, because what must never
   // happen is one of those lists reaching a key — however it got there.

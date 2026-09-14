@@ -1852,28 +1852,64 @@ that accounts for them.
   still 14,385 and unmoved, because a filter element is not a repeater.
 
   **AND BOTH OF THOSE READERS WERE HAND-WRITTEN, ONE PER FEATURE, WHILE THE PLATFORM DECLARES
-  FASTER THAN THIS REPO WRITES READERS.** Measured: `schema/src` exports 22 `as const` string
-  lists and the two above name FOUR of them. `form-calendar` alone declares three and seeds a
-  key against each — `defaultMode`, `acceptedDates`, `picker`, three declarations in the file
-  the element itself lives in — and `sb_traits_for form-calendar` said nothing about any of
+  FASTER THAN THIS REPO WRITES READERS.** Measured: `schema/src` holds 57 exported array
+  declarations and the two above name FOUR of them. `form-calendar` alone declares three and
+  seeds a key against each — `defaultMode`, `acceptedDates`, `picker`, three declarations in the
+  file the element itself lives in — and `sb_traits_for form-calendar` said nothing about any of
   them. A READER gap on this side, not a declaration gap on theirs. `declaredVocab` scans for
   the shape instead, so the next declaration costs nothing: verified against a live branch
   where `SCENE_VIEWER_MODES` had just landed, which joins `specials.sceneViewer` with no code
   change at all.
 
-  THE JOIN IS THE WHOLE DIFFICULTY AND THE NAME IS NOT EVIDENCE — `DATE_PICKERS` governs
-  `picker`, and nothing mechanical turns one into the other. Four requirements, all of them
-  paid for:
+  **THERE ARE TWO DECLARATION SHAPES AND THE SECOND IS THE COMMON ONE.** Reading only
+  `export const X = [ … ] as const` sees 23 lists; the platform more often writes a TYPED array
+  whose members are references into an `as const` enum object —
+  `export const OPTION_SOURCES: OptionSource[] = [OPTION_SOURCE.MANUAL, OPTION_SOURCE.PRODUCT, …]`.
+  That one is not academic: `optionSource` is seeded by `form-select`, `form-radio` AND
+  `form-checkbox`, and the platform had declared it all along. A member that cannot be resolved
+  to a string literal DROPS THE WHOLE LIST rather than shortening it — a vocabulary missing a
+  value tells an agent a working word is invalid, which is this table's own defect history.
 
-  - **LOCALITY IS REQUIRED, NOT PREFERRED, AND THAT WAS THE SURPRISE.** The plan was that a
-    SHARED module (`fieldPattern.ts`, `formRules.ts`) could be a candidate for every element
-    seeding a matching value, with the seed-in-list rule carrying it alone. MEASURED, IT
-    CANNOT: that produced 17 joins on this tree and **every single one was wrong**.
+  Two rules decide whether a typed array is a vocabulary at all, and both exist because a typed
+  array proves less than `as const`. Its element type must be NAMED (`OptionSource[]`,
+  `Breakpoint[]`): `readonly string[]` says "some strings", not "the members of a closed type".
+  And where every member comes from one enum object, the list must name EVERY member of it.
+  `ADDRESS_PARTS` is why: it lists eight of `ADDRESS_PART`'s nine and omits `WHOLE` (`''`), the
+  legacy value the platform's own comment says a stored node can still carry — publishing it
+  would tell an agent that `form-address`'s own seeded `part: ""` is invalid, which is the
+  `backgroundSceneSource` defect exactly. `ADDRESS_TEXT_PARTS` beside it is an explicit
+  three-of-nine subset, and `CONDITION_OPS_WITH_VALUE` is another. **Measured, neither rule
+  changes today's join count** — `form-address` seeds `part: ''`, which rule 4 below already
+  refuses — so both are guards rather than fixes, kept because the shape they refuse is one this
+  repo has already shipped once.
+
+  An array of OBJECTS resolves to no literals at all, which is what turns away
+  `FIELD_SKIN_KNOBS`, `STARTER_PRESETS` and the `*_TARGET_FIELDS` set — with no name
+  special-cased anywhere. THE SCAN IS WIDE AND THE JOIN IS NARROW, deliberately: filtering a
+  list out by its name would hide the day one of them starts surviving the join.
+
+  THE JOIN IS THE WHOLE DIFFICULTY AND THE NAME IS NOT THE JOIN — `DATE_PICKERS` governs
+  `picker`, and nothing mechanical turns one into the other. A join needs TWO INDEPENDENT pieces
+  of evidence, one of which is always the seeded value:
+
+  - **LOCALITY, for a declaration under `schema/src/elements/<type>/`** — a candidate for that
+    element's own seeded keys and for nothing else.
+  - **THE DECLARATION'S OWN NAME NAMES THE KEY, for a SHARED declaration, AND THAT WAS THE
+    SURPRISE.** The plan was that a shared module could join on the seeded value alone. MEASURED,
+    IT CANNOT: that produced 17 joins on this tree and **every single one was wrong**.
     `filterBehavior: "filter"` joined `HOVER_PRESET_STYLE_KEYS`, a list of CSS PROPERTY names
     that happens to contain the word `filter`; `qr-code`'s `source: "text"` joined
     `SCHEME_ROLES`; `datasetSource: "product"` and `filterSource: "category"` both joined
     `TRANSLATION_ENTITY_TYPES`. An ordinary English word sitting in an unrelated subsystem's
-    list is indistinguishable from a governing vocabulary. What silence costs is known and
+    list is indistinguishable from a governing vocabulary. Four of those would have OVERWRITTEN
+    correct entries `filterVocab` and Source B already publish.
+
+    So a shared list must ALSO be named for the key — `OPTION_SOURCES` for `optionSource`,
+    ignoring case, underscores and a plural. **This is a REFUSAL and never a derivation**, which
+    is what keeps it clear of the rule that name-derivation is forbidden: it can only reject a
+    value match the name contradicts, never invent a key. Measured, it admits `optionSource` on
+    all three elements that seed it and turns away all 27 shared value-matches on this tree, the
+    original 17 among them. What silence costs is known and
     named: `FIELD_PATTERN_VALUES`' own doc comment says "Every value `specials.patternPreset`
     may hold", `form-text` seeds exactly that key, and this reader will not say so — that
     answer lives in the inspector row that WRITES the key (`FieldPatternRow.vue` →
@@ -1888,18 +1924,21 @@ that accounts for them.
     `BACKGROUND_SCENE_SOURCES` carries `''` as a REAL value — the exact shape that would
     attach a scene vocabulary to every empty URL and label an element seeds.
 
-  A LIST OF KEY NAMES PUBLISHED AS THE LEGAL VALUES OF A KEY is the one outcome this must
-  never produce, so it is ASSERTED rather than left to the rules: the `_KEYS` suffix is refused
-  structurally, and `BACKGROUND_SCENE_RESPONSIVE_KEYS`, `BACKGROUND_SCENE_BASE_ONLY_KEYS`,
-  `HOVER_PRESET_STYLE_KEYS`, `TRANSLATION_ENTITY_TYPES` and `SCHEME_ROLES` must each still be
-  FOUND by the scan and must have joined NOTHING. Both halves were checked by breaking them:
-  loosening locality makes the assertion exit 1 naming `HOVER_PRESET_STYLE_KEYS`, and breaking
-  the scan regex makes it exit 1 naming the declaration it can no longer see.
+  A LIST OF KEY NAMES PUBLISHED AS THE LEGAL VALUES OF A KEY is the one outcome this must never
+  produce, AND NOTHING FILTERS ONE BY NAME. `BACKGROUND_SCENE_RESPONSIVE_KEYS`,
+  `BACKGROUND_SCENE_BASE_ONLY_KEYS`, `HOVER_PRESET_STYLE_KEYS`, `TRANSLATION_ENTITY_TYPES` and
+  `SCHEME_ROLES` are all read by the scan, offered to the join like any other list, and rejected
+  by the rules above on their own — a `_KEYS`-suffix exclusion was tried and REMOVED, because a
+  name filter would hide the day one of them starts surviving. The five are ASSERTED instead:
+  each must still be FOUND, and each must have joined NOTHING. Both halves were checked by
+  breaking them — dropping the name-corroboration requirement exits 1 naming
+  `HOVER_PRESET_STYLE_KEYS`, and breaking the scan exits 1 naming the declaration it can no
+  longer see — which is what makes the assertion live rather than shadowed by the filter.
 
   It runs FIRST among the Source C readers so the two hand-written ones keep the last word
   where they overlap — they read the platform's own KEY MAPPING where this one infers the key
   from the seed. NEITHER IS SUBSUMED and neither was forced: the general reader reaches 1 of
-  `sceneVocab`'s 12 vocabularies and 0 of `filterVocab`'s 23. 57 → 61 vocabularies, purely
+  `sceneVocab`'s 12 vocabularies and 0 of `filterVocab`'s 23. 57 → 64 vocabularies, purely
   additive, with `list-dataset` unmoved at 14,385 bytes.
 
   **AND THE RULE UNDERNEATH ALL OF IT IS ONE SENTENCE, worth more than the table it produced:
