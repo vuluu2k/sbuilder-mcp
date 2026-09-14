@@ -6,6 +6,16 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.42.0] - 2026-09-14
+
+### Added
+- sb_traits_for now returns specials_values alongside config_values, growing the legal-value vocabulary from 3 globally-unique keys to 26 keys scoped per element (cart-total's part, breadcrumb's source, divider's contentType/contentPosition/orientation, dropdown/popover's panelAlign/placement, media-dataset's layout, popup's triggerType, tab's tabPosition, product-image-feature's mainImageSource, list-dataset's loadingMode, locale-switcher's labelMode, member-field's field, and the shared backgroundSceneSource among them), so a control whose name does not match its write key still resolves to the right vocabulary; sb_set now warns when a written value falls outside the element's vocabulary, naming the values that actually do something.
+- sb_set now warns when a config or specials write targets a key that no renderer, editor, or runtime reads anywhere in the platform, instead of storing it silently with no effect at all; the first catalog scan of every seeded key against the platform's own source found exactly one, config.splitDirection on image-comparison.
+- npm run codegen and npm run codegen:check now warn when an element's own AI hints describe it in "renders only through/inside" language while the element is missing from the inert-element table or its rejection ledger, catching drift like the quickview element that had already shipped unnoticed.
+- The catalog now covers the platform's background 3D scene feature on flex-section, flex-block and dataset-block (backgroundSceneSource, effect, gallery, model, veil and color config keys), reachable through sb_traits_for and sb_add.
+- A product's shape (sb_api_find / sb_api_call) now includes modelUrl, the product's optional 3D model URL, and the binding-source count grew from 78 to 79 to cover it.
+- chat-widget's launcher text is now translatable through sb_traits_for's translatable field, alongside its existing title.
+
 ## [0.41.0] - 2026-09-13
 
 ### Added

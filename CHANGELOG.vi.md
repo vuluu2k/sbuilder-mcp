@@ -6,6 +6,16 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.42.0] - 2026-09-14
+
+### Added
+- sb_traits_for giờ trả thêm specials_values bên cạnh config_values, mở rộng bảng giá trị hợp lệ từ 3 khóa dùng chung toàn cục lên 26 khóa gắn theo từng phần tử (part của cart-total, source của breadcrumb, contentType/contentPosition/orientation của divider, panelAlign/placement của dropdown/popover, layout của media-dataset, triggerType của popup, tabPosition của tab, mainImageSource của product-image-feature, loadingMode của list-dataset, labelMode của locale-switcher, field của member-field, cùng backgroundSceneSource dùng chung), nhờ đó một control có tên khác với key nó ghi vẫn tra đúng bảng giá trị. sb_set giờ cảnh báo khi giá trị được ghi nằm ngoài bảng giá trị của phần tử đó, nêu rõ những giá trị thật sự có tác dụng.
+- sb_set giờ cảnh báo khi một lệnh ghi config hoặc specials nhắm vào một key mà không renderer, không editor, không runtime nào trong nền tảng đọc tới, thay vì âm thầm lưu lại mà không có tác dụng gì; lượt quét đầu tiên đối chiếu mọi key được seed với chính mã nguồn nền tảng tìm ra đúng một trường hợp, config.splitDirection trên image-comparison.
+- npm run codegen và npm run codegen:check giờ cảnh báo khi mô tả AI hint của một phần tử dùng ngôn ngữ kiểu "chỉ render qua/bên trong" nhưng phần tử đó lại vắng mặt trong bảng phần tử "inert" lẫn sổ loại trừ của nó, bắt được các trường hợp trôi dạt như phần tử quickview từng lên hàng mà không ai để ý.
+- Catalog giờ bao phủ tính năng nền cảnh 3D của nền tảng trên flex-section, flex-block và dataset-block (các config key backgroundSceneSource, effect, gallery, model, veil và màu sắc), có thể tra qua sb_traits_for và dùng qua sb_add.
+- Shape của sản phẩm (sb_api_find / sb_api_call) giờ có thêm modelUrl, URL mô hình 3D tùy chọn của sản phẩm, và số nguồn binding tăng từ 78 lên 79 để bao phủ nó.
+- Chữ trên nút mở chat của chat-widget giờ dịch được qua field translatable của sb_traits_for, cùng với title vốn đã có.
+
 ## [0.41.0] - 2026-09-13
 
 ### Added
