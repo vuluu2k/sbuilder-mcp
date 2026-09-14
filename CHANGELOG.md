@@ -6,6 +6,11 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.47.1] - 2026-09-14
+
+### Fixed
+- `sb_page_create` with `is_homepage` set on a site that already has one no longer creates a duplicate that steals the star and leaves the platform's own original home page reachable at no address; it now adopts the existing home page instead, renaming it when the caller named it something else, and reports what it did instead of creating anything.
+
 ## [0.47.0] - 2026-09-14
 
 ### Added

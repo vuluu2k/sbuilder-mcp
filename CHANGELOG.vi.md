@@ -6,6 +6,11 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.47.1] - 2026-09-14
+
+### Fixed
+- `sb_page_create` với `is_homepage` được bật trên một site đã có sẵn trang chủ giờ không còn tạo ra một trang trùng lặp cướp mất ngôi sao và khiến trang chủ gốc của nền tảng trở nên không thể truy cập ở bất kỳ địa chỉ nào; giờ nó nhận lại trang chủ hiện có, đổi tên nếu người gọi đặt tên khác, và báo cáo việc đã làm thay vì tạo trang mới.
+
 ## [0.47.0] - 2026-09-14
 
 ### Added
