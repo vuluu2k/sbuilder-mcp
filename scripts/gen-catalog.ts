@@ -1746,6 +1746,249 @@ export const API_DEFINITIONS: Record<string, unknown> = ${JSON.stringify(
     return out;
   };
 
+  // ---- Source C, GENERALISED: every `as const` the schema DECLARES ---------
+  //
+  // The two readers below are HAND-WRITTEN, one per feature — `sceneVocab` for
+  // the 3D surfaces, `filterVocab` for the storefront filters — and the platform
+  // declares faster than this repo writes readers. MEASURED at this commit:
+  // `schema/src` exports 22 `as const` string lists and those two readers name
+  // FOUR of them. `form-calendar` alone declares three, seeds a key against each
+  // (`defaultMode`, `acceptedDates`, `picker`), and `sb_traits_for form-calendar`
+  // said nothing about any of them.
+  //
+  // So this scans for the shape instead: `export const NAME = [ … ] as const`
+  // with two or more string members, and JOINS each list to the key it governs.
+  //
+  // THE JOIN IS THE WHOLE DIFFICULTY, AND THE NAME IS NOT EVIDENCE. `DATE_PICKERS`
+  // governs `picker`; nothing mechanical turns one into the other, and this repo
+  // already measured what name-derivation costs — the snake_case→camelCase guess
+  // was wrong for 11 of the 13 controls Source B joins (`divider_orientation`
+  // writes `config.orientation`). So the join is EVIDENCE, and all four parts are
+  // required:
+  //
+  //   1. LOCALITY, AND IT IS REQUIRED RATHER THAN PREFERRED. Only a declaration
+  //      under `schema/src/elements/<type>/` is a candidate, and only for
+  //      `<type>`'s own seeded keys. Allowing a SHARED module to be a candidate
+  //      for every element was tried first, on the reasoning that rule 2 would
+  //      carry it alone — MEASURED, IT CANNOT: that produced 17 joins on this
+  //      tree and every single one was wrong. `filterBehavior: "filter"` joined
+  //      `HOVER_PRESET_STYLE_KEYS`, a list of CSS PROPERTY NAMES that happens to
+  //      contain the word `filter`; `qr-code`'s `source: "text"` joined
+  //      `SCHEME_ROLES`; `datasetSource: "product"` and `filterSource:
+  //      "category"` both joined `TRANSLATION_ENTITY_TYPES`. An ordinary English
+  //      word sitting in an unrelated subsystem's list is indistinguishable from
+  //      a governing vocabulary, and no amount of seed-matching separates them.
+  //      A shared declaration therefore gets SILENCE. What that costs is real and
+  //      known: `FIELD_PATTERN_VALUES`' own doc comment says "Every value
+  //      `specials.patternPreset` may hold", `form-text` seeds exactly that key,
+  //      and this reader will not say so. That answer lives in the inspector row
+  //      that writes the key (`FieldPatternRow.vue` → `setNodeValue(…,
+  //      'patternPreset', v)`), which is Source B's kind of evidence, not this
+  //      one's.
+  //
+  //   2. THE SEED IS IN THE LIST. `form-calendar` seeds `picker: 'native'` and
+  //      `DATE_PICKERS` contains `native`. A list that does not contain the
+  //      element's own seeded value does not govern that key — the same reasoning
+  //      that put `''` in `backgroundSceneSource` and kept it out of
+  //      `filterSource`.
+  //
+  //   3. EXACTLY ONE CANDIDATE, IN BOTH DIRECTIONS. Two lists containing one
+  //      seed is a coin flip: `spline-scene` seeds `speed: 'normal'` AND
+  //      `intensity: 'normal'`, and `SCENE_SPEEDS` and `SCENE_INTENSITIES` both
+  //      carry `normal`, so neither key is joined here (`sceneVocab` answers both
+  //      from the key mapping the editor declares). The MIRROR matters as much:
+  //      one list matching two keys on the same element is equally unresolvable,
+  //      so all of its matches are dropped rather than the first one taken.
+  //
+  //   4. A SEED OF `''` IS NOT EVIDENCE. 119 elements seed some key as the empty
+  //      string, so `''` discriminates nothing — and `BACKGROUND_SCENE_SOURCES`
+  //      carries `''` as a real value, which is exactly the shape that would
+  //      attach a scene vocabulary to every empty URL and label an element seeds.
+  //
+  // A LIST OF KEY NAMES IS NOT A VOCABULARY, AND THAT IS ASSERTED RATHER THAN
+  // LEFT TO RULE 2. `BACKGROUND_SCENE_RESPONSIVE_KEYS`,
+  // `BACKGROUND_SCENE_BASE_ONLY_KEYS` and `HOVER_PRESET_STYLE_KEYS` list KEYS,
+  // and `TRANSLATION_ENTITY_TYPES` / `SCHEME_ROLES` belong to other subsystems
+  // entirely; a join that ever produced one would publish a list of key names as
+  // the legal VALUES of a key. The `_KEYS` suffix is the platform's own
+  // convention and is refused structurally, and all five are asserted by name to
+  // be FOUND by the scan and to have joined NOTHING — the first half catches the
+  // scan breaking, the second catches the join loosening.
+  const declaredVocab = (): Array<{ scope: string; vocab: ValueVocabulary }> => {
+    const root = resolve(repo, 'schema/src');
+    const files: string[] = [];
+    const walk = (dir: string) => {
+      for (const e of readdirSync(dir, { withFileTypes: true })) {
+        const p = join(dir, e.name);
+        if (e.isDirectory()) walk(p);
+        else if (e.name.endsWith('.ts') && !e.name.endsWith('.d.ts')) files.push(p);
+      }
+    };
+    walk(root);
+    // Bracket-matched, COMMENTS SKIPPED BEFORE STRINGS — the same trap
+    // `filterVocab` records one delimiter over, and `theme.ts` springs it:
+    // `PRESET_KINDS` carries a paragraph of prose inside the array ("a node",
+    // "it alone has"), and a scanner that reads one of those apostrophes as a
+    // string opener runs past the closing bracket and returns the rest of the
+    // file as members.
+    const closes = (src: string, open: number): number | null => {
+      let depth = 0;
+      for (let i = open; i < src.length; i++) {
+        const c = src[i];
+        const n = src[i + 1];
+        if (c === '/' && n === '/') {
+          i = src.indexOf('\n', i);
+          if (i < 0) return null;
+          continue;
+        }
+        if (c === '/' && n === '*') {
+          i = src.indexOf('*/', i);
+          if (i < 0) return null;
+          i += 1;
+          continue;
+        }
+        if (c === "'" || c === '"' || c === '`') {
+          for (i++; i < src.length && src[i] !== c; i++) if (src[i] === '\\') i++;
+          continue;
+        }
+        if (c === '[') depth++;
+        else if (c === ']' && --depth === 0) return i;
+      }
+      return null;
+    };
+    const commentless = (body: string): string =>
+      body.replace(/\/\*[\s\S]*?\*\//g, ' ').replace(/\/\/[^\n]*/g, ' ');
+    type Raw = { name: string; rel: string; body: string };
+    const raw: Raw[] = [];
+    for (const f of files) {
+      const src = readFileSync(f, 'utf8');
+      const rel = f.slice(root.length + 1);
+      for (const m of src.matchAll(/(?:^|\n)export const ([A-Za-z0-9_]+)\s*(?::[^=\n]*)?=\s*\[/g)) {
+        const open = m.index + m[0].length - 1;
+        const end = closes(src, open);
+        // `as const` is the platform's own mark that the members ARE the
+        // complete set. A plain `X[] = [ … ]` is a typed array that may be
+        // appended to from anywhere, which proves nothing.
+        if (end === null || !/^\s*as const\b/.test(src.slice(end + 1, end + 20))) continue;
+        raw.push({ name: m[1], rel, body: commentless(src.slice(open + 1, end)) });
+      }
+    }
+    // Members, with `...OTHER` resolved against the lists already read.
+    // `FIELD_PATTERN_VALUES` is literally `['', ...FIELD_PATTERN_PRESETS,
+    // 'custom']`, so a reader that took the quoted words alone would publish a
+    // TWO-value list for a seven-value key — a partial list, which this whole
+    // table holds is worse than none. Anything left over after the strings, the
+    // spreads and the punctuation means the list is not made of string literals
+    // (`WEEKDAYS` is ISO day numbers), and it is dropped rather than truncated.
+    const byName = new Map(raw.map((d) => [d.name, d]));
+    const cache = new Map<string, string[] | null>();
+    const membersOf = (name: string, seen: Set<string>): string[] | null => {
+      const hit = cache.get(name);
+      if (hit !== undefined) return hit;
+      const d = byName.get(name);
+      if (!d || seen.has(name)) return null;
+      seen.add(name);
+      const rest = d.body
+        .replace(/'[^']*'/g, '')
+        .replace(/\.\.\.\s*[A-Za-z0-9_]+/g, '')
+        .replace(/[\s,]/g, '');
+      const acc: string[] = [];
+      let ok = rest.length === 0;
+      if (ok) {
+        for (const s of d.body.matchAll(/\.\.\.\s*([A-Za-z0-9_]+)/g)) {
+          const v = membersOf(s[1], seen);
+          if (!v) {
+            ok = false;
+            break;
+          }
+          acc.push(...v);
+        }
+      }
+      if (ok) acc.push(...[...d.body.matchAll(/'([^']*)'/g)].map((x) => x[1]));
+      const uniq = [...new Set(acc)];
+      const r = ok && uniq.length > 1 ? uniq : null;
+      cache.set(name, r);
+      return r;
+    };
+    type Decl = { name: string; rel: string; scope: string; values: string[] };
+    const usable: Decl[] = [];
+    for (const d of raw) {
+      // The platform's own naming convention for a list of KEY NAMES. Refused
+      // structurally, so the assertion below is a tripwire rather than the only
+      // thing standing between a key-name list and the table.
+      if (/_KEYS$/.test(d.name)) continue;
+      const local = /^elements\/([a-z0-9-]+)\//.exec(d.rel);
+      if (!local || !elements[local[1]]) continue;
+      const values = membersOf(d.name, new Set());
+      if (values) usable.push({ name: d.name, rel: d.rel, scope: local[1], values });
+    }
+    const out: Array<{ scope: string; vocab: ValueVocabulary }> = [];
+    const joined = new Set<string>();
+    let ambiguous = 0;
+    for (const [type, el] of Object.entries(elements)) {
+      const cands = usable.filter((d) => d.scope === type);
+      if (!cands.length) continue;
+      // Every (key → the one list that could govern it), then the mirror: a
+      // list reached from two keys is dropped for both.
+      const hits: Array<{ target: 'config' | 'specials'; key: string; decl: Decl }> = [];
+      for (const target of ['config', 'specials'] as const) {
+        const seeded = (el.defaults?.[target] ?? {}) as Record<string, unknown>;
+        for (const [key, seed] of Object.entries(seeded)) {
+          if (typeof seed !== 'string' || seed === '') continue;
+          const match = cands.filter((d) => d.values.includes(seed));
+          if (match.length === 1) hits.push({ target, key, decl: match[0] });
+          else if (match.length > 1) ambiguous++;
+        }
+      }
+      for (const h of hits) {
+        if (hits.filter((o) => o.decl.name === h.decl.name).length > 1) {
+          ambiguous++;
+          continue;
+        }
+        joined.add(h.decl.name);
+        out.push({
+          scope: type,
+          vocab: {
+            target: h.target,
+            writeKey: h.key,
+            values: [...h.decl.values].sort(),
+            readBy: `${h.decl.name} (schema/src/${h.decl.rel})`,
+          },
+        });
+      }
+    }
+    // A list of KEY NAMES published as the legal VALUES of a key is the one
+    // outcome this reader must never produce, so it is asserted rather than
+    // left to the rules above. Each must still be FOUND — a scan that stopped
+    // parsing would satisfy "joined nothing" while having read nothing at all.
+    for (const name of [
+      'BACKGROUND_SCENE_RESPONSIVE_KEYS',
+      'BACKGROUND_SCENE_BASE_ONLY_KEYS',
+      'HOVER_PRESET_STYLE_KEYS',
+      'TRANSLATION_ENTITY_TYPES',
+      'SCHEME_ROLES',
+    ]) {
+      if (!byName.has(name)) {
+        console.error(`${name} is gone from schema/src — the declaration scan drifted`);
+        process.exit(1);
+      }
+      if (joined.has(name)) {
+        console.error(`${name} is a list of key names and was joined to a key — the join loosened`);
+        process.exit(1);
+      }
+    }
+    if (!out.length) {
+      console.error('no declared vocabulary joined to any key — the declaration scan drifted');
+      process.exit(1);
+    }
+    console.error(
+      `  declared vocabularies from schema's own as-const lists: ${out.length} joined, ` +
+        `${usable.length - joined.size} of ${usable.length} element-local declarations matched ` +
+        `nothing (${raw.length} scanned, ${ambiguous} declined as ambiguous)`,
+    );
+    return out;
+  };
+
   // ---- Source C: a DECLARED list, and the 3D feature that needed one ------
   //
   // A and B both read an IMPLEMENTATION — a renderer's switch, a picker's
@@ -2333,6 +2576,16 @@ export const API_DEFINITIONS: Record<string, unknown> = ${JSON.stringify(
     else if (elements[scope]) put(scope, vocab.writeKey, vocab);
     // A renderer directory with no element of that name is a shared subtree
     // (`overlayplace`), not an element — it scopes to nothing and says nothing.
+  }
+  // The general declaration reader runs FIRST among the Source C readers, so
+  // the two hand-written ones keep the last word wherever they overlap: they
+  // read the platform's own KEY MAPPING (`sceneKeys.ts`, the filter dialog's
+  // `setNodeValue` calls) where this one infers the key from the seed, and a
+  // read mapping outranks an inferred one. Measured, the only overlap is
+  // `spline-scene.source`, where both reach `SCENE_SOURCES` and the entries are
+  // byte-identical.
+  for (const { scope, vocab } of declaredVocab()) {
+    if (elements[scope]) put(scope, vocab.writeKey, vocab);
   }
   for (const { scope, vocab } of sceneVocab()) {
     if (scope === '*') put('*', vocab.writeKey, vocab);

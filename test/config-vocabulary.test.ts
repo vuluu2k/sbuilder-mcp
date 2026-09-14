@@ -508,3 +508,113 @@ describe('a declared vocabulary outranks the renderer that draws it', () => {
     }
   });
 });
+
+/**
+ * THE READER THAT COSTS NOTHING FOR THE NEXT DECLARATION.
+ *
+ * The two Source C readers above are HAND-WRITTEN, one per feature, and the
+ * platform declares faster than this repo writes readers: `schema/src` exports
+ * 22 `as const` string lists and those two name FOUR of them. `form-calendar`
+ * alone declares three and seeds a key against each, and `sb_traits_for
+ * form-calendar` said nothing about any of them — a reader gap on this side,
+ * not a declaration gap on theirs.
+ *
+ * `declaredVocab` scans for the shape and joins each list to the key it governs
+ * on EVIDENCE. The join is the whole difficulty, and every assertion here pins
+ * one of its four parts — as a PROPERTY where it can be, because the point of
+ * generating the table is that it grows with the platform.
+ */
+describe('a declaration the schema makes reaches the key it governs', () => {
+  // THE HEADLINE CASE. Three declarations in one file, three seeded keys, and
+  // the catalog was silent on all three.
+  it('names the calendar keys the platform declares', () => {
+    const v = (key: string) => vocabularyForWrite('form-calendar', 'specials', key)!;
+    expect(v('defaultMode').values).toEqual(['specific', 'today', 'unset']);
+    expect(v('acceptedDates').values).toEqual(['all', 'future', 'past']);
+    expect(v('picker').values).toEqual(['grid', 'native']);
+    expect(vocabularyForWrite('form-date', 'specials', 'format')!.values).toContain('day-month-year');
+    // The declaration is the source, so no fallback is invented: it proves what
+    // the key may HOLD and is silent on what the renderer does with anything
+    // else. Same rule the editor's picker gets.
+    const note = unknownWriteNote('form-calendar', 'specials', 'picker', 'calendar')!;
+    expect(note).toMatch(/DATE_PICKERS/);
+    expect(note).toMatch(/grid, native/);
+    expect(note).not.toMatch(/renders as that/);
+    expect(unknownWriteNote('form-calendar', 'specials', 'picker', 'grid')).toBeNull();
+  });
+
+  // RULE 1, MEASURED RATHER THAN ASSUMED. Letting a SHARED module be a
+  // candidate for every element that seeds a matching value produced 17 joins
+  // on this tree and every one was wrong: `filterBehavior: "filter"` joined
+  // `HOVER_PRESET_STYLE_KEYS` (a list of CSS PROPERTY names), `qr-code`'s
+  // `source: "text"` joined `SCHEME_ROLES`, and `datasetSource: "product"` and
+  // `filterSource: "category"` both joined `TRANSLATION_ENTITY_TYPES`. An
+  // ordinary English word in an unrelated subsystem's list is indistinguishable
+  // from a governing vocabulary, so locality is REQUIRED and a shared
+  // declaration gets silence.
+  //
+  // Pinned by the VALUES rather than by the reader, because what must never
+  // happen is one of those lists reaching a key — however it got there.
+  it('never hands a key another subsystem list', () => {
+    const foreign = [
+      'blogCategory', // TRANSLATION_ENTITY_TYPES
+      'uiString',
+      'mailString',
+      'backgroundGradient', // SCHEME_ROLES
+      'buttonBgGradient',
+      'textDecoration', // HOVER_PRESET_STYLE_KEYS
+      'boxShadow',
+      'backgroundSceneColor1', // BACKGROUND_SCENE_RESPONSIVE_KEYS
+      'backgroundSceneModelUrl', // BACKGROUND_SCENE_BASE_ONLY_KEYS
+    ];
+    for (const [type, table] of Object.entries(ELEMENT_VALUES)) {
+      for (const [key, v] of Object.entries(table)) {
+        for (const word of foreign) {
+          expect(v.values, `${type}.${key}`).not.toContain(word);
+        }
+      }
+    }
+    // The live cases the wrong join produced, each still answered by the reader
+    // that actually knows the key — or by nothing at all.
+    expect(vocabularyForWrite('qr-code', 'specials', 'source')!.values.sort()).toEqual([
+      'page',
+      'text',
+    ]);
+    expect(vocabularyForWrite('list-dataset', 'config', 'datasetSource')).toBeNull();
+    expect(vocabularyForWrite('form-text', 'specials', 'patternPreset')).toBeNull();
+  });
+
+  // RULES 3 AND 4, both of which keep a key SILENT rather than guessing.
+  it('says nothing where two lists could answer, or where the seed proves nothing', () => {
+    // `spline-scene` seeds speed:"normal" AND intensity:"normal", and
+    // SCENE_SPEEDS and SCENE_INTENSITIES both carry `normal` — a coin flip
+    // this reader refuses. Both keys are answered by `sceneVocab`, which reads
+    // the editor's own key mapping instead of inferring from the seed.
+    for (const key of ['speed', 'intensity']) {
+      const v = vocabularyForWrite('spline-scene', 'config', key)!;
+      expect(v.readBy, key).toMatch(/sceneKeys|SCENE_(SPEEDS|INTENSITIES)/);
+    }
+    // `''` is seeded by 119 elements on some key, so it discriminates nothing —
+    // and `BACKGROUND_SCENE_SOURCES` carries it as a REAL value, which is the
+    // shape that would attach a scene vocabulary to every empty URL and label.
+    for (const key of ['modelUrl', 'posterUrl']) {
+      expect(vocabularyForWrite('spline-scene', 'specials', key), key).toBeNull();
+    }
+  });
+
+  // THE OVERLAP, AND THE ORDER THAT RESOLVES IT. `spline-scene.source` is
+  // reachable by both the general reader (SCENE_SOURCES is local to that
+  // element) and by `sceneVocab` (which reads the key mapping `sceneKeys.ts`
+  // declares). The general reader runs FIRST so the read mapping outranks the
+  // inferred one; the values are the same list either way, which is why the
+  // catalog did not move when the general reader landed.
+  it('leaves the hand-written readers the last word where they overlap', () => {
+    const v = vocabularyForWrite('spline-scene', 'specials', 'source')!;
+    expect(v.values).toEqual(['effect', 'gallery', 'model', 'spline']);
+    expect(v.readBy).toMatch(/SCENE_SOURCES/);
+    // Neither hand-written reader is subsumed: the general one reaches 1 of
+    // sceneVocab's 12 vocabularies and 0 of filterVocab's 23, so both stay.
+    expect(vocabularyForWrite('flex-section', 'config', 'backgroundSceneSource')).not.toBeNull();
+    expect(vocabularyForWrite('filter-checkbox', 'specials', 'filterSource')).not.toBeNull();
+  });
+});

@@ -1851,6 +1851,104 @@ that accounts for them.
   `filter-slider` 5,452 — against a 16,000 ceiling the budget test measures on `list-dataset`,
   still 14,385 and unmoved, because a filter element is not a repeater.
 
+  **AND BOTH OF THOSE READERS WERE HAND-WRITTEN, ONE PER FEATURE, WHILE THE PLATFORM DECLARES
+  FASTER THAN THIS REPO WRITES READERS.** Measured: `schema/src` exports 22 `as const` string
+  lists and the two above name FOUR of them. `form-calendar` alone declares three and seeds a
+  key against each — `defaultMode`, `acceptedDates`, `picker`, three declarations in the file
+  the element itself lives in — and `sb_traits_for form-calendar` said nothing about any of
+  them. A READER gap on this side, not a declaration gap on theirs. `declaredVocab` scans for
+  the shape instead, so the next declaration costs nothing: verified against a live branch
+  where `SCENE_VIEWER_MODES` had just landed, which joins `specials.sceneViewer` with no code
+  change at all.
+
+  THE JOIN IS THE WHOLE DIFFICULTY AND THE NAME IS NOT EVIDENCE — `DATE_PICKERS` governs
+  `picker`, and nothing mechanical turns one into the other. Four requirements, all of them
+  paid for:
+
+  - **LOCALITY IS REQUIRED, NOT PREFERRED, AND THAT WAS THE SURPRISE.** The plan was that a
+    SHARED module (`fieldPattern.ts`, `formRules.ts`) could be a candidate for every element
+    seeding a matching value, with the seed-in-list rule carrying it alone. MEASURED, IT
+    CANNOT: that produced 17 joins on this tree and **every single one was wrong**.
+    `filterBehavior: "filter"` joined `HOVER_PRESET_STYLE_KEYS`, a list of CSS PROPERTY names
+    that happens to contain the word `filter`; `qr-code`'s `source: "text"` joined
+    `SCHEME_ROLES`; `datasetSource: "product"` and `filterSource: "category"` both joined
+    `TRANSLATION_ENTITY_TYPES`. An ordinary English word sitting in an unrelated subsystem's
+    list is indistinguishable from a governing vocabulary. What silence costs is known and
+    named: `FIELD_PATTERN_VALUES`' own doc comment says "Every value `specials.patternPreset`
+    may hold", `form-text` seeds exactly that key, and this reader will not say so — that
+    answer lives in the inspector row that WRITES the key (`FieldPatternRow.vue` →
+    `setNodeValue(…, 'patternPreset', v)`), which is Source B's kind of evidence.
+  - **THE SEED IS IN THE LIST**, the same reasoning that put `''` in `backgroundSceneSource`
+    and kept it out of `filterSource`.
+  - **EXACTLY ONE CANDIDATE, IN BOTH DIRECTIONS.** `spline-scene` seeds `speed: "normal"` AND
+    `intensity: "normal"` while `SCENE_SPEEDS` and `SCENE_INTENSITIES` both carry `normal`, so
+    neither is joined here. The mirror matters as much: one list matching two keys on one
+    element is equally unresolvable, so all of its matches drop rather than the first winning.
+  - **A SEED OF `''` IS NOT EVIDENCE.** 119 elements seed some key as the empty string, and
+    `BACKGROUND_SCENE_SOURCES` carries `''` as a REAL value — the exact shape that would
+    attach a scene vocabulary to every empty URL and label an element seeds.
+
+  A LIST OF KEY NAMES PUBLISHED AS THE LEGAL VALUES OF A KEY is the one outcome this must
+  never produce, so it is ASSERTED rather than left to the rules: the `_KEYS` suffix is refused
+  structurally, and `BACKGROUND_SCENE_RESPONSIVE_KEYS`, `BACKGROUND_SCENE_BASE_ONLY_KEYS`,
+  `HOVER_PRESET_STYLE_KEYS`, `TRANSLATION_ENTITY_TYPES` and `SCHEME_ROLES` must each still be
+  FOUND by the scan and must have joined NOTHING. Both halves were checked by breaking them:
+  loosening locality makes the assertion exit 1 naming `HOVER_PRESET_STYLE_KEYS`, and breaking
+  the scan regex makes it exit 1 naming the declaration it can no longer see.
+
+  It runs FIRST among the Source C readers so the two hand-written ones keep the last word
+  where they overlap — they read the platform's own KEY MAPPING where this one infers the key
+  from the seed. NEITHER IS SUBSUMED and neither was forced: the general reader reaches 1 of
+  `sceneVocab`'s 12 vocabularies and 0 of `filterVocab`'s 23. 57 → 61 vocabularies, purely
+  additive, with `list-dataset` unmoved at 14,385 bytes.
+
+  **AND THE RULE UNDERNEATH ALL OF IT IS ONE SENTENCE, worth more than the table it produced:
+  DO NOT TAKE THE THING THAT ACTS AS THE THING THAT DEFINES.** A guard acts on a value; a
+  vocabulary defines it. An emitter acts on a choice; an inspector row offers it. In a codebase
+  with this much lockstep the acting side is always the easier one to find and always the wrong
+  one to trust — and this repo paid for that twice in one day, reading `bgSceneColorRule` as a
+  normaliser and then reading Go emitters for six keys whose inspector rows held the real list
+  (`PopupTriggerRow.vue:70` is literally `(['once','always'] as const)`). Those looked like two
+  separate mistakes and are one.
+
+  The platform states the ordering as a LADDER, and every gap between two adjacent rungs is a
+  defect this file already has a name for:
+
+  > **declaration > row > emitter** — what the platform DEFINES, what an author may CHOOSE,
+  > what the renderer can DRAW.
+
+  - **declaration ahead of row** — a value only an agent can reach. `config.splitDirection`
+    exactly: seeded, legal, stored, published, rendered identically, with no inspector row, so
+    a merchant cannot reach it and `sb_set` can on every call.
+  - **row ahead of emitter** — a control that silently does nothing, the shape this platform
+    ranks worst. `gallery` and `model` each spent a wave here legitimately, which is why an
+    emitter is a FLOOR: reading one under-declares by whatever has been declared and not yet
+    drawn.
+  - **row ahead of declaration** — the editor promising what the schema does not define. NO
+    INSTANCE EXISTS, measured across all 61 vocabularies: one write key is answered by two
+    source classes (`specials.source`) and it is three elements with three vocabularies, not a
+    conflict. So the ordering here is deliberately NOT encoded for it — a rule written for a
+    situation that has never occurred is one nobody can test, and the first real instance is
+    when you learn which way it actually wants to go.
+
+  Which is why `test/config-vocabulary.test.ts` asserts the SOURCE and not only the values: a
+  catalog that gets the right answer from the wrong rung is right until the rungs disagree, and
+  then it is wrong with no warning.
+
+  **AND "LOCAL TO THE ELEMENT" IS REQUIRED RATHER THAN PREFERRED — measured, after being
+  specified the other way.** The brief for this reader said a declaration in a SHARED module
+  could be a candidate for any element seeding a matching value, with the seed-membership rule
+  left to carry it alone. It cannot: allowing it produced 17 joins and **all 17 were wrong**,
+  four of them overwriting correct entries. `filterBehavior: "filter"` joined
+  `HOVER_PRESET_STYLE_KEYS` (CSS property names), `qr-code.source: "text"` joined
+  `SCHEME_ROLES`, `datasetSource: "product"` joined `TRANSLATION_ENTITY_TYPES`. A seed value is
+  a common English word and coincidental membership is the normal case, not the edge one.
+
+  The cost is named rather than hidden: `FIELD_PATTERN_VALUES` genuinely governs
+  `form-text.patternPreset` and lives in a shared module, so this reader stays SILENT on it.
+  The evidence that would reach it is `FieldPatternRow.vue`'s own write — Source B's kind of
+  evidence, and a separate reader, deliberately not bolted onto this one.
+
 - **A MULTI-LANGUAGE STORE WAS REACHABLE AND UNSAFE, and the unsafe half breaks the page
   rather than degrading it.** Every translations route is in the catalog — read, write,
   `/auto`, `/pending`, `/progress`, `/review` — so an agent could call all of them and had NO

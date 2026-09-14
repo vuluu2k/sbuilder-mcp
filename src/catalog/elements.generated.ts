@@ -37051,6 +37051,49 @@ export const ELEMENT_VALUES: Record<string, Record<string, ValueVocabulary>> = {
       "readBy": "COLOR_MODES (editor/src/components/inspector/ScenePaletteRows.vue)"
     }
   },
+  "form-date": {
+    "format": {
+      "target": "specials",
+      "writeKey": "format",
+      "values": [
+        "date-time",
+        "day-month-year",
+        "time"
+      ],
+      "readBy": "DATE_FORMAT_CHOICES (schema/src/elements/form-date/meta.ts)"
+    }
+  },
+  "form-calendar": {
+    "defaultMode": {
+      "target": "specials",
+      "writeKey": "defaultMode",
+      "values": [
+        "specific",
+        "today",
+        "unset"
+      ],
+      "readBy": "DATE_DEFAULT_MODES (schema/src/elements/form-calendar/meta.ts)"
+    },
+    "acceptedDates": {
+      "target": "specials",
+      "writeKey": "acceptedDates",
+      "values": [
+        "all",
+        "future",
+        "past"
+      ],
+      "readBy": "ACCEPTED_DATES (schema/src/elements/form-calendar/meta.ts)"
+    },
+    "picker": {
+      "target": "specials",
+      "writeKey": "picker",
+      "values": [
+        "grid",
+        "native"
+      ],
+      "readBy": "DATE_PICKERS (schema/src/elements/form-calendar/meta.ts)"
+    }
+  },
   "*": {
     "backgroundSceneSource": {
       "target": "config",
