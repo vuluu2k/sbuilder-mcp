@@ -160,6 +160,10 @@ describe('readinessGaps() — the catalogue', () => {
       { type: 'checkout', status: 'published' },
       { type: 'account', status: 'published' },
       { type: 'search', status: 'published' },
+      // …and a 404 page, for the same reason the cart badge is below: a site
+      // that is "otherwise ready" has one, and without it this fixture would
+      // report `errorPage` and stop isolating the CATALOGUE question.
+      { type: 'error', status: 'published' },
     ],
     liveGateways: 1,
     shippingMethods: 1,
@@ -291,6 +295,9 @@ describe('readinessGaps() — is this a site at all', () => {
     expect(ids({})).not.toContain('siteChrome');
   });
 
+  // Reads `toContain` rather than an exact list: this case is about siteChrome,
+  // and a two-page site with no 404 page reports `errorPage` beside it — see the
+  // errorPage block below, which owns that assertion.
   it('asks it of a plain site too, not only a store', () => {
     // The gate below it returns early for anything that is not a store, and this
     // question is true of every website — so it is asked before the gate.
@@ -305,7 +312,7 @@ describe('readinessGaps() — is this a site at all', () => {
       globalNodes: null,
       globalKinds: [],
     } as never);
-    expect(plain.map((g) => g.id)).toEqual(['siteChrome']);
+    expect(plain.map((g) => g.id)).toContain('siteChrome');
   });
 
   it('reports a cart that opens with nothing showing what is in it', () => {
@@ -319,5 +326,73 @@ describe('readinessGaps() — is this a site at all', () => {
     const nothingOpens = ids({ globalNodes: [] });
     expect(nothingOpens).toContain('cartTrigger');
     expect(nothingOpens).not.toContain('cartCount');
+  });
+});
+
+/**
+ * A MISTYPED URL ANSWERS IN GO, NOT IN THE SHOP'S VOICE.
+ *
+ * storefront/errorpage.go falls through to http.NotFound when the site has no
+ * PUBLISHED page of type `error` — the bare "404 page not found" in plain text,
+ * no header, no footer, no way back. Unlike the completion page, which backstops
+ * itself with a built-in receipt, this fallback carries none of the site. And
+ * nothing reports it: the only person who meets it already took a wrong turn.
+ */
+describe('readinessGaps() — the 404 page', () => {
+  const twoPages = [
+    { type: 'page', status: 'published' },
+    { type: 'page', status: 'published' },
+  ];
+  const site = (pages: unknown) =>
+    readinessGaps({
+      pages,
+      liveGateways: null,
+      shippingMethods: null,
+      pageNodes: [],
+      globalNodes: null,
+      globalKinds: ['header'],
+    } as never).map((g) => g.id);
+
+  it('reports a multi-page site with no error page', () => {
+    expect(site(twoPages)).toContain('errorPage');
+  });
+
+  it('is silent once one is published', () => {
+    expect(site([...twoPages, { type: 'error', status: 'published' }])).not.toContain('errorPage');
+  });
+
+  it('says PUBLISH, not create, when one exists as a draft', () => {
+    const g = readinessGaps({
+      pages: [...twoPages, { type: 'error', status: 'draft' }],
+      liveGateways: null,
+      shippingMethods: null,
+      pageNodes: [],
+      globalNodes: null,
+      globalKinds: ['header'],
+    } as never).find((x) => x.id === 'errorPage')!;
+    expect(g.draft).toBe(true);
+    expect(g.fix).toMatch(/Publish/);
+  });
+
+  // THE THRESHOLD, and the contract it protects: a one-page brochure has no
+  // second address to mistype and nothing to put in a header, so nagging it
+  // about a 404 page is the "says nothing about a brochure site" case failing.
+  it('says nothing to a one-page site', () => {
+    expect(site([{ type: 'page', status: 'published' }])).not.toContain('errorPage');
+  });
+
+  // THE LIVENESS ANCHOR. Every assertion above is about something NOT being
+  // reported; this is what proves the fixture can still report at all.
+  it('still answers the other site-level question on the same fixture', () => {
+    const noChrome = readinessGaps({
+      pages: twoPages,
+      liveGateways: null,
+      shippingMethods: null,
+      pageNodes: [],
+      globalNodes: null,
+      globalKinds: [],
+    } as never).map((g) => g.id);
+    expect(noChrome).toContain('siteChrome');
+    expect(noChrome).toContain('errorPage');
   });
 });

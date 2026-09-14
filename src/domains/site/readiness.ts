@@ -44,6 +44,7 @@ export type ReadinessGapId =
   | 'catalogue'
   | 'categoryScope'
   | 'siteChrome'
+  | 'errorPage'
   | 'cartCount';
 
 export interface ReadinessGap {
@@ -175,6 +176,44 @@ export function readinessGaps(input: ReadinessInput): ReadinessGap[] {
         'Make them shared: POST /api/sites/{siteId}/global-sections with { name, kind: "header" | ' +
         '"footer", document }, then PUT .../{id}/document with { subtree }. A page then carries a ' +
         'globalRef instead of a copy, and one edit reaches every page.',
+    });
+  }
+
+  // A MISTYPED URL ANSWERS IN GO, NOT IN THE SHOP'S VOICE.
+  //
+  // storefront/errorpage.go: with no PUBLISHED page of type `error`, notFound
+  // falls through to http.NotFound — the bare "404 page not found" in plain
+  // text. No header, no footer, no way back to the shop, and nothing that looks
+  // like the site the shopper was just in.
+  //
+  // Unlike the completion page, which backstops itself with a built-in receipt
+  // (measured 200 on a live store that had none), this fallback carries none of
+  // the site. And unlike a dead link, nothing reports it: the only person who
+  // sees it is a visitor who already took a wrong turn and now has no way back.
+  //
+  // Asked of EVERY site, not only a store, and so placed here with siteChrome
+  // rather than below the gate — a mistyped URL is not a commerce question.
+  //
+  // TWO PAGES IS THE THRESHOLD, the same one siteChrome uses and for a related
+  // reason: a one-page site has no second address to mistype, no menu to follow
+  // a stale link out of, and nothing to put in a header that would make a 404
+  // look like the site. Below it this would be a nag at a brochure — which the
+  // silence contract in readiness.test.ts names outright.
+  if (pages && pages.length >= 2 && !published(pages, 'error')) {
+    const draft = drafted(pages, 'error');
+    gaps.push({
+      id: 'errorPage',
+      draft,
+      problem:
+        'A URL that does not exist answers with the platform\'s own bare "404 page not found" ' +
+        'in plain text — no header, no footer, no way back to the shop. A shopper who follows ' +
+        'a stale link or mistypes an address lands on a blank page that does not look like ' +
+        'this site at all.',
+      fix: draft
+        ? 'Publish the error page that already exists.'
+        : 'Create a page of type "error" and publish it. It has no address of its own — the ' +
+          'storefront serves it as the BODY of a 404 — so give it the site\'s header and ' +
+          'footer and a link back to the home page.',
     });
   }
 
