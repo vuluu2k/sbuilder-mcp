@@ -502,3 +502,128 @@ describe('a created page wears the site chrome', () => {
     expect(out.chrome).toBeUndefined();
   });
 });
+
+/**
+ * `sb_remove`'s dry run counts NODES, and it used to count PATCHES.
+ *
+ * The field is called `removing` on a tool described as "Remove a node and its
+ * whole subtree", so every caller reads it as a node count — and
+ * `patches.length` is off by one in the ORDINARY case and exact in the rare
+ * one, which is the worst arrangement available. `removeNode` emits one `unset`
+ * per doomed node PLUS one `remove` that takes the id out of its parent's child
+ * list, and that second patch exists only while the parent is still in the
+ * document.
+ *
+ * Both numbers were believed in this repo's own work: a childless section under
+ * ROOT reported 2, which was read as evidence of a hidden node attached by
+ * `parent` alone, and a page-source dump then proved no such node existed.
+ */
+describe('removeNode: what the dry run is counting', () => {
+  const nodeCount = (patches: Array<{ op: string; path: string[] }>) =>
+    patches.filter((p) => p.op === 'unset' && p.path.length === 2).length;
+
+  const doc = (nodes: Record<string, unknown>) =>
+    PageDoc.from({ schema_version: 2, root_node_id: 'rt', nodes } as never);
+
+  const node = (id: string, parent: string | null, kids: string[] = [], type = 'flex-section') => ({
+    id,
+    data: { type, parent, nodes: kids, isCanvas: true, hidden: false, custom: {} },
+    style: {},
+    config: {},
+    specials: {},
+    responsive: {},
+    events: [],
+    bindings: [],
+  });
+
+  it('a childless section whose parent lists it is ONE node and TWO patches', async () => {
+    const { removeNode } = await import('../src/domains/site/builder.js');
+    const d = doc({
+      rt: node('rt', null, ['fs_1'], 'root'),
+      fs_1: node('fs_1', 'rt'),
+    });
+    const patches = removeNode(d, 'fs_1') as Array<{ op: string; path: string[] }>;
+    expect(patches.length).toBe(2);
+    expect(nodeCount(patches)).toBe(1);
+  });
+
+  it('is exact when the parent is GONE — the case that made the old count look right', async () => {
+    // The satellite shape: a node attached by `parent` alone to an owner that
+    // has already been deleted. No child list to edit, so patches == nodes and
+    // the old reading happened to agree.
+    const { removeNode } = await import('../src/domains/site/builder.js');
+    const d = doc({
+      rt: node('rt', null, [], 'root'),
+      li_1: node('li_1', 'da_gone', ['tx_1'], 'list-empty'),
+      tx_1: node('tx_1', 'li_1', [], 'text'),
+    });
+    const patches = removeNode(d, 'li_1') as Array<{ op: string; path: string[] }>;
+    expect(patches.length).toBe(2);
+    expect(nodeCount(patches)).toBe(2);
+  });
+
+  it('counts the whole subtree, not just the node named', async () => {
+    const { removeNode } = await import('../src/domains/site/builder.js');
+    const d = doc({
+      rt: node('rt', null, ['fs_1'], 'root'),
+      fs_1: node('fs_1', 'rt', ['tx_1', 'tx_2']),
+      tx_1: node('tx_1', 'fs_1', [], 'text'),
+      tx_2: node('tx_2', 'fs_1', [], 'text'),
+    });
+    const patches = removeNode(d, 'fs_1') as Array<{ op: string; path: string[] }>;
+    expect(nodeCount(patches)).toBe(3);
+    expect(patches.length).toBe(4);
+  });
+});
+
+/**
+ * THE TOOL's own number, because the three tests above cannot see it.
+ *
+ * They pin `removeNode`'s patch composition, which is real and which the count
+ * is derived from — and they stay GREEN if `sb_remove` is put back to reporting
+ * `patches.length`. That is the "a test that survives its own fix being
+ * deleted" shape this repo keeps closing, so the distinction is asserted where
+ * a caller actually meets it: in the dry run's bytes.
+ */
+describe('sb_remove dry run reports nodes and patches as different numbers', () => {
+  it('a childless section under ROOT is removing:1, patches:2', async () => {
+    const document = {
+      schema_version: 2,
+      root_node_id: 'ROOT',
+      nodes: {
+        ROOT: {
+          id: 'ROOT',
+          data: { type: 'root', parent: null, nodes: ['fs_1'], isCanvas: true, hidden: false, custom: {} },
+          style: {}, config: {}, specials: {}, responsive: {}, events: [], bindings: [],
+        },
+        fs_1: {
+          id: 'fs_1',
+          data: { type: 'flex-section', parent: 'ROOT', nodes: [], isCanvas: true, hidden: false, custom: {} },
+          style: {}, config: {}, specials: {}, responsive: {}, events: [], bindings: [],
+        },
+      },
+    };
+    const f = (async () =>
+      new Response(
+        JSON.stringify({ source: { pageId: 'pg_1', siteId: 's1', document, schemaVersion: 2, updatedAt: 'now' } }),
+        { status: 200, headers: { 'content-type': 'application/json' } },
+      )) as unknown as typeof fetch;
+    const session = new Session('http://x', f);
+    (session as unknown as { access: string }).access = 'jwt';
+    const { client, close } = await connectedClient({ fetchImpl: f, session });
+    try {
+      await client.callTool({ name: 'sb_page_open', arguments: { site_id: 's1', page_id: 'pg_1' } });
+      const res = (await client.callTool({
+        name: 'sb_remove',
+        arguments: { id: 'fs_1' },
+      })) as { content: Array<{ text?: string }> };
+      const out = JSON.parse(res.content[0].text ?? '{}') as { removing?: number; patches?: number };
+      // ONE node goes; TWO patches do it. Reporting the patch count here read as
+      // a hidden second node and cost a real investigation on a live page.
+      expect(out.removing).toBe(1);
+      expect(out.patches).toBe(2);
+    } finally {
+      await close();
+    }
+  });
+});

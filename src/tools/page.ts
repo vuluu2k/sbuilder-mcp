@@ -767,7 +767,25 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
     async ({ id, dry_run }) => {
       const d = session.current();
       const patches = removeNode(d, id);
-      if (dry_run !== false) return text({ dry_run: true, removing: patches.length });
+      // NODES, NOT PATCHES — this reported `patches.length` and the field is
+      // called `removing` on a tool whose description is "Remove a node and its
+      // whole subtree", so every caller reads it as a node count.
+      //
+      // It is off by one in the ORDINARY case and exact in the rare one, which
+      // is the worst arrangement available: `removeNode` emits one `unset` per
+      // doomed node PLUS one `remove` that takes the id out of its parent's
+      // child list — and that second patch exists only when the parent is still
+      // in the document. A childless section under ROOT therefore reported 2,
+      // and a four-node subtree whose parent had already been deleted reported
+      // 4 and was right. Both numbers were believed here: the 2 was read as
+      // evidence of a hidden node attached by `parent` alone, and a page-source
+      // dump then proved no such node exists.
+      //
+      // The doomed set is exactly the `unset` patches that name a node
+      // directly; the parent-list patch is an `insert`/`remove` four segments
+      // deep, so length is what separates them without re-deriving the walk.
+      const nodes = patches.filter((p) => p.op === 'unset' && p.path.length === 2).length;
+      if (dry_run !== false) return text({ dry_run: true, removing: nodes, patches: patches.length });
       await session.applyAndSave(patches);
       return text({ removed: id, rev: d.rev });
     },

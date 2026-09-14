@@ -629,6 +629,29 @@ that accounts for them.
   NOT counted in `children` — that number still means `data.nodes.length`, which is what every
   index-taking call is written against.
 
+- **`sb_remove`'s DRY RUN COUNTED PATCHES AND CALLED THEM `removing`, on a tool described as
+  "Remove a node and its whole subtree".** Every caller reads that as a node count, and
+  `removeNode` emits one `unset` per doomed node PLUS one `remove` that takes the id out of its
+  parent's child list — a patch that exists only while the parent is still in the document. So
+  the number is OFF BY ONE IN THE ORDINARY CASE and EXACT IN THE RARE ONE, which is the worst
+  arrangement available: plausible, usually close, and wrong in the direction nobody checks.
+
+  Both readings were believed here, on the same live page. A childless `flex-section` under
+  ROOT reported `removing: 2`, which this file recorded as evidence of "a second node attached
+  to it by `parent` alone that the outline does not show" — and dumping that page's 118 nodes
+  proved NO node names it as a parent. The orphaned `list-empty` subtree next to it reported
+  `removing: 4` and was right, because its owner had already been deleted so there was no child
+  list to edit. Two numbers, one wrong, and the wrong one is the one a section normally gives.
+
+  It reports `removing` (nodes) and `patches` (what it takes) as separate fields now. The node
+  count is exactly the `unset` patches whose path names a node directly — two segments, where
+  the parent-list patch is four — so it needs no second walk of the tree.
+
+  THE TEST FOR IT IS AT THE TOOL, not at `removeNode`. Three tests pin the patch composition
+  and every one of them stays GREEN with the tool put back to `patches.length`; that is the
+  "a test that survives its own fix being deleted" shape this repo keeps closing, and it is
+  why the distinction is asserted in the dry run's BYTES, where a caller meets it.
+
 - **A FORM'S FIELDS ARE STYLED BY CONFIG KEYS THAT BECOME CSS VARIABLES**, not by style on
   the field. `schema/src/elements/fieldSkin.ts` and its lockstep mirror
   `server/render/nodes/fieldskin/fieldskin.go` hold the vocabulary: `fieldBg`,
