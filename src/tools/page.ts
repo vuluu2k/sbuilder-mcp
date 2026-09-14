@@ -356,6 +356,32 @@ async function siteChrome(
   }
 }
 
+/**
+ * The site's own home page, or null when it genuinely has none.
+ *
+ * THROWS RATHER THAN GUESSES. Answering "none" for a listing that could not be
+ * read is the one wrong answer available here: it is indistinguishable from an
+ * empty site, and the caller acts on it by creating a home page the site
+ * already had. `siteChrome` above may swallow its read because a page created
+ * without chrome is a page a person can fix; this one may not, because the page
+ * it creates cannot be un-created and takes the star off whichever page held it.
+ */
+async function existingHomepage(
+  ctx: ToolContext,
+  siteId: string,
+): Promise<{ id: string; name: string } | null> {
+  const listed = (await request({
+    base: ctx.base,
+    method: 'GET',
+    path: `/api/sites/${encodeURIComponent(siteId)}/pages`,
+    token: siteToken(ctx),
+    fetchImpl: ctx.fetchImpl,
+  })) as { pages?: Array<Record<string, unknown>> };
+  const home = (listed.pages ?? []).find((p) => p.isHomepage === true);
+  if (!home || typeof home.id !== 'string' || !home.id) return null;
+  return { id: home.id, name: typeof home.name === 'string' ? home.name : '' };
+}
+
 export function registerPageTools(server: McpServer, ctx: ToolContext): PageSession {
   const session = new PageSession(ctx);
 
@@ -1149,7 +1175,87 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
       // fine, while `siteChrome` asks whether the SITE has globals and it does.
       // Measured: three pages built with these tools, every one of them bare,
       // beside a store page carrying its header as ROOT's first child.
-      const wear = chrome !== false ? await siteChrome(ctx, site_id) : {};
+      // A SITE HAS ONE HOME PAGE, AND BY THE TIME AN AGENT ASKS FOR ONE IT
+      // USUALLY EXISTS ALREADY.
+      //
+      // `isHomepage: true` does not mean "make this the home page" to the
+      // platform. It means MOVE THE STAR: CreatePage demotes whoever holds it
+      // and promotes this one. An agent building a store reads the flag the
+      // first way and asks for it on a site the editor already gave a home page
+      // to, so the site ends up with two — the new one on "/", the old one
+      // demoted and holding nothing. Measured on a real store: pg_439cb121
+      // "Home" and pg_237719d4 "Trang chủ", both slug "", both path "/", the
+      // first reachable at no address at all and still listed as a page.
+      //
+      // So the flag is honoured as what the caller meant — the site's home page
+      // — which is the one it already has. Adopted, renamed when the caller
+      // named it something else, never duplicated. The same rule sb_import_site
+      // already follows when its entry page lands on a site with a home page.
+      //
+      // REPLACING the home page with a DIFFERENT page stays possible and stays
+      // explicit: create it without the flag, build it, then PATCH isHomepage
+      // through sb_api_call. That is a decision, and it should read like one.
+      const adopt = is_homepage === true ? await existingHomepage(ctx, site_id) : null;
+      const rename = adopt && name.trim() !== '' && name !== adopt.name ? name : '';
+      // Read AFTER the adopt decision and skipped when it holds: siteChrome
+      // reads the header and footer off the home page, so asking it which
+      // chrome to dress the home page in is two requests to answer "its own".
+      const wear = chrome !== false && !adopt ? await siteChrome(ctx, site_id) : {};
+      if (adopt && dry_run !== false) {
+        return text({
+          dry_run: true,
+          into: 'the existing home page',
+          page: adopt,
+          ...(rename ? { would_rename: { from: adopt.name, to: rename } } : {}),
+          note:
+            'Nothing would be created. This site already has a home page and a site has ' +
+            'exactly one, so a create carrying isHomepage would have taken the star off ' +
+            `${JSON.stringify(adopt.name)} and left it with no address. Open ${adopt.id} ` +
+            'with sb_page_open and build it.',
+        });
+      }
+      if (adopt) {
+        // THE RENAME IS THE ONLY WRITE. Not the seed — this page may already be
+        // the site's front door, and overwriting a document nobody asked to
+        // replace is the one thing worse than the duplicate this branch exists
+        // to prevent. Not the chrome either: siteChrome reads the header and
+        // footer OFF the home page, so this page is where they came from.
+        let renamed_to: string | undefined;
+        let rename_failed: string | undefined;
+        if (rename) {
+          try {
+            await request({
+              base: ctx.base,
+              method: 'PATCH',
+              path: `${path}/${encodeURIComponent(adopt.id)}`,
+              token: siteToken(ctx),
+              body: { name: rename },
+              fetchImpl: ctx.fetchImpl,
+            });
+            renamed_to = rename;
+          } catch (e) {
+            // The page is still the right one to build on, so a failed rename
+            // is reported, never raised — the caller asked for a home page and
+            // this is it, under its old name.
+            rename_failed = (e as Error).message.replace(/^sbuilder:\s*/, '').slice(0, 160);
+          }
+        }
+        return text({
+          into: 'the existing home page',
+          page: { id: adopt.id, name: renamed_to ?? adopt.name },
+          ...(renamed_to ? { renamed: { from: adopt.name, to: renamed_to } } : {}),
+          ...(rename_failed ? { rename_failed } : {}),
+          ...(slug ? { slug_ignored: 'A home page is served at "/" and carries no slug.' } : {}),
+          ...(type && type !== 'page' ? { type_ignored: `Kept as it is; adopting does not retype a page to "${type}".` } : {}),
+          note:
+            'Nothing was created. This site already had a home page and a site has exactly ' +
+            'one, so creating another would have taken the star off this page and left it ' +
+            `with no address. Open ${adopt.id} with sb_page_open and build it. To hand the ` +
+            'home page over to a DIFFERENT page instead, create that page WITHOUT ' +
+            'is_homepage and then PATCH isHomepage on it through sb_api_call.',
+        });
+      }
+
       if (dry_run !== false) {
         return text({
           dry_run: true,
