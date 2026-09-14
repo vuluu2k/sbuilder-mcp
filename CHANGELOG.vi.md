@@ -6,6 +6,14 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.46.0] - 2026-09-14
+
+### Added
+- Codegen giờ quét thêm một dạng khai báo thứ hai — một mảng có kiểu gồm các thành viên từ const-object, ví dụ `OPTION_SOURCES: OptionSource[] = [...]` — chứ không chỉ mảng `as-const` thuần như trước, nâng số khai báo được quét từ 23 lên 57 và bảng giá trị hợp lệ của catalog từ 61 lên 64 mục; form-select, form-radio và form-checkbox giờ có bảng giá trị cho optionSource, tra được qua specials_values của sb_traits_for và cảnh báo giá trị nằm ngoài bảng của sb_set.
+
+### Fixed
+- Một module vocabulary dùng chung giờ chỉ được nối với một key config hoặc specials khi chính tên của module đó nêu tên key ấy, khép lại nguy cơ nối sai mà việc quét rộng hơn lẽ ra sẽ mở lại (một giá trị seed như "category" hay "text" là từ tiếng Anh thông dụng, tình cờ trùng với các danh sách dùng chung không liên quan); được xác minh trên chính bản quét đã mở rộng, vốn nếu không sẽ nối sai giá trị "category" của filterSource vào một danh sách option-source không liên quan.
+
 ## [0.45.0] - 2026-09-14
 
 ### Added

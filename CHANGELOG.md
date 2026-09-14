@@ -6,6 +6,14 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.46.0] - 2026-09-14
+
+### Added
+- Codegen now also scans a second declaration shape — a typed array of const-object members, such as `OPTION_SOURCES: OptionSource[] = [...]` — not just the plain `as-const` array it already read, growing scanned declarations from 23 to 57 and the catalog's legal-value vocabulary from 61 to 64 entries; form-select, form-radio and form-checkbox now carry a vocabulary for optionSource, reachable through sb_traits_for's specials_values and sb_set's out-of-vocabulary warning.
+
+### Fixed
+- A shared vocabulary module is now only joined to a config or specials key when the module's own name names that key, closing the false-join risk a wider scan would otherwise reopen (a seed value like "category" or "text" is a common word that coincidentally matches unrelated shared lists); verified against the newly-widened scan, which would otherwise have wrongly joined filterSource's "category" value to an unrelated option-source list.
+
 ## [0.45.0] - 2026-09-14
 
 ### Added
