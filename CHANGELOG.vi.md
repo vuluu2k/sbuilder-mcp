@@ -6,6 +6,15 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.52.0] - 2026-09-15
+
+### Added
+- Gợi ý `usually_also` của `sb_page_list` giờ nêu tên trang `faq` nếu site còn thiếu.
+- Gợi ý `usually_also` của `sb_page_list` giờ nêu tên trang danh sách blog nếu site còn thiếu, nhưng chỉ khi site đã có template bài viết (`post`) để liệt kê — site chưa có bài viết nào thì không còn bị nhắc xây trang này.
+
+### Changed
+- Gợi ý `usually_also` của `sb_page_list` tách mục `policy` duy nhất thành `policy-delivery` (giao hàng và đổi trả) và `policy-privacy` (bảo mật và điều khoản sử dụng), để một site chỉ có một trong hai trang không còn bị đọc nhầm là đã có đủ cả hai.
+
 ## [0.51.0] - 2026-09-15
 
 ### Added

@@ -6,6 +6,15 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.52.0] - 2026-09-15
+
+### Added
+- `sb_page_list`'s `usually_also` advisory now names a missing `faq` page.
+- `sb_page_list`'s `usually_also` advisory now names a missing blog listing page, but only on a site that already has a `post` (article) template to list — a site with no articles is no longer told to build one.
+
+### Changed
+- `sb_page_list`'s `usually_also` advisory splits the single `policy` entry into `policy-delivery` (shipping and returns) and `policy-privacy` (privacy and terms of use), so a site carrying only one of the two no longer reads as having both.
+
 ## [0.51.0] - 2026-09-15
 
 ### Added
