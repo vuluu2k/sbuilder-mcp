@@ -50,6 +50,7 @@ export type ReadinessGapId =
   | 'articleTemplate'
   | 'blogCategoryPage'
   | 'coursePage'
+  | 'maintenancePage'
   | 'cartCount';
 
 export interface ReadinessGap {
@@ -88,6 +89,11 @@ export interface ReadinessInput {
   blogCategories?: number | null;
   /** How many courses the site sells; null when the list was unread. */
   courses?: number | null;
+  /**
+   * Is the storefront switched OFF right now; null when the site could not be
+   * read. The one input here that describes a state rather than a shape.
+   */
+  maintenanceMode?: boolean | null;
   /** How many product categories the store has; null when the list was unread. */
   categories?: number | null;
   /** How many of them point at a page of their own; null when unread. */
@@ -197,6 +203,38 @@ export function readinessGaps(input: ReadinessInput): ReadinessGap[] {
         'Make them shared: POST /api/sites/{siteId}/global-sections with { name, kind: "header" | ' +
         '"footer", document }, then PUT .../{id}/document with { subtree }. A page then carries a ' +
         'globalRef instead of a copy, and one edit reaches every page.',
+    });
+  }
+
+  // THE SITE IS DARK RIGHT NOW AND SAYING NOTHING IN ITS OWN VOICE.
+  //
+  // Reported FIRST, because it is the only finding here that is not about what
+  // a visitor might one day meet: with the switch on, every public address is
+  // answering 503 this second. `maintenance.go` serves the published `maintain`
+  // page as that body when there is one, and a PLAIN SENTENCE when there is
+  // not — and it FAILS CLOSED on purpose, so an unresolvable page does not
+  // reopen the shop. The owner gets the outage they asked for either way; what
+  // they lose is every word of it.
+  //
+  // ONLY WHILE THE SWITCH IS ON. Telling a site to build a page for an outage
+  // it is not having is advice about a page nobody will see, and it would
+  // arrive on every review of every site — the nag this file keeps warning
+  // about, at the widest possible scale. Silent when the site could not be
+  // read, like everything else.
+  if (pages && input.maintenanceMode === true && !published(pages, 'maintain')) {
+    const draft = drafted(pages, 'maintain');
+    gaps.push({
+      id: 'maintenancePage',
+      draft,
+      problem:
+        'This storefront is switched OFF right now and has no published page of the "maintain" ' +
+        'type, so every address is answering a bare 503 sentence — no header, no logo, no word ' +
+        'about when it is back, and nothing that looks like this shop.',
+      fix: draft
+        ? 'Publish the maintenance page that already exists.'
+        : 'Create a page of type "maintain" and publish it. It has no address of its own — the ' +
+          'storefront serves it as the BODY of the 503 — so give it the shop\'s name and a line ' +
+          'saying when you are back.',
     });
   }
 

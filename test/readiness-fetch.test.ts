@@ -18,6 +18,7 @@ function platform(forms: unknown) {
     if (path.includes('/articles')) return json({ articles: [{}], total: 7 });
     if (path.includes('/blog-categories')) return json({ blogCategories: [{}], total: 2 });
     if (path.includes('/courses')) return json({ courses: [{}], total: 5 });
+    if (/\/api\/sites\/[^/]+$/.test(path)) return json({ site: { maintenanceMode: true } });
     if (path.endsWith('/pages')) return json({ pages: [{ type: 'page', status: 'published' }] });
     if (path.endsWith('/global-sections')) return json({ globalSections: [{ kind: 'header' }] });
     return json({});
@@ -72,6 +73,14 @@ describe('gatherReadiness reads the form list', () => {
     expect(paths.some((p) => p.endsWith('/courses'))).toBe(true);
     expect(input.blogCategories).toBe(2);
     expect(input.courses).toBe(5);
+  });
+
+  // THE SWITCH, which decides whether the maintenance page matters at all.
+  it('reads the site record for the maintenance switch', async () => {
+    const { ctx, paths } = platform({ forms: [] });
+    const input = await gatherReadiness(ctx, 's1', []);
+    expect(paths.some((p) => /\/api\/sites\/[^/]+$/.test(p))).toBe(true);
+    expect(input.maintenanceMode).toBe(true);
   });
 
   it('reports null rather than an empty list when the read gives no forms', async () => {

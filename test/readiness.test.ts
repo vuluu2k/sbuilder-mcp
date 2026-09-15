@@ -718,3 +718,70 @@ describe('readinessGaps() — every entity prefix has a template check', () => {
     expect(store).toContain('categoryPage');
   });
 });
+
+/**
+ * THE SITE IS DARK RIGHT NOW.
+ *
+ * The only finding here that is not about what a visitor MIGHT meet: with the
+ * switch on, every public address is answering 503 this second. maintenance.go
+ * serves the published `maintain` page as that body when there is one and a
+ * plain sentence when there is not — and it fails closed, so the shop stays
+ * shut either way. What the owner loses is every word of it.
+ */
+describe('readinessGaps() — the maintenance page', () => {
+  const site = (extra: Record<string, unknown>) =>
+    readinessGaps({
+      pages: [{ type: 'page', status: 'published' }],
+      liveGateways: null,
+      shippingMethods: null,
+      pageNodes: [],
+      globalNodes: null,
+      globalKinds: ['header'],
+      ...extra,
+    } as never).map((g) => g.id);
+
+  it('reports a switched-off site with no maintenance page', () => {
+    expect(site({ maintenanceMode: true })).toContain('maintenancePage');
+  });
+
+  it('is reported FIRST, because it is the only one already happening', () => {
+    expect(site({ maintenanceMode: true })[0]).toBe('maintenancePage');
+  });
+
+  it('is silent once one is published', () => {
+    expect(
+      site({
+        maintenanceMode: true,
+        pages: [
+          { type: 'page', status: 'published' },
+          { type: 'maintain', status: 'published' },
+        ],
+      }),
+    ).not.toContain('maintenancePage');
+  });
+
+  // ONLY WHILE THE SWITCH IS ON. Otherwise this is advice about a page nobody
+  // will see, arriving on every review of every site — the nag at its widest.
+  it('says nothing to a site that is open', () => {
+    expect(site({ maintenanceMode: false })).not.toContain('maintenancePage');
+  });
+
+  it('says nothing when the site could not be read', () => {
+    expect(site({ maintenanceMode: null })).not.toContain('maintenancePage');
+    expect(site({})).not.toContain('maintenancePage');
+  });
+
+  it('says PUBLISH, not create, when one exists as a draft', () => {
+    const g = readinessGaps({
+      pages: [
+        { type: 'page', status: 'published' },
+        { type: 'maintain', status: 'draft' },
+      ],
+      maintenanceMode: true,
+      liveGateways: null, shippingMethods: null, pageNodes: [],
+      globalNodes: null, globalKinds: ['header'],
+    } as never).find((x) => x.id === 'maintenancePage')!;
+    expect(g.draft).toBe(true);
+    expect(g.fix).toMatch(/Publish/);
+  });
+});

@@ -31,7 +31,7 @@ export async function gatherReadiness(
   };
   const site = encodeURIComponent(siteId);
 
-  const [pageList, gateways, shipping, globals, productList, categoryList, pageLinks, formList, articleList, blogCategoryList, courseList] =
+  const [pageList, gateways, shipping, globals, productList, categoryList, pageLinks, formList, articleList, blogCategoryList, courseList, siteRecord] =
     await Promise.all([
     get<{ pages?: ReadinessPage[] }>(`/api/sites/${site}/pages`),
     get<{ paymentGateways?: Array<{ enabled?: boolean; configured?: boolean }> }>(
@@ -79,6 +79,11 @@ export async function gatherReadiness(
       `/api/sites/${site}/blog-categories?limit=1`,
     ),
     get<{ courses?: unknown[]; total?: number }>(`/api/sites/${site}/courses?limit=1`),
+    // THE SWITCH ITSELF. `maintain` is the one page type whose absence matters
+    // only while a flag is on — see maintenanceGap. Read here rather than
+    // guessed, because the alternative is telling every site on earth to build
+    // a page for an outage it is not having.
+    get<{ site?: { maintenanceMode?: boolean } }>(`/api/sites/${site}`),
   ]);
 
   // A gateway counts only when it is BOTH enabled and configured — the editor's
@@ -146,5 +151,9 @@ export async function gatherReadiness(
     courses: Array.isArray(courseList?.courses)
       ? (courseList?.total ?? courseList.courses.length)
       : null,
+    maintenanceMode:
+      typeof siteRecord?.site?.maintenanceMode === 'boolean'
+        ? siteRecord.site.maintenanceMode
+        : null,
   };
 }
