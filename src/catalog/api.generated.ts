@@ -3354,7 +3354,7 @@ export const API_OPERATIONS: ApiOperation[] = [
         "in": "body",
         "required": true,
         "type": "object",
-        "description": "question (required) and history (prior turns: role user|assistant, text)"
+        "description": "question (required), history (prior turns: role user|assistant, text) and context (the selected element the agent may propose edits to)"
       }
     ],
     "bodyDescribed": false,

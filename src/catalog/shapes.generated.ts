@@ -9,7 +9,7 @@ export const SHAPE_SOURCE = {
   "fromHandlers": 176,
   "fromSwaggerOnly": 0,
   "withReadOnly": 26,
-  "structsRead": 1678
+  "structsRead": 1697
 } as const;
 
 export const REQUEST_SHAPES: Record<string, RequestShape> = {
@@ -3014,6 +3014,11 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
         "name": "history",
         "type": "llm.Turn[]",
         "note": "History is sent by the CLIENT, unlike the storefront chatbot's, which removed it as a security fix."
+      },
+      {
+        "name": "context",
+        "type": "editoragent.EditContext | null",
+        "note": "Context is the PAGE as the EDITOR described it — the outline of ROOT's children, and the selected element with its trait list, value types and current values, read off the live registries at send time. IT IS THE CAPABILITY LIST, not a hint."
       }
     ],
     "source": "go",
