@@ -6,6 +6,12 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.50.0] - 2026-09-15
+
+### Changed
+- `sb_catalog_search` raises its `limit` ceiling from 30 to 60 so a category can be read whole; the `basic` category alone holds 39 element types, and a 30-cap silently dropped the nine an agent had never used, the same failure browsing exists to fix.
+- `sb_catalog_search`'s browse note now tells the caller to pass a category name with `limit` 60 to read that whole group's descriptions at once, on top of passing a type for its fields.
+
 ## [0.49.0] - 2026-09-15
 
 ### Added

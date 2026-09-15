@@ -6,6 +6,12 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.50.0] - 2026-09-15
+
+### Changed
+- `sb_catalog_search` nâng trần `limit` từ 30 lên 60 để có thể đọc trọn một category; riêng category `basic` đã có 39 loại phần tử, và mức trần 30 âm thầm bỏ sót chín phần tử mà agent chưa từng dùng đến — đúng lỗi mà tính năng duyệt catalog vốn sinh ra để khắc phục.
+- Ghi chú duyệt catalog của `sb_catalog_search` giờ hướng dẫn người gọi truyền tên một category cùng `limit` 60 để đọc toàn bộ mô tả của nhóm đó một lần, bên cạnh việc truyền một loại phần tử để xem các trường lựa chọn của nó.
+
 ## [0.49.0] - 2026-09-15
 
 ### Added
