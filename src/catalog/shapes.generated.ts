@@ -4,12 +4,12 @@
 import type { RequestShape } from './types.js';
 
 export const SHAPE_SOURCE = {
-  "writeOperations": 234,
-  "shaped": 175,
-  "fromHandlers": 175,
+  "writeOperations": 235,
+  "shaped": 176,
+  "fromHandlers": 176,
   "fromSwaggerOnly": 0,
   "withReadOnly": 26,
-  "structsRead": 1671
+  "structsRead": 1678
 } as const;
 
 export const REQUEST_SHAPES: Record<string, RequestShape> = {
@@ -3003,6 +3003,21 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
       "createdAt",
       "updatedAt"
     ]
+  },
+  "post:/api/sites/{siteId}/ai/messages": {
+    "fields": [
+      {
+        "name": "question",
+        "type": "string"
+      },
+      {
+        "name": "history",
+        "type": "llm.Turn[]",
+        "note": "History is sent by the CLIENT, unlike the storefront chatbot's, which removed it as a security fix."
+      }
+    ],
+    "source": "go",
+    "goType": "(inline)"
   },
   "post:/api/sites/{siteId}/fonts": {
     "fields": [

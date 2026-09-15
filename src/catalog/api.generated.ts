@@ -3,10 +3,10 @@
 import type { ApiOperation } from './types.js';
 
 export const SWAGGER_SOURCE = {
-  "operations": 524,
+  "operations": 525,
   "definitions": 107,
-  "bodyCarrying": 192,
-  "bodyUndescribed": 73,
+  "bodyCarrying": 193,
+  "bodyUndescribed": 74,
   "generatedFrom": "server/docs/swagger.json"
 } as const;
 
@@ -3320,6 +3320,41 @@ export const API_OPERATIONS: ApiOperation[] = [
         "required": true,
         "type": "string",
         "description": "Connection ID"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/api/sites/{siteId}/ai/messages",
+    "method": "POST",
+    "path": "/api/sites/{siteId}/ai/messages",
+    "tags": [
+      "sites"
+    ],
+    "summary": "Ask the editor's AI assistant a question about this product",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "Accept",
+        "in": "header",
+        "required": false,
+        "type": "string",
+        "description": "text/event-stream to receive the answer as it is written; anything else returns one JSON body"
+      },
+      {
+        "name": "message",
+        "in": "body",
+        "required": true,
+        "type": "object",
+        "description": "question (required) and history (prior turns: role user|assistant, text)"
       }
     ],
     "bodyDescribed": false,
@@ -18029,7 +18064,8 @@ export const API_DEFINITIONS: Record<string, unknown> = {
         "description": "ZoneFees prices this method PER ZONE, keyed by zone id — the map behind\nFeeForZone. A zone with no entry falls back to FeeCents, so a merchant\nwho prices one method for one zone still has a working checkout for\nevery other combination.\n\nA MAP ON THE ROW rather than a method×zone table, and that is a\nconsidered exception to the normalise-everything rule: these fees are\nnever queried, sorted or aggregated on their own — every read wants them\nalongside the method they belong to — so a join table would buy a query\nnobody makes and cost one on every checkout.",
         "type": "object",
         "additionalProperties": {
-          "type": "integer"
+          "type": "integer",
+          "format": "int64"
         }
       }
     }

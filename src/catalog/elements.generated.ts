@@ -32186,7 +32186,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
         "collectionType": "all_products",
         "collectionId": "all_products",
         "articleCategoryId": "all_articles",
-        "collectionListType": "all_collections",
+        "collectionListType": "page_collections",
         "listNavIcon": "ArrowLeftSLine",
         "listNavPosition": "inside",
         "listNavIconSize": 16,
@@ -33183,7 +33183,9 @@ export const ELEMENTS: Record<string, CatalogElement> = {
             "label": "Article",
             "controls": [
               "article_category",
-              "articleCategoryId"
+              "articleSourceType",
+              "articleCategoryId",
+              "relationSlotKey"
             ]
           },
           {
@@ -33438,7 +33440,9 @@ export const ELEMENTS: Record<string, CatalogElement> = {
       "paginationItemActiveBorderStyle",
       "paginationItemActiveBorderRadius",
       "article_category",
+      "articleSourceType",
       "articleCategoryId",
+      "relationSlotKey",
       "list_loading_mode",
       "list_load_more_label",
       "list_pager_style",
@@ -33518,8 +33522,9 @@ export const ELEMENTS: Record<string, CatalogElement> = {
       "The dataset-block template — and every dataset node inside it — must carry the SAME config.datasetSource as this repeater. Each node reads its OWN key, so a collection list whose card omits it leaves that card on the product default: it binds product.url, no product context reaches a collection row, and the card publishes with no link, so clicking it does nothing",
       "config.datasetSource picks the ENTITY: \"product\" for a product list, \"category\" for a collection list. It is what derives the node's binding target (product::product_list / category::collection_list)",
       "Product lists: config.collectionType \"page_collection\" renders THE COLLECTION THE PAGE IS (the one /collections/{slug} named) so a single collection template serves every collection, \"all_products\" renders the whole catalog and narrows to the page collection on a collection template, \"collection\" renders the one named by config.collectionId, \"related\" renders the PAGE PRODUCT's neighbours — the products sharing one of its collections, minus itself",
+      "Article lists: config.articleSourceType \"page_category\" renders THE BLOG CATEGORY THE PAGE IS (the one /blog-categories/{slug} named) so a single blog template serves every category — off a blog template it shows every article; \"category\" filters by config.articleCategoryId (the \"all_articles\" sentinel means no filter, and on a blog template it narrows to the page category anyway); \"slot\" renders a curated shelf, the rows filed by hand under config.relationSlotKey",
       "Use \"related\" for a cross-sell shelf on a product page (\"Sản phẩm liên quan\" / \"You may also like\"). It reads no collectionId — its axis is whatever collections the page product is filed under — and it renders nothing on a page that names no product, so pair it with an emptyStateId if the section must never be blank",
-      "Collection lists: config.collectionListType \"all_collections\" renders every collection; \"custom_collections\" renders specials.collectionIds, in that order",
+      "Collection lists: config.collectionListType \"page_collections\" renders THE SUB-COLLECTIONS OF THE COLLECTION THE PAGE IS (the one /collections/{slug} named), so a single collection template draws every collection's browse grid — off a collection template it shows every collection instead; \"all_collections\" renders every collection; \"custom_collections\" renders specials.collectionIds, in that order",
       "config.quantity caps how many records render; config.itemsPerRow is the row size (grid columns / slide page size) and style.gap is the space between cards — both are per-breakpoint",
       "config.layout \"grid\" for a multi-row grid, \"slide\" for row-by-row carousel behaviour",
       "Navigation and pagination only matter when layout is \"slide\". The arrows exist while config.listNavIcon names an icon (clearing it turns them off); the dots exist while paginationItemWidth and paginationItemHeight are both above 0",
@@ -36428,7 +36433,7 @@ export const SATELLITE_RULES: Record<string, SatelliteRule[]> = {
                 "textAlign": "center"
               },
               "specials": {
-                "text": "Collections you create will show up here."
+                "text": "New collections will show up here. Check back soon."
               }
             }
           ]
@@ -36514,7 +36519,7 @@ export const SATELLITE_RULES: Record<string, SatelliteRule[]> = {
                 "textAlign": "center"
               },
               "specials": {
-                "text": "Topics you create will show up here."
+                "text": "New topics will show up here. Check back soon."
               }
             }
           ]
@@ -36557,7 +36562,50 @@ export const SATELLITE_RULES: Record<string, SatelliteRule[]> = {
                 "textAlign": "center"
               },
               "specials": {
-                "text": "Courses you publish will show up here."
+                "text": "New courses will show up here. Check back soon."
+              }
+            }
+          ]
+        },
+        "review": {
+          "type": "list-empty",
+          "children": [
+            {
+              "type": "icon",
+              "style": {
+                "color": "#d4d4d4"
+              },
+              "config": {
+                "iconSize": 32
+              },
+              "specials": {
+                "name": "ChatQuoteLine"
+              }
+            },
+            {
+              "type": "heading",
+              "style": {
+                "width": "auto",
+                "fontSize": "20px",
+                "fontWeight": "600",
+                "color": "#171717",
+                "textAlign": "center"
+              },
+              "specials": {
+                "htmlTag": "h3",
+                "text": "No reviews yet"
+              }
+            },
+            {
+              "type": "text",
+              "style": {
+                "width": "auto",
+                "fontSize": "14px",
+                "color": "#737373",
+                "textAlign": "center"
+              },
+              "specials": {
+                "text": "Reviews will show up here once customers leave them."
               }
             }
           ]
@@ -36852,6 +36900,7 @@ export const CONFIG_VALUES: Record<
   "articleSourceType": {
     "values": [
       "category",
+      "page_category",
       "slot"
     ],
     "fallback": "category",
@@ -36861,7 +36910,8 @@ export const CONFIG_VALUES: Record<
   "collectionListType": {
     "values": [
       "all_collections",
-      "custom_collections"
+      "custom_collections",
+      "page_collections"
     ],
     "fallback": "all_collections",
     "aliases": {},

@@ -3,6 +3,7 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { ELEMENTS, BINDING_SOURCES } from '../src/catalog/elements.generated.js';
 import { API_OPERATIONS } from '../src/catalog/api.generated.js';
+import { REQUEST_SHAPES } from '../src/catalog/shapes.generated.js';
 
 /**
  * THE NUMBERS IN THE READMEs ARE MEASUREMENTS, AND A MEASUREMENT NOBODY CHECKS
@@ -39,6 +40,36 @@ describe('the READMEs describe the catalog that actually shipped', () => {
       expect(Number(m![1]), `${name} says ${m![1]} API operations; the catalog holds ${real}`).toBe(
         real,
       );
+    }
+  });
+
+  /**
+   * THE PARENTHETICAL DRIFTED WHILE THE HEADLINE WAS GUARDED.
+   *
+   * The same sentence carries a second measurement — "(176 of the 235 writes
+   * carrying a body shape …)" — and nothing checked it. A regen on 2026-09-15
+   * moved the operation count by one and this pair by one each; the test caught
+   * the first and said nothing about the other two, so the fix would have left
+   * two fresh stale numbers in the same line it was repairing.
+   *
+   * Computed exactly as gen-catalog computes it, including the swagger-bodied
+   * fallback — a second definition here would drift from the generator and
+   * report a mismatch nobody could act on.
+   */
+  it('names the right shaped-writes pair', () => {
+    const writeOps = API_OPERATIONS.filter((o) => ['POST', 'PUT', 'PATCH'].includes(o.method));
+    const swaggerBodied = new Set(
+      writeOps.filter((o) => o.bodyDescribed && o.bodyRef).map((o) => o.id),
+    );
+    const shaped = writeOps.filter((o) => REQUEST_SHAPES[o.id] || swaggerBodied.has(o.id)).length;
+    for (const name of READMES) {
+      // "(176 of the 235 writes" / "(176 trong 235 lệnh ghi"
+      const m = /\((\d+) (?:of the|trong) (\d+) (?:writes|lệnh ghi)/.exec(read(name));
+      expect(m, `${name} no longer states the shaped-writes pair`).not.toBeNull();
+      expect(
+        [Number(m![1]), Number(m![2])],
+        `${name} says ${m![1]}/${m![2]} shaped writes; the catalog holds ${shaped}/${writeOps.length}`,
+      ).toEqual([shaped, writeOps.length]);
     }
   });
 
