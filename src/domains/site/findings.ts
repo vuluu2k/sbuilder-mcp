@@ -51,6 +51,11 @@ export const FIX: Record<string, string> = {
   unlinked_form:
     'Point it at a real form: sb_set id "<id>", namespace specials, keys ' +
     '{ "formId": "<a form id from sb_api_find \'list forms\'>" }.',
+  handbuilt_menu:
+    'Replace it with the real thing: sb_add a "menu" in place of the container "<id>", one ' +
+    '"menu-item" per link, and delete the buttons with sb_remove. Add a "menu-drawer" (with a ' +
+    '"hamburger-menu" trigger) for the phone, and "menu-dropdown" where a link has a sub-level. ' +
+    'sb_traits_for "menu" has the controls.',
   dead_menu_link:
     'Write the entries the renderer actually reads: sb_set id "<id>", namespace specials, keys ' +
     '{ "menuItems": [{ "id": "mi-1", "label": "Shop", "href": "/shop" }] }. Setting menuId alone ' +

@@ -1,5 +1,6 @@
 import { childrenOf, childrenWithSatellites, isOverlay, pageChildren, appBlockRoot, SPEC_GLOBAL_REF, SPEC_APP_BLOCK_REF, type DocLike } from '../../core/tree.js';
 import { STUCK_STATE, stickyBlockedBy, stuckHostOf, isPinnedNode } from './sticky.js';
+import { bandOf, type Band } from './traps.js';
 import { HOVER_STATE, hoverHome } from './hover.js';
 import { ELEMENTS, BINDING_SOURCES, BOUND_SPECIALS , FIRST_CHILD_ONLY, SATELLITE_RULES, ELEMENT_SEEDS } from '../../catalog/elements.generated.js';
 import type { PageDoc } from './document.js';
@@ -16,6 +17,12 @@ import { fill } from './findings.js';
  * Every finding names the fix, because a warning that only states a problem is
  * one the reader has to re-derive.
  */
+/**
+ * How many buttons in a row read as a navigation rather than as a pair of calls
+ * to action. Three: two side by side is the ordinary hero shape.
+ */
+const HANDBUILT_MENU_MIN = 3;
+
 export interface Finding {
   code: string;
   nodeId: string;
@@ -213,6 +220,63 @@ export function reviewDesign(doc: PageDoc): Finding[] {
     for (const k of childrenWithSatellites(d, id)) go(k, inner, overlay || overlayIds.has(k));
   };
   go(d.root_node_id);
+
+  // WHICH BAND EACH NODE LIVES IN, taken from the top-level section it descends
+  // from. `bandOf` answers for a ROOT child; everything below one inherits it.
+  const band = new Map<string, Band>();
+  for (const sectionId of pageChildren(d)) {
+    const b = bandOf(d, sectionId);
+    const stack = [sectionId];
+    while (stack.length) {
+      const id = stack.pop()!;
+      if (band.has(id)) continue;
+      band.set(id, b);
+      for (const k of childrenWithSatellites(d, id)) stack.push(k);
+    }
+  }
+
+  // BUILT BY HAND OUT OF PRIMITIVES, WHERE THE PLATFORM HAS THE ELEMENT.
+  //
+  // Every other check here asks whether something is BROKEN. This one asks
+  // whether it was built with the wrong thing, which is the defect no amount of
+  // looking at the page reveals: it renders correctly on the screen the author
+  // is looking at, and fails on the one they are not.
+  //
+  // Measured on a store built with these tools: the header's navigation was six
+  // `button` nodes in a flex-block. It looks right on a desktop canvas. On a
+  // phone there is no drawer, because a drawer is something `menu` brings and a
+  // row of buttons does not — so the site shipped with no mobile navigation and
+  // nothing anywhere said so.
+  //
+  // A TABLE, because this will not be the only one. The next pattern is a row
+  // here, not a second branch somewhere else.
+  //
+  // DELIBERATELY NARROW. Three or more buttons, ALL the container's children,
+  // all leaves, and only in the HEADER band. A footer's link column is the same
+  // shape and is legitimately a list of links; a two-button pair is a call to
+  // action, not a menu. The check that fires on those is one an author learns to
+  // ignore, which costs more than the one it catches.
+  for (const [containerId, childIds] of [...Object.keys(d.nodes)].map(
+    (id) => [id, childrenOf(d, id)] as const,
+  )) {
+    if (band.get(containerId) !== 'header') continue;
+    if (childIds.length < HANDBUILT_MENU_MIN) continue;
+    const allLeafButtons = childIds.every(
+      (k) => d.nodes[k]?.data.type === 'button' && childrenOf(d, k).length === 0,
+    );
+    if (!allLeafButtons) continue;
+    out.push({
+      code: 'handbuilt_menu',
+      nodeId: containerId,
+      type: d.nodes[containerId]?.data.type ?? '',
+      problem:
+        `${childIds.length} buttons in a row in the header is a navigation built by hand. It ` +
+        'renders correctly on a wide canvas and has no drawer on a phone, no dropdown for a ' +
+        'sub-level, and no active state on the page the visitor is already reading — all three ' +
+        'are things the menu element brings and a row of buttons cannot.',
+      fix: fill('handbuilt_menu', {}),
+    });
+  }
 
   for (const id of walkOrder) {
     if (id === d.root_node_id) continue;
