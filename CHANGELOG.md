@@ -6,6 +6,11 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.59.3] - 2026-09-15
+
+### Changed
+- The call sheet for `POST /api/sites/{siteId}/ai/messages` now documents its `context` body field — the page outline plus the selected element's trait list, value types and current values — so a call through `sb_api_call` can pass the editor's own capability list instead of guessing at the shape.
+
 ## [0.59.2] - 2026-09-15
 
 ### Fixed

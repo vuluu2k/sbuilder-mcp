@@ -6,6 +6,11 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.59.3] - 2026-09-15
+
+### Changed
+- Call sheet cho `POST /api/sites/{siteId}/ai/messages` giờ mô tả trường `context` trong body — gồm outline của trang cùng danh sách trait, kiểu giá trị và giá trị hiện tại của phần tử đang chọn — nhờ đó một lệnh gọi qua `sb_api_call` có thể gửi đúng danh sách năng lực của editor thay vì phải đoán hình dạng của nó.
+
 ## [0.59.2] - 2026-09-15
 
 ### Fixed
