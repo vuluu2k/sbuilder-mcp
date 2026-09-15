@@ -6,6 +6,17 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.49.0] - 2026-09-15
+
+### Added
+- `sb_catalog_search` now returns every element type, grouped by category, when `query` is omitted, so an agent can browse the catalogue instead of only searching for a name it already knows.
+- `sb_review` reports a `handbuilt_menu` finding when a header contains three or more sibling buttons and nothing else, since a row of buttons cannot supply the mobile drawer, sub-level dropdown, or active state that the platform's own `menu` element brings.
+- Opening a page now joins the live-edit room on its own, through `sb_page_open`, `sb_page_create`, and `sb_template_use` alike, instead of requiring a separate `sb_live_join` call that an agent has to remember to make; a write retries the join if an earlier attempt failed, and `sb_page_open` reports when it newly joined the room or could not.
+- `sb_connect` now mentions the live-edit room in its connect note, in the one place an agent is guaranteed to read on the way in.
+
+### Fixed
+- A page whose read came back empty because the fetch failed open no longer risks silently emptying the page on save; `sb_page_open` now reports a `seeded_empty` warning on that page, and `PageSession.save` re-checks the server before writing and refuses the save if the server actually holds content, asking the caller to re-open and reapply instead.
+
 ## [0.48.1] - 2026-09-14
 
 ### Fixed

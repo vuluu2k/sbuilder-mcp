@@ -6,6 +6,17 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.49.0] - 2026-09-15
+
+### Added
+- `sb_catalog_search` giờ trả về mọi loại phần tử, nhóm theo category, khi bỏ trống `query`, nhờ đó agent có thể duyệt qua toàn bộ catalog thay vì chỉ tìm kiếm theo tên đã biết trước.
+- `sb_review` giờ báo lỗi `handbuilt_menu` khi một header chứa từ ba nút button anh em trở lên và không có gì khác, vì một hàng button không thể thay thế drawer cho điện thoại, dropdown cho cấp con, hay trạng thái active cho trang khách đang xem — những thứ mà phần tử `menu` của nền tảng mang lại.
+- Việc mở một trang giờ tự động tham gia phòng live-edit, qua cả `sb_page_open`, `sb_page_create` lẫn `sb_template_use`, thay vì phải gọi riêng `sb_live_join` mà agent phải tự nhớ; một lần ghi sẽ thử tham gia lại nếu lần trước thất bại, và `sb_page_open` báo cáo khi nó vừa tham gia phòng thành công hay không thể.
+- `sb_connect` giờ nhắc đến phòng live-edit trong ghi chú kết nối, ngay tại nơi chắc chắn agent sẽ đọc khi mới vào.
+
+### Fixed
+- Một lần đọc trang trả về rỗng vì việc fetch thất bại theo kiểu "mở" giờ không còn nguy cơ âm thầm xoá sạch trang khi lưu; `sb_page_open` giờ báo cảnh báo `seeded_empty` trên trang đó, và `PageSession.save` kiểm tra lại với server trước khi ghi, từ chối lưu nếu server thực sự đang giữ nội dung, và yêu cầu người gọi mở lại trang rồi áp dụng lại thay đổi.
+
 ## [0.48.1] - 2026-09-14
 
 ### Fixed
