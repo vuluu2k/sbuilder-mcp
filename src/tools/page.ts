@@ -102,6 +102,49 @@ export class PageSession {
     this.live = live;
   }
 
+  /**
+   * How to open the live-edit room, handed over by `registerLiveTools`.
+   *
+   * A CALLBACK rather than an import, because `live.ts` already imports this
+   * class and the reverse edge would be a cycle. The direction that matters is
+   * the one the design has: the room knows about the page session, not the other
+   * way round.
+   */
+  private liveJoiner: ((siteId: string) => void) | null = null;
+
+  setLiveJoiner(fn: (siteId: string) => void): void {
+    this.liveJoiner = fn;
+  }
+
+  /**
+   * JOIN BEFORE THE FIRST EDIT, rather than when an agent remembers to.
+   *
+   * `sb_live_join` is one call and reads as cheap, which is exactly why it gets
+   * skipped: nothing fails without it. The room is simply empty, so a merchant
+   * watching their own site being built sees a static canvas and concludes the
+   * agent is not working. Measured here — one session built 17 pages and 19
+   * products over two hours with an editor open beside it and never joined.
+   *
+   * Opening a page is where designing starts, so that is where this fires. The
+   * room ALWAYS YIELDS to a human (see the yield rule), so joining early costs
+   * a socket and risks nothing.
+   *
+   * FAILURE IS NOT FATAL. No credential, no network, a server without the
+   * endpoint — none of those are reasons to refuse to open a page. The caller is
+   * told, and goes on designing with nobody watching, which is the old behaviour
+   * rather than a new one.
+   */
+  async ensureLive(siteId: string): Promise<'joined' | 'already' | string> {
+    if (this.live) return 'already';
+    if (!this.liveJoiner) return 'no live transport is registered';
+    try {
+      this.liveJoiner(siteId);
+      return this.live ? 'joined' : 'the live transport did not attach';
+    } catch (e) {
+      return (e as Error).message.replace(/^sbuilder:\s*/, '').slice(0, 160);
+    }
+  }
+
   location(): { siteId: string; pageId: string } {
     this.current();
     return { siteId: this.siteId, pageId: this.pageId };
@@ -156,6 +199,19 @@ export class PageSession {
    */
   async applyAndSave(patches: Patch[]): Promise<void> {
     const d = this.current();
+    // EVERY WRITE CHECKS THE ROOM, not only the first page open.
+    //
+    // Joining once at open is right until the once fails. No network for a
+    // moment, a credential that arrived late, a server that had not brought the
+    // endpoint up yet — any of those leave a session that edits for an hour with
+    // nobody watching and no second attempt, which is the same silence this
+    // whole path exists to end.
+    //
+    // FREE WHEN JOINED: `ensureLive` returns on a null check, so the steady state
+    // costs one branch per write. A dropped socket is NOT this method's problem —
+    // `RealtimeSocket` owns its own reconnect with backoff, and re-attaching a
+    // second LiveSession over a live one would be the bug, not the fix.
+    await this.ensureLive(this.siteId);
     const before = new Set(validateForSave(d));
     const after = validateForSave(d.preview(patches));
     const introduced = after.filter((p) => !before.has(p));
@@ -215,7 +271,19 @@ export class PageSession {
     // which is right for a page just created and catastrophic for one that has
     // content — and the two are identical bytes, so only the save can judge.
     this.openedSeeded = this.doc.seededRoot === true;
+    // A PAGE IS NOW ON THE CANVAS, so the room is joined here rather than in the
+    // one tool that happens to be the usual way in. `sb_page_create`,
+    // `sb_template_use` and `shareChrome` all open pages too, and a join wired to
+    // sb_page_open alone leaves every one of those editing unseen.
+    this.liveState = await this.ensureLive(siteId);
     return this.doc.outline();
+  }
+
+  /** What the last open's join attempt did, for the tool that reports it. */
+  private liveState: 'joined' | 'already' | string = 'already';
+
+  liveStatus(): 'joined' | 'already' | string {
+    return this.liveState;
   }
 
   /** What the server said it could not compose when this page was opened. */
@@ -484,6 +552,8 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
     },
     async ({ site_id: given, page_id }) => {
       const outline = await session.open(siteFor(ctx, given), page_id);
+      // `open` joined the room on the way through — this only reports what it did.
+      const live = session.liveStatus();
       const doc = session.current();
       // A page whose stored document named its root under the app-block key
       // renders as an empty <body> and says nothing about why. Nobody else can
@@ -506,6 +576,13 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
       const warnings = session.composeWarnings();
       return text({
         outline,
+        // Said ONLY when it is news. 'already' is the steady state after the
+        // first open and repeating it on every page is the shape that drifts.
+        ...(live === 'joined'
+          ? { live: 'Joined the live-edit room — anyone with this site open sees these edits as they land.' }
+          : live === 'already'
+            ? {}
+            : { live_unavailable: live }),
         ...(blank_page_repair ? { blank_page_repair } : {}),
         ...(seeded_empty ? { seeded_empty } : {}),
         ...(warnings.length ? { compose_warnings: warnings } : {}),

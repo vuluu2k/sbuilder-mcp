@@ -250,11 +250,47 @@ export function liveTokenFor(ctx: ToolContext): () => string {
   return () => (ctx.apiKey ? ctx.apiKey : ctx.session.token());
 }
 
+/**
+ * Open the room and hand it to the page session.
+ *
+ * EXTRACTED so joining is not something an agent has to REMEMBER. `sb_live_join`
+ * was opt-in and one call, which reads as cheap and is not: an agent that never
+ * makes it builds an entire site the watching merchant cannot see happening —
+ * no peer, no cursor, no element appearing as it lands. Nothing fails, so
+ * nothing prompts the question, and the person who asked for an agent watches a
+ * static canvas and concludes it is not working.
+ *
+ * Measured here: one session built 17 pages and 19 products over two hours with
+ * an editor open beside it and never joined.
+ *
+ * `PageSession.ensureLive` calls this on the first page open, which is where
+ * designing starts. The explicit tool stays, for a caller who wants to join a
+ * different site or re-join after a drop.
+ */
+export function joinRoom(ctx: ToolContext, session: PageSession, siteId: string): void {
+  const tokenFn = liveTokenFor(ctx);
+  const wsBase = ctx.base.replace(/^http/, 'ws').replace(/\/$/, '');
+  const socket = new RealtimeSocket(
+    `${wsBase}/api/realtime/ws?site=${encodeURIComponent(siteId)}`,
+    tokenFn,
+  );
+  const live = new LiveSession(socket, {
+    onRemote: (patches) => session.applyRemote(patches),
+    onDesync: (reason) => session.markStale(reason),
+  });
+  socket.connect();
+  session.attachLive(live);
+}
+
 export function registerLiveTools(
   server: McpServer,
   ctx: ToolContext,
   session: PageSession,
 ): void {
+  // The page session joins on its own at the first sb_page_open. Registered
+  // here because this module owns the socket and the session must not import it.
+  session.setLiveJoiner((siteId) => joinRoom(ctx, session, siteId));
+
   server.registerTool(
     'sb_live_join',
     {
@@ -268,18 +304,7 @@ export function registerLiveTools(
     },
     async ({ site_id: given }) => {
       const site_id = siteFor(ctx, given);
-      const tokenFn = liveTokenFor(ctx);
-      const wsBase = ctx.base.replace(/^http/, 'ws').replace(/\/$/, '');
-      const socket = new RealtimeSocket(
-        `${wsBase}/api/realtime/ws?site=${encodeURIComponent(site_id)}`,
-        tokenFn,
-      );
-      const live = new LiveSession(socket, {
-        onRemote: (patches) => session.applyRemote(patches),
-        onDesync: (reason) => session.markStale(reason),
-      });
-      socket.connect();
-      session.attachLive(live);
+      joinRoom(ctx, session, site_id);
       return text({
         joined: site_id,
         note: 'Edits now publish to the room as they are made. Call sb_page_open next.',

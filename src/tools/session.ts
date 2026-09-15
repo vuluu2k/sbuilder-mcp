@@ -15,6 +15,14 @@ export interface ConnectResult {
   site_name?: string;
   operations: number;
   note?: string;
+  /**
+   * When to join the live-edit room, said on the way in.
+   *
+   * The room is opt-in and one call away, and an agent that never makes it
+   * builds a whole site the watching merchant cannot see happening. Nothing
+   * fails, so nothing prompts the question.
+   */
+  live?: string;
 }
 
 /**
@@ -55,6 +63,23 @@ export async function connect(
           'pass that site id to sb_page_open, or set SB_SITE once and leave site_id out. Set ' +
           'SB_EMAIL and SB_PASSWORD as well if you want account-level calls (listing sites, ' +
           'members, roles), which a key cannot make.',
+      // SAID HERE BECAUSE HERE IS WHERE IT IS STILL FREE.
+      //
+      // `sb_live_join` is opt-in and one call, and an agent that never makes it
+      // builds an entire site the watching merchant cannot see happening: no
+      // peer in the room, no cursor, no element appearing as it lands. Nothing
+      // fails, so nothing prompts the question — the room is simply empty, and
+      // the person who asked for an agent watches a static canvas and concludes
+      // the agent is not working.
+      //
+      // MEASURED: one session built 17 pages and 19 products over two hours with
+      // an editor open beside it and never joined, because no surface an agent
+      // reads on the way in mentions the room. The tool's own description says
+      // what it does; nothing said WHEN. Connect is that when.
+      live:
+        'Nobody watching an open editor sees these edits until sb_live_join is called. Call it ' +
+        'now if a person has the site open — it takes this key\'s own name, always yields to a ' +
+        'human, and is safe to leave on for the whole session.',
     };
   }
 
