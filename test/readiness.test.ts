@@ -648,3 +648,73 @@ describe('readinessGaps() — the article template', () => {
     expect(plain({ articles: 4 })).toContain('articleTemplate');
   });
 });
+
+/**
+ * THE FIVE ENTITY PREFIXES, AS ONE SET.
+ *
+ * storefront/entityroute.go registers /products, /collections, /blog,
+ * /blog-categories and /courses. Each resolves to the site's published page of
+ * its own TYPE, so each 404s everything under it when that page is missing.
+ * This block is the proof that all five are now asked about, rather than four
+ * and whichever one nobody noticed.
+ */
+describe('readinessGaps() — every entity prefix has a template check', () => {
+  const site = (extra: Record<string, unknown>) =>
+    readinessGaps({
+      pages: [{ type: 'page', status: 'published' }],
+      liveGateways: null,
+      shippingMethods: null,
+      pageNodes: [],
+      globalNodes: null,
+      globalKinds: ['header'],
+      ...extra,
+    } as never).map((g) => g.id);
+
+  const CASES = [
+    { count: { articles: 3 }, id: 'articleTemplate', type: 'post' },
+    { count: { blogCategories: 3 }, id: 'blogCategoryPage', type: 'blog' },
+    { count: { courses: 3 }, id: 'coursePage', type: 'course' },
+  ];
+
+  it('reports each one when its entities exist and its template does not', () => {
+    for (const c of CASES) expect(site(c.count), c.id).toContain(c.id);
+  });
+
+  it('is silent for each once its template is published', () => {
+    for (const c of CASES) {
+      const pages = [
+        { type: 'page', status: 'published' },
+        { type: c.type, status: 'published' },
+      ];
+      expect(site({ ...c.count, pages }), c.id).not.toContain(c.id);
+    }
+  });
+
+  // THE COUNT IS THE GATE. A site with no courses has not installed the app; a
+  // site with no blog categories has nothing under that prefix to break.
+  it('is silent for each when the site has none of that entity', () => {
+    for (const c of CASES) {
+      const zero = Object.fromEntries(Object.keys(c.count).map((k) => [k, 0]));
+      expect(site(zero), c.id).not.toContain(c.id);
+    }
+  });
+
+  it('is silent for each when the count could not be read', () => {
+    for (const c of CASES) {
+      const unread = Object.fromEntries(Object.keys(c.count).map((k) => [k, null]));
+      expect(site(unread), c.id).not.toContain(c.id);
+    }
+  });
+
+  // THE PRODUCT AND CATEGORY HALVES ARE THE OTHER TWO, checked in their own
+  // blocks — named here so the set of five is stated in one place.
+  it('covers the store halves too', () => {
+    const store = site({
+      categories: 2,
+      products: { active: 1, purchasable: 1 },
+      pageNodes: [{ data: { type: 'list-dataset' } }],
+    });
+    expect(store).toContain('productPage');
+    expect(store).toContain('categoryPage');
+  });
+});

@@ -31,7 +31,7 @@ export async function gatherReadiness(
   };
   const site = encodeURIComponent(siteId);
 
-  const [pageList, gateways, shipping, globals, productList, categoryList, pageLinks, formList, articleList] =
+  const [pageList, gateways, shipping, globals, productList, categoryList, pageLinks, formList, articleList, blogCategoryList, courseList] =
     await Promise.all([
     get<{ pages?: ReadinessPage[] }>(`/api/sites/${site}/pages`),
     get<{ paymentGateways?: Array<{ enabled?: boolean; configured?: boolean }> }>(
@@ -70,6 +70,15 @@ export async function gatherReadiness(
     // resolves to the site's `post` template, so a site that has written
     // articles and has no template 404s every one of them.
     get<{ articles?: unknown[]; total?: number }>(`/api/sites/${site}/articles?limit=1`),
+    // THE LAST TWO ENTITY PREFIXES the storefront registers
+    // (storefront/entityroute.go): /blog-categories/{slug} and /courses/{slug}.
+    // Each resolves to the site's published page of its own TYPE, so each has
+    // the hole /products/{slug} has, and counting is how we know the site uses
+    // the prefix at all.
+    get<{ blogCategories?: unknown[]; categories?: unknown[]; total?: number }>(
+      `/api/sites/${site}/blog-categories?limit=1`,
+    ),
+    get<{ courses?: unknown[]; total?: number }>(`/api/sites/${site}/courses?limit=1`),
   ]);
 
   // A gateway counts only when it is BOTH enabled and configured — the editor's
@@ -83,6 +92,10 @@ export async function gatherReadiness(
   const methods = shipping?.shippingMethods ?? shipping?.methods;
   const shippingMethods = Array.isArray(methods) ? methods.length : null;
 
+  // Either key, like the product categories below: this reader has met both
+  // spellings from the platform and guessing one would read a real list as none.
+  const rawBlogCats = blogCategoryList?.blogCategories ?? blogCategoryList?.categories;
+  const blogCats = Array.isArray(rawBlogCats) ? rawBlogCats : null;
   const cats = categoryList?.categories ?? categoryList?.productCategories;
   const categories = Array.isArray(cats) ? (categoryList?.total ?? cats.length) : null;
   const links = pageLinks?.links ?? pageLinks?.pageLinks;
@@ -128,6 +141,10 @@ export async function gatherReadiness(
     forms: formList?.forms ?? null,
     articles: Array.isArray(articleList?.articles)
       ? (articleList?.total ?? articleList.articles.length)
+      : null,
+    blogCategories: blogCats ? (blogCategoryList?.total ?? blogCats.length) : null,
+    courses: Array.isArray(courseList?.courses)
+      ? (courseList?.total ?? courseList.courses.length)
       : null,
   };
 }

@@ -48,6 +48,8 @@ export type ReadinessGapId =
   | 'mergedAuthPage'
   | 'categoryPage'
   | 'articleTemplate'
+  | 'blogCategoryPage'
+  | 'coursePage'
   | 'cartCount';
 
 export interface ReadinessGap {
@@ -82,6 +84,10 @@ export interface ReadinessInput {
   forms?: Array<{ id?: string; type?: string }> | null;
   /** How many blog articles the site has written; null when the list was unread. */
   articles?: number | null;
+  /** How many blog categories the site has; null when the list was unread. */
+  blogCategories?: number | null;
+  /** How many courses the site sells; null when the list was unread. */
+  courses?: number | null;
   /** How many product categories the store has; null when the list was unread. */
   categories?: number | null;
   /** How many of them point at a page of their own; null when unread. */
@@ -305,6 +311,36 @@ export function readinessGaps(input: ReadinessInput): ReadinessGap[] {
         ? 'Publish the article template page that already exists.'
         : 'Create a page of type "post" and publish it. It opens seeded with the cover, ' +
           'headline, date and body an article cannot be read without.',
+    });
+  }
+
+  // THE LAST TWO ENTITY PREFIXES, the same hole in the same shape.
+  //
+  // storefront/entityroute.go registers five: /products, /collections, /blog,
+  // /blog-categories and /courses. Each resolves to the site's published page of
+  // its own TYPE, so each 404s everything under it when that page is missing.
+  // Four of the five are now checked above; these are the other two.
+  //
+  // COUNTED, NOT ASSUMED. A site with no blog categories has nothing under
+  // /blog-categories to break, and a site with no courses has not installed the
+  // app — the count IS the gate, which is why neither needs to ask about the
+  // app separately. Both sit above the store gate: a course is sold, but a blog
+  // is not commerce, and a site can be neither and still have one.
+  for (const [count, type, id, prefix, what] of [
+    [input.blogCategories, 'blog', 'blogCategoryPage' as const, '/blog-categories/{slug}', 'blog category'],
+    [input.courses, 'course', 'coursePage' as const, '/courses/{slug}', 'course'],
+  ] as const) {
+    if (!pages || (count ?? 0) === 0 || published(pages, type)) continue;
+    const draft = drafted(pages, type);
+    gaps.push({
+      id,
+      draft,
+      problem:
+        `This site has ${count} ${what}${count === 1 ? '' : count && count > 1 ? 's' : ''} and no ` +
+        `published page of the "${type}" type. ${prefix} needs one, so every ${what} link 404s.`,
+      fix: draft
+        ? `Publish the ${what} template page that already exists.`
+        : `Create a page of type "${type}" and publish it.`,
     });
   }
 

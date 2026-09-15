@@ -16,6 +16,8 @@ function platform(forms: unknown) {
       new Response(JSON.stringify(v), { status: 200, headers: { 'content-type': 'application/json' } });
     if (path.endsWith('/forms')) return json(forms);
     if (path.includes('/articles')) return json({ articles: [{}], total: 7 });
+    if (path.includes('/blog-categories')) return json({ blogCategories: [{}], total: 2 });
+    if (path.includes('/courses')) return json({ courses: [{}], total: 5 });
     if (path.endsWith('/pages')) return json({ pages: [{ type: 'page', status: 'published' }] });
     if (path.endsWith('/global-sections')) return json({ globalSections: [{ kind: 'header' }] });
     return json({});
@@ -58,6 +60,18 @@ describe('gatherReadiness reads the form list', () => {
     const input = await gatherReadiness(ctx, 's1', []);
     expect(paths.some((p) => p.includes('/articles'))).toBe(true);
     expect(input.articles).toBe(7);
+  });
+
+  // EVERY COUNT THE TEMPLATE CHECKS READ, asked for and carried through. Each
+  // gap's own tests hand its number in directly and pass whether or not anything
+  // fetches it.
+  it('asks for the blog categories and the courses too', async () => {
+    const { ctx, paths } = platform({ forms: [] });
+    const input = await gatherReadiness(ctx, 's1', []);
+    expect(paths.some((p) => p.includes('/blog-categories'))).toBe(true);
+    expect(paths.some((p) => p.endsWith('/courses'))).toBe(true);
+    expect(input.blogCategories).toBe(2);
+    expect(input.courses).toBe(5);
   });
 
   it('reports null rather than an empty list when the read gives no forms', async () => {
