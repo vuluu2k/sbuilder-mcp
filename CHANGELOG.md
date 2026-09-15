@@ -6,6 +6,11 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.59.0] - 2026-09-15
+
+### Added
+- `sb_review` now reports a `maintenancePage` readiness gap when a site has maintenance mode switched on but no published page of the `maintain` type, since every public address then answers a bare 503 sentence with no header, logo, or word about when the shop is back; the check reads the site's own maintenance flag and stays silent for a site that is not currently in maintenance.
+
 ## [0.58.0] - 2026-09-15
 
 ### Added

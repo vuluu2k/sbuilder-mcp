@@ -6,6 +6,11 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.59.0] - 2026-09-15
+
+### Added
+- `sb_review` giờ báo lỗi sẵn sàng `maintenancePage` khi site đã bật chế độ bảo trì nhưng chưa có trang loại `maintain` nào được publish, vì khi đó mọi địa chỉ công khai sẽ chỉ trả về một câu 503 trơn, không header, không logo, không một dòng nào báo khi nào shop mở lại; việc kiểm tra đọc thẳng cờ bảo trì của site và im lặng nếu site hiện không ở chế độ bảo trì.
+
 ## [0.58.0] - 2026-09-15
 
 ### Added
