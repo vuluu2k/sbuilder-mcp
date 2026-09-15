@@ -6,6 +6,12 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.59.2] - 2026-09-15
+
+### Fixed
+- The call sheet for creating or replacing a product now states, at the moment a price is written, that `priceCents`, `compareAtCents`, `costCents`, and a shipping method's `feeCents` are minor units divided by 100 on the storefront, instead of only as the fix for a readiness gap that clears the moment a product exists.
+- The call sheet now states that the variant picker renders from `product.attributes`, not from `variants[].options` alone, so a product with variants but no declared attributes no longer silently ships the element's seed options ("Color: Red / Green / Blue") on the published page.
+
 ## [0.59.1] - 2026-09-15
 
 ### Added

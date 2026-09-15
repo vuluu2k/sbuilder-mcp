@@ -6,6 +6,12 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.59.2] - 2026-09-15
+
+### Fixed
+- Call sheet để tạo hoặc thay thế sản phẩm giờ nêu rõ, ngay tại thời điểm giá được ghi, rằng `priceCents`, `compareAtCents`, `costCents` và `feeCents` của một shipping method đều là đơn vị nhỏ nhất, được chia cho 100 trên storefront, thay vì chỉ xuất hiện như hướng khắc phục cho một lỗi sẵn sàng vốn biến mất ngay khi có sản phẩm.
+- Call sheet giờ nêu rõ bộ chọn variant hiển thị từ `product.attributes`, không phải chỉ từ `variants[].options`, nhờ đó một sản phẩm có variant nhưng chưa khai báo attributes sẽ không còn âm thầm hiển thị các tuỳ chọn gieo sẵn của phần tử ("Color: Red / Green / Blue") trên trang đã publish.
+
 ## [0.59.1] - 2026-09-15
 
 ### Added
