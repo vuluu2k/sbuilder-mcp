@@ -19,7 +19,7 @@ import {
 import { baseOnlyNote } from '../domains/site/baseonly.js';
 import { detachNote, presetIdOf, presetLayer } from '../domains/site/theme.js';
 import { inertHintsFor } from '../domains/site/inert.js';
-import { hasSeed, seedDocument, seedSummary, seededTypes } from '../domains/site/storepage.js';
+import { hasSeed, layoutDocument, seedDocument, seedSummary, seededTypes } from '../domains/site/storepage.js';
 import {
   animationNote,
   deadKeyNote,
@@ -37,7 +37,7 @@ import { readinessGaps, READINESS_NOTICE } from '../domains/site/readiness.js';
 import { gatherReadiness } from '../domains/site/readiness-fetch.js';
 import { globalWarning, restampPatches, RESPONSIVE_NOTICE } from '../domains/site/traps.js';
 import { catalogBrowse, catalogMatches, traitsFor } from '../catalog/element-search.js';
-import { missingUsualPages, type InventoryPage } from '../domains/site/inventory.js';
+import { layoutForPageName, missingUsualPages, type InventoryPage } from '../domains/site/inventory.js';
 import {
   LAYOUT_PATTERNS,
   PATTERN_BY_ID,
@@ -1374,6 +1374,19 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
       // been seeding, so a caller planning a build needs to know before it
       // commits whether it is about to hand-assemble a buy box that already
       // exists.
+      // AN ORDINARY PAGE OPENS AS SOMETHING TOO, decided from its NAME.
+      //
+      // `hasSeed` is keyed by page TYPE, and every content page is type "page",
+      // so About, a policy and an FAQ all arrived blank — and were then
+      // hand-assembled out of the same three primitives, which is why they all
+      // came out looking the same.
+      //
+      // The name is the signal because it is the only one there is, and reusing
+      // the keyword table that already decides a page is MISSING is what stops
+      // the two answers drifting apart: a name sb_page_list reads as "the about
+      // page" is the name that gets the about layout. `seed:false` opts out, as
+      // it always has.
+      const layout = seed !== false ? layoutForPageName(name, type) : undefined;
       const willSeed = seed !== false && hasSeed(type);
       const summary = willSeed && type ? seedSummary(type) : null;
       // WHAT MAKES THE NEW PAGE PART OF THE SITE.
@@ -1472,6 +1485,7 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
           would_post: path,
           body: redact(body),
           ...(summary ? { would_seed: { type, ...summary } } : {}),
+          ...(layout ? { would_open_as: layout } : {}),
           ...(wear.header || wear.footer
             ? { would_wear: { ...(wear.header ? { header: wear.header } : {}), ...(wear.footer ? { footer: wear.footer } : {}) } }
             : {}),
@@ -1503,8 +1517,8 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
       // unwinding a page the caller asked for.
       let seeded: Record<string, unknown> | null = null;
       const newId = res.page?.id;
-      if (willSeed && type && typeof newId === 'string' && newId) {
-        const document = seedDocument(type, { locale, headline });
+      if ((willSeed || layout) && typeof newId === 'string' && newId) {
+        const document = layout ? layoutDocument(layout) : seedDocument(type ?? '', { locale, headline });
         if (document) {
           try {
             await request({
@@ -1517,7 +1531,9 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
               body: { document, schemaVersion: document.schema_version },
               fetchImpl: ctx.fetchImpl,
             });
-            seeded = { type, nodes: Object.keys(document.nodes).length };
+            seeded = layout
+              ? { layout, nodes: Object.keys(document.nodes).length }
+              : { type, nodes: Object.keys(document.nodes).length };
           } catch (e) {
             seeded = {
               failed: e instanceof Error ? e.message : String(e),

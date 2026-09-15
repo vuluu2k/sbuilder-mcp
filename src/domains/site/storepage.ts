@@ -1,6 +1,7 @@
 import {
   COMPLETION_HEADLINE,
   COMPLETION_HEADLINE_SENTINEL,
+  PAGE_LAYOUT_SEEDS,
   STORE_PAGE_SEEDS,
 } from '../../catalog/storepages.generated.js';
 
@@ -71,4 +72,28 @@ export function seedDocument(
 export function seedSummary(type: string): { nodes: number } | null {
   const seed = STORE_PAGE_SEEDS[type];
   return seed ? { nodes: Object.keys(seed.nodes).length } : null;
+}
+
+/**
+ * The document an ordinary page opens with for a chosen LAYOUT, or null.
+ *
+ * Separate from `seedDocument` because the keys are different things: that one
+ * is keyed by the page TYPE the storefront routes by, this one by the PURPOSE an
+ * author picked. Every content page is type `page`, so the first table cannot
+ * tell an About page from a policy and this one can.
+ *
+ * Same palette cards, same editor module, read through the same codegen — so a
+ * merchant who picks the layout in the create dialog and an agent that lands on
+ * it here open the same page.
+ */
+export function layoutDocument(
+  layout: string,
+): { schema_version: number; root_node_id: string; nodes: Record<string, unknown> } | null {
+  const seed = PAGE_LAYOUT_SEEDS[layout];
+  return seed ? (JSON.parse(JSON.stringify(seed)) as ReturnType<typeof layoutDocument> & object) : null;
+}
+
+/** The layouts this build carries. */
+export function layoutNames(): string[] {
+  return Object.keys(PAGE_LAYOUT_SEEDS);
 }

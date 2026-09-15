@@ -3406,6 +3406,8 @@ export type FormTemplateKey = keyof typeof FORM_TEMPLATES;
   )) as {
     buildStorePageDocument: (type: string, headline: string) => { nodes: Record<string, unknown> } | undefined;
     hasStorePageSeed: (type: string) => boolean;
+    buildPageLayoutDocument: (layout: string) => { nodes: Record<string, unknown> } | undefined;
+    PAGE_LAYOUT_IDS: readonly string[];
   };
   const HEADLINE_SENTINEL = '__SB_COMPLETION_HEADLINE__';
   const STORE_TYPES = ['product', 'category', 'search', 'blog', 'post', 'complete'] as const;
@@ -3421,6 +3423,27 @@ export type FormTemplateKey = keyof typeof FORM_TEMPLATES;
       stableIds(doc as { nodes: Record<string, unknown> }, `sp${type.slice(0, 3)}`),
     );
   }
+  // THE LAYOUTS, read from the same module and the same palette cards.
+  //
+  // Keyed by PURPOSE rather than by type, because every content page is type
+  // `page` and a type-keyed table cannot tell an About page from a policy. The
+  // list is read from the editor rather than repeated here, so a layout added
+  // there arrives at this door without anyone remembering to copy it — which is
+  // the whole reason the store seeds are read the same way.
+  const layoutSeeds: Record<string, unknown> = {};
+  for (const layout of storeSeedMod.PAGE_LAYOUT_IDS) {
+    const doc = storeSeedMod.buildPageLayoutDocument(layout);
+    if (!doc) continue;
+    layoutSeeds[layout] = normalizeSeed(
+      layout,
+      stableIds(doc as { nodes: Record<string, unknown> }, `pl${layout.slice(0, 3)}`),
+    );
+  }
+  if (Object.keys(layoutSeeds).length !== storeSeedMod.PAGE_LAYOUT_IDS.length) {
+    console.error('a declared page layout built no document — check storePageSeeds.ts');
+    process.exit(1);
+  }
+
   if (!storeSeeds.product) {
     console.error('no product page seed — has editor/src/element/storePageSeeds.ts moved?');
     process.exit(1);
@@ -3493,6 +3516,20 @@ export const COMPLETION_HEADLINE: Record<string, string> = ${JSON.stringify(comp
  * agent that creates a product page and a merchant who drags the Product card
  * end up looking at the same thing. A type absent here starts blank, which is
  * the right default for \`page\` itself.
+ */
+export const PAGE_LAYOUT_SEEDS: Record<string, { schema_version: number; root_node_id: string; nodes: Record<string, unknown> }> = ${JSON.stringify(
+    layoutSeeds,
+    null,
+    2,
+  )} as const;
+
+/**
+ * The document an ordinary page opens with for a chosen LAYOUT.
+ *
+ * Keyed by purpose, not by type: every content page is type \`page\`, so the
+ * table above cannot tell an About page from a policy. Same palette cards, same
+ * module, same reason — an author who picks the layout in the editor and an
+ * agent that asks for it here must land on the same page.
  */
 export const STORE_PAGE_SEEDS: Record<string, { schema_version: number; root_node_id: string; nodes: Record<string, unknown> }> = ${JSON.stringify(
     storeSeeds,

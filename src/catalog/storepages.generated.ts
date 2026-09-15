@@ -42,6 +42,578 @@ export const COMPLETION_HEADLINE: Record<string, string> = {
  * end up looking at the same thing. A type absent here starts blank, which is
  * the right default for `page` itself.
  */
+export const PAGE_LAYOUT_SEEDS: Record<string, { schema_version: number; root_node_id: string; nodes: Record<string, unknown> }> = {
+  "about": {
+    "schema_version": 2,
+    "root_node_id": "plabo_1",
+    "nodes": {
+      "plabo_1": {
+        "id": "plabo_1",
+        "data": {
+          "type": "root",
+          "parent": null,
+          "nodes": [
+            "plabo_5"
+          ],
+          "isCanvas": true,
+          "hidden": false,
+          "custom": {}
+        },
+        "style": {},
+        "config": {},
+        "specials": {},
+        "responsive": {},
+        "events": [],
+        "bindings": []
+      },
+      "plabo_2": {
+        "id": "plabo_2",
+        "data": {
+          "type": "heading",
+          "parent": "plabo_5",
+          "nodes": [],
+          "isCanvas": false,
+          "hidden": false,
+          "custom": {}
+        },
+        "style": {
+          "width": "100%",
+          "height": "fit-content"
+        },
+        "config": {
+          "textGlobalStyle": "heading-1"
+        },
+        "specials": {
+          "htmlTag": "h2",
+          "text": "Heading",
+          "stylePreset": "heading-default"
+        },
+        "responsive": {},
+        "events": [],
+        "bindings": []
+      },
+      "plabo_3": {
+        "id": "plabo_3",
+        "data": {
+          "type": "text",
+          "parent": "plabo_5",
+          "nodes": [],
+          "isCanvas": false,
+          "hidden": false,
+          "custom": {}
+        },
+        "style": {
+          "width": "100%",
+          "height": "fit-content"
+        },
+        "config": {
+          "textGlobalStyle": "text-1"
+        },
+        "specials": {
+          "htmlTag": "p",
+          "text": "Enter your text here",
+          "stylePreset": "text-default"
+        },
+        "responsive": {},
+        "events": [],
+        "bindings": []
+      },
+      "plabo_4": {
+        "id": "plabo_4",
+        "data": {
+          "type": "image",
+          "parent": "plabo_5",
+          "nodes": [],
+          "isCanvas": false,
+          "hidden": false,
+          "custom": {}
+        },
+        "style": {
+          "width": "100%",
+          "height": "fit-content"
+        },
+        "config": {
+          "imageRatio": "auto",
+          "customImageRatioWidth": 16,
+          "customImageRatioHeight": 9,
+          "imageEager": false
+        },
+        "specials": {
+          "src": "",
+          "alt": "",
+          "stylePreset": "image-default"
+        },
+        "responsive": {},
+        "events": [],
+        "bindings": []
+      },
+      "plabo_5": {
+        "id": "plabo_5",
+        "data": {
+          "type": "flex-section",
+          "parent": "plabo_1",
+          "nodes": [
+            "plabo_2",
+            "plabo_3",
+            "plabo_4"
+          ],
+          "isCanvas": true,
+          "hidden": false,
+          "custom": {}
+        },
+        "style": {
+          "display": "flex",
+          "flexDirection": "column",
+          "width": "100%",
+          "height": "fit-content",
+          "gap": "24px",
+          "paddingTop": "48px",
+          "paddingBottom": "48px"
+        },
+        "config": {
+          "backgroundSceneSource": "",
+          "backgroundSceneEffect": "gradient-mesh",
+          "backgroundSceneGallery": "podium",
+          "backgroundSceneSpeed": "normal",
+          "backgroundSceneIntensity": "normal",
+          "backgroundSceneColors": "theme",
+          "backgroundSceneColor1": "#171717",
+          "backgroundSceneColor2": "#ffffff",
+          "backgroundSceneColor3": "#6b7280",
+          "backgroundSceneUrl": "",
+          "backgroundSceneModelUrl": "",
+          "backgroundSceneVeil": 0,
+          "backgroundSceneVeilColor": "#000000"
+        },
+        "specials": {
+          "stylePreset": "container-section"
+        },
+        "responsive": {},
+        "events": [],
+        "bindings": []
+      }
+    }
+  },
+  "policy": {
+    "schema_version": 2,
+    "root_node_id": "plpol_1",
+    "nodes": {
+      "plpol_1": {
+        "id": "plpol_1",
+        "data": {
+          "type": "root",
+          "parent": null,
+          "nodes": [
+            "plpol_4"
+          ],
+          "isCanvas": true,
+          "hidden": false,
+          "custom": {}
+        },
+        "style": {},
+        "config": {},
+        "specials": {},
+        "responsive": {},
+        "events": [],
+        "bindings": []
+      },
+      "plpol_2": {
+        "id": "plpol_2",
+        "data": {
+          "type": "heading",
+          "parent": "plpol_4",
+          "nodes": [],
+          "isCanvas": false,
+          "hidden": false,
+          "custom": {}
+        },
+        "style": {
+          "width": "100%",
+          "height": "fit-content"
+        },
+        "config": {
+          "textGlobalStyle": "heading-1"
+        },
+        "specials": {
+          "htmlTag": "h2",
+          "text": "Heading",
+          "stylePreset": "heading-default"
+        },
+        "responsive": {},
+        "events": [],
+        "bindings": []
+      },
+      "plpol_3": {
+        "id": "plpol_3",
+        "data": {
+          "type": "text",
+          "parent": "plpol_4",
+          "nodes": [],
+          "isCanvas": false,
+          "hidden": false,
+          "custom": {}
+        },
+        "style": {
+          "width": "100%",
+          "height": "fit-content"
+        },
+        "config": {
+          "textGlobalStyle": "text-1"
+        },
+        "specials": {
+          "htmlTag": "p",
+          "text": "Enter your text here",
+          "stylePreset": "text-default"
+        },
+        "responsive": {},
+        "events": [],
+        "bindings": []
+      },
+      "plpol_4": {
+        "id": "plpol_4",
+        "data": {
+          "type": "flex-section",
+          "parent": "plpol_1",
+          "nodes": [
+            "plpol_2",
+            "plpol_3"
+          ],
+          "isCanvas": true,
+          "hidden": false,
+          "custom": {}
+        },
+        "style": {
+          "display": "flex",
+          "flexDirection": "column",
+          "width": "100%",
+          "height": "fit-content",
+          "gap": "24px",
+          "paddingTop": "48px",
+          "paddingBottom": "48px"
+        },
+        "config": {
+          "backgroundSceneSource": "",
+          "backgroundSceneEffect": "gradient-mesh",
+          "backgroundSceneGallery": "podium",
+          "backgroundSceneSpeed": "normal",
+          "backgroundSceneIntensity": "normal",
+          "backgroundSceneColors": "theme",
+          "backgroundSceneColor1": "#171717",
+          "backgroundSceneColor2": "#ffffff",
+          "backgroundSceneColor3": "#6b7280",
+          "backgroundSceneUrl": "",
+          "backgroundSceneModelUrl": "",
+          "backgroundSceneVeil": 0,
+          "backgroundSceneVeilColor": "#000000"
+        },
+        "specials": {
+          "stylePreset": "container-section"
+        },
+        "responsive": {},
+        "events": [],
+        "bindings": []
+      }
+    }
+  },
+  "faq": {
+    "schema_version": 2,
+    "root_node_id": "plfaq_1",
+    "nodes": {
+      "plfaq_1": {
+        "id": "plfaq_1",
+        "data": {
+          "type": "root",
+          "parent": null,
+          "nodes": [
+            "plfaq_8"
+          ],
+          "isCanvas": true,
+          "hidden": false,
+          "custom": {}
+        },
+        "style": {},
+        "config": {},
+        "specials": {},
+        "responsive": {},
+        "events": [],
+        "bindings": []
+      },
+      "plfaq_2": {
+        "id": "plfaq_2",
+        "data": {
+          "type": "heading",
+          "parent": "plfaq_8",
+          "nodes": [],
+          "isCanvas": false,
+          "hidden": false,
+          "custom": {}
+        },
+        "style": {
+          "width": "100%",
+          "height": "fit-content"
+        },
+        "config": {
+          "textGlobalStyle": "heading-1"
+        },
+        "specials": {
+          "htmlTag": "h2",
+          "text": "Heading",
+          "stylePreset": "heading-default"
+        },
+        "responsive": {},
+        "events": [],
+        "bindings": []
+      },
+      "plfaq_3": {
+        "id": "plfaq_3",
+        "data": {
+          "type": "accordion",
+          "parent": "plfaq_8",
+          "nodes": [
+            "plfaq_4",
+            "plfaq_5",
+            "plfaq_6"
+          ],
+          "isCanvas": true,
+          "hidden": false,
+          "custom": {}
+        },
+        "style": {
+          "display": "block",
+          "width": "100%",
+          "height": "fit-content",
+          "padding": "0px",
+          "margin": "0px"
+        },
+        "config": {
+          "openItems": [
+            0
+          ],
+          "accordionItemId": "plfaq_7"
+        },
+        "specials": {},
+        "responsive": {},
+        "events": [],
+        "bindings": []
+      },
+      "plfaq_4": {
+        "id": "plfaq_4",
+        "data": {
+          "type": "accordion-content",
+          "parent": "plfaq_3",
+          "nodes": [],
+          "isCanvas": true,
+          "hidden": false,
+          "custom": {}
+        },
+        "style": {
+          "display": "flex",
+          "flexDirection": "column",
+          "justifyContent": "flex-start",
+          "alignItems": "flex-start",
+          "minWidth": "0px",
+          "width": "100%",
+          "height": "fit-content",
+          "gap": "16px",
+          "padding": "16px",
+          "margin": "0px"
+        },
+        "config": {},
+        "specials": {
+          "label": "Accordion 1"
+        },
+        "responsive": {
+          "tablet": {
+            "style": {
+              "padding": "14px"
+            }
+          },
+          "mobile": {
+            "style": {
+              "padding": "12px"
+            }
+          }
+        },
+        "events": [],
+        "bindings": []
+      },
+      "plfaq_5": {
+        "id": "plfaq_5",
+        "data": {
+          "type": "accordion-content",
+          "parent": "plfaq_3",
+          "nodes": [],
+          "isCanvas": true,
+          "hidden": false,
+          "custom": {}
+        },
+        "style": {
+          "display": "flex",
+          "flexDirection": "column",
+          "justifyContent": "flex-start",
+          "alignItems": "flex-start",
+          "minWidth": "0px",
+          "width": "100%",
+          "height": "fit-content",
+          "gap": "16px",
+          "padding": "16px",
+          "margin": "0px"
+        },
+        "config": {},
+        "specials": {
+          "label": "Accordion 2"
+        },
+        "responsive": {
+          "tablet": {
+            "style": {
+              "padding": "14px"
+            }
+          },
+          "mobile": {
+            "style": {
+              "padding": "12px"
+            }
+          }
+        },
+        "events": [],
+        "bindings": []
+      },
+      "plfaq_6": {
+        "id": "plfaq_6",
+        "data": {
+          "type": "accordion-content",
+          "parent": "plfaq_3",
+          "nodes": [],
+          "isCanvas": true,
+          "hidden": false,
+          "custom": {}
+        },
+        "style": {
+          "display": "flex",
+          "flexDirection": "column",
+          "justifyContent": "flex-start",
+          "alignItems": "flex-start",
+          "minWidth": "0px",
+          "width": "100%",
+          "height": "fit-content",
+          "gap": "16px",
+          "padding": "16px",
+          "margin": "0px"
+        },
+        "config": {},
+        "specials": {
+          "label": "Accordion 3"
+        },
+        "responsive": {
+          "tablet": {
+            "style": {
+              "padding": "14px"
+            }
+          },
+          "mobile": {
+            "style": {
+              "padding": "12px"
+            }
+          }
+        },
+        "events": [],
+        "bindings": []
+      },
+      "plfaq_7": {
+        "id": "plfaq_7",
+        "data": {
+          "type": "accordion-item",
+          "parent": "plfaq_3",
+          "nodes": [],
+          "isCanvas": false,
+          "hidden": false,
+          "custom": {}
+        },
+        "style": {
+          "backgroundColor": "#f5f5f5",
+          "color": "#171717",
+          "textAlign": "left",
+          "fontFamily": "Inter",
+          "fontSize": "14px",
+          "padding": "12px 16px"
+        },
+        "config": {
+          "textGlobalStyle": "text-2"
+        },
+        "specials": {},
+        "responsive": {
+          "mobile": {
+            "style": {
+              "padding": "12px"
+            }
+          }
+        },
+        "states": {
+          "hover": {
+            "style": {
+              "backgroundColor": "#ebebeb"
+            }
+          }
+        },
+        "events": [],
+        "bindings": []
+      },
+      "plfaq_8": {
+        "id": "plfaq_8",
+        "data": {
+          "type": "flex-section",
+          "parent": "plfaq_1",
+          "nodes": [
+            "plfaq_2",
+            "plfaq_3"
+          ],
+          "isCanvas": true,
+          "hidden": false,
+          "custom": {}
+        },
+        "style": {
+          "display": "flex",
+          "flexDirection": "column",
+          "width": "100%",
+          "height": "fit-content",
+          "gap": "24px",
+          "paddingTop": "48px",
+          "paddingBottom": "48px"
+        },
+        "config": {
+          "backgroundSceneSource": "",
+          "backgroundSceneEffect": "gradient-mesh",
+          "backgroundSceneGallery": "podium",
+          "backgroundSceneSpeed": "normal",
+          "backgroundSceneIntensity": "normal",
+          "backgroundSceneColors": "theme",
+          "backgroundSceneColor1": "#171717",
+          "backgroundSceneColor2": "#ffffff",
+          "backgroundSceneColor3": "#6b7280",
+          "backgroundSceneUrl": "",
+          "backgroundSceneModelUrl": "",
+          "backgroundSceneVeil": 0,
+          "backgroundSceneVeilColor": "#000000"
+        },
+        "specials": {
+          "stylePreset": "container-section"
+        },
+        "responsive": {},
+        "events": [],
+        "bindings": []
+      }
+    }
+  }
+} as const;
+
+/**
+ * The document an ordinary page opens with for a chosen LAYOUT.
+ *
+ * Keyed by purpose, not by type: every content page is type `page`, so the
+ * table above cannot tell an About page from a policy. Same palette cards, same
+ * module, same reason — an author who picks the layout in the editor and an
+ * agent that asks for it here must land on the same page.
+ */
 export const STORE_PAGE_SEEDS: Record<string, { schema_version: number; root_node_id: string; nodes: Record<string, unknown> }> = {
   "product": {
     "schema_version": 2,

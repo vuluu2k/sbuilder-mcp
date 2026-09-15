@@ -32,6 +32,16 @@ export interface UsualPage {
   /** What the site is missing while this page is absent. */
   why: string;
   /**
+   * The page LAYOUT this purpose opens with, where the platform declares one.
+   *
+   * The same keywords that decide a page is MISSING decide what it opens as, so
+   * the two answers cannot drift apart: a name this table reads as "the about
+   * page" is a name `sb_page_create` gives the about layout to. Absent means the
+   * page has no layout of its own — the auth pages are built by sb_store, which
+   * puts a real form on them, and a blank page is right for everything else.
+   */
+  layout?: string;
+  /**
    * Only advise this page on a site the condition holds for.
    *
    * Absent means "every site". Present means the page answers a need this site
@@ -75,6 +85,7 @@ export const USUAL_PAGES: readonly UsualPage[] = [
     key: 'about',
     match: ['about', 'gioi-thieu', 'giới thiệu', 've-chung-toi'],
     why: 'Nothing says who the shop is, which is the page a first-time buyer opens before paying.',
+    layout: 'about',
   },
   // TWO POLICIES, NOT ONE BUCKET. These were a single entry, and it read a shop
   // carrying only "Chính sách giao hàng & đổi trả" as complete — which is
@@ -90,6 +101,7 @@ export const USUAL_PAGES: readonly UsualPage[] = [
     why:
       'No delivery or return terms a shopper can read before paying. This is the page a buyer ' +
       'looks for when the parcel is late and the one a dispute is settled against.',
+    layout: 'policy',
   },
   {
     key: 'policy-privacy',
@@ -100,6 +112,7 @@ export const USUAL_PAGES: readonly UsualPage[] = [
     why:
       'No privacy policy or terms of use. Payment providers and marketplaces ask for both ' +
       'before they will list a shop, and a checkout form collects personal data either way.',
+    layout: 'policy',
   },
   {
     key: 'faq',
@@ -107,6 +120,7 @@ export const USUAL_PAGES: readonly UsualPage[] = [
     why:
       'The same handful of questions reach support one message at a time, with no page to link ' +
       'an answer to. The accordion element is what this page is built from.',
+    layout: 'faq',
   },
   {
     key: 'blog',
@@ -146,4 +160,22 @@ export function missingUsualPages(pages: InventoryPage[] | null): UsualPage[] {
   return USUAL_PAGES.filter(
     (u) => (u.when ? u.when(pages) : true) && !u.match.some((m) => hay.includes(m)),
   );
+}
+
+/**
+ * The layout a page called `name` should open with, or undefined.
+ *
+ * READ OFF THE SAME KEYWORDS that decide a page is missing, so the two answers
+ * cannot drift: a name this module reads as "the about page" is the name that
+ * gets the about layout. That is the whole reason it lives here rather than in
+ * a second table beside sb_page_create.
+ *
+ * ONLY FOR TYPE `page`. Every other type already opens with the seed its own
+ * type describes, and a name-based guess on top of it would contradict a
+ * decision the platform has already made.
+ */
+export function layoutForPageName(name: string, type: string | undefined): string | undefined {
+  if (type && type !== 'page') return undefined;
+  const hay = name.toLowerCase();
+  return USUAL_PAGES.find((u) => u.layout && u.match.some((m) => hay.includes(m)))?.layout;
 }
