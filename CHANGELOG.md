@@ -6,6 +6,12 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.57.0] - 2026-09-15
+
+### Added
+- `sb_review` now reports a `categoryPage` readiness gap when a store has product categories but no published page of the `category` type, since `/collections/{slug}` falls back to that template and every collection link, including the ones in the site's own menu, 404s without it.
+- `sb_review` now reports an `articleTemplate` readiness gap when a site has written blog articles but no published page of the `post` type, since `/blog/{slug}` falls back to that template and every article link, including the ones a listing page carries, 404s without it.
+
 ## [0.56.0] - 2026-09-15
 
 ### Added

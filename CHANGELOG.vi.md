@@ -6,6 +6,12 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.57.0] - 2026-09-15
+
+### Added
+- `sb_review` giờ báo lỗi sẵn sàng `categoryPage` khi store có danh mục sản phẩm nhưng chưa có trang loại `category` nào được publish, vì `/collections/{slug}` sẽ dùng template đó, và mọi liên kết danh mục — kể cả những liên kết trong menu của chính site — sẽ trả về 404 nếu thiếu.
+- `sb_review` giờ báo lỗi sẵn sàng `articleTemplate` khi site đã viết bài blog nhưng chưa có trang loại `post` nào được publish, vì `/blog/{slug}` sẽ dùng template đó, và mọi liên kết bài viết — kể cả những liên kết trong trang danh sách bài viết — sẽ trả về 404 nếu thiếu.
+
 ## [0.56.0] - 2026-09-15
 
 ### Added
