@@ -6,6 +6,11 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.54.0] - 2026-09-15
+
+### Added
+- `sb_review` reports a `mergedAuthPage` readiness gap when a single page carries two or more account forms (login, register, forgot-password, reset, or verify), since none of them then has an address a header can link to or a password-reset email can point at; the fix names `sb_store action:"form"` with a `page_name` to give each its own page.
+
 ## [0.53.0] - 2026-09-15
 
 ### Added

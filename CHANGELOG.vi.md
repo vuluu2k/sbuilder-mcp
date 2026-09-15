@@ -6,6 +6,11 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.54.0] - 2026-09-15
+
+### Added
+- `sb_review` giờ báo cáo lỗi sẵn sàng `mergedAuthPage` khi một trang duy nhất chứa từ hai form tài khoản trở lên (đăng nhập, đăng ký, quên mật khẩu, đặt lại, hoặc xác thực), vì khi đó không form nào có địa chỉ riêng để header liên kết tới hay để email đặt lại mật khẩu trỏ đến; hướng khắc phục nêu tên `sb_store action:"form"` kèm `page_name` để tách mỗi form ra trang riêng của nó.
+
 ## [0.53.0] - 2026-09-15
 
 ### Added
