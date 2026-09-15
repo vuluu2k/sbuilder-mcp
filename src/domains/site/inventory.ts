@@ -31,6 +31,15 @@ export interface UsualPage {
   match: string[];
   /** What the site is missing while this page is absent. */
   why: string;
+  /**
+   * Only advise this page on a site the condition holds for.
+   *
+   * Absent means "every site". Present means the page answers a need this site
+   * has actually created for itself — a blog listing matters once there is an
+   * article template for it to list, and not before. Advice that does not apply
+   * is the thing that teaches a reader to skim past the advice that does.
+   */
+  when?: (pages: InventoryPage[]) => boolean;
 }
 
 export const USUAL_PAGES: readonly UsualPage[] = [
@@ -67,16 +76,50 @@ export const USUAL_PAGES: readonly UsualPage[] = [
     match: ['about', 'gioi-thieu', 'giới thiệu', 've-chung-toi'],
     why: 'Nothing says who the shop is, which is the page a first-time buyer opens before paying.',
   },
+  // TWO POLICIES, NOT ONE BUCKET. These were a single entry, and it read a shop
+  // carrying only "Chính sách giao hàng & đổi trả" as complete — which is
+  // exactly the shop that was measured, and it had no privacy terms at all. One
+  // policy page satisfying a check about all of them is the check answering a
+  // question it was not asked.
   {
-    key: 'policy',
+    key: 'policy-delivery',
     match: [
-      'policy', 'policies', 'chinh-sach', 'chính sách', 'dieu-khoan', 'điều khoản',
-      'terms', 'privacy', 'bao-mat', 'bảo mật', 'doi-tra', 'đổi trả', 'return',
-      'shipping', 'van-chuyen', 'vận chuyển', 'giao-hang', 'giao hàng', 'refund',
+      'doi-tra', 'đổi trả', 'return', 'refund', 'hoan-tien', 'hoàn tiền',
+      'shipping', 'van-chuyen', 'vận chuyển', 'giao-hang', 'giao hàng', 'delivery',
     ],
     why:
-      'No delivery, return or privacy terms a shopper can read before paying — the pages a ' +
-      'marketplace and a payment provider both ask for.',
+      'No delivery or return terms a shopper can read before paying. This is the page a buyer ' +
+      'looks for when the parcel is late and the one a dispute is settled against.',
+  },
+  {
+    key: 'policy-privacy',
+    match: [
+      'privacy', 'bao-mat', 'bảo mật', 'dieu-khoan', 'điều khoản', 'terms',
+      'quy-dinh', 'quy định',
+    ],
+    why:
+      'No privacy policy or terms of use. Payment providers and marketplaces ask for both ' +
+      'before they will list a shop, and a checkout form collects personal data either way.',
+  },
+  {
+    key: 'faq',
+    match: ['faq', 'cau-hoi', 'câu hỏi', 'hoi-dap', 'hỏi đáp', 'help', 'tro-giup', 'trợ giúp'],
+    why:
+      'The same handful of questions reach support one message at a time, with no page to link ' +
+      'an answer to. The accordion element is what this page is built from.',
+  },
+  {
+    key: 'blog',
+    // ONLY ONCE THERE IS SOMETHING TO LIST. `post` is the ARTICLE template —
+    // it answers /blog/{slug} and has no address of its own — so a site with
+    // one can publish articles that nothing on the site links to. A site
+    // without one has no articles, and telling it to build a listing page is
+    // advice about a section it never asked for.
+    when: (pages) => pages.some((x) => x.type === 'post'),
+    match: ['blog', 'tin-tuc', 'tin tức', 'news', 'bai-viet', 'bài viết', 'kien-thuc', 'cẩm nang'],
+    why:
+      'This site has an article template, so /blog/{slug} works — but no page LISTS the ' +
+      'articles, so each one is reachable only by someone who already has its URL.',
   },
 ];
 
@@ -100,5 +143,7 @@ export function missingUsualPages(pages: InventoryPage[] | null): UsualPage[] {
     .filter((p) => (typeof p.type === 'string' ? p.type === 'page' : true))
     .map((p) => `${typeof p.slug === 'string' ? p.slug : ''} ${typeof p.name === 'string' ? p.name : ''}`.toLowerCase())
     .join('\n');
-  return USUAL_PAGES.filter((u) => !u.match.some((m) => hay.includes(m)));
+  return USUAL_PAGES.filter(
+    (u) => (u.when ? u.when(pages) : true) && !u.match.some((m) => hay.includes(m)),
+  );
 }
