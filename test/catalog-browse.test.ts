@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import { catalogBrowse, catalogMatches } from '../src/catalog/element-search.js';
+import { catalogBrowse, catalogMatches, largestCategorySize } from '../src/catalog/element-search.js';
 import { ELEMENTS } from '../src/catalog/elements.generated.js';
 import { connectedClient } from './harness.js';
 
@@ -50,6 +50,57 @@ describe('catalogBrowse — a search cannot introduce you to anything', () => {
     expect(json.length).toBeLessThan(6000);
     const withDesc = Object.values(ELEMENTS).find((e) => e.description.length > 40)!;
     expect(json).not.toContain(withDesc.description);
+  });
+});
+
+/**
+ * BROWSING NAMES THEM; A GROUP QUERY EXPLAINS THEM.
+ *
+ * Browse deliberately carries no descriptions, so the second step is what turns
+ * a list of 114 names into knowing what they are FOR. It only works if `limit`
+ * clears the biggest category — otherwise a group query returns its first 30 of
+ * 39 and looks like the whole group, and the nine it dropped are exactly the
+ * elements nobody knew to look for.
+ */
+describe('reading one category whole', () => {
+  const CAP = 60;
+
+  it('has a limit cap that clears the biggest category', () => {
+    expect(largestCategorySize()).toBeLessThanOrEqual(CAP);
+  });
+
+  it('returns every element of a group, with descriptions, at that limit', () => {
+    for (const [category, rows] of Object.entries(catalogBrowse())) {
+      const got = catalogMatches(category, { limit: CAP }).filter((m) => m.category === category);
+      expect(got.length, category).toBe(rows.length);
+      for (const m of got) expect(m.description.length, `${category}/${m.type}`).toBeGreaterThan(0);
+    }
+  });
+
+  // THE POINT OF THE WHOLE EXERCISE, named: an element nobody would search for
+  // is reachable by asking for its group.
+  // AND THE CAP THE TOOL ACTUALLY ENFORCES, not the one this file believes in.
+  // Every assertion above reads CAP as a literal, so lowering the schema's
+  // maximum back to 30 would leave them all green while silently truncating
+  // every group query an agent makes.
+  it('is the limit the tool really accepts', async () => {
+    const { client, close } = await connectedClient();
+    try {
+      const { tools } = await client.listTools();
+      const schema = tools.find((t) => t.name === 'sb_catalog_search')!.inputSchema as {
+        properties: { limit: { maximum: number } };
+      };
+      expect(schema.properties.limit.maximum).toBe(CAP);
+    } finally {
+      await close();
+    }
+  });
+
+  it('reaches an element by its group that no one would have queried by name', () => {
+    const media = catalogMatches('media', { limit: CAP }).map((m) => m.type);
+    expect(media).toContain('image-comparison');
+    const basic = catalogMatches('basic', { limit: CAP }).map((m) => m.type);
+    expect(basic).toContain('text-marquee');
   });
 });
 

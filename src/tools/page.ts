@@ -637,7 +637,7 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
           'does sb_traits_for.',
       inputSchema: {
       query: z.string().optional(),
-      limit: z.number().int().min(1).max(30).optional().describe('Default 8'),
+      limit: z.number().int().min(1).max(60).optional().describe('Default 8'),
       detail: z.boolean().optional().describe('Include useWhen / avoidWhen / contentTips per match'),
     },
       annotations: { readOnlyHint: true },
@@ -653,8 +653,10 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
           : {
               elements: catalogBrowse(),
               note:
-                'Every element type, grouped as the palette groups them. Pass one as query for ' +
-                'the fields to choose by, then sb_traits_for for its controls and hints.',
+                'Every element type, grouped as the palette groups them. Pass a TYPE as query ' +
+                'for the fields to choose by, or a CATEGORY NAME with limit 60 to read that ' +
+                "whole group's descriptions at once — which is how you find out what the ones " +
+                'you have never used are for. sb_traits_for then has the controls and hints.',
             },
       ),
   );

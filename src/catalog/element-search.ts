@@ -57,6 +57,19 @@ export function catalogBrowse(): Record<string, string[]> {
 }
 
 /**
+ * The biggest category, which is what `limit` has to clear for a caller to read
+ * one group WHOLE.
+ *
+ * A group query that silently returns its first 30 of 39 is the worst answer
+ * available here: it looks like the whole group, and the nine it dropped are
+ * exactly the elements nobody knew to look for. `catalog-browse.test.ts` fails
+ * when a category outgrows the cap, which is the only way anyone would notice.
+ */
+export function largestCategorySize(): number {
+  return Math.max(...Object.values(catalogBrowse()).map((g) => g.length));
+}
+
+/**
  * Four fields to CHOOSE by.
  *
  * The old shape returned nine fields per element including three lists of
