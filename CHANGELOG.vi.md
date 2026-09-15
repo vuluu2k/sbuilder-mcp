@@ -6,6 +6,15 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.53.0] - 2026-09-15
+
+### Added
+- `sb_store action:"form"` giờ nhận thêm `page_name` (và `headline` tuỳ chọn) để dựng luôn một trang và đặt form vừa tạo lên đó trong cùng một lần gọi, thay vì để người gọi phải tự tạo trang, `sb_add` phần tử form rồi `sb_set` `formId` của nó.
+- Gợi ý của `sb_page_list` khi thiếu trang đăng nhập, đăng ký, quên mật khẩu hoặc liên hệ giờ nêu đích danh một lệnh gọi duy nhất `sb_store action:"form" template:"..." page_name:"..."` để dựng cả form lẫn trang chứa nó, thay vì chỉ trỏ tới mỗi template của form.
+
+### Changed
+- Trang được tạo cho một form vừa dựng là một lần ghi riêng và không bao giờ huỷ lần ghi trước đó; nếu việc tạo trang bị từ chối, `sb_store` vẫn báo cáo form đã tạo thành công, kèm trường `page_failed`, thay vì xoá form đó đi.
+
 ## [0.52.0] - 2026-09-15
 
 ### Added

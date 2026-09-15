@@ -6,6 +6,15 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.53.0] - 2026-09-15
+
+### Added
+- `sb_store action:"form"` now takes a `page_name` (and optional `headline`) that builds a page and places the seeded form on it in the same call, instead of leaving the caller to create a page, `sb_add` a form element, and `sb_set` its `formId` by hand.
+- `sb_page_list`'s advisory for a missing login, register, forgot-password, or contact page now names the single `sb_store action:"form" template:"..." page_name:"..."` call that builds both the form and its page, instead of pointing at the form template alone.
+
+### Changed
+- A page created for a seeded form is a second write and never undoes the first; if the page create is refused, `sb_store` still reports the form it already made, under a `page_failed` field, rather than rolling the form back.
+
 ## [0.52.0] - 2026-09-15
 
 ### Added
