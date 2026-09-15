@@ -515,3 +515,136 @@ describe('readinessGaps() — account forms stacked on one page', () => {
     expect(ids([formNode('f_login'), formNode('f_register')], FORMS)).toContain('mergedAuthPage');
   });
 });
+
+/**
+ * THE OTHER SIDE OF THE CATALOGUE.
+ *
+ * /collections/{slug} resolves exactly as /products/{slug} does — to the
+ * category's own page, or to the DEFAULT TEMPLATE for the `category` type. A
+ * store with categories and no published one 404s every collection link,
+ * including the ones its own menu carries. `productPage` had a gap for this
+ * shape since the beginning; the category half never did.
+ */
+describe('readinessGaps() — the category template', () => {
+  const store = [
+    { type: 'product', status: 'published' },
+    { type: 'checkout', status: 'published' },
+    { type: 'error', status: 'published' },
+    { type: 'account', status: 'published' },
+    { type: 'search', status: 'published' },
+  ];
+  const ids = (pages: unknown[], categories: number | null) =>
+    readinessGaps({
+      pages,
+      categories,
+      categoryPageLinks: 0,
+      liveGateways: 1,
+      shippingMethods: 1,
+      products: { active: 1, purchasable: 1 },
+      pageNodes: [],
+      globalNodes: [
+        { data: { type: 'button' }, events: [{ action: 'open_cart' }] },
+        { data: { type: 'cart-count' } },
+      ],
+      globalKinds: ['header'],
+    } as never).map((g) => g.id);
+
+  it('reports a store with categories and no category page', () => {
+    expect(ids(store, 3)).toContain('categoryPage');
+  });
+
+  it('is silent once one is published', () => {
+    expect(ids([...store, { type: 'category', status: 'published' }], 3)).not.toContain(
+      'categoryPage',
+    );
+  });
+
+  it('says PUBLISH, not create, when one exists as a draft', () => {
+    const g = readinessGaps({
+      pages: [...store, { type: 'category', status: 'draft' }],
+      categories: 3, categoryPageLinks: 0, liveGateways: 1, shippingMethods: 1,
+      products: { active: 1, purchasable: 1 }, pageNodes: [],
+      globalNodes: [
+        { data: { type: 'button' }, events: [{ action: 'open_cart' }] },
+        { data: { type: 'cart-count' } },
+      ],
+      globalKinds: ['header'],
+    } as never).find((x) => x.id === 'categoryPage')!;
+    expect(g.draft).toBe(true);
+    expect(g.fix).toMatch(/Publish/);
+  });
+
+  // GATED ON HAVING CATEGORIES. A shop can genuinely sell from one flat
+  // catalogue, and telling it to build a template for a thing it does not use is
+  // the nag this file keeps warning about.
+  it('says nothing to a store with no categories', () => {
+    expect(ids(store, 0)).not.toContain('categoryPage');
+  });
+
+  it('says nothing when the count could not be read', () => {
+    expect(ids(store, null)).not.toContain('categoryPage');
+  });
+
+  // THE LIVENESS ANCHOR: this fixture really does produce gaps, so the four
+  // silences above are read off a list that could have contained the finding.
+  it('still answers the scope question on the same fixture', () => {
+    expect(ids([...store, { type: 'category', status: 'published' }], 3)).toContain(
+      'categoryScope',
+    );
+  });
+});
+
+/**
+ * ARTICLES WRITTEN AND NOTHING TO RENDER THEM IN.
+ *
+ * `post` is the ARTICLE template: /blog/{slug} resolves to the site's published
+ * page of that type. A site that has written articles and has none 404s every
+ * one — including the links its own listing page carries, which is the page
+ * that makes them findable at all.
+ */
+describe('readinessGaps() — the article template', () => {
+  const plain = (extra: Record<string, unknown>) =>
+    readinessGaps({
+      pages: [{ type: 'page', status: 'published' }],
+      liveGateways: null,
+      shippingMethods: null,
+      pageNodes: [],
+      globalNodes: null,
+      globalKinds: ['header'],
+      ...extra,
+    } as never).map((g) => g.id);
+
+  it('reports a site that has written articles and has no post page', () => {
+    expect(plain({ articles: 4 })).toContain('articleTemplate');
+  });
+
+  it('is silent once one is published', () => {
+    expect(
+      plain({
+        articles: 4,
+        pages: [
+          { type: 'page', status: 'published' },
+          { type: 'post', status: 'published' },
+        ],
+      }),
+    ).not.toContain('articleTemplate');
+  });
+
+  // GATED ON HAVING WRITTEN SOMETHING. A site with no blog hears nothing about
+  // a template for a section it does not have.
+  it('says nothing to a site with no articles', () => {
+    expect(plain({ articles: 0 })).not.toContain('articleTemplate');
+  });
+
+  it('says nothing when the count could not be read', () => {
+    expect(plain({ articles: null })).not.toContain('articleTemplate');
+    expect(plain({})).not.toContain('articleTemplate');
+  });
+
+  // ASKED OF EVERY SITE, above the store gate: a blog is not a commerce feature
+  // and a brochure site with a news section has exactly this problem. This
+  // fixture is not a store — if the check sat below the gate it would never run.
+  it('asks it of a site that is not a store', () => {
+    expect(plain({ articles: 4 })).toContain('articleTemplate');
+  });
+});

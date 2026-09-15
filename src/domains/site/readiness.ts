@@ -46,6 +46,8 @@ export type ReadinessGapId =
   | 'siteChrome'
   | 'errorPage'
   | 'mergedAuthPage'
+  | 'categoryPage'
+  | 'articleTemplate'
   | 'cartCount';
 
 export interface ReadinessGap {
@@ -78,6 +80,8 @@ export interface ReadinessInput {
    * login form from a register form on a page that holds both.
    */
   forms?: Array<{ id?: string; type?: string }> | null;
+  /** How many blog articles the site has written; null when the list was unread. */
+  articles?: number | null;
   /** How many product categories the store has; null when the list was unread. */
   categories?: number | null;
   /** How many of them point at a page of their own; null when unread. */
@@ -277,6 +281,33 @@ export function readinessGaps(input: ReadinessInput): ReadinessGap[] {
     }
   }
 
+  // ARTICLES WRITTEN AND NOTHING TO RENDER THEM IN.
+  //
+  // `post` is the ARTICLE template: /blog/{slug} resolves to the site's
+  // published page of that type, so a site that has written articles and has
+  // none 404s every single one — including the links its own listing page
+  // carries, which is the page that makes the articles findable in the first
+  // place.
+  //
+  // ASKED OF EVERY SITE, above the store gate: a blog is not a commerce
+  // feature, and a brochure site with a news section has exactly this problem.
+  // Gated on having WRITTEN something, so a site with no blog hears nothing.
+  if (pages && (input.articles ?? 0) > 0 && !published(pages, 'post')) {
+    const draft = drafted(pages, 'post');
+    gaps.push({
+      id: 'articleTemplate',
+      draft,
+      problem:
+        `This site has ${input.articles} article${input.articles === 1 ? '' : 's'} and no ` +
+        'published page of the "post" type. /blog/{slug} needs one, so every article 404s — ' +
+        'including the links a listing page carries.',
+      fix: draft
+        ? 'Publish the article template page that already exists.'
+        : 'Create a page of type "post" and publish it. It opens seeded with the cover, ' +
+          'headline, date and body an article cannot be read without.',
+    });
+  }
+
   if (!isStore(input)) return gaps;
 
   if (pages && !published(pages, 'checkout')) {
@@ -321,6 +352,38 @@ export function readinessGaps(input: ReadinessInput): ReadinessGap[] {
         : 'Create a page of type "product" and publish it.',
     });
   }
+  // AND THE SAME HOLE ON THE OTHER SIDE OF THE CATALOGUE.
+  //
+  // `/collections/{slug}` resolves the same way /products/{slug} does — through
+  // PublishedForEntity, to the category's own page or to the DEFAULT TEMPLATE
+  // for the `category` type — so a store with categories and no published one
+  // 404s every collection link, including the ones its own menu carries.
+  //
+  // `categoryScope` below is a different defect and assumes this page EXISTS:
+  // it reports a template SHARED across categories, which is the complaint you
+  // can only make once there is a template to share. With none, every URL fails
+  // outright and the scope question does not arise.
+  //
+  // GATED ON HAVING CATEGORIES, unlike productPage. A store can genuinely sell
+  // without collections — one shop, one flat catalogue — and telling it to build
+  // a template for a thing it does not use is the nag this file keeps warning
+  // about. Silent when the count could not be read, like everything else here.
+  if (pages && (input.categories ?? 0) > 0 && !published(pages, 'category')) {
+    const draft = drafted(pages, 'category');
+    gaps.push({
+      id: 'categoryPage',
+      draft,
+      problem:
+        `This store has ${input.categories} categor${input.categories === 1 ? 'y' : 'ies'} and no ` +
+        'published page of the "category" type. /collections/{slug} needs one, so every ' +
+        'collection link 404s — including the ones in the site\'s own menu.',
+      fix: draft
+        ? 'Publish the category template page that already exists.'
+        : 'Create a page of type "category" and publish it. It opens seeded with the collection ' +
+          'title and a product repeater.',
+    });
+  }
+
   // NOTHING TO SELL. Checked before the delivery option, because a shipping
   // method for an empty catalogue is furniture.
   if (input.products) {

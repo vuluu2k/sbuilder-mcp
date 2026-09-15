@@ -15,6 +15,7 @@ function platform(forms: unknown) {
     const json = (v: unknown) =>
       new Response(JSON.stringify(v), { status: 200, headers: { 'content-type': 'application/json' } });
     if (path.endsWith('/forms')) return json(forms);
+    if (path.includes('/articles')) return json({ articles: [{}], total: 7 });
     if (path.endsWith('/pages')) return json({ pages: [{ type: 'page', status: 'published' }] });
     if (path.endsWith('/global-sections')) return json({ globalSections: [{ kind: 'header' }] });
     return json({});
@@ -49,6 +50,16 @@ describe('gatherReadiness reads the form list', () => {
 
   // SILENT ON UNREAD DATA, end to end: a shape this reader does not recognise
   // must read as "not known", never as "no forms".
+  // THE SAME WIRING, FOR THE COUNT THAT DECIDES /blog/{slug} RESOLVES. The gap's
+  // own tests hand `articles` in directly and pass whether or not anything reads
+  // the platform for it.
+  it('asks for the articles and carries the count through', async () => {
+    const { ctx, paths } = platform({ forms: [] });
+    const input = await gatherReadiness(ctx, 's1', []);
+    expect(paths.some((p) => p.includes('/articles'))).toBe(true);
+    expect(input.articles).toBe(7);
+  });
+
   it('reports null rather than an empty list when the read gives no forms', async () => {
     const { ctx } = platform({ unexpected: true });
     const input = await gatherReadiness(ctx, 's1', [formNode('f_login'), formNode('f_register')]);

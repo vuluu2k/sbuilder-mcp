@@ -31,7 +31,7 @@ export async function gatherReadiness(
   };
   const site = encodeURIComponent(siteId);
 
-  const [pageList, gateways, shipping, globals, productList, categoryList, pageLinks, formList] =
+  const [pageList, gateways, shipping, globals, productList, categoryList, pageLinks, formList, articleList] =
     await Promise.all([
     get<{ pages?: ReadinessPage[] }>(`/api/sites/${site}/pages`),
     get<{ paymentGateways?: Array<{ enabled?: boolean; configured?: boolean }> }>(
@@ -66,6 +66,10 @@ export async function gatherReadiness(
     // blindness is what let one page quietly become the site's whole account
     // area, which is the shape `mergedAuthPage` reports.
     get<{ forms?: Array<{ id?: string; type?: string }> }>(`/api/sites/${site}/forms`),
+    // THE ARTICLES, for the same reason the products are read: /blog/{slug}
+    // resolves to the site's `post` template, so a site that has written
+    // articles and has no template 404s every one of them.
+    get<{ articles?: unknown[]; total?: number }>(`/api/sites/${site}/articles?limit=1`),
   ]);
 
   // A gateway counts only when it is BOTH enabled and configured — the editor's
@@ -122,5 +126,8 @@ export async function gatherReadiness(
     categories,
     categoryPageLinks,
     forms: formList?.forms ?? null,
+    articles: Array.isArray(articleList?.articles)
+      ? (articleList?.total ?? articleList.articles.length)
+      : null,
   };
 }
