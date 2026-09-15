@@ -6,6 +6,11 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.55.0] - 2026-09-15
+
+### Added
+- `sb_page_create` giờ mở trang Giới thiệu, chính sách hoặc FAQ với một layout thực sự thay vì canvas trống, được xác định bằng cách so khớp `name` của trang với đúng bảng từ khoá mà `sb_page_list` đã dùng để báo thiếu trang; kết quả trả về `would_open_as` (khi dry run) hoặc `seeded: { layout, nodes }` (khi chạy thật) trong trường hợp này, và `seed:false` vẫn dùng để bỏ qua tính năng này.
+
 ## [0.54.0] - 2026-09-15
 
 ### Added

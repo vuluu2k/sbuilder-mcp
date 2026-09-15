@@ -6,6 +6,11 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.55.0] - 2026-09-15
+
+### Added
+- `sb_page_create` now opens an About, policy, or FAQ page with a real layout instead of a blank canvas, matched from the page's `name` against the same keyword table `sb_page_list` already uses to flag a missing one; the result reports `would_open_as` (dry run) or `seeded: { layout, nodes }` (real run) when this applies, and `seed:false` still opts out.
+
 ## [0.54.0] - 2026-09-15
 
 ### Added
