@@ -493,10 +493,21 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
           'the renderer finds no root and publishes an EMPTY BODY. The next save from here writes ' +
           'the canonical key and fixes it; publish afterwards.'
         : undefined;
+      // AN EMPTY READ IS REPORTED, because the caller is the only one who knows
+      // whether this page is supposed to be empty. A page just created reads
+      // this and carries on; a page that was built reads it and stops — which is
+      // the whole difference between noticing now and noticing after a publish.
+      const seeded_empty = doc.seededRoot
+        ? 'This page came back EMPTY and a ROOT was seeded for it. That is expected for a page ' +
+          'you just created. If this page HAD content, do not edit or publish it — the draft ' +
+          'read is blank, not the page: re-open it, and if it is still blank restore it from ' +
+          'GET /api/sites/{siteId}/pages/{pageId}/history.'
+        : undefined;
       const warnings = session.composeWarnings();
       return text({
         outline,
         ...(blank_page_repair ? { blank_page_repair } : {}),
+        ...(seeded_empty ? { seeded_empty } : {}),
         ...(warnings.length ? { compose_warnings: warnings } : {}),
         ...reviewField(ctx, doc),
       });

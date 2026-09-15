@@ -85,7 +85,9 @@ export class PageDoc {
     // The genuinely broken case is still refused below: a document that HAS
     // nodes but whose root_node_id names none of them is damage, not emptiness,
     // and inventing a root there would strand every existing node as an orphan.
+    let seeded = false;
     if (!d.root_node_id && Object.keys(d.nodes).length === 0) {
+      seeded = true;
       d.root_node_id = 'ROOT';
       d.nodes.ROOT = {
         id: 'ROOT',
@@ -136,6 +138,7 @@ export class PageDoc {
     }
     const out = new PageDoc(d);
     out.adoptedRootKey = adopted;
+    out.seededRoot = seeded;
     return out;
   }
 
@@ -146,6 +149,26 @@ export class PageDoc {
    * a fact no other surface reports, so the tool layer says it out loud.
    */
   adoptedRootKey?: string;
+
+  /**
+   * This ROOT was INVENTED, not read — the source came back `{ root_node_id: "",
+   * nodes: {} }` and the empty-document branch above seeded one.
+   *
+   * For a page the caller has just created that is the whole point, and nothing
+   * downstream needs to care. For a page that HAS content it is a read that
+   * failed open: the session now holds a blank tree it believes is the page, and
+   * the first save writes that blank tree over whatever the server holds. The
+   * two are indistinguishable AT READ TIME — the bytes are identical — so the
+   * distinction cannot be made here and must survive to the one place that can
+   * check it cheaply, which is `PageSession.save`.
+   *
+   * MEASURED: a product template carrying 24 nodes plus a shared header and
+   * footer came back bare to one session and was stored bare. The published copy
+   * was untouched, so all 19 product pages kept rendering while the draft the
+   * editor opens was blank — one publish from that draft would have taken every
+   * one of them down.
+   */
+  seededRoot?: boolean;
 
   get rev(): number {
     return this.revision;
