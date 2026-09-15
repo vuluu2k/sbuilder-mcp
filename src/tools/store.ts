@@ -35,6 +35,7 @@ import { siteToken } from './credentialpick.js';
 import { siteFor, type ToolContext } from './context.js';
 import { genId } from '../domains/site/ids.js';
 import type { PageSession } from './page.js';
+import { addSubtree } from '../domains/site/builder.js';
 import { chromeLinks, hasGlobal, shareChrome, sitePages } from './chrome.js';
 import { tokensFromPage } from '../domains/site/importmap.js';
 import {
@@ -259,11 +260,69 @@ const FORM_TEMPLATE_KEYS = Object.keys(FORM_TEMPLATES).sort() as unknown as [str
  * returns — and `/account` is the one page that is not a free choice, because
  * `membersOnlyRedirectTarget` sends every gated visitor there.
  */
+/**
+ * The page a seeded form goes on, built and saved in the same call.
+ *
+ * WHY THIS EXISTS. seedForm made a form and stopped, and said so: "No page is
+ * made. Where a login form belongs is a design decision." True, and it left the
+ * caller three steps — create a page, sb_add a form element, sb_set its formId —
+ * with nothing insisting they belong together. Measured: a store built with
+ * these tools had no login page, no register page and no forgot page, and its
+ * own header had nothing to link to. The design decision was never the
+ * obstacle; the three steps were.
+ *
+ * A BLANK PAGE FIRST, THEN THE SUBTREE, rather than a document posted with the
+ * create. The checkout path can post one because it has a whole seeded document
+ * to post; here the document is one element, and going through the session is
+ * how every other builder in this server writes a page — band rules, id
+ * minting and the save contract all come with it instead of being re-derived.
+ */
+async function placeFormOnPage(
+  ctx: ToolContext,
+  session: PageSession,
+  siteId: string,
+  formId: string,
+  pageName: string,
+  headline: string | undefined,
+): Promise<{ id: string; name: string }> {
+  const made = (await request({
+    base: ctx.base,
+    method: 'POST',
+    path: `/api/sites/${encodeURIComponent(siteId)}/pages`,
+    token: siteToken(ctx),
+    body: { name: pageName, type: 'page' },
+    fetchImpl: ctx.fetchImpl,
+  })) as { page?: { id?: unknown; name?: unknown } };
+  const id = made.page?.id;
+  if (typeof id !== 'string' || !id) {
+    throw new Error('sbuilder: the platform accepted the page create and returned no page');
+  }
+  await session.open(siteId, id);
+  const doc = session.current();
+  const { patches } = addSubtree(doc, doc.doc.root_node_id, {
+    type: 'flex-section',
+    children: [
+      {
+        type: 'flex-block',
+        children: [
+          ...(headline ? [{ type: 'heading', specials: { text: headline } }] : []),
+          { type: 'form', specials: { formId } },
+        ],
+      },
+    ],
+  });
+  await session.applyAndSave(patches);
+  return { id, name: typeof made.page?.name === 'string' ? made.page.name : pageName };
+}
+
 async function seedForm(
   ctx: ToolContext,
+  session: PageSession,
   siteId: string,
   key: string,
   formName: string | undefined,
+  pageName: string | undefined,
+  headline: string | undefined,
   dryRun: boolean,
 ): Promise<unknown> {
   const tpl = FORM_TEMPLATES[key as keyof typeof FORM_TEMPLATES] as {
@@ -300,6 +359,15 @@ async function seedForm(
           path: `/api/sites/${site}/forms/{formId}/document`,
         },
       ],
+      ...(pageName
+        ? {
+            would_also: `create a page named ${JSON.stringify(pageName)} of type "page" and put ` +
+              'the form on it, so the form has an address a header can link to',
+          }
+        : {
+            no_page: 'Only the form. Pass page_name to have the page made and the form placed ' +
+              'on it in this same call — the three steps that otherwise get skipped.',
+          }),
       preview: redact({ name, type: tpl.type }),
     };
   }
@@ -339,13 +407,34 @@ async function seedForm(
     throw e;
   }
 
+  // THE PAGE IS A SECOND WRITE AND MUST NOT UNDO THE FIRST. The form EXISTS the
+  // moment its three calls land; a refused page create leaves a form the caller
+  // can still place by hand, which is exactly what they had before this
+  // argument existed. Reporting the failure beats deleting a form they asked
+  // for — the same rule the seed follows in sb_page_create.
+  let page: { id: string; name: string } | undefined;
+  let page_failed: string | undefined;
+  if (pageName) {
+    try {
+      page = await placeFormOnPage(ctx, session, siteId, form.id, pageName, headline);
+    } catch (e) {
+      page_failed = (e as Error).message.replace(/^sbuilder:\s*/, '').slice(0, 160);
+    }
+  }
+
   return {
     form: { id: form.id, type: form.type, name: form.name },
     fields,
-    next:
-      `Place it: sb_add a "form" element, then sb_set its specials.formId to "${form.id}". ` +
-      'The submit button lives in the FORM DOCUMENT, not on the page, and a page republish is ' +
-      'what makes a form-document edit visible.',
+    ...(page ? { page } : {}),
+    ...(page_failed ? { page_failed } : {}),
+    next: page
+      ? `The form is on page ${page.id}. Publish it with sb_publish, and link to it from the ` +
+        'header. The submit button lives in the FORM DOCUMENT, not on the page, and a page ' +
+        'republish is what makes a form-document edit visible.'
+      : `Place it: sb_add a "form" element, then sb_set its specials.formId to "${form.id}" — ` +
+        'or pass page_name to have that page made for you. The submit button lives in the FORM ' +
+        'DOCUMENT, not on the page, and a page republish is what makes a form-document edit ' +
+        'visible.',
   };
 }
 
@@ -431,7 +520,9 @@ export function registerStoreTools(server: McpServer, ctx: ToolContext, session:
             `sbuilder: action:"form" needs a template. One of: ${FORM_TEMPLATE_KEYS.join(', ')}.`,
           );
         }
-        return text(await seedForm(ctx, siteId, template, name, dry_run !== false));
+        return text(
+          await seedForm(ctx, session, siteId, template, name, page_name, headline, dry_run !== false),
+        );
       }
       const lang = (language ?? 'vi') as Language;
       const t = CHECKOUT_TEXT[lang];

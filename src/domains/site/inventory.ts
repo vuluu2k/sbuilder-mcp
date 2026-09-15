@@ -48,28 +48,28 @@ export const USUAL_PAGES: readonly UsualPage[] = [
     match: ['login', 'signin', 'sign-in', 'dang-nhap', 'đăng nhập'],
     why:
       'Nothing for a header, an order email or /account\'s signed-out state to link to. ' +
-      'Seed it with sb_store action:"form" template "login" on a page of type "page".',
+      'sb_store action:"form" template:"login" page_name:"Đăng nhập" builds the form AND the page it lives on.',
   },
   {
     key: 'register',
     match: ['register', 'signup', 'sign-up', 'dang-ky', 'đăng ký'],
     why:
       'A shopper cannot open an account, so order history, addresses and any member-gated ' +
-      'page are unreachable. Template "register".',
+      'page are unreachable. sb_store action:"form" template:"register" with a page_name.',
   },
   {
     key: 'forgot',
     match: ['forgot', 'reset', 'quen-mat-khau', 'quên mật khẩu', 'doi-mat-khau'],
     why:
       'A customer who forgets a password has no way back in and writes to support instead. ' +
-      'Template "forgot".',
+      'sb_store action:"form" template:"forgot" with a page_name.',
   },
   {
     key: 'contact',
     match: ['contact', 'lien-he', 'liên hệ'],
     why:
       'No address, phone or form anywhere, so a shopper with a question about an order has ' +
-      'nowhere to put it. Template "contact".',
+      'nowhere to put it. sb_store action:"form" template:"contact" with a page_name.',
   },
   {
     key: 'about',
