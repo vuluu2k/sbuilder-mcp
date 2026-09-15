@@ -6,6 +6,11 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.56.0] - 2026-09-15
+
+### Added
+- `sb_page_create` giờ mở trang danh sách bài viết (khớp theo tên, giống các layout trang thường dùng khác) với một tiêu đề trên một repeater đã gắn sẵn với `article.url`, `article.title`, `article.summary` và `article.date`, kèm trạng thái rỗng, thay vì một canvas trống; gợi ý `usually_also` khi thiếu trang danh sách blog giờ nêu đích danh đây là cách khắc phục.
+
 ## [0.55.0] - 2026-09-15
 
 ### Added

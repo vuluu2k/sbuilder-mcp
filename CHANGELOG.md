@@ -6,6 +6,11 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.56.0] - 2026-09-15
+
+### Added
+- `sb_page_create` now opens an articles-listing page (matched by name, the same as the other usual-page layouts) with a heading over a repeater already bound to `article.url`, `article.title`, `article.summary`, and `article.date`, plus an empty state, instead of a blank canvas; the `usually_also` advisory for a missing blog listing now names this as its fix.
+
 ## [0.55.0] - 2026-09-15
 
 ### Added
