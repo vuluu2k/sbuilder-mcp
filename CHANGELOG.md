@@ -6,6 +6,17 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.59.1] - 2026-09-15
+
+### Added
+- `sb_api_find` and `sb_api_call` now reach `POST /api/sites/{siteId}/ai/messages`, the editor's own AI assistant for a product, with its request shape (`question` plus a `history` of prior turns).
+- `sb_traits_for` now lists `articleSourceType` and `relationSlotKey` as controls on article-list repeaters, and both it and `sb_set` recognize `page_category` as a legal `articleSourceType` value and `page_collections` as a legal `collectionListType` value, so a single blog or collection template can render the category or collection the page itself names.
+- `list-dataset`'s generated empty-state table now seeds a `review` source ("No reviews yet"), so a review list repeater gets a styled empty state instead of none.
+
+### Changed
+- `sb_page_create` and `sb_template_use` now seed new collection-list pages with `collectionListType: "page_collections"` instead of `all_collections`, so a collection template's sub-collection grid follows the page it is on rather than listing every collection on the site.
+- The generated empty-state copy for collections, blog topics, and courses now reads "New … will show up here. Check back soon." instead of "… you create will show up here."
+
 ## [0.59.0] - 2026-09-15
 
 ### Added

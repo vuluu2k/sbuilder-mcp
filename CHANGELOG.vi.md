@@ -6,6 +6,17 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.59.1] - 2026-09-15
+
+### Added
+- `sb_api_find` và `sb_api_call` giờ với tới được `POST /api/sites/{siteId}/ai/messages`, trợ lý AI của chính editor dành cho một sản phẩm, cùng hình dạng request của nó (`question` và một `history` gồm các lượt hỏi đáp trước đó).
+- `sb_traits_for` giờ liệt kê `articleSourceType` và `relationSlotKey` là control trên các repeater danh sách bài viết, và cả nó lẫn `sb_set` đều nhận `page_category` là giá trị hợp lệ của `articleSourceType` và `page_collections` là giá trị hợp lệ của `collectionListType`, nhờ đó một template blog hoặc collection duy nhất có thể hiển thị đúng danh mục hoặc collection mà trang đó đại diện.
+- Bảng trạng thái rỗng sinh sẵn của `list-dataset` giờ gieo thêm nguồn `review` ("No reviews yet"), nên một repeater danh sách đánh giá có trạng thái rỗng được thiết kế riêng thay vì không có gì.
+
+### Changed
+- `sb_page_create` và `sb_template_use` giờ gieo các trang danh sách collection mới với `collectionListType: "page_collections"` thay vì `all_collections`, nên lưới sub-collection của một template collection sẽ theo đúng trang nó đang nằm trên đó thay vì liệt kê mọi collection của site.
+- Nội dung trạng thái rỗng sinh sẵn cho collection, chủ đề blog và khoá học giờ đọc là "New … will show up here. Check back soon." thay vì "… you create will show up here."
+
 ## [0.59.0] - 2026-09-15
 
 ### Added
