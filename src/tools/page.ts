@@ -37,6 +37,7 @@ import { readinessGaps, READINESS_NOTICE } from '../domains/site/readiness.js';
 import { gatherReadiness } from '../domains/site/readiness-fetch.js';
 import { globalWarning, restampPatches, RESPONSIVE_NOTICE } from '../domains/site/traps.js';
 import { catalogBrowse, catalogMatches, traitsFor } from '../catalog/element-search.js';
+import { missingUsualPages, type InventoryPage } from '../domains/site/inventory.js';
 import {
   LAYOUT_PATTERNS,
   PATTERN_BY_ID,
@@ -1295,20 +1296,34 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
       inputSchema: { site_id: z.string().optional() },
       annotations: { readOnlyHint: true },
     },
-    async ({ site_id: given }) =>
-      text(
-        projectList(
-          await request({
-          base: ctx.base,
-          method: 'GET',
-          path: `/api/sites/${encodeURIComponent(siteFor(ctx, given))}/pages`,
-          token: siteToken(ctx),
-          fetchImpl: ctx.fetchImpl,
-        }),
-          'pages',
-          PAGE_FIELDS,
-        ),
-      ),
+    async ({ site_id: given }) => {
+      const raw = (await request({
+        base: ctx.base,
+        method: 'GET',
+        path: `/api/sites/${encodeURIComponent(siteFor(ctx, given))}/pages`,
+        token: siteToken(ctx),
+        fetchImpl: ctx.fetchImpl,
+      })) as { pages?: InventoryPage[] };
+      // WHAT A SITE USUALLY ALSO HAS, said where an agent is orienting rather
+      // than after it has finished. sb_review reports the pages the storefront
+      // ROUTES BY TYPE; these have no type at all — login, register, forgot,
+      // contact, about, the policies are ordinary "page" rows — so nothing else
+      // in this server can tell a site that has them from one that does not.
+      // See ./inventory.ts: advice, matched by name, and the note says both.
+      const missing = missingUsualPages(raw.pages ?? null);
+      return text({
+        ...(projectList(raw, 'pages', PAGE_FIELDS) as Record<string, unknown>),
+        ...(missing.length
+          ? {
+              usually_also: Object.fromEntries(missing.map((m) => [m.key, m.why])),
+              usually_also_note:
+                'Pages most sites have that this one appears not to, found by NAME because they ' +
+                'have no type — one you named unusually will show here anyway. Advice, not ' +
+                'defects: sb_review reports the pages the storefront routes by type.',
+            }
+          : {}),
+      });
+    },
   );
 
   server.registerTool(
