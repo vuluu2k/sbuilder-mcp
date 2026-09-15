@@ -47,6 +47,32 @@ describe('layoutForPageName', () => {
     }
   });
 
+  /**
+   * THE COMPLETENESS INVARIANT, and the only checkable sense of "finished" this
+   * list has: every page sb_page_list calls usual must have a door that BUILDS
+   * it. Four go through sb_store's form flow, which puts a real form on a real
+   * page; four through a layout. A tenth entry added with neither would be a
+   * line of advice with nothing behind it — the shape that teaches a reader to
+   * skim past the advice that does work.
+   */
+  const FORM_BUILT = new Set(['login', 'register', 'forgot', 'contact']);
+
+  it('leaves no usual page without something that builds it', () => {
+    const orphans = USUAL_PAGES.filter((u) => !u.layout && !FORM_BUILT.has(u.key)).map((u) => u.key);
+    expect(orphans).toEqual([]);
+  });
+
+  it('keeps the two builders apart — no page is claimed by both', () => {
+    const both = USUAL_PAGES.filter((u) => u.layout && FORM_BUILT.has(u.key)).map((u) => u.key);
+    expect(both).toEqual([]);
+  });
+
+  // The articles page is the one that had neither until now.
+  it('opens the articles listing on a repeater bound to articles', () => {
+    expect(layoutForPageName('Tin tức', 'page')).toBe('articles');
+    expect(JSON.stringify(layoutDocument('articles'))).toContain('article.title');
+  });
+
   it('builds a real document for each', () => {
     for (const id of layoutNames()) {
       const doc = layoutDocument(id)!;

@@ -603,6 +603,538 @@ export const PAGE_LAYOUT_SEEDS: Record<string, { schema_version: number; root_no
         "bindings": []
       }
     }
+  },
+  "articles": {
+    "schema_version": 2,
+    "root_node_id": "plart_1",
+    "nodes": {
+      "plart_1": {
+        "id": "plart_1",
+        "data": {
+          "type": "root",
+          "parent": null,
+          "nodes": [
+            "plart_13"
+          ],
+          "isCanvas": true,
+          "hidden": false,
+          "custom": {}
+        },
+        "style": {},
+        "config": {},
+        "specials": {},
+        "responsive": {},
+        "events": [],
+        "bindings": []
+      },
+      "plart_2": {
+        "id": "plart_2",
+        "data": {
+          "type": "heading",
+          "parent": "plart_13",
+          "nodes": [],
+          "isCanvas": false,
+          "hidden": false,
+          "custom": {}
+        },
+        "style": {
+          "width": "100%",
+          "height": "fit-content"
+        },
+        "config": {
+          "textGlobalStyle": "heading-1"
+        },
+        "specials": {
+          "htmlTag": "h2",
+          "text": "Heading",
+          "stylePreset": "heading-default"
+        },
+        "responsive": {},
+        "events": [],
+        "bindings": []
+      },
+      "plart_3": {
+        "id": "plart_3",
+        "data": {
+          "type": "list-dataset",
+          "parent": "plart_13",
+          "nodes": [
+            "plart_4"
+          ],
+          "isCanvas": true,
+          "hidden": false,
+          "custom": {}
+        },
+        "style": {
+          "width": "100%",
+          "gap": "24px"
+        },
+        "config": {
+          "datasetSource": "article",
+          "articleSourceType": "category",
+          "loadingMode": "none",
+          "layout": "grid",
+          "quantity": 4,
+          "itemsPerRow": 4,
+          "collectionType": "all_products",
+          "collectionId": "all_products",
+          "articleCategoryId": "all_articles",
+          "collectionListType": "all_collections",
+          "listNavIcon": "ArrowLeftSLine",
+          "listNavPosition": "inside",
+          "listNavIconSize": 16,
+          "listNavIconColor": "#171717",
+          "listNavButtonWidth": 32,
+          "listNavButtonHeight": 32,
+          "listNavButtonBg": "#ffffff",
+          "paginationItemWidth": 8,
+          "paginationItemHeight": 8,
+          "paginationItemGap": 4,
+          "paginationItemBg": "rgba(0,0,0,0.25)",
+          "paginationItemActiveBg": "rgba(0,0,0,0.8)",
+          "emptyStateId": "plart_9"
+        },
+        "specials": {
+          "loadMoreLabel": "Load more",
+          "collectionIds": []
+        },
+        "responsive": {
+          "tablet": {
+            "style": {
+              "gap": "20px"
+            },
+            "config": {
+              "itemsPerRow": 2
+            }
+          },
+          "mobile": {
+            "style": {
+              "gap": "16px"
+            },
+            "config": {
+              "itemsPerRow": 1
+            }
+          }
+        },
+        "events": [],
+        "bindings": [
+          {
+            "id": "bind-target",
+            "source": "",
+            "field": "",
+            "target": {
+              "type": "article",
+              "id": "",
+              "kind": "article_list"
+            }
+          }
+        ]
+      },
+      "plart_4": {
+        "id": "plart_4",
+        "data": {
+          "type": "dataset-block",
+          "parent": "plart_3",
+          "nodes": [
+            "plart_5",
+            "plart_6",
+            "plart_7",
+            "plart_8"
+          ],
+          "isCanvas": true,
+          "hidden": false,
+          "custom": {}
+        },
+        "style": {
+          "display": "flex",
+          "flexDirection": "column",
+          "gap": "24px",
+          "padding": "24px",
+          "backgroundColor": "#ffffff",
+          "width": "100%",
+          "height": "fit-content"
+        },
+        "config": {
+          "contentWidth": "fill_container",
+          "contentWidthCustom": 0,
+          "backgroundSceneSource": "",
+          "backgroundSceneEffect": "gradient-mesh",
+          "backgroundSceneGallery": "podium",
+          "backgroundSceneSpeed": "normal",
+          "backgroundSceneIntensity": "normal",
+          "backgroundSceneColors": "theme",
+          "backgroundSceneColor1": "#171717",
+          "backgroundSceneColor2": "#ffffff",
+          "backgroundSceneColor3": "#6b7280",
+          "backgroundSceneUrl": "",
+          "backgroundSceneModelUrl": "",
+          "backgroundSceneVeil": 0,
+          "backgroundSceneVeilColor": "#000000",
+          "datasetSource": "article"
+        },
+        "specials": {},
+        "responsive": {
+          "tablet": {
+            "style": {
+              "padding": "20px",
+              "gap": "20px"
+            }
+          },
+          "mobile": {
+            "style": {
+              "padding": "16px",
+              "gap": "16px"
+            }
+          }
+        },
+        "events": [],
+        "bindings": [
+          {
+            "id": "bind-href",
+            "source": "article.url",
+            "field": "specials.boundHref",
+            "target": {
+              "type": "article",
+              "id": "",
+              "kind": "article_general"
+            }
+          },
+          {
+            "id": "bind-href-label",
+            "source": "article.title",
+            "field": "specials.boundHrefLabel"
+          }
+        ]
+      },
+      "plart_5": {
+        "id": "plart_5",
+        "data": {
+          "type": "collection-media",
+          "parent": "plart_4",
+          "nodes": [],
+          "isCanvas": false,
+          "hidden": false,
+          "custom": {}
+        },
+        "style": {
+          "width": "100%",
+          "overflow": "hidden"
+        },
+        "config": {
+          "imageRatio": "auto",
+          "customImageRatioWidth": 16,
+          "customImageRatioHeight": 9,
+          "datasetSource": "article"
+        },
+        "specials": {
+          "src": "",
+          "alt": ""
+        },
+        "responsive": {},
+        "events": [],
+        "bindings": [
+          {
+            "id": "bind-image",
+            "source": "article.image",
+            "field": "specials.boundImage",
+            "target": {
+              "type": "article",
+              "id": "",
+              "kind": "media"
+            }
+          }
+        ]
+      },
+      "plart_6": {
+        "id": "plart_6",
+        "data": {
+          "type": "text-dataset",
+          "parent": "plart_4",
+          "nodes": [],
+          "isCanvas": false,
+          "hidden": false,
+          "custom": {}
+        },
+        "style": {
+          "fontSize": "20px"
+        },
+        "config": {
+          "datasetSource": "article",
+          "kind": "title",
+          "textValue": "Article title",
+          "descriptionDisplayType": "Full",
+          "descriptionLines": 3,
+          "moreText": "Show more",
+          "lessText": "Show less",
+          "icon": true,
+          "moreButtonColor": "#000000",
+          "textGlobalStyle": "text-1"
+        },
+        "specials": {
+          "htmlTag": "h4",
+          "moreButtonEnabled": false,
+          "stylePreset": "text-dataset-default"
+        },
+        "responsive": {},
+        "events": [],
+        "bindings": [
+          {
+            "id": "bind-text",
+            "source": "article.title",
+            "field": "specials.boundText",
+            "target": {
+              "type": "article",
+              "id": "",
+              "kind": "title"
+            }
+          }
+        ]
+      },
+      "plart_7": {
+        "id": "plart_7",
+        "data": {
+          "type": "text-dataset",
+          "parent": "plart_4",
+          "nodes": [],
+          "isCanvas": false,
+          "hidden": false,
+          "custom": {}
+        },
+        "style": {},
+        "config": {
+          "datasetSource": "article",
+          "kind": "summary",
+          "textValue": "Article summary",
+          "descriptionDisplayType": "Full",
+          "descriptionLines": 3,
+          "moreText": "Show more",
+          "lessText": "Show less",
+          "icon": true,
+          "moreButtonColor": "#000000",
+          "textGlobalStyle": "text-1"
+        },
+        "specials": {
+          "htmlTag": "p",
+          "moreButtonEnabled": false,
+          "stylePreset": "text-dataset-default"
+        },
+        "responsive": {},
+        "events": [],
+        "bindings": [
+          {
+            "id": "bind-text",
+            "source": "article.summary",
+            "field": "specials.boundText",
+            "target": {
+              "type": "article",
+              "id": "",
+              "kind": "summary"
+            }
+          }
+        ]
+      },
+      "plart_8": {
+        "id": "plart_8",
+        "data": {
+          "type": "text-dataset",
+          "parent": "plart_4",
+          "nodes": [],
+          "isCanvas": false,
+          "hidden": false,
+          "custom": {}
+        },
+        "style": {},
+        "config": {
+          "datasetSource": "article",
+          "kind": "date",
+          "textValue": "2026-08-13",
+          "descriptionDisplayType": "Full",
+          "descriptionLines": 3,
+          "moreText": "Show more",
+          "lessText": "Show less",
+          "icon": true,
+          "moreButtonColor": "#000000",
+          "textGlobalStyle": "text-1"
+        },
+        "specials": {
+          "htmlTag": "p",
+          "moreButtonEnabled": false,
+          "stylePreset": "text-dataset-default"
+        },
+        "responsive": {},
+        "events": [],
+        "bindings": [
+          {
+            "id": "bind-text",
+            "source": "article.date",
+            "field": "specials.boundText",
+            "target": {
+              "type": "article",
+              "id": "",
+              "kind": "date"
+            }
+          }
+        ]
+      },
+      "plart_9": {
+        "id": "plart_9",
+        "data": {
+          "type": "list-empty",
+          "parent": "plart_3",
+          "nodes": [
+            "plart_10",
+            "plart_11",
+            "plart_12"
+          ],
+          "isCanvas": true,
+          "hidden": false,
+          "custom": {}
+        },
+        "style": {
+          "display": "flex",
+          "flexDirection": "column",
+          "alignItems": "center",
+          "justifyContent": "center",
+          "gap": "12px",
+          "width": "100%",
+          "padding": "48px 24px 48px 24px"
+        },
+        "config": {},
+        "specials": {},
+        "responsive": {},
+        "events": [],
+        "bindings": []
+      },
+      "plart_10": {
+        "id": "plart_10",
+        "data": {
+          "type": "icon",
+          "parent": "plart_9",
+          "nodes": [],
+          "isCanvas": false,
+          "hidden": false,
+          "custom": {}
+        },
+        "style": {
+          "width": "fit-content",
+          "height": "fit-content",
+          "color": "#d4d4d4"
+        },
+        "config": {
+          "iconSize": 32
+        },
+        "specials": {
+          "name": "FileListLine",
+          "stylePreset": "icon-default"
+        },
+        "responsive": {},
+        "events": [],
+        "bindings": []
+      },
+      "plart_11": {
+        "id": "plart_11",
+        "data": {
+          "type": "heading",
+          "parent": "plart_9",
+          "nodes": [],
+          "isCanvas": false,
+          "hidden": false,
+          "custom": {}
+        },
+        "style": {
+          "width": "auto",
+          "height": "fit-content",
+          "fontSize": "20px",
+          "fontWeight": "600",
+          "color": "#171717",
+          "textAlign": "center"
+        },
+        "config": {
+          "textGlobalStyle": "heading-1"
+        },
+        "specials": {
+          "htmlTag": "h3",
+          "text": "No posts yet",
+          "stylePreset": "heading-default"
+        },
+        "responsive": {},
+        "events": [],
+        "bindings": []
+      },
+      "plart_12": {
+        "id": "plart_12",
+        "data": {
+          "type": "text",
+          "parent": "plart_9",
+          "nodes": [],
+          "isCanvas": false,
+          "hidden": false,
+          "custom": {}
+        },
+        "style": {
+          "width": "auto",
+          "height": "fit-content",
+          "fontSize": "14px",
+          "color": "#737373",
+          "textAlign": "center"
+        },
+        "config": {
+          "textGlobalStyle": "text-1"
+        },
+        "specials": {
+          "htmlTag": "p",
+          "text": "New stories will show up here. Check back soon.",
+          "stylePreset": "text-default"
+        },
+        "responsive": {},
+        "events": [],
+        "bindings": []
+      },
+      "plart_13": {
+        "id": "plart_13",
+        "data": {
+          "type": "flex-section",
+          "parent": "plart_1",
+          "nodes": [
+            "plart_2",
+            "plart_3"
+          ],
+          "isCanvas": true,
+          "hidden": false,
+          "custom": {}
+        },
+        "style": {
+          "display": "flex",
+          "flexDirection": "column",
+          "width": "100%",
+          "height": "fit-content",
+          "gap": "24px",
+          "paddingTop": "48px",
+          "paddingBottom": "48px"
+        },
+        "config": {
+          "backgroundSceneSource": "",
+          "backgroundSceneEffect": "gradient-mesh",
+          "backgroundSceneGallery": "podium",
+          "backgroundSceneSpeed": "normal",
+          "backgroundSceneIntensity": "normal",
+          "backgroundSceneColors": "theme",
+          "backgroundSceneColor1": "#171717",
+          "backgroundSceneColor2": "#ffffff",
+          "backgroundSceneColor3": "#6b7280",
+          "backgroundSceneUrl": "",
+          "backgroundSceneModelUrl": "",
+          "backgroundSceneVeil": 0,
+          "backgroundSceneVeilColor": "#000000"
+        },
+        "specials": {
+          "stylePreset": "container-section"
+        },
+        "responsive": {},
+        "events": [],
+        "bindings": []
+      }
+    }
   }
 } as const;
 

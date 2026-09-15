@@ -84,7 +84,8 @@ export const USUAL_PAGES: readonly UsualPage[] = [
   {
     key: 'about',
     match: ['about', 'gioi-thieu', 'giới thiệu', 've-chung-toi'],
-    why: 'Nothing says who the shop is, which is the page a first-time buyer opens before paying.',
+    why: 'Nothing says who the shop is, which is the page a first-time buyer opens before paying. ' +
+      'sb_page_create name:"Giới thiệu" opens it as a heading, a story and a picture.',
     layout: 'about',
   },
   // TWO POLICIES, NOT ONE BUCKET. These were a single entry, and it read a shop
@@ -100,7 +101,8 @@ export const USUAL_PAGES: readonly UsualPage[] = [
     ],
     why:
       'No delivery or return terms a shopper can read before paying. This is the page a buyer ' +
-      'looks for when the parcel is late and the one a dispute is settled against.',
+      'looks for when the parcel is late and the one a dispute is settled against. ' +
+      'sb_page_create with a name carrying "giao hàng" or "đổi trả" opens it as prose.',
     layout: 'policy',
   },
   {
@@ -111,7 +113,8 @@ export const USUAL_PAGES: readonly UsualPage[] = [
     ],
     why:
       'No privacy policy or terms of use. Payment providers and marketplaces ask for both ' +
-      'before they will list a shop, and a checkout form collects personal data either way.',
+      'before they will list a shop, and a checkout form collects personal data either way. ' +
+      'sb_page_create with a name carrying "bảo mật" or "điều khoản" opens it as prose.',
     layout: 'policy',
   },
   {
@@ -119,7 +122,8 @@ export const USUAL_PAGES: readonly UsualPage[] = [
     match: ['faq', 'cau-hoi', 'câu hỏi', 'hoi-dap', 'hỏi đáp', 'help', 'tro-giup', 'trợ giúp'],
     why:
       'The same handful of questions reach support one message at a time, with no page to link ' +
-      'an answer to. The accordion element is what this page is built from.',
+      'an answer to. sb_page_create name:"Câu hỏi thường gặp" opens it on the accordion, which ' +
+      'is the element this page is made of.',
     layout: 'faq',
   },
   {
@@ -133,7 +137,9 @@ export const USUAL_PAGES: readonly UsualPage[] = [
     match: ['blog', 'tin-tuc', 'tin tức', 'news', 'bai-viet', 'bài viết', 'kien-thuc', 'cẩm nang'],
     why:
       'This site has an article template, so /blog/{slug} works — but no page LISTS the ' +
-      'articles, so each one is reachable only by someone who already has its URL.',
+      'articles, so each one is reachable only by someone who already has its URL. ' +
+      'sb_page_create name:"Tin tức" opens it on a repeater already bound to them.',
+    layout: 'articles',
   },
 ];
 
