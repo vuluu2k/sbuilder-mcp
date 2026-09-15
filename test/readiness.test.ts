@@ -451,3 +451,67 @@ describe('readinessGaps() — the account page tells an agent the right shape', 
     expect(fix().length).toBeGreaterThan(80);
   });
 });
+
+/**
+ * ONE PAGE QUIETLY BECAME THE WHOLE ACCOUNT AREA.
+ *
+ * This server told agents to put login and register behind a member-gate on
+ * /account, and they did. The rule is fixed; the pages it already built are
+ * not, and nothing could SEE them — a page document carries `specials.formId`
+ * and never the KIND of form, so only the site's own form list tells them apart.
+ */
+describe('readinessGaps() — account forms stacked on one page', () => {
+  const formNode = (formId: string) => ({ data: { type: 'form' }, specials: { formId } });
+  const base = {
+    pages: [{ type: 'page', status: 'published' }],
+    liveGateways: 1,
+    shippingMethods: 1,
+    globalNodes: [],
+    globalKinds: ['header'],
+  };
+  const ids = (pageNodes: unknown[], forms: unknown) =>
+    readinessGaps({ ...base, pageNodes, forms } as never).map((g) => g.id);
+
+  const FORMS = [
+    { id: 'f_login', type: 'login' },
+    { id: 'f_register', type: 'register' },
+    { id: 'f_contact', type: 'contact' },
+  ];
+
+  it('reports a page carrying both a login and a register form', () => {
+    const got = readinessGaps({
+      ...base,
+      pageNodes: [formNode('f_login'), formNode('f_register')],
+      forms: FORMS,
+    } as never).find((g) => g.id === 'mergedAuthPage')!;
+    expect(got).toBeTruthy();
+    expect(got.problem).toMatch(/login, register/);
+    expect(got.fix).toMatch(/page_name/);
+  });
+
+  // COUNTED BY DISTINCT TYPE. A form split across segments is several nodes of
+  // ONE type, and calling that a merged page would fire on every multi-step form.
+  it('is silent on several nodes showing the SAME form', () => {
+    expect(ids([formNode('f_login'), formNode('f_login')], FORMS)).not.toContain('mergedAuthPage');
+  });
+
+  it('is silent on one account form beside an ordinary one', () => {
+    expect(ids([formNode('f_login'), formNode('f_contact')], FORMS)).not.toContain('mergedAuthPage');
+  });
+
+  // SILENT ON UNREAD DATA, the rule this whole file keeps: without the form list
+  // a formId says nothing, and guessing would fire on a site that is fine.
+  it('is silent when the form list could not be read', () => {
+    expect(ids([formNode('f_login'), formNode('f_register')], null)).not.toContain('mergedAuthPage');
+  });
+
+  it('is silent on a form whose id is not in the list at all', () => {
+    expect(ids([formNode('f_gone'), formNode('f_missing')], FORMS)).not.toContain('mergedAuthPage');
+  });
+
+  // THE LIVENESS ANCHOR. Five of the six assertions here are that NOTHING is
+  // reported; this proves the fixture can still report when it should.
+  it('still reports once the second account form is a different kind', () => {
+    expect(ids([formNode('f_login'), formNode('f_register')], FORMS)).toContain('mergedAuthPage');
+  });
+});

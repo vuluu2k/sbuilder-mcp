@@ -45,6 +45,7 @@ export type ReadinessGapId =
   | 'categoryScope'
   | 'siteChrome'
   | 'errorPage'
+  | 'mergedAuthPage'
   | 'cartCount';
 
 export interface ReadinessGap {
@@ -62,11 +63,21 @@ export interface ReadinessPage {
 
 interface NodeLike {
   data: { type: string };
+  /** Only `formId` is read — which FORM a node shows. See ReadinessInput.forms. */
+  specials?: Record<string, unknown>;
   events?: Array<{ action?: string }>;
   bindings?: Array<{ id?: string; target?: { action?: string } }>;
 }
 
 export interface ReadinessInput {
+  /**
+   * The site's forms, by TYPE; null when the list was unread.
+   *
+   * A page document carries `specials.formId` and nothing else — which form a
+   * node shows, never what KIND it is — so this list is the only way to tell a
+   * login form from a register form on a page that holds both.
+   */
+  forms?: Array<{ id?: string; type?: string }> | null;
   /** How many product categories the store has; null when the list was unread. */
   categories?: number | null;
   /** How many of them point at a page of their own; null when unread. */
@@ -215,6 +226,55 @@ export function readinessGaps(input: ReadinessInput): ReadinessGap[] {
           'storefront serves it as the BODY of a 404 — so give it the site\'s header and ' +
           'footer and a link back to the home page.',
     });
+  }
+
+  // ONE PAGE QUIETLY BECAME THE WHOLE ACCOUNT AREA.
+  //
+  // This server used to tell agents, in as many words, to put the login and the
+  // register form behind a member-gate on /account. They did. The result is a
+  // page carrying two or three different jobs, and — the part that is not a
+  // matter of taste — NEITHER JOB HAS AN ADDRESS. A header can link to one
+  // thing, an email that says "reset your password" has nowhere specific to
+  // point, and a visitor who came to register meets a login form first because
+  // that is what was stacked on top.
+  //
+  // The rule was fixed; the pages it already built were not, and nothing could
+  // see them: a page document carries `specials.formId` and never the KIND of
+  // form, so only the site's own form list can tell these apart.
+  //
+  // COUNTED BY DISTINCT TYPE, not by how many form nodes there are. A form split
+  // across segments is several nodes of ONE type and is not this defect.
+  const authTypes = new Set(['login', 'register', 'forgot', 'reset', 'verify']);
+  if (input.forms && input.forms.length > 0) {
+    const typeOf = new Map(
+      input.forms
+        .filter((f): f is { id: string; type: string } => !!f?.id && !!f?.type)
+        .map((f) => [f.id, f.type]),
+    );
+    const onPage = new Set<string>();
+    for (const n of input.pageNodes) {
+      if (n.data.type !== 'form') continue;
+      const id = n.specials?.formId;
+      const t = typeof id === 'string' ? typeOf.get(id) : undefined;
+      if (t && authTypes.has(t)) onPage.add(t);
+    }
+    if (onPage.size >= 2) {
+      const named = [...onPage].sort().join(', ');
+      gaps.push({
+        id: 'mergedAuthPage',
+        draft: false,
+        problem:
+          `This page carries ${onPage.size} different account forms (${named}). Neither has an ` +
+          'address of its own, so a header can link to only one of them, a password-reset mail ' +
+          'has nowhere specific to point, and whoever came to do the second thing meets the ' +
+          'first one stacked on top.',
+        fix:
+          'Give each its own page: sb_store action:"form" with template "login", "register" or ' +
+          '"forgot" and a page_name builds the form AND the page in one call. Leave /account ' +
+          'showing the profile behind a member-gate with audience "members", and a short ' +
+          'sign-in prompt LINKING to the login page behind audience "guests".',
+      });
+    }
   }
 
   if (!isStore(input)) return gaps;

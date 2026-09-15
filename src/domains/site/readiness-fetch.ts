@@ -31,7 +31,7 @@ export async function gatherReadiness(
   };
   const site = encodeURIComponent(siteId);
 
-  const [pageList, gateways, shipping, globals, productList, categoryList, pageLinks] =
+  const [pageList, gateways, shipping, globals, productList, categoryList, pageLinks, formList] =
     await Promise.all([
     get<{ pages?: ReadinessPage[] }>(`/api/sites/${site}/pages`),
     get<{ paymentGateways?: Array<{ enabled?: boolean; configured?: boolean }> }>(
@@ -60,6 +60,12 @@ export async function gatherReadiness(
     get<{ links?: Array<{ linkType?: string }>; pageLinks?: Array<{ linkType?: string }> }>(
       `/api/sites/${site}/page-links`,
     ),
+    // THE FORMS, BY TYPE. A page document carries only `specials.formId` — which
+    // form a node shows, never what KIND of form it is — so nothing reading a
+    // page can tell a login form from a register form without this list. That
+    // blindness is what let one page quietly become the site's whole account
+    // area, which is the shape `mergedAuthPage` reports.
+    get<{ forms?: Array<{ id?: string; type?: string }> }>(`/api/sites/${site}/forms`),
   ]);
 
   // A gateway counts only when it is BOTH enabled and configured — the editor's
@@ -115,5 +121,6 @@ export async function gatherReadiness(
     globalKinds,
     categories,
     categoryPageLinks,
+    forms: formList?.forms ?? null,
   };
 }
