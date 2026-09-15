@@ -6,6 +6,11 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.58.0] - 2026-09-15
+
+### Added
+- `sb_review` giờ báo lỗi sẵn sàng `blogCategoryPage` và `coursePage` khi site có danh mục blog hoặc khoá học nhưng chưa có trang loại `blog` hoặc `course` nào được publish, vì `/blog-categories/{slug}` và `/courses/{slug}` sẽ dùng các template đó, và mọi liên kết sẽ trả về 404 nếu thiếu — hoàn tất việc kiểm tra cho cả năm tiền tố thực thể mà storefront đăng ký.
+
 ## [0.57.0] - 2026-09-15
 
 ### Added
