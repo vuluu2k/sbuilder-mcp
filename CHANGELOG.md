@@ -6,6 +6,11 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.51.0] - 2026-09-15
+
+### Added
+- `sb_page_list` now reports which of the pages most sites carry — login, register, forgot-password, contact, about, and policy pages — this site appears to be missing, matched by name against untyped `page` rows since none of them has a page type of its own, alongside a note naming the suggestion as advice rather than a defect.
+
 ## [0.50.0] - 2026-09-15
 
 ### Changed

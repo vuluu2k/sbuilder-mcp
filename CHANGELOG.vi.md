@@ -6,6 +6,11 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.51.0] - 2026-09-15
+
+### Added
+- `sb_page_list` giờ báo cáo site này có vẻ đang thiếu những trang mà hầu hết các site thường có — đăng nhập, đăng ký, quên mật khẩu, liên hệ, giới thiệu và các trang chính sách — bằng cách so khớp theo tên với các trang loại `page` không có kiểu riêng, kèm ghi chú nói rõ đây là gợi ý chứ không phải lỗi.
+
 ## [0.50.0] - 2026-09-15
 
 ### Changed
