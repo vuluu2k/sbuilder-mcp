@@ -360,7 +360,7 @@ export function describeOperation(op: ApiOperation): Record<string, unknown> {
     };
   }
 
-  // FILLING A CATALOGUE WAS REACHABLE AND THREE FACTS ABOUT IT WERE NOT, each
+  // FILLING A CATALOGUE WAS REACHABLE AND FIVE FACTS ABOUT IT WERE NOT, each
   // failing silently. Attached to the call sheet for the same reason the
   // translation table is: this is where the agent is when it decides what to
   // send, on both credential surfaces a product can be created or replaced on.
@@ -369,6 +369,39 @@ export function describeOperation(op: ApiOperation): Record<string, unknown> {
       price:
         'Price lives on the VARIANT, not the product — variants[].priceCents. A product ' +
         'posted with no variant renders a catalogue entry nobody can buy.',
+      // MINOR UNITS, SAID WHERE THE NUMBER IS BEING WRITTEN.
+      //
+      // The fact was already in the codebase — `readiness.ts` carries it twice —
+      // but only as the FIX on a store gap that fires when the catalogue is
+      // EMPTY or has no priced product. The moment an agent creates products the
+      // gap clears, so the sentence is on screen exactly while it cannot be
+      // acted on and gone the moment it could be.
+      //
+      // MEASURED: a whole storefront built with every price 100× low. Cherry at
+      // "8.500 ₫", a 3.2M gift basket at "32.000 ₫" — read back through the
+      // renderer, published, and only caught because the numbers looked absurd
+      // to a human. Nothing refused them: `priceCents` takes any integer, and a
+      // store whose every price is wrong by the same factor looks internally
+      // consistent.
+      units:
+        'priceCents is MINOR UNITS — the storefront divides by 100, so VND 280.000 is ' +
+        "28000000. Same for compareAtCents, costCents and a shipping method's feeCents. " +
+        'Nothing refuses a wrong one, and every price wrong by the same factor looks ' +
+        'deliberate. Write one, read the rendered price, then write the rest.',
+      // THE PICKER A PRODUCT GETS WHEN NOBODY DECLARED ITS OPTIONS.
+      //
+      // `variants[].options` alone is not enough: the buy box reads
+      // `attributes` for the control, and a product with variants but no
+      // attributes renders the ELEMENT'S SEED — "Color: Red / Green / Blue",
+      // "Size: S / M / L" — on a real product page, published.
+      //
+      // MEASURED on a fruit-gift store: every one of 19 products offered Color
+      // and Size until attributes were added.
+      attributes:
+        'The variant picker comes from product.attributes — [{ name, values[] }] — not ' +
+        "from variants[].options alone. Variants without attributes render the element's " +
+        'seed ("Color: Red / Green / Blue") on the published page. Declare attributes, and ' +
+        "match each variant's options keys to them.",
       slug:
         'A colliding slug is RENAMED, not refused, and the write still answers 200/201. ' +
         'Re-running an import does not error — it DOUBLES the catalogue in silence.',
