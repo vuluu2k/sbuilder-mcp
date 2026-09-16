@@ -3,8 +3,8 @@
 
 export const TRANSLATION_SOURCE = {
   "elements": 58,
-  "pairs": 142,
-  "neverKeys": 164,
+  "pairs": 146,
+  "neverKeys": 167,
   "entityTypes": 12
 } as const;
 
@@ -40,16 +40,20 @@ export const TRANSLATABLE_SPECIALS: Record<string, string[]> = {
     "filterValues"
   ],
   "filter-checkbox": [
-    "filterValues"
+    "filterValues",
+    "filterAllLabel"
   ],
   "filter-radio": [
-    "filterValues"
+    "filterValues",
+    "filterAllLabel"
   ],
   "filter-color": [
-    "filterValues"
+    "filterValues",
+    "filterAllLabel"
   ],
   "filter-tag": [
-    "filterValues"
+    "filterValues",
+    "filterAllLabel"
   ],
   "account-info": [
     "promptText",
@@ -355,7 +359,10 @@ export const NEVER_TRANSLATED: string[] = [
   "filterColors",
   "filterExcluded",
   "filterMatch",
+  "filterMaxDepth",
+  "filterMaxValues",
   "filterRanges",
+  "filterShowAll",
   "filterSource",
   "filterTarget",
   "filterTargets",

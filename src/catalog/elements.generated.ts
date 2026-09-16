@@ -2549,7 +2549,11 @@ export const ELEMENTS: Record<string, CatalogElement> = {
         "filterArity": "",
         "filterBehavior": "filter",
         "filterTargets": [],
-        "filterRanges": []
+        "filterRanges": [],
+        "filterMaxDepth": 0,
+        "filterMaxValues": 0,
+        "filterShowAll": false,
+        "filterAllLabel": ""
       }
     },
     "inspector": [
@@ -2757,7 +2761,11 @@ export const ELEMENTS: Record<string, CatalogElement> = {
         "filterArity": "",
         "filterBehavior": "filter",
         "filterTargets": [],
-        "filterRanges": []
+        "filterRanges": [],
+        "filterMaxDepth": 0,
+        "filterMaxValues": 0,
+        "filterShowAll": false,
+        "filterAllLabel": ""
       }
     },
     "inspector": [
@@ -2966,7 +2974,11 @@ export const ELEMENTS: Record<string, CatalogElement> = {
         "filterArity": "",
         "filterBehavior": "filter",
         "filterTargets": [],
-        "filterRanges": []
+        "filterRanges": [],
+        "filterMaxDepth": 0,
+        "filterMaxValues": 0,
+        "filterShowAll": false,
+        "filterAllLabel": ""
       }
     },
     "inspector": [
@@ -3174,7 +3186,11 @@ export const ELEMENTS: Record<string, CatalogElement> = {
         "filterArity": "",
         "filterBehavior": "filter",
         "filterTargets": [],
-        "filterRanges": []
+        "filterRanges": [],
+        "filterMaxDepth": 0,
+        "filterMaxValues": 0,
+        "filterShowAll": false,
+        "filterAllLabel": ""
       }
     },
     "inspector": [
