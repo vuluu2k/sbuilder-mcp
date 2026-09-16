@@ -6,6 +6,11 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.60.4] - 2026-09-16
+
+### Internal
+- Catalog được sinh ra giờ được làm mới dựa trên một bản checkout hiện tại của nền tảng (một field `linkKind` mới trên registry filter source); không có vocabulary hay kết quả tool nào thay đổi, chỉ có số đếm của bước quét dead-key và shape.
+
 ## [0.60.3] - 2026-09-16
 
 ### Added
