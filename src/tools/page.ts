@@ -1337,6 +1337,18 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
               (t.servedRole ? `served as the site's ${t.servedRole}` : 'an address you choose'),
           ]),
         ),
+        // NOT A LIST OF THE PAGES A SITE NEEDS, and this line is here because
+        // the table above reads like one. A type is a fixed ADDRESS the
+        // storefront routes by; most of a real website has no type at all —
+        // login, register, contact, about, the policies, and whatever else this
+        // particular shop sells or must say — and every one of those is an
+        // ordinary `page`. Twelve is the number of routed types, never the
+        // number of pages.
+        page_types_note:
+          'Types are the storefront\'s fixed addresses, not an inventory of a site. Everything ' +
+          'else — login, register, contact, about, policies, and anything this shop needs — is ' +
+          'type "page" with an address you choose, and there is no limit to how many. ' +
+          'usually_also below lists the ones most sites have; it is a floor, not a ceiling.',
         ...(missing.length
           ? {
               usually_also: Object.fromEntries(missing.map((m) => [m.key, m.why])),
