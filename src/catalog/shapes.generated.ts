@@ -4,12 +4,12 @@
 import type { RequestShape } from './types.js';
 
 export const SHAPE_SOURCE = {
-  "writeOperations": 235,
-  "shaped": 176,
-  "fromHandlers": 176,
+  "writeOperations": 236,
+  "shaped": 177,
+  "fromHandlers": 177,
   "fromSwaggerOnly": 0,
   "withReadOnly": 26,
-  "structsRead": 1697
+  "structsRead": 1701
 } as const;
 
 export const REQUEST_SHAPES: Record<string, RequestShape> = {
@@ -3023,6 +3023,28 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
     ],
     "source": "go",
     "goType": "(inline)"
+  },
+  "put:/api/sites/{siteId}/ai/settings": {
+    "fields": [
+      {
+        "name": "provider",
+        "type": "string"
+      },
+      {
+        "name": "model",
+        "type": "string"
+      },
+      {
+        "name": "apiKey",
+        "type": "string | null"
+      },
+      {
+        "name": "baseUrl",
+        "type": "string"
+      }
+    ],
+    "source": "go",
+    "goType": "editoragent.SettingsInput"
   },
   "post:/api/sites/{siteId}/fonts": {
     "fields": [

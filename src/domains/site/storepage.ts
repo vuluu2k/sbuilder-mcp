@@ -2,8 +2,7 @@ import {
   COMPLETION_HEADLINE,
   COMPLETION_HEADLINE_SENTINEL,
   PAGE_LAYOUT_SEEDS,
-  STORE_PAGE_SEEDS,
-} from '../../catalog/storepages.generated.js';
+  STORE_PAGE_SEEDS } from '../../catalog/storepages.generated.js';
 
 /**
  * WHAT A NEW STORE PAGE OPENS WITH — for an agent, as for a merchant.
@@ -34,6 +33,7 @@ export function hasSeed(type: string | undefined): boolean {
 export function seededTypes(): string[] {
   return Object.keys(STORE_PAGE_SEEDS);
 }
+
 
 /**
  * The document a new page of `type` opens with, or null.

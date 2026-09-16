@@ -1139,6 +1139,97 @@ export const PAGE_LAYOUT_SEEDS: Record<string, { schema_version: number; root_no
 } as const;
 
 /**
+ * EVERY page type the platform has, and what each one is FOR.
+ *
+ * A storefront is not one page: most of these are TEMPLATES, and a missing one
+ * means a whole family of addresses serves nothing. `routePattern` is where the
+ * type is served (absent = the author names the address), `ownSlug` says whether
+ * the author names it, `servedRole` marks the two that are served by ROLE rather
+ * than by address, and `app` names the builtin app a type needs installed.
+ */
+export const PAGE_TYPES: readonly {
+  type: string;
+  group: string;
+  ownSlug: boolean;
+  routePattern?: string;
+  servedRole?: string;
+  app?: string;
+}[] = [
+  {
+    "type": "page",
+    "group": "main",
+    "ownSlug": true
+  },
+  {
+    "type": "product",
+    "group": "store",
+    "ownSlug": false,
+    "routePattern": "/products/{slug}"
+  },
+  {
+    "type": "category",
+    "group": "store",
+    "ownSlug": false,
+    "routePattern": "/collections/{slug}"
+  },
+  {
+    "type": "course",
+    "group": "store",
+    "ownSlug": false,
+    "routePattern": "/courses/{slug}",
+    "app": "courses"
+  },
+  {
+    "type": "search",
+    "group": "main",
+    "ownSlug": false,
+    "routePattern": "/search"
+  },
+  {
+    "type": "checkout",
+    "group": "store",
+    "ownSlug": false,
+    "routePattern": "/checkout"
+  },
+  {
+    "type": "complete",
+    "group": "store",
+    "ownSlug": false,
+    "routePattern": "/checkout/complete"
+  },
+  {
+    "type": "account",
+    "group": "main",
+    "ownSlug": false,
+    "routePattern": "/account"
+  },
+  {
+    "type": "blog",
+    "group": "blog",
+    "ownSlug": false,
+    "routePattern": "/blog-categories/{slug}"
+  },
+  {
+    "type": "post",
+    "group": "blog",
+    "ownSlug": false,
+    "routePattern": "/blog/{slug}"
+  },
+  {
+    "type": "error",
+    "group": "error",
+    "ownSlug": false,
+    "servedRole": "notFound"
+  },
+  {
+    "type": "maintain",
+    "group": "maintain",
+    "ownSlug": false,
+    "servedRole": "maintenance"
+  }
+] as const;
+
+/**
  * The document an ordinary page opens with for a chosen LAYOUT.
  *
  * Keyed by purpose, not by type: every content page is type `page`, so the

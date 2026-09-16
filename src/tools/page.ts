@@ -19,7 +19,14 @@ import {
 import { baseOnlyNote } from '../domains/site/baseonly.js';
 import { detachNote, presetIdOf, presetLayer } from '../domains/site/theme.js';
 import { inertHintsFor } from '../domains/site/inert.js';
-import { hasSeed, layoutDocument, seedDocument, seedSummary, seededTypes } from '../domains/site/storepage.js';
+import {
+  hasSeed,
+  layoutDocument,
+  seedDocument,
+  seedSummary,
+  seededTypes,
+} from '../domains/site/storepage.js';
+import { PAGE_TYPES } from '../catalog/storepages.generated.js';
 import {
   animationNote,
   deadKeyNote,
@@ -1313,6 +1320,23 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
       const missing = missingUsualPages(raw.pages ?? null);
       return text({
         ...(projectList(raw, 'pages', PAGE_FIELDS) as Record<string, unknown>),
+        // EVERY TYPE THE PLATFORM HAS, and the address each one answers at.
+        //
+        // Here rather than in `sb_page_create`'s argument description, because
+        // that string rides in `tools/list` and the token budget caps it — the
+        // table put the payload over twice while being trimmed. It is also the
+        // better home: an agent reads this while ORIENTING, before it has
+        // decided what to build, and a type it has never heard of is exactly
+        // what it cannot ask for. `sb_page_create` used to name six of twelve
+        // from a hand-typed string, so search, account, blog, complete, error
+        // and maintain were unreachable to anyone who only read the tool.
+        page_types: Object.fromEntries(
+          PAGE_TYPES.map((t) => [
+            t.type,
+            t.routePattern ??
+              (t.servedRole ? `served as the site's ${t.servedRole}` : 'an address you choose'),
+          ]),
+        ),
         ...(missing.length
           ? {
               usually_also: Object.fromEntries(missing.map((m) => [m.key, m.why])),
@@ -1337,7 +1361,10 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
       inputSchema: {
       site_id: z.string().optional(),
       name: z.string(),
-      type: z.string().optional().describe('page (default), checkout, product, category, post, course'),
+      type: z
+        .string()
+        .optional()
+        .describe('page (default); sb_page_list lists every type and where each is served'),
       slug: z.string().optional(),
       is_homepage: z.boolean().optional(),
       settings: z.record(z.unknown()).optional(),

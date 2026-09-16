@@ -3,10 +3,10 @@
 import type { ApiOperation } from './types.js';
 
 export const SWAGGER_SOURCE = {
-  "operations": 525,
+  "operations": 527,
   "definitions": 107,
-  "bodyCarrying": 193,
-  "bodyUndescribed": 74,
+  "bodyCarrying": 195,
+  "bodyUndescribed": 76,
   "generatedFrom": "server/docs/swagger.json"
 } as const;
 
@@ -3355,6 +3355,62 @@ export const API_OPERATIONS: ApiOperation[] = [
         "required": true,
         "type": "object",
         "description": "question (required), history (prior turns: role user|assistant, text) and context (the selected element the agent may propose edits to)"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/sites/{siteId}/ai/settings",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/ai/settings",
+    "tags": [
+      "sites"
+    ],
+    "summary": "Read or replace this site's own AI credentials",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "settings",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "provider, model, baseUrl and apiKey (PUT only; omit apiKey to keep the stored one, send \\"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "put:/api/sites/{siteId}/ai/settings",
+    "method": "PUT",
+    "path": "/api/sites/{siteId}/ai/settings",
+    "tags": [
+      "sites"
+    ],
+    "summary": "Read or replace this site's own AI credentials",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "settings",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "provider, model, baseUrl and apiKey (PUT only; omit apiKey to keep the stored one, send \\"
       }
     ],
     "bodyDescribed": false,

@@ -3457,6 +3457,69 @@ export type FormTemplateKey = keyof typeof FORM_TEMPLATES;
   // i18n rather than defaulted here. Defaulting would hardcode English into a
   // seeded page and ship the exact defect `default_seed_copy` exists to report —
   // and the platform already ships the sentence in both languages.
+  // EVERY PAGE TYPE THE PLATFORM HAS, and what each one is FOR.
+  //
+  // `sb_page_create` used to describe its `type` argument with a hand-typed
+  // string — "page (default), checkout, product, category, post, course" — six
+  // of the platform's twelve. An agent reading it could not create a search
+  // page, an account page, a blog listing, an order-complete page, a 404 body
+  // or a maintenance page, and had no way to learn they exist. Those are
+  // TEMPLATES: without one, a whole family of storefront URLs serves nothing.
+  //
+  // Read from `PAGE_TYPE_META`, which already carries every field the answer
+  // needs — the group it files under, whether the author names its slug, the
+  // address it is served at, and the app that provides it. A hand list drifted
+  // 6/12; a generated one cannot.
+  const pageTypes: {
+    type: string;
+    group: string;
+    ownSlug: boolean;
+    routePattern?: string;
+    servedRole?: string;
+    app?: string;
+  }[] = [];
+  {
+    const src = readFileSync(
+      resolve(repo, 'editor/src/features/pages/pageTypes.ts'),
+      'utf8',
+    );
+    const block = /export const PAGE_TYPE_META[\s\S]*?\n\];/.exec(src);
+    if (!block) {
+      console.error('PAGE_TYPE_META is gone from editor/src/features/pages/pageTypes.ts');
+      process.exit(1);
+    }
+    // meta(type, icon, group, ownSlug, routePattern?, servedRole?, app?)
+    const call = /meta\(\s*'([a-zA-Z]+)'\s*,\s*[A-Za-z0-9_]+\s*,\s*'([a-zA-Z]+)'\s*,\s*(true|false)\s*(?:,\s*([^,)]+))?\s*(?:,\s*([^,)]+))?\s*(?:,\s*([^,)]+))?\s*\)/g;
+    const lit = (raw?: string): string | undefined => {
+      const t = raw?.trim();
+      if (!t || t === 'undefined') return undefined;
+      const m = /^'([^']*)'$/.exec(t);
+      return m ? m[1] : undefined;
+    };
+    for (const m of block[0].matchAll(call)) {
+      pageTypes.push({
+        type: m[1],
+        group: m[2],
+        ownSlug: m[3] === 'true',
+        routePattern: lit(m[4]),
+        servedRole: lit(m[5]),
+        app: lit(m[6]),
+      });
+    }
+    // The declared union is the authority on COUNT; the meta list is the
+    // authority on detail. A mismatch means the regex fell behind the file's
+    // spelling, and shipping the subset is how this drifted in the first place.
+    const union = /export const PAGE_TYPES = \[([\s\S]*?)\] as const;/.exec(src);
+    const declared = union ? [...union[1].matchAll(/'([a-zA-Z]+)'/g)].map((m) => m[1]) : [];
+    const missing = declared.filter((t) => !pageTypes.some((p) => p.type === t));
+    if (!declared.length || missing.length) {
+      console.error(
+        `PAGE_TYPE_META parse recovered ${pageTypes.length} of ${declared.length} page types` +
+          (missing.length ? ` — missing ${missing.join(', ')}` : ''),
+      );
+      process.exit(1);
+    }
+  }
   const completionHeadline: Record<string, string> = {};
   for (const lang of ['vi', 'en']) {
     const raw = JSON.parse(
@@ -3524,6 +3587,24 @@ export const PAGE_LAYOUT_SEEDS: Record<string, { schema_version: number; root_no
   )} as const;
 
 /**
+ * EVERY page type the platform has, and what each one is FOR.
+ *
+ * A storefront is not one page: most of these are TEMPLATES, and a missing one
+ * means a whole family of addresses serves nothing. \`routePattern\` is where the
+ * type is served (absent = the author names the address), \`ownSlug\` says whether
+ * the author names it, \`servedRole\` marks the two that are served by ROLE rather
+ * than by address, and \`app\` names the builtin app a type needs installed.
+ */
+export const PAGE_TYPES: readonly {
+  type: string;
+  group: string;
+  ownSlug: boolean;
+  routePattern?: string;
+  servedRole?: string;
+  app?: string;
+}[] = ${JSON.stringify(pageTypes, null, 2)} as const;
+
+/**
  * The document an ordinary page opens with for a chosen LAYOUT.
  *
  * Keyed by purpose, not by type: every content page is type \`page\`, so the
@@ -3539,7 +3620,7 @@ export const STORE_PAGE_SEEDS: Record<string, { schema_version: number; root_nod
 `;
   emit(resolve(process.cwd(), 'src/catalog/storepages.generated.ts'), storeOut);
   console.error(
-    `${VERB} storepages.generated.ts: ${Object.keys(storeSeeds).length} seeded page types (` +
+    `${VERB} storepages.generated.ts: ${pageTypes.length} page types, ${Object.keys(storeSeeds).length} seeded (` +
       Object.entries(storeSeeds)
         .map(([t, d]) => `${t} ${Object.keys((d as { nodes: object }).nodes).length}`)
         .join(', ') +
