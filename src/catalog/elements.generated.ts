@@ -36917,6 +36917,38 @@ export const WRITE_PRECONDITIONS: WritePrecondition[] = [
       }
     ],
     "otherwise": "no extra row is drawn. It is the way BACK OUT of a browse tree — a link to the category the page is serving — so it needs the page to be followed and the rows to be links. Under in-place filtering, \"everything\" is already what an untouched filter shows."
+  },
+  {
+    "key": "filterMatch",
+    "value": "all",
+    "types": [
+      "filter-checkbox",
+      "filter-radio",
+      "filter-color",
+      "filter-tag"
+    ],
+    "requires": [
+      {
+        "key": "filterSource",
+        "anyOf": [
+          "category",
+          "attribute",
+          "tag",
+          "blog_category",
+          "course_tag"
+        ]
+      },
+      {
+        "key": "filterBehavior",
+        "anyOf": [
+          "filter",
+          "navigate",
+          "",
+          null
+        ]
+      }
+    ],
+    "otherwise": "the filter combines ticked values with OR, as it always did. Both predicates IGNORE the mode outside these cases rather than honouring it — a product holds ONE brand, one price and one stock state, so \"match all\" on two ticked values could only return an empty shelf, and a stale URL degrades to the ordinary OR instead of to a blank page."
   }
 ];
 

@@ -494,6 +494,28 @@ export function deadKeyNote(namespace: string, key: string): string | null {
  * not have, and a newer deployment may honour a combination this catalog was
  * generated before. The sentence says what the PAGE does, never "invalid".
  */
+/**
+ * One clause against one stored value — a MIRROR of `holds` in
+ * schema/src/filters/preconditions.ts, and the two must agree.
+ *
+ * `null` in a clause means NOT SET, which is a real state rather than a hole:
+ * a node written before a key existed does not carry it, and both renderers
+ * then read their own fallback. Without this mapping the two copies disagreed
+ * within an hour of being written — this one called a perfectly good tag filter
+ * broken, which is a FALSE POSITIVE and worse than the silence the whole
+ * mechanism replaced, because a caller warned about correct work stops reading
+ * the warnings.
+ *
+ * It is a copy because this package has no runtime dependency on the schema —
+ * the table arrives as generated data. The cases that separate the two are
+ * asserted on both sides (`test/write-preconditions.test.ts` here,
+ * `schema/test/filter-preconditions.test.ts` there) rather than left to the
+ * reading.
+ */
+function holdsClause(c: { anyOf: (string | boolean | null)[] }, stored: unknown): boolean {
+  return c.anyOf.includes(stored === undefined ? null : (stored as string | boolean));
+}
+
 export function preconditionNotes(
   type: string,
   specials: Readonly<Record<string, unknown>>,
@@ -502,14 +524,14 @@ export function preconditionNotes(
   for (const p of WRITE_PRECONDITIONS) {
     if (!p.types.includes(type)) continue;
     if (specials[p.key] !== p.value) continue;
-    const missing = p.requires.filter(
-      (c) => !c.anyOf.includes(specials[c.key] as string | boolean),
-    );
+    const missing = p.requires.filter((c) => !holdsClause(c, specials[c.key]));
     if (missing.length === 0) continue;
     const held = missing
       .map((c) => {
         const now = specials[c.key];
-        const want = c.anyOf.map((v) => JSON.stringify(v)).join(' or ');
+        const want = c.anyOf
+          .map((v) => (v === null ? 'to be left unset' : JSON.stringify(v)))
+          .join(' or ');
         // An ABSENT key is not `null`, and saying so would send a caller looking
         // for a null they never wrote. The platform's own default applies here,
         // which is a different thing to fix than a wrong value.

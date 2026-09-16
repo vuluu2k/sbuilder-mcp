@@ -67,6 +67,60 @@ describe('a combination that is legal key by key and does nothing', () => {
     expect(note).not.toContain('null');
   });
 
+  it('reads an ABSENT neighbour as the state the renderers infer', () => {
+    // THE CASE THAT SEPARATED THE TWO COPIES. `holdsClause` here mirrors
+    // `holds` in schema/src/filters/preconditions.ts, and within an hour of
+    // being written this one lacked the absent→null mapping and called a
+    // perfectly good tag filter broken. A FALSE POSITIVE is worse than the
+    // silence this mechanism replaced: a caller warned about correct work stops
+    // reading the warnings.
+    //
+    // `filterBehavior` unset is not "event", so a match mode applies exactly as
+    // it would on a stored "filter".
+    expect(
+      preconditionNotes('filter-checkbox', { filterSource: 'tag', filterMatch: 'all' }),
+    ).toEqual([]);
+    // …and one key apart, the case it must still catch.
+    expect(
+      preconditionNotes('filter-checkbox', {
+        filterSource: 'tag',
+        filterMatch: 'all',
+        filterBehavior: 'event',
+      }),
+    ).toHaveLength(1);
+  });
+
+  it('catches a match mode on a source where a product holds ONE value', () => {
+    // The config dialog hides this row where it is meaningless, so an AUTHOR
+    // cannot reach it — which is why it belongs in the table. This catalog
+    // publishes `all | any` for every filter element and says nothing about
+    // where the mode means something, so the surface with no picker to hide is
+    // the one that could write it.
+    const [note] = preconditionNotes('filter-checkbox', {
+      filterSource: 'brand',
+      filterMatch: 'all',
+    });
+    expect(note).toContain('filterMatch');
+    expect(note).toContain('brand');
+    expect(note).toContain('OR');
+  });
+
+  it('spells an accepted "not set" in words, never as the null token', () => {
+    // THE CLAUSE HAS TO BE ONE THAT IS ACTUALLY REPORTED. The brand case above
+    // reports the SOURCE clause, which carries no null, so asserting there
+    // proved nothing — it stayed green with the wording reverted. This case
+    // reports the BEHAVIOUR clause, whose accepted states include "not set",
+    // and "needs … or null" would send a caller looking for a null to write.
+    const [note] = preconditionNotes('filter-checkbox', {
+      filterSource: 'tag',
+      filterMatch: 'all',
+      filterBehavior: 'event',
+    });
+    expect(note).toContain('filterBehavior');
+    expect(note).toContain('left unset');
+    expect(note).not.toContain('null');
+  });
+
   it('tells a shape that will never read the setting from one missing a neighbour', () => {
     const shape = unsupportedSettingNote('select', 'filterValueMode', 'auto');
     expect(shape).toContain('not a setting select reads');
