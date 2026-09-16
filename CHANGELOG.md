@@ -6,6 +6,14 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.60.0] - 2026-09-16
+
+### Added
+- `sb_page_list` now returns a `page_types` table naming every one of the platform's twelve page types and the address or role each is served at, generated from the platform's own page-type metadata, since `sb_page_create` previously only described six of them (page, checkout, product, category, post, course) in its argument text, leaving search, account, blog, complete, error, and maintain pages undiscoverable to an agent that only read the tool.
+
+### Changed
+- `sb_page_create`'s `type` argument now points to `sb_page_list` for the full set of page types instead of naming a partial list inline.
+
 ## [0.59.3] - 2026-09-15
 
 ### Changed

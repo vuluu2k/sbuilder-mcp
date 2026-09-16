@@ -6,6 +6,14 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.60.0] - 2026-09-16
+
+### Added
+- `sb_page_list` giờ trả về bảng `page_types` nêu tên cả mười hai loại trang của nền tảng cùng địa chỉ hoặc vai trò mà mỗi loại được phục vụ, sinh ra từ chính metadata loại trang của nền tảng, vì trước đó `sb_page_create` chỉ mô tả sáu trong số đó (page, checkout, product, category, post, course) trong phần mô tả tham số, khiến các trang search, account, blog, complete, error và maintain không thể được khám phá bởi một agent chỉ đọc mô tả của tool.
+
+### Changed
+- Tham số `type` của `sb_page_create` giờ trỏ tới `sb_page_list` để xem đầy đủ các loại trang thay vì liệt kê một danh sách không đầy đủ ngay trong mô tả.
+
 ## [0.59.3] - 2026-09-15
 
 ### Changed
