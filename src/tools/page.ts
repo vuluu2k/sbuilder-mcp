@@ -32,6 +32,8 @@ import {
   deadKeyNote,
   unknownValueNote,
   unknownWriteNote,
+  preconditionNotes,
+  unsupportedSettingNote,
 } from '../domains/site/vocabulary.js';
 import { skinLevelNote } from '../domains/site/fieldskin.js';
 import { siteTheme } from '../domains/site/theme-fetch.js';
@@ -887,6 +889,28 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
             if (!n) continue;
             const once = ctx.notices.once(`value:${type}.${e.namespace}.${k}=${JSON.stringify(v)}`, n);
             if (once) valueNotes.push(once);
+          }
+          // …AND THE ONE A PER-KEY TABLE CANNOT GIVE: values that are each legal
+          // and mean nothing TOGETHER. `filterValueMode: "auto"` with
+          // `filterSource: "blog_category"` passed every check above and
+          // published a filter that renders nothing.
+          //
+          // Asked of the node AS IT WILL BE, not of the write: the node may
+          // already carry the neighbour this write needs, and the write may
+          // supply the neighbour a stored value was missing — so a question
+          // about one key alone answers the wrong thing in both directions.
+          if (e.namespace === 'specials') {
+            const after = { ...(d.doc.nodes[e.id]?.specials ?? {}), ...e.keys };
+            for (const [k, v] of Object.entries(e.keys)) {
+              const un = unsupportedSettingNote(type, k, v);
+              if (!un) continue;
+              const once = ctx.notices.once(`unsupported:${type}.${k}=${JSON.stringify(v)}`, un);
+              if (once) valueNotes.push(once);
+            }
+            for (const n of preconditionNotes(type, after)) {
+              const once = ctx.notices.once(`precondition:${type}:${n.slice(0, 60)}`, n);
+              if (once) valueNotes.push(once);
+            }
           }
         }
         // AND THE QUIETER ONE: a key an element SEEDS that no renderer anywhere

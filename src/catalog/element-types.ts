@@ -192,3 +192,32 @@ export interface DeadKey {
   /** Every element whose `meta.defaults` seeds it, sorted. */
   seededBy: string[];
 }
+
+/** One neighbour a setting needs, and the values that satisfy it. */
+export interface PreconditionClause {
+  key: string;
+  anyOf: (string | boolean)[];
+}
+
+/**
+ * A setting that is legal on its own and MEANINGLESS without its neighbours.
+ *
+ * The catalog's other tables publish one key's legal values each, which cannot
+ * say "these two are legal apart and do nothing together" — and that is a real
+ * write an agent can make: `filterValueMode: "auto"` with `filterSource:
+ * "blog_category"` stores, saves, publishes and renders an empty filter, with
+ * no error at any layer.
+ *
+ * `otherwise` is what the page DOES when a clause fails, never "this is
+ * invalid": the platform stores what it is given, so a refusal would invent a
+ * rule it does not have.
+ */
+export interface WritePrecondition {
+  key: string;
+  value: string | boolean;
+  /** Element types whose renderer honours it at all. */
+  types: string[];
+  /** Every clause must hold. */
+  requires: PreconditionClause[];
+  otherwise: string;
+}

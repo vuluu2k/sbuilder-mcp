@@ -1,5 +1,7 @@
 import { DEAD_KEYS } from '../../catalog/deadkeys.generated.js';
-import { ANIMATION, CONFIG_VALUES, ELEMENT_VALUES } from '../../catalog/elements.generated.js';
+import { ANIMATION, CONFIG_VALUES, ELEMENT_VALUES,
+  WRITE_PRECONDITIONS,
+} from '../../catalog/elements.generated.js';
 import type { DeadKey, ValueVocabulary } from '../../catalog/element-types.js';
 
 /**
@@ -470,5 +472,77 @@ export function deadKeyNote(namespace: string, key: string): string | null {
     'error and renders exactly as it did before; no value for it does anything. The inspector ' +
     'draws no row for it either, so only an agent can reach it. Nothing here can fix that — the ' +
     `fix is upstream, in schema/src/elements/${dead.seededBy[0]}/meta.ts.`
+  );
+}
+
+/**
+ * THE WARNING A PER-KEY VOCABULARY CANNOT GIVE.
+ *
+ * Every table above publishes ONE key's legal values, so a write whose values
+ * are each legal passes in silence — and several combinations in this platform
+ * are legal apart and meaningless together. `filterValueMode: "auto"` with
+ * `filterSource: "blog_category"` is the one that prompted this: both values
+ * are real, the pair stores, saves, publishes, and renders an empty filter,
+ * with no error at any layer. A caller had no way to see it coming.
+ *
+ * Takes the node AS IT WILL BE — the caller merges its write in first — because
+ * these are questions about the finished node. Asking about one key alone is
+ * exactly the blindness being fixed.
+ *
+ * A WARNING AND NEVER A REFUSAL, the rule its siblings above already follow:
+ * the platform stores what it is given, so refusing would invent a rule it does
+ * not have, and a newer deployment may honour a combination this catalog was
+ * generated before. The sentence says what the PAGE does, never "invalid".
+ */
+export function preconditionNotes(
+  type: string,
+  specials: Readonly<Record<string, unknown>>,
+): string[] {
+  const out: string[] = [];
+  for (const p of WRITE_PRECONDITIONS) {
+    if (!p.types.includes(type)) continue;
+    if (specials[p.key] !== p.value) continue;
+    const missing = p.requires.filter(
+      (c) => !c.anyOf.includes(specials[c.key] as string | boolean),
+    );
+    if (missing.length === 0) continue;
+    const held = missing
+      .map((c) => {
+        const now = specials[c.key];
+        const want = c.anyOf.map((v) => JSON.stringify(v)).join(' or ');
+        // An ABSENT key is not `null`, and saying so would send a caller looking
+        // for a null they never wrote. The platform's own default applies here,
+        // which is a different thing to fix than a wrong value.
+        const has = now === undefined ? 'is not set' : `is ${JSON.stringify(now)}`;
+        return `${c.key} ${has}, and this needs ${want}`;
+      })
+      .join('; ');
+    out.push(
+      `specials.${p.key} = ${JSON.stringify(p.value)} does nothing on this node: ${held}. ` +
+        `Left as it is, ${p.otherwise}`,
+    );
+  }
+  return out;
+}
+
+/**
+ * The same question for a shape that does not honour the setting AT ALL.
+ *
+ * Split from the clause check because the answer is different in kind: a
+ * missing neighbour is something the caller can fix with another write, while a
+ * `select` will never read the auto value mode however the rest of the node is
+ * arranged.
+ */
+export function unsupportedSettingNote(type: string, key: string, value: unknown): string | null {
+  const p = WRITE_PRECONDITIONS.find((x) => x.key === key && x.value === value);
+  if (!p || p.types.includes(type)) return null;
+  // NOT `p.otherwise`. That sentence explains what a node MISSING A NEIGHBOUR
+  // renders as, and borrowing it here would hand a caller the wrong diagnosis —
+  // it would send them to fix a sibling key on a shape that will never read
+  // this one however the rest of the node is arranged.
+  return (
+    `specials.${key} = ${JSON.stringify(value)} is not a setting ${type} reads — ` +
+    `only ${p.types.join(', ')} honour it. It stores, saves and publishes with no error, ` +
+    `and this element's renderer never looks at it.`
   );
 }

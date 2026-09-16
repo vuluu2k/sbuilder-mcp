@@ -4,9 +4,9 @@
 import type { RequestShape } from './types.js';
 
 export const SHAPE_SOURCE = {
-  "writeOperations": 237,
-  "shaped": 178,
-  "fromHandlers": 178,
+  "writeOperations": 238,
+  "shaped": 179,
+  "fromHandlers": 179,
   "fromSwaggerOnly": 0,
   "withReadOnly": 26,
   "structsRead": 1726
@@ -3039,6 +3039,20 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
         "name": "verifies",
         "type": "boolean",
         "note": "Verifies says this client answers the `verify` round trip."
+      }
+    ],
+    "source": "go",
+    "goType": "(inline)"
+  },
+  "post:/api/sites/{siteId}/ai/tool-results": {
+    "fields": [
+      {
+        "name": "id",
+        "type": "string"
+      },
+      {
+        "name": "result",
+        "type": "string"
       }
     ],
     "source": "go",

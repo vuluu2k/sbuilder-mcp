@@ -3,10 +3,10 @@
 import type { ApiOperation } from './types.js';
 
 export const SWAGGER_SOURCE = {
-  "operations": 530,
+  "operations": 531,
   "definitions": 107,
-  "bodyCarrying": 196,
-  "bodyUndescribed": 77,
+  "bodyCarrying": 197,
+  "bodyUndescribed": 78,
   "generatedFrom": "server/docs/swagger.json"
 } as const;
 
@@ -3488,6 +3488,34 @@ export const API_OPERATIONS: ApiOperation[] = [
         "required": false,
         "type": "object",
         "description": "provider, model, baseUrl and apiKey (PUT only; omit apiKey to keep the stored one, send \\"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/api/sites/{siteId}/ai/tool-results",
+    "method": "POST",
+    "path": "/api/sites/{siteId}/ai/tool-results",
+    "tags": [
+      "sites"
+    ],
+    "summary": "Deliver the result of a client-side tool call",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "result",
+        "in": "body",
+        "required": true,
+        "type": "object",
+        "description": "id (the tool_request's own id, from the SSE event) and result (what the tool answered, as a string)"
       }
     ],
     "bodyDescribed": false,
