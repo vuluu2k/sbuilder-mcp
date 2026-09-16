@@ -6,6 +6,13 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.60.3] - 2026-09-16
+
+### Added
+- `sb_traits_for` and `sb_set` now recognize `filterShowAll` and `filterAllLabel` on the four option-list filter elements (`filter-checkbox`, `filter-radio`, `filter-color`, `filter-tag`), the leading "everything in this category" row a navigate filter can carry and the label it shows.
+- `sb_traits_for` and `sb_set` now recognize `filterMaxDepth` and `filterMaxValues` on the same four filter elements, the two limits a category filter's browse tree can carry, seeded at 0 to match what both renderers already infer from an absent key.
+- `filterAllLabel` is now a translatable special on the four filter elements, since it is copy a shopper reads.
+
 ## [0.60.2] - 2026-09-16
 
 ### Added

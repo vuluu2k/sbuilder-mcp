@@ -6,6 +6,13 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.60.3] - 2026-09-16
+
+### Added
+- `sb_traits_for` và `sb_set` giờ nhận diện `filterShowAll` và `filterAllLabel` trên bốn element bộ lọc dạng danh sách tùy chọn (`filter-checkbox`, `filter-radio`, `filter-color`, `filter-tag`) — dòng dẫn đầu "tất cả trong danh mục này" mà một bộ lọc kiểu navigate có thể mang, cùng nhãn nó hiển thị.
+- `sb_traits_for` và `sb_set` giờ nhận diện `filterMaxDepth` và `filterMaxValues` trên cùng bốn element bộ lọc đó — hai giới hạn mà cây duyệt của một bộ lọc danh mục có thể mang, được gieo sẵn giá trị 0 để khớp với những gì cả hai renderer vốn đã suy ra khi thiếu key này.
+- `filterAllLabel` giờ là một special có thể dịch trên bốn element bộ lọc, vì đây là nội dung mà khách mua hàng đọc được.
+
 ## [0.60.2] - 2026-09-16
 
 ### Added
