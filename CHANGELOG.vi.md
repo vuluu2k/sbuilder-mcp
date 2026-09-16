@@ -6,6 +6,14 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.60.2] - 2026-09-16
+
+### Added
+- `sb_traits_for` và `sb_set` giờ liệt kê `navigate` là giá trị hợp lệ của `filterBehavior` trên bốn element bộ lọc dạng danh sách tùy chọn (`filter-checkbox`, `filter-radio`, `filter-color`, `filter-tag`) — biến một bộ lọc thành một liên kết thay vì cập nhật query — chỉ giới hạn ở bốn element đó vì renderer của `select` chỉ đọc `event`, nếu ghi `navigate` vào đó thì lệnh vẫn được chấp nhận nhưng không làm gì cả.
+- `sb_traits_for` và `sb_set` giờ liệt kê `auto` là giá trị hợp lệ của `filterValueMode` trên mọi element bộ lọc, một bộ lọc danh mục đi theo đúng trang đang hiển thị.
+- `sb_api_find` và `sb_api_call` giờ với tới được lịch sử hội thoại của trợ lý biên tập: liệt kê các hội thoại đã lưu của một site, đọc một hội thoại theo id, và liệt kê các model mà một nhà cung cấp sẽ chạy cho key của site đó.
+- Bảng mô tả endpoint gửi tin nhắn của trợ lý giờ ghi thêm bốn trường body: `conversationId` để tiếp tục một luồng hội thoại đã có, `images` là các URL ảnh mà model cần xem, `clientTools` là các hàm phía trình duyệt mà model có thể gọi, và `verifies` cho biết client này có trả lời vòng xác minh (verify) hay không.
+
 ## [0.60.1] - 2026-09-16
 
 ### Fixed

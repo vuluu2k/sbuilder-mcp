@@ -6,6 +6,14 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.60.2] - 2026-09-16
+
+### Added
+- `sb_traits_for` and `sb_set` now list `navigate` as a legal `filterBehavior` value on the four option-list filter elements (`filter-checkbox`, `filter-radio`, `filter-color`, `filter-tag`), turning a filter into a link instead of a query update, scoped to those four because `select`'s own renderer only reads `event` and a `navigate` write to it would be accepted and silently do nothing.
+- `sb_traits_for` and `sb_set` now list `auto` as a legal `filterValueMode` value on every filter element, a category filter that follows the page it is on.
+- `sb_api_find` and `sb_api_call` now reach the editor assistant's conversation history: listing a site's stored conversations, reading one by id, and listing the models a provider will run for the site's key.
+- The call sheet for the assistant's message endpoint now documents four more body fields: `conversationId` to continue an existing thread, `images` for picture URLs the model should look at, `clientTools` for browser-side functions the model may call, and `verifies` for whether the client answers the verify round trip.
+
 ## [0.60.1] - 2026-09-16
 
 ### Fixed
