@@ -4,12 +4,12 @@
 import type { RequestShape } from './types.js';
 
 export const SHAPE_SOURCE = {
-  "writeOperations": 236,
-  "shaped": 177,
-  "fromHandlers": 177,
+  "writeOperations": 237,
+  "shaped": 178,
+  "fromHandlers": 178,
   "fromSwaggerOnly": 0,
   "withReadOnly": 26,
-  "structsRead": 1701
+  "structsRead": 1725
 } as const;
 
 export const REQUEST_SHAPES: Record<string, RequestShape> = {
@@ -3016,9 +3016,29 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
         "note": "History is sent by the CLIENT, unlike the storefront chatbot's, which removed it as a security fix."
       },
       {
+        "name": "conversationId",
+        "type": "string",
+        "note": "ConversationID continues an existing thread."
+      },
+      {
         "name": "context",
         "type": "editoragent.EditContext | null",
         "note": "Context is the PAGE as the EDITOR described it — the outline of ROOT's children, and the selected element with its trait list, value types and current values, read off the live registries at send time. IT IS THE CAPABILITY LIST, not a hint."
+      },
+      {
+        "name": "images",
+        "type": "string[]",
+        "note": "Images are urls of pictures the author attached for the model to LOOK AT."
+      },
+      {
+        "name": "clientTools",
+        "type": "editoragent.ClientTool[]",
+        "note": "ClientTools are functions the browser offers the model, answered from the live document — see editoragent/clienttools."
+      },
+      {
+        "name": "verifies",
+        "type": "boolean",
+        "note": "Verifies says this client answers the `verify` round trip."
       }
     ],
     "source": "go",
@@ -3045,6 +3065,24 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
     ],
     "source": "go",
     "goType": "editoragent.SettingsInput"
+  },
+  "post:/api/sites/{siteId}/ai/models": {
+    "fields": [
+      {
+        "name": "provider",
+        "type": "string"
+      },
+      {
+        "name": "apiKey",
+        "type": "string"
+      },
+      {
+        "name": "baseUrl",
+        "type": "string"
+      }
+    ],
+    "source": "go",
+    "goType": "(inline)"
   },
   "post:/api/sites/{siteId}/fonts": {
     "fields": [

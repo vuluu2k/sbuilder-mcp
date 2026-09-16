@@ -423,9 +423,15 @@ describe('what a key is allowed to hold, scoped to the element', () => {
   // produces the draft field `matchMode`.
   it('names the four keys the filter config dialog writes', () => {
     const v = (type: string, key: string) => vocabularyForWrite(type, 'specials', key)!;
-    expect(v('filter-checkbox', 'filterValueMode').values).toEqual(['all', 'manual']);
+    // `auto` and `navigate` are the two the platform grew on 2026-09-16: a
+    // category filter that FOLLOWS the page it is on, and one whose rows LEAVE
+    // for the category's own page instead of narrowing a list. Both are offered
+    // by the dialog for the catalogue-tree sources only, and both reach this
+    // table the way every other value does — read from the picker, not listed
+    // here — so a third one arrives without anybody editing this file.
+    expect(v('filter-checkbox', 'filterValueMode').values).toEqual(['all', 'auto', 'manual']);
     expect(v('filter-checkbox', 'filterMatch').values).toEqual(['all', 'any']);
-    expect(v('filter-checkbox', 'filterBehavior').values).toEqual(['event', 'filter']);
+    expect(v('filter-checkbox', 'filterBehavior').values).toEqual(['event', 'filter', 'navigate']);
     // `''` IS LOAD-BEARING AND THE DIALOG NEVER WRITES IT. It means "follow the
     // SHAPE" — a radio holds one value, everything else holds many — and it is
     // what all four option-list filters SEED, while `FilterConfig.arity`
@@ -438,6 +444,25 @@ describe('what a key is allowed to hold, scoped to the element', () => {
     // match mode and hears about neither; it does seed the behaviour.
     expect(vocabularyForWrite('select', 'specials', 'filterArity')).toBeNull();
     expect(vocabularyForWrite('select', 'specials', 'filterMatch')).toBeNull();
+    // BUT IT HEARS ONLY TWO OF THE BEHAVIOUR'S THREE, and this line is the one
+    // that caught the defect the day `navigate` landed. The key is seeded, so
+    // the rule this table already applied — "a key an element does not SEED is
+    // a key it does not have" — passed it through whole. The missing half is
+    // that a VALUE no renderer reads is a value the element does not have
+    // either: the four option-list filters draw a row per value and a row can
+    // become an `<a href>`, while a select draws `<option>`, which no href can
+    // live on. `dropdown/html.go` reads `"event"` and nothing else, so a select
+    // set to navigate publishes an ordinary dropdown and the setting changes
+    // nothing — an agent could pick it, the write would be accepted, and the
+    // page would look exactly as it did before.
+    //
+    // DERIVED, not excluded here: `readNavigableFilters` takes the set from the
+    // `nodes.Register*(… filtershared.WriteHTML …)` calls, the only navigate
+    // branch in the tree. Mutating ONE of those registrations away from
+    // filtershared moves that element and no other (measured 2026-09-16:
+    // filter-tag lost the value, the other three kept it), which is what makes
+    // the four assertions above this one the liveness anchor for this one —
+    // every one of them is also satisfied by a reader that excluded everything.
     expect(v('select', 'filterBehavior').values).toEqual(['event', 'filter']);
     // THE NAME COLLISION THE JOIN AVOIDS: `sources.ts` exports a type called
     // `FilterValueMode` whose members are catalog | fixed | range | authored |

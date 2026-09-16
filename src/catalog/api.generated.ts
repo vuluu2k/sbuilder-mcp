@@ -3,10 +3,10 @@
 import type { ApiOperation } from './types.js';
 
 export const SWAGGER_SOURCE = {
-  "operations": 527,
+  "operations": 530,
   "definitions": 107,
-  "bodyCarrying": 195,
-  "bodyUndescribed": 76,
+  "bodyCarrying": 196,
+  "bodyUndescribed": 77,
   "generatedFrom": "server/docs/swagger.json"
 } as const;
 
@@ -3327,6 +3327,55 @@ export const API_OPERATIONS: ApiOperation[] = [
     "credential": "siteScoped"
   },
   {
+    "id": "get:/api/sites/{siteId}/ai/conversations",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/ai/conversations",
+    "tags": [
+      "sites"
+    ],
+    "summary": "List the editor assistant's stored conversations",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/sites/{siteId}/ai/conversations/{id}",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/ai/conversations/{id}",
+    "tags": [
+      "sites"
+    ],
+    "summary": "Read one stored conversation",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Conversation ID"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
     "id": "post:/api/sites/{siteId}/ai/messages",
     "method": "POST",
     "path": "/api/sites/{siteId}/ai/messages",
@@ -3355,6 +3404,34 @@ export const API_OPERATIONS: ApiOperation[] = [
         "required": true,
         "type": "object",
         "description": "question (required), history (prior turns: role user|assistant, text) and context (the selected element the agent may propose edits to)"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/api/sites/{siteId}/ai/models",
+    "method": "POST",
+    "path": "/api/sites/{siteId}/ai/models",
+    "tags": [
+      "sites"
+    ],
+    "summary": "List the models a provider will run for this site's key",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "query",
+        "in": "body",
+        "required": true,
+        "type": "object",
+        "description": "provider (required), apiKey and baseUrl (optional — the stored key is used when apiKey is omitted)"
       }
     ],
     "bodyDescribed": false,

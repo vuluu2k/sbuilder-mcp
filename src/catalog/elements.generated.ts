@@ -37483,6 +37483,7 @@ export const ELEMENT_VALUES: Record<string, Record<string, ValueVocabulary>> = {
       "writeKey": "filterValueMode",
       "values": [
         "all",
+        "auto",
         "manual"
       ],
       "readBy": "FilterConfig.valueMode (editor/src/features/filters/types.ts)"
@@ -37511,7 +37512,8 @@ export const ELEMENT_VALUES: Record<string, Record<string, ValueVocabulary>> = {
       "writeKey": "filterBehavior",
       "values": [
         "event",
-        "filter"
+        "filter",
+        "navigate"
       ],
       "readBy": "FilterConfig.behavior (editor/src/features/filters/types.ts)"
     }
@@ -37542,6 +37544,7 @@ export const ELEMENT_VALUES: Record<string, Record<string, ValueVocabulary>> = {
       "writeKey": "filterValueMode",
       "values": [
         "all",
+        "auto",
         "manual"
       ],
       "readBy": "FilterConfig.valueMode (editor/src/features/filters/types.ts)"
@@ -37570,7 +37573,8 @@ export const ELEMENT_VALUES: Record<string, Record<string, ValueVocabulary>> = {
       "writeKey": "filterBehavior",
       "values": [
         "event",
-        "filter"
+        "filter",
+        "navigate"
       ],
       "readBy": "FilterConfig.behavior (editor/src/features/filters/types.ts)"
     }
@@ -37601,6 +37605,7 @@ export const ELEMENT_VALUES: Record<string, Record<string, ValueVocabulary>> = {
       "writeKey": "filterValueMode",
       "values": [
         "all",
+        "auto",
         "manual"
       ],
       "readBy": "FilterConfig.valueMode (editor/src/features/filters/types.ts)"
@@ -37629,7 +37634,8 @@ export const ELEMENT_VALUES: Record<string, Record<string, ValueVocabulary>> = {
       "writeKey": "filterBehavior",
       "values": [
         "event",
-        "filter"
+        "filter",
+        "navigate"
       ],
       "readBy": "FilterConfig.behavior (editor/src/features/filters/types.ts)"
     }
@@ -37660,6 +37666,7 @@ export const ELEMENT_VALUES: Record<string, Record<string, ValueVocabulary>> = {
       "writeKey": "filterValueMode",
       "values": [
         "all",
+        "auto",
         "manual"
       ],
       "readBy": "FilterConfig.valueMode (editor/src/features/filters/types.ts)"
@@ -37688,7 +37695,8 @@ export const ELEMENT_VALUES: Record<string, Record<string, ValueVocabulary>> = {
       "writeKey": "filterBehavior",
       "values": [
         "event",
-        "filter"
+        "filter",
+        "navigate"
       ],
       "readBy": "FilterConfig.behavior (editor/src/features/filters/types.ts)"
     }

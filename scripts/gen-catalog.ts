@@ -366,6 +366,83 @@ function readFirstChildOnly(repo: string): string[] {
   return out.sort();
 }
 
+/**
+ * THE ELEMENTS A `filterBehavior: "navigate"` CAN ACTUALLY REACH, and the value
+ * word itself — both read out of Go.
+ *
+ * `filterBehavior` is one key with three values, and the third is not a property
+ * of the KEY but of the SHAPE that renders it. The four option-list filters draw
+ * a row per value and a row can become an `<a href>`; a `select` draws
+ * `<option>`, which no href can live on — `dropdown/html.go` reads `"event"` and
+ * nothing else, so a select set to navigate publishes an ordinary dropdown and
+ * the setting changes nothing.
+ *
+ * That is the exact defect this table exists to prevent, arriving one level
+ * below the one it was built for. The rule it already applies — "a key an
+ * element does not SEED is a key it does not have" — is not enough here: the
+ * select genuinely seeds `filterBehavior`. The missing half is that a VALUE no
+ * renderer reads is a value the element does not have either.
+ *
+ * READ FROM THE REGISTRATION, not from a list here and not from the config
+ * dialog's own `v-if`. Three reasons, in the order they matter:
+ *
+ *  - The dialog gates the option correctly today, but a picker proves what ONE
+ *    consumer offers; the renderer proves what the platform can do. A second
+ *    surface that writes this key (this server is one) is outside that gate.
+ *  - `filtershared.WriteHTML` is the only navigate branch in the tree, so the
+ *    set is exactly its callers — no join to keep in step. A fifth filter
+ *    registered through it is covered on the next codegen with no edit here,
+ *    and an element that stops routing through it loses the value the same way.
+ *  - Mapping through `generated.Element*` rather than the DIRECTORY name is what
+ *    keeps it honest for the case that motivated it: `select` lives in
+ *    `nodes/dropdown`, so a directory-keyed reader would have been right about
+ *    the select by accident and wrong about the next one on purpose.
+ *
+ * ABSENT IS SILENT, PRESENT-AND-UNREADABLE EXITS 1 — the discipline every reader
+ * in this file follows. A tree with no `filtershared` is a tree with no filter
+ * elements and yields nothing; a `filtershared` whose behaviour const no longer
+ * parses would make this table WRONG rather than short.
+ */
+function readNavigableFilters(repo: string): { value: string; types: string[] } | null {
+  const sharedPath = resolve(repo, 'server/render/nodes/filtershared/filtershared.go');
+  if (!existsSync(sharedPath)) return null;
+  const behavior = /BehaviorNavigate\s*=\s*"([a-z]+)"/.exec(readFileSync(sharedPath, 'utf8'));
+  if (!behavior) {
+    console.error(
+      'filtershared.BehaviorNavigate no longer reads as a string const — the navigate ' +
+        'behaviour moved, and this table would publish it for elements that ignore it',
+    );
+    process.exit(1);
+  }
+  const genPath = resolve(repo, 'server/render/generated/schema_gen.go');
+  if (!existsSync(genPath)) return null;
+  const typeOf = new Map<string, string>();
+  const consts = /^\s*(Element[A-Za-z0-9]+)\s+ElementType\s*=\s*"([^"]+)"/gm;
+  for (const m of readFileSync(genPath, 'utf8').matchAll(consts)) typeOf.set(m[1], m[2]);
+  const registers =
+    /nodes\.Register(?:Tree)?\(\s*generated\.(Element[A-Za-z0-9]+)\s*,\s*filtershared\.WriteHTML/g;
+  const dir = resolve(repo, 'server/render/nodes');
+  const types = new Set<string>();
+  for (const entry of readdirSync(dir, { withFileTypes: true })) {
+    if (!entry.isDirectory()) continue;
+    for (const f of readdirSync(resolve(dir, entry.name))) {
+      if (!f.endsWith('.go') || f.endsWith('_test.go')) continue;
+      for (const m of readFileSync(resolve(dir, entry.name, f), 'utf8').matchAll(registers)) {
+        const t = typeOf.get(m[1]);
+        if (t) types.add(t);
+      }
+    }
+  }
+  if (types.size === 0) {
+    console.error(
+      'nothing registers filtershared.WriteHTML — the filter renderers moved, and every ' +
+        'element would silently lose the navigate behaviour',
+    );
+    process.exit(1);
+  }
+  return { value: behavior[1], types: [...types].sort() };
+}
+
 /** A built node as the editor's factory returns it — ids and parents included. */
 interface RawNode {
   id: string;
@@ -2754,10 +2831,19 @@ export const API_DEFINITIONS: Record<string, unknown> = ${JSON.stringify(
     const sourceReadBy = `FILTER_SOURCES + SORT_SOURCE (${SOURCES_REL})`;
     for (const type of configTypes) emit(type, 'filterSource', [...facetIds, sortSource], sourceReadBy);
     emit(RANGE_ONLY, 'filterSource', rangeIds, `FILTER_SOURCES valueMode:"range" (${SOURCES_REL})`);
+    // The navigate behaviour is the one value in this block that belongs to the
+    // SHAPE rather than to the key — see readNavigableFilters. Subtracted per
+    // type rather than dropped from the union, because for the four option-list
+    // filters it is entirely real.
+    const nav = readNavigableFilters(repo);
     for (const [key, values] of siblings) {
       const field = writes.get(key) as string;
       for (const type of new Set([...configTypes, ...elementTypes, RANGE_ONLY])) {
-        emit(type, key, values, `FilterConfig.${field} (${TYPES_REL})`);
+        const own =
+          nav && values.includes(nav.value) && !nav.types.includes(type)
+            ? values.filter((v) => v !== nav.value)
+            : values;
+        emit(type, key, own, `FilterConfig.${field} (${TYPES_REL})`);
       }
     }
     console.error(`  storefront filter vocabularies from the platform's own declarations: ${out.length}`);
