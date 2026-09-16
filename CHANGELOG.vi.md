@@ -6,6 +6,11 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.60.1] - 2026-09-16
+
+### Fixed
+- Bảng `page_types` của `sb_page_list` giờ kèm `page_types_note` nói rõ mười hai loại trang là các địa chỉ cố định mà storefront định tuyến tới, không phải danh sách các trang một site cần có, vì login, register, contact, about, các trang chính sách và bất cứ điều gì shop cần nói đều là các dòng `page` thông thường, không giới hạn số lượng.
+
 ## [0.60.0] - 2026-09-16
 
 ### Added

@@ -6,6 +6,11 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.60.1] - 2026-09-16
+
+### Fixed
+- `sb_page_list`'s `page_types` table now carries a `page_types_note` stating that the twelve types are the storefront's fixed routed addresses, not a checklist of the pages a site needs, since login, register, contact, about, policy pages and anything else a shop must say are ordinary `page` rows with no limit on how many.
+
 ## [0.60.0] - 2026-09-16
 
 ### Added
