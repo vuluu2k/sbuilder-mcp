@@ -6,6 +6,15 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.61.0] - 2026-09-16
+
+### Added
+- `sb_set` now warns when a write on a `specials` key is legal on its own but does nothing because a sibling key it depends on is missing or set to the wrong value, naming both keys, what the node renders as meanwhile, and which value would fix it, read from the platform's own precondition declarations rather than a list kept in this repo.
+- `sb_set` now separately warns when a `specials` key is not honored by the target element's renderer at all, naming the element types that do honor it, so the write is not mistaken for a fixable missing-neighbour case.
+
+### Internal
+- The generated catalog is refreshed against a current platform checkout (a new tool-results API route); operation count moves from 530 to 531 (179 of 238 writes now carrying a body shape read off the handler).
+
 ## [0.60.4] - 2026-09-16
 
 ### Internal

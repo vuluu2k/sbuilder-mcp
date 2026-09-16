@@ -6,6 +6,15 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.61.0] - 2026-09-16
+
+### Added
+- `sb_set` giờ cảnh báo khi một lệnh ghi lên key `specials` tự nó hợp lệ nhưng không làm gì cả vì một key liền kề mà nó phụ thuộc vào đang thiếu hoặc sai giá trị — nêu rõ cả hai key, node sẽ render ra sao trong lúc đó, và giá trị nào sẽ khắc phục, được đọc từ chính khai báo tiền điều kiện của nền tảng thay vì một danh sách tự giữ trong repo này.
+- `sb_set` giờ cảnh báo riêng khi một key `specials` hoàn toàn không được renderer của element đích đọc tới, nêu rõ những element type nào thực sự đọc key đó, để tránh bị nhầm thành trường hợp thiếu key liền kề có thể sửa được.
+
+### Internal
+- Catalog được sinh ra giờ được làm mới dựa trên một bản checkout hiện tại của nền tảng (route API tool-results mới); số operation tăng từ 530 lên 531 (179 trong 238 lệnh ghi giờ mang hình dạng body đọc thẳng từ handler).
+
 ## [0.60.4] - 2026-09-16
 
 ### Internal
