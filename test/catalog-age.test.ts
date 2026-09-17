@@ -64,6 +64,27 @@ describe('the catalog says how old it is', () => {
     }
   });
 
+  it('holds nothing that changes on its own, so the staleness check cannot cry wolf', () => {
+    // IT SHIPPED WITH A `generatedAt` FOR FIVE MINUTES. `codegen:check`
+    // regenerates and compares, so a field holding TODAY made the check report
+    // the catalog STALE every single day — for a reason that has nothing to do
+    // with the platform, which is the cry-wolf failure that trains people to
+    // stop reading a guard.
+    //
+    // Every field here must therefore be a fact about the COMMIT, not about the
+    // run. A date-like value that is not the commit's own is the shape to
+    // catch, and so is anything at today's date.
+    const today = new Date().toISOString().slice(0, 10);
+    for (const [key, value] of Object.entries(PLATFORM_SOURCE)) {
+      if (typeof value !== 'string') continue;
+      if (key === 'committedAt') continue;
+      expect(value, `${key} looks like a date that is not the commit's`).not.toMatch(
+        /^\d{4}-\d{2}-\d{2}/,
+      );
+      expect(value, `${key} carries today's date and will differ tomorrow`).not.toContain(today);
+    }
+  });
+
   it('is what the generator actually wrote, not a placeholder', () => {
     // The whole line is worthless if the stamp is empty, and an empty stamp is
     // exactly what a broken git read produces — silently.
