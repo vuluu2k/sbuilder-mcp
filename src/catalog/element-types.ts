@@ -196,7 +196,15 @@ export interface DeadKey {
 /** One neighbour a setting needs, and the values that satisfy it. */
 export interface PreconditionClause {
   key: string;
-  anyOf: (string | boolean)[];
+  /**
+   * `null` stands for NOT SET, which is a real state rather than a hole in the
+   * list: a node written before a key existed does not carry it, and the
+   * renderers then read their own fallback. Without it the table reports a
+   * FALSE POSITIVE on a node that is perfectly correct — worse than the silence
+   * this mechanism replaced, because a caller warned about correct work stops
+   * reading the warnings.
+   */
+  anyOf: (string | boolean | null)[];
 }
 
 /**

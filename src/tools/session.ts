@@ -3,6 +3,7 @@ import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { request } from '../transport/http.js';
 import { text } from '../mcp/response.js';
 import { API_OPERATIONS } from '../catalog/api.generated.js';
+import { PLATFORM_SOURCE } from '../catalog/source.generated.js';
 import type { ToolContext } from './context.js';
 
 export interface ConnectResult {
@@ -23,6 +24,43 @@ export interface ConnectResult {
    * fails, so nothing prompts the question.
    */
   live?: string;
+  /**
+   * WHICH PLATFORM THIS CATALOG DESCRIBES, and how old that is.
+   *
+   * Every table this server answers from was generated against one web_builder
+   * commit. Nothing in the running system says which — `/healthz` answers "ok"
+   * and the API's `info.version` is a static "1.0" — so an install three months
+   * behind the deployment it is talking to behaves exactly like one generated
+   * this morning, and simply lacks the elements and keys the platform has grown
+   * since. The design degrades safely for that (every note is a warning, never a
+   * refusal), but it could not SAY so; a date a reader can see turns "the agent
+   * did not know about that element" into a regeneration.
+   *
+   * Absent where the generator had no git to ask.
+   */
+  catalog?: string;
+}
+
+/**
+ * The provenance line, or '' when the generator had no git to ask.
+ *
+ * Reads as an AGE rather than a commit id, because the age is the actionable
+ * half — nobody can tell whether `d6a68b7` is recent, and everybody can tell
+ * whether four months is. The id rides along for the person who then has to
+ * find it.
+ */
+export function catalogAge(now = new Date()): string {
+  const { commit, committedAt, dirty } = PLATFORM_SOURCE;
+  if (!commit || !committedAt) return '';
+  const days = Math.floor((now.getTime() - new Date(committedAt).getTime()) / 86_400_000);
+  const age =
+    days <= 1 ? 'today' : days < 45 ? `${days} days old` : `${Math.floor(days / 30)} months old`;
+  return (
+    `Built from web_builder ${commit.slice(0, 9)} (${committedAt.slice(0, 10)}, ${age})` +
+    (dirty ? ', from an UNCOMMITTED tree — it may describe work no deployment has' : '') +
+    `. The platform reports no version of its own, so nothing here can compare the two: if an ` +
+    `element or key you expect is missing, regenerate rather than working around it.`
+  );
 }
 
 /**
@@ -53,6 +91,7 @@ export async function connect(
       ...(ctx.siteId ? { site: ctx.siteId } : {}),
       ...(ctx.siteId && ctx.siteName ? { site_name: ctx.siteName } : {}),
       operations: API_OPERATIONS.length,
+      ...(catalogAge() ? { catalog: catalogAge() } : {}),
       note: ctx.siteId
         ? `Connected with an API key alone, on site ${ctx.siteId} (SB_SITE)${
             ctx.siteName ? `, the store called ${JSON.stringify(ctx.siteName)}` : ''
@@ -106,6 +145,7 @@ export async function connect(
     sites: (listed?.sites ?? []).map((s) => ({ id: s.id, name: s.name })),
     api_key: ctx.apiKey ? 'present' : 'missing',
     operations: API_OPERATIONS.length,
+    ...(catalogAge() ? { catalog: catalogAge() } : {}),
   };
   if (!ctx.apiKey) {
     result.note =
