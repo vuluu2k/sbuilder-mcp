@@ -8,11 +8,8 @@ export const PLATFORM_SOURCE: {
   committedAt: string | null;
   /** True when `--dirty` read a working tree, so half-finished work can be described here. */
   dirty: boolean;
-  /** The day this file was written, which can be much later than the commit. */
-  generatedAt: string;
 } = {
   "commit": "d6a68b77a7a00a6a9ca66da5161d57e845aae628",
   "committedAt": "2026-09-17T00:01:02+07:00",
-  "dirty": false,
-  "generatedAt": "2026-09-17"
+  "dirty": false
 };
