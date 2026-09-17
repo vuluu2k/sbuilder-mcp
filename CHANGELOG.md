@@ -6,6 +6,15 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.61.1] - 2026-09-17
+
+### Added
+- `sb_connect` now reports how old the generated catalog's platform knowledge is, in words (e.g. "45 days old"), along with the web_builder commit it was generated from, so a stale install reads as staleness instead of as a missing element or key.
+- `sb_set`'s precondition warning now also covers `filterMatch: "all"` on filter elements, which only takes effect where a product can hold several of a source's values.
+
+### Fixed
+- `sb_set`'s precondition warning no longer reports a false positive when a sibling `specials` key is simply unset, since a `null` clause now correctly means "not set" instead of being compared as a literal value.
+
 ## [0.61.0] - 2026-09-16
 
 ### Added
