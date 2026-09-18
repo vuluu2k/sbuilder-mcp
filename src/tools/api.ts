@@ -285,6 +285,18 @@ export const RAW_CALL_NOTICE =
   'defaults to true. The durable fix is an @Router annotation upstream and a catalog regen.';
 
 /**
+ * Routes registered DIRECTLY on the gin router, outside every annotated
+ * dispatcher, so no `swag init` and no regen can ever carry them. Hand-kept
+ * and three entries long on purpose: the generated answer for UNANNOTATED
+ * routes is an @Router line upstream, not a table here.
+ */
+export const OUTSIDE_CATALOG = [
+  { method: 'GET', path: '/api/permissions', why: 'the RBAC matrix, content domains and delegation scopes' },
+  { method: 'GET', path: '/api/plans', why: 'the public plan catalogue' },
+  { method: 'GET', path: '/api/locales', why: "the language list with each locale's currency" },
+] as const;
+
+/**
  * The operation a call names — from the catalog by id, or synthesised from
  * method + path for a route the catalog does not carry.
  *
@@ -538,7 +550,8 @@ export function registerApiTools(server: McpServer, ctx: ToolContext): void {
         matches,
         next: matches.length
           ? 'Pass one id back to sb_api_find for its call sheet before calling it.'
-          : 'No match — try other words, or a tag.',
+          : 'No match — try other words, or a tag. A route the catalog does not carry can still be called: sb_api_call with method + path.',
+        ...(matches.length ? {} : { outside_catalog: OUTSIDE_CATALOG }),
       });
     },
   );
