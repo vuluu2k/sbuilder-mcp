@@ -109,11 +109,13 @@ every existing test stays green untouched.
 ### 5.2 Mechanism
 
 The builder functions (`addSubtree`, `setKeys`, `moveNode`, `removeNode`, `duplicateNode`,
-and the two in `live.ts`) take `opts.force`. A soft guard becomes
-`soft(force, forced, message)`: without force it throws `message + ' Pass force:true to write anyway.'`;
-with force it pushes `message` onto `forced` and returns. The builder returns `forced`
-alongside its patches; the tool puts it on the result as `forced: string[]`, in the dry run
-too, so the caller sees what was overridden before committing.
+and the two in `live.ts`) take a `GuardOpts` (`{ force?, forced? }`) the CALLER owns. Every
+soft guard CALL SITE is wrapped in `soft(guard, () => refuseX(...))`; the guard functions
+themselves do not change. Without force the wrapper rethrows the guard's own message plus
+`' Pass force:true to write anyway.'`; with force it pushes the message onto `forced` and
+returns. No return type changes: the tool reads `guard.forced` after the call and puts it on
+the result as `forced: string[]`, in the dry run too, so the caller sees what was overridden
+before committing.
 
 The suffix appears only on soft guards. A caller reading an error can therefore tell
 whether force is an answer without trying it.
@@ -128,7 +130,7 @@ the deployment:
 | `refuseAppBlockInterior`, `refuseAppBlockParent` | the write is stored nowhere today; a deployment that persists it may exist, and nothing is destroyed |
 | `childAllows`, `isRootOnly` | element lists move with the platform |
 | `refuseSecondTemplate` | `FIRST_CHILD_ONLY` is read off one renderer version |
-| `refuseStuckConfig`, `refuseStuckAfter`, `refuseReveal`, `refuseHoverConfig` | each says "compiles to nothing" against one compiler version |
+| `refuseStuckConfig`, `refuseStuckAfter`, `refuseReveal`, `refuseHoverConfig`, `requireStuckHost`, `requireHoverHost` | each says "compiles to nothing" against one compiler version |
 
 Hard — never overridden, and `force` is silently irrelevant to them:
 
@@ -139,6 +141,7 @@ Hard — never overridden, and `force` is silently irrelevant to them:
 | ROOT remove / duplicate | no document survives it |
 | unknown element type | there is nothing to write |
 | `refuseOverlay` (overlay ROOT as the target) | stripped on write, so the forced write is a no-op the tool would then report as done |
+| the cycle check in `moveNode`, "contains an app block" in `duplicateNode`, `specials` with a state, `requireContainer` | each detaches or drops content the tool would then report as written |
 
 ### 5.4 Tests
 
