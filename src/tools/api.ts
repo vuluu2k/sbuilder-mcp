@@ -265,6 +265,16 @@ const SITE_PARAMS = new Set(['siteid']);
 const RAW_METHODS = new Set(['GET', 'HEAD', 'POST', 'PUT', 'PATCH', 'DELETE']);
 
 /**
+ * Two ids naming the same route differ only in what they call the parameter:
+ * `{siteId}` in most operations, `{siteID}` in eight. Compare on route SHAPE —
+ * the same normalisation `reportUndocumentedRoutes` in scripts/gen-catalog.ts
+ * uses for the identical split — so a caller who spells a parameter name
+ * differently still gets the catalogued treatment rather than silently
+ * dropping onto the raw path with no undo prepared for a whole-document PUT.
+ */
+const routeShape = (id: string): string => id.replace(/\{[^}]*\}/g, '{}');
+
+/**
  * Said once per process on the first raw call. A raw route has no call sheet,
  * no shape and no undo, and the durable fix is upstream — the same fix
  * reportUndocumentedRoutes names.
@@ -314,7 +324,11 @@ export function resolveOperation(args: CallArgs): ApiOperation & { raw?: true } 
     throw new Error(`sbuilder: method "${args.method}" is not one of ${[...RAW_METHODS].join(', ')}.`);
   }
   const path = args.path!;
-  if (!path.startsWith('/') || path.startsWith('//') || /^[a-z][a-z0-9+.-]*:/i.test(path)) {
+  // `request()` builds the URL as `ctx.base + path` (plain concatenation), so an
+  // authority can never be reintroduced by the path — but a backslash is refused
+  // outright anyway, because a relative-URL resolver treats one as a slash and
+  // this refusal must hold even if that concatenation is ever replaced with one.
+  if (!path.startsWith('/') || path.startsWith('//') || path.includes('\\')) {
     throw new Error(
       `sbuilder: path must be a bare platform path starting with "/" (got ${JSON.stringify(path)}). ` +
         'The base URL is this install\'s SB_API; a path carrying a host would send the credential elsewhere.',
@@ -322,7 +336,7 @@ export function resolveOperation(args: CallArgs): ApiOperation & { raw?: true } 
   }
   // A method+path that names a catalogued route gets the catalogued treatment
   // — shape, undo, projections — never less than the catalog already knows.
-  const known = API_OPERATIONS.find((o) => o.id === `${method.toLowerCase()}:${path}`);
+  const known = API_OPERATIONS.find((o) => routeShape(o.id) === routeShape(`${method.toLowerCase()}:${path}`));
   if (known) return known;
   return {
     id: `${method.toLowerCase()}:${path}`,

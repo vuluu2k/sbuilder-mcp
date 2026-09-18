@@ -412,6 +412,7 @@ describe('callOperation() — the raw form', () => {
     await expect(callOperation(ctx, { method: 'GET', path: 'https://evil.example/x', dry_run: false })).rejects.toThrow(/bare platform path/i);
     await expect(callOperation(ctx, { method: 'GET', path: '//evil.example/x', dry_run: false })).rejects.toThrow(/bare platform path/i);
     await expect(callOperation(ctx, { method: 'GET', path: 'api/permissions', dry_run: false })).rejects.toThrow(/bare platform path/i);
+    await expect(callOperation(ctx, { method: 'GET', path: '/\\evil.example/x', dry_run: false })).rejects.toThrow(/bare platform path/i);
   });
 
   it('refuses an unknown method, and id together with method/path', async () => {
@@ -453,5 +454,29 @@ describe('callOperation() — the raw form', () => {
     // Not wrapped: this is the catalogued operation, answered as it always is.
     expect(out.uncatalogued).toBeUndefined();
     expect(out).toEqual({ menus: [], total: 0 });
+  });
+
+  it('folds back on route SHAPE, so a one-letter param-name case difference still matches the catalogued route', async () => {
+    const f = ok();
+    const record = vi.fn();
+    const ctx = { ...(await rawCtx(f)), undo: { record } } as unknown as ToolContext;
+    const out = (await callOperation(ctx, {
+      method: 'PUT',
+      // The catalogue spells this route's site param {siteID}; this call spells
+      // it {siteId}. A caller who does not know the platform's inconsistency
+      // must still get the catalogued route, its undo prep and its projection —
+      // never silently dropped onto the raw path with no undo for a whole-
+      // document replace.
+      path: '/api/sites/{siteId}/menus/{id}',
+      path_params: { id: 'm1' },
+      body: { label: 'Main' },
+      dry_run: false,
+    })) as Record<string, unknown>;
+    expect(out.uncatalogued).toBeUndefined();
+    // Two requests: the catalogued undo pre-read GET, then the PUT itself.
+    expect(calls(f)).toHaveLength(2);
+    expect((calls(f)[0][1] as RequestInit).method).toBe('GET');
+    expect((calls(f)[1][1] as RequestInit).method).toBe('PUT');
+    expect(record).toHaveBeenCalled();
   });
 });
