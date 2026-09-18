@@ -328,9 +328,19 @@ export function resolveOperation(args: CallArgs): ApiOperation & { raw?: true } 
   // authority can never be reintroduced by the path — but a backslash is refused
   // outright anyway, because a relative-URL resolver treats one as a slash and
   // this refusal must hold even if that concatenation is ever replaced with one.
-  if (!path.startsWith('/') || path.startsWith('//') || path.includes('\\')) {
+  // A `?` or `#` in `path` is refused too: `buildUrl` appends `query` with its
+  // own `?`, so one already in `path` either buries the query in a fragment or
+  // sends two `?`s — a query belongs in `query`, not folded into `path`.
+  if (
+    !path.startsWith('/') ||
+    path.startsWith('//') ||
+    path.includes('\\') ||
+    path.includes('?') ||
+    path.includes('#')
+  ) {
     throw new Error(
-      `sbuilder: path must be a bare platform path starting with "/" (got ${JSON.stringify(path)}). ` +
+      `sbuilder: path must be a bare platform path starting with "/", with no query string or ` +
+        `fragment (got ${JSON.stringify(path)}). A query belongs in \`query\`, not in \`path\`. ` +
         'The base URL is this install\'s SB_API; a path carrying a host would send the credential elsewhere.',
     );
   }
@@ -538,7 +548,8 @@ export function registerApiTools(server: McpServer, ctx: ToolContext): void {
     {
       description:
         'Call an operation from sb_api_find (id), or a route the catalog lacks (method+path); ' +
-          'dry run by default. pick selects fields, max_items caps lists, item_offset skips items.',
+          'dry run by default. pick selects fields, max_items caps lists, item_offset skips items. ' +
+          'Lists over 60 KB say so.',
       inputSchema: {
       id: z
         .string()

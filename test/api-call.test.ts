@@ -413,6 +413,8 @@ describe('callOperation() — the raw form', () => {
     await expect(callOperation(ctx, { method: 'GET', path: '//evil.example/x', dry_run: false })).rejects.toThrow(/bare platform path/i);
     await expect(callOperation(ctx, { method: 'GET', path: 'api/permissions', dry_run: false })).rejects.toThrow(/bare platform path/i);
     await expect(callOperation(ctx, { method: 'GET', path: '/\\evil.example/x', dry_run: false })).rejects.toThrow(/bare platform path/i);
+    await expect(callOperation(ctx, { method: 'GET', path: '/api/x?a=b', dry_run: false })).rejects.toThrow(/bare platform path/i);
+    await expect(callOperation(ctx, { method: 'GET', path: '/api/x#y', dry_run: false })).rejects.toThrow(/bare platform path/i);
   });
 
   it('refuses an unknown method, and id together with method/path', async () => {
