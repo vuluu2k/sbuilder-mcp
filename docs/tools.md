@@ -124,6 +124,7 @@ Execute one operation found by `sb_api_find`.
 | `dry_run` | boolean? | **Defaults to `true`** — sends nothing, returns a redacted preview |
 | `pick` | string[]? | Fields to keep on each item of a list answer (or on the one item of a `{ page: {…} }` answer) |
 | `max_items` | number? | Cap on a list answer's items, applied after the platform's own paging |
+| `item_offset` | integer? | Skip this many items within the returned list (default 0); positive offsets require GET/HEAD |
 
 Credentials are chosen from the path, never from the argument: `/api/v1/…` uses `SB_TOKEN`,
 everything else uses the session. A missing `SB_TOKEN` is reported by name rather than
@@ -141,13 +142,24 @@ hint }` names how many came back, how many there were, and how to narrow the cal
 `max_items`, or the operation's own `limit`/`offset` query). A non-list answer is never cut:
 there is no honest place to stop inside one object.
 
+Cuts also report `offset` and, when more items can be read, `next_item_offset`. Pass the
+latter as `item_offset` with the same GET and query to read the next slice, including on
+endpoints without server pagination. This re-fetches the list, not a cached snapshot:
+concurrent changes can shift rows. Prefer the API's own pagination when available; this
+parameter cannot fetch records beyond the API's current page. Never repeat a mutation to
+page its response; positive offsets on writes are refused. If one row alone exceeds the
+budget, narrow `pick` first; no non-advancing continuation is returned.
+
+A list-wide `pick` matching no fields keeps original fields and reports `shaping_note`,
+while still applying pagination and the size cap rather than returning a list of `{}`.
+
 Three quieter rules, each of which exists because the alternative loses data silently. An
 answer with **no single list** — two arrays, say — is returned untouched with a
 `shaping_note`, rather than shaped into something the platform never sent; a `pick` that
 matches nothing does the same, because `{}` reads as "the platform answered nothing". If the
 platform's own answer already carries a `truncated` field, this one lands under `_truncated`
 instead of overwriting it. And when the non-list part of an answer alone exceeds the cap,
-nothing is cut — dropping items would not help — and the note says why.
+no additional size cut is made — dropping items would not help — and the note says why.
 
 ---
 

@@ -80,7 +80,7 @@ nhét ngược lại vào mọi bản cài.
 | `sb_connect` | Đăng nhập, liệt kê site tài khoản vận hành được, báo đang có credential nào |
 | `sb_site_list` | Liệt kê site tài khoản vận hành được |
 | `sb_api_find` | Tìm operation theo ý định — mỗi kết quả một dòng — rồi đọc call sheet của một operation theo id: schema tham số thật, credential cần dùng, và các trường body đọc thẳng từ handler decode chúng, mỗi trường mang theo cái bẫy doc comment của chính nó ghi lại |
-| `sb_api_call` | Chạy một operation. Mặc định chạy khô, không gửi gì |
+| `sb_api_call` | Chạy operation; mặc định chạy khô. Chọn field và phân trang kết quả phía MCP |
 | `sb_page_open` | Mở một trang để sửa và trả về outline |
 | `sb_outline` | Trang đang mở dạng cây nén — không bao giờ dump tài liệu thô |
 | `sb_node_read` | Một node đầy đủ, kèm cảnh báo nếu nó là global dùng chung |

@@ -83,7 +83,7 @@ in this client: one would put the very key the platform exists to hold back into
 | `sb_connect` | Log in, list the sites this account can operate, report which credentials are present |
 | `sb_site_list` | List the sites this account can operate |
 | `sb_api_find` | Find API operations by intent — one line per match — then read one operation's call sheet by id: real parameter schemas, the credential it needs, and the body's fields read off the handler that decodes them, each carrying the trap its own doc comment records |
-| `sb_api_call` | Execute one operation. Defaults to a dry run that sends nothing |
+| `sb_api_call` | Execute an operation; dry run by default. Field selection and local result pagination |
 | `sb_page_open` | Open a page for editing and return its outline |
 | `sb_outline` | The open page as a compressed tree — never a raw document dump |
 | `sb_node_read` | One node in full, with a warning if it is a shared global |

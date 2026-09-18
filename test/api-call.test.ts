@@ -114,6 +114,33 @@ describe('callOperation()', () => {
     expect(JSON.stringify(out)).not.toContain('jwt');
   });
 
+  it.each([true, false])('refuses paging a mutation before any network request (dry_run=%s)', async (dry_run) => {
+    const f = ok();
+    await expect(callOperation(await ctxWith(f, 'wbk_k'), {
+      id: 'post:/api/v1/products', item_offset: 1, dry_run,
+    })).rejects.toThrow(/reads only/);
+    expect(calls(f)).toHaveLength(0);
+  });
+
+  it('previews local pagination without any request', async () => {
+    const f = ok();
+    const out = await callOperation(await ctxWith(f, 'wbk_k'), {
+      id: 'get:/api/v1/products', item_offset: 2, max_items: 1,
+    });
+    expect(out).toMatchObject({ dry_run: true, shaping: { item_offset: 2, max_items: 1 } });
+    expect(calls(f)).toHaveLength(0);
+  });
+
+  it('applies local pagination after the request, not as an API query parameter', async () => {
+    const f = vi.fn(async () => new Response(JSON.stringify({ products: [{ id: 1 }, { id: 2 }, { id: 3 }], total: 30 }))) as unknown as typeof fetch;
+    const out = await callOperation(await ctxWith(f, 'wbk_k'), {
+      id: 'get:/api/v1/products', query: { limit: '3' }, item_offset: 1, max_items: 1, dry_run: false,
+    });
+    expect(out).toMatchObject({ products: [{ id: 2 }], total: 30, truncated: { offset: 1, next_item_offset: 2 } });
+    expect(calls(f)).toHaveLength(1);
+    expect(calls(f)[0][0]).toBe('http://x/api/v1/products?limit=3');
+  });
+
   it('encodes a path param rather than letting it inject a path segment', async () => {
     const f = ok();
     await callOperation(await ctxWith(f, 'wbk_k'), {
@@ -166,6 +193,83 @@ describe('shapeResponse()', () => {
     expect(shapeResponse(raw, {})).toBe(raw);
   });
 
+  it('continues through every item without changing the platform total', () => {
+    const raw = { ...list(5), total: 100 };
+    const first = shapeResponse(raw, { pick: ['id'], max_items: 2 }) as any;
+    const second = shapeResponse(raw, { pick: ['id'], max_items: 2, item_offset: first.truncated.next_item_offset }) as any;
+    const last = shapeResponse(raw, { pick: ['id'], max_items: 2, item_offset: second.truncated.next_item_offset }) as any;
+    expect([...first.products, ...second.products, ...last.products]).toEqual(
+      raw.products.map(({ id }) => ({ id })),
+    );
+    expect([first.total, second.total, last.total]).toEqual([100, 100, 100]);
+    expect(last.truncated).toMatchObject({ offset: 4, shown: 1, of: 5 });
+    expect(last.truncated.next_item_offset).toBeUndefined();
+    expect(raw.products).toHaveLength(5);
+  });
+
+  it('continues a size-truncated bare array with no overlaps or omissions', () => {
+    const raw = list(600).products;
+    const collected: unknown[] = [];
+    let offset = 0;
+    for (let page = 0; page < 10; page++) {
+      const out = shapeResponse(raw, { item_offset: offset }) as any;
+      collected.push(...out.items);
+      expect(JSON.stringify(out).length).toBeLessThanOrEqual(RESULT_CAP);
+      if (out.truncated.next_item_offset === undefined) break;
+      expect(out.truncated.next_item_offset).toBeGreaterThan(offset);
+      offset = out.truncated.next_item_offset;
+    }
+    expect(collected).toEqual(raw);
+  });
+
+  it('budgets continuation metadata even when the selected rows alone fit', () => {
+    const raw = [{ blob: 'x'.repeat(RESULT_CAP - 30) }, { id: 2 }];
+    const out = shapeResponse(raw, { max_items: 1 });
+    expect(JSON.stringify(out).length).toBeLessThanOrEqual(RESULT_CAP);
+  });
+
+  it('reports an exhausted offset without a false continuation', () => {
+    const out = shapeResponse(list(5), { item_offset: 20 }) as any;
+    expect(out.products).toEqual([]);
+    expect(out.truncated).toMatchObject({ offset: 5, shown: 0, of: 5 });
+    expect(out.truncated.next_item_offset).toBeUndefined();
+  });
+
+  it('does not suggest a continuation that cannot advance past an oversized row', () => {
+    const out = shapeResponse([{ blob: 'x'.repeat(RESULT_CAP) }], {}) as any;
+    expect(out.items).toEqual([]);
+    expect(out.truncated.next_item_offset).toBeUndefined();
+    expect(out.truncated.hint).toMatch(/pick/);
+  });
+
+  it('keeps original list fields and warns when pick matches nothing', () => {
+    const raw = list(2);
+    const out = shapeResponse(raw, { pick: ['typo'] }) as any;
+    expect(out.products).toEqual(raw.products);
+    expect(out.shaping_note).toMatch(/pick matched no field/);
+    const bare = shapeResponse(raw.products, { pick: [] }) as any;
+    expect(bare.items).toEqual(raw.products);
+    expect(bare.shaping_note).toMatch(/pick matched no field/);
+  });
+
+  it('still caps unmatched projections and preserves the warning', () => {
+    const out = shapeResponse(list(600), { pick: ['typo'] }) as any;
+    expect(out.products.length).toBeGreaterThan(0);
+    expect(out.truncated.next_item_offset).toBe(out.products.length);
+    expect(out.shaping_note).toMatch(/pick matched no field/);
+    expect(JSON.stringify(out).length).toBeLessThanOrEqual(RESULT_CAP);
+  });
+
+  it('does not discard successful picks just because some rows lack the field', () => {
+    expect(shapeResponse([{ id: 1 }, { name: 'other' }], { pick: ['id'] })).toEqual([{ id: 1 }, {}]);
+  });
+
+  it('reports offset on a non-list even when pick succeeds', () => {
+    const out = shapeResponse({ page: { id: 'p' } }, { pick: ['id'], item_offset: 1 }) as any;
+    expect(out.page).toEqual({ id: 'p' });
+    expect(out.shaping_note).toMatch(/item_offset did not apply/);
+  });
+
   it('a bare array is shaped too', () => {
     const out = shapeResponse([{ id: 1, x: 2 }, { id: 2, x: 3 }], { pick: ['id'], max_items: 1 }) as { items: unknown[]; truncated: unknown };
     expect(out.items).toEqual([{ id: 1 }]);
@@ -203,7 +307,7 @@ describe('shapeResponse() — the edges the review found', () => {
     const raw = { products: [{ id: 'p1' }], meta: 'x'.repeat(RESULT_CAP + 10) };
     const out = shapeResponse(raw, {}) as { products: unknown[]; truncated: { hint: string } };
     expect(out.products.length).toBe(1);
-    expect(out.truncated.hint).toMatch(/nothing was cut/);
+    expect(out.truncated.hint).toMatch(/no additional size cut/);
   });
 
   it('never clobbers a platform field named truncated', () => {

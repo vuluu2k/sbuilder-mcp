@@ -22,6 +22,8 @@ export interface CallArgs {
   pick?: string[];
   /** Cap on the items of a list response, applied after the platform's own paging. */
   max_items?: number;
+  /** Skip items within this response, not within the server's dataset. */
+  item_offset?: number;
 }
 
 /** Past this many characters a list response is cut to fit and says so. */
@@ -91,8 +93,11 @@ const LIST_PROJECTIONS: Record<string, string[]> = {
   'get:/api/sites/{siteId}/pages/{pageId}/history': ['id', 'createdBy', 'createdAt'],
 };
 
-export function shapeResponse(raw: unknown, opts: { pick?: string[]; max_items?: number }): unknown {
-  const asked = opts.pick !== undefined || opts.max_items !== undefined;
+export function shapeResponse(
+  raw: unknown,
+  opts: Pick<CallArgs, 'pick' | 'max_items' | 'item_offset'>,
+): unknown {
+  const asked = opts.pick !== undefined || opts.max_items !== undefined || opts.item_offset !== undefined;
   const isObj = (v: unknown): v is Record<string, unknown> =>
     !!v && typeof v === 'object' && !Array.isArray(v);
   const list = listOf(raw);
@@ -129,32 +134,50 @@ export function shapeResponse(raw: unknown, opts: { pick?: string[]; max_items?:
           'Not a single-list answer and pick matched no field, so nothing was shaped or cut.',
       };
     }
-    if (opts.max_items !== undefined && isObj(out)) {
-      return { ...out, shaping_note: 'Not a list answer, so max_items did not apply.' };
+    if ((opts.max_items !== undefined || opts.item_offset !== undefined) && isObj(out)) {
+      return { ...out, shaping_note: 'Not a list answer, so max_items/item_offset did not apply.' };
     }
     return out;
   }
 
-  let items = opts.pick ? list.items.map((it) => pickFields(it, opts.pick!)) : list.items;
-  const of = items.length;
-  let cut: 'max_items' | 'size' | undefined;
+  const of = list.items.length;
+  const offset = Math.min(opts.item_offset ?? 0, of);
+  let items = list.items.slice(offset);
+  let shapingNote: string | undefined;
+  if (opts.pick) {
+    const projected = items.map((it) => pickFields(it, opts.pick!));
+    // A typo must not turn a populated list into apparently empty records.
+    // Keep the payload in this case, but still apply the normal size guard.
+    const objects = projected.filter(isObj);
+    if (objects.length > 0 && objects.every((it) => Object.keys(it).length === 0)) {
+      shapingNote = 'pick matched no field on these items; original fields kept. Check the field names.';
+    } else {
+      items = projected;
+    }
+  }
+  let cut: 'max_items' | 'size' | 'item_offset' | undefined = offset > 0 ? 'item_offset' : undefined;
   if (opts.max_items !== undefined && items.length > opts.max_items) {
     items = items.slice(0, opts.max_items);
     cut = 'max_items';
   }
-  const rebuild = (its: unknown[]) =>
-    list.key === null ? its : { ...(raw as Record<string, unknown>), [list.key]: its };
+  const rebuild = (its: unknown[]) => {
+    const out = list.key === null ? its : { ...(raw as Record<string, unknown>), [list.key]: its };
+    if (!shapingNote) return out;
+    return list.key === null
+      ? { items: its, shaping_note: shapingNote }
+      : { ...out, shaping_note: shapingNote };
+  };
 
   // The platform may already answer with a `truncated` field; never clobber it.
   const key = isObj(raw) && 'truncated' in raw ? '_truncated' : 'truncated';
   const said = (t: Record<string, unknown>) =>
     list.key === null
-      ? { items, [key]: t }
+      ? { items, ...(shapingNote ? { shaping_note: shapingNote } : {}), [key]: t }
       : { ...(rebuild(items) as Record<string, unknown>), [key]: t };
 
   // Budget the cut so the answer INCLUDING what it says about the cut fits.
   const TRUNCATED_ROOM = 320;
-  if (JSON.stringify(rebuild(items)).length > RESULT_CAP) {
+  if (JSON.stringify(rebuild(items)).length + (cut ? TRUNCATED_ROOM : 0) > RESULT_CAP) {
     const fixed = JSON.stringify(rebuild([])).length;
     if (fixed + TRUNCATED_ROOM > RESULT_CAP) {
       // The non-list part alone is over the cap, so dropping items gains
@@ -162,7 +185,8 @@ export function shapeResponse(raw: unknown, opts: { pick?: string[]; max_items?:
       return said({
         shown: items.length,
         of,
-        hint: `The non-list part of this answer alone is over ${RESULT_CAP} characters, so nothing was cut. Pass pick to keep only the fields you need.`,
+        offset,
+        hint: `The non-list part alone exceeds ${RESULT_CAP} characters; no additional size cut was made. Narrow the response at the API.`,
       });
     }
     let used = fixed + TRUNCATED_ROOM;
@@ -180,10 +204,16 @@ export function shapeResponse(raw: unknown, opts: { pick?: string[]; max_items?:
   return said({
     shown: items.length,
     of,
+    offset,
+    // No false continuation when even one row cannot fit. The caller must
+    // narrow its fields first, not loop forever at the same offset.
+    ...(items.length > 0 && offset + items.length < of
+      ? { next_item_offset: offset + items.length }
+      : {}),
     hint:
       cut === 'size'
-        ? `The full list was over ${RESULT_CAP} characters. Pass pick to keep only the fields you need, max_items, or the operation's own limit/offset query.`
-        : "Cut by max_items; raise it or page with the operation's own limit/offset query.",
+        ? `List exceeds ${RESULT_CAP} characters. Use pick to narrow fields; item_offset pages within this response.`
+        : 'item_offset/max_items select within this response, after API paging. Repeat only reads, never mutations.',
   });
 }
 
@@ -229,6 +259,9 @@ const SITE_PARAMS = new Set(['siteid']);
 export async function callOperation(ctx: ToolContext, args: CallArgs): Promise<unknown> {
   const op = API_OPERATIONS.find((o) => o.id === args.id);
   if (!op) throw new Error(`sbuilder: unknown operation "${args.id}" — use sb_api_find first`);
+  if (args.item_offset && op.method !== 'GET' && op.method !== 'HEAD') {
+    throw new Error('sbuilder: item_offset is for reads only. Repeating a mutation to page its result would repeat the write; use the matching GET instead.');
+  }
 
   // Substitute {name} placeholders. A missing one would otherwise be sent
   // literally, and a path containing a brace 404s with nothing to explain it.
@@ -286,8 +319,8 @@ export async function callOperation(ctx: ToolContext, args: CallArgs): Promise<u
       }),
       // Shaping is part of what the call WOULD do, so the preview says it;
       // otherwise a dry run reads identically whether or not it was asked for.
-      ...(args.pick !== undefined || args.max_items !== undefined
-        ? { shaping: { pick: args.pick, max_items: args.max_items } }
+      ...(args.pick !== undefined || args.max_items !== undefined || args.item_offset !== undefined
+        ? { shaping: { pick: args.pick, max_items: args.max_items, item_offset: args.item_offset } }
         : {}),
       note: 'Nothing was sent. Re-call with dry_run:false to execute.',
     };
@@ -332,7 +365,7 @@ export async function callOperation(ctx: ToolContext, args: CallArgs): Promise<u
   // The caller's own `pick` outranks the default: asking for `document` is how
   // you read a version rather than merely choose one.
   const projection = args.pick ?? LIST_PROJECTIONS[op.id];
-  return shapeResponse(raw, { pick: projection, max_items: args.max_items });
+  return shapeResponse(raw, { pick: projection, max_items: args.max_items, item_offset: args.item_offset });
 }
 
 /**
@@ -356,9 +389,8 @@ export function registerApiTools(server: McpServer, ctx: ToolContext): void {
     'sb_api_find',
     {
       description:
-        'Search platform API operations by intent (query: one line per match), or read one ' +
-          "operation's full call sheet (id: parameter types, credential, and the body's fields " +
-          'with the traps their own doc comments carry, read off the handler that decodes them). ' +
+        'Find API operations by intent (query), or get a call sheet (id): parameters, ' +
+          'credential, body fields and handler caveats. ' +
           `Reaches all ${SWAGGER_SOURCE.operations} operations.`,
       inputSchema: {
       query: z
@@ -403,9 +435,8 @@ export function registerApiTools(server: McpServer, ctx: ToolContext): void {
     'sb_api_call',
     {
       description:
-        'Execute one operation from sb_api_find. Defaults to a dry run that sends nothing and ' +
-          'shows the request. pick keeps only named fields on list items, max_items caps the ' +
-          'list, and a list over 60 KB is cut to fit and says so.',
+        'Call an operation from sb_api_find; dry run by default. pick selects fields, ' +
+          'max_items caps lists, item_offset skips items. Lists over 60 KB carry truncation metadata.',
       inputSchema: {
       id: z
         .string()
@@ -416,6 +447,7 @@ export function registerApiTools(server: McpServer, ctx: ToolContext): void {
       dry_run: z.boolean().optional().describe('Defaults to true. Pass false to actually send.'),
       pick: z.array(z.string()).optional(),
       max_items: z.number().int().min(1).optional(),
+      item_offset: z.number().int().min(0).optional().describe('Offset within this response, after API paging. Reads only.'),
     },
       annotations: { readOnlyHint: false, destructiveHint: true, openWorldHint: true },
     },

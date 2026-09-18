@@ -128,6 +128,7 @@ Chạy một operation tìm được bằng `sb_api_find`.
 | `dry_run` | boolean? | **Mặc định `true`** — không gửi gì, trả về bản xem trước đã che bí mật |
 | `pick` | string[]? | Các field giữ lại trên mỗi item của một câu trả lời dạng danh sách (hoặc trên item duy nhất của câu trả lời `{ page: {…} }`) |
 | `max_items` | number? | Trần số item của một danh sách, áp sau phân trang của chính nền tảng |
+| `item_offset` | integer? | Bỏ qua số item này trong danh sách trả về (mặc định 0); giá trị dương chỉ dùng với GET/HEAD |
 
 Credential chọn theo path chứ không theo tham số: `/api/v1/…` dùng `SB_TOKEN`, còn lại
 dùng phiên. Thiếu `SB_TOKEN` thì báo đích danh tên biến, thay vì để nền tảng trả
@@ -146,13 +147,24 @@ hẹp lệnh gọi (`pick`, `max_items`, hoặc query `limit`/`offset` của ch�
 lời không phải danh sách thì không bao giờ bị cắt: không có chỗ nào trung thực để dừng giữa
 một object.
 
+Kết quả bị cắt còn có `offset` và `next_item_offset` nếu có thể đọc tiếp. Truyền giá trị
+sau vào `item_offset`, giữ nguyên GET và query để đọc phần kế tiếp, kể cả khi API không hỗ
+trợ phân trang. Mỗi lần gọi tải lại danh sách, không giữ snapshot: dữ liệu thay đổi đồng
+thời có thể làm vị trí item dịch chuyển. Ưu tiên phân trang của API nếu có; tham số này
+không lấy được bản ghi ngoài trang hiện tại của API. Không gọi lại thao tác ghi chỉ để
+đọc tiếp kết quả; offset dương trên thao tác ghi bị từ chối. Nếu riêng một item đã vượt
+trần, thu hẹp `pick` trước; không trả con trỏ khiến việc đọc tiếp lặp mãi tại chỗ.
+
+Nếu `pick` không khớp field nào trong danh sách, giữ field gốc và báo `shaping_note`,
+vẫn áp phân trang và giới hạn dung lượng thay vì trả toàn `{}`.
+
 Ba luật lặng lẽ hơn, mỗi luật tồn tại vì phương án còn lại làm mất dữ liệu mà không nói. Một
 câu trả lời **không có danh sách duy nhất** — ví dụ hai mảng — được trả về nguyên vẹn kèm
 `shaping_note`, thay vì bị định hình thành thứ nền tảng chưa từng gửi; `pick` không khớp
 trường nào cũng vậy, vì `{}` đọc lên như "nền tảng không trả gì". Nếu chính câu trả lời của
 nền tảng đã có trường `truncated`, thông tin cắt sẽ nằm ở `_truncated` chứ không ghi đè. Và
-khi riêng phần không phải danh sách đã vượt trần, không cắt gì cả — bỏ bớt item cũng không
-giúp — và ghi chú nói rõ vì sao.
+khi riêng phần không phải danh sách đã vượt trần, không cắt thêm vì dung lượng — bỏ bớt
+item cũng không giúp — và ghi chú nói rõ vì sao.
 
 ---
 
