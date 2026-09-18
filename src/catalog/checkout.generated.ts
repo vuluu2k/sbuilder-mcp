@@ -498,7 +498,11 @@ export const CHECKOUT_FORM_DOCUMENT = {
         "color": "#ffffff",
         "borderRadius": "6px"
       },
-      "config": {},
+      "config": {
+        "iconSize": 20,
+        "iconGap": 8,
+        "iconPosition": "left"
+      },
       "specials": {
         "text": "Đặt hàng",
         "submittingText": "Đang gửi…"
@@ -1098,7 +1102,11 @@ export const FORM_TEMPLATES = {
             "color": "#ffffff",
             "borderRadius": "6px"
           },
-          "config": {},
+          "config": {
+            "iconSize": 20,
+            "iconGap": 8,
+            "iconPosition": "left"
+          },
           "specials": {
             "text": "Gửi",
             "submittingText": "Đang gửi…"
@@ -1266,7 +1274,11 @@ export const FORM_TEMPLATES = {
             "color": "#ffffff",
             "borderRadius": "6px"
           },
-          "config": {},
+          "config": {
+            "iconSize": 20,
+            "iconGap": 8,
+            "iconPosition": "left"
+          },
           "specials": {
             "text": "Đăng ký",
             "submittingText": "Đang gửi…"
@@ -1657,7 +1669,11 @@ export const FORM_TEMPLATES = {
             "color": "#ffffff",
             "borderRadius": "6px"
           },
-          "config": {},
+          "config": {
+            "iconSize": 20,
+            "iconGap": 8,
+            "iconPosition": "left"
+          },
           "specials": {
             "text": "Đặt hàng",
             "submittingText": "Đang gửi…"
@@ -2160,7 +2176,11 @@ export const FORM_TEMPLATES = {
             "color": "#ffffff",
             "borderRadius": "6px"
           },
-          "config": {},
+          "config": {
+            "iconSize": 20,
+            "iconGap": 8,
+            "iconPosition": "left"
+          },
           "specials": {
             "text": "Đặt hàng",
             "submittingText": "Đang gửi…"
@@ -2905,7 +2925,11 @@ export const FORM_TEMPLATES = {
             "color": "#ffffff",
             "borderRadius": "6px"
           },
-          "config": {},
+          "config": {
+            "iconSize": 20,
+            "iconGap": 8,
+            "iconPosition": "left"
+          },
           "specials": {
             "text": "Gửi",
             "submittingText": "Đang gửi…"
@@ -3155,7 +3179,11 @@ export const FORM_TEMPLATES = {
             "color": "#ffffff",
             "borderRadius": "6px"
           },
-          "config": {},
+          "config": {
+            "iconSize": 20,
+            "iconGap": 8,
+            "iconPosition": "left"
+          },
           "specials": {
             "text": "Gửi thông tin",
             "submittingText": "Đang gửi…"
@@ -3449,7 +3477,11 @@ export const FORM_TEMPLATES = {
             "color": "#ffffff",
             "borderRadius": "6px"
           },
-          "config": {},
+          "config": {
+            "iconSize": 20,
+            "iconGap": 8,
+            "iconPosition": "left"
+          },
           "specials": {
             "text": "Đặt lịch",
             "submittingText": "Đang gửi…"
@@ -3818,7 +3850,11 @@ export const FORM_TEMPLATES = {
             "color": "#ffffff",
             "borderRadius": "6px"
           },
-          "config": {},
+          "config": {
+            "iconSize": 20,
+            "iconGap": 8,
+            "iconPosition": "left"
+          },
           "specials": {
             "text": "Đặt phòng",
             "submittingText": "Đang gửi…"
@@ -4037,7 +4073,11 @@ export const FORM_TEMPLATES = {
             "color": "#ffffff",
             "borderRadius": "6px"
           },
-          "config": {},
+          "config": {
+            "iconSize": 20,
+            "iconGap": 8,
+            "iconPosition": "left"
+          },
           "specials": {
             "text": "Gửi góp ý",
             "submittingText": "Đang gửi…"
@@ -4296,7 +4336,11 @@ export const FORM_TEMPLATES = {
             "color": "#ffffff",
             "borderRadius": "6px"
           },
-          "config": {},
+          "config": {
+            "iconSize": 20,
+            "iconGap": 8,
+            "iconPosition": "left"
+          },
           "specials": {
             "text": "Đăng ký",
             "submittingText": "Đang gửi…"
@@ -4560,7 +4604,11 @@ export const FORM_TEMPLATES = {
             "color": "#ffffff",
             "borderRadius": "6px"
           },
-          "config": {},
+          "config": {
+            "iconSize": 20,
+            "iconGap": 8,
+            "iconPosition": "left"
+          },
           "specials": {
             "text": "Gửi yêu cầu",
             "submittingText": "Đang gửi…"
@@ -4856,7 +4904,11 @@ export const FORM_TEMPLATES = {
             "color": "#ffffff",
             "borderRadius": "6px"
           },
-          "config": {},
+          "config": {
+            "iconSize": 20,
+            "iconGap": 8,
+            "iconPosition": "left"
+          },
           "specials": {
             "text": "Nộp hồ sơ",
             "submittingText": "Đang gửi…"
@@ -5038,7 +5090,11 @@ export const FORM_TEMPLATES = {
             "color": "#ffffff",
             "borderRadius": "6px"
           },
-          "config": {},
+          "config": {
+            "iconSize": 20,
+            "iconGap": 8,
+            "iconPosition": "left"
+          },
           "specials": {
             "text": "Đăng nhập",
             "submittingText": "Đang gửi…"
@@ -5302,7 +5358,11 @@ export const FORM_TEMPLATES = {
             "color": "#ffffff",
             "borderRadius": "6px"
           },
-          "config": {},
+          "config": {
+            "iconSize": 20,
+            "iconGap": 8,
+            "iconPosition": "left"
+          },
           "specials": {
             "text": "Đăng ký",
             "submittingText": "Đang gửi…"
@@ -5443,7 +5503,11 @@ export const FORM_TEMPLATES = {
             "color": "#ffffff",
             "borderRadius": "6px"
           },
-          "config": {},
+          "config": {
+            "iconSize": 20,
+            "iconGap": 8,
+            "iconPosition": "left"
+          },
           "specials": {
             "text": "Gửi mã",
             "submittingText": "Đang gửi…"
@@ -5625,7 +5689,11 @@ export const FORM_TEMPLATES = {
             "color": "#ffffff",
             "borderRadius": "6px"
           },
-          "config": {},
+          "config": {
+            "iconSize": 20,
+            "iconGap": 8,
+            "iconPosition": "left"
+          },
           "specials": {
             "text": "Xác minh",
             "submittingText": "Đang gửi…"
@@ -5889,7 +5957,11 @@ export const FORM_TEMPLATES = {
             "color": "#ffffff",
             "borderRadius": "6px"
           },
-          "config": {},
+          "config": {
+            "iconSize": 20,
+            "iconGap": 8,
+            "iconPosition": "left"
+          },
           "specials": {
             "text": "Đặt lại mật khẩu",
             "submittingText": "Đang gửi…"

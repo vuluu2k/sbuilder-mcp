@@ -3,10 +3,10 @@
 import type { ApiOperation } from './types.js';
 
 export const SWAGGER_SOURCE = {
-  "operations": 531,
+  "operations": 560,
   "definitions": 107,
-  "bodyCarrying": 197,
-  "bodyUndescribed": 78,
+  "bodyCarrying": 210,
+  "bodyUndescribed": 91,
   "generatedFrom": "server/docs/swagger.json"
 } as const;
 
@@ -1152,6 +1152,167 @@ export const API_OPERATIONS: ApiOperation[] = [
     "credential": "siteScoped"
   },
   {
+    "id": "get:/api/admin/accounts/{id}/ai-credits",
+    "method": "GET",
+    "path": "/api/admin/accounts/{id}/ai-credits",
+    "tags": [
+      "admin"
+    ],
+    "summary": "Read or top up one owner's AI credit balance",
+    "params": [
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "account or org id"
+      },
+      {
+        "name": "body",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "{credits:N, note:\\"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/api/admin/accounts/{id}/ai-credits",
+    "method": "POST",
+    "path": "/api/admin/accounts/{id}/ai-credits",
+    "tags": [
+      "admin"
+    ],
+    "summary": "Read or top up one owner's AI credit balance",
+    "params": [
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "account or org id"
+      },
+      {
+        "name": "body",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "{credits:N, note:\\"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/admin/accounts/{id}/ai-limit",
+    "method": "GET",
+    "path": "/api/admin/accounts/{id}/ai-limit",
+    "tags": [
+      "admin"
+    ],
+    "summary": "Read, set or lift one account's platform-funded AI ceiling",
+    "params": [
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "account id"
+      },
+      {
+        "name": "body",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "{monthlyCalls:N} — PUT only; 0 blocks the account"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "put:/api/admin/accounts/{id}/ai-limit",
+    "method": "PUT",
+    "path": "/api/admin/accounts/{id}/ai-limit",
+    "tags": [
+      "admin"
+    ],
+    "summary": "Read, set or lift one account's platform-funded AI ceiling",
+    "params": [
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "account id"
+      },
+      {
+        "name": "body",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "{monthlyCalls:N} — PUT only; 0 blocks the account"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "delete:/api/admin/accounts/{id}/ai-limit",
+    "method": "DELETE",
+    "path": "/api/admin/accounts/{id}/ai-limit",
+    "tags": [
+      "admin"
+    ],
+    "summary": "Read, set or lift one account's platform-funded AI ceiling",
+    "params": [
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "account id"
+      },
+      {
+        "name": "body",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "{monthlyCalls:N} — PUT only; 0 blocks the account"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/admin/accounts/{id}/orgs",
+    "method": "GET",
+    "path": "/api/admin/accounts/{id}/orgs",
+    "tags": [
+      "admin"
+    ],
+    "summary": "List the organisations one customer belongs to",
+    "params": [
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "account id"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
     "id": "get:/api/admin/address-units",
     "method": "GET",
     "path": "/api/admin/address-units",
@@ -1159,6 +1320,32 @@ export const API_OPERATIONS: ApiOperation[] = [
       "admin"
     ],
     "summary": "List and load administrative-unit data",
+    "params": [],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/admin/ai-keys",
+    "method": "GET",
+    "path": "/api/admin/ai-keys",
+    "tags": [
+      "admin"
+    ],
+    "summary": "Manage the platform's AI provider credentials",
+    "params": [],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/api/admin/ai-keys",
+    "method": "POST",
+    "path": "/api/admin/ai-keys",
+    "tags": [
+      "admin"
+    ],
+    "summary": "Manage the platform's AI provider credentials",
     "params": [],
     "bodyDescribed": false,
     "bodyRef": null,
@@ -1238,6 +1425,48 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "summary": "Manage the platform's Pexels credentials",
     "params": [],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/admin/payout",
+    "method": "GET",
+    "path": "/api/admin/payout",
+    "tags": [
+      "admin"
+    ],
+    "summary": "Read or replace the platform's receiving account and SePay secret",
+    "params": [
+      {
+        "name": "body",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "{bankName,bankCode,accountNumber,accountHolder,codePrefix,webhookSecret} — PUT only"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "put:/api/admin/payout",
+    "method": "PUT",
+    "path": "/api/admin/payout",
+    "tags": [
+      "admin"
+    ],
+    "summary": "Read or replace the platform's receiving account and SePay secret",
+    "params": [
+      {
+        "name": "body",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "{bankName,bankCode,accountNumber,accountHolder,codePrefix,webhookSecret} — PUT only"
+      }
+    ],
     "bodyDescribed": false,
     "bodyRef": null,
     "credential": "siteScoped"
@@ -1351,6 +1580,48 @@ export const API_OPERATIONS: ApiOperation[] = [
     "credential": "siteScoped"
   },
   {
+    "id": "post:/api/auth/change-email",
+    "method": "POST",
+    "path": "/api/auth/change-email",
+    "tags": [
+      "auth"
+    ],
+    "summary": "Move the account to a new, code-verified address",
+    "params": [
+      {
+        "name": "body",
+        "in": "body",
+        "required": true,
+        "type": "object",
+        "description": "newEmail + code"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "none"
+  },
+  {
+    "id": "post:/api/auth/change-email/request",
+    "method": "POST",
+    "path": "/api/auth/change-email/request",
+    "tags": [
+      "auth"
+    ],
+    "summary": "Email a code to a new address, authorising a move",
+    "params": [
+      {
+        "name": "body",
+        "in": "body",
+        "required": true,
+        "type": "object",
+        "description": "newEmail"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "none"
+  },
+  {
     "id": "post:/api/auth/change-password",
     "method": "POST",
     "path": "/api/auth/change-password",
@@ -1406,6 +1677,45 @@ export const API_OPERATIONS: ApiOperation[] = [
     "credential": "none"
   },
   {
+    "id": "get:/api/auth/identities",
+    "method": "GET",
+    "path": "/api/auth/identities",
+    "tags": [
+      "auth"
+    ],
+    "summary": "List or unlink the account's external sign-in methods",
+    "params": [],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "none"
+  },
+  {
+    "id": "post:/api/auth/identities",
+    "method": "POST",
+    "path": "/api/auth/identities",
+    "tags": [
+      "auth"
+    ],
+    "summary": "List or unlink the account's external sign-in methods",
+    "params": [],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "none"
+  },
+  {
+    "id": "delete:/api/auth/identities/{provider}",
+    "method": "DELETE",
+    "path": "/api/auth/identities/{provider}",
+    "tags": [
+      "auth"
+    ],
+    "summary": "List or unlink the account's external sign-in methods",
+    "params": [],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "none"
+  },
+  {
     "id": "post:/api/auth/login",
     "method": "POST",
     "path": "/api/auth/login",
@@ -1434,6 +1744,180 @@ export const API_OPERATIONS: ApiOperation[] = [
       "auth"
     ],
     "summary": "Get the authenticated user",
+    "params": [],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "none"
+  },
+  {
+    "id": "patch:/api/auth/me",
+    "method": "PATCH",
+    "path": "/api/auth/me",
+    "tags": [
+      "auth"
+    ],
+    "summary": "Update the authenticated user's profile",
+    "params": [
+      {
+        "name": "body",
+        "in": "body",
+        "required": true,
+        "type": "object",
+        "description": "name"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "none"
+  },
+  {
+    "id": "post:/api/auth/me/avatar",
+    "method": "POST",
+    "path": "/api/auth/me/avatar",
+    "tags": [
+      "auth"
+    ],
+    "summary": "Upload or remove the authenticated user's profile picture",
+    "params": [
+      {
+        "name": "file",
+        "in": "formData",
+        "required": false,
+        "type": "file",
+        "description": "image (JPEG, PNG, WebP or GIF)"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "none"
+  },
+  {
+    "id": "delete:/api/auth/me/avatar",
+    "method": "DELETE",
+    "path": "/api/auth/me/avatar",
+    "tags": [
+      "auth"
+    ],
+    "summary": "Upload or remove the authenticated user's profile picture",
+    "params": [
+      {
+        "name": "file",
+        "in": "formData",
+        "required": false,
+        "type": "file",
+        "description": "image (JPEG, PNG, WebP or GIF)"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "none"
+  },
+  {
+    "id": "get:/api/auth/oauth/{provider}/callback",
+    "method": "GET",
+    "path": "/api/auth/oauth/{provider}/callback",
+    "tags": [
+      "auth"
+    ],
+    "summary": "Begin a Google/GitHub sign-in, or finish one",
+    "params": [
+      {
+        "name": "provider",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "google or github"
+      },
+      {
+        "name": "intent",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "login (default) or link; link needs a session"
+      },
+      {
+        "name": "redirect",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "an in-app path to land on afterwards"
+      },
+      {
+        "name": "code",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "callback only: the provider's authorization code"
+      },
+      {
+        "name": "state",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "callback only: the state this server signed"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "none"
+  },
+  {
+    "id": "get:/api/auth/oauth/{provider}/start",
+    "method": "GET",
+    "path": "/api/auth/oauth/{provider}/start",
+    "tags": [
+      "auth"
+    ],
+    "summary": "Begin a Google/GitHub sign-in, or finish one",
+    "params": [
+      {
+        "name": "provider",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "google or github"
+      },
+      {
+        "name": "intent",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "login (default) or link; link needs a session"
+      },
+      {
+        "name": "redirect",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "an in-app path to land on afterwards"
+      },
+      {
+        "name": "code",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "callback only: the provider's authorization code"
+      },
+      {
+        "name": "state",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "callback only: the state this server signed"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "none"
+  },
+  {
+    "id": "get:/api/auth/providers",
+    "method": "GET",
+    "path": "/api/auth/providers",
+    "tags": [
+      "auth"
+    ],
+    "summary": "List the external sign-in providers and whether each is configured",
     "params": [],
     "bodyDescribed": false,
     "bodyRef": null,
@@ -1496,6 +1980,27 @@ export const API_OPERATIONS: ApiOperation[] = [
         "required": true,
         "type": "object",
         "description": "email + code + newPassword"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "none"
+  },
+  {
+    "id": "post:/api/auth/set-password",
+    "method": "POST",
+    "path": "/api/auth/set-password",
+    "tags": [
+      "auth"
+    ],
+    "summary": "Set a first password on an account that has none",
+    "params": [
+      {
+        "name": "body",
+        "in": "body",
+        "required": true,
+        "type": "object",
+        "description": "newPassword + code"
       }
     ],
     "bodyDescribed": false,
@@ -3019,6 +3524,40 @@ export const API_OPERATIONS: ApiOperation[] = [
     "credential": "siteScoped"
   },
   {
+    "id": "get:/api/public/capabilities",
+    "method": "GET",
+    "path": "/api/public/capabilities",
+    "tags": [
+      "capabilities"
+    ],
+    "summary": "What this deployment can do",
+    "params": [],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/api/public/uploads",
+    "method": "POST",
+    "path": "/api/public/uploads",
+    "tags": [
+      "uploads"
+    ],
+    "summary": "Hold a file for a site that does not exist yet",
+    "params": [
+      {
+        "name": "file",
+        "in": "formData",
+        "required": true,
+        "type": "file",
+        "description": "the image to hold"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
     "id": "get:/api/sites",
     "method": "GET",
     "path": "/api/sites",
@@ -3061,6 +3600,76 @@ export const API_OPERATIONS: ApiOperation[] = [
     "credential": "siteScoped"
   },
   {
+    "id": "get:/api/sites/{id}/ai-credits/price",
+    "method": "GET",
+    "path": "/api/sites/{id}/ai-credits/price",
+    "tags": [
+      "ai"
+    ],
+    "summary": "What one AI credit costs",
+    "params": [
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "site id"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/api/sites/{id}/ai-credits/purchase",
+    "method": "POST",
+    "path": "/api/sites/{id}/ai-credits/purchase",
+    "tags": [
+      "ai"
+    ],
+    "summary": "Buy AI credits — issues an unpaid invoice with a payment code",
+    "params": [
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "site id"
+      },
+      {
+        "name": "body",
+        "in": "body",
+        "required": true,
+        "type": "object",
+        "description": "{credits:N}"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/sites/{id}/ai-credits/wallets",
+    "method": "GET",
+    "path": "/api/sites/{id}/ai-credits/wallets",
+    "tags": [
+      "ai"
+    ],
+    "summary": "Which wallets the caller may fund",
+    "params": [
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "site id"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
     "id": "put:/api/sites/{id}/owner",
     "method": "PUT",
     "path": "/api/sites/{id}/owner",
@@ -3082,6 +3691,34 @@ export const API_OPERATIONS: ApiOperation[] = [
         "required": false,
         "type": "object",
         "description": "userId"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/api/sites/{id}/plan-checkout",
+    "method": "POST",
+    "path": "/api/sites/{id}/plan-checkout",
+    "tags": [
+      "plans"
+    ],
+    "summary": "Buy a plan — issues an unpaid invoice with a payment code",
+    "params": [
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "site id"
+      },
+      {
+        "name": "body",
+        "in": "body",
+        "required": true,
+        "type": "object",
+        "description": "{planId}"
       }
     ],
     "bodyDescribed": false,
@@ -3999,6 +4636,19 @@ export const API_OPERATIONS: ApiOperation[] = [
       "billing"
     ],
     "summary": "What this store owes, and what to type into the transfer",
+    "params": [],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/sites/{siteId}/billing/live",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/billing/live",
+    "tags": [
+      "billing"
+    ],
+    "summary": "Push payment events for one site as they happen",
     "params": [],
     "bodyDescribed": false,
     "bodyRef": null,
