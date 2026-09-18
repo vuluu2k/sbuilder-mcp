@@ -117,7 +117,9 @@ Execute one operation found by `sb_api_find`.
 
 | Arg | Type | Notes |
 | --- | --- | --- |
-| `id` | string | From `sb_api_find`, e.g. `get:/api/sites/{siteID}/menus` |
+| `id` | string? | Operation id from `sb_api_find`. Omit it to call by `method` + `path` |
+| `method` | string? | With `path`, when `id` is absent: `GET`, `HEAD`, `POST`, `PUT`, `PATCH` or `DELETE` |
+| `path` | string? | A bare platform path starting with `/`, e.g. `/api/sites/{siteId}/published`; `{siteId}` defaults to `SB_SITE` |
 | `path_params` | object? | Every `{name}` in the path; missing one is refused, values are URL-encoded |
 | `query` | object? | Query string; `undefined` values are dropped |
 | `body` | any? | Request body |
@@ -129,6 +131,23 @@ Execute one operation found by `sb_api_find`.
 Credentials are chosen from the path, never from the argument: `/api/v1/…` uses `SB_TOKEN`,
 everything else uses the session. A missing `SB_TOKEN` is reported by name rather than
 letting the platform answer `401 api_key_required`, which reads like a permissions problem.
+
+**A route the catalog does not carry is still callable.** The catalog is a closed list read
+off one swagger document, and the platform serves routes it does not describe — 20 the
+platform never annotated, three registered directly on the router (`/api/permissions`,
+`/api/plans`, `/api/locales`), and anything newer than the last regen. `method` + `path`
+reaches them under exactly the same rules: the credential follows the path prefix, `dry_run`
+defaults to `true`, `{siteId}` defaults to `SB_SITE`, and `pick` / `max_items` /
+`item_offset` apply. A `method` + `path` naming a route the catalog already holds is
+answered as the catalogued operation instead, shape and undo included, and is not wrapped.
+What a raw call does NOT have is said once per process in `note`: no call sheet, no body
+shape, no body warnings and no `sb_undo`. The answer is wrapped as
+`{ uncatalogued: true, data }` so it cannot be mistaken for a catalogued one. A path that
+is not a bare platform path is refused, because the base URL is this install's `SB_API` and
+a path carrying a host would send the credential elsewhere. A path carrying a query string
+or a fragment is refused too — the query belongs in `query`, not in `path`. When
+`sb_api_find` matches nothing, its answer lists the three router-only routes under
+`outside_catalog`.
 
 A failed call carries the platform's one error shape, `{ error, code }`, and — when the
 platform sends them — `details` and `fields`. A `validation` error names the offending

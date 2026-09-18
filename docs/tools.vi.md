@@ -121,7 +121,9 @@ Chạy một operation tìm được bằng `sb_api_find`.
 
 | Tham số | Kiểu | Ghi chú |
 | --- | --- | --- |
-| `id` | string | Lấy từ `sb_api_find`, ví dụ `get:/api/sites/{siteID}/menus` |
+| `id` | string? | Operation id lấy từ `sb_api_find`. Bỏ trống để gọi bằng `method` + `path` |
+| `method` | string? | Cùng với `path`, khi không có `id`: `GET`, `HEAD`, `POST`, `PUT`, `PATCH` hoặc `DELETE` |
+| `path` | string? | Một path trần của platform, bắt đầu bằng `/`, ví dụ `/api/sites/{siteId}/published`; `{siteId}` mặc định lấy từ `SB_SITE` |
 | `path_params` | object? | Mọi `{name}` trong path; thiếu một cái là bị từ chối, giá trị được URL-encode |
 | `query` | object? | Query string; giá trị `undefined` bị bỏ |
 | `body` | any? | Thân yêu cầu |
@@ -133,6 +135,22 @@ Chạy một operation tìm được bằng `sb_api_find`.
 Credential chọn theo path chứ không theo tham số: `/api/v1/…` dùng `SB_TOKEN`, còn lại
 dùng phiên. Thiếu `SB_TOKEN` thì báo đích danh tên biến, thay vì để nền tảng trả
 `401 api_key_required` — cái đó đọc lên giống lỗi phân quyền.
+
+**Route không có trong catalog vẫn gọi được.** Catalog là một danh sách đóng đọc từ một tài
+liệu swagger, còn platform phục vụ cả những route tài liệu đó không mô tả — 20 route chưa
+từng được annotate, ba route đăng ký thẳng trên router (`/api/permissions`, `/api/plans`,
+`/api/locales`), và mọi thứ mới hơn lần regen gần nhất. `method` + `path` gọi tới chúng theo
+đúng các quy tắc cũ: credential theo tiền tố path, `dry_run` mặc định `true`, `{siteId}` lấy
+từ `SB_SITE`, và `pick` / `max_items` / `item_offset` vẫn áp dụng. Một cặp `method` + `path`
+gọi trúng route đã có trong catalog thì được trả lời như một operation trong catalog, kèm
+shape và undo, và không bị bọc lại. Thứ một raw call KHÔNG có được nói một lần mỗi process
+trong `note`: không call sheet, không body shape, không cảnh báo body và không `sb_undo`.
+Kết quả được bọc thành `{ uncatalogued: true, data }` để không nhầm với kết quả có trong
+catalog. Một path không phải path trần của platform bị từ chối, vì base URL là `SB_API` của
+bản cài này và một path mang host sẽ gửi credential đi nơi khác. Một path mang query string
+hoặc fragment cũng bị từ chối — query thuộc về `query`, không phải `path`. Khi
+`sb_api_find` không khớp gì, câu trả lời liệt kê ba route chỉ-có-trên-router dưới
+`outside_catalog`.
 
 Một lệnh gọi thất bại mang đúng một hình dạng lỗi của nền tảng, `{ error, code }`, và — khi
 nền tảng gửi kèm — `details` và `fields`. Lỗi `validation` nêu đích danh trường sai trong
