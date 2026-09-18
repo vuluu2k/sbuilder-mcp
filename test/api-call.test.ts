@@ -1,6 +1,8 @@
 import { describe, it, expect, vi } from 'vitest';
 import { callOperation, shapeResponse, RESULT_CAP } from '../src/tools/api.js';
 import { Session } from '../src/transport/auth.js';
+import { Notices } from '../src/mcp/notices.js';
+import type { ToolContext } from '../src/tools/context.js';
 
 const ok = () =>
   vi.fn(
@@ -363,5 +365,93 @@ describe('a listing whose every row is a whole page', () => {
   it('leaves the total alone, because a truncated list that lies about its size is worse', () => {
     const out = shapeResponse(versions, { pick: ['id'] }) as { total: number };
     expect(out.total).toBe(2);
+  });
+});
+
+describe('callOperation() — the raw form', () => {
+  const rawCtx = async (f: typeof fetch) => ({ ...(await ctxWith(f, 'wbk_k')), notices: new Notices(), siteId: 'site_env' });
+
+  it('sends a route the catalog does not carry, on the site-scoped credential', async () => {
+    const f = ok();
+    const out = (await callOperation(await rawCtx(f) as unknown as ToolContext, {
+      method: 'get',
+      path: '/api/permissions',
+      dry_run: false,
+    })) as { uncatalogued: boolean; data: unknown; note?: string };
+    expect(calls(f)[0][0]).toBe('http://x/api/permissions');
+    expect((calls(f)[0][1] as { headers: Record<string, string> }).headers.Authorization).toBe('Bearer wbk_k');
+    expect(out.uncatalogued).toBe(true);
+    expect(out.data).toEqual({ menus: [], total: 0 });
+    expect(out.note).toMatch(/no call sheet/i);
+  });
+
+  it('says the directive once per process', async () => {
+    const f = ok();
+    const ctx = await rawCtx(f) as unknown as ToolContext;
+    await callOperation(ctx, { method: 'GET', path: '/api/locales', dry_run: false });
+    const second = (await callOperation(ctx, { method: 'GET', path: '/api/locales', dry_run: false })) as { note?: string };
+    expect(second.note).toBeUndefined();
+  });
+
+  it('defaults {siteId} to SB_SITE in a raw path too', async () => {
+    const f = ok();
+    await callOperation(await rawCtx(f) as unknown as ToolContext, { method: 'GET', path: '/api/sites/{siteId}/published', dry_run: false });
+    expect(calls(f)[0][0]).toBe('http://x/api/sites/site_env/published');
+  });
+
+  it('routes /api/v1 to the key and refuses without one', async () => {
+    const f = ok();
+    const ctx = { ...(await ctxWith(f)), notices: new Notices() } as unknown as ToolContext;
+    await expect(
+      callOperation(ctx, { method: 'GET', path: '/api/v1/anything', dry_run: false }),
+    ).rejects.toThrow(/SB_TOKEN/);
+  });
+
+  it('refuses a path that is not a bare platform path', async () => {
+    const ctx = await rawCtx(ok()) as unknown as ToolContext;
+    await expect(callOperation(ctx, { method: 'GET', path: 'https://evil.example/x', dry_run: false })).rejects.toThrow(/bare platform path/i);
+    await expect(callOperation(ctx, { method: 'GET', path: '//evil.example/x', dry_run: false })).rejects.toThrow(/bare platform path/i);
+    await expect(callOperation(ctx, { method: 'GET', path: 'api/permissions', dry_run: false })).rejects.toThrow(/bare platform path/i);
+  });
+
+  it('refuses an unknown method, and id together with method/path', async () => {
+    const ctx = await rawCtx(ok()) as unknown as ToolContext;
+    await expect(callOperation(ctx, { method: 'FETCH', path: '/api/x', dry_run: false })).rejects.toThrow(/method/i);
+    await expect(
+      callOperation(ctx, { id: 'get:/api/sites/{siteID}/menus', method: 'GET', path: '/api/x' }),
+    ).rejects.toThrow(/either id or method\+path/i);
+    await expect(callOperation(ctx, {})).rejects.toThrow(/either id or method\+path/i);
+  });
+
+  it('dry-runs a raw call by default and marks it uncatalogued', async () => {
+    const f = ok();
+    const out = (await callOperation(await rawCtx(f) as unknown as ToolContext, { method: 'POST', path: '/api/site-imports', body: { url: 'u' } })) as Record<string, unknown>;
+    expect(calls(f)).toHaveLength(0);
+    expect(out.dry_run).toBe(true);
+    expect(out.uncatalogued).toBe(true);
+    expect((out.would_send as { method: string }).method).toBe('POST');
+  });
+
+  it('prepares no undo for a raw PUT', async () => {
+    const f = ok();
+    const record = vi.fn();
+    const ctx = { ...(await rawCtx(f)), undo: { record } } as unknown as ToolContext;
+    await callOperation(ctx, { method: 'PUT', path: '/api/sites/{siteId}/subscription', body: { a: 1 }, dry_run: false });
+    expect(record).not.toHaveBeenCalled();
+    // One request only: the PUT itself, no GET before it.
+    expect(calls(f)).toHaveLength(1);
+  });
+
+  it('folds a method+path that names a catalogued route back onto the catalogue', async () => {
+    const f = ok();
+    const out = (await callOperation(await rawCtx(f) as unknown as ToolContext, {
+      method: 'GET',
+      path: '/api/sites/{siteID}/menus',
+      dry_run: false,
+    })) as Record<string, unknown>;
+    expect(calls(f)[0][0]).toBe('http://x/api/sites/site_env/menus');
+    // Not wrapped: this is the catalogued operation, answered as it always is.
+    expect(out.uncatalogued).toBeUndefined();
+    expect(out).toEqual({ menus: [], total: 0 });
   });
 });

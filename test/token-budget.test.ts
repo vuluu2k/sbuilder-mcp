@@ -70,7 +70,9 @@ describe('token budget — a diet without a scale comes back', () => {
     // layer every style preset resolves from, so one token repaints every page,
     // and the alternative an agent reaches for without it — a literal on each
     // node — detaches that node from the theme permanently.
-    expect(JSON.stringify(tools).length).toBeLessThan(24_500);
+    //
+    // raised for the raw form of sb_api_call (method, path) — 24,647 measured on 2026-09-19.
+    expect(JSON.stringify(tools).length).toBeLessThan(26_147);
     for (const t of tools) expect(t.description, t.name).not.toMatch(/vanishes on publish/);
     const instructions = client.getInstructions() ?? '';
     expect(instructions.length).toBeGreaterThan(200);

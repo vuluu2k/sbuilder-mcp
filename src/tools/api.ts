@@ -11,9 +11,15 @@ import {
 import { request, redact } from '../transport/http.js';
 import { text } from '../mcp/response.js';
 import type { ToolContext } from './context.js';
+import { credentialFor } from '../transport/credential.js';
+import type { ApiOperation } from '../catalog/types.js';
 
 export interface CallArgs {
-  id: string;
+  /** Operation id from sb_api_find. Omit it to call by method + path. */
+  id?: string;
+  /** With `path`, when `id` is absent: a route the catalog does not carry. */
+  method?: string;
+  path?: string;
   path_params?: Record<string, string>;
   query?: Record<string, string>;
   body?: unknown;
@@ -256,9 +262,84 @@ export function tokenFor(ctx: ToolContext, credential: string): string | undefin
  */
 const SITE_PARAMS = new Set(['siteid']);
 
+const RAW_METHODS = new Set(['GET', 'HEAD', 'POST', 'PUT', 'PATCH', 'DELETE']);
+
+/**
+ * Said once per process on the first raw call. A raw route has no call sheet,
+ * no shape and no undo, and the durable fix is upstream — the same fix
+ * reportUndocumentedRoutes names.
+ */
+export const RAW_CALL_NOTICE =
+  'This route is not in the catalog, so it has no call sheet, no body shape, no body ' +
+  'warnings and no sb_undo. The credential still follows the path prefix and dry_run still ' +
+  'defaults to true. The durable fix is an @Router annotation upstream and a catalog regen.';
+
+/**
+ * The operation a call names — from the catalog by id, or synthesised from
+ * method + path for a route the catalog does not carry.
+ *
+ * The raw form exists because the catalog is a CLOSED LIST read off one
+ * swagger document, and the platform serves routes that document does not
+ * describe: 20 the platform never annotated, three registered directly on the
+ * router, and anything newer than the last regen. Refusing them made the
+ * catalog's staleness the caller's ceiling.
+ *
+ * It changes no rule. The credential comes from the path prefix exactly as it
+ * does for a catalogued route, and a path that is not a bare platform path is
+ * refused: `request()` prefixes `ctx.base`, so a path carrying a host would
+ * send this install's credential to another server.
+ *
+ * A method+path that NAMES a catalogued route folds back onto it, so a caller
+ * who happens to spell a known route this way gets the catalogued treatment
+ * — shape, undo, projections — never less than the catalog already knows.
+ */
+export function resolveOperation(args: CallArgs): ApiOperation & { raw?: true } {
+  const hasRaw = args.method !== undefined || args.path !== undefined;
+  if (args.id && hasRaw) {
+    throw new Error('sbuilder: sb_api_call takes either id or method+path, not both.');
+  }
+  if (!args.id && !(args.method && args.path)) {
+    throw new Error(
+      'sbuilder: sb_api_call takes either id or method+path — id from sb_api_find, ' +
+        'method+path for a route the catalog does not carry.',
+    );
+  }
+  if (args.id) {
+    const op = API_OPERATIONS.find((o) => o.id === args.id);
+    if (!op) throw new Error(`sbuilder: unknown operation "${args.id}" — use sb_api_find first`);
+    return op;
+  }
+  const method = args.method!.toUpperCase();
+  if (!RAW_METHODS.has(method)) {
+    throw new Error(`sbuilder: method "${args.method}" is not one of ${[...RAW_METHODS].join(', ')}.`);
+  }
+  const path = args.path!;
+  if (!path.startsWith('/') || path.startsWith('//') || /^[a-z][a-z0-9+.-]*:/i.test(path)) {
+    throw new Error(
+      `sbuilder: path must be a bare platform path starting with "/" (got ${JSON.stringify(path)}). ` +
+        'The base URL is this install\'s SB_API; a path carrying a host would send the credential elsewhere.',
+    );
+  }
+  // A method+path that names a catalogued route gets the catalogued treatment
+  // — shape, undo, projections — never less than the catalog already knows.
+  const known = API_OPERATIONS.find((o) => o.id === `${method.toLowerCase()}:${path}`);
+  if (known) return known;
+  return {
+    id: `${method.toLowerCase()}:${path}`,
+    method,
+    path,
+    tags: [],
+    summary: '',
+    params: [],
+    bodyDescribed: false,
+    bodyRef: null,
+    credential: credentialFor(path),
+    raw: true,
+  };
+}
+
 export async function callOperation(ctx: ToolContext, args: CallArgs): Promise<unknown> {
-  const op = API_OPERATIONS.find((o) => o.id === args.id);
-  if (!op) throw new Error(`sbuilder: unknown operation "${args.id}" — use sb_api_find first`);
+  const op = resolveOperation(args);
   if (args.item_offset && op.method !== 'GET' && op.method !== 'HEAD') {
     throw new Error('sbuilder: item_offset is for reads only. Repeating a mutation to page its result would repeat the write; use the matching GET instead.');
   }
@@ -310,6 +391,7 @@ export async function callOperation(ctx: ToolContext, args: CallArgs): Promise<u
   if (dryRun) {
     return {
       dry_run: true,
+      ...(op.raw ? { uncatalogued: true } : {}),
       would_send: redact({
         method: op.method,
         url: ctx.base.replace(/\/$/, '') + path,
@@ -359,13 +441,19 @@ export async function callOperation(ctx: ToolContext, args: CallArgs): Promise<u
   // that worked and a DELETE that returned nothing looked identical, so sixteen
   // page deletes in a row reported `null` sixteen times and the only way to know
   // they had happened was to list the pages again. Say what the operation did.
-  if (raw === null || raw === undefined) {
-    return { ok: true, method: op.method, path, note: 'The platform answered with no content.' };
-  }
   // The caller's own `pick` outranks the default: asking for `document` is how
   // you read a version rather than merely choose one.
-  const projection = args.pick ?? LIST_PROJECTIONS[op.id];
-  return shapeResponse(raw, { pick: projection, max_items: args.max_items, item_offset: args.item_offset });
+  const answer =
+    raw === null || raw === undefined
+      ? { ok: true, method: op.method, path, note: 'The platform answered with no content.' }
+      : shapeResponse(raw, {
+          pick: args.pick ?? LIST_PROJECTIONS[op.id],
+          max_items: args.max_items,
+          item_offset: args.item_offset,
+        });
+  if (!op.raw) return answer;
+  const note = ctx.notices.once('raw_call', RAW_CALL_NOTICE);
+  return { uncatalogued: true, ...(note ? { note } : {}), data: answer };
 }
 
 /**
@@ -435,12 +523,18 @@ export function registerApiTools(server: McpServer, ctx: ToolContext): void {
     'sb_api_call',
     {
       description:
-        'Call an operation from sb_api_find; dry run by default. pick selects fields, ' +
-          'max_items caps lists, item_offset skips items. Lists over 60 KB carry truncation metadata.',
+        'Call an operation from sb_api_find (id), or a route the catalog lacks (method+path); ' +
+          'dry run by default. pick selects fields, max_items caps lists, item_offset skips items.',
       inputSchema: {
       id: z
         .string()
+        .optional()
         .describe('Operation id from sb_api_find, e.g. "get:/api/sites/{siteID}/menus"'),
+      method: z.string().optional().describe('With path, when id is absent: GET|HEAD|POST|PUT|PATCH|DELETE'),
+      path: z
+        .string()
+        .optional()
+        .describe('Bare platform path, e.g. "/api/sites/{siteId}/published"; {siteId} defaults to SB_SITE'),
       path_params: z.record(z.string()).optional(),
       query: z.record(z.string()).optional(),
       body: z.unknown().optional(),
