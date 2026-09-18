@@ -706,15 +706,18 @@ export function registerLiveTools(
         trigger: z.string().optional().describe('Default "click"'),
         payload: z.record(z.unknown()).optional(),
         dry_run: z.boolean().optional(),
+        force: z.boolean().optional().describe('Override a render-inference guard; reported as forced'),
       },
       annotations: { readOnlyHint: false, destructiveHint: false },
     },
-    async ({ id, action, trigger, payload, dry_run }) => {
+    async ({ id, action, trigger, payload, dry_run, force }) => {
       const d = session.current();
-      const patches = setEvent(d, id, trigger ?? 'click', action, payload);
-      if (dry_run !== false) return text({ dry_run: true, patches });
+      const guard: GuardOpts = { force, forced: [] };
+      const patches = setEvent(d, id, trigger ?? 'click', action, payload, guard);
+      const forced = guard.forced!.length ? { forced: guard.forced } : {};
+      if (dry_run !== false) return text({ dry_run: true, patches, ...forced });
       await session.applyAndSave(patches);
-      return text({ node: id, trigger: trigger ?? 'click', action, rev: d.rev });
+      return text({ node: id, trigger: trigger ?? 'click', action, rev: d.rev, ...forced });
     },
   );
 
@@ -740,15 +743,18 @@ export function registerLiveTools(
         .optional()
         .describe('Pass product.id + specials.boundProductId'),
       dry_run: z.boolean().optional(),
+      force: z.boolean().optional().describe('Override a render-inference guard; reported as forced'),
     },
       annotations: { readOnlyHint: false, destructiveHint: false },
     },
-    async ({ id, source, field, action, dry_run }) => {
+    async ({ id, source, field, action, dry_run, force }) => {
       const d = session.current();
-      const patches = bindNode(d, id, source, field, action);
-      if (dry_run !== false) return text({ dry_run: true, patches });
+      const guard: GuardOpts = { force, forced: [] };
+      const patches = bindNode(d, id, source, field, action, guard);
+      const forced = guard.forced!.length ? { forced: guard.forced } : {};
+      if (dry_run !== false) return text({ dry_run: true, patches, ...forced });
       await session.applyAndSave(patches);
-      return text({ bound: id, source, field, ...(action ? { action } : {}), rev: d.rev });
+      return text({ bound: id, source, field, ...(action ? { action } : {}), rev: d.rev, ...forced });
     },
   );
 }
