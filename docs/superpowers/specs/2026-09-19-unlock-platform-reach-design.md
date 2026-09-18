@@ -192,7 +192,22 @@ create deletes what it created where the editor does the same.
   the editor's builders, the way `STORE_PAGE_SEEDS` already is; codegen asserts each spec
   still builds a document with a root.
 
-### 6.3 Re-measure
+### 6.3 The segment arm — one exact reader, in `scripts/shapes.ts`
+
+`sitedomain/rest/rest.go`'s `action` serves five annotated POST routes from one handler that
+switches on the route's trailing segment, and three of the arms (`canonical`, `redirect`,
+`redirect-code`) decode an inline struct of their own. The reader sees three distinct bodies
+in one method arm and, by its own rule, says nothing — so the three domain writes the editor
+sends `{canonical}`, `{redirectTo}` and `{redirectCode}` to have no shape.
+
+`segmentHop` already trusts that segment to pick a CALLEE. The addition reads a `case
+"<tail>":` arm INSIDE the annotated handler, taking only the decodes between that arm and the
+next `case`. It is exact for the same reason the hop is: the literal comes from the route
+itself. `verify` and `primary` resolve to an arm that decodes nothing, which is the correct
+"no body" rather than silence. Pinned in `test/shapes.test.ts` against the real catalog, the
+way the three earlier readings are.
+
+### 6.4 Re-measure
 
 After 6.1 lands on origin/main and the catalog is regenerated, the unshaped-write list is
 recomputed. The expectation is that what remains is action endpoints with no JSON body,
