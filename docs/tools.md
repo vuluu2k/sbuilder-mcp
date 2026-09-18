@@ -272,6 +272,7 @@ With `control`: that one control in full.
 | `spec` | object | `{ type, name?, style?, config?, specials?, children? }` — **nested** |
 | `index` | number? | Defaults to append |
 | `dry_run` | boolean? | Defaults to true |
+| `force` | boolean? | Override a soft guard; the message is returned as `forced[]` instead of thrown. Hard guards ignore it — see "What every write checks" |
 
 Pass `children` to build a whole section in one call. Refuses a root-only element inside a
 section, a child a parent's whitelist excludes, and any add into a non-container.
@@ -295,6 +296,7 @@ forever.
 | `base` | boolean? | Write at base instead of per breakpoint |
 | `edits` | array? | Many nodes in one call: `[{ id, namespace, keys, breakpoint?, base?, state?, unset? }]`; the single-node fields above are then ignored |
 | `dry_run` | boolean? | Defaults to true |
+| `force` | boolean? | Override a soft guard; the message is returned as `forced[]` instead of thrown. Hard guards ignore it — see "What every write checks" |
 
 **Base and breakpoints.** `sb_set` writes per breakpoint by default, because a design should respond. Base is legitimate too — the cascade resolves a key *current slot → wider → base → narrower*, so base is the fallback layer, and it is where every element's own defaults are seeded. Use base for a value that genuinely should not vary.
 
@@ -319,6 +321,10 @@ over the master, emptying it for every page that carries it. That is not hypothe
 took four pages blank in one run. Both `sb_add` and `sb_set` refuse it and name the right key.
 
 ## `sb_move` / `sb_remove`
+
+| Arg | Type | Notes |
+| --- | --- | --- |
+| `force` | boolean? | Override a soft guard; the message is returned as `forced[]` instead of thrown. Hard guards ignore it — see "What every write checks" |
 
 `sb_move` takes `id`, `parent_id`, `index`. `sb_remove` takes `id` and deletes the whole
 subtree. Both refuse to touch a **site overlay** — it is composed onto ROOT on read and
@@ -359,6 +365,24 @@ this page's to fix.
 
 Plus tree integrity: no dangling child ids, no parent pointer disagreeing with a child
 list, no node unreachable from ROOT.
+
+### `force`, and which guards yield to it
+
+A guard here is one of two kinds. A **soft** guard asserts what a renderer does — "this key
+compiles to nothing", "this element takes no such child", "this repeater renders only its
+first child" — against the catalog's copy of the platform, which can be older than the
+deployment you are writing to. Its refusal ends with `Pass force:true to write anyway.`, and
+with `force:true` the write goes through and the message comes back as `forced: [...]`, in
+the dry run too. Soft: the app-block interior and parent checks, `childAllows` and root-only,
+the second template under `list-dataset`, and the stuck / stuck-after / reveal / hover-config
+/ hover-host checks.
+
+A **hard** guard protects an invariant the platform itself enforces or a write with no way
+back, and `force` never reaches it: band order (the platform refuses the save), a composed
+stamp (`globalId` / `appBlockId` empties the master on every page), removing or duplicating
+ROOT, an unknown element type, the overlay root (stripped on write, so the forced write would
+be a no-op reported as done), a node moved into its own subtree, and `specials` with a state.
+A hard refusal carries no `force` hint, which is how you tell them apart without trying.
 
 ---
 
@@ -471,6 +495,7 @@ data renders impossible to photograph.
 | `trigger` | string? | Defaults to `click` |
 | `payload` | object? | |
 | `dry_run` | boolean? | Defaults to true |
+| `force` | boolean? | Override a soft guard; the message is returned as `forced[]` instead of thrown. Hard guards ignore it — see "What every write checks" |
 
 The only way to put a click action on a node. `NodeSpec` carries no `events`, `sb_set` writes
 style / config / specials, and `createNode` always minted `events: []` — so `open_cart` could
@@ -502,6 +527,7 @@ question.
 | `field` | string | Always `specials.<key>` |
 | `dry_run` | boolean? | Defaults to true |
 | `action` | `"add_to_cart"` \| `"buy_now"`? | Makes the node a PURCHASE control instead of a field |
+| `force` | boolean? | Override a soft guard; the message is returned as `forced[]` instead of thrown. Hard guards ignore it — see "What every write checks" |
 
 Both arguments are validated against generated vocabulary, because both failures are
 **silent**: an unknown `source` resolves to nothing and renders as the element's own
@@ -606,6 +632,10 @@ CSS expresses whether or not a control exists for it. `config` and `specials` ar
 open — they are per-element, and the element's `defaults` name the keys it really uses.
 
 ## `sb_duplicate`
+
+| Arg | Type | Notes |
+| --- | --- | --- |
+| `force` | boolean? | Override a soft guard; the message is returned as `forced[]` instead of thrown. Hard guards ignore it — see "What every write checks" |
 
 `id`. Copies the node and everything under it under **fresh ids**, inserted right after the
 original — the move a designer makes constantly. Styling comes with it, which is the point.

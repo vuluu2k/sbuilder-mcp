@@ -272,6 +272,7 @@ Có `control`: đúng một control đó, đầy đủ.
 | `spec` | object | `{ type, name?, style?, config?, specials?, children? }` — **lồng nhau** |
 | `index` | number? | Mặc định nối vào cuối |
 | `dry_run` | boolean? | Mặc định true |
+| `force` | boolean? | Bỏ qua một guard mềm; thông điệp được trả về trong `forced[]` thay vì ném lỗi. Guard cứng bỏ qua tham số này — xem "Mỗi lần ghi kiểm tra gì" |
 
 Truyền `children` để dựng nguyên một section trong một lần gọi. Từ chối element root-only
 đặt trong section, con nằm ngoài whitelist của cha, và mọi lần thêm vào node không phải
@@ -295,6 +296,7 @@ ra đều lưu được, publish được và render mãi placeholder.
 | `base` | boolean? | Ghi ở base thay vì theo breakpoint |
 | `edits` | array? | Nhiều node trong một lần gọi: `[{ id, namespace, keys, breakpoint?, base?, state?, unset? }]`; các tham số một-node ở trên khi đó bị bỏ qua |
 | `dry_run` | boolean? | Mặc định true |
+| `force` | boolean? | Bỏ qua một guard mềm; thông điệp được trả về trong `forced[]` thay vì ném lỗi. Guard cứng bỏ qua tham số này — xem "Mỗi lần ghi kiểm tra gì" |
 
 **Base và breakpoint.** `sb_set` mặc định ghi theo breakpoint, vì một thiết kế nên đáp ứng. Base cũng hợp lệ — cascade giải một khoá theo thứ tự *slot hiện tại → rộng hơn → base → hẹp hơn*, nên base là lớp dự phòng, và là chỗ default của chính mỗi element được gieo vào. Dùng base cho giá trị thật sự không nên thay đổi.
 
@@ -319,6 +321,10 @@ mọi trang mang nó. Không phải giả định: một lần chạy đã làm 
 `sb_set` đều từ chối và nêu đúng khoá cần dùng.
 
 ## `sb_move` / `sb_remove`
+
+| Tham số | Kiểu | Ghi chú |
+| --- | --- | --- |
+| `force` | boolean? | Bỏ qua một guard mềm; thông điệp được trả về trong `forced[]` thay vì ném lỗi. Guard cứng bỏ qua tham số này — xem "Mỗi lần ghi kiểm tra gì" |
 
 `sb_move` nhận `id`, `parent_id`, `index`. `sb_remove` nhận `id` và xoá cả cây con. Cả hai
 từ chối đụng vào **site overlay** — nó được ghép lên ROOT lúc đọc và bóc ra lúc ghi, nên sửa
@@ -356,6 +362,23 @@ trên nó là nơi thiết lập của chủ cửa hàng nằm. Outline cắm c�
 
 Cộng thêm tính toàn vẹn cây: không có id con trỏ vào hư không, không có con trỏ cha mâu
 thuẫn với danh sách con, không có node nào không với tới được từ ROOT.
+
+### `force`, và guard nào nhường nó
+
+Guard ở đây có hai loại. Guard **mềm** khẳng định renderer làm gì — "key này biên dịch ra
+không gì cả", "phần tử này không nhận con như vậy", "repeater này chỉ render con đầu tiên" —
+dựa trên bản sao platform trong catalog, vốn có thể cũ hơn deployment bạn đang ghi vào. Lời
+từ chối của nó kết thúc bằng `Pass force:true to write anyway.`, và với `force:true` lệnh
+ghi vẫn đi, thông điệp quay về trong `forced: [...]`, cả ở dry run. Mềm: kiểm tra bên trong
+và cha của app block, `childAllows` và root-only, template thứ hai dưới `list-dataset`, và
+các kiểm tra stuck / stuck-after / reveal / hover-config / hover-host.
+
+Guard **cứng** bảo vệ một bất biến chính platform thực thi hoặc một lệnh ghi không có đường
+lùi, và `force` không bao giờ chạm tới: thứ tự band (platform từ chối save), stamp đã compose
+(`globalId` / `appBlockId` làm trống master trên mọi trang), xoá hoặc nhân bản ROOT, loại
+phần tử không tồn tại, root của overlay (bị bỏ khi ghi, nên lệnh ghi bị ép sẽ là no-op được
+báo là xong), node chuyển vào chính cây con của nó, và `specials` kèm state. Lời từ chối cứng
+không mang gợi ý `force`, đó là cách phân biệt mà không cần thử.
 
 ---
 
@@ -453,6 +476,7 @@ không chụp được.
 | `trigger` | string? | Mặc định `click` |
 | `payload` | object? | |
 | `dry_run` | boolean? | Mặc định true |
+| `force` | boolean? | Bỏ qua một guard mềm; thông điệp được trả về trong `forced[]` thay vì ném lỗi. Guard cứng bỏ qua tham số này — xem "Mỗi lần ghi kiểm tra gì" |
 
 Cách duy nhất đặt được click action lên một node. `NodeSpec` không mang `events`, `sb_set`
 chỉ ghi style / config / specials, còn `createNode` luôn ghi `events: []` — nên `open_cart`
@@ -483,6 +507,7 @@ một câu hỏi.
 | `field` | string | Luôn là `specials.<key>` |
 | `dry_run` | boolean? | Mặc định true |
 | `action` | `"add_to_cart"` \| `"buy_now"`? | Biến node thành nút MUA HÀNG thay vì một trường dữ liệu |
+| `force` | boolean? | Bỏ qua một guard mềm; thông điệp được trả về trong `forced[]` thay vì ném lỗi. Guard cứng bỏ qua tham số này — xem "Mỗi lần ghi kiểm tra gì" |
 
 Cả hai tham số đều được kiểm với từ vựng sinh tự động, vì cả hai lỗi đều **im lặng**:
 `source` lạ sẽ giải ra rỗng và hiện placeholder của chính element (không phân biệt được với
@@ -587,6 +612,10 @@ thì **không** mở — chúng theo từng element, và `defaults` của elemen
 nó thật sự dùng.
 
 ## `sb_duplicate`
+
+| Tham số | Kiểu | Ghi chú |
+| --- | --- | --- |
+| `force` | boolean? | Bỏ qua một guard mềm; thông điệp được trả về trong `forced[]` thay vì ném lỗi. Guard cứng bỏ qua tham số này — xem "Mỗi lần ghi kiểm tra gì" |
 
 `id`. Nhân bản node và cả cây con dưới **id mới**, chèn ngay sau bản gốc — thao tác người
 thiết kế làm liên tục. Style đi theo, và đó chính là mục đích. Từ chối ROOT, site overlay, và cây con có chứa
