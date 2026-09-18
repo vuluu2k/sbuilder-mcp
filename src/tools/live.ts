@@ -29,6 +29,7 @@ import { LiveSession } from '../live/session.js';
 import type { Patch } from '../core/patch.js';
 import type { PageDoc } from '../domains/site/document.js';
 import { refuseAppBlockInterior } from '../domains/site/builder.js';
+import { soft, type GuardOpts } from '../domains/site/guard.js';
 import { childrenOf, isOverlay, overlayRoot, subtreeIds } from '../core/tree.js';
 import { siteToken } from './credentialpick.js';
 import { searchStock, SearchUnavailable, NO_SEARCH_NEXT, type StockPhoto } from '../transport/stock.js';
@@ -70,9 +71,10 @@ export function bindNode(
   source: string,
   field: string,
   action?: string,
+  guard?: GuardOpts,
 ): Patch[] {
   const node = doc.node(id) as unknown as { bindings: Array<{ id?: string }> };
-  refuseAppBlockInterior(doc, id, 'binding');
+  soft(guard, () => refuseAppBlockInterior(doc, id, 'binding'));
   if (!BINDING_SOURCES.includes(source)) {
     throw new Error(
       `sbuilder: "${source}" is not a binding source the renderer provides, so the binding ` +
@@ -170,13 +172,14 @@ export function setEvent(
   trigger: string,
   action: string,
   payload?: Record<string, unknown>,
+  guard?: GuardOpts,
 ): Patch[] {
   const node = doc.node(id) as unknown as {
     data: { type: string };
     events?: Array<{ id?: string; name?: string }>;
     bindings?: Array<{ id?: string }>;
   };
-  refuseAppBlockInterior(doc, id, 'setting an event on');
+  soft(guard, () => refuseAppBlockInterior(doc, id, 'setting an event on'));
   const events = node.events ?? [];
   const at = events.findIndex((e) => e?.name === trigger);
 
