@@ -289,7 +289,13 @@ export function setKeys(
   },
 ): Patch[] {
   doc.node(id); // throws naming the id if it is not there
-  const g: GuardOpts = { force: opts.force, forced: opts.forced };
+  // UNDEFINED WHEN THE CALLER NAMED NEITHER — a guard object is what tells
+  // `soft` the caller can actually pass `force`. Every tool that takes the
+  // argument builds `{ force, forced: [] }`, so their refusals keep the hint.
+  const g: GuardOpts | undefined =
+    opts.force !== undefined || opts.forced !== undefined
+      ? { force: opts.force, forced: opts.forced }
+      : undefined;
   soft(g, () => refuseAppBlockInterior(doc, id, 'writing'));
   const { namespace } = opts;
 

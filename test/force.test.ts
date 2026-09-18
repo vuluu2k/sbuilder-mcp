@@ -42,7 +42,7 @@ describe('soft guards under force', () => {
       ['move out', (g) => moveNode(d, inner, other, 0, g)],
     ];
     for (const [name, run] of cases) {
-      expect(() => run({}), name).toThrow(FORCE_HINT);
+      expect(() => run({ force: false }), name).toThrow(FORCE_HINT);
       const g = forced();
       expect(() => run(g), name).not.toThrow();
       expect(g.forced.join(' '), name).toMatch(/app block/i);
@@ -55,7 +55,7 @@ describe('soft guards under force', () => {
     d.apply(sec.patches);
     const block = sec.ids[1];
     // flex-section is root-only; under a flex-block it is refused, softly.
-    expect(() => addSubtree(d, block, { type: 'flex-section' })).toThrow(/root-only.*force:true/s);
+    expect(() => addSubtree(d, block, { type: 'flex-section' }, undefined, {})).toThrow(/root-only.*force:true/s);
     const g = forced();
     expect(() => addSubtree(d, block, { type: 'flex-section' }, undefined, g)).not.toThrow();
     expect(g.forced[0]).toMatch(/root-only/);
@@ -71,7 +71,7 @@ describe('soft guards under force', () => {
     });
     d.apply(sec.patches);
     const list = sec.ids[1];
-    expect(() => addSubtree(d, list, { type: 'dataset-block' })).toThrow(/FIRST child.*force:true/s);
+    expect(() => addSubtree(d, list, { type: 'dataset-block' }, undefined, {})).toThrow(/FIRST child.*force:true/s);
     const g = forced();
     expect(() => addSubtree(d, list, { type: 'dataset-block' }, undefined, g)).not.toThrow();
     expect(g.forced[0]).toMatch(/FIRST child/);
@@ -82,7 +82,7 @@ describe('soft guards under force', () => {
     const sec = addSubtree(d, 'ROOT', { type: 'flex-section', children: [{ type: 'heading' }] });
     d.apply(sec.patches);
     const h = sec.ids[1];
-    expect(() => setKeys(d, h, { stuckAfter: 40 }, { namespace: 'config' })).toThrow(/cannot pin.*force:true/s);
+    expect(() => setKeys(d, h, { stuckAfter: 40 }, { namespace: 'config', force: false })).toThrow(/cannot pin.*force:true/s);
     const g = forced();
     expect(() => setKeys(d, h, { stuckAfter: 40 }, { namespace: 'config', ...g })).not.toThrow();
     expect(g.forced[0]).toMatch(/cannot pin/);
@@ -93,7 +93,7 @@ describe('soft guards under force', () => {
     const sec = addSubtree(d, 'ROOT', { type: 'flex-section', children: [{ type: 'heading' }] });
     d.apply(sec.patches);
     const h = sec.ids[1];
-    expect(() => setKeys(d, h, { color: 'red' }, { namespace: 'style', state: 'stuck' })).toThrow(FORCE_HINT);
+    expect(() => setKeys(d, h, { color: 'red' }, { namespace: 'style', state: 'stuck', force: false })).toThrow(FORCE_HINT);
     const g = forced();
     expect(() => setKeys(d, h, { color: 'red' }, { namespace: 'style', state: 'stuck', ...g })).not.toThrow();
     expect(g.forced.length).toBeGreaterThan(0);
@@ -108,15 +108,34 @@ describe('soft guards under force', () => {
     d.apply(sec.patches);
     const section = sec.ids[0];
     const t = sec.ids[2];
-    expect(() => setKeys(d, t, { foo: 1 }, { namespace: 'config', state: 'hover' })).toThrow(FORCE_HINT);
+    expect(() => setKeys(d, t, { foo: 1 }, { namespace: 'config', state: 'hover', force: false })).toThrow(FORCE_HINT);
     const g = forced();
     expect(() => setKeys(d, t, { foo: 1 }, { namespace: 'config', state: 'hover', ...g })).not.toThrow();
     expect(g.forced.join(' ')).toMatch(/hidden/);
     // A direct child of ROOT has no box around it to hover.
-    expect(() => setKeys(d, section, { revealOnHover: true }, { namespace: 'config' })).toThrow(FORCE_HINT);
+    expect(() => setKeys(d, section, { revealOnHover: true }, { namespace: 'config', force: false })).toThrow(FORCE_HINT);
     const g2 = forced();
     expect(() => setKeys(d, section, { revealOnHover: true }, { namespace: 'config', ...g2 })).not.toThrow();
     expect(g2.forced.join(' ')).toMatch(/hover/i);
+  });
+
+  // ELEVEN CALL SITES REACH THESE BUILDERS WITH NO GUARD — `sb_import`,
+  // `sb_import_site`, `sb_template_use`, `sb_store` — and none of those tools
+  // has a `force` argument. Telling their caller to pass one names an argument
+  // that is refused.
+  it('a call with no guard carries no hint', () => {
+    const d = PageDoc.from({ schema_version: 2, root_node_id: '', nodes: {} });
+    const sec = addSubtree(d, 'ROOT', { type: 'flex-section', children: [{ type: 'flex-block' }] });
+    d.apply(sec.patches);
+    const block = sec.ids[1];
+    const add = (() => { try { addSubtree(d, block, { type: 'flex-section' }); } catch (e) { return (e as Error).message; } })();
+    expect(add).toMatch(/root-only/);
+    expect(add).not.toContain(FORCE_HINT);
+
+    const { d: ad, inner } = withAppBlock();
+    const set = (() => { try { setKeys(ad, inner, { text: 'x' }, { namespace: 'specials', base: true }); } catch (e) { return (e as Error).message; } })();
+    expect(set).toMatch(/app block/i);
+    expect(set).not.toContain(FORCE_HINT);
   });
 
   it('setMany carries force to every edit', () => {

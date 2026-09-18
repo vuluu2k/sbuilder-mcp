@@ -7,8 +7,22 @@ const refuse = () => {
 
 describe('soft()', () => {
   it('rethrows with the force hint when not forced', () => {
-    expect(() => soft(undefined, refuse)).toThrow('sbuilder: nope' + FORCE_HINT);
+    expect(() => soft({}, refuse)).toThrow('sbuilder: nope' + FORCE_HINT);
     expect(() => soft({ force: false }, refuse)).toThrow(FORCE_HINT);
+  });
+
+  // THE HINT IS ONLY TRUE FOR A CALLER THAT CAN PASS `force`. A builder called
+  // with no guard at all sits behind a tool whose schema has no such argument,
+  // so the hint would name an argument that is refused.
+  it('carries no hint when no guard was supplied', () => {
+    const msg = (() => { try { soft(undefined, refuse); } catch (e) { return (e as Error).message; } })();
+    expect(msg).toBe('sbuilder: nope');
+  });
+
+  it('records even when force came with no array', () => {
+    const g: GuardOpts = { force: true };
+    expect(() => soft(g, refuse)).not.toThrow();
+    expect(g.forced).toEqual(['sbuilder: nope']);
   });
 
   it('records instead of throwing when forced', () => {
@@ -27,7 +41,7 @@ describe('soft()', () => {
     const inner = () => {
       throw new Error('x' + FORCE_HINT);
     };
-    expect(() => soft(undefined, inner)).toThrow('x' + FORCE_HINT);
-    expect((() => { try { soft(undefined, inner); } catch (e) { return (e as Error).message; } })()).not.toMatch(new RegExp(FORCE_HINT.trim() + '.*' + FORCE_HINT.trim()));
+    expect(() => soft({}, inner)).toThrow('x' + FORCE_HINT);
+    expect((() => { try { soft({}, inner); } catch (e) { return (e as Error).message; } })()).not.toMatch(new RegExp(FORCE_HINT.trim() + '.*' + FORCE_HINT.trim()));
   });
 });

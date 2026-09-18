@@ -23,9 +23,17 @@ export function soft(g: GuardOpts | undefined, check: () => void): void {
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e);
     if (g?.force) {
-      g.forced?.push(msg);
+      // A caller that passed `force` without an array still gets the override,
+      // and the record must not be dropped on the floor: minting the array is
+      // cheaper than a force whose message nobody can report.
+      (g.forced ??= []).push(msg);
       return;
     }
+    // THE HINT IS ONLY TRUE FOR A CALLER THAT CAN PASS `force`. A builder
+    // reached with NO guard sits behind a tool whose schema has no such
+    // argument — `sb_import`, `sb_import_site`, `sb_template_use`, `sb_store`
+    // all do this — so the hint would name an argument that is refused.
+    if (g === undefined) throw e instanceof Error ? e : new Error(msg);
     throw new Error(msg.endsWith(FORCE_HINT) ? msg : msg + FORCE_HINT);
   }
 }
