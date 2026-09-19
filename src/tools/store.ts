@@ -40,6 +40,8 @@ import { chromeLinks, hasGlobal, shareChrome, sitePages } from './chrome.js';
 import { tokensFromPage } from '../domains/site/importmap.js';
 import { bindMenu } from './menu.js';
 import { attachOverlay } from './overlay.js';
+import { installApp } from './app.js';
+import { BUILTIN_APP_KEYS } from '../catalog/appscaffolds.generated.js';
 import { ELEMENTS } from '../catalog/elements.generated.js';
 import {
   CHECKOUT_FORM,
@@ -458,9 +460,12 @@ export function registerStoreTools(server: McpServer, ctx: ToolContext, session:
         'action:"overlay_attach" puts a pop-up on the open page (kind:"popup") or points a ' +
         'list-dataset at a quick-view panel (kind:"quickview", list_id), creating either from ' +
         'the platform\'s own seed when overlay_id is omitted, and re-reads the page afterwards ' +
-        'as the editor must. Dry run returns the plan.',
+        'as the editor must. action:"app" installs one of the platform\'s built-in apps ' +
+        '(app_key) and creates the pages it needs that installing it does not — today only ' +
+        '"courses" has any, from the platform\'s own scaffold; every other key installs with ' +
+        'nothing further to build. Dry run returns the plan.',
       inputSchema: {
-        action: z.enum(['checkout', 'form', 'chrome', 'menu', 'overlay_attach']),
+        action: z.enum(['checkout', 'form', 'chrome', 'menu', 'overlay_attach', 'app']),
         site_id: z.string().optional(),
         language: z.enum(['vi', 'en']).optional().describe('Copy language, default vi'),
         page_name: z.string().optional(),
@@ -494,6 +499,10 @@ export function registerStoreTools(server: McpServer, ctx: ToolContext, session:
           .string()
           .optional()
           .describe('action:"overlay_attach" kind:"quickview" — the list-dataset node on the open page'),
+        app_key: z
+          .enum(BUILTIN_APP_KEYS)
+          .optional()
+          .describe('action:"app" — which built-in app to install'),
         dry_run: z.boolean().optional(),
       },
       annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: true },
@@ -512,9 +521,23 @@ export function registerStoreTools(server: McpServer, ctx: ToolContext, session:
       kind,
       overlay_id,
       list_id,
+      app_key,
       dry_run,
     }) => {
       const siteId = siteFor(ctx, given);
+      if (action === 'app') {
+        if (!app_key) {
+          throw new Error(
+            `sbuilder: action:"app" needs app_key. One of: ${BUILTIN_APP_KEYS.join(', ')}.`,
+          );
+        }
+        return text(
+          await installApp(ctx, session, siteId, app_key, {
+            language: (language ?? 'vi') as Language,
+            dryRun: dry_run !== false,
+          }),
+        );
+      }
       if (action === 'menu') {
         if (!node_id) {
           throw new Error('sbuilder: action:"menu" needs node_id — the menu node on the open page.');

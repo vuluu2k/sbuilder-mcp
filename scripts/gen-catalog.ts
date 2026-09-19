@@ -3875,6 +3875,210 @@ export const OVERLAY_SEEDS: Record<'popup' | 'quickview', OverlayDocument> = ${J
       `quickview ${Object.keys(overlaySeeds.quickview.nodes).length} nodes`,
   );
 
+  // ---- Which built-in apps exist, and what pages each needs -------------
+  //
+  // `POST /api/sites/{siteId}/builtin-apps/{key}` installs an app and nothing
+  // else — it does not create the pages the app needs to actually work.
+  // `/courses/{slug}` resolves through the `course` page type's DEFAULT
+  // TEMPLATE (server/internal/page.PublishedForEntity), so installing
+  // `courses`, writing a curriculum and publishing gets a 404 for the
+  // course's own address, with nothing anywhere naming the page that was
+  // supposed to be built first.
+  //
+  // `editor/src/features/builtinapps/pageScaffold.ts` is the platform's own
+  // answer — `scaffoldAppPages`, run right after a successful install, and
+  // `isPresent`, the rule for "does the site already have this one" — and it
+  // cannot be imported directly: it pulls in `@/i18n` (`loadNamespaces`,
+  // `currentLocale`), which is Vue. Its one entry, `courses`, is built by
+  // `editor/src/features/courses/pageScaffold.ts`, which is safe to import on
+  // its own: `@webbuilder/schema`, `../../element/factory`,
+  // `../../element/treeFactory`, and a TYPE-ONLY import of `ScaffoldPage` from
+  // the Vue-carrying sibling — a type import erases at compile time and pulls
+  // in nothing at runtime.
+  //
+  // `BUILTIN_APP_KEYS` is read off `builtinapps.Keys` in Go rather than typed
+  // here — a hand-kept roster is exactly the thing this generator exists to
+  // replace — and cross-checked against the `key` path parameter's own
+  // description on `POST .../builtin-apps/{key}` ("App key: mail |
+  // multilingual | agent | chat | booking | loyalty | payments | courses"),
+  // so the two cannot silently drift apart.
+  const builtinAppsGo = readFileSync(
+    resolve(repo, 'server/internal/builtinapps/builtinapps.go'),
+    'utf8',
+  );
+  const appKeyConsts = new Map<string, string>();
+  for (const m of builtinAppsGo.matchAll(/\bKey(\w+)\s*=\s*"([a-z]+)"/g)) {
+    appKeyConsts.set(m[1], m[2]);
+  }
+  const appRosterLine = /var Keys = \[\]string\{([^}]+)\}/.exec(builtinAppsGo);
+  if (!appRosterLine) {
+    console.error('builtinapps.Keys is gone from server/internal/builtinapps/builtinapps.go');
+    process.exit(1);
+  }
+  const BUILTIN_APP_KEYS = appRosterLine[1].split(',').map((raw) => {
+    const ident = raw.trim().replace(/^Key/, '');
+    const value = appKeyConsts.get(ident);
+    if (!value) {
+      console.error(`builtinapps.Keys names Key${ident}, which no const in builtinapps.go declares`);
+      process.exit(1);
+    }
+    return value;
+  });
+  if (BUILTIN_APP_KEYS.length < 8) {
+    console.error(`only ${BUILTIN_APP_KEYS.length} builtin app keys — is WB_REPO stale?`);
+    process.exit(1);
+  }
+  const installAppOp = ops.find((o) => o.id === 'post:/api/sites/{siteId}/builtin-apps/{key}');
+  const installAppKeyParam = installAppOp?.params.find((p) => p.name === 'key');
+  if (installAppKeyParam?.description) {
+    const described = installAppKeyParam.description
+      .replace(/^[^:]*:\s*/, '')
+      .split('|')
+      .map((s) => s.trim())
+      .filter(Boolean);
+    if (described.length && described.join('|') !== BUILTIN_APP_KEYS.join('|')) {
+      console.error(
+        `POST .../builtin-apps/{key}'s own description says "${described.join(' | ')}", ` +
+          `builtinapps.Keys says "${BUILTIN_APP_KEYS.join(' | ')}" — one of them moved`,
+      );
+      process.exit(1);
+    }
+  }
+
+  const coursesScaffoldMod = (await import(
+    resolve(repo, 'editor/src/features/courses/pageScaffold.ts')
+  )) as {
+    coursesScaffold: () => Array<{
+      slug: string;
+      type: string;
+      nameKey: string;
+      build: () => { schema_version?: number; root_node_id: string; nodes: Record<string, unknown> };
+    }>;
+  };
+
+  // Each i18n locale file wraps its own data under a key matching the
+  // filename (`courses.json` → `{ courses: {...} }`), the same shape
+  // `payments.json`'s completion headline is already read off above — so a
+  // dotted key like `courses.scaffold.detail` walks straight down the parsed
+  // JSON with no unwrapping of its own to get wrong.
+  const walkI18n = (raw: unknown, key: string): string | undefined => {
+    let cur: unknown = raw;
+    for (const part of key.split('.')) {
+      if (!cur || typeof cur !== 'object') return undefined;
+      cur = (cur as Record<string, unknown>)[part];
+    }
+    return typeof cur === 'string' ? cur : undefined;
+  };
+  const coursesLocale: Record<'vi' | 'en', unknown> = { vi: undefined, en: undefined };
+  for (const lang of ['vi', 'en'] as const) {
+    coursesLocale[lang] = JSON.parse(
+      readFileSync(resolve(repo, `editor/src/i18n/locales/${lang}/courses.json`), 'utf8'),
+    );
+  }
+
+  interface AppScaffoldPage {
+    slug: string;
+    type: string;
+    name: { vi: string; en: string };
+    document: { schema_version: number; root_node_id: string; nodes: Record<string, unknown> };
+  }
+  const APP_SCAFFOLDS: Record<string, AppScaffoldPage[]> = {};
+  const coursesSpecs = coursesScaffoldMod.coursesScaffold();
+  APP_SCAFFOLDS.courses = coursesSpecs.map((spec, i) => {
+    const built = stableIds(
+      spec.build() as { nodes: Record<string, unknown> },
+      `crs${i + 1}`,
+    ) as { schema_version?: number; root_node_id: string; nodes: Record<string, unknown> };
+    const name = { vi: '', en: '' };
+    for (const lang of ['vi', 'en'] as const) {
+      const h = walkI18n(coursesLocale[lang], spec.nameKey);
+      if (!h) {
+        console.error(`${lang}/courses.json is missing ${spec.nameKey}`);
+        process.exit(1);
+      }
+      name[lang] = h;
+    }
+    return {
+      slug: spec.slug,
+      type: spec.type,
+      name,
+      document: {
+        schema_version: built.schema_version ?? docVersion,
+        root_node_id: built.root_node_id,
+        nodes: built.nodes,
+      },
+    };
+  });
+
+  // ASSERTED rather than trusted forever: `installApp`'s `isPresent` rule
+  // treats a slug-less page as a TEMPLATE (present by TYPE) and every other
+  // page as present by SLUG, so a scaffold naming two slug-less pages, or none
+  // at all, would silently change which of those two rules a page falls under.
+  if (APP_SCAFFOLDS.courses.length !== 4) {
+    console.error(`the courses scaffold has ${APP_SCAFFOLDS.courses.length} pages, expected 4`);
+    process.exit(1);
+  }
+  const templatePages = APP_SCAFFOLDS.courses.filter((p) => p.slug === '');
+  if (templatePages.length !== 1 || templatePages[0].type !== 'course') {
+    console.error(
+      'the courses scaffold must name exactly one slug-less page, of type "course" — check ' +
+        'editor/src/features/courses/pageScaffold.ts',
+    );
+    process.exit(1);
+  }
+  for (const p of APP_SCAFFOLDS.courses) {
+    if (!p.document.root_node_id || !p.document.nodes[p.document.root_node_id]) {
+      console.error(
+        `the courses scaffold page ${JSON.stringify(p.type)}/${JSON.stringify(p.slug)} names no usable root`,
+      );
+      process.exit(1);
+    }
+  }
+
+  const appScaffoldsOut = `// GENERATED by scripts/gen-catalog.ts — do not edit by hand.
+// Source: <WB_REPO>/editor/src/features/courses/pageScaffold.ts (the platform's
+// own course-app page scaffold) and <WB_REPO>/server/internal/builtinapps/
+// builtinapps.go (the Keys roster).
+
+/**
+ * Every key \`POST /api/sites/{siteId}/builtin-apps/{key}\` accepts, in the
+ * platform's own order — read off \`builtinapps.Keys\` rather than typed here,
+ * and checked at codegen against that route's own \`key\` parameter description.
+ */
+export const BUILTIN_APP_KEYS = ${JSON.stringify(BUILTIN_APP_KEYS)} as const;
+
+/**
+ * The pages an app needs that installing it does not create.
+ *
+ * \`editor/src/features/builtinapps/pageScaffold.ts\` runs this right after a
+ * successful install (\`scaffoldAppPages\`) and offers it again as a repair.
+ * \`isPresent\` is the rule for "does the site already have this one": a page
+ * with a non-empty \`slug\` is present if the site has that SLUG (whatever its
+ * type); a page with an empty \`slug\` is a TEMPLATE — reached by an entity
+ * URL rather than an address of its own — and is present if the site has ANY
+ * page of that TYPE, because the entity route resolves through the type's
+ * default template and a second one would just sit there unreachable.
+ * \`sb_store action:"app"\` follows the same rule.
+ *
+ * Only \`courses\` has one today; a key absent here installs with nothing
+ * further to build.
+ */
+export const APP_SCAFFOLDS: Record<
+  string,
+  Array<{
+    slug: string;
+    type: string;
+    name: { vi: string; en: string };
+    document: { schema_version: number; root_node_id: string; nodes: Record<string, unknown> };
+  }>
+> = ${JSON.stringify(APP_SCAFFOLDS, null, 2)};
+`;
+  emit(resolve(process.cwd(), 'src/catalog/appscaffolds.generated.ts'), appScaffoldsOut);
+  console.error(
+    `${VERB} appscaffolds.generated.ts: ${Object.keys(APP_SCAFFOLDS).length} app, ` +
+      `${APP_SCAFFOLDS.courses.length} pages`,
+  );
+
   // ---- Which form node reads which skin knob ---------------------------
   //
   // A FORM'S FIELDS ARE STYLED BY CONFIG KEYS, AND THE WRONG LEVEL IS SILENT.
