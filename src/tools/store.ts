@@ -39,6 +39,7 @@ import { addSubtree } from '../domains/site/builder.js';
 import { chromeLinks, hasGlobal, shareChrome, sitePages } from './chrome.js';
 import { tokensFromPage } from '../domains/site/importmap.js';
 import { bindMenu } from './menu.js';
+import { attachOverlay } from './overlay.js';
 import { ELEMENTS } from '../catalog/elements.generated.js';
 import {
   CHECKOUT_FORM,
@@ -453,10 +454,13 @@ export function registerStoreTools(server: McpServer, ctx: ToolContext, session:
         'its own field document, which is the part that cannot be guessed. action:"chrome" ' +
         'gives every page ONE shared header, built from the pages this site already has — the ' +
         'gap sb_review reports as siteChrome. action:"menu" binds a menu node on the open page ' +
-        'to the site\'s menu and resolves its links, the way the editor does. Dry run returns ' +
-        'the plan.',
+        'to the site\'s menu and resolves its links, the way the editor does. ' +
+        'action:"overlay_attach" puts a pop-up on the open page (kind:"popup") or points a ' +
+        'list-dataset at a quick-view panel (kind:"quickview", list_id), creating either from ' +
+        'the platform\'s own seed when overlay_id is omitted, and re-reads the page afterwards ' +
+        'as the editor must. Dry run returns the plan.',
       inputSchema: {
-        action: z.enum(['checkout', 'form', 'chrome', 'menu']),
+        action: z.enum(['checkout', 'form', 'chrome', 'menu', 'overlay_attach']),
         site_id: z.string().optional(),
         language: z.enum(['vi', 'en']).optional().describe('Copy language, default vi'),
         page_name: z.string().optional(),
@@ -465,18 +469,51 @@ export function registerStoreTools(server: McpServer, ctx: ToolContext, session:
           .enum(FORM_TEMPLATE_KEYS)
           .optional()
           .describe('action:"form" — which of the platform\'s own form templates to seed'),
-        name: z.string().optional().describe('action:"form" — the form\'s name in the merchant\'s list'),
+        name: z
+          .string()
+          .optional()
+          .describe(
+            'action:"form" — the form\'s name in the merchant\'s list. action:"overlay_attach" ' +
+              'with no overlay_id — the new pop-up/quick-view\'s name.',
+          ),
         footer: z
           .boolean()
           .optional()
           .describe('action:"chrome" — build a shared FOOTER instead of a header'),
         node_id: z.string().optional().describe('action:"menu" — the menu node on the open page'),
         menu_id: z.string().optional(),
+        kind: z
+          .enum(['popup', 'quickview'])
+          .optional()
+          .describe('action:"overlay_attach" — which kind of overlay to attach'),
+        overlay_id: z
+          .string()
+          .optional()
+          .describe('action:"overlay_attach" — an existing overlay; omit to create one from the seed'),
+        list_id: z
+          .string()
+          .optional()
+          .describe('action:"overlay_attach" kind:"quickview" — the list-dataset node on the open page'),
         dry_run: z.boolean().optional(),
       },
       annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: true },
     },
-    async ({ action, site_id: given, language, page_name, headline, template, name, footer, node_id, menu_id, dry_run }) => {
+    async ({
+      action,
+      site_id: given,
+      language,
+      page_name,
+      headline,
+      template,
+      name,
+      footer,
+      node_id,
+      menu_id,
+      kind,
+      overlay_id,
+      list_id,
+      dry_run,
+    }) => {
       const siteId = siteFor(ctx, given);
       if (action === 'menu') {
         if (!node_id) {
@@ -492,6 +529,20 @@ export function registerStoreTools(server: McpServer, ctx: ToolContext, session:
           );
         }
         return text(await bindMenu(ctx, session, siteId, node_id, { menuId: menu_id, dryRun: dry_run !== false }));
+      }
+      if (action === 'overlay_attach') {
+        if (!kind) {
+          throw new Error('sbuilder: action:"overlay_attach" needs kind — "popup" or "quickview".');
+        }
+        return text(
+          await attachOverlay(ctx, session, siteId, {
+            kind,
+            overlayId: overlay_id,
+            name,
+            listId: list_id,
+            dryRun: dry_run !== false,
+          }),
+        );
       }
       if (action === 'chrome') {
         // SKIPPED WHEN THE SITE ALREADY SHARES ONE, because a second header is

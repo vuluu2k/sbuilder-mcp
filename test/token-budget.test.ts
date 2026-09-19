@@ -72,7 +72,17 @@ describe('token budget — a diet without a scale comes back', () => {
     // node — detaches that node from the theme permanently.
     //
     // raised for the raw form of sb_api_call (method, path) — 24,647 measured on 2026-09-19.
-    expect(JSON.stringify(tools).length).toBeLessThan(26_147);
+    //
+    // 26,147 -> 27,864: `sb_store action:"overlay_attach"` (~200, measured 26,364 on
+    // 2026-09-19). A pop-up cannot reach a page through an ordinary save — the platform
+    // derives the edge set from the COMPOSED document, so attaching one is its own call and
+    // the caller must re-read afterwards or the next save takes it straight back off, exactly
+    // as `editor/src/features/overlays/usePopupOverlay.ts` documents. A quick view is worse to
+    // guess: it is a `list-dataset` pointed at a panel through `config.quickviewId`, which the
+    // platform's own compose step reads from BASE ONLY with no responsive merge, so a value
+    // written at any breakpoint composes nothing and the panel never renders — silently, like
+    // every other base-only key this repo has already paid for once.
+    expect(JSON.stringify(tools).length).toBeLessThan(27_864);
     for (const t of tools) expect(t.description, t.name).not.toMatch(/vanishes on publish/);
     const instructions = client.getInstructions() ?? '';
     expect(instructions.length).toBeGreaterThan(200);
