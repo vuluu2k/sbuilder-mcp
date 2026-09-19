@@ -140,8 +140,13 @@ reaches them under exactly the same rules: the credential follows the path prefi
 defaults to `true`, `{siteId}` defaults to `SB_SITE`, and `pick` / `max_items` /
 `item_offset` apply. A `method` + `path` naming a route the catalog already holds is
 answered as the catalogued operation instead, shape and undo included, and is not wrapped.
-What a raw call does NOT have is said once per process in `note`: no call sheet, no body
-shape, no body warnings and no `sb_undo`. The answer is wrapped as
+That fold-back is segment-wise, so a path carrying literal ids
+(`/api/sites/abc123/menus/m1`) folds back as well as one spelling the parameters — the
+literals become the values the catalogued route names. A route spelling more of itself
+wins (`…/pages/locate-nodes` over `…/pages/{pageId}`), and two equally specific siblings
+fold to nothing and stay raw rather than being guessed between.
+What a raw call does NOT have is said once per process — as `directive` on a dry run, as
+`note` on a send: no call sheet, no body shape, no body warnings and no `sb_undo`. The answer is wrapped as
 `{ uncatalogued: true, data }` so it cannot be mistaken for a catalogued one. A path that
 is not a bare platform path is refused, because the base URL is this install's `SB_API` and
 a path carrying a host would send the credential elsewhere. A path carrying a query string

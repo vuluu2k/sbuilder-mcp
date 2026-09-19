@@ -1,5 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
-import { callOperation, shapeResponse, RESULT_CAP } from '../src/tools/api.js';
+import { callOperation, shapeResponse, foldBack, RESULT_CAP } from '../src/tools/api.js';
+import { API_OPERATIONS } from '../src/catalog/api.generated.js';
 import { Session } from '../src/transport/auth.js';
 import { Notices } from '../src/mcp/notices.js';
 import type { ToolContext } from '../src/tools/context.js';
@@ -480,5 +481,70 @@ describe('callOperation() — the raw form', () => {
     expect((calls(f)[0][1] as RequestInit).method).toBe('GET');
     expect((calls(f)[1][1] as RequestInit).method).toBe('PUT');
     expect(record).toHaveBeenCalled();
+  });
+
+  // THE DRY RUN IS THE DEFAULT, so a directive that only fires after a real
+  // send reaches nobody who looks before they leap.
+  it('says the raw directive on a dry run, once', async () => {
+    const ctx = await rawCtx(ok()) as unknown as ToolContext;
+    const first = (await callOperation(ctx, { method: 'POST', path: '/api/site-imports', body: { url: 'u' } })) as Record<string, unknown>;
+    expect(first.directive).toMatch(/no call sheet/i);
+    const second = (await callOperation(ctx, { method: 'POST', path: '/api/site-imports', body: { url: 'u' } })) as Record<string, unknown>;
+    expect(second.directive).toBeUndefined();
+  });
+
+  it('does not repeat the directive on the real send that follows a dry run', async () => {
+    const f = ok();
+    const ctx = await rawCtx(f) as unknown as ToolContext;
+    await callOperation(ctx, { method: 'GET', path: '/api/locales' });
+    const real = (await callOperation(ctx, { method: 'GET', path: '/api/locales', dry_run: false })) as { note?: string };
+    expect(real.note).toBeUndefined();
+  });
+
+  it('redacts the credential in a raw dry run too', async () => {
+    const out = (await callOperation(await rawCtx(ok()) as unknown as ToolContext, {
+      method: 'POST',
+      path: '/api/site-imports',
+      body: { url: 'u' },
+    })) as { would_send: Record<string, unknown> };
+    expect(out.would_send.Authorization).toBe('[redacted]');
+    expect(JSON.stringify(out)).not.toContain('wbk_k');
+  });
+
+  // A LITERAL ID NAMES THE SAME ROUTE AS A {param}. Without the segment-wise
+  // fold this PUT went raw — no shape, no projection, and no undo pre-read
+  // before a whole-document replace.
+  it('folds a path carrying literal ids back onto the catalogued route', async () => {
+    const f = ok();
+    const record = vi.fn();
+    const ctx = { ...(await rawCtx(f)), undo: { record } } as unknown as ToolContext;
+    const out = (await callOperation(ctx, {
+      method: 'PUT',
+      path: '/api/sites/site_env/menus/m1',
+      body: { label: 'Main' },
+      dry_run: false,
+    })) as Record<string, unknown>;
+    expect(out.uncatalogued).toBeUndefined();
+    expect(calls(f)).toHaveLength(2);
+    expect((calls(f)[0][1] as RequestInit).method).toBe('GET');
+    expect((calls(f)[1][1] as RequestInit).method).toBe('PUT');
+    expect(record).toHaveBeenCalled();
+  });
+
+  it('prefers the sibling that spells more of itself', () => {
+    const op = foldBack('GET', '/api/sites/site_env/pages/locate-nodes', API_OPERATIONS);
+    expect(op?.id).toBe('get:/api/sites/{siteId}/pages/locate-nodes');
+  });
+
+  // TWO EQUALLY SPECIFIC SIBLINGS ARE TWO OPERATIONS. Picking one would send a
+  // body shaped for the other, so the call stays raw.
+  it('folds to nothing when two candidates are equally specific', () => {
+    const ops = [
+      { id: 'get:/api/sites/{siteId}/orders/{id}', method: 'GET', path: '/api/sites/{siteId}/orders/{id}' },
+      { id: 'get:/api/sites/{siteId}/{kind}/archived', method: 'GET', path: '/api/sites/{siteId}/{kind}/archived' },
+    ] as unknown as typeof API_OPERATIONS;
+    expect(foldBack('GET', '/api/sites/s1/orders/archived', ops)).toBeUndefined();
+    // Either one alone still folds.
+    expect(foldBack('GET', '/api/sites/s1/orders/archived', [ops[0]])?.id).toBe('get:/api/sites/{siteId}/orders/{id}');
   });
 });

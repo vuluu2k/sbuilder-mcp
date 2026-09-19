@@ -143,8 +143,14 @@ từng được annotate, ba route đăng ký thẳng trên router (`/api/permis
 đúng các quy tắc cũ: credential theo tiền tố path, `dry_run` mặc định `true`, `{siteId}` lấy
 từ `SB_SITE`, và `pick` / `max_items` / `item_offset` vẫn áp dụng. Một cặp `method` + `path`
 gọi trúng route đã có trong catalog thì được trả lời như một operation trong catalog, kèm
-shape và undo, và không bị bọc lại. Thứ một raw call KHÔNG có được nói một lần mỗi process
-trong `note`: không call sheet, không body shape, không cảnh báo body và không `sb_undo`.
+shape và undo, và không bị bọc lại. Việc khớp đó làm theo từng đoạn path, nên một path mang
+id thật (`/api/sites/abc123/menus/m1`) cũng khớp được như path viết tham số — các id thật
+trở thành giá trị cho tham số mà route trong catalog đặt tên. Route nói rõ về chính nó hơn
+sẽ thắng (`…/pages/locate-nodes` hơn `…/pages/{pageId}`), và hai route cùng mức cụ thể thì
+không khớp vào đâu cả và vẫn là raw, thay vì bị đoán bừa.
+Thứ một raw call KHÔNG có được nói một lần mỗi process — là `directive` khi dry run, là
+`note` khi gửi thật: không call sheet, không body shape, không cảnh báo body và không
+`sb_undo`.
 Kết quả được bọc thành `{ uncatalogued: true, data }` để không nhầm với kết quả có trong
 catalog. Một path không phải path trần của platform bị từ chối, vì base URL là `SB_API` của
 bản cài này và một path mang host sẽ gửi credential đi nơi khác. Một path mang query string

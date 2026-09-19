@@ -275,6 +275,69 @@ const RAW_METHODS = new Set(['GET', 'HEAD', 'POST', 'PUT', 'PATCH', 'DELETE']);
 const routeShape = (id: string): string => id.replace(/\{[^}]*\}/g, '{}');
 
 /**
+ * Fold a raw method+path back onto the catalogued route it names.
+ *
+ * `routeShape` answers only when the caller SPELLED the parameters. A caller
+ * who writes the real ids instead — `/api/sites/abc123/menus/m1`, which is what
+ * a path copied out of a browser looks like — named exactly the same route and
+ * got none of the catalogued treatment: no shape, no projection, and no undo
+ * pre-read before a whole-document PUT.
+ *
+ * Segment-wise: the same number of segments, a catalogued `{param}` takes any
+ * single non-empty segment, a literal must match exactly and case-sensitively.
+ *
+ * RANKED so the tool never GUESSES between siblings. An exact-literal route —
+ * every segment equal — wins outright, because it IS the route rather than a
+ * match of it. Otherwise the candidate spelling the MOST literal segments wins:
+ * `…/pages/locate-nodes` is more specific than `…/pages/{pageId}` and is what a
+ * caller naming that path meant. A TIE folds to NOTHING and the call stays raw,
+ * because two equally specific siblings are two different operations and
+ * picking one would send a body shaped for the other.
+ */
+export function foldBack(
+  method: string,
+  path: string,
+  ops: readonly ApiOperation[],
+): ApiOperation | undefined {
+  const want = `${method.toLowerCase()}:${path}`;
+  const byShape = ops.find((o) => routeShape(o.id) === routeShape(want));
+  if (byShape) return byShape;
+
+  const segs = path.split('/');
+  let best: ApiOperation | undefined;
+  let bestLiterals = -1;
+  let tied = false;
+  for (const o of ops) {
+    if (o.method.toLowerCase() !== method.toLowerCase()) continue;
+    const cand = o.path.split('/');
+    if (cand.length !== segs.length) continue;
+    let literals = 0;
+    let ok = true;
+    for (let i = 0; i < cand.length; i++) {
+      const c = cand[i];
+      if (c.startsWith('{') && c.endsWith('}')) {
+        if (!segs[i]) { ok = false; break; }
+      } else if (c === segs[i]) {
+        literals++;
+      } else {
+        ok = false;
+        break;
+      }
+    }
+    if (!ok) continue;
+    if (literals === cand.length) return o;
+    if (literals > bestLiterals) {
+      best = o;
+      bestLiterals = literals;
+      tied = false;
+    } else if (literals === bestLiterals) {
+      tied = true;
+    }
+  }
+  return tied ? undefined : best;
+}
+
+/**
  * Said once per process on the first raw call. A raw route has no call sheet,
  * no shape and no undo, and the durable fix is upstream — the same fix
  * reportUndocumentedRoutes names.
@@ -282,7 +345,9 @@ const routeShape = (id: string): string => id.replace(/\{[^}]*\}/g, '{}');
 export const RAW_CALL_NOTICE =
   'This route is not in the catalog, so it has no call sheet, no body shape, no body ' +
   'warnings and no sb_undo. The credential still follows the path prefix and dry_run still ' +
-  'defaults to true. The durable fix is an @Router annotation upstream and a catalog regen.';
+  'defaults to true. Spell path parameters as {name} with values in path_params; a literal id ' +
+  'folds onto the catalogued route only when exactly one matches. ' +
+  'The durable fix is an @Router annotation upstream and a catalog regen.';
 
 /**
  * Routes registered DIRECTLY on the gin router, outside every annotated
@@ -315,7 +380,7 @@ export const OUTSIDE_CATALOG = [
  * who happens to spell a known route this way gets the catalogued treatment
  * — shape, undo, projections — never less than the catalog already knows.
  */
-export function resolveOperation(args: CallArgs): ApiOperation & { raw?: true } {
+export function resolveOperation(args: CallArgs): ApiOperation & { raw?: true; bound?: Record<string, string> } {
   const hasRaw = args.method !== undefined || args.path !== undefined;
   if (args.id && hasRaw) {
     throw new Error('sbuilder: sb_api_call takes either id or method+path, not both.');
@@ -358,8 +423,26 @@ export function resolveOperation(args: CallArgs): ApiOperation & { raw?: true } 
   }
   // A method+path that names a catalogued route gets the catalogued treatment
   // — shape, undo, projections — never less than the catalog already knows.
-  const known = API_OPERATIONS.find((o) => routeShape(o.id) === routeShape(`${method.toLowerCase()}:${path}`));
-  if (known) return known;
+  const known = foldBack(method, path, API_OPERATIONS);
+  if (known) {
+    // THE CATALOGUED PATH IS WHAT IS RETURNED, always. `op.path` is the key the
+    // undo pre-read and the projections are looked up by, so replacing it with
+    // the caller's literal spelling would fold the route back and then lose the
+    // treatment that was the point. The literals the caller wrote become
+    // bindings instead, under the names the call sheet lists.
+    const bound: Record<string, string> = {};
+    const cand = known.path.split('/');
+    const segs = path.split('/');
+    if (cand.length === segs.length) {
+      for (let i = 0; i < cand.length; i++) {
+        const c = cand[i];
+        if (c.startsWith('{') && c.endsWith('}') && !segs[i].startsWith('{')) {
+          bound[c.slice(1, -1)] = segs[i];
+        }
+      }
+    }
+    return Object.keys(bound).length ? { ...known, bound } : known;
+  }
   return {
     id: `${method.toLowerCase()}:${path}`,
     method,
@@ -391,7 +474,10 @@ export async function callOperation(ctx: ToolContext, args: CallArgs): Promise<u
     // difference of one letter — a distinction no reader of the call sheet has
     // any reason to notice, and one this tool has nothing to gain by enforcing.
     // The exact name still wins; the fold is only a fallback.
-    const given = args.path_params ?? {};
+    // A LITERAL THE CALLER WROTE INTO THE PATH IS A VALUE THEY SUPPLIED, under
+    // the name the catalogued route gives that segment. An explicit
+    // `path_params` entry still wins.
+    const given = { ...(op.bound ?? {}), ...(args.path_params ?? {}) };
     let value = given[name];
     if (value === undefined) {
       const folded = Object.keys(given).find((k) => k.toLowerCase() === name.toLowerCase());
@@ -425,9 +511,14 @@ export async function callOperation(ctx: ToolContext, args: CallArgs): Promise<u
   const token = tokenFor(ctx, op.credential);
   const dryRun = args.dry_run !== false;
   if (dryRun) {
+    // THE DRY RUN IS THE DEFAULT, so a directive said only after a real send
+    // reaches nobody who looks before they leap. Once per process either way:
+    // a dry run that said it leaves the send that follows silent.
+    const directive = op.raw ? ctx.notices.once('raw_call', RAW_CALL_NOTICE) : undefined;
     return {
       dry_run: true,
       ...(op.raw ? { uncatalogued: true } : {}),
+      ...(directive ? { directive } : {}),
       would_send: redact({
         method: op.method,
         url: ctx.base.replace(/\/$/, '') + path,
