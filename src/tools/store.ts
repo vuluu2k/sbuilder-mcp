@@ -38,6 +38,8 @@ import type { PageSession } from './page.js';
 import { addSubtree } from '../domains/site/builder.js';
 import { chromeLinks, hasGlobal, shareChrome, sitePages } from './chrome.js';
 import { tokensFromPage } from '../domains/site/importmap.js';
+import { bindMenu } from './menu.js';
+import { ELEMENTS } from '../catalog/elements.generated.js';
 import {
   CHECKOUT_FORM,
   CHECKOUT_FORM_DOCUMENT,
@@ -450,9 +452,11 @@ export function registerStoreTools(server: McpServer, ctx: ToolContext, session:
         'register, forgot, reset, verify, contact, subscribe, booking, review and more) with ' +
         'its own field document, which is the part that cannot be guessed. action:"chrome" ' +
         'gives every page ONE shared header, built from the pages this site already has — the ' +
-        'gap sb_review reports as siteChrome. Dry run returns the plan.',
+        'gap sb_review reports as siteChrome. action:"menu" binds a menu node on the open page ' +
+        'to the site\'s menu and resolves its links, the way the editor does. Dry run returns ' +
+        'the plan.',
       inputSchema: {
-        action: z.enum(['checkout', 'form', 'chrome']),
+        action: z.enum(['checkout', 'form', 'chrome', 'menu']),
         site_id: z.string().optional(),
         language: z.enum(['vi', 'en']).optional().describe('Copy language, default vi'),
         page_name: z.string().optional(),
@@ -466,12 +470,29 @@ export function registerStoreTools(server: McpServer, ctx: ToolContext, session:
           .boolean()
           .optional()
           .describe('action:"chrome" — build a shared FOOTER instead of a header'),
+        node_id: z.string().optional().describe('action:"menu" — the menu node on the open page'),
+        menu_id: z.string().optional(),
         dry_run: z.boolean().optional(),
       },
       annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: true },
     },
-    async ({ action, site_id: given, language, page_name, headline, template, name, footer, dry_run }) => {
+    async ({ action, site_id: given, language, page_name, headline, template, name, footer, node_id, menu_id, dry_run }) => {
       const siteId = siteFor(ctx, given);
+      if (action === 'menu') {
+        if (!node_id) {
+          throw new Error('sbuilder: action:"menu" needs node_id — the menu node on the open page.');
+        }
+        const node = session.current().node(node_id);
+        const type = node.data.type;
+        const seeds = ELEMENTS[type]?.defaults?.specials;
+        if (!seeds || !('menuItems' in seeds)) {
+          throw new Error(
+            `sbuilder: node "${node_id}" is a "${type}", which does not seed specials.menuItems — ` +
+              'only a menu node can be bound to a site menu.',
+          );
+        }
+        return text(await bindMenu(ctx, session, siteId, node_id, { menuId: menu_id, dryRun: dry_run !== false }));
+      }
       if (action === 'chrome') {
         // SKIPPED WHEN THE SITE ALREADY SHARES ONE, because a second header is
         // two headers rather than a menu — and below two pages, because a menu
