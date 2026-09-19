@@ -30,8 +30,33 @@ function buildDoc(): { document: unknown; menuNodeId: string } {
   return { document: d.doc, menuNodeId: ids[1] };
 }
 
-/** Answers every route `bindMenu` touches, by URL, and records every call. */
-function scripted(initialDoc: unknown, menus: unknown[]) {
+interface Menu {
+  id: string;
+  name: string;
+  items: unknown[];
+}
+
+/**
+ * Answers every route `bindMenu` touches, by URL, and records every call.
+ *
+ * `/menus/{id}` answers whichever of `menus` (or `createdMenu`) carries that
+ * id — generalised past the original hardcoded `mn_1` so a test can pass its
+ * own menu(s) without teaching this helper a new literal every time. The four
+ * entity listings default to empty, exactly the "kind whose listing fails" a
+ * caller sees when a test does not care about that kind at all.
+ */
+function scripted(
+  initialDoc: unknown,
+  menus: Menu[],
+  opts: {
+    createdMenu?: Menu;
+    categories?: Array<{ id: string; slug: string }>;
+    articles?: Array<{ id: string; slug: string }>;
+    blogCategories?: Array<{ id: string; slug: string }>;
+    products?: Array<{ id: string; slug: string }>;
+  } = {},
+) {
+  const createdMenu = opts.createdMenu ?? MENU;
   const calls: Call[] = [];
   const saved: Array<Record<string, unknown>> = [];
   let current = initialDoc;
@@ -53,14 +78,33 @@ function scripted(initialDoc: unknown, menus: unknown[]) {
       });
     }
     if (path.endsWith('/menus') && method === 'GET') return json({ menus });
-    if (path.endsWith('/menus') && method === 'POST') return json({ menu: MENU }, 201);
-    if (path.endsWith('/menus/mn_1') && method === 'GET') return json({ menu: MENU });
+    if (path.endsWith('/menus') && method === 'POST') return json({ menu: createdMenu }, 201);
+    const menuId = /\/menus\/([^/]+)$/.exec(path)?.[1];
+    if (menuId && method === 'GET') {
+      const found = menus.find((m) => m.id === menuId) ?? (menuId === createdMenu.id ? createdMenu : undefined);
+      if (found) return json({ menu: found });
+    }
     if (path.endsWith('/pages') && method === 'GET') {
       return json({ pages: [{ id: 'pg_1', slug: 'home', path: '/', name: 'Home' }] });
     }
+    if (path.endsWith('/product-categories') && method === 'GET') return json({ categories: opts.categories ?? [] });
+    if (path.endsWith('/articles') && method === 'GET') return json({ articles: opts.articles ?? [] });
+    if (path.endsWith('/blog-categories') && method === 'GET') {
+      return json({ blogCategories: opts.blogCategories ?? [] });
+    }
+    if (path.endsWith('/products') && method === 'GET') return json({ products: opts.products ?? [] });
     return json({});
   }) as unknown as typeof fetch;
   return { f, calls, saved };
+}
+
+/** A page document with a menu node's `specials.menuItems` overwritten before it is served. */
+function withMenuItems(document: unknown, nodeId: string, menuItems: unknown[]): unknown {
+  const doc = JSON.parse(JSON.stringify(document)) as {
+    nodes: Record<string, { specials: Record<string, unknown> }>;
+  };
+  doc.nodes[nodeId].specials.menuItems = menuItems;
+  return doc;
 }
 
 async function clientOver(f: typeof fetch) {
@@ -163,6 +207,143 @@ describe('sb_store action:"menu"', () => {
 
     expect(failed.isError).toBe(true);
     expect(failed.content[0].text).toContain('heading');
+
+    await close();
+  });
+
+  it("preserves a row's panelId across a re-sync, at depth 2 as well", async () => {
+    const { document, menuNodeId } = buildDoc();
+    const withPanels = withMenuItems(document, menuNodeId, [
+      {
+        id: 'i1',
+        label: 'Shop (old)',
+        href: '',
+        panelId: 'panel_top',
+        items: [{ id: 'i1a', label: 'New (old)', href: '', panelId: 'panel_new' }],
+      },
+    ]);
+    const menu: Menu = {
+      id: 'mn_2',
+      name: 'Main menu',
+      items: [
+        {
+          id: 'i1',
+          label: 'Shop',
+          link: { type: 'none' },
+          items: [{ id: 'i1a', label: 'New', link: { type: 'url', url: 'https://x/new' } }],
+        },
+      ],
+    };
+    const { f, saved } = scripted(withPanels, [menu]);
+    const { client, close } = await clientOver(f);
+
+    await client.callTool({ name: 'sb_page_open', arguments: { site_id: 's1', page_id: 'pg_1' } });
+    await client.callTool({
+      name: 'sb_store',
+      arguments: { action: 'menu', node_id: menuNodeId, dry_run: false },
+    });
+
+    const savedDoc = saved[0].document as { nodes: Record<string, { specials: Record<string, unknown> }> };
+    const items = savedDoc.nodes[menuNodeId].specials.menuItems as Array<Record<string, unknown>>;
+    expect(items[0]).toMatchObject({ id: 'i1', label: 'Shop', href: '', panelId: 'panel_top' });
+    const kids = items[0].items as Array<Record<string, unknown>>;
+    expect(kids[0]).toMatchObject({ id: 'i1a', label: 'New', href: 'https://x/new', panelId: 'panel_new' });
+
+    await close();
+  });
+
+  it("resolves a productCategory link to the platform's own collections prefix", async () => {
+    const { document, menuNodeId } = buildDoc();
+    const menu: Menu = {
+      id: 'mn_3',
+      name: 'Main menu',
+      items: [{ id: 'i1', label: 'Shoes', link: { type: 'productCategory', entityId: 'c1' } }],
+    };
+    const { f, saved } = scripted(document, [menu], { categories: [{ id: 'c1', slug: 'giay-dep' }] });
+    const { client, close } = await clientOver(f);
+
+    await client.callTool({ name: 'sb_page_open', arguments: { site_id: 's1', page_id: 'pg_1' } });
+    await client.callTool({
+      name: 'sb_store',
+      arguments: { action: 'menu', node_id: menuNodeId, dry_run: false },
+    });
+
+    const savedDoc = saved[0].document as { nodes: Record<string, { specials: Record<string, unknown> }> };
+    const items = savedDoc.nodes[menuNodeId].specials.menuItems as Array<Record<string, unknown>>;
+    expect(items[0].href).toBe('/collections/giay-dep');
+
+    await close();
+  });
+
+  it("resolves an article link to the platform's own blog prefix", async () => {
+    const { document, menuNodeId } = buildDoc();
+    const menu: Menu = {
+      id: 'mn_4',
+      name: 'Main menu',
+      items: [{ id: 'i1', label: 'Launch post', link: { type: 'article', entityId: 'a1' } }],
+    };
+    const { f, saved } = scripted(document, [menu], { articles: [{ id: 'a1', slug: 'ra-mat' }] });
+    const { client, close } = await clientOver(f);
+
+    await client.callTool({ name: 'sb_page_open', arguments: { site_id: 's1', page_id: 'pg_1' } });
+    await client.callTool({
+      name: 'sb_store',
+      arguments: { action: 'menu', node_id: menuNodeId, dry_run: false },
+    });
+
+    const savedDoc = saved[0].document as { nodes: Record<string, { specials: Record<string, unknown> }> };
+    const items = savedDoc.nodes[menuNodeId].specials.menuItems as Array<Record<string, unknown>>;
+    expect(items[0].href).toBe('/blog/ra-mat');
+
+    await close();
+  });
+
+  it("resolves a blogCategory link to the platform's own blog-categories prefix", async () => {
+    const { document, menuNodeId } = buildDoc();
+    const menu: Menu = {
+      id: 'mn_5',
+      name: 'Main menu',
+      items: [{ id: 'i1', label: 'News', link: { type: 'blogCategory', entityId: 'bc1' } }],
+    };
+    const { f, saved } = scripted(document, [menu], { blogCategories: [{ id: 'bc1', slug: 'tin-tuc' }] });
+    const { client, close } = await clientOver(f);
+
+    await client.callTool({ name: 'sb_page_open', arguments: { site_id: 's1', page_id: 'pg_1' } });
+    await client.callTool({
+      name: 'sb_store',
+      arguments: { action: 'menu', node_id: menuNodeId, dry_run: false },
+    });
+
+    const savedDoc = saved[0].document as { nodes: Record<string, { specials: Record<string, unknown> }> };
+    const items = savedDoc.nodes[menuNodeId].specials.menuItems as Array<Record<string, unknown>>;
+    expect(items[0].href).toBe('/blog-categories/tin-tuc');
+
+    await close();
+  });
+
+  it("resolves a product link to the platform's own products prefix, batched by id", async () => {
+    const { document, menuNodeId } = buildDoc();
+    const menu: Menu = {
+      id: 'mn_6',
+      name: 'Main menu',
+      items: [{ id: 'i1', label: 'Best seller', link: { type: 'product', entityId: 'p1' } }],
+    };
+    const { f, calls, saved } = scripted(document, [menu], { products: [{ id: 'p1', slug: 'ao-thun' }] });
+    const { client, close } = await clientOver(f);
+
+    await client.callTool({ name: 'sb_page_open', arguments: { site_id: 's1', page_id: 'pg_1' } });
+    await client.callTool({
+      name: 'sb_store',
+      arguments: { action: 'menu', node_id: menuNodeId, dry_run: false },
+    });
+
+    const savedDoc = saved[0].document as { nodes: Record<string, { specials: Record<string, unknown> }> };
+    const items = savedDoc.nodes[menuNodeId].specials.menuItems as Array<Record<string, unknown>>;
+    expect(items[0].href).toBe('/products/ao-thun');
+    // Batched by id, not a whole-list read — the same split the editor's own
+    // resolver makes, because a shop may hold thousands of products.
+    const productCall = calls.find((c) => c.method === 'GET' && c.path.endsWith('/products'));
+    expect(productCall).toBeTruthy();
 
     await close();
   });

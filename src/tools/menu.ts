@@ -83,19 +83,22 @@ const DEFAULT_MENU_ITEMS: MenuItemInput[] = ['Home', 'Categories', 'Contact', 'A
 }));
 
 /**
- * A per-entity listing route, mirroring `pagelinks/entityUrl.ts`'s
- * `ENTITY_URL_PREFIX` for the three kinds a menu can reference beyond a page.
- * `product` is deliberately absent: the editor's own resolver batches it BY ID
- * against a different route (`getProductsByIds`), which is out of this flow's
- * scope — a `product` link resolves to '' here, same as any other kind this
- * table does not know, which is the honest "cannot resolve" the editor itself
- * falls back to for an unreachable listing.
+ * A per-entity WHOLE-LIST route, mirroring `pagelinks/entityUrl.ts`'s
+ * `ENTITY_URL_PREFIX` for the three kinds fetched as one unpaginated listing —
+ * a category tree and a site's blog are small enough that asking for
+ * everything and indexing it costs the same one round trip a by-id batch
+ * would. `product` is NOT here: the editor's own resolver batches it BY ID
+ * against a different route (`getProductsByIds`) because a shop may hold
+ * thousands, so it is resolved separately in `resolveLinks` below.
  */
 const ENTITY_ROUTES: Record<string, { segment: string; envelope: string; prefix: string }> = {
   productCategory: { segment: 'product-categories', envelope: 'categories', prefix: 'collections' },
   article: { segment: 'articles', envelope: 'articles', prefix: 'blog' },
   blogCategory: { segment: 'blog-categories', envelope: 'blogCategories', prefix: 'blog-categories' },
 };
+
+/** Every entity kind a menu link can carry, whole-list or by-id. */
+const ENTITY_KINDS = new Set<string>([...Object.keys(ENTITY_ROUTES), 'product']);
 
 /**
  * The editor's own inverse read (`snapshot.ts`'s `linkFromHref`): a stored
@@ -142,7 +145,7 @@ function hrefFor(link: MenuLink | undefined, resolve: (type: string, id: string)
   if (l.type === 'phone') return val === '' ? '' : `tel:${val}`;
   if (l.type === 'anchor') return val === '' ? '' : `#${val.replace(/^#/, '')}`;
   if (l.type === 'page' && l.pageId) return resolve('page', l.pageId) ?? '';
-  if (l.entityId && ENTITY_ROUTES[l.type]) return resolve(l.type, l.entityId) ?? '';
+  if (l.entityId && ENTITY_KINDS.has(l.type)) return resolve(l.type, l.entityId) ?? '';
   return '';
 }
 
@@ -152,7 +155,7 @@ function collectRefs(items: MenuItem[], into: Map<string, Set<string>>): void {
     const link = it.link;
     if (link?.type === 'page' && link.pageId) {
       (into.get('page') ?? into.set('page', new Set()).get('page')!).add(link.pageId);
-    } else if (link?.entityId && ENTITY_ROUTES[link.type]) {
+    } else if (link?.entityId && ENTITY_KINDS.has(link.type)) {
       (into.get(link.type) ?? into.set(link.type, new Set()).get(link.type)!).add(link.entityId);
     }
     if (it.items?.length) collectRefs(it.items, into);
@@ -218,6 +221,23 @@ async function resolveLinks(
     maps[kind] = map;
   }
 
+  // PRODUCTS ARE THE ONE UNBOUNDED SET, so they are batched BY ID rather than
+  // read as a whole list — a menu names a handful and a shop may hold
+  // thousands, the same split `createMenuLinkResolver` makes. The platform
+  // accepts `?ids=` repeated or comma-joined (`parseIDs`,
+  // `products/rest/rest.go`); comma-joined is one query param.
+  if (refs.has('product')) {
+    const ids = [...(refs.get('product') ?? [])];
+    const got = await get<{ products?: Array<{ id: string; slug?: string }> }>(
+      `/api/sites/${site}/products?ids=${ids.map((id) => encodeURIComponent(id)).join(',')}`,
+    );
+    const map = new Map<string, string>();
+    for (const p of got?.products ?? []) {
+      if (p.id && p.slug) map.set(p.id, `/products/${p.slug}`);
+    }
+    maps.product = map;
+  }
+
   return (type, id) => maps[type]?.get(id);
 }
 
@@ -273,13 +293,42 @@ function preservePanels(
   return apply(next);
 }
 
-/** Every row whose href never resolved, for the caller to go fix by hand. */
-function unresolvedLabels(rows: Array<Record<string, unknown>>, out: string[] = []): string[] {
-  for (const r of rows) {
-    if (r.href === '') out.push(String(r.label ?? ''));
-    if (Array.isArray(r.items)) unresolvedLabels(r.items as Array<Record<string, unknown>>, out);
-  }
-  return out;
+/** A row shape both `MenuItem` and `MenuItemInput` satisfy — all `classifyLinks` needs. */
+interface LinkedRow {
+  label: string;
+  link?: MenuLink;
+  items?: LinkedRow[];
+}
+
+/**
+ * Which rows carry a REFERENCE that came back with no address, versus which
+ * were never linked to anything in the first place.
+ *
+ * `type:'none'` (every row of a freshly seeded menu element, before an author
+ * has pointed any of them anywhere) is UNLINKED — a placeholder by design, not
+ * a failure. Only a row that named a page, an entity or a plain address and
+ * still resolved to `''` is UNRESOLVED: a dangling reference the caller should
+ * go fix, exactly the shape `unresolved.length` is reported for.
+ */
+function classifyLinks(
+  items: LinkedRow[],
+  resolve: (type: string, id: string) => string | undefined,
+): { unresolved: string[]; unlinked: number } {
+  const unresolved: string[] = [];
+  let unlinked = 0;
+  const walk = (list: LinkedRow[]): void => {
+    for (const it of list) {
+      const type = it.link?.type ?? 'none';
+      if (type === 'none') {
+        unlinked += 1;
+      } else if (hrefFor(it.link, resolve) === '') {
+        unresolved.push(it.label);
+      }
+      if (it.items?.length) walk(it.items);
+    }
+  };
+  walk(items);
+  return { unresolved, unlinked };
 }
 
 export async function bindMenu(
@@ -358,7 +407,8 @@ export async function bindMenu(
     // DRY RUN, would-create branch: there is no real id to read back, so what
     // would be written is computed PURELY from the seed rows — none of them
     // can be a page or entity link (`linkFromHref` never produces one), so no
-    // further lookup is needed or possible.
+    // further lookup is needed or possible. The remaining steps are still
+    // named, with the id filled in once the create actually runs.
     const currentItems = node.specials.menuItems;
     const seedRows =
       Array.isArray(currentItems) && currentItems.length ? seedFromSnapshot(currentItems) : DEFAULT_MENU_ITEMS;
@@ -368,11 +418,27 @@ export async function bindMenu(
       href: hrefFor(r.link, () => undefined),
       ...(r.link?.target === '_blank' ? { target: '_blank' } : {}),
     }));
+    const { unresolved, unlinked } = classifyLinks(seedRows, () => undefined);
+    const { siteId: openSite, pageId } = session.location();
+    steps.push({
+      step: n++,
+      what: 'bind the node to the new menu and read its items back',
+      method: 'GET',
+      path: `/api/sites/${site}/menus/{id}`,
+    });
+    steps.push({
+      step: n++,
+      what: `save the node — specials.menuId (the new menu's id), specials.menuItems (${preview.length} item(s))`,
+      method: 'PUT',
+      path: `/api/sites/${encodeURIComponent(openSite)}/pages/${encodeURIComponent(pageId)}/source`,
+    });
     return {
       dry_run: true,
       plan: steps,
       menu: { would_create: DEFAULT_MENU_NAME },
       items: preview,
+      ...(unresolved.length ? { unresolved } : {}),
+      ...(unlinked ? { unlinked } : {}),
       note: 'Nothing was sent. Re-call with dry_run:false to create the menu, bind the node and write its snapshot.',
     };
   }
@@ -399,7 +465,7 @@ export async function bindMenu(
 
   const built = buildSnapshot(items, resolve);
   const snapshot = preservePanels(node.specials.menuItems, built);
-  const unresolved = unresolvedLabels(snapshot);
+  const { unresolved, unlinked } = classifyLinks(items, resolve);
 
   const itemsPatches = setKeys(doc, nodeId, { menuItems: snapshot }, { namespace: 'specials' });
 
@@ -418,6 +484,7 @@ export async function bindMenu(
       menu: { id: menu.id, name: fullMenu.name },
       items: snapshot,
       ...(unresolved.length ? { unresolved } : {}),
+      ...(unlinked ? { unlinked } : {}),
       note: 'Nothing was sent. Re-call with dry_run:false to bind the node and write its menu snapshot.',
     };
   }
@@ -430,5 +497,6 @@ export async function bindMenu(
     created,
     items: snapshot.length,
     ...(unresolved.length ? { unresolved } : {}),
+    ...(unlinked ? { unlinked } : {}),
   };
 }
