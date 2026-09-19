@@ -5,8 +5,8 @@ import type { RequestShape } from './types.js';
 
 export const SHAPE_SOURCE = {
   "writeOperations": 251,
-  "shaped": 190,
-  "fromHandlers": 190,
+  "shaped": 193,
+  "fromHandlers": 193,
   "fromSwaggerOnly": 0,
   "withReadOnly": 26,
   "structsRead": 1823
@@ -7079,6 +7079,36 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
       {
         "name": "hostname",
         "type": "string"
+      }
+    ],
+    "source": "go",
+    "goType": "(inline)"
+  },
+  "post:/api/sites/{siteId}/domains/{id}/canonical": {
+    "fields": [
+      {
+        "name": "canonical",
+        "type": "string"
+      }
+    ],
+    "source": "go",
+    "goType": "(inline)"
+  },
+  "post:/api/sites/{siteId}/domains/{id}/redirect": {
+    "fields": [
+      {
+        "name": "redirectTo",
+        "type": "string"
+      }
+    ],
+    "source": "go",
+    "goType": "(inline)"
+  },
+  "post:/api/sites/{siteId}/domains/{id}/redirect-code": {
+    "fields": [
+      {
+        "name": "redirectCode",
+        "type": "number"
       }
     ],
     "source": "go",

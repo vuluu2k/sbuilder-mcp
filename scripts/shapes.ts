@@ -676,6 +676,28 @@ function segmentHop(
   return [];
 }
 
+/**
+ * THE SEGMENT ARM. `sitedomain/rest`'s `action` serves five POST routes from
+ * one handler that switches on the route's trailing literal segment, each
+ * `case "redirect":` arm decoding its own inline struct. The method arm sees
+ * three distinct bodies and, by its own rule, says nothing — so the three
+ * domain writes the editor sends `{canonical}`, `{redirectTo}`, `{redirectCode}`
+ * to had no shape. `segmentHop` already trusts that segment to pick a CALLEE;
+ * this reads a `case "<tail>":` arm INSIDE the handler, taking only the decodes
+ * between that arm and the next `case`/`default`. Exact for the same reason the
+ * hop is: the literal comes from the route itself. An arm that decodes nothing
+ * is a correct "no body", not silence.
+ */
+function segmentArm(body: string[], route: { path: string }, dir: string) {
+  const tail = route.path.split('/').filter((x) => x && !x.startsWith('{')).pop();
+  if (!tail) return [];
+  const at = body.findIndex((l) => new RegExp(`^\\s*case\\s+"${tail}"\\s*:`).test(l));
+  if (at === -1) return [];
+  let end = at + 1;
+  for (; end < body.length && !/^\s*(case\s|default\s*:)/.test(body[end]); end++);
+  return extractDecodes(body.slice(at, end), dir);
+}
+
 function readDecodeSites(file: string, dir: string): DecodeSite[] {
   const funcs = readFuncs(readFileSync(file, 'utf8').split('\n'));
   const byName = new Map(funcs.map((f) => [f.name, f]));
@@ -694,6 +716,17 @@ function readDecodeSites(file: string, dir: string): DecodeSite[] {
       let arm = armLines(fn.body, route.method);
       if (arm.length === 0 && writeRoutes.length === 1) arm = fn.body;
       let decodes = arm.length > 0 ? extractDecodes(arm, dir) : [];
+      // The method arm found several distinct bodies in one stretch — the shape
+      // of a dispatcher that routes by PATH SEGMENT rather than by method, with
+      // every segment's case arm inline in the same function. See segmentArm.
+      const distinctBefore = new Set(decodes.map((d) => d.ref ?? JSON.stringify(d.inline?.fields))).size;
+      if (distinctBefore > 1) {
+        const whole = arm.length > 0 ? arm : fn.body;
+        const tail = route.path.split('/').filter((x) => x && !x.startsWith('{')).pop();
+        const armExists = tail !== undefined && whole.some((l) => new RegExp(`^\\s*case\\s+"${tail}"\\s*:`).test(l));
+        // An arm that exists and decodes nothing is a real answer: no body.
+        if (armExists) decodes = segmentArm(whole, route, dir);
+      }
       if (decodes.length === 0) {
         // A dispatcher with no method arm at all — see segmentHop.
         const bySeg = segmentHop(fn, byName, route, dir);
@@ -718,13 +751,15 @@ function readDecodeSites(file: string, dir: string): DecodeSite[] {
         }
         if (candidates.length === 1) decodes = candidates[0];
       }
-      // MORE THAN ONE DISTINCT BODY IN ONE ARM MEANS THE ARM IS NOT THE ANSWER.
-      // `sitedomain`'s `action` serves verify, primary, canonical, redirect and
-      // redirect-code from a single POST handler that switches on a PATH SEGMENT;
-      // only verify and primary are annotated, and neither takes a body. Reading
-      // the first decode gave both of them `{ canonical }`. A handler that decodes
-      // two different shapes in one method arm cannot say which route owns which,
-      // so it says nothing.
+      // MORE THAN ONE DISTINCT BODY IN ONE ARM MEANS THE ARM IS NOT THE ANSWER,
+      // UNLESS THE SEGMENT ARM ABOVE ALREADY RESOLVED IT. `sitedomain`'s `action`
+      // serves verify, primary, canonical, redirect and redirect-code from a
+      // single POST handler that switches on a PATH SEGMENT; the segment-arm pass
+      // reads each route's own `case "<tail>":` arm, so canonical/redirect/
+      // redirect-code now carry their own body and verify/primary correctly carry
+      // none. This is the backstop for a dispatcher segmentArm could not resolve —
+      // a handler that decodes several shapes in one arm with no matching case
+      // literal still cannot say which route owns which, so it says nothing.
       const distinct = new Map(decodes.map((d) => [d.ref ?? JSON.stringify(d.inline?.fields), d]));
       if (distinct.size !== 1) continue;
       const first = decodes[0];
