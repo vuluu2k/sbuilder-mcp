@@ -6,6 +6,26 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.62.0] - 2026-09-20
+
+### Added
+- `sb_api_call` can now reach a route the generated catalog does not carry at all, by passing `method` and `path` directly, under the same credential routing, `dry_run` default, and `SB_SITE` fallback as a catalogued call; a `method` + `path` that names a route the catalog already holds folds back onto that catalogued operation instead, matched segment-wise so a path spelled with literal ids (e.g. `/api/sites/abc123/menus/m1`) still resolves and gets its shape and `sb_undo` support.
+- `sb_api_call`'s `item_offset` argument pages through a list answer after the platform's own pagination, for the many listing operations that carry no pagination of their own.
+- `sb_api_find` now names the raw call form and the three router-only routes (`/api/permissions`, `/api/plans`, `/api/locales`) when a search matches nothing.
+- `sb_add`, `sb_set`, `sb_move`, `sb_remove`, `sb_duplicate`, `sb_bind`, and `sb_event` now take a `force` argument that overrides a "soft" guard — one that only asserts what the catalog believes a renderer does, which can be stale against a newer deployment — and returns the overridden message under `forced` instead of throwing; a "hard" guard protecting a platform invariant with no way back (band order, a composed stamp, ROOT, the overlay root, a move into a node's own subtree, `specials` with a state) still refuses regardless of `force`.
+- `sb_store` gained three actions: `menu` binds a menu node on the open page to the site's menu and resolves its links the way the editor does; `overlay_attach` puts a pop-up on the open page or points a `list-dataset` at a quick-view panel, then re-reads the page as the editor requires; `app` installs one of the platform's built-in apps and creates the scaffold pages it needs.
+
+### Changed
+- `sb_api_call`'s raw (uncatalogued) call form now states what it cannot offer — no call sheet, no body shape, no `sb_undo` — on the dry run as well as on a real send, since `dry_run` defaults to true and that is when most callers first meet it.
+- `sb_api_call` now refuses a `path` carrying a query string, a fragment, or a backslash, since a query belongs in the `query` argument and a backslash could otherwise redirect the request off this install's own API host.
+- The generated catalog was regenerated against the platform: 560 API operations (up from 531), 193 of 251 write operations now carrying a documented body shape (up from 179 of 238), including the three domain-action bodies (`menu`, `overlay_attach`, `app`) recovered by a new segment-arm reader.
+
+### Fixed
+- `sb_store`'s `menu` action now resolves a product link, keeps a listing panel's local id through a rebuild, and its dry-run plan names every step it would take.
+- `sb_store`'s `overlay_attach` action is now a no-op when the overlay is already attached, refuses attaching to a different site than the one the open page belongs to, and refuses a popup carrying `list_id` (which only means something for a quickview).
+- `sb_store`'s `menu` dry-run plan now goes out through the same redaction every other flow's plan does, instead of being built by hand.
+- A `force` argument no longer hints "pass force:true" on a tool whose schema does not accept one, and `force:true` with no `forced` array supplied no longer drops the override record silently.
+
 ## [0.61.1] - 2026-09-17
 
 ### Added

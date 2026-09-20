@@ -6,6 +6,26 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.62.0] - 2026-09-20
+
+### Added
+- `sb_api_call` giờ có thể gọi tới một route mà catalog được sinh ra hoàn toàn không mang, bằng cách truyền thẳng `method` và `path`, dưới cùng quy tắc chọn credential theo path, mặc định `dry_run`, và fallback `SB_SITE` như một lệnh gọi có trong catalog; một `method` + `path` trỏ đến route mà catalog đã có thì được gập ngược lại thành chính operation đó, khớp theo từng đoạn path nên một path viết bằng id literal (ví dụ `/api/sites/abc123/menus/m1`) vẫn được nhận diện và có đầy đủ shape cùng hỗ trợ `sb_undo`.
+- Tham số `item_offset` của `sb_api_call` cho phép lật qua các item trong một danh sách trả về sau khi đã áp dụng phân trang của chính nền tảng, dành cho rất nhiều operation liệt kê vốn không có phân trang riêng.
+- `sb_api_find` giờ nêu tên dạng gọi thô và ba route chỉ tồn tại trên router (`/api/permissions`, `/api/plans`, `/api/locales`) khi một tìm kiếm không khớp gì cả.
+- `sb_add`, `sb_set`, `sb_move`, `sb_remove`, `sb_duplicate`, `sb_bind`, và `sb_event` giờ nhận tham số `force` để ghi đè một guard "mềm" — loại chỉ khẳng định điều mà catalog tin là renderer sẽ làm, có thể đã lỗi thời so với bản triển khai mới hơn — và trả về thông điệp bị ghi đè dưới `forced` thay vì ném lỗi; một guard "cứng" bảo vệ bất biến của nền tảng không có đường quay lại (thứ tự band, một stamp đã compose, ROOT, overlay root, di chuyển một node vào chính subtree của nó, `specials` kèm state) vẫn từ chối bất kể `force`.
+- `sb_store` có thêm ba action: `menu` gắn một node menu trên trang đang mở vào menu của site và resolve các liên kết của nó giống hệt editor; `overlay_attach` đặt một pop-up lên trang đang mở hoặc trỏ một `list-dataset` vào panel quick-view, sau đó đọc lại trang như editor bắt buộc phải làm; `app` cài một app dựng sẵn của nền tảng và tạo các trang scaffold mà nó cần.
+
+### Changed
+- Dạng gọi thô (chưa có trong catalog) của `sb_api_call` giờ nêu rõ những gì nó không thể cung cấp — không call sheet, không body shape, không `sb_undo` — ngay trên dry run chứ không chỉ khi gửi thật, vì `dry_run` mặc định là true và đó là lúc phần lớn người gọi gặp nó lần đầu.
+- `sb_api_call` giờ từ chối một `path` mang query string, fragment, hoặc dấu gạch chéo ngược, vì query thuộc về tham số `query`, còn dấu gạch chéo ngược có thể khiến request bị chuyển hướng khỏi host API của chính bản cài đặt này.
+- Catalog được sinh ra đã được làm mới dựa trên nền tảng: 560 operation API (tăng từ 531), 193 trong 251 lệnh ghi giờ mang hình dạng body đã được ghi lại (tăng từ 179 trong 238), bao gồm ba hình dạng body của domain-action (`menu`, `overlay_attach`, `app`) được khôi phục nhờ một bộ đọc segment-arm mới.
+
+### Fixed
+- Action `menu` của `sb_store` giờ resolve được liên kết sản phẩm, giữ nguyên id cục bộ của một panel listing qua một lần rebuild, và plan của dry run nêu tên đầy đủ từng bước sẽ thực hiện.
+- Action `overlay_attach` của `sb_store` giờ không làm gì khi overlay đã được gắn sẵn, từ chối gắn vào một site khác với site của trang đang mở, và từ chối một popup mang `list_id` (giá trị này chỉ có ý nghĩa với quickview).
+- Plan dry run của action `menu` trong `sb_store` giờ đi qua cùng bước redact như plan của mọi flow khác, thay vì được dựng tay.
+- Tham số `force` không còn gợi ý "pass force:true" trên một tool mà schema của nó không nhận tham số này, và `force:true` không kèm mảng `forced` không còn làm mất bản ghi ghi đè một cách âm thầm.
+
 ## [0.61.1] - 2026-09-17
 
 ### Added
