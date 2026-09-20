@@ -44,11 +44,17 @@ function buildDoc(): { document: DocLike; listNodeId: string } {
  * `specials.overlayId`, or a quickview panel stamped `specials.quickviewId` —
  * mirroring what `ComposeOverlays`/`ComposeQuickviews` actually do on read.
  */
-function scripted(kind: 'popup' | 'quickview', initialDoc: DocLike, listNodeId?: string) {
+function scripted(
+  kind: 'popup' | 'quickview',
+  initialDoc: DocLike,
+  listNodeId?: string,
+  /** Seed the "already on the page" state a real re-open of an already-attached page would show. */
+  preAttached?: string,
+) {
   const calls: Call[] = [];
   let current: DocLike = initialDoc;
-  let attachedOverlayId: string | null = null;
-  let quickviewOverlayId: string | null = null;
+  let attachedOverlayId: string | null = kind === 'popup' ? (preAttached ?? null) : null;
+  let quickviewOverlayId: string | null = kind === 'quickview' ? (preAttached ?? null) : null;
   let composedIdSeq = 0;
 
   const withComposed = (doc: DocLike): DocLike => {
@@ -226,8 +232,16 @@ describe('sb_store action:"overlay_attach"', () => {
     // No overlay create call — an id was given.
     expect(calls.filter((c) => c.method === 'POST' && c.path.endsWith('/overlays'))).toEqual([]);
 
-    const gets = calls.filter((c) => c.method === 'GET' && c.path.endsWith('/source'));
-    expect(gets.length).toBeGreaterThanOrEqual(1);
+    // THE RE-READ MUST FOLLOW THE SAVE, not merely occur somewhere — the
+    // platform's own comment on this flow says the panel does not exist on
+    // this client until the round trip after the write lands.
+    const putIndex = calls.findIndex((c) => c.method === 'PUT' && c.path.endsWith('/source'));
+    const lastSourceGetIndex = calls.reduce(
+      (last, c, i) => (c.method === 'GET' && c.path.endsWith('/source') ? i : last),
+      -1,
+    );
+    expect(putIndex).toBeGreaterThanOrEqual(0);
+    expect(lastSourceGetIndex).toBeGreaterThan(putIndex);
 
     expect(out.overlay_id).toBe('qv_1');
     expect(out.created).toBe(false);
@@ -277,6 +291,120 @@ describe('sb_store action:"overlay_attach"', () => {
 
     expect(failed.isError).toBe(true);
     expect(failed.content[0].text).toContain('heading');
+
+    await close();
+  });
+
+  it('kind:"popup" is a no-op when the overlay is already on the open page', async () => {
+    const { document } = buildDoc();
+    const { f, calls } = scripted('popup', document, undefined, 'ov_1');
+    const { client, close } = await clientOver(f);
+
+    await client.callTool({ name: 'sb_page_open', arguments: { site_id: 's1', page_id: 'pg_1' } });
+    calls.length = 0;
+
+    const out = parse(
+      await client.callTool({
+        name: 'sb_store',
+        arguments: { action: 'overlay_attach', kind: 'popup', overlay_id: 'ov_1', dry_run: false },
+      }),
+    );
+
+    expect(calls).toEqual([]); // no save, no re-attach, no re-read
+    expect(out.already_attached).toBe(true);
+    expect(out.overlay_id).toBe('ov_1');
+    expect(out.node_id).toBe('composed_pop_1');
+
+    await close();
+  });
+
+  it('kind:"popup" dry run reports already_attached without sending anything', async () => {
+    const { document } = buildDoc();
+    const { f, calls } = scripted('popup', document, undefined, 'ov_1');
+    const { client, close } = await clientOver(f);
+
+    await client.callTool({ name: 'sb_page_open', arguments: { site_id: 's1', page_id: 'pg_1' } });
+    calls.length = 0;
+
+    const out = parse(
+      await client.callTool({
+        name: 'sb_store',
+        arguments: { action: 'overlay_attach', kind: 'popup', overlay_id: 'ov_1' },
+      }),
+    );
+
+    expect(calls).toEqual([]);
+    expect(out.dry_run).toBe(true);
+    expect(out.already_attached).toBe(true);
+    expect(out.node_id).toBe('composed_pop_1');
+
+    await close();
+  });
+
+  it('kind:"quickview" is a no-op when the list already points at this overlay', async () => {
+    const { document, listNodeId } = buildDoc();
+    document.nodes[listNodeId].config = {
+      ...(document.nodes[listNodeId].config ?? {}),
+      quickviewId: 'qv_1',
+    };
+    const { f, calls } = scripted('quickview', document, listNodeId, 'qv_1');
+    const { client, close } = await clientOver(f);
+
+    await client.callTool({ name: 'sb_page_open', arguments: { site_id: 's1', page_id: 'pg_1' } });
+    calls.length = 0;
+
+    const out = parse(
+      await client.callTool({
+        name: 'sb_store',
+        arguments: {
+          action: 'overlay_attach',
+          kind: 'quickview',
+          list_id: listNodeId,
+          overlay_id: 'qv_1',
+          dry_run: false,
+        },
+      }),
+    );
+
+    expect(calls).toEqual([]);
+    expect(out.already_attached).toBe(true);
+    expect(out.overlay_id).toBe('qv_1');
+    expect(out.node_id).toBe('composed_qv_1');
+
+    await close();
+  });
+
+  it('kind:"quickview" re-attaches when the choice is stored but the composed panel is missing', async () => {
+    // A choice with no composed panel means this page has not been re-read
+    // since the choice was made — the two halves of "already attached" must
+    // BOTH hold, or the caller is left with a stale answer.
+    const { document, listNodeId } = buildDoc();
+    document.nodes[listNodeId].config = {
+      ...(document.nodes[listNodeId].config ?? {}),
+      quickviewId: 'qv_1',
+    };
+    const { f, calls } = scripted('quickview', document, listNodeId); // no preAttached: no composed panel yet
+    const { client, close } = await clientOver(f);
+
+    await client.callTool({ name: 'sb_page_open', arguments: { site_id: 's1', page_id: 'pg_1' } });
+    calls.length = 0;
+
+    const out = parse(
+      await client.callTool({
+        name: 'sb_store',
+        arguments: {
+          action: 'overlay_attach',
+          kind: 'quickview',
+          list_id: listNodeId,
+          overlay_id: 'qv_1',
+          dry_run: false,
+        },
+      }),
+    );
+
+    expect(calls.some((c) => c.method === 'PUT')).toBe(true);
+    expect(out.already_attached).toBeUndefined();
+    expect(out.node_id).toBe('composed_qv_1');
 
     await close();
   });

@@ -122,6 +122,34 @@ export async function attachOverlay(
       );
     }
 
+    // ALREADY ATTACHED — do nothing, the way `useQuickviewOverlay.choose`'s
+    // caller (`openForEditing`) does by checking `panelNode(overlayId)` first.
+    // Both halves must hold: the list's OWN choice (`config.quickviewId`, at
+    // base — never a breakpoint slot, which compose never reads) must already
+    // name this overlay, AND the composed panel must already be present on
+    // this page. Either alone is not enough — a choice with no composed panel
+    // is a page that has not been re-read since the choice was made, and a
+    // stray composed node with no matching choice cannot happen but is not
+    // the fact this check is answering. Writing again here is not WRONG, only
+    // wasted: it would churn the shared master's revision fence for no reason.
+    if (opts.overlayId) {
+      const alreadyChosen = listNode.config?.quickviewId === opts.overlayId;
+      const existingId = alreadyChosen
+        ? findComposed(doc.doc.nodes as Record<string, unknown>, 'quickviewId', opts.overlayId)
+        : undefined;
+      if (alreadyChosen && existingId) {
+        return opts.dryRun
+          ? {
+              dry_run: true,
+              already_attached: true,
+              overlay_id: opts.overlayId,
+              node_id: existingId,
+              note: 'Nothing to do — this list already points at this quick view.',
+            }
+          : { kind: 'quickview', overlay_id: opts.overlayId, created: false, already_attached: true, node_id: existingId };
+      }
+    }
+
     let overlayId = opts.overlayId;
     let created = false;
     if (!overlayId) {
@@ -184,6 +212,32 @@ export async function attachOverlay(
 
   // popup ---------------------------------------------------------------
   const { pageId } = session.location();
+
+  // ALREADY ATTACHED — the way `usePopupOverlay.attachToCurrentPage` checks
+  // `nodes.findByOverlayId(overlayId)` before doing anything. Only meaningful
+  // when the caller NAMED an overlay: a freshly created one cannot already be
+  // composed onto this page. Saving and re-attaching anyway would not be
+  // wrong, only wasted — it churns the shared master's revision fence
+  // (`restampPatches`'s fence) for an edge that already exists.
+  if (opts.overlayId) {
+    const existingId = findComposed(
+      session.current().doc.nodes as Record<string, unknown>,
+      'overlayId',
+      opts.overlayId,
+    );
+    if (existingId) {
+      return opts.dryRun
+        ? {
+            dry_run: true,
+            already_attached: true,
+            overlay_id: opts.overlayId,
+            node_id: existingId,
+            note: 'Nothing to do — this pop-up is already on the open page.',
+          }
+        : { kind: 'popup', overlay_id: opts.overlayId, created: false, already_attached: true, node_id: existingId };
+    }
+  }
+
   steps.push({
     step: n++,
     what: 'save the page — the edge cannot attach to an unsaved draft',
