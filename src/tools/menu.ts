@@ -32,7 +32,7 @@
  * multi-write flow in this file does — a node bound but not yet snapshotted
  * is a state nobody should be able to observe.
  */
-import { request } from '../transport/http.js';
+import { request, redact } from '../transport/http.js';
 import { siteToken } from './credentialpick.js';
 import type { ToolContext } from './context.js';
 import type { PageSession } from './page.js';
@@ -434,7 +434,7 @@ export async function bindMenu(
     });
     return {
       dry_run: true,
-      plan: steps,
+      plan: redact(steps),
       menu: { would_create: DEFAULT_MENU_NAME },
       items: preview,
       ...(unresolved.length ? { unresolved } : {}),
@@ -480,7 +480,7 @@ export async function bindMenu(
   if (opts.dryRun) {
     return {
       dry_run: true,
-      plan: steps,
+      plan: redact(steps),
       menu: { id: menu.id, name: fullMenu.name },
       items: snapshot,
       ...(unresolved.length ? { unresolved } : {}),

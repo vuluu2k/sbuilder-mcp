@@ -135,10 +135,17 @@ describe('sb_store action:"menu"', () => {
     );
 
     expect(out.dry_run).toBe(true);
-    const plan = out.plan as Array<{ step: number; method: string; path: string }>;
+    const plan = out.plan as Array<{ step: number; method: string; path: string; body?: unknown }>;
     expect(plan[0].step).toBe(1);
     expect(plan[0].method).toBe('POST');
     expect(plan[0].path).toMatch(/\/menus$/);
+    // THE PREVIEW GOES OUT THROUGH `redact()`, like every other flow's — this is
+    // the only plan here that carries a request BODY, and a hand-built preview
+    // is the shape that drifts away from that rule. `redact` rebuilds every
+    // object it walks, so the body arriving as an object with its own keys is
+    // the evidence it came back through the same path the others use.
+    expect(plan[0].body).toBeTypeOf('object');
+    expect(Object.keys(plan[0].body as Record<string, unknown>)).toContain('items');
     expect(calls.filter((c) => c.method !== 'GET')).toEqual([]);
 
     await close();
