@@ -6,6 +6,15 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.61.1] - 2026-09-17
+
+### Added
+- `sb_connect` giờ báo cáo kiến thức nền tảng của catalog được sinh ra đã cũ đến mức nào, bằng lời (ví dụ "45 days old"), cùng với commit web_builder mà nó được sinh ra từ đó, để một bản cài đặt lỗi thời được đọc đúng là lỗi thời thay vì bị hiểu nhầm là thiếu element hay key.
+- Cảnh báo tiền điều kiện của `sb_set` giờ bao phủ thêm `filterMatch: "all"` trên các element bộ lọc, giá trị này chỉ có tác dụng ở nơi một sản phẩm có thể mang nhiều giá trị của một nguồn.
+
+### Fixed
+- Cảnh báo tiền điều kiện của `sb_set` không còn báo sai (false positive) khi một key `specials` liền kề đơn giản là chưa được thiết lập, vì một clause `null` giờ được hiểu đúng là "chưa thiết lập" thay vì bị so sánh như một giá trị literal.
+
 ## [0.61.0] - 2026-09-16
 
 ### Added
