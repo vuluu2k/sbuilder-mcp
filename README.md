@@ -83,7 +83,7 @@ in this client: one would put the very key the platform exists to hold back into
 | `sb_connect` | Log in, list the sites this account can operate, report which credentials are present |
 | `sb_site_list` | List the sites this account can operate |
 | `sb_api_find` | Find API operations by intent — one line per match — then read one operation's call sheet by id: real parameter schemas, the credential it needs, and the body's fields read off the handler that decodes them, each carrying the trap its own doc comment records |
-| `sb_api_call` | Execute one operation. Defaults to a dry run that sends nothing |
+| `sb_api_call` | Execute an operation, or any route by method+path; dry run by default. Field selection and local result pagination |
 | `sb_page_open` | Open a page for editing and return its outline |
 | `sb_outline` | The open page as a compressed tree — never a raw document dump |
 | `sb_node_read` | One node in full, with a warning if it is a shared global |
@@ -109,10 +109,10 @@ in this client: one would put the very key the platform exists to hold back into
 | `sb_import` | Read a page from any public URL and add its structure and content to the open page as real elements, styled with THIS page's own tokens — a translation, not a clone |
 | `sb_import_site` | Read a WHOLE site from one URL — its sitemap, or the links on that page — and give each page found its own draft page here, built from this site's tokens; the entry page's own colours and type scale also patch into this SITE'S theme, so it stops being purely a read |
 | `sb_theme` | Read or patch the site's palette and type scale — the layer every style preset resolves from, so one token repaints every page |
-| `sb_store` | Run a store flow that must happen in a fixed order — the four writes that make a working checkout, or any of the platform's 17 form templates (login, register, forgot, contact, subscribe …) with its own field document |
+| `sb_store` | Run a store flow that must happen in a fixed order — `checkout` (the four writes that make a working one), `form` (any of the platform's 17 templates with its own field document), `chrome` (one shared header or footer), `menu` (a menu node bound to the site's menu, its links resolved), `overlay_attach` (a pop-up or quick view on the open page) and `app` (a built-in app plus the pages it needs) |
 | `sb_undo` | Put back what a PUT replaced. The SECOND answer for a page, not the only one: the platform has versions, history and restore (`sb_api_find` "page versions"), which outlive this process — reach for those first and use this for every other shaped PUT |
 
-Twenty-eight tools, **531 API operations** (179 of the 238 writes carrying a body shape read
+Twenty-eight tools, **560 API operations** (193 of the 251 writes carrying a body shape read
 off the handler), 113 elements, 79 binding sources. `sb_api_find`
 is an index rather than a tool per endpoint, so the tool list stays short while everything
 the platform can do stays reachable — and operations added to the platform arrive with the

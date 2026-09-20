@@ -1,9 +1,12 @@
 /**
  * THE STORE FLOWS THAT MUST BE ORDERED.
  *
- * `sb_review` names eight readiness gaps. Seven of them are now one call each —
- * a delivery option, a payment gateway, a product, a page of the right type —
- * because `REQUEST_SHAPES` tells the caller what those calls take. One is not.
+ * `sb_review` names EIGHTEEN readiness gaps (`ReadinessGapId`). Most are one
+ * call each — a delivery option, a payment gateway, a product, a page of the
+ * right type — because `REQUEST_SHAPES` tells the caller what those calls take.
+ * The ones that are not are the flows in this file: each is several writes in
+ * an order that is written down in exactly one place, the editor, and is not
+ * guessable from the API surface.
  *
  * A CHECKOUT IS FOUR WRITES IN A FIXED ORDER, and the editor is the only place
  * they are written down (`editor/src/features/pages/checkoutPage.ts`):
@@ -24,8 +27,12 @@
  * orphan the retry would then duplicate. The editor shipped that bug first.
  *
  * ONE TOOL WITH AN `action`, not one tool per surface: the `tools/list` ceiling
- * is 17,000 characters and 26 tools already sit under it. There is exactly one
- * flow here today, and the enum is how a second arrives without a second tool.
+ * is 27,864 characters and 31 tools already sit under it. There are SIX flows
+ * here today — checkout, form, chrome, menu, overlay_attach, app — and the enum
+ * is how each arrived without a seventh, eighth and ninth entry in that list.
+ * Four of them live in their own modules (`chrome.ts`, `menu.ts`, `overlay.ts`,
+ * `app.ts`) and are dispatched from here; the checkout and `form` are written
+ * out below, because they came first.
  */
 import { z } from 'zod';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
@@ -38,6 +45,11 @@ import type { PageSession } from './page.js';
 import { addSubtree } from '../domains/site/builder.js';
 import { chromeLinks, hasGlobal, shareChrome, sitePages } from './chrome.js';
 import { tokensFromPage } from '../domains/site/importmap.js';
+import { bindMenu } from './menu.js';
+import { attachOverlay } from './overlay.js';
+import { installApp } from './app.js';
+import { BUILTIN_APP_KEYS } from '../catalog/appscaffolds.generated.js';
+import { ELEMENTS } from '../catalog/elements.generated.js';
 import {
   CHECKOUT_FORM,
   CHECKOUT_FORM_DOCUMENT,
@@ -450,9 +462,17 @@ export function registerStoreTools(server: McpServer, ctx: ToolContext, session:
         'register, forgot, reset, verify, contact, subscribe, booking, review and more) with ' +
         'its own field document, which is the part that cannot be guessed. action:"chrome" ' +
         'gives every page ONE shared header, built from the pages this site already has — the ' +
-        'gap sb_review reports as siteChrome. Dry run returns the plan.',
+        'gap sb_review reports as siteChrome. action:"menu" binds a menu node on the open page ' +
+        'to the site\'s menu and resolves its links, the way the editor does. ' +
+        'action:"overlay_attach" puts a pop-up on the open page (kind:"popup") or points a ' +
+        'list-dataset at a quick-view panel (kind:"quickview", list_id), creating either from ' +
+        'the platform\'s own seed when overlay_id is omitted, and re-reads the page afterwards ' +
+        'as the editor must. action:"app" installs one of the platform\'s built-in apps ' +
+        '(app_key) and creates the pages it needs that installing it does not — today only ' +
+        '"courses" has any, from the platform\'s own scaffold; every other key installs with ' +
+        'nothing further to build. Dry run returns the plan.',
       inputSchema: {
-        action: z.enum(['checkout', 'form', 'chrome']),
+        action: z.enum(['checkout', 'form', 'chrome', 'menu', 'overlay_attach', 'app']),
         site_id: z.string().optional(),
         language: z.enum(['vi', 'en']).optional().describe('Copy language, default vi'),
         page_name: z.string().optional(),
@@ -461,26 +481,123 @@ export function registerStoreTools(server: McpServer, ctx: ToolContext, session:
           .enum(FORM_TEMPLATE_KEYS)
           .optional()
           .describe('action:"form" — which of the platform\'s own form templates to seed'),
-        name: z.string().optional().describe('action:"form" — the form\'s name in the merchant\'s list'),
+        name: z
+          .string()
+          .optional()
+          .describe(
+            'action:"form" — the form\'s name in the merchant\'s list. action:"overlay_attach" ' +
+              'with no overlay_id — the new pop-up/quick-view\'s name.',
+          ),
         footer: z
           .boolean()
           .optional()
           .describe('action:"chrome" — build a shared FOOTER instead of a header'),
+        node_id: z.string().optional().describe('action:"menu" — the menu node on the open page'),
+        menu_id: z.string().optional(),
+        kind: z
+          .enum(['popup', 'quickview'])
+          .optional()
+          .describe('action:"overlay_attach" — which kind of overlay to attach'),
+        overlay_id: z
+          .string()
+          .optional()
+          .describe('action:"overlay_attach" — an existing overlay; omit to create one from the seed'),
+        list_id: z
+          .string()
+          .optional()
+          .describe('action:"overlay_attach" kind:"quickview" — the list-dataset node on the open page'),
+        app_key: z
+          .enum(BUILTIN_APP_KEYS)
+          .optional()
+          .describe('action:"app" — which built-in app to install'),
         dry_run: z.boolean().optional(),
       },
       annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: true },
     },
-    async ({ action, site_id: given, language, page_name, headline, template, name, footer, dry_run }) => {
+    async ({
+      action,
+      site_id: given,
+      language,
+      page_name,
+      headline,
+      template,
+      name,
+      footer,
+      node_id,
+      menu_id,
+      kind,
+      overlay_id,
+      list_id,
+      app_key,
+      dry_run,
+    }) => {
       const siteId = siteFor(ctx, given);
+      if (action === 'app') {
+        if (!app_key) {
+          throw new Error(
+            `sbuilder: action:"app" needs app_key. One of: ${BUILTIN_APP_KEYS.join(', ')}.`,
+          );
+        }
+        return text(
+          await installApp(ctx, session, siteId, app_key, {
+            language: (language ?? 'vi') as Language,
+            dryRun: dry_run !== false,
+          }),
+        );
+      }
+      if (action === 'menu') {
+        if (!node_id) {
+          throw new Error('sbuilder: action:"menu" needs node_id — the menu node on the open page.');
+        }
+        const node = session.current().node(node_id);
+        const type = node.data.type;
+        const seeds = ELEMENTS[type]?.defaults?.specials;
+        if (!seeds || !('menuItems' in seeds)) {
+          throw new Error(
+            `sbuilder: node "${node_id}" is a "${type}", which does not seed specials.menuItems — ` +
+              'only a menu node can be bound to a site menu.',
+          );
+        }
+        return text(await bindMenu(ctx, session, siteId, node_id, { menuId: menu_id, dryRun: dry_run !== false }));
+      }
+      if (action === 'overlay_attach') {
+        if (!kind) {
+          throw new Error('sbuilder: action:"overlay_attach" needs kind — "popup" or "quickview".');
+        }
+        // A LIST IS THE QUICK VIEW'S WHOLE ATTACHMENT and means nothing to a
+        // pop-up, which reaches a page through an edge. Unchecked, a caller who
+        // meant "quickview" and typed "popup" gets a pop-up created, attached
+        // and the page saved, with `list_id` read by nothing and nothing said —
+        // a wrong write that answers success, which is the shape this file
+        // spends every other paragraph closing.
+        if (kind === 'popup' && list_id) {
+          throw new Error(
+            'sbuilder: action:"overlay_attach" kind:"popup" takes no list_id — a pop-up reaches ' +
+              'a page through an edge, not through a list. A list-dataset pointing at a panel is ' +
+              'kind:"quickview"; that is almost certainly what this call meant.',
+          );
+        }
+        return text(
+          await attachOverlay(ctx, session, siteId, {
+            kind,
+            overlayId: overlay_id,
+            name,
+            listId: list_id,
+            dryRun: dry_run !== false,
+          }),
+        );
+      }
       if (action === 'chrome') {
         // SKIPPED WHEN THE SITE ALREADY SHARES ONE, because a second header is
         // two headers rather than a menu — and below two pages, because a menu
         // to one page is a link to itself. Both are `sb_import_site`'s own
         // rules, kept because they were right there.
-        const kind = footer === true ? 'footer' : 'header';
-        if (await hasGlobal(ctx, siteId, kind)) {
+        // NAMED `chromeKind`, not `kind`: the tool's own `kind` argument is the
+        // OVERLAY enum, and shadowing it here reads as the same idea twice.
+        const chromeKind = footer === true ? 'footer' : 'header';
+        if (await hasGlobal(ctx, siteId, chromeKind)) {
           return text({
-            skipped: `this site already shares a ${kind} — a second one is two of them, not a menu`,
+            skipped: `this site already shares a ${chromeKind} — a second one is two of them, not a menu`,
           });
         }
         const pages = await sitePages(ctx, siteId);
@@ -497,7 +614,7 @@ export function registerStoreTools(server: McpServer, ctx: ToolContext, session:
         if (dry_run !== false) {
           return text({
             dry_run: true,
-            would_create: kind,
+            would_create: chromeKind,
             menu: links,
             onto: pages.map((p) => p.slug),
             tokens_from: Object.keys(tokens).length ? 'the home page' : 'nothing — the home page is blank',
@@ -506,7 +623,7 @@ export function registerStoreTools(server: McpServer, ctx: ToolContext, session:
               'to it, so the menu becomes one edit instead of one per page.',
           });
         }
-        const out = await shareChrome(ctx, session, siteId, kind, links, pages, tokens);
+        const out = await shareChrome(ctx, session, siteId, chromeKind, links, pages, tokens);
         return text({
           ...out,
           next:

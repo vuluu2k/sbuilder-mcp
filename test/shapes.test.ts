@@ -48,3 +48,17 @@ describe('request shapes recovered from the handlers', () => {
     expect(total).toBeGreaterThanOrEqual(158);
   });
 });
+
+describe('the segment arm: one POST handler switching on the route\'s own tail', () => {
+  it('gives each domain action the body its own case arm decodes', () => {
+    const f = (id: string) => REQUEST_SHAPES[id]?.fields.map((x) => x.name) ?? null;
+    expect(f('post:/api/sites/{siteId}/domains/{id}/canonical')).toEqual(['canonical']);
+    expect(f('post:/api/sites/{siteId}/domains/{id}/redirect')).toEqual(['redirectTo']);
+    expect(f('post:/api/sites/{siteId}/domains/{id}/redirect-code')).toEqual(['redirectCode']);
+  });
+
+  it('says nothing for an arm that decodes nothing', () => {
+    expect(REQUEST_SHAPES['post:/api/sites/{siteId}/domains/{id}/verify']).toBeUndefined();
+    expect(REQUEST_SHAPES['post:/api/sites/{siteId}/domains/{id}/primary']).toBeUndefined();
+  });
+});

@@ -117,17 +117,42 @@ Execute one operation found by `sb_api_find`.
 
 | Arg | Type | Notes |
 | --- | --- | --- |
-| `id` | string | From `sb_api_find`, e.g. `get:/api/sites/{siteID}/menus` |
+| `id` | string? | Operation id from `sb_api_find`. Omit it to call by `method` + `path` |
+| `method` | string? | With `path`, when `id` is absent: `GET`, `HEAD`, `POST`, `PUT`, `PATCH` or `DELETE` |
+| `path` | string? | A bare platform path starting with `/`, e.g. `/api/sites/{siteId}/published`; `{siteId}` defaults to `SB_SITE` |
 | `path_params` | object? | Every `{name}` in the path; missing one is refused, values are URL-encoded |
 | `query` | object? | Query string; `undefined` values are dropped |
 | `body` | any? | Request body |
 | `dry_run` | boolean? | **Defaults to `true`** — sends nothing, returns a redacted preview |
 | `pick` | string[]? | Fields to keep on each item of a list answer (or on the one item of a `{ page: {…} }` answer) |
 | `max_items` | number? | Cap on a list answer's items, applied after the platform's own paging |
+| `item_offset` | integer? | Skip this many items within the returned list (default 0); positive offsets require GET/HEAD |
 
 Credentials are chosen from the path, never from the argument: `/api/v1/…` uses `SB_TOKEN`,
 everything else uses the session. A missing `SB_TOKEN` is reported by name rather than
 letting the platform answer `401 api_key_required`, which reads like a permissions problem.
+
+**A route the catalog does not carry is still callable.** The catalog is a closed list read
+off one swagger document, and the platform serves routes it does not describe — 20 the
+platform never annotated, three registered directly on the router (`/api/permissions`,
+`/api/plans`, `/api/locales`), and anything newer than the last regen. `method` + `path`
+reaches them under exactly the same rules: the credential follows the path prefix, `dry_run`
+defaults to `true`, `{siteId}` defaults to `SB_SITE`, and `pick` / `max_items` /
+`item_offset` apply. A `method` + `path` naming a route the catalog already holds is
+answered as the catalogued operation instead, shape and undo included, and is not wrapped.
+That fold-back is segment-wise, so a path carrying literal ids
+(`/api/sites/abc123/menus/m1`) folds back as well as one spelling the parameters — the
+literals become the values the catalogued route names. A route spelling more of itself
+wins (`…/pages/locate-nodes` over `…/pages/{pageId}`), and two equally specific siblings
+fold to nothing and stay raw rather than being guessed between.
+What a raw call does NOT have is said once per process — as `directive` on a dry run, as
+`note` on a send: no call sheet, no body shape, no body warnings and no `sb_undo`. The answer is wrapped as
+`{ uncatalogued: true, data }` so it cannot be mistaken for a catalogued one. A path that
+is not a bare platform path is refused, because the base URL is this install's `SB_API` and
+a path carrying a host would send the credential elsewhere. A path carrying a query string
+or a fragment is refused too — the query belongs in `query`, not in `path`. When
+`sb_api_find` matches nothing, its answer lists the three router-only routes under
+`outside_catalog`.
 
 A failed call carries the platform's one error shape, `{ error, code }`, and — when the
 platform sends them — `details` and `fields`. A `validation` error names the offending
@@ -141,13 +166,24 @@ hint }` names how many came back, how many there were, and how to narrow the cal
 `max_items`, or the operation's own `limit`/`offset` query). A non-list answer is never cut:
 there is no honest place to stop inside one object.
 
+Cuts also report `offset` and, when more items can be read, `next_item_offset`. Pass the
+latter as `item_offset` with the same GET and query to read the next slice, including on
+endpoints without server pagination. This re-fetches the list, not a cached snapshot:
+concurrent changes can shift rows. Prefer the API's own pagination when available; this
+parameter cannot fetch records beyond the API's current page. Never repeat a mutation to
+page its response; positive offsets on writes are refused. If one row alone exceeds the
+budget, narrow `pick` first; no non-advancing continuation is returned.
+
+A list-wide `pick` matching no fields keeps original fields and reports `shaping_note`,
+while still applying pagination and the size cap rather than returning a list of `{}`.
+
 Three quieter rules, each of which exists because the alternative loses data silently. An
 answer with **no single list** — two arrays, say — is returned untouched with a
 `shaping_note`, rather than shaped into something the platform never sent; a `pick` that
 matches nothing does the same, because `{}` reads as "the platform answered nothing". If the
 platform's own answer already carries a `truncated` field, this one lands under `_truncated`
 instead of overwriting it. And when the non-list part of an answer alone exceeds the cap,
-nothing is cut — dropping items would not help — and the note says why.
+no additional size cut is made — dropping items would not help — and the note says why.
 
 ---
 
@@ -241,6 +277,7 @@ With `control`: that one control in full.
 | `spec` | object | `{ type, name?, style?, config?, specials?, children? }` — **nested** |
 | `index` | number? | Defaults to append |
 | `dry_run` | boolean? | Defaults to true |
+| `force` | boolean? | Override a soft guard; the message is returned as `forced[]` instead of thrown. Hard guards ignore it — see "What every write checks" |
 
 Pass `children` to build a whole section in one call. Refuses a root-only element inside a
 section, a child a parent's whitelist excludes, and any add into a non-container.
@@ -264,6 +301,7 @@ forever.
 | `base` | boolean? | Write at base instead of per breakpoint |
 | `edits` | array? | Many nodes in one call: `[{ id, namespace, keys, breakpoint?, base?, state?, unset? }]`; the single-node fields above are then ignored |
 | `dry_run` | boolean? | Defaults to true |
+| `force` | boolean? | Override a soft guard; the message is returned as `forced[]` instead of thrown. Hard guards ignore it — see "What every write checks" |
 
 **Base and breakpoints.** `sb_set` writes per breakpoint by default, because a design should respond. Base is legitimate too — the cascade resolves a key *current slot → wider → base → narrower*, so base is the fallback layer, and it is where every element's own defaults are seeded. Use base for a value that genuinely should not vary.
 
@@ -288,6 +326,10 @@ over the master, emptying it for every page that carries it. That is not hypothe
 took four pages blank in one run. Both `sb_add` and `sb_set` refuse it and name the right key.
 
 ## `sb_move` / `sb_remove`
+
+| Arg | Type | Notes |
+| --- | --- | --- |
+| `force` | boolean? | Override a soft guard; the message is returned as `forced[]` instead of thrown. Hard guards ignore it — see "What every write checks" |
 
 `sb_move` takes `id`, `parent_id`, `index`. `sb_remove` takes `id` and deletes the whole
 subtree. Both refuse to touch a **site overlay** — it is composed onto ROOT on read and
@@ -328,6 +370,24 @@ this page's to fix.
 
 Plus tree integrity: no dangling child ids, no parent pointer disagreeing with a child
 list, no node unreachable from ROOT.
+
+### `force`, and which guards yield to it
+
+A guard here is one of two kinds. A **soft** guard asserts what a renderer does — "this key
+compiles to nothing", "this element takes no such child", "this repeater renders only its
+first child" — against the catalog's copy of the platform, which can be older than the
+deployment you are writing to. Its refusal ends with `Pass force:true to write anyway.`, and
+with `force:true` the write goes through and the message comes back as `forced: [...]`, in
+the dry run too. Soft: the app-block interior and parent checks, `childAllows` and root-only,
+the second template under `list-dataset`, and the stuck / stuck-after / reveal / hover-config
+/ hover-host checks.
+
+A **hard** guard protects an invariant the platform itself enforces or a write with no way
+back, and `force` never reaches it: band order (the platform refuses the save), a composed
+stamp (`globalId` / `appBlockId` empties the master on every page), removing or duplicating
+ROOT, an unknown element type, the overlay root (stripped on write, so the forced write would
+be a no-op reported as done), a node moved into its own subtree, and `specials` with a state.
+A hard refusal carries no `force` hint, which is how you tell them apart without trying.
 
 ---
 
@@ -440,6 +500,7 @@ data renders impossible to photograph.
 | `trigger` | string? | Defaults to `click` |
 | `payload` | object? | |
 | `dry_run` | boolean? | Defaults to true |
+| `force` | boolean? | Override a soft guard; the message is returned as `forced[]` instead of thrown. Hard guards ignore it — see "What every write checks" |
 
 The only way to put a click action on a node. `NodeSpec` carries no `events`, `sb_set` writes
 style / config / specials, and `createNode` always minted `events: []` — so `open_cart` could
@@ -471,6 +532,7 @@ question.
 | `field` | string | Always `specials.<key>` |
 | `dry_run` | boolean? | Defaults to true |
 | `action` | `"add_to_cart"` \| `"buy_now"`? | Makes the node a PURCHASE control instead of a field |
+| `force` | boolean? | Override a soft guard; the message is returned as `forced[]` instead of thrown. Hard guards ignore it — see "What every write checks" |
 
 Both arguments are validated against generated vocabulary, because both failures are
 **silent**: an unknown `source` resolves to nothing and renders as the element's own
@@ -575,6 +637,10 @@ CSS expresses whether or not a control exists for it. `config` and `specials` ar
 open — they are per-element, and the element's `defaults` name the keys it really uses.
 
 ## `sb_duplicate`
+
+| Arg | Type | Notes |
+| --- | --- | --- |
+| `force` | boolean? | Override a soft guard; the message is returned as `forced[]` instead of thrown. Hard guards ignore it — see "What every write checks" |
 
 `id`. Copies the node and everything under it under **fresh ids**, inserted right after the
 original — the move a designer makes constantly. Styling comes with it, which is the point.
@@ -1510,13 +1576,20 @@ Run a store flow that must happen in a **fixed order**.
 
 | Arg | Type | Notes |
 | --- | --- | --- |
-| `action` | `"checkout"` \| `"form"` | The flow to run |
+| `action` | `"checkout"` \| `"form"` \| `"chrome"` \| `"menu"` \| `"overlay_attach"` \| `"app"` | The flow to run |
 | `site_id` | string? | Falls back to `SB_SITE` |
-| `language` | `"vi"` \| `"en"`? | `checkout` — copy language, default `vi` |
-| `page_name` | string? | `checkout` — overrides the editor's own page name |
-| `headline` | string? | `checkout` — overrides the page's headline |
+| `language` | `"vi"` \| `"en"`? | `checkout` — copy language, default `vi`. `app` — which language names the scaffold pages |
+| `page_name` | string? | `checkout` — overrides the editor's own page name. `form` — make a page and place the form on it |
+| `headline` | string? | `checkout` — overrides the page's headline. `form` — the heading above the placed form |
 | `template` | enum? | `form` — which of the platform's 17 templates to seed |
-| `name` | string? | `form` — the form's name in the merchant's list |
+| `name` | string? | `form` — the form's name in the merchant's list. `overlay_attach` with no `overlay_id` — the new overlay's name |
+| `footer` | boolean? | `chrome` — build a shared **footer** instead of a header |
+| `node_id` | string? | `menu` — the menu node on the open page |
+| `menu_id` | string? | `menu` — an existing menu; omit to use the site's first, or create one |
+| `kind` | `"popup"` \| `"quickview"`? | `overlay_attach` — which kind of overlay to attach |
+| `overlay_id` | string? | `overlay_attach` — an existing overlay; omit to create one from the platform's seed |
+| `list_id` | string? | `overlay_attach` + `kind:"quickview"` — the `list-dataset` node whose quick view this sets |
+| `app_key` | enum? | `app` — which built-in app to install |
 | `dry_run` | boolean? | Defaults to **true** |
 
 ### `action: "form"`
@@ -1537,13 +1610,22 @@ WHOLE** (name and type must ride along or `Normalize()` renames it "Form" and tu
 ids. If a later write fails the form is deleted again — a form nobody can see is the orphan
 the obvious retry duplicates.
 
-It makes **no page**. Where a login form belongs is a design decision, and `/account` is the
-one page that is not a free choice: `membersOnlyRedirectTarget` sends every gated visitor
-there. Place the form with `sb_add` and point `specials.formId` at the id this returns.
+By default it makes **no page**. Where a login form belongs is a design decision, and
+`/account` is the one page that is not a free choice: `membersOnlyRedirectTarget` sends every
+gated visitor there. Place the form yourself with `sb_add` and point `specials.formId` at the
+id this returns.
+
+**Or pass `page_name`** — and `headline` with it — to have that page made and the form placed
+on it in the same call: a new page of type `page` carrying a section, the headline if one was
+given, and a `form` node already pointing at the form just created. It is a deliberate SECOND
+write and must not undo the first. The form EXISTS the moment its three calls land, so a
+refused page create leaves the form in place and reports `page_failed` rather than deleting a
+form the caller asked for — that is the state they had before this argument existed, and it
+is still placeable by hand. Publish the page afterwards.
 
 ### `action: "checkout"`
 
-`sb_review` names ten readiness gaps. Seven are now one call each — a delivery option, a
+`sb_review` names eighteen readiness gaps. Most are one call each — a delivery option, a
 gateway, a product, a page of the right type — because the call sheet says what those calls
 take. The checkout is the one that is not, because it is four writes whose order is the
 whole contract, written down only in `editor/src/features/pages/checkoutPage.ts`:
@@ -1579,6 +1661,177 @@ along, because both failures are silent:
 Both documents are **generated** from the editor's own `formTemplates.ts` and
 `checkoutPageSeed.ts` by `npm run codegen`, not hand-copied — a copy of the platform's seed
 rots the next time the platform edits it, and the first person to notice is a shopper.
+
+### `action: "chrome"`
+
+Give every page **one** shared header — or, with `footer: true`, one shared footer.
+
+`sb_review` reports this as `siteChrome`. Two pages and no global section means every page
+carries its own header: changing the menu is one edit per page, the copies drift, and a
+visitor meets a slightly different site on every click. It is the most basic thing a website
+has that a generated one does not — and it was reachable by exactly ONE tool.
+`sb_import_site` builds it from the pages it just made; a site built any other way
+(patterns, `sb_add`, a store seeded by `sb_store`) had to reproduce it by hand.
+
+By hand means: create the master, know that its `document` is page-SHAPED but rooted at the
+**section** rather than at ROOT, then give every page a ROOT child carrying
+`specials.globalRef` + `globalKind` — **first**, because a header after middle content is a
+band-order refusal on the next save (trap 3). A footer goes last, for the same reason.
+
+The menu is built from the pages this site already has, home first. The look is read off the
+**home page** — rule 0 applied to a site rather than to a page: whatever pattern the rest of
+the site already follows is the one its header should wear. A blank home page yields no
+tokens rather than an invented palette.
+
+**Skipped rather than done twice.** A site that already shares a section of that kind
+answers `skipped` — a second header is two headers, not a menu — and so does a site with
+fewer than two pages, because a menu to one page is a link to itself. Both are checked
+before the dry run, so a dry run reports them too.
+
+**Not atomic, and it must not pretend to be.** One page that will not take the reference
+does not undo the master: it is reported under `failed` with its slug and the reason, while
+the pages that took it are listed under `carried`.
+
+**Dry run** (the default) returns `would_create`, the `menu` it would build, the `onto`
+slugs it would build it onto, and where the tokens came from. **Executing** returns the
+master's id as `created`, `carried`, any `failed`, and the reminder that a global section
+reaches a visitor only through a page that has been **published** since — a saved page keeps
+the old chrome.
+
+### `action: "menu"`
+
+Bind a `menu` node on the open page to the site's menu, and resolve its links.
+
+A menu element drops onto the canvas holding its own seeded `specials.menuItems` — Home /
+Categories / Contact / About us, every `href` empty — the same placeholder every fresh drop
+carries, editor or agent. Nothing turned that into a real menu: the site's menu is a
+SEPARATE record (`GET/POST /api/sites/{siteId}/menus`), and nothing this server shipped ever
+wrote `specials.menuId` or replaced the seed with the site's own rows. A page built entirely
+with these tools therefore shipped a menu naming four pages the site does not have, with no
+way to change the wording once.
+
+**The renderer reads `specials.menuItems` and never `menuId`**, so the snapshot on the node
+**is** the menu as far as the page is concerned. Binding without re-resolving leaves the node
+pointing at a real menu and still rendering dead links — which is why this is one flow and
+not two arguments.
+
+The editor closes this the moment a menu node lands (`editor/src/features/menus/sync.ts`,
+`ensureMenuBinding` → `syncBoundMenuNode`), and this mirrors it write for write:
+
+1. **Bind** — use `menu_id`, or the site's first menu, or create "Main menu" seeded from the
+   node's own current rows, so binding never changes what is already on canvas.
+2. **Read** the bound menu's items fresh (`GET /menus/{id}`).
+3. **Resolve** each row's reference to the address the storefront actually serves: `page` off
+   the page list, `productCategory` → `/collections/{slug}`, `article` → `/blog/{slug}`,
+   `blogCategory` → `/blog-categories/{slug}`, and `product` → `/products/{slug}` batched by
+   id, because a shop's catalogue is unbounded while a category tree is not. Only the kinds
+   the rows actually reference are fetched. **A listing that cannot be reached degrades that
+   kind to an empty `href` rather than aborting the sync** — the editor's own resolver
+   swallows its failures the same way.
+4. **Write** the resolved snapshot as `specials.menuItems`, carrying each row's `panelId`
+   across. A row's local mega-panel is not something the site-level menu knows about, so a
+   plain re-sync would silently strip it.
+
+Steps 1 and 4 land in the **same save**: a node bound but not yet snapshotted is a state
+nobody should be able to observe.
+
+A `node_id` whose element does not seed `specials.menuItems` is refused by type, naming it,
+before anything is read.
+
+**Dry run** returns the ordered `plan`, the `menu` it would use or create, the `items` it
+would write, `unresolved` (rows that named a page or an entity and came back with no address
+— a dangling reference to go fix) and `unlinked` (rows never pointed at anything, which is
+what every fresh seed row is). **Executing** returns `node`, `menu_id`, `created`, the item
+count and those same two.
+
+### `action: "overlay_attach"`
+
+Put a pop-up on the open page (`kind: "popup"`), or point a `list-dataset` at a quick-view
+panel (`kind: "quickview"` plus `list_id`). With no `overlay_id` the overlay is created first,
+from the platform's own seed — `CreateOverlayInput.document` is required, and an empty pop-up
+is a white rectangle nobody can dismiss.
+
+**THE PAGE MUST BE RE-READ AFTER THE ATTACH, and that is the whole reason this is a tool.** A
+pop-up reaches a page through an edge (`page_overlay_refs`) that an ordinary page save cannot
+write: the save DERIVES the edge set from the COMPOSED document, and the pop-up is not in
+that document until something else puts it there. Attachment is its own call to break that
+circle — and until the composer has put the panel into the document this session holds, **the
+next save derives an edge set without it and takes the attachment straight back off**, with a
+200 at every step.
+
+So, for a pop-up:
+
+1. **Save** the page as it stands — the edge cannot attach to an unsaved draft, and the
+   re-read must hand back the author's own work rather than an older one.
+2. **Create** the pop-up, if the caller named none.
+3. **Attach** — `POST /overlays/{id}/pages/{pageId}`, the edge itself.
+4. **Re-read** the page.
+5. Find the composed node, stamped `specials.overlayId`, and return its id.
+
+A quick view reaches a page through the LIST's own config instead, and must never have an
+edge: an edge would make compose append the panel to ROOT, putting a `position: static` copy
+of it below the footer of every page that uses it. So the dance is shorter — create the panel
+if needed, write `config.quickviewId` on the list and save in the same call, then re-read so
+the composer merges the master in.
+
+**That config key is written at BASE, unconditionally.** `nodeQuickviewChoice`
+(`server/internal/page/quickview.go`) decodes the node's raw `config` map with no responsive
+merge, both when deciding which masters to fetch and when composing them in, so a choice
+written into a breakpoint slot is invisible to compose and the panel never merges — in every
+environment, always. `BASE_ONLY_CONFIG` does not name the key; that is a gap in the
+platform's ledger, not a fact about the key.
+
+**Already attached is a no-op**, the way the editor's own check is. A pop-up already composed
+onto this page — or a list that already names this overlay AND already shows the composed
+panel — returns `already_attached` and writes nothing. Writing again would not be wrong, only
+wasted: it churns the shared master's revision fence for an attachment that already exists.
+
+`kind: "quickview"` refuses a `list_id` that is not a `list-dataset`, naming what it is.
+
+**Dry run** returns the ordered `plan` (through `redact()`) and `would_create` when there is
+no `overlay_id`. **Executing** returns `kind`, `overlay_id`, whether it was `created`, and
+`node_id` — the composed node on this page, which is what a later `sb_set` styles. A write
+that lands with no panel coming back on the re-read raises rather than reporting success.
+
+### `action: "app"`
+
+Install one of the platform's built-in apps — `mail`, `multilingual`, `agent`, `chat`,
+`booking`, `loyalty`, `payments`, `courses` — and create the pages it needs that installing
+it does not.
+
+`POST /api/sites/{siteId}/builtin-apps/{key}` turns an app ON and stops there. It is one fact
+("this store turned Courses on"), not a page builder — so a caller who installs `courses`,
+writes a curriculum and publishes gets a **404 for the course's own address**, because
+`/courses/{slug}` resolves through the `course` page type's DEFAULT TEMPLATE and nothing
+anywhere names the page that was supposed to be built first.
+
+`scaffoldAppPages` (`editor/src/features/builtinapps/pageScaffold.ts`) is the platform's own
+answer, run right after a successful install, and `APP_SCAFFOLDS` is this server's generated
+copy of what it builds. **Today only `courses` ships a scaffold** — four pages: the `course`
+template, `/courses`, `/learn` and `/my-courses`. Every other key installs with nothing
+further to build, and the result says so.
+
+**A page with no slug is matched by TYPE, and that is the one that fixes the 404.**
+`isPresent`, copied from the editor: a page with a non-empty `slug` is already there if the
+site has that SLUG, whatever its type; a page with an EMPTY slug is a TEMPLATE — reached by
+an entity URL rather than by an address of its own — so it is already there if the site has
+ANY page of that TYPE, because a second one would just sit there unreachable behind the
+first. The list is re-checked as it grows, or two scaffold pages could both find "no page of
+this type yet" true against the same stale list and both get created.
+
+**`slug` is sent only when it is non-empty.** Sending `''` asks the server to claim the empty
+slug, which is not what an empty slug means here.
+
+**One page's failure never aborts the rest.** The app is installed by the time page creation
+runs, so throwing on one page would report a failed install that actually succeeded. A refused
+create is reported under `failed` with its reason, the others still run, and the whole call is
+safe to repeat: a second install is a no-op and a page already there is skipped.
+
+The scaffold pages are named in `language`, default `vi`.
+
+**Dry run** reads the page list — the one call it makes — so the plan can say which pages are
+already there rather than guess, and returns the ordered `plan` plus `present`. **Executing**
+returns `installed`, `created`, `present` and any `failed`.
 
 ## `sb_undo`
 

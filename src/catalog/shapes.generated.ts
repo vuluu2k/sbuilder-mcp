@@ -4,15 +4,31 @@
 import type { RequestShape } from './types.js';
 
 export const SHAPE_SOURCE = {
-  "writeOperations": 238,
-  "shaped": 179,
-  "fromHandlers": 179,
+  "writeOperations": 251,
+  "shaped": 193,
+  "fromHandlers": 193,
   "fromSwaggerOnly": 0,
   "withReadOnly": 26,
-  "structsRead": 1726
+  "structsRead": 1823
 } as const;
 
 export const REQUEST_SHAPES: Record<string, RequestShape> = {
+  "post:/api/sites/{id}/ai-credits/purchase": {
+    "fields": [
+      {
+        "name": "credits",
+        "type": "number | null",
+        "note": "A POINTER so \"absent\" is distinguishable from zero — and both are refused, with different sentences."
+      },
+      {
+        "name": "wallet",
+        "type": "string",
+        "note": "Wallet is which balance the credits go into, as `kind:id`."
+      }
+    ],
+    "source": "go",
+    "goType": "(inline)"
+  },
   "post:/api/sites/{siteId}/api-keys": {
     "fields": [
       {
@@ -538,6 +554,64 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
     ],
     "source": "go",
     "goType": "gradeRequest"
+  },
+  "patch:/api/auth/me": {
+    "fields": [
+      {
+        "name": "name",
+        "type": "string"
+      }
+    ],
+    "source": "go",
+    "goType": "(inline)"
+  },
+  "post:/api/auth/change-email/request": {
+    "fields": [
+      {
+        "name": "newEmail",
+        "type": "string"
+      }
+    ],
+    "source": "go",
+    "goType": "(inline)"
+  },
+  "post:/api/auth/change-email": {
+    "fields": [
+      {
+        "name": "newEmail",
+        "type": "string"
+      },
+      {
+        "name": "code",
+        "type": "string"
+      }
+    ],
+    "source": "go",
+    "goType": "(inline)"
+  },
+  "post:/api/auth/set-password": {
+    "fields": [
+      {
+        "name": "newPassword",
+        "type": "string"
+      },
+      {
+        "name": "code",
+        "type": "string"
+      }
+    ],
+    "source": "go",
+    "goType": "(inline)"
+  },
+  "post:/api/auth/identities": {
+    "fields": [
+      {
+        "name": "ticket",
+        "type": "string"
+      }
+    ],
+    "source": "go",
+    "goType": "(inline)"
   },
   "post:/api/auth/register": {
     "fields": [
@@ -3031,6 +3105,11 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
         "note": "Images are urls of pictures the author attached for the model to LOOK AT."
       },
       {
+        "name": "draftTickets",
+        "type": "string[]",
+        "note": "DraftTickets are pictures attached on the landing page, before this site or its owner existed."
+      },
+      {
         "name": "clientTools",
         "type": "editoragent.ClientTool[]",
         "note": "ClientTools are functions the browser offers the model, answered from the live document — see editoragent/clienttools."
@@ -3039,6 +3118,11 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
         "name": "verifies",
         "type": "boolean",
         "note": "Verifies says this client answers the `verify` round trip."
+      },
+      {
+        "name": "plan",
+        "type": "boolean",
+        "note": "Plan asks the assistant to clarify and outline before building — the composer's Build/Plan selector."
       }
     ],
     "source": "go",
@@ -4854,6 +4938,44 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
     "source": "go",
     "goType": "chargeRequest"
   },
+  "post:/api/sites/{id}/plan-checkout": {
+    "fields": [
+      {
+        "name": "planId",
+        "type": "string"
+      }
+    ],
+    "source": "go",
+    "goType": "(inline)"
+  },
+  "post:/api/admin/ai-keys": {
+    "fields": [
+      {
+        "name": "label",
+        "type": "string"
+      },
+      {
+        "name": "provider",
+        "type": "string",
+        "note": "The vendor fields."
+      },
+      {
+        "name": "model",
+        "type": "string"
+      },
+      {
+        "name": "baseUrl",
+        "type": "string"
+      },
+      {
+        "name": "key",
+        "type": "string",
+        "note": "`key`, not `secret`: it is what every vendor's own dashboard calls the value the operator is copying, and a form field named for the thing you are pasting is one less thing to guess at."
+      }
+    ],
+    "source": "go",
+    "goType": "(inline)"
+  },
   "post:/api/admin/geo-keys": {
     "fields": [
       {
@@ -4883,6 +5005,62 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
     ],
     "source": "go",
     "goType": "(inline)"
+  },
+  "put:/api/admin/accounts/{id}/ai-limit": {
+    "fields": [
+      {
+        "name": "monthlyCalls",
+        "type": "number | null",
+        "note": "A POINTER so \"absent\" is distinguishable from \"zero\"."
+      }
+    ],
+    "source": "go",
+    "goType": "(inline)"
+  },
+  "post:/api/admin/accounts/{id}/ai-credits": {
+    "fields": [
+      {
+        "name": "credits",
+        "type": "number | null",
+        "note": "A POINTER so \"absent\" is distinguishable from \"zero\"."
+      },
+      {
+        "name": "note",
+        "type": "string"
+      }
+    ],
+    "source": "go",
+    "goType": "(inline)"
+  },
+  "put:/api/admin/payout": {
+    "fields": [
+      {
+        "name": "bankName",
+        "type": "string"
+      },
+      {
+        "name": "bankCode",
+        "type": "string"
+      },
+      {
+        "name": "accountNumber",
+        "type": "string"
+      },
+      {
+        "name": "accountHolder",
+        "type": "string"
+      },
+      {
+        "name": "codePrefix",
+        "type": "string"
+      },
+      {
+        "name": "webhookSecret",
+        "type": "string | null"
+      }
+    ],
+    "source": "go",
+    "goType": "payoutBody"
   },
   "post:/api/admin/translation-keys": {
     "fields": [
@@ -6901,6 +7079,36 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
       {
         "name": "hostname",
         "type": "string"
+      }
+    ],
+    "source": "go",
+    "goType": "(inline)"
+  },
+  "post:/api/sites/{siteId}/domains/{id}/canonical": {
+    "fields": [
+      {
+        "name": "canonical",
+        "type": "string"
+      }
+    ],
+    "source": "go",
+    "goType": "(inline)"
+  },
+  "post:/api/sites/{siteId}/domains/{id}/redirect": {
+    "fields": [
+      {
+        "name": "redirectTo",
+        "type": "string"
+      }
+    ],
+    "source": "go",
+    "goType": "(inline)"
+  },
+  "post:/api/sites/{siteId}/domains/{id}/redirect-code": {
+    "fields": [
+      {
+        "name": "redirectCode",
+        "type": "number"
       }
     ],
     "source": "go",

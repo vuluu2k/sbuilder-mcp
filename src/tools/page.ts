@@ -56,6 +56,7 @@ import {
 import { tokensFromPage } from '../domains/site/importmap.js';
 import { middleEnd } from '../domains/site/traps.js';
 import { applyPatches, type Patch } from '../core/patch.js';
+import type { GuardOpts } from '../domains/site/guard.js';
 import { stickyWarning } from '../domains/site/sticky.js';
 import { HOVER_STATE, PARENT_HOVER_STATE, hoverHostNote, hoverRoutingNote } from '../domains/site/hover.js';
 import type { LiveSession } from '../live/session.js';
@@ -698,12 +699,15 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
       spec: specSchema,
       index: z.number().int().min(0).optional(),
       dry_run: z.boolean().optional(),
+      force: z.boolean().optional().describe('Override a render-inference guard; reported as forced'),
     },
       annotations: { readOnlyHint: false, destructiveHint: false },
     },
-    async ({ parent_id, spec, index, dry_run }) => {
+    async ({ parent_id, spec, index, dry_run, force }) => {
       const d = session.current();
-      const { patches, ids } = addSubtree(d, parent_id, spec, index);
+      const guard: GuardOpts = { force, forced: [] };
+      const { patches, ids } = addSubtree(d, parent_id, spec, index, guard);
+      const forced = guard.forced!.length ? { forced: guard.forced } : {};
       // ELEMENTS THAT RENDER CONVINCINGLY WHILE WIRED TO NOTHING. The add
       // succeeds completely, the tree is correct and the page photographs
       // right, so neither sb_review nor sb_look can see the gap — the moment
@@ -726,10 +730,11 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
           would_add: ids.length,
           patches: patches.length,
           ...(inert ? { inert } : {}),
+          ...forced,
         });
       }
       await session.applyAndSave(patches);
-      return text({ added: ids, rev: d.rev, ...(inert ? { inert } : {}) });
+      return text({ added: ids, rev: d.rev, ...(inert ? { inert } : {}), ...forced });
     },
   );
 
@@ -775,10 +780,11 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
           )
           .optional(),
         dry_run: z.boolean().optional(),
+        force: z.boolean().optional().describe('Override a render-inference guard; reported as forced'),
       },
       annotations: { readOnlyHint: false, destructiveHint: false },
     },
-    async ({ id, namespace, keys, breakpoint, base, state, unset, edits, dry_run }) => {
+    async ({ id, namespace, keys, breakpoint, base, state, unset, edits, dry_run, force }) => {
       const d = session.current();
       // One shape inside: a single edit is a batch of one.
       const batch: SetEdit[] = edits ?? [];
@@ -791,7 +797,9 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
         }
         batch.push({ id, namespace, keys: keys ?? {}, breakpoint: breakpoint as Breakpoint | undefined, base, state, unset });
       }
-      const { patches, touched } = setMany(d, batch);
+      const guard: GuardOpts = { force, forced: [] };
+      const { patches, touched } = setMany(d, batch, guard);
+      const forced = guard.forced!.length ? { forced: guard.forced } : {};
       // WHERE A HOVER ACTUALLY WENT. Routing it silently would leave a caller
       // who reads the node back looking for keys in a slot they never wrote to.
       //
@@ -995,6 +1003,7 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
           ...(skinNote ? { field_skin: skinNote } : {}),
           ...(Object.keys(hostNotes).length ? { hover_host: hostNotes } : {}),
           ...(note ? { note } : {}),
+          ...forced,
         });
       }
       const warnings: Record<string, string> = stuck();
@@ -1015,6 +1024,7 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
           ...(valueNote ? { value: valueNote } : {}),
           ...(skinNote ? { field_skin: skinNote } : {}),
           ...(hostNotes[batch[0].id] ? { hover_host: hostNotes[batch[0].id] } : {}),
+          ...forced,
         });
       }
       return text({
@@ -1027,6 +1037,7 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
         ...(valueNote ? { value: valueNote } : {}),
         ...(skinNote ? { field_skin: skinNote } : {}),
         ...(Object.keys(hostNotes).length ? { hover_host: hostNotes } : {}),
+        ...forced,
       });
     },
   );
@@ -1041,15 +1052,18 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
       parent_id: z.string(),
       index: z.number().int().min(0),
       dry_run: z.boolean().optional(),
+      force: z.boolean().optional().describe('Override a render-inference guard; reported as forced'),
     },
       annotations: { readOnlyHint: false, destructiveHint: false },
     },
-    async ({ id, parent_id, index, dry_run }) => {
+    async ({ id, parent_id, index, dry_run, force }) => {
       const d = session.current();
-      const patches = moveNode(d, id, parent_id, index);
-      if (dry_run !== false) return text({ dry_run: true, patches });
+      const guard: GuardOpts = { force, forced: [] };
+      const patches = moveNode(d, id, parent_id, index, guard);
+      const forced = guard.forced!.length ? { forced: guard.forced } : {};
+      if (dry_run !== false) return text({ dry_run: true, patches, ...forced });
       await session.applyAndSave(patches);
-      return text({ moved: id, rev: d.rev });
+      return text({ moved: id, rev: d.rev, ...forced });
     },
   );
 
@@ -1058,12 +1072,18 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
     {
       description:
         'Remove a node and its whole subtree.',
-      inputSchema: { id: z.string(), dry_run: z.boolean().optional() },
+      inputSchema: {
+        id: z.string(),
+        dry_run: z.boolean().optional(),
+        force: z.boolean().optional().describe('Override a render-inference guard; reported as forced'),
+      },
       annotations: { readOnlyHint: false, destructiveHint: true },
     },
-    async ({ id, dry_run }) => {
+    async ({ id, dry_run, force }) => {
       const d = session.current();
-      const patches = removeNode(d, id);
+      const guard: GuardOpts = { force, forced: [] };
+      const patches = removeNode(d, id, guard);
+      const forced = guard.forced!.length ? { forced: guard.forced } : {};
       // NODES, NOT PATCHES — this reported `patches.length` and the field is
       // called `removing` on a tool whose description is "Remove a node and its
       // whole subtree", so every caller reads it as a node count.
@@ -1082,9 +1102,11 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
       // directly; the parent-list patch is an `insert`/`remove` four segments
       // deep, so length is what separates them without re-deriving the walk.
       const nodes = patches.filter((p) => p.op === 'unset' && p.path.length === 2).length;
-      if (dry_run !== false) return text({ dry_run: true, removing: nodes, patches: patches.length });
+      if (dry_run !== false) {
+        return text({ dry_run: true, removing: nodes, patches: patches.length, ...forced });
+      }
       await session.applyAndSave(patches);
-      return text({ removed: id, rev: d.rev });
+      return text({ removed: id, rev: d.rev, ...forced });
     },
   );
 
@@ -1131,15 +1153,21 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
       description:
         'Copy a node and everything under it, under fresh ids, right after the original. The ' +
           'move a designer makes constantly — build one card, duplicate it twice.',
-      inputSchema: { id: z.string(), dry_run: z.boolean().optional() },
+      inputSchema: {
+        id: z.string(),
+        dry_run: z.boolean().optional(),
+        force: z.boolean().optional().describe('Override a render-inference guard; reported as forced'),
+      },
       annotations: { readOnlyHint: false, destructiveHint: false },
     },
-    async ({ id, dry_run }) => {
+    async ({ id, dry_run, force }) => {
       const d = session.current();
-      const { patches, ids } = duplicateNode(d, id);
-      if (dry_run !== false) return text({ dry_run: true, would_copy: ids.length });
+      const guard: GuardOpts = { force, forced: [] };
+      const { patches, ids } = duplicateNode(d, id, guard);
+      const forced = guard.forced!.length ? { forced: guard.forced } : {};
+      if (dry_run !== false) return text({ dry_run: true, would_copy: ids.length, ...forced });
       await session.applyAndSave(patches);
-      return text({ duplicated: id, into: ids[0], nodes: ids.length, rev: d.rev });
+      return text({ duplicated: id, into: ids[0], nodes: ids.length, rev: d.rev, ...forced });
     },
   );
 

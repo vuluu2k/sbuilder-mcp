@@ -70,7 +70,38 @@ describe('token budget — a diet without a scale comes back', () => {
     // layer every style preset resolves from, so one token repaints every page,
     // and the alternative an agent reaches for without it — a literal on each
     // node — detaches that node from the theme permanently.
-    expect(JSON.stringify(tools).length).toBeLessThan(24_500);
+    //
+    // raised for the raw form of sb_api_call (method, path) — 24,647 measured on 2026-09-19.
+    //
+    // 26,147 -> 27,864: THREE `sb_store` actions, not one. The note that raised this
+    // ceiling credited `overlay_attach` alone at "~200" and cited 26,364 — a number that
+    // was right on the day and is wrong now, and an attribution that was never right,
+    // which is what a ledger entry costs when it is estimated from the change in hand
+    // rather than measured. Measured per commit, this branch: `menu` +247
+    // (25,351 -> 25,598), `overlay_attach` +766 (-> 26,364, the one that crossed the old
+    // 26,147 and forced the raise), `app` +437 (-> 26,801). **tools/list IS 26,801,
+    // measured 2026-09-20.**
+    //
+    // The ceiling STAYS at 27,864 rather than being re-cut to today's number. 1,063
+    // characters is about one more action's description — room the next one should find
+    // rather than a raise it has to ask for — and this repo's own rule is that a ceiling
+    // set just above today's measurement gets raised again without anybody looking.
+    //
+    // What the three buy. `menu`: a menu node drops holding its own placeholder rows and
+    // nothing here ever wrote `specials.menuId`, so every page carried its own copy of
+    // "Home / Categories / Contact / About us" and rewording the menu was one edit per
+    // page. `overlay_attach`: a pop-up cannot reach a page through an ordinary save — the
+    // platform derives the edge set from the COMPOSED document, so attaching one is its
+    // own call and the caller must re-read afterwards or the next save takes it straight
+    // back off, exactly as `editor/src/features/overlays/usePopupOverlay.ts` documents;
+    // and a quick view is worse to guess, being a `list-dataset` pointed at a panel
+    // through `config.quickviewId`, which the platform's own compose step reads from BASE
+    // ONLY with no responsive merge, so a value written at any breakpoint composes
+    // nothing and the panel never renders — silently, like every other base-only key this
+    // repo has already paid for once. `app`: installing a built-in app is one call the
+    // catalog already answers, and the pages it needs but does not create are not — a
+    // `courses` install with no course pages is an app a shopper cannot reach.
+    expect(JSON.stringify(tools).length).toBeLessThan(27_864);
     for (const t of tools) expect(t.description, t.name).not.toMatch(/vanishes on publish/);
     const instructions = client.getInstructions() ?? '';
     expect(instructions.length).toBeGreaterThan(200);

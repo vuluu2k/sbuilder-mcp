@@ -29,6 +29,7 @@ import {
 } from './hover.js';
 import { splitBaseOnly, splitBaseOnlyKeys } from './baseonly.js';
 import { genId } from './ids.js';
+import { soft, type GuardOpts } from './guard.js';
 import type { PageDoc } from './document.js';
 
 export type Breakpoint = 'desktop' | 'laptop' | 'tablet' | 'mobile';
@@ -56,22 +57,25 @@ function requireContainer(parentType: string, parentId: string): void {
   }
 }
 
-function requireAllowed(parentType: string, childType: string): void {
+function requireAllowed(parentType: string, childType: string, g?: GuardOpts): void {
   const child = ELEMENTS[childType];
   if (!child) {
+    // HARD: there is nothing to write.
     throw new Error(
       `sbuilder: unknown element "${childType}". Use sb_catalog_search to find a real one.`,
     );
   }
-  if (child.isRootOnly && parentType !== 'root') {
-    throw new Error(
-      `sbuilder: ${childType} is root-only — it may only be a direct child of ROOT, not of a ${parentType}.`,
-    );
-  }
-  const allows = ELEMENTS[parentType]?.childAllows ?? [];
-  if (allows.length > 0 && !allows.includes(childType)) {
-    throw new Error(`sbuilder: a ${parentType} accepts only [${allows.join(', ')}], not ${childType}.`);
-  }
+  soft(g, () => {
+    if (child.isRootOnly && parentType !== 'root') {
+      throw new Error(
+        `sbuilder: ${childType} is root-only — it may only be a direct child of ROOT, not of a ${parentType}.`,
+      );
+    }
+    const allows = ELEMENTS[parentType]?.childAllows ?? [];
+    if (allows.length > 0 && !allows.includes(childType)) {
+      throw new Error(`sbuilder: a ${parentType} accepts only [${allows.join(', ')}], not ${childType}.`);
+    }
+  });
 }
 
 function refuseOverlay(doc: PageDoc, id: string, verb: string): void {
@@ -135,12 +139,13 @@ export function addSubtree(
   parentId: string,
   spec: NodeSpec,
   index?: number,
+  guard?: GuardOpts,
 ): { patches: Patch[]; ids: string[] } {
   const parent = doc.node(parentId);
-  refuseAppBlockParent(doc, parentId, 'adding');
+  soft(guard, () => refuseAppBlockParent(doc, parentId, 'adding'));
   requireContainer(parent.data.type, parentId);
-  requireAllowed(parent.data.type, spec.type);
-  refuseSecondTemplate(doc.doc, parentId, 'Adding');
+  requireAllowed(parent.data.type, spec.type, guard);
+  soft(guard, () => refuseSecondTemplate(doc.doc, parentId, 'Adding'));
 
   const patches: Patch[] = [];
   const ids: string[] = [];
@@ -172,7 +177,7 @@ export function addSubtree(
     const children = s.children?.length ? s.children : (ELEMENT_SEEDS[s.type] ?? []);
     for (const child of children) {
       requireContainer(s.type, n.id);
-      requireAllowed(s.type, child.type);
+      requireAllowed(s.type, child.type, guard);
       const childId = build(child, n.id);
       patches.push({ op: 'insert', path: ['nodes', n.id, 'data', 'nodes'], index: APPEND, value: childId });
     }
@@ -277,10 +282,21 @@ export function setKeys(
      * a state slot genuinely clears the state.
      */
     unset?: string[];
+    /** Override every SOFT guard this write would otherwise be refused by. */
+    force?: boolean;
+    /** The messages force overrode, for the tool to report. Owned by the caller. */
+    forced?: string[];
   },
 ): Patch[] {
   doc.node(id); // throws naming the id if it is not there
-  refuseAppBlockInterior(doc, id, 'writing');
+  // UNDEFINED WHEN THE CALLER NAMED NEITHER — a guard object is what tells
+  // `soft` the caller can actually pass `force`. Every tool that takes the
+  // argument builds `{ force, forced: [] }`, so their refusals keep the hint.
+  const g: GuardOpts | undefined =
+    opts.force !== undefined || opts.forced !== undefined
+      ? { force: opts.force, forced: opts.forced }
+      : undefined;
+  soft(g, () => refuseAppBlockInterior(doc, id, 'writing'));
   const { namespace } = opts;
 
   // RE-DERIVE THE BINDINGS when the data axis moves.
@@ -298,10 +314,10 @@ export function setKeys(
   // the state branch because it is written on the node that PINS, at base or at
   // a breakpoint, never inside a stuck slot.
   if (namespace === 'config') {
-    refuseStuckAfter(doc.doc, id, keys);
+    soft(g, () => refuseStuckAfter(doc.doc, id, keys));
     // The reveal is a BASE-level config key with a host precondition, so it is
     // checked here rather than in the state branch — it is not a state at all.
-    refuseReveal(doc.doc, id, keys);
+    soft(g, () => refuseReveal(doc.doc, id, keys));
   }
 
   // The paths `keys` and `unset` share. Computed once so a removal can never
@@ -356,20 +372,20 @@ export function setKeys(
     // the repair `sb_review` asks for, and refusing it would leave the caller
     // holding a finding they cannot act on.
     if (opts.state === STUCK_STATE && Object.keys(keys).length) {
-      requireStuckHost(doc.doc, id);
-      if (namespace === 'config') refuseStuckConfig(keys);
+      soft(g, () => requireStuckHost(doc.doc, id));
+      if (namespace === 'config') soft(g, () => refuseStuckConfig(keys));
     }
     // THE PARENT-HOVER STATE has a host precondition of its own, and a different
     // one: not "something pins above me" but "I am a real child of a real box".
     if (opts.state === PARENT_HOVER_STATE && Object.keys(keys).length) {
-      requireHoverHost(doc.doc, id);
+      soft(g, () => requireHoverHost(doc.doc, id));
     }
     if (
       (opts.state === HOVER_STATE || opts.state === PARENT_HOVER_STATE) &&
       namespace === 'config' &&
       Object.keys(keys).length
     ) {
-      refuseHoverConfig(keys, opts.state);
+      soft(g, () => refuseHoverConfig(keys, opts.state!));
     }
     // HOVER HAS THREE HOMES and only one of them is `states.hover`. An element
     // that declares a Hover variant of its own is served by its own renderer
@@ -563,11 +579,11 @@ function rebindPatch(doc: PageDoc, id: string, keys: Record<string, unknown>): P
  * Refuses ROOT (there is nothing to put a second one beside) and an overlay
  * (not part of this document at all).
  */
-export function duplicateNode(doc: PageDoc, id: string): { patches: Patch[]; ids: string[] } {
+export function duplicateNode(doc: PageDoc, id: string, guard?: GuardOpts): { patches: Patch[]; ids: string[] } {
   const n = doc.node(id);
   if (id === doc.doc.root_node_id) throw new Error('sbuilder: cannot duplicate ROOT');
   refuseOverlay(doc, id, 'duplicating');
-  refuseAppBlockInterior(doc, id, 'duplicating');
+  soft(guard, () => refuseAppBlockInterior(doc, id, 'duplicating'));
   // A copy of a composed block carries the original's appBlockId/appBlockHash
   // stamps; the save reduces it to a reference and the platform answers with a
   // WarnAppBlockEdited this client does not surface — so the local tree and the
@@ -588,7 +604,7 @@ export function duplicateNode(doc: PageDoc, id: string): { patches: Patch[]; ids
   // the second child the renderer will never draw. sb_add and sb_move already
   // refuse that; duplicate is the likeliest way to reach for it, since
   // "duplicate the card" is the move a designer makes constantly.
-  refuseSecondTemplate(doc.doc, parentId, 'Duplicating into');
+  soft(guard, () => refuseSecondTemplate(doc.doc, parentId, 'Duplicating into'));
 
   const patches: Patch[] = [];
   const ids: string[] = [];
@@ -655,12 +671,12 @@ export function duplicateNode(doc: PageDoc, id: string): { patches: Patch[]; ids
   return { patches, ids };
 }
 
-export function moveNode(doc: PageDoc, id: string, newParentId: string, index: number): Patch[] {
+export function moveNode(doc: PageDoc, id: string, newParentId: string, index: number, guard?: GuardOpts): Patch[] {
   const n = doc.node(id);
   refuseOverlay(doc, id, 'moving');
-  refuseAppBlockInterior(doc, id, 'moving');
+  soft(guard, () => refuseAppBlockInterior(doc, id, 'moving'));
   const newParent = doc.node(newParentId);
-  refuseAppBlockParent(doc, newParentId, 'moving');
+  soft(guard, () => refuseAppBlockParent(doc, newParentId, 'moving'));
 
   // The STRUCTURAL check runs first, before the type rules, and the order is not
   // arbitrary: a node moved inside its own subtree detaches that subtree from the
@@ -674,10 +690,10 @@ export function moveNode(doc: PageDoc, id: string, newParentId: string, index: n
   }
 
   requireContainer(newParent.data.type, newParentId);
-  requireAllowed(newParent.data.type, n.data.type);
+  requireAllowed(newParent.data.type, n.data.type, guard);
   // Not for a REORDER: a node already in this parent is not a second template,
   // and refusing it would block the one move that is always safe.
-  if (n.data.parent !== newParentId) refuseSecondTemplate(doc.doc, newParentId, 'Moving');
+  if (n.data.parent !== newParentId) soft(guard, () => refuseSecondTemplate(doc.doc, newParentId, 'Moving'));
 
   const patches: Patch[] = [];
   const oldParentId = n.data.parent;
@@ -690,11 +706,11 @@ export function moveNode(doc: PageDoc, id: string, newParentId: string, index: n
   return patches;
 }
 
-export function removeNode(doc: PageDoc, id: string): Patch[] {
+export function removeNode(doc: PageDoc, id: string, guard?: GuardOpts): Patch[] {
   const n = doc.node(id);
   if (id === doc.doc.root_node_id) throw new Error('sbuilder: cannot remove ROOT');
   refuseOverlay(doc, id, 'removing');
-  refuseAppBlockInterior(doc, id, 'removing');
+  soft(guard, () => refuseAppBlockInterior(doc, id, 'removing'));
 
   const patches: Patch[] = [];
   const parentId = n.data.parent;
@@ -751,12 +767,22 @@ export interface SetEdit {
  * Every edit is checked before any patch is emitted, so a bad id in the fourth
  * edit refuses the whole batch rather than leaving three applied.
  */
-export function setMany(doc: PageDoc, edits: SetEdit[]): { patches: Patch[]; touched: Array<{ id: string; keys: string[] }> } {
+export function setMany(doc: PageDoc, edits: SetEdit[], guard?: GuardOpts): { patches: Patch[]; touched: Array<{ id: string; keys: string[] }> } {
   if (edits.length === 0) throw new Error('sbuilder: sb_set edits is empty — nothing to write');
   const patches: Patch[] = [];
   const touched: Array<{ id: string; keys: string[] }> = [];
   for (const e of edits) {
-    patches.push(...setKeys(doc, e.id, e.keys, { namespace: e.namespace, breakpoint: e.breakpoint, base: e.base, state: e.state, unset: e.unset }));
+    patches.push(
+      ...setKeys(doc, e.id, e.keys, {
+        namespace: e.namespace,
+        breakpoint: e.breakpoint,
+        base: e.base,
+        state: e.state,
+        unset: e.unset,
+        force: guard?.force,
+        forced: guard?.forced,
+      }),
+    );
     touched.push({ id: e.id, keys: Object.keys(e.keys) });
   }
   return { patches, touched };

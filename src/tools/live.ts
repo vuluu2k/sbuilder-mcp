@@ -29,6 +29,7 @@ import { LiveSession } from '../live/session.js';
 import type { Patch } from '../core/patch.js';
 import type { PageDoc } from '../domains/site/document.js';
 import { refuseAppBlockInterior } from '../domains/site/builder.js';
+import { soft, type GuardOpts } from '../domains/site/guard.js';
 import { childrenOf, isOverlay, overlayRoot, subtreeIds } from '../core/tree.js';
 import { siteToken } from './credentialpick.js';
 import { searchStock, SearchUnavailable, NO_SEARCH_NEXT, type StockPhoto } from '../transport/stock.js';
@@ -70,9 +71,10 @@ export function bindNode(
   source: string,
   field: string,
   action?: string,
+  guard?: GuardOpts,
 ): Patch[] {
   const node = doc.node(id) as unknown as { bindings: Array<{ id?: string }> };
-  refuseAppBlockInterior(doc, id, 'binding');
+  soft(guard, () => refuseAppBlockInterior(doc, id, 'binding'));
   if (!BINDING_SOURCES.includes(source)) {
     throw new Error(
       `sbuilder: "${source}" is not a binding source the renderer provides, so the binding ` +
@@ -170,13 +172,14 @@ export function setEvent(
   trigger: string,
   action: string,
   payload?: Record<string, unknown>,
+  guard?: GuardOpts,
 ): Patch[] {
   const node = doc.node(id) as unknown as {
     data: { type: string };
     events?: Array<{ id?: string; name?: string }>;
     bindings?: Array<{ id?: string }>;
   };
-  refuseAppBlockInterior(doc, id, 'setting an event on');
+  soft(guard, () => refuseAppBlockInterior(doc, id, 'setting an event on'));
   const events = node.events ?? [];
   const at = events.findIndex((e) => e?.name === trigger);
 
@@ -703,15 +706,18 @@ export function registerLiveTools(
         trigger: z.string().optional().describe('Default "click"'),
         payload: z.record(z.unknown()).optional(),
         dry_run: z.boolean().optional(),
+        force: z.boolean().optional().describe('Override a render-inference guard; reported as forced'),
       },
       annotations: { readOnlyHint: false, destructiveHint: false },
     },
-    async ({ id, action, trigger, payload, dry_run }) => {
+    async ({ id, action, trigger, payload, dry_run, force }) => {
       const d = session.current();
-      const patches = setEvent(d, id, trigger ?? 'click', action, payload);
-      if (dry_run !== false) return text({ dry_run: true, patches });
+      const guard: GuardOpts = { force, forced: [] };
+      const patches = setEvent(d, id, trigger ?? 'click', action, payload, guard);
+      const forced = guard.forced!.length ? { forced: guard.forced } : {};
+      if (dry_run !== false) return text({ dry_run: true, patches, ...forced });
       await session.applyAndSave(patches);
-      return text({ node: id, trigger: trigger ?? 'click', action, rev: d.rev });
+      return text({ node: id, trigger: trigger ?? 'click', action, rev: d.rev, ...forced });
     },
   );
 
@@ -737,15 +743,18 @@ export function registerLiveTools(
         .optional()
         .describe('Pass product.id + specials.boundProductId'),
       dry_run: z.boolean().optional(),
+      force: z.boolean().optional().describe('Override a render-inference guard; reported as forced'),
     },
       annotations: { readOnlyHint: false, destructiveHint: false },
     },
-    async ({ id, source, field, action, dry_run }) => {
+    async ({ id, source, field, action, dry_run, force }) => {
       const d = session.current();
-      const patches = bindNode(d, id, source, field, action);
-      if (dry_run !== false) return text({ dry_run: true, patches });
+      const guard: GuardOpts = { force, forced: [] };
+      const patches = bindNode(d, id, source, field, action, guard);
+      const forced = guard.forced!.length ? { forced: guard.forced } : {};
+      if (dry_run !== false) return text({ dry_run: true, patches, ...forced });
       await session.applyAndSave(patches);
-      return text({ bound: id, source, field, ...(action ? { action } : {}), rev: d.rev });
+      return text({ bound: id, source, field, ...(action ? { action } : {}), rev: d.rev, ...forced });
     },
   );
 }

@@ -11,9 +11,15 @@ import {
 import { request, redact } from '../transport/http.js';
 import { text } from '../mcp/response.js';
 import type { ToolContext } from './context.js';
+import { credentialFor } from '../transport/credential.js';
+import type { ApiOperation } from '../catalog/types.js';
 
 export interface CallArgs {
-  id: string;
+  /** Operation id from sb_api_find. Omit it to call by method + path. */
+  id?: string;
+  /** With `path`, when `id` is absent: a route the catalog does not carry. */
+  method?: string;
+  path?: string;
   path_params?: Record<string, string>;
   query?: Record<string, string>;
   body?: unknown;
@@ -22,6 +28,8 @@ export interface CallArgs {
   pick?: string[];
   /** Cap on the items of a list response, applied after the platform's own paging. */
   max_items?: number;
+  /** Skip items within this response, not within the server's dataset. */
+  item_offset?: number;
 }
 
 /** Past this many characters a list response is cut to fit and says so. */
@@ -91,8 +99,11 @@ const LIST_PROJECTIONS: Record<string, string[]> = {
   'get:/api/sites/{siteId}/pages/{pageId}/history': ['id', 'createdBy', 'createdAt'],
 };
 
-export function shapeResponse(raw: unknown, opts: { pick?: string[]; max_items?: number }): unknown {
-  const asked = opts.pick !== undefined || opts.max_items !== undefined;
+export function shapeResponse(
+  raw: unknown,
+  opts: Pick<CallArgs, 'pick' | 'max_items' | 'item_offset'>,
+): unknown {
+  const asked = opts.pick !== undefined || opts.max_items !== undefined || opts.item_offset !== undefined;
   const isObj = (v: unknown): v is Record<string, unknown> =>
     !!v && typeof v === 'object' && !Array.isArray(v);
   const list = listOf(raw);
@@ -129,32 +140,50 @@ export function shapeResponse(raw: unknown, opts: { pick?: string[]; max_items?:
           'Not a single-list answer and pick matched no field, so nothing was shaped or cut.',
       };
     }
-    if (opts.max_items !== undefined && isObj(out)) {
-      return { ...out, shaping_note: 'Not a list answer, so max_items did not apply.' };
+    if ((opts.max_items !== undefined || opts.item_offset !== undefined) && isObj(out)) {
+      return { ...out, shaping_note: 'Not a list answer, so max_items/item_offset did not apply.' };
     }
     return out;
   }
 
-  let items = opts.pick ? list.items.map((it) => pickFields(it, opts.pick!)) : list.items;
-  const of = items.length;
-  let cut: 'max_items' | 'size' | undefined;
+  const of = list.items.length;
+  const offset = Math.min(opts.item_offset ?? 0, of);
+  let items = list.items.slice(offset);
+  let shapingNote: string | undefined;
+  if (opts.pick) {
+    const projected = items.map((it) => pickFields(it, opts.pick!));
+    // A typo must not turn a populated list into apparently empty records.
+    // Keep the payload in this case, but still apply the normal size guard.
+    const objects = projected.filter(isObj);
+    if (objects.length > 0 && objects.every((it) => Object.keys(it).length === 0)) {
+      shapingNote = 'pick matched no field on these items; original fields kept. Check the field names.';
+    } else {
+      items = projected;
+    }
+  }
+  let cut: 'max_items' | 'size' | 'item_offset' | undefined = offset > 0 ? 'item_offset' : undefined;
   if (opts.max_items !== undefined && items.length > opts.max_items) {
     items = items.slice(0, opts.max_items);
     cut = 'max_items';
   }
-  const rebuild = (its: unknown[]) =>
-    list.key === null ? its : { ...(raw as Record<string, unknown>), [list.key]: its };
+  const rebuild = (its: unknown[]) => {
+    const out = list.key === null ? its : { ...(raw as Record<string, unknown>), [list.key]: its };
+    if (!shapingNote) return out;
+    return list.key === null
+      ? { items: its, shaping_note: shapingNote }
+      : { ...out, shaping_note: shapingNote };
+  };
 
   // The platform may already answer with a `truncated` field; never clobber it.
   const key = isObj(raw) && 'truncated' in raw ? '_truncated' : 'truncated';
   const said = (t: Record<string, unknown>) =>
     list.key === null
-      ? { items, [key]: t }
+      ? { items, ...(shapingNote ? { shaping_note: shapingNote } : {}), [key]: t }
       : { ...(rebuild(items) as Record<string, unknown>), [key]: t };
 
   // Budget the cut so the answer INCLUDING what it says about the cut fits.
   const TRUNCATED_ROOM = 320;
-  if (JSON.stringify(rebuild(items)).length > RESULT_CAP) {
+  if (JSON.stringify(rebuild(items)).length + (cut ? TRUNCATED_ROOM : 0) > RESULT_CAP) {
     const fixed = JSON.stringify(rebuild([])).length;
     if (fixed + TRUNCATED_ROOM > RESULT_CAP) {
       // The non-list part alone is over the cap, so dropping items gains
@@ -162,7 +191,8 @@ export function shapeResponse(raw: unknown, opts: { pick?: string[]; max_items?:
       return said({
         shown: items.length,
         of,
-        hint: `The non-list part of this answer alone is over ${RESULT_CAP} characters, so nothing was cut. Pass pick to keep only the fields you need.`,
+        offset,
+        hint: `The non-list part alone exceeds ${RESULT_CAP} characters; no additional size cut was made. Narrow the response at the API.`,
       });
     }
     let used = fixed + TRUNCATED_ROOM;
@@ -180,10 +210,16 @@ export function shapeResponse(raw: unknown, opts: { pick?: string[]; max_items?:
   return said({
     shown: items.length,
     of,
+    offset,
+    // No false continuation when even one row cannot fit. The caller must
+    // narrow its fields first, not loop forever at the same offset.
+    ...(items.length > 0 && offset + items.length < of
+      ? { next_item_offset: offset + items.length }
+      : {}),
     hint:
       cut === 'size'
-        ? `The full list was over ${RESULT_CAP} characters. Pass pick to keep only the fields you need, max_items, or the operation's own limit/offset query.`
-        : "Cut by max_items; raise it or page with the operation's own limit/offset query.",
+        ? `List exceeds ${RESULT_CAP} characters. Use pick to narrow fields; item_offset pages within this response.`
+        : 'item_offset/max_items select within this response, after API paging. Repeat only reads, never mutations.',
   });
 }
 
@@ -226,9 +262,206 @@ export function tokenFor(ctx: ToolContext, credential: string): string | undefin
  */
 const SITE_PARAMS = new Set(['siteid']);
 
+const RAW_METHODS = new Set(['GET', 'HEAD', 'POST', 'PUT', 'PATCH', 'DELETE']);
+
+/**
+ * Two ids naming the same route differ only in what they call the parameter:
+ * `{siteId}` in most operations, `{siteID}` in eight. Compare on route SHAPE —
+ * the same normalisation `reportUndocumentedRoutes` in scripts/gen-catalog.ts
+ * uses for the identical split — so a caller who spells a parameter name
+ * differently still gets the catalogued treatment rather than silently
+ * dropping onto the raw path with no undo prepared for a whole-document PUT.
+ */
+const routeShape = (id: string): string => id.replace(/\{[^}]*\}/g, '{}');
+
+/**
+ * Fold a raw method+path back onto the catalogued route it names.
+ *
+ * `routeShape` answers only when the caller SPELLED the parameters. A caller
+ * who writes the real ids instead — `/api/sites/abc123/menus/m1`, which is what
+ * a path copied out of a browser looks like — named exactly the same route and
+ * got none of the catalogued treatment: no shape, no projection, and no undo
+ * pre-read before a whole-document PUT.
+ *
+ * Segment-wise: the same number of segments, a catalogued `{param}` takes any
+ * single non-empty segment, a literal must match exactly and case-sensitively.
+ *
+ * RANKED so the tool never GUESSES between siblings. An exact-literal route —
+ * every segment equal — wins outright, because it IS the route rather than a
+ * match of it. Otherwise the candidate spelling the MOST literal segments wins:
+ * `…/pages/locate-nodes` is more specific than `…/pages/{pageId}` and is what a
+ * caller naming that path meant. A TIE folds to NOTHING and the call stays raw,
+ * because two equally specific siblings are two different operations and
+ * picking one would send a body shaped for the other.
+ */
+export function foldBack(
+  method: string,
+  path: string,
+  ops: readonly ApiOperation[],
+): ApiOperation | undefined {
+  const want = `${method.toLowerCase()}:${path}`;
+  const byShape = ops.find((o) => routeShape(o.id) === routeShape(want));
+  if (byShape) return byShape;
+
+  const segs = path.split('/');
+  let best: ApiOperation | undefined;
+  let bestLiterals = -1;
+  let tied = false;
+  for (const o of ops) {
+    if (o.method.toLowerCase() !== method.toLowerCase()) continue;
+    const cand = o.path.split('/');
+    if (cand.length !== segs.length) continue;
+    let literals = 0;
+    let ok = true;
+    for (let i = 0; i < cand.length; i++) {
+      const c = cand[i];
+      if (c.startsWith('{') && c.endsWith('}')) {
+        if (!segs[i]) { ok = false; break; }
+      } else if (c === segs[i]) {
+        literals++;
+      } else {
+        ok = false;
+        break;
+      }
+    }
+    if (!ok) continue;
+    if (literals === cand.length) return o;
+    if (literals > bestLiterals) {
+      best = o;
+      bestLiterals = literals;
+      tied = false;
+    } else if (literals === bestLiterals) {
+      tied = true;
+    }
+  }
+  return tied ? undefined : best;
+}
+
+/**
+ * Said once per process on the first raw call. A raw route has no call sheet,
+ * no shape and no undo, and the durable fix is upstream — the same fix
+ * reportUndocumentedRoutes names.
+ */
+export const RAW_CALL_NOTICE =
+  'This route is not in the catalog, so it has no call sheet, no body shape, no body ' +
+  'warnings and no sb_undo. The credential still follows the path prefix and dry_run still ' +
+  'defaults to true. Spell path parameters as {name} with values in path_params; a literal id ' +
+  'folds onto the catalogued route only when exactly one matches. ' +
+  'The durable fix is an @Router annotation upstream and a catalog regen.';
+
+/**
+ * Routes registered DIRECTLY on the gin router, outside every annotated
+ * dispatcher, so no `swag init` and no regen can ever carry them. Hand-kept
+ * and three entries long on purpose: the generated answer for UNANNOTATED
+ * routes is an @Router line upstream, not a table here.
+ */
+export const OUTSIDE_CATALOG = [
+  { method: 'GET', path: '/api/permissions', why: 'the RBAC matrix, content domains and delegation scopes' },
+  { method: 'GET', path: '/api/plans', why: 'the public plan catalogue' },
+  { method: 'GET', path: '/api/locales', why: "the language list with each locale's currency" },
+] as const;
+
+/**
+ * The operation a call names — from the catalog by id, or synthesised from
+ * method + path for a route the catalog does not carry.
+ *
+ * The raw form exists because the catalog is a CLOSED LIST read off one
+ * swagger document, and the platform serves routes that document does not
+ * describe: 20 the platform never annotated, three registered directly on the
+ * router, and anything newer than the last regen. Refusing them made the
+ * catalog's staleness the caller's ceiling.
+ *
+ * It changes no rule. The credential comes from the path prefix exactly as it
+ * does for a catalogued route, and a path that is not a bare platform path is
+ * refused: `request()` prefixes `ctx.base`, so a path carrying a host would
+ * send this install's credential to another server.
+ *
+ * A method+path that NAMES a catalogued route folds back onto it, so a caller
+ * who happens to spell a known route this way gets the catalogued treatment
+ * — shape, undo, projections — never less than the catalog already knows.
+ */
+export function resolveOperation(args: CallArgs): ApiOperation & { raw?: true; bound?: Record<string, string> } {
+  const hasRaw = args.method !== undefined || args.path !== undefined;
+  if (args.id && hasRaw) {
+    throw new Error('sbuilder: sb_api_call takes either id or method+path, not both.');
+  }
+  if (!args.id && !(args.method && args.path)) {
+    throw new Error(
+      'sbuilder: sb_api_call takes either id or method+path — id from sb_api_find, ' +
+        'method+path for a route the catalog does not carry.',
+    );
+  }
+  if (args.id) {
+    const op = API_OPERATIONS.find((o) => o.id === args.id);
+    if (!op) throw new Error(`sbuilder: unknown operation "${args.id}" — use sb_api_find first`);
+    return op;
+  }
+  const method = args.method!.toUpperCase();
+  if (!RAW_METHODS.has(method)) {
+    throw new Error(`sbuilder: method "${args.method}" is not one of ${[...RAW_METHODS].join(', ')}.`);
+  }
+  const path = args.path!;
+  // `request()` builds the URL as `ctx.base + path` (plain concatenation), so an
+  // authority can never be reintroduced by the path — but a backslash is refused
+  // outright anyway, because a relative-URL resolver treats one as a slash and
+  // this refusal must hold even if that concatenation is ever replaced with one.
+  // A `?` or `#` in `path` is refused too: `buildUrl` appends `query` with its
+  // own `?`, so one already in `path` either buries the query in a fragment or
+  // sends two `?`s — a query belongs in `query`, not folded into `path`.
+  if (
+    !path.startsWith('/') ||
+    path.startsWith('//') ||
+    path.includes('\\') ||
+    path.includes('?') ||
+    path.includes('#')
+  ) {
+    throw new Error(
+      `sbuilder: path must be a bare platform path starting with "/", with no query string or ` +
+        `fragment (got ${JSON.stringify(path)}). A query belongs in \`query\`, not in \`path\`. ` +
+        'The base URL is this install\'s SB_API; a path carrying a host would send the credential elsewhere.',
+    );
+  }
+  // A method+path that names a catalogued route gets the catalogued treatment
+  // — shape, undo, projections — never less than the catalog already knows.
+  const known = foldBack(method, path, API_OPERATIONS);
+  if (known) {
+    // THE CATALOGUED PATH IS WHAT IS RETURNED, always. `op.path` is the key the
+    // undo pre-read and the projections are looked up by, so replacing it with
+    // the caller's literal spelling would fold the route back and then lose the
+    // treatment that was the point. The literals the caller wrote become
+    // bindings instead, under the names the call sheet lists.
+    const bound: Record<string, string> = {};
+    const cand = known.path.split('/');
+    const segs = path.split('/');
+    if (cand.length === segs.length) {
+      for (let i = 0; i < cand.length; i++) {
+        const c = cand[i];
+        if (c.startsWith('{') && c.endsWith('}') && !segs[i].startsWith('{')) {
+          bound[c.slice(1, -1)] = segs[i];
+        }
+      }
+    }
+    return Object.keys(bound).length ? { ...known, bound } : known;
+  }
+  return {
+    id: `${method.toLowerCase()}:${path}`,
+    method,
+    path,
+    tags: [],
+    summary: '',
+    params: [],
+    bodyDescribed: false,
+    bodyRef: null,
+    credential: credentialFor(path),
+    raw: true,
+  };
+}
+
 export async function callOperation(ctx: ToolContext, args: CallArgs): Promise<unknown> {
-  const op = API_OPERATIONS.find((o) => o.id === args.id);
-  if (!op) throw new Error(`sbuilder: unknown operation "${args.id}" — use sb_api_find first`);
+  const op = resolveOperation(args);
+  if (args.item_offset && op.method !== 'GET' && op.method !== 'HEAD') {
+    throw new Error('sbuilder: item_offset is for reads only. Repeating a mutation to page its result would repeat the write; use the matching GET instead.');
+  }
 
   // Substitute {name} placeholders. A missing one would otherwise be sent
   // literally, and a path containing a brace 404s with nothing to explain it.
@@ -241,7 +474,10 @@ export async function callOperation(ctx: ToolContext, args: CallArgs): Promise<u
     // difference of one letter — a distinction no reader of the call sheet has
     // any reason to notice, and one this tool has nothing to gain by enforcing.
     // The exact name still wins; the fold is only a fallback.
-    const given = args.path_params ?? {};
+    // A LITERAL THE CALLER WROTE INTO THE PATH IS A VALUE THEY SUPPLIED, under
+    // the name the catalogued route gives that segment. An explicit
+    // `path_params` entry still wins.
+    const given = { ...(op.bound ?? {}), ...(args.path_params ?? {}) };
     let value = given[name];
     if (value === undefined) {
       const folded = Object.keys(given).find((k) => k.toLowerCase() === name.toLowerCase());
@@ -275,8 +511,14 @@ export async function callOperation(ctx: ToolContext, args: CallArgs): Promise<u
   const token = tokenFor(ctx, op.credential);
   const dryRun = args.dry_run !== false;
   if (dryRun) {
+    // THE DRY RUN IS THE DEFAULT, so a directive said only after a real send
+    // reaches nobody who looks before they leap. Once per process either way:
+    // a dry run that said it leaves the send that follows silent.
+    const directive = op.raw ? ctx.notices.once('raw_call', RAW_CALL_NOTICE) : undefined;
     return {
       dry_run: true,
+      ...(op.raw ? { uncatalogued: true } : {}),
+      ...(directive ? { directive } : {}),
       would_send: redact({
         method: op.method,
         url: ctx.base.replace(/\/$/, '') + path,
@@ -286,8 +528,8 @@ export async function callOperation(ctx: ToolContext, args: CallArgs): Promise<u
       }),
       // Shaping is part of what the call WOULD do, so the preview says it;
       // otherwise a dry run reads identically whether or not it was asked for.
-      ...(args.pick !== undefined || args.max_items !== undefined
-        ? { shaping: { pick: args.pick, max_items: args.max_items } }
+      ...(args.pick !== undefined || args.max_items !== undefined || args.item_offset !== undefined
+        ? { shaping: { pick: args.pick, max_items: args.max_items, item_offset: args.item_offset } }
         : {}),
       note: 'Nothing was sent. Re-call with dry_run:false to execute.',
     };
@@ -326,13 +568,19 @@ export async function callOperation(ctx: ToolContext, args: CallArgs): Promise<u
   // that worked and a DELETE that returned nothing looked identical, so sixteen
   // page deletes in a row reported `null` sixteen times and the only way to know
   // they had happened was to list the pages again. Say what the operation did.
-  if (raw === null || raw === undefined) {
-    return { ok: true, method: op.method, path, note: 'The platform answered with no content.' };
-  }
   // The caller's own `pick` outranks the default: asking for `document` is how
   // you read a version rather than merely choose one.
-  const projection = args.pick ?? LIST_PROJECTIONS[op.id];
-  return shapeResponse(raw, { pick: projection, max_items: args.max_items });
+  const answer =
+    raw === null || raw === undefined
+      ? { ok: true, method: op.method, path, note: 'The platform answered with no content.' }
+      : shapeResponse(raw, {
+          pick: args.pick ?? LIST_PROJECTIONS[op.id],
+          max_items: args.max_items,
+          item_offset: args.item_offset,
+        });
+  if (!op.raw) return answer;
+  const note = ctx.notices.once('raw_call', RAW_CALL_NOTICE);
+  return { uncatalogued: true, ...(note ? { note } : {}), data: answer };
 }
 
 /**
@@ -356,9 +604,8 @@ export function registerApiTools(server: McpServer, ctx: ToolContext): void {
     'sb_api_find',
     {
       description:
-        'Search platform API operations by intent (query: one line per match), or read one ' +
-          "operation's full call sheet (id: parameter types, credential, and the body's fields " +
-          'with the traps their own doc comments carry, read off the handler that decodes them). ' +
+        'Find API operations by intent (query), or get a call sheet (id): parameters, ' +
+          'credential, body fields and handler caveats. ' +
           `Reaches all ${SWAGGER_SOURCE.operations} operations.`,
       inputSchema: {
       query: z
@@ -394,7 +641,8 @@ export function registerApiTools(server: McpServer, ctx: ToolContext): void {
         matches,
         next: matches.length
           ? 'Pass one id back to sb_api_find for its call sheet before calling it.'
-          : 'No match — try other words, or a tag.',
+          : 'No match — try other words, or a tag. A route the catalog does not carry can still be called: sb_api_call with method + path.',
+        ...(matches.length ? {} : { outside_catalog: OUTSIDE_CATALOG }),
       });
     },
   );
@@ -403,19 +651,26 @@ export function registerApiTools(server: McpServer, ctx: ToolContext): void {
     'sb_api_call',
     {
       description:
-        'Execute one operation from sb_api_find. Defaults to a dry run that sends nothing and ' +
-          'shows the request. pick keeps only named fields on list items, max_items caps the ' +
-          'list, and a list over 60 KB is cut to fit and says so.',
+        'Call an operation from sb_api_find (id), or a route the catalog lacks (method+path); ' +
+          'dry run by default. pick selects fields, max_items caps lists, item_offset skips items. ' +
+          'Lists over 60 KB say so.',
       inputSchema: {
       id: z
         .string()
+        .optional()
         .describe('Operation id from sb_api_find, e.g. "get:/api/sites/{siteID}/menus"'),
+      method: z.string().optional().describe('With path, when id is absent: GET|HEAD|POST|PUT|PATCH|DELETE'),
+      path: z
+        .string()
+        .optional()
+        .describe('Bare platform path, e.g. "/api/sites/{siteId}/published"; {siteId} defaults to SB_SITE'),
       path_params: z.record(z.string()).optional(),
       query: z.record(z.string()).optional(),
       body: z.unknown().optional(),
       dry_run: z.boolean().optional().describe('Defaults to true. Pass false to actually send.'),
       pick: z.array(z.string()).optional(),
       max_items: z.number().int().min(1).optional(),
+      item_offset: z.number().int().min(0).optional().describe('Offset within this response, after API paging. Reads only.'),
     },
       annotations: { readOnlyHint: false, destructiveHint: true, openWorldHint: true },
     },

@@ -80,7 +80,7 @@ nhét ngược lại vào mọi bản cài.
 | `sb_connect` | Đăng nhập, liệt kê site tài khoản vận hành được, báo đang có credential nào |
 | `sb_site_list` | Liệt kê site tài khoản vận hành được |
 | `sb_api_find` | Tìm operation theo ý định — mỗi kết quả một dòng — rồi đọc call sheet của một operation theo id: schema tham số thật, credential cần dùng, và các trường body đọc thẳng từ handler decode chúng, mỗi trường mang theo cái bẫy doc comment của chính nó ghi lại |
-| `sb_api_call` | Chạy một operation. Mặc định chạy khô, không gửi gì |
+| `sb_api_call` | Chạy operation, hoặc bất kỳ route nào bằng method+path; mặc định chạy khô. Chọn field và phân trang kết quả phía MCP |
 | `sb_page_open` | Mở một trang để sửa và trả về outline |
 | `sb_outline` | Trang đang mở dạng cây nén — không bao giờ dump tài liệu thô |
 | `sb_node_read` | Một node đầy đủ, kèm cảnh báo nếu nó là global dùng chung |
@@ -106,10 +106,10 @@ nhét ngược lại vào mọi bản cài.
 | `sb_import` | Đọc một trang từ URL công khai bất kỳ và thêm cấu trúc + nội dung của nó vào trang đang mở dưới dạng element thật, mang token của CHÍNH trang này — là dịch lại, không phải sao chép |
 | `sb_import_site` | Đọc CẢ website từ một URL — sitemap của nó, hoặc các link trên trang đó — và tạo cho mỗi trang tìm được một trang nháp riêng ở đây, dựng bằng token của site này; màu và thang chữ của trang gốc cũng được vá vào THEME của site này, nên đây không còn thuần là đọc |
 | `sb_theme` | Đọc hoặc vá bảng màu và thang chữ của site — tầng mà mọi style preset phân giải từ đó, nên một token thay áo cho mọi trang |
-| `sb_store` | Chạy một luồng cửa hàng bắt buộc đúng thứ tự — bốn lệnh ghi tạo nên trang thanh toán, hoặc gieo bất kỳ template nào trong 17 form của nền tảng (login, register, forgot, contact, subscribe …) kèm field document của nó |
+| `sb_store` | Chạy một luồng cửa hàng bắt buộc đúng thứ tự — `checkout` (bốn lệnh ghi tạo nên trang thanh toán), `form` (một trong 17 template của nền tảng kèm field document của nó), `chrome` (một header hoặc footer dùng chung), `menu` (một node menu bind vào menu của site, link đã phân giải), `overlay_attach` (một pop-up hay quick view trên trang đang mở) và `app` (một app dựng sẵn kèm những trang nó cần) |
 | `sb_undo` | Trả lại thứ mà một lệnh PUT đã ghi đè. Với TRANG thì đây là đường về thứ hai chứ không phải duy nhất: nền tảng có version, history và restore (`sb_api_find` "page versions"), và chúng sống lâu hơn tiến trình này — hãy dùng chúng trước, còn tool này cho mọi PUT có hình dạng khác |
 
-Hai mươi tám tool, **531 operation API** (179 trong 238 lệnh ghi có hình dạng body đọc thẳng
+Hai mươi tám tool, **560 operation API** (193 trong 251 lệnh ghi có hình dạng body đọc thẳng
 từ handler), 113 element, 79 nguồn binding. `sb_api_find` là
 một chỉ mục chứ không phải mỗi endpoint một tool, nên danh sách tool vẫn ngắn trong khi mọi
 thứ nền tảng làm được vẫn với tới — và operation mới thêm bên nền tảng sẽ tự có sau lần

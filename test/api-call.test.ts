@@ -1,6 +1,9 @@
 import { describe, it, expect, vi } from 'vitest';
-import { callOperation, shapeResponse, RESULT_CAP } from '../src/tools/api.js';
+import { callOperation, shapeResponse, foldBack, RESULT_CAP } from '../src/tools/api.js';
+import { API_OPERATIONS } from '../src/catalog/api.generated.js';
 import { Session } from '../src/transport/auth.js';
+import { Notices } from '../src/mcp/notices.js';
+import type { ToolContext } from '../src/tools/context.js';
 
 const ok = () =>
   vi.fn(
@@ -114,6 +117,33 @@ describe('callOperation()', () => {
     expect(JSON.stringify(out)).not.toContain('jwt');
   });
 
+  it.each([true, false])('refuses paging a mutation before any network request (dry_run=%s)', async (dry_run) => {
+    const f = ok();
+    await expect(callOperation(await ctxWith(f, 'wbk_k'), {
+      id: 'post:/api/v1/products', item_offset: 1, dry_run,
+    })).rejects.toThrow(/reads only/);
+    expect(calls(f)).toHaveLength(0);
+  });
+
+  it('previews local pagination without any request', async () => {
+    const f = ok();
+    const out = await callOperation(await ctxWith(f, 'wbk_k'), {
+      id: 'get:/api/v1/products', item_offset: 2, max_items: 1,
+    });
+    expect(out).toMatchObject({ dry_run: true, shaping: { item_offset: 2, max_items: 1 } });
+    expect(calls(f)).toHaveLength(0);
+  });
+
+  it('applies local pagination after the request, not as an API query parameter', async () => {
+    const f = vi.fn(async () => new Response(JSON.stringify({ products: [{ id: 1 }, { id: 2 }, { id: 3 }], total: 30 }))) as unknown as typeof fetch;
+    const out = await callOperation(await ctxWith(f, 'wbk_k'), {
+      id: 'get:/api/v1/products', query: { limit: '3' }, item_offset: 1, max_items: 1, dry_run: false,
+    });
+    expect(out).toMatchObject({ products: [{ id: 2 }], total: 30, truncated: { offset: 1, next_item_offset: 2 } });
+    expect(calls(f)).toHaveLength(1);
+    expect(calls(f)[0][0]).toBe('http://x/api/v1/products?limit=3');
+  });
+
   it('encodes a path param rather than letting it inject a path segment', async () => {
     const f = ok();
     await callOperation(await ctxWith(f, 'wbk_k'), {
@@ -166,6 +196,83 @@ describe('shapeResponse()', () => {
     expect(shapeResponse(raw, {})).toBe(raw);
   });
 
+  it('continues through every item without changing the platform total', () => {
+    const raw = { ...list(5), total: 100 };
+    const first = shapeResponse(raw, { pick: ['id'], max_items: 2 }) as any;
+    const second = shapeResponse(raw, { pick: ['id'], max_items: 2, item_offset: first.truncated.next_item_offset }) as any;
+    const last = shapeResponse(raw, { pick: ['id'], max_items: 2, item_offset: second.truncated.next_item_offset }) as any;
+    expect([...first.products, ...second.products, ...last.products]).toEqual(
+      raw.products.map(({ id }) => ({ id })),
+    );
+    expect([first.total, second.total, last.total]).toEqual([100, 100, 100]);
+    expect(last.truncated).toMatchObject({ offset: 4, shown: 1, of: 5 });
+    expect(last.truncated.next_item_offset).toBeUndefined();
+    expect(raw.products).toHaveLength(5);
+  });
+
+  it('continues a size-truncated bare array with no overlaps or omissions', () => {
+    const raw = list(600).products;
+    const collected: unknown[] = [];
+    let offset = 0;
+    for (let page = 0; page < 10; page++) {
+      const out = shapeResponse(raw, { item_offset: offset }) as any;
+      collected.push(...out.items);
+      expect(JSON.stringify(out).length).toBeLessThanOrEqual(RESULT_CAP);
+      if (out.truncated.next_item_offset === undefined) break;
+      expect(out.truncated.next_item_offset).toBeGreaterThan(offset);
+      offset = out.truncated.next_item_offset;
+    }
+    expect(collected).toEqual(raw);
+  });
+
+  it('budgets continuation metadata even when the selected rows alone fit', () => {
+    const raw = [{ blob: 'x'.repeat(RESULT_CAP - 30) }, { id: 2 }];
+    const out = shapeResponse(raw, { max_items: 1 });
+    expect(JSON.stringify(out).length).toBeLessThanOrEqual(RESULT_CAP);
+  });
+
+  it('reports an exhausted offset without a false continuation', () => {
+    const out = shapeResponse(list(5), { item_offset: 20 }) as any;
+    expect(out.products).toEqual([]);
+    expect(out.truncated).toMatchObject({ offset: 5, shown: 0, of: 5 });
+    expect(out.truncated.next_item_offset).toBeUndefined();
+  });
+
+  it('does not suggest a continuation that cannot advance past an oversized row', () => {
+    const out = shapeResponse([{ blob: 'x'.repeat(RESULT_CAP) }], {}) as any;
+    expect(out.items).toEqual([]);
+    expect(out.truncated.next_item_offset).toBeUndefined();
+    expect(out.truncated.hint).toMatch(/pick/);
+  });
+
+  it('keeps original list fields and warns when pick matches nothing', () => {
+    const raw = list(2);
+    const out = shapeResponse(raw, { pick: ['typo'] }) as any;
+    expect(out.products).toEqual(raw.products);
+    expect(out.shaping_note).toMatch(/pick matched no field/);
+    const bare = shapeResponse(raw.products, { pick: [] }) as any;
+    expect(bare.items).toEqual(raw.products);
+    expect(bare.shaping_note).toMatch(/pick matched no field/);
+  });
+
+  it('still caps unmatched projections and preserves the warning', () => {
+    const out = shapeResponse(list(600), { pick: ['typo'] }) as any;
+    expect(out.products.length).toBeGreaterThan(0);
+    expect(out.truncated.next_item_offset).toBe(out.products.length);
+    expect(out.shaping_note).toMatch(/pick matched no field/);
+    expect(JSON.stringify(out).length).toBeLessThanOrEqual(RESULT_CAP);
+  });
+
+  it('does not discard successful picks just because some rows lack the field', () => {
+    expect(shapeResponse([{ id: 1 }, { name: 'other' }], { pick: ['id'] })).toEqual([{ id: 1 }, {}]);
+  });
+
+  it('reports offset on a non-list even when pick succeeds', () => {
+    const out = shapeResponse({ page: { id: 'p' } }, { pick: ['id'], item_offset: 1 }) as any;
+    expect(out.page).toEqual({ id: 'p' });
+    expect(out.shaping_note).toMatch(/item_offset did not apply/);
+  });
+
   it('a bare array is shaped too', () => {
     const out = shapeResponse([{ id: 1, x: 2 }, { id: 2, x: 3 }], { pick: ['id'], max_items: 1 }) as { items: unknown[]; truncated: unknown };
     expect(out.items).toEqual([{ id: 1 }]);
@@ -203,7 +310,7 @@ describe('shapeResponse() — the edges the review found', () => {
     const raw = { products: [{ id: 'p1' }], meta: 'x'.repeat(RESULT_CAP + 10) };
     const out = shapeResponse(raw, {}) as { products: unknown[]; truncated: { hint: string } };
     expect(out.products.length).toBe(1);
-    expect(out.truncated.hint).toMatch(/nothing was cut/);
+    expect(out.truncated.hint).toMatch(/no additional size cut/);
   });
 
   it('never clobbers a platform field named truncated', () => {
@@ -259,5 +366,185 @@ describe('a listing whose every row is a whole page', () => {
   it('leaves the total alone, because a truncated list that lies about its size is worse', () => {
     const out = shapeResponse(versions, { pick: ['id'] }) as { total: number };
     expect(out.total).toBe(2);
+  });
+});
+
+describe('callOperation() — the raw form', () => {
+  const rawCtx = async (f: typeof fetch) => ({ ...(await ctxWith(f, 'wbk_k')), notices: new Notices(), siteId: 'site_env' });
+
+  it('sends a route the catalog does not carry, on the site-scoped credential', async () => {
+    const f = ok();
+    const out = (await callOperation(await rawCtx(f) as unknown as ToolContext, {
+      method: 'get',
+      path: '/api/permissions',
+      dry_run: false,
+    })) as { uncatalogued: boolean; data: unknown; note?: string };
+    expect(calls(f)[0][0]).toBe('http://x/api/permissions');
+    expect((calls(f)[0][1] as { headers: Record<string, string> }).headers.Authorization).toBe('Bearer wbk_k');
+    expect(out.uncatalogued).toBe(true);
+    expect(out.data).toEqual({ menus: [], total: 0 });
+    expect(out.note).toMatch(/no call sheet/i);
+  });
+
+  it('says the directive once per process', async () => {
+    const f = ok();
+    const ctx = await rawCtx(f) as unknown as ToolContext;
+    await callOperation(ctx, { method: 'GET', path: '/api/locales', dry_run: false });
+    const second = (await callOperation(ctx, { method: 'GET', path: '/api/locales', dry_run: false })) as { note?: string };
+    expect(second.note).toBeUndefined();
+  });
+
+  it('defaults {siteId} to SB_SITE in a raw path too', async () => {
+    const f = ok();
+    await callOperation(await rawCtx(f) as unknown as ToolContext, { method: 'GET', path: '/api/sites/{siteId}/published', dry_run: false });
+    expect(calls(f)[0][0]).toBe('http://x/api/sites/site_env/published');
+  });
+
+  it('routes /api/v1 to the key and refuses without one', async () => {
+    const f = ok();
+    const ctx = { ...(await ctxWith(f)), notices: new Notices() } as unknown as ToolContext;
+    await expect(
+      callOperation(ctx, { method: 'GET', path: '/api/v1/anything', dry_run: false }),
+    ).rejects.toThrow(/SB_TOKEN/);
+  });
+
+  it('refuses a path that is not a bare platform path', async () => {
+    const ctx = await rawCtx(ok()) as unknown as ToolContext;
+    await expect(callOperation(ctx, { method: 'GET', path: 'https://evil.example/x', dry_run: false })).rejects.toThrow(/bare platform path/i);
+    await expect(callOperation(ctx, { method: 'GET', path: '//evil.example/x', dry_run: false })).rejects.toThrow(/bare platform path/i);
+    await expect(callOperation(ctx, { method: 'GET', path: 'api/permissions', dry_run: false })).rejects.toThrow(/bare platform path/i);
+    await expect(callOperation(ctx, { method: 'GET', path: '/\\evil.example/x', dry_run: false })).rejects.toThrow(/bare platform path/i);
+    await expect(callOperation(ctx, { method: 'GET', path: '/api/x?a=b', dry_run: false })).rejects.toThrow(/bare platform path/i);
+    await expect(callOperation(ctx, { method: 'GET', path: '/api/x#y', dry_run: false })).rejects.toThrow(/bare platform path/i);
+  });
+
+  it('refuses an unknown method, and id together with method/path', async () => {
+    const ctx = await rawCtx(ok()) as unknown as ToolContext;
+    await expect(callOperation(ctx, { method: 'FETCH', path: '/api/x', dry_run: false })).rejects.toThrow(/method/i);
+    await expect(
+      callOperation(ctx, { id: 'get:/api/sites/{siteID}/menus', method: 'GET', path: '/api/x' }),
+    ).rejects.toThrow(/either id or method\+path/i);
+    await expect(callOperation(ctx, {})).rejects.toThrow(/either id or method\+path/i);
+  });
+
+  it('dry-runs a raw call by default and marks it uncatalogued', async () => {
+    const f = ok();
+    const out = (await callOperation(await rawCtx(f) as unknown as ToolContext, { method: 'POST', path: '/api/site-imports', body: { url: 'u' } })) as Record<string, unknown>;
+    expect(calls(f)).toHaveLength(0);
+    expect(out.dry_run).toBe(true);
+    expect(out.uncatalogued).toBe(true);
+    expect((out.would_send as { method: string }).method).toBe('POST');
+  });
+
+  it('prepares no undo for a raw PUT', async () => {
+    const f = ok();
+    const record = vi.fn();
+    const ctx = { ...(await rawCtx(f)), undo: { record } } as unknown as ToolContext;
+    await callOperation(ctx, { method: 'PUT', path: '/api/sites/{siteId}/subscription', body: { a: 1 }, dry_run: false });
+    expect(record).not.toHaveBeenCalled();
+    // One request only: the PUT itself, no GET before it.
+    expect(calls(f)).toHaveLength(1);
+  });
+
+  it('folds a method+path that names a catalogued route back onto the catalogue', async () => {
+    const f = ok();
+    const out = (await callOperation(await rawCtx(f) as unknown as ToolContext, {
+      method: 'GET',
+      path: '/api/sites/{siteID}/menus',
+      dry_run: false,
+    })) as Record<string, unknown>;
+    expect(calls(f)[0][0]).toBe('http://x/api/sites/site_env/menus');
+    // Not wrapped: this is the catalogued operation, answered as it always is.
+    expect(out.uncatalogued).toBeUndefined();
+    expect(out).toEqual({ menus: [], total: 0 });
+  });
+
+  it('folds back on route SHAPE, so a one-letter param-name case difference still matches the catalogued route', async () => {
+    const f = ok();
+    const record = vi.fn();
+    const ctx = { ...(await rawCtx(f)), undo: { record } } as unknown as ToolContext;
+    const out = (await callOperation(ctx, {
+      method: 'PUT',
+      // The catalogue spells this route's site param {siteID}; this call spells
+      // it {siteId}. A caller who does not know the platform's inconsistency
+      // must still get the catalogued route, its undo prep and its projection —
+      // never silently dropped onto the raw path with no undo for a whole-
+      // document replace.
+      path: '/api/sites/{siteId}/menus/{id}',
+      path_params: { id: 'm1' },
+      body: { label: 'Main' },
+      dry_run: false,
+    })) as Record<string, unknown>;
+    expect(out.uncatalogued).toBeUndefined();
+    // Two requests: the catalogued undo pre-read GET, then the PUT itself.
+    expect(calls(f)).toHaveLength(2);
+    expect((calls(f)[0][1] as RequestInit).method).toBe('GET');
+    expect((calls(f)[1][1] as RequestInit).method).toBe('PUT');
+    expect(record).toHaveBeenCalled();
+  });
+
+  // THE DRY RUN IS THE DEFAULT, so a directive that only fires after a real
+  // send reaches nobody who looks before they leap.
+  it('says the raw directive on a dry run, once', async () => {
+    const ctx = await rawCtx(ok()) as unknown as ToolContext;
+    const first = (await callOperation(ctx, { method: 'POST', path: '/api/site-imports', body: { url: 'u' } })) as Record<string, unknown>;
+    expect(first.directive).toMatch(/no call sheet/i);
+    const second = (await callOperation(ctx, { method: 'POST', path: '/api/site-imports', body: { url: 'u' } })) as Record<string, unknown>;
+    expect(second.directive).toBeUndefined();
+  });
+
+  it('does not repeat the directive on the real send that follows a dry run', async () => {
+    const f = ok();
+    const ctx = await rawCtx(f) as unknown as ToolContext;
+    await callOperation(ctx, { method: 'GET', path: '/api/locales' });
+    const real = (await callOperation(ctx, { method: 'GET', path: '/api/locales', dry_run: false })) as { note?: string };
+    expect(real.note).toBeUndefined();
+  });
+
+  it('redacts the credential in a raw dry run too', async () => {
+    const out = (await callOperation(await rawCtx(ok()) as unknown as ToolContext, {
+      method: 'POST',
+      path: '/api/site-imports',
+      body: { url: 'u' },
+    })) as { would_send: Record<string, unknown> };
+    expect(out.would_send.Authorization).toBe('[redacted]');
+    expect(JSON.stringify(out)).not.toContain('wbk_k');
+  });
+
+  // A LITERAL ID NAMES THE SAME ROUTE AS A {param}. Without the segment-wise
+  // fold this PUT went raw — no shape, no projection, and no undo pre-read
+  // before a whole-document replace.
+  it('folds a path carrying literal ids back onto the catalogued route', async () => {
+    const f = ok();
+    const record = vi.fn();
+    const ctx = { ...(await rawCtx(f)), undo: { record } } as unknown as ToolContext;
+    const out = (await callOperation(ctx, {
+      method: 'PUT',
+      path: '/api/sites/site_env/menus/m1',
+      body: { label: 'Main' },
+      dry_run: false,
+    })) as Record<string, unknown>;
+    expect(out.uncatalogued).toBeUndefined();
+    expect(calls(f)).toHaveLength(2);
+    expect((calls(f)[0][1] as RequestInit).method).toBe('GET');
+    expect((calls(f)[1][1] as RequestInit).method).toBe('PUT');
+    expect(record).toHaveBeenCalled();
+  });
+
+  it('prefers the sibling that spells more of itself', () => {
+    const op = foldBack('GET', '/api/sites/site_env/pages/locate-nodes', API_OPERATIONS);
+    expect(op?.id).toBe('get:/api/sites/{siteId}/pages/locate-nodes');
+  });
+
+  // TWO EQUALLY SPECIFIC SIBLINGS ARE TWO OPERATIONS. Picking one would send a
+  // body shaped for the other, so the call stays raw.
+  it('folds to nothing when two candidates are equally specific', () => {
+    const ops = [
+      { id: 'get:/api/sites/{siteId}/orders/{id}', method: 'GET', path: '/api/sites/{siteId}/orders/{id}' },
+      { id: 'get:/api/sites/{siteId}/{kind}/archived', method: 'GET', path: '/api/sites/{siteId}/{kind}/archived' },
+    ] as unknown as typeof API_OPERATIONS;
+    expect(foldBack('GET', '/api/sites/s1/orders/archived', ops)).toBeUndefined();
+    // Either one alone still folds.
+    expect(foldBack('GET', '/api/sites/s1/orders/archived', [ops[0]])?.id).toBe('get:/api/sites/{siteId}/orders/{id}');
   });
 });

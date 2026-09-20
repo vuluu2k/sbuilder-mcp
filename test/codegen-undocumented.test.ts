@@ -3,6 +3,13 @@ import { execFileSync, spawnSync } from 'node:child_process';
 import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
+import { vi } from 'vitest';
+
+// Every test here spawns `tsx scripts/gen-catalog.ts` against a scratch git
+// repo. Measured 6-8 s per test on a loaded machine against vitest's 5 s
+// default, so the suite went red on load alone. 20 s is headroom, not a
+// measurement.
+vi.setConfig({ testTimeout: 20_000 });
 
 /**
  * TWO STALENESS QUESTIONS, AND ONLY ONE OF THEM WAS EVER ASKED.

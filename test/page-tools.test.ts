@@ -5,6 +5,8 @@ import { Notices } from '../src/mcp/notices.js';
 import { UndoLog } from '../src/tools/undo.js';
 import { PageDoc } from '../src/domains/site/document.js';
 import { connectedClient } from './harness.js';
+import { addSubtree } from '../src/domains/site/builder.js';
+import { SPEC_APP_BLOCK_ID } from '../src/core/tree.js';
 
 const emptyDocument = {
   schema_version: 2,
@@ -649,5 +651,75 @@ describe('sb_remove dry run reports nodes and patches as different numbers', () 
     } finally {
       await close();
     }
+  });
+});
+
+function appBlockDocument() {
+  const d = PageDoc.from({ schema_version: 2, root_node_id: '', nodes: {} });
+  const first = addSubtree(d, 'ROOT', {
+    type: 'flex-section',
+    children: [{ type: 'flex-block', children: [{ type: 'heading' }] }],
+  });
+  d.apply(first.patches);
+  // The COMPOSED stamp, applied the way the server applies it — by patch.
+  d.apply([{ op: 'set', path: ['nodes', first.ids[1], 'specials', SPEC_APP_BLOCK_ID], value: 'inst_1/hero' }]);
+  d.apply(addSubtree(d, 'ROOT', { type: 'flex-section' }).patches);
+  return { document: d.doc, ids: { section: first.ids[0], block: first.ids[1], inner: first.ids[2] } };
+}
+
+async function openPageWithAppBlock() {
+  const { document, ids } = appBlockDocument();
+  const f = vi.fn(async () =>
+    new Response(
+      JSON.stringify({ source: { pageId: 'pg_1', siteId: 's1', document, schemaVersion: 2, updatedAt: 'now' } }),
+      { status: 200, headers: { 'content-type': 'application/json' } },
+    ),
+  ) as unknown as typeof fetch;
+  const session = new Session('http://x', f);
+  (session as unknown as { access: string }).access = 'jwt';
+  const { client, close } = await connectedClient({ fetchImpl: f, session });
+  await client.callTool({ name: 'sb_page_open', arguments: { site_id: 's1', page_id: 'pg_1' } });
+  // The MCP SDK reports a thrown tool error as `isError` rather than rejecting,
+  // so the wrapper rethrows: the tests below say `rejects.toThrow`.
+  const call = async (name: string, args: Record<string, unknown>) => {
+    const res = (await client.callTool({ name, arguments: args })) as {
+      isError?: boolean;
+      content: Array<{ text?: string }>;
+    };
+    const textOut = res.content.map((c) => c.text ?? '').join('');
+    if (res.isError) throw new Error(textOut);
+    return JSON.parse(textOut) as Record<string, any>;
+  };
+  return { call, ids, close };
+}
+
+describe('force on the writing tools', () => {
+  it('sb_set inside an app block: refused without force, reported with it, in the dry run and the real run', async () => {
+    const { call, ids } = await openPageWithAppBlock();
+    await expect(call('sb_set', { id: ids.inner, namespace: 'specials', keys: { text: 'x' } })).rejects.toThrow(/force:true/);
+    const dry = await call('sb_set', { id: ids.inner, namespace: 'specials', keys: { text: 'x' }, force: true });
+    expect(dry.dry_run).toBe(true);
+    expect(dry.forced[0]).toMatch(/app block/i);
+    const real = await call('sb_set', { id: ids.inner, namespace: 'specials', keys: { text: 'x' }, force: true, dry_run: false });
+    expect(real.set).toEqual(['text']);
+    expect(real.forced[0]).toMatch(/app block/i);
+  });
+
+  it('sb_remove dry run carries forced beside removing and patches', async () => {
+    const { call, ids } = await openPageWithAppBlock();
+    const dry = await call('sb_remove', { id: ids.inner, force: true });
+    expect(dry).toMatchObject({ dry_run: true, removing: 1 });
+    expect(dry.forced[0]).toMatch(/app block/i);
+  });
+
+  it('a hard guard is unchanged by force at the tool', async () => {
+    const { call } = await openPageWithAppBlock();
+    await expect(call('sb_remove', { id: 'ROOT', force: true, dry_run: false })).rejects.toThrow(/cannot remove ROOT/);
+  });
+
+  it('no forced field when nothing was overridden', async () => {
+    const { call, ids } = await openPageWithAppBlock();
+    const dry = await call('sb_set', { id: ids.section, namespace: 'style', keys: { color: 'red' }, force: true });
+    expect(dry.forced).toBeUndefined();
   });
 });

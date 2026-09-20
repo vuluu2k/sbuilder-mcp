@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { searchOperations, describeOperation, summarizeOperation, findOperation } from '../src/catalog/search.js';
 import { REQUEST_SHAPES } from '../src/catalog/shapes.generated.js';
 import { API_OPERATIONS } from '../src/catalog/api.generated.js';
+import { OUTSIDE_CATALOG } from '../src/tools/api.js';
 
 describe('searchOperations()', () => {
   it('finds menu operations from the word "menu"', () => {
@@ -465,5 +466,13 @@ describe('parameters the doc block duplicated', () => {
         expect(listed, `${op.method} ${op.path} lost {${m[1]}}`).toContain(m[1]);
       }
     }
+  });
+});
+
+describe('the routes the catalog cannot carry by construction', () => {
+  it('names the three router-registered routes, none of which the catalog holds', () => {
+    const paths = OUTSIDE_CATALOG.map((r) => `${r.method.toLowerCase()}:${r.path}`);
+    expect(paths).toEqual(['get:/api/permissions', 'get:/api/plans', 'get:/api/locales']);
+    for (const p of paths) expect(API_OPERATIONS.some((o) => o.id === p)).toBe(false);
   });
 });
