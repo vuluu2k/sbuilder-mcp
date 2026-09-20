@@ -1576,13 +1576,20 @@ Run a store flow that must happen in a **fixed order**.
 
 | Arg | Type | Notes |
 | --- | --- | --- |
-| `action` | `"checkout"` \| `"form"` | The flow to run |
+| `action` | `"checkout"` \| `"form"` \| `"chrome"` \| `"menu"` \| `"overlay_attach"` \| `"app"` | The flow to run |
 | `site_id` | string? | Falls back to `SB_SITE` |
-| `language` | `"vi"` \| `"en"`? | `checkout` — copy language, default `vi` |
+| `language` | `"vi"` \| `"en"`? | `checkout` — copy language, default `vi`. `app` — which language names the scaffold pages |
 | `page_name` | string? | `checkout` — overrides the editor's own page name |
 | `headline` | string? | `checkout` — overrides the page's headline |
 | `template` | enum? | `form` — which of the platform's 17 templates to seed |
-| `name` | string? | `form` — the form's name in the merchant's list |
+| `name` | string? | `form` — the form's name in the merchant's list. `overlay_attach` with no `overlay_id` — the new overlay's name |
+| `footer` | boolean? | `chrome` — build a shared **footer** instead of a header |
+| `node_id` | string? | `menu` — the menu node on the open page |
+| `menu_id` | string? | `menu` — an existing menu; omit to use the site's first, or create one |
+| `kind` | `"popup"` \| `"quickview"`? | `overlay_attach` — which kind of overlay to attach |
+| `overlay_id` | string? | `overlay_attach` — an existing overlay; omit to create one from the platform's seed |
+| `list_id` | string? | `overlay_attach` + `kind:"quickview"` — the `list-dataset` node whose quick view this sets |
+| `app_key` | enum? | `app` — which built-in app to install |
 | `dry_run` | boolean? | Defaults to **true** |
 
 ### `action: "form"`
@@ -1645,6 +1652,177 @@ along, because both failures are silent:
 Both documents are **generated** from the editor's own `formTemplates.ts` and
 `checkoutPageSeed.ts` by `npm run codegen`, not hand-copied — a copy of the platform's seed
 rots the next time the platform edits it, and the first person to notice is a shopper.
+
+### `action: "chrome"`
+
+Give every page **one** shared header — or, with `footer: true`, one shared footer.
+
+`sb_review` reports this as `siteChrome`. Two pages and no global section means every page
+carries its own header: changing the menu is one edit per page, the copies drift, and a
+visitor meets a slightly different site on every click. It is the most basic thing a website
+has that a generated one does not — and it was reachable by exactly ONE tool.
+`sb_import_site` builds it from the pages it just made; a site built any other way
+(patterns, `sb_add`, a store seeded by `sb_store`) had to reproduce it by hand.
+
+By hand means: create the master, know that its `document` is page-SHAPED but rooted at the
+**section** rather than at ROOT, then give every page a ROOT child carrying
+`specials.globalRef` + `globalKind` — **first**, because a header after middle content is a
+band-order refusal on the next save (trap 3). A footer goes last, for the same reason.
+
+The menu is built from the pages this site already has, home first. The look is read off the
+**home page** — rule 0 applied to a site rather than to a page: whatever pattern the rest of
+the site already follows is the one its header should wear. A blank home page yields no
+tokens rather than an invented palette.
+
+**Skipped rather than done twice.** A site that already shares a section of that kind
+answers `skipped` — a second header is two headers, not a menu — and so does a site with
+fewer than two pages, because a menu to one page is a link to itself. Both are checked
+before the dry run, so a dry run reports them too.
+
+**Not atomic, and it must not pretend to be.** One page that will not take the reference
+does not undo the master: it is reported under `failed` with its slug and the reason, while
+the pages that took it are listed under `carried`.
+
+**Dry run** (the default) returns `would_create`, the `menu` it would build, the `onto`
+slugs it would build it onto, and where the tokens came from. **Executing** returns the
+master's id as `created`, `carried`, any `failed`, and the reminder that a global section
+reaches a visitor only through a page that has been **published** since — a saved page keeps
+the old chrome.
+
+### `action: "menu"`
+
+Bind a `menu` node on the open page to the site's menu, and resolve its links.
+
+A menu element drops onto the canvas holding its own seeded `specials.menuItems` — Home /
+Categories / Contact / About us, every `href` empty — the same placeholder every fresh drop
+carries, editor or agent. Nothing turned that into a real menu: the site's menu is a
+SEPARATE record (`GET/POST /api/sites/{siteId}/menus`), and nothing this server shipped ever
+wrote `specials.menuId` or replaced the seed with the site's own rows. A page built entirely
+with these tools therefore shipped a menu naming four pages the site does not have, with no
+way to change the wording once.
+
+**The renderer reads `specials.menuItems` and never `menuId`**, so the snapshot on the node
+**is** the menu as far as the page is concerned. Binding without re-resolving leaves the node
+pointing at a real menu and still rendering dead links — which is why this is one flow and
+not two arguments.
+
+The editor closes this the moment a menu node lands (`editor/src/features/menus/sync.ts`,
+`ensureMenuBinding` → `syncBoundMenuNode`), and this mirrors it write for write:
+
+1. **Bind** — use `menu_id`, or the site's first menu, or create "Main menu" seeded from the
+   node's own current rows, so binding never changes what is already on canvas.
+2. **Read** the bound menu's items fresh (`GET /menus/{id}`).
+3. **Resolve** each row's reference to the address the storefront actually serves: `page` off
+   the page list, `productCategory` → `/collections/{slug}`, `article` → `/blog/{slug}`,
+   `blogCategory` → `/blog-categories/{slug}`, and `product` → `/products/{slug}` batched by
+   id, because a shop's catalogue is unbounded while a category tree is not. Only the kinds
+   the rows actually reference are fetched. **A listing that cannot be reached degrades that
+   kind to an empty `href` rather than aborting the sync** — the editor's own resolver
+   swallows its failures the same way.
+4. **Write** the resolved snapshot as `specials.menuItems`, carrying each row's `panelId`
+   across. A row's local mega-panel is not something the site-level menu knows about, so a
+   plain re-sync would silently strip it.
+
+Steps 1 and 4 land in the **same save**: a node bound but not yet snapshotted is a state
+nobody should be able to observe.
+
+A `node_id` whose element does not seed `specials.menuItems` is refused by type, naming it,
+before anything is read.
+
+**Dry run** returns the ordered `plan`, the `menu` it would use or create, the `items` it
+would write, `unresolved` (rows that named a page or an entity and came back with no address
+— a dangling reference to go fix) and `unlinked` (rows never pointed at anything, which is
+what every fresh seed row is). **Executing** returns `node`, `menu_id`, `created`, the item
+count and those same two.
+
+### `action: "overlay_attach"`
+
+Put a pop-up on the open page (`kind: "popup"`), or point a `list-dataset` at a quick-view
+panel (`kind: "quickview"` plus `list_id`). With no `overlay_id` the overlay is created first,
+from the platform's own seed — `CreateOverlayInput.document` is required, and an empty pop-up
+is a white rectangle nobody can dismiss.
+
+**THE PAGE MUST BE RE-READ AFTER THE ATTACH, and that is the whole reason this is a tool.** A
+pop-up reaches a page through an edge (`page_overlay_refs`) that an ordinary page save cannot
+write: the save DERIVES the edge set from the COMPOSED document, and the pop-up is not in
+that document until something else puts it there. Attachment is its own call to break that
+circle — and until the composer has put the panel into the document this session holds, **the
+next save derives an edge set without it and takes the attachment straight back off**, with a
+200 at every step.
+
+So, for a pop-up:
+
+1. **Save** the page as it stands — the edge cannot attach to an unsaved draft, and the
+   re-read must hand back the author's own work rather than an older one.
+2. **Create** the pop-up, if the caller named none.
+3. **Attach** — `POST /overlays/{id}/pages/{pageId}`, the edge itself.
+4. **Re-read** the page.
+5. Find the composed node, stamped `specials.overlayId`, and return its id.
+
+A quick view reaches a page through the LIST's own config instead, and must never have an
+edge: an edge would make compose append the panel to ROOT, putting a `position: static` copy
+of it below the footer of every page that uses it. So the dance is shorter — create the panel
+if needed, write `config.quickviewId` on the list and save in the same call, then re-read so
+the composer merges the master in.
+
+**That config key is written at BASE, unconditionally.** `nodeQuickviewChoice`
+(`server/internal/page/quickview.go`) decodes the node's raw `config` map with no responsive
+merge, both when deciding which masters to fetch and when composing them in, so a choice
+written into a breakpoint slot is invisible to compose and the panel never merges — in every
+environment, always. `BASE_ONLY_CONFIG` does not name the key; that is a gap in the
+platform's ledger, not a fact about the key.
+
+**Already attached is a no-op**, the way the editor's own check is. A pop-up already composed
+onto this page — or a list that already names this overlay AND already shows the composed
+panel — returns `already_attached` and writes nothing. Writing again would not be wrong, only
+wasted: it churns the shared master's revision fence for an attachment that already exists.
+
+`kind: "quickview"` refuses a `list_id` that is not a `list-dataset`, naming what it is.
+
+**Dry run** returns the ordered `plan` (through `redact()`) and `would_create` when there is
+no `overlay_id`. **Executing** returns `kind`, `overlay_id`, whether it was `created`, and
+`node_id` — the composed node on this page, which is what a later `sb_set` styles. A write
+that lands with no panel coming back on the re-read raises rather than reporting success.
+
+### `action: "app"`
+
+Install one of the platform's built-in apps — `mail`, `multilingual`, `agent`, `chat`,
+`booking`, `loyalty`, `payments`, `courses` — and create the pages it needs that installing
+it does not.
+
+`POST /api/sites/{siteId}/builtin-apps/{key}` turns an app ON and stops there. It is one fact
+("this store turned Courses on"), not a page builder — so a caller who installs `courses`,
+writes a curriculum and publishes gets a **404 for the course's own address**, because
+`/courses/{slug}` resolves through the `course` page type's DEFAULT TEMPLATE and nothing
+anywhere names the page that was supposed to be built first.
+
+`scaffoldAppPages` (`editor/src/features/builtinapps/pageScaffold.ts`) is the platform's own
+answer, run right after a successful install, and `APP_SCAFFOLDS` is this server's generated
+copy of what it builds. **Today only `courses` ships a scaffold** — four pages: the `course`
+template, `/courses`, `/learn` and `/my-courses`. Every other key installs with nothing
+further to build, and the result says so.
+
+**A page with no slug is matched by TYPE, and that is the one that fixes the 404.**
+`isPresent`, copied from the editor: a page with a non-empty `slug` is already there if the
+site has that SLUG, whatever its type; a page with an EMPTY slug is a TEMPLATE — reached by
+an entity URL rather than by an address of its own — so it is already there if the site has
+ANY page of that TYPE, because a second one would just sit there unreachable behind the
+first. The list is re-checked as it grows, or two scaffold pages could both find "no page of
+this type yet" true against the same stale list and both get created.
+
+**`slug` is sent only when it is non-empty.** Sending `''` asks the server to claim the empty
+slug, which is not what an empty slug means here.
+
+**One page's failure never aborts the rest.** The app is installed by the time page creation
+runs, so throwing on one page would report a failed install that actually succeeded. A refused
+create is reported under `failed` with its reason, the others still run, and the whole call is
+safe to repeat: a second install is a no-op and a page already there is skipped.
+
+The scaffold pages are named in `language`, default `vi`.
+
+**Dry run** reads the page list — the one call it makes — so the plan can say which pages are
+already there rather than guess, and returns the ordered `plan` plus `present`. **Executing**
+returns `installed`, `created`, `present` and any `failed`.
 
 ## `sb_undo`
 

@@ -106,7 +106,7 @@ nhét ngược lại vào mọi bản cài.
 | `sb_import` | Đọc một trang từ URL công khai bất kỳ và thêm cấu trúc + nội dung của nó vào trang đang mở dưới dạng element thật, mang token của CHÍNH trang này — là dịch lại, không phải sao chép |
 | `sb_import_site` | Đọc CẢ website từ một URL — sitemap của nó, hoặc các link trên trang đó — và tạo cho mỗi trang tìm được một trang nháp riêng ở đây, dựng bằng token của site này; màu và thang chữ của trang gốc cũng được vá vào THEME của site này, nên đây không còn thuần là đọc |
 | `sb_theme` | Đọc hoặc vá bảng màu và thang chữ của site — tầng mà mọi style preset phân giải từ đó, nên một token thay áo cho mọi trang |
-| `sb_store` | Chạy một luồng cửa hàng bắt buộc đúng thứ tự — bốn lệnh ghi tạo nên trang thanh toán, hoặc gieo bất kỳ template nào trong 17 form của nền tảng (login, register, forgot, contact, subscribe …) kèm field document của nó |
+| `sb_store` | Chạy một luồng cửa hàng bắt buộc đúng thứ tự — `checkout` (bốn lệnh ghi tạo nên trang thanh toán), `form` (một trong 17 template của nền tảng kèm field document của nó), `chrome` (một header hoặc footer dùng chung), `menu` (một node menu bind vào menu của site, link đã phân giải), `overlay_attach` (một pop-up hay quick view trên trang đang mở) và `app` (một app dựng sẵn kèm những trang nó cần) |
 | `sb_undo` | Trả lại thứ mà một lệnh PUT đã ghi đè. Với TRANG thì đây là đường về thứ hai chứ không phải duy nhất: nền tảng có version, history và restore (`sb_api_find` "page versions"), và chúng sống lâu hơn tiến trình này — hãy dùng chúng trước, còn tool này cho mọi PUT có hình dạng khác |
 
 Hai mươi tám tool, **560 operation API** (193 trong 251 lệnh ghi có hình dạng body đọc thẳng

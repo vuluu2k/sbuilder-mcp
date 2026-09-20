@@ -109,7 +109,7 @@ in this client: one would put the very key the platform exists to hold back into
 | `sb_import` | Read a page from any public URL and add its structure and content to the open page as real elements, styled with THIS page's own tokens — a translation, not a clone |
 | `sb_import_site` | Read a WHOLE site from one URL — its sitemap, or the links on that page — and give each page found its own draft page here, built from this site's tokens; the entry page's own colours and type scale also patch into this SITE'S theme, so it stops being purely a read |
 | `sb_theme` | Read or patch the site's palette and type scale — the layer every style preset resolves from, so one token repaints every page |
-| `sb_store` | Run a store flow that must happen in a fixed order — the four writes that make a working checkout, or any of the platform's 17 form templates (login, register, forgot, contact, subscribe …) with its own field document |
+| `sb_store` | Run a store flow that must happen in a fixed order — `checkout` (the four writes that make a working one), `form` (any of the platform's 17 templates with its own field document), `chrome` (one shared header or footer), `menu` (a menu node bound to the site's menu, its links resolved), `overlay_attach` (a pop-up or quick view on the open page) and `app` (a built-in app plus the pages it needs) |
 | `sb_undo` | Put back what a PUT replaced. The SECOND answer for a page, not the only one: the platform has versions, history and restore (`sb_api_find` "page versions"), which outlive this process — reach for those first and use this for every other shaped PUT |
 
 Twenty-eight tools, **560 API operations** (193 of the 251 writes carrying a body shape read

@@ -1530,13 +1530,20 @@ Chạy một luồng cửa hàng bắt buộc **đúng thứ tự**.
 
 | Tham số | Kiểu | Ghi chú |
 | --- | --- | --- |
-| `action` | `"checkout"` \| `"form"` | Luồng cần chạy |
+| `action` | `"checkout"` \| `"form"` \| `"chrome"` \| `"menu"` \| `"overlay_attach"` \| `"app"` | Luồng cần chạy |
 | `site_id` | string? | Không truyền thì lấy `SB_SITE` |
-| `language` | `"vi"` \| `"en"`? | `checkout` — ngôn ngữ nội dung, mặc định `vi` |
+| `language` | `"vi"` \| `"en"`? | `checkout` — ngôn ngữ nội dung, mặc định `vi`. `app` — ngôn ngữ đặt tên các trang scaffold |
 | `page_name` | string? | `checkout` — ghi đè tên trang mặc định của editor |
 | `headline` | string? | `checkout` — ghi đè tiêu đề trang |
 | `template` | enum? | `form` — chọn một trong 17 template của nền tảng |
-| `name` | string? | `form` — tên form trong danh sách của chủ shop |
+| `name` | string? | `form` — tên form trong danh sách của chủ shop. `overlay_attach` không có `overlay_id` — tên overlay mới |
+| `footer` | boolean? | `chrome` — dựng **footer** dùng chung thay vì header |
+| `node_id` | string? | `menu` — node menu trên trang đang mở |
+| `menu_id` | string? | `menu` — một menu đã có; bỏ trống để dùng menu đầu tiên của site, hoặc tạo mới |
+| `kind` | `"popup"` \| `"quickview"`? | `overlay_attach` — gắn loại overlay nào |
+| `overlay_id` | string? | `overlay_attach` — một overlay đã có; bỏ trống để tạo mới từ seed của nền tảng |
+| `list_id` | string? | `overlay_attach` + `kind:"quickview"` — node `list-dataset` mà quick view này gắn vào |
+| `app_key` | enum? | `app` — cài app dựng sẵn nào |
 | `dry_run` | boolean? | Mặc định **true** |
 
 ### `action: "form"`
@@ -1600,6 +1607,171 @@ vì cả hai lỗi đều im lặng:
 Cả hai tài liệu đều được **sinh ra** từ `formTemplates.ts` và `checkoutPageSeed.ts` của chính
 editor qua `npm run codegen`, không chép tay — một bản chép seed của nền tảng sẽ mục ngay lần
 nền tảng sửa nó, và người đầu tiên phát hiện là khách mua hàng.
+
+### `action: "chrome"`
+
+Cho mọi trang **một** header dùng chung — hoặc, với `footer: true`, một footer dùng chung.
+
+`sb_review` gọi khoảng trống này là `siteChrome`. Hai trang mà không có global section nghĩa
+là mỗi trang tự mang header của nó: đổi menu là sửa từng trang một, các bản sao lệch dần, và
+khách bấm sang trang nào cũng gặp một website hơi khác. Đó là thứ cơ bản nhất mà một website
+có còn một website sinh tự động thì không — và trước đây chỉ đúng MỘT tool với tới được:
+`sb_import_site` dựng nó từ chính những trang nó vừa tạo, còn site dựng bằng cách khác
+(pattern, `sb_add`, một cửa hàng gieo bằng `sb_store`) thì phải làm lại bằng tay.
+
+Bằng tay nghĩa là: tạo master, biết rằng `document` của nó có HÌNH DẠNG của một trang nhưng
+gốc là **section** chứ không phải ROOT, rồi cho mỗi trang một con của ROOT mang
+`specials.globalRef` + `globalKind` — **đặt đầu tiên**, vì header nằm sau nội dung giữa là
+lỗi thứ tự band và lần lưu kế tiếp bị từ chối (bẫy 3). Footer thì đặt cuối, cùng một lý do.
+
+Menu được dựng từ chính các trang site đang có, trang chủ trước. Diện mạo thì đọc từ **trang
+chủ** — quy tắc 0 áp cho cả site thay vì cho một trang: pattern mà phần còn lại của site đang
+theo chính là thứ header của nó nên mặc. Trang chủ trống thì không sinh token nào, thay vì
+bịa ra một bảng màu.
+
+**Bỏ qua chứ không làm hai lần.** Site đã có sẵn một section dùng chung thuộc loại đó thì trả
+về `skipped` — thêm cái thứ hai là có hai header chứ không phải có menu — site dưới hai trang
+cũng vậy, vì một menu tới đúng một trang chỉ là link tới chính nó. Cả hai được kiểm trước
+nhánh dry run, nên một lần dry run cũng báo đúng như vậy.
+
+**Không nguyên tử, và không được giả vờ là nguyên tử.** Một trang không nhận reference thì
+không huỷ master: trang đó nằm trong `failed` kèm slug và lý do, còn những trang đã nhận nằm
+trong `carried`.
+
+**Dry run** (mặc định) trả về `would_create`, `menu` sẽ dựng, danh sách slug trong `onto`, và
+token lấy từ đâu. **Khi chạy thật** trả về id của master trong `created`, `carried`, `failed`
+nếu có, kèm nhắc nhở: một global section chỉ tới được khách qua trang đã **publish** sau đó —
+trang mới lưu vẫn giữ chrome cũ.
+
+### `action: "menu"`
+
+Bind một node `menu` trên trang đang mở vào menu của site, rồi phân giải link của nó.
+
+Một element `menu` rơi xuống canvas mang sẵn `specials.menuItems` của chính nó — Home /
+Categories / Contact / About us, mọi `href` rỗng — đúng cái placeholder mà mọi lần thả mới
+đều mang, editor hay agent cũng thế. Không có gì biến nó thành menu thật: menu của site là
+một bản ghi RIÊNG (`GET/POST /api/sites/{siteId}/menus`), và không thứ gì server này từng
+ship ghi `specials.menuId` hay thay chỗ seed đó bằng các dòng của chính site. Nên một trang
+dựng hoàn toàn bằng bộ tool này ship kèm một menu gọi tên bốn trang mà site không có, và
+không có cách nào sửa chữ ở một chỗ duy nhất.
+
+**Renderer đọc `specials.menuItems` và không bao giờ đọc `menuId`**, nên với trang thì bản
+chụp nằm trên node **chính là** menu. Bind mà không phân giải lại sẽ để node trỏ đúng vào một
+menu thật mà vẫn render link chết — vì vậy đây là một luồng chứ không phải hai tham số.
+
+Editor đóng lỗ này ngay khi một node menu vừa đáp xuống (`editor/src/features/menus/sync.ts`,
+`ensureMenuBinding` → `syncBoundMenuNode`), và đây là bản sao từng lệnh ghi:
+
+1. **Bind** — dùng `menu_id`, hoặc menu đầu tiên của site, hoặc tạo "Main menu" gieo từ chính
+   các dòng node đang có, để việc bind không bao giờ làm đổi thứ đã nằm trên canvas.
+2. **Đọc** lại items của menu đã bind cho mới (`GET /menus/{id}`).
+3. **Phân giải** tham chiếu của từng dòng ra địa chỉ mà storefront thật sự phục vụ: `page`
+   theo danh sách trang, `productCategory` → `/collections/{slug}`, `article` →
+   `/blog/{slug}`, `blogCategory` → `/blog-categories/{slug}`, và `product` →
+   `/products/{slug}` gom theo id, vì danh mục một shop thì không có trần còn cây category
+   thì có. Chỉ những loại mà các dòng thật sự tham chiếu mới được gọi. **Một listing không
+   đọc được sẽ hạ loại đó xuống `href` rỗng chứ không huỷ cả lần đồng bộ** — resolver của
+   chính editor cũng nuốt lỗi đúng như vậy.
+4. **Ghi** bản chụp đã phân giải vào `specials.menuItems`, mang theo `panelId` của từng dòng.
+   Mega-panel cục bộ của một dòng là thứ menu cấp site không biết gì, nên một lần đồng bộ
+   ngây thơ sẽ âm thầm xoá mất nó.
+
+Bước 1 và 4 nằm trong **cùng một lần lưu**: node đã bind mà chưa có bản chụp là một trạng
+thái không ai nên quan sát được.
+
+Một `node_id` mà element của nó không gieo `specials.menuItems` bị từ chối theo type, có nêu
+tên type, trước khi đọc bất cứ thứ gì.
+
+**Dry run** trả về `plan` đã sắp thứ tự, `menu` sẽ dùng hoặc sẽ tạo, `items` sẽ ghi,
+`unresolved` (dòng có trỏ tới một trang hay một entity mà không ra địa chỉ — một tham chiếu
+treo cần đi sửa) và `unlinked` (dòng chưa từng trỏ vào đâu, đúng trạng thái của mọi dòng seed
+mới). **Khi chạy thật** trả về `node`, `menu_id`, `created`, số item, và đúng hai con số đó.
+
+### `action: "overlay_attach"`
+
+Đặt một pop-up lên trang đang mở (`kind: "popup"`), hoặc trỏ một `list-dataset` tới panel xem
+nhanh (`kind: "quickview"` kèm `list_id`). Không truyền `overlay_id` thì overlay được tạo
+trước từ seed của chính nền tảng — `CreateOverlayInput.document` là bắt buộc, và một pop-up
+rỗng là một hình chữ nhật trắng không ai tắt được.
+
+**PHẢI ĐỌC LẠI TRANG SAU KHI GẮN, và đó là toàn bộ lý do thứ này phải là một tool.** Một
+pop-up tới được trang qua một cạnh (`page_overlay_refs`) mà lệnh lưu trang thường không ghi
+được: lệnh lưu SUY RA tập cạnh từ tài liệu ĐÃ COMPOSE, còn pop-up thì chưa có trong tài liệu
+đó cho tới khi thứ khác đặt nó vào. Việc gắn là một lệnh riêng để phá vòng lặp ấy — và chừng
+nào composer chưa đặt panel vào tài liệu mà phiên này đang giữ, **lần lưu kế tiếp sẽ suy ra
+tập cạnh không có nó và gỡ luôn phần vừa gắn**, với 200 ở mọi bước.
+
+Nên với một pop-up:
+
+1. **Lưu** trang như nó đang có — cạnh không gắn được vào một bản nháp chưa lưu, và lần đọc
+   lại phải trả về đúng việc của tác giả chứ không phải một bản cũ hơn.
+2. **Tạo** pop-up, nếu người gọi không nêu tên cái nào.
+3. **Gắn** — `POST /overlays/{id}/pages/{pageId}`, chính là cạnh đó.
+4. **Đọc lại** trang.
+5. Tìm node đã compose, đóng dấu `specials.overlayId`, và trả về id của nó.
+
+Quick view thì tới trang qua config của chính LIST, và không bao giờ được có cạnh: một cạnh
+sẽ khiến bước compose nối panel vào ROOT, đặt một bản `position: static` của nó dưới footer
+của mọi trang dùng nó. Nên vũ điệu ngắn hơn — tạo panel nếu cần, ghi `config.quickviewId` lên
+list rồi lưu trong cùng một lệnh, sau đó đọc lại để composer trộn master vào.
+
+**Khoá config đó được ghi ở BASE, không điều kiện.** `nodeQuickviewChoice`
+(`server/internal/page/quickview.go`) decode thẳng map `config` thô của node, không merge
+theo breakpoint, cả khi quyết định lấy master nào lẫn khi compose chúng vào — nên một lựa
+chọn ghi vào ô breakpoint là vô hình với compose và panel không bao giờ được trộn vào, ở mọi
+môi trường, luôn luôn. `BASE_ONLY_CONFIG` không nêu khoá này; đó là một lỗ hổng trong sổ của
+nền tảng chứ không phải một sự thật về khoá.
+
+**Đã gắn rồi thì không làm gì**, đúng như cách kiểm tra của chính editor. Một pop-up đã
+compose sẵn trên trang này — hoặc một list vừa đã trỏ tới overlay này VỪA đã có panel đã
+compose — trả về `already_attached` và không ghi gì. Ghi lại không sai, chỉ phí: nó làm xê
+dịch hàng rào revision của master dùng chung cho một mối nối đã có sẵn.
+
+`kind: "quickview"` từ chối một `list_id` không phải `list-dataset`, có nêu nó là gì.
+
+**Dry run** trả về `plan` đã sắp thứ tự (qua `redact()`) và `would_create` khi không có
+`overlay_id`. **Khi chạy thật** trả về `kind`, `overlay_id`, có `created` hay không, và
+`node_id` — node đã compose trên trang này, cũng là thứ `sb_set` sẽ tạo kiểu sau đó. Một lệnh
+ghi đã xong mà lần đọc lại không thấy panel thì báo lỗi chứ không báo thành công.
+
+### `action: "app"`
+
+Cài một app dựng sẵn của nền tảng — `mail`, `multilingual`, `agent`, `chat`, `booking`,
+`loyalty`, `payments`, `courses` — và tạo những trang nó cần mà việc cài không tạo.
+
+`POST /api/sites/{siteId}/builtin-apps/{key}` BẬT app lên rồi dừng ở đó. Nó là một sự thật
+("cửa hàng này đã bật Courses"), không phải một trình dựng trang — nên người cài `courses`,
+soạn chương trình học rồi publish sẽ nhận **404 ở chính địa chỉ của khoá học**, vì
+`/courses/{slug}` phân giải qua DEFAULT TEMPLATE của page type `course`, và không chỗ nào
+nói ra cái trang lẽ ra phải dựng trước.
+
+`scaffoldAppPages` (`editor/src/features/builtinapps/pageScaffold.ts`) là câu trả lời của
+chính nền tảng, chạy ngay sau một lần cài thành công, còn `APP_SCAFFOLDS` là bản sao được
+sinh ra của server này. **Hôm nay chỉ `courses` có scaffold** — bốn trang: template `course`,
+`/courses`, `/learn` và `/my-courses`. Mọi key khác cài xong là hết việc, và kết quả nói đúng
+như vậy.
+
+**Trang không có slug được đối chiếu theo TYPE, và đó chính là trang chữa cái 404.**
+`isPresent`, chép từ editor: một trang có `slug` khác rỗng là đã có nếu site có SLUG đó, bất
+kể type; một trang có slug RỖNG là một TEMPLATE — tới bằng URL của entity chứ không có địa
+chỉ riêng — nên coi là đã có nếu site có BẤT KỲ trang nào thuộc TYPE đó, vì cái thứ hai chỉ
+nằm im sau cái thứ nhất và không ai tới được. Danh sách được kiểm lại khi nó dài thêm, nếu
+không hai trang scaffold có thể cùng thấy "chưa có trang nào thuộc type này" đúng trên cùng
+một danh sách cũ và cùng được tạo.
+
+**`slug` chỉ được gửi khi khác rỗng.** Gửi `''` là bảo server chiếm lấy slug rỗng, không phải
+điều một slug rỗng muốn nói ở đây.
+
+**Một trang hỏng không bao giờ huỷ những trang còn lại.** App đã cài xong trước khi tới bước
+tạo trang, nên ném lỗi ở một trang là báo hỏng một lần cài thật ra đã thành công. Trang bị từ
+chối nằm trong `failed` kèm lý do, những trang khác vẫn chạy, và cả lệnh gọi lại được an
+toàn: cài lần hai là no-op, còn trang đã có thì bị bỏ qua.
+
+Các trang scaffold được đặt tên theo `language`, mặc định `vi`.
+
+**Dry run** đọc danh sách trang — lệnh duy nhất nó gọi — để kế hoạch nói được trang nào đã có
+thay vì đoán, rồi trả về `plan` đã sắp thứ tự cùng `present`. **Khi chạy thật** trả về
+`installed`, `created`, `present` và `failed` nếu có.
 
 ## `sb_undo`
 
