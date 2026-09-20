@@ -1579,8 +1579,8 @@ Run a store flow that must happen in a **fixed order**.
 | `action` | `"checkout"` \| `"form"` \| `"chrome"` \| `"menu"` \| `"overlay_attach"` \| `"app"` | The flow to run |
 | `site_id` | string? | Falls back to `SB_SITE` |
 | `language` | `"vi"` \| `"en"`? | `checkout` — copy language, default `vi`. `app` — which language names the scaffold pages |
-| `page_name` | string? | `checkout` — overrides the editor's own page name |
-| `headline` | string? | `checkout` — overrides the page's headline |
+| `page_name` | string? | `checkout` — overrides the editor's own page name. `form` — make a page and place the form on it |
+| `headline` | string? | `checkout` — overrides the page's headline. `form` — the heading above the placed form |
 | `template` | enum? | `form` — which of the platform's 17 templates to seed |
 | `name` | string? | `form` — the form's name in the merchant's list. `overlay_attach` with no `overlay_id` — the new overlay's name |
 | `footer` | boolean? | `chrome` — build a shared **footer** instead of a header |
@@ -1610,13 +1610,22 @@ WHOLE** (name and type must ride along or `Normalize()` renames it "Form" and tu
 ids. If a later write fails the form is deleted again — a form nobody can see is the orphan
 the obvious retry duplicates.
 
-It makes **no page**. Where a login form belongs is a design decision, and `/account` is the
-one page that is not a free choice: `membersOnlyRedirectTarget` sends every gated visitor
-there. Place the form with `sb_add` and point `specials.formId` at the id this returns.
+By default it makes **no page**. Where a login form belongs is a design decision, and
+`/account` is the one page that is not a free choice: `membersOnlyRedirectTarget` sends every
+gated visitor there. Place the form yourself with `sb_add` and point `specials.formId` at the
+id this returns.
+
+**Or pass `page_name`** — and `headline` with it — to have that page made and the form placed
+on it in the same call: a new page of type `page` carrying a section, the headline if one was
+given, and a `form` node already pointing at the form just created. It is a deliberate SECOND
+write and must not undo the first. The form EXISTS the moment its three calls land, so a
+refused page create leaves the form in place and reports `page_failed` rather than deleting a
+form the caller asked for — that is the state they had before this argument existed, and it
+is still placeable by hand. Publish the page afterwards.
 
 ### `action: "checkout"`
 
-`sb_review` names ten readiness gaps. Seven are now one call each — a delivery option, a
+`sb_review` names eighteen readiness gaps. Most are one call each — a delivery option, a
 gateway, a product, a page of the right type — because the call sheet says what those calls
 take. The checkout is the one that is not, because it is four writes whose order is the
 whole contract, written down only in `editor/src/features/pages/checkoutPage.ts`:

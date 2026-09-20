@@ -1533,8 +1533,8 @@ Chạy một luồng cửa hàng bắt buộc **đúng thứ tự**.
 | `action` | `"checkout"` \| `"form"` \| `"chrome"` \| `"menu"` \| `"overlay_attach"` \| `"app"` | Luồng cần chạy |
 | `site_id` | string? | Không truyền thì lấy `SB_SITE` |
 | `language` | `"vi"` \| `"en"`? | `checkout` — ngôn ngữ nội dung, mặc định `vi`. `app` — ngôn ngữ đặt tên các trang scaffold |
-| `page_name` | string? | `checkout` — ghi đè tên trang mặc định của editor |
-| `headline` | string? | `checkout` — ghi đè tiêu đề trang |
+| `page_name` | string? | `checkout` — ghi đè tên trang mặc định của editor. `form` — tạo một trang và đặt form lên đó |
+| `headline` | string? | `checkout` — ghi đè tiêu đề trang. `form` — tiêu đề phía trên form được đặt |
 | `template` | enum? | `form` — chọn một trong 17 template của nền tảng |
 | `name` | string? | `form` — tên form trong danh sách của chủ shop. `overlay_attach` không có `overlay_id` — tên overlay mới |
 | `footer` | boolean? | `chrome` — dựng **footer** dùng chung thay vì header |
@@ -1564,15 +1564,23 @@ phải đi kèm, nếu không `Normalize()` đổi tên thành "Form" và chuy�
 hỏng thì form bị xoá lại — một form không ai thấy chính là thứ mồ côi mà lần thử lại sẽ nhân
 đôi.
 
-Nó **không tạo trang**. Đặt form ở đâu là quyết định thiết kế, và `/account` là trang duy
-nhất không được tự do chọn: `membersOnlyRedirectTarget` đưa mọi khách bị chặn về đó. Đặt form
-bằng `sb_add` rồi trỏ `specials.formId` vào id nó trả về.
+Mặc định nó **không tạo trang**. Đặt form ở đâu là quyết định thiết kế, và `/account` là
+trang duy nhất không được tự do chọn: `membersOnlyRedirectTarget` đưa mọi khách bị chặn về
+đó. Tự đặt form bằng `sb_add` rồi trỏ `specials.formId` vào id nó trả về.
+
+**Hoặc truyền `page_name`** — kèm `headline` nếu muốn — để trang đó được tạo và form được đặt
+lên nó trong cùng một lệnh: một trang mới type `page` mang một section, tiêu đề nếu có, và
+một node `form` đã trỏ sẵn vào form vừa tạo. Đó là một lệnh ghi THỨ HAI có chủ ý và không
+được phép huỷ lệnh thứ nhất. Form ĐÃ TỒN TẠI ngay khi ba lệnh của nó xong, nên một lần tạo
+trang bị từ chối sẽ để form nguyên chỗ và báo `page_failed` chứ không xoá một form người gọi
+đã yêu cầu — đó đúng là trạng thái họ có trước khi tham số này tồn tại, và form vẫn đặt được
+bằng tay. Nhớ publish trang sau đó.
 
 ### `action: "checkout"`
 
-`sb_review` nêu tám readiness gap. Bảy cái giờ chỉ còn một lệnh gọi mỗi cái — một phương thức
-giao hàng, một cổng thanh toán, một sản phẩm, một trang đúng type — vì call sheet đã nói rõ
-những lệnh đó nhận gì. Checkout là cái còn lại, vì nó là **bốn lệnh ghi mà thứ tự chính là
+`sb_review` nêu mười tám readiness gap. Phần lớn chỉ còn một lệnh gọi mỗi cái — một phương
+thức giao hàng, một cổng thanh toán, một sản phẩm, một trang đúng type — vì call sheet đã nói
+rõ những lệnh đó nhận gì. Checkout là cái còn lại, vì nó là **bốn lệnh ghi mà thứ tự chính là
 hợp đồng**, và chỉ được ghi lại ở đúng một chỗ:
 `editor/src/features/pages/checkoutPage.ts`.
 
