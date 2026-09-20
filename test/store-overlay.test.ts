@@ -409,6 +409,57 @@ describe('sb_store action:"overlay_attach"', () => {
     await close();
   });
 
+  it('refuses a site_id that is not the open page\'s site', async () => {
+    // EVERY PATH HERE IS SITE-SCOPED AND THE PAGE COMES FROM THE SESSION, so a
+    // session spanning two sites — which this server supports by design, an
+    // explicit site_id beating SB_SITE — could attach a page id of one site to
+    // an overlay of another and then reopen that page under the wrong site.
+    const { document } = buildDoc();
+    const { f, calls } = scripted('popup', document);
+    const { client, close } = await clientOver(f);
+
+    await client.callTool({ name: 'sb_page_open', arguments: { site_id: 's1', page_id: 'pg_1' } });
+    calls.length = 0;
+
+    const failed = (await client.callTool({
+      name: 'sb_store',
+      arguments: { action: 'overlay_attach', kind: 'popup', site_id: 's2', dry_run: false },
+    })) as { isError?: boolean; content: Array<{ text: string }> };
+
+    expect(failed.isError).toBe(true);
+    expect(failed.content[0].text).toContain('s2');
+    expect(failed.content[0].text).toContain('s1');
+    expect(failed.content[0].text).toContain('pg_1');
+    expect(calls).toEqual([]);
+
+    await close();
+  });
+
+  it('refuses kind:"popup" carrying a list_id', async () => {
+    // A LIST IS THE QUICK VIEW'S ATTACHMENT AND MEANS NOTHING TO A POP-UP, which
+    // reaches a page through an edge. Left unchecked, a caller who meant
+    // "quickview" and typed "popup" gets a pop-up created, attached and the page
+    // saved, with their list_id read by nothing and nothing said about it.
+    const { document, listNodeId } = buildDoc();
+    const { f, calls } = scripted('popup', document, listNodeId);
+    const { client, close } = await clientOver(f);
+
+    await client.callTool({ name: 'sb_page_open', arguments: { site_id: 's1', page_id: 'pg_1' } });
+    calls.length = 0;
+
+    const failed = (await client.callTool({
+      name: 'sb_store',
+      arguments: { action: 'overlay_attach', kind: 'popup', list_id: listNodeId, dry_run: false },
+    })) as { isError?: boolean; content: Array<{ text: string }> };
+
+    expect(failed.isError).toBe(true);
+    expect(failed.content[0].text).toContain('quickview');
+    expect(failed.content[0].text).toContain('list_id');
+    expect(calls).toEqual([]);
+
+    await close();
+  });
+
   it('refuses overlay_attach with no kind', async () => {
     const { document } = buildDoc();
     const { f } = scripted('popup', document);

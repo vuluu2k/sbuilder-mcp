@@ -92,6 +92,22 @@ export async function attachOverlay(
   opts: { kind: 'popup' | 'quickview'; overlayId?: string; name?: string; listId?: string; dryRun: boolean },
 ): Promise<unknown> {
   const site = encodeURIComponent(siteId);
+  // THE PAGE-BOUND HALF COMES FROM THE SESSION, NEVER FROM THE ARGUMENT. Every
+  // path below is site-scoped while the page id is whatever `sb_page_open` last
+  // read, and a session spanning two sites is a shape this server supports on
+  // purpose — an explicit `site_id` beats `SB_SITE`, so "a session spanning two
+  // sites works by naming each". Resolving one site while the open page belongs
+  // to another would post that page id under the WRONG site's overlay and then
+  // reopen the page there, which is a wrong write rather than a failed one.
+  // There is no sensible winner to pick between the two, so it is refused.
+  const { siteId: openSite, pageId } = session.location();
+  if (openSite !== siteId) {
+    throw new Error(
+      `sbuilder: action:"overlay_attach" resolved site "${siteId}", but the open page ` +
+        `"${pageId}" belongs to site "${openSite}" — an overlay is attached to the OPEN page. ` +
+        `Open a page on "${siteId}", or pass site_id:"${openSite}".`,
+    );
+  }
   const post = async <T>(path: string, body?: unknown): Promise<T> =>
     (await request({
       base: ctx.base,
@@ -171,7 +187,6 @@ export async function attachOverlay(
       }
     }
 
-    const { pageId } = session.location();
     steps.push({
       step: n++,
       what: `point the list at it — config.quickviewId (base) — and save`,
@@ -211,8 +226,6 @@ export async function attachOverlay(
   }
 
   // popup ---------------------------------------------------------------
-  const { pageId } = session.location();
-
   // ALREADY ATTACHED — the way `usePopupOverlay.attachToCurrentPage` checks
   // `nodes.findByOverlayId(overlayId)` before doing anything. Only meaningful
   // when the caller NAMED an overlay: a freshly created one cannot already be

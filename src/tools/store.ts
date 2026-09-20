@@ -1,9 +1,12 @@
 /**
  * THE STORE FLOWS THAT MUST BE ORDERED.
  *
- * `sb_review` names eight readiness gaps. Seven of them are now one call each —
- * a delivery option, a payment gateway, a product, a page of the right type —
- * because `REQUEST_SHAPES` tells the caller what those calls take. One is not.
+ * `sb_review` names EIGHTEEN readiness gaps (`ReadinessGapId`). Most are one
+ * call each — a delivery option, a payment gateway, a product, a page of the
+ * right type — because `REQUEST_SHAPES` tells the caller what those calls take.
+ * The ones that are not are the flows in this file: each is several writes in
+ * an order that is written down in exactly one place, the editor, and is not
+ * guessable from the API surface.
  *
  * A CHECKOUT IS FOUR WRITES IN A FIXED ORDER, and the editor is the only place
  * they are written down (`editor/src/features/pages/checkoutPage.ts`):
@@ -24,8 +27,12 @@
  * orphan the retry would then duplicate. The editor shipped that bug first.
  *
  * ONE TOOL WITH AN `action`, not one tool per surface: the `tools/list` ceiling
- * is 17,000 characters and 26 tools already sit under it. There is exactly one
- * flow here today, and the enum is how a second arrives without a second tool.
+ * is 27,864 characters and 31 tools already sit under it. There are SIX flows
+ * here today — checkout, form, chrome, menu, overlay_attach, app — and the enum
+ * is how each arrived without a seventh, eighth and ninth entry in that list.
+ * Four of them live in their own modules (`chrome.ts`, `menu.ts`, `overlay.ts`,
+ * `app.ts`) and are dispatched from here; the checkout and `form` are written
+ * out below, because they came first.
  */
 import { z } from 'zod';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
@@ -557,6 +564,19 @@ export function registerStoreTools(server: McpServer, ctx: ToolContext, session:
         if (!kind) {
           throw new Error('sbuilder: action:"overlay_attach" needs kind — "popup" or "quickview".');
         }
+        // A LIST IS THE QUICK VIEW'S WHOLE ATTACHMENT and means nothing to a
+        // pop-up, which reaches a page through an edge. Unchecked, a caller who
+        // meant "quickview" and typed "popup" gets a pop-up created, attached
+        // and the page saved, with `list_id` read by nothing and nothing said —
+        // a wrong write that answers success, which is the shape this file
+        // spends every other paragraph closing.
+        if (kind === 'popup' && list_id) {
+          throw new Error(
+            'sbuilder: action:"overlay_attach" kind:"popup" takes no list_id — a pop-up reaches ' +
+              'a page through an edge, not through a list. A list-dataset pointing at a panel is ' +
+              'kind:"quickview"; that is almost certainly what this call meant.',
+          );
+        }
         return text(
           await attachOverlay(ctx, session, siteId, {
             kind,
@@ -572,10 +592,12 @@ export function registerStoreTools(server: McpServer, ctx: ToolContext, session:
         // two headers rather than a menu — and below two pages, because a menu
         // to one page is a link to itself. Both are `sb_import_site`'s own
         // rules, kept because they were right there.
-        const kind = footer === true ? 'footer' : 'header';
-        if (await hasGlobal(ctx, siteId, kind)) {
+        // NAMED `chromeKind`, not `kind`: the tool's own `kind` argument is the
+        // OVERLAY enum, and shadowing it here reads as the same idea twice.
+        const chromeKind = footer === true ? 'footer' : 'header';
+        if (await hasGlobal(ctx, siteId, chromeKind)) {
           return text({
-            skipped: `this site already shares a ${kind} — a second one is two of them, not a menu`,
+            skipped: `this site already shares a ${chromeKind} — a second one is two of them, not a menu`,
           });
         }
         const pages = await sitePages(ctx, siteId);
@@ -592,7 +614,7 @@ export function registerStoreTools(server: McpServer, ctx: ToolContext, session:
         if (dry_run !== false) {
           return text({
             dry_run: true,
-            would_create: kind,
+            would_create: chromeKind,
             menu: links,
             onto: pages.map((p) => p.slug),
             tokens_from: Object.keys(tokens).length ? 'the home page' : 'nothing — the home page is blank',
@@ -601,7 +623,7 @@ export function registerStoreTools(server: McpServer, ctx: ToolContext, session:
               'to it, so the menu becomes one edit instead of one per page.',
           });
         }
-        const out = await shareChrome(ctx, session, siteId, kind, links, pages, tokens);
+        const out = await shareChrome(ctx, session, siteId, chromeKind, links, pages, tokens);
         return text({
           ...out,
           next:
