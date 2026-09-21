@@ -30,7 +30,14 @@ import type { Patch } from '../core/patch.js';
 import type { PageDoc } from '../domains/site/document.js';
 import { refuseAppBlockInterior } from '../domains/site/builder.js';
 import { soft, type GuardOpts } from '../domains/site/guard.js';
+import {
+  hrefPatches,
+  hasPurchaseBinding,
+  PRODUCT_ACTION_BINDING_ID,
+  type NodeEventLike,
+} from '../domains/site/navhref.js';
 import { childrenOf, isOverlay, overlayRoot, subtreeIds } from '../core/tree.js';
+import { offscreenNodes, offscreenRootOf } from '../domains/site/offscreen.js';
 import { siteToken } from './credentialpick.js';
 import { searchStock, SearchUnavailable, NO_SEARCH_NEXT, type StockPhoto } from '../transport/stock.js';
 import { siteFor, type ToolContext } from './context.js';
@@ -38,15 +45,15 @@ import { projectList, MEDIA_FIELDS } from './project.js';
 import type { PageSession } from './page.js';
 
 /**
- * The reserved binding id a PURCHASE control carries, and the vocabulary its
- * target speaks — `schema/src/elements/datasetBindings.ts:845-852`.
+ * The vocabulary a PURCHASE control's target speaks —
+ * `schema/src/elements/datasetBindings.ts:845-852`.
  *
- * The id is reserved so authoring and the editor's own healing never collide,
- * and `buy_now` is stored as builderx's `dynamic_checkout`: the picker's word
- * and the document's word are deliberately different, and hand-mapping either
- * one is how the two drift.
+ * `buy_now` is stored as builderx's `dynamic_checkout`: the picker's word and
+ * the document's word are deliberately different, and hand-mapping either one
+ * is how the two drift. The reserved binding ID itself moved to
+ * `domains/site/navhref.ts`, because the href projection needs it too and a
+ * copy in each place is exactly how a pair like this comes apart.
  */
-const PRODUCT_ACTION_BINDING_ID = 'bind-product-action';
 const PURCHASE_TARGETS: Record<string, string> = {
   add_to_cart: 'add_to_cart',
   buy_now: 'dynamic_checkout',
@@ -165,6 +172,13 @@ function liveEventTable(type: string, node: { bindings?: Array<{ id?: string }> 
  * ONE ACTION PER TRIGGER, replaced in place. The platform stores a list, but a
  * second `click` on one node is two answers to one question, and picking between
  * them at runtime is the platform's business rather than an authoring choice.
+ *
+ * AND EVERY WRITE CARRIES THE `<a href>` PROJECTION WITH IT. `node.events` is
+ * never read by a renderer — a sole navigation click is rendered from
+ * `specials.href` and from nothing else, and `nodes.EventAttrs` emits no
+ * `on:click` for one precisely because it assumes that href is there. Writing
+ * the event alone therefore produced a control that renders, saves, publishes
+ * and does nothing. See `domains/site/navhref.ts` for the measurement.
  */
 export function setEvent(
   doc: PageDoc,
@@ -176,16 +190,28 @@ export function setEvent(
 ): Patch[] {
   const node = doc.node(id) as unknown as {
     data: { type: string };
-    events?: Array<{ id?: string; name?: string }>;
+    events?: NodeEventLike[];
     bindings?: Array<{ id?: string }>;
+    specials?: Record<string, unknown>;
   };
   soft(guard, () => refuseAppBlockInterior(doc, id, 'setting an event on'));
   const events = node.events ?? [];
   const at = events.findIndex((e) => e?.name === trigger);
+  const purchaseBound = hasPurchaseBinding(node.bindings);
+  // THE PROJECTION RIDES WITH EVERY WRITE, never as a separate step a caller
+  // could forget — the whole defect was that the two could be apart. `next` is
+  // the click list AFTER this write, because the href follows the list the node
+  // will have and not the one it had.
+  const project = (next: NodeEventLike[]): Patch[] =>
+    hrefPatches(id, next, purchaseBound, node.specials);
 
   if (action === 'none') {
     if (at < 0) return [];
-    return [{ op: 'remove', path: ['nodes', id, 'events'], index: at }];
+    const next = events.filter((_, i) => i !== at);
+    return [
+      { op: 'remove', path: ['nodes', id, 'events'], index: at },
+      ...project(next),
+    ];
   }
 
   const table = liveEventTable(node.data.type, node);
@@ -216,8 +242,17 @@ export function setEvent(
   }
 
   const value = { id: `ev_${action}`, name: trigger, action, payload: payload ?? {} };
-  if (at >= 0) return [{ op: 'set', path: ['nodes', id, 'events', String(at)], value }];
-  return [{ op: 'insert', path: ['nodes', id, 'events'], index: events.length, value }];
+  if (at >= 0) {
+    const next = events.map((e, i) => (i === at ? value : e));
+    return [
+      { op: 'set', path: ['nodes', id, 'events', String(at)], value },
+      ...project(next),
+    ];
+  }
+  return [
+    { op: 'insert', path: ['nodes', id, 'events'], index: events.length, value },
+    ...project([...events, value]),
+  ];
 }
 
 /**
@@ -370,8 +405,15 @@ export function registerLiveTools(
       // nor the reason. `overlayRoot` answers for a node ANYWHERE inside one,
       // which is the case that matters: the caller frames the stepper or the
       // empty state, not the drawer root.
+      //
+      // BY TYPE AS WELL AS BY STAMP. `overlayRoot` answers the COMPOSITION
+      // question — is this node inside a subtree the save strips — and a
+      // `cart-drawer` authored straight into a page document carries no stamp
+      // while parking itself off-screen exactly the same way. Measured: every
+      // page of one storefront had one, so framing anything inside the drawer
+      // opened nothing and the shot failed on the clip.
       const openOverlay = node_id
-        ? (overlayRoot(session.current().doc, node_id) ?? undefined)
+        ? (offscreenRootOf(session.current().doc, node_id) ?? undefined)
         : undefined;
       const shots = await shoot(target, {
         widths: widths ?? DEFAULT_WIDTHS,
@@ -390,10 +432,10 @@ export function registerLiveTools(
       // The overlay subtree, read off the OPEN DOCUMENT — the boxes come from
       // the render and carry no idea which node is a drawer.
       const doc = session.current().doc;
-      const skip = new Set<string>();
-      for (const id of childrenOf(doc, doc.root_node_id)) {
-        if (isOverlay(doc, id)) for (const n of subtreeIds(doc, id)) skip.add(n);
-      }
+      // The same widening: an unstamped drawer is off-screen by its own CSS,
+      // and judging its geometry produced thirteen false off-canvas findings
+      // per page on a site whose pages were correct.
+      const skip = offscreenNodes(doc);
       const visual = node_id ? [] : measure(shots, skip);
       const layout = compactFindings(visual);
       const layoutNotice = visual.length > 0 ? ctx.notices.once('measure', MEASURE_NOTICE) : undefined;
@@ -457,10 +499,27 @@ export function registerLiveTools(
               'the page is stored and never painted.',
           )
         : undefined;
+      // A SHOT IS EVIDENCE ABOUT A RENDERER, NEVER ABOUT THE CANVAS. Both the
+      // draft preview and the published page come out of the GO renderer; the
+      // editor canvas is a Vue store that loads the same draft through its own
+      // gate and can disagree with the picture completely — `hydrate` discards
+      // a document whose `root_node_id` names no node and shows an empty ROOT,
+      // silently, on a document the renderer draws perfectly. So a green
+      // screenshot here is compatible with a merchant opening the editor and
+      // finding nothing. Said ONCE, like every other directive.
+      const canvasNote = ctx.notices.once(
+        'shot-not-canvas',
+        'A screenshot is the GO RENDERER\'s answer — the draft preview and the published page ' +
+          'both come from it. It is not evidence that the EDITOR CANVAS works: the editor ' +
+          'loads the same draft through its own gate and silently shows an empty ROOT for a ' +
+          'document whose root_node_id names no node, which the renderer draws without ' +
+          'complaint. sb_page_state answers for the canvas.',
+      );
       return images(shots.map((s) => ({ dataBase64: s.imageBase64, mimeType: s.mimeType })), {
         widths: shots.map((s) => s.width),
         ...(url ? { shot: url } : {}),
         ...(previewNote ? { preview_note: previewNote } : {}),
+        ...(canvasNote ? { canvas_note: canvasNote } : {}),
         ...(stuckNote ? { stuck_note: stuckNote } : {}),
         ...(node_id ? { framed: node_id } : {}),
         ...(with_boxes === false

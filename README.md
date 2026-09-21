@@ -98,7 +98,8 @@ in this client: one would put the very key the platform exists to hold back into
 | `sb_template_use` | Instantiate a template into a page |
 | `sb_page_list` | Every page on the site |
 | `sb_page_create` | Create a page — a store type arrives with the editor's own starting document; `type` is the route for checkout, product, category, post, course |
-| `sb_publish` | Compile the draft into the live page (cascades to shared globals) |
+| `sb_publish` | Compile the draft into the live page (cascades to shared globals), report which revision went live, and with `verify` check the origin is serving it |
+| `sb_page_state` | Which of a page's three copies is which — the DRAFT the editor canvas shows, the PUBLISHED row the storefront serves, and this session's — plus whether the editor will render the canvas BLANK, and where the recovery points are |
 | `sb_review` | Every defect a visitor would see, each with its fix, plus the five gaps between this store and a paid order |
 | `sb_media_list` | The site's media library |
 | `sb_media_upload` | Add an image and get its URL — a local path, a URL the platform fetches, or a SEARCH for real photographs you read and pick from, one or several at a time |
@@ -109,7 +110,7 @@ in this client: one would put the very key the platform exists to hold back into
 | `sb_import` | Read a page from any public URL and add its structure and content to the open page as real elements, styled with THIS page's own tokens — a translation, not a clone |
 | `sb_import_site` | Read a WHOLE site from one URL — its sitemap, or the links on that page — and give each page found its own draft page here, built from this site's tokens; the entry page's own colours and type scale also patch into this SITE'S theme, so it stops being purely a read |
 | `sb_theme` | Read or patch the site's palette and type scale — the layer every style preset resolves from, so one token repaints every page |
-| `sb_store` | Run a store flow that must happen in a fixed order — `checkout` (the four writes that make a working one), `form` (any of the platform's 17 templates with its own field document), `chrome` (one shared header or footer), `menu` (a menu node bound to the site's menu, its links resolved), `overlay_attach` (a pop-up or quick view on the open page) and `app` (a built-in app plus the pages it needs) |
+| `sb_store` | Run a store flow that must happen in a fixed order — `checkout` (the four writes that make a working one), `form` (any of the platform's 17 templates with its own field document), `chrome` (one shared header or footer), `menu` (a menu node bound to the site's menu, its links resolved), `overlay_attach` (a pop-up or quick view on the open page) and `app` (a built-in app plus the pages it needs), `global_attach` / `global_detach` (put an EXISTING shared section on the open page, or take it off) |
 | `sb_undo` | Put back what a PUT replaced. The SECOND answer for a page, not the only one: the platform has versions, history and restore (`sb_api_find` "page versions"), which outlive this process — reach for those first and use this for every other shaped PUT |
 
 Twenty-eight tools, **560 API operations** (193 of the 251 writes carrying a body shape read

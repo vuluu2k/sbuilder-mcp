@@ -3046,6 +3046,130 @@ that accounts for them.
   for when a grep for `node.States` "found only four files" and produced a conclusion a probe
   then disproved.
 
+- **`node.events` IS NEVER READ BY A RENDERER, so every navigation this server authored was
+  DEAD.** A SOLE navigation click renders as `specials.href` and from nothing else:
+  `nodes.EventAttrs` (`render/nodes/helpers.go:621`) skips it outright —
+  `if ev.Name == "click" && clicks == 1 && purchaseItem == "" && (go_to_url || open_page)
+  { continue // the <a href> form }` — on the stated assumption that the href is already
+  there, because "a call beside an anchor would navigate twice". The editor upholds that by
+  writing the event AND its href in ONE undo step (`projectHref`, `stores/node.ts:618`),
+  whose own comment says `node.events` is never read by a renderer. `setEvent` wrote the
+  event alone, for as long as `sb_event` has existed.
+
+  So `sb_event action:"go_to_url"` produced a node with neither an anchor nor an `on:click`:
+  a control that renders, saves, publishes, and does nothing when a shopper clicks it. SILENT
+  at every step — `sb_review` reads the tree and the tree is correct, `sb_look` photographs
+  the page and the page looks right. MEASURED on a live storefront: three home-page images
+  carrying `click: go_to_url {"url":"/bo-suu-tap"}` published as bare `<img>` tags, beside a
+  button that carried the href and published as `<a href="/bo-suu-tap">`. Fixed, and verified
+  end to end: after the fix the same three publish as
+  `<a class="wb-image-link" href="/bo-suu-tap">`.
+
+  `domains/site/navhref.ts` holds the projection, pure and in its own module because two
+  callers need it for opposite reasons — `setEvent` must WRITE it, `sb_review` must REPORT a
+  document that arrived another way (`dead_nav`). The rule is the editor's exactly: projected
+  only for a SOLE `go_to_url`/`open_page` click on a node with no purchase binding, cleared
+  otherwise. `go_to_checkout` is never projected — a checkout hop is not a plain link — and an
+  `open_page` with no resolved `url` projects nothing rather than inventing one, since neither
+  renderer can resolve a page id. Through `sb_event` the purchase-bound case is ALREADY
+  unreachable (binding a purchase swaps the element to `meta.bindingEvents`, which offers no
+  `go_to_url`), so that clause is for documents that arrive by another road; the test pins
+  that rather than asserting a combination the tool refuses.
+
+- **A GLOBAL-SECTION EDGE IS RECORDED FROM THE COMPOSED STAMP ALONE, so attaching one takes
+  TWO saves.** `Decompose` (`page/decompose.go:312`) builds its `GlobalWrite` list from nodes
+  carrying `specials.globalId`; a node carrying `specials.globalRef` — the STORED form, the
+  only one a client may write, and literally what `makeRefNode` writes — takes the
+  `if !stamped { continue }` branch and produces no write. `SaveDraftComposed` then calls
+  `SetPageRefs(siteID, pageID, refIDs)` with a list that does not include it, and
+  `SetPageRefs` REPLACES the page's whole ref set.
+
+  So planting a reference and saving once leaves the page composing the section perfectly on
+  every read — Compose resolves `globalRef` fine — while `page_global_refs` never hears about
+  it. What that costs is `usageCount` and `GET /global-sections/{id}/pages`, which is the list
+  the DELETE dialog shows: a master reported as used by seventeen pages, deleted, and the
+  eighteenth goes blank. MEASURED: attaching the shared header left `usageCount` at 17 with
+  the page absent from the referencing list; re-reading and storing the composed document back
+  moved it to 18 and the page appeared.
+
+  `PageSession.recompose` is that round trip. `sb_store action:"global_attach"` /
+  `"global_detach"`, `action:"chrome"` and `sb_page_create`'s own chrome attach all make it —
+  without it every page they touch wears the site's chrome and none is counted as doing so. It
+  REFUSES to run on a read that came back empty, for the reason `save()` does: a read that
+  failed open must not become a write that empties the page. That guard was not foresight — the
+  repo's own page-create test went red on the first run without it.
+
+- **THE EDITOR CANVAS AND THE RENDERER DISAGREE BY CONSTRUCTION, and "the live page has data
+  but the canvas is blank" is that, not a cache.** A page is THREE documents: the DRAFT
+  (`GET /pages/{id}/source`, what the canvas shows), the PUBLISHED row (compiled at publish
+  time, what the storefront serves), and a session's own copy. `hydrate`
+  (`editor/src/stores/node.ts:3418`) gates the first —
+
+  ```ts
+  const rootId = doc?.root_node_id ?? '';
+  if (!rootId || !nodes[rootId]) { this.seedRoot(opts?.pageId); return; }
+  ```
+
+  — and a document failing it is SILENTLY REPLACED by an empty ROOT, with nothing in the log,
+  after which the editor's next save stores that blank. The Go renderer has no such gate. This
+  file already records the measured incident from the other side: a product template of 24
+  nodes read back bare and stored bare, the published copy untouched, all 19 product pages
+  still rendering, invisible until a person opened the editor.
+
+  `sb_page_state` reports all three and SIMULATES that gate — against the RAW document, never
+  a `PageDoc`, because `PageDoc.from` repairs a `rootId` alias in memory and the editor reads
+  the stored bytes. Three verdicts with different fixes, and the middle one inverts the usual
+  advice: a root naming nothing means do NOT open the page in the editor, because that save is
+  what makes the loss permanent. The cache is real and is only on the LIVE page —
+  `cache-control: public, max-age=60`, measured — which is why `sb_publish verify` reports
+  `max_age` beside `serving`.
+
+- **`measure` SKIPPED OVERLAYS BY THEIR COMPOSITION STAMP, AND BEING OFF-SCREEN IS A RENDER
+  FACT.** The skip was built from `isOverlay` — `overlayId` plus a ROOT parent — which is the
+  right question for trap 1 and the wrong one here: `cart-drawer` hides and translates ITSELF
+  (`render/nodes/cart-drawer/css.go`), so a drawer authored straight into a page document parks
+  off-screen with no stamp at all. MEASURED: every page of one storefront carried exactly that,
+  so the skip came out EMPTY and `sb_look` reported THIRTEEN off-canvas findings per page at
+  every width on pages that were correct — the "list nobody reads" the skip's own comment
+  exists to prevent. With the render-side test the same pages report ONE finding, a real
+  overlap in the shared header that had been buried under it. The same blind spot made
+  `sb_look node_id:<anything in the drawer>` fail outright, because `overlayRoot` decides what
+  to open and it asks the same stamp question.
+
+  `domains/site/offscreen.ts` is the render-side test, and `overlayRoot` is deliberately NOT
+  widened to match: it answers the composition question every write guard asks, and widening it
+  would make `refuseOverlay` start refusing writes to a drawer the page genuinely owns. Two
+  questions, two functions, pinned apart by a test. HAND-KEPT with the replacement named — the
+  honest source is an element whose `css.go` hides itself until `.is-open`, which is
+  mechanically readable, and the element metas carry nothing to derive it from (all five report
+  `category: "basic"`). The same standing debt `INERT_ON_ADD` carries.
+
+  This is the `Box.position` lesson again, one field along: a comment described behaviour the
+  code did not have, because the code asked a question ADJACENT to the one the comment was
+  about.
+
+- **`ApiError.code` NEVER REACHED THE CALLER.** The platform writes exactly one error shape,
+  `{"error","code"}`, and this file has recorded since the transport was written that `code` is
+  the branchable half. It was kept on the object and dropped at the MCP boundary: a tool that
+  throws hands the SDK an `Error`, of which only `message` survives. So an agent met "band
+  order" with no `band_order` to match on, and no status to tell a 409 from a 500. The code and
+  the status now ride in the message as a SUFFIX — `… [code: band_order, http 409]` — so the
+  platform's own sentence still leads and every existing assertion on it still holds.
+
+- **A PAGE THIS SERVER CREATES KEEPS `schema_version: 1` FOREVER, and it is one character.**
+  `PageDoc.from` reads `if (!d.schema_version) d.schema_version = 2;` — and the server's empty
+  seed supplies `1`, which is truthy, so the upgrade never fires. Measured on a live site: 12 of
+  24 page documents at v1 against `DOC_SCHEMA_VERSION` 2. The consequence is mild and real: the
+  editor's version-gated one-shot `stripLegacySchemeScopes` re-runs on every hydrate of those
+  pages instead of once.
+
+  DELIBERATELY NOT "FIXED" BY STAMPING 2 HERE. The editor strips the v1 scheme scopes and THEN
+  stamps; stamping without stripping would rob the document of a migration it has not had, and
+  pin every stamped node to one colour scheme forever. `sb_page_state` reports `schemaVersion`
+  instead, and the real fix is either to port the strip or to leave the stamp to the editor. Two
+  of the v1 documents are not this repo's doing either — `editor/src/features/courses/pageScaffold.ts:157`
+  returns `{ schema_version: 1, … }`, which codegen captures verbatim into `APP_SCAFFOLDS`.
+
 ## The five traps
 
 Each fails SILENTLY. Each is encoded in `src/domains/site/traps.ts` (trap 5 in

@@ -56,6 +56,22 @@ export const FIX: Record<string, string> = {
     '"menu-item" per link, and delete the buttons with sb_remove. Add a "menu-drawer" (with a ' +
     '"hamburger-menu" trigger) for the phone, and "menu-dropdown" where a link has a sub-level. ' +
     'sb_traits_for "menu" has the controls.',
+  // The child is NAMED, because "a child is missing" without which one sends
+  // the reader back to diff two documents by hand.
+  missing_node:
+    'Take the dead reference out: sb_remove id "<child>" clears it when the node is merely ' +
+    'orphaned. If the content is wanted, sb_add it under "<id>" instead. Until one or the ' +
+    'other happens the platform refuses every save of this page, and a refused save is ' +
+    'reported against whatever command came next rather than this one.',
+  // THE FIX IS NOT "SET href INSTEAD OF THE EVENT" — it is to re-issue the event
+  // through the tool that now projects both. Telling a caller to write the href
+  // by hand would leave the two able to disagree again on the next edit, which
+  // is the whole defect.
+  dead_nav:
+    'Re-issue the click through sb_event, which now writes specials.href alongside it: ' +
+    'sb_event id "<id>", action "go_to_url", payload { "url": "<url>" }. A sole navigation ' +
+    'click renders as an <a href> and from nothing else — the renderer emits no on:click ' +
+    'for one — so the event without the href is a control that publishes and does nothing.',
   dead_menu_link:
     'Write the entries the renderer actually reads: sb_set id "<id>", namespace specials, keys ' +
     '{ "menuItems": [{ "id": "mi-1", "label": "Shop", "href": "/shop" }] }. Setting menuId alone ' +

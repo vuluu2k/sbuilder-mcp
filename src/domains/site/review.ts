@@ -5,6 +5,7 @@ import { HOVER_STATE, hoverHome } from './hover.js';
 import { ELEMENTS, BINDING_SOURCES, BOUND_SPECIALS , FIRST_CHILD_ONLY, SATELLITE_RULES, ELEMENT_SEEDS } from '../../catalog/elements.generated.js';
 import type { PageDoc } from './document.js';
 import { fill } from './findings.js';
+import { deadNavigation } from './navhref.js';
 
 /**
  * A defect somebody looking at the page would see.
@@ -203,9 +204,24 @@ export function reviewDesign(doc: PageDoc): Finding[] {
   const inRepeater = new Map<string, string>();
   // Which nodes sit inside an overlay, so their findings can say so.
   const inOverlay = new Set<string>();
+  // A CHILD ID NAMING NO NODE. `validateForSave` already refuses this on the
+  // way OUT — "Node X lists child Y, which is not in the document" — but a
+  // review runs on a document that is already damaged, which is exactly when a
+  // caller most needs one.
+  //
+  // It used to THROW: `go` pushed the dangling id like any other and the loop
+  // below read `d.nodes[id].data.type` off `undefined`, so `sb_review` answered
+  // "Cannot read properties of undefined (reading 'data')" — an error naming no
+  // page, no node, and nothing to do about it, from the one tool whose whole job
+  // is to say what is wrong with the page. `walk()` in core/tree.ts has carried
+  // the `if (!n) return` guard all along; this recursion carries its own scope
+  // down and so cannot hand the traversal to `walk`, which is precisely the
+  // caller `walk`'s own comment warns will get this wrong.
+  const dangling: Array<{ parent: string; child: string }> = [];
   const go = (id: string, repeater?: string, overlay = false): void => {
     if (seen.has(id)) return;
     seen.add(id);
+    if (!d.nodes[id]) return;
     if (overlay) inOverlay.add(id);
     walkOrder.push(id);
     if (repeater) inRepeater.set(id, repeater);
@@ -217,9 +233,28 @@ export function reviewDesign(doc: PageDoc): Finding[] {
     // outside the check that exists to say what a visitor meets. `walk`'s own
     // comment names this as the mistake a caller makes by reaching for the
     // child-only list; this had made it.
-    for (const k of childrenWithSatellites(d, id)) go(k, inner, overlay || overlayIds.has(k));
+    for (const k of childrenWithSatellites(d, id)) {
+      if (!d.nodes[k]) dangling.push({ parent: id, child: k });
+      go(k, inner, overlay || overlayIds.has(k));
+    }
   };
   go(d.root_node_id);
+
+  // Reported rather than thrown, and reported FIRST: every other finding below
+  // is about a node that exists, so a reader meeting twenty of those and no
+  // mention of the hole in the tree would fix the wrong things.
+  for (const { parent, child } of dangling) {
+    out.push({
+      code: 'missing_node',
+      nodeId: parent,
+      type: d.nodes[parent]?.data.type ?? '',
+      problem:
+        `It lists a child "${child}" that is not in the document, so the renderer walks to a ` +
+        'hole: whatever was meant to be there renders as nothing, and the platform refuses ' +
+        'every save of this page until it is gone.',
+      fix: fill('missing_node', { child }),
+    });
+  }
 
   // WHICH BAND EACH NODE LIVES IN, taken from the top-level section it descends
   // from. `bandOf` answers for a ROOT child; everything below one inherits it.
@@ -293,6 +328,32 @@ export function reviewDesign(doc: PageDoc): Finding[] {
         fix: fill('unknown_element', {}),
       });
       continue;
+    }
+
+    // A NAVIGATION CONTROL WITH NOWHERE TO GO, and it is the sharpest silent
+    // failure on this list because the page is CORRECT in every way a check can
+    // otherwise see. The tree holds the event the author asked for; the pixels
+    // are the pixels they designed; and the click does nothing, because a sole
+    // navigation click renders as `specials.href` and the renderer deliberately
+    // emits no `on:click` beside it.
+    //
+    // Measured on a live storefront: three home-page images published as bare
+    // `<img>` tags with no anchor, next to a button that carried the href and
+    // published as `<a href>`. `sb_event` now writes both; this is for every
+    // document that got here before it did, or by another road.
+    const dead = deadNavigation(n as never);
+    if (dead) {
+      out.push({
+        code: 'dead_nav',
+        nodeId: id,
+        type,
+        problem:
+          `Its only click action goes to "${dead.url}" and it carries no specials.href, so the ` +
+          'published markup has neither an anchor nor an on:click — a shopper clicking it ' +
+          'stays exactly where they are, on a page that looks right and reviews clean.',
+        fix: fill('dead_nav', { url: dead.url }),
+        ...(inOverlay.has(id) ? { overlay: true } : {}),
+      });
     }
 
     // PINNING FAILS WITH NOTHING ON SCREEN AND NOTHING IN THE LOG — both halves

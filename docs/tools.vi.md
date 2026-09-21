@@ -440,6 +440,21 @@ OVERLAY được đo nhưng không báo: cart drawer đỗ ngoài viewport cho t
 node trong đó đều đọc ra là off-canvas — hai chục finding trên một trang vốn đúng, mà không
 cái nào sửa được từ trang đó.
 
+**Một overlay được nhận diện bằng VIỆC RENDERER CỦA NÓ LÀM GÌ, không chỉ bằng con dấu
+compose — và khoảng cách đó đã phải trả giá.** Tập bỏ qua trước đây dựng từ `isOverlay` —
+"node này có mang `overlayId` và nằm trực tiếp dưới ROOT không" — đúng cho trap 1 và sai ở
+đây: `cart-drawer` TỰ ẩn và tự dịch mình ra ngoài (`render/nodes/cart-drawer/css.go`), nên
+một drawer viết thẳng vào tài liệu trang vẫn đỗ ngoài màn hình mà không có con dấu nào. ĐO
+trên một storefront thật: mọi trang đều đúng như vậy, nên tập bỏ qua RỖNG và `sb_look` báo
+MƯỜI BA finding off-canvas mỗi trang ở mọi khổ, trên những trang hoàn toàn đúng — đúng cái
+"danh sách không ai đọc" mà chốt chặn này sinh ra để tránh. Với phép kiểm phía render, cùng
+những trang đó báo MỘT finding: một overlap thật trong header dùng chung, trước đó bị vùi
+dưới nhiễu. Cùng điểm mù đó khiến `sb_look node_id:<bất kỳ node nào trong drawer>` hỏng
+thẳng: không có gì được mở, vùng clip rơi ra ngoài ảnh, và Playwright trả về "Clipped area is
+either empty or outside the resulting image". `overlayRoot` trong `core/tree` cố tình KHÔNG
+được nới theo — nó trả lời câu hỏi compose mà mọi write guard hỏi, và nới nó ra sẽ khiến
+`refuseOverlay` bắt đầu từ chối những lệnh ghi lên một drawer mà trang thật sự sở hữu.
+
 Ảnh chụp có CUỘN hết trang trước khi bấm máy, nên ảnh lazy dưới màn hình được tải thay vì
 chụp thành ô trống. Đo trên storefront thật: bốn ảnh chưa tải trước khi cuộn, không còn cái
 nào sau đó.
@@ -501,6 +516,35 @@ còn event là thứ xảy ra song song. Hỏi ở đây sẽ bị từ chối v
 
 Một hành động cho một trigger, thay tại chỗ: hai `click` trên một node là hai câu trả lời cho
 một câu hỏi.
+
+**MỖI LẦN GHI ĐỀU MANG THEO PHÉP CHIẾU `<a href>`, vì `node.events` KHÔNG BAO GIỜ được
+renderer đọc.** Một click điều hướng DUY NHẤT được render từ `specials.href` và không từ đâu
+khác: `nodes.EventAttrs` bỏ qua nó thẳng thừng —
+
+```go
+if ev.Name == "click" && clicks == 1 && purchaseItem == "" &&
+    (ev.Action == "go_to_url" || ev.Action == "open_page") {
+    continue // dạng <a href>; xem ở trên
+}
+```
+
+— dựa trên giả định đã nói rõ rằng href đã có sẵn, vì "một lời gọi đặt cạnh một anchor sẽ
+điều hướng hai lần". Editor giữ đúng giả định đó bằng cách ghi event và href của nó trong
+cùng một bước undo (`projectHref`); công cụ này thì không, nên `sb_event action:"go_to_url"`
+tạo ra một node không có anchor lẫn `on:click`. Một control render đẹp, lưu được, publish
+được, và **bấm vào không làm gì cả** — câm ở mọi bước, vì `sb_review` đọc cây và cây đúng,
+còn `sb_look` chụp trang và trang trông đúng.
+
+Đo trên một storefront thật: ba tấm ảnh ở trang chủ mang
+`click: go_to_url {"url":"/bo-suu-tap"}` được publish thành thẻ `<img>` trần, ngay cạnh một
+nút có href và publish thành `<a href="/bo-suu-tap">`.
+
+Nên `href` và `target` giờ đi theo danh sách click, đúng luật của editor: chỉ chiếu cho một
+click `go_to_url`/`open_page` DUY NHẤT trên node không có binding mua hàng, ngoài ra thì xoá.
+`go_to_checkout` không bao giờ được chiếu — một bước sang thanh toán không phải link thường.
+Một `open_page` mà payload không có `url` đã phân giải thì không chiếu gì, thay vì bịa ra một
+cái, vì cả hai renderer đều không phân giải được page id. `sb_review` báo node tới đây bằng
+đường khác là `dead_nav`.
 
 ---
 
@@ -716,6 +760,23 @@ làm hỏng cả lệnh tạo.
 `sb_publish` **lan**: trang dùng chung global section với trang khác sẽ publish luôn các
 trang đó, vì header sửa một lần không được lên live ở trang này mà cũ ở trang kia.
 
+**Nó báo BẢN NÀO đã lên live** — `id` (dòng published), `publishedAt`, và `fromVersionId`
+(bản nháp mà nó được biên dịch từ đó). Ba trường này trả lời đúng câu người gọi hỏi ngay sau
+khi publish và trước đây không có cách nào hỏi; `document`, `html`, `css` của dòng đó vẫn bị
+bỏ, vì publish lan và trả chúng về là đổ markup của mọi trang được publish lại vào người đọc.
+
+**`verify: true` rồi tải trang live và nói origin đã phục vụ bản đó chưa.** Một mã 200 chứng
+minh nền tảng đã lưu một dòng, không chứng minh một người xem đang được phục vụ nó:
+storefront trả `cache-control: public, max-age=60`, nên hai thứ lệch nhau hợp lệ tới một
+phút. Người publish rồi tải lại, thấy trang cũ, kết luận publish hỏng, rồi đi "sửa" thứ chưa
+bao giờ hỏng. Phép kiểm tải chính địa chỉ của trang (lấy từ link preview của nó, nên tên
+miền riêng vẫn đúng) kèm tham số phá cache và `Cache-Control: no-cache`, rồi hỏi markup được
+phục vụ có mang các node id mà lần publish này đặt vào không — mọi element renderer vẽ đều
+mang `id="<node id>"`, nên id của các band cấp cao nhất là dấu vân tay của tài liệu mà không
+cần so từng byte. Nó trả về `serving`, các band `missing` nếu có, `etag`, và `max_age` — tức
+bản sao của người khác còn có thể khác trong bao lâu. Một phép kiểm KHÔNG CHẠY ĐƯỢC được báo
+tách khỏi một trang không phục vụ đúng: lúc đó publish đã thành công rồi.
+
 ## Dùng chung với các MCP server khác
 
 Bộ tool này trả lời ba trong năm câu hỏi mà một site đặt ra. Hai câu còn lại cần một nguồn
@@ -902,6 +963,8 @@ tài liệu:
 | Mã | Khiếm khuyết |
 | --- | --- |
 | `empty_page` | Không có gì — publish ra trang trắng |
+| `missing_node` | Một node cha gọi tên đứa con tài liệu không có. Renderer đi vào một lỗ trống, và nền tảng từ chối mọi lần lưu cho tới khi nó biến mất — báo ở đây chứ không ném lỗi, vì một lần review chạy trên tài liệu đã hỏng, và đó đúng là lúc người gọi cần nó nhất |
+| `dead_nav` | Một click điều hướng duy nhất mà không có `specials.href`. Renderer KHÔNG BAO GIỜ đọc `node.events`: `EventAttrs` không phát `on:click` cho nó, vì cho rằng href đã biến nó thành anchor. Nên control đó render, publish, và bấm vào không làm gì |
 | `empty_container` | Section không chứa gì — một dải trống |
 | `placeholder_content` | Vẫn là chữ mặc định của element ("Enter your text here") |
 | `empty_text` / `missing_media` | Element bỏ trống — khoảng trắng, hoặc ảnh vỡ |
@@ -1780,6 +1843,116 @@ Các trang scaffold được đặt tên theo `language`, mặc định `vi`.
 **Dry run** đọc danh sách trang — lệnh duy nhất nó gọi — để kế hoạch nói được trang nào đã có
 thay vì đoán, rồi trả về `plan` đã sắp thứ tự cùng `present`. **Khi chạy thật** trả về
 `installed`, `created`, `present` và `failed` nếu có.
+
+### `action: "global_attach"` / `action: "global_detach"`
+
+Đặt một section dùng chung ĐÃ CÓ lên trang đang mở, hoặc gỡ nó ra. `global_id` gọi tên
+master; nếu bỏ trống khi attach, lời từ chối sẽ liệt kê những cái site này có.
+
+**`action:"chrome"` là công cụ sai cho việc này và sẽ đặt hai header lên site.** Cái đó TẠO
+một master từ những trang site đã có, đúng cho một site chưa dùng chung gì. Trường hợp thông
+thường là site đã có header và trang mới nhất không mang nó — đo trên một storefront thật,
+bảy trong hai mươi tư trang không mang cả header lẫn footer trong khi cả hai master đều tồn
+tại — và trước action này thì không có công cụ nào cho việc đó.
+
+**Con dấu không bao giờ là thứ người gọi được viết.** Một trang THAM CHIẾU master bằng
+`specials.globalRef` + `globalKind`; server compose master lên trang khi đọc và đóng dấu kết
+quả là `specials.globalId`. Viết con dấu đã compose làm lần lưu kế tiếp DECOMPOSE node đó đè
+lên master và làm rỗng nó cho mọi trang đang mang — bốn trang đã trắng ở đây trước khi
+`sb_add` và `sb_set` học cách từ chối, và viết tay tham chiếu là cách duy nhất để gắn. Nên
+tham chiếu được viết bởi đoạn mã biết con dấu nào là con dấu nào, còn người gọi không bao
+giờ chạm tới con dấu.
+
+Vị trí cũng không phải lựa chọn: header vào ĐẦU và footer vào CUỐI, vì compose biến tham
+chiếu thành một band thật và các con của ROOT phải đọc được thành `[header*][middle*][footer*]`
+nếu không nền tảng từ chối mọi lần lưu.
+
+**VÀ NỀN TẢNG GHI NHẬN CẠNH THAM CHIẾU CHỈ TỪ CON DẤU ĐÃ COMPOSE, nên gắn cần HAI lần lưu.**
+`Decompose` (`server/internal/page/decompose.go:312`) dựng danh sách `GlobalWrite` từ các
+node mang `globalId`; node mang `globalRef` — dạng LƯU TRỮ, và là dạng duy nhất client được
+viết — rơi vào nhánh `if !stamped { continue }` và không sinh ra write nào.
+`SaveDraftComposed` sau đó gọi `SetPageRefs(siteID, pageID, refIDs)` với danh sách không có
+nó, mà `SetPageRefs` THAY THẾ toàn bộ tập tham chiếu của trang.
+
+Nên cắm một tham chiếu rồi lưu một lần để lại một trang compose section hoàn toàn đúng ở mọi
+lần đọc — Compose phân giải `globalRef` bình thường — trong khi `page_global_refs` không hề
+biết. Cái giá là `usageCount` và `GET /global-sections/{id}/pages`, tức danh sách hộp thoại
+XOÁ hiển thị: một master báo là đang được 17 trang dùng, bị xoá, và trang thứ 18 trắng. ĐO
+ĐƯỢC: gắn header dùng chung vào một trang để `usageCount` nguyên 17 và trang không có trong
+danh sách tham chiếu; đọc lại rồi lưu tài liệu đã compose trở lại đưa nó lên 18 và trang xuất
+hiện.
+
+`PageSession.recompose` là vòng đi-về đó, và `action:"chrome"` cùng phần gắn chrome của
+`sb_page_create` giờ cũng làm — thiếu nó thì mọi trang chúng chạm đều mang chrome của site mà
+không trang nào được đếm là có. Nó từ chối chạy khi lần đọc trả về RỖNG, vì lý do `save()`
+cũng từ chối: một lần đọc hỏng mở không được phép trở thành một lần ghi làm rỗng trang.
+
+Cả hai action đều báo `pages_referencing` đọc từ nền tảng SAU khi ghi, nên đó là câu trả lời
+của chính site chứ không phải ý kiến thứ hai tính ở đây. Gỡ ra không đụng tới master — nó là
+bản ghi riêng, còn thứ nằm trong tài liệu trang là một phép compose server thực hiện lúc đọc.
+
+---
+
+## `sb_page_state`
+
+| Tham số | Kiểu | Ghi chú |
+| --- | --- | --- |
+| `site_id` | string? | Mặc định `SB_SITE` |
+| `page_id` | string? | Mặc định trang đang mở |
+
+**Một trang là BA tài liệu, và mọi trượt câm ở đây đều là hỏi về cái này trong khi cái khác
+trả lời:**
+
+| | đọc |
+| --- | --- |
+| CANVAS editor | bản NHÁP — `GET /pages/{id}/source` |
+| STOREFRONT | dòng PUBLISHED, biên dịch lúc publish |
+| phiên này | bản sao của nó, đọc một lần rồi sửa từ đó |
+
+"Bản live có dữ liệu mà canvas trắng" chính là hình dạng công cụ này sinh ra để trả lời, và
+**đó không phải cache**. Bản nháp đã bị làm rỗng trong khi dòng published vẫn giữ bản tốt.
+Repo này có ca đã đo: một product template 24 node đọc về rỗng và bị lưu rỗng; bản published
+không hề hấn nên cả 19 trang sản phẩm vẫn hiển thị; không ai thấy cho tới khi có người mở
+editor.
+
+**Phán quyết canvas MÔ PHỎNG chính cổng kiểm của editor** thay vì mô tả nó, vì luật chỉ có ba
+dòng và không gì khác trả lời được (`editor/src/stores/node.ts`, `hydrate`):
+
+```ts
+const nodes = doc?.nodes ?? {};
+const rootId = doc?.root_node_id ?? '';
+if (!rootId || !nodes[rootId]) { this.seedRoot(opts?.pageId); return; }
+```
+
+Tài liệu trượt cổng này bị THAY LẶNG LẼ bằng một ROOT rỗng — canvas trắng, không một dòng
+log — và lần lưu kế tiếp của editor ghi cái rỗng đó xuống. Renderer Go không có cổng nào như
+vậy, và đó đúng là cách hai bản sao tách nhau ra. Đọc trên tài liệu THÔ, không bao giờ trên
+`PageDoc`: `PageDoc.from` sửa alias `rootId` trong bộ nhớ, còn editor đọc đúng byte đã lưu.
+
+Ba phán quyết, và cách chữa khác nhau:
+
+- **alias `rootId`** — chữa được trong một lần lưu, và được gọi tên riêng vì nếu không người
+  đọc chẳng hiểu vì sao một tài liệu đầy node lại sắp biến mất. Đây là hình dạng
+  `editor/src/element/completionPage.ts:91` từng ship trước `8e40bbab`.
+- **root không trỏ tới node nào** — cái nguy hiểm, và lời khuyên đảo ngược: ĐỪNG mở trang này
+  trong editor, vì chính lần lưu đó biến mất mát thành vĩnh viễn. Phục hồi từ một version.
+- **không có node nào** — bình thường với một trang vừa tạo.
+
+`drift` so `updatedAt` của bản nháp với `publishedAt` của dòng live, chừa một giây dung sai vì
+publish ghi dòng của nó sau khi đọc bản nháp. `published_ahead` được báo đúng như cái nó là —
+LAN từ một header dùng chung sửa ở nơi khác — chứ không phải một lỗi.
+
+`recovery` LIỆT KÊ các điểm phục hồi thật thay vì mô tả chúng, rút gọn còn id / nhãn / thời
+điểm vì một version của trang hai node đo được 1.690 byte và danh sách hai mươi bản thật là
+1,4 MB. Nền tảng thêm một checkpoint autosave ở MỌI lần lưu nháp và đúc một snapshot có nhãn
+khi được yêu cầu, nên **checkpoint trước một lần PUT toàn tài liệu đã được lấy sẵn**; một lần
+restore chỉ đổi bản NHÁP, và nền tảng tự ghi một version `__pre_restore` trước, nên restore
+cũng hoàn tác được.
+
+`editor_note` nêu mốc thời gian của bản nháp và ý nghĩa của nó: một tab editor mở trước mốc
+đó đang giữ bản cũ, vì editor nạp bản nháp một lần và không đọc lại — nên một lần lưu từ đây
+là vô hình ở đó cho tới khi tab được tải lại, và lần lưu kế tiếp của tab đó sẽ ghi bản cũ của
+nó đè lên bản này.
 
 ## `sb_undo`
 

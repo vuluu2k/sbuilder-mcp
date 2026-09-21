@@ -386,6 +386,7 @@ describe('a nested add stores each child exactly once', () => {
       const u = String(input);
       if (init?.method === 'PUT' && u.includes('/source')) {
         saved.push(JSON.parse(String(init.body)) as Record<string, unknown>);
+        stored = (saved.at(-1) as { document?: unknown }).document;
         return new Response('{}', { status: 200, headers: { 'content-type': 'application/json' } });
       }
       if (u.includes('/source')) {
@@ -463,6 +464,7 @@ describe('a created page wears the site chrome', () => {
   };
 
   function siteServing(saved: Array<Record<string, unknown>>, homepage = true) {
+    let stored: unknown;
     return (async (input: string | URL, init?: RequestInit) => {
       const u = String(input);
       const json = (b: unknown, status = 200) =>
@@ -480,7 +482,14 @@ describe('a created page wears the site chrome', () => {
       }
       if (u.includes('/pages/pg_home/source')) return json({ source: { document: homeDoc } });
       if (u.includes('/source')) {
-        return json({ source: { document: { schema_version: 2, root_node_id: '', nodes: {} } } });
+        // A REAL SERVER HANDS BACK WHAT IT WAS GIVEN. The page starts empty
+        // and then holds whatever the last PUT stored — without which this
+        // fake claims every page is empty forever, and a second read (which
+        // the chrome attach now makes, to let the platform record the global
+        // edge) would look like a page that had been erased.
+        return json({
+          source: { document: stored ?? { schema_version: 2, root_node_id: '', nodes: {} } },
+        });
       }
       return json({});
     }) as unknown as typeof fetch;

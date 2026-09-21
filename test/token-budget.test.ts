@@ -101,7 +101,36 @@ describe('token budget — a diet without a scale comes back', () => {
     // repo has already paid for once. `app`: installing a built-in app is one call the
     // catalog already answers, and the pages it needs but does not create are not — a
     // `courses` install with no course pages is an app a shopper cannot reach.
-    expect(JSON.stringify(tools).length).toBeLessThan(27_864);
+    //
+    // 27,864 -> 30,500, measured at 28,546. What the 682 over the old ceiling
+    // buys, and the headroom is 1,954 — about two more actions, room the next
+    // one should find rather than a raise it has to ask for.
+    //
+    // `sb_page_state` (~950, a whole tool): a page is THREE documents — the
+    // draft the editor canvas shows, the published row the storefront serves,
+    // and what this session holds — and nothing could say which was which. The
+    // failure that costs most is "the live page has data and the canvas is
+    // blank", which is not a cache: the editor's `hydrate` silently discards a
+    // document whose root_node_id names no node and shows an empty ROOT, while
+    // the Go renderer draws the same document without complaint, so a
+    // screenshot and a review both pass. Its next save then stores that blank.
+    // This tool simulates that gate, so the answer arrives before the save
+    // that makes the loss permanent rather than after it.
+    //
+    // `sb_store` global_attach / global_detach (~330): putting an EXISTING
+    // shared header on a page had no tool at all — `action:"chrome"` builds a
+    // new master, which is the wrong answer for the ordinary case and puts two
+    // headers on the site. Measured on a live storefront: seven of twenty-four
+    // pages carried neither the header nor the footer while both masters
+    // existed, and the only fix was hand-writing a reference node — the write
+    // whose one plausible spelling (`globalId`, the COMPOSED stamp) decomposes
+    // over the master and empties it for every page carrying it.
+    //
+    // `sb_publish verify` (~110): a 200 proves a row was stored, not that a
+    // visitor is served it. The storefront answers `max-age=60`, so the two
+    // legitimately differ for a minute — long enough for a caller to reload,
+    // see the old page, and go looking for a bug that is not there.
+    expect(JSON.stringify(tools).length).toBeLessThan(30_500);
     for (const t of tools) expect(t.description, t.name).not.toMatch(/vanishes on publish/);
     const instructions = client.getInstructions() ?? '';
     expect(instructions.length).toBeGreaterThan(200);

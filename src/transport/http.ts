@@ -128,7 +128,13 @@ export async function request(opts: RequestOpts): Promise<unknown> {
       // A non-JSON body from this platform means something UPSTREAM of the app
       // answered — a proxy, a 502 page. Say exactly that rather than guessing a
       // code the platform never wrote.
-      if (!res.ok) throw new ApiError(res.status, 'non_json_response', raw.slice(0, 400));
+      if (!res.ok) {
+        throw new ApiError(
+          res.status,
+          'non_json_response',
+          `${raw.slice(0, 400)} [code: non_json_response, http ${res.status}]`,
+        );
+      }
       return raw;
     }
   }
@@ -146,10 +152,22 @@ export async function request(opts: RequestOpts): Promise<unknown> {
     const fieldText = env.fields
       ? ' — ' + Object.entries(env.fields).map(([k, v]) => `${k}: ${v}`).join('; ')
       : '';
+    // THE CODE RIDES IN THE MESSAGE, because nothing else survives the MCP
+    // boundary. `ApiError.code` has been the branchable half since this
+    // transport was written — the platform writes exactly one error shape,
+    // `{"error","code"}`, and the code is the part an agent can act on — and a
+    // tool that throws hands the SDK an Error, of which only `message`
+    // reaches the client. So the object kept the code and every caller saw
+    // prose: "band order" with no `band_order` to match on, and no status to
+    // tell a 409 from a 500.
+    //
+    // A SUFFIX rather than a prefix, so the platform's own sentence still
+    // leads and every existing `toContain` on it still holds.
+    const code = env.code ?? 'unknown';
     throw new ApiError(
       res.status,
-      env.code ?? 'unknown',
-      (env.error ?? `HTTP ${res.status}`) + fieldText,
+      code,
+      `${env.error ?? `HTTP ${res.status}`}${fieldText} [code: ${code}, http ${res.status}]`,
       env.details,
       env.fields,
     );

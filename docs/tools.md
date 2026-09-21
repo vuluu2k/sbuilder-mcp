@@ -457,6 +457,22 @@ reported: a cart drawer is parked outside the viewport until a shopper opens it,
 node in it reads as off-canvas — two dozen findings on a page that is correct, none of them
 fixable from that page.
 
+**An overlay is recognised by WHAT ITS RENDERER DOES, not only by its composition stamp,
+and that distinction was paid for.** The skip used to be built from `isOverlay` — "does this
+node carry `overlayId` and sit under ROOT" — which is the right question for trap 1 and the
+wrong one here: `cart-drawer` hides and translates ITSELF (`render/nodes/cart-drawer/css.go`),
+so a drawer authored straight into a page document parks off-screen with no stamp at all.
+MEASURED on a live storefront: every page carried exactly that, so the skip came out EMPTY
+and `sb_look` reported THIRTEEN off-canvas findings per page at every width, on pages that
+were correct — the "list nobody reads" the skip exists to prevent. With the render-side test
+the same pages report ONE finding, a real overlap in the shared header that had been buried
+under the noise. The same blind spot made `sb_look node_id:<anything in the drawer>` fail
+outright: nothing was opened, the clip landed outside the image, and Playwright answered
+"Clipped area is either empty or outside the resulting image". `overlayRoot` in `core/tree`
+is deliberately NOT widened to match — it answers the composition question every write guard
+asks, and widening it would make `refuseOverlay` start refusing writes to a drawer the page
+genuinely owns.
+
 The shot WALKS the page before it fires, so lazy images below the fold are loaded rather
 than photographed as empty boxes. Measured on a real storefront: four of the page's images
 unloaded before the walk, none after.
@@ -520,6 +536,35 @@ pointed at `sb_bind`.
 
 One action per trigger, replaced in place: a second `click` on one node is two answers to one
 question.
+
+**EVERY WRITE CARRIES THE `<a href>` PROJECTION WITH IT, because `node.events` is never read
+by a renderer.** A SOLE navigation click renders as `specials.href` and from nothing else:
+`nodes.EventAttrs` skips it outright —
+
+```go
+if ev.Name == "click" && clicks == 1 && purchaseItem == "" &&
+    (ev.Action == "go_to_url" || ev.Action == "open_page") {
+    continue // the <a href> form; see above
+}
+```
+
+— on the stated assumption that the href is already there, because "a call beside an anchor
+would navigate twice". The editor upholds that by writing the event and its href in one undo
+step (`projectHref`); this tool did not, so `sb_event action:"go_to_url"` produced a node
+with neither an anchor nor an `on:click`. A control that renders, saves, publishes, and does
+nothing when a shopper clicks it — silent at every step, because `sb_review` reads the tree
+and the tree is correct while `sb_look` photographs the page and the page looks right.
+
+Measured on a live storefront: three home-page images carrying
+`click: go_to_url {"url":"/bo-suu-tap"}` published as bare `<img>` tags, beside a button that
+carried the href and published as `<a href="/bo-suu-tap">`.
+
+So `href` and `target` now move with the click list, and follow the editor's rule exactly:
+projected only for a SOLE `go_to_url`/`open_page` click on a node with no purchase binding,
+cleared otherwise. `go_to_checkout` is never projected — a checkout hop is not a plain link.
+An `open_page` whose payload carries no resolved `url` projects nothing rather than inventing
+one, since neither renderer can resolve a page id. `sb_review` reports a node that got here
+by another road as `dead_nav`.
 
 ---
 
@@ -743,6 +788,25 @@ out, and a site with no home page to read is left alone rather than guessed at.
 `sb_publish` **cascades**: a page sharing a global section with others republishes them too,
 because a header edited once must not go live on one page and stay stale on the rest.
 
+**It reports WHICH REVISION went live** — `id` (the published row), `publishedAt`, and
+`fromVersionId` (the draft version it was compiled from). Those three answer the question a
+caller has immediately after publishing and previously had no way to ask; the row's
+`document`, `html` and `css` are still dropped, because publish cascades and returning them
+pours every republished page's markup into the reader.
+
+**`verify: true` then fetches the live page and says whether the origin is serving it.** A
+200 proves the platform stored a row, not that a visitor is being served it: the storefront
+answers `cache-control: public, max-age=60`, so the two legitimately differ for up to a
+minute. A caller who publishes, reloads, sees the old page and concludes the publish failed
+then "fixes" something that was never broken. The check fetches the page's own address
+(taken from its preview link, so a custom domain is handled) with a cache-busting parameter
+and `Cache-Control: no-cache`, and asks whether the served markup carries the node ids this
+publish put in it — every element the renderer draws carries `id="<node id>"`, so the
+top-level band ids fingerprint the document without diffing bytes the served page does not
+contain anyway. It reports `serving`, any `missing` bands, the `etag`, and `max_age`, which
+is how long somebody else's copy may still differ. A check that could not RUN is reported
+apart from a page that is not serving: the publish already succeeded by then.
+
 ## Working with the other MCP servers
 
 These tools answer three of the five questions a site raises. The other two need a design
@@ -928,6 +992,8 @@ box. Returns `{ findings, fixes, findings_notice? }`, in document order:
 | Code | The defect |
 | --- | --- |
 | `empty_page` | Nothing on it — publishes blank |
+| `missing_node` | A parent naming a child the document does not hold. The renderer walks to a hole, and the platform refuses every save until it is gone — reported here rather than thrown, because a review runs on a document that is already damaged and that is exactly when a caller needs one |
+| `dead_nav` | A sole navigation click with no `specials.href`. A renderer reads `node.events` NEVER: `EventAttrs` emits no `on:click` for one, assuming the href made it an anchor. So the control renders, publishes, and does nothing when a shopper clicks it |
 | `empty_container` | A section holding nothing — an empty band |
 | `placeholder_content` | Still the copy the element ships with ("Enter your text here") |
 | `empty_text` / `missing_media` | An element left blank — empty space, or a broken image |
@@ -1810,6 +1876,122 @@ answer, run right after a successful install, and `APP_SCAFFOLDS` is this server
 copy of what it builds. **Today only `courses` ships a scaffold** — four pages: the `course`
 template, `/courses`, `/learn` and `/my-courses`. Every other key installs with nothing
 further to build, and the result says so.
+
+### `action: "global_attach"` / `action: "global_detach"`
+
+Put an EXISTING shared section on the open page, or take it off. `global_id` names the
+master; omitted on attach, the refusal lists the site's own.
+
+**`action:"chrome"` is the wrong tool for this and puts two headers on the site.** That one
+CREATES a master from the pages a site already has, which is right for a site that shares
+nothing. The ordinary case is a site whose header exists and whose newest page does not
+carry it — measured on a live storefront, seven of twenty-four pages carried neither the
+header nor the footer while both masters existed — and until this action there was no tool
+for it at all.
+
+**The stamp is never the caller's to write.** A page REFERENCES a master with
+`specials.globalRef` + `globalKind`; the server composes the master onto the page on read
+and stamps the result `specials.globalId`. Authoring the composed stamp makes the next save
+DECOMPOSE that node over the master and empty it for every page carrying it — four pages
+went blank here before `sb_add` and `sb_set` learned to refuse it, and hand-writing the
+reference was the only way to attach one. So the reference is written by the code that knows
+which stamp is which, and the caller never meets a stamp.
+
+The position is not a choice either: a header goes in FIRST and a footer LAST, because
+compose turns the reference into a real band and ROOT's children must read
+`[header*][middle*][footer*]` or the platform refuses every save. A header appended at the
+end is a `band_order` refusal reported against a caller who never knowingly touched a band.
+
+**AND THE PLATFORM RECORDS THE EDGE FROM THE COMPOSED STAMP ALONE, so attaching takes two
+saves.** `Decompose` (`server/internal/page/decompose.go:312`) builds its `GlobalWrite` list
+from nodes carrying `globalId`; a node carrying `globalRef` — the STORED form, and the only
+one a client may write — takes the `if !stamped { continue }` branch and produces no write.
+`SaveDraftComposed` then calls `SetPageRefs(siteID, pageID, refIDs)` with a list that does
+not include it, and `SetPageRefs` REPLACES the page's whole ref set.
+
+So planting a reference and saving once leaves the page composing the section correctly on
+every read — Compose resolves `globalRef` fine — while `page_global_refs` never hears about
+it. What that costs is `usageCount` and `GET /global-sections/{id}/pages`, which is the list
+the DELETE dialog shows: a master reported as used by seventeen pages, deleted, and the
+eighteenth goes blank. MEASURED: attaching the shared header to a page left `usageCount` at
+17 and the page absent from the referencing list; re-reading and storing the composed
+document back moved it to 18 and the page appeared.
+
+`PageSession.recompose` is that round trip, and `action:"chrome"` and `sb_page_create`'s own
+chrome attach now make it too — without it every page they touch wears the site's chrome and
+none of them is counted as doing so. It refuses to run on a read that came back EMPTY, for
+the reason `save()` does: a read that failed open must not become a write that empties the
+page.
+
+Both actions report `pages_referencing` read from the platform AFTER the write, so the
+answer is the site's own rather than a second opinion computed here. Detaching leaves the
+master alone — it is its own record, and what sits in the page document is a composition the
+server performed on read.
+
+---
+
+## `sb_page_state`
+
+| Arg | Type | Notes |
+| --- | --- | --- |
+| `site_id` | string? | Defaults to `SB_SITE` |
+| `page_id` | string? | Defaults to the open page |
+
+**A page is THREE documents, and every silent failure here is one of them being asked about
+while another answers:**
+
+| | reads |
+| --- | --- |
+| the editor CANVAS | the DRAFT — `GET /pages/{id}/source` |
+| the STOREFRONT | the PUBLISHED row, compiled at publish time |
+| this session | its own copy, read once and edited since |
+
+"The live page has data and the canvas is blank" is the shape this exists for, and **it is
+not a cache**. The draft was emptied while the published row kept the good copy. This repo
+has the measured incident: a product template of 24 nodes read back bare and stored bare;
+the published copy untouched, so all 19 product pages went on rendering; invisible until a
+person opened the editor.
+
+**The canvas verdict SIMULATES the editor's own gate** rather than describing it, because
+the rule is three lines and nothing else can answer it (`editor/src/stores/node.ts`,
+`hydrate`):
+
+```ts
+const nodes = doc?.nodes ?? {};
+const rootId = doc?.root_node_id ?? '';
+if (!rootId || !nodes[rootId]) { this.seedRoot(opts?.pageId); return; }
+```
+
+A document failing it is SILENTLY REPLACED by an empty ROOT — blank canvas, nothing in the
+log — and the editor's next save stores that blank. The Go renderer has no such gate, which
+is exactly how the two copies come apart. Read against the RAW document, never a `PageDoc`:
+`PageDoc.from` repairs a `rootId` alias in memory, and the editor reads the stored bytes.
+
+Three verdicts, and the fixes differ:
+
+- **the `rootId` alias** — repairable in one save, and named separately because the reader
+  otherwise has no idea why a document full of nodes is about to vanish. It is the shape
+  `editor/src/element/completionPage.ts:91` shipped before `8e40bbab`.
+- **a root naming nothing** — the dangerous one, and the advice inverts: do NOT open this in
+  the editor, because that save is what makes the loss permanent. Recover from a version.
+- **no nodes at all** — normal for a page just created.
+
+`drift` compares the draft's `updatedAt` against the live row's `publishedAt`, with a second
+of slack because publish writes its row after reading the draft. `published_ahead` is
+reported as the CASCADE it is — a shared header edited elsewhere republishes every page
+carrying it — rather than as a defect.
+
+`recovery` LISTS the real recovery points rather than describing them, projected to
+id / label / when because one version of a two-node page measured 1,690 bytes and a listing
+of twenty realistic ones is 1.4 MB. The platform appends an autosave checkpoint on EVERY
+draft save and mints a labelled snapshot on demand, so **the checkpoint before a
+whole-document PUT is already taken**; a restore changes the DRAFT only, and the platform
+writes a `__pre_restore` version of its own first, so a restore is itself undoable.
+
+`editor_note` names the draft's timestamp and what it means: an editor tab opened before it
+holds an older copy, because the editor loads the draft once and does not re-read it — so a
+save made here is invisible there until the tab is reloaded, and that tab's next save would
+store its older copy over this one.
 
 **A page with no slug is matched by TYPE, and that is the one that fixes the 404.**
 `isPresent`, copied from the editor: a page with a non-empty `slug` is already there if the

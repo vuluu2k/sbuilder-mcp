@@ -3,6 +3,9 @@ import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { composeWarnings, type ComposeWarning } from '../domains/site/findings.js';
 import { text } from '../mcp/response.js';
 import { loadSource, saveSource } from '../transport/pages.js';
+import { previewUrl } from '../vision/preview.js';
+import { bandIds, proveLive, type LiveProof } from '../domains/site/liveproof.js';
+import { canvasVerdict, driftOf } from '../domains/site/pagestate.js';
 import { PageDoc, type OutlineNode } from '../domains/site/document.js';
 import {
   addSubtree,
@@ -261,9 +264,81 @@ export class PageSession {
     this.doc?.apply(patches);
   }
 
+  /**
+   * Does this session hold edits the server has not been given?
+   *
+   * `savedRev` is the revision this session last STORED, so a difference is
+   * exactly "something was applied and not saved" — the same comparison
+   * `save()` makes to skip a write that would change nothing.
+   */
+  hasUnsaved(): boolean {
+    return this.doc != null && this.doc.rev !== this.savedRev;
+  }
+
   /** The yield rule's local half: the next save re-pulls instead of overwriting. */
   markStale(reason: string): void {
     this.stale = reason;
+  }
+
+  /**
+   * RE-READ THE PAGE AND STORE WHAT CAME BACK, unchanged.
+   *
+   * A no-op save is normally exactly what `save()` refuses to do, and for good
+   * reason — it costs a round trip and bumps the revision of every shared
+   * master the page carries. This one is not a no-op to the SERVER, and that
+   * is the whole point.
+   *
+   * THE PLATFORM RECORDS A PAGE'S GLOBAL-SECTION EDGES FROM THE COMPOSED STAMP
+   * ALONE. `Decompose` (`server/internal/page/decompose.go:312`) builds its
+   * `GlobalWrite` list from nodes carrying `specials.globalId`; a node carrying
+   * `specials.globalRef` — the STORED form, which is what a client must write
+   * to attach one — takes the `if !stamped { continue }` branch and produces no
+   * write at all. `SaveDraftComposed` then calls
+   * `SetPageRefs(siteID, pageID, refIDs)` with a list that does not include it,
+   * and `SetPageRefs` REPLACES the page's whole ref set.
+   *
+   * So planting a reference and saving once leaves the page composing the
+   * section correctly on every read — Compose resolves `globalRef` fine — while
+   * `page_global_refs` never hears about it. The visible consequences are
+   * `usageCount` and `GET /global-sections/{id}/pages`, which is the list the
+   * DELETE dialog shows: a master reported as used by seventeen pages, deleted,
+   * and the eighteenth goes blank.
+   *
+   * MEASURED on a live site rather than reasoned about. Attaching the shared
+   * header to a page left `usageCount` at 17 and the page absent from the
+   * referencing list; re-reading and storing the composed document back moved
+   * it to 18 and the page appeared. The second save is what turns `globalRef`
+   * into `globalId` and back again, which is the only path that reaches
+   * `SetPageRefs`.
+   *
+   * Cheaper than the alternative, which was for every caller to remember this.
+   */
+  async recompose(): Promise<void> {
+    await this.open(this.siteId, this.pageId);
+    // A READ THAT FAILED OPEN MUST NOT BECOME A WRITE THAT EMPTIES THE PAGE,
+    // and this path is the one place that guard could be skipped.
+    //
+    // `save()` carries it (`openedSeeded`) because a session that seeded its
+    // own ROOT is exactly how a 24-node product template got stored bare with
+    // its published copy left intact. This function calls `saveSource`
+    // DIRECTLY — it has to, since the whole point is a save `save()` would
+    // skip as a no-op — so it would have walked straight past that guard and
+    // written the invented ROOT over the page. Caught by this repo's own
+    // page-create test on the first run, which is the argument for the guard
+    // living at every door rather than at the usual one.
+    //
+    // Nothing to recompose either way: an empty document references no master,
+    // so there is no edge for the round trip to record.
+    if (this.openedSeeded) return;
+    const d = this.current();
+    const saved = await saveSource(
+      this.ctx,
+      this.siteId,
+      this.pageId,
+      d.doc as unknown as { schema_version?: number; root_node_id: string; nodes: Record<string, unknown> },
+    );
+    d.apply(restampPatches(d.doc, { globals: saved.globals, overlays: saved.overlays }));
+    this.savedRev = d.rev;
   }
 
   async open(siteId: string, pageId: string): Promise<OutlineNode[]> {
@@ -1665,6 +1740,12 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
           }
           void patches;
           await session.save();
+          // AND ONCE MORE, because the platform records the edge off the
+          // COMPOSED stamp and this save wrote the REFERENCE. Without it every
+          // page created here wears the site's chrome and none of them is
+          // counted as doing so — which is the list the delete dialog reads.
+          // See `PageSession.recompose`.
+          await session.recompose();
           wearing = { carries: ids, open: newId };
         } catch (e) {
           wearing = {
@@ -1693,13 +1774,24 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
     'sb_publish',
     {
       description:
-        'Compile the draft into the live page. PUBLISH CASCADES: a page sharing a global ' +
-          'section with others republishes them too, because a header edited once must not go ' +
-          'live on one page and stay stale on the rest.',
-      inputSchema: { site_id: z.string().optional(), page_id: z.string(), dry_run: z.boolean().optional() },
+        'Compile the draft into the live page, and report which revision went live (id, ' +
+          'publishedAt, fromVersionId). PUBLISH CASCADES: a page sharing a global section with ' +
+          'others republishes them too, because a header edited once must not go live on one ' +
+          'page and stay stale on the rest. verify:true then fetches the live page and says ' +
+          'whether the origin is serving that revision yet — the storefront caches for 60s, so ' +
+          'a reload showing the old page is that, not a failed publish.',
+      inputSchema: {
+        site_id: z.string().optional(),
+        page_id: z.string(),
+        dry_run: z.boolean().optional(),
+        verify: z
+          .boolean()
+          .optional()
+          .describe('Fetch the live page afterwards and report whether it serves this revision'),
+      },
       annotations: { readOnlyHint: false, destructiveHint: true, idempotentHint: true },
     },
-    async ({ site_id: given, page_id, dry_run }) => {
+    async ({ site_id: given, page_id, dry_run, verify }) => {
       const site_id = siteFor(ctx, given);
       // PUBLISH IS A SITE-LEVEL CALL that NAMES pages, not a page-level route.
       // This used to POST /pages/{id}/publish, which the platform answers 404 —
@@ -1722,18 +1814,63 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
       // — and publish CASCADES, so returning the response as it arrives pours
       // every republished page's markup into the reader. Kept: what identifies
       // the row and what a caller would act on.
+      // WHAT IDENTIFIES THE LIVE REVISION, which the projection used to throw
+      // away along with the markup.
+      //
+      // `document`, `html` and `css` are dropped for the reason they always
+      // were — publish CASCADES, so returning them pours every republished
+      // page's markup into the reader. But `id`, `publishedAt` and
+      // `fromVersionId` are the three fields that ANSWER "which revision is
+      // live", which is the question a caller has immediately after publishing
+      // and had no way to ask: `id` is the published row, `fromVersionId` the
+      // draft version it was compiled from, and `publishedAt` the moment. They
+      // cost one line each and they are the whole point of the response.
       const published = (res.published ?? []).map((p) => ({
         pageId: p.pageId,
         ...(p.slug !== undefined ? { slug: p.slug } : {}),
         ...(p.isHomepage ? { isHomepage: true } : {}),
+        ...(p.id !== undefined ? { id: p.id } : {}),
+        ...(p.publishedAt !== undefined ? { publishedAt: p.publishedAt } : {}),
+        ...(p.fromVersionId ? { fromVersionId: p.fromVersionId } : {}),
       }));
       // PUBLISH SKIPS A PAGE WITH NO SAVED DRAFT and still answers 200 with
       // whatever did publish (`server/internal/page/service.go:650`, a bare
       // `continue`). sb_page_create followed by sb_publish does exactly that:
       // the call succeeds, the page never flips to published, and the URL 404s.
       const landed = published.some((p) => p.pageId === page_id);
+      // A 200 PROVES A ROW WAS STORED, NOT THAT A VISITOR IS BEING SERVED IT.
+      // The storefront answers `cache-control: public, max-age=60`, so the two
+      // legitimately differ for up to a minute — long enough for a caller to
+      // reload, see the old page, and go looking for a bug that is not there.
+      // Opt-in because it costs a preview mint and a page fetch, and because
+      // most publishes are followed by more work rather than by a look.
+      let live: LiveProof | undefined;
+      if (verify) {
+        const row = (res.published ?? []).find((p) => p.pageId === page_id);
+        const ids = bandIds((row as { document?: unknown } | undefined)?.document);
+        try {
+          // The storefront ORIGIN, taken from the page's own preview link
+          // rather than guessed: a site may have a custom domain, and this is
+          // the one place the platform states where its pages are served from.
+          const origin = new URL(await previewUrl(ctx, site_id, page_id)).origin;
+          const slug = typeof row?.slug === 'string' ? row.slug : '';
+          const path = row?.isHomepage || slug === '' ? '/' : `/${slug}`;
+          live = await proveLive(origin + path, ids, ctx.fetchImpl ?? fetch);
+        } catch (e) {
+          live = {
+            url: '',
+            status: 0,
+            serving: false,
+            checked: ids.length,
+            note:
+              `The live address could not be resolved (${(e as Error).message}). The publish ` +
+              'succeeded; only this check did not run.',
+          };
+        }
+      }
       return text({
         published,
+        ...(live ? { live } : {}),
         ...(published.length !== (res.total ?? published.length) ? { total: res.total } : {}),
         ...(landed
           ? {}
@@ -1742,6 +1879,143 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
                 'nothing for it and reported success anyway. Open it with sb_page_open, save an ' +
                 'edit, then publish again.',
             }),
+      });
+    },
+  );
+
+  server.registerTool(
+    'sb_page_state',
+    {
+      description:
+        'Which of this page\'s three copies is which: the DRAFT the editor canvas shows, the ' +
+        'PUBLISHED row the storefront serves, and what this session holds. Says whether the ' +
+        'editor will render the canvas BLANK (its hydrate gate discards a document whose root ' +
+        'is missing and shows an empty ROOT, silently — the Go renderer has no such gate, ' +
+        'which is how "the live page has data but the canvas is empty" happens), whether the ' +
+        'draft has changes the live page does not, and where the recovery points are.',
+      inputSchema: {
+        site_id: z.string().optional(),
+        page_id: z.string().optional().describe('Defaults to the open page'),
+      },
+      annotations: { readOnlyHint: true },
+    },
+    async ({ site_id: given, page_id }) => {
+      const site_id = siteFor(ctx, given);
+      const here = session.location();
+      const pageId = page_id ?? here.pageId;
+      if (!pageId) {
+        throw new Error('sbuilder: sb_page_state needs page_id, or a page opened with sb_page_open.');
+      }
+      // THE RAW SOURCE, not `session.current()`. `PageDoc.from` repairs a root
+      // alias in memory; the editor reads the STORED bytes, so a report about
+      // what the editor will do has to read them too.
+      const src = await loadSource(ctx, site_id, pageId);
+      const canvas = canvasVerdict(src.document);
+
+      // The live row. Listed rather than fetched per page because the platform
+      // offers no per-page published read, and the list is already projected.
+      const live = (await request({
+        base: ctx.base,
+        method: 'GET',
+        path: `/api/sites/${encodeURIComponent(site_id)}/published`,
+        token: siteToken(ctx),
+        fetchImpl: ctx.fetchImpl,
+      })) as { published?: Array<Record<string, unknown>> };
+      const row = (live.published ?? []).find((p) => p.pageId === pageId);
+      const publishedNodes = Object.keys(
+        ((row?.document as { nodes?: Record<string, unknown> } | undefined)?.nodes ?? {}),
+      ).length;
+
+      const drift = driftOf(src.updatedAt, row?.publishedAt as string | undefined);
+
+      // Projected to id + label + when, never the documents: one version of a
+      // two-node page measured 1,690 bytes over the wire, so a realistic page
+      // is ~70 KB per version and a listing of twenty is 1.4 MB in one answer.
+      // The same projection `sb_api_call` applies to these two operations.
+      const points = async (
+        kind: 'versions' | 'history',
+      ): Promise<Array<Record<string, unknown>>> => {
+        try {
+          const got = (await request({
+            base: ctx.base,
+            method: 'GET',
+            path: `/api/sites/${encodeURIComponent(site_id)}/pages/${encodeURIComponent(pageId)}/${kind}`,
+            token: siteToken(ctx),
+            fetchImpl: ctx.fetchImpl,
+          })) as Record<string, unknown>;
+          const rows = (got[kind] ?? []) as Array<Record<string, unknown>>;
+          return rows.slice(0, 5).map((r) => ({
+            id: r.id,
+            ...(r.versionNo !== undefined ? { versionNo: r.versionNo } : {}),
+            ...(r.label ? { label: r.label } : {}),
+            ...(r.isLive ? { isLive: true } : {}),
+            createdAt: r.createdAt,
+          }));
+        } catch {
+          // A recovery list that cannot be read must not fail a report whose
+          // whole purpose is to be readable when something is already wrong.
+          return [];
+        }
+      };
+      const [versions, history] = await Promise.all([points('versions'), points('history')]);
+      const recovery = {
+        versions,
+        history,
+        note:
+          'The platform appends an autosave checkpoint on EVERY draft save and mints a ' +
+          'labelled snapshot on demand, and both outlive this process — so a checkpoint ' +
+          'before a whole-document PUT is already taken. Restore with sb_api_call ' +
+          '"post:/api/sites/{siteId}/pages/{pageId}/versions/{versionId}/restore" or the ' +
+          'history twin. A RESTORE CHANGES THE DRAFT ONLY: publish afterwards, or the ' +
+          'storefront keeps serving the page you just rolled back from. The platform writes ' +
+          'a __pre_restore version of its own first, so a restore is itself undoable.',
+      };
+      const open = here.pageId === pageId && here.siteId === site_id;
+      return text({
+        page: pageId,
+        draft: {
+          updatedAt: src.updatedAt,
+          schemaVersion: src.schemaVersion,
+          nodes: canvas.nodes,
+          ...(src.warnings?.length ? { compose_warnings: src.warnings.length } : {}),
+        },
+        published: row
+          ? {
+              id: row.id,
+              publishedAt: row.publishedAt,
+              fromVersionId: row.fromVersionId,
+              nodes: publishedNodes,
+            }
+          : null,
+        canvas: canvas.blank
+          ? { blank: true, nodes: canvas.nodes, why: canvas.why, fix: canvas.fix }
+          : { blank: false, nodes: canvas.nodes },
+        drift,
+        session: open
+          ? { open: true, rev: session.current().rev, unsaved: session.hasUnsaved() }
+          : { open: false },
+        // THE EDITOR DOES NOT RE-READ A PAGE IT ALREADY HAS OPEN. A save from
+        // here lands on the server and the canvas keeps showing the copy it
+        // loaded — which reads as "my edit did nothing" and is the single most
+        // common way a session and a person disagree about a page. Nothing
+        // here can see the editor, so the honest form is the timestamp and
+        // what to do with it.
+        editor_note:
+          `An editor tab that opened this page before ${src.updatedAt} is holding an older ` +
+          'copy: the editor loads the draft once and does not re-read it, so a save made here ' +
+          'is invisible there until the tab is reloaded — and that tab\'s next save would ' +
+          'store its older copy over this one. Reload the editor before editing there.',
+        // THE CHECKPOINT BEFORE A PUT ALREADY EXISTS, and that is worth
+        // stating rather than re-implementing: `saveDraftRaw` appends an
+        // autosave checkpoint on EVERY draft save, bounded by the service's
+        // own keep count, and `SaveVersion` mints a labelled snapshot beside
+        // it. What was missing was anyone SAYING so — this repo recorded for
+        // three phases that a wrecked draft was unrecoverable, which was true
+        // of the OpenAPI document and false of the platform.
+        //
+        // Listed rather than described, because "there is a way back" is not
+        // a way back: a caller in trouble needs the id to restore.
+        recovery,
       });
     },
   );

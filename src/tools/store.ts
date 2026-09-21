@@ -43,7 +43,14 @@ import { siteFor, type ToolContext } from './context.js';
 import { genId } from '../domains/site/ids.js';
 import type { PageSession } from './page.js';
 import { addSubtree } from '../domains/site/builder.js';
-import { chromeLinks, hasGlobal, shareChrome, sitePages } from './chrome.js';
+import {
+  attachGlobal,
+  chromeLinks,
+  detachGlobal,
+  hasGlobal,
+  shareChrome,
+  sitePages,
+} from './chrome.js';
 import { tokensFromPage } from '../domains/site/importmap.js';
 import { bindMenu } from './menu.js';
 import { attachOverlay } from './overlay.js';
@@ -470,9 +477,22 @@ export function registerStoreTools(server: McpServer, ctx: ToolContext, session:
         'as the editor must. action:"app" installs one of the platform\'s built-in apps ' +
         '(app_key) and creates the pages it needs that installing it does not — today only ' +
         '"courses" has any, from the platform\'s own scaffold; every other key installs with ' +
-        'nothing further to build. Dry run returns the plan.',
+        'nothing further to build. action:"global_attach" puts an EXISTING shared section ' +
+        '(global_id) on the open page and action:"global_detach" takes it off, writing the ' +
+        'reference the platform reads and placing it in the band ROOT\'s child order demands — ' +
+        'the answer for a page that is missing the site\'s header, where action:"chrome" would ' +
+        'wrongly build a second one. Dry run returns the plan.',
       inputSchema: {
-        action: z.enum(['checkout', 'form', 'chrome', 'menu', 'overlay_attach', 'app']),
+        action: z.enum([
+          'checkout',
+          'form',
+          'chrome',
+          'menu',
+          'overlay_attach',
+          'app',
+          'global_attach',
+          'global_detach',
+        ]),
         site_id: z.string().optional(),
         language: z.enum(['vi', 'en']).optional().describe('Copy language, default vi'),
         page_name: z.string().optional(),
@@ -510,6 +530,13 @@ export function registerStoreTools(server: McpServer, ctx: ToolContext, session:
           .enum(BUILTIN_APP_KEYS)
           .optional()
           .describe('action:"app" — which built-in app to install'),
+        global_id: z
+          .string()
+          .optional()
+          .describe(
+            'action:"global_attach"/"global_detach" — the shared section; omitted on attach it ' +
+              'lists the site\'s own',
+          ),
         dry_run: z.boolean().optional(),
       },
       annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: true },
@@ -529,9 +556,21 @@ export function registerStoreTools(server: McpServer, ctx: ToolContext, session:
       overlay_id,
       list_id,
       app_key,
+      global_id,
       dry_run,
     }) => {
       const siteId = siteFor(ctx, given);
+      if (action === 'global_attach' || action === 'global_detach') {
+        // THE COMPOSED STAMP IS NEVER THE CALLER'S TO WRITE. A page references
+        // a master with `specials.globalRef`; the server composes it in on read
+        // and stamps the result `globalId`. Authoring the composed stamp makes
+        // the next save DECOMPOSE that node OVER the master and empty it for
+        // every page carrying it — four pages went blank here before `sb_add`
+        // and `sb_set` learned to refuse it, and hand-writing the reference was
+        // the only way to attach one until this action existed.
+        const run = action === 'global_attach' ? attachGlobal : detachGlobal;
+        return text(await run(ctx, session, siteId, global_id, { dryRun: dry_run !== false }));
+      }
       if (action === 'app') {
         if (!app_key) {
           throw new Error(
