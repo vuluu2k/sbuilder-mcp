@@ -6,6 +6,21 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.63.0] - 2026-09-21
+
+### Added
+- `sb_store` gained `global_attach` and `global_detach` actions to put an existing shared header or footer onto the open page, or take one off, without hand-writing the composed stamp.
+- `sb_page_state` is a new tool that reports whether the editor's draft, the published page, and this session's own copy of a page agree, and lists the real recovery points (autosave checkpoints and labelled versions) when they do not.
+- `sb_publish` now reports the published revision's `id`, `publishedAt`, and the draft version it was compiled from, and takes a `verify` argument that fetches the live storefront and confirms the origin is actually serving that revision.
+
+### Fixed
+- `sb_event` now writes the `<a href>` a renderer actually reads alongside a navigation click, since `node.events` is never read for a sole `go_to_url`/`open_page` click; every navigation authored before this fix rendered, saved, and published a control that did nothing when a shopper clicked it.
+- `sb_review` no longer throws on a page whose document names a child node it does not hold; it reports the defect as `missing_node` instead.
+- `sb_review` reports `dead_nav` for a navigation click that reached the document without its href projection.
+- `sb_look`'s overlap check and its `node_id` framing now recognize an overlay (such as the cart drawer) by how it actually renders off-screen, not only by its composition stamp, removing dozens of false off-canvas findings per page and letting a drawer authored straight into a page document be framed at all.
+- API errors thrown by a tool now carry the platform's own error `code` and HTTP status in the message, so a failure like a band-order refusal can be matched against its documented code instead of only its prose.
+- `sb_store`'s `chrome` action and `sb_page_create` now re-read and re-store the page immediately after attaching a global section, so the platform's usage count and referencing-pages list reflect the attachment right away instead of only after a later save.
+
 ## [0.62.0] - 2026-09-20
 
 ### Added

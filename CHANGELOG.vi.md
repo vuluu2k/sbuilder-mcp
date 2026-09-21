@@ -6,6 +6,21 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.63.0] - 2026-09-21
+
+### Added
+- `sb_store` có thêm hai action `global_attach` và `global_detach` để đặt một header hoặc footer dùng chung đã tồn tại lên trang đang mở, hoặc gỡ nó ra, mà không cần tự tay viết stamp đã compose.
+- `sb_page_state` là một tool mới, báo cáo xem bản draft của editor, trang đã publish, và bản sao của session này có khớp nhau hay không, đồng thời liệt kê các điểm khôi phục thật sự (checkpoint autosave và version có nhãn) khi chúng không khớp.
+- `sb_publish` giờ báo cáo `id` của bản ghi đã publish, `publishedAt`, và version draft mà nó được biên dịch từ đó, đồng thời nhận tham số `verify` để lấy trang storefront trực tiếp và xác nhận origin có đang phục vụ đúng bản đó không.
+
+### Fixed
+- `sb_event` giờ ghi `<a href>` mà renderer thực sự đọc cùng lúc với một click điều hướng, vì `node.events` không bao giờ được đọc cho một click `go_to_url`/`open_page` đơn lẻ; mọi điều hướng được tạo trước bản sửa này render, lưu và publish thành một control không làm gì khi khách bấm vào.
+- `sb_review` không còn ném lỗi khi tài liệu của trang trỏ tới một node con mà nó không có; giờ báo cáo lỗi này dưới dạng `missing_node`.
+- `sb_review` báo cáo `dead_nav` cho một click điều hướng đến được tài liệu mà không có phép chiếu href của nó.
+- Kiểm tra chồng lấp của `sb_look` và việc khung hình theo `node_id` giờ nhận diện một overlay (như cart drawer) dựa trên cách nó thực sự render ngoài màn hình, chứ không chỉ dựa vào stamp compose, loại bỏ hàng chục phát hiện off-canvas giả trên mỗi trang và cho phép khung hình một drawer được tạo thẳng vào tài liệu trang.
+- Lỗi API do một tool ném ra giờ mang theo `code` lỗi và mã trạng thái HTTP của nền tảng trong message, để một lỗi như bị từ chối do sai thứ tự band có thể được đối chiếu với mã đã tài liệu hóa thay vì chỉ dựa vào câu chữ.
+- Action `chrome` của `sb_store` và `sb_page_create` giờ đọc lại và lưu lại trang ngay sau khi gắn một global section, để số lượt sử dụng và danh sách trang tham chiếu của nền tảng phản ánh việc gắn kết ngay lập tức thay vì chỉ sau một lần lưu sau đó.
+
 ## [0.62.0] - 2026-09-20
 
 ### Added
