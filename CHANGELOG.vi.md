@@ -6,6 +6,11 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.63.2] - 2026-09-24
+
+### Fixed
+- Socket live-edit giờ giữ lại các frame được gửi trước khi server chào (welcome) thay vì loại bỏ chúng, để một section được thêm ngay sau `sb_page_open` đến được với editor đang xem trang thay vì để trang đó hiển thị "This page is empty" và có nguy cơ trạng thái rỗng đó bị autosave đè lên công việc của agent; hàng đợi giữ frame bị giới hạn ở 500 frame để một vòng lặp reconnect kéo dài không thể làm bộ nhớ tăng vô hạn.
+
 ## [0.63.1] - 2026-09-24
 
 ### Fixed

@@ -6,6 +6,11 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.63.2] - 2026-09-24
+
+### Fixed
+- The live-edit socket now holds frames sent before the server's welcome instead of dropping them, so a section added right after `sb_page_open` reaches an editor watching the page instead of leaving it showing "This page is empty" and risking that empty state being autosaved over the agent's work; the held queue is capped at 500 frames so a long reconnect loop cannot grow memory without bound.
+
 ## [0.63.1] - 2026-09-24
 
 ### Fixed
