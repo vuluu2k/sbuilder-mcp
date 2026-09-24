@@ -2,9 +2,9 @@
 // Source: <WB_REPO>/schema/src/elements/translatableFields.ts
 
 export const TRANSLATION_SOURCE = {
-  "elements": 58,
-  "pairs": 146,
-  "neverKeys": 167,
+  "elements": 64,
+  "pairs": 175,
+  "neverKeys": 173,
   "entityTypes": 12
 } as const;
 
@@ -66,6 +66,24 @@ export const TRANSLATABLE_SPECIALS: Record<string, string[]> = {
     "label",
     "placeholder"
   ],
+  "free-ship-bar": [
+    "remainingText",
+    "reachedText"
+  ],
+  "voucher-list": [
+    "title",
+    "buttonLabel",
+    "emptyText",
+    "copiedText",
+    "failedText"
+  ],
+  "countdown": [
+    "expiredText",
+    "dayLabel",
+    "hourLabel",
+    "minuteLabel",
+    "secondLabel"
+  ],
   "order-history": [
     "title",
     "emptyText",
@@ -113,6 +131,17 @@ export const TRANSLATABLE_SPECIALS: Record<string, string[]> = {
   "points-card": [
     "title",
     "signedOutText"
+  ],
+  "my-vouchers": [
+    "title",
+    "signedOutText",
+    "buttonLabel",
+    "emptyText",
+    "copiedText",
+    "failedText",
+    "loadFailedText",
+    "usedText",
+    "expiredText"
   ],
   "member-field": [
     "prefix",
@@ -176,6 +205,16 @@ export const TRANSLATABLE_SPECIALS: Record<string, string[]> = {
     "detailPlaceholder",
     "placeholder"
   ],
+  "form-discount-code": [
+    "label",
+    "placeholder",
+    "description",
+    "buttonLabel",
+    "appliedText",
+    "unknownCodeText",
+    "codeNotUsableText",
+    "quoteFailedText"
+  ],
   "form-radio": [
     "label",
     "options",
@@ -208,7 +247,6 @@ export const TRANSLATABLE_SPECIALS: Record<string, string[]> = {
   ],
   "form-calendar": [
     "label",
-    "placeholder",
     "description"
   ],
   "form-file": [
@@ -293,6 +331,9 @@ export const TRANSLATABLE_SPECIALS: Record<string, string[]> = {
   "theme-switcher": [
     "lightLabel",
     "darkLabel"
+  ],
+  "sale-badge": [
+    "text"
   ]
 };
 
@@ -350,6 +391,7 @@ export const NEVER_TRANSLATED: string[] = [
   "dir",
   "displayType",
   "end",
+  "endsAt",
   "field",
   "fileFormat",
   "fileLimit",
@@ -358,11 +400,13 @@ export const NEVER_TRANSLATED: string[] = [
   "filterBehavior",
   "filterColors",
   "filterExcluded",
+  "filterHierarchy",
   "filterMatch",
   "filterMaxDepth",
   "filterMaxValues",
   "filterRanges",
   "filterShowAll",
+  "filterShowCount",
   "filterSource",
   "filterTarget",
   "filterTargets",
@@ -400,6 +444,7 @@ export const NEVER_TRANSLATED: string[] = [
   "minChars",
   "minLabelText",
   "minValue",
+  "mode",
   "modelUrl",
   "moneyPayload",
   "moreButtonEnabled",
@@ -459,6 +504,7 @@ export const NEVER_TRANSLATED: string[] = [
   "showPhone",
   "showPlaceholder",
   "source",
+  "sourceCode",
   "specificDate",
   "src",
   "start",
@@ -467,6 +513,7 @@ export const NEVER_TRANSLATED: string[] = [
   "stylePreset",
   "symbolChar",
   "target",
+  "thresholdCents",
   "trackUrl",
   "variant",
   "videoId",

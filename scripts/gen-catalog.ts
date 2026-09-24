@@ -4120,6 +4120,12 @@ export const APP_SCAFFOLDS: Record<
     TimeslotFieldKnobs: [...grp('FIELD_CHROME_KNOBS'), ...grp('TIMESLOT_SKIN_KNOBS'), ...grp('TIMESLOT_MARKER_SKIN_KNOBS')],
     FileFieldKnobs: [...grp('FIELD_CHROME_KNOBS'), ...grp('FILE_SKIN_KNOBS')],
     PayFieldKnobs: grp('PAY_FIELD_SKIN_KNOBS'),
+    // The form alone dresses the two lines its island writes after a send.
+    FormKnobs: [...grp('FIELD_NODE_SKIN_KNOBS'), ...grp('FORM_MESSAGE_SKIN_KNOBS')],
+    // form-text adds the textarea's own knob to the input vocabulary.
+    TextFieldKnobs: [...grp('FIELD_NODE_SKIN_KNOBS'), ...grp('FIELD_AREA_SKIN_KNOBS')],
+    // search-input's suggestion panel — not a form node, same table shape.
+    SearchPanelKnobs: grp('SEARCH_PANEL_SKIN_KNOBS'),
   };
 
   // THE CROSS-CHECK, and it deliberately does NOT parse the Go composition.
@@ -4157,7 +4163,7 @@ export const APP_SCAFFOLDS: Record<
   const skinByNode: Record<string, string[]> = {};
   const nodesDir = resolve(repo, 'server/render/nodes');
   for (const entry of readdirSync(nodesDir, { withFileTypes: true })) {
-    if (!entry.isDirectory() || !entry.name.startsWith('form')) continue;
+    if (!entry.isDirectory() || entry.name === 'fieldskin') continue;
     const css = resolve(nodesDir, entry.name, 'css.go');
     if (!existsSync(css)) continue;
     const src = readFileSync(css, 'utf8');

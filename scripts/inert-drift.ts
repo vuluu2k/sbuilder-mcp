@@ -28,7 +28,7 @@
  * MEASURED against the 113-element catalog of 2026-09-14, and written down so
  * the next reader knows what this does and does not claim:
  *
- *   15 of the table's 20 entries match.
+ *   15 of the table's 21 entries match (countdown, added later, is a sixth miss).
  *    5 do not — spline-scene, form-step-button, form-step-count, theme-switcher,
  *      breadcrumb. Their traps are real and are described in other words.
  *    1 element outside the table matches: text-dataset (see AUDIT_REJECTED).
@@ -68,6 +68,11 @@ export const AUDIT_REJECTED: Record<string, string> = {
   // being inert. A text-dataset bound to a product shows that product's text;
   // there is no second write missing and nothing would surprise an author.
   'text-dataset': "renders only the record's own text — render language about content, not inertness",
+  // "Renders nothing at all when the product has no real saving" — that is the
+  // badge being RIGHT, not wired to nothing: a full-price product has no
+  // discount to flag, the description says so up front, and no second write
+  // would change it.
+  'sale-badge': 'hides itself when there is no real discount — correct behaviour, stated in the description',
 };
 
 /** Structurally typed so this module needs no import from the catalog. */
@@ -113,7 +118,7 @@ export function reportInertDrift(elements: Record<string, InertCandidate>): void
       'src/domains/site/inert.ts (the first write succeeds completely, the element still does ' +
       'nothing useful, and a competent author would be SURPRISED), then either add an entry ' +
       'naming the second write it needs, or record the rejection in AUDIT_REJECTED ' +
-      '(scripts/inert-drift.ts) with the reason. This check catches 15 of the table\'s 20 ' +
+      '(scripts/inert-drift.ts) with the reason. This check catches 15 of the table\'s 21 ' +
       'entries by design; a silent element is still possible, so it is a floor, not a proof.',
   );
 }

@@ -692,6 +692,20 @@ export const PAGE_LAYOUT_SEEDS: Record<string, { schema_version: number; root_no
           "paginationItemGap": 4,
           "paginationItemBg": "rgba(0,0,0,0.25)",
           "paginationItemActiveBg": "rgba(0,0,0,0.8)",
+          "paginationBg": "transparent",
+          "pagerAlign": "center",
+          "pagerSpacing": 24,
+          "pagerItemGap": 8,
+          "pagerItemWidth": 36,
+          "pagerItemHeight": 36,
+          "pagerItemBorderRadius": 8,
+          "pagerItemBg": "transparent",
+          "moreAlign": "center",
+          "moreSpacing": 24,
+          "moreHeight": 40,
+          "morePaddingX": 20,
+          "moreBorderRadius": 8,
+          "moreBg": "transparent",
           "emptyStateId": "plart_9"
         },
         "specials": {
@@ -1098,6 +1112,196 @@ export const PAGE_LAYOUT_SEEDS: Record<string, { schema_version: number; root_no
           "nodes": [
             "plart_2",
             "plart_3"
+          ],
+          "isCanvas": true,
+          "hidden": false,
+          "custom": {}
+        },
+        "style": {
+          "display": "flex",
+          "flexDirection": "column",
+          "width": "100%",
+          "height": "fit-content",
+          "gap": "24px",
+          "paddingTop": "48px",
+          "paddingBottom": "48px"
+        },
+        "config": {
+          "backgroundSceneSource": "",
+          "backgroundSceneEffect": "gradient-mesh",
+          "backgroundSceneGallery": "podium",
+          "backgroundSceneSpeed": "normal",
+          "backgroundSceneIntensity": "normal",
+          "backgroundSceneColors": "theme",
+          "backgroundSceneColor1": "#171717",
+          "backgroundSceneColor2": "#ffffff",
+          "backgroundSceneColor3": "#6b7280",
+          "backgroundSceneUrl": "",
+          "backgroundSceneModelUrl": "",
+          "backgroundSceneVeil": 0,
+          "backgroundSceneVeilColor": "#000000"
+        },
+        "specials": {
+          "stylePreset": "container-section"
+        },
+        "responsive": {},
+        "events": [],
+        "bindings": []
+      }
+    }
+  },
+  "login": {
+    "schema_version": 2,
+    "root_node_id": "pllog_1",
+    "nodes": {
+      "pllog_1": {
+        "id": "pllog_1",
+        "data": {
+          "type": "root",
+          "parent": null,
+          "nodes": [
+            "pllog_3"
+          ],
+          "isCanvas": true,
+          "hidden": false,
+          "custom": {}
+        },
+        "style": {},
+        "config": {},
+        "specials": {},
+        "responsive": {},
+        "events": [],
+        "bindings": []
+      },
+      "pllog_2": {
+        "id": "pllog_2",
+        "data": {
+          "type": "form",
+          "parent": "pllog_3",
+          "nodes": [],
+          "isCanvas": false,
+          "hidden": false,
+          "custom": {}
+        },
+        "style": {
+          "display": "flex",
+          "flexDirection": "column",
+          "width": "100%",
+          "height": "fit-content",
+          "gap": "12px"
+        },
+        "config": {},
+        "specials": {
+          "formId": "",
+          "segmentId": "",
+          "formRules": ""
+        },
+        "responsive": {},
+        "events": [],
+        "bindings": []
+      },
+      "pllog_3": {
+        "id": "pllog_3",
+        "data": {
+          "type": "flex-section",
+          "parent": "pllog_1",
+          "nodes": [
+            "pllog_2"
+          ],
+          "isCanvas": true,
+          "hidden": false,
+          "custom": {}
+        },
+        "style": {
+          "display": "flex",
+          "flexDirection": "column",
+          "width": "100%",
+          "height": "fit-content",
+          "gap": "24px",
+          "paddingTop": "48px",
+          "paddingBottom": "48px"
+        },
+        "config": {
+          "backgroundSceneSource": "",
+          "backgroundSceneEffect": "gradient-mesh",
+          "backgroundSceneGallery": "podium",
+          "backgroundSceneSpeed": "normal",
+          "backgroundSceneIntensity": "normal",
+          "backgroundSceneColors": "theme",
+          "backgroundSceneColor1": "#171717",
+          "backgroundSceneColor2": "#ffffff",
+          "backgroundSceneColor3": "#6b7280",
+          "backgroundSceneUrl": "",
+          "backgroundSceneModelUrl": "",
+          "backgroundSceneVeil": 0,
+          "backgroundSceneVeilColor": "#000000"
+        },
+        "specials": {
+          "stylePreset": "container-section"
+        },
+        "responsive": {},
+        "events": [],
+        "bindings": []
+      }
+    }
+  },
+  "register": {
+    "schema_version": 2,
+    "root_node_id": "plreg_1",
+    "nodes": {
+      "plreg_1": {
+        "id": "plreg_1",
+        "data": {
+          "type": "root",
+          "parent": null,
+          "nodes": [
+            "plreg_3"
+          ],
+          "isCanvas": true,
+          "hidden": false,
+          "custom": {}
+        },
+        "style": {},
+        "config": {},
+        "specials": {},
+        "responsive": {},
+        "events": [],
+        "bindings": []
+      },
+      "plreg_2": {
+        "id": "plreg_2",
+        "data": {
+          "type": "form",
+          "parent": "plreg_3",
+          "nodes": [],
+          "isCanvas": false,
+          "hidden": false,
+          "custom": {}
+        },
+        "style": {
+          "display": "flex",
+          "flexDirection": "column",
+          "width": "100%",
+          "height": "fit-content",
+          "gap": "12px"
+        },
+        "config": {},
+        "specials": {
+          "formId": "",
+          "segmentId": "",
+          "formRules": ""
+        },
+        "responsive": {},
+        "events": [],
+        "bindings": []
+      },
+      "plreg_3": {
+        "id": "plreg_3",
+        "data": {
+          "type": "flex-section",
+          "parent": "plreg_1",
+          "nodes": [
+            "plreg_2"
           ],
           "isCanvas": true,
           "hidden": false,
@@ -2520,6 +2724,20 @@ export const STORE_PAGE_SEEDS: Record<string, { schema_version: number; root_nod
           "paginationItemGap": 4,
           "paginationItemBg": "rgba(0,0,0,0.25)",
           "paginationItemActiveBg": "rgba(0,0,0,0.8)",
+          "paginationBg": "transparent",
+          "pagerAlign": "center",
+          "pagerSpacing": 24,
+          "pagerItemGap": 8,
+          "pagerItemWidth": 36,
+          "pagerItemHeight": 36,
+          "pagerItemBorderRadius": 8,
+          "pagerItemBg": "transparent",
+          "moreAlign": "center",
+          "moreSpacing": 24,
+          "moreHeight": 40,
+          "morePaddingX": 20,
+          "moreBorderRadius": 8,
+          "moreBg": "transparent",
           "emptyStateId": "spcat_10"
         },
         "specials": {
@@ -3218,6 +3436,20 @@ export const STORE_PAGE_SEEDS: Record<string, { schema_version: number; root_nod
           "paginationItemGap": 4,
           "paginationItemBg": "rgba(0,0,0,0.25)",
           "paginationItemActiveBg": "rgba(0,0,0,0.8)",
+          "paginationBg": "transparent",
+          "pagerAlign": "center",
+          "pagerSpacing": 24,
+          "pagerItemGap": 8,
+          "pagerItemWidth": 36,
+          "pagerItemHeight": 36,
+          "pagerItemBorderRadius": 8,
+          "pagerItemBg": "transparent",
+          "moreAlign": "center",
+          "moreSpacing": 24,
+          "moreHeight": 40,
+          "morePaddingX": 20,
+          "moreBorderRadius": 8,
+          "moreBg": "transparent",
           "emptyStateId": "spsea_10"
         },
         "specials": {
@@ -3922,6 +4154,20 @@ export const STORE_PAGE_SEEDS: Record<string, { schema_version: number; root_nod
           "paginationItemGap": 4,
           "paginationItemBg": "rgba(0,0,0,0.25)",
           "paginationItemActiveBg": "rgba(0,0,0,0.8)",
+          "paginationBg": "transparent",
+          "pagerAlign": "center",
+          "pagerSpacing": 24,
+          "pagerItemGap": 8,
+          "pagerItemWidth": 36,
+          "pagerItemHeight": 36,
+          "pagerItemBorderRadius": 8,
+          "pagerItemBg": "transparent",
+          "moreAlign": "center",
+          "moreSpacing": 24,
+          "moreHeight": 40,
+          "morePaddingX": 20,
+          "moreBorderRadius": 8,
+          "moreBg": "transparent",
           "emptyStateId": "spblo_9"
         },
         "specials": {

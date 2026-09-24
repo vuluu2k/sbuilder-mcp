@@ -43,7 +43,7 @@
  * `codegen:check`, matching each element's own prose against the render language
  * every kept entry here uses ("only renders inside/through/as"), and warning
  * about any that is in neither this table nor its `AUDIT_REJECTED` ledger. It
- * catches 15 of the 20 below — enough to warn, nowhere near enough to generate —
+ * catches 15 of the 21 below — enough to warn, nowhere near enough to generate —
  * and it would have caught `quickview`. An element REJECTED after being read
  * against the criterion above belongs in that ledger with its reason, not here.
  */
@@ -136,6 +136,18 @@ export const INERT_ON_ADD: Record<string, InertHint> = {
 
   // Its own AVOID uses the word this table is named after: "the switcher would
   // be inert". A single-currency store is the common case, not an edge one.
+  // Seeded with `endsAt: ''` ON PURPOSE — the meta's own words: "there is no
+  // honest default absolute instant to fabricate". So a freshly added
+  // countdown paints four labelled boxes that look finished and count down to
+  // nothing; the screenshot cannot tell it from a working one.
+  countdown: {
+    note:
+      'A countdown is seeded with NO end time (specials.endsAt is ""), so it paints four boxes ' +
+      'that count down to nothing. Set specials.endsAt to an ISO-8601 instant WITH an offset ' +
+      '(e.g. "2026-10-01T00:00:00+07:00"), or specials.sourceCode to a public discount code whose ' +
+      'own end date should drive it.',
+  },
+
   'currency-switcher': {
     note:
       'A currency-switcher is inert on a single-currency store — its own AVOID note says so ' +

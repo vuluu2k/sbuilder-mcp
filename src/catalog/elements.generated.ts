@@ -3,7 +3,7 @@
 import type { CatalogElement, NodeSeed, SatelliteRule, TraitDescription, ValueVocabulary, WritePrecondition } from './element-types.js';
 
 export const ELEMENT_SOURCE = {
-  "count": 113,
+  "count": 119,
   "docSchemaVersion": 2
 } as const;
 
@@ -2274,6 +2274,20 @@ export const ELEMENTS: Record<string, CatalogElement> = {
               "corner",
               "shadow"
             ]
+          },
+          {
+            "key": "suggestPanel",
+            "label": "Suggestion box",
+            "controls": [
+              "search_panel_skin"
+            ]
+          },
+          {
+            "key": "suggestPanelShadow",
+            "label": "Suggestion box shadow",
+            "controls": [
+              "search_panel_shadow"
+            ]
           }
         ]
       },
@@ -2332,6 +2346,8 @@ export const ELEMENTS: Record<string, CatalogElement> = {
       "border",
       "corner",
       "shadow",
+      "search_panel_skin",
+      "search_panel_shadow",
       "padding_margin",
       "display",
       "animation",
@@ -2346,7 +2362,6 @@ export const ELEMENTS: Record<string, CatalogElement> = {
       "The author wants to narrow by a fixed set of values (a brand, a size, a price band). That is a filter element — filter-checkbox, filter-radio, filter-color or filter-tag."
     ],
     "contentTips": [
-      "specials.searchEntity picks the corpus: product | category | article | blogCategory.",
       "specials.searchBehavior picks what a commit does: navigate (goes to /search, and is the only lane that works with JavaScript disabled), filter (narrows lists on this page), suggest (opens a dropdown), event (dispatches wb:search and writes no URL).",
       "A list-dataset OPTS OUT of being narrowed on its own node: specials.searchable false refuses search, specials.filterable false refuses filters. There is no per-box target list any more.",
       "specials.searchPlaceholder is the field’s placeholder text; leave it empty for none.",
@@ -2508,7 +2523,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
       "The page has no search behaviour at all — a chip that filters nothing reads as broken."
     ],
     "contentTips": [
-      "specials.keywords holds the resting chips as plain strings; commas are stripped because a comma is the filter format’s value separator.",
+      "specials.keywordItems holds the resting chips as plain strings; commas are stripped because a comma is the filter format’s value separator.",
       "specials.keywordAction picks the click: navigate (to /search, works without JavaScript) or filter (narrows the current page’s lists via ?f.search=)."
     ],
     "semantics": [
@@ -2552,6 +2567,8 @@ export const ELEMENTS: Record<string, CatalogElement> = {
         "filterRanges": [],
         "filterMaxDepth": 0,
         "filterMaxValues": 0,
+        "filterHierarchy": "nested",
+        "filterShowCount": false,
         "filterShowAll": false,
         "filterAllLabel": ""
       }
@@ -2764,6 +2781,8 @@ export const ELEMENTS: Record<string, CatalogElement> = {
         "filterRanges": [],
         "filterMaxDepth": 0,
         "filterMaxValues": 0,
+        "filterHierarchy": "nested",
+        "filterShowCount": false,
         "filterShowAll": false,
         "filterAllLabel": ""
       }
@@ -2977,6 +2996,8 @@ export const ELEMENTS: Record<string, CatalogElement> = {
         "filterRanges": [],
         "filterMaxDepth": 0,
         "filterMaxValues": 0,
+        "filterHierarchy": "nested",
+        "filterShowCount": false,
         "filterShowAll": false,
         "filterAllLabel": ""
       }
@@ -3189,6 +3210,8 @@ export const ELEMENTS: Record<string, CatalogElement> = {
         "filterRanges": [],
         "filterMaxDepth": 0,
         "filterMaxValues": 0,
+        "filterHierarchy": "nested",
+        "filterShowCount": false,
         "filterShowAll": false,
         "filterAllLabel": ""
       }
@@ -6928,10 +6951,46 @@ export const ELEMENTS: Record<string, CatalogElement> = {
             ]
           },
           {
+            "key": "form_look",
+            "label": "Form look",
+            "controls": [
+              "form_look"
+            ]
+          },
+          {
+            "key": "field_chrome",
+            "label": "Label & hint",
+            "controls": [
+              "field_chrome"
+            ]
+          },
+          {
             "key": "field_skin",
             "label": "Field style",
             "controls": [
               "field_skin"
+            ]
+          },
+          {
+            "key": "field_text_skin",
+            "label": "Field text",
+            "controls": [
+              "field_text_skin"
+            ]
+          },
+          {
+            "key": "field_state_skin",
+            "label": "Field states",
+            "controls": [
+              "field_state_skin"
+            ]
+          },
+          {
+            "key": "form_message_skin",
+            "label": "Messages",
+            "controls": [
+              "form_state_preview",
+              "form_message_skin"
             ]
           }
         ]
@@ -6985,7 +7044,13 @@ export const ELEMENTS: Record<string, CatalogElement> = {
       "border",
       "corner",
       "shadow",
+      "form_look",
+      "field_chrome",
       "field_skin",
+      "field_text_skin",
+      "field_state_skin",
+      "form_state_preview",
+      "form_message_skin",
       "padding_margin",
       "display",
       "animation",
@@ -7081,10 +7146,39 @@ export const ELEMENTS: Record<string, CatalogElement> = {
             ]
           },
           {
+            "key": "field_chrome",
+            "label": "Label & hint",
+            "controls": [
+              "field_chrome"
+            ]
+          },
+          {
             "key": "field_skin",
             "label": "Field style",
             "controls": [
               "field_skin"
+            ]
+          },
+          {
+            "key": "field_text_skin",
+            "label": "Field text",
+            "controls": [
+              "field_text_skin"
+            ]
+          },
+          {
+            "key": "field_state_skin",
+            "label": "Field states",
+            "controls": [
+              "form_state_preview",
+              "field_state_skin"
+            ]
+          },
+          {
+            "key": "field_area_skin",
+            "label": "Multi-line box",
+            "controls": [
+              "field_area_skin"
             ]
           },
           {
@@ -7157,7 +7251,12 @@ export const ELEMENTS: Record<string, CatalogElement> = {
       "field_prefill",
       "field_layout",
       "field_icon",
+      "field_chrome",
       "field_skin",
+      "field_text_skin",
+      "form_state_preview",
+      "field_state_skin",
+      "field_area_skin",
       "width_select",
       "size_bounds",
       "field_name",
@@ -7372,6 +7471,11 @@ export const ELEMENTS: Record<string, CatalogElement> = {
         "backgroundColor": "#171717",
         "color": "#ffffff",
         "borderRadius": "6px"
+      },
+      "config": {
+        "iconSize": 20,
+        "iconGap": 8,
+        "iconPosition": "left"
       }
     },
     "inspector": [
@@ -7386,12 +7490,41 @@ export const ELEMENTS: Record<string, CatalogElement> = {
             ]
           },
           {
+            "key": "icon",
+            "label": "Icon",
+            "controls": [
+              "button_icon",
+              "icon_size",
+              "icon_position",
+              "icon_gap"
+            ]
+          },
+          {
+            "key": "state",
+            "label": "state",
+            "controls": []
+          },
+          {
             "key": "size",
             "label": "Size",
             "controls": [
               "width_select",
               "height_select",
               "size_bounds"
+            ]
+          },
+          {
+            "key": "typography",
+            "label": "Typography",
+            "controls": [
+              "text_color",
+              "text_style",
+              "font_family",
+              "font_size",
+              "text_align",
+              "line_height",
+              "text_spacing",
+              "text_transform"
             ]
           },
           {
@@ -7415,6 +7548,11 @@ export const ELEMENTS: Record<string, CatalogElement> = {
       {
         "tab": "advanced",
         "groups": [
+          {
+            "key": "state",
+            "label": "state",
+            "controls": []
+          },
           {
             "key": "spacing",
             "label": "Spacing",
@@ -7441,9 +7579,21 @@ export const ELEMENTS: Record<string, CatalogElement> = {
     ],
     "controls": [
       "field_submit",
+      "button_icon",
+      "icon_size",
+      "icon_position",
+      "icon_gap",
       "width_select",
       "height_select",
       "size_bounds",
+      "text_color",
+      "text_style",
+      "font_family",
+      "font_size",
+      "text_align",
+      "line_height",
+      "text_spacing",
+      "text_transform",
       "bg_color",
       "border",
       "corner",
@@ -7534,10 +7684,32 @@ export const ELEMENTS: Record<string, CatalogElement> = {
             ]
           },
           {
+            "key": "field_chrome",
+            "label": "Label & hint",
+            "controls": [
+              "field_chrome"
+            ]
+          },
+          {
             "key": "field_skin",
             "label": "Field style",
             "controls": [
               "field_skin"
+            ]
+          },
+          {
+            "key": "field_text_skin",
+            "label": "Field text",
+            "controls": [
+              "field_text_skin"
+            ]
+          },
+          {
+            "key": "field_state_skin",
+            "label": "Field states",
+            "controls": [
+              "form_state_preview",
+              "field_state_skin"
             ]
           },
           {
@@ -7596,7 +7768,11 @@ export const ELEMENTS: Record<string, CatalogElement> = {
       "field_prefill",
       "field_layout",
       "field_icon",
+      "field_chrome",
       "field_skin",
+      "field_text_skin",
+      "form_state_preview",
+      "field_state_skin",
       "width_select",
       "size_bounds",
       "field_name",
@@ -7712,10 +7888,32 @@ export const ELEMENTS: Record<string, CatalogElement> = {
             ]
           },
           {
+            "key": "field_chrome",
+            "label": "Label & hint",
+            "controls": [
+              "field_chrome"
+            ]
+          },
+          {
             "key": "field_skin",
             "label": "Field style",
             "controls": [
               "field_skin"
+            ]
+          },
+          {
+            "key": "field_text_skin",
+            "label": "Field text",
+            "controls": [
+              "field_text_skin"
+            ]
+          },
+          {
+            "key": "field_state_skin",
+            "label": "Field states",
+            "controls": [
+              "form_state_preview",
+              "field_state_skin"
             ]
           },
           {
@@ -7769,7 +7967,11 @@ export const ELEMENTS: Record<string, CatalogElement> = {
       "field_address_same",
       "field_address_parts",
       "field_layout",
+      "field_chrome",
       "field_skin",
+      "field_text_skin",
+      "form_state_preview",
+      "field_state_skin",
       "width_select",
       "size_bounds",
       "field_name",
@@ -7801,6 +8003,165 @@ export const ELEMENTS: Record<string, CatalogElement> = {
       "province",
       "ward",
       "shipping"
+    ]
+  },
+  "form-discount-code": {
+    "type": "form-discount-code",
+    "label": "Discount code",
+    "category": "form",
+    "isContainer": false,
+    "isRootOnly": false,
+    "locked": false,
+    "hideInLayer": false,
+    "childAllows": [],
+    "defaults": {
+      "specials": {
+        "name": "discount_code",
+        "mapTo": "order.discountCode",
+        "label": "Mã giảm giá",
+        "placeholder": "Nhập mã giảm giá",
+        "description": "",
+        "required": false,
+        "showLabel": true,
+        "buttonLabel": "Áp dụng",
+        "appliedText": "Đã áp dụng mã giảm giá.",
+        "unknownCodeText": "Mã giảm giá không tồn tại.",
+        "codeNotUsableText": "Mã này chưa dùng được cho đơn hàng của bạn.",
+        "quoteFailedText": "Chưa kiểm tra được mã. Vui lòng thử lại."
+      },
+      "style": {
+        "width": "100%",
+        "gap": "8px"
+      }
+    },
+    "inspector": [
+      {
+        "tab": "general",
+        "groups": [
+          {
+            "key": "content",
+            "label": "Content",
+            "controls": [
+              "field_content",
+              "discount_button_label",
+              "mapTo"
+            ]
+          },
+          {
+            "key": "messages",
+            "label": "Messages",
+            "controls": [
+              "discount_applied_text",
+              "discount_unknown_text",
+              "discount_not_usable_text",
+              "discount_failed_text"
+            ]
+          },
+          {
+            "key": "field_layout",
+            "label": "Layout",
+            "controls": [
+              "field_layout",
+              "gap"
+            ]
+          },
+          {
+            "key": "typography",
+            "label": "Typography",
+            "controls": [
+              "font_family",
+              "font_size",
+              "text_color"
+            ]
+          },
+          {
+            "key": "size",
+            "label": "Size",
+            "controls": [
+              "width_select",
+              "size_bounds"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "advanced",
+        "groups": [
+          {
+            "key": "id_field",
+            "label": "ID field",
+            "controls": [
+              "field_name"
+            ]
+          },
+          {
+            "key": "spacing",
+            "label": "Spacing",
+            "controls": [
+              "padding_margin"
+            ]
+          },
+          {
+            "key": "display",
+            "label": "Display",
+            "controls": [
+              "display"
+            ]
+          },
+          {
+            "key": "class_css",
+            "label": "Class",
+            "controls": [
+              "class_css"
+            ]
+          }
+        ]
+      }
+    ],
+    "controls": [
+      "field_content",
+      "discount_button_label",
+      "mapTo",
+      "discount_applied_text",
+      "discount_unknown_text",
+      "discount_not_usable_text",
+      "discount_failed_text",
+      "field_layout",
+      "gap",
+      "font_family",
+      "font_size",
+      "text_color",
+      "width_select",
+      "size_bounds",
+      "field_name",
+      "padding_margin",
+      "display",
+      "class_css"
+    ],
+    "description": "A checkout discount-code field: a labelled text box, an \"Áp dụng\" button beside it, and a message line under it. It is a real form field mapped to order.discountCode, so the code reaches the order; it also carries the quote marker, so the bill on the page re-prices as the shopper types. The message line ships EMPTY and the runtime island fills it with one of four merchant-authored sentences — applied, unknown code, code not usable yet, or \"we could not check just now\". Must be placed INSIDE a form: outside one the page would re-price on screen and submit an order carrying no code.",
+    "useWhen": [
+      "A checkout or order form needs a place for the customer to enter a discount / voucher code",
+      "The shopper should see the bill change, and see a clear refusal when the code is wrong"
+    ],
+    "avoidWhen": [
+      "The element would sit outside a form — the code would never reach the order, however correct the price on screen looked",
+      "A GIFT CARD code is wanted: that is a different order column (order.giftCardCode) and a different balance; use the gift-card row instead",
+      "The form already holds another field mapped to order.discountCode — a form with two refuses to save (ErrDuplicateMapping)"
+    ],
+    "contentTips": [
+      "Write all four outcome lines in the shop's own voice; they are the only words a shopper gets when a code is refused",
+      "Keep \"code not usable\" and \"we could not check just now\" distinct — the second is a network problem and must not blame the shopper's code",
+      "The button label is a verb the shopper presses (\"Áp dụng\", \"Apply\"), not a noun"
+    ],
+    "semantics": [
+      "form",
+      "field",
+      "checkout",
+      "order",
+      "discount",
+      "voucher",
+      "promotion",
+      "coupon"
     ]
   },
   "form-select": {
@@ -7862,10 +8223,32 @@ export const ELEMENTS: Record<string, CatalogElement> = {
             ]
           },
           {
+            "key": "field_chrome",
+            "label": "Label & hint",
+            "controls": [
+              "field_chrome"
+            ]
+          },
+          {
             "key": "field_skin",
             "label": "Field style",
             "controls": [
               "field_skin"
+            ]
+          },
+          {
+            "key": "field_text_skin",
+            "label": "Field text",
+            "controls": [
+              "field_text_skin"
+            ]
+          },
+          {
+            "key": "field_state_skin",
+            "label": "Field states",
+            "controls": [
+              "form_state_preview",
+              "field_state_skin"
             ]
           },
           {
@@ -7917,7 +8300,11 @@ export const ELEMENTS: Record<string, CatalogElement> = {
       "field_options",
       "field_content",
       "field_layout",
+      "field_chrome",
       "field_skin",
+      "field_text_skin",
+      "form_state_preview",
+      "field_state_skin",
       "width_select",
       "size_bounds",
       "field_name",
@@ -8645,10 +9032,32 @@ export const ELEMENTS: Record<string, CatalogElement> = {
             ]
           },
           {
+            "key": "field_chrome",
+            "label": "Label & hint",
+            "controls": [
+              "field_chrome"
+            ]
+          },
+          {
             "key": "field_skin",
             "label": "Field style",
             "controls": [
               "field_skin"
+            ]
+          },
+          {
+            "key": "field_text_skin",
+            "label": "Field text",
+            "controls": [
+              "field_text_skin"
+            ]
+          },
+          {
+            "key": "field_state_skin",
+            "label": "Field states",
+            "controls": [
+              "form_state_preview",
+              "field_state_skin"
             ]
           },
           {
@@ -8699,7 +9108,11 @@ export const ELEMENTS: Record<string, CatalogElement> = {
       "field_content",
       "field_date_format",
       "field_layout",
+      "field_chrome",
       "field_skin",
+      "field_text_skin",
+      "form_state_preview",
+      "field_state_skin",
       "width_select",
       "size_bounds",
       "field_name",
@@ -8747,7 +9160,6 @@ export const ELEMENTS: Record<string, CatalogElement> = {
         "name": "",
         "label": "Label",
         "description": "",
-        "placeholder": "",
         "required": false,
         "showLabel": true,
         "mapTo": "",
@@ -8794,10 +9206,32 @@ export const ELEMENTS: Record<string, CatalogElement> = {
             ]
           },
           {
+            "key": "field_chrome",
+            "label": "Label & hint",
+            "controls": [
+              "field_chrome"
+            ]
+          },
+          {
             "key": "field_skin",
             "label": "Field style",
             "controls": [
               "field_skin"
+            ]
+          },
+          {
+            "key": "field_text_skin",
+            "label": "Field text",
+            "controls": [
+              "field_text_skin"
+            ]
+          },
+          {
+            "key": "field_state_skin",
+            "label": "Field states",
+            "controls": [
+              "form_state_preview",
+              "field_state_skin"
             ]
           },
           {
@@ -8863,7 +9297,11 @@ export const ELEMENTS: Record<string, CatalogElement> = {
       "field_layout",
       "field_icon",
       "field_date_default",
+      "field_chrome",
       "field_skin",
+      "field_text_skin",
+      "form_state_preview",
+      "field_state_skin",
       "width_select",
       "size_bounds",
       "field_name",
@@ -9442,6 +9880,11 @@ export const ELEMENTS: Record<string, CatalogElement> = {
             ]
           },
           {
+            "key": "state",
+            "label": "state",
+            "controls": []
+          },
+          {
             "key": "size",
             "label": "Size",
             "controls": [
@@ -9481,6 +9924,11 @@ export const ELEMENTS: Record<string, CatalogElement> = {
       {
         "tab": "advanced",
         "groups": [
+          {
+            "key": "state",
+            "label": "state",
+            "controls": []
+          },
           {
             "key": "spacing",
             "label": "Spacing",
@@ -13007,7 +13455,6 @@ export const ELEMENTS: Record<string, CatalogElement> = {
         }
       },
       "config": {
-        "contentWidth": "fill_container",
         "dropdownIcon": "down",
         "expandType": "click",
         "submenuStyle": "dropdown",
@@ -13296,20 +13743,6 @@ export const ELEMENTS: Record<string, CatalogElement> = {
             "controls": [
               "padding_margin"
             ]
-          },
-          {
-            "key": "display",
-            "label": "Display",
-            "controls": [
-              "display"
-            ]
-          },
-          {
-            "key": "class_css",
-            "label": "Class",
-            "controls": [
-              "class_css"
-            ]
           }
         ]
       }
@@ -13334,9 +13767,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
       "border",
       "corner",
       "shadow",
-      "padding_margin",
-      "display",
-      "class_css"
+      "padding_margin"
     ],
     "description": "A menu's shared link skin — one satellite node whose typography, colors and states paint every link of its menu identically (style it once, every item follows). It is not an individual link.",
     "useWhen": [
@@ -13435,27 +13866,6 @@ export const ELEMENTS: Record<string, CatalogElement> = {
             "controls": [
               "padding_margin"
             ]
-          },
-          {
-            "key": "display",
-            "label": "Display",
-            "controls": [
-              "display"
-            ]
-          },
-          {
-            "key": "animation",
-            "label": "Animation",
-            "controls": [
-              "animation"
-            ]
-          },
-          {
-            "key": "class_css",
-            "label": "Class",
-            "controls": [
-              "class_css"
-            ]
           }
         ]
       }
@@ -13475,10 +13885,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
       "border",
       "corner",
       "shadow",
-      "padding_margin",
-      "display",
-      "animation",
-      "class_css"
+      "padding_margin"
     ],
     "description": "A menu's shared submenu surface — one satellite node whose background, padding and shape paint every dropdown panel the menu opens (style it once, every submenu follows). It is not an individual panel.",
     "useWhen": [
@@ -14552,6 +14959,830 @@ export const ELEMENTS: Record<string, CatalogElement> = {
       "price",
       "checkout",
       "commerce"
+    ]
+  },
+  "free-ship-bar": {
+    "type": "free-ship-bar",
+    "label": "Free shipping bar",
+    "category": "store",
+    "isContainer": false,
+    "isRootOnly": false,
+    "locked": false,
+    "hideInLayer": false,
+    "childAllows": [],
+    "defaults": {
+      "specials": {
+        "thresholdCents": 50000000,
+        "remainingText": "Mua thêm {amount} để được miễn phí vận chuyển",
+        "reachedText": "Bạn đã được miễn phí vận chuyển!"
+      },
+      "style": {
+        "display": "flex",
+        "flexDirection": "column",
+        "width": "100%",
+        "gap": "8px",
+        "fontSize": "13px",
+        "color": "#171717"
+      },
+      "config": {
+        "barHeight": 8,
+        "barRadius": 999,
+        "trackColor": "#e5e5e5",
+        "fillColor": "#171717"
+      }
+    },
+    "inspector": [
+      {
+        "tab": "general",
+        "groups": [
+          {
+            "key": "layout",
+            "label": "Layout",
+            "controls": [
+              "gap",
+              "padding",
+              "margin"
+            ]
+          },
+          {
+            "key": "content",
+            "label": "Content",
+            "controls": [
+              "freeship_threshold"
+            ]
+          },
+          {
+            "key": "messages",
+            "label": "Messages",
+            "controls": [
+              "freeship_remaining_text",
+              "freeship_reached_text"
+            ]
+          },
+          {
+            "key": "bar",
+            "label": "Bar",
+            "controls": [
+              "freeship_bar_height",
+              "freeship_bar_radius",
+              "freeship_track_color",
+              "freeship_fill_color"
+            ]
+          },
+          {
+            "key": "size",
+            "label": "Size",
+            "controls": [
+              "width_select",
+              "size_bounds"
+            ]
+          },
+          {
+            "key": "typography",
+            "label": "Typography",
+            "controls": [
+              "font_family",
+              "font_size",
+              "text_style",
+              "text_color"
+            ]
+          },
+          {
+            "key": "background",
+            "label": "Background",
+            "controls": [
+              "bg_color"
+            ]
+          },
+          {
+            "key": "shape",
+            "label": "Shape",
+            "controls": [
+              "border",
+              "corner",
+              "shadow"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "advanced",
+        "groups": [
+          {
+            "key": "state",
+            "label": "state",
+            "controls": []
+          },
+          {
+            "key": "spacing",
+            "label": "Spacing",
+            "controls": [
+              "padding_margin"
+            ]
+          },
+          {
+            "key": "display",
+            "label": "Display",
+            "controls": [
+              "display"
+            ]
+          },
+          {
+            "key": "animation",
+            "label": "Animation",
+            "controls": [
+              "animation"
+            ]
+          },
+          {
+            "key": "class_css",
+            "label": "Class",
+            "controls": [
+              "class_css"
+            ]
+          }
+        ]
+      }
+    ],
+    "controls": [
+      "gap",
+      "padding",
+      "margin",
+      "freeship_threshold",
+      "freeship_remaining_text",
+      "freeship_reached_text",
+      "freeship_bar_height",
+      "freeship_bar_radius",
+      "freeship_track_color",
+      "freeship_fill_color",
+      "width_select",
+      "size_bounds",
+      "font_family",
+      "font_size",
+      "text_style",
+      "text_color",
+      "bg_color",
+      "border",
+      "corner",
+      "shadow",
+      "padding_margin",
+      "display",
+      "animation",
+      "class_css"
+    ],
+    "description": "A progress bar toward free shipping: a message line (\"Mua thêm 50.000₫ để được miễn phí vận chuyển\") over a track that fills as the cart approaches a merchant-typed threshold. Driven by the cart in the shopper's own browser (no server round-trip), so the message ships empty and the fill sits at 0% until the runtime island hydrates. The threshold is authored on the element itself — there is no site-wide automatic-discount setting this reads from yet.",
+    "useWhen": [
+      "A cart drawer or cart page should nudge shoppers toward a free-shipping minimum",
+      "The store already has a de-facto free-shipping cutoff and wants it stated as a live progress bar rather than static text"
+    ],
+    "avoidWhen": [
+      "The site already has an automatic free-shipping discount configured — this bar cannot read it yet, so the two numbers can silently disagree; state that in the two texts",
+      "The exact remaining amount needs to show anywhere the cart total is not known client-side (a server-rendered email, for instance)"
+    ],
+    "contentTips": [
+      "Keep the `{amount}` token in remainingText — the island substitutes it with the formatted gap to the threshold; removing it drops the number from the sentence",
+      "Write reachedText as a small celebration, not a repeat of remainingText with the amount removed",
+      "Set specials.thresholdCents in MINOR UNITS (50000 = 500.00 of the site currency, not 50000.00) — the same unit every other price field in this editor uses"
+    ],
+    "semantics": [
+      "store",
+      "cart",
+      "shipping",
+      "promotion",
+      "progress",
+      "incentive"
+    ]
+  },
+  "voucher-list": {
+    "type": "voucher-list",
+    "label": "Voucher list",
+    "category": "store",
+    "isContainer": false,
+    "isRootOnly": false,
+    "locked": false,
+    "hideInLayer": false,
+    "childAllows": [],
+    "defaults": {
+      "specials": {
+        "title": "Mã giảm giá đang có",
+        "buttonLabel": "Áp dụng",
+        "emptyText": "Hiện chưa có mã giảm giá nào.",
+        "copiedText": "Đã sao chép mã!",
+        "failedText": "Không thể sao chép mã, vui lòng thử lại."
+      },
+      "style": {
+        "display": "flex",
+        "flexDirection": "column",
+        "width": "100%",
+        "gap": "16px",
+        "fontSize": "13px",
+        "color": "#171717"
+      },
+      "config": {
+        "columns": 3,
+        "gap": 12
+      }
+    },
+    "inspector": [
+      {
+        "tab": "general",
+        "groups": [
+          {
+            "key": "layout",
+            "label": "Layout",
+            "controls": [
+              "gap",
+              "padding",
+              "margin"
+            ]
+          },
+          {
+            "key": "content",
+            "label": "Content",
+            "controls": [
+              "voucherlist_title",
+              "voucherlist_button_label"
+            ]
+          },
+          {
+            "key": "empty_state",
+            "label": "Preview",
+            "controls": [
+              "voucherlist_empty_text"
+            ]
+          },
+          {
+            "key": "messages",
+            "label": "Messages",
+            "controls": [
+              "voucherlist_copied_text",
+              "voucherlist_failed_text"
+            ]
+          },
+          {
+            "key": "items",
+            "label": "Items list",
+            "controls": [
+              "voucherlist_columns",
+              "voucherlist_gap"
+            ]
+          },
+          {
+            "key": "size",
+            "label": "Size",
+            "controls": [
+              "width_select",
+              "size_bounds"
+            ]
+          },
+          {
+            "key": "typography",
+            "label": "Typography",
+            "controls": [
+              "font_family",
+              "font_size",
+              "text_style",
+              "text_color"
+            ]
+          },
+          {
+            "key": "background",
+            "label": "Background",
+            "controls": [
+              "bg_color"
+            ]
+          },
+          {
+            "key": "shape",
+            "label": "Shape",
+            "controls": [
+              "border",
+              "corner",
+              "shadow"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "advanced",
+        "groups": [
+          {
+            "key": "state",
+            "label": "state",
+            "controls": []
+          },
+          {
+            "key": "spacing",
+            "label": "Spacing",
+            "controls": [
+              "padding_margin"
+            ]
+          },
+          {
+            "key": "display",
+            "label": "Display",
+            "controls": [
+              "display"
+            ]
+          },
+          {
+            "key": "animation",
+            "label": "Animation",
+            "controls": [
+              "animation"
+            ]
+          },
+          {
+            "key": "class_css",
+            "label": "Class",
+            "controls": [
+              "class_css"
+            ]
+          }
+        ]
+      }
+    ],
+    "controls": [
+      "gap",
+      "padding",
+      "margin",
+      "voucherlist_title",
+      "voucherlist_button_label",
+      "voucherlist_empty_text",
+      "voucherlist_copied_text",
+      "voucherlist_failed_text",
+      "voucherlist_columns",
+      "voucherlist_gap",
+      "width_select",
+      "size_bounds",
+      "font_family",
+      "font_size",
+      "text_style",
+      "text_color",
+      "bg_color",
+      "border",
+      "corner",
+      "shadow",
+      "padding_margin",
+      "display",
+      "animation",
+      "class_css"
+    ],
+    "description": "A public list of the discount codes a merchant has explicitly opted into publishing — a card per voucher (code, a short title, what it saves, and any minimum-order condition), tap one to apply it to the cart or copy it to the clipboard. Fetched from the storefront on load; nothing here is authored per-product or per-collection.",
+    "useWhen": [
+      "A promotions or collections page should show shoppers which codes are currently valid, without them having to be told the code elsewhere",
+      "The cart or checkout page should let a shopper pick from the shop's public codes instead of typing one blind"
+    ],
+    "avoidWhen": [
+      "The code is meant to be private or targeted (an email-only or influencer code) — only codes the merchant has explicitly marked public ever appear here",
+      "A single-use, one-time bearer code needs to be shown — those can never appear on this list by construction"
+    ],
+    "contentTips": [
+      "Keep buttonLabel short — it is the tap target on every card, not a sentence",
+      "emptyText should read as \"nothing right now\", not as an error — a shop can genuinely have zero public codes",
+      "copiedText and failedText are a status line shown after a tap with no discount box on the page; word them as a brief confirmation, not a dialog"
+    ],
+    "semantics": [
+      "store",
+      "promotion",
+      "discount",
+      "voucher",
+      "list"
+    ]
+  },
+  "my-vouchers": {
+    "type": "my-vouchers",
+    "label": "My vouchers",
+    "category": "advanced",
+    "isContainer": false,
+    "isRootOnly": false,
+    "locked": false,
+    "hideInLayer": false,
+    "childAllows": [],
+    "defaults": {
+      "specials": {
+        "title": "Voucher của tôi",
+        "signedOutText": "Đăng nhập để xem voucher của bạn",
+        "buttonLabel": "Áp dụng",
+        "emptyText": "Bạn chưa có voucher nào.",
+        "copiedText": "Đã sao chép mã!",
+        "failedText": "Không thể sao chép mã, vui lòng thử lại.",
+        "loadFailedText": "Không tải được voucher của bạn.",
+        "usedText": "Đã dùng",
+        "expiredText": "Đã hết hạn"
+      },
+      "style": {
+        "display": "flex",
+        "flexDirection": "column",
+        "width": "100%",
+        "gap": "16px",
+        "fontSize": "13px",
+        "color": "#171717"
+      },
+      "config": {
+        "columns": 3,
+        "gap": 12
+      }
+    },
+    "inspector": [
+      {
+        "tab": "general",
+        "groups": [
+          {
+            "key": "layout",
+            "label": "Layout",
+            "controls": [
+              "gap",
+              "padding",
+              "margin"
+            ]
+          },
+          {
+            "key": "account",
+            "label": "Account",
+            "controls": [
+              "account_title",
+              "account_signed_out_text"
+            ]
+          },
+          {
+            "key": "content",
+            "label": "Content",
+            "controls": [
+              "my_vouchers_button_label"
+            ]
+          },
+          {
+            "key": "empty_state",
+            "label": "Preview",
+            "controls": [
+              "my_vouchers_empty_text"
+            ]
+          },
+          {
+            "key": "messages",
+            "label": "Messages",
+            "controls": [
+              "my_vouchers_copied_text",
+              "my_vouchers_failed_text",
+              "my_vouchers_load_failed_text"
+            ]
+          },
+          {
+            "key": "labels",
+            "label": "Labels",
+            "controls": [
+              "my_vouchers_used_text",
+              "my_vouchers_expired_text"
+            ]
+          },
+          {
+            "key": "items",
+            "label": "Items list",
+            "controls": [
+              "my_vouchers_columns",
+              "my_vouchers_gap"
+            ]
+          },
+          {
+            "key": "size",
+            "label": "Size",
+            "controls": [
+              "width_select",
+              "size_bounds"
+            ]
+          },
+          {
+            "key": "typography",
+            "label": "Typography",
+            "controls": [
+              "font_family",
+              "font_size",
+              "text_style",
+              "text_color"
+            ]
+          },
+          {
+            "key": "background",
+            "label": "Background",
+            "controls": [
+              "bg_color"
+            ]
+          },
+          {
+            "key": "shape",
+            "label": "Shape",
+            "controls": [
+              "border",
+              "corner",
+              "shadow"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "advanced",
+        "groups": [
+          {
+            "key": "state",
+            "label": "state",
+            "controls": []
+          },
+          {
+            "key": "spacing",
+            "label": "Spacing",
+            "controls": [
+              "padding_margin"
+            ]
+          },
+          {
+            "key": "display",
+            "label": "Display",
+            "controls": [
+              "display"
+            ]
+          },
+          {
+            "key": "animation",
+            "label": "Animation",
+            "controls": [
+              "animation"
+            ]
+          },
+          {
+            "key": "class_css",
+            "label": "Class",
+            "controls": [
+              "class_css"
+            ]
+          }
+        ]
+      }
+    ],
+    "controls": [
+      "gap",
+      "padding",
+      "margin",
+      "account_title",
+      "account_signed_out_text",
+      "my_vouchers_button_label",
+      "my_vouchers_empty_text",
+      "my_vouchers_copied_text",
+      "my_vouchers_failed_text",
+      "my_vouchers_load_failed_text",
+      "my_vouchers_used_text",
+      "my_vouchers_expired_text",
+      "my_vouchers_columns",
+      "my_vouchers_gap",
+      "width_select",
+      "size_bounds",
+      "font_family",
+      "font_size",
+      "text_style",
+      "text_color",
+      "bg_color",
+      "border",
+      "corner",
+      "shadow",
+      "padding_margin",
+      "display",
+      "animation",
+      "class_css"
+    ],
+    "description": "The signed-in shopper's own voucher wallet — every discount code that is theirs, whether a merchant assigned it directly or it was minted by redeeming loyalty points, each showing its live usable / used / expired state. A signed-out visitor sees a sign-in prompt instead; a card cannot be tapped once it is used or expired.",
+    "useWhen": [
+      "An account or rewards page should list the vouchers a member has been GIVEN — never the shop's public codes (voucher-list is that element)",
+      "The shop grants member-only codes (through the merchant discount panel or by redeeming loyalty points) and members need a place to find and use them"
+    ],
+    "avoidWhen": [
+      "The page should show every code the shop currently publishes — that is voucher-list, an anonymous element with no signed-in state at all",
+      "The store has no member-bound discounts or loyalty program — this element renders an honest empty wallet, but it has nothing to show"
+    ],
+    "contentTips": [
+      "signedOutText is the only thing an anonymous visitor ever sees here — word it as an invitation to sign in, not an error",
+      "usedText and expiredText are short badges printed ON a card, not sentences — keep them to one or two words",
+      "loadFailedText is a network-failure line, distinct from failedText (a clipboard-copy failure) — do not conflate the two"
+    ],
+    "semantics": [
+      "store",
+      "account",
+      "promotion",
+      "discount",
+      "voucher",
+      "wallet",
+      "member"
+    ]
+  },
+  "countdown": {
+    "type": "countdown",
+    "label": "Countdown",
+    "category": "store",
+    "isContainer": false,
+    "isRootOnly": false,
+    "locked": false,
+    "hideInLayer": false,
+    "childAllows": [],
+    "defaults": {
+      "specials": {
+        "endsAt": "",
+        "sourceCode": "",
+        "expiredText": "Chương trình đã kết thúc",
+        "dayLabel": "Ngày",
+        "hourLabel": "Giờ",
+        "minuteLabel": "Phút",
+        "secondLabel": "Giây"
+      },
+      "style": {
+        "display": "flex",
+        "flexDirection": "column",
+        "width": "100%",
+        "gap": "12px",
+        "fontSize": "13px",
+        "color": "#171717"
+      },
+      "config": {
+        "digitSize": 24,
+        "gap": 12,
+        "boxRadius": 8,
+        "boxColor": "#171717",
+        "digitColor": "#ffffff"
+      }
+    },
+    "inspector": [
+      {
+        "tab": "general",
+        "groups": [
+          {
+            "key": "layout",
+            "label": "Layout",
+            "controls": [
+              "gap",
+              "padding",
+              "margin"
+            ]
+          },
+          {
+            "key": "content",
+            "label": "Content",
+            "controls": [
+              "countdown_ends_at",
+              "countdown_source_code"
+            ]
+          },
+          {
+            "key": "labels",
+            "label": "Labels",
+            "controls": [
+              "countdown_day_label",
+              "countdown_hour_label",
+              "countdown_minute_label",
+              "countdown_second_label"
+            ]
+          },
+          {
+            "key": "messages",
+            "label": "Messages",
+            "controls": [
+              "countdown_expired_text"
+            ]
+          },
+          {
+            "key": "boxes",
+            "label": "Boxes",
+            "controls": [
+              "countdown_digit_size",
+              "countdown_box_gap",
+              "countdown_box_radius",
+              "countdown_box_color",
+              "countdown_digit_color"
+            ]
+          },
+          {
+            "key": "size",
+            "label": "Size",
+            "controls": [
+              "width_select",
+              "size_bounds"
+            ]
+          },
+          {
+            "key": "typography",
+            "label": "Typography",
+            "controls": [
+              "font_family",
+              "font_size",
+              "text_style",
+              "text_color"
+            ]
+          },
+          {
+            "key": "background",
+            "label": "Background",
+            "controls": [
+              "bg_color"
+            ]
+          },
+          {
+            "key": "shape",
+            "label": "Shape",
+            "controls": [
+              "border",
+              "corner",
+              "shadow"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "advanced",
+        "groups": [
+          {
+            "key": "state",
+            "label": "state",
+            "controls": []
+          },
+          {
+            "key": "spacing",
+            "label": "Spacing",
+            "controls": [
+              "padding_margin"
+            ]
+          },
+          {
+            "key": "display",
+            "label": "Display",
+            "controls": [
+              "display"
+            ]
+          },
+          {
+            "key": "animation",
+            "label": "Animation",
+            "controls": [
+              "animation"
+            ]
+          },
+          {
+            "key": "class_css",
+            "label": "Class",
+            "controls": [
+              "class_css"
+            ]
+          }
+        ]
+      }
+    ],
+    "controls": [
+      "gap",
+      "padding",
+      "margin",
+      "countdown_ends_at",
+      "countdown_source_code",
+      "countdown_day_label",
+      "countdown_hour_label",
+      "countdown_minute_label",
+      "countdown_second_label",
+      "countdown_expired_text",
+      "countdown_digit_size",
+      "countdown_box_gap",
+      "countdown_box_radius",
+      "countdown_box_color",
+      "countdown_digit_color",
+      "width_select",
+      "size_bounds",
+      "font_family",
+      "font_size",
+      "text_style",
+      "text_color",
+      "bg_color",
+      "border",
+      "corner",
+      "shadow",
+      "padding_margin",
+      "display",
+      "animation",
+      "class_css"
+    ],
+    "description": "A countdown to an absolute instant — four boxes (days, hours, minutes, seconds) counting down to a merchant-typed end time, or to a listed public discount's own end date when a code is named. Driven by a server clock the island reads on load, never the shopper's own device clock.",
+    "useWhen": [
+      "A flash sale or a limited-time discount needs a visible ticking deadline",
+      "A launch, a registration window, or any other announced moment needs a countdown — this element does not require a discount at all"
+    ],
+    "avoidWhen": [
+      "The end time is not actually fixed — a countdown with no real deadline trains shoppers to ignore the next one",
+      "The page already shows the same deadline another way (a banner, a badge) — a second clock counting down to the same moment is noise"
+    ],
+    "contentTips": [
+      "The four unit labels (dayLabel/hourLabel/minuteLabel/secondLabel) are short words under each box, not sentences",
+      "expiredText is the line shown once the countdown reaches zero — word it as the sale being over, not as an error",
+      "sourceCode only matters when the SAME code is also published on a voucher-list — leave it empty for a countdown with no discount behind it"
+    ],
+    "semantics": [
+      "store",
+      "promotion",
+      "countdown",
+      "deadline",
+      "timer"
     ]
   },
   "menu-drawer": {
@@ -25032,6 +26263,1803 @@ export const ELEMENTS: Record<string, CatalogElement> = {
       "money"
     ]
   },
+  "sale-badge": {
+    "type": "sale-badge",
+    "label": "Sale badge",
+    "category": "dataset",
+    "isContainer": false,
+    "isRootOnly": false,
+    "locked": false,
+    "hideInLayer": false,
+    "childAllows": [],
+    "defaults": {
+      "specials": {
+        "mode": "percent",
+        "text": "Sale",
+        "boundPriceCents": "",
+        "boundCompareCents": ""
+      },
+      "style": {
+        "display": "inline-flex",
+        "alignItems": "center",
+        "justifyContent": "center",
+        "width": "fit-content",
+        "height": "fit-content",
+        "padding": "2px 8px",
+        "borderRadius": "4px",
+        "backgroundColor": "#171717",
+        "color": "#ffffff",
+        "fontSize": "12px",
+        "fontWeight": "600",
+        "lineHeight": "1"
+      },
+      "bindings": [
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ]
+    },
+    "bindingsFor": {
+      "product|title": [
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "product|vendor": [
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "product|description": [
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "product|summary": [
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "product|content": [
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "product|author": [
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "product|date": [
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "product|image": [
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "product|price": [
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "product|prices": [
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "product|url": [
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "product|name": [
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "category|title": [
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "category|vendor": [
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "category|description": [
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "category|summary": [
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "category|content": [
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "category|author": [
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "category|date": [
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "category|image": [
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "category|price": [
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "category|prices": [
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "category|url": [
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "category|name": [
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "article|title": [
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "article|vendor": [
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "article|description": [
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "article|summary": [
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "article|content": [
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "article|author": [
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "article|date": [
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "article|image": [
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "article|price": [
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "article|prices": [
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "article|url": [
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "article|name": [
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "course|title": [
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "course|vendor": [
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "course|description": [
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "course|summary": [
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "course|content": [
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "course|author": [
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "course|date": [
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "course|image": [
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "course|price": [
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "course|prices": [
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "course|url": [
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "course|name": [
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "instructor|title": [
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "instructor|vendor": [
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "instructor|description": [
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "instructor|summary": [
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "instructor|content": [
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "instructor|author": [
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "instructor|date": [
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "instructor|image": [
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "instructor|price": [
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "instructor|prices": [
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "instructor|url": [
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "instructor|name": [
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "blogCategory|title": [
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "blogCategory|vendor": [
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "blogCategory|description": [
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "blogCategory|summary": [
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "blogCategory|content": [
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "blogCategory|author": [
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "blogCategory|date": [
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "blogCategory|image": [
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "blogCategory|price": [
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "blogCategory|prices": [
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "blogCategory|url": [
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "blogCategory|name": [
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ]
+    },
+    "inspector": [
+      {
+        "tab": "general",
+        "groups": [
+          {
+            "key": "product",
+            "label": "Product",
+            "controls": [
+              "data_source",
+              "product",
+              "productId",
+              "boundPriceCents",
+              "boundCompareCents"
+            ]
+          },
+          {
+            "key": "content",
+            "label": "Content",
+            "controls": [
+              "sale_badge_mode",
+              "sale_badge_text"
+            ]
+          },
+          {
+            "key": "size",
+            "label": "Size",
+            "controls": [
+              "width_select",
+              "height_select",
+              "size_bounds"
+            ]
+          },
+          {
+            "key": "layout",
+            "label": "Layout",
+            "controls": [
+              "padding",
+              "margin",
+              "align_self"
+            ]
+          },
+          {
+            "key": "typography",
+            "label": "Typography",
+            "controls": [
+              "font_family",
+              "font_size",
+              "text_style",
+              "text_color"
+            ]
+          },
+          {
+            "key": "background",
+            "label": "Background",
+            "controls": [
+              "bg_color"
+            ]
+          },
+          {
+            "key": "shape",
+            "label": "Shape",
+            "controls": [
+              "border",
+              "corner",
+              "shadow"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "advanced",
+        "groups": [
+          {
+            "key": "state",
+            "label": "state",
+            "controls": []
+          },
+          {
+            "key": "spacing",
+            "label": "Spacing",
+            "controls": [
+              "padding_margin"
+            ]
+          },
+          {
+            "key": "display",
+            "label": "Display",
+            "controls": [
+              "display"
+            ]
+          },
+          {
+            "key": "animation",
+            "label": "Animation",
+            "controls": [
+              "animation"
+            ]
+          },
+          {
+            "key": "class_css",
+            "label": "Class",
+            "controls": [
+              "class_css"
+            ]
+          }
+        ]
+      }
+    ],
+    "controls": [
+      "data_source",
+      "product",
+      "productId",
+      "boundPriceCents",
+      "boundCompareCents",
+      "sale_badge_mode",
+      "sale_badge_text",
+      "width_select",
+      "height_select",
+      "size_bounds",
+      "padding",
+      "margin",
+      "align_self",
+      "font_family",
+      "font_size",
+      "text_style",
+      "text_color",
+      "bg_color",
+      "border",
+      "corner",
+      "shadow",
+      "padding_margin",
+      "display",
+      "animation",
+      "class_css"
+    ],
+    "description": "A small \"−20%\" / \"Sale\" pill for a product card or product page, computed at render time from the bound product's price and compare-at cents. Purely static — no island, no runtime module. Two content modes: specials.mode \"percent\" shows a computed \"−N%\"; \"text\" shows an authored word (default \"Sale\"). Renders nothing at all when the product has no real saving (no compare-at price, or compare-at at or below price) — it never invents a discount.",
+    "useWhen": [
+      "A product card or product page needs a quick visual flag that the item is on sale",
+      "Beside a pricing-dataset price display, to draw attention to the struck-through compare-at"
+    ],
+    "avoidWhen": [
+      "The exact amount saved needs to show in money (\"tiết kiệm 50.000₫\") — this element only shows a percentage or a fixed word, never a formatted amount",
+      "The badge should show on every product regardless of a real discount — that is authored text, not this element"
+    ],
+    "contentTips": [
+      "Leave specials.mode as \"percent\" for a computed \"−N%\"; set it to \"text\" for a generic word like \"Sale\" instead",
+      "The percentage and the visibility both come from the bound product — nothing to seed here beyond the mode/text choice"
+    ],
+    "semantics": [
+      "product",
+      "dataset",
+      "store",
+      "ecommerce",
+      "price",
+      "badge",
+      "promotion"
+    ]
+  },
   "collection-media": {
     "type": "collection-media",
     "label": "Collection media",
@@ -32214,7 +35242,21 @@ export const ELEMENTS: Record<string, CatalogElement> = {
         "paginationItemHeight": 8,
         "paginationItemGap": 4,
         "paginationItemBg": "rgba(0,0,0,0.25)",
-        "paginationItemActiveBg": "rgba(0,0,0,0.8)"
+        "paginationItemActiveBg": "rgba(0,0,0,0.8)",
+        "paginationBg": "transparent",
+        "pagerAlign": "center",
+        "pagerSpacing": 24,
+        "pagerItemGap": 8,
+        "pagerItemWidth": 36,
+        "pagerItemHeight": 36,
+        "pagerItemBorderRadius": 8,
+        "pagerItemBg": "transparent",
+        "moreAlign": "center",
+        "moreSpacing": 24,
+        "moreHeight": 40,
+        "morePaddingX": 20,
+        "moreBorderRadius": 8,
+        "moreBg": "transparent"
       },
       "specials": {
         "loadMoreLabel": "Load more",
@@ -34640,6 +37682,10 @@ export const BOUND_SPECIALS: Record<string, string[]> = {
   "rating-stars": [
     "boundRating"
   ],
+  "sale-badge": [
+    "boundCompareCents",
+    "boundPriceCents"
+  ],
   "spline-scene": [
     "boundModel"
   ],
@@ -36212,6 +39258,475 @@ export const TRAIT_WRITES: Record<string, TraitDescription> = {
         "type": "boolean"
       }
     ]
+  },
+  "sale_badge_mode": {
+    "key": "sale_badge_mode",
+    "label": "Mode",
+    "writes": [
+      {
+        "target": "specials",
+        "writeKey": "mode",
+        "type": "string"
+      }
+    ]
+  },
+  "sale_badge_text": {
+    "key": "sale_badge_text",
+    "label": "Word",
+    "writes": [
+      {
+        "target": "specials",
+        "writeKey": "text",
+        "type": "string"
+      }
+    ]
+  },
+  "discount_button_label": {
+    "key": "discount_button_label",
+    "label": "Button text",
+    "writes": [
+      {
+        "target": "specials",
+        "writeKey": "buttonLabel",
+        "type": "string"
+      }
+    ]
+  },
+  "discount_applied_text": {
+    "key": "discount_applied_text",
+    "label": "Applied",
+    "writes": [
+      {
+        "target": "specials",
+        "writeKey": "appliedText",
+        "type": "string"
+      }
+    ]
+  },
+  "discount_unknown_text": {
+    "key": "discount_unknown_text",
+    "label": "Unknown code",
+    "writes": [
+      {
+        "target": "specials",
+        "writeKey": "unknownCodeText",
+        "type": "string"
+      }
+    ]
+  },
+  "discount_not_usable_text": {
+    "key": "discount_not_usable_text",
+    "label": "Not usable",
+    "writes": [
+      {
+        "target": "specials",
+        "writeKey": "codeNotUsableText",
+        "type": "string"
+      }
+    ]
+  },
+  "discount_failed_text": {
+    "key": "discount_failed_text",
+    "label": "Check failed",
+    "writes": [
+      {
+        "target": "specials",
+        "writeKey": "quoteFailedText",
+        "type": "string"
+      }
+    ]
+  },
+  "freeship_threshold": {
+    "key": "freeship_threshold",
+    "label": "Free-shipping threshold",
+    "writes": [
+      {
+        "target": "specials",
+        "writeKey": "thresholdCents",
+        "type": "number"
+      }
+    ]
+  },
+  "freeship_remaining_text": {
+    "key": "freeship_remaining_text",
+    "label": "Below threshold",
+    "writes": [
+      {
+        "target": "specials",
+        "writeKey": "remainingText",
+        "type": "string"
+      }
+    ]
+  },
+  "freeship_reached_text": {
+    "key": "freeship_reached_text",
+    "label": "Reached",
+    "writes": [
+      {
+        "target": "specials",
+        "writeKey": "reachedText",
+        "type": "string"
+      }
+    ]
+  },
+  "freeship_bar_height": {
+    "key": "freeship_bar_height",
+    "label": "Bar height",
+    "writes": [
+      {
+        "target": "config",
+        "writeKey": "barHeight",
+        "type": "number",
+        "unit": "px"
+      }
+    ]
+  },
+  "freeship_bar_radius": {
+    "key": "freeship_bar_radius",
+    "label": "Bar corner",
+    "writes": [
+      {
+        "target": "config",
+        "writeKey": "barRadius",
+        "type": "number",
+        "unit": "px"
+      }
+    ]
+  },
+  "freeship_track_color": {
+    "key": "freeship_track_color",
+    "label": "Track color",
+    "writes": [
+      {
+        "target": "config",
+        "writeKey": "trackColor",
+        "type": "color"
+      }
+    ]
+  },
+  "freeship_fill_color": {
+    "key": "freeship_fill_color",
+    "label": "Fill color",
+    "writes": [
+      {
+        "target": "config",
+        "writeKey": "fillColor",
+        "type": "color"
+      }
+    ]
+  },
+  "voucherlist_title": {
+    "key": "voucherlist_title",
+    "label": "Title",
+    "writes": [
+      {
+        "target": "specials",
+        "writeKey": "title",
+        "type": "string"
+      }
+    ]
+  },
+  "voucherlist_button_label": {
+    "key": "voucherlist_button_label",
+    "label": "Button text",
+    "writes": [
+      {
+        "target": "specials",
+        "writeKey": "buttonLabel",
+        "type": "string"
+      }
+    ]
+  },
+  "voucherlist_empty_text": {
+    "key": "voucherlist_empty_text",
+    "label": "Empty text",
+    "writes": [
+      {
+        "target": "specials",
+        "writeKey": "emptyText",
+        "type": "string"
+      }
+    ]
+  },
+  "voucherlist_copied_text": {
+    "key": "voucherlist_copied_text",
+    "label": "Copied",
+    "writes": [
+      {
+        "target": "specials",
+        "writeKey": "copiedText",
+        "type": "string"
+      }
+    ]
+  },
+  "voucherlist_failed_text": {
+    "key": "voucherlist_failed_text",
+    "label": "Copy failed",
+    "writes": [
+      {
+        "target": "specials",
+        "writeKey": "failedText",
+        "type": "string"
+      }
+    ]
+  },
+  "voucherlist_columns": {
+    "key": "voucherlist_columns",
+    "label": "Columns",
+    "writes": [
+      {
+        "target": "config",
+        "writeKey": "columns",
+        "type": "number"
+      }
+    ]
+  },
+  "voucherlist_gap": {
+    "key": "voucherlist_gap",
+    "label": "Card gap",
+    "writes": [
+      {
+        "target": "config",
+        "writeKey": "gap",
+        "type": "number",
+        "unit": "px"
+      }
+    ]
+  },
+  "countdown_ends_at": {
+    "key": "countdown_ends_at",
+    "label": "Ends",
+    "writes": [
+      {
+        "target": "specials",
+        "writeKey": "endsAt",
+        "type": "string"
+      }
+    ]
+  },
+  "countdown_source_code": {
+    "key": "countdown_source_code",
+    "label": "Linked code",
+    "writes": [
+      {
+        "target": "specials",
+        "writeKey": "sourceCode",
+        "type": "string"
+      }
+    ]
+  },
+  "countdown_day_label": {
+    "key": "countdown_day_label",
+    "label": "Day label",
+    "writes": [
+      {
+        "target": "specials",
+        "writeKey": "dayLabel",
+        "type": "string"
+      }
+    ]
+  },
+  "countdown_hour_label": {
+    "key": "countdown_hour_label",
+    "label": "Hour label",
+    "writes": [
+      {
+        "target": "specials",
+        "writeKey": "hourLabel",
+        "type": "string"
+      }
+    ]
+  },
+  "countdown_minute_label": {
+    "key": "countdown_minute_label",
+    "label": "Minute label",
+    "writes": [
+      {
+        "target": "specials",
+        "writeKey": "minuteLabel",
+        "type": "string"
+      }
+    ]
+  },
+  "countdown_second_label": {
+    "key": "countdown_second_label",
+    "label": "Second label",
+    "writes": [
+      {
+        "target": "specials",
+        "writeKey": "secondLabel",
+        "type": "string"
+      }
+    ]
+  },
+  "countdown_expired_text": {
+    "key": "countdown_expired_text",
+    "label": "Expired",
+    "writes": [
+      {
+        "target": "specials",
+        "writeKey": "expiredText",
+        "type": "string"
+      }
+    ]
+  },
+  "countdown_digit_size": {
+    "key": "countdown_digit_size",
+    "label": "Digit size",
+    "writes": [
+      {
+        "target": "config",
+        "writeKey": "digitSize",
+        "type": "number",
+        "unit": "px"
+      }
+    ]
+  },
+  "countdown_box_gap": {
+    "key": "countdown_box_gap",
+    "label": "Box gap",
+    "writes": [
+      {
+        "target": "config",
+        "writeKey": "gap",
+        "type": "number",
+        "unit": "px"
+      }
+    ]
+  },
+  "countdown_box_radius": {
+    "key": "countdown_box_radius",
+    "label": "Box corner",
+    "writes": [
+      {
+        "target": "config",
+        "writeKey": "boxRadius",
+        "type": "number",
+        "unit": "px"
+      }
+    ]
+  },
+  "countdown_box_color": {
+    "key": "countdown_box_color",
+    "label": "Box color",
+    "writes": [
+      {
+        "target": "config",
+        "writeKey": "boxColor",
+        "type": "color"
+      }
+    ]
+  },
+  "countdown_digit_color": {
+    "key": "countdown_digit_color",
+    "label": "Digit color",
+    "writes": [
+      {
+        "target": "config",
+        "writeKey": "digitColor",
+        "type": "color"
+      }
+    ]
+  },
+  "my_vouchers_button_label": {
+    "key": "my_vouchers_button_label",
+    "label": "Button text",
+    "writes": [
+      {
+        "target": "specials",
+        "writeKey": "buttonLabel",
+        "type": "string"
+      }
+    ]
+  },
+  "my_vouchers_empty_text": {
+    "key": "my_vouchers_empty_text",
+    "label": "Empty text",
+    "writes": [
+      {
+        "target": "specials",
+        "writeKey": "emptyText",
+        "type": "string"
+      }
+    ]
+  },
+  "my_vouchers_copied_text": {
+    "key": "my_vouchers_copied_text",
+    "label": "Copied",
+    "writes": [
+      {
+        "target": "specials",
+        "writeKey": "copiedText",
+        "type": "string"
+      }
+    ]
+  },
+  "my_vouchers_failed_text": {
+    "key": "my_vouchers_failed_text",
+    "label": "Copy failed",
+    "writes": [
+      {
+        "target": "specials",
+        "writeKey": "failedText",
+        "type": "string"
+      }
+    ]
+  },
+  "my_vouchers_load_failed_text": {
+    "key": "my_vouchers_load_failed_text",
+    "label": "Load failed",
+    "writes": [
+      {
+        "target": "specials",
+        "writeKey": "loadFailedText",
+        "type": "string"
+      }
+    ]
+  },
+  "my_vouchers_used_text": {
+    "key": "my_vouchers_used_text",
+    "label": "Used",
+    "writes": [
+      {
+        "target": "specials",
+        "writeKey": "usedText",
+        "type": "string"
+      }
+    ]
+  },
+  "my_vouchers_expired_text": {
+    "key": "my_vouchers_expired_text",
+    "label": "Expired",
+    "writes": [
+      {
+        "target": "specials",
+        "writeKey": "expiredText",
+        "type": "string"
+      }
+    ]
+  },
+  "my_vouchers_columns": {
+    "key": "my_vouchers_columns",
+    "label": "Columns",
+    "writes": [
+      {
+        "target": "config",
+        "writeKey": "columns",
+        "type": "number"
+      }
+    ]
+  },
+  "my_vouchers_gap": {
+    "key": "my_vouchers_gap",
+    "label": "Card gap",
+    "writes": [
+      {
+        "target": "config",
+        "writeKey": "gap",
+        "type": "number",
+        "unit": "px"
+      }
+    ]
   }
 };
 
@@ -36874,6 +40389,25 @@ export const WRITE_PRECONDITIONS: WritePrecondition[] = [
     "otherwise": "the filter offers NOTHING and renders nothing at all. What this mode follows is the page's own PRODUCT collection (`/collections/{slug}`), so the blog's taxonomy — a tree too, which is why it looks like it should work — has nothing here to follow."
   },
   {
+    "key": "filterShowCount",
+    "value": true,
+    "types": [
+      "filter-checkbox",
+      "filter-radio",
+      "filter-color",
+      "filter-tag"
+    ],
+    "requires": [
+      {
+        "key": "filterSource",
+        "anyOf": [
+          "category"
+        ]
+      }
+    ],
+    "otherwise": "no number is drawn beside any row. A published page may not read the catalogue to count — its product read is bounded so one URL cannot pull an unbounded table — so the number has to arrive as a site-scoped aggregate the database already groups, and only the product CATEGORY has one. A source gains the setting the day its own aggregate ships."
+  },
+  {
     "key": "filterBehavior",
     "value": "navigate",
     "types": [
@@ -36967,6 +40501,12 @@ export const HOVER_HOMES: Record<string, { home: 'legacy' | 'state' }> = {
   },
   "filter-tag": {
     "home": "state"
+  },
+  "form-submit": {
+    "home": "legacy"
+  },
+  "form-step-button": {
+    "home": "legacy"
   },
   "tab-item": {
     "home": "state"
@@ -37642,6 +41182,15 @@ export const ELEMENT_VALUES: Record<string, Record<string, ValueVocabulary>> = {
         "navigate"
       ],
       "readBy": "FilterConfig.behavior (editor/src/features/filters/types.ts)"
+    },
+    "filterHierarchy": {
+      "target": "specials",
+      "writeKey": "filterHierarchy",
+      "values": [
+        "flat",
+        "nested"
+      ],
+      "readBy": "FilterConfig.hierarchy (editor/src/features/filters/types.ts)"
     }
   },
   "filter-radio": {
@@ -37703,6 +41252,15 @@ export const ELEMENT_VALUES: Record<string, Record<string, ValueVocabulary>> = {
         "navigate"
       ],
       "readBy": "FilterConfig.behavior (editor/src/features/filters/types.ts)"
+    },
+    "filterHierarchy": {
+      "target": "specials",
+      "writeKey": "filterHierarchy",
+      "values": [
+        "flat",
+        "nested"
+      ],
+      "readBy": "FilterConfig.hierarchy (editor/src/features/filters/types.ts)"
     }
   },
   "filter-color": {
@@ -37764,6 +41322,15 @@ export const ELEMENT_VALUES: Record<string, Record<string, ValueVocabulary>> = {
         "navigate"
       ],
       "readBy": "FilterConfig.behavior (editor/src/features/filters/types.ts)"
+    },
+    "filterHierarchy": {
+      "target": "specials",
+      "writeKey": "filterHierarchy",
+      "values": [
+        "flat",
+        "nested"
+      ],
+      "readBy": "FilterConfig.hierarchy (editor/src/features/filters/types.ts)"
     }
   },
   "filter-tag": {
@@ -37825,6 +41392,15 @@ export const ELEMENT_VALUES: Record<string, Record<string, ValueVocabulary>> = {
         "navigate"
       ],
       "readBy": "FilterConfig.behavior (editor/src/features/filters/types.ts)"
+    },
+    "filterHierarchy": {
+      "target": "specials",
+      "writeKey": "filterHierarchy",
+      "values": [
+        "flat",
+        "nested"
+      ],
+      "readBy": "FilterConfig.hierarchy (editor/src/features/filters/types.ts)"
     }
   },
   "select": {
@@ -38029,6 +41605,17 @@ export const ELEMENT_VALUES: Record<string, Record<string, ValueVocabulary>> = {
         "page"
       ],
       "readBy": "qr_source (editor picker)"
+    }
+  },
+  "sale-badge": {
+    "sale_badge_mode": {
+      "target": "specials",
+      "writeKey": "mode",
+      "values": [
+        "percent",
+        "text"
+      ],
+      "readBy": "sale_badge_mode (editor picker)"
     }
   },
   "cart-drawer": {

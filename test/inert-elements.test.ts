@@ -166,7 +166,7 @@ describe('elements that render convincingly while doing nothing', () => {
     }
   });
 
-  it('grew from 3 to 20 entries', () => {
-    expect(Object.keys(INERT_ON_ADD).length).toBe(20);
+  it('grew from 3 to 21 entries', () => {
+    expect(Object.keys(INERT_ON_ADD).length).toBe(21);
   });
 });

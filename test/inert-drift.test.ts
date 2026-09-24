@@ -85,12 +85,12 @@ describe('the INERT_ON_ADD staleness detector', () => {
   // The measurement recorded in the module header, asserted rather than trusted.
   // If it moves, the header is wrong — and a header that overstates a detector's
   // reach is worse than no detector, because it reads as a proof.
-  it('catches 15 of the 20 entries it claims, no more and no fewer', () => {
+  it('catches 15 of the 21 entries it claims, no more and no fewer', () => {
     const caught = Object.keys(INERT_ON_ADD).filter((t) => {
       const e = (ELEMENTS as Record<string, { description?: string; avoidWhen?: string[] }>)[t];
       return e && RENDER_LANGUAGE.test(`${(e.avoidWhen ?? []).join(' ')} ${e.description ?? ''}`);
     });
-    expect(Object.keys(INERT_ON_ADD)).toHaveLength(20);
+    expect(Object.keys(INERT_ON_ADD)).toHaveLength(21);
     expect(caught).toHaveLength(15);
     // And the ledger's one member is a real element, so a typo cannot silence a
     // live candidate for ever.

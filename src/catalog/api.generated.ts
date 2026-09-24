@@ -3,10 +3,10 @@
 import type { ApiOperation } from './types.js';
 
 export const SWAGGER_SOURCE = {
-  "operations": 560,
-  "definitions": 107,
-  "bodyCarrying": 210,
-  "bodyUndescribed": 91,
+  "operations": 568,
+  "definitions": 108,
+  "bodyCarrying": 214,
+  "bodyUndescribed": 92,
   "generatedFrom": "server/docs/swagger.json"
 } as const;
 
@@ -505,6 +505,19 @@ export const API_OPERATIONS: ApiOperation[] = [
       "storeaccount"
     ],
     "summary": "Complete email verification",
+    "params": [],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/_wb/account/vouchers",
+    "method": "GET",
+    "path": "/_wb/account/vouchers",
+    "tags": [
+      "storeaccount"
+    ],
+    "summary": "The signed-in shopper's voucher wallet",
     "params": [],
     "bodyDescribed": false,
     "bodyRef": null,
@@ -1152,6 +1165,19 @@ export const API_OPERATIONS: ApiOperation[] = [
     "credential": "siteScoped"
   },
   {
+    "id": "get:/_wb/vouchers/list",
+    "method": "GET",
+    "path": "/_wb/vouchers/list",
+    "tags": [
+      "storevouchers"
+    ],
+    "summary": "List the site's publicly-listed vouchers",
+    "params": [],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
     "id": "get:/api/admin/accounts/{id}/ai-credits",
     "method": "GET",
     "path": "/api/admin/accounts/{id}/ai-credits",
@@ -1443,7 +1469,7 @@ export const API_OPERATIONS: ApiOperation[] = [
         "in": "body",
         "required": false,
         "type": "object",
-        "description": "{bankName,bankCode,accountNumber,accountHolder,codePrefix,webhookSecret} — PUT only"
+        "description": "{bankName,bankCode,accountNumber,accountHolder,webhookSecret} — PUT only"
       }
     ],
     "bodyDescribed": false,
@@ -1464,7 +1490,7 @@ export const API_OPERATIONS: ApiOperation[] = [
         "in": "body",
         "required": false,
         "type": "object",
-        "description": "{bankName,bankCode,accountNumber,accountHolder,codePrefix,webhookSecret} — PUT only"
+        "description": "{bankName,bankCode,accountNumber,accountHolder,webhookSecret} — PUT only"
       }
     ],
     "bodyDescribed": false,
@@ -2551,6 +2577,55 @@ export const API_OPERATIONS: ApiOperation[] = [
         "required": false,
         "type": "integer",
         "description": "Page offset"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/orgs/{id}/ai-credits",
+    "method": "GET",
+    "path": "/api/orgs/{id}/ai-credits",
+    "tags": [
+      "ai"
+    ],
+    "summary": "An organisation's AI credit balance",
+    "params": [
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "org id"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/api/orgs/{id}/ai-credits/purchase",
+    "method": "POST",
+    "path": "/api/orgs/{id}/ai-credits/purchase",
+    "tags": [
+      "ai"
+    ],
+    "summary": "Buy AI credits for an organisation",
+    "params": [
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "org id"
+      },
+      {
+        "name": "body",
+        "in": "body",
+        "required": true,
+        "type": "object",
+        "description": "{credits:N}"
       }
     ],
     "bodyDescribed": false,
@@ -7206,6 +7281,111 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": true,
     "bodyRef": "github_com_webbuilder_server_internal_discounts.Discount",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/sites/{siteId}/discounts/{id}/grants",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/discounts/{id}/grants",
+    "tags": [
+      "discounts"
+    ],
+    "summary": "List, assign or revoke a discount's member grants",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Discount ID"
+      },
+      {
+        "name": "grant",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "{customerId} (POST only)"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "internal_discounts_rest.grantRequest",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/api/sites/{siteId}/discounts/{id}/grants",
+    "method": "POST",
+    "path": "/api/sites/{siteId}/discounts/{id}/grants",
+    "tags": [
+      "discounts"
+    ],
+    "summary": "List, assign or revoke a discount's member grants",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Discount ID"
+      },
+      {
+        "name": "grant",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "{customerId} (POST only)"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "internal_discounts_rest.grantRequest",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "delete:/api/sites/{siteId}/discounts/{id}/grants/{grantId}",
+    "method": "DELETE",
+    "path": "/api/sites/{siteId}/discounts/{id}/grants/{grantId}",
+    "tags": [
+      "discounts"
+    ],
+    "summary": "List, assign or revoke a discount's member grants",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Discount ID"
+      },
+      {
+        "name": "grant",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "{customerId} (POST only)"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "internal_discounts_rest.grantRequest",
     "credential": "siteScoped"
   },
   {
@@ -12447,6 +12627,34 @@ export const API_OPERATIONS: ApiOperation[] = [
     "credential": "siteScoped"
   },
   {
+    "id": "get:/api/sites/{siteId}/products/attributes",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/products/attributes",
+    "tags": [
+      "products"
+    ],
+    "summary": "Attribute axes already used on this site",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "limit",
+        "in": "query",
+        "required": false,
+        "type": "integer",
+        "description": "Max axes to return (clamped to products.MaxAttributeSuggestions)"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
     "id": "get:/api/sites/{siteId}/products/export",
     "method": "GET",
     "path": "/api/sites/{siteId}/products/export",
@@ -17314,12 +17522,20 @@ export const API_DEFINITIONS: Record<string, unknown> = {
       "id": {
         "type": "string"
       },
+      "memberBound": {
+        "description": "MemberBound marks this discount as OWNED: it is redeemable only by a\ncustomer who holds a DiscountGrant for it (see grant.go), and the\nownership check lives in orders.Checkout.resolveDiscount — the one\nfunction both the quote and the order-create path call.\n\nOFF by construction exactly as PublicListed is: Go's zero value is\nfalse and the Postgres column defaults false, so a discount is a\nbearer code until somebody says otherwise. The opposite default would\nretroactively lock every shopper out of every code that works today.\n\nIT IS AN EXPLICIT FLAG RATHER THAN \"this discount has at least one\ngrant\", and that is the whole design (contract D3): deriving boundness\nwould mean that adding the FIRST grant to an ordinary shared code\nsilently made that code refuse for every other shopper on the site —\n\"save this one for Anna\" breaking SUMMER20 for everyone, with nothing\non screen and nothing in a log. With the flag, a grant on an UNBOUND\ncode is a bookmark that changes spendability for nobody, and a grant\non a BOUND code is an entitlement. Two facts, two words.\n\nNormalize keeps two invariants true for every write path: an automatic\ndiscount is never member-bound, and a member-bound discount is never\nPublicListed. See Normalize's clauses for why each one is there.",
+        "type": "boolean"
+      },
       "method": {
         "description": "Method decides how the discount is applied: \"code\" (customer enters a code)\nor \"automatic\" (applied at checkout with no code). Automatic discounts may\nhave a blank Code.",
         "type": "string"
       },
       "minOrderCents": {
         "type": "integer"
+      },
+      "publicListed": {
+        "description": "PublicListed is the merchant's explicit opt-in to publish this code on the\nanonymous storefront list (GET /_wb/vouchers/list, package\ninternal/discounts/public). OFF by construction, not by care: the zero\nvalue is false and the Postgres column defaults false, so a discount is\nprivate until a merchant ticks the box — never the other way round on a\nfeature that publishes a working code to anyone who opens the shop.\n\nNormalize forces this back to false whenever UsageLimit == 1: a\nsingle-use code on a public list is a race by construction (the first\nanonymous reader spends it and every later reader gets a refusal), and\nit is also the exact shape of a loyalty-minted bearer voucher\n(loyaltyminter.MintFixedCode sets UsageLimit: 1 because \"the code ...\nmust die on first use\"). See Normalize's comment for why the rule keys\non UsageLimit rather than the minted code's \"DIEM-\" prefix.",
+        "type": "boolean"
       },
       "siteId": {
         "type": "string"
@@ -18955,6 +19171,14 @@ export const API_DEFINITIONS: Record<string, unknown> = {
     "properties": {
       "days": {
         "type": "integer"
+      }
+    }
+  },
+  "internal_discounts_rest.grantRequest": {
+    "type": "object",
+    "properties": {
+      "customerId": {
+        "type": "string"
       }
     }
   },

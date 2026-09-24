@@ -4,12 +4,12 @@
 import type { RequestShape } from './types.js';
 
 export const SHAPE_SOURCE = {
-  "writeOperations": 251,
-  "shaped": 193,
-  "fromHandlers": 193,
+  "writeOperations": 253,
+  "shaped": 195,
+  "fromHandlers": 195,
   "fromSwaggerOnly": 0,
   "withReadOnly": 26,
-  "structsRead": 1823
+  "structsRead": 1875
 } as const;
 
 export const REQUEST_SHAPES: Record<string, RequestShape> = {
@@ -24,6 +24,17 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
         "name": "wallet",
         "type": "string",
         "note": "Wallet is which balance the credits go into, as `kind:id`."
+      }
+    ],
+    "source": "go",
+    "goType": "(inline)"
+  },
+  "post:/api/orgs/{id}/ai-credits/purchase": {
+    "fields": [
+      {
+        "name": "credits",
+        "type": "number | null",
+        "note": "A POINTER so \"absent\" is distinguishable from zero, and both are refused with different sentences — an empty form should be told the field is empty, not that zero is out of range."
       }
     ],
     "source": "go",
@@ -3001,6 +3012,16 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
       {
         "name": "updatedAt",
         "type": "string (RFC3339)"
+      },
+      {
+        "name": "publicListed",
+        "type": "boolean",
+        "note": "PublicListed is the merchant's explicit opt-in to publish this code on the anonymous storefront list (GET /_wb/vouchers/list, package internal/discounts/public)."
+      },
+      {
+        "name": "memberBound",
+        "type": "boolean",
+        "note": "MemberBound marks this discount as OWNED: it is redeemable only by a customer who holds a DiscountGrant for it (see grant. IT IS AN EXPLICIT FLAG RATHER THAN \"this discount has at least one grant\", and that is the whole design (contract…"
       }
     ],
     "source": "go",
@@ -3067,6 +3088,16 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
       {
         "name": "updatedAt",
         "type": "string (RFC3339)"
+      },
+      {
+        "name": "publicListed",
+        "type": "boolean",
+        "note": "PublicListed is the merchant's explicit opt-in to publish this code on the anonymous storefront list (GET /_wb/vouchers/list, package internal/discounts/public)."
+      },
+      {
+        "name": "memberBound",
+        "type": "boolean",
+        "note": "MemberBound marks this discount as OWNED: it is redeemable only by a customer who holds a DiscountGrant for it (see grant. IT IS AN EXPLICIT FLAG RATHER THAN \"this discount has at least one grant\", and that is the whole design (contract…"
       }
     ],
     "source": "go",
@@ -3077,6 +3108,16 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
       "createdAt",
       "updatedAt"
     ]
+  },
+  "post:/api/sites/{siteId}/discounts/{id}/grants": {
+    "fields": [
+      {
+        "name": "customerId",
+        "type": "string"
+      }
+    ],
+    "source": "go",
+    "goType": "grantRequest"
   },
   "post:/api/sites/{siteId}/ai/messages": {
     "fields": [
@@ -3123,6 +3164,11 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
         "name": "plan",
         "type": "boolean",
         "note": "Plan asks the assistant to clarify and outline before building — the composer's Build/Plan selector."
+      },
+      {
+        "name": "auto",
+        "type": "boolean",
+        "note": "Auto says the author turned the autonomous mode on for this turn."
       }
     ],
     "source": "go",
@@ -5048,10 +5094,6 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
       },
       {
         "name": "accountHolder",
-        "type": "string"
-      },
-      {
-        "name": "codePrefix",
         "type": "string"
       },
       {

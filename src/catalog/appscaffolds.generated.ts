@@ -44,7 +44,7 @@ export const APP_SCAFFOLDS: Record<
         "en": "Course page"
       },
       "document": {
-        "schema_version": 1,
+        "schema_version": 2,
         "root_node_id": "crs1_7",
         "nodes": {
           "crs1_1": {
@@ -343,7 +343,7 @@ export const APP_SCAFFOLDS: Record<
         "en": "Courses"
       },
       "document": {
-        "schema_version": 1,
+        "schema_version": 2,
         "root_node_id": "crs2_7",
         "nodes": {
           "crs2_1": {
@@ -384,7 +384,21 @@ export const APP_SCAFFOLDS: Record<
               "paginationItemHeight": 8,
               "paginationItemGap": 4,
               "paginationItemBg": "rgba(0,0,0,0.25)",
-              "paginationItemActiveBg": "rgba(0,0,0,0.8)"
+              "paginationItemActiveBg": "rgba(0,0,0,0.8)",
+              "paginationBg": "transparent",
+              "pagerAlign": "center",
+              "pagerSpacing": 24,
+              "pagerItemGap": 8,
+              "pagerItemWidth": 36,
+              "pagerItemHeight": 36,
+              "pagerItemBorderRadius": 8,
+              "pagerItemBg": "transparent",
+              "moreAlign": "center",
+              "moreSpacing": 24,
+              "moreHeight": 40,
+              "morePaddingX": 20,
+              "moreBorderRadius": 8,
+              "moreBg": "transparent"
             },
             "specials": {
               "loadMoreLabel": "Load more",
@@ -692,7 +706,7 @@ export const APP_SCAFFOLDS: Record<
         "en": "Learning"
       },
       "document": {
-        "schema_version": 1,
+        "schema_version": 2,
         "root_node_id": "crs3_3",
         "nodes": {
           "crs3_1": {
@@ -795,7 +809,7 @@ export const APP_SCAFFOLDS: Record<
         "en": "My courses"
       },
       "document": {
-        "schema_version": 1,
+        "schema_version": 2,
         "root_node_id": "crs4_3",
         "nodes": {
           "crs4_1": {

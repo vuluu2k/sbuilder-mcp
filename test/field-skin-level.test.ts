@@ -47,7 +47,9 @@ describe('a field-skin knob on the wrong node', () => {
     expect(Object.keys(FIELD_SKIN_BY_NODE).length).toBeGreaterThanOrEqual(10);
     // The chrome trio is shared by every field, which is what makes one edit on
     // the form reach them all.
+    // search-input is skinned too (its suggestion panel) but is not a field.
     for (const [node, keys] of Object.entries(FIELD_SKIN_BY_NODE)) {
+      if (!node.startsWith('form')) continue;
       expect(keys, node).toContain('fieldReqColor');
     }
   });
