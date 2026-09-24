@@ -6,6 +6,20 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.64.0] - 2026-09-24
+
+### Added
+- `sb_templates` / `sb_template_use` gained four built-in layout patterns — testimonials, numbered steps, image-and-text, and a pricing table — alongside the existing hero, feature, stats, CTA, gallery, and FAQ bands.
+- `sb_add`'s node specs (and the import mapper's captured nodes) now accept `states`, so a caller can seed an interaction state such as hover directly on a new node instead of writing it in a second call.
+
+### Changed
+- The built-in layout patterns are no longer flat: feature, testimonial, and pricing rows now render as cards on accent-tinted bands, the CTA band is an accent panel, headings carry eyebrow labels, and heroes gained a second (ghost) button and a narrower text measure.
+- The built-in layout patterns now animate: first-screen text enters on load line by line, lower bands reveal on scroll staggered by position, cards lift on hover, and buttons get a matching hover treatment through their own `config.stateHover` slot.
+- The built-in layout patterns now wear the target page's own accent and heading colors when composed onto an existing page, falling back to the site's theme only when the page has none of its own.
+
+### Fixed
+- A page built or extended by this server on a site that had never saved a theme now gets the starter theme saved to the platform on the first write, so the published page's buttons and headings actually match what the editor's canvas showed instead of publishing unstyled (`var(--wb-color-primary)` referencing nothing declared).
+
 ## [0.63.2] - 2026-09-24
 
 ### Fixed

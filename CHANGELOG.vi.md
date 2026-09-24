@@ -6,6 +6,20 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.64.0] - 2026-09-24
+
+### Added
+- `sb_templates` / `sb_template_use` có thêm bốn layout dựng sẵn — cảm nhận khách hàng, các bước đánh số, ảnh kèm nội dung, và bảng giá — bên cạnh các band hero, lợi ích, số liệu, kêu gọi hành động, thư viện ảnh và FAQ đã có.
+- Node spec của `sb_add` (và node được capture bởi bộ mapper nhập trang) giờ nhận `states`, để có thể gieo sẵn một trạng thái tương tác như hover ngay trên node mới thay vì phải gọi thêm một lần nữa.
+
+### Changed
+- Các layout dựng sẵn không còn phẳng: các hàng lợi ích, cảm nhận khách hàng và bảng giá giờ render thành thẻ (card) trên nền có tông màu nhấn nhạt, band CTA trở thành một khối màu nhấn, tiêu đề có nhãn nhỏ phía trên, và hero có thêm nút thứ hai (dạng viền) cùng bề rộng chữ hẹp hơn.
+- Các layout dựng sẵn giờ có chuyển động: chữ ở màn hình đầu hiện dần khi tải trang theo từng dòng, các band phía dưới hiện dần khi cuộn tới theo thứ tự vị trí, thẻ nổi lên khi rê chuột, và nút bấm có hiệu ứng hover riêng qua đúng nơi nó thuộc về — `config.stateHover`.
+- Các layout dựng sẵn giờ mang màu nhấn và màu tiêu đề của chính trang đích khi được ghép vào một trang đã có nội dung, chỉ dùng lại theme của site khi trang đó chưa có gì.
+
+### Fixed
+- Một trang được server này tạo hoặc chỉnh sửa trên site chưa từng lưu theme giờ sẽ được lưu theme khởi đầu (starter theme) lên nền tảng ngay ở lần ghi đầu tiên, để trang đã publish có nút và tiêu đề đúng như những gì canvas của editor hiển thị, thay vì publish ra trang không có style (`var(--wb-color-primary)` trỏ tới một biến chưa được khai báo ở đâu cả).
+
 ## [0.63.2] - 2026-09-24
 
 ### Fixed
