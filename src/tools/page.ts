@@ -40,6 +40,7 @@ import {
 } from '../domains/site/vocabulary.js';
 import { skinLevelNote } from '../domains/site/fieldskin.js';
 import { siteTheme } from '../domains/site/theme-fetch.js';
+import { ensureSiteTheme } from './theme.js';
 import { request, redact } from '../transport/http.js';
 import { siteToken } from './credentialpick.js';
 import { validateForSave } from '../domains/site/validate.js';
@@ -534,6 +535,7 @@ export class PageSession {
     // "is the document now different from what the server holds", and the
     // re-stamp wrote the server's own answer back into it.
     this.savedRev = d.rev;
+    await ensureSiteTheme(this.ctx, this.siteId);
   }
 }
 
@@ -1725,6 +1727,7 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
               body: { document, schemaVersion: document.schema_version },
               fetchImpl: ctx.fetchImpl,
             });
+            await ensureSiteTheme(ctx, site_id);
             seeded = layout
               ? { layout, nodes: Object.keys(document.nodes).length }
               : { type, nodes: Object.keys(document.nodes).length };

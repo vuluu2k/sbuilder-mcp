@@ -73,6 +73,43 @@ export async function readTheme(
   return { theme: structuredClone(STARTER_THEME) as StarterTheme, origin: 'starter' };
 }
 
+/**
+ * SAVE THE STARTER THEME FOR A SITE THAT HAS NONE, once per site per process.
+ *
+ * A new site stores no theme. The editor paints against `DEFAULT_THEME` anyway,
+ * and it saves that theme the first time a node references a token. Publish
+ * compiles only the STORED theme, so a page this server builds on a fresh site
+ * references `var(--wb-color-primary)` and the `-default` preset classes with
+ * nothing declaring them. The result: buttons with white text on no fill, and
+ * headings at body size. The canvas looks right and the published page does not.
+ * Measured on a fresh local site, 2026-09-24.
+ *
+ * This does the save the editor would have done. It never replaces a stored
+ * theme (`readTheme` answers 'site' for one), and it never fails the page
+ * write it rides on. A failed attempt is simply retried on the next save.
+ */
+const themeSeeded = new Set<string>();
+export async function ensureSiteTheme(ctx: ToolContext, siteId: string): Promise<void> {
+  if (themeSeeded.has(siteId)) return;
+  try {
+    const { theme, origin } = await readTheme(ctx, siteId);
+    if (origin === 'starter') {
+      await request({
+        base: ctx.base,
+        method: 'PUT',
+        path: `/api/sites/${encodeURIComponent(siteId)}/theme`,
+        token: siteToken(ctx),
+        body: { theme },
+        fetchImpl: ctx.fetchImpl,
+      });
+      clearThemeCache();
+    }
+    themeSeeded.add(siteId);
+  } catch {
+    // The page write already succeeded; the next save retries.
+  }
+}
+
 export function registerThemeTools(server: McpServer, ctx: ToolContext): void {
   server.registerTool(
     'sb_theme',

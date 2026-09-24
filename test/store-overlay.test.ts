@@ -168,6 +168,8 @@ describe('sb_store action:"overlay_attach"', () => {
     const mutating = calls.filter((c) => c.method !== 'GET' || c.path.endsWith('/source'));
     expect(mutating.map((c) => `${c.method} ${c.path}`)).toEqual([
       'PUT /api/sites/s1/pages/pg_1/source',
+      // A site with no stored theme gets the starter saved once (ensureSiteTheme).
+      'PUT /api/sites/s1/theme',
       'POST /api/sites/s1/overlays',
       'POST /api/sites/s1/overlays/ov_1/pages/pg_1',
       'GET /api/sites/s1/pages/pg_1/source',

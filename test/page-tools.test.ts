@@ -19,7 +19,7 @@ const emptyDocument = {
 function scripted() {
   const saved: Array<Record<string, unknown>> = [];
   const f = vi.fn(async (_url: unknown, init?: RequestInit) => {
-    if (init?.method === 'PUT') saved.push(JSON.parse(String(init.body)));
+    if (init?.method === 'PUT' && String(_url).includes('/source')) saved.push(JSON.parse(String(init.body)));
     return new Response(
       JSON.stringify({
         source: { pageId: 'pg_1', siteId: 's1', document: emptyDocument, schemaVersion: 2, updatedAt: 'now' },
@@ -251,7 +251,7 @@ function docWithFooter() {
 function servingFooterDoc() {
   const saved: Array<Record<string, unknown>> = [];
   const f = vi.fn(async (_url: unknown, init?: RequestInit) => {
-    if (init?.method === 'PUT') saved.push(JSON.parse(String(init.body)));
+    if (init?.method === 'PUT' && String(_url).includes('/source')) saved.push(JSON.parse(String(init.body)));
     return new Response(
       JSON.stringify({
         source: { pageId: 'pg_1', siteId: 's1', document: docWithFooter(), schemaVersion: 2, updatedAt: 'now' },

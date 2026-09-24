@@ -53,7 +53,7 @@ function scripted(reads: Array<Record<string, unknown>>) {
   const puts: Array<Record<string, unknown>> = [];
   let get = 0;
   const f = vi.fn(async (_url: unknown, init?: RequestInit) => {
-    if (init?.method === 'PUT') {
+    if (init?.method === 'PUT' && String(_url).includes('/source')) {
       puts.push(JSON.parse(String(init.body)));
       return new Response(
         JSON.stringify({ source: { pageId: 'pg_1', siteId: 's1', document: puts[puts.length - 1]!.document, schemaVersion: 2 } }),

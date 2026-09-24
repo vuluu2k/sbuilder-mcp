@@ -45,7 +45,7 @@ const SOURCE = {
 function harness() {
   const puts: unknown[] = [];
   const fetchImpl = vi.fn(async (_url: string, init?: { method?: string }) => {
-    if ((init?.method ?? 'GET') === 'PUT') puts.push(1);
+    if ((init?.method ?? 'GET') === 'PUT' && _url.includes('/source')) puts.push(1);
     return new Response(JSON.stringify(SOURCE), {
       status: 200,
       headers: { 'content-type': 'application/json' },
