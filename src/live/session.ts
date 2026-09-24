@@ -88,6 +88,11 @@ export class LiveSession {
     if (this.selfId) this.announcePage();
   }
 
+  /** Leave the room: the socket closes, the server publishes our `leave`. */
+  close(): void {
+    this.socket.close();
+  }
+
   private announcePage(): void {
     if (!this.pageId) return;
     this.socket.send({ t: 'page', pageId: this.pageId });

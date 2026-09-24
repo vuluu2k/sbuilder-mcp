@@ -12,6 +12,14 @@ async function main(): Promise<void> {
   }
   const server = createServer();
   await server.connect(new StdioServerTransport());
+  // THE CLIENT CLOSED STDIN, SO THIS PROCESS IS DONE. The SDK does not exit on
+  // its own, and the live-room socket (plus its reconnect timer) keeps the event
+  // loop alive — an orphaned process that answers the server's pings, so the
+  // agent's avatar stays in the room indefinitely. Exiting closes the socket and
+  // the server publishes the leave.
+  const done = () => process.exit(0);
+  process.stdin.once('end', done);
+  process.stdin.once('close', done);
   // stdout is the MCP channel. Every log line in this repo is console.error.
   console.error('[sbuilder-mcp] ready on stdio');
 }

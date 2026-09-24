@@ -94,6 +94,8 @@ export class PageSession {
   private siteId = '';
   private pageId = '';
   private live: LiveSession | null = null;
+  /** Which site's room `live` is in — a page on another site needs another room. */
+  private liveSite = '';
   private stale: string | null = null;
   /**
    * The document revision this session last stored, so an unchanged document is
@@ -112,8 +114,27 @@ export class PageSession {
 
   constructor(private readonly ctx: ToolContext) {}
 
-  attachLive(live: LiveSession): void {
+  /**
+   * ONE ROOM AT A TIME. A second join (sb_live_join again, or a page on another
+   * site) used to overwrite `live` and leave the old socket reconnecting for the
+   * life of the process — a second robot in the old site's room, forever.
+   *
+   * And the page is announced HERE as well as on open: `start` was never called
+   * anywhere, so every ops/cursor/select frame went out with `pageId: ''` and
+   * the editor, which filters by page, dropped all of them.
+   */
+  attachLive(live: LiveSession, siteId: string): void {
+    if (this.live !== live) this.live?.close();
     this.live = live;
+    this.liveSite = siteId;
+    if (this.pageId && this.siteId === siteId) live.start(this.pageId);
+  }
+
+  /** Leave the room, if in one. */
+  leaveLive(): void {
+    this.live?.close();
+    this.live = null;
+    this.liveSite = '';
   }
 
   /**
@@ -149,8 +170,11 @@ export class PageSession {
    * rather than a new one.
    */
   async ensureLive(siteId: string): Promise<'joined' | 'already' | string> {
-    if (this.live) return 'already';
+    if (this.live && this.liveSite === siteId) return 'already';
     if (!this.liveJoiner) return 'no live transport is registered';
+    // Out of the old site's room first, so a failed join below cannot leave
+    // this process sitting in a room for a site it is no longer editing.
+    this.leaveLive();
     try {
       this.liveJoiner(siteId);
       return this.live ? 'joined' : 'the live transport did not attach';
@@ -362,6 +386,10 @@ export class PageSession {
     // `sb_template_use` and `shareChrome` all open pages too, and a join wired to
     // sb_page_open alone leaves every one of those editing unseen.
     this.liveState = await this.ensureLive(siteId);
+    // Tell the room this page. A fresh join already did (attachLive); an
+    // existing one has only heard of the previous page. Without it the editor
+    // drops every frame this session sends.
+    if (this.liveState === 'already') this.live?.start(pageId);
     return this.doc.outline();
   }
 

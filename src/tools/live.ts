@@ -317,7 +317,7 @@ export function joinRoom(ctx: ToolContext, session: PageSession, siteId: string)
     onDesync: (reason) => session.markStale(reason),
   });
   socket.connect();
-  session.attachLive(live);
+  session.attachLive(live, siteId);
 }
 
 export function registerLiveTools(

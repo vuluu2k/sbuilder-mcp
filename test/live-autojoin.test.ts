@@ -44,7 +44,13 @@ function ctxWith() {
 
 /** A room that records nothing but the fact that it was opened. */
 function fakeLive(): LiveSession {
-  return { publish: () => {}, select: () => {}, cursor: () => {} } as unknown as LiveSession;
+  return {
+    publish: () => {},
+    select: () => {},
+    cursor: () => {},
+    start: () => {},
+    close: () => {},
+  } as unknown as LiveSession;
 }
 
 describe('the live room is joined on the first page open', () => {
@@ -53,7 +59,7 @@ describe('the live room is joined on the first page open', () => {
     const joined: string[] = [];
     ps.setLiveJoiner((siteId) => {
       joined.push(siteId);
-      ps.attachLive(fakeLive());
+      ps.attachLive(fakeLive(), siteId);
     });
 
     expect(await ps.ensureLive('s1')).toBe('joined');
@@ -62,7 +68,7 @@ describe('the live room is joined on the first page open', () => {
 
   it('joins ONCE — a second open does not open a second socket', async () => {
     const ps = new PageSession(ctxWith());
-    const joiner = vi.fn((_siteId: string) => ps.attachLive(fakeLive()));
+    const joiner = vi.fn((siteId: string) => ps.attachLive(fakeLive(), siteId));
     ps.setLiveJoiner(joiner);
 
     expect(await ps.ensureLive('s1')).toBe('joined');
@@ -102,9 +108,9 @@ describe('every write re-checks the room', () => {
   it('a write joins when an earlier attempt failed', async () => {
     const ps = new PageSession(ctxWith());
     let allow = false;
-    const joiner = vi.fn((_siteId: string) => {
+    const joiner = vi.fn((siteId: string) => {
       if (!allow) throw new Error('sbuilder: no network');
-      ps.attachLive(fakeLive());
+      ps.attachLive(fakeLive(), siteId);
     });
     ps.setLiveJoiner(joiner);
     await ps.open('s1', 'pg_1');
@@ -124,7 +130,7 @@ describe('every write re-checks the room', () => {
 
   it('costs nothing once joined — a second write does not re-join', async () => {
     const ps = new PageSession(ctxWith());
-    const joiner = vi.fn((_siteId: string) => ps.attachLive(fakeLive()));
+    const joiner = vi.fn((siteId: string) => ps.attachLive(fakeLive(), siteId));
     ps.setLiveJoiner(joiner);
     await ps.open('s1', 'pg_1');
     expect(joiner).toHaveBeenCalledTimes(1);
@@ -136,5 +142,57 @@ describe('every write re-checks the room', () => {
       { op: 'set', path: ['nodes', 'rt', 'style', 'gap'], value: '12px' },
     ]);
     expect(joiner).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('one room at a time, on the right page', () => {
+  /** A room that records what it was told. */
+  function recordingLive(log: string[], name: string): LiveSession {
+    return {
+      publish: () => {},
+      select: () => {},
+      cursor: () => {},
+      start: (pageId: string) => log.push(`${name}:start:${pageId}`),
+      close: () => log.push(`${name}:close`),
+    } as unknown as LiveSession;
+  }
+
+  it('announces the page it opened — and the next one it opens', async () => {
+    const ps = new PageSession(ctxWith());
+    const log: string[] = [];
+    ps.setLiveJoiner((siteId) => ps.attachLive(recordingLive(log, 'a'), siteId));
+    await ps.open('s1', 'pg_1');
+    await ps.open('s1', 'pg_2');
+    expect(log, 'page never announced to the room').toEqual(['a:start:pg_1', 'a:start:pg_2']);
+  });
+
+  it('leaves the old site room before joining another', async () => {
+    const ps = new PageSession(ctxWith());
+    const log: string[] = [];
+    let n = 0;
+    ps.setLiveJoiner((siteId) => ps.attachLive(recordingLive(log, `r${++n}`), siteId));
+    await ps.open('s1', 'pg_1');
+    await ps.open('s2', 'pg_9');
+    expect(log, 'old room left open').toEqual(['r1:start:pg_1', 'r1:close', 'r2:start:pg_9']);
+  });
+
+  it('a FAILED join to another site still leaves the old room', async () => {
+    const ps = new PageSession(ctxWith());
+    const log: string[] = [];
+    ps.setLiveJoiner((siteId) => {
+      if (siteId === 's2') throw new Error('sbuilder: no network');
+      ps.attachLive(recordingLive(log, 'a'), siteId);
+    });
+    await ps.open('s1', 'pg_1');
+    await ps.open('s2', 'pg_9');
+    expect(log, 'still in the old site room').toEqual(['a:start:pg_1', 'a:close']);
+  });
+
+  it('an explicit re-join replaces the socket instead of leaking it', () => {
+    const ps = new PageSession(ctxWith());
+    const log: string[] = [];
+    ps.attachLive(recordingLive(log, 'a'), 's1');
+    ps.attachLive(recordingLive(log, 'b'), 's1');
+    expect(log, 'first socket leaked').toEqual(['a:close']);
   });
 });
