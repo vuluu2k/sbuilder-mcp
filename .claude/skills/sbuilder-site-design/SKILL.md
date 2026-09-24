@@ -38,7 +38,7 @@ shows a required-looking field with nothing in it. Then a gateway:
 
 **5. The checkout, through the editor's own four-step flow.** Do not hand-build
 it — the field document's `mapTo` values are a vocabulary the server validates
-(`customer.fullName`, not `customer.name`). See CLAUDE.md's checkout entry.
+(`customer.fullName`, not `customer.name`). See `sbuilder-store-flows`' checkout entry.
 
 **5b. ONE category template serves every category — leave the repeater on `all_products`.**
 `/collections/{slug}` falls back to the DEFAULT TEMPLATE for the `category` type, and since
@@ -417,10 +417,11 @@ sb_set fl_x style base:true        { flexWrap: "nowrap" }    # ← say the wide 
 ```
 
 **This is a STYLE rule. Some CONFIG has no breakpoint to be written at.** `html.go` reads
-`node.Config[key]` with no responsive merge and one HTML document serves every width, so 13
-keys exist only at base — `iconSize`, `layout`, `htmlTag`, `descriptionLines`, `quantity`,
-`rowLimit`, `activeIndex`, `activeTab`, `openItems`, and the whole data axis (`datasetSource`,
-`kind`, `collectionId`, `collectionType`). Written per breakpoint they show on the editor
+`node.Config[key]` with no responsive merge and one HTML document serves every width, so some
+keys exist only at base — the platform's `BASE_ONLY_CONFIG` ledger, generated into the catalog
+(`iconSize`, `layout`, `htmlTag`, `rowLimit`, `openItems` and the whole data axis —
+`datasetSource`, `kind`, `collectionId`, `collectionType` — among them; the ledger shrinks as
+the platform makes keys responsive, so trust `sb_set`'s `base_only` note over this list). Written per breakpoint they show on the editor
 canvas and vanish on publish. `sb_set` now moves them to base for you and says so as
 `base_only`; what it cannot do is make them respond. If one of these has to differ by width,
 the answer is a style key or a different element — not a breakpoint.
@@ -466,8 +467,8 @@ Two levels, one vocabulary — but the FORM emits only a subset.
 that would — so you do not have to hold this table in your head.
 
 - **On the FIELD node only**: `payCard*`, `choice*`, `slot*`, `file*`. Written on the form
-  they are stored and rendered NOWHERE — `form/css.go` emits `FieldKnobs`
-  (`ChromeKnobs + Knobs`) and nothing else.
+  they are stored and rendered NOWHERE — `form/css.go` emits `FormKnobs` (the input
+  vocabulary plus the sent/error message lines) and nothing else.
 
 Field nodes and the submit button live in the **form document**, not the page:
 `PUT /api/sites/{siteId}/forms/{id}/document`. A page republish is what makes that edit
@@ -519,8 +520,11 @@ config key the state translates, and only `true`. `fixed` pins too, and is not s
 
 Three ways a correct page reads as broken:
 
-- **The draft preview threads no store data.** Every repeater renders its empty state there.
-  `sb_look` says so in `preview_note`; pass the published storefront address as `url`.
+- **An ENTITY TEMPLATE previews with nothing bound.** The draft preview DOES thread store data
+  (a home page previews real products at real prices), but entity routing lives in the
+  published host, so a product/category template previews with a blank title, a zero price
+  and the variant picker's seed options. Judge those at the published URL — pass it as `url`.
+  (This line used to say the preview threads NO store data; that was measured false.)
 - **The page's CSS is a LINKED STYLESHEET** — `static-*.css`, `desktop-*.css`,
   `tablet-*.css` off the assets host. Grepping the HTML for a rule and finding nothing proves
   nothing. It read as "the style did not apply" twice here, when it had both times.

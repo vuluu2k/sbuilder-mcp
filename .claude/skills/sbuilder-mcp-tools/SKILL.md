@@ -1,6 +1,6 @@
 ---
 name: sbuilder-mcp-tools
-description: The tool-authoring contract for sbuilder-mcp — where a tool lives, how it answers, the dry_run default, credential routing, and the three places a new tool must be registered. Triggers when adding, changing, or reviewing an MCP tool in this repo, touching src/tools/**, src/server.ts, or src/catalog/**.
+description: The tool-authoring contract for sbuilder-mcp — where a tool lives, how it answers, the dry_run default, credential routing, and the three places a new tool must be registered. Triggers when adding, changing, or reviewing an MCP tool in this repo, touching src/tools/** or src/server.ts (the catalog itself is sbuilder-codegen).
 ---
 
 # Authoring a tool in `sbuilder-mcp`
@@ -16,7 +16,7 @@ One group per file under `src/tools/*.ts`, exporting `registerXTools(server, ctx
 `src/server.ts` calls each group. A tool never reaches past `ToolContext`
 (`src/tools/context.ts`) into an adapter.
 
-## The five rules
+## The rules
 
 1. **Answer through `text()`** from `src/mcp/response.ts` — or `image()`/`images()` when
    returning screenshots. Never hand-build a `content` array: the shape belongs in one place.
@@ -26,8 +26,13 @@ One group per file under `src/tools/*.ts`, exporting `registerXTools(server, ctx
    `{ dry_run: true, would_send: redact(...) }`. `redact()` keys off field NAMES, not value
    shapes — a token format can change, a field name is ours.
 4. **Relative imports end in `.js`.** ESM / Node16. This applies inside `.ts` sources.
-5. **Never hand-edit `src/catalog/api.generated.ts`.** Regenerate:
-   `WB_REPO=/path/to/web_builder npm run codegen`.
+5. **Never hand-edit `src/catalog/*.generated.ts`.** Regenerate:
+   `WB_REPO=/path/to/web_builder npm run codegen` (see `sbuilder-codegen`).
+6. **Register with MCP annotations** — `readOnlyHint` for a read, `destructiveHint` where a
+   write destroys.
+7. **Say a directive once per process through `ctx.notices.once(...)`**, never inline in
+   every result — `test/token-budget.test.ts` is the scale, and a repeated notice is the
+   shape that drifts.
 
 ## Credentials
 
@@ -62,7 +67,7 @@ Skipping it fails invisibly: the document is right, the save is right, and only 
 watching the editor see nothing happen.
 
 The live client never answers `snapreq` and never publishes a `ckpt`. That is the yield
-rule, and it is what keeps `src/live/session.ts` small. See `CLAUDE.md`.
+rule, and it is what keeps `src/live/session.ts` small. See `CLAUDE.md`'s yield rule.
 
 ## Registering
 
