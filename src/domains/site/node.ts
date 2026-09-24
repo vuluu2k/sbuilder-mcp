@@ -42,6 +42,8 @@ export interface CreateOpts {
    * `mobile.style` does not silently drop an element's own `mobile.config`.
    */
   responsive?: Record<string, { style?: Record<string, unknown>; config?: Record<string, unknown> }>;
+  /** Interaction states (`hover`, `parentHover`), merged over the element's own defaults. */
+  states?: Record<string, { style?: Record<string, unknown>; config?: Record<string, unknown> }>;
 }
 
 /**
@@ -128,7 +130,7 @@ export function createNode(type: string, opts: CreateOpts = {}): BuilderNode {
     );
   }
   const d = meta.defaults;
-  const states = d.states;
+  const states = opts.states ? { ...copy(d.states ?? {}), ...copy(opts.states) } : d.states;
   const config = { ...copy(d.config ?? {}), ...(opts.config ?? {}) };
   return {
     id: genId(type),

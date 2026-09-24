@@ -5,6 +5,7 @@ import { PageDoc } from '../src/domains/site/document.js';
 import { addSubtree, type NodeSpec } from '../src/domains/site/builder.js';
 import { validateForSave } from '../src/domains/site/validate.js';
 import { INERT_ON_ADD } from '../src/domains/site/inert.js';
+import { ANIMATION } from '../src/catalog/elements.generated.js';
 
 /**
  * THE COMPOSITIONS A PAGE IS MADE OF.
@@ -44,7 +45,10 @@ describe('every layout pattern', () => {
     // wrong: a band that answers the accent differently does not read as a new
     // section, it reads as a different website.
     for (const p of LAYOUT_PATTERNS) {
-      const json = JSON.stringify(p.build(tokens));
+      // A scheme role's FALLBACK is not a colour of the pattern's own: it only
+      // paints on a theme without that role, and the role is what follows dark
+      // mode. Everything else must be the page's.
+      const json = JSON.stringify(p.build(tokens)).replace(/var\(--wb-sc-[\w-]+, #[0-9a-fA-F]{6}\)/g, '');
       const hexes = json.match(/#[0-9a-fA-F]{6}/g) ?? [];
       for (const hex of hexes) {
         expect([tokens.headingColor, tokens.buttonBg], `${p.id} invented ${hex}`).toContain(hex);
@@ -64,8 +68,13 @@ describe('every layout pattern', () => {
     for (const p of LAYOUT_PATTERNS) walk(p.build(tokens) as unknown as Record<string, unknown>);
     expect(rows.length).toBeGreaterThan(0);
     for (const r of rows) {
+      // A PACKED row (two buttons, a set of links) answers mobile by WRAPPING:
+      // its cells keep their content width, so nothing shrinks to a sliver.
+      const style = r.style as Record<string, unknown>;
+      const cells = (r.children as Array<{ style?: Record<string, unknown> }>) ?? [];
+      if (style.flexWrap === 'wrap' && cells.every((c) => c.style?.flex === '0 0 auto')) continue;
       const res = r.responsive as { mobile?: { style?: Record<string, unknown> } } | undefined;
-      expect(res?.mobile?.style?.flexDirection).toBe('column');
+      expect(res?.mobile?.style?.flexDirection, JSON.stringify(style)).toBe('column');
     }
   });
 });
@@ -250,7 +259,15 @@ describe('the defects a built page had, measured on the render', () => {
   it('leaves a row of EQUAL columns top-aligned, which is the right default', () => {
     // Three blurbs of different lengths should share a top edge. Centring
     // every row would trade one defect for another.
-    expect(spec('sb_feature_trio')).toContain('"alignItems":"flex-start"');
+    expect(spec('sb_steps')).toContain('"alignItems":"flex-start"');
+  });
+
+  it('STRETCHES a row of cards, so their frames share one height', () => {
+    // Top-aligned, three cards of different lengths show three bottom edges —
+    // the frame makes the difference visible where bare text hid it.
+    const json = spec('sb_feature_trio');
+    expect(json).toContain('"alignItems":"stretch"');
+    expect(json).toContain('"flex":"1 1 auto"');
   });
 
   it('wears the theme TYPE SCALE by reference, never as a literal', () => {
@@ -456,5 +473,55 @@ describe('the store-shaped patterns', () => {
       d.apply(addSubtree(d, 'ROOT', spec!).patches);
       expect(validateForSave(d), id).toEqual([]);
     }
+  });
+});
+
+describe('depth and motion', () => {
+  const built = (id: string, t: object = THEME_TOKENS) => {
+    const d = PageDoc.from({ schema_version: 2, root_node_id: '', nodes: {} });
+    d.apply(addSubtree(d, 'ROOT', PATTERN_BY_ID.get(id)!.build(t as never)!).patches);
+    return Object.values(d.doc.nodes) as unknown as Array<{
+      data: { type: string };
+      config?: Record<string, unknown>;
+      states?: Record<string, { style?: Record<string, unknown> }>;
+    }>;
+  };
+
+  it("wears a page's OWN accent and ink, leaving no theme variable behind", () => {
+    for (const p of LAYOUT_PATTERNS) {
+      const json = JSON.stringify(p.build(tokens));
+      expect(json, `${p.id} kept the theme accent`).not.toContain('var(--wb-color-primary)');
+      expect(json, `${p.id} kept the theme ink`).not.toContain('var(--wb-color-heading)');
+    }
+    expect(JSON.stringify(PATTERN_BY_ID.get('sb_cta_band')!.build(tokens)), 'accent reached the panel').toContain(
+      '"backgroundColor":"#E8557A"',
+    );
+  });
+
+  it('stores a card hover in states.hover and a button hover in config.stateHover', () => {
+    const nodes = built('sb_feature_trio');
+    const cards = nodes.filter((n) => n.states?.hover?.style?.translate);
+    expect(cards, 'card hover reached the stored node').toHaveLength(3);
+    const buttons = built('sb_cta_band').filter((n) => n.data.type === 'button');
+    expect(buttons.length, 'band has its button').toBe(1);
+    expect(buttons[0]!.config?.stateHover, 'button hover in its legacy home').toMatchObject({ translate: '0 -2px' });
+    expect(buttons[0]!.states?.hover, 'nothing written where a button never reads').toBeUndefined();
+  });
+
+  it('writes only animations the renderer plays: active, a known type, staggered', () => {
+    let seen = 0;
+    for (const p of LAYOUT_PATTERNS) {
+      const ranges: number[] = [];
+      for (const n of built(p.id)) {
+        const a = n.config?.animation as Record<string, unknown> | undefined;
+        if (!a) continue;
+        seen += 1;
+        expect(a.active, `${p.id} animation without consent`).toBe(true);
+        expect(ANIMATION.types, `${p.id} unknown type ${String(a.type)}`).toContain(a.type);
+        if (a.trigger === 'view') ranges.push(a.range as number);
+      }
+      if (ranges.length > 1) expect(new Set(ranges).size, `${p.id} not staggered`).toBeGreaterThan(1);
+    }
+    expect(seen, 'the fixture reaches animated nodes').toBeGreaterThan(10);
   });
 });

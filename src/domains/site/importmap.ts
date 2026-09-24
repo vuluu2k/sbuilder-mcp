@@ -155,6 +155,13 @@ export interface Captured {
   href?: string;
   items?: string[];
   children?: Captured[];
+  /**
+   * Values laid over whatever node this capture maps to. An import never sets
+   * it: a browser walk has no way to know a card's hover or entrance. It exists
+   * for the layout patterns, which do know, and which otherwise would have to
+   * re-walk the mapped tree to find the node a group became.
+   */
+  extra?: Pick<NodeSpec, 'style' | 'config' | 'states'>;
 }
 
 /**
@@ -364,6 +371,18 @@ function textScale(slug: string, fallback: Record<string, string>): {
 }
 
 function one(c: Captured, t: PageTokens): NodeSpec | null {
+  const n = shape(c, t);
+  const x = c.extra;
+  if (!n || !x) return n;
+  return {
+    ...n,
+    ...(x.style ? { style: { ...n.style, ...x.style } } : {}),
+    ...(x.config ? { config: { ...n.config, ...x.config } } : {}),
+    ...(x.states ? { states: { ...n.states, ...x.states } } : {}),
+  };
+}
+
+function shape(c: Captured, t: PageTokens): NodeSpec | null {
   switch (c.kind) {
     case 'heading': {
       const text = c.text?.trim();

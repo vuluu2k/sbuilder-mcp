@@ -108,26 +108,53 @@ export const THEME_TOKENS: PageTokens = {
   sectionMaxWidth: '1200px',
 };
 
+const ACCENT = 'var(--wb-color-primary)';
+const HEADING = 'var(--wb-color-heading)';
+
+/**
+ * THE ACCENT AND THE INK ARE THE PAGE'S, not the theme's, when the page has its
+ * own. The helpers below write the theme variables because that is the answer
+ * on a blank page; on a page whose tokens were read off its content, a band in
+ * the theme's accent reads as a different website (rule 0). One substitution
+ * here covers every helper rather than threading `t` through each of them.
+ */
+function wear(spec: NodeSpec, t: PageTokens): NodeSpec {
+  let json = JSON.stringify(spec);
+  const swap = (from: string, to?: string): void => {
+    if (to && to !== from) json = json.split(from).join(JSON.stringify(to).slice(1, -1));
+  };
+  swap(ACCENT, t.buttonBg);
+  swap(HEADING, t.headingColor);
+  return JSON.parse(json) as NodeSpec;
+}
+
 /** One section, through the same mapper an import goes through. */
 function section(
   children: Captured[],
   t: PageTokens,
   style?: Record<string, unknown>,
   innerStyle?: Record<string, unknown>,
+  mobile?: Record<string, unknown>,
 ): NodeSpec | null {
   const [spec] = toSpecs([{ kind: 'section', children }], t);
   if (!spec) return null;
-  const outer = style ? { ...spec, style: { ...spec.style, ...style } } : spec;
-  if (!innerStyle) return outer;
+  const styled = style ? { ...spec, style: { ...spec.style, ...style } } : spec;
+  const outer = mobile
+    ? { ...styled, responsive: { ...styled.responsive, mobile: { ...styled.responsive?.mobile, style: { ...styled.responsive?.mobile?.style, ...mobile } } } }
+    : styled;
+  if (!innerStyle) return wear(outer, t);
   // THE SECTION CENTRES ITS BLOCK; THE BLOCK CENTRES ITS CHILDREN. `textAlign`
   // moves the words and leaves a `width: fit-content` button where it was, so a
   // centred band came out with its call to action against the left margin.
   const [inner, ...rest] = outer.children ?? [];
-  if (!inner) return outer;
-  return {
-    ...outer,
-    children: [{ ...inner, style: { ...inner.style, ...innerStyle } }, ...rest],
-  };
+  if (!inner) return wear(outer, t);
+  return wear(
+    {
+      ...outer,
+      children: [{ ...inner, style: { ...inner.style, ...innerStyle } }, ...rest],
+    },
+    t,
+  );
 }
 
 const row = (children: Captured[], wrap = false, align?: Captured['align']): Captured => ({
@@ -149,7 +176,114 @@ const p = (text: string, textAlign?: Captured['textAlign']): Captured => ({
   text,
   ...(textAlign ? { textAlign } : {}),
 });
-const cta = (text: string, href = '#'): Captured => ({ kind: 'button', variant: 'cta', text, href });
+type Extra = NonNullable<Captured['extra']>;
+
+/** Lay extras over a capture, merging each namespace rather than replacing it. */
+function dress(c: Captured, ...xs: Extra[]): Captured {
+  const out: Extra = { ...c.extra };
+  for (const x of xs) {
+    if (x.style) out.style = { ...out.style, ...x.style };
+    if (x.config) out.config = { ...out.config, ...x.config };
+    if (x.states) out.states = { ...out.states, ...x.states };
+  }
+  return { ...c, extra: out };
+}
+
+// SCHEME ROLES, with the light scheme's own values as fallbacks. `--wb-sc-*` is
+// what the theme swaps for dark mode, so a card drawn from these follows it.
+const BORDER = 'var(--wb-sc-border, #e5e7eb)';
+const SHADOW = 'var(--wb-sc-shadow, rgba(17,24,39,0.08))';
+const SURFACE = 'var(--wb-sc-background, #ffffff)';
+/** A band set apart from its neighbours: the page's background, tinted by its accent. */
+const TINT = { backgroundColor: `color-mix(in srgb, ${ACCENT} 5%, ${SURFACE})` };
+
+/**
+ * REVEAL ON SCROLL, staggered by position.
+ *
+ * `trigger: "view"` ties the animation to the scroll timeline, where a time
+ * delay means nothing, so the stagger is carried by `range` (how far into the
+ * viewport the entrance completes): the first column lands first. `delay` is
+ * kept for browsers without scroll timelines, which play it at first paint.
+ * Reduced motion is honoured by the renderer, not here.
+ */
+const reveal = (i = 0, type = 'fade_in_up'): Extra => ({
+  config: {
+    animation: { active: true, type, intensity: 'soft', trigger: 'view', range: 40 + i * 15, delay: Number((i * 0.1).toFixed(2)) },
+  },
+});
+/** The first screen: nothing to scroll to, so it plays at load, one line after another. */
+const enter = (i = 0, type = 'fade_in_up'): Extra => ({
+  config: { animation: { active: true, type, intensity: 'soft', delay: Number((i * 0.12).toFixed(2)) } },
+});
+
+/**
+ * A button that answers the pointer. A button's hover lives in the flat,
+ * base-only `config.stateHover` (see `hover.ts`); `states.hover` paints nothing
+ * on one. `translate`, not `transform`: an entrance animation fills `transform`
+ * and would outrank a hover written there.
+ */
+const cta = (text: string, href = '#'): Captured =>
+  dress(
+    { kind: 'button', variant: 'cta', text, href },
+    {
+      style: { transition: 'translate 0.2s ease, box-shadow 0.2s ease' },
+      config: { stateHover: { translate: '0 -2px', boxShadow: `0 10px 24px ${SHADOW}` } },
+    },
+  );
+/** The second choice beside a call to action: same shape, no fill. */
+const ghost = (text: string, href = '#'): Captured =>
+  dress(cta(text, href), {
+    style: { backgroundColor: 'transparent', color: HEADING, border: `1px solid ${BORDER}` },
+  });
+/** Two buttons side by side, packed rather than spread across the row. */
+const actions = (kids: Captured[], centred = false): Captured => ({
+  kind: 'group',
+  direction: 'row',
+  pack: true,
+  ...(centred ? { align: 'center' as const } : {}),
+  children: kids,
+});
+/** The small label above a heading that says what the band is. */
+const eyebrow = (text: string, textAlign?: Captured['textAlign']): Captured =>
+  dress(p(text, textAlign), {
+    style: {
+      fontSize: 'var(--wb-ts-text-2-size)',
+      fontWeight: '600',
+      letterSpacing: '0.12em',
+      textTransform: 'uppercase',
+      lineHeight: '1.4',
+      color: ACCENT,
+    },
+  });
+const muted = (text: string, textAlign?: Captured['textAlign']): Captured =>
+  dress(p(text, textAlign), { style: { color: 'var(--wb-color-muted)' } });
+/**
+ * A CARD: a surface, a hairline, a radius, and a lift under the pointer. It
+ * fills its cell (`flex`), so a row of cards shares one height when the row
+ * stretches.
+ */
+const card = (children: Captured[], i: number, highlight = false): Captured =>
+  dress(
+    { kind: 'group', direction: 'column', children },
+    {
+      style: {
+        flex: '1 1 auto',
+        padding: '28px',
+        borderRadius: '16px',
+        backgroundColor: SURFACE,
+        border: highlight ? `2px solid ${ACCENT}` : `1px solid ${BORDER}`,
+        ...(highlight ? { boxShadow: `0 16px 40px ${SHADOW}` } : {}),
+      },
+      states: { hover: { style: { translate: '0 -4px', boxShadow: `0 16px 40px ${SHADOW}` } } },
+    },
+    reveal(i),
+  );
+/** The heading block every band opens with: label, title, and one line. */
+const intro = (label: string, title: string, line?: string, textAlign?: Captured['textAlign']): Captured[] => [
+  eyebrow(label, textAlign),
+  h(title, 2, textAlign),
+  ...(line ? [muted(line, textAlign)] : []),
+];
 /**
  * The picture slot: a real image when the site has one, and WORDS when it does
  * not.
@@ -237,7 +371,7 @@ export const LAYOUT_PATTERNS: LayoutPattern[] = [
   {
     id: 'sb_hero_split',
     name: 'Hero — hai cột',
-    use: 'Mở đầu trang: tiêu đề, một câu, nút hành động bên trái; chỗ cho ảnh bên phải',
+    use: 'Mở đầu trang: nhãn, tiêu đề, một câu, hai nút bên trái; ảnh bo góc bên phải — hiện dần khi tải trang',
     images: 1,
     build: (t, pool) => {
       const used = new Set<string>();
@@ -248,66 +382,95 @@ export const LAYOUT_PATTERNS: LayoutPattern[] = [
           // measured 154px beside 420px, and the band read as a caption that
           // had slipped off the picture.
           row([
-            { kind: 'group', direction: 'column', children: [h('Tiêu đề chính', 1), p('Một câu nói rõ bạn bán gì và cho ai.'), cta('Mua ngay')] },
             {
               kind: 'group',
               direction: 'column',
               children: [
-                img(
-                  pick(pool, used, 'landscape'),
-                  'Ảnh mở đầu',
-                  'Chưa có ảnh nào trong thư viện — sb_media_upload một URL, rồi sb_set src lên khối này.',
+                dress(eyebrow('Bộ sưu tập mới'), enter(0)),
+                dress(h('Tiêu đề chính', 1), enter(1)),
+                dress(p('Một câu nói rõ bạn bán gì và cho ai.'), enter(2)),
+                dress(actions([cta('Mua ngay'), ghost('Tìm hiểu thêm')]), enter(3)),
+              ],
+            },
+            {
+              kind: 'group',
+              direction: 'column',
+              children: [
+                dress(
+                  img(
+                    pick(pool, used, 'landscape'),
+                    'Ảnh mở đầu',
+                    'Chưa có ảnh nào trong thư viện — sb_media_upload một URL, rồi sb_set src lên khối này.',
+                  ),
+                  { style: { borderRadius: '20px', overflow: 'hidden' } },
+                  enter(2, 'fade_in'),
                 ),
               ],
             },
           ], false, 'center'),
         ],
         t,
+        { padding: '96px 24px' },
+        undefined,
+        { padding: '56px 20px' },
       );
     },
   },
   {
     id: 'sb_hero_centered',
     name: 'Hero — canh giữa',
-    use: 'Mở đầu trang khi chưa có ảnh: tiêu đề lớn, một câu, một nút',
+    use: 'Mở đầu trang khi chưa có ảnh: nhãn, tiêu đề lớn, một câu, hai nút — canh giữa, hiện dần khi tải trang',
     build: (t) =>
       section(
         // Centred on the NODES, not left to the section's inherited textAlign —
         // the theme's heading preset declares its own and wins.
-        [h('Tiêu đề chính', 1, 'center'), p('Một câu nói rõ bạn bán gì và cho ai.', 'center'), cta('Mua ngay')],
+        [
+          dress(eyebrow('Chào mừng', 'center'), enter(0)),
+          dress(h('Tiêu đề chính', 1, 'center'), enter(1)),
+          dress(p('Một câu nói rõ bạn bán gì và cho ai.', 'center'), enter(2)),
+          dress(actions([cta('Mua ngay'), ghost('Tìm hiểu thêm')], true), enter(3)),
+        ],
         t,
-        { alignItems: 'center', textAlign: 'center' },
-        { alignItems: 'center' },
+        { alignItems: 'center', textAlign: 'center', padding: '112px 24px' },
+        // A NARROWER MEASURE than the 1200px band: a centred headline over a
+        // full-width line reads as a banner, not a sentence.
+        { alignItems: 'center', maxWidth: '760px' },
+        { padding: '64px 20px' },
       ),
   },
   {
     id: 'sb_feature_trio',
     name: 'Ba lợi ích',
-    use: 'Ba cột ngang nhau: mỗi cột một tiêu đề nhỏ và một đoạn — lý do nên mua',
+    use: 'Nền nhạt, ba thẻ ngang nhau: icon, tiêu đề nhỏ, một đoạn — lý do nên mua; thẻ nổi lên khi rê chuột',
     build: (t) =>
       section(
         [
-          h('Vì sao chọn chúng tôi'),
-          row([
-            { kind: 'group', direction: 'column', children: [h('Lợi ích một', 3), p('Một hoặc hai câu.')] },
-            { kind: 'group', direction: 'column', children: [h('Lợi ích hai', 3), p('Một hoặc hai câu.')] },
-            { kind: 'group', direction: 'column', children: [h('Lợi ích ba', 3), p('Một hoặc hai câu.')] },
-          ]),
+          ...intro('Lợi ích', 'Vì sao chọn chúng tôi', 'Ba điều khách hàng nhắc đến nhiều nhất.'),
+          row(
+            [
+              card([icon('SparklingLine'), h('Lợi ích một', 3), p('Một hoặc hai câu.')], 0),
+              card([icon('LeafLine'), h('Lợi ích hai', 3), p('Một hoặc hai câu.')], 1),
+              card([icon('CustomerService2Line'), h('Lợi ích ba', 3), p('Một hoặc hai câu.')], 2),
+            ],
+            false,
+            'stretch',
+          ),
         ],
         t,
+        TINT,
       ),
   },
   {
     id: 'sb_stats_row',
     name: 'Dải số liệu',
-    use: 'Ba đến bốn con số lớn với nhãn bên dưới — bằng chứng, không phải lời hứa',
+    use: 'Ba đến bốn con số lớn với nhãn bên dưới — bằng chứng, không phải lời hứa; hiện lần lượt khi cuộn tới',
     build: (t) =>
       section(
         [
           row([
-            { kind: 'group', direction: 'column', children: [h('1.000+', 2, 'center'), p('Khách hàng', 'center')] },
-            { kind: 'group', direction: 'column', children: [h('4,9/5', 2, 'center'), p('Đánh giá trung bình', 'center')] },
-            { kind: 'group', direction: 'column', children: [h('24h', 2, 'center'), p('Giao trong nội thành', 'center')] },
+            dress({ kind: 'group', direction: 'column', children: [h('1.000+', 2, 'center'), muted('Khách hàng', 'center')] }, reveal(0)),
+            dress({ kind: 'group', direction: 'column', children: [h('4,9/5', 2, 'center'), muted('Đánh giá trung bình', 'center')] }, reveal(1)),
+            dress({ kind: 'group', direction: 'column', children: [h('24h', 2, 'center'), muted('Giao trong nội thành', 'center')] }, reveal(2)),
           ]),
         ],
         t,
@@ -318,16 +481,24 @@ export const LAYOUT_PATTERNS: LayoutPattern[] = [
   {
     id: 'sb_cta_band',
     name: 'Dải kêu gọi hành động',
-    use: 'Một câu và một nút, đặt cuối trang hoặc giữa hai band nội dung',
+    use: 'Khối màu chủ đạo bo góc: một câu, một nút đảo màu — đặt cuối trang hoặc giữa hai band nội dung',
     build: (t) =>
       section(
         // CENTRED ON THE NODES. The section's own `textAlign` is inherited, and
         // the theme's heading preset declares its own — so the band came out
         // with its words hard left and only the button in the middle.
-        [h('Sẵn sàng bắt đầu?', 2, 'center'), p('Một câu nhắc lại lời hứa chính.', 'center'), cta('Mua ngay')],
+        [
+          // ON THE ACCENT, the ink is the page's button text — or, on a page
+          // that has none, its background, which is the inversion that reads.
+          dress(h('Sẵn sàng bắt đầu?', 2, 'center'), { style: { color: t.buttonColor ?? SURFACE } }, reveal(0)),
+          dress(p('Một câu nhắc lại lời hứa chính.', 'center'), { style: { color: t.buttonColor ?? SURFACE, opacity: '0.85' } }, reveal(1)),
+          dress(cta('Mua ngay'), { style: { backgroundColor: t.buttonColor ?? SURFACE, color: ACCENT } }, reveal(2)),
+        ],
         t,
         { alignItems: 'center', textAlign: 'center' },
-        { alignItems: 'center' },
+        // THE PANEL IS THE INNER BLOCK, so the band keeps the page's gutters and
+        // the colour sits inside the same 1200px measure as everything else.
+        { alignItems: 'center', backgroundColor: ACCENT, borderRadius: '24px', padding: '56px 32px' },
       ),
   },
   {
@@ -365,7 +536,13 @@ export const LAYOUT_PATTERNS: LayoutPattern[] = [
         .sort((a, b) => a - b);
       const frame = ratios.length ? ratios[Math.floor(ratios.length / 2)].toFixed(2) : undefined;
       for (const m of picked) {
-        shots.push({ kind: 'image', src: m.url, alt: m.name ?? 'Ảnh', ...(frame ? { ratio: frame } : {}) });
+        shots.push(
+          dress(
+            { kind: 'image', src: m.url, alt: m.name ?? 'Ảnh', ...(frame ? { ratio: frame } : {}) },
+            { style: { borderRadius: '12px', overflow: 'hidden' } },
+            reveal(shots.length % 3, 'zoom_in'),
+          ),
+        );
       }
       if (shots.length === 0) {
         return section(
@@ -386,8 +563,9 @@ export const LAYOUT_PATTERNS: LayoutPattern[] = [
     build: (t) =>
       section(
         [
-          h('Câu hỏi thường gặp'),
+          ...intro('Hỗ trợ', 'Câu hỏi thường gặp'),
           {
+            extra: reveal(0),
             kind: 'accordion',
             children: [
               { kind: 'accordion-item', text: 'Giao hàng mất bao lâu?', children: [p('Trả lời ngắn gọn.')] },
@@ -465,21 +643,25 @@ export const LAYOUT_PATTERNS: LayoutPattern[] = [
           h('Cam kết của chúng tôi'),
           row([
             {
+              extra: reveal(0),
               kind: 'group',
               direction: 'column',
               children: [icon('TruckLine'), h('Giao hàng nhanh', 3), p('Giao toàn quốc trong 24-48h.')],
             },
             {
+              extra: reveal(1),
               kind: 'group',
               direction: 'column',
               children: [icon('ShieldCheckLine'), h('Bảo hành chính hãng', 3), p('Đổi mới trong 7 ngày nếu lỗi.')],
             },
             {
+              extra: reveal(2),
               kind: 'group',
               direction: 'column',
               children: [icon('RefreshLine'), h('Đổi trả dễ dàng', 3), p('30 ngày đổi ý, hoàn tiền nhanh.')],
             },
             {
+              extra: reveal(3),
               kind: 'group',
               direction: 'column',
               children: [icon('BankCardLine'), h('Thanh toán an toàn', 3), p('Hỗ trợ nhiều hình thức thanh toán.')],
@@ -487,6 +669,160 @@ export const LAYOUT_PATTERNS: LayoutPattern[] = [
           ]),
         ],
         t,
+      ),
+  },
+  // ---------------------------------------------------------------------
+  // THE BANDS A LANDING PAGE REACHES FOR AFTER THE FIRST SCREEN: social proof,
+  // a process, a picture beside a claim, and a choice between offers.
+  // ---------------------------------------------------------------------
+  {
+    id: 'sb_testimonials',
+    name: 'Cảm nhận khách hàng',
+    use: 'Nền nhạt, ba thẻ trích dẫn: năm sao, lời khách, tên và nơi ở — bằng chứng xã hội',
+    build: (t) =>
+      section(
+        [
+          ...intro('Khách hàng nói gì', 'Được hàng nghìn người tin chọn', undefined, 'center'),
+          row(
+            [
+              ['Nguyễn Minh Anh', 'Hà Nội'],
+              ['Trần Quốc Bảo', 'TP. Hồ Chí Minh'],
+              ['Lê Thu Hà', 'Đà Nẵng'],
+            ].map(([name, place], i) =>
+              card(
+                [
+                  dress(p('★★★★★'), { style: { color: ACCENT, letterSpacing: '0.1em' } }),
+                  dress(p('“Một hoặc hai câu khách hàng thật sự đã nói — cụ thể hơn một lời khen.”'), {
+                    style: { fontSize: 'var(--wb-ts-heading-5-size)', color: HEADING },
+                  }),
+                  h(name!, 4),
+                  muted(`Khách hàng tại ${place}`),
+                ],
+                i,
+              ),
+            ),
+            false,
+            'stretch',
+          ),
+        ],
+        t,
+        TINT,
+        { alignItems: 'center' },
+      ),
+  },
+  {
+    id: 'sb_steps',
+    name: 'Các bước',
+    use: 'Ba bước đánh số 01-02-03, mỗi bước một tiêu đề nhỏ và một câu — quy trình đặt hàng, sử dụng, bảo hành',
+    build: (t) =>
+      section(
+        [
+          ...intro('Cách hoạt động', 'Ba bước đơn giản'),
+          row(
+            [
+              ['01', 'Chọn sản phẩm', 'Một câu nói bước này làm gì.'],
+              ['02', 'Đặt hàng', 'Một câu nói bước này làm gì.'],
+              ['03', 'Nhận hàng', 'Một câu nói bước này làm gì.'],
+            ].map(([n, title, line], i) =>
+              dress(
+                {
+                  kind: 'group',
+                  direction: 'column',
+                  children: [
+                    dress(p(n!), {
+                      style: { fontSize: 'var(--wb-ts-heading-2-size)', fontWeight: '700', lineHeight: '1', color: ACCENT },
+                    }),
+                    h(title!, 3),
+                    p(line!),
+                  ],
+                },
+                { style: { borderTop: `2px solid ${ACCENT}`, paddingTop: '20px' } },
+                reveal(i),
+              ),
+            ),
+          ),
+        ],
+        t,
+      ),
+  },
+  {
+    id: 'sb_image_text',
+    name: 'Ảnh và nội dung',
+    use: 'Ảnh bên trái, bên phải là nhãn, tiêu đề, một đoạn, ba ý có dấu và một link — đặt xen kẽ với hero hai cột',
+    images: 1,
+    build: (t, pool) => {
+      const used = new Set<string>();
+      return section(
+        [
+          row([
+            dress(
+              {
+                kind: 'group',
+                direction: 'column',
+                children: [
+                  img(
+                    pick(pool, used, 'landscape'),
+                    'Ảnh minh hoạ',
+                    'Chưa có ảnh nào trong thư viện — sb_media_upload một URL, rồi sb_set src lên khối này.',
+                  ),
+                ],
+              },
+              { style: { borderRadius: '20px', overflow: 'hidden' } },
+              reveal(0, 'fade_in_left'),
+            ),
+            dress(
+              {
+                kind: 'group',
+                direction: 'column',
+                children: [
+                  ...intro('Câu chuyện', 'Một điều làm bạn khác biệt'),
+                  p('Hai hoặc ba câu kể cụ thể: nguyên liệu, cách làm, người làm.'),
+                  { kind: 'list', items: ['Ý thứ nhất', 'Ý thứ hai', 'Ý thứ ba'] },
+                  linkTo('Tìm hiểu thêm →'),
+                ],
+              },
+              reveal(1, 'fade_in_right'),
+            ),
+          ], false, 'center'),
+        ],
+        t,
+      );
+    },
+  },
+  {
+    id: 'sb_pricing',
+    name: 'Bảng giá',
+    use: 'Ba thẻ gói: tên, giá, một câu, danh sách quyền lợi, nút — thẻ giữa được làm nổi bật',
+    build: (t) =>
+      section(
+        [
+          ...intro('Bảng giá', 'Chọn gói phù hợp', 'Đổi gói bất cứ lúc nào.', 'center'),
+          row(
+            [
+              ['Cơ bản', '99.000đ', false],
+              ['Tiêu chuẩn', '199.000đ', true],
+              ['Cao cấp', '399.000đ', false],
+            ].map(([name, price, best], i) =>
+              card(
+                [
+                  ...(best ? [eyebrow('Phổ biến nhất')] : []),
+                  h(String(name), 3),
+                  h(String(price), 2),
+                  muted('Một câu cho biết gói này dành cho ai.'),
+                  { kind: 'list', items: ['Quyền lợi thứ nhất', 'Quyền lợi thứ hai', 'Quyền lợi thứ ba'] },
+                  best ? cta('Chọn gói') : ghost('Chọn gói'),
+                ],
+                i,
+                Boolean(best),
+              ),
+            ),
+            false,
+            'stretch',
+          ),
+        ],
+        t,
+        undefined,
+        { alignItems: 'center' },
       ),
   },
 ];
