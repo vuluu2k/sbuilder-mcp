@@ -84,6 +84,49 @@ describe('RealtimeSocket', () => {
     s.send({ t: 'cursor', x: 1, y: 2 });
     expect(fake.sent.length).toBe(0);
   });
+
+  // The edit made right after sb_page_open — before the handshake finished —
+  // used to be DROPPED, so an open editor never saw it.
+  it('holds frames sent before the welcome and flushes them after it, in order', () => {
+    const fake = new FakeSocket();
+    fake.readyState = 0;
+    const s = new RealtimeSocket('ws://x', () => 't', () => fake);
+    const order: string[] = [];
+    s.on((e) => {
+      if (e.t === 'welcome') s.send({ t: 'page', pageId: 'pg' });
+    });
+    s.connect();
+    s.send({ t: 'ops', opId: 'a' });
+    fake.readyState = 1;
+    fake.onopen!();
+    s.send({ t: 'ops', opId: 'b' }); // open, but not welcomed: auth may still fail
+    expect(fake.sent.map((f) => JSON.parse(f).t), 'sent before the welcome').toEqual(['auth']);
+    fake.onmessage!({ data: JSON.stringify({ t: 'welcome', peerId: 'p', peers: [] }) });
+    for (const f of fake.sent) order.push(JSON.parse(f).opId ?? JSON.parse(f).t);
+    expect(order, 'queued frames lost or out of order').toEqual(['auth', 'page', 'a', 'b']);
+    s.send({ t: 'ops', opId: 'c' });
+    expect(JSON.parse(fake.sent.at(-1)!).opId, 'ready socket did not send directly').toBe('c');
+  });
+
+  it('holds frames across a reconnect too', () => {
+    const socks: FakeSocket[] = [];
+    const s = new RealtimeSocket('ws://x', () => 't', () => {
+      const f = new FakeSocket();
+      socks.push(f);
+      return f;
+    });
+    s.connect();
+    socks[0].onopen!();
+    socks[0].onmessage!({ data: JSON.stringify({ t: 'welcome', peers: [] }) });
+    socks[0].onclose!();
+    s.send({ t: 'ops', opId: 'during-gap' });
+    expect(socks[0].sent.map((f) => JSON.parse(f).t), 'sent into a closed socket').toEqual(['auth']);
+    s.connect();
+    socks[1].onopen!();
+    socks[1].onmessage!({ data: JSON.stringify({ t: 'welcome', peers: [] }) });
+    expect(socks[1].sent.map((f) => JSON.parse(f).opId ?? JSON.parse(f).t)).toEqual(['auth', 'during-gap']);
+    s.close();
+  });
 });
 
 /**

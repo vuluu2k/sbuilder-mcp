@@ -28,6 +28,8 @@ export interface RealtimeEvent {
 const OPEN = 1;
 const RETRY_BASE_MS = 500;
 const RETRY_MAX_MS = 15_000;
+/** Frames held while not ready. A reconnect loop must not grow memory forever. */
+const QUEUE_MAX = 500;
 
 export class RealtimeSocket {
   private ws: SocketLike | null = null;
@@ -35,6 +37,19 @@ export class RealtimeSocket {
   private attempt = 0;
   private handlers: Array<(e: RealtimeEvent) => void> = [];
   private timer: ReturnType<typeof setTimeout> | null = null;
+  /** The server has welcomed THIS connection — frames sent now are read. */
+  private ready = false;
+  /**
+   * Frames sent while not ready, flushed on the welcome.
+   *
+   * `sb_page_open` starts the connection and returns; the `sb_add` right after
+   * it ran before the handshake finished, and a send that DROPPED on a
+   * not-open socket lost it without a trace. The editor watching the page never
+   * saw the section appear — it showed an empty page, and its next autosave
+   * could write that empty page over the agent's work. Same for every edit made
+   * during a reconnect.
+   */
+  private queue: string[] = [];
 
   constructor(
     private readonly url: string,
@@ -63,6 +78,7 @@ export class RealtimeSocket {
     this.ws = ws;
     this.attempt += 1;
 
+    this.ready = false;
     ws.onopen = () => {
       // Auth is the FIRST message, never a header (a browser cannot set one on a
       // WebSocket) and never a query parameter (a token in a URL lands in logs).
@@ -113,10 +129,16 @@ export class RealtimeSocket {
       } catch {
         return; // a malformed frame must never throw into the socket
       }
+      // Ready BEFORE the handlers, flushed AFTER them: the page announcement
+      // the welcome triggers goes out directly, ahead of the ops held for it.
+      const held = this.ready ? [] : this.queue.splice(0);
+      this.ready = true;
       for (const h of this.handlers) h(parsed);
+      for (const f of held) ws.send(f);
     };
 
     ws.onclose = () => {
+      this.ready = false;
       if (this.closed) return;
       const wait = Math.min(RETRY_BASE_MS * 2 ** this.attempt, RETRY_MAX_MS);
       this.timer = setTimeout(() => this.connect(), wait);
@@ -130,12 +152,22 @@ export class RealtimeSocket {
 
   send(e: RealtimeEvent): void {
     if (this.closed) return;
-    if (this.ws?.readyState !== OPEN) return;
-    this.ws.send(JSON.stringify(e));
+    const frame = JSON.stringify(e);
+    if (this.ready && this.ws?.readyState === OPEN) {
+      this.ws.send(frame);
+      return;
+    }
+    if (this.queue.length >= QUEUE_MAX) {
+      // ponytail: drops the oldest past the cap; the peer re-pulls on the gap.
+      console.error('[sbuilder-mcp] live queue full, dropping the oldest frame');
+      this.queue.shift();
+    }
+    this.queue.push(frame);
   }
 
   close(): void {
     this.closed = true;
+    this.queue = [];
     if (this.timer) clearTimeout(this.timer);
     this.ws?.close();
   }
