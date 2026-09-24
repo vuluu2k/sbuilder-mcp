@@ -6,6 +6,14 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.63.1] - 2026-09-24
+
+### Fixed
+- Live-edit frames now carry the open page's id from the moment a room is joined and whenever a new page is opened afterward, so the editor's own per-page filter no longer drops every ops, cursor, and select frame this server sends.
+- A second `sb_live_join`, or opening a page on a different site while already in a room, now leaves the previous room instead of leaving its socket connected and reconnecting for the rest of the process.
+- Opening a page on a site other than the one the current live room belongs to now leaves that room first, so a failed join can no longer strand the session in the wrong site's room.
+- The server process now exits when the MCP client closes stdin, instead of being kept alive indefinitely by the live-room socket and its reconnect timer.
+
 ## [0.63.0] - 2026-09-21
 
 ### Added

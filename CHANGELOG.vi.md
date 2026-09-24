@@ -6,6 +6,14 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.63.1] - 2026-09-24
+
+### Fixed
+- Các frame live-edit giờ mang theo id của trang đang mở ngay từ lúc vào phòng và mỗi khi một trang mới được mở sau đó, để bộ lọc theo từng trang của chính editor không còn loại bỏ mọi frame ops, cursor và select mà server này gửi đi.
+- Gọi `sb_live_join` lần thứ hai, hoặc mở một trang thuộc site khác trong khi đang ở trong một phòng, giờ sẽ rời phòng cũ thay vì để socket của nó tiếp tục kết nối và tự reconnect trong suốt phần đời còn lại của tiến trình.
+- Mở một trang thuộc site khác với site của phòng live hiện tại giờ sẽ rời phòng đó trước, để một lần join thất bại không còn có thể khiến session bị mắc kẹt trong phòng của site sai.
+- Tiến trình server giờ thoát khi client MCP đóng stdin, thay vì bị giữ sống vô thời hạn bởi socket của phòng live và timer reconnect của nó.
+
 ## [0.63.0] - 2026-09-21
 
 ### Added
