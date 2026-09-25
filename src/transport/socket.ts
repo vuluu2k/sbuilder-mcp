@@ -110,6 +110,11 @@ export class RealtimeSocket {
         JSON.stringify({
           t: 'auth',
           token: this.token(),
+          // THE YIELD RULE, said to the server: this client never answers a
+          // snapreq, so it must never be the peer a joiner is sent to. An
+          // agent key is skipped by Kind already; a SESSION reads as a person
+          // and needs saying. Older servers ignore the key.
+          noSnapshot: true,
           ...(id.client ? { client: id.client } : {}),
           ...(id.clientVersion ? { clientVersion: id.clientVersion } : {}),
         }),

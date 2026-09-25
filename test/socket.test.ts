@@ -20,7 +20,7 @@ describe('RealtimeSocket', () => {
     const s = new RealtimeSocket('ws://x/api/realtime/ws?site=s1', () => 'tok', () => fake);
     s.connect();
     fake.onopen!();
-    expect(JSON.parse(fake.sent[0])).toEqual({ t: 'auth', token: 'tok' });
+    expect(JSON.parse(fake.sent[0])).toEqual({ t: 'auth', token: 'tok', noSnapshot: true });
   });
 
   it('reads the token per attempt, never captured', () => {
@@ -154,7 +154,7 @@ describe('the auth frame names the harness', () => {
     const fake = new FakeSocket();
     new RealtimeSocket('ws://x', () => 'tok', () => fake).connect();
     fake.onopen!();
-    expect(frame(fake)).toEqual({ t: 'auth', token: 'tok' });
+    expect(frame(fake)).toEqual({ t: 'auth', token: 'tok', noSnapshot: true });
   });
 
   it('carries the client and its version once the handshake named them', () => {
@@ -165,6 +165,7 @@ describe('the auth frame names the harness', () => {
     expect(frame(fake)).toEqual({
       t: 'auth',
       token: 'tok',
+      noSnapshot: true,
       client: 'claude-code',
       clientVersion: '2.1.0',
     });
@@ -178,7 +179,7 @@ describe('the auth frame names the harness', () => {
     const fake = new FakeSocket();
     new RealtimeSocket('ws://x', () => 'tok', () => fake).connect();
     fake.onopen!();
-    expect(frame(fake)).toEqual({ t: 'auth', token: 'tok', client: 'some-harness' });
+    expect(frame(fake)).toEqual({ t: 'auth', token: 'tok', noSnapshot: true, client: 'some-harness' });
     expect(frame(fake)).not.toHaveProperty('clientVersion');
   });
 
