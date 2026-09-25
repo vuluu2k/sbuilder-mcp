@@ -1101,7 +1101,7 @@ publish panel then listed five gaps.
 | `siteChrome` | Two or more pages and NO global section, so each page carries its own header and footer. Changing the menu is one edit per page, the copies drift, and a visitor meets a slightly different site on every click. Asked of every site, not only a store — it is the one question here that is not about money |
 | `cartDrawer` | Something opens the cart but the site has no cart drawer, so it opens nothing. Fix: `sb_store action:"cart"` |
 | `cartCount` | Something opens the cart but nothing shows what is in it. `cart-count` is opt-in because `open_cart` is an ACTION any element can carry, so a site built with these tools never gets one: a shopper adds an item, sees a toast fade, and then no evidence anywhere that their basket is not empty |
-| `categoryScope` | Two or more product categories and none points at a page of its own, so `/collections/{slug}` serves one default template for every one — and nothing on it narrows the product feed to the category in the URL. A shopper who picks a category sees the whole catalogue. The blog twin auto-scopes by slug; this one does not |
+| `categoryScope` | The open page is the shared `category` template and every product repeater on it is pinned to ONE named collection (`collectionType: "collection"`), so every `/collections/{slug}` shows that one. Since the platform scopes a category template itself, `all_products` / `page_collection` follow the URL and a shared template is correct — no page per category is needed |
 
 Each gap carries `draft: true` when the page EXISTS but is unpublished, because "publish the
 one you made" and "create one" are different jobs. Ordered most-blocking first.

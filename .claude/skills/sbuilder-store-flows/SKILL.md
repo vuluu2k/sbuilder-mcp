@@ -243,6 +243,12 @@ repo over a number here, and fix the line when you catch one stale.
   population of pages the `sb_look` entity-template caveat already covers. Judge it at
   `/collections/{slug}` on the published storefront.
 
+  **`sb_review`'s `categoryScope` now reports ONLY the one shape still broken**: the open page
+  is the shared category template and EVERY product repeater on it is pinned to a named
+  `collection`. It used to fire on "categories > 1 and no page-links" and prescribe a page per
+  category — a count that is now the correct setup. A pinned shelf beside a URL-following one
+  is a design and stays silent.
+
   This entry is kept in the shape "it used to be X, it is now Y" on purpose. The previous
   version was written the same afternoon the platform fixed it and prescribed a page per
   category as the remedy, which is exactly the stale-hint cost this file records for agent keys

@@ -15,6 +15,7 @@ export async function gatherReadiness(
   ctx: ToolContext,
   siteId: string,
   pageNodes: ReadinessInput['pageNodes'],
+  openPageId?: string,
 ): Promise<ReadinessInput> {
   const get = async <T>(path: string): Promise<T | null> => {
     try {
@@ -33,7 +34,7 @@ export async function gatherReadiness(
 
   const [pageList, gateways, shipping, globals, productList, categoryList, pageLinks, formList, articleList, blogCategoryList, courseList, siteRecord, overlayList] =
     await Promise.all([
-    get<{ pages?: ReadinessPage[] }>(`/api/sites/${site}/pages`),
+    get<{ pages?: Array<ReadinessPage & { id?: string; isDefaultTemplate?: boolean }> }>(`/api/sites/${site}/pages`),
     get<{ paymentGateways?: Array<{ enabled?: boolean; configured?: boolean }> }>(
       `/api/sites/${site}/payment-gateways`,
     ),
@@ -136,8 +137,13 @@ export async function gatherReadiness(
       }
     : null;
 
+  // A page an entity links to is that entity's own; only the shared template
+  // counts as the category template, and a row without the flag is read as one.
+  const open = openPageId ? pageList?.pages?.find((p) => p.id === openPageId) : undefined;
+
   return {
     pages: pageList?.pages ?? null,
+    openPageType: open && open.isDefaultTemplate !== false ? open.type : undefined,
     products,
     liveGateways,
     shippingMethods,

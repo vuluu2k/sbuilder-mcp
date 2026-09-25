@@ -202,15 +202,18 @@ describe('readinessGaps() — the catalogue', () => {
 });
 
 /**
- * EVERY CATEGORY SHOWS EVERY PRODUCT — reported from a real storefront, and the
- * one readiness question that is answered by counts rather than by a document.
- *
- * `/collections/{slug}` falls back to the DEFAULT TEMPLATE for the `category`
- * type, and nothing on it narrows the product feed to the category in the URL:
- * `entityScope` threads the entity into the article feed for a blogCategory and
- * the review feed for a product, and into nothing at all for a productCategory.
+ * A CATEGORY TEMPLATE SCOPES ITSELF since web_builder b4ca5645: `all_products`
+ * (and the explicit `page_collection`) on a category page narrows to the
+ * category in the URL. So a store whose categories all share the default
+ * template is FINE — the old "one page per category" advice is gone. What is
+ * still a defect: the shared template's only product repeaters are pinned to
+ * ONE named collection, so every category shows that one.
  */
 describe('categoryScope', () => {
+  const list = (config: Record<string, unknown>) => ({
+    data: { type: 'list-dataset' },
+    config: { datasetSource: 'product', ...config },
+  });
   const store = (over: Record<string, unknown>) =>
     readinessGaps({
       pages: [
@@ -223,29 +226,47 @@ describe('categoryScope', () => {
       liveGateways: 1,
       shippingMethods: 1,
       products: { active: 3, purchasable: 3 },
-      pageNodes: null,
+      pageNodes: [],
       globalNodes: null,
       ...over,
-    } as never).map((g) => g.id);
+    } as never);
 
-  it('reports a store whose categories all share one template', () => {
-    expect(store({ categories: 4, categoryPageLinks: 0 })).toContain('categoryScope');
+  it('says nothing about categories sharing the default template — it scopes itself now', () => {
+    expect(store({ categories: 4, categoryPageLinks: 0 }).map((g) => g.id)).not.toContain('categoryScope');
+    expect(
+      store({ categories: 4, categoryPageLinks: 0, openPageType: 'category', pageNodes: [list({ collectionType: 'all_products' })] })
+        .map((g) => g.id),
+    ).not.toContain('categoryScope');
   });
 
-  it('says nothing once the categories point at pages of their own', () => {
-    expect(store({ categories: 4, categoryPageLinks: 4 })).not.toContain('categoryScope');
+  it('reports the shared template whose only repeater is pinned to one collection', () => {
+    const gap = store({
+      categories: 4,
+      categoryPageLinks: 0,
+      openPageType: 'category',
+      pageNodes: [list({ collectionType: 'collection', collectionId: 'c1' })],
+    }).find((g) => g.id === 'categoryScope');
+    expect(gap).toBeTruthy();
+    expect(gap!.fix).toMatch(/page_collection|all_products/);
+    expect(gap!.fix).not.toMatch(/page-links\/bulk|its own page/);
   });
 
-  // One category CAN be served correctly by the shared template — its repeater
-  // just names that one collection — so a single-category store is not a defect.
-  it('says nothing about a store with one category', () => {
-    expect(store({ categories: 1, categoryPageLinks: 0 })).not.toContain('categoryScope');
+  it('a pinned "you may also like" shelf beside a repeater that follows the URL is a design, not a defect', () => {
+    expect(
+      store({
+        categories: 4,
+        categoryPageLinks: 0,
+        openPageType: 'category',
+        pageNodes: [list({ collectionType: 'page_collection' }), list({ collectionType: 'collection', collectionId: 'c2' })],
+      }).map((g) => g.id),
+    ).not.toContain('categoryScope');
   });
 
-  // Silent on what it could not read, like every other check here.
-  it('says nothing when the counts are unknown', () => {
-    expect(store({ categories: null, categoryPageLinks: null })).not.toContain('categoryScope');
-    expect(store({})).not.toContain('categoryScope');
+  it('says nothing when the open page is not the category template', () => {
+    expect(
+      store({ categories: 4, categoryPageLinks: 0, openPageType: 'page', pageNodes: [list({ collectionType: 'collection' })] })
+        .map((g) => g.id),
+    ).not.toContain('categoryScope');
   });
 });
 
@@ -598,9 +619,19 @@ describe('readinessGaps() — the category template', () => {
   // THE LIVENESS ANCHOR: this fixture really does produce gaps, so the four
   // silences above are read off a list that could have contained the finding.
   it('still answers the scope question on the same fixture', () => {
-    expect(ids([...store, { type: 'category', status: 'published' }], 3)).toContain(
-      'categoryScope',
-    );
+    const g = readinessGaps({
+      pages: [...store, { type: 'category', status: 'published' }],
+      categories: 3, categoryPageLinks: 0, liveGateways: 1, shippingMethods: 1,
+      products: { active: 1, purchasable: 1 },
+      openPageType: 'category',
+      pageNodes: [{ data: { type: 'list-dataset' }, config: { collectionType: 'collection' } }],
+      globalNodes: [
+        { data: { type: 'button' }, events: [{ action: 'open_cart' }] },
+        { data: { type: 'cart-count' } },
+      ],
+      globalKinds: ['header'],
+    } as never).map((x) => x.id);
+    expect(g).toContain('categoryScope');
   });
 });
 

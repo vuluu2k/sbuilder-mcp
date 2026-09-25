@@ -1070,7 +1070,7 @@ hoàn toàn bằng bộ tool này review sạch, publish và render đúng; bả
 | `siteChrome` | Từ hai trang trở lên mà KHÔNG có global section nào, nên mỗi trang tự mang header/footer riêng. Đổi menu là sửa từng trang, các bản sao lệch dần, và khách gặp một site hơi khác ở mỗi lần bấm. Hỏi cho mọi site chứ không riêng cửa hàng — đây là câu hỏi duy nhất ở đây không liên quan tới tiền |
 | `cartDrawer` | Có thứ mở giỏ nhưng site không có ngăn giỏ, nên bấm vào không mở gì. Sửa: `sb_store action:"cart"` |
 | `cartCount` | Có thứ mở được giỏ nhưng không có gì cho thấy trong giỏ có gì. `cart-count` là tuỳ chọn vì `open_cart` là một HÀNH ĐỘNG mà element nào cũng mang được, nên site dựng bằng bộ công cụ này không bao giờ tự có: khách thêm hàng, thấy một toast tắt đi, rồi không còn dấu hiệu nào cho thấy giỏ không rỗng |
-| `categoryScope` | Từ hai danh mục sản phẩm trở lên mà không cái nào trỏ tới trang riêng, nên `/collections/{slug}` phục vụ chung một default template — và không gì trên đó thu hẹp feed sản phẩm theo danh mục trong URL. Khách bấm một danh mục thấy toàn bộ catalogue. Danh mục blog tự thu hẹp theo slug, cái này thì không |
+| `categoryScope` | Trang đang mở là template `category` dùng chung và mọi repeater sản phẩm trên đó đều ghim vào MỘT collection cố định (`collectionType: "collection"`), nên mọi `/collections/{slug}` đều hiện collection đó. Nền tảng đã tự thu hẹp template danh mục theo URL: `all_products` / `page_collection` đi theo URL, một template dùng chung là đúng — không cần mỗi danh mục một trang |
 
 Mỗi khoảng trống mang `draft: true` khi trang ĐÃ CÓ nhưng chưa publish, vì "publish cái đã
 làm" và "tạo mới" là hai việc khác nhau. Sắp theo mức chặn giảm dần.

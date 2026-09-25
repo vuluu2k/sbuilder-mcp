@@ -73,6 +73,8 @@ interface NodeLike {
   specials?: Record<string, unknown>;
   events?: Array<{ action?: string }>;
   bindings?: Array<{ id?: string; target?: { action?: string } }>;
+  /** Only a repeater's `datasetSource` / `collectionType` — see categoryScope. */
+  config?: Record<string, unknown>;
 }
 
 export interface ReadinessInput {
@@ -99,6 +101,11 @@ export interface ReadinessInput {
   categories?: number | null;
   /** How many of them point at a page of their own; null when unread. */
   categoryPageLinks?: number | null;
+  /**
+   * The open page's type when it is a SHARED template (not a page one entity
+   * links to); undefined when unknown. Only `category` is read.
+   */
+  openPageType?: string;
   /** The site's pages; null when the list could not be read. */
   pages: ReadinessPage[] | null;
   /** Gateways a shopper could really pay through; null when unread. */
@@ -617,39 +624,41 @@ export function readinessGaps(input: ReadinessInput): ReadinessGap[] {
     });
   }
 
-  // EVERY CATEGORY SHOWS EVERY PRODUCT, which is what a shared template does.
+  // A SHARED CATEGORY TEMPLATE PINNED TO ONE CATEGORY.
   //
-  // `/collections/{slug}` resolves through PublishedForEntity: the category's
-  // OWN page when a page-link names one, else the DEFAULT TEMPLATE for the
-  // `category` type. Nothing on that shared template narrows the product feed to
-  // the category in the URL — `entityScope` threads the entity into the article
-  // feed for a blogCategory and the review feed for a product, and into nothing
-  // at all for a productCategory — so a repeater on `all_products` repeats the
-  // whole catalogue, and one on `collection` names ONE fixed id. Either way at
-  // most one category can be right.
-  //
-  // Reported on the COUNTS rather than by reading the template's document: two
-  // categories and no page-links is already the defect, whatever the template
-  // says, and a document fetch per review to confirm it would cost every store
-  // that has this right. Silent when either count could not be read, like every
-  // other check here.
-  if ((input.categories ?? 0) > 1 && input.categoryPageLinks === 0) {
+  // `/collections/{slug}` serves the category's own page when a page-link names
+  // one, else the default `category` template. Since web_builder b4ca5645 that
+  // template scopes itself: `all_products` (and the explicit `page_collection`)
+  // on it list the category in the URL, so one shared template is RIGHT and no
+  // page per category is needed. What still breaks it is the one kind that
+  // names its own id — `collection` + `collectionId` — when that is the only
+  // product repeater on the template: every category then shows that one.
+  // A pinned shelf BESIDE a repeater that follows the URL is a "you may also
+  // like" design, not this defect. Read off the open page, so it speaks only
+  // while the template itself is under review.
+  const shelves = input.pageNodes.filter(
+    (n) => n.data.type === 'list-dataset' && (n.config?.datasetSource ?? 'product') === 'product',
+  );
+  if (
+    input.openPageType === 'category' &&
+    (input.categories ?? 0) > 1 &&
+    input.categoryPageLinks != null &&
+    input.categoryPageLinks < (input.categories ?? 0) &&
+    shelves.length > 0 &&
+    shelves.every((n) => n.config?.collectionType === 'collection')
+  ) {
     gaps.push({
       id: 'categoryScope',
       draft: false,
       problem:
-        `${input.categories} product categories share ONE page — none of them points at a page ` +
-        'of its own, so /collections/{slug} serves the default template for every one. Nothing ' +
-        'on that template narrows the product feed to the category in the URL (the blog twin ' +
-        'auto-scopes; this one does not), so a shopper who picks a category sees the whole ' +
-        'catalogue, or one other category, on all of them.',
+        'This is the shared category template, and every product repeater on it is pinned to ONE ' +
+        'named collection — so /collections/{slug} shows that same collection for all ' +
+        `${input.categories} categories.`,
       fix:
-        'Give each category its own page and set its product repeater to config ' +
-        '{ "collectionType": "collection", "collectionId": "<that category id>" }, then link ' +
-        'them in one call: sb_api_call post:/api/sites/{siteId}/page-links/bulk with body ' +
-        '{ "linkType": "productCategory", "linkIds": ["<category ids>"], "pageId": "<page id>" } ' +
-        '— one call per page, since each page is one category. sb_duplicate the template you ' +
-        'already have rather than rebuilding it.',
+        'Set the repeater to follow the URL: sb_set config { "collectionType": "page_collection" } ' +
+        '(or leave it on "all_products", which scopes itself on a category page). The draft ' +
+        'preview has no category in the URL and lists the whole catalogue — judge it at ' +
+        '/collections/{slug} on the published storefront.',
     });
   }
 

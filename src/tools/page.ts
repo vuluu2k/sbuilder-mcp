@@ -1481,8 +1481,8 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
       let store: Record<string, unknown> = {};
       let formTypes: Record<string, string> | undefined;
       try {
-        const { siteId } = session.location();
-        const input = await gatherReadiness(ctx, siteId, Object.values(doc.doc.nodes) as never);
+        const { siteId, pageId } = session.location();
+        const input = await gatherReadiness(ctx, siteId, Object.values(doc.doc.nodes) as never, pageId);
         // The page names a form only by id; this list says what KIND it is.
         formTypes = Object.fromEntries(
           (input.forms ?? []).flatMap((f) => (f.id && f.type ? [[f.id, f.type]] : [])),
