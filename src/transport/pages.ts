@@ -1,4 +1,4 @@
-import { request } from './http.js';
+import { ApiError, request } from './http.js';
 import { siteToken } from '../tools/credentialpick.js';
 import type { ToolContext } from '../tools/context.js';
 
@@ -8,6 +8,12 @@ export interface PageSource {
   document: unknown;
   schemaVersion: number;
   updatedAt: string;
+  /**
+   * The draft's server revision (web_builder 1dbc88a2c, `page.SourceRev`).
+   * Sent back as `baseRev` so a save over a newer draft is refused 409
+   * `source_stale`. Absent from an older platform.
+   */
+  rev?: number;
   /** Omitted by the server when empty — never null. Treat absence as "none". */
   warnings?: unknown[];
   /**
@@ -75,18 +81,24 @@ export async function loadSource(
  * why nothing is swallowed: the code is the only thing that tells an agent what
  * to fix.
  */
+/** The platform refused a save over a draft that moved since it was read. */
+export const isSourceStale = (e: unknown): boolean =>
+  e instanceof ApiError && e.status === 409 && e.code === 'source_stale';
+
 export async function saveSource(
   ctx: ToolContext,
   siteId: string,
   pageId: string,
   document: { schema_version?: number; root_node_id: string; nodes: Record<string, unknown> },
+  baseRev?: number,
 ): Promise<PageSource> {
   const out = (await request({
     base: ctx.base,
     method: 'PUT',
     path: sourcePath(siteId, pageId),
     token: siteToken(ctx),
-    body: { document, schemaVersion: document.schema_version ?? 1 },
+    // Only when the read reported one: an older platform has no fence to name.
+    body: { document, schemaVersion: document.schema_version ?? 1, ...(baseRev ? { baseRev } : {}) },
     fetchImpl: ctx.fetchImpl,
   })) as { source: PageSource };
   return out.source;

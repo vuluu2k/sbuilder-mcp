@@ -429,6 +429,11 @@ tự báo khi chúng được lưu. Ngoại lệ là đổi tên root: phòng kh
 editor đang mở phải tải lại mới thấy. Thay trang mà CHÍNH phiên này đang mở sẽ đánh dấu bản của
 nó là cũ, nên lần sửa kế tiếp kéo lại trước, thay vì lưu bản cũ đè lên lần ghi đó — có hay không
 có phòng live, và `POST …/pages/{id}/versions/{v}/restore` hay `…/history/{h}/restore` cũng vậy.
+Trên nền tảng có báo `rev` của bản nháp, mỗi lần lưu gửi lại nó dưới dạng `baseRev`: lưu đè lên bản
+nháp mà người khác đã lưu sau đó thì bị từ chối `409 source_stale`, và frame `{t:"source", pageId,
+rev}` của phòng cho một lần lưu không phải của phiên này sẽ đánh dấu bản sao là cũ. Cả hai trường
+hợp đều kéo lại và áp lại lần ghi một lần nếu lần lưu kia không chạm node nào của nó, còn chạm thì
+từ chối rõ ràng.
 
 ## `sb_look`
 

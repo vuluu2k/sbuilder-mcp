@@ -315,6 +315,7 @@ export function joinRoom(ctx: ToolContext, session: PageSession, siteId: string)
   const live = new LiveSession(socket, {
     onRemote: (patches) => session.applyRemote(patches),
     onDesync: (reason) => session.markStale(reason),
+    onSource: (pageId, rev) => session.sourceSaved(pageId, rev),
   });
   socket.connect();
   session.attachLive(live, siteId);

@@ -2,7 +2,7 @@ import { z } from 'zod';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { composeWarnings, type ComposeWarning } from '../domains/site/findings.js';
 import { text } from '../mcp/response.js';
-import { loadSource, saveSource } from '../transport/pages.js';
+import { isSourceStale, loadSource, saveSource } from '../transport/pages.js';
 import { previewUrl } from '../vision/preview.js';
 import { bandIds, proveLive, type LiveProof } from '../domains/site/liveproof.js';
 import { canvasVerdict, driftOf } from '../domains/site/pagestate.js';
@@ -103,6 +103,14 @@ export class PageSession {
   /** Which site's room `live` is in — a page on another site needs another room. */
   private liveSite = '';
   private stale: string | null = null;
+  /**
+   * The draft revision last read or stored (`rev`, web_builder 1dbc88a2c), sent
+   * back as `baseRev`; 0 on a platform that reports none. `saving` is the PUT in
+   * flight, so a room `source` frame for our own save — which can land before
+   * the PUT answers — is judged against the rev that save returns.
+   */
+  private sourceRev = 0;
+  private saving: Promise<unknown> | null = null;
   /**
    * The document revision this session last stored, so an unchanged document is
    * not written again. `sb_look` saves before it renders — correctly, a shot of
@@ -319,8 +327,38 @@ export class PageSession {
           `not repair it, so nothing was applied: ${after.join(' ')}`,
       );
     }
+    // What the touched nodes were BEFORE this write, for the rebase a 409
+    // source_stale needs: by then the patches are already in the local copy.
+    const snap = this.touchedSnapshot(d, patches);
+    const dirty = d.rev !== this.savedRev;
     this.applyAndPublish(patches);
-    await this.save(before);
+    try {
+      await this.save(before, true);
+    } catch (e) {
+      if (!isSourceStale(e)) throw e;
+      return this.rebase(patches, { dirty, before: snap });
+    }
+  }
+
+  private touchedSnapshot(d: PageDoc, patches: Patch[]): Map<string, string> {
+    const touched = [...new Set(patches.map((p) => String(p.path[1])))];
+    return new Map(touched.map((id) => [id, JSON.stringify(d.doc.nodes[id] ?? null)]));
+  }
+
+  /**
+   * A page's draft was saved (the room's `source` frame). A rev past the one
+   * this session last read or stored is a save it did not make — the yield
+   * rule: the next write re-pulls first. Judged after any save in flight, whose
+   * own frame can arrive before its answer.
+   */
+  sourceSaved(pageId: string, rev: number): void {
+    const check = (): void => {
+      if (this.isOpen(this.liveSite, pageId) && this.sourceRev > 0 && rev > this.sourceRev) {
+        this.markStale(`the page was saved elsewhere (rev ${rev})`);
+      }
+    };
+    if (this.saving) void this.saving.then(check, check);
+    else check();
   }
 
   /**
@@ -334,17 +372,18 @@ export class PageSession {
    * Unsaved local edits are never rebased: those are exactly what a re-pull
    * throws away, so that case keeps the old refusal.
    */
-  private async rebase(patches: Patch[]): Promise<void> {
+  private async rebase(
+    patches: Patch[],
+    base?: { dirty: boolean; before: Map<string, string> },
+  ): Promise<void> {
     const reason = this.stale!;
     const old = this.current();
-    const dirty = old.rev !== this.savedRev;
-    const touched = [...new Set(patches.map((p) => String(p.path[1])))];
-    const snap = (d: PageDoc, id: string): string => JSON.stringify(d.doc.nodes[id] ?? null);
-    const before = new Map(touched.map((id) => [id, snap(old, id)]));
+    const dirty = base ? base.dirty : old.rev !== this.savedRev;
+    const before = base ? base.before : this.touchedSnapshot(old, patches);
     this.stale = null;
     await this.open(this.siteId, this.pageId);
-    const fresh = this.current();
-    const moved = touched.filter((id) => snap(fresh, id) !== before.get(id));
+    const after = this.touchedSnapshot(this.current(), patches);
+    const moved = [...before.keys()].filter((id) => after.get(id) !== before.get(id));
     if (dirty || moved.length > 0) {
       throw new Error(
         `sbuilder: the page changed under this session (${reason})` +
@@ -441,9 +480,11 @@ export class PageSession {
       this.siteId,
       this.pageId,
       d.doc as unknown as { schema_version?: number; root_node_id: string; nodes: Record<string, unknown> },
+      this.sourceRev,
     );
     d.apply(restampPatches(d.doc, { globals: saved.globals, overlays: saved.overlays }));
     this.savedRev = d.rev;
+    this.sourceRev = saved.rev ?? 0;
   }
 
   async open(siteId: string, pageId: string): Promise<OutlineNode[]> {
@@ -451,6 +492,7 @@ export class PageSession {
     this.doc = PageDoc.from(src.document);
     this.siteId = siteId;
     this.pageId = pageId;
+    this.sourceRev = src.rev ?? 0;
     // The platform's own account of what it could not compose. Typed on the
     // response since the transport was written and read by nothing until now.
     this.warnings = composeWarnings(src.warnings);
@@ -512,7 +554,7 @@ export class PageSession {
    * autosave later means the agent has spent the interval editing a tree nobody
    * will ever store.
    */
-  async save(inherited: ReadonlySet<string> = new Set()): Promise<void> {
+  async save(inherited: ReadonlySet<string> = new Set(), staleThrows = false): Promise<void> {
     if (this.stale) {
       // THE YIELD RULE. The room moved in a way this client cannot reconcile, so
       // it must not write its copy over whatever is there now. Re-pull, and make
@@ -615,12 +657,30 @@ export class PageSession {
       // first real tree and every save after this one is an ordinary save.
       this.openedSeeded = false;
     }
-    const saved = await saveSource(
+    // `baseRev`: the platform refuses (409 source_stale) a save over a draft
+    // somebody else stored since this copy was read — the yield rule, enforced
+    // server-side. `applyAndSave` rebases the write it was carrying; any other
+    // caller gets the re-pull and the loud refusal of the stale branch above.
+    const pending = saveSource(
       this.ctx,
       this.siteId,
       this.pageId,
       d.doc as unknown as { schema_version?: number; root_node_id: string; nodes: Record<string, unknown> },
+      this.sourceRev,
     );
+    this.saving = pending;
+    let saved: Awaited<typeof pending>;
+    try {
+      saved = await pending;
+    } catch (e) {
+      if (!isSourceStale(e)) throw e;
+      this.stale = 'the page was saved elsewhere since this session read it (409 source_stale)';
+      if (staleThrows) throw e;
+      return this.save(inherited);
+    } finally {
+      this.saving = null;
+    }
+    this.sourceRev = saved.rev ?? 0;
     // RE-STAMP THE FENCE, or lose every edit after this one.
     //
     // The save reports each shared master's new revision precisely so the client

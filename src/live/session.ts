@@ -15,6 +15,8 @@ export interface LiveOpts {
   onRemote(patches: Patch[]): void;
   /** "I can no longer prove my document matches the room." */
   onDesync(reason: string): void;
+  /** A page's draft was saved — by anyone, this client included (web_builder 1dbc88a2c). */
+  onSource?(pageId: string, rev: number): void;
 }
 
 /**
@@ -186,6 +188,11 @@ export class LiveSession {
         // that exists against a peer not running our code.
         const ok = raw.filter((p) => isSyncablePatch(p));
         if (ok.length > 0) this.opts.onRemote(ok);
+        break;
+      }
+      case 'source': {
+        const rev = Number(e.rev ?? 0);
+        if (typeof e.pageId === 'string' && rev > 0) this.opts.onSource?.(e.pageId, rev);
         break;
       }
       case 'snapreq':

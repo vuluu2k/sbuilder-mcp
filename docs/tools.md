@@ -442,7 +442,11 @@ the platform announces their saves itself. A root RENAME is the exception: `root
 not something the room syncs, so an open editor must reload to see it. A replace of the page
 THIS session has open marks its copy stale, so the next edit re-pulls first instead of saving
 the old copy back over the write — with or without a live room, and so does a
-`POST …/pages/{id}/versions/{v}/restore` or `…/history/{h}/restore`.
+`POST …/pages/{id}/versions/{v}/restore` or `…/history/{h}/restore`. On a platform that reports a
+draft `rev`, every save sends it back as `baseRev`: a save over a draft somebody else stored since
+is refused `409 source_stale`, and the room's `{t:"source", pageId, rev}` frame for a save this
+session did not make marks the copy stale. Either way the write is re-pulled and reapplied once
+when the other save touched none of its nodes, and refused loudly when it did.
 
 ## `sb_look`
 

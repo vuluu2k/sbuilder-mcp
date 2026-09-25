@@ -101,6 +101,13 @@ repo over a number here, and fix the line when you catch one stale.
   replaces the draft with NO document in the body, so `SOURCE_RESTORE` matches those paths
   too — page.ts tells agents to restore that way, and the next `sb_set` saved over it. The
   listeners are a Set: a single slot let the last `PageSession` constructed silence the rest.
+  **THE SERVER NOW FENCES THE DRAFT (web_builder 1dbc88a2c).** GET/PUT `…/source` answer `rev`
+  (µs write time); PUT with `baseRev` ≠ current → 409 `source_stale` (details.rev), and every
+  save broadcasts `{t:'source', pageId, rev}`. `PageSession` sends `baseRev` only when a read
+  reported one (older platforms: nothing), rebases on 409 through the same `rebase()` the yield
+  rule uses (snapshot taken BEFORE the patches were applied, or every node reads as "moved"),
+  and marks stale on a frame whose rev is past its own — judged after any save in flight,
+  because our own save's frame can land before its PUT answers.
 
   **AND "WHICH MACHINE" HAD NO FIELD, so every agent in the room was the same robot.** `Kind`
   answered person-or-machine and stopped there; the editor paints one glyph (`&#129302;`) for
