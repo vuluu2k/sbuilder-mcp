@@ -17,6 +17,8 @@
  * that fires on a correctly built site is one the reader learns to ignore.
  */
 
+import { cartRelocalize, cartSeedLocale } from './cartlang.js';
+
 /** The purchase binding an Add-to-cart / Buy-now button carries. */
 const PRODUCT_ACTION_BINDING_ID = 'bind-product-action';
 
@@ -52,7 +54,8 @@ export type ReadinessGapId =
   | 'coursePage'
   | 'maintenancePage'
   | 'cartCount'
-  | 'cartDrawer';
+  | 'cartDrawer'
+  | 'cartDrawerLanguage';
 
 export interface ReadinessGap {
   id: ReadinessGapId;
@@ -137,6 +140,8 @@ export interface ReadinessInput {
   globalKinds?: string[] | null;
   /** The KIND of each overlay the site has (cart, popup, quickview); null when unread. */
   overlayKinds?: string[] | null;
+  /** The site's cart drawer master (its document); null when unread or the site has none. */
+  cartOverlay?: { root_node_id: string; nodes: Record<string, unknown> } | null;
 }
 
 /** Does this node carry a purchase action (add to cart, buy now)? */
@@ -392,6 +397,26 @@ export function readinessGaps(input: ReadinessInput): ReadinessGap[] {
         ? `Publish the ${what} template page that already exists.`
         : `Create a page of type "${type}" and publish it.`,
     });
+  }
+
+  // A CART DRAWER IN ANOTHER LANGUAGE. Asked before the store gate: a drawer
+  // that exists is shown on every page, whatever this page sells.
+  if (input.siteLocale && input.cartOverlay?.root_node_id) {
+    const locale = cartSeedLocale(input.siteLocale);
+    const changes = cartRelocalize(input.cartOverlay, input.cartOverlay.root_node_id, locale);
+    if (changes.length > 0) {
+      gaps.push({
+        id: 'cartDrawerLanguage',
+        draft: false,
+        problem:
+          `The site's locale is "${input.siteLocale}", but the cart drawer still carries another ` +
+          `language's seed words: ${[...new Set(changes.map((c) => `"${c.from}"`))].join(', ')}. ` +
+          'Every page shows it.',
+        fix:
+          'Open any page of this site, then sb_store action:"cart" relocalize:true dry_run:false — it ' +
+          `rewrites exactly those seed strings to the "${locale}" seed's, and leaves edited text alone.`,
+      });
+    }
   }
 
   if (!isStore(input)) return gaps;

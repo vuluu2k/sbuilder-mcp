@@ -59,6 +59,7 @@ import type { PageSession } from './page.js';
 import { setKeys } from '../domains/site/builder.js';
 import { CART_SEEDS, OVERLAY_SEEDS } from '../catalog/overlays.generated.js';
 import { withFreshIds } from '../domains/site/ids.js';
+import { cartRelocalize, cartSeedLocale } from '../domains/site/cartlang.js';
 
 interface Step {
   step: number;
@@ -401,6 +402,76 @@ export async function ensureCartDrawer(
     language: seedLocale,
     ...(languageNote ? { language_note: languageNote } : {}),
     ...(nodeId ? { node_id: nodeId } : {}),
+    next: 'Publish the pages: the drawer reaches a shopper through each published page.',
+  };
+}
+
+/**
+ * `sb_store action:"cart" relocalize:true` — PUT THE SITE'S LANGUAGE ON AN
+ * EXISTING DRAWER. Rewrites only strings EXACTLY equal to another locale's seed
+ * word, node ids and styles untouched.
+ *
+ * THROUGH THE PAGE SAVE, never the overlays API: `PATCH /overlays/{id}` ignores
+ * a `document` and answers 200, and there is no document PUT — the page save
+ * carries the composed drawer and the page context decomposes it into the
+ * master (overlays/rest/rest.go). So a real run needs a page of this site open.
+ */
+export async function relocalizeCartDrawer(
+  ctx: ToolContext,
+  session: PageSession,
+  siteId: string,
+  dryRun: boolean,
+): Promise<unknown> {
+  const site = encodeURIComponent(siteId);
+  const get = (path: string) => request({ base: ctx.base, method: 'GET', path, token: siteToken(ctx), fetchImpl: ctx.fetchImpl });
+  const listed = (await get(`/api/sites/${site}/overlays`)) as {
+    overlays?: Array<{ id?: string; kind?: string; document?: { root_node_id: string; nodes: Record<string, unknown> } }>;
+  };
+  const cart = (listed.overlays ?? []).find((o) => o.kind === 'cart');
+  if (!cart?.id) throw new Error('sbuilder: this site has no cart drawer — sb_store action:"cart" without relocalize creates one.');
+  const settings = (await get(`/api/sites/${site}/settings`)) as { settings?: { locale?: unknown } | null };
+  const raw = settings.settings?.locale;
+  if (typeof raw !== 'string' || !raw) {
+    throw new Error('sbuilder: settings.locale is unset, so there is no site language to relocalize to — set it with sb_theme locale first.');
+  }
+  const language = cartSeedLocale(raw);
+
+  const open = session.peek() ? session.location() : null;
+  const composed =
+    open?.siteId === siteId
+      ? Object.values(session.current().doc.nodes).find((n) => n.specials?.overlayId === cart.id)
+      : undefined;
+  const changes = composed
+    ? cartRelocalize(session.current().doc, composed.id, language)
+    : cart.document?.root_node_id
+      ? cartRelocalize(cart.document, cart.document.root_node_id, language)
+      : [];
+  if (dryRun || changes.length === 0) {
+    return {
+      ...(dryRun ? { dry_run: true } : {}),
+      overlay_id: cart.id,
+      language,
+      changes,
+      ...(changes.length === 0
+        ? { note: 'Nothing to change — no seed word from another language is left in the drawer.' }
+        : {
+            plan: redact([{ step: 1, what: 'rewrite those strings in the composed drawer and save the open page', method: 'PUT', path: `/api/sites/${site}/pages/{open page}/source` }]),
+            note: 'Nothing was sent. Re-call with dry_run:false; it writes through the open page\'s save.',
+          }),
+    };
+  }
+  if (!composed) {
+    throw new Error(
+      `sbuilder: the drawer is written through a page save, so relocalize needs a page of site "${siteId}" open — sb_page_open one, then re-run.`,
+    );
+  }
+  await session.applyAndSave(
+    changes.map((c) => ({ op: 'set' as const, path: ['nodes', c.node_id, 'specials', c.key], value: c.to })),
+  );
+  return {
+    overlay_id: cart.id,
+    language,
+    changes,
     next: 'Publish the pages: the drawer reaches a shopper through each published page.',
   };
 }

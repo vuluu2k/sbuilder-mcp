@@ -83,7 +83,9 @@ export async function gatherReadiness(
     get<{ site?: { maintenanceMode?: boolean } }>(`/api/sites/${site}`),
     // THE OVERLAYS, for the one a cart control opens: no `cart` overlay means
     // every `open_cart` on the site opens nothing.
-    get<{ overlays?: Array<{ kind?: string }> }>(`/api/sites/${site}/overlays`),
+    // The list ships each overlay's FULL document (overlays/rest/rest.go), so the
+    // cart drawer's words are read here too — see cartDrawerLanguage.
+    get<{ overlays?: Array<{ kind?: string; document?: ReadinessInput['cartOverlay'] }> }>(`/api/sites/${site}/overlays`),
     // `<html lang>` is served from this; see siteLanguage in readiness.ts.
     get<{ settings?: { locale?: unknown } | null }>(`/api/sites/${site}/settings`),
   ]);
@@ -148,6 +150,9 @@ export async function gatherReadiness(
     pageNodes,
     globalNodes,
     globalKinds,
+    cartOverlay: Array.isArray(overlayList?.overlays)
+      ? (overlayList.overlays.find((o) => o.kind === 'cart')?.document ?? null)
+      : null,
     overlayKinds: Array.isArray(overlayList?.overlays) ? overlayList.overlays.map((o) => o.kind ?? '') : null,
     categories,
     categoryPageLinks,

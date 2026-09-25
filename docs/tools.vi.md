@@ -1098,6 +1098,7 @@ hoàn toàn bằng bộ tool này review sạch, publish và render đúng; bả
 | `cartTrigger` | Không gì mở được giỏ; khách đóng ngăn giỏ rồi không quay lại được |
 | `siteChrome` | Từ hai trang trở lên mà KHÔNG có global section nào, nên mỗi trang tự mang header/footer riêng. Đổi menu là sửa từng trang, các bản sao lệch dần, và khách gặp một site hơi khác ở mỗi lần bấm. Hỏi cho mọi site chứ không riêng cửa hàng — đây là câu hỏi duy nhất ở đây không liên quan tới tiền |
 | `cartDrawer` | Có thứ mở giỏ nhưng site không có ngăn giỏ, nên bấm vào không mở gì. Sửa: `sb_store action:"cart"` |
+| `cartDrawerLanguage` | Ngăn giỏ vẫn mang chữ seed của MỘT NGÔN NGỮ KHÁC (khớp chính xác với seed theo locale của editor, ví dụ "Your cart" / "Checkout" trên site `vi`) — store tạo trước khi ngăn giỏ được seed theo ngôn ngữ site. Chữ merchant đã sửa không bao giờ khớp. Hỏi với mọi site. Sửa: mở một trang của site, rồi `sb_store action:"cart" relocalize:true dry_run:false` |
 | `cartCount` | Có thứ mở được giỏ nhưng không có gì cho thấy trong giỏ có gì. `cart-count` là tuỳ chọn vì `open_cart` là một HÀNH ĐỘNG mà element nào cũng mang được, nên site dựng bằng bộ công cụ này không bao giờ tự có: khách thêm hàng, thấy một toast tắt đi, rồi không còn dấu hiệu nào cho thấy giỏ không rỗng |
 | `categoryScope` | Trang đang mở là template `category` dùng chung và mọi repeater sản phẩm trên đó đều ghim vào MỘT collection cố định (`collectionType: "collection"`), nên mọi `/collections/{slug}` đều hiện collection đó. Nền tảng đã tự thu hẹp template danh mục theo URL: `all_products` / `page_collection` đi theo URL, một template dùng chung là đúng — không cần mỗi danh mục một trang |
 
@@ -1678,7 +1679,7 @@ Chạy một luồng cửa hàng bắt buộc **đúng thứ tự**.
 | --- | --- | --- |
 | `action` | `"checkout"` \| `"form"` \| `"chrome"` \| `"menu"` \| `"overlay_attach"` \| `"cart"` \| `"app"` | Luồng cần chạy |
 | `site_id` | string? | Không truyền thì lấy `SB_SITE` |
-| `language` | `"vi"` \| `"en"`? | `checkout` — ngôn ngữ nội dung, mặc định `vi`. `app` — ngôn ngữ đặt tên các trang scaffold |
+| `language` | `"vi"` \| `"en"`? | `checkout` — ngôn ngữ nội dung, mặc định `vi`. `chrome` — ngôn ngữ đặt tên các menu footer, mặc định `vi`. `app` — ngôn ngữ đặt tên các trang scaffold |
 | `page_name` | string? | `checkout` — ghi đè tên trang mặc định của editor. `form` — tạo một trang và đặt form lên đó |
 | `headline` | string? | `checkout` — ghi đè tiêu đề trang. `form` — tiêu đề phía trên form được đặt |
 | `template` | enum? | `form` — chọn một trong 17 template của nền tảng |
@@ -1690,6 +1691,7 @@ Chạy một luồng cửa hàng bắt buộc **đúng thứ tự**.
 | `overlay_id` | string? | `overlay_attach` — một overlay đã có; bỏ trống để tạo mới từ seed của nền tảng |
 | `list_id` | string? | `overlay_attach` + `kind:"quickview"` — node `list-dataset` mà quick view này gắn vào |
 | `app_key` | enum? | `app` — cài app dựng sẵn nào |
+| `relocalize` | boolean? | `cart` — viết lại chữ seed ngôn ngữ khác của ngăn giỏ ĐÃ CÓ thành chữ seed theo locale site; chạy thật cần đang mở một trang của site |
 | `dry_run` | boolean? | Mặc định **true** |
 
 ### `action: "form"`
@@ -1859,6 +1861,18 @@ này có icon giỏ bấm vào không mở gì. Ngăn giỏ là `cartDrawerSeed(
 nguyên. Nếu đang mở một trang của site, trang được lưu trước và đọc lại sau để ngăn giỏ hiện
 trong phiên (`node_id`). Nền tảng ghép nó vào mọi trang; publish các trang để khách thấy.
 `sb_review` báo thiếu ngăn giỏ là `cartDrawer`.
+
+Ngăn giỏ được seed theo ngôn ngữ của site (`settings.locale`, subtag chính). Kết quả có
+`language` — seed đã dùng — và, khi đó là tiếng Anh chỉ vì không có lựa chọn tốt hơn,
+`language_note` nói lý do (locale chưa đặt, locale không có seed, hoặc không đọc được settings).
+
+**`relocalize: true`** sửa ngăn giỏ ĐÃ CÓ. Chỉ viết lại các chuỗi `text` / `label` /
+`emptyText` KHỚP CHÍNH XÁC với chữ seed của ngôn ngữ khác thành chữ của seed theo locale site
+(hai seed được ghép từng node, nên "Checkout" thành "Thanh toán"), giữ nguyên mọi id node và
+style; chữ merchant đã sửa được để nguyên. Kết quả liệt kê `changes` (`node_id`, `key`,
+`from`, `to`) và `language`. Nó ghi qua lần lưu của TRANG ĐANG MỞ — API overlays không có
+đường ghi document (`PATCH /overlays/{id}` bỏ qua nó) — nên chạy thật cần đang mở một trang
+của site. `sb_review` báo ngăn giỏ này là `cartDrawerLanguage`.
 
 ### `action: "overlay_attach"`
 

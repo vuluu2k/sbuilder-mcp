@@ -45,7 +45,7 @@ import { siteChrome, wearChrome, type PageSession } from './page.js';
 import { addSubtree } from '../domains/site/builder.js';
 import { attachGlobal, buildChrome, detachGlobal } from './chrome.js';
 import { bindMenu } from './menu.js';
-import { attachOverlay, ensureCartDrawer } from './overlay.js';
+import { attachOverlay, ensureCartDrawer, relocalizeCartDrawer } from './overlay.js';
 import { installApp } from './app.js';
 import { BUILTIN_APP_KEYS } from '../catalog/appscaffolds.generated.js';
 import { ELEMENTS } from '../catalog/elements.generated.js';
@@ -526,6 +526,13 @@ export function registerStoreTools(server: McpServer, ctx: ToolContext, session:
             'action:"global_attach"/"global_detach" — the shared section; omitted on attach it ' +
               'lists the site\'s own',
           ),
+        relocalize: z
+          .boolean()
+          .optional()
+          .describe(
+            'action:"cart" — rewrite an EXISTING drawer\'s seed words that are in another language ' +
+              'to the site locale\'s (edited text untouched); needs a page of the site open',
+          ),
         dry_run: z.boolean().optional(),
       },
       annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: true },
@@ -546,6 +553,7 @@ export function registerStoreTools(server: McpServer, ctx: ToolContext, session:
       list_id,
       app_key,
       global_id,
+      relocalize,
       dry_run,
     }) => {
       const siteId = siteFor(ctx, given);
@@ -616,7 +624,8 @@ export function registerStoreTools(server: McpServer, ctx: ToolContext, session:
         );
       }
       if (action === 'cart') {
-        return text(await ensureCartDrawer(ctx, session, siteId, dry_run !== false));
+        const run = relocalize === true ? relocalizeCartDrawer : ensureCartDrawer;
+        return text(await run(ctx, session, siteId, dry_run !== false));
       }
       if (action === 'chrome') {
         return text(

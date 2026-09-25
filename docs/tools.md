@@ -1128,6 +1128,7 @@ publish panel then listed five gaps.
 | `cartTrigger` | Nothing opens the cart on its own; a shopper who closes the drawer cannot get back |
 | `siteChrome` | Two or more pages and NO global section, so each page carries its own header and footer. Changing the menu is one edit per page, the copies drift, and a visitor meets a slightly different site on every click. Asked of every site, not only a store — it is the one question here that is not about money |
 | `cartDrawer` | Something opens the cart but the site has no cart drawer, so it opens nothing. Fix: `sb_store action:"cart"` |
+| `cartDrawerLanguage` | The cart drawer still carries ANOTHER locale's seed words (exact match against the editor's per-locale seeds, e.g. "Your cart" / "Checkout" on a `vi` site) — a store made before the drawer was seeded in the site's language. Text the merchant edited never matches. Asked of every site. Fix: open a page of the site, then `sb_store action:"cart" relocalize:true dry_run:false` |
 | `cartCount` | Something opens the cart but nothing shows what is in it. `cart-count` is opt-in because `open_cart` is an ACTION any element can carry, so a site built with these tools never gets one: a shopper adds an item, sees a toast fade, and then no evidence anywhere that their basket is not empty |
 | `categoryScope` | The open page is the shared `category` template and every product repeater on it is pinned to ONE named collection (`collectionType: "collection"`), so every `/collections/{slug}` shows that one. Since the platform scopes a category template itself, `all_products` / `page_collection` follow the URL and a shared template is correct — no page per category is needed |
 
@@ -1729,7 +1730,7 @@ Run a store flow that must happen in a **fixed order**.
 | --- | --- | --- |
 | `action` | `"checkout"` \| `"form"` \| `"chrome"` \| `"menu"` \| `"overlay_attach"` \| `"cart"` \| `"app"` | The flow to run |
 | `site_id` | string? | Falls back to `SB_SITE` |
-| `language` | `"vi"` \| `"en"`? | `checkout` — copy language, default `vi`. `app` — which language names the scaffold pages |
+| `language` | `"vi"` \| `"en"`? | `checkout` — copy language, default `vi`. `chrome` — the language the footer menus are named in, default `vi`. `app` — which language names the scaffold pages |
 | `page_name` | string? | `checkout` — overrides the editor's own page name. `form` — make a page and place the form on it |
 | `headline` | string? | `checkout` — overrides the page's headline. `form` — the heading above the placed form |
 | `template` | enum? | `form` — which of the platform's 17 templates to seed |
@@ -1741,6 +1742,7 @@ Run a store flow that must happen in a **fixed order**.
 | `overlay_id` | string? | `overlay_attach` — an existing overlay; omit to create one from the platform's seed |
 | `list_id` | string? | `overlay_attach` + `kind:"quickview"` — the `list-dataset` node whose quick view this sets |
 | `app_key` | enum? | `app` — which built-in app to install |
+| `relocalize` | boolean? | `cart` — rewrite an EXISTING drawer's seed words that are in another language to the site locale's seed; a real run needs a page of the site open |
 | `dry_run` | boolean? | Defaults to **true** |
 
 ### `action: "form"`
@@ -1915,6 +1917,18 @@ under fresh ids. A site that already has one is left alone. When a page on the s
 is saved first and re-read after, so the drawer shows in the session (`node_id`). The platform
 composes it onto every page; publish the pages for shoppers to see it. `sb_review` reports the
 missing drawer as `cartDrawer`.
+
+The drawer is seeded in the site's language (`settings.locale`, primary subtag). The result
+carries `language` — the seed used — and, when that is English only because there was nothing
+better, `language_note` saying why (locale unset, a locale with no seed, or settings unreadable).
+
+**`relocalize: true`** fixes an EXISTING drawer instead. It rewrites only `text` / `label` /
+`emptyText` strings that EXACTLY equal another locale's seed word to the site locale's word
+(the seeds are paired node by node, so "Checkout" becomes "Thanh toán"), keeping every node id
+and style; text the merchant edited is left alone. The result lists `changes`
+(`node_id`, `key`, `from`, `to`) and `language`. It writes through the OPEN PAGE's save —
+the overlays API has no document write (`PATCH /overlays/{id}` ignores one) — so a real run
+needs a page of the site open. `sb_review` reports the drawer as `cartDrawerLanguage`.
 
 ### `action: "overlay_attach"`
 
