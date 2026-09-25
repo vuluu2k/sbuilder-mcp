@@ -757,7 +757,9 @@ to the catalogue — never static tiles wearing product photos, which is a shop 
 is a literal and nothing is buyable. Both name only `config.datasetSource` (and, where an
 element has a kind axis, `config.kind`); `createNode`'s own `bindingsForConfig` derives every
 binding at add time, so the pattern cannot drift from the platform's own factory the way a
-hand-copied binding has twice in this repo's history. `sb_brand_wall` is a picture-slot pattern
+hand-copied binding has twice in this repo's history. Each card's picture is the editor's own
+tile: a product's is a childless `media-dataset` at `layout:"single"` (one square image, no
+thumbnail strip), a category's is `collection-media`, bound to `category.image`. `sb_brand_wall` is a picture-slot pattern
 like `sb_gallery` (real logos from the library, or a sentence naming `sb_media_upload`), framed
 with `contain` rather than a wall's median-ratio crop — a transparent logo forced into a
 photograph's crop loses its own shape. `sb_trust_band` is icon-plus-line reassurances (delivery,

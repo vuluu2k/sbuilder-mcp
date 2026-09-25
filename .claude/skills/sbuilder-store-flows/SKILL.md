@@ -190,6 +190,10 @@ repo over a number here, and fix the line when you catch one stale.
   own capture-built heading, because the mapper has nothing to say about a shape it was never
   taught. `sb_brand_wall` (logos from the library, framed with `contain` rather than a wall's
   median-ratio crop — a transparent logo forced into a photograph's crop loses its own shape) and
+  The card's PICTURE follows the editor's own presets: a category's is `collection-media`
+  (`category.image`) — a `media-dataset` on a category derives `product.image` and shows no
+  picture — and a product's is the childless `media-dataset` at `layout:'single'`
+  (`seedBoundMediaTile`), since the default `bottom` drew three empty thumbnails under every card.
   `sb_trust_band` (icon-plus-line reassurances, naming exact platform icon ids) needed no such
   exception; both are ordinary `Captured` compositions.
 

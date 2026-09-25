@@ -321,8 +321,17 @@ const icon = (name: string): Captured => ({ kind: 'icon', name });
  * both because a binding was carried as a VALUE instead of being re-derived.
  */
 function datasetCard(source: 'product' | 'category'): NodeSpec {
+  // THE PICTURE is the editor's own tile for each source (pickerPresets.ts):
+  // a category's is `collection-media`, bound to `category.image` — a
+  // media-dataset there reads `product.image` off a category record. A
+  // product's is the CHILDLESS media-dataset at `layout: single`
+  // (`seedBoundMediaTile`): the default `bottom` draws a thumbnail strip of the
+  // element's three empty config images under every card, and `single` is the
+  // feature alone, 1 / 1 by the static CSS unless a ratio overrides it.
   const children: NodeSpec[] = [
-    { type: 'media-dataset', config: { datasetSource: source } },
+    source === 'category'
+      ? { type: 'collection-media', config: { datasetSource: source } }
+      : { type: 'media-dataset', config: { datasetSource: source, layout: 'single' } },
     { type: 'text-dataset', config: { datasetSource: source, kind: 'title' } },
   ];
   // A category has no price. Binding one anyway would not fail loudly — it

@@ -435,11 +435,37 @@ describe('the store-shaped patterns', () => {
     const types = typesIn(spec).map(([t]) => t);
     expect(types).toContain('list-dataset');
     expect(types).toContain('dataset-block');
-    expect(types).toContain('media-dataset');
+    // A category's picture is `collection-media` (category.image), the editor's
+    // own category tile — a media-dataset reads `product.image` off a category.
+    expect(types).toContain('collection-media');
+    expect(types).not.toContain('media-dataset');
     // A category has no price — a card that bound one would read a product
     // field off a category record.
     expect(types).not.toContain('pricing-dataset');
     expect(JSON.stringify(spec)).toContain('"datasetSource":"category"');
+  });
+
+  const added = (id: string) => {
+    const d = PageDoc.from({ schema_version: 2, root_node_id: '', nodes: {} });
+    d.apply(addSubtree(d, 'ROOT', PATTERN_BY_ID.get(id)!.build(THEME_TOKENS)!).patches);
+    return Object.values(d.doc.nodes) as unknown as Array<{
+      data: { type: string };
+      config: Record<string, unknown>;
+      bindings?: Array<{ source: string }>;
+    }>;
+  };
+
+  it("a shelf card's picture is ONE square image, not a gallery with a thumbnail strip", () => {
+    const media = added('sb_product_shelf').find((n) => n.data.type === 'media-dataset')!;
+    // `single` hides the strip; the static CSS makes its feature 1 / 1 unless a
+    // ratio overrides it, so none is written.
+    expect(media.config.layout).toBe('single');
+    expect(media.config.mediaImageRatio ?? '').toBe('');
+  });
+
+  it("a category tile shows the category's own picture", () => {
+    const tile = added('sb_category_strip').find((n) => n.data.type === 'collection-media')!;
+    expect(tile.bindings?.map((b) => b.source)).toContain('category.image');
   });
 
   it('the repeater card carries no bindings of its own — bindingsForConfig derives them at add time', () => {

@@ -737,7 +737,9 @@ FAQ mà không cái nào là một cửa hàng. `sb_product_shelf` và `sb_categ
 mọi giá là chữ cứng và không gì mua được. Cả hai chỉ khai `config.datasetSource` (và, ở nơi
 element có trục kind, `config.kind`); `createNode` qua `bindingsForConfig` của nó tự suy ra mọi
 binding tại lúc thêm, nên mẫu không thể trôi khỏi factory của platform theo cách một binding
-chép tay đã từng trôi hai lần trong lịch sử repo này. `sb_brand_wall` là mẫu ô ảnh như
+chép tay đã từng trôi hai lần trong lịch sử repo này. Ảnh của mỗi thẻ là ô của chính editor: sản
+phẩm dùng `media-dataset` không con ở `layout:"single"` (một ảnh vuông, không dải thumbnail), danh
+mục dùng `collection-media`, gắn `category.image`. `sb_brand_wall` là mẫu ô ảnh như
 `sb_gallery` (logo thật từ thư viện, hoặc một câu chỉ tới `sb_media_upload`), nhưng khung bằng
 `contain` chứ không phải khung tỷ lệ trung vị của một dải ảnh — một logo trong suốt bị ép vào
 khung crop của ảnh chụp sẽ mất hình dạng của chính nó. `sb_trust_band` là icon-kèm-dòng-chữ (giao
