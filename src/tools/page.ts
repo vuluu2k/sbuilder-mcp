@@ -76,8 +76,12 @@ import { projectList, PAGE_FIELDS, TEMPLATE_FIELDS } from './project.js';
  * copies of a directive is how one of them quietly loses it. The fix for each
  * KIND is sent once under `fixes`, and the directive once per process.
  */
-export function reviewField(ctx: ToolContext, doc: PageDoc): Record<string, unknown> {
-  const all = reviewDesign(doc);
+export function reviewField(
+  ctx: ToolContext,
+  doc: PageDoc,
+  formTypes?: Record<string, string>,
+): Record<string, unknown> {
+  const all = reviewDesign(doc, { formTypes });
   if (all.length === 0) return {};
   const { findings, fixes } = compactFindings(all);
   const notice = ctx.notices.once('review', REVIEW_NOTICE);
@@ -1469,16 +1473,19 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
     },
     async () => {
       const doc = session.current();
-      const field = reviewField(ctx, doc);
       // THE STORE'S OWN READINESS, which no API exposes and no page document
       // can show. A page can review perfectly clean and still sit on a store
       // with no checkout page, no gateway and no way back to the cart.
       let store: Record<string, unknown> = {};
+      let formTypes: Record<string, string> | undefined;
       try {
         const { siteId } = session.location();
-        const gaps = readinessGaps(
-          await gatherReadiness(ctx, siteId, Object.values(doc.doc.nodes) as never),
+        const input = await gatherReadiness(ctx, siteId, Object.values(doc.doc.nodes) as never);
+        // The page names a form only by id; this list says what KIND it is.
+        formTypes = Object.fromEntries(
+          (input.forms ?? []).flatMap((f) => (f.id && f.type ? [[f.id, f.type]] : [])),
         );
+        const gaps = readinessGaps(input);
         if (gaps.length > 0) {
           const notice = ctx.notices.once('readiness', READINESS_NOTICE);
           store = { store_gaps: gaps, ...(notice ? { store_notice: notice } : {}) };
@@ -1486,6 +1493,7 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
       } catch {
         // Readiness is additional information, never the reason a review fails.
       }
+      const field = reviewField(ctx, doc, formTypes);
       const clean = Object.keys(field).length === 0;
       return text({
         ...(clean ? { findings: [], verdict: 'Nothing a visitor would notice on this page.' } : field),

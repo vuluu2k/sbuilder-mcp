@@ -177,7 +177,11 @@ function drawsItsOwnContent(type: string): boolean {
  * can be an empty container. Findings are ordered by document order so a caller working
  * top-down meets them in the order they appear on screen.
  */
-export function reviewDesign(doc: PageDoc): Finding[] {
+export function reviewDesign(
+  doc: PageDoc,
+  /** The site's forms by id → type, when read; lets `order_goes_nowhere` ask the form itself. */
+  opts: { formTypes?: Record<string, string> } = {},
+): Finding[] {
   const d: DocLike = doc.doc;
   const out: Finding[] = [];
   const overlayIds = new Set(
@@ -420,10 +424,15 @@ export function reviewDesign(doc: PageDoc): Finding[] {
       // open, and the form's own type a third; a page that carries BOTH a form
       // and a cart total is the checkout shape and nothing else is — a contact
       // page has no cart to total.
-      const sellsFromCart = Object.values(d.nodes).some(
-        (x) => (x as { data?: { type?: string } }).data?.type === 'cart-total',
-      );
-      if (!navigates && sellsFromCart) {
+      //
+      // NOT THE CART DRAWER'S TOTAL: the drawer is an overlay composed onto EVERY
+      // page (trap 1), so counting it made every login and register page a
+      // "checkout". And when the site's form list says what this form IS, that
+      // answer wins — only an `order` form places an order.
+      const sellsFromCart = walkOrder.some((x) => !inOverlay.has(x) && d.nodes[x]?.data.type === 'cart-total');
+      const formType = opts.formTypes?.[String(n.specials?.formId ?? '')];
+      const isOrder = formType ? formType === 'order' : sellsFromCart;
+      if (!navigates && isOrder && !inOverlay.has(id)) {
         out.push({
           code: 'order_goes_nowhere',
           nodeId: id,
