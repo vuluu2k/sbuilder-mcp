@@ -22,7 +22,7 @@ const blank = (): Doc => ({
  * A fresh store: a home page, an about page, a policy page, the product
  * template, one category holding a product and one empty. No menu, no chrome.
  */
-function store(opts: { menus?: Array<{ id: string; name: string; items: unknown[] }>; overlays?: Array<{ id: string; kind: string }> } = {}) {
+function store(opts: { menus?: Array<{ id: string; name: string; items: unknown[] }>; overlays?: Array<{ id: string; kind: string }>; fail?: RegExp } = {}) {
   const calls: Array<{ method: string; path: string; body?: any }> = [];
   const overlays = [...(opts.overlays ?? [])];
   const menus = [...(opts.menus ?? [])];
@@ -41,6 +41,7 @@ function store(opts: { menus?: Array<{ id: string; name: string; items: unknown[
     calls.push({ method, path, body });
     const json = (v: unknown, status = 200) =>
       new Response(JSON.stringify(v), { status, headers: { 'content-type': 'application/json' } });
+    if (opts.fail?.test(path)) return json({ error: 'boom' }, 500);
     const src = /\/pages\/([^/]+)\/source$/.exec(path);
     if (src) {
       if (method === 'PUT') docs[src[1]] = body.document;
@@ -198,6 +199,21 @@ describe('sb_store action:"chrome" builds a real header', () => {
     expect(calls.filter((c) => c.method === 'PUT' && c.path.includes('/menus/'))).toEqual([]);
     expect(menus[0].items).toBe(own);
     expect(out.menus[0]).toMatchObject({ id: 'mn_x', reused: true });
+    await close();
+  });
+
+  it("a lookup that fails does not turn the merchant's linked menu into a placeholder", async () => {
+    const own = [
+      { id: 'o1', label: 'Tin tức', link: { type: 'blogCategory', entityId: 'b1' } },
+      { id: 'o2', label: 'Ra mắt', link: { type: 'article', entityId: 'a1' } },
+    ];
+    // The article and blog lookups answer 500: a transient failure, not a menu
+    // that links nowhere.
+    const { calls, menus, ctx } = store({ menus: [{ id: 'mn_x', name: 'Main menu', items: own }], fail: /\/(articles|blog-categories)$/ });
+    const { client, close } = await connectedClient(ctx);
+    await client.callTool({ name: 'sb_store', arguments: { action: 'chrome', dry_run: false } });
+    expect(calls.filter((c) => c.method === 'PUT' && c.path.includes('/menus/'))).toEqual([]);
+    expect(menus[0].items).toBe(own);
     await close();
   });
 

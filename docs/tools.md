@@ -1660,8 +1660,8 @@ ROOT child carrying `globalRef` + `globalKind`, FIRST, because a header after mi
 band-order refusal on the next save.
 
 It first creates a SITE MENU (`POST /api/sites/{siteId}/menus`, reused by name on a re-run —
-unless every row of the menu of that name links nowhere, like the four `type:"none"` placeholders
-`sb_menu` seeds; that one's rows are replaced with the real ones (`would:"fill"` in the dry run,
+unless every row of the menu of that name is `type:"none"`, like the four placeholders `sb_menu`
+seeds — judged on the stored link types, never on a lookup that may have failed; that one's rows are replaced with the real ones (`would:"fill"` in the dry run,
 beside its current `rows`), while a menu with any working link is left exactly as the merchant made it)
 whose rows are REFERENCES — home and the content pages as `{type:"page", pageId}`, each stocked
 category as `{type:"productCategory", entityId}` with its sub-categories or first products as

@@ -1611,8 +1611,8 @@ trang nhưng gốc là SECTION, rồi cho mỗi trang một con của ROOT mang 
 đặt ĐẦU TIÊN, vì header nằm sau nội dung giữa là lỗi thứ tự band ở lần lưu kế tiếp.
 
 Trước tiên nó tạo một MENU CỦA SITE (`POST /api/sites/{siteId}/menus`, chạy lại thì dùng lại
-theo tên — trừ khi mọi dòng của menu cùng tên không dẫn tới đâu, như bốn dòng giữ chỗ
-`type:"none"` mà `sb_menu` tạo; khi đó các dòng được thay bằng liên kết thật (`would:"fill"` trong
+theo tên — trừ khi mọi dòng của menu cùng tên đều là `type:"none"`, như bốn dòng giữ chỗ mà
+`sb_menu` tạo — xét theo loại liên kết đã lưu, không theo một lần tra cứu có thể đã lỗi; khi đó các dòng được thay bằng liên kết thật (`would:"fill"` trong
 dry run, kèm `rows` hiện tại), còn menu có dù chỉ một liên kết thật thì giữ nguyên như chủ shop đã làm) mà mỗi dòng là THAM CHIẾU — trang chủ và các trang nội dung là `{type:"page", pageId}`,
 mỗi danh mục có hàng là `{type:"productCategory", entityId}` kèm danh mục con hoặc vài sản phẩm
 đầu làm dòng con — rồi dựng header trên nó: một element `menu` bind vào đó (hover, dropdown) ẩn

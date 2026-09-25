@@ -251,11 +251,13 @@ const rowCount = (items: Array<{ items?: unknown[] }>): number =>
 /**
  * ONE SITE MENU PER NAME. A menu of that name already on the site is reused
  * as it is — the merchant may have edited it since — so a re-run creates no
- * duplicate. The exception is a menu that links NOWHERE: every row unlinked
- * or unresolved (what `sb_menu` seeds — four `type:'none'` placeholders), or
- * no rows at all. Reusing that puts a header on every page whose links go
- * nowhere, so its rows are replaced with the real ones; a menu with even one
- * working link is the merchant's and stays untouched.
+ * duplicate. The exception is a menu that links NOWHERE: every row
+ * `type:'none'` (what `sb_menu` seeds — four placeholders), or no rows at all.
+ * Reusing that puts a header on every page whose links go nowhere, so its rows
+ * are replaced with the real ones; a menu with even one link is the merchant's
+ * and stays untouched. Judged on the STORED link types only, never on whether
+ * a lookup resolved them: the resolver reads a failed GET as "no match", so a
+ * 5xx would have made a real menu look empty and overwritten it with no undo.
  */
 async function ensureMenu(
   ctx: ToolContext,
@@ -269,7 +271,7 @@ async function ensureMenu(
   if (found) {
     const snap = await menuSnapshot(ctx, siteId, found.id);
     const rows = snap.menu?.items ?? [];
-    const placeholder = snap.unlinked + snap.unresolved.length === rowCount(rows);
+    const placeholder = snap.unlinked === rowCount(rows);
     if (!placeholder) return { name, would: 'reuse', id: found.id, rows: snap.snapshot };
     if (dryRun) return { name, would: 'fill', id: found.id, rows: snap.snapshot, items };
     await request({
