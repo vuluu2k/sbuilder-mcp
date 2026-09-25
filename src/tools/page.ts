@@ -51,7 +51,7 @@ import { readinessGaps, READINESS_NOTICE } from '../domains/site/readiness.js';
 import { gatherReadiness } from '../domains/site/readiness-fetch.js';
 import { globalWarning, restampPatches, RESPONSIVE_NOTICE } from '../domains/site/traps.js';
 import { catalogBrowse, catalogMatches, traitsFor } from '../catalog/element-search.js';
-import { layoutForPageName, missingUsualPages, type InventoryPage } from '../domains/site/inventory.js';
+import { layoutForPageName, missingUsualPages, purposeTypeForName, type InventoryPage } from '../domains/site/inventory.js';
 import {
   LAYOUT_PATTERNS,
   PATTERN_BY_ID,
@@ -1657,9 +1657,10 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
         // ordinary `page`. Twelve is the number of routed types, never the
         // number of pages.
         page_types_note:
-          'Types are the storefront\'s fixed addresses, not an inventory of a site. Everything ' +
-          'else — login, register, contact, about, policies, and anything this shop needs — is ' +
-          'type "page" with an address you choose, and there is no limit to how many. ' +
+          'Types with a pattern are the storefront\'s fixed addresses, not an inventory of a site. ' +
+          'about, contact, policy, faq, login and register name a content page\'s PURPOSE (own ' +
+          'icon, own slug, any number); everything else is type "page". sb_page_create picks ' +
+          'the purpose type from the name when you pass none. ' +
           'usually_also below lists the ones most sites have; it is a floor, not a ceiling.',
         ...(missing.length
           ? {
@@ -1688,7 +1689,7 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
       type: z
         .string()
         .optional()
-        .describe('page (default); sb_page_list lists every type and where each is served'),
+        .describe('omit: inferred from the name (about/contact/policy/faq), else page; sb_page_list lists every type'),
       slug: z.string().optional(),
       is_homepage: z.boolean().optional(),
       settings: z.record(z.unknown()).optional(),
@@ -1705,6 +1706,11 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
       const path = `/api/sites/${encodeURIComponent(site_id)}/pages`;
       // The platform stores this verbatim and renders it as text — see plainText.
       name = plainText(name);
+      // "Giới thiệu" is an `about` page, not a `page` wearing the about layout —
+      // its own type is what gives it its icon and tells the next reader what it
+      // is for. Only when the caller named no type; an explicit one wins.
+      const askedType = type;
+      type ??= purposeTypeForName(name);
       // TYPE IS THE ROUTE for several kinds of page: /checkout and
       // /products/{slug} resolve to the site's PUBLISHED page of that type and
       // fall through to a 404 when there is none. Without this argument the
@@ -1820,7 +1826,7 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
           ...(renamed_to ? { renamed: { from: adopt.name, to: renamed_to } } : {}),
           ...(rename_failed ? { rename_failed } : {}),
           ...(slug ? { slug_ignored: 'A home page is served at "/" and carries no slug.' } : {}),
-          ...(type && type !== 'page' ? { type_ignored: `Kept as it is; adopting does not retype a page to "${type}".` } : {}),
+          ...(askedType && askedType !== 'page' ? { type_ignored: `Kept as it is; adopting does not retype a page to "${askedType}".` } : {}),
           note:
             'Nothing was created. This site already had a home page and a site has exactly ' +
             'one, so creating another would have taken the star off this page and left it ' +

@@ -12,7 +12,7 @@ annotation — `readOnlyHint` trên mười hai tool chỉ đọc, `destructiveH
 `sb_api_call` và `sb_page_create` nhận `name` cùng `type`, `slug`, `is_homepage` và `settings`. **TYPE CHÍNH LÀ
 ĐƯỜNG ĐI** với vài loại trang: `checkout`, `product`, `category`, `post` và `course` được
 định tuyến theo type chứ không theo slug, nên `/checkout` và `/products/{slug}` trả 404 cho
-tới khi có một trang loại đó ĐƯỢC PUBLISH. Mặc định là `page`. Thiếu tham số này thì agent có
+tới khi có một trang loại đó ĐƯỢC PUBLISH. Bỏ trống thì đọc từ tên — "Giới thiệu", "Liên hệ", chính sách, hỏi đáp thành `about`, `contact`, `policy`, `faq` (icon riêng, slug riêng, mở sẵn layout cùng tên) — còn lại là `page`. Thiếu tham số này thì agent có
 thể dựng một cửa hàng không ai mua được — đúng khoảng trống đầu tiên mà `sb_review` báo.
 
 `sb_publish` — nên client nào tôn trọng chúng sẽ thôi hỏi người dùng xác
@@ -1651,7 +1651,7 @@ trang duy nhất không được tự do chọn: `membersOnlyRedirectTarget` đ�
 đó. Tự đặt form bằng `sb_add` rồi trỏ `specials.formId` vào id nó trả về.
 
 **Hoặc truyền `page_name`** — kèm `headline` nếu muốn — để trang đó được tạo và form được đặt
-lên nó trong cùng một lệnh: một trang mới type `page` mang một section, tiêu đề nếu có, và
+lên nó trong cùng một lệnh: một trang mới — type `login`, `register` hoặc `contact` với các mẫu đó, còn lại `page` — mang một section, tiêu đề nếu có, và
 một node `form` đã trỏ sẵn vào form vừa tạo. Đó là một lệnh ghi THỨ HAI có chủ ý và không
 được phép huỷ lệnh thứ nhất. Form ĐÃ TỒN TẠI ngay khi ba lệnh của nó xong, nên một lần tạo
 trang bị từ chối sẽ để form nguyên chỗ và báo `page_failed` chứ không xoá một form người gọi

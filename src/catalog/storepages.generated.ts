@@ -1365,6 +1365,36 @@ export const PAGE_TYPES: readonly {
     "ownSlug": true
   },
   {
+    "type": "about",
+    "group": "main",
+    "ownSlug": true
+  },
+  {
+    "type": "contact",
+    "group": "main",
+    "ownSlug": true
+  },
+  {
+    "type": "policy",
+    "group": "main",
+    "ownSlug": true
+  },
+  {
+    "type": "faq",
+    "group": "main",
+    "ownSlug": true
+  },
+  {
+    "type": "login",
+    "group": "main",
+    "ownSlug": true
+  },
+  {
+    "type": "register",
+    "group": "main",
+    "ownSlug": true
+  },
+  {
     "type": "product",
     "group": "store",
     "ownSlug": false,

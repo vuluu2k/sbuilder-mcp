@@ -531,7 +531,7 @@ export function readinessGaps(input: ReadinessInput): ReadinessGap[] {
       'Create a page of type "account" and publish it: the profile behind a member-gate with ' +
         'audience "members", and behind audience "guests" a short sign-in prompt LINKING to the ' +
         'login page — not the forms themselves. Login, register and forgot-password are three ' +
-        'ordinary pages of type "page", each seeded by sb_store action:"form" with template ' +
+        'pages of their own (types "login", "register", "page"), each made by sb_store action:"form" with template ' +
         '"login", "register" or "forgot". Putting all three inside /account hands a shopper one ' +
         'crowded page and hands a header nothing to link to: a popup is a fine way to SIGN IN, ' +
         'but only a page has an address, and /account is the address this platform already ' +

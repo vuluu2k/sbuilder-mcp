@@ -73,9 +73,9 @@ entirely: `/checkout`, `/checkout/complete`, `/account`, `/search`. Plus
 `/products/{slug}` needs a published `product` page and `/categories/…` a
 `category` one. Only `/checkout/complete` backstops itself; the rest 404.
 
-**6a. `/account` IS THE SIGN-IN DESTINATION, and it is ONE page.** There is no
-`login` or `register` page type — `page.FixedPathTypes` is search, checkout,
-complete, account — and `membersonly.go`'s `membersOnlyRedirectTarget` sends
+**6a. `/account` IS THE SIGN-IN DESTINATION, and it is ONE page.** `login` and
+`register` are page types, but slug-routed ones like `page` — `page.FixedPathTypes`
+is still search, checkout, complete, account — and `membersonly.go`'s `membersOnlyRedirectTarget` sends
 every anonymous visitor who hits a members-only page to `/account`, with its own
 comment ruling out "a page-document scan hunting for a login form". So splitting
 sign-in onto its own page breaks the platform's own redirect: the shopper lands

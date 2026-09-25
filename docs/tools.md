@@ -782,7 +782,7 @@ behaviour rather than to an empty list.
 `sb_page_create` takes `name` plus `type`, `slug`, `is_homepage` and `settings`. **TYPE IS
 THE ROUTE** for several kinds: `checkout`, `product`, `category`, `post` and `course` resolve
 by type rather than by slug, so `/checkout` and `/products/{slug}` answer 404 until a page of
-that type is PUBLISHED. The default is `page`. Without this argument an agent can build a
+that type is PUBLISHED. Omitted, it is read off the name — "Giới thiệu", "Liên hệ", a policy or an FAQ become `about`, `contact`, `policy`, `faq` (own icon, own slug, opened as their layout) — else `page`. Without this argument an agent can build a
 shop it can never let anyone buy from — which is the first gap `sb_review` reports.
 
 **A STORE PAGE ARRIVES BUILT.** `product`, `category`, `search`, `blog`, `post` and `complete`
@@ -1702,7 +1702,7 @@ gated visitor there. Place the form yourself with `sb_add` and point `specials.f
 id this returns.
 
 **Or pass `page_name`** — and `headline` with it — to have that page made and the form placed
-on it in the same call: a new page of type `page` carrying a section, the headline if one was
+on it in the same call: a new page — of type `login`, `register` or `contact` for those templates, else `page` — carrying a section, the headline if one was
 given, and a `form` node already pointing at the form just created. It is a deliberate SECOND
 write and must not undo the first. The form EXISTS the moment its three calls land, so a
 refused page create leaves the form in place and reports `page_failed` rather than deleting a

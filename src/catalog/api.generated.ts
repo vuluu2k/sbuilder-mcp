@@ -16494,7 +16494,7 @@ export const API_OPERATIONS: ApiOperation[] = [
         "in": "query",
         "required": false,
         "type": "string",
-        "description": "Filter by page type (page|product|category|blog|post|error|maintain|search|checkout|complete)"
+        "description": "Filter by page type (page|product|category|blog|post|error|maintain|search|checkout|complete|account|course|about|contact|policy|faq|login|register)"
       },
       {
         "name": "status",
@@ -16564,7 +16564,7 @@ export const API_OPERATIONS: ApiOperation[] = [
         "in": "query",
         "required": false,
         "type": "string",
-        "description": "Filter by page type (page|product|category|blog|post|error|maintain|search|checkout|complete)"
+        "description": "Filter by page type (page|product|category|blog|post|error|maintain|search|checkout|complete|account|course|about|contact|policy|faq|login|register)"
       },
       {
         "name": "status",

@@ -429,7 +429,7 @@ describe('readinessGaps() — the account page tells an agent the right shape', 
     for (const template of ['"login"', '"register"', '"forgot"']) {
       expect(fix()).toContain(template);
     }
-    expect(fix()).toMatch(/pages of type "page"/);
+    expect(fix()).toMatch(/types "login", "register", "page"/);
   });
 
   it('keeps the members gate, which is what makes /account answer a gated visitor', () => {

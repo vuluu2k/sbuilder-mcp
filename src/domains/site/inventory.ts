@@ -1,3 +1,5 @@
+import { PAGE_TYPES } from '../../catalog/storepages.generated.js';
+
 /**
  * THE PAGES A SITE HAS THAT THE PLATFORM CANNOT NAME.
  *
@@ -160,12 +162,35 @@ export interface InventoryPage {
 export function missingUsualPages(pages: InventoryPage[] | null): UsualPage[] {
   if (!pages) return [];
   const hay = pages
-    .filter((p) => (typeof p.type === 'string' ? p.type === 'page' : true))
+    .filter((p) => (typeof p.type === 'string' ? isSlugType(p.type) : true))
     .map((p) => `${typeof p.slug === 'string' ? p.slug : ''} ${typeof p.name === 'string' ? p.name : ''}`.toLowerCase())
     .join('\n');
   return USUAL_PAGES.filter(
-    (u) => (u.when ? u.when(pages) : true) && !u.match.some((m) => hay.includes(m)),
+    (u) =>
+      (u.when ? u.when(pages) : true) &&
+      !u.match.some((m) => hay.includes(m)) &&
+      // A page of the purpose's own type counts whatever it is called. Not for
+      // the two policies: one `policy` page is not proof of the other.
+      !pages.some((p) => p.type === u.key),
   );
+}
+
+/** Routed at its own slug like `page`: `page` itself and the purpose types (about, login…). */
+function isSlugType(type: string): boolean {
+  return PAGE_TYPES.some((t) => t.type === type && t.ownSlug);
+}
+
+/**
+ * The PURPOSE type a page called `name` should be created as — `about`,
+ * `contact`, `policy`, `faq` — or undefined for an ordinary page. The platform gave each its own type (and icon) so a page list says what
+ * a page is FOR; the same keywords that decide a page is missing decide it here.
+ */
+export function purposeTypeForName(name: string): string | undefined {
+  const hay = name.toLowerCase();
+  const key = USUAL_PAGES.find((u) => u.match.some((m) => hay.includes(m)))?.key.replace(/^policy-.*/, 'policy');
+  // Not login/register: "Đăng ký tư vấn" is a lead form, not an account page —
+  // those come from sb_store action:"form", which sets the type itself.
+  return key && key !== 'login' && key !== 'register' && isSlugType(key) ? key : undefined;
 }
 
 /**
@@ -181,7 +206,13 @@ export function missingUsualPages(pages: InventoryPage[] | null): UsualPage[] {
  * decision the platform has already made.
  */
 export function layoutForPageName(name: string, type: string | undefined): string | undefined {
-  if (type && type !== 'page') return undefined;
+  // A purpose type opens as its own layout, as in the editor. Not login/register:
+  // that layout's form is unbound until sb_store action:"form" builds one.
+  if (type && type !== 'page') {
+    return isSlugType(type) && type !== 'login' && type !== 'register'
+      ? USUAL_PAGES.find((u) => u.layout === type)?.layout
+      : undefined;
+  }
   const hay = name.toLowerCase();
   return USUAL_PAGES.find((u) => u.layout && u.match.some((m) => hay.includes(m)))?.layout;
 }

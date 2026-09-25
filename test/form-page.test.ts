@@ -74,7 +74,8 @@ describe('sb_store action:"form" builds the page the form lives on', () => {
     expect((body.page as { id: string }).id).toBe('pg_new');
 
     const created = harness.calls.find((c) => c.method === 'POST' && c.path.endsWith('/pages'));
-    expect(created?.body).toMatchObject({ name: 'Đăng nhập', type: 'page' });
+    // Of the login TYPE: its own icon, and the page list says what it is for.
+    expect(created?.body).toMatchObject({ name: 'Đăng nhập', type: 'login' });
 
     // The form element really carries the form that was just made — a page with
     // an unbound form element is the same blank page, one element heavier.

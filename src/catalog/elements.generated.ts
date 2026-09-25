@@ -260,6 +260,12 @@ export const ELEMENTS: Record<string, CatalogElement> = {
     "locked": false,
     "hideInLayer": false,
     "childAllows": [],
+    "events": {
+      "click": [
+        "open_page",
+        "go_to_url"
+      ]
+    },
     "defaults": {
       "style": {
         "display": "flex",
@@ -387,6 +393,14 @@ export const ELEMENTS: Record<string, CatalogElement> = {
         "tab": "advanced",
         "groups": [
           {
+            "key": "action",
+            "label": "Action",
+            "controls": [
+              "action",
+              "href"
+            ]
+          },
+          {
             "key": "spacing",
             "label": "Spacing",
             "controls": [
@@ -443,6 +457,8 @@ export const ELEMENTS: Record<string, CatalogElement> = {
       "border",
       "corner",
       "shadow",
+      "action",
+      "href",
       "padding_margin",
       "display",
       "animation",
@@ -457,7 +473,8 @@ export const ELEMENTS: Record<string, CatalogElement> = {
       "As the outermost page wrapper — use flex-section for top-level bands"
     ],
     "contentTips": [
-      "Adjust gap and flexDirection in style for row vs column orientation"
+      "Adjust gap and flexDirection in style for row vs column orientation",
+      "A card whose whole surface is the link (product, category, article tile): put a click event (open_page / go_to_url — navigation only; a pop-up belongs on a button) on the block itself instead of stretching a button over it — buttons inside still run only their own action"
     ],
     "semantics": [
       "layout",
@@ -875,7 +892,8 @@ export const ELEMENTS: Record<string, CatalogElement> = {
             "label": "Icon",
             "controls": [
               "button_icon",
-              "icon_size",
+              "button_icon_color",
+              "icon_size_bp",
               "icon_position",
               "icon_gap"
             ]
@@ -982,7 +1000,8 @@ export const ELEMENTS: Record<string, CatalogElement> = {
       "product",
       "action",
       "button_icon",
-      "icon_size",
+      "button_icon_color",
+      "icon_size_bp",
       "icon_position",
       "icon_gap",
       "width_select",
@@ -7494,6 +7513,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
             "label": "Icon",
             "controls": [
               "button_icon",
+              "button_icon_color",
               "icon_size",
               "icon_position",
               "icon_gap"
@@ -7580,6 +7600,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
     "controls": [
       "field_submit",
       "button_icon",
+      "button_icon_color",
       "icon_size",
       "icon_position",
       "icon_gap",
@@ -9874,6 +9895,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
             "label": "Icon",
             "controls": [
               "button_icon",
+              "button_icon_color",
               "icon_size",
               "icon_position",
               "icon_gap"
@@ -9956,6 +9978,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
     "controls": [
       "step_button_label",
       "button_icon",
+      "button_icon_color",
       "icon_size",
       "icon_position",
       "icon_gap",
@@ -13293,7 +13316,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
             "label": "Breadcrumb icon",
             "controls": [
               "breadcrumb_icon",
-              "icon_size",
+              "icon_size_bp",
               "breadcrumb_icon_color"
             ]
           },
@@ -13381,7 +13404,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
       "width_select",
       "size_bounds",
       "breadcrumb_icon",
-      "icon_size",
+      "icon_size_bp",
       "breadcrumb_icon_color",
       "gap",
       "horizontal",
@@ -15952,7 +15975,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
             "label": "Icon",
             "controls": [
               "config_icon_color",
-              "icon_size"
+              "icon_size_bp"
             ]
           },
           {
@@ -16019,7 +16042,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
     ],
     "controls": [
       "config_icon_color",
-      "icon_size",
+      "icon_size_bp",
       "menu_direct",
       "padding",
       "margin",
@@ -20855,7 +20878,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
             "key": "quantity_icon",
             "label": "Icon",
             "controls": [
-              "icon_size"
+              "icon_size_bp"
             ]
           },
           {
@@ -20899,7 +20922,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
       "width_select",
       "height_select",
       "size_bounds",
-      "icon_size",
+      "icon_size_bp",
       "bg_color",
       "bg_image",
       "border",
@@ -32815,7 +32838,11 @@ export const ELEMENTS: Record<string, CatalogElement> = {
         "pauseOnHover": true,
         "loop": true,
         "transition": "slide",
-        "transitionMs": 350
+        "transitionMs": 350,
+        "dotColor": "",
+        "dotActiveColor": "",
+        "arrowBg": "",
+        "arrowColor": ""
       }
     },
     "inspector": [

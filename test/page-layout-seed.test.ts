@@ -150,6 +150,18 @@ describe('sb_page_create opens a content page as something', () => {
     expect(body.seeded).toBeUndefined();
   });
 
+  it('creates it as the about TYPE, and an explicit type still wins', async () => {
+    const h = platform();
+    await create(h.f, { site_id: 's1', name: 'Giới thiệu', chrome: false, dry_run: false });
+    const post = h.calls.find((c) => c.method === 'POST' && c.path.endsWith('/pages'));
+    expect(post?.body).toMatchObject({ type: 'about' });
+
+    const h2 = platform();
+    await create(h2.f, { site_id: 's1', name: 'Giới thiệu', type: 'page', chrome: false, dry_run: false });
+    const post2 = h2.calls.find((c) => c.method === 'POST' && c.path.endsWith('/pages'));
+    expect(post2?.body).toMatchObject({ type: 'page' });
+  });
+
   it('says so in a dry run', async () => {
     const body = await create(platform().f, { site_id: 's1', name: 'Giới thiệu' });
     expect(body.would_open_as).toBe('about');

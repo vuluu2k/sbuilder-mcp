@@ -60,8 +60,9 @@ repo over a number here, and fix the line when you catch one stale.
   question, asked second.
 
 - **`/account` IS THE SIGN-IN DESTINATION, so it cannot be split — and it must not show
-  two auth forms at once.** There is no `login` or `register` page type (`FixedPathTypes` is
-  search, checkout, complete, account), and `membersonly.go`'s `membersOnlyRedirectTarget`
+  two auth forms at once.** `login` and `register` ARE page types since web_builder
+  `8459371d9`, but SLUG-routed purpose types (with `about`, `contact`, `policy`, `faq`) — not
+  fixed paths (`FixedPathTypes` is still search, checkout, complete, account) — and `membersonly.go`'s `membersOnlyRedirectTarget`
   sends every anonymous visitor who hits a members-only page to `/account`, its comment
   ruling out "a page-document scan hunting for a login form". So the instinct to give
   sign-in and registration their own pages breaks the platform's own redirect: the shopper
@@ -414,3 +415,12 @@ repo over a number here, and fix the line when you catch one stale.
   fixes stored drafts. Overlays and forms root at their own element BY DESIGN — do not "fix"
   them. The id rename is structural (`remapIds`): the old JSON-wide substitution also rewrote
   any text that quoted an id.
+
+- **A CONTENT PAGE'S PURPOSE IS ITS TYPE since web_builder `8459371d9`.** `about`, `contact`,
+  `policy`, `faq`, `login`, `register` route at their own slug exactly like `page`, any number of
+  each, with their own icon — so a page list says what a page is FOR. `sb_page_create` infers the
+  type from the name when none is passed (`purposeTypeForName`, the `USUAL_PAGES` keywords) and
+  opens it as the layout of the same name; `sb_store action:"form"` makes a login/register/contact
+  page of that type. Never login/register via the layout alone: its form is unbound until the
+  form flow builds one. `checkout` is a form template AND a fixed-path type, so only slug-routed
+  types are ever inferred.

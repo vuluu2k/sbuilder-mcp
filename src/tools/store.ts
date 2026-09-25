@@ -57,6 +57,7 @@ import { attachOverlay } from './overlay.js';
 import { installApp } from './app.js';
 import { BUILTIN_APP_KEYS } from '../catalog/appscaffolds.generated.js';
 import { ELEMENTS } from '../catalog/elements.generated.js';
+import { PAGE_TYPES } from '../catalog/storepages.generated.js';
 import {
   CHECKOUT_FORM,
   CHECKOUT_FORM_DOCUMENT,
@@ -292,6 +293,15 @@ const FORM_TEMPLATE_KEYS = Object.keys(FORM_TEMPLATES).sort() as unknown as [str
  * how every other builder in this server writes a page — band rules, id
  * minting and the save contract all come with it instead of being re-derived.
  */
+/**
+ * A login, register or contact form's page is of that PURPOSE type — its own icon,
+ * its own purpose. Slug-routed types only: `checkout` is a form template AND a
+ * fixed-path type, and a page made here must never claim /checkout.
+ */
+function pageTypeFor(template: string): string {
+  return PAGE_TYPES.some((t) => t.type === template && t.ownSlug) ? template : 'page';
+}
+
 async function placeFormOnPage(
   ctx: ToolContext,
   session: PageSession,
@@ -299,13 +309,14 @@ async function placeFormOnPage(
   formId: string,
   pageName: string,
   headline: string | undefined,
+  type: string,
 ): Promise<{ id: string; name: string }> {
   const made = (await request({
     base: ctx.base,
     method: 'POST',
     path: `/api/sites/${encodeURIComponent(siteId)}/pages`,
     token: siteToken(ctx),
-    body: { name: pageName, type: 'page' },
+    body: { name: pageName, type },
     fetchImpl: ctx.fetchImpl,
   })) as { page?: { id?: unknown; name?: unknown } };
   const id = made.page?.id;
@@ -376,7 +387,7 @@ async function seedForm(
       ],
       ...(pageName
         ? {
-            would_also: `create a page named ${JSON.stringify(pageName)} of type "page" and put ` +
+            would_also: `create a page named ${JSON.stringify(pageName)} of type "${pageTypeFor(key)}" and put ` +
               'the form on it, so the form has an address a header can link to',
           }
         : {
@@ -431,7 +442,7 @@ async function seedForm(
   let page_failed: string | undefined;
   if (pageName) {
     try {
-      page = await placeFormOnPage(ctx, session, siteId, form.id, pageName, headline);
+      page = await placeFormOnPage(ctx, session, siteId, form.id, pageName, headline, pageTypeFor(key));
     } catch (e) {
       page_failed = (e as Error).message.replace(/^sbuilder:\s*/, '').slice(0, 160);
     }
