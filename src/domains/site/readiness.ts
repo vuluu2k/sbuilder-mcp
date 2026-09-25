@@ -667,8 +667,10 @@ export function readinessGaps(input: ReadinessInput): ReadinessGap[] {
   return gaps;
 }
 
-// Letters only Vietnamese writes; French or Spanish copy shares none of them.
-const VI_LETTERS = /[ăâđêôơưạảấầẩẫậắằẳẵặẹẻẽếềểễệỉịọỏốồổỗộớờởỡợụủứừửữựỳỵỷỹ]/i;
+// Letters ONLY Vietnamese writes: ă ơ ư đ, the dot-below / hook-above tones and
+// circumflex+tone. Bare â ê ô and acute/grave/tilde vowels are French or
+// Portuguese too, and counting them read a French page as Vietnamese.
+const VI_LETTERS = /[ăđơưạảấầẩẫậắằẳẵặẹẻẽếềểễệỉịĩọỏốồổỗộớờởỡợụủũứừửữựỳỵỷỹ]/i;
 
 /**
  * THE SITE SAYS ONE LANGUAGE AND THE PAGE ANOTHER. `settings.locale` is what
@@ -678,8 +680,8 @@ const VI_LETTERS = /[ăâđêôơưạảấầẩẫậắằẳẵặẹẻẽ
  * account reads its whole catalogue in an English voice. Nothing on the page
  * shows it.
  *
- * ponytail: a letter-set heuristic over text nodes, vi vs not-vi only; a real
- * language detector if a third market ever matters.
+ * ponytail: a letter-set heuristic over text nodes, warning only "Vietnamese copy,
+ * locale not vi"; a real language detector if a third market ever matters.
  */
 export function siteLanguage(locale: string | null | undefined, nodes: NodeLike[]): string | null {
   if (!locale) return null;
@@ -690,14 +692,13 @@ export function siteLanguage(locale: string | null | undefined, nodes: NodeLike[
     .filter((t) => /[a-zà-ỹ]{3}/i.test(t));
   if (texts.length < 3) return null;
   const vi = texts.filter((t) => VI_LETTERS.test(t)).length / texts.length;
-  const siteVi = /^vi\b/i.test(locale);
-  const content = vi >= 0.5 ? 'Vietnamese' : vi === 0 ? 'not Vietnamese' : null;
-  if (!content || (content === 'Vietnamese') === siteVi) return null;
-  const want = content === 'Vietnamese' ? 'vi' : 'en';
+  // One direction only: no Vietnamese letters on a `vi` site is unaccented copy or
+  // English product and brand names far more often than a wrong locale.
+  if (vi < 0.5 || /^vi\b/i.test(locale)) return null;
   return (
-    `The site's locale is "${locale}" but this page's copy is ${content} — <html lang> ` +
+    `The site's locale is "${locale}" but this page's copy is Vietnamese — <html lang> ` +
     'is served from the locale, so screen readers and search engines read the page in the ' +
-    `wrong language, and the storefront's built-in strings follow it. sb_theme locale:"${want}" ` +
+    `wrong language, and the storefront's built-in strings follow it. sb_theme locale:"vi" ` +
     'sets it (site-wide).'
   );
 }

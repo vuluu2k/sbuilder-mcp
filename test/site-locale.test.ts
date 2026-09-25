@@ -79,12 +79,28 @@ describe('sb_review: the site locale against the page language', () => {
     await close();
   });
 
-  it('warns the reverse: an English page on a `vi` site', async () => {
-    const { ctx } = site({ locale: 'vi', texts: EN });
+  // One page of English on a `vi` site is product and brand names far more
+  // often than a wrong locale, so the reverse direction is never warned.
+  it.each([
+    ['an English page on a `vi` site', 'vi', EN],
+    ['unaccented Vietnamese on a `vi` site', 'vi', ['Ao thun cotton', 'Giao hang mien phi', 'Doi tra 30 ngay', 'Them vao gio']],
+    ['English brand names on a `vi` site', 'vi', ['Nike Air Max', 'Adidas Ultraboost', 'New Balance 574', 'Converse Chuck']],
+    ['a French page on an `fr` site', 'fr', ['Château de rêve', 'Tête-à-tête côté forêt', 'Hôtel près du lac', 'Fenêtre sur côte']],
+  ])('is silent on %s', async (_label, locale, texts) => {
+    const { ctx } = site({ locale, texts });
     const { client, close } = await connectedClient(ctx);
     await client.callTool({ name: 'sb_page_open', arguments: { site_id: 's1', page_id: 'p1' } });
     const out = parse(await client.callTool({ name: 'sb_review', arguments: {} }));
-    expect(out.site_language).toMatch(/locale is "vi"/);
+    expect(out.site_language).toBeUndefined();
+    await close();
+  });
+
+  it('still warns a Vietnamese page on an `fr` site', async () => {
+    const { ctx } = site({ locale: 'fr', texts: VI });
+    const { client, close } = await connectedClient(ctx);
+    await client.callTool({ name: 'sb_page_open', arguments: { site_id: 's1', page_id: 'p1' } });
+    const out = parse(await client.callTool({ name: 'sb_review', arguments: {} }));
+    expect(out.site_language).toMatch(/locale is "fr".*Vietnamese/);
     await close();
   });
 

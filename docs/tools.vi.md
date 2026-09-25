@@ -1055,9 +1055,11 @@ không trả về một bức ảnh sai.
 
 
 **Và ngôn ngữ của site, một lần mỗi site mỗi process**, ở `site_language`: khi nội dung trang
-là tiếng Việt mà `locale` của site không phải `vi`, hoặc ngược lại. `<html lang>` được phục vụ từ
+là tiếng Việt (chữ chỉ tiếng Việt có — ă ơ ư đ và dấu nặng / dấu hỏi, không tính â ê ô của tiếng
+Pháp) mà `locale` của site không phải `vi`. `<html lang>` được phục vụ từ
 locale, nên trang bị đọc to và được index sai ngôn ngữ, và không gì trên trang cho thấy điều đó.
-Cách sửa nó nêu là `sb_theme locale:"…"`.
+Cách sửa nó nêu là `sb_theme locale:"vi"`. Chiều ngược lại (chữ tiếng Anh trên site `vi`) không bao
+giờ cảnh báo: một trang toàn tên sản phẩm và thương hiệu không chứng minh locale sai.
 
 **Và những gì chắn giữa cửa hàng này với một đơn đã thanh toán**, ở `store_gaps`, kèm
 `store_notice` chỉ nói một lần mỗi process. Đây là luật kiểm tra sẵn sàng của chính nền tảng,

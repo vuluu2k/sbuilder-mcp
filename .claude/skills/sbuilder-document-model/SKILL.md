@@ -698,3 +698,10 @@ platform treats an unproven guard as indistinguishable from an absent one.
   A satellite whose rule carries a `seed`/`seedBySource` (the list-empty owners) is born from
   that seed through `sb_add` too, unless the caller brings children — a bare `list-empty` is
   blank space where the editor shows a glyph, a headline and a line of body.
+
+- **`site_language` (`siteLanguage` in readiness.ts) warns ONE direction only: Vietnamese copy
+  on a locale that is not `vi`.** It counted â/ê/ô, which French and Portuguese write, so a
+  French site read as Vietnamese; and it told a `vi` site to switch to `en` off one page of
+  English product and brand names or unaccented Vietnamese. Only letters no other language
+  writes count (ă ơ ư đ, dot-below / hook-above tones, circumflex+tone), and the reverse is
+  never warned — a false "switch your whole site's language" costs more than a missed one.

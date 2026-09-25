@@ -1086,9 +1086,11 @@ is **refused by name** rather than answered with the wrong picture.
 
 
 **And the site's language, once per site per process**, under `site_language`: when the page's
-copy is Vietnamese and the site's `locale` is not `vi`, or the reverse. `<html lang>` is served
+copy is Vietnamese (letters only Vietnamese writes — ă ơ ư đ and the dot-below / hook-above
+tones, never French â ê ô) and the site's `locale` is not `vi`. `<html lang>` is served
 from the locale, so the page is read aloud and indexed in the wrong language, and nothing on the
-page shows it. The fix it names is `sb_theme locale:"…"`.
+page shows it. The fix it names is `sb_theme locale:"vi"`. The reverse (English copy on a `vi`
+site) is never warned: one page of product and brand names is not evidence of a wrong locale.
 
 **And what stands between this store and a paid order**, under `store_gaps`, with a
 `store_notice` said once per process. These are the platform's OWN readiness rules, and they
