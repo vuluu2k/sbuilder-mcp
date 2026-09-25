@@ -55,7 +55,7 @@ function world(opts: { revs?: boolean; fence?: boolean } = {}) {
       server.rev += 1;
     } else {
       gets += 1;
-      hook?.();
+      if (hook) queueMicrotask(hook);
       hook = undefined;
     }
     return json({ source: { pageId: 'pg', document: server.doc, ...(revs ? { rev: server.rev } : {}) } });
@@ -175,6 +175,22 @@ describe("the room's {t:'source'} frame", () => {
     peerEdits(w, deliver, 'he');
     await expect(w.ps.applyAndSave(setText('he', 'Mine'))).rejects.toThrow(/changed under this session/);
     expect(w.server.doc.nodes.he.specials.text).toBe('Peer');
+  });
+
+  it('a late frame for the save a rebase just re-read does not stale the reapplied write', async () => {
+    const w = world();
+    const deliver = room(w);
+    deliver({ t: 'welcome', peerId: 'me', peers: [] });
+    await w.ps.open('s1', 'pg');
+    w.elsewhere((d) => {
+      d.nodes.tx.specials.text = 'Theirs';
+    });
+    // The frame for that save lands while the rebase is re-reading the page.
+    w.onGet(() => deliver({ t: 'source', pageId: 'pg', rev: w.server.rev }));
+    const reads = w.gets();
+    await w.ps.applyAndSave(setText('he', 'Mine'));
+    expect(w.server.doc.nodes.he.specials.text).toBe('Mine');
+    expect(w.gets() - reads).toBe(1);
   });
 
   it('its own save, another page, and an unknown frame type change nothing', async () => {

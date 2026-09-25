@@ -105,8 +105,8 @@ export class PageSession {
   private stale: string | null = null;
   /**
    * The draft revision last read or stored (`rev`, web_builder 1dbc88a2c), sent
-   * back as `baseRev`; 0 on a platform that reports none. `saving` is the PUT in
-   * flight, so a room `source` frame for our own save — which can land before
+   * back as `baseRev`; 0 on a platform that reports none. `saving` is the PUT
+   * (or re-read) in flight, so a room `source` frame for our own save — which can land before
    * the PUT answers — is judged against the rev that save returns.
    */
   private sourceRev = 0;
@@ -504,7 +504,16 @@ export class PageSession {
   }
 
   async open(siteId: string, pageId: string): Promise<OutlineNode[]> {
-    const src = await loadSource(this.ctx, siteId, pageId);
+    // A read in flight defers `sourceSaved` like a save does: a frame for a
+    // save this read already carries must be judged against the rev it returns.
+    const pending = loadSource(this.ctx, siteId, pageId);
+    this.saving = pending;
+    let src: Awaited<typeof pending>;
+    try {
+      src = await pending;
+    } finally {
+      if (this.saving === pending) this.saving = null;
+    }
     this.doc = PageDoc.from(src.document);
     this.siteId = siteId;
     this.pageId = pageId;
