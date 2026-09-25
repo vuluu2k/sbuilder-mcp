@@ -121,6 +121,12 @@ export class PageSession {
    * fence `restampPatches` exists to keep honest.
    */
   private savedRev = -1;
+  /**
+   * Nodes a PEER's ops touched since this copy was last pulled or stored. Those
+   * ops are applied locally, so a rebase comparing the local copy with a
+   * re-pull cannot see them move — they are counted as moved here instead.
+   */
+  private remoteTouched = new Set<string>();
   /** The open read handed back an empty document and a ROOT was invented for it. */
   private openedSeeded = false;
   private warnings: ComposeWarning[] = [];
@@ -380,10 +386,11 @@ export class PageSession {
     const old = this.current();
     const dirty = base ? base.dirty : old.rev !== this.savedRev;
     const before = base ? base.before : this.touchedSnapshot(old, patches);
+    const peer = new Set(this.remoteTouched);
     this.stale = null;
     await this.open(this.siteId, this.pageId);
     const after = this.touchedSnapshot(this.current(), patches);
-    const moved = [...before.keys()].filter((id) => after.get(id) !== before.get(id));
+    const moved = [...before.keys()].filter((id) => peer.has(id) || after.get(id) !== before.get(id));
     if (dirty || moved.length > 0) {
       throw new Error(
         `sbuilder: the page changed under this session (${reason})` +
@@ -404,8 +411,17 @@ export class PageSession {
     return (this.live?.peers ?? []).filter((p) => p.pageId === pageId).map((p) => p.name || p.userId);
   }
 
+  /**
+   * A peer's ops are not unsaved LOCAL edits: the peer stores them itself. So a
+   * copy that was clean stays clean, or every write after a human's edit would
+   * refuse as "unsaved edits" on the next re-pull.
+   */
   applyRemote(patches: Patch[]): void {
-    this.doc?.apply(patches);
+    if (!this.doc) return;
+    const clean = !this.hasUnsaved();
+    this.doc.apply(patches);
+    if (clean) this.savedRev = this.doc.rev;
+    for (const p of patches) this.remoteTouched.add(String(p.path[1]));
   }
 
   /**
@@ -498,6 +514,7 @@ export class PageSession {
     this.warnings = composeWarnings(src.warnings);
     // Freshly pulled IS the stored state.
     this.savedRev = this.doc.rev;
+    this.remoteTouched.clear();
     // WHAT THE READ ACTUALLY RETURNED, kept so `save` can tell a page this
     // session emptied from a page that arrived empty because the read failed
     // open. `PageDoc.from` seeds a ROOT for `{ root_node_id: "", nodes: {} }`,
@@ -693,6 +710,7 @@ export class PageSession {
     // "is the document now different from what the server holds", and the
     // re-stamp wrote the server's own answer back into it.
     this.savedRev = d.rev;
+    this.remoteTouched.clear();
     await ensureSiteTheme(this.ctx, this.siteId);
   }
 }

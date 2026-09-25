@@ -39,6 +39,7 @@ function world(opts: { revs?: boolean; fence?: boolean } = {}) {
   const server = { doc: page(), rev: 100 };
   const puts: any[] = [];
   let gets = 0;
+  let hook: (() => void) | undefined;
   const f = vi.fn(async (url: unknown, init?: RequestInit) => {
     const method = init?.method ?? 'GET';
     const json = (v: unknown, status = 200) =>
@@ -52,7 +53,11 @@ function world(opts: { revs?: boolean; fence?: boolean } = {}) {
       }
       server.doc = body.document;
       server.rev += 1;
-    } else gets += 1;
+    } else {
+      gets += 1;
+      hook?.();
+      hook = undefined;
+    }
     return json({ source: { pageId: 'pg', document: server.doc, ...(revs ? { rev: server.rev } : {}) } });
   }) as unknown as typeof fetch;
   const s = new Session('http://x', f);
@@ -64,7 +69,7 @@ function world(opts: { revs?: boolean; fence?: boolean } = {}) {
     edit(server.doc);
     server.rev += 1;
   };
-  return { ps, server, puts, gets: () => gets, elsewhere };
+  return { ps, server, puts, gets: () => gets, elsewhere, onGet: (f: () => void) => (hook = f) };
 }
 
 const setText = (id: string, text: string) => [{ op: 'set' as const, path: ['nodes', id, 'specials', 'text'], value: text }];
@@ -113,13 +118,14 @@ describe("the room's {t:'source'} frame", () => {
     const fake = new FakeSocket();
     const sock = new RealtimeSocket('ws://x', () => 'tok', () => fake);
     const live = new LiveSession(sock, {
-      onRemote: () => {},
+      onRemote: (patches) => w.ps.applyRemote(patches),
       onDesync: () => {},
       onSource: (pageId, rev) => w.ps.sourceSaved(pageId, rev),
     });
     sock.connect();
     fake.onopen!();
     w.ps.attachLive(live, 's1');
+    live.start('pg');
     return (e: Record<string, unknown>) => fake.onmessage!({ data: JSON.stringify(e) });
   }
 
@@ -136,6 +142,39 @@ describe("the room's {t:'source'} frame", () => {
     await w.ps.applyAndSave(setText('he', 'Mine'));
     expect(w.server.doc.nodes.tx).toBeUndefined();
     expect(w.server.doc.nodes.he.specials.text).toBe('Mine');
+  });
+
+  // A peer's ops arrive, then that peer autosaves. Their edit is not an
+  // unsaved LOCAL edit of this session, so the write re-pulls and reapplies.
+  const peerEdits = (w: ReturnType<typeof world>, deliver: (e: Record<string, unknown>) => void, id: string) => {
+    const op = { op: 'set', path: ['nodes', id, 'specials', 'text'], value: 'Peer' };
+    deliver({ t: 'ops', pageId: 'pg', seq: 1, peerId: 'human', ops: [op] });
+    expect(w.ps.current().doc.nodes[id].specials!.text).toBe('Peer');
+    w.elsewhere((d) => {
+      d.nodes[id].specials.text = 'Peer';
+    });
+    deliver({ t: 'source', pageId: 'pg', rev: w.server.rev });
+  };
+
+  it("a peer's applied ops then its save: a write to another node goes through", async () => {
+    const w = world();
+    const deliver = room(w);
+    deliver({ t: 'welcome', peerId: 'me', peers: [] });
+    await w.ps.open('s1', 'pg');
+    peerEdits(w, deliver, 'tx');
+    await w.ps.applyAndSave(setText('he', 'Mine'));
+    expect(w.server.doc.nodes.he.specials.text).toBe('Mine');
+    expect(w.server.doc.nodes.tx.specials.text).toBe('Peer');
+  });
+
+  it("a peer's applied ops then its save: a write to the SAME node fails loudly", async () => {
+    const w = world();
+    const deliver = room(w);
+    deliver({ t: 'welcome', peerId: 'me', peers: [] });
+    await w.ps.open('s1', 'pg');
+    peerEdits(w, deliver, 'he');
+    await expect(w.ps.applyAndSave(setText('he', 'Mine'))).rejects.toThrow(/changed under this session/);
+    expect(w.server.doc.nodes.he.specials.text).toBe('Peer');
   });
 
   it('its own save, another page, and an unknown frame type change nothing', async () => {
