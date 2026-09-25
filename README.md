@@ -98,7 +98,7 @@ in this client: one would put the very key the platform exists to hold back into
 | `sb_template_use` | Instantiate a template into a page |
 | `sb_page_list` | Every page on the site |
 | `sb_page_create` | Create a page — a store type arrives with the editor's own starting document; `type` is the route for checkout, product, category, post, course |
-| `sb_publish` | Compile the draft into the live page (cascades to shared globals), report which revision went live, and with `verify` check the origin is serving it |
+| `sb_publish` | Compile the draft into the live page (cascades to shared globals), report which revision went live, and with `verify` check the origin is serving it; lists other pages with unpublished drafts (`publish_drafts` publishes them too) |
 | `sb_page_state` | Which of a page's three copies is which — the DRAFT the editor canvas shows, the PUBLISHED row the storefront serves, and this session's — plus whether the editor will render the canvas BLANK, and where the recovery points are |
 | `sb_page_repair` | Rename a page root that is not `ROOT` (left by older seeds) so every editor build draws it — one page or the whole site |
 | `sb_review` | Every defect a visitor would see, each with its fix, plus the five gaps between this store and a paid order |

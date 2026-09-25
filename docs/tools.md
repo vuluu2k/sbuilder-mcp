@@ -840,6 +840,12 @@ caller has immediately after publishing and previously had no way to ask; the ro
 `document`, `html` and `css` are still dropped, because publish cascades and returning them
 pours every republished page's markup into the reader.
 
+**It lists the OTHER pages whose draft is ahead of live** as `unpublished_drafts`
+(`pageId`, `name`, `slug`) — dry run and real run alike — and `publish_drafts: true` puts them
+in the same publish. The platform has no "draft differs from published" field: this is
+`updatedAt` (bumped by every draft save) past `publishedAt`, the comparison `sb_page_state`
+makes, so a metadata-only edit counts too. A never-published page is not listed.
+
 **`verify: true` then fetches the live page and says whether the origin is serving it.** A
 200 proves the platform stored a row, not that a visitor is being served it: the storefront
 answers `cache-control: public, max-age=60`, so the two legitimately differ for up to a

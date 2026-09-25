@@ -2099,10 +2099,14 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
           .boolean()
           .optional()
           .describe('Fetch the live page afterwards and report whether it serves this revision'),
+        publish_drafts: z
+          .boolean()
+          .optional()
+          .describe('Also publish every other page whose draft is ahead of its live copy (listed as unpublished_drafts)'),
       },
       annotations: { readOnlyHint: false, destructiveHint: true, idempotentHint: true },
     },
-    async ({ site_id: given, page_id, dry_run, verify }) => {
+    async ({ site_id: given, page_id, dry_run, verify, publish_drafts }) => {
       const site_id = siteFor(ctx, given);
       // PUBLISH IS A SITE-LEVEL CALL that NAMES pages, not a page-level route.
       // This used to POST /pages/{id}/publish, which the platform answers 404 —
@@ -2111,8 +2115,39 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
       // list means the whole site, so the id is always sent: publishing one page
       // must never become publishing every page by accident.
       const path = `/api/sites/${encodeURIComponent(site_id)}/publish`;
-      const body = { pageIds: [page_id] };
-      if (dry_run !== false) return text({ dry_run: true, would_post: path, body });
+      // OTHER PAGES WHOSE DRAFT IS AHEAD OF LIVE. The platform carries no
+      // "draft differs from published" flag; `updatedAt` is bumped by every
+      // draft save (touchPage) and `publishedAt` by publish, so this is the
+      // same timestamp comparison sb_page_state makes — a metadata edit counts
+      // too. A never-published page is not listed: publishing it is a choice,
+      // not a forgotten step. A failed read never fails the publish.
+      let drafts: Array<{ pageId: string; name: string; slug: string }> = [];
+      try {
+        const got = (await request({
+          base: ctx.base,
+          method: 'GET',
+          path: `/api/sites/${encodeURIComponent(site_id)}/pages`,
+          token: siteToken(ctx),
+          fetchImpl: ctx.fetchImpl,
+        })) as { pages?: Array<Record<string, unknown>> };
+        drafts = (got.pages ?? [])
+          .filter((p) => p.id !== page_id)
+          .filter((p) => driftOf(p.updatedAt as string | undefined, p.publishedAt as string | undefined).state === 'draft_ahead')
+          .map((p) => ({ pageId: String(p.id), name: String(p.name ?? ''), slug: String(p.slug ?? '') }));
+      } catch {
+        drafts = [];
+      }
+      const body = { pageIds: [page_id, ...(publish_drafts ? drafts.map((d) => d.pageId) : [])] };
+      const draftNote = (left: typeof drafts) =>
+        left.length
+          ? {
+              unpublished_drafts: left,
+              drafts_note: 'Draft saved after its last publish (updatedAt past publishedAt — no platform flag says so). publish_drafts:true publishes them too.',
+            }
+          : {};
+      if (dry_run !== false) {
+        return text({ dry_run: true, would_post: path, body, ...draftNote(drafts) });
+      }
       const res = (await request({
         base: ctx.base,
         method: 'POST',
@@ -2181,6 +2216,7 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
       }
       return text({
         published,
+        ...draftNote(drafts.filter((d) => !published.some((p) => p.pageId === d.pageId))),
         ...(live ? { live } : {}),
         ...(published.length !== (res.total ?? published.length) ? { total: res.total } : {}),
         ...(landed

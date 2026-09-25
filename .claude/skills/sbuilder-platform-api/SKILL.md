@@ -45,6 +45,12 @@ repo over a number here, and fix the line when you catch one stale.
   — for every page the cascade touched. So `sb_publish` asserts the page came back, and
   projects the rows.
 
+- **NO FIELD SAYS "THIS DRAFT IS NOT LIVE YET".** The `Page` row carries `updatedAt` (bumped by
+  every draft save, `touchPage`, `service.go:521`) and `publishedAt`, nothing else. So
+  `sb_publish`'s `unpublished_drafts` is `driftOf(updatedAt, publishedAt)` over `GET …/pages` —
+  a metadata edit also counts. Publishing one page left the pages the agent edited earlier
+  silently stale; say it by timestamp and say that it is a timestamp.
+
 - **A colliding page slug is RENAMED, not refused.** `uniqueSlug` suffixes `-1`, `-2`, … and
   its own comment says it "never errors" (`service.go:877`). `ErrSlugConflict` exists and maps
   to 409; this path never reaches it. The create answers 200 carrying a slug the caller never

@@ -113,6 +113,53 @@ describe('sb_publish', () => {
   });
 });
 
+describe('sb_publish: other pages with unpublished drafts', () => {
+  // No field says "draft differs from live"; a page's `updatedAt` is bumped by
+  // every draft save (touchPage) and `publishedAt` by publish, so draft_ahead is
+  // updatedAt past publishedAt — the comparison sb_page_state already makes.
+  const pages = [
+    { id: 'pg_1', name: 'Home', slug: '', updatedAt: '2026-09-25T10:00:00Z', publishedAt: '2026-09-20T10:00:00Z' },
+    { id: 'pg_a', name: 'About', slug: 'about', updatedAt: '2026-09-25T10:00:00Z', publishedAt: '2026-09-20T10:00:00Z' },
+    { id: 'pg_b', name: 'FAQ', slug: 'faq', updatedAt: '2026-09-20T10:00:00Z', publishedAt: '2026-09-20T10:00:00Z' },
+    { id: 'pg_c', name: 'Draft only', slug: 'draft', updatedAt: '2026-09-25T10:00:00Z' },
+  ];
+  function site() {
+    const posts: any[] = [];
+    const f = (async (url: unknown, init?: RequestInit) => {
+      const path = new URL(String(url)).pathname;
+      const json = (v: unknown) => new Response(JSON.stringify(v), { status: 200, headers: { 'content-type': 'application/json' } });
+      if (path.endsWith('/pages')) return json({ pages });
+      if (path.endsWith('/publish')) {
+        const body = JSON.parse(String(init!.body));
+        posts.push(body);
+        return json({ published: body.pageIds.map((id: string) => ({ pageId: id })), total: body.pageIds.length });
+      }
+      return json({});
+    }) as unknown as typeof fetch;
+    return { f, posts };
+  }
+
+  it('lists them and publishes only the named page by default', async () => {
+    const { f, posts } = site();
+    const out = JSON.parse(await callTool(f, 'sb_publish', { site_id: 's1', page_id: 'pg_1', dry_run: false }));
+    expect(posts[0].pageIds).toEqual(['pg_1']);
+    expect(out.unpublished_drafts.map((p: any) => p.pageId)).toEqual(['pg_a']);
+  });
+
+  it('publish_drafts:true — the preview names them, and the real call publishes them too', async () => {
+    const { f, posts } = site();
+    const dry = JSON.parse(await callTool(f, 'sb_publish', { site_id: 's1', page_id: 'pg_1', publish_drafts: true }));
+    expect(dry.dry_run).toBe(true);
+    expect(dry.body.pageIds).toEqual(['pg_1', 'pg_a']);
+    expect(posts).toEqual([]);
+    const out = JSON.parse(
+      await callTool(f, 'sb_publish', { site_id: 's1', page_id: 'pg_1', publish_drafts: true, dry_run: false }),
+    );
+    expect(posts[0].pageIds).toEqual(['pg_1', 'pg_a']);
+    expect(out.unpublished_drafts).toBeUndefined();
+  });
+});
+
 describe('sb_page_create', () => {
   it('sends the page TYPE, which is what routes /checkout and /products', async () => {
     const { client, close } = await connectedClient();

@@ -811,6 +811,12 @@ trang đó, vì header sửa một lần không được lên live ở trang nà
 khi publish và trước đây không có cách nào hỏi; `document`, `html`, `css` của dòng đó vẫn bị
 bỏ, vì publish lan và trả chúng về là đổ markup của mọi trang được publish lại vào người đọc.
 
+**Nó liệt kê các trang KHÁC có bản nháp mới hơn bản live** ở `unpublished_drafts`
+(`pageId`, `name`, `slug`) — cả dry run lẫn chạy thật — và `publish_drafts: true` đưa chúng vào
+cùng lần publish. Nền tảng không có trường "nháp khác bản đã publish": đây là `updatedAt`
+(tăng mỗi lần lưu nháp) sau `publishedAt`, đúng phép so của `sb_page_state`, nên một lần sửa
+chỉ metadata cũng tính. Trang chưa từng publish không được liệt kê.
+
 **`verify: true` rồi tải trang live và nói origin đã phục vụ bản đó chưa.** Một mã 200 chứng
 minh nền tảng đã lưu một dòng, không chứng minh một người xem đang được phục vụ nó:
 storefront trả `cache-control: public, max-age=60`, nên hai thứ lệch nhau hợp lệ tới một
