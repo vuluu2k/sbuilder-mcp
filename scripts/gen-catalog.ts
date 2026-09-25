@@ -3781,7 +3781,8 @@ export const STORE_PAGE_SEEDS: Record<string, { schema_version: number; root_nod
   const overlaySeedMod = (await import(
     resolve(repo, 'editor/src/features/overlays/seed.ts')
   )) as {
-    cartDrawerSeed: () => { root_node_id: string; nodes: Record<string, unknown> };
+    cartDrawerSeed: (locale?: string) => { root_node_id: string; nodes: Record<string, unknown> };
+    CART_SEED_WORDS: Record<string, unknown>;
     popupSeed: () => { root_node_id: string; nodes: Record<string, unknown> };
     quickviewSeed: () => { root_node_id: string; nodes: Record<string, unknown> };
   };
@@ -3837,6 +3838,18 @@ export const STORE_PAGE_SEEDS: Record<string, { schema_version: number; root_nod
     popup: stableIds(pruneUnreachable(overlaySeedMod.popupSeed()), 'pop'),
     quickview: stableIds(pruneUnreachable(overlaySeedMod.quickviewSeed()), 'qv'),
   };
+  // THE CART SPEAKS THE SITE'S LANGUAGE. The editor passes `settings.locale` to
+  // `cartDrawerSeed`, so one capture per locale it knows — a Vietnamese store
+  // must not get "Your cart" / "Checkout" from this tool and "Giỏ hàng" from
+  // the editor.
+  const cartSeeds: Record<string, { root_node_id: string; nodes: Record<string, unknown> }> = {};
+  for (const locale of Object.keys(overlaySeedMod.CART_SEED_WORDS ?? {})) {
+    cartSeeds[locale] = stableIds(pruneUnreachable(overlaySeedMod.cartDrawerSeed(locale)), 'cart');
+  }
+  if (!cartSeeds.en || JSON.stringify(cartSeeds.en) !== JSON.stringify(overlaySeeds.cart)) {
+    console.error('CART_SEED_WORDS has no `en`, or cartDrawerSeed("en") is not its default — the fallback moved');
+    process.exit(1);
+  }
   for (const [kind, doc] of Object.entries(overlaySeeds)) {
     if (!doc.root_node_id || !doc.nodes[doc.root_node_id]) {
       console.error(`the ${kind} overlay seed names no usable root_node_id`);
@@ -3876,6 +3889,13 @@ export const OVERLAY_SEEDS: Record<'cart' | 'popup' | 'quickview', OverlayDocume
     null,
     2,
   )} as const;
+
+/**
+ * The cart drawer per site language (\`settings.locale\`'s primary subtag),
+ * captured by calling \`cartDrawerSeed(locale)\` for every locale the editor's
+ * \`CART_SEED_WORDS\` knows. An unknown language gets \`en\`, as in the editor.
+ */
+export const CART_SEEDS: Record<string, OverlayDocument> = ${JSON.stringify(cartSeeds, null, 2)} as const;
 `;
   emit(resolve(process.cwd(), 'src/catalog/overlays.generated.ts'), overlaysOut);
   console.error(

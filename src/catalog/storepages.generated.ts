@@ -1339,6 +1339,196 @@ export const PAGE_LAYOUT_SEEDS: Record<string, { schema_version: number; root_no
         "bindings": []
       }
     }
+  },
+  "forgot": {
+    "schema_version": 2,
+    "root_node_id": "ROOT",
+    "nodes": {
+      "ROOT": {
+        "id": "ROOT",
+        "data": {
+          "type": "root",
+          "parent": null,
+          "nodes": [
+            "plfor_3"
+          ],
+          "isCanvas": true,
+          "hidden": false,
+          "custom": {}
+        },
+        "style": {},
+        "config": {},
+        "specials": {},
+        "responsive": {},
+        "events": [],
+        "bindings": []
+      },
+      "plfor_2": {
+        "id": "plfor_2",
+        "data": {
+          "type": "form",
+          "parent": "plfor_3",
+          "nodes": [],
+          "isCanvas": false,
+          "hidden": false,
+          "custom": {}
+        },
+        "style": {
+          "display": "flex",
+          "flexDirection": "column",
+          "width": "100%",
+          "height": "fit-content",
+          "gap": "12px"
+        },
+        "config": {},
+        "specials": {
+          "formId": "",
+          "segmentId": "",
+          "formRules": ""
+        },
+        "responsive": {},
+        "events": [],
+        "bindings": []
+      },
+      "plfor_3": {
+        "id": "plfor_3",
+        "data": {
+          "type": "flex-section",
+          "parent": "ROOT",
+          "nodes": [
+            "plfor_2"
+          ],
+          "isCanvas": true,
+          "hidden": false,
+          "custom": {}
+        },
+        "style": {
+          "display": "flex",
+          "flexDirection": "column",
+          "width": "100%",
+          "height": "fit-content",
+          "gap": "24px",
+          "paddingTop": "48px",
+          "paddingBottom": "48px"
+        },
+        "config": {
+          "backgroundSceneSource": "",
+          "backgroundSceneEffect": "gradient-mesh",
+          "backgroundSceneGallery": "podium",
+          "backgroundSceneSpeed": "normal",
+          "backgroundSceneIntensity": "normal",
+          "backgroundSceneColors": "theme",
+          "backgroundSceneColor1": "#171717",
+          "backgroundSceneColor2": "#ffffff",
+          "backgroundSceneColor3": "#6b7280",
+          "backgroundSceneUrl": "",
+          "backgroundSceneModelUrl": "",
+          "backgroundSceneVeil": 0,
+          "backgroundSceneVeilColor": "#000000"
+        },
+        "specials": {
+          "stylePreset": "container-section"
+        },
+        "responsive": {},
+        "events": [],
+        "bindings": []
+      }
+    }
+  },
+  "reset": {
+    "schema_version": 2,
+    "root_node_id": "ROOT",
+    "nodes": {
+      "ROOT": {
+        "id": "ROOT",
+        "data": {
+          "type": "root",
+          "parent": null,
+          "nodes": [
+            "plres_3"
+          ],
+          "isCanvas": true,
+          "hidden": false,
+          "custom": {}
+        },
+        "style": {},
+        "config": {},
+        "specials": {},
+        "responsive": {},
+        "events": [],
+        "bindings": []
+      },
+      "plres_2": {
+        "id": "plres_2",
+        "data": {
+          "type": "form",
+          "parent": "plres_3",
+          "nodes": [],
+          "isCanvas": false,
+          "hidden": false,
+          "custom": {}
+        },
+        "style": {
+          "display": "flex",
+          "flexDirection": "column",
+          "width": "100%",
+          "height": "fit-content",
+          "gap": "12px"
+        },
+        "config": {},
+        "specials": {
+          "formId": "",
+          "segmentId": "",
+          "formRules": ""
+        },
+        "responsive": {},
+        "events": [],
+        "bindings": []
+      },
+      "plres_3": {
+        "id": "plres_3",
+        "data": {
+          "type": "flex-section",
+          "parent": "ROOT",
+          "nodes": [
+            "plres_2"
+          ],
+          "isCanvas": true,
+          "hidden": false,
+          "custom": {}
+        },
+        "style": {
+          "display": "flex",
+          "flexDirection": "column",
+          "width": "100%",
+          "height": "fit-content",
+          "gap": "24px",
+          "paddingTop": "48px",
+          "paddingBottom": "48px"
+        },
+        "config": {
+          "backgroundSceneSource": "",
+          "backgroundSceneEffect": "gradient-mesh",
+          "backgroundSceneGallery": "podium",
+          "backgroundSceneSpeed": "normal",
+          "backgroundSceneIntensity": "normal",
+          "backgroundSceneColors": "theme",
+          "backgroundSceneColor1": "#171717",
+          "backgroundSceneColor2": "#ffffff",
+          "backgroundSceneColor3": "#6b7280",
+          "backgroundSceneUrl": "",
+          "backgroundSceneModelUrl": "",
+          "backgroundSceneVeil": 0,
+          "backgroundSceneVeilColor": "#000000"
+        },
+        "specials": {
+          "stylePreset": "container-section"
+        },
+        "responsive": {},
+        "events": [],
+        "bindings": []
+      }
+    }
   }
 } as const;
 
@@ -1391,6 +1581,16 @@ export const PAGE_TYPES: readonly {
   },
   {
     "type": "register",
+    "group": "main",
+    "ownSlug": true
+  },
+  {
+    "type": "forgot",
+    "group": "main",
+    "ownSlug": true
+  },
+  {
+    "type": "reset",
     "group": "main",
     "ownSlug": true
   },
@@ -3413,7 +3613,7 @@ export const STORE_PAGE_SEEDS: Record<string, { schema_version: number; root_nod
           "searchScope": "page",
           "searchPages": [],
           "searchMinChars": 2,
-          "searchPlaceholder": "",
+          "searchPlaceholder": "Tìm kiếm…",
           "searchDebounceMs": 250,
           "searchShowClear": true,
           "searchClearLabel": "Xoá tìm kiếm",

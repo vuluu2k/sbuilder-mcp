@@ -2,9 +2,9 @@
 // Source: <WB_REPO>/schema/src/elements/translatableFields.ts
 
 export const TRANSLATION_SOURCE = {
-  "elements": 64,
-  "pairs": 175,
-  "neverKeys": 174,
+  "elements": 65,
+  "pairs": 177,
+  "neverKeys": 175,
   "entityTypes": 12
 } as const;
 
@@ -259,6 +259,10 @@ export const TRANSLATABLE_SPECIALS: Record<string, string[]> = {
   "form-paragraph": [
     "text"
   ],
+  "form-link": [
+    "text",
+    "linkText"
+  ],
   "form-step-button": [
     "text"
   ],
@@ -430,6 +434,7 @@ export const NEVER_TRANSLATED: string[] = [
   "launcherIcon",
   "learnHref",
   "limitChars",
+  "linkTarget",
   "lockedHref",
   "loginHref",
   "logoShape",

@@ -4905,6 +4905,11 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
       {
         "name": "schemaVersion",
         "type": "number"
+      },
+      {
+        "name": "baseRev",
+        "type": "number",
+        "note": "BaseRev is the `rev` the caller loaded."
       }
     ],
     "source": "go",
@@ -7012,6 +7017,10 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
       },
       {
         "name": "slug",
+        "type": "string"
+      },
+      {
+        "name": "locale",
         "type": "string"
       }
     ],

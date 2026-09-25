@@ -3,7 +3,7 @@
 import type { CatalogElement, NodeSeed, SatelliteRule, TraitDescription, ValueVocabulary, WritePrecondition } from './element-types.js';
 
 export const ELEMENT_SOURCE = {
-  "count": 119,
+  "count": 120,
   "docSchemaVersion": 2
 } as const;
 
@@ -2222,7 +2222,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
         "searchScope": "page",
         "searchPages": [],
         "searchMinChars": 2,
-        "searchPlaceholder": "",
+        "searchPlaceholder": "Tìm kiếm…",
         "searchDebounceMs": 250,
         "searchShowClear": true,
         "searchClearLabel": "Xoá tìm kiếm",
@@ -2383,7 +2383,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
     "contentTips": [
       "specials.searchBehavior picks what a commit does: navigate (goes to /search, and is the only lane that works with JavaScript disabled), filter (narrows lists on this page), suggest (opens a dropdown), event (dispatches wb:search and writes no URL).",
       "A list-dataset OPTS OUT of being narrowed on its own node: specials.searchable false refuses search, specials.filterable false refuses filters. There is no per-box target list any more.",
-      "specials.searchPlaceholder is the field’s placeholder text; leave it empty for none.",
+      "specials.searchPlaceholder is the field’s placeholder text (seeded \"Tìm kiếm…\"); empty for none.",
       "The dropdown is the CHILDREN, rendered in order: heading + list-dataset pairs (one list per corpus) make a designed, federated dropdown whose islands work.",
       "specials.searchScope picks where typing narrows: page (every list on the page) | panel (only the lists inside this box’s own dropdown).",
       "specials.searchDisplay picks the presentation: field (always-open bar) | expand (icon that opens into the bar) | overlay (icon that opens a search sheet)."
@@ -7487,8 +7487,8 @@ export const ELEMENTS: Record<string, CatalogElement> = {
       "style": {
         "width": "100%",
         "padding": "10px 16px",
-        "backgroundColor": "#171717",
-        "color": "#ffffff",
+        "backgroundColor": "var(--wb-sc-buttonBg, #171717)",
+        "color": "var(--wb-sc-buttonText, #ffffff)",
         "borderRadius": "6px"
       },
       "config": {
@@ -9606,6 +9606,141 @@ export const ELEMENTS: Record<string, CatalogElement> = {
       "help"
     ]
   },
+  "form-link": {
+    "type": "form-link",
+    "label": "Link",
+    "category": "form",
+    "isContainer": false,
+    "isRootOnly": false,
+    "locked": false,
+    "hideInLayer": false,
+    "childAllows": [],
+    "defaults": {
+      "specials": {
+        "text": "Chưa có tài khoản?",
+        "linkText": "Đăng ký ngay",
+        "linkTarget": "register",
+        "href": ""
+      },
+      "style": {
+        "width": "100%",
+        "height": "fit-content",
+        "textAlign": "center",
+        "lineHeight": "150%",
+        "fontSize": "14px",
+        "color": "#525252"
+      }
+    },
+    "inspector": [
+      {
+        "tab": "general",
+        "groups": [
+          {
+            "key": "link",
+            "label": "Link",
+            "controls": [
+              "form_link_text",
+              "form_link_label",
+              "form_link_target",
+              "form_link_href"
+            ]
+          },
+          {
+            "key": "size",
+            "label": "Size",
+            "controls": [
+              "width_select",
+              "height_select",
+              "size_bounds"
+            ]
+          },
+          {
+            "key": "typography",
+            "label": "Typography",
+            "controls": [
+              "text_global_style",
+              "text_color",
+              "text_style",
+              "font_family",
+              "font_size",
+              "text_align",
+              "line_height",
+              "text_spacing",
+              "text_transform"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "advanced",
+        "groups": [
+          {
+            "key": "spacing",
+            "label": "Spacing",
+            "controls": [
+              "padding_margin"
+            ]
+          },
+          {
+            "key": "display",
+            "label": "Display",
+            "controls": [
+              "display"
+            ]
+          },
+          {
+            "key": "class_css",
+            "label": "Class",
+            "controls": [
+              "class_css"
+            ]
+          }
+        ]
+      }
+    ],
+    "controls": [
+      "form_link_text",
+      "form_link_label",
+      "form_link_target",
+      "form_link_href",
+      "width_select",
+      "height_select",
+      "size_bounds",
+      "text_global_style",
+      "text_color",
+      "text_style",
+      "font_family",
+      "font_size",
+      "text_align",
+      "line_height",
+      "text_spacing",
+      "text_transform",
+      "padding_margin",
+      "display",
+      "class_css"
+    ],
+    "description": "A line of text inside a form that ends in a link — \"Forgot password?\", \"No account yet? Sign up\". Collects nothing. The link reaches the site's register / login / forgot page by TYPE, or a custom URL.",
+    "useWhen": [
+      "A sign-in form needs its \"Forgot password?\" and \"Sign up\" lines under the button.",
+      "A sign-up or reset form needs a way back to sign in."
+    ],
+    "avoidWhen": [
+      "The link is a call to action on its own. Use a Button outside the form.",
+      "The text explains a field. Use that field's description instead."
+    ],
+    "contentTips": [
+      "Keep the prefix a short question and the link the answer: \"Chưa có tài khoản?\" + \"Đăng ký ngay\".",
+      "Prefer the register / login / forgot targets over a typed URL — they follow the page wherever its slug goes."
+    ],
+    "semantics": [
+      "form",
+      "link",
+      "login",
+      "register",
+      "forgot-password",
+      "account"
+    ]
+  },
   "form-segment": {
     "type": "form-segment",
     "label": "Segment",
@@ -9869,9 +10004,9 @@ export const ELEMENTS: Record<string, CatalogElement> = {
         "borderRadius": "6px",
         "borderWidth": "1px",
         "borderStyle": "solid",
-        "borderColor": "#171717",
-        "backgroundColor": "#171717",
-        "color": "#ffffff"
+        "borderColor": "var(--wb-sc-buttonBg, #171717)",
+        "backgroundColor": "var(--wb-sc-buttonBg, #171717)",
+        "color": "var(--wb-sc-buttonText, #ffffff)"
       },
       "config": {
         "iconSize": 20,
@@ -12656,7 +12791,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
         "backgroundColor": "#f5f5f5",
         "color": "#7b7b7b",
         "textAlign": "left",
-        "fontFamily": "Inter",
+        "fontFamily": "var(--wb-ts-text-2-family, Inter)",
         "fontSize": "14px",
         "padding": "8px 16px"
       },
@@ -12671,8 +12806,8 @@ export const ELEMENTS: Record<string, CatalogElement> = {
         },
         "active": {
           "style": {
-            "backgroundColor": "#171717",
-            "color": "#ffffff"
+            "backgroundColor": "var(--wb-sc-buttonBg, #171717)",
+            "color": "var(--wb-sc-buttonText, #ffffff)"
           }
         }
       }
@@ -13680,8 +13815,8 @@ export const ELEMENTS: Record<string, CatalogElement> = {
     "childAllows": [],
     "defaults": {
       "style": {
-        "color": "#171717",
-        "fontFamily": "Inter",
+        "color": "var(--wb-sc-link, #171717)",
+        "fontFamily": "var(--wb-ts-text-2-family, Inter)",
         "fontSize": "14px",
         "lineHeight": "1.5",
         "padding": "4px 8px"
@@ -13812,7 +13947,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
     "contentTips": [
       "this skin carries no text of its own — labels come from the menu data",
       "Default and Hover are separate state slots; edit Hover with the State switcher",
-      "the default look is ink #171717 with a #676767 hover"
+      "the default look is the theme link colour (ink #171717 on a default theme) and the text-2 font, with a #676767 hover"
     ],
     "semantics": [
       "menu-item",
@@ -13833,7 +13968,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
     "childAllows": [],
     "defaults": {
       "style": {
-        "backgroundColor": "#ffffff",
+        "backgroundColor": "var(--wb-sc-background, #ffffff)",
         "padding": "16px 32px",
         "gap": "8px"
       }
@@ -37915,6 +38050,50 @@ export const TRAIT_WRITES: Record<string, TraitDescription> = {
       }
     ]
   },
+  "form_link_text": {
+    "key": "form_link_text",
+    "label": "Text",
+    "writes": [
+      {
+        "target": "specials",
+        "writeKey": "text",
+        "type": "string"
+      }
+    ]
+  },
+  "form_link_label": {
+    "key": "form_link_label",
+    "label": "Link text",
+    "writes": [
+      {
+        "target": "specials",
+        "writeKey": "linkText",
+        "type": "string"
+      }
+    ]
+  },
+  "form_link_target": {
+    "key": "form_link_target",
+    "label": "Link to",
+    "writes": [
+      {
+        "target": "specials",
+        "writeKey": "linkTarget",
+        "type": "string"
+      }
+    ]
+  },
+  "form_link_href": {
+    "key": "form_link_href",
+    "label": "URL",
+    "writes": [
+      {
+        "target": "specials",
+        "writeKey": "href",
+        "type": "string"
+      }
+    ]
+  },
   "account_title": {
     "key": "account_title",
     "label": "Section title",
@@ -41527,6 +41706,19 @@ export const ELEMENT_VALUES: Record<string, Record<string, ValueVocabulary>> = {
         "savings"
       ],
       "readBy": "cart_total_part (editor picker)"
+    }
+  },
+  "form-link": {
+    "form_link_target": {
+      "target": "specials",
+      "writeKey": "linkTarget",
+      "values": [
+        "register",
+        "login",
+        "forgot",
+        "custom"
+      ],
+      "readBy": "form_link_target (editor picker)"
     }
   },
   "member-field": {

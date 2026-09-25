@@ -115,7 +115,7 @@ in this client: one would put the very key the platform exists to hold back into
 | `sb_undo` | Put back what a PUT replaced. The SECOND answer for a page, not the only one: the platform has versions, history and restore (`sb_api_find` "page versions"), which outlive this process — reach for those first and use this for every other shaped PUT |
 
 Twenty-eight tools, **568 API operations** (195 of the 253 writes carrying a body shape read
-off the handler), 119 elements, 79 binding sources. `sb_api_find`
+off the handler), 120 elements, 79 binding sources. `sb_api_find`
 is an index rather than a tool per endpoint, so the tool list stays short while everything
 the platform can do stays reachable — and operations added to the platform arrive with the
 next `npm run codegen`.

@@ -494,8 +494,8 @@ export const CHECKOUT_FORM_DOCUMENT = {
       "style": {
         "width": "100%",
         "padding": "10px 16px",
-        "backgroundColor": "#171717",
-        "color": "#ffffff",
+        "backgroundColor": "var(--wb-sc-buttonBg, #171717)",
+        "color": "var(--wb-sc-buttonText, #ffffff)",
         "borderRadius": "6px"
       },
       "config": {
@@ -1098,8 +1098,8 @@ export const FORM_TEMPLATES = {
           "style": {
             "width": "100%",
             "padding": "10px 16px",
-            "backgroundColor": "#171717",
-            "color": "#ffffff",
+            "backgroundColor": "var(--wb-sc-buttonBg, #171717)",
+            "color": "var(--wb-sc-buttonText, #ffffff)",
             "borderRadius": "6px"
           },
           "config": {
@@ -1270,8 +1270,8 @@ export const FORM_TEMPLATES = {
           "style": {
             "width": "100%",
             "padding": "10px 16px",
-            "backgroundColor": "#171717",
-            "color": "#ffffff",
+            "backgroundColor": "var(--wb-sc-buttonBg, #171717)",
+            "color": "var(--wb-sc-buttonText, #ffffff)",
             "borderRadius": "6px"
           },
           "config": {
@@ -1665,8 +1665,8 @@ export const FORM_TEMPLATES = {
           "style": {
             "width": "100%",
             "padding": "10px 16px",
-            "backgroundColor": "#171717",
-            "color": "#ffffff",
+            "backgroundColor": "var(--wb-sc-buttonBg, #171717)",
+            "color": "var(--wb-sc-buttonText, #ffffff)",
             "borderRadius": "6px"
           },
           "config": {
@@ -2172,8 +2172,8 @@ export const FORM_TEMPLATES = {
           "style": {
             "width": "100%",
             "padding": "10px 16px",
-            "backgroundColor": "#171717",
-            "color": "#ffffff",
+            "backgroundColor": "var(--wb-sc-buttonBg, #171717)",
+            "color": "var(--wb-sc-buttonText, #ffffff)",
             "borderRadius": "6px"
           },
           "config": {
@@ -2921,8 +2921,8 @@ export const FORM_TEMPLATES = {
           "style": {
             "width": "100%",
             "padding": "10px 16px",
-            "backgroundColor": "#171717",
-            "color": "#ffffff",
+            "backgroundColor": "var(--wb-sc-buttonBg, #171717)",
+            "color": "var(--wb-sc-buttonText, #ffffff)",
             "borderRadius": "6px"
           },
           "config": {
@@ -3175,8 +3175,8 @@ export const FORM_TEMPLATES = {
           "style": {
             "width": "100%",
             "padding": "10px 16px",
-            "backgroundColor": "#171717",
-            "color": "#ffffff",
+            "backgroundColor": "var(--wb-sc-buttonBg, #171717)",
+            "color": "var(--wb-sc-buttonText, #ffffff)",
             "borderRadius": "6px"
           },
           "config": {
@@ -3472,8 +3472,8 @@ export const FORM_TEMPLATES = {
           "style": {
             "width": "100%",
             "padding": "10px 16px",
-            "backgroundColor": "#171717",
-            "color": "#ffffff",
+            "backgroundColor": "var(--wb-sc-buttonBg, #171717)",
+            "color": "var(--wb-sc-buttonText, #ffffff)",
             "borderRadius": "6px"
           },
           "config": {
@@ -3843,8 +3843,8 @@ export const FORM_TEMPLATES = {
           "style": {
             "width": "100%",
             "padding": "10px 16px",
-            "backgroundColor": "#171717",
-            "color": "#ffffff",
+            "backgroundColor": "var(--wb-sc-buttonBg, #171717)",
+            "color": "var(--wb-sc-buttonText, #ffffff)",
             "borderRadius": "6px"
           },
           "config": {
@@ -4066,8 +4066,8 @@ export const FORM_TEMPLATES = {
           "style": {
             "width": "100%",
             "padding": "10px 16px",
-            "backgroundColor": "#171717",
-            "color": "#ffffff",
+            "backgroundColor": "var(--wb-sc-buttonBg, #171717)",
+            "color": "var(--wb-sc-buttonText, #ffffff)",
             "borderRadius": "6px"
           },
           "config": {
@@ -4329,8 +4329,8 @@ export const FORM_TEMPLATES = {
           "style": {
             "width": "100%",
             "padding": "10px 16px",
-            "backgroundColor": "#171717",
-            "color": "#ffffff",
+            "backgroundColor": "var(--wb-sc-buttonBg, #171717)",
+            "color": "var(--wb-sc-buttonText, #ffffff)",
             "borderRadius": "6px"
           },
           "config": {
@@ -4597,8 +4597,8 @@ export const FORM_TEMPLATES = {
           "style": {
             "width": "100%",
             "padding": "10px 16px",
-            "backgroundColor": "#171717",
-            "color": "#ffffff",
+            "backgroundColor": "var(--wb-sc-buttonBg, #171717)",
+            "color": "var(--wb-sc-buttonText, #ffffff)",
             "borderRadius": "6px"
           },
           "config": {
@@ -4897,8 +4897,8 @@ export const FORM_TEMPLATES = {
           "style": {
             "width": "100%",
             "padding": "10px 16px",
-            "backgroundColor": "#171717",
-            "color": "#ffffff",
+            "backgroundColor": "var(--wb-sc-buttonBg, #171717)",
+            "color": "var(--wb-sc-buttonText, #ffffff)",
             "borderRadius": "6px"
           },
           "config": {
@@ -4933,7 +4933,9 @@ export const FORM_TEMPLATES = {
               "flog_2",
               "flog_3",
               "flog_4",
-              "flog_5"
+              "flog_5",
+              "flog_6",
+              "flog_7"
             ],
             "isCanvas": false,
             "hidden": false,
@@ -5083,8 +5085,8 @@ export const FORM_TEMPLATES = {
           "style": {
             "width": "100%",
             "padding": "10px 16px",
-            "backgroundColor": "#171717",
-            "color": "#ffffff",
+            "backgroundColor": "var(--wb-sc-buttonBg, #171717)",
+            "color": "var(--wb-sc-buttonText, #ffffff)",
             "borderRadius": "6px"
           },
           "config": {
@@ -5095,6 +5097,64 @@ export const FORM_TEMPLATES = {
           "specials": {
             "text": "Đăng nhập",
             "submittingText": "Đang gửi…"
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "flog_6": {
+          "id": "flog_6",
+          "data": {
+            "type": "form-link",
+            "parent": "flog_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%",
+            "height": "fit-content",
+            "textAlign": "center",
+            "lineHeight": "150%",
+            "fontSize": "14px",
+            "color": "#525252"
+          },
+          "config": {},
+          "specials": {
+            "text": "",
+            "linkText": "Quên mật khẩu?",
+            "linkTarget": "forgot",
+            "href": ""
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "flog_7": {
+          "id": "flog_7",
+          "data": {
+            "type": "form-link",
+            "parent": "flog_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%",
+            "height": "fit-content",
+            "textAlign": "center",
+            "lineHeight": "150%",
+            "fontSize": "14px",
+            "color": "#525252"
+          },
+          "config": {},
+          "specials": {
+            "text": "Chưa có tài khoản?",
+            "linkText": "Đăng ký ngay",
+            "linkTarget": "register",
+            "href": ""
           },
           "responsive": {},
           "events": [],
@@ -5121,7 +5181,8 @@ export const FORM_TEMPLATES = {
               "freg_4",
               "freg_5",
               "freg_6",
-              "freg_7"
+              "freg_7",
+              "freg_8"
             ],
             "isCanvas": false,
             "hidden": false,
@@ -5351,8 +5412,8 @@ export const FORM_TEMPLATES = {
           "style": {
             "width": "100%",
             "padding": "10px 16px",
-            "backgroundColor": "#171717",
-            "color": "#ffffff",
+            "backgroundColor": "var(--wb-sc-buttonBg, #171717)",
+            "color": "var(--wb-sc-buttonText, #ffffff)",
             "borderRadius": "6px"
           },
           "config": {
@@ -5363,6 +5424,35 @@ export const FORM_TEMPLATES = {
           "specials": {
             "text": "Đăng ký",
             "submittingText": "Đang gửi…"
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "freg_8": {
+          "id": "freg_8",
+          "data": {
+            "type": "form-link",
+            "parent": "freg_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%",
+            "height": "fit-content",
+            "textAlign": "center",
+            "lineHeight": "150%",
+            "fontSize": "14px",
+            "color": "#525252"
+          },
+          "config": {},
+          "specials": {
+            "text": "Đã có tài khoản?",
+            "linkText": "Đăng nhập",
+            "linkTarget": "login",
+            "href": ""
           },
           "responsive": {},
           "events": [],
@@ -5386,7 +5476,8 @@ export const FORM_TEMPLATES = {
             "nodes": [
               "ffor_2",
               "ffor_3",
-              "ffor_4"
+              "ffor_4",
+              "ffor_5"
             ],
             "isCanvas": false,
             "hidden": false,
@@ -5496,8 +5587,8 @@ export const FORM_TEMPLATES = {
           "style": {
             "width": "100%",
             "padding": "10px 16px",
-            "backgroundColor": "#171717",
-            "color": "#ffffff",
+            "backgroundColor": "var(--wb-sc-buttonBg, #171717)",
+            "color": "var(--wb-sc-buttonText, #ffffff)",
             "borderRadius": "6px"
           },
           "config": {
@@ -5508,6 +5599,35 @@ export const FORM_TEMPLATES = {
           "specials": {
             "text": "Gửi mã",
             "submittingText": "Đang gửi…"
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "ffor_5": {
+          "id": "ffor_5",
+          "data": {
+            "type": "form-link",
+            "parent": "ffor_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%",
+            "height": "fit-content",
+            "textAlign": "center",
+            "lineHeight": "150%",
+            "fontSize": "14px",
+            "color": "#525252"
+          },
+          "config": {},
+          "specials": {
+            "text": "Nhớ mật khẩu rồi?",
+            "linkText": "Đăng nhập",
+            "linkTarget": "login",
+            "href": ""
           },
           "responsive": {},
           "events": [],
@@ -5682,8 +5802,8 @@ export const FORM_TEMPLATES = {
           "style": {
             "width": "100%",
             "padding": "10px 16px",
-            "backgroundColor": "#171717",
-            "color": "#ffffff",
+            "backgroundColor": "var(--wb-sc-buttonBg, #171717)",
+            "color": "var(--wb-sc-buttonText, #ffffff)",
             "borderRadius": "6px"
           },
           "config": {
@@ -5950,8 +6070,8 @@ export const FORM_TEMPLATES = {
           "style": {
             "width": "100%",
             "padding": "10px 16px",
-            "backgroundColor": "#171717",
-            "color": "#ffffff",
+            "backgroundColor": "var(--wb-sc-buttonBg, #171717)",
+            "color": "var(--wb-sc-buttonText, #ffffff)",
             "borderRadius": "6px"
           },
           "config": {

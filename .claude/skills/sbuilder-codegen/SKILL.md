@@ -190,7 +190,7 @@ above today's measurement gets raised again without anybody looking.
   `PUT /pages/{id}/source` — the shape the bullet three below records somebody having to read
   out of the editor by hand.
 
-- **The element registry holds 119 types, and `getElementAI` covers 119/119** (2026-09-24 regen; 106 when
+- **The element registry holds 120 types, and `getElementAI` covers 120/120** (2026-09-25 regen; 106 when
   `order-receipt` landed, 107, then `rating-stars`, `chat-widget` and `cart-count` — codegen
   asserts the coverage, so this number moves with the platform and a stale one here is caught
   by the next run, not by a reader). The

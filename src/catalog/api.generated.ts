@@ -681,9 +681,16 @@ export const API_OPERATIONS: ApiOperation[] = [
       {
         "name": "courseId",
         "in": "query",
-        "required": true,
+        "required": false,
         "type": "string",
         "description": "The course id"
+      },
+      {
+        "name": "slug",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "The course slug, when no id is known"
       }
     ],
     "bodyDescribed": false,
@@ -16494,7 +16501,7 @@ export const API_OPERATIONS: ApiOperation[] = [
         "in": "query",
         "required": false,
         "type": "string",
-        "description": "Filter by page type (page|product|category|blog|post|error|maintain|search|checkout|complete|account|course|about|contact|policy|faq|login|register)"
+        "description": "Filter by page type (page|product|category|blog|post|error|maintain|search|checkout|complete|account|course|about|contact|policy|faq|login|register|forgot|reset)"
       },
       {
         "name": "status",
@@ -16564,7 +16571,7 @@ export const API_OPERATIONS: ApiOperation[] = [
         "in": "query",
         "required": false,
         "type": "string",
-        "description": "Filter by page type (page|product|category|blog|post|error|maintain|search|checkout|complete|account|course|about|contact|policy|faq|login|register)"
+        "description": "Filter by page type (page|product|category|blog|post|error|maintain|search|checkout|complete|account|course|about|contact|policy|faq|login|register|forgot|reset)"
       },
       {
         "name": "status",
