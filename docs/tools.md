@@ -1724,7 +1724,9 @@ given, and a `form` node already pointing at the form just created. It is a deli
 write and must not undo the first. The form EXISTS the moment its three calls land, so a
 refused page create leaves the form in place and reports `page_failed` rather than deleting a
 form the caller asked for — that is the state they had before this argument existed, and it
-is still placeable by hand. Publish the page afterwards.
+is still placeable by hand. The page then wears the header and footer the site's home page
+wears — the same attach `sb_page_create` does, reported as `page.chrome`. Publish the page
+afterwards.
 
 ### `action: "checkout"`
 

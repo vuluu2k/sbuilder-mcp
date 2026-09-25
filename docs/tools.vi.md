@@ -1673,7 +1673,8 @@ một node `form` đã trỏ sẵn vào form vừa tạo. Đó là một lệnh 
 được phép huỷ lệnh thứ nhất. Form ĐÃ TỒN TẠI ngay khi ba lệnh của nó xong, nên một lần tạo
 trang bị từ chối sẽ để form nguyên chỗ và báo `page_failed` chứ không xoá một form người gọi
 đã yêu cầu — đó đúng là trạng thái họ có trước khi tham số này tồn tại, và form vẫn đặt được
-bằng tay. Nhớ publish trang sau đó.
+bằng tay. Sau đó trang mặc header và footer mà trang chủ của site đang mặc — đúng bước gắn
+mà `sb_page_create` làm, báo trong `page.chrome`. Nhớ publish trang sau đó.
 
 ### `action: "checkout"`
 

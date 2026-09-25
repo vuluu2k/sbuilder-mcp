@@ -41,7 +41,7 @@ import { request, redact } from '../transport/http.js';
 import { siteToken } from './credentialpick.js';
 import { siteFor, type ToolContext } from './context.js';
 import { withFreshIds } from '../domains/site/ids.js';
-import type { PageSession } from './page.js';
+import { siteChrome, wearChrome, type PageSession } from './page.js';
 import { addSubtree } from '../domains/site/builder.js';
 import {
   attachGlobal,
@@ -293,7 +293,7 @@ async function placeFormOnPage(
   pageName: string,
   headline: string | undefined,
   type: string,
-): Promise<{ id: string; name: string }> {
+): Promise<{ id: string; name: string; chrome?: Record<string, unknown> }> {
   const made = (await request({
     base: ctx.base,
     method: 'POST',
@@ -321,7 +321,10 @@ async function placeFormOnPage(
     ],
   });
   await session.applyAndSave(patches);
-  return { id, name: typeof made.page?.name === 'string' ? made.page.name : pageName };
+  // The site's header and footer, the way sb_page_create dresses a page —
+  // AFTER the form, so the footer lands last in ROOT's band order.
+  const chrome = await wearChrome(session, siteId, id, await siteChrome(ctx, siteId));
+  return { id, name: typeof made.page?.name === 'string' ? made.page.name : pageName, ...(chrome ? { chrome } : {}) };
 }
 
 async function seedForm(
@@ -371,7 +374,8 @@ async function seedForm(
       ...(pageName
         ? {
             would_also: `create a page named ${JSON.stringify(pageName)} of type "${pageTypeFor(key)}" and put ` +
-              'the form on it, so the form has an address a header can link to',
+              'the form on it, so the form has an address a header can link to — wearing the ' +
+              "header and footer the site's home page wears",
           }
         : {
             no_page: 'Only the form. Pass page_name to have the page made and the form placed ' +
@@ -421,7 +425,7 @@ async function seedForm(
   // can still place by hand, which is exactly what they had before this
   // argument existed. Reporting the failure beats deleting a form they asked
   // for — the same rule the seed follows in sb_page_create.
-  let page: { id: string; name: string } | undefined;
+  let page: Awaited<ReturnType<typeof placeFormOnPage>> | undefined;
   let page_failed: string | undefined;
   if (pageName) {
     try {

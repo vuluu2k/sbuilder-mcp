@@ -129,3 +129,49 @@ describe('sb_store action:"form" builds the page the form lives on', () => {
     expect(String(without.no_page)).toMatch(/page_name/);
   });
 });
+
+describe('the page the form flow creates wears the site chrome', () => {
+  const node = (id: string, parent: string | null, type: string, specials: Record<string, unknown> = {}, nodes: string[] = []) => ({
+    id, data: { type, parent, nodes }, style: {}, config: {}, specials, responsive: {}, events: [], bindings: [],
+  });
+  // The home page as the platform COMPOSES it: each global stamped globalId.
+  const home = {
+    schema_version: 2,
+    root_node_id: 'ROOT',
+    nodes: {
+      ROOT: node('ROOT', null, 'root', {}, ['h', 'mid', 'f']),
+      h: node('h', 'ROOT', 'flex-section', { globalId: 'gs_head', globalKind: 'header' }),
+      mid: node('mid', 'ROOT', 'flex-section'),
+      f: node('f', 'ROOT', 'flex-section', { globalId: 'gs_foot', globalKind: 'footer' }),
+    },
+  };
+
+  it('carries the home page\'s header first and footer last, around the form', async () => {
+    const calls: Call[] = [];
+    let stored: any = JSON.parse(JSON.stringify(emptyDoc));
+    const f = (async (url: unknown, init?: RequestInit) => {
+      const path = new URL(String(url)).pathname;
+      const method = init?.method ?? 'GET';
+      const body = init?.body ? JSON.parse(String(init.body)) : undefined;
+      calls.push({ method, path, body });
+      const json = (v: unknown, status = 200) =>
+        new Response(JSON.stringify(v), { status, headers: { 'content-type': 'application/json' } });
+      if (path.endsWith('/forms') && method === 'POST') return json({ form: { id: 'frm_1', type: 'login' } }, 201);
+      if (path.endsWith('/pages') && method === 'POST') return json({ page: { id: 'pg_new', name: 'Login' } }, 201);
+      if (path.endsWith('/pages') && method === 'GET') {
+        return json({ pages: [{ id: 'pg_home', isHomepage: true }, { id: 'pg_new' }] });
+      }
+      if (path.endsWith('/pg_home/source')) return json({ source: { pageId: 'pg_home', document: home } });
+      if (path.endsWith('/pg_new/source')) {
+        if (method === 'PUT') stored = body.document;
+        return json({ source: { pageId: 'pg_new', document: stored } });
+      }
+      return json({});
+    }) as unknown as typeof fetch;
+    await run(f, { action: 'form', template: 'login', page_name: 'Login', dry_run: false });
+    const kids = stored.nodes[stored.root_node_id].data.nodes.map((id: string) => stored.nodes[id]);
+    expect(kids[0].specials).toMatchObject({ globalRef: 'gs_head', globalKind: 'header' });
+    expect(kids[kids.length - 1].specials).toMatchObject({ globalRef: 'gs_foot', globalKind: 'footer' });
+    expect(JSON.stringify(stored)).toContain('"formId":"frm_1"');
+  });
+});

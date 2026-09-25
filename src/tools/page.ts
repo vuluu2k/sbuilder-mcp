@@ -653,7 +653,7 @@ const specSchema: z.ZodType<NodeSpec> = z.lazy(() =>
  * Silent on anything it cannot read. A page created without its chrome is a page
  * a person can fix; a page created with the WRONG chrome is one nobody notices.
  */
-async function siteChrome(
+export async function siteChrome(
   ctx: ToolContext,
   siteId: string,
 ): Promise<{ header?: string; footer?: string }> {
@@ -681,6 +681,59 @@ async function siteChrome(
     return out;
   } catch {
     return {};
+  }
+}
+
+/**
+ * Put the site's header and footer (`siteChrome`) on a page this server just
+ * created, or undefined when there is none to wear. Shared by `sb_page_create`
+ * and `sb_store action:"form"`, which both create pages a visitor navigates.
+ *
+ * THE REFERENCE SHAPE IS THE PLATFORM'S OWN (decompose.go:382): a flex-section
+ * carrying `globalRef` + `globalKind`. Header FIRST and footer LAST, because
+ * compose turns them into real bands and ROOT's children must read header,
+ * middle, footer or every save is refused — so call it AFTER the page's own
+ * content is in. Never throws: a page without its chrome is one a person can fix.
+ */
+export async function wearChrome(
+  session: PageSession,
+  siteId: string,
+  pageId: string,
+  wear: { header?: string; footer?: string },
+): Promise<Record<string, unknown> | undefined> {
+  if (!wear.header && !wear.footer) return undefined;
+  try {
+    await session.open(siteId, pageId);
+    const doc = session.current();
+    const ids: string[] = [];
+    if (wear.header) {
+      const made = addSubtree(doc, doc.doc.root_node_id, {
+        type: 'flex-section',
+        specials: { globalRef: wear.header, globalKind: 'header' },
+      }, 0);
+      doc.apply(made.patches);
+      ids.push('header');
+    }
+    if (wear.footer) {
+      const made = addSubtree(doc, doc.doc.root_node_id, {
+        type: 'flex-section',
+        specials: { globalRef: wear.footer, globalKind: 'footer' },
+      });
+      doc.apply(made.patches);
+      ids.push('footer');
+    }
+    await session.save();
+    // AND ONCE MORE, because the platform records the edge off the COMPOSED
+    // stamp and this save wrote the REFERENCE. Without it every page created
+    // here wears the site's chrome and none of them is counted as doing so —
+    // which is the list the delete dialog reads. See `PageSession.recompose`.
+    await session.recompose();
+    return { carries: ids, open: pageId };
+  } catch (e) {
+    return {
+      failed: (e as Error).message.replace(/^sbuilder:\s*/, '').slice(0, 160),
+      note: 'The page exists. Attach the chrome by hand, or create it again.',
+    };
   }
 }
 
@@ -1937,49 +1990,8 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
         }
       }
 
-      // THE REFERENCE SHAPE IS THE PLATFORM'S OWN (decompose.go:382): a
-      // flex-section carrying `globalRef` + `globalKind`. Header FIRST and
-      // footer LAST, because compose turns them into real bands and ROOT's
-      // children must read header, middle, footer or every save is refused.
-      let wearing: Record<string, unknown> | undefined;
-      if ((wear.header || wear.footer) && typeof newId === 'string' && newId) {
-        try {
-          await session.open(site_id, newId);
-          const doc = session.current();
-          const patches: Patch[] = [];
-          const ids: string[] = [];
-          if (wear.header) {
-            const made = addSubtree(doc, doc.doc.root_node_id, {
-              type: 'flex-section',
-              specials: { globalRef: wear.header, globalKind: 'header' },
-            }, 0);
-            doc.apply(made.patches);
-            ids.push('header');
-          }
-          if (wear.footer) {
-            const made = addSubtree(doc, doc.doc.root_node_id, {
-              type: 'flex-section',
-              specials: { globalRef: wear.footer, globalKind: 'footer' },
-            });
-            doc.apply(made.patches);
-            ids.push('footer');
-          }
-          void patches;
-          await session.save();
-          // AND ONCE MORE, because the platform records the edge off the
-          // COMPOSED stamp and this save wrote the REFERENCE. Without it every
-          // page created here wears the site's chrome and none of them is
-          // counted as doing so — which is the list the delete dialog reads.
-          // See `PageSession.recompose`.
-          await session.recompose();
-          wearing = { carries: ids, open: newId };
-        } catch (e) {
-          wearing = {
-            failed: (e as Error).message.replace(/^sbuilder:\s*/, '').slice(0, 160),
-            note: 'The page exists. Attach the chrome by hand, or create it again.',
-          };
-        }
-      }
+      const wearing =
+        typeof newId === 'string' && newId ? await wearChrome(session, site_id, newId, wear) : undefined;
 
       return text({
         ...res,
