@@ -51,7 +51,8 @@ export type ReadinessGapId =
   | 'blogCategoryPage'
   | 'coursePage'
   | 'maintenancePage'
-  | 'cartCount';
+  | 'cartCount'
+  | 'cartDrawer';
 
 export interface ReadinessGap {
   id: ReadinessGapId;
@@ -125,6 +126,8 @@ export interface ReadinessInput {
    * an unread one, which is the whole question here. Null when unread.
    */
   globalKinds?: string[] | null;
+  /** The KIND of each overlay the site has (cart, popup, quickview); null when unread. */
+  overlayKinds?: string[] | null;
 }
 
 /** Does this node carry a purchase action (add to cart, buy now)? */
@@ -577,6 +580,28 @@ export function readinessGaps(input: ReadinessInput): ReadinessGap[] {
       fix:
         'Give the control that opens the cart a cart-count satellite — sb_set on it with config ' +
         '{ cartCountId: … } mints one, or add a cart-count beside it.',
+    });
+  }
+
+  // A CART BUTTON THAT OPENS NOTHING. `open_cart` opens the site's ONE drawer —
+  // the overlay of kind `cart` — and a site that never made one has a control
+  // that renders, saves, publishes and does nothing when a shopper clicks it.
+  // Any node counts here, a purchase button included: it opens the same drawer.
+  if (
+    input.overlayKinds &&
+    !input.overlayKinds.includes('cart') &&
+    [...input.pageNodes, ...(input.globalNodes ?? [])].some((n) =>
+      (n.events ?? []).some((e) => e.action === 'open_cart'),
+    )
+  ) {
+    gaps.push({
+      id: 'cartDrawer',
+      draft: false,
+      problem:
+        'A control opens the cart, but this site has no cart drawer, so clicking it opens nothing.',
+      fix:
+        'Run sb_store action:"cart" dry_run:false — it creates the site\'s cart drawer from the ' +
+        'editor\'s own seed, and the platform composes it onto every page.',
     });
   }
 

@@ -31,7 +31,7 @@ export async function gatherReadiness(
   };
   const site = encodeURIComponent(siteId);
 
-  const [pageList, gateways, shipping, globals, productList, categoryList, pageLinks, formList, articleList, blogCategoryList, courseList, siteRecord] =
+  const [pageList, gateways, shipping, globals, productList, categoryList, pageLinks, formList, articleList, blogCategoryList, courseList, siteRecord, overlayList] =
     await Promise.all([
     get<{ pages?: ReadinessPage[] }>(`/api/sites/${site}/pages`),
     get<{ paymentGateways?: Array<{ enabled?: boolean; configured?: boolean }> }>(
@@ -84,6 +84,9 @@ export async function gatherReadiness(
     // guessed, because the alternative is telling every site on earth to build
     // a page for an outage it is not having.
     get<{ site?: { maintenanceMode?: boolean } }>(`/api/sites/${site}`),
+    // THE OVERLAYS, for the one a cart control opens: no `cart` overlay means
+    // every `open_cart` on the site opens nothing.
+    get<{ overlays?: Array<{ kind?: string }> }>(`/api/sites/${site}/overlays`),
   ]);
 
   // A gateway counts only when it is BOTH enabled and configured — the editor's
@@ -141,6 +144,7 @@ export async function gatherReadiness(
     pageNodes,
     globalNodes,
     globalKinds,
+    overlayKinds: Array.isArray(overlayList?.overlays) ? overlayList.overlays.map((o) => o.kind ?? '') : null,
     categories,
     categoryPageLinks,
     forms: formList?.forms ?? null,

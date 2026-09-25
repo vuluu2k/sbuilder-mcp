@@ -3781,6 +3781,7 @@ export const STORE_PAGE_SEEDS: Record<string, { schema_version: number; root_nod
   const overlaySeedMod = (await import(
     resolve(repo, 'editor/src/features/overlays/seed.ts')
   )) as {
+    cartDrawerSeed: () => { root_node_id: string; nodes: Record<string, unknown> };
     popupSeed: () => { root_node_id: string; nodes: Record<string, unknown> };
     quickviewSeed: () => { root_node_id: string; nodes: Record<string, unknown> };
   };
@@ -3830,6 +3831,9 @@ export const STORE_PAGE_SEEDS: Record<string, { schema_version: number; root_nod
     return { root_node_id: doc.root_node_id, nodes: pruned };
   };
   const overlaySeeds: Record<string, { root_node_id: string; nodes: Record<string, unknown> }> = {
+    // The site's ONE cart drawer, which `sb_store action:"cart"` creates when a
+    // site has none — without it every `open_cart` control opens nothing.
+    cart: stableIds(pruneUnreachable(overlaySeedMod.cartDrawerSeed()), 'cart'),
     popup: stableIds(pruneUnreachable(overlaySeedMod.popupSeed()), 'pop'),
     quickview: stableIds(pruneUnreachable(overlaySeedMod.quickviewSeed()), 'qv'),
   };
@@ -3859,7 +3863,7 @@ export interface OverlayDocument {
 }
 
 /**
- * WHAT A FRESH POP-UP AND A FRESH QUICK VIEW ARRIVE HOLDING, read by calling
+ * WHAT A FRESH CART DRAWER, POP-UP AND QUICK VIEW ARRIVE HOLDING, read by calling
  * the editor's OWN seed functions rather than copied from their output — the
  * day either card gains a piece it arrives at both doors.
  *
@@ -3867,7 +3871,7 @@ export interface OverlayDocument {
  * (so \`--check\` reports real drift only), and \`sb_store\` mints FRESH ids on
  * every real attach, exactly as the editor does on every real drop.
  */
-export const OVERLAY_SEEDS: Record<'popup' | 'quickview', OverlayDocument> = ${JSON.stringify(
+export const OVERLAY_SEEDS: Record<'cart' | 'popup' | 'quickview', OverlayDocument> = ${JSON.stringify(
     overlaySeeds,
     null,
     2,
@@ -3875,7 +3879,8 @@ export const OVERLAY_SEEDS: Record<'popup' | 'quickview', OverlayDocument> = ${J
 `;
   emit(resolve(process.cwd(), 'src/catalog/overlays.generated.ts'), overlaysOut);
   console.error(
-    `${VERB} overlays.generated.ts: popup ${Object.keys(overlaySeeds.popup.nodes).length} nodes, ` +
+    `${VERB} overlays.generated.ts: cart ${Object.keys(overlaySeeds.cart.nodes).length} nodes, ` +
+      `popup ${Object.keys(overlaySeeds.popup.nodes).length} nodes, ` +
       `quickview ${Object.keys(overlaySeeds.quickview.nodes).length} nodes`,
   );
 

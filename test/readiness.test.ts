@@ -785,3 +785,23 @@ describe('readinessGaps() — the maintenance page', () => {
     expect(g.fix).toMatch(/Publish/);
   });
 });
+
+describe('cartDrawer — a control opens the cart and the site has no drawer', () => {
+  const store = {
+    ...base,
+    pages: [{ type: 'checkout', status: 'published' }],
+    globalNodes: [node('icon', { events: [{ name: 'click', action: 'open_cart' }] })],
+  };
+  const idsOf = (extra: Partial<ReadinessInput>) => readinessGaps({ ...store, ...extra }).map((g) => g.id);
+
+  it('reports it, naming the call that creates one', () => {
+    const gap = readinessGaps({ ...store, overlayKinds: ['popup'] }).find((g) => g.id === 'cartDrawer');
+    expect(gap?.fix).toContain('sb_store action:"cart"');
+  });
+
+  it('is silent when the site has one, when nothing opens the cart, or when the list was unread', () => {
+    expect(idsOf({ overlayKinds: ['cart'] })).not.toContain('cartDrawer');
+    expect(idsOf({ overlayKinds: [], globalNodes: [] })).not.toContain('cartDrawer');
+    expect(idsOf({ overlayKinds: null })).not.toContain('cartDrawer');
+  });
+});

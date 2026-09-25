@@ -430,3 +430,10 @@ repo over a number here, and fix the line when you catch one stale.
   page of that type. Never login/register via the layout alone: its form is unbound until the
   form flow builds one. `checkout` is a form template AND a fixed-path type, so only slug-routed
   types are ever inferred.
+
+- **A CART ICON OPENED NOTHING, because nothing but the editor made the drawer.** `open_cart`
+  opens the site's ONE overlay of kind `cart`; only the editor's "Edit cart"
+  (`useCartOverlay` → `ensureCart`) ever created it, so a site built with these tools shipped
+  cart icons wired to nothing and `sb_review` said nothing. `sb_store action:"cart"` creates it
+  from `OVERLAY_SEEDS.cart` (codegen, the editor's `cartDrawerSeed()`), under fresh ids, and
+  `readiness` reports `cartDrawer` off `GET /overlays` — silent when that list is unread.

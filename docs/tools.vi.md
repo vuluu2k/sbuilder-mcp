@@ -1062,6 +1062,7 @@ hoàn toàn bằng bộ tool này review sạch, publish và render đúng; bả
 | `shipping` | Không có phương thức giao: ô chọn ở trang thanh toán trống và mọi đơn miễn phí ship |
 | `cartTrigger` | Không gì mở được giỏ; khách đóng ngăn giỏ rồi không quay lại được |
 | `siteChrome` | Từ hai trang trở lên mà KHÔNG có global section nào, nên mỗi trang tự mang header/footer riêng. Đổi menu là sửa từng trang, các bản sao lệch dần, và khách gặp một site hơi khác ở mỗi lần bấm. Hỏi cho mọi site chứ không riêng cửa hàng — đây là câu hỏi duy nhất ở đây không liên quan tới tiền |
+| `cartDrawer` | Có thứ mở giỏ nhưng site không có ngăn giỏ, nên bấm vào không mở gì. Sửa: `sb_store action:"cart"` |
 | `cartCount` | Có thứ mở được giỏ nhưng không có gì cho thấy trong giỏ có gì. `cart-count` là tuỳ chọn vì `open_cart` là một HÀNH ĐỘNG mà element nào cũng mang được, nên site dựng bằng bộ công cụ này không bao giờ tự có: khách thêm hàng, thấy một toast tắt đi, rồi không còn dấu hiệu nào cho thấy giỏ không rỗng |
 | `categoryScope` | Từ hai danh mục sản phẩm trở lên mà không cái nào trỏ tới trang riêng, nên `/collections/{slug}` phục vụ chung một default template — và không gì trên đó thu hẹp feed sản phẩm theo danh mục trong URL. Khách bấm một danh mục thấy toàn bộ catalogue. Danh mục blog tự thu hẹp theo slug, cái này thì không |
 
@@ -1622,7 +1623,7 @@ Chạy một luồng cửa hàng bắt buộc **đúng thứ tự**.
 
 | Tham số | Kiểu | Ghi chú |
 | --- | --- | --- |
-| `action` | `"checkout"` \| `"form"` \| `"chrome"` \| `"menu"` \| `"overlay_attach"` \| `"app"` | Luồng cần chạy |
+| `action` | `"checkout"` \| `"form"` \| `"chrome"` \| `"menu"` \| `"overlay_attach"` \| `"cart"` \| `"app"` | Luồng cần chạy |
 | `site_id` | string? | Không truyền thì lấy `SB_SITE` |
 | `language` | `"vi"` \| `"en"`? | `checkout` — ngôn ngữ nội dung, mặc định `vi`. `app` — ngôn ngữ đặt tên các trang scaffold |
 | `page_name` | string? | `checkout` — ghi đè tên trang mặc định của editor. `form` — tạo một trang và đặt form lên đó |
@@ -1786,6 +1787,16 @@ tên type, trước khi đọc bất cứ thứ gì.
 `unresolved` (dòng có trỏ tới một trang hay một entity mà không ra địa chỉ — một tham chiếu
 treo cần đi sửa) và `unlinked` (dòng chưa từng trỏ vào đâu, đúng trạng thái của mọi dòng seed
 mới). **Khi chạy thật** trả về `node`, `menu_id`, `created`, số item, và đúng hai con số đó.
+
+### `action: "cart"`
+
+Tạo ngăn giỏ hàng cho site khi site chưa có. `open_cart` mở overlay DUY NHẤT loại `cart` của
+site, và trước đây chỉ nút "Edit cart" của editor tạo ra nó — nên site dựng bằng bộ công cụ
+này có icon giỏ bấm vào không mở gì. Ngăn giỏ là `cartDrawerSeed()` của chính editor (header có
+✕, một dòng giỏ đã bind, tổng tiền, Checkout, Continue shopping) với id mới. Site đã có thì để
+nguyên. Nếu đang mở một trang của site, trang được lưu trước và đọc lại sau để ngăn giỏ hiện
+trong phiên (`node_id`). Nền tảng ghép nó vào mọi trang; publish các trang để khách thấy.
+`sb_review` báo thiếu ngăn giỏ là `cartDrawer`.
 
 ### `action: "overlay_attach"`
 

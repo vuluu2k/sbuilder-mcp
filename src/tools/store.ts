@@ -53,7 +53,7 @@ import {
 } from './chrome.js';
 import { tokensFromPage } from '../domains/site/importmap.js';
 import { bindMenu } from './menu.js';
-import { attachOverlay } from './overlay.js';
+import { attachOverlay, ensureCartDrawer } from './overlay.js';
 import { installApp } from './app.js';
 import { BUILTIN_APP_KEYS } from '../catalog/appscaffolds.generated.js';
 import { ELEMENTS } from '../catalog/elements.generated.js';
@@ -464,7 +464,8 @@ export function registerStoreTools(server: McpServer, ctx: ToolContext, session:
         'action:"overlay_attach" puts a pop-up on the open page (kind:"popup") or points a ' +
         'list-dataset at a quick-view panel (kind:"quickview", list_id), creating either from ' +
         'the platform\'s own seed when overlay_id is omitted, and re-reads the page afterwards ' +
-        'as the editor must. action:"app" installs one of the platform\'s built-in apps ' +
+        'as the editor must. action:"cart" creates the site\'s cart drawer from the editor\'s ' +
+        'seed when it has none — without it every open_cart control opens nothing. action:"app" installs one of the platform\'s built-in apps ' +
         '(app_key) and creates the pages it needs that installing it does not — today only ' +
         '"courses" has any, from the platform\'s own scaffold; every other key installs with ' +
         'nothing further to build. action:"global_attach" puts an EXISTING shared section ' +
@@ -479,6 +480,7 @@ export function registerStoreTools(server: McpServer, ctx: ToolContext, session:
           'chrome',
           'menu',
           'overlay_attach',
+          'cart',
           'app',
           'global_attach',
           'global_detach',
@@ -615,6 +617,9 @@ export function registerStoreTools(server: McpServer, ctx: ToolContext, session:
             dryRun: dry_run !== false,
           }),
         );
+      }
+      if (action === 'cart') {
+        return text(await ensureCartDrawer(ctx, session, siteId, dry_run !== false));
       }
       if (action === 'chrome') {
         // SKIPPED WHEN THE SITE ALREADY SHARES ONE, because a second header is

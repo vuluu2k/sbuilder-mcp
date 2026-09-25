@@ -329,3 +329,55 @@ export async function attachOverlay(
 
   return { kind: 'popup', overlay_id: overlayId, created, node_id: nodeId };
 }
+
+/**
+ * `sb_store action:"cart"` — GIVE THE SITE ITS CART DRAWER, if it has none.
+ *
+ * `open_cart` opens the site's ONE overlay of kind `cart`, and nothing creates
+ * that overlay but the editor's "Edit cart" (`useCartOverlay` →
+ * `overlays.ensureCart`). A site built through these tools therefore carried
+ * cart icons that opened nothing. This is `ensureCart` write for write: the
+ * platform composes a cart onto EVERY page, so there is no edge to attach; the
+ * open page (if any) is saved first and re-read after, so the drawer appears in
+ * this session's copy — the editor's own order, for its reason.
+ */
+export async function ensureCartDrawer(
+  ctx: ToolContext,
+  session: PageSession,
+  siteId: string,
+  dryRun: boolean,
+): Promise<unknown> {
+  const site = encodeURIComponent(siteId);
+  const path = `/api/sites/${site}/overlays`;
+  const listed = (await request({ base: ctx.base, method: 'GET', path, token: siteToken(ctx), fetchImpl: ctx.fetchImpl })) as {
+    overlays?: Array<{ id?: string; kind?: string }>;
+  };
+  const existing = (listed.overlays ?? []).find((o) => o.kind === 'cart');
+  if (existing) return { overlay_id: existing.id, created: false, note: 'This site already has its cart drawer.' };
+
+  const body = { kind: 'cart', name: 'Cart', document: withFreshIds(OVERLAY_SEEDS.cart) };
+  if (dryRun) {
+    return {
+      dry_run: true,
+      plan: redact([{ step: 1, what: 'create the site\'s cart drawer', method: 'POST', path, body }]),
+      note: 'Nothing was sent. Re-call with dry_run:false to create it; it shows on every page.',
+    };
+  }
+  const open = session.peek() ? session.location() : null;
+  const onPage = open?.siteId === siteId;
+  if (onPage) await session.applyAndSave([]);
+  const made = (await request({ base: ctx.base, method: 'POST', path, token: siteToken(ctx), body, fetchImpl: ctx.fetchImpl })) as {
+    overlay?: { id?: string };
+  };
+  if (!made.overlay?.id) throw new Error('sbuilder: the platform accepted the cart create and returned no overlay');
+  if (onPage) await session.open(siteId, open!.pageId);
+  const nodeId = onPage
+    ? findComposed(session.current().doc.nodes as Record<string, unknown>, 'overlayId', made.overlay.id)
+    : undefined;
+  return {
+    overlay_id: made.overlay.id,
+    created: true,
+    ...(nodeId ? { node_id: nodeId } : {}),
+    next: 'Publish the pages: the drawer reaches a shopper through each published page.',
+  };
+}

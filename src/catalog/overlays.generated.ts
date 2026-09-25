@@ -13,7 +13,7 @@ export interface OverlayDocument {
 }
 
 /**
- * WHAT A FRESH POP-UP AND A FRESH QUICK VIEW ARRIVE HOLDING, read by calling
+ * WHAT A FRESH CART DRAWER, POP-UP AND QUICK VIEW ARRIVE HOLDING, read by calling
  * the editor's OWN seed functions rather than copied from their output — the
  * day either card gains a piece it arrives at both doors.
  *
@@ -21,7 +21,841 @@ export interface OverlayDocument {
  * (so `--check` reports real drift only), and `sb_store` mints FRESH ids on
  * every real attach, exactly as the editor does on every real drop.
  */
-export const OVERLAY_SEEDS: Record<'popup' | 'quickview', OverlayDocument> = {
+export const OVERLAY_SEEDS: Record<'cart' | 'popup' | 'quickview', OverlayDocument> = {
+  "cart": {
+    "root_node_id": "cart_1",
+    "nodes": {
+      "cart_1": {
+        "id": "cart_1",
+        "data": {
+          "type": "cart-drawer",
+          "parent": null,
+          "nodes": [
+            "cart_2",
+            "cart_5",
+            "cart_20"
+          ],
+          "isCanvas": true,
+          "hidden": false,
+          "custom": {}
+        },
+        "style": {
+          "display": "flex",
+          "flexDirection": "column",
+          "width": "400px",
+          "gap": "8px",
+          "padding": "20px 24px",
+          "backgroundColor": "#ffffff",
+          "overflowX": "auto",
+          "overflowY": "auto"
+        },
+        "config": {
+          "direct": "right"
+        },
+        "specials": {},
+        "responsive": {},
+        "events": [],
+        "bindings": []
+      },
+      "cart_2": {
+        "id": "cart_2",
+        "data": {
+          "type": "flex-block",
+          "parent": "cart_1",
+          "nodes": [
+            "cart_3",
+            "cart_4"
+          ],
+          "isCanvas": true,
+          "hidden": false,
+          "custom": {}
+        },
+        "style": {
+          "display": "flex",
+          "flexDirection": "row",
+          "alignItems": "center",
+          "justifyContent": "space-between",
+          "width": "100%",
+          "gap": "8px"
+        },
+        "config": {
+          "contentWidth": "fill_container",
+          "backgroundSceneSource": "",
+          "backgroundSceneEffect": "gradient-mesh",
+          "backgroundSceneGallery": "podium",
+          "backgroundSceneSpeed": "normal",
+          "backgroundSceneIntensity": "normal",
+          "backgroundSceneColors": "theme",
+          "backgroundSceneColor1": "#171717",
+          "backgroundSceneColor2": "#ffffff",
+          "backgroundSceneColor3": "#6b7280",
+          "backgroundSceneUrl": "",
+          "backgroundSceneModelUrl": "",
+          "backgroundSceneVeil": 0,
+          "backgroundSceneVeilColor": "#000000"
+        },
+        "specials": {},
+        "responsive": {},
+        "events": [],
+        "bindings": []
+      },
+      "cart_3": {
+        "id": "cart_3",
+        "data": {
+          "type": "heading",
+          "parent": "cart_2",
+          "nodes": [],
+          "isCanvas": false,
+          "hidden": false,
+          "custom": {}
+        },
+        "style": {
+          "width": "100%",
+          "height": "fit-content",
+          "fontSize": "20px"
+        },
+        "config": {
+          "textGlobalStyle": "heading-1"
+        },
+        "specials": {
+          "htmlTag": "h2",
+          "text": "Cart",
+          "stylePreset": "heading-default"
+        },
+        "responsive": {},
+        "events": [],
+        "bindings": []
+      },
+      "cart_4": {
+        "id": "cart_4",
+        "data": {
+          "type": "icon",
+          "parent": "cart_2",
+          "nodes": [],
+          "isCanvas": false,
+          "hidden": false,
+          "custom": {}
+        },
+        "style": {
+          "width": "fit-content",
+          "height": "fit-content"
+        },
+        "config": {
+          "iconSize": 24
+        },
+        "specials": {
+          "name": "CloseLine",
+          "stylePreset": "icon-default"
+        },
+        "responsive": {},
+        "events": [
+          {
+            "id": "ev_close_cart",
+            "name": "click",
+            "action": "close_cart",
+            "payload": {}
+          }
+        ],
+        "bindings": []
+      },
+      "cart_5": {
+        "id": "cart_5",
+        "data": {
+          "type": "flex-block",
+          "parent": "cart_1",
+          "nodes": [
+            "cart_6"
+          ],
+          "isCanvas": true,
+          "hidden": false,
+          "custom": {}
+        },
+        "style": {
+          "display": "flex",
+          "flexDirection": "column",
+          "alignItems": "flex-start",
+          "justifyContent": "flex-start",
+          "width": "100%",
+          "gap": "16px",
+          "flex": "1 1 auto"
+        },
+        "config": {
+          "contentWidth": "fill_container",
+          "backgroundSceneSource": "",
+          "backgroundSceneEffect": "gradient-mesh",
+          "backgroundSceneGallery": "podium",
+          "backgroundSceneSpeed": "normal",
+          "backgroundSceneIntensity": "normal",
+          "backgroundSceneColors": "theme",
+          "backgroundSceneColor1": "#171717",
+          "backgroundSceneColor2": "#ffffff",
+          "backgroundSceneColor3": "#6b7280",
+          "backgroundSceneUrl": "",
+          "backgroundSceneModelUrl": "",
+          "backgroundSceneVeil": 0,
+          "backgroundSceneVeilColor": "#000000"
+        },
+        "specials": {},
+        "responsive": {},
+        "events": [],
+        "bindings": []
+      },
+      "cart_6": {
+        "id": "cart_6",
+        "data": {
+          "type": "cart-order",
+          "parent": "cart_5",
+          "nodes": [
+            "cart_7"
+          ],
+          "isCanvas": true,
+          "hidden": false,
+          "custom": {}
+        },
+        "style": {
+          "display": "flex",
+          "flexDirection": "column",
+          "width": "100%",
+          "gap": "16px"
+        },
+        "config": {
+          "emptyStateId": "cart_16"
+        },
+        "specials": {
+          "emptyText": "Your cart is empty"
+        },
+        "responsive": {},
+        "events": [],
+        "bindings": []
+      },
+      "cart_7": {
+        "id": "cart_7",
+        "data": {
+          "type": "cart-item",
+          "parent": "cart_6",
+          "nodes": [
+            "cart_8",
+            "cart_9",
+            "cart_12",
+            "cart_15"
+          ],
+          "isCanvas": true,
+          "hidden": false,
+          "custom": {}
+        },
+        "style": {
+          "display": "flex",
+          "flexDirection": "row",
+          "alignItems": "center",
+          "width": "100%",
+          "height": "fit-content",
+          "gap": "12px"
+        },
+        "config": {},
+        "specials": {},
+        "responsive": {},
+        "events": [],
+        "bindings": []
+      },
+      "cart_8": {
+        "id": "cart_8",
+        "data": {
+          "type": "media-dataset",
+          "parent": "cart_7",
+          "nodes": [],
+          "isCanvas": true,
+          "hidden": false,
+          "custom": {}
+        },
+        "style": {
+          "width": "64px",
+          "overflow": "hidden",
+          "height": "64px",
+          "flex": "0 0 64px",
+          "borderRadius": "8px"
+        },
+        "config": {
+          "images": [
+            {
+              "src": "",
+              "alt": ""
+            },
+            {
+              "src": "",
+              "alt": ""
+            },
+            {
+              "src": "",
+              "alt": ""
+            }
+          ],
+          "layout": "bottom",
+          "activeIndex": 0
+        },
+        "specials": {},
+        "responsive": {},
+        "events": [],
+        "bindings": [
+          {
+            "id": "bind-image",
+            "source": "product.image",
+            "field": "specials.boundImage",
+            "target": {
+              "type": "product",
+              "id": "",
+              "kind": "media"
+            }
+          },
+          {
+            "id": "bind-images",
+            "source": "product.images",
+            "field": "specials.boundImages"
+          }
+        ]
+      },
+      "cart_9": {
+        "id": "cart_9",
+        "data": {
+          "type": "flex-block",
+          "parent": "cart_7",
+          "nodes": [
+            "cart_10",
+            "cart_11"
+          ],
+          "isCanvas": true,
+          "hidden": false,
+          "custom": {}
+        },
+        "style": {
+          "display": "flex",
+          "flexDirection": "column",
+          "alignItems": "flex-start",
+          "justifyContent": "flex-start",
+          "width": "100%",
+          "height": "fit-content",
+          "gap": "4px",
+          "flex": "1 1 0"
+        },
+        "config": {
+          "contentWidth": "fill_container",
+          "backgroundSceneSource": "",
+          "backgroundSceneEffect": "gradient-mesh",
+          "backgroundSceneGallery": "podium",
+          "backgroundSceneSpeed": "normal",
+          "backgroundSceneIntensity": "normal",
+          "backgroundSceneColors": "theme",
+          "backgroundSceneColor1": "#171717",
+          "backgroundSceneColor2": "#ffffff",
+          "backgroundSceneColor3": "#6b7280",
+          "backgroundSceneUrl": "",
+          "backgroundSceneModelUrl": "",
+          "backgroundSceneVeil": 0,
+          "backgroundSceneVeilColor": "#000000"
+        },
+        "specials": {},
+        "responsive": {},
+        "events": [],
+        "bindings": []
+      },
+      "cart_10": {
+        "id": "cart_10",
+        "data": {
+          "type": "text-dataset",
+          "parent": "cart_9",
+          "nodes": [],
+          "isCanvas": false,
+          "hidden": false,
+          "custom": {}
+        },
+        "style": {
+          "fontSize": "14px"
+        },
+        "config": {
+          "datasetSource": "product",
+          "kind": "title",
+          "textValue": "Product name",
+          "descriptionDisplayType": "Full",
+          "descriptionLines": 3,
+          "moreText": "Show more",
+          "lessText": "Show less",
+          "icon": true,
+          "moreButtonColor": "#000000",
+          "textGlobalStyle": "text-1"
+        },
+        "specials": {
+          "htmlTag": "h4",
+          "moreButtonEnabled": false,
+          "stylePreset": "text-dataset-default"
+        },
+        "responsive": {},
+        "events": [],
+        "bindings": [
+          {
+            "id": "bind-text",
+            "source": "product.title",
+            "field": "specials.boundText",
+            "target": {
+              "type": "product",
+              "id": "",
+              "kind": "title"
+            }
+          }
+        ]
+      },
+      "cart_11": {
+        "id": "cart_11",
+        "data": {
+          "type": "pricing-dataset",
+          "parent": "cart_9",
+          "nodes": [],
+          "isCanvas": false,
+          "hidden": false,
+          "custom": {}
+        },
+        "style": {
+          "gap": "4px"
+        },
+        "config": {
+          "kind": "prices",
+          "priceValue": "$0.00",
+          "compareValue": "$0.00",
+          "displayPriceId": "price",
+          "textGlobalStyle": "text-1"
+        },
+        "specials": {
+          "htmlTag": "p"
+        },
+        "responsive": {},
+        "events": [],
+        "bindings": [
+          {
+            "id": "bind-price",
+            "source": "product.price",
+            "field": "specials.boundPrice",
+            "target": {
+              "type": "product",
+              "id": "",
+              "kind": "prices"
+            }
+          },
+          {
+            "id": "bind-compare",
+            "source": "product.compareAtPrice",
+            "field": "specials.boundCompare"
+          },
+          {
+            "id": "bind-price-cents",
+            "source": "product.priceCents",
+            "field": "specials.boundPriceCents"
+          },
+          {
+            "id": "bind-compare-cents",
+            "source": "product.compareAtCents",
+            "field": "specials.boundCompareCents"
+          },
+          {
+            "id": "bind-price-mo",
+            "source": "product.moneyOverride",
+            "field": "specials.boundMoneyOverride"
+          },
+          {
+            "id": "bind-product-id",
+            "source": "product.id",
+            "field": "specials.boundProductId"
+          }
+        ]
+      },
+      "cart_12": {
+        "id": "cart_12",
+        "data": {
+          "type": "quantity-dataset",
+          "parent": "cart_7",
+          "nodes": [],
+          "isCanvas": false,
+          "hidden": false,
+          "custom": {}
+        },
+        "style": {
+          "display": "inline-flex",
+          "width": "fit-content",
+          "alignItems": "center",
+          "borderWidth": "1px",
+          "borderStyle": "solid",
+          "borderColor": "#d0d0d0",
+          "borderRadius": "8px",
+          "overflow": "hidden",
+          "flex": "0 0 auto"
+        },
+        "config": {
+          "defaultNum": 1,
+          "quantityButtonId": "cart_13",
+          "quantityInputId": "cart_14"
+        },
+        "specials": {
+          "button": true
+        },
+        "responsive": {},
+        "events": [],
+        "bindings": [
+          {
+            "id": "bind-product-id",
+            "source": "product.id",
+            "field": "specials.boundProductId",
+            "target": {
+              "type": "product",
+              "id": "",
+              "kind": "quantity"
+            }
+          }
+        ]
+      },
+      "cart_13": {
+        "id": "cart_13",
+        "data": {
+          "type": "quantity-button",
+          "parent": "cart_12",
+          "nodes": [],
+          "isCanvas": false,
+          "hidden": false,
+          "custom": {}
+        },
+        "style": {
+          "backgroundColor": "#f8f8f8",
+          "width": "24px",
+          "height": "24px"
+        },
+        "config": {
+          "iconSize": 12
+        },
+        "specials": {},
+        "responsive": {},
+        "states": {
+          "hover": {
+            "style": {
+              "backgroundColor": "#f1f1f1"
+            }
+          }
+        },
+        "events": [],
+        "bindings": []
+      },
+      "cart_14": {
+        "id": "cart_14",
+        "data": {
+          "type": "quantity-input",
+          "parent": "cart_12",
+          "nodes": [],
+          "isCanvas": false,
+          "hidden": false,
+          "custom": {}
+        },
+        "style": {
+          "width": "32px",
+          "height": "24px"
+        },
+        "config": {},
+        "specials": {
+          "stylePreset": "quantity-input-default"
+        },
+        "responsive": {},
+        "events": [],
+        "bindings": []
+      },
+      "cart_15": {
+        "id": "cart_15",
+        "data": {
+          "type": "icon",
+          "parent": "cart_7",
+          "nodes": [],
+          "isCanvas": false,
+          "hidden": false,
+          "custom": {}
+        },
+        "style": {
+          "width": "fit-content",
+          "height": "fit-content",
+          "flex": "0 0 auto",
+          "color": "#9ca3af"
+        },
+        "config": {
+          "iconSize": 16
+        },
+        "specials": {
+          "name": "DeleteBinLine",
+          "stylePreset": "icon-default"
+        },
+        "responsive": {},
+        "events": [
+          {
+            "id": "ev_cart_remove",
+            "name": "click",
+            "action": "cart_remove",
+            "payload": {}
+          }
+        ],
+        "bindings": []
+      },
+      "cart_16": {
+        "id": "cart_16",
+        "data": {
+          "type": "list-empty",
+          "parent": "cart_6",
+          "nodes": [
+            "cart_17",
+            "cart_18",
+            "cart_19"
+          ],
+          "isCanvas": true,
+          "hidden": false,
+          "custom": {}
+        },
+        "style": {
+          "display": "flex",
+          "flexDirection": "column",
+          "alignItems": "center",
+          "justifyContent": "center",
+          "gap": "12px",
+          "width": "100%",
+          "padding": "48px 24px 48px 24px"
+        },
+        "config": {},
+        "specials": {},
+        "responsive": {},
+        "events": [],
+        "bindings": []
+      },
+      "cart_17": {
+        "id": "cart_17",
+        "data": {
+          "type": "icon",
+          "parent": "cart_16",
+          "nodes": [],
+          "isCanvas": false,
+          "hidden": false,
+          "custom": {}
+        },
+        "style": {
+          "width": "fit-content",
+          "height": "fit-content",
+          "color": "#d4d4d4"
+        },
+        "config": {
+          "iconSize": 32
+        },
+        "specials": {
+          "name": "ShoppingCartLine",
+          "stylePreset": "icon-default"
+        },
+        "responsive": {},
+        "events": [],
+        "bindings": []
+      },
+      "cart_18": {
+        "id": "cart_18",
+        "data": {
+          "type": "heading",
+          "parent": "cart_16",
+          "nodes": [],
+          "isCanvas": false,
+          "hidden": false,
+          "custom": {}
+        },
+        "style": {
+          "width": "auto",
+          "height": "fit-content",
+          "fontSize": "20px",
+          "fontWeight": "600",
+          "color": "#171717",
+          "textAlign": "center"
+        },
+        "config": {
+          "textGlobalStyle": "heading-1"
+        },
+        "specials": {
+          "htmlTag": "h3",
+          "text": "Your cart is empty",
+          "stylePreset": "heading-default"
+        },
+        "responsive": {},
+        "events": [],
+        "bindings": []
+      },
+      "cart_19": {
+        "id": "cart_19",
+        "data": {
+          "type": "text",
+          "parent": "cart_16",
+          "nodes": [],
+          "isCanvas": false,
+          "hidden": false,
+          "custom": {}
+        },
+        "style": {
+          "width": "auto",
+          "height": "fit-content",
+          "fontSize": "14px",
+          "color": "#737373",
+          "textAlign": "center"
+        },
+        "config": {
+          "textGlobalStyle": "text-1"
+        },
+        "specials": {
+          "htmlTag": "p",
+          "text": "Add something you like and it will show up here.",
+          "stylePreset": "text-default"
+        },
+        "responsive": {},
+        "events": [],
+        "bindings": []
+      },
+      "cart_20": {
+        "id": "cart_20",
+        "data": {
+          "type": "flex-block",
+          "parent": "cart_1",
+          "nodes": [
+            "cart_21",
+            "cart_22",
+            "cart_23"
+          ],
+          "isCanvas": true,
+          "hidden": false,
+          "custom": {}
+        },
+        "style": {
+          "display": "flex",
+          "flexDirection": "column",
+          "alignItems": "flex-start",
+          "justifyContent": "flex-start",
+          "width": "100%",
+          "gap": "8px"
+        },
+        "config": {
+          "contentWidth": "fill_container",
+          "backgroundSceneSource": "",
+          "backgroundSceneEffect": "gradient-mesh",
+          "backgroundSceneGallery": "podium",
+          "backgroundSceneSpeed": "normal",
+          "backgroundSceneIntensity": "normal",
+          "backgroundSceneColors": "theme",
+          "backgroundSceneColor1": "#171717",
+          "backgroundSceneColor2": "#ffffff",
+          "backgroundSceneColor3": "#6b7280",
+          "backgroundSceneUrl": "",
+          "backgroundSceneModelUrl": "",
+          "backgroundSceneVeil": 0,
+          "backgroundSceneVeilColor": "#000000"
+        },
+        "specials": {},
+        "responsive": {},
+        "events": [],
+        "bindings": []
+      },
+      "cart_21": {
+        "id": "cart_21",
+        "data": {
+          "type": "cart-total",
+          "parent": "cart_20",
+          "nodes": [],
+          "isCanvas": false,
+          "hidden": false,
+          "custom": {}
+        },
+        "style": {
+          "display": "flex",
+          "flexDirection": "row",
+          "justifyContent": "space-between",
+          "alignItems": "center",
+          "width": "100%",
+          "gap": "12px",
+          "fontSize": "16px",
+          "fontWeight": "600",
+          "color": "#171717"
+        },
+        "config": {},
+        "specials": {
+          "label": "Tổng cộng",
+          "placeholder": "0 ₫",
+          "part": "total"
+        },
+        "responsive": {},
+        "events": [],
+        "bindings": []
+      },
+      "cart_22": {
+        "id": "cart_22",
+        "data": {
+          "type": "button",
+          "parent": "cart_20",
+          "nodes": [],
+          "isCanvas": false,
+          "hidden": false,
+          "custom": {}
+        },
+        "style": {
+          "width": "100%",
+          "height": "fit-content"
+        },
+        "config": {
+          "iconSize": 20,
+          "iconGap": 8,
+          "iconPosition": "left"
+        },
+        "specials": {
+          "text": "Checkout",
+          "stylePreset": "button-default"
+        },
+        "responsive": {},
+        "events": [
+          {
+            "id": "ev_click",
+            "name": "click",
+            "action": "go_to_checkout",
+            "payload": {}
+          }
+        ],
+        "bindings": []
+      },
+      "cart_23": {
+        "id": "cart_23",
+        "data": {
+          "type": "button",
+          "parent": "cart_20",
+          "nodes": [],
+          "isCanvas": false,
+          "hidden": false,
+          "custom": {}
+        },
+        "style": {
+          "width": "100%",
+          "height": "fit-content",
+          "backgroundColor": "transparent",
+          "color": "#171717",
+          "border": "1px solid #171717"
+        },
+        "config": {
+          "iconSize": 20,
+          "iconGap": 8,
+          "iconPosition": "left"
+        },
+        "specials": {
+          "text": "Continue shopping",
+          "stylePreset": "button-default"
+        },
+        "responsive": {},
+        "events": [
+          {
+            "id": "ev_click",
+            "name": "click",
+            "action": "close_cart",
+            "payload": {}
+          }
+        ],
+        "bindings": []
+      }
+    }
+  },
   "popup": {
     "root_node_id": "pop_1",
     "nodes": {

@@ -1093,6 +1093,7 @@ publish panel then listed five gaps.
 | `shipping` | No delivery option: the checkout's select is empty and every order ships free |
 | `cartTrigger` | Nothing opens the cart on its own; a shopper who closes the drawer cannot get back |
 | `siteChrome` | Two or more pages and NO global section, so each page carries its own header and footer. Changing the menu is one edit per page, the copies drift, and a visitor meets a slightly different site on every click. Asked of every site, not only a store — it is the one question here that is not about money |
+| `cartDrawer` | Something opens the cart but the site has no cart drawer, so it opens nothing. Fix: `sb_store action:"cart"` |
 | `cartCount` | Something opens the cart but nothing shows what is in it. `cart-count` is opt-in because `open_cart` is an ACTION any element can carry, so a site built with these tools never gets one: a shopper adds an item, sees a toast fade, and then no evidence anywhere that their basket is not empty |
 | `categoryScope` | Two or more product categories and none points at a page of its own, so `/collections/{slug}` serves one default template for every one — and nothing on it narrows the product feed to the category in the URL. A shopper who picks a category sees the whole catalogue. The blog twin auto-scopes by slug; this one does not |
 
@@ -1672,7 +1673,7 @@ Run a store flow that must happen in a **fixed order**.
 
 | Arg | Type | Notes |
 | --- | --- | --- |
-| `action` | `"checkout"` \| `"form"` \| `"chrome"` \| `"menu"` \| `"overlay_attach"` \| `"app"` | The flow to run |
+| `action` | `"checkout"` \| `"form"` \| `"chrome"` \| `"menu"` \| `"overlay_attach"` \| `"cart"` \| `"app"` | The flow to run |
 | `site_id` | string? | Falls back to `SB_SITE` |
 | `language` | `"vi"` \| `"en"`? | `checkout` — copy language, default `vi`. `app` — which language names the scaffold pages |
 | `page_name` | string? | `checkout` — overrides the editor's own page name. `form` — make a page and place the form on it |
@@ -1839,6 +1840,17 @@ would write, `unresolved` (rows that named a page or an entity and came back wit
 — a dangling reference to go fix) and `unlinked` (rows never pointed at anything, which is
 what every fresh seed row is). **Executing** returns `node`, `menu_id`, `created`, the item
 count and those same two.
+
+### `action: "cart"`
+
+Give the site its cart drawer when it has none. `open_cart` opens the site's ONE overlay of
+kind `cart`, and only the editor's "Edit cart" ever created one — so a site built with these
+tools carried cart icons that opened nothing. The drawer is the editor's own
+`cartDrawerSeed()` (header with ✕, one bound cart line, total, Checkout, Continue shopping)
+under fresh ids. A site that already has one is left alone. When a page on the site is open it
+is saved first and re-read after, so the drawer shows in the session (`node_id`). The platform
+composes it onto every page; publish the pages for shoppers to see it. `sb_review` reports the
+missing drawer as `cartDrawer`.
 
 ### `action: "overlay_attach"`
 
