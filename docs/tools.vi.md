@@ -407,8 +407,17 @@ tool khác đều chạy được chỉ với khoá.
 **Luật nhường.** Client này không bao giờ là nguồn chân lý về tài liệu. Nó không trả lời yêu
 cầu snapshot cho ai, và không phát checkpoint hội tụ nào của riêng nó. Gặp bất kỳ dấu hiệu
 lệch nào — lỗ trong `seq` của server, checkpoint đến đúng seq của nó, một lần lưu bị từ chối
-— nó vứt bản của mình, kéo lại từ server, và **để lần lưu kế tiếp báo lỗi to** để người gọi
-đọc lại rồi làm lại. An toàn khi chạy cạnh người thật; người thật thắng mọi bất đồng.
+— nó vứt bản của mình và kéo lại từ server. Lần ghi kế tiếp được áp lại MỘT lần lên cây mới,
+trừ khi phía bên kia đã sửa đúng node nó chạm tới hoặc còn sửa đổi chưa lưu — khi đó nó **báo
+lỗi to** để người gọi đọc lại rồi làm lại. An toàn khi chạy cạnh người thật; người thật thắng
+mọi bất đồng.
+
+**Mọi lần ghi trang đều được báo vào phòng, dù đi qua cửa nào.** Một lần thay cả tài liệu —
+`sb_api_call` `PUT …/pages/{id}/source` thô, `sb_page_repair`, một flow `sb_store` — được so
+với bản đang lưu và phát thành op theo node cho ĐÚNG trang đó, khi có người trong phòng đang
+mở trang ấy (thêm hai lần đọc, chỉ khi đó). Global section và overlay không cần gì: nền tảng
+tự báo khi chúng được lưu. Ngoại lệ là đổi tên root: phòng không đồng bộ `root_node_id`, nên
+editor đang mở phải tải lại mới thấy.
 
 ## `sb_look`
 

@@ -125,7 +125,59 @@ export function buildUrl(base: string, path: string, query?: RequestOpts['query'
   return s ? `${url}?${s}` : url;
 }
 
+type DocShape = { root_node_id?: string; nodes: Record<string, unknown> };
+
+/**
+ * Whoever shows a page's document live — the PageSession in a live room — and
+ * must hear of a write that replaced it.
+ *
+ * `watching` answers whether anyone is on that page AND the write is not one
+ * already put on the wire (the session's own save publishes its patch batch).
+ */
+export interface PageWriteWatcher {
+  watching(siteId: string, pageId: string, doc: unknown): boolean;
+  written(siteId: string, pageId: string, before: DocShape, after: DocShape): void;
+}
+
+let watcher: PageWriteWatcher | null = null;
+
+/** One watcher per process — one live room at a time. Returns the unsubscribe. */
+export function watchPageWrites(w: PageWriteWatcher): () => void {
+  watcher = w;
+  return () => {
+    if (watcher === w) watcher = null;
+  };
+}
+
+const SOURCE_WRITE = /^\/api\/sites\/([^/]+)\/pages\/([^/]+)\/source$/;
+
+/**
+ * EVERY PAGE-DOCUMENT WRITE REACHES THE LIVE ROOM, whichever door it came
+ * through — a tool's own batch, `sb_api_call`, `sb_page_repair`, an `sb_store`
+ * flow. The platform announces a shared section's or an overlay's save itself
+ * (`global` / `overlay` frames); a PAGE save it announces to nobody, and an
+ * editor re-hydrates only from ops. So a replace of a page somebody is looking
+ * at is diffed (composed before vs composed after — two reads, paid only when a
+ * peer is on that page) and published as node-level ops.
+ */
 export async function request(opts: RequestOpts): Promise<unknown> {
+  const w = watcher;
+  const m = w && opts.method !== 'GET' ? SOURCE_WRITE.exec(opts.path) : null;
+  const doc = (opts.body as { document?: unknown } | undefined)?.document;
+  if (!w || !m || !doc) return send(opts);
+  const [siteId, pageId] = [decodeURIComponent(m[1]), decodeURIComponent(m[2])];
+  if (!w.watching(siteId, pageId, doc)) return send(opts);
+  const read = async (): Promise<DocShape | undefined> =>
+    ((await send({ ...opts, method: 'GET', body: undefined, query: undefined })) as { source?: { document?: DocShape } })
+      .source?.document;
+  const before = await read().catch(() => undefined);
+  const out = await send(opts);
+  const after = await read().catch(() => undefined);
+  if (before?.nodes && after?.nodes) w.written(siteId, pageId, before, after);
+  return out;
+}
+
+async function send(opts: RequestOpts): Promise<unknown> {
   const doFetch = opts.fetchImpl ?? fetch;
   // Identity rides on EVERY call rather than on a handshake of its own. There is
   // no "connect" request to hang it off — the first thing this server does is

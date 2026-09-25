@@ -150,3 +150,17 @@ describe('publish() frame size', () => {
     expect(new Set(frames.map((f) => f.opId)).size).toBe(frames.length);
   });
 });
+
+describe('publish() to another page', () => {
+  it("a batch for another page is acked without moving this page's seq", () => {
+    const { fake, live, deliver } = harness();
+    live.start('pg_1');
+    deliver({ t: 'welcome', peerId: 'me', peers: [] });
+    live.publish([{ op: 'unset', path: ['nodes', 'a'] }], 'pg_2');
+    const frame = fake.sent.find((f) => f.t === 'ops')!;
+    expect(frame.pageId).toBe('pg_2');
+    deliver({ t: 'ack', to: 'me', opId: frame.opId, seq: 50 });
+    expect(live.maxSeq).toBe(0);
+    expect(live.pendingAcks).toBe(0);
+  });
+});

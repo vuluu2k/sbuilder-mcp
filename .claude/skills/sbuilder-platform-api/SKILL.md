@@ -85,6 +85,16 @@ repo over a number here, and fix the line when you catch one stale.
   because presence with an invented coordinate is theatre. The read path is still HTTP — the
   socket BROADCASTS edits, it does not fetch or save them.
 
+- **THE PLATFORM ANNOUNCES A SHARED SECTION'S OR AN OVERLAY'S SAVE, NEVER A PAGE'S.**
+  `announceGlobal` / `OverlayChanged` fan out `global` / `overlay` frames and the editor
+  re-fetches the master; a `PUT …/pages/{id}/source` is announced to nobody, and the editor
+  has no "page saved, reload" frame — it changes only through `ops` (and a `snap` it asked
+  for). So `request()` (`src/transport/http.ts`) is the one door: a page-source write while a
+  peer is on that page is diffed composed-before vs composed-after (`documentPatches`) and
+  published for THAT page (`LiveSession.publish(patches, pageId)`). The session's own save is
+  skipped by identity — its patch batch is already on the wire. A root rename cannot be
+  expressed as ops (`root_node_id` is not synced); the editor must reload.
+
   **AND "WHICH MACHINE" HAD NO FIELD, so every agent in the room was the same robot.** `Kind`
   answered person-or-machine and stopped there; the editor paints one glyph (`&#129302;`) for
   every agent peer (`PresenceBar.vue:51`, `PeerCursors.vue:111`), so a merchant with Claude

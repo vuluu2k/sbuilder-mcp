@@ -42,7 +42,7 @@ import {
 import { skinLevelNote } from '../domains/site/fieldskin.js';
 import { siteTheme } from '../domains/site/theme-fetch.js';
 import { ensureSiteTheme } from './theme.js';
-import { request, redact } from '../transport/http.js';
+import { request, redact, watchPageWrites } from '../transport/http.js';
 import { siteToken } from './credentialpick.js';
 import { validateForSave } from '../domains/site/validate.js';
 import { reviewDesign, REVIEW_NOTICE } from '../domains/site/review.js';
@@ -60,7 +60,7 @@ import {
 } from '../domains/site/patterns.js';
 import { tokensFromPage } from '../domains/site/importmap.js';
 import { middleEnd } from '../domains/site/traps.js';
-import { applyPatches, type Patch } from '../core/patch.js';
+import { applyPatches, documentPatches, type Patch } from '../core/patch.js';
 import type { GuardOpts } from '../domains/site/guard.js';
 import { stickyWarning } from '../domains/site/sticky.js';
 import { HOVER_STATE, PARENT_HOVER_STATE, hoverHostNote, hoverRoutingNote } from '../domains/site/hover.js';
@@ -129,11 +129,29 @@ export class PageSession {
     if (this.live !== live) this.live?.close();
     this.live = live;
     this.liveSite = siteId;
+    this.unwatch();
+    this.unwatch = watchPageWrites({
+      // The session's own document is already on the wire as its patch batch.
+      watching: (site, page, doc) =>
+        this.live !== null && this.liveSite === site && doc !== this.doc?.doc && this.peersOn(page).length > 0,
+      written: (_site, page, before, after) => {
+        // `root_node_id` is outside what the room syncs; ops against a renamed
+        // root would unset the node the editor draws from. It must re-read.
+        if (before.root_node_id !== after.root_node_id) {
+          console.error(`sbuilder: page ${page} root renamed; an open editor must reload to see it`);
+          return;
+        }
+        this.live?.publish(documentPatches(before, after), page);
+      },
+    });
     if (this.pageId && this.siteId === siteId) live.start(this.pageId);
   }
 
   /** Leave the room, if in one. */
+  private unwatch: () => void = () => {};
+
   leaveLive(): void {
+    this.unwatch();
     this.live?.close();
     this.live = null;
     this.liveSite = '';

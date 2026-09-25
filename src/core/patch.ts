@@ -152,3 +152,25 @@ export function applyPatches(state: object, patches: Patch[]): void {
     }
   }
 }
+
+/**
+ * The node-level patches that turn one document into another: a `set` for every
+ * node that is new or differs, an `unset` for every node that is gone.
+ *
+ * For a write that replaced a WHOLE document (a raw `PUT …/source`), where no
+ * patch batch exists to publish. Whole-node sets lose the splice granularity a
+ * tool's own batch has, which is fine for a write that was a replace anyway.
+ */
+export function documentPatches(
+  before: { nodes: Record<string, unknown> },
+  after: { nodes: Record<string, unknown> },
+): Patch[] {
+  const out: Patch[] = [];
+  for (const [id, node] of Object.entries(after.nodes)) {
+    if (JSON.stringify(before.nodes[id]) !== JSON.stringify(node)) out.push({ op: 'set', path: ['nodes', id], value: node });
+  }
+  for (const id of Object.keys(before.nodes)) {
+    if (!(id in after.nodes)) out.push({ op: 'unset', path: ['nodes', id] });
+  }
+  return out;
+}

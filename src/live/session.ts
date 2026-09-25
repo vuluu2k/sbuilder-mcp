@@ -53,7 +53,8 @@ export class LiveSession {
   private selfId = '';
   private pageId = '';
   private roster = new Map<string, Peer>();
-  private pending = new Map<string, number>();
+  /** opId → the page it was sent for; seq is per page, so only this page's acks move `seq`. */
+  private pending = new Map<string, string>();
   private seq = 0;
 
   constructor(
@@ -105,9 +106,13 @@ export class LiveSession {
    * the server drops an ops frame with no ops silently (a bare `continue` in
    * readPump), so sending one is indistinguishable from success while achieving
    * nothing at all.
+   *
+   * `pageId` defaults to the open page; another page on the same site is
+   * addressed when a write replaced ITS document (the room is per site, and an
+   * editor keeps only the frames for the page it shows).
    */
-  publish(patches: Patch[]): void {
-    if (!this.pageId) return;
+  publish(patches: Patch[], pageId = this.pageId): void {
+    if (!pageId) return;
     const ops = syncable(patches);
     if (ops.length === 0) return;
     // The wire caps an `ops` frame at 4 MiB and CLOSES the socket past it, so a
@@ -117,8 +122,8 @@ export class LiveSession {
     // order and never reference a node a later frame creates.
     for (const chunk of chunkBySize(ops, OPS_FRAME_BUDGET)) {
       const opId = randomBytes(8).toString('hex');
-      this.pending.set(opId, Date.now());
-      this.socket.send({ t: 'ops', pageId: this.pageId, ops: chunk, opId });
+      this.pending.set(opId, pageId);
+      this.socket.send({ t: 'ops', pageId, ops: chunk, opId });
     }
   }
 
@@ -157,9 +162,11 @@ export class LiveSession {
         break;
       }
       case 'ack': {
-        this.pending.delete(String(e.opId ?? ''));
+        const opId = String(e.opId ?? '');
+        const forPage = this.pending.get(opId);
+        this.pending.delete(opId);
         const s = Number(e.seq ?? 0);
-        if (s > this.seq) this.seq = s;
+        if (forPage === this.pageId && s > this.seq) this.seq = s;
         break;
       }
       case 'ops': {

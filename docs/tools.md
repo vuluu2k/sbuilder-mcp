@@ -420,9 +420,17 @@ socket alone — which is why `sb_live_join` checks for one up front and names w
 **The yield rule.** This client is never the authority on the document. It does not answer
 a snapshot request for anyone, and it publishes no convergence checkpoint of its own. On any
 evidence of divergence — a gap in the server's `seq`, a checkpoint arriving at its own seq,
-a rejected save — it discards its copy, re-pulls from the server, and **fails the next save
-loudly** so the caller re-reads and reapplies. Safe to run beside a human; the human wins
-every disagreement.
+a rejected save — it discards its copy and re-pulls from the server. The next write is then
+reapplied ONCE onto the fresh tree, unless the other side changed a node it touches or local
+edits were unsaved — then it **fails loudly** so the caller re-reads and reapplies. Safe to
+run beside a human; the human wins every disagreement.
+
+**Every page write is announced, whichever door it used.** A whole-document replace — a raw
+`sb_api_call` `PUT …/pages/{id}/source`, `sb_page_repair`, an `sb_store` flow — is diffed
+against the page as stored and published as node-level ops for THAT page, whenever someone in
+the room is on it (two extra reads, only then). Shared sections and overlays need nothing:
+the platform announces their saves itself. A root RENAME is the exception: `root_node_id` is
+not something the room syncs, so an open editor must reload to see it.
 
 ## `sb_look`
 
