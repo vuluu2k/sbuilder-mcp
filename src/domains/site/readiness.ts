@@ -578,8 +578,9 @@ export function readinessGaps(input: ReadinessInput): ReadinessGap[] {
         'Something opens the cart, but nothing shows what is in it. A shopper who adds an item ' +
         'sees a toast that fades and then no evidence anywhere that their basket is not empty.',
       fix:
-        'Give the control that opens the cart a cart-count satellite — sb_set on it with config ' +
-        '{ cartCountId: … } mints one, or add a cart-count beside it.',
+        'When the control is an icon, sb_add with parent_id = that icon and spec ' +
+        '{ type: "cart-count" } attaches the badge as its satellite (config.cartCountId); ' +
+        'otherwise sb_add a cart-count beside it.',
     });
   }
 

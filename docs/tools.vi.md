@@ -284,6 +284,12 @@ Truyền `children` để dựng nguyên một section trong một lần gọi. 
 đặt trong section, con nằm ngoài whitelist của cha, và mọi lần thêm vào node không phải
 container.
 
+**SATELLITE cũng thêm theo cách đó.** Khi `spec.type` là một satellite mà cha khai báo —
+`icon` → `cart-count` (huy hiệu giỏ hàng), `tab` → `tab-item`, … — nó được gắn đúng như
+`addDetachedNode` của editor: `data.parent` là node chủ, KHÔNG nằm trong danh sách con của chủ,
+và `config[<key>]` ở base của chủ trỏ tới nó (`cartCountId` cho huy hiệu). `index` bị bỏ qua;
+chủ đã có một cái còn sống thì bị từ chối. `sb_remove` một satellite cũng xoá key đó.
+
 
 Phần tử vừa tạo mang sẵn BINDINGS mà kiểu của nó cần: `text-dataset` đã đọc `product.title`,
 `pricing-dataset` có đủ sáu khoá giá, `list-dataset` có target repeater. Editor suy chúng lúc

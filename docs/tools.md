@@ -282,6 +282,12 @@ With `control`: that one control in full.
 Pass `children` to build a whole section in one call. Refuses a root-only element inside a
 section, a child a parent's whitelist excludes, and any add into a non-container.
 
+**A SATELLITE is added the same way.** When `spec.type` is a satellite the parent declares —
+`icon` → `cart-count` (the basket badge), `tab` → `tab-item`, … — it is attached as the editor's
+`addDetachedNode` does: `data.parent` is the host, it is NOT in the host's children, and the
+host's base `config[<key>]` points at it (`cartCountId` for the badge). `index` is ignored; a
+host that already has a live one refuses. `sb_remove` on a satellite clears that key too.
+
 
 A created element arrives with the BINDINGS its type needs: a `text-dataset` already reads
 `product.title`, a `pricing-dataset` its six price keys, a `list-dataset` its repeater target.

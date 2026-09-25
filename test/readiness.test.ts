@@ -322,6 +322,16 @@ describe('readinessGaps() — is this a site at all', () => {
     expect(noBadge).toContain('cartCount');
   });
 
+  it('names the call that actually adds the badge — sb_set on cartCountId mints nothing', () => {
+    const gap = readinessGaps({
+      ...base,
+      pages: [{ type: 'checkout', status: 'published' }],
+      globalNodes: [{ data: { type: 'icon' }, events: [{ action: 'open_cart' }] }] as never,
+    }).find((g) => g.id === 'cartCount');
+    expect(gap?.fix).toContain('sb_add');
+    expect(gap?.fix).not.toContain('sb_set');
+  });
+
   it('does not say it twice — nothing opens the cart is a different finding', () => {
     const nothingOpens = ids({ globalNodes: [] });
     expect(nothingOpens).toContain('cartTrigger');

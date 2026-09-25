@@ -145,8 +145,23 @@ export function addSubtree(
 ): { patches: Patch[]; ids: string[] } {
   const parent = doc.node(parentId);
   soft(guard, () => refuseAppBlockParent(doc, parentId, 'adding'));
-  requireContainer(parent.data.type, parentId);
-  requireAllowed(parent.data.type, spec.type, guard);
+  // A SATELLITE the parent declares (`icon` → `cart-count` as `cartCountId`) is
+  // attached the way the editor's `addDetachedNode` does: `data.parent` = the
+  // host, NOT in its `data.nodes`, and the host points at it from base config.
+  // An icon is no container, so without this the badge could not be added at all.
+  const satellite = (SATELLITE_RULES[parent.data.type] ?? []).find((r) => r.type === spec.type);
+  if (satellite) {
+    const cur = parent.config?.[satellite.configKey];
+    if (typeof cur === 'string' && cur && doc.has(cur)) {
+      throw new Error(
+        `sbuilder: ${parentId} already has its ${spec.type} satellite (${cur}, config.${satellite.configKey}). ` +
+          `Edit it with sb_set, or sb_remove ${cur} first.`,
+      );
+    }
+  } else {
+    requireContainer(parent.data.type, parentId);
+    requireAllowed(parent.data.type, spec.type, guard);
+  }
   soft(guard, () => refuseSecondTemplate(doc.doc, parentId, 'Adding'));
 
   const patches: Patch[] = [];
@@ -188,6 +203,10 @@ export function addSubtree(
   };
 
   const rootId = build(spec, parentId);
+  if (satellite) {
+    patches.push({ op: 'set', path: ['nodes', parentId, 'config', satellite.configKey], value: rootId });
+    return { patches, ids };
+  }
   const at = index ?? parent.data.nodes.length;
   patches.push({ op: 'insert', path: ['nodes', parentId, 'data', 'nodes'], index: at, value: rootId });
   return { patches, ids };
@@ -718,8 +737,16 @@ export function removeNode(doc: PageDoc, id: string, guard?: GuardOpts): Patch[]
   const patches: Patch[] = [];
   const parentId = n.data.parent;
   if (parentId && doc.has(parentId)) {
-    const at = doc.node(parentId).data.nodes.indexOf(id);
+    const parent = doc.node(parentId);
+    const at = parent.data.nodes.indexOf(id);
     if (at >= 0) patches.push({ op: 'remove', path: ['nodes', parentId, 'data', 'nodes'], index: at });
+    // A SATELLITE: clear the host's pointer FIRST, as the editor does, so the
+    // host never names a node that is gone.
+    for (const rule of SATELLITE_RULES[parent.data.type] ?? []) {
+      if (parent.config?.[rule.configKey] === id) {
+        patches.push({ op: 'set', path: ['nodes', parentId, 'config', rule.configKey], value: '' });
+      }
+    }
   }
   // Unset the whole subtree AND everything hanging off it — a node left behind
   // is an orphan the save check rejects, and the agent would never guess why.

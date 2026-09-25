@@ -683,3 +683,11 @@ platform treats an unproven guard as indistinguishable from an absent one.
   instead, and the real fix is either to port the strip or to leave the stamp to the editor. Two
   of the v1 documents are not this repo's doing either — `editor/src/features/courses/pageScaffold.ts:157`
   returns `{ schema_version: 1, … }`, which codegen captures verbatim into `APP_SCAFFOLDS`.
+
+- **AN OPT-IN SATELLITE COULD NOT BE CREATED, and the remedy named a call that did nothing.**
+  `readiness`' `cartCount` fix said `sb_set {cartCountId}` "mints one"; it writes a string and
+  mints nothing (pinned in `test/satellite-add.test.ts`), and `sb_add` into an icon was refused
+  because an icon is no container. `addSubtree` now attaches a spec whose type the parent
+  declares in `SATELLITE_RULES` exactly as the editor's `addDetachedNode` + `setNodeValue`
+  does (parent = host, absent from `data.nodes`, base `config[key]` = id), and `removeNode`
+  clears the host's key first, as `IconCartBadgeRow.remove` does.
