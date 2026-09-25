@@ -287,11 +287,13 @@ export function registerThemeTools(server: McpServer, ctx: ToolContext): void {
         }
       }
 
-      // The locale is written only once the theme half has been validated, so a
-      // refused token or slug leaves nothing half-changed.
-      const lang = locale ? { locale: await setLocale(ctx, site_id, locale, dry_run !== false) } : {};
+      // THE LOCALE IS WRITTEN LAST — after every check and after the theme PUT —
+      // so a refused token, an empty theme or a failed theme write leaves the
+      // site exactly as it was rather than half-changed.
+      const writeLocale = async (dry: boolean) =>
+        locale ? { locale: await setLocale(ctx, site_id, locale, dry) } : {};
       if (!changes.length) {
-        return text({ unchanged: true, ...lang, note: 'Every value named already holds that value.' });
+        return text({ unchanged: true, ...(await writeLocale(dry_run !== false)), note: 'Every value named already holds that value.' });
       }
       // The document goes back WHOLE, so this can only ever be true — asserted
       // anyway, because the one failure this endpoint cannot take back is a
@@ -301,6 +303,7 @@ export function registerThemeTools(server: McpServer, ctx: ToolContext): void {
       }
 
       if (dry_run !== false) {
+        const lang = await writeLocale(true);
         return text({
           dry_run: true,
           would_change: changes,
@@ -325,6 +328,12 @@ export function registerThemeTools(server: McpServer, ctx: ToolContext): void {
       // resolution reads through it — the next call in this session would
       // report the colour this write just replaced as what a node paints.
       clearThemeCache();
+      let lang: Awaited<ReturnType<typeof writeLocale>>;
+      try {
+        lang = await writeLocale(false);
+      } catch (e) {
+        throw new Error(`sbuilder: the theme WAS saved; only the locale was not: ${(e as Error).message.replace(/^sbuilder: /, '')}`);
+      }
       return text({
         changed: changes,
         ...lang,

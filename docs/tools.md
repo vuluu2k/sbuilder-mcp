@@ -1709,8 +1709,9 @@ setting (read, change, send the whole document back) and tries that whole body w
 credential it holds (the key, then the session) before falling back to the locale-only body the
 platform merges for a narrower credential; the settings read falls back to the session too. A 403
 on every door is reported as one, naming each credential that was refused. With `colors` or
-`text_styles` in the same call, those are validated first, so a refused token or slug writes
-nothing. Dry run by default: `{ dry_run, locale: { from, to } }`.
+`text_styles` in the same call, the locale is written LAST — after every check and after the
+theme PUT — so a refused token, an empty theme or a failed theme write leaves the locale as it
+was. Dry run by default: `{ dry_run, locale: { from, to } }`.
 
 Republish afterwards. A theme is compiled into each page's stylesheet, so a saved page keeps
 the old palette until it is published again.

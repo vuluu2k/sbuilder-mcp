@@ -1661,8 +1661,9 @@ giọng mà trình đọc màn hình chọn và ngôn ngữ công cụ tìm ki�
 (đọc, đổi, gửi lại nguyên tài liệu) và thử body nguyên vẹn đó với mọi credential đang có (key, rồi
 session) trước khi lùi về body chỉ-có-locale mà nền tảng gộp cho một credential hẹp hơn; lần đọc
 settings cũng lùi về session. 403 ở mọi cửa được báo đúng là 403, nêu tên từng credential đã bị từ
-chối. Có `colors` hay `text_styles` trong cùng lần gọi thì chúng được kiểm trước, nên token hay slug
-bị từ chối thì không gì được ghi. Mặc định dry run: `{ dry_run, locale: { from, to } }`.
+chối. Có `colors` hay `text_styles` trong cùng lần gọi thì locale được ghi SAU CÙNG — sau mọi bước
+kiểm và sau lần PUT theme — nên token bị từ chối, theme rỗng hay PUT theme lỗi đều để locale
+nguyên như cũ. Mặc định dry run: `{ dry_run, locale: { from, to } }`.
 
 ## `sb_store`
 

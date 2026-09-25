@@ -24,6 +24,8 @@ function site(opts: {
   refuse?: (body: any, auth: string) => boolean;
   refuseGet?: (auth: string) => boolean;
   apiKey?: string;
+  theme?: unknown;
+  failThemePut?: boolean;
 }) {
   const calls: Array<{ method: string; path: string; body?: any; auth: string }> = [];
   let settings: Record<string, unknown> | null =
@@ -51,7 +53,8 @@ function site(opts: {
       if (opts.refuseGet?.(auth)) return json({ error: 'forbidden', code: 'forbidden' }, 403);
       return json({ settings });
     }
-    if (path.endsWith('/theme') && method === 'GET') return json({ theme: null });
+    if (path.endsWith('/theme') && method === 'GET') return json({ theme: opts.theme ?? null });
+    if (path.endsWith('/theme') && method === 'PUT' && opts.failThemePut) return json({ error: 'boom' }, 500);
     if (path.endsWith('/settings') && method === 'PUT') {
       if (opts.refuse?.(body, auth)) return json({ error: 'forbidden', code: 'forbidden' }, 403);
       settings = { ...(settings ?? {}), ...body.settings };
@@ -200,6 +203,29 @@ describe('sb_theme locale', () => {
     const out = parse(await client.callTool({ name: 'sb_theme', arguments: { locale: 'vi', dry_run: false } }));
     expect(out.locale).toMatchObject({ from: 'en', to: 'vi' });
     expect(now()).toEqual({ currency: 'VND', locale: 'vi' });
+    await close();
+  });
+
+  it('a theme the empty-theme guard refuses leaves the locale unwritten', async () => {
+    const theme = { colors: [{ id: 'primary', value: '#000000' }], presets: [], textStyles: [] };
+    const { ctx, calls } = site({ locale: 'en', texts: [], theme });
+    const { client, close } = await connectedClient(ctx);
+    const out = parse(
+      await client.callTool({ name: 'sb_theme', arguments: { locale: 'vi', colors: { primary: '#111111' }, dry_run: false } }),
+    );
+    expect(out.error).toMatch(/no colours or no presets/);
+    expect(calls.filter((c) => c.method === 'PUT' && c.path.endsWith('/settings'))).toEqual([]);
+    await close();
+  });
+
+  it('a theme PUT that fails leaves the locale unwritten', async () => {
+    const { ctx, calls } = site({ locale: 'en', texts: [], failThemePut: true });
+    const { client, close } = await connectedClient(ctx);
+    const out = parse(
+      await client.callTool({ name: 'sb_theme', arguments: { locale: 'vi', colors: { primary: '#111111' }, dry_run: false } }),
+    );
+    expect(out.error).toMatch(/500/);
+    expect(calls.filter((c) => c.method === 'PUT' && c.path.endsWith('/settings'))).toEqual([]);
     await close();
   });
 
