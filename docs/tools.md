@@ -1669,8 +1669,8 @@ children — and builds the header on it: a `menu` element bound to it (hover, d
 mobile, a `hamburger-menu` shown only on mobile holding a `menu-drawer` with a ✕ (`close_menu`) and
 a vertical collapse menu bound to the same site menu, an account icon to `/account` and a cart icon
 carrying `open_cart` with a `cart-count` satellite, in a `section-wide` band — and, when the site
-has no cart drawer, creates it exactly as `action:"cart"` does (under `cart`, shown in the dry run
-too), because `open_cart` otherwise opens nothing. No colour is written;
+has no cart drawer, creates it exactly as `action:"cart"` does (under `cart`; the dry run shows `{would:"create", kind:"cart", nodes}` rather than the seed document),
+because `open_cart` otherwise opens nothing. No colour is written;
 every node wears its theme preset. Pass `footer: true` for a shared footer instead — link columns,
 each a vertical `menu` bound to its own site menu — which goes in LAST for the same band-order reason.
 

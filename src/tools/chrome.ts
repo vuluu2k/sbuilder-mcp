@@ -509,13 +509,21 @@ export async function buildChrome(
   // overlay — a site with none gets one, or the icon opens nothing.
   const cartFor = async (dryRun: boolean) =>
     kind === 'header' ? { cart: await ensureCartDrawer(ctx, session, siteId, dryRun) } : {};
+  // The drawer's whole seed document is sb_store action:"cart"'s preview;
+  // here it is one line beside the header tree.
+  const cartPreview = async () => {
+    const got = (await cartFor(true)) as { cart?: { dry_run?: boolean; plan?: Array<{ body?: { document?: { nodes?: object } } }> } };
+    if (!got.cart?.dry_run) return got;
+    const nodes = Object.keys(got.cart.plan?.[0]?.body?.document?.nodes ?? {}).length;
+    return { cart: { dry_run: true, would: 'create', kind: 'cart', nodes } };
+  };
   if (opts.dryRun) {
     return {
       dry_run: true,
       would_create: kind,
       menus: redact(plans),
       tree: specTree(spec),
-      ...(await cartFor(true)),
+      ...(await cartPreview()),
       onto: onto.map((p) => p.slug || '/'),
       note:
         'Nothing was sent. The menus are site records every menu node binds by id, so the ' +

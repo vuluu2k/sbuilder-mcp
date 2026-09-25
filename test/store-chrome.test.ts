@@ -243,7 +243,11 @@ describe('sb_store action:"chrome" builds a real header', () => {
     const { calls, overlays, ctx } = store();
     const { client, close } = await connectedClient(ctx);
     const dry = parse(await client.callTool({ name: 'sb_store', arguments: { action: 'chrome' } }));
-    expect(dry.cart).toMatchObject({ dry_run: true });
+    // Summarised, not the whole seed document: the chrome preview already
+    // carries the header tree, and the drawer's own plan is sb_store action:"cart".
+    expect(dry.cart).toMatchObject({ dry_run: true, would: 'create', kind: 'cart' });
+    expect(dry.cart.nodes).toBeGreaterThan(0);
+    expect(JSON.stringify(dry.cart).length).toBeLessThan(300);
     expect(calls.filter((c) => c.method !== 'GET')).toEqual([]);
     const out = parse(await client.callTool({ name: 'sb_store', arguments: { action: 'chrome', dry_run: false } }));
     expect(overlays.filter((o) => o.kind === 'cart').length).toBe(1);
