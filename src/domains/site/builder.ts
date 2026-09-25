@@ -9,7 +9,7 @@ import {
   SPEC_GLOBAL_REF,
 } from '../../core/tree.js';
 import { ELEMENTS, ELEMENT_SEEDS, SATELLITE_RULES } from '../../catalog/elements.generated.js';
-import { bindingsForConfig, createNode, mintSatellites } from './node.js';
+import { bindingsForConfig, createNode, mintSatellites, seedFor } from './node.js';
 import { refuseSecondTemplate } from './traps.js';
 import {
   STUCK_STATE,
@@ -202,7 +202,22 @@ export function addSubtree(
     return n.id;
   };
 
-  const rootId = build(spec, parentId);
+  // A satellite the editor births as a SUBTREE (a list's empty state: glyph,
+  // headline, line of body) is born the same way here, or `sb_add` of one
+  // arrives bare. The caller's own values and children still win.
+  const seed = satellite && !spec.children?.length ? seedFor(satellite, parent) : undefined;
+  const rootId = build(
+    seed
+      ? {
+          ...spec,
+          style: { ...seed.style, ...spec.style },
+          config: { ...seed.config, ...spec.config },
+          specials: { ...seed.specials, ...spec.specials },
+          children: seed.children,
+        }
+      : spec,
+    parentId,
+  );
   if (satellite) {
     patches.push({ op: 'set', path: ['nodes', parentId, 'config', satellite.configKey], value: rootId });
     return { patches, ids };

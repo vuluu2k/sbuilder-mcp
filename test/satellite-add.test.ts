@@ -50,4 +50,21 @@ describe('a satellite is created and removed through sb_add / sb_remove', () => 
     d.apply(setMany(d, [{ id: icon, namespace: 'config', keys: { cartCountId: 'x' }, base: true }]).patches);
     expect(Object.keys(d.doc.nodes).length).toBe(before);
   });
+
+  it('a seeded satellite arrives with its seed subtree, not bare', () => {
+    const d = PageDoc.from({ schema_version: 2, root_node_id: '', nodes: {} });
+    const { patches, ids } = addSubtree(d, 'ROOT', { type: 'flex-section', children: [{ type: 'list-dataset' }] });
+    d.apply(patches);
+    const list = ids.find((id) => d.doc.nodes[id].data.type === 'list-dataset')!;
+    const minted = d.doc.nodes[list].config.emptyStateId as string;
+    const seededKids = d.doc.nodes[minted].data.nodes.length;
+    expect(seededKids).toBeGreaterThan(0);
+    d.apply(removeNode(d, minted));
+    const added = addSubtree(d, list, { type: 'list-empty' });
+    d.apply(added.patches);
+    const empty = d.doc.nodes[added.ids[0]];
+    expect(d.doc.nodes[list].config.emptyStateId).toBe(empty.id);
+    expect(empty.data.nodes.length).toBe(seededKids);
+    expect(validateForSave(d)).toEqual([]);
+  });
 });

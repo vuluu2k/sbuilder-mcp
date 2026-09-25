@@ -94,6 +94,10 @@ repo over a number here, and fix the line when you catch one stale.
   published for THAT page (`LiveSession.publish(patches, pageId)`). The session's own save is
   skipped by identity — its patch batch is already on the wire. A root rename cannot be
   expressed as ops (`root_node_id` is not synced); the editor must reload.
+  The OTHER half — marking the session's own open copy stale — is `onPageSourceWrite`,
+  registered in `PageSession`'s constructor, never only while in a room: without
+  SB_EMAIL/SB_PASSWORD there is no room, and a raw `sb_api_call` PUT to the open page was
+  overwritten by the next edit.
 
   **AND "WHICH MACHINE" HAD NO FIELD, so every agent in the room was the same robot.** `Kind`
   answered person-or-machine and stopped there; the editor paints one glyph (`&#129302;`) for

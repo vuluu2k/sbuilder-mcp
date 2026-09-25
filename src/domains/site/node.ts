@@ -232,13 +232,13 @@ export function mintSatellites(owner: BuilderNode, seen: Set<string> = new Set()
  * does — a list whose source this build does not know still gets a designed
  * empty state rather than a blank one.
  */
-function seedFor(
+export function seedFor(
   rule: { seed?: NodeSeed; seedBySource?: Record<string, NodeSeed> },
-  owner: BuilderNode,
+  owner: { config?: Record<string, unknown> },
 ): NodeSeed | undefined {
   if (rule.seed) return rule.seed;
   if (!rule.seedBySource) return undefined;
-  const src = owner.config.datasetSource;
+  const src = owner.config?.datasetSource;
   const key = typeof src === 'string' ? src : 'product';
   return rule.seedBySource[key] ?? rule.seedBySource.product;
 }

@@ -153,3 +153,38 @@ describe('a raw write to the page this session has open', () => {
     expect(docs.pg_b.nodes.he.specials.text).toBe('Changed');
   });
 });
+
+describe('a raw write to the open page with NO live room', () => {
+  it('still marks the copy stale, so the next edit does not overwrite it', async () => {
+    const docs: Record<string, Doc> = { pg_a: page() };
+    const calls: string[] = [];
+    const f = vi.fn(async (url: unknown, init?: RequestInit) => {
+      const path = new URL(String(url)).pathname;
+      const method = init?.method ?? 'GET';
+      calls.push(`${method} ${path}`);
+      const id = path.split('/')[5];
+      if (method === 'PUT') docs[id] = JSON.parse(String(init!.body)).document;
+      return new Response(JSON.stringify({ source: { pageId: id, document: docs[id] } }), {
+        status: 200, headers: { 'content-type': 'application/json' },
+      });
+    }) as unknown as typeof fetch;
+    const s = new Session('http://x', f);
+    (s as unknown as { access: string }).access = 'jwt';
+    const ctx = { base: 'http://x', session: s, fetchImpl: f, notices: new Notices(), undo: new UndoLog() };
+    const ps = new PageSession(ctx as never);
+    await ps.open('s1', 'pg_a');
+    const next = page();
+    next.nodes.sec.data.nodes = ['he'];
+    delete next.nodes.tx;
+    calls.length = 0;
+    await request({
+      base: ctx.base, method: 'PUT', path: '/api/sites/s1/pages/pg_a/source', token: 'jwt',
+      body: { document: next, schemaVersion: 2 }, fetchImpl: ctx.fetchImpl,
+    });
+    // Nobody to announce to: the raw write costs no extra read.
+    expect(calls).toEqual(['PUT /api/sites/s1/pages/pg_a/source']);
+    await ps.applyAndSave([{ op: 'set', path: ['nodes', 'he', 'specials', 'text'], value: 'Mine' }]);
+    expect(docs.pg_a.nodes.tx).toBeUndefined();
+    expect(docs.pg_a.nodes.he.specials.text).toBe('Mine');
+  });
+});

@@ -42,7 +42,7 @@ import {
 import { skinLevelNote } from '../domains/site/fieldskin.js';
 import { siteTheme } from '../domains/site/theme-fetch.js';
 import { ensureSiteTheme } from './theme.js';
-import { request, redact, watchPageWrites } from '../transport/http.js';
+import { request, redact, watchPageWrites, onPageSourceWrite } from '../transport/http.js';
 import { siteToken } from './credentialpick.js';
 import { validateForSave } from '../domains/site/validate.js';
 import { reviewDesign, REVIEW_NOTICE } from '../domains/site/review.js';
@@ -118,7 +118,12 @@ export class PageSession {
   private warnings: ComposeWarning[] = [];
   private boxes: Box[] = [];
 
-  constructor(private readonly ctx: ToolContext) {}
+  constructor(private readonly ctx: ToolContext) {
+    // Its own save is skipped by identity: that document IS this copy.
+    onPageSourceWrite((site, page, doc) => {
+      if (doc !== this.doc?.doc && this.isOpen(site, page)) this.markStale('the page was written by another call');
+    });
+  }
 
   /**
    * ONE ROOM AT A TIME. A second join (sb_live_join again, or a page on another
@@ -140,13 +145,10 @@ export class PageSession {
         this.live !== null &&
         this.liveSite === site &&
         doc !== this.doc?.doc &&
-        (this.isOpen(site, page) || this.peersOn(page).length > 0),
+        this.peersOn(page).length > 0,
+      // Marking this session's own copy stale is `onPageSourceWrite`'s job
+      // (constructor): it must happen without a room too.
       written: (site, page, before, after) => {
-        // A write to the page THIS session holds replaced what its copy was
-        // read from: saving that copy next would resurrect whatever the write
-        // removed. The yield rule re-pulls before the next save.
-        if (this.isOpen(site, page)) this.markStale('the page was written by another call');
-        if (this.peersOn(page).length === 0) return;
         if (!before?.nodes || !after?.nodes) {
           console.error(`sbuilder: page ${page} was written but could not be re-read; the live room was not told`);
           return;

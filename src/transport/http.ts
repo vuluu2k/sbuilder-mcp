@@ -150,6 +150,24 @@ export function watchPageWrites(w: PageWriteWatcher): () => void {
   };
 }
 
+/**
+ * THE STALE HALF, registered for the whole process rather than only while in a
+ * live room. A raw write (`sb_api_call` PUT, `sb_page_repair`, a store flow) to
+ * the page a session holds replaces what that copy was read from; the next save
+ * of the copy would overwrite it. That is data loss with or without anybody
+ * watching, so it cannot hang off the room — which needs SB_EMAIL/SB_PASSWORD
+ * and was, until this hook, the only thing that told the session.
+ */
+type SourceWritten = (siteId: string, pageId: string, doc: unknown) => void;
+let sourceWritten: SourceWritten | null = null;
+
+export function onPageSourceWrite(fn: SourceWritten): () => void {
+  sourceWritten = fn;
+  return () => {
+    if (sourceWritten === fn) sourceWritten = null;
+  };
+}
+
 const SOURCE_WRITE = /^\/api\/sites\/([^/]+)\/pages\/([^/]+)\/source$/;
 
 /**
@@ -162,12 +180,18 @@ const SOURCE_WRITE = /^\/api\/sites\/([^/]+)\/pages\/([^/]+)\/source$/;
  * peer is on that page) and published as node-level ops.
  */
 export async function request(opts: RequestOpts): Promise<unknown> {
-  const w = watcher;
-  const m = w && opts.method !== 'GET' ? SOURCE_WRITE.exec(opts.path) : null;
+  const m = opts.method !== 'GET' ? SOURCE_WRITE.exec(opts.path) : null;
   const doc = (opts.body as { document?: unknown } | undefined)?.document;
-  if (!w || !m || !doc) return send(opts);
+  if (!m || !doc) return send(opts);
   const [siteId, pageId] = [decodeURIComponent(m[1]), decodeURIComponent(m[2])];
-  if (!w.watching(siteId, pageId, doc)) return send(opts);
+  const out = await announced(opts, siteId, pageId, doc);
+  sourceWritten?.(siteId, pageId, doc);
+  return out;
+}
+
+async function announced(opts: RequestOpts, siteId: string, pageId: string, doc: unknown): Promise<unknown> {
+  const w = watcher;
+  if (!w || !w.watching(siteId, pageId, doc)) return send(opts);
   const read = async (): Promise<DocShape | undefined> =>
     ((await send({ ...opts, method: 'GET', body: undefined, query: undefined })) as { source?: { document?: DocShape } })
       .source?.document;

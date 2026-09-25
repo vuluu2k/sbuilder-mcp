@@ -691,3 +691,6 @@ platform treats an unproven guard as indistinguishable from an absent one.
   declares in `SATELLITE_RULES` exactly as the editor's `addDetachedNode` + `setNodeValue`
   does (parent = host, absent from `data.nodes`, base `config[key]` = id), and `removeNode`
   clears the host's key first, as `IconCartBadgeRow.remove` does.
+  A satellite whose rule carries a `seed`/`seedBySource` (the list-empty owners) is born from
+  that seed through `sb_add` too, unless the caller brings children — a bare `list-empty` is
+  blank space where the editor shows a glyph, a headline and a line of body.
