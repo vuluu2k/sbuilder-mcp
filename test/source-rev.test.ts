@@ -330,6 +330,39 @@ describe("the room's {t:'source'} frame", () => {
     expect(w.peers.at(-1)).toBeUndefined();
   }, 10_000);
 
+  const removeTx = () => [
+    { op: 'remove' as const, path: ['nodes', 'sec', 'data', 'nodes'], index: 1 },
+    { op: 'unset' as const, path: ['nodes', 'tx'] },
+  ];
+
+  it('409 rebase after an acked remove: the room gets no second copy, and the save names us', async () => {
+    const w = world();
+    room(w)({ t: 'welcome', peerId: 'me', peers: [] });
+    await w.ps.open('s1', 'pg');
+    w.elsewhere((d) => {
+      d.nodes.he.specials.text = 'Theirs';
+    });
+    await w.ps.applyAndSave(removeTx());
+    expect(w.frames.filter((f) => f.t === 'ops')).toHaveLength(1);
+    expect(w.server.doc.nodes.tx).toBeUndefined();
+    expect(w.server.doc.nodes.he.specials.text).toBe('Theirs');
+    expect(w.peers.at(-1)).toBe('me');
+  });
+
+  it('409 rebase after an unacked remove: no second copy, and no header', async () => {
+    const w = world();
+    room(w)({ t: 'welcome', peerId: 'me', peers: [] });
+    await w.ps.open('s1', 'pg');
+    w.elsewhere((d) => {
+      d.nodes.he.specials.text = 'Theirs';
+    });
+    w.acks.on = false;
+    await w.ps.applyAndSave(removeTx());
+    expect(w.frames.filter((f) => f.t === 'ops')).toHaveLength(1);
+    expect(w.server.doc.nodes.tx).toBeUndefined();
+    expect(w.peers.at(-1)).toBeUndefined();
+  }, 10_000);
+
   it('its own save, another page, and an unknown frame type change nothing', async () => {
     const w = world({ fence: false });
     const deliver = room(w);

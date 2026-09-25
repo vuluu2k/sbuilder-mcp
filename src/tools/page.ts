@@ -98,6 +98,9 @@ export function reviewField(
 /** How long a save in the live room waits for its ops' acks before leaving `X-WB-Live-Peer` off. */
 const LIVE_ACK_CAP_MS = 2_000;
 
+/** What `LiveSession.publish` did with a batch. */
+type Published = { sent: boolean; opIds: string[] };
+
 export class PageSession {
   private doc: PageDoc | null = null;
   private siteId = '';
@@ -279,13 +282,17 @@ export class PageSession {
    * forgot to publish" is invisible: this session's document is right, the save
    * is right, and only the humans watching see nothing happen.
    */
-  applyAndPublish(patches: Patch[]): void {
+  applyAndPublish(patches: Patch[], published?: Published): Published {
     const d = this.current();
     const wasCarried = d.rev === this.broadcastRev;
     d.apply(patches);
-    const out = this.live?.publish(patches);
-    if (out) this.sentOps.push(...out.opIds);
-    if (wasCarried && out?.sent) this.broadcastRev = d.rev;
+    // A batch the room already has (a 409 rebase reapplying it) is NOT sent
+    // again: insert/remove address by index, so a peer that applied the first
+    // copy would apply the second on top — a remove at index 2 takes the
+    // human's next section with it. Its own op ids still decide the header.
+    const out = published ?? this.live?.publish(patches) ?? { sent: false, opIds: [] };
+    this.sentOps.push(...out.opIds);
+    if (wasCarried && out.sent) this.broadcastRev = d.rev;
     // Move the cursor to what was just touched, but ONLY when a real
     // measurement exists. Presence with a made-up coordinate is theatre;
     // presence with a measured one is information.
@@ -295,6 +302,7 @@ export class PageSession {
       this.live.select(touched);
       this.live.cursor(box.x + box.w / 2, box.y + box.h / 2);
     }
+    return out;
   }
 
   /**
@@ -317,7 +325,7 @@ export class PageSession {
    * can edit, because the edit that repairs it is also a write. Pre-existing
    * problems are left to `save()`, which names them.
    */
-  async applyAndSave(patches: Patch[]): Promise<void> {
+  async applyAndSave(patches: Patch[], published?: Published): Promise<void> {
     const d = this.current();
     // EVERY WRITE CHECKS THE ROOM, not only the first page open.
     //
@@ -332,7 +340,7 @@ export class PageSession {
     // `RealtimeSocket` owns its own reconnect with backoff, and re-attaching a
     // second LiveSession over a live one would be the bug, not the fix.
     await this.ensureLive(this.siteId);
-    if (this.stale) return this.rebase(patches);
+    if (this.stale) return this.rebase(patches, undefined, published);
     const before = new Set(validateForSave(d));
     const after = validateForSave(d.preview(patches));
     const introduced = after.filter((p) => !before.has(p));
@@ -367,12 +375,14 @@ export class PageSession {
     // source_stale needs: by then the patches are already in the local copy.
     const snap = this.touchedSnapshot(d, patches);
     const dirty = d.rev !== this.savedRev;
-    this.applyAndPublish(patches);
+    const out = this.applyAndPublish(patches, published);
     try {
       await this.save(before, true);
     } catch (e) {
       if (!isSourceStale(e)) throw e;
-      return this.rebase(patches, { dirty, before: snap });
+      // Only a batch that put ops on the wire counts as published; one that
+      // published nothing (no room, all unsyncable) is published on reapply.
+      return this.rebase(patches, { dirty, before: snap }, out.opIds.length > 0 ? out : undefined);
     }
   }
 
@@ -436,6 +446,7 @@ export class PageSession {
   private async rebase(
     patches: Patch[],
     base?: { dirty: boolean; before: Map<string, string> },
+    published?: Published,
   ): Promise<void> {
     const reason = this.stale!;
     const old = this.current();
@@ -454,7 +465,7 @@ export class PageSession {
       );
     }
     console.error(`sbuilder: page changed under this session (${reason}); re-pulled and reapplied`);
-    return this.applyAndSave(patches);
+    return this.applyAndSave(patches, published);
   }
 
   private isOpen(siteId: string, pageId: string): boolean {
