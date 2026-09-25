@@ -61,14 +61,16 @@ export const PAGE_ROOT_ID = 'ROOT';
 type IdDoc = { root_node_id?: string; nodes: Record<string, unknown> };
 
 /**
- * Rename a document's node ids STRUCTURALLY: the `nodes` keys, and every string
- * VALUE anywhere in a node that equals an old id exactly — `id`, `data.parent`,
- * `data.nodes[]`, and the satellite references in `config` (`emptyStateId`,
- * `accordionItemId`, …) — plus `root_node_id`.
+ * Rename a document's node ids STRUCTURALLY: the `nodes` keys, a node's `id`,
+ * every string in its `data` (`parent`, `nodes[]`) and its `config` (the
+ * satellite references — `emptyStateId`, `accordionItemId`, …) that equals an
+ * old id exactly, plus `root_node_id`.
  *
  * Never a substitution over the serialised JSON: that rewrote an id wherever it
  * appeared INSIDE a string, so a heading or an href quoting one was corrupted.
- * An exact-value match cannot touch text that merely contains an id.
+ * And never an exact match over the WHOLE node either: a heading whose text IS
+ * an id (`spcom_3`) is still text. `specials` and `style` carry content, never a
+ * node reference — every generated seed was scanned for where ids live.
  */
 export function remapIds<T extends IdDoc>(doc: T, idFor: (id: string, node: unknown) => string): T {
   const map = new Map<string, string>();
@@ -81,11 +83,33 @@ export function remapIds<T extends IdDoc>(doc: T, idFor: (id: string, node: unkn
     }
     return v;
   };
+  const REF_FIELDS = new Set(['id', 'data', 'config']);
   const nodes: Record<string, unknown> = {};
-  for (const [id, node] of Object.entries(doc.nodes)) nodes[map.get(id)!] = walk(node);
+  for (const [id, node] of Object.entries(doc.nodes)) {
+    nodes[map.get(id)!] =
+      node && typeof node === 'object'
+        ? Object.fromEntries(Object.entries(node).map(([k, x]) => [k, REF_FIELDS.has(k) ? walk(x) : x]))
+        : node;
+  }
   const out = { ...doc, nodes };
   if (typeof doc.root_node_id === 'string') out.root_node_id = map.get(doc.root_node_id) ?? doc.root_node_id;
   return out;
+}
+
+/**
+ * Fresh node ids for a seeded document.
+ *
+ * The generated documents carry STABLE placeholder ids (`spcat_3`, `ckf_1`) so
+ * that re-running codegen produces no diff. Placeholders are not values: the
+ * editor mints an id per node at drop time, and two pages built from one seed
+ * must be as unrelated as two built by hand. A page's `ROOT` is the one id that
+ * is NOT re-minted: it is the editor's literal, and a minted root (`rt_<hex>`)
+ * paints white in any editor before web_builder `7322af49a`.
+ */
+export function withFreshIds<T extends IdDoc>(doc: T): T {
+  return remapIds(doc, (id, node) =>
+    id === PAGE_ROOT_ID ? id : genId((node as { data?: { type?: string } })?.data?.type ?? 'node'),
+  );
 }
 
 /**

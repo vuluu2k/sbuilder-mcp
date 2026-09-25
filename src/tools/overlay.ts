@@ -58,6 +58,7 @@ import type { ToolContext } from './context.js';
 import type { PageSession } from './page.js';
 import { setKeys } from '../domains/site/builder.js';
 import { OVERLAY_SEEDS } from '../catalog/overlays.generated.js';
+import { withFreshIds } from '../domains/site/ids.js';
 
 interface Step {
   step: number;
@@ -169,7 +170,7 @@ export async function attachOverlay(
     let overlayId = opts.overlayId;
     let created = false;
     if (!overlayId) {
-      const createBody = { kind: 'quickview', name, document: OVERLAY_SEEDS.quickview };
+      const createBody = { kind: 'quickview', name, document: withFreshIds(OVERLAY_SEEDS.quickview) };
       steps.push({
         step: n++,
         what: `create the quick view "${name}"`,
@@ -273,7 +274,7 @@ export async function attachOverlay(
   let overlayId = opts.overlayId;
   let created = false;
   if (!overlayId) {
-    const createBody = { kind: 'popup', name, document: OVERLAY_SEEDS.popup };
+    const createBody = { kind: 'popup', name, document: withFreshIds(OVERLAY_SEEDS.popup) };
     steps.push({
       step: n++,
       what: `create the pop-up "${name}"`,

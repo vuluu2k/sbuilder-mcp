@@ -129,6 +129,9 @@ describe('sb_store action:"app"', () => {
       expect(body.document).toBeTruthy();
       const spec = missingSpecs.find((s) => s.type === body.type && s.name.vi === body.name);
       expect(spec).toBeTruthy();
+      // Placeholder ids are not values: every page but ROOT gets its own.
+      const sentIds = Object.keys((body.document as { nodes: Record<string, unknown> }).nodes);
+      expect(sentIds.filter((id) => id !== 'ROOT' && id in spec!.document.nodes)).toEqual([]);
       if (spec!.slug) {
         expect(body.slug).toBe(spec!.slug);
       } else {

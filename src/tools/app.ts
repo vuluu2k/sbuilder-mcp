@@ -40,6 +40,7 @@ import { siteToken } from './credentialpick.js';
 import type { ToolContext } from './context.js';
 import type { PageSession } from './page.js';
 import { APP_SCAFFOLDS } from '../catalog/appscaffolds.generated.js';
+import { withFreshIds } from '../domains/site/ids.js';
 
 interface Step {
   step: number;
@@ -73,7 +74,7 @@ function pageBody(spec: AppScaffoldPage, lang: 'vi' | 'en'): Record<string, unkn
     name: spec.name[lang],
     ...(spec.slug ? { slug: spec.slug } : {}),
     type: spec.type,
-    document: spec.document,
+    document: withFreshIds(spec.document),
   };
 }
 

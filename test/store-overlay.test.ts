@@ -5,6 +5,7 @@ import { Notices } from '../src/mcp/notices.js';
 import { UndoLog } from '../src/tools/undo.js';
 import { PageDoc } from '../src/domains/site/document.js';
 import { addSubtree } from '../src/domains/site/builder.js';
+import { OVERLAY_SEEDS } from '../src/catalog/overlays.generated.js';
 
 interface Call {
   method: string;
@@ -179,6 +180,15 @@ describe('sb_store action:"overlay_attach"', () => {
     expect(out.created).toBe(true);
     expect(out.node_id).toBe('composed_pop_1');
 
+    // The seed's ids are placeholders: two pop-ups sharing them collide once both
+    // are composed onto one page.
+    const sent = calls.find((c) => c.method === 'POST' && c.path.endsWith('/overlays'))!.body as {
+      document: { root_node_id: string; nodes: Record<string, unknown> };
+    };
+    const placeholders = Object.keys(OVERLAY_SEEDS.popup.nodes);
+    expect(Object.keys(sent.document.nodes).filter((id) => placeholders.includes(id))).toEqual([]);
+    expect(sent.document.nodes[sent.document.root_node_id]).toBeTruthy();
+
     await close();
   });
 
@@ -270,6 +280,9 @@ describe('sb_store action:"overlay_attach"', () => {
     const created = calls.find((c) => c.method === 'POST' && c.path.endsWith('/overlays'));
     expect(created).toBeTruthy();
     expect((created!.body as { kind: string; document: unknown }).kind).toBe('quickview');
+    const qv = (created!.body as { document: { nodes: Record<string, unknown> } }).document;
+    const qvPlaceholders = Object.keys(OVERLAY_SEEDS.quickview.nodes);
+    expect(Object.keys(qv.nodes).filter((id) => qvPlaceholders.includes(id))).toEqual([]);
     expect(out.overlay_id).toBe('qv_created_1');
     expect(out.created).toBe(true);
     expect(out.node_id).toBe('composed_qv_1');

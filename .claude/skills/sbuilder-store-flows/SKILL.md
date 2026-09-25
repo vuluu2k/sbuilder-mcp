@@ -416,6 +416,12 @@ repo over a number here, and fix the line when you catch one stale.
   them. The id rename is structural (`remapIds`): the old JSON-wide substitution also rewrote
   any text that quoted an id.
 
+- **EVERY GENERATED DOCUMENT IS SENT THROUGH `withFreshIds`** (`src/domains/site/ids.ts`):
+  `seedDocument`, `layoutDocument`, overlay seeds, app scaffolds, checkout and form templates.
+  Their ids are codegen placeholders; shipped verbatim, two category pages both carried
+  `spcat_3…`. `remapIds` renames only `id`, `data` and `config` — a heading whose text IS an
+  id stays text.
+
 - **A CONTENT PAGE'S PURPOSE IS ITS TYPE since web_builder `8459371d9`.** `about`, `contact`,
   `policy`, `faq`, `login`, `register` route at their own slug exactly like `page`, any number of
   each, with their own icon — so a page list says what a page is FOR. `sb_page_create` infers the

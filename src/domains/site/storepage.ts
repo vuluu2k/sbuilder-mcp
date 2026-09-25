@@ -3,6 +3,7 @@ import {
   COMPLETION_HEADLINE_SENTINEL,
   PAGE_LAYOUT_SEEDS,
   STORE_PAGE_SEEDS } from '../../catalog/storepages.generated.js';
+import { withFreshIds } from './ids.js';
 
 /**
  * WHAT A NEW STORE PAGE OPENS WITH — for an agent, as for a merchant.
@@ -54,8 +55,9 @@ export function seedDocument(
   if (!seed) return null;
 
   const raw = JSON.stringify(seed);
+  // Fresh ids per create, so two pages from one seed share nothing but ROOT.
   if (!raw.includes(COMPLETION_HEADLINE_SENTINEL)) {
-    return JSON.parse(raw) as ReturnType<typeof seedDocument> & object;
+    return withFreshIds(JSON.parse(raw) as ReturnType<typeof seedDocument> & object);
   }
   const lang = opts.locale && opts.locale in COMPLETION_HEADLINE ? opts.locale : 'vi';
   const headline = opts.headline || COMPLETION_HEADLINE[lang];
@@ -63,9 +65,9 @@ export function seedDocument(
   // the same way or an apostrophe in a merchant's own headline breaks the
   // document. Slicing the quotes off a stringified string is that escaping.
   const escaped = JSON.stringify(headline).slice(1, -1);
-  return JSON.parse(raw.split(COMPLETION_HEADLINE_SENTINEL).join(escaped)) as ReturnType<
-    typeof seedDocument
-  > & object;
+  return withFreshIds(
+    JSON.parse(raw.split(COMPLETION_HEADLINE_SENTINEL).join(escaped)) as ReturnType<typeof seedDocument> & object,
+  );
 }
 
 /** A one-line summary of what a seed puts on the page, for the tool result. */
@@ -90,7 +92,7 @@ export function layoutDocument(
   layout: string,
 ): { schema_version: number; root_node_id: string; nodes: Record<string, unknown> } | null {
   const seed = PAGE_LAYOUT_SEEDS[layout];
-  return seed ? (JSON.parse(JSON.stringify(seed)) as ReturnType<typeof layoutDocument> & object) : null;
+  return seed ? withFreshIds(seed) : null;
 }
 
 /** The layouts this build carries. */
