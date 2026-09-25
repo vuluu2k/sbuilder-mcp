@@ -41,6 +41,7 @@ function world(opts: { revs?: boolean; fence?: boolean } = {}) {
   let gets = 0;
   let hook: (() => void) | undefined;
   let putHook: (() => void) | undefined;
+  let held: Promise<void> | undefined;
   const f = vi.fn(async (url: unknown, init?: RequestInit) => {
     const method = init?.method ?? 'GET';
     const json = (v: unknown, status = 200) =>
@@ -60,6 +61,11 @@ function world(opts: { revs?: boolean; fence?: boolean } = {}) {
       gets += 1;
       if (hook) queueMicrotask(hook);
       hook = undefined;
+      if (held) {
+        const h = held;
+        held = undefined;
+        await h;
+      }
     }
     return json({ source: { pageId: 'pg', document: server.doc, ...(revs ? { rev: server.rev } : {}) } });
   }) as unknown as typeof fetch;
@@ -72,7 +78,7 @@ function world(opts: { revs?: boolean; fence?: boolean } = {}) {
     edit(server.doc);
     server.rev += 1;
   };
-  return { ps, server, puts, gets: () => gets, elsewhere, onGet: (f: () => void) => (hook = f), onPut: (f: () => void) => (putHook = f) };
+  return { ps, server, puts, gets: () => gets, elsewhere, onGet: (f: () => void) => (hook = f), onPut: (f: () => void) => (putHook = f), holdGet: (p: Promise<void>) => (held = p) };
 }
 
 const setText = (id: string, text: string) => [{ op: 'set' as const, path: ['nodes', id, 'specials', 'text'], value: text }];
@@ -195,6 +201,31 @@ describe("the room's {t:'source'} frame", () => {
     deliver({ t: 'source', pageId: 'pg', rev: w.server.rev });
     await expect(w.ps.applyAndSave(setText('tx', 'Mine'))).rejects.toThrow(/changed under this session/);
     expect(w.server.doc.nodes.tx.specials.text).toBe('Peer');
+  });
+
+  it('a save finishing does not clear a re-read that started during it', async () => {
+    const w = world({ fence: false });
+    const deliver = room(w);
+    deliver({ t: 'welcome', peerId: 'me', peers: [] });
+    await w.ps.open('s1', 'pg');
+    // A re-read starts while the save is in flight and answers only after the
+    // save is done; the frame for the foreign save it reads lands in between.
+    let release!: () => void;
+    let reopen: Promise<unknown> = Promise.resolve();
+    w.onPut(() => {
+      w.elsewhere((d) => {
+        d.nodes.tx.specials.text = 'Theirs';
+      });
+      w.holdGet(new Promise<void>((r) => (release = r)));
+      reopen = w.ps.open('s1', 'pg');
+    });
+    await w.ps.applyAndSave(setText('he', 'One'));
+    deliver({ t: 'source', pageId: 'pg', rev: w.server.rev });
+    release();
+    await reopen;
+    const reads = w.gets();
+    await w.ps.applyAndSave(setText('he', 'Two'));
+    expect(w.gets()).toBe(reads);
   });
 
   it('a late frame for the save a rebase just re-read does not stale the reapplied write', async () => {

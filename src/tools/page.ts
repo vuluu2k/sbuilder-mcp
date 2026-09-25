@@ -709,7 +709,8 @@ export class PageSession {
       if (staleThrows) throw e;
       return this.save(inherited);
     } finally {
-      this.saving = null;
+      // Only its own: a re-read started meanwhile still owns the slot.
+      if (this.saving === pending) this.saving = null;
     }
     this.sourceRev = saved.rev ?? 0;
     // RE-STAMP THE FENCE, or lose every edit after this one.
