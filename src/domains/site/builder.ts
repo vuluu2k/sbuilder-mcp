@@ -127,6 +127,25 @@ function refuseAppBlockParent(doc: PageDoc, parentId: string, verb: string): voi
   throw new Error(appBlockMessage(parentId, root, verb));
 }
 
+type SatelliteRule = (typeof SATELLITE_RULES)[string][number];
+
+/**
+ * A satellite the editor births as a SUBTREE (a list's empty state: glyph,
+ * headline, line of body) is born the same way here, top-level or nested, or
+ * it arrives bare. The caller's own values and children still win.
+ */
+function seeded(spec: NodeSpec, rule: SatelliteRule, owner: { config?: Record<string, unknown> }): NodeSpec {
+  const seed = spec.children?.length ? undefined : seedFor(rule, owner);
+  if (!seed) return spec;
+  return {
+    ...spec,
+    style: { ...seed.style, ...spec.style },
+    config: { ...seed.config, ...spec.config },
+    specials: { ...seed.specials, ...spec.specials },
+    children: seed.children,
+  };
+}
+
 /**
  * Add a whole subtree under `parentId`, as ONE batch of patches.
  *
@@ -178,8 +197,21 @@ export function addSubtree(
       responsive: s.responsive,
       states: s.states,
     });
+    // A child the element declares as a SATELLITE (an icon's cart-count, a
+    // list's empty state) hangs off `config[key]`, exactly as a top-level
+    // `sb_add` of one does. The caller's nested spec takes the place of the
+    // one `mintSatellites` would mint, so its key is reserved before minting.
+    const children = s.children?.length ? s.children : (ELEMENT_SEEDS[s.type] ?? []);
+    const nested = new Map<NodeSpec, SatelliteRule>();
+    for (const child of children) {
+      const rule = (SATELLITE_RULES[s.type] ?? []).find((r) => r.type === child.type);
+      if (!rule || n.config[rule.configKey] || [...nested.values()].includes(rule)) continue;
+      nested.set(child, rule);
+      n.config[rule.configKey] = child.type;
+    }
     // Before the owner is handed to a patch: minting rewrites its `config`.
     const sats = mintSatellites(n);
+    for (const rule of nested.values()) delete n.config[rule.configKey];
     patches.push({ op: 'set', path: ['nodes', n.id], value: n });
     ids.push(n.id);
     for (const sat of sats) {
@@ -192,13 +224,10 @@ export function addSubtree(
     // dropdown with no trigger and no panel is a bare relative box, and a select
     // renders INTO those two nodes and draws an empty box without them. A caller
     // who passed children has expressed an intent and is never overridden.
-    const children = s.children?.length ? s.children : (ELEMENT_SEEDS[s.type] ?? []);
     for (const child of children) {
-      // A child the element declares as a SATELLITE (an icon's cart-count)
-      // hangs off `config[key]`, exactly as a top-level `sb_add` of one does.
-      const sat = (SATELLITE_RULES[s.type] ?? []).find((r) => r.type === child.type);
-      if (sat && !n.config[sat.configKey]) {
-        const satId = build(child, n.id);
+      const sat = nested.get(child);
+      if (sat) {
+        const satId = build(seeded(child, sat, n), n.id);
         patches.push({ op: 'set', path: ['nodes', n.id, 'config', sat.configKey], value: satId });
         continue;
       }
@@ -210,22 +239,7 @@ export function addSubtree(
     return n.id;
   };
 
-  // A satellite the editor births as a SUBTREE (a list's empty state: glyph,
-  // headline, line of body) is born the same way here, or `sb_add` of one
-  // arrives bare. The caller's own values and children still win.
-  const seed = satellite && !spec.children?.length ? seedFor(satellite, parent) : undefined;
-  const rootId = build(
-    seed
-      ? {
-          ...spec,
-          style: { ...seed.style, ...spec.style },
-          config: { ...seed.config, ...spec.config },
-          specials: { ...seed.specials, ...spec.specials },
-          children: seed.children,
-        }
-      : spec,
-    parentId,
-  );
+  const rootId = build(satellite ? seeded(spec, satellite, parent) : spec, parentId);
   if (satellite) {
     patches.push({ op: 'set', path: ['nodes', parentId, 'config', satellite.configKey], value: rootId });
     return { patches, ids };

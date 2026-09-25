@@ -104,6 +104,10 @@ repo over a number here, and fix the line when you catch one stale.
   owner's pointer rewritten — before which a duplicated accordion pointed at the ORIGINAL's
   skin. Three list-empty owners are born as a SUBTREE, not a bare node, so the empty state is
   generated per dataset source from the editor's own `buildEmptyStateTree`.
+  A satellite given as a NESTED child spec takes the same path as a top-level `sb_add` of one
+  (`seeded()` in builder.ts): its key is reserved before `mintSatellites`, so it REPLACES the
+  minted one instead of being refused as an ordinary child of a non-container, and it gets its
+  seed subtree when it brings no children — it used to arrive bare.
 
 - **`ELEMENT_SEEDS` is content an element is not USABLE without.** A `dropdown` without its
   trigger and panel is "a bare relative box"; a `select` renders INTO those two nodes.

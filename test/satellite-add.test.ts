@@ -67,4 +67,38 @@ describe('a satellite is created and removed through sb_add / sb_remove', () => 
     expect(empty.data.nodes.length).toBe(seededKids);
     expect(validateForSave(d)).toEqual([]);
   });
+
+  it('a NESTED satellite spec takes the minted one\'s place and still gets its seed', () => {
+    const d = PageDoc.from({ schema_version: 2, root_node_id: '', nodes: {} });
+    const { patches } = addSubtree(d, 'ROOT', {
+      type: 'flex-section',
+      children: [{ type: 'list-dataset', children: [{ type: 'list-empty', style: { padding: '9px' } }] }],
+    });
+    d.apply(patches);
+    const all = Object.values(d.doc.nodes);
+    const list = all.find((n) => n.data.type === 'list-dataset')!;
+    const empties = all.filter((n) => n.data.type === 'list-empty');
+    expect(empties.length).toBe(1);
+    expect(list.config.emptyStateId).toBe(empties[0].id);
+    expect(list.data.nodes).not.toContain(empties[0].id);
+    expect(empties[0].style.padding).toBe('9px');
+    expect(empties[0].data.nodes.length).toBeGreaterThan(0);
+    expect(validateForSave(d)).toEqual([]);
+  });
+
+  it('a nested satellite the owner mints anyway is used, not refused as an ordinary child', () => {
+    const d = PageDoc.from({ schema_version: 2, root_node_id: '', nodes: {} });
+    const { patches } = addSubtree(d, 'ROOT', {
+      type: 'flex-section',
+      children: [{ type: 'menu', children: [{ type: 'menu-item', style: { color: 'red' } }] }],
+    });
+    d.apply(patches);
+    const all = Object.values(d.doc.nodes);
+    const menu = all.find((n) => n.data.type === 'menu')!;
+    const items = all.filter((n) => n.data.type === 'menu-item');
+    expect(items.length).toBe(1);
+    expect(menu.config.menuItemId).toBe(items[0].id);
+    expect(items[0].style.color).toBe('red');
+    expect(validateForSave(d)).toEqual([]);
+  });
 });
