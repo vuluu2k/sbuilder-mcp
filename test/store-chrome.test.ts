@@ -22,8 +22,9 @@ const blank = (): Doc => ({
  * A fresh store: a home page, an about page, a policy page, the product
  * template, one category holding a product and one empty. No menu, no chrome.
  */
-function store(opts: { menus?: Array<{ id: string; name: string; items: unknown[] }> } = {}) {
+function store(opts: { menus?: Array<{ id: string; name: string; items: unknown[] }>; overlays?: Array<{ id: string; kind: string }> } = {}) {
   const calls: Array<{ method: string; path: string; body?: any }> = [];
+  const overlays = [...(opts.overlays ?? [])];
   const menus = [...(opts.menus ?? [])];
   const globals: Array<{ id: string; kind: string; document: Doc }> = [];
   const pages = [
@@ -52,6 +53,11 @@ function store(opts: { menus?: Array<{ id: string; name: string; items: unknown[
       return json({ globalSection: { id: `g${globals.length}` } }, 201);
     }
     if (/\/global-sections\/[^/]+\/pages$/.test(path)) return json({ pages: [] });
+    if (path.endsWith('/overlays') && method === 'GET') return json({ overlays });
+    if (path.endsWith('/overlays') && method === 'POST') {
+      overlays.push({ id: `ov${overlays.length + 1}`, kind: body.kind });
+      return json({ overlay: { id: `ov${overlays.length}` } }, 201);
+    }
     if (path.endsWith('/menus') && method === 'GET') return json({ menus });
     if (path.endsWith('/menus') && method === 'POST') {
       const withIds = (items: any[], pre: string): any[] =>
@@ -86,6 +92,7 @@ function store(opts: { menus?: Array<{ id: string; name: string; items: unknown[
     calls,
     globals,
     menus,
+    overlays,
     ctx: { base: 'http://x', session, fetchImpl: f, notices: new Notices(), undo: new UndoLog(), siteId: 's1' },
   };
 }
@@ -213,6 +220,27 @@ describe('sb_store action:"chrome" builds a real header', () => {
     expect(out.menus[0]).toMatchObject({ name: 'Main menu', would: 'create' });
     expect(JSON.stringify(out.tree)).toMatch(/hamburger-menu/);
     expect(calls.filter((c) => c.method !== 'GET')).toEqual([]);
+    await close();
+  });
+
+  it('the header\'s cart icon opens something: a site with no cart drawer gets one', async () => {
+    const { calls, overlays, ctx } = store();
+    const { client, close } = await connectedClient(ctx);
+    const dry = parse(await client.callTool({ name: 'sb_store', arguments: { action: 'chrome' } }));
+    expect(dry.cart).toMatchObject({ dry_run: true });
+    expect(calls.filter((c) => c.method !== 'GET')).toEqual([]);
+    const out = parse(await client.callTool({ name: 'sb_store', arguments: { action: 'chrome', dry_run: false } }));
+    expect(overlays.filter((o) => o.kind === 'cart').length).toBe(1);
+    expect(out.cart).toMatchObject({ created: true });
+    await close();
+  });
+
+  it('a site that has its cart drawer keeps it, and gets no second one', async () => {
+    const { overlays, ctx } = store({ overlays: [{ id: 'ov_c', kind: 'cart' }] });
+    const { client, close } = await connectedClient(ctx);
+    const out = parse(await client.callTool({ name: 'sb_store', arguments: { action: 'chrome', dry_run: false } }));
+    expect(overlays.length).toBe(1);
+    expect(out.cart).toMatchObject({ overlay_id: 'ov_c', created: false });
     await close();
   });
 

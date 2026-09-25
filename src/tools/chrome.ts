@@ -10,6 +10,7 @@ import { setEvent } from './live.js';
 import { DEFAULT_MENU_NAME, menuSnapshot, type Menu, type MenuItemInput } from './menu.js';
 import { redact } from '../transport/http.js';
 import type { PageSession } from './page.js';
+import { ensureCartDrawer } from './overlay.js';
 
 /**
  * THE HEADER A SITE SHARES, for a site that was BUILT rather than imported.
@@ -502,12 +503,17 @@ export async function buildChrome(
       : footerSpec(wanted.map((m, i) => ({ title: m.title, bound: bound[i] })));
   // Every page wears it, templates included: a product page is still this site.
   const onto = pages;
+  // The header's cart icon carries `open_cart`, which opens the site's ONE cart
+  // overlay — a site with none gets one, or the icon opens nothing.
+  const cartFor = async (dryRun: boolean) =>
+    kind === 'header' ? { cart: await ensureCartDrawer(ctx, session, siteId, dryRun) } : {};
   if (opts.dryRun) {
     return {
       dry_run: true,
       would_create: kind,
       menus: redact(plans),
       tree: specTree(spec),
+      ...(await cartFor(true)),
       onto: onto.map((p) => p.slug || '/'),
       note:
         'Nothing was sent. The menus are site records every menu node binds by id, so the ' +
@@ -516,8 +522,10 @@ export async function buildChrome(
     };
   }
   const out = await shareChrome(ctx, session, siteId, kind, chromeDocument(spec), onto);
+  const cart = await cartFor(false);
   return {
     ...out,
+    ...cart,
     menus: plans.map((p) => ({
       name: p.name,
       id: p.id,

@@ -458,7 +458,8 @@ repo over a number here, and fix the line when you catch one stale.
   on mobile, `hamburger-menu` → `menu-drawer` (✕ `close_menu` + vertical collapse menu) shown only
   on mobile — `config.hidden` is NON-cascading, so each width must say its own. Cart = the icon
   carrying `open_cart` with a `cart-count` SATELLITE (nested satellites in a spec now attach by
-  `config[key]`). No colour literals: the menu-item / dropdown skins still carry the platform's
+  `config[key]`), and a header run also runs `ensureCartDrawer` — the icon it wires would
+  otherwise open no overlay on a site that never had one. No colour literals: the menu-item / dropdown skins still carry the platform's
   own `#171717`/Inter defaults, which are being moved to tokens upstream — regenerate, do not
   paint over them here.
 

@@ -1602,7 +1602,9 @@ mỗi danh mục có hàng là `{type:"productCategory", entityId}` kèm danh m�
 đầu làm dòng con — rồi dựng header trên nó: một element `menu` bind vào đó (hover, dropdown) ẩn
 trên mobile, một `hamburger-menu` chỉ hiện trên mobile chứa `menu-drawer` có nút ✕ (`close_menu`)
 và một menu dọc kiểu collapse bind cùng menu site, icon tài khoản tới `/account` và icon giỏ hàng
-mang `open_cart` kèm satellite `cart-count`, trong một dải `section-wide`. Không ghi màu nào; mọi
+mang `open_cart` kèm satellite `cart-count`, trong một dải `section-wide` — và nếu site chưa có
+ngăn giỏ hàng thì tạo nó y như `action:"cart"` (ở `cart`, dry run cũng hiện), vì không có thì
+`open_cart` chẳng mở gì. Không ghi màu nào; mọi
 node mặc preset của theme. Truyền `footer: true` để làm footer dùng chung — các cột link, mỗi cột
 là một `menu` dọc bind vào menu site riêng — và nó đặt CUỐI vì cùng lý do thứ tự band.
 
