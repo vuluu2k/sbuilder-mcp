@@ -3,9 +3,9 @@
 import type { ApiOperation } from './types.js';
 
 export const SWAGGER_SOURCE = {
-  "operations": 568,
-  "definitions": 108,
-  "bodyCarrying": 214,
+  "operations": 574,
+  "definitions": 110,
+  "bodyCarrying": 219,
   "bodyUndescribed": 92,
   "generatedFrom": "server/docs/swagger.json"
 } as const;
@@ -979,6 +979,19 @@ export const API_OPERATIONS: ApiOperation[] = [
         "description": "Page offset"
       }
     ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/_wb/flashsales/active",
+    "method": "GET",
+    "path": "/_wb/flashsales/active",
+    "tags": [
+      "storeflashsales"
+    ],
+    "summary": "List the site's running flash-sale campaigns and items",
+    "params": [],
     "bodyDescribed": false,
     "bodyRef": null,
     "credential": "siteScoped"
@@ -8024,6 +8037,167 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/sites/{siteId}/flash-sales",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/flash-sales",
+    "tags": [
+      "flashsales"
+    ],
+    "summary": "List or create flash sales",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "flashSale",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "Flash sale to create (POST only)"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "github_com_webbuilder_server_internal_flashsales.FlashSale",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/api/sites/{siteId}/flash-sales",
+    "method": "POST",
+    "path": "/api/sites/{siteId}/flash-sales",
+    "tags": [
+      "flashsales"
+    ],
+    "summary": "List or create flash sales",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "flashSale",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "Flash sale to create (POST only)"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "github_com_webbuilder_server_internal_flashsales.FlashSale",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/sites/{siteId}/flash-sales/{id}",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/flash-sales/{id}",
+    "tags": [
+      "flashsales"
+    ],
+    "summary": "Get, update or delete a flash sale",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Flash sale ID"
+      },
+      {
+        "name": "flashSale",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "Updated flash sale (PUT only)"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "github_com_webbuilder_server_internal_flashsales.FlashSale",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "put:/api/sites/{siteId}/flash-sales/{id}",
+    "method": "PUT",
+    "path": "/api/sites/{siteId}/flash-sales/{id}",
+    "tags": [
+      "flashsales"
+    ],
+    "summary": "Get, update or delete a flash sale",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Flash sale ID"
+      },
+      {
+        "name": "flashSale",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "Updated flash sale (PUT only)"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "github_com_webbuilder_server_internal_flashsales.FlashSale",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "delete:/api/sites/{siteId}/flash-sales/{id}",
+    "method": "DELETE",
+    "path": "/api/sites/{siteId}/flash-sales/{id}",
+    "tags": [
+      "flashsales"
+    ],
+    "summary": "Get, update or delete a flash sale",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Flash sale ID"
+      },
+      {
+        "name": "flashSale",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "Updated flash sale (PUT only)"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "github_com_webbuilder_server_internal_flashsales.FlashSale",
     "credential": "siteScoped"
   },
   {
@@ -17580,6 +17754,73 @@ export const API_DEFINITIONS: Record<string, unknown> = {
       }
     }
   },
+  "github_com_webbuilder_server_internal_flashsales.FlashSale": {
+    "type": "object",
+    "properties": {
+      "active": {
+        "type": "boolean"
+      },
+      "allowDiscountCodes": {
+        "type": "boolean"
+      },
+      "createdAt": {
+        "type": "string"
+      },
+      "endsAt": {
+        "type": "string"
+      },
+      "id": {
+        "type": "string"
+      },
+      "items": {
+        "type": "array",
+        "items": {
+          "$ref": "#/definitions/github_com_webbuilder_server_internal_flashsales.Item"
+        }
+      },
+      "name": {
+        "type": "string"
+      },
+      "siteId": {
+        "type": "string"
+      },
+      "startsAt": {
+        "type": "string"
+      },
+      "updatedAt": {
+        "type": "string"
+      }
+    }
+  },
+  "github_com_webbuilder_server_internal_flashsales.Item": {
+    "type": "object",
+    "properties": {
+      "flashSaleId": {
+        "type": "string"
+      },
+      "id": {
+        "type": "string"
+      },
+      "perOrderLimit": {
+        "type": "integer"
+      },
+      "productId": {
+        "type": "string"
+      },
+      "quota": {
+        "type": "integer"
+      },
+      "salePriceCents": {
+        "type": "integer"
+      },
+      "sold": {
+        "type": "integer"
+      },
+      "variantId": {
+        "type": "string"
+      }
+    }
+  },
   "github_com_webbuilder_server_internal_fonts.FontFile": {
     "type": "object",
     "properties": {
@@ -18260,11 +18501,19 @@ export const API_DEFINITIONS: Record<string, unknown> = {
   "github_com_webbuilder_server_internal_orders.OrderItem": {
     "type": "object",
     "properties": {
+      "flashItemId": {
+        "description": "FlashItemID names the flash-sale item this line was priced by (\"\" = the\ncatalogue price). Set only by LineResolver.Items; the quota claim and its\nrelease key on it. See orders/flash.go.",
+        "type": "string"
+      },
       "image": {
         "type": "string"
       },
       "name": {
         "type": "string"
+      },
+      "noDiscount": {
+        "description": "NoDiscount keeps this line out of every discount base — a flash-sale line\nwhose campaign does not stack with codes. See Checkout.orderContext.",
+        "type": "boolean"
       },
       "options": {
         "type": "object",

@@ -1,6 +1,6 @@
 # Tools
 
-Four tools reach 495 platform operations, and 166 of the 216 writes among them carry a body
+Four tools reach 574 platform operations, and 197 of the 255 writes among them carry a body
 shape read off the handler that decodes it. `sb_api_find` is an index, not a tool per
 endpoint — see [why](../README.md#tools).
 
@@ -255,7 +255,7 @@ emitted, so a bad id in the fourth edit refuses the whole batch. The result is t
 | `limit` | number? | Default 8, max 30 |
 | `detail` | boolean? | Add `useWhen`, `avoidWhen`, `contentTips` to every match |
 
-Searches the platform's own AI hints across all 106 elements. Each match is
+Searches the platform's own AI hints across all 122 elements. Each match is
 `{ type, label, category, description }`, plus `isContainer: true` / `isRootOnly: true`
 only when true — four fields to **choose** by. The hints themselves, written by the platform
 team for exactly this purpose, come with `sb_traits_for` for the element chosen, or on every

@@ -530,8 +530,8 @@ export const PAGE_LAYOUT_SEEDS: Record<string, { schema_version: number; root_no
           "custom": {}
         },
         "style": {
-          "backgroundColor": "#f5f5f5",
-          "color": "#171717",
+          "backgroundColor": "var(--wb-sc-border, #f5f5f5)",
+          "color": "var(--wb-sc-heading, #171717)",
           "textAlign": "left",
           "fontFamily": "Inter",
           "fontSize": "14px",
@@ -551,7 +551,8 @@ export const PAGE_LAYOUT_SEEDS: Record<string, { schema_version: number; root_no
         "states": {
           "hover": {
             "style": {
-              "backgroundColor": "#ebebeb"
+              "backgroundColor": "var(--wb-sc-border, #ebebeb)",
+              "color": "var(--wb-sc-text, #7b7b7b)"
             }
           }
         },
@@ -2375,7 +2376,7 @@ export const STORE_PAGE_SEEDS: Record<string, { schema_version: number; root_nod
         },
         "style": {
           "fontFamily": "Inter",
-          "color": "#000000",
+          "color": "var(--wb-sc-heading, #000000)",
           "lineHeight": "1.3",
           "fontWeight": "700",
           "textAlign": "left"
@@ -2401,13 +2402,13 @@ export const STORE_PAGE_SEEDS: Record<string, { schema_version: number; root_nod
         "style": {
           "fontFamily": "Inter",
           "fontSize": "16px",
-          "color": "#171717",
+          "color": "var(--wb-sc-link, #171717)",
           "lineHeight": "1.3",
           "borderColor": "#d0d0d0",
           "borderWidth": "1px",
           "borderStyle": "solid",
           "borderRadius": "0",
-          "backgroundColor": "#ffffff",
+          "backgroundColor": "var(--wb-sc-background, #ffffff)",
           "padding": "16px 12px",
           "gap": "12px",
           "--variant-image-width": "48px",
@@ -2434,13 +2435,13 @@ export const STORE_PAGE_SEEDS: Record<string, { schema_version: number; root_nod
         "states": {
           "hover": {
             "style": {
-              "backgroundColor": "#f5f5f5"
+              "backgroundColor": "var(--wb-sc-border, #f5f5f5)"
             }
           },
           "active": {
             "style": {
-              "borderColor": "#171717",
-              "backgroundColor": "#ffffff"
+              "borderColor": "var(--wb-sc-link, #171717)",
+              "backgroundColor": "var(--wb-sc-background, #ffffff)"
             }
           }
         },

@@ -3,7 +3,7 @@
 import type { CatalogElement, NodeSeed, SatelliteRule, TraitDescription, ValueVocabulary, WritePrecondition } from './element-types.js';
 
 export const ELEMENT_SOURCE = {
-  "count": 120,
+  "count": 122,
   "docSchemaVersion": 2
 } as const;
 
@@ -3210,7 +3210,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
         "gap": 8,
         "columns": 3,
         "boxBorderColor": "#d4d4d4",
-        "accentColor": "#171717",
+        "accentColor": "var(--wb-sc-link, #171717)",
         "chipPaddingX": 14,
         "chipPaddingY": 6,
         "chipRadius": 999
@@ -3422,9 +3422,9 @@ export const ELEMENTS: Record<string, CatalogElement> = {
       "config": {
         "trackHeight": 4,
         "handleSize": 16,
-        "trackColor": "#e5e5e5",
-        "accentColor": "#171717",
-        "handleColor": "#ffffff",
+        "trackColor": "var(--wb-sc-border, #e5e5e5)",
+        "accentColor": "var(--wb-sc-buttonBg, #171717)",
+        "handleColor": "var(--wb-sc-background, #ffffff)",
         "labelGap": 8
       },
       "specials": {
@@ -12788,8 +12788,8 @@ export const ELEMENTS: Record<string, CatalogElement> = {
         }
       },
       "style": {
-        "backgroundColor": "#f5f5f5",
-        "color": "#7b7b7b",
+        "backgroundColor": "var(--wb-sc-border, #f5f5f5)",
+        "color": "var(--wb-sc-text, #7b7b7b)",
         "textAlign": "left",
         "fontFamily": "var(--wb-ts-text-2-family, Inter)",
         "fontSize": "14px",
@@ -12801,7 +12801,8 @@ export const ELEMENTS: Record<string, CatalogElement> = {
       "states": {
         "hover": {
           "style": {
-            "backgroundColor": "#ebebeb"
+            "backgroundColor": "var(--wb-sc-border, #ebebeb)",
+            "color": "var(--wb-sc-heading, #171717)"
           }
         },
         "active": {
@@ -13236,8 +13237,8 @@ export const ELEMENTS: Record<string, CatalogElement> = {
         }
       },
       "style": {
-        "backgroundColor": "#f5f5f5",
-        "color": "#171717",
+        "backgroundColor": "var(--wb-sc-border, #f5f5f5)",
+        "color": "var(--wb-sc-heading, #171717)",
         "textAlign": "left",
         "fontFamily": "Inter",
         "fontSize": "14px",
@@ -13249,7 +13250,8 @@ export const ELEMENTS: Record<string, CatalogElement> = {
       "states": {
         "hover": {
           "style": {
-            "backgroundColor": "#ebebeb"
+            "backgroundColor": "var(--wb-sc-border, #ebebeb)",
+            "color": "var(--wb-sc-text, #7b7b7b)"
           }
         }
       }
@@ -14998,7 +15000,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
         "gap": "12px",
         "fontSize": "16px",
         "fontWeight": "600",
-        "color": "#171717"
+        "color": "var(--wb-sc-heading, #171717)"
       },
       "specials": {
         "label": "Tổng cộng",
@@ -15160,13 +15162,13 @@ export const ELEMENTS: Record<string, CatalogElement> = {
         "width": "100%",
         "gap": "8px",
         "fontSize": "13px",
-        "color": "#171717"
+        "color": "var(--wb-sc-heading, #171717)"
       },
       "config": {
         "barHeight": 8,
         "barRadius": 999,
-        "trackColor": "#e5e5e5",
-        "fillColor": "#171717"
+        "trackColor": "var(--wb-sc-border, #e5e5e5)",
+        "fillColor": "var(--wb-sc-buttonBg, #171717)"
       }
     },
     "inspector": [
@@ -15354,7 +15356,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
         "width": "100%",
         "gap": "16px",
         "fontSize": "13px",
-        "color": "#171717"
+        "color": "var(--wb-sc-heading, #171717)"
       },
       "config": {
         "columns": 3,
@@ -15555,7 +15557,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
         "width": "100%",
         "gap": "16px",
         "fontSize": "13px",
-        "color": "#171717"
+        "color": "var(--wb-sc-heading, #171717)"
       },
       "config": {
         "columns": 3,
@@ -15764,6 +15766,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
       "specials": {
         "endsAt": "",
         "sourceCode": "",
+        "sourceFlashSale": false,
         "expiredText": "Chương trình đã kết thúc",
         "dayLabel": "Ngày",
         "hourLabel": "Giờ",
@@ -15776,14 +15779,14 @@ export const ELEMENTS: Record<string, CatalogElement> = {
         "width": "100%",
         "gap": "12px",
         "fontSize": "13px",
-        "color": "#171717"
+        "color": "var(--wb-sc-heading, #171717)"
       },
       "config": {
         "digitSize": 24,
         "gap": 12,
         "boxRadius": 8,
-        "boxColor": "#171717",
-        "digitColor": "#ffffff"
+        "boxColor": "var(--wb-sc-buttonBg, #171717)",
+        "digitColor": "var(--wb-sc-buttonText, #ffffff)"
       }
     },
     "inspector": [
@@ -15804,7 +15807,8 @@ export const ELEMENTS: Record<string, CatalogElement> = {
             "label": "Content",
             "controls": [
               "countdown_ends_at",
-              "countdown_source_code"
+              "countdown_source_code",
+              "countdown_source_flash_sale"
             ]
           },
           {
@@ -15916,6 +15920,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
       "margin",
       "countdown_ends_at",
       "countdown_source_code",
+      "countdown_source_flash_sale",
       "countdown_day_label",
       "countdown_hour_label",
       "countdown_minute_label",
@@ -15953,6 +15958,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
     "contentTips": [
       "The four unit labels (dayLabel/hourLabel/minuteLabel/secondLabel) are short words under each box, not sentences",
       "expiredText is the line shown once the countdown reaches zero — word it as the sale being over, not as an error",
+      "sourceFlashSale: true counts to the end of the flash sale running right now (falling back to endsAt when none runs) — use it on a flash-sale block instead of typing an end time",
       "sourceCode only matters when the SAME code is also published on a voucher-list — leave it empty for a countdown with no discount behind it"
     ],
     "semantics": [
@@ -23211,7 +23217,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
     "defaults": {
       "style": {
         "fontFamily": "Inter",
-        "color": "#000000",
+        "color": "var(--wb-sc-heading, #000000)",
         "lineHeight": "1.3",
         "fontWeight": "700",
         "textAlign": "left"
@@ -23336,13 +23342,13 @@ export const ELEMENTS: Record<string, CatalogElement> = {
       "style": {
         "fontFamily": "Inter",
         "fontSize": "16px",
-        "color": "#171717",
+        "color": "var(--wb-sc-link, #171717)",
         "lineHeight": "1.3",
         "borderColor": "#d0d0d0",
         "borderWidth": "1px",
         "borderStyle": "solid",
         "borderRadius": "0",
-        "backgroundColor": "#ffffff",
+        "backgroundColor": "var(--wb-sc-background, #ffffff)",
         "padding": "16px 12px",
         "gap": "12px",
         "--variant-image-width": "48px",
@@ -23359,13 +23365,13 @@ export const ELEMENTS: Record<string, CatalogElement> = {
       "states": {
         "hover": {
           "style": {
-            "backgroundColor": "#f5f5f5"
+            "backgroundColor": "var(--wb-sc-border, #f5f5f5)"
           }
         },
         "active": {
           "style": {
-            "borderColor": "#171717",
-            "backgroundColor": "#ffffff"
+            "borderColor": "var(--wb-sc-link, #171717)",
+            "backgroundColor": "var(--wb-sc-background, #ffffff)"
           }
         }
       }
@@ -28236,6 +28242,3967 @@ export const ELEMENTS: Record<string, CatalogElement> = {
       "price",
       "badge",
       "promotion"
+    ]
+  },
+  "flash-sale-price": {
+    "type": "flash-sale-price",
+    "label": "Flash sale price",
+    "category": "dataset",
+    "isContainer": false,
+    "isRootOnly": false,
+    "locked": false,
+    "hideInLayer": false,
+    "childAllows": [],
+    "defaults": {
+      "style": {
+        "gap": "4px"
+      },
+      "config": {
+        "priceValue": "$0.00",
+        "compareValue": "$0.00"
+      },
+      "specials": {
+        "showPercent": true
+      },
+      "bindings": [
+        {
+          "id": "bind-price",
+          "source": "product.price",
+          "field": "specials.boundPrice",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare",
+          "source": "product.compareAtPrice",
+          "field": "specials.boundCompare"
+        },
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents"
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-price-mo",
+          "source": "product.moneyOverride",
+          "field": "specials.boundMoneyOverride"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ]
+    },
+    "bindingsFor": {
+      "product|title": [
+        {
+          "id": "bind-price",
+          "source": "product.price",
+          "field": "specials.boundPrice",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare",
+          "source": "product.compareAtPrice",
+          "field": "specials.boundCompare"
+        },
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents"
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-price-mo",
+          "source": "product.moneyOverride",
+          "field": "specials.boundMoneyOverride"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "product|vendor": [
+        {
+          "id": "bind-price",
+          "source": "product.price",
+          "field": "specials.boundPrice",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare",
+          "source": "product.compareAtPrice",
+          "field": "specials.boundCompare"
+        },
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents"
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-price-mo",
+          "source": "product.moneyOverride",
+          "field": "specials.boundMoneyOverride"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "product|description": [
+        {
+          "id": "bind-price",
+          "source": "product.price",
+          "field": "specials.boundPrice",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare",
+          "source": "product.compareAtPrice",
+          "field": "specials.boundCompare"
+        },
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents"
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-price-mo",
+          "source": "product.moneyOverride",
+          "field": "specials.boundMoneyOverride"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "product|summary": [
+        {
+          "id": "bind-price",
+          "source": "product.price",
+          "field": "specials.boundPrice",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare",
+          "source": "product.compareAtPrice",
+          "field": "specials.boundCompare"
+        },
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents"
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-price-mo",
+          "source": "product.moneyOverride",
+          "field": "specials.boundMoneyOverride"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "product|content": [
+        {
+          "id": "bind-price",
+          "source": "product.price",
+          "field": "specials.boundPrice",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare",
+          "source": "product.compareAtPrice",
+          "field": "specials.boundCompare"
+        },
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents"
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-price-mo",
+          "source": "product.moneyOverride",
+          "field": "specials.boundMoneyOverride"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "product|author": [
+        {
+          "id": "bind-price",
+          "source": "product.price",
+          "field": "specials.boundPrice",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare",
+          "source": "product.compareAtPrice",
+          "field": "specials.boundCompare"
+        },
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents"
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-price-mo",
+          "source": "product.moneyOverride",
+          "field": "specials.boundMoneyOverride"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "product|date": [
+        {
+          "id": "bind-price",
+          "source": "product.price",
+          "field": "specials.boundPrice",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare",
+          "source": "product.compareAtPrice",
+          "field": "specials.boundCompare"
+        },
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents"
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-price-mo",
+          "source": "product.moneyOverride",
+          "field": "specials.boundMoneyOverride"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "product|image": [
+        {
+          "id": "bind-price",
+          "source": "product.price",
+          "field": "specials.boundPrice",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare",
+          "source": "product.compareAtPrice",
+          "field": "specials.boundCompare"
+        },
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents"
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-price-mo",
+          "source": "product.moneyOverride",
+          "field": "specials.boundMoneyOverride"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "product|price": [
+        {
+          "id": "bind-price",
+          "source": "product.price",
+          "field": "specials.boundPrice",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare",
+          "source": "product.compareAtPrice",
+          "field": "specials.boundCompare"
+        },
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents"
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-price-mo",
+          "source": "product.moneyOverride",
+          "field": "specials.boundMoneyOverride"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "product|prices": [
+        {
+          "id": "bind-price",
+          "source": "product.price",
+          "field": "specials.boundPrice",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare",
+          "source": "product.compareAtPrice",
+          "field": "specials.boundCompare"
+        },
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents"
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-price-mo",
+          "source": "product.moneyOverride",
+          "field": "specials.boundMoneyOverride"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "product|url": [
+        {
+          "id": "bind-price",
+          "source": "product.price",
+          "field": "specials.boundPrice",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare",
+          "source": "product.compareAtPrice",
+          "field": "specials.boundCompare"
+        },
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents"
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-price-mo",
+          "source": "product.moneyOverride",
+          "field": "specials.boundMoneyOverride"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "product|name": [
+        {
+          "id": "bind-price",
+          "source": "product.price",
+          "field": "specials.boundPrice",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare",
+          "source": "product.compareAtPrice",
+          "field": "specials.boundCompare"
+        },
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents"
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-price-mo",
+          "source": "product.moneyOverride",
+          "field": "specials.boundMoneyOverride"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "category|title": [
+        {
+          "id": "bind-price",
+          "source": "product.price",
+          "field": "specials.boundPrice",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare",
+          "source": "product.compareAtPrice",
+          "field": "specials.boundCompare"
+        },
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents"
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-price-mo",
+          "source": "product.moneyOverride",
+          "field": "specials.boundMoneyOverride"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "category|vendor": [
+        {
+          "id": "bind-price",
+          "source": "product.price",
+          "field": "specials.boundPrice",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare",
+          "source": "product.compareAtPrice",
+          "field": "specials.boundCompare"
+        },
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents"
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-price-mo",
+          "source": "product.moneyOverride",
+          "field": "specials.boundMoneyOverride"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "category|description": [
+        {
+          "id": "bind-price",
+          "source": "product.price",
+          "field": "specials.boundPrice",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare",
+          "source": "product.compareAtPrice",
+          "field": "specials.boundCompare"
+        },
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents"
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-price-mo",
+          "source": "product.moneyOverride",
+          "field": "specials.boundMoneyOverride"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "category|summary": [
+        {
+          "id": "bind-price",
+          "source": "product.price",
+          "field": "specials.boundPrice",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare",
+          "source": "product.compareAtPrice",
+          "field": "specials.boundCompare"
+        },
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents"
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-price-mo",
+          "source": "product.moneyOverride",
+          "field": "specials.boundMoneyOverride"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "category|content": [
+        {
+          "id": "bind-price",
+          "source": "product.price",
+          "field": "specials.boundPrice",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare",
+          "source": "product.compareAtPrice",
+          "field": "specials.boundCompare"
+        },
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents"
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-price-mo",
+          "source": "product.moneyOverride",
+          "field": "specials.boundMoneyOverride"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "category|author": [
+        {
+          "id": "bind-price",
+          "source": "product.price",
+          "field": "specials.boundPrice",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare",
+          "source": "product.compareAtPrice",
+          "field": "specials.boundCompare"
+        },
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents"
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-price-mo",
+          "source": "product.moneyOverride",
+          "field": "specials.boundMoneyOverride"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "category|date": [
+        {
+          "id": "bind-price",
+          "source": "product.price",
+          "field": "specials.boundPrice",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare",
+          "source": "product.compareAtPrice",
+          "field": "specials.boundCompare"
+        },
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents"
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-price-mo",
+          "source": "product.moneyOverride",
+          "field": "specials.boundMoneyOverride"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "category|image": [
+        {
+          "id": "bind-price",
+          "source": "product.price",
+          "field": "specials.boundPrice",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare",
+          "source": "product.compareAtPrice",
+          "field": "specials.boundCompare"
+        },
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents"
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-price-mo",
+          "source": "product.moneyOverride",
+          "field": "specials.boundMoneyOverride"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "category|price": [
+        {
+          "id": "bind-price",
+          "source": "product.price",
+          "field": "specials.boundPrice",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare",
+          "source": "product.compareAtPrice",
+          "field": "specials.boundCompare"
+        },
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents"
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-price-mo",
+          "source": "product.moneyOverride",
+          "field": "specials.boundMoneyOverride"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "category|prices": [
+        {
+          "id": "bind-price",
+          "source": "product.price",
+          "field": "specials.boundPrice",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare",
+          "source": "product.compareAtPrice",
+          "field": "specials.boundCompare"
+        },
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents"
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-price-mo",
+          "source": "product.moneyOverride",
+          "field": "specials.boundMoneyOverride"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "category|url": [
+        {
+          "id": "bind-price",
+          "source": "product.price",
+          "field": "specials.boundPrice",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare",
+          "source": "product.compareAtPrice",
+          "field": "specials.boundCompare"
+        },
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents"
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-price-mo",
+          "source": "product.moneyOverride",
+          "field": "specials.boundMoneyOverride"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "category|name": [
+        {
+          "id": "bind-price",
+          "source": "product.price",
+          "field": "specials.boundPrice",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare",
+          "source": "product.compareAtPrice",
+          "field": "specials.boundCompare"
+        },
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents"
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-price-mo",
+          "source": "product.moneyOverride",
+          "field": "specials.boundMoneyOverride"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "article|title": [
+        {
+          "id": "bind-price",
+          "source": "product.price",
+          "field": "specials.boundPrice",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare",
+          "source": "product.compareAtPrice",
+          "field": "specials.boundCompare"
+        },
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents"
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-price-mo",
+          "source": "product.moneyOverride",
+          "field": "specials.boundMoneyOverride"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "article|vendor": [
+        {
+          "id": "bind-price",
+          "source": "product.price",
+          "field": "specials.boundPrice",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare",
+          "source": "product.compareAtPrice",
+          "field": "specials.boundCompare"
+        },
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents"
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-price-mo",
+          "source": "product.moneyOverride",
+          "field": "specials.boundMoneyOverride"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "article|description": [
+        {
+          "id": "bind-price",
+          "source": "product.price",
+          "field": "specials.boundPrice",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare",
+          "source": "product.compareAtPrice",
+          "field": "specials.boundCompare"
+        },
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents"
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-price-mo",
+          "source": "product.moneyOverride",
+          "field": "specials.boundMoneyOverride"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "article|summary": [
+        {
+          "id": "bind-price",
+          "source": "product.price",
+          "field": "specials.boundPrice",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare",
+          "source": "product.compareAtPrice",
+          "field": "specials.boundCompare"
+        },
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents"
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-price-mo",
+          "source": "product.moneyOverride",
+          "field": "specials.boundMoneyOverride"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "article|content": [
+        {
+          "id": "bind-price",
+          "source": "product.price",
+          "field": "specials.boundPrice",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare",
+          "source": "product.compareAtPrice",
+          "field": "specials.boundCompare"
+        },
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents"
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-price-mo",
+          "source": "product.moneyOverride",
+          "field": "specials.boundMoneyOverride"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "article|author": [
+        {
+          "id": "bind-price",
+          "source": "product.price",
+          "field": "specials.boundPrice",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare",
+          "source": "product.compareAtPrice",
+          "field": "specials.boundCompare"
+        },
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents"
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-price-mo",
+          "source": "product.moneyOverride",
+          "field": "specials.boundMoneyOverride"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "article|date": [
+        {
+          "id": "bind-price",
+          "source": "product.price",
+          "field": "specials.boundPrice",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare",
+          "source": "product.compareAtPrice",
+          "field": "specials.boundCompare"
+        },
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents"
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-price-mo",
+          "source": "product.moneyOverride",
+          "field": "specials.boundMoneyOverride"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "article|image": [
+        {
+          "id": "bind-price",
+          "source": "product.price",
+          "field": "specials.boundPrice",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare",
+          "source": "product.compareAtPrice",
+          "field": "specials.boundCompare"
+        },
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents"
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-price-mo",
+          "source": "product.moneyOverride",
+          "field": "specials.boundMoneyOverride"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "article|price": [
+        {
+          "id": "bind-price",
+          "source": "product.price",
+          "field": "specials.boundPrice",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare",
+          "source": "product.compareAtPrice",
+          "field": "specials.boundCompare"
+        },
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents"
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-price-mo",
+          "source": "product.moneyOverride",
+          "field": "specials.boundMoneyOverride"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "article|prices": [
+        {
+          "id": "bind-price",
+          "source": "product.price",
+          "field": "specials.boundPrice",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare",
+          "source": "product.compareAtPrice",
+          "field": "specials.boundCompare"
+        },
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents"
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-price-mo",
+          "source": "product.moneyOverride",
+          "field": "specials.boundMoneyOverride"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "article|url": [
+        {
+          "id": "bind-price",
+          "source": "product.price",
+          "field": "specials.boundPrice",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare",
+          "source": "product.compareAtPrice",
+          "field": "specials.boundCompare"
+        },
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents"
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-price-mo",
+          "source": "product.moneyOverride",
+          "field": "specials.boundMoneyOverride"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "article|name": [
+        {
+          "id": "bind-price",
+          "source": "product.price",
+          "field": "specials.boundPrice",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare",
+          "source": "product.compareAtPrice",
+          "field": "specials.boundCompare"
+        },
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents"
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-price-mo",
+          "source": "product.moneyOverride",
+          "field": "specials.boundMoneyOverride"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "course|title": [
+        {
+          "id": "bind-price",
+          "source": "product.price",
+          "field": "specials.boundPrice",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare",
+          "source": "product.compareAtPrice",
+          "field": "specials.boundCompare"
+        },
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents"
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-price-mo",
+          "source": "product.moneyOverride",
+          "field": "specials.boundMoneyOverride"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "course|vendor": [
+        {
+          "id": "bind-price",
+          "source": "product.price",
+          "field": "specials.boundPrice",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare",
+          "source": "product.compareAtPrice",
+          "field": "specials.boundCompare"
+        },
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents"
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-price-mo",
+          "source": "product.moneyOverride",
+          "field": "specials.boundMoneyOverride"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "course|description": [
+        {
+          "id": "bind-price",
+          "source": "product.price",
+          "field": "specials.boundPrice",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare",
+          "source": "product.compareAtPrice",
+          "field": "specials.boundCompare"
+        },
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents"
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-price-mo",
+          "source": "product.moneyOverride",
+          "field": "specials.boundMoneyOverride"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "course|summary": [
+        {
+          "id": "bind-price",
+          "source": "product.price",
+          "field": "specials.boundPrice",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare",
+          "source": "product.compareAtPrice",
+          "field": "specials.boundCompare"
+        },
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents"
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-price-mo",
+          "source": "product.moneyOverride",
+          "field": "specials.boundMoneyOverride"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "course|content": [
+        {
+          "id": "bind-price",
+          "source": "product.price",
+          "field": "specials.boundPrice",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare",
+          "source": "product.compareAtPrice",
+          "field": "specials.boundCompare"
+        },
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents"
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-price-mo",
+          "source": "product.moneyOverride",
+          "field": "specials.boundMoneyOverride"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "course|author": [
+        {
+          "id": "bind-price",
+          "source": "product.price",
+          "field": "specials.boundPrice",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare",
+          "source": "product.compareAtPrice",
+          "field": "specials.boundCompare"
+        },
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents"
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-price-mo",
+          "source": "product.moneyOverride",
+          "field": "specials.boundMoneyOverride"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "course|date": [
+        {
+          "id": "bind-price",
+          "source": "product.price",
+          "field": "specials.boundPrice",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare",
+          "source": "product.compareAtPrice",
+          "field": "specials.boundCompare"
+        },
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents"
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-price-mo",
+          "source": "product.moneyOverride",
+          "field": "specials.boundMoneyOverride"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "course|image": [
+        {
+          "id": "bind-price",
+          "source": "product.price",
+          "field": "specials.boundPrice",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare",
+          "source": "product.compareAtPrice",
+          "field": "specials.boundCompare"
+        },
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents"
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-price-mo",
+          "source": "product.moneyOverride",
+          "field": "specials.boundMoneyOverride"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "course|price": [
+        {
+          "id": "bind-price",
+          "source": "product.price",
+          "field": "specials.boundPrice",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare",
+          "source": "product.compareAtPrice",
+          "field": "specials.boundCompare"
+        },
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents"
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-price-mo",
+          "source": "product.moneyOverride",
+          "field": "specials.boundMoneyOverride"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "course|prices": [
+        {
+          "id": "bind-price",
+          "source": "product.price",
+          "field": "specials.boundPrice",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare",
+          "source": "product.compareAtPrice",
+          "field": "specials.boundCompare"
+        },
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents"
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-price-mo",
+          "source": "product.moneyOverride",
+          "field": "specials.boundMoneyOverride"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "course|url": [
+        {
+          "id": "bind-price",
+          "source": "product.price",
+          "field": "specials.boundPrice",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare",
+          "source": "product.compareAtPrice",
+          "field": "specials.boundCompare"
+        },
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents"
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-price-mo",
+          "source": "product.moneyOverride",
+          "field": "specials.boundMoneyOverride"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "course|name": [
+        {
+          "id": "bind-price",
+          "source": "product.price",
+          "field": "specials.boundPrice",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare",
+          "source": "product.compareAtPrice",
+          "field": "specials.boundCompare"
+        },
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents"
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-price-mo",
+          "source": "product.moneyOverride",
+          "field": "specials.boundMoneyOverride"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "instructor|title": [
+        {
+          "id": "bind-price",
+          "source": "product.price",
+          "field": "specials.boundPrice",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare",
+          "source": "product.compareAtPrice",
+          "field": "specials.boundCompare"
+        },
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents"
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-price-mo",
+          "source": "product.moneyOverride",
+          "field": "specials.boundMoneyOverride"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "instructor|vendor": [
+        {
+          "id": "bind-price",
+          "source": "product.price",
+          "field": "specials.boundPrice",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare",
+          "source": "product.compareAtPrice",
+          "field": "specials.boundCompare"
+        },
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents"
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-price-mo",
+          "source": "product.moneyOverride",
+          "field": "specials.boundMoneyOverride"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "instructor|description": [
+        {
+          "id": "bind-price",
+          "source": "product.price",
+          "field": "specials.boundPrice",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare",
+          "source": "product.compareAtPrice",
+          "field": "specials.boundCompare"
+        },
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents"
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-price-mo",
+          "source": "product.moneyOverride",
+          "field": "specials.boundMoneyOverride"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "instructor|summary": [
+        {
+          "id": "bind-price",
+          "source": "product.price",
+          "field": "specials.boundPrice",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare",
+          "source": "product.compareAtPrice",
+          "field": "specials.boundCompare"
+        },
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents"
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-price-mo",
+          "source": "product.moneyOverride",
+          "field": "specials.boundMoneyOverride"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "instructor|content": [
+        {
+          "id": "bind-price",
+          "source": "product.price",
+          "field": "specials.boundPrice",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare",
+          "source": "product.compareAtPrice",
+          "field": "specials.boundCompare"
+        },
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents"
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-price-mo",
+          "source": "product.moneyOverride",
+          "field": "specials.boundMoneyOverride"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "instructor|author": [
+        {
+          "id": "bind-price",
+          "source": "product.price",
+          "field": "specials.boundPrice",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare",
+          "source": "product.compareAtPrice",
+          "field": "specials.boundCompare"
+        },
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents"
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-price-mo",
+          "source": "product.moneyOverride",
+          "field": "specials.boundMoneyOverride"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "instructor|date": [
+        {
+          "id": "bind-price",
+          "source": "product.price",
+          "field": "specials.boundPrice",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare",
+          "source": "product.compareAtPrice",
+          "field": "specials.boundCompare"
+        },
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents"
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-price-mo",
+          "source": "product.moneyOverride",
+          "field": "specials.boundMoneyOverride"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "instructor|image": [
+        {
+          "id": "bind-price",
+          "source": "product.price",
+          "field": "specials.boundPrice",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare",
+          "source": "product.compareAtPrice",
+          "field": "specials.boundCompare"
+        },
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents"
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-price-mo",
+          "source": "product.moneyOverride",
+          "field": "specials.boundMoneyOverride"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "instructor|price": [
+        {
+          "id": "bind-price",
+          "source": "product.price",
+          "field": "specials.boundPrice",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare",
+          "source": "product.compareAtPrice",
+          "field": "specials.boundCompare"
+        },
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents"
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-price-mo",
+          "source": "product.moneyOverride",
+          "field": "specials.boundMoneyOverride"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "instructor|prices": [
+        {
+          "id": "bind-price",
+          "source": "product.price",
+          "field": "specials.boundPrice",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare",
+          "source": "product.compareAtPrice",
+          "field": "specials.boundCompare"
+        },
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents"
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-price-mo",
+          "source": "product.moneyOverride",
+          "field": "specials.boundMoneyOverride"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "instructor|url": [
+        {
+          "id": "bind-price",
+          "source": "product.price",
+          "field": "specials.boundPrice",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare",
+          "source": "product.compareAtPrice",
+          "field": "specials.boundCompare"
+        },
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents"
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-price-mo",
+          "source": "product.moneyOverride",
+          "field": "specials.boundMoneyOverride"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "instructor|name": [
+        {
+          "id": "bind-price",
+          "source": "product.price",
+          "field": "specials.boundPrice",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare",
+          "source": "product.compareAtPrice",
+          "field": "specials.boundCompare"
+        },
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents"
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-price-mo",
+          "source": "product.moneyOverride",
+          "field": "specials.boundMoneyOverride"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "blogCategory|title": [
+        {
+          "id": "bind-price",
+          "source": "product.price",
+          "field": "specials.boundPrice",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare",
+          "source": "product.compareAtPrice",
+          "field": "specials.boundCompare"
+        },
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents"
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-price-mo",
+          "source": "product.moneyOverride",
+          "field": "specials.boundMoneyOverride"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "blogCategory|vendor": [
+        {
+          "id": "bind-price",
+          "source": "product.price",
+          "field": "specials.boundPrice",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare",
+          "source": "product.compareAtPrice",
+          "field": "specials.boundCompare"
+        },
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents"
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-price-mo",
+          "source": "product.moneyOverride",
+          "field": "specials.boundMoneyOverride"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "blogCategory|description": [
+        {
+          "id": "bind-price",
+          "source": "product.price",
+          "field": "specials.boundPrice",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare",
+          "source": "product.compareAtPrice",
+          "field": "specials.boundCompare"
+        },
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents"
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-price-mo",
+          "source": "product.moneyOverride",
+          "field": "specials.boundMoneyOverride"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "blogCategory|summary": [
+        {
+          "id": "bind-price",
+          "source": "product.price",
+          "field": "specials.boundPrice",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare",
+          "source": "product.compareAtPrice",
+          "field": "specials.boundCompare"
+        },
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents"
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-price-mo",
+          "source": "product.moneyOverride",
+          "field": "specials.boundMoneyOverride"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "blogCategory|content": [
+        {
+          "id": "bind-price",
+          "source": "product.price",
+          "field": "specials.boundPrice",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare",
+          "source": "product.compareAtPrice",
+          "field": "specials.boundCompare"
+        },
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents"
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-price-mo",
+          "source": "product.moneyOverride",
+          "field": "specials.boundMoneyOverride"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "blogCategory|author": [
+        {
+          "id": "bind-price",
+          "source": "product.price",
+          "field": "specials.boundPrice",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare",
+          "source": "product.compareAtPrice",
+          "field": "specials.boundCompare"
+        },
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents"
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-price-mo",
+          "source": "product.moneyOverride",
+          "field": "specials.boundMoneyOverride"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "blogCategory|date": [
+        {
+          "id": "bind-price",
+          "source": "product.price",
+          "field": "specials.boundPrice",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare",
+          "source": "product.compareAtPrice",
+          "field": "specials.boundCompare"
+        },
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents"
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-price-mo",
+          "source": "product.moneyOverride",
+          "field": "specials.boundMoneyOverride"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "blogCategory|image": [
+        {
+          "id": "bind-price",
+          "source": "product.price",
+          "field": "specials.boundPrice",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare",
+          "source": "product.compareAtPrice",
+          "field": "specials.boundCompare"
+        },
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents"
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-price-mo",
+          "source": "product.moneyOverride",
+          "field": "specials.boundMoneyOverride"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "blogCategory|price": [
+        {
+          "id": "bind-price",
+          "source": "product.price",
+          "field": "specials.boundPrice",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare",
+          "source": "product.compareAtPrice",
+          "field": "specials.boundCompare"
+        },
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents"
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-price-mo",
+          "source": "product.moneyOverride",
+          "field": "specials.boundMoneyOverride"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "blogCategory|prices": [
+        {
+          "id": "bind-price",
+          "source": "product.price",
+          "field": "specials.boundPrice",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare",
+          "source": "product.compareAtPrice",
+          "field": "specials.boundCompare"
+        },
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents"
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-price-mo",
+          "source": "product.moneyOverride",
+          "field": "specials.boundMoneyOverride"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "blogCategory|url": [
+        {
+          "id": "bind-price",
+          "source": "product.price",
+          "field": "specials.boundPrice",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare",
+          "source": "product.compareAtPrice",
+          "field": "specials.boundCompare"
+        },
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents"
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-price-mo",
+          "source": "product.moneyOverride",
+          "field": "specials.boundMoneyOverride"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "blogCategory|name": [
+        {
+          "id": "bind-price",
+          "source": "product.price",
+          "field": "specials.boundPrice",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare",
+          "source": "product.compareAtPrice",
+          "field": "specials.boundCompare"
+        },
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents"
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-price-mo",
+          "source": "product.moneyOverride",
+          "field": "specials.boundMoneyOverride"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ]
+    },
+    "inspector": [
+      {
+        "tab": "general",
+        "groups": [
+          {
+            "key": "product",
+            "label": "Product",
+            "controls": [
+              "data_source",
+              "product",
+              "productId",
+              "priceValue",
+              "compareValue"
+            ]
+          },
+          {
+            "key": "content",
+            "label": "Content",
+            "controls": [
+              "flash_sale_show_percent"
+            ]
+          },
+          {
+            "key": "size",
+            "label": "Size",
+            "controls": [
+              "width_select",
+              "height_select",
+              "size_bounds"
+            ]
+          },
+          {
+            "key": "layout",
+            "label": "Layout",
+            "controls": [
+              "gap",
+              "padding",
+              "margin"
+            ]
+          },
+          {
+            "key": "typography",
+            "label": "Typography",
+            "controls": [
+              "font_family",
+              "font_size",
+              "text_style",
+              "text_color"
+            ]
+          },
+          {
+            "key": "background",
+            "label": "Background",
+            "controls": [
+              "bg_color"
+            ]
+          },
+          {
+            "key": "shape",
+            "label": "Shape",
+            "controls": [
+              "border",
+              "corner",
+              "shadow"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "advanced",
+        "groups": [
+          {
+            "key": "state",
+            "label": "state",
+            "controls": []
+          },
+          {
+            "key": "spacing",
+            "label": "Spacing",
+            "controls": [
+              "padding_margin"
+            ]
+          },
+          {
+            "key": "display",
+            "label": "Display",
+            "controls": [
+              "display"
+            ]
+          },
+          {
+            "key": "animation",
+            "label": "Animation",
+            "controls": [
+              "animation"
+            ]
+          },
+          {
+            "key": "class_css",
+            "label": "Class",
+            "controls": [
+              "class_css"
+            ]
+          }
+        ]
+      }
+    ],
+    "controls": [
+      "data_source",
+      "product",
+      "productId",
+      "priceValue",
+      "compareValue",
+      "flash_sale_show_percent",
+      "width_select",
+      "height_select",
+      "size_bounds",
+      "gap",
+      "padding",
+      "margin",
+      "font_family",
+      "font_size",
+      "text_style",
+      "text_color",
+      "bg_color",
+      "border",
+      "corner",
+      "shadow",
+      "padding_margin",
+      "display",
+      "animation",
+      "class_css"
+    ],
+    "description": "A product price that follows the store's running flash sale. The page shows the product's base price (and compare-at) exactly like a price display; while a flash sale covers the product, the published page swaps in the sale price, strikes the base price and can show \"−X%\", then reverts by itself when the campaign ends.",
+    "useWhen": [
+      "Product cards or a product page in a store that runs flash sales",
+      "The price inside a \"Flash sale\" block built from a product list"
+    ],
+    "avoidWhen": [
+      "A store that never runs flash sales — use the plain product price",
+      "A static discount flag — use the sale badge"
+    ],
+    "contentTips": [
+      "Place it inside a product card or on a product page so it binds the product",
+      "Turn specials.showPercent off to hide the \"−X%\" next to the sale price",
+      "The sale price itself comes from Manage → Flash sale, never from this element"
+    ],
+    "semantics": [
+      "product",
+      "dataset",
+      "store",
+      "ecommerce",
+      "price",
+      "flash sale",
+      "promotion"
+    ]
+  },
+  "flash-sale-progress": {
+    "type": "flash-sale-progress",
+    "label": "Flash sale progress",
+    "category": "dataset",
+    "isContainer": false,
+    "isRootOnly": false,
+    "locked": false,
+    "hideInLayer": false,
+    "childAllows": [],
+    "defaults": {
+      "style": {
+        "gap": "4px"
+      },
+      "config": {
+        "barHeight": 6,
+        "trackColor": "var(--wb-sc-border, #e5e5e5)",
+        "fillColor": "var(--wb-sc-buttonBg, #171717)"
+      },
+      "specials": {
+        "soldText": "Đã bán {sold}",
+        "almostText": "Sắp cháy hàng",
+        "soldOutText": "Đã hết suất",
+        "showCountdown": true
+      },
+      "bindings": [
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "product_general"
+          }
+        }
+      ]
+    },
+    "bindingsFor": {
+      "product|title": [
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "product_general"
+          }
+        }
+      ],
+      "product|vendor": [
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "product_general"
+          }
+        }
+      ],
+      "product|description": [
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "product_general"
+          }
+        }
+      ],
+      "product|summary": [
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "product_general"
+          }
+        }
+      ],
+      "product|content": [
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "product_general"
+          }
+        }
+      ],
+      "product|author": [
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "product_general"
+          }
+        }
+      ],
+      "product|date": [
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "product_general"
+          }
+        }
+      ],
+      "product|image": [
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "product_general"
+          }
+        }
+      ],
+      "product|price": [
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "product_general"
+          }
+        }
+      ],
+      "product|prices": [
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "product_general"
+          }
+        }
+      ],
+      "product|url": [
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "product_general"
+          }
+        }
+      ],
+      "product|name": [
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "product_general"
+          }
+        }
+      ],
+      "category|title": [
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "product_general"
+          }
+        }
+      ],
+      "category|vendor": [
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "product_general"
+          }
+        }
+      ],
+      "category|description": [
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "product_general"
+          }
+        }
+      ],
+      "category|summary": [
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "product_general"
+          }
+        }
+      ],
+      "category|content": [
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "product_general"
+          }
+        }
+      ],
+      "category|author": [
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "product_general"
+          }
+        }
+      ],
+      "category|date": [
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "product_general"
+          }
+        }
+      ],
+      "category|image": [
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "product_general"
+          }
+        }
+      ],
+      "category|price": [
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "product_general"
+          }
+        }
+      ],
+      "category|prices": [
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "product_general"
+          }
+        }
+      ],
+      "category|url": [
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "product_general"
+          }
+        }
+      ],
+      "category|name": [
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "product_general"
+          }
+        }
+      ],
+      "article|title": [
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "product_general"
+          }
+        }
+      ],
+      "article|vendor": [
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "product_general"
+          }
+        }
+      ],
+      "article|description": [
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "product_general"
+          }
+        }
+      ],
+      "article|summary": [
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "product_general"
+          }
+        }
+      ],
+      "article|content": [
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "product_general"
+          }
+        }
+      ],
+      "article|author": [
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "product_general"
+          }
+        }
+      ],
+      "article|date": [
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "product_general"
+          }
+        }
+      ],
+      "article|image": [
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "product_general"
+          }
+        }
+      ],
+      "article|price": [
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "product_general"
+          }
+        }
+      ],
+      "article|prices": [
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "product_general"
+          }
+        }
+      ],
+      "article|url": [
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "product_general"
+          }
+        }
+      ],
+      "article|name": [
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "product_general"
+          }
+        }
+      ],
+      "course|title": [
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "product_general"
+          }
+        }
+      ],
+      "course|vendor": [
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "product_general"
+          }
+        }
+      ],
+      "course|description": [
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "product_general"
+          }
+        }
+      ],
+      "course|summary": [
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "product_general"
+          }
+        }
+      ],
+      "course|content": [
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "product_general"
+          }
+        }
+      ],
+      "course|author": [
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "product_general"
+          }
+        }
+      ],
+      "course|date": [
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "product_general"
+          }
+        }
+      ],
+      "course|image": [
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "product_general"
+          }
+        }
+      ],
+      "course|price": [
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "product_general"
+          }
+        }
+      ],
+      "course|prices": [
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "product_general"
+          }
+        }
+      ],
+      "course|url": [
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "product_general"
+          }
+        }
+      ],
+      "course|name": [
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "product_general"
+          }
+        }
+      ],
+      "instructor|title": [
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "product_general"
+          }
+        }
+      ],
+      "instructor|vendor": [
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "product_general"
+          }
+        }
+      ],
+      "instructor|description": [
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "product_general"
+          }
+        }
+      ],
+      "instructor|summary": [
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "product_general"
+          }
+        }
+      ],
+      "instructor|content": [
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "product_general"
+          }
+        }
+      ],
+      "instructor|author": [
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "product_general"
+          }
+        }
+      ],
+      "instructor|date": [
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "product_general"
+          }
+        }
+      ],
+      "instructor|image": [
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "product_general"
+          }
+        }
+      ],
+      "instructor|price": [
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "product_general"
+          }
+        }
+      ],
+      "instructor|prices": [
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "product_general"
+          }
+        }
+      ],
+      "instructor|url": [
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "product_general"
+          }
+        }
+      ],
+      "instructor|name": [
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "product_general"
+          }
+        }
+      ],
+      "blogCategory|title": [
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "product_general"
+          }
+        }
+      ],
+      "blogCategory|vendor": [
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "product_general"
+          }
+        }
+      ],
+      "blogCategory|description": [
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "product_general"
+          }
+        }
+      ],
+      "blogCategory|summary": [
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "product_general"
+          }
+        }
+      ],
+      "blogCategory|content": [
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "product_general"
+          }
+        }
+      ],
+      "blogCategory|author": [
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "product_general"
+          }
+        }
+      ],
+      "blogCategory|date": [
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "product_general"
+          }
+        }
+      ],
+      "blogCategory|image": [
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "product_general"
+          }
+        }
+      ],
+      "blogCategory|price": [
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "product_general"
+          }
+        }
+      ],
+      "blogCategory|prices": [
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "product_general"
+          }
+        }
+      ],
+      "blogCategory|url": [
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "product_general"
+          }
+        }
+      ],
+      "blogCategory|name": [
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "product_general"
+          }
+        }
+      ]
+    },
+    "inspector": [
+      {
+        "tab": "general",
+        "groups": [
+          {
+            "key": "product",
+            "label": "Product",
+            "controls": [
+              "data_source",
+              "product",
+              "productId"
+            ]
+          },
+          {
+            "key": "content",
+            "label": "Content",
+            "controls": [
+              "flash_sale_progress_show_countdown"
+            ]
+          },
+          {
+            "key": "messages",
+            "label": "Messages",
+            "controls": [
+              "flash_sale_progress_sold_text",
+              "flash_sale_progress_almost_text",
+              "flash_sale_progress_sold_out_text"
+            ]
+          },
+          {
+            "key": "bar",
+            "label": "Bar",
+            "controls": [
+              "flash_sale_progress_bar_height",
+              "flash_sale_progress_track_color",
+              "flash_sale_progress_fill_color"
+            ]
+          },
+          {
+            "key": "size",
+            "label": "Size",
+            "controls": [
+              "width_select",
+              "size_bounds"
+            ]
+          },
+          {
+            "key": "layout",
+            "label": "Layout",
+            "controls": [
+              "gap",
+              "padding",
+              "margin"
+            ]
+          },
+          {
+            "key": "typography",
+            "label": "Typography",
+            "controls": [
+              "font_family",
+              "font_size",
+              "text_style",
+              "text_color"
+            ]
+          },
+          {
+            "key": "background",
+            "label": "Background",
+            "controls": [
+              "bg_color"
+            ]
+          },
+          {
+            "key": "shape",
+            "label": "Shape",
+            "controls": [
+              "border",
+              "corner",
+              "shadow"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "advanced",
+        "groups": [
+          {
+            "key": "state",
+            "label": "state",
+            "controls": []
+          },
+          {
+            "key": "spacing",
+            "label": "Spacing",
+            "controls": [
+              "padding_margin"
+            ]
+          },
+          {
+            "key": "display",
+            "label": "Display",
+            "controls": [
+              "display"
+            ]
+          },
+          {
+            "key": "animation",
+            "label": "Animation",
+            "controls": [
+              "animation"
+            ]
+          },
+          {
+            "key": "class_css",
+            "label": "Class",
+            "controls": [
+              "class_css"
+            ]
+          }
+        ]
+      }
+    ],
+    "controls": [
+      "data_source",
+      "product",
+      "productId",
+      "flash_sale_progress_show_countdown",
+      "flash_sale_progress_sold_text",
+      "flash_sale_progress_almost_text",
+      "flash_sale_progress_sold_out_text",
+      "flash_sale_progress_bar_height",
+      "flash_sale_progress_track_color",
+      "flash_sale_progress_fill_color",
+      "width_select",
+      "size_bounds",
+      "gap",
+      "padding",
+      "margin",
+      "font_family",
+      "font_size",
+      "text_style",
+      "text_color",
+      "bg_color",
+      "border",
+      "corner",
+      "shadow",
+      "padding_margin",
+      "display",
+      "animation",
+      "class_css"
+    ],
+    "description": "A product's progress toward its running flash sale, hidden until one covers it. The page ships nothing visible; while a flash sale runs the published page reveals a small bar (sold/quota, when the item has a quota) and one message — \"Đã bán {sold}\" (or \"Sắp cháy hàng\" near the quota, \"Đã hết suất\" at it) — with an optional short countdown to the sale's end, then hides again by itself when the campaign ends.",
+    "useWhen": [
+      "A product card or product page in a store that runs flash sales, beside the flash-sale price",
+      "A \"hurry, almost gone\" urgency line under a sale price"
+    ],
+    "avoidWhen": [
+      "A store that never runs flash sales — it never has anything to show",
+      "A plain always-visible stock count — use whatever element already shows inventory"
+    ],
+    "contentTips": [
+      "Place it inside a product card or on a product page so it binds the product",
+      "Edit the three sentences under Messages; {sold} in the first is filled in live",
+      "Turn Show countdown off to drop the small timer to the sale's end",
+      "Bar height and both bar colours are under Bar — the sold count and quota never come from this element"
+    ],
+    "semantics": [
+      "product",
+      "dataset",
+      "store",
+      "ecommerce",
+      "flash sale",
+      "promotion",
+      "progress",
+      "urgency"
     ]
   },
   "collection-media": {
@@ -37835,6 +41802,13 @@ export const BOUND_SPECIALS: Record<string, string[]> = {
     "boundHref",
     "boundHrefLabel"
   ],
+  "flash-sale-price": [
+    "boundCompare",
+    "boundCompareCents",
+    "boundMoneyOverride",
+    "boundPrice",
+    "boundPriceCents"
+  ],
   "media-dataset": [
     "boundImage",
     "boundImages"
@@ -39507,6 +43481,95 @@ export const TRAIT_WRITES: Record<string, TraitDescription> = {
       }
     ]
   },
+  "flash_sale_show_percent": {
+    "key": "flash_sale_show_percent",
+    "label": "Show −X%",
+    "writes": [
+      {
+        "target": "specials",
+        "writeKey": "showPercent",
+        "type": "boolean"
+      }
+    ]
+  },
+  "flash_sale_progress_show_countdown": {
+    "key": "flash_sale_progress_show_countdown",
+    "label": "Countdown",
+    "writes": [
+      {
+        "target": "specials",
+        "writeKey": "showCountdown",
+        "type": "boolean"
+      }
+    ]
+  },
+  "flash_sale_progress_sold_text": {
+    "key": "flash_sale_progress_sold_text",
+    "label": "Sold",
+    "writes": [
+      {
+        "target": "specials",
+        "writeKey": "soldText",
+        "type": "string"
+      }
+    ]
+  },
+  "flash_sale_progress_almost_text": {
+    "key": "flash_sale_progress_almost_text",
+    "label": "Almost gone",
+    "writes": [
+      {
+        "target": "specials",
+        "writeKey": "almostText",
+        "type": "string"
+      }
+    ]
+  },
+  "flash_sale_progress_sold_out_text": {
+    "key": "flash_sale_progress_sold_out_text",
+    "label": "Sold out",
+    "writes": [
+      {
+        "target": "specials",
+        "writeKey": "soldOutText",
+        "type": "string"
+      }
+    ]
+  },
+  "flash_sale_progress_bar_height": {
+    "key": "flash_sale_progress_bar_height",
+    "label": "Bar height",
+    "writes": [
+      {
+        "target": "config",
+        "writeKey": "barHeight",
+        "type": "number",
+        "unit": "px"
+      }
+    ]
+  },
+  "flash_sale_progress_track_color": {
+    "key": "flash_sale_progress_track_color",
+    "label": "Track color",
+    "writes": [
+      {
+        "target": "config",
+        "writeKey": "trackColor",
+        "type": "color"
+      }
+    ]
+  },
+  "flash_sale_progress_fill_color": {
+    "key": "flash_sale_progress_fill_color",
+    "label": "Fill color",
+    "writes": [
+      {
+        "target": "config",
+        "writeKey": "fillColor",
+        "type": "color"
+      }
+    ]
+  },
   "discount_button_label": {
     "key": "discount_button_label",
     "label": "Button text",
@@ -39738,6 +43801,17 @@ export const TRAIT_WRITES: Record<string, TraitDescription> = {
         "target": "specials",
         "writeKey": "sourceCode",
         "type": "string"
+      }
+    ]
+  },
+  "countdown_source_flash_sale": {
+    "key": "countdown_source_flash_sale",
+    "label": "Flash sale",
+    "writes": [
+      {
+        "target": "specials",
+        "writeKey": "sourceFlashSale",
+        "type": "boolean"
       }
     ]
   },

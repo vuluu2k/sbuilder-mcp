@@ -1,6 +1,6 @@
 # Bộ tool
 
-Bốn tool với tới 495 operation của nền tảng, và 166 trong 216 lệnh ghi trong số đó mang theo
+Bốn tool với tới 574 operation của nền tảng, và 197 trong 255 lệnh ghi trong số đó mang theo
 hình dạng body đọc thẳng từ handler decode chúng. `sb_api_find` là một chỉ mục, không phải mỗi
 endpoint một tool — [lý do](../README.vi.md#bộ-tool).
 
@@ -257,7 +257,7 @@ warnings? }` với `warnings` khoá theo id node.
 | `limit` | number? | Mặc định 8, tối đa 30 |
 | `detail` | boolean? | Thêm `useWhen`, `avoidWhen`, `contentTips` vào mọi kết quả |
 
-Tìm trong chính AI hints của nền tảng trên cả 106 element. Mỗi kết quả là
+Tìm trong chính AI hints của nền tảng trên cả 122 element. Mỗi kết quả là
 `{ type, label, category, description }`, kèm `isContainer: true` / `isRootOnly: true` chỉ
 khi đúng — bốn trường để **chọn**. Bản thân các hint, do đội nền tảng viết đúng cho mục đích
 này, đi kèm `sb_traits_for` của element đã chọn, hoặc kèm mọi kết quả khi `detail: true`;

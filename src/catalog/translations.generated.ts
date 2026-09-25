@@ -2,9 +2,9 @@
 // Source: <WB_REPO>/schema/src/elements/translatableFields.ts
 
 export const TRANSLATION_SOURCE = {
-  "elements": 65,
-  "pairs": 177,
-  "neverKeys": 175,
+  "elements": 66,
+  "pairs": 180,
+  "neverKeys": 178,
   "entityTypes": 12
 } as const;
 
@@ -69,6 +69,11 @@ export const TRANSLATABLE_SPECIALS: Record<string, string[]> = {
   "free-ship-bar": [
     "remainingText",
     "reachedText"
+  ],
+  "flash-sale-progress": [
+    "soldText",
+    "almostText",
+    "soldOutText"
   ],
   "voucher-list": [
     "title",
@@ -498,6 +503,7 @@ export const NEVER_TRANSLATED: string[] = [
   "sentText",
   "setRange",
   "showCount",
+  "showCountdown",
   "showCurrent",
   "showDetail",
   "showFlag",
@@ -507,10 +513,12 @@ export const NEVER_TRANSLATED: string[] = [
   "showLogos",
   "showMarker",
   "showOutline",
+  "showPercent",
   "showPhone",
   "showPlaceholder",
   "source",
   "sourceCode",
+  "sourceFlashSale",
   "specificDate",
   "src",
   "start",

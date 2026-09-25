@@ -631,7 +631,7 @@ export const CHECKOUT_PAGE_DOCUMENT = {
         "gap": "12px",
         "fontSize": "16px",
         "fontWeight": "400",
-        "color": "#171717"
+        "color": "var(--wb-sc-heading, #171717)"
       },
       "config": {},
       "specials": {
@@ -662,7 +662,7 @@ export const CHECKOUT_PAGE_DOCUMENT = {
         "gap": "12px",
         "fontSize": "16px",
         "fontWeight": "400",
-        "color": "#171717"
+        "color": "var(--wb-sc-heading, #171717)"
       },
       "config": {},
       "specials": {
@@ -693,7 +693,7 @@ export const CHECKOUT_PAGE_DOCUMENT = {
         "gap": "12px",
         "fontSize": "16px",
         "fontWeight": "400",
-        "color": "#171717"
+        "color": "var(--wb-sc-heading, #171717)"
       },
       "config": {},
       "specials": {
@@ -724,7 +724,7 @@ export const CHECKOUT_PAGE_DOCUMENT = {
         "gap": "12px",
         "fontSize": "16px",
         "fontWeight": "600",
-        "color": "#171717"
+        "color": "var(--wb-sc-heading, #171717)"
       },
       "config": {},
       "specials": {
@@ -755,7 +755,7 @@ export const CHECKOUT_PAGE_DOCUMENT = {
         "gap": "12px",
         "fontSize": "16px",
         "fontWeight": "600",
-        "color": "#171717"
+        "color": "var(--wb-sc-heading, #171717)"
       },
       "config": {},
       "specials": {

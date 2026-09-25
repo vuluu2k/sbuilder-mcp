@@ -4,12 +4,12 @@
 import type { RequestShape } from './types.js';
 
 export const SHAPE_SOURCE = {
-  "writeOperations": 253,
-  "shaped": 195,
-  "fromHandlers": 195,
+  "writeOperations": 255,
+  "shaped": 197,
+  "fromHandlers": 197,
   "fromSwaggerOnly": 0,
-  "withReadOnly": 26,
-  "structsRead": 1875
+  "withReadOnly": 28,
+  "structsRead": 1931
 } as const;
 
 export const REQUEST_SHAPES: Record<string, RequestShape> = {
@@ -3228,6 +3228,178 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
     "source": "go",
     "goType": "(inline)"
   },
+  "post:/api/sites/{siteId}/flash-sales": {
+    "fields": [
+      {
+        "name": "id",
+        "type": "string"
+      },
+      {
+        "name": "siteId",
+        "type": "string"
+      },
+      {
+        "name": "name",
+        "type": "string"
+      },
+      {
+        "name": "startsAt",
+        "type": "string (RFC3339)"
+      },
+      {
+        "name": "endsAt",
+        "type": "string (RFC3339)"
+      },
+      {
+        "name": "active",
+        "type": "boolean"
+      },
+      {
+        "name": "allowDiscountCodes",
+        "type": "boolean"
+      },
+      {
+        "name": "items",
+        "type": "Item[]",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string"
+          },
+          {
+            "name": "flashSaleId",
+            "type": "string"
+          },
+          {
+            "name": "productId",
+            "type": "string"
+          },
+          {
+            "name": "variantId",
+            "type": "string"
+          },
+          {
+            "name": "salePriceCents",
+            "type": "number"
+          },
+          {
+            "name": "quota",
+            "type": "number"
+          },
+          {
+            "name": "perOrderLimit",
+            "type": "number"
+          },
+          {
+            "name": "sold",
+            "type": "number"
+          }
+        ]
+      },
+      {
+        "name": "createdAt",
+        "type": "string (RFC3339)"
+      },
+      {
+        "name": "updatedAt",
+        "type": "string (RFC3339)"
+      }
+    ],
+    "source": "go",
+    "goType": "flashsales.FlashSale",
+    "readOnly": [
+      "id",
+      "createdAt",
+      "updatedAt",
+      "items"
+    ]
+  },
+  "put:/api/sites/{siteId}/flash-sales/{id}": {
+    "fields": [
+      {
+        "name": "id",
+        "type": "string"
+      },
+      {
+        "name": "siteId",
+        "type": "string"
+      },
+      {
+        "name": "name",
+        "type": "string"
+      },
+      {
+        "name": "startsAt",
+        "type": "string (RFC3339)"
+      },
+      {
+        "name": "endsAt",
+        "type": "string (RFC3339)"
+      },
+      {
+        "name": "active",
+        "type": "boolean"
+      },
+      {
+        "name": "allowDiscountCodes",
+        "type": "boolean"
+      },
+      {
+        "name": "items",
+        "type": "Item[]",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string"
+          },
+          {
+            "name": "flashSaleId",
+            "type": "string"
+          },
+          {
+            "name": "productId",
+            "type": "string"
+          },
+          {
+            "name": "variantId",
+            "type": "string"
+          },
+          {
+            "name": "salePriceCents",
+            "type": "number"
+          },
+          {
+            "name": "quota",
+            "type": "number"
+          },
+          {
+            "name": "perOrderLimit",
+            "type": "number"
+          },
+          {
+            "name": "sold",
+            "type": "number"
+          }
+        ]
+      },
+      {
+        "name": "createdAt",
+        "type": "string (RFC3339)"
+      },
+      {
+        "name": "updatedAt",
+        "type": "string (RFC3339)"
+      }
+    ],
+    "source": "go",
+    "goType": "flashsales.FlashSale",
+    "readOnly": [
+      "id",
+      "createdAt",
+      "updatedAt",
+      "items"
+    ]
+  },
   "post:/api/sites/{siteId}/fonts": {
     "fields": [
       {
@@ -4195,6 +4367,16 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
           {
             "name": "taxCents",
             "type": "number"
+          },
+          {
+            "name": "flashItemId",
+            "type": "string",
+            "note": "FlashItemID names the flash-sale item this line was priced by (\"\" = the catalogue price)."
+          },
+          {
+            "name": "noDiscount",
+            "type": "boolean",
+            "note": "NoDiscount keeps this line out of every discount base — a flash-sale line whose campaign does not stack with codes."
           }
         ]
       },
@@ -4474,6 +4656,16 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
           {
             "name": "taxCents",
             "type": "number"
+          },
+          {
+            "name": "flashItemId",
+            "type": "string",
+            "note": "FlashItemID names the flash-sale item this line was priced by (\"\" = the catalogue price)."
+          },
+          {
+            "name": "noDiscount",
+            "type": "boolean",
+            "note": "NoDiscount keeps this line out of every discount base — a flash-sale line whose campaign does not stack with codes."
           }
         ]
       },

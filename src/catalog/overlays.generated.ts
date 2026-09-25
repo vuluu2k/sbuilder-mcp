@@ -771,7 +771,7 @@ export const OVERLAY_SEEDS: Record<'cart' | 'popup' | 'quickview', OverlayDocume
           "gap": "12px",
           "fontSize": "16px",
           "fontWeight": "600",
-          "color": "#171717"
+          "color": "var(--wb-sc-heading, #171717)"
         },
         "config": {},
         "specials": {
@@ -1689,7 +1689,7 @@ export const OVERLAY_SEEDS: Record<'cart' | 'popup' | 'quickview', OverlayDocume
         },
         "style": {
           "fontFamily": "Inter",
-          "color": "#000000",
+          "color": "var(--wb-sc-heading, #000000)",
           "lineHeight": "1.3",
           "fontWeight": "700",
           "textAlign": "left"
@@ -1715,13 +1715,13 @@ export const OVERLAY_SEEDS: Record<'cart' | 'popup' | 'quickview', OverlayDocume
         "style": {
           "fontFamily": "Inter",
           "fontSize": "16px",
-          "color": "#171717",
+          "color": "var(--wb-sc-link, #171717)",
           "lineHeight": "1.3",
           "borderColor": "#d0d0d0",
           "borderWidth": "1px",
           "borderStyle": "solid",
           "borderRadius": "0",
-          "backgroundColor": "#ffffff",
+          "backgroundColor": "var(--wb-sc-background, #ffffff)",
           "padding": "16px 12px",
           "gap": "12px",
           "--variant-image-width": "48px",
@@ -1748,13 +1748,13 @@ export const OVERLAY_SEEDS: Record<'cart' | 'popup' | 'quickview', OverlayDocume
         "states": {
           "hover": {
             "style": {
-              "backgroundColor": "#f5f5f5"
+              "backgroundColor": "var(--wb-sc-border, #f5f5f5)"
             }
           },
           "active": {
             "style": {
-              "borderColor": "#171717",
-              "backgroundColor": "#ffffff"
+              "borderColor": "var(--wb-sc-link, #171717)",
+              "backgroundColor": "var(--wb-sc-background, #ffffff)"
             }
           }
         },
@@ -2812,7 +2812,7 @@ export const CART_SEEDS: Record<string, OverlayDocument> = {
           "gap": "12px",
           "fontSize": "16px",
           "fontWeight": "600",
-          "color": "#171717"
+          "color": "var(--wb-sc-heading, #171717)"
         },
         "config": {},
         "specials": {
@@ -3646,7 +3646,7 @@ export const CART_SEEDS: Record<string, OverlayDocument> = {
           "gap": "12px",
           "fontSize": "16px",
           "fontWeight": "600",
-          "color": "#171717"
+          "color": "var(--wb-sc-heading, #171717)"
         },
         "config": {},
         "specials": {
