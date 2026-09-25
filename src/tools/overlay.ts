@@ -367,12 +367,19 @@ export async function ensureCartDrawer(
   }).catch(() => null)) as { settings?: { locale?: unknown } | null } | null;
   const locale = String(settings?.settings?.locale ?? '').toLowerCase().split('-')[0];
   const seedLocale = Object.hasOwn(CART_SEEDS, locale) ? locale : 'en';
+  const languageNote =
+    seedLocale === locale
+      ? undefined
+      : settings === null
+        ? 'The site settings could not be read, so the drawer is in English — edit its words if the store is not.'
+        : `settings.locale is ${locale ? `"${locale}", which has no seed` : 'unset'}, so the drawer is in English — set it with sb_theme locale first if the store is not.`;
   const seed = CART_SEEDS[seedLocale] ?? OVERLAY_SEEDS.cart;
   const body = { kind: 'cart', name: 'Cart', document: withFreshIds(seed) };
   if (dryRun) {
     return {
       dry_run: true,
       language: seedLocale,
+      ...(languageNote ? { language_note: languageNote } : {}),
       plan: redact([{ step: 1, what: 'create the site\'s cart drawer', method: 'POST', path, body }]),
       note: 'Nothing was sent. Re-call with dry_run:false to create it; it shows on every page.',
     };
@@ -392,6 +399,7 @@ export async function ensureCartDrawer(
     overlay_id: made.overlay.id,
     created: true,
     language: seedLocale,
+    ...(languageNote ? { language_note: languageNote } : {}),
     ...(nodeId ? { node_id: nodeId } : {}),
     next: 'Publish the pages: the drawer reaches a shopper through each published page.',
   };

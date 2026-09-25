@@ -79,4 +79,15 @@ describe('sb_store action:"cart"', () => {
     if (locale === 'vi-VN') expect(doc).not.toContain('Your cart is empty');
     await close();
   });
+
+  it('says WHY a drawer came out in English, and says nothing when it did not', async () => {
+    for (const [locale, note] of [['vi', undefined], [undefined, /unset/], ['xx', /"xx", which has no seed/]] as const) {
+      const { ctx } = site([], locale);
+      const { client, close } = await connectedClient(ctx);
+      const out = parse(await client.callTool({ name: 'sb_store', arguments: { action: 'cart' } }));
+      if (note) expect(out.language_note).toMatch(note);
+      else expect(out.language_note).toBeUndefined();
+      await close();
+    }
+  });
 });
