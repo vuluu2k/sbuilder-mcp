@@ -75,6 +75,8 @@ describe('sb_store action:"cart"', () => {
     const doc = JSON.stringify(calls.find((c) => c.method === 'POST' && c.path === '/api/sites/s1/overlays')!.body);
     expect(doc).toContain(says);
     expect(doc).not.toContain(never);
+    // The empty cart too — it said "Your cart is empty" on a Vietnamese store.
+    if (locale === 'vi-VN') expect(doc).not.toContain('Your cart is empty');
     await close();
   });
 });

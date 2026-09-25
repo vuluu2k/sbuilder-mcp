@@ -3097,7 +3097,7 @@ export const CART_SEEDS: Record<string, OverlayDocument> = {
           "emptyStateId": "cart_16"
         },
         "specials": {
-          "emptyText": "Your cart is empty"
+          "emptyText": "Giỏ hàng đang trống"
         },
         "responsive": {},
         "events": [],
@@ -3548,7 +3548,7 @@ export const CART_SEEDS: Record<string, OverlayDocument> = {
         },
         "specials": {
           "htmlTag": "h3",
-          "text": "Your cart is empty",
+          "text": "Giỏ hàng đang trống",
           "stylePreset": "heading-default"
         },
         "responsive": {},
@@ -3577,7 +3577,7 @@ export const CART_SEEDS: Record<string, OverlayDocument> = {
         },
         "specials": {
           "htmlTag": "p",
-          "text": "Add something you like and it will show up here.",
+          "text": "Thêm sản phẩm bạn thích, chúng sẽ hiện ở đây.",
           "stylePreset": "text-default"
         },
         "responsive": {},
