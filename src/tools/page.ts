@@ -695,10 +695,15 @@ export class PageSession {
       this.sourceRev,
     );
     this.saving = pending;
+    // What a peer touched BEFORE this body was built is in the save; what it
+    // touches while the PUT is in flight is not, so only the former is cleared.
+    const sent = this.remoteTouched;
+    this.remoteTouched = new Set();
     let saved: Awaited<typeof pending>;
     try {
       saved = await pending;
     } catch (e) {
+      for (const id of sent) this.remoteTouched.add(id);
       if (!isSourceStale(e)) throw e;
       this.stale = 'the page was saved elsewhere since this session read it (409 source_stale)';
       if (staleThrows) throw e;
@@ -719,7 +724,6 @@ export class PageSession {
     // "is the document now different from what the server holds", and the
     // re-stamp wrote the server's own answer back into it.
     this.savedRev = d.rev;
-    this.remoteTouched.clear();
     await ensureSiteTheme(this.ctx, this.siteId);
   }
 }

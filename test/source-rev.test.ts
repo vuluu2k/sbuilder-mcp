@@ -40,6 +40,7 @@ function world(opts: { revs?: boolean; fence?: boolean } = {}) {
   const puts: any[] = [];
   let gets = 0;
   let hook: (() => void) | undefined;
+  let putHook: (() => void) | undefined;
   const f = vi.fn(async (url: unknown, init?: RequestInit) => {
     const method = init?.method ?? 'GET';
     const json = (v: unknown, status = 200) =>
@@ -48,6 +49,8 @@ function world(opts: { revs?: boolean; fence?: boolean } = {}) {
     if (method === 'PUT') {
       const body = JSON.parse(String(init!.body));
       puts.push(body);
+      if (putHook) queueMicrotask(putHook);
+      putHook = undefined;
       if (opts.fence !== false && body.baseRev && body.baseRev !== server.rev) {
         return json({ error: 'page: the draft was saved elsewhere since it was loaded', code: 'source_stale', details: { rev: String(server.rev) } }, 409);
       }
@@ -69,7 +72,7 @@ function world(opts: { revs?: boolean; fence?: boolean } = {}) {
     edit(server.doc);
     server.rev += 1;
   };
-  return { ps, server, puts, gets: () => gets, elsewhere, onGet: (f: () => void) => (hook = f) };
+  return { ps, server, puts, gets: () => gets, elsewhere, onGet: (f: () => void) => (hook = f), onPut: (f: () => void) => (putHook = f) };
 }
 
 const setText = (id: string, text: string) => [{ op: 'set' as const, path: ['nodes', id, 'specials', 'text'], value: text }];
@@ -175,6 +178,23 @@ describe("the room's {t:'source'} frame", () => {
     peerEdits(w, deliver, 'he');
     await expect(w.ps.applyAndSave(setText('he', 'Mine'))).rejects.toThrow(/changed under this session/);
     expect(w.server.doc.nodes.he.specials.text).toBe('Peer');
+  });
+
+  it("a peer's op that lands while this session's save is in flight still counts as theirs", async () => {
+    const w = world();
+    const deliver = room(w);
+    deliver({ t: 'welcome', peerId: 'me', peers: [] });
+    await w.ps.open('s1', 'pg');
+    const op = { op: 'set', path: ['nodes', 'tx', 'specials', 'text'], value: 'Peer' };
+    w.onPut(() => deliver({ t: 'ops', pageId: 'pg', seq: 1, peerId: 'human', ops: [op] }));
+    await w.ps.applyAndSave(setText('he', 'One'));
+    expect(w.ps.current().doc.nodes.tx.specials!.text).toBe('Peer');
+    w.elsewhere((d) => {
+      d.nodes.tx.specials.text = 'Peer';
+    });
+    deliver({ t: 'source', pageId: 'pg', rev: w.server.rev });
+    await expect(w.ps.applyAndSave(setText('tx', 'Mine'))).rejects.toThrow(/changed under this session/);
+    expect(w.server.doc.nodes.tx.specials.text).toBe('Peer');
   });
 
   it('a late frame for the save a rebase just re-read does not stale the reapplied write', async () => {
