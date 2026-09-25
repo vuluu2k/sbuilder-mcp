@@ -271,8 +271,10 @@ repo over a number here, and fix the line when you catch one stale.
   body that is EXACTLY `{settings:{locale}}` MERGE instead, and lets a `pages.write` key send it
   (that PUT answered 403 to a key before). A server older than the merge stores `{locale}` as
   the WHOLE of settings, so `sb_theme locale` reads, sends the merged document, and only on a 403
-  tries the narrow body — a 403 there is the same gate on either server, so it cannot wipe. Then
-  the session, when a key was refused and one exists; a 403 on every door is reported as a 403.
+  tries the narrow body — a 403 there is the same gate on either server, so it cannot wipe. The
+  WHOLE body goes with every credential (key, then session) before the narrow one: trying the
+  narrow body with the key first took the merge when a session could have written safely. The
+  GET falls back the same way, and the 403 names each credential refused.
 
 ## Phases — how reach and capability grew
 

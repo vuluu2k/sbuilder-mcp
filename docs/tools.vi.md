@@ -1640,9 +1640,11 @@ giữ bảng màu cũ cho tới khi được publish lần nữa.
 
 `locale` đặt NGÔN NGỮ của site — `settings.locale`, thứ `<html lang>` được phục vụ từ đó, tức
 giọng mà trình đọc màn hình chọn và ngôn ngữ công cụ tìm kiếm index. Nó giữ mọi setting khác
-(đọc, đổi, gửi lại nguyên tài liệu), lùi về body chỉ-có-locale mà nền tảng gộp cho một credential
-hẹp hơn, rồi về session khi key bị từ chối. 403 ở mọi cửa được báo đúng là 403, nêu tên
-credential. Mặc định dry run: `{ dry_run, locale: { from, to } }`.
+(đọc, đổi, gửi lại nguyên tài liệu) và thử body nguyên vẹn đó với mọi credential đang có (key, rồi
+session) trước khi lùi về body chỉ-có-locale mà nền tảng gộp cho một credential hẹp hơn; lần đọc
+settings cũng lùi về session. 403 ở mọi cửa được báo đúng là 403, nêu tên từng credential đã bị từ
+chối. Có `colors` hay `text_styles` trong cùng lần gọi thì chúng được kiểm trước, nên token hay slug
+bị từ chối thì không gì được ghi. Mặc định dry run: `{ dry_run, locale: { from, to } }`.
 
 ## `sb_store`
 

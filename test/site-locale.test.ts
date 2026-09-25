@@ -18,7 +18,13 @@ const text = (id: string, t: string) => ({
   specials: { text: `<p>${t}</p>` },
 });
 
-function site(opts: { locale?: string | null; texts: string[]; refuse?: (body: any, auth: string) => boolean }) {
+function site(opts: {
+  locale?: string | null;
+  texts: string[];
+  refuse?: (body: any, auth: string) => boolean;
+  refuseGet?: (auth: string) => boolean;
+  apiKey?: string;
+}) {
   const calls: Array<{ method: string; path: string; body?: any; auth: string }> = [];
   let settings: Record<string, unknown> | null =
     opts.locale === null ? null : { currency: 'VND', locale: opts.locale ?? 'en' };
@@ -41,7 +47,11 @@ function site(opts: { locale?: string | null; texts: string[]; refuse?: (body: a
     const json = (v: unknown, status = 200) =>
       new Response(JSON.stringify(v), { status, headers: { 'content-type': 'application/json' } });
     if (path.endsWith('/source')) return json({ source: { pageId: 'p1', document: doc, schemaVersion: 2 } });
-    if (path.endsWith('/settings') && method === 'GET') return json({ settings });
+    if (path.endsWith('/settings') && method === 'GET') {
+      if (opts.refuseGet?.(auth)) return json({ error: 'forbidden', code: 'forbidden' }, 403);
+      return json({ settings });
+    }
+    if (path.endsWith('/theme') && method === 'GET') return json({ theme: null });
     if (path.endsWith('/settings') && method === 'PUT') {
       if (opts.refuse?.(body, auth)) return json({ error: 'forbidden', code: 'forbidden' }, 403);
       settings = { ...(settings ?? {}), ...body.settings };
@@ -54,7 +64,10 @@ function site(opts: { locale?: string | null; texts: string[]; refuse?: (body: a
   return {
     calls,
     now: () => settings,
-    ctx: { base: 'http://x', session, fetchImpl: f, notices: new Notices(), undo: new UndoLog(), siteId: 's1' },
+    ctx: {
+      base: 'http://x', session, fetchImpl: f, notices: new Notices(), undo: new UndoLog(), siteId: 's1',
+      ...(opts.apiKey ? { apiKey: opts.apiKey } : {}),
+    },
   };
 }
 
@@ -157,6 +170,47 @@ describe('sb_theme locale', () => {
     const { client, close } = await connectedClient(ctx);
     const out = parse(await client.callTool({ name: 'sb_theme', arguments: { locale: 'Vietnamese!' } }));
     expect(out.error).toMatch(/language tag/);
+    await close();
+  });
+
+  it('tries the whole-settings body with EVERY credential before the locale-only one', async () => {
+    const { ctx, calls, now } = site({
+      locale: 'en', texts: [], apiKey: 'key',
+      refuse: (_b, auth) => auth === 'Bearer key',
+    });
+    const { client, close } = await connectedClient(ctx);
+    await client.callTool({ name: 'sb_theme', arguments: { locale: 'vi', dry_run: false } });
+    const puts = calls.filter((c) => c.method === 'PUT');
+    expect(puts.map((p) => Object.keys(p.body.settings).length > 1)).toEqual([true, true]);
+    expect(now()).toEqual({ currency: 'VND', locale: 'vi' });
+    await close();
+  });
+
+  it('names every credential actually refused', async () => {
+    const { ctx } = site({ locale: 'en', texts: [], apiKey: 'key', refuse: () => true });
+    const { client, close } = await connectedClient(ctx);
+    const out = parse(await client.callTool({ name: 'sb_theme', arguments: { locale: 'vi', dry_run: false } }));
+    expect(out.error).toMatch(/the API key and the session/);
+    await close();
+  });
+
+  it('reads settings with the session when the key is refused the read', async () => {
+    const { ctx, now } = site({ locale: 'en', texts: [], apiKey: 'key', refuseGet: (auth) => auth === 'Bearer key' });
+    const { client, close } = await connectedClient(ctx);
+    const out = parse(await client.callTool({ name: 'sb_theme', arguments: { locale: 'vi', dry_run: false } }));
+    expect(out.locale).toMatchObject({ from: 'en', to: 'vi' });
+    expect(now()).toEqual({ currency: 'VND', locale: 'vi' });
+    await close();
+  });
+
+  it('a bad colour token refuses the call before the locale is written', async () => {
+    const { ctx, calls } = site({ locale: 'en', texts: [] });
+    const { client, close } = await connectedClient(ctx);
+    const out = parse(
+      await client.callTool({ name: 'sb_theme', arguments: { locale: 'vi', colors: { nope: '#000' }, dry_run: false } }),
+    );
+    expect(out.error).toMatch(/no colour token/);
+    expect(calls.filter((c) => c.method === 'PUT')).toEqual([]);
     await close();
   });
 });

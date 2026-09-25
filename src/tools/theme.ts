@@ -121,8 +121,8 @@ const LOCALE_TAG = /^[A-Za-z]{2,8}(-[A-Za-z0-9]{1,8})*$/;
  * back. A caller allowed only the language (web_builder 58dbfefb: a key with
  * pages.write) is refused that, and the platform merges a body that is EXACTLY
  * `{locale}` instead — so that is the second door. Never the first: a server
- * older than the merge would store `{locale}` as the WHOLE of settings. A
- * key refused on both tries the session when there is one.
+ * older than the merge would store `{locale}` as the WHOLE of settings. Each
+ * door is tried with every credential (key, then session) before the next.
  */
 async function setLocale(
   ctx: ToolContext,
@@ -134,30 +134,49 @@ async function setLocale(
     throw new Error(`sbuilder: "${locale}" is not a language tag — use one like "vi", "en" or "en-GB".`);
   }
   const path = `/api/sites/${encodeURIComponent(siteId)}/settings`;
-  const got = (await request({ base: ctx.base, method: 'GET', path, token: siteToken(ctx), fetchImpl: ctx.fetchImpl })) as {
-    settings?: Record<string, unknown> | null;
-  };
-  const current = got?.settings ?? {};
+  // Every credential this install holds, the site-scoped pick first.
+  const creds = [{ token: siteToken(ctx), name: ctx.apiKey ? 'the API key' : 'the session' }];
+  if (ctx.apiKey && ctx.session.loggedIn()) creds.push({ token: ctx.session.token(), name: 'the session' });
+  const refused = new Set<string>();
+  const is403 = (e: unknown): boolean => e instanceof ApiError && e.status === 403;
+
+  let got: { settings?: Record<string, unknown> | null } | undefined;
+  for (const c of creds) {
+    try {
+      got = (await request({ base: ctx.base, method: 'GET', path, token: c.token, fetchImpl: ctx.fetchImpl })) as typeof got;
+      break;
+    } catch (e) {
+      if (!is403(e)) throw e;
+      refused.add(c.name);
+    }
+  }
+  if (!got) throw refusal(siteId, 'read settings', [...refused], ctx);
+  const current = got.settings ?? {};
   const from = typeof current.locale === 'string' ? current.locale : null;
   if (from === locale) return { from, to: locale, unchanged: true };
   if (dryRun) return { from, to: locale };
 
-  const tokens = [siteToken(ctx)];
-  if (ctx.apiKey && ctx.session.loggedIn()) tokens.push(ctx.session.token());
+  // The whole body with EVERY credential before the locale-only one: a session
+  // that may write settings keeps the safe door open where the key alone would
+  // have taken the merge.
   const bodies = [{ settings: { ...current, locale } }, { settings: { locale } }];
-  for (const token of tokens) {
-    for (const body of bodies) {
+  for (const body of bodies) {
+    for (const c of creds) {
       try {
-        await request({ base: ctx.base, method: 'PUT', path, token, body, fetchImpl: ctx.fetchImpl });
+        await request({ base: ctx.base, method: 'PUT', path, token: c.token, body, fetchImpl: ctx.fetchImpl });
         return { from, to: locale };
       } catch (e) {
-        if (!(e instanceof ApiError && e.status === 403)) throw e;
+        if (!is403(e)) throw e;
+        refused.add(c.name);
       }
     }
   }
-  throw new Error(
-    `sbuilder: 403 — the platform refused to write settings.locale on ${siteId} with ` +
-      (ctx.apiKey ? 'the API key' : 'the session') +
+  throw refusal(siteId, 'write settings.locale', [...refused], ctx);
+}
+
+function refusal(siteId: string, what: string, refused: string[], ctx: ToolContext): Error {
+  return new Error(
+    `sbuilder: 403 — the platform refused to ${what} on ${siteId} with ${refused.join(' and ')}` +
       (ctx.apiKey && !ctx.session.loggedIn() ? ' (no session to try: set SB_EMAIL/SB_PASSWORD)' : '') +
       '. The whole-settings write needs settings permission; a locale-only write needs ' +
       'pages.write on a platform that has it. Nothing was changed.',
@@ -191,8 +210,8 @@ export function registerThemeTools(server: McpServer, ctx: ToolContext): void {
     },
     async ({ site_id: given, colors, text_styles, locale, dry_run }) => {
       const site_id = siteFor(ctx, given);
-      const lang = locale ? { locale: await setLocale(ctx, site_id, locale, dry_run !== false) } : {};
       if (locale && !colors && !text_styles) {
+        const lang = { locale: await setLocale(ctx, site_id, locale, dry_run !== false) };
         return text({
           ...(dry_run !== false && !lang.locale?.unchanged ? { dry_run: true } : {}),
           ...lang,
@@ -268,6 +287,9 @@ export function registerThemeTools(server: McpServer, ctx: ToolContext): void {
         }
       }
 
+      // The locale is written only once the theme half has been validated, so a
+      // refused token or slug leaves nothing half-changed.
+      const lang = locale ? { locale: await setLocale(ctx, site_id, locale, dry_run !== false) } : {};
       if (!changes.length) {
         return text({ unchanged: true, ...lang, note: 'Every value named already holds that value.' });
       }

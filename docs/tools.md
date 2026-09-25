@@ -1688,10 +1688,12 @@ preset resolves through those ids, so an invented one would be stored and read b
 
 `locale` sets the site's LANGUAGE — `settings.locale`, what `<html lang>` is served from, so
 the voice a screen reader picks and the language a search engine indexes. It keeps every other
-setting (read, change, send the whole document back), falls back to the locale-only body the
-platform merges for a narrower credential, then to the session when a key is refused. A 403 on
-every door is reported as one, naming the credential. Dry run by default: `{ dry_run, locale:
-{ from, to } }`.
+setting (read, change, send the whole document back) and tries that whole body with every
+credential it holds (the key, then the session) before falling back to the locale-only body the
+platform merges for a narrower credential; the settings read falls back to the session too. A 403
+on every door is reported as one, naming each credential that was refused. With `colors` or
+`text_styles` in the same call, those are validated first, so a refused token or slug writes
+nothing. Dry run by default: `{ dry_run, locale: { from, to } }`.
 
 Republish afterwards. A theme is compiled into each page's stylesheet, so a saved page keeps
 the old palette until it is published again.
