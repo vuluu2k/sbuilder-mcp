@@ -6,7 +6,7 @@ import { UndoLog } from '../src/tools/undo.js';
 import { OVERLAY_SEEDS } from '../src/catalog/overlays.generated.js';
 
 /** A site whose overlay list is `kinds`; every call recorded. */
-function site(kinds: string[]) {
+function site(kinds: string[], locale?: string) {
   const calls: Array<{ method: string; path: string; body?: any }> = [];
   const f = (async (url: unknown, init?: RequestInit) => {
     const path = new URL(String(url)).pathname;
@@ -18,6 +18,7 @@ function site(kinds: string[]) {
     if (path.endsWith('/overlays') && method === 'GET') {
       return json({ overlays: kinds.map((k, i) => ({ id: `ov_${i}`, kind: k })) });
     }
+    if (path.endsWith('/settings') && method === 'GET') return json({ settings: locale ? { locale } : {} });
     if (path.endsWith('/overlays') && method === 'POST') return json({ overlay: { id: 'cart_1', kind: 'cart' } }, 201);
     return json({});
   }) as unknown as typeof fetch;
@@ -58,6 +59,22 @@ describe('sb_store action:"cart"', () => {
     const out = parse(await client.callTool({ name: 'sb_store', arguments: { action: 'cart', dry_run: false } }));
     expect(out.overlay_id).toBe('ov_0');
     expect(calls.filter((c) => c.method !== 'GET')).toEqual([]);
+    await close();
+  });
+
+  // The editor seeds the drawer in `settings.locale`; this tool seeded English
+  // on every store, so a Vietnamese shop said "Your cart" / "Checkout".
+  it.each([
+    ['vi-VN', '"text":"Giỏ hàng"', '"text":"Your cart"'],
+    [undefined, '"text":"Your cart"', '"text":"Giỏ hàng"'],
+    ['xx', '"text":"Your cart"', '"text":"Giỏ hàng"'],
+  ])('speaks the site language (%s)', async (locale, says, never) => {
+    const { calls, ctx } = site([], locale);
+    const { client, close } = await connectedClient(ctx);
+    await client.callTool({ name: 'sb_store', arguments: { action: 'cart', dry_run: false } });
+    const doc = JSON.stringify(calls.find((c) => c.method === 'POST' && c.path === '/api/sites/s1/overlays')!.body);
+    expect(doc).toContain(says);
+    expect(doc).not.toContain(never);
     await close();
   });
 });

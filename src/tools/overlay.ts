@@ -57,7 +57,7 @@ import { siteToken } from './credentialpick.js';
 import type { ToolContext } from './context.js';
 import type { PageSession } from './page.js';
 import { setKeys } from '../domains/site/builder.js';
-import { OVERLAY_SEEDS } from '../catalog/overlays.generated.js';
+import { CART_SEEDS, OVERLAY_SEEDS } from '../catalog/overlays.generated.js';
 import { withFreshIds } from '../domains/site/ids.js';
 
 interface Step {
@@ -355,10 +355,24 @@ export async function ensureCartDrawer(
   const existing = (listed.overlays ?? []).find((o) => o.kind === 'cart');
   if (existing) return { overlay_id: existing.id, created: false, note: 'This site already has its cart drawer.' };
 
-  const body = { kind: 'cart', name: 'Cart', document: withFreshIds(OVERLAY_SEEDS.cart) };
+  // The editor seeds the drawer in the site's language (`settings.locale`).
+  // With none set the editor falls back to ITS UI language, which a server
+  // does not have — so English, and the result says which one was used.
+  const settings = (await request({
+    base: ctx.base,
+    method: 'GET',
+    path: `/api/sites/${site}/settings`,
+    token: siteToken(ctx),
+    fetchImpl: ctx.fetchImpl,
+  }).catch(() => null)) as { settings?: { locale?: unknown } | null } | null;
+  const locale = String(settings?.settings?.locale ?? '').toLowerCase().split('-')[0];
+  const seedLocale = Object.hasOwn(CART_SEEDS, locale) ? locale : 'en';
+  const seed = CART_SEEDS[seedLocale] ?? OVERLAY_SEEDS.cart;
+  const body = { kind: 'cart', name: 'Cart', document: withFreshIds(seed) };
   if (dryRun) {
     return {
       dry_run: true,
+      language: seedLocale,
       plan: redact([{ step: 1, what: 'create the site\'s cart drawer', method: 'POST', path, body }]),
       note: 'Nothing was sent. Re-call with dry_run:false to create it; it shows on every page.',
     };
@@ -377,6 +391,7 @@ export async function ensureCartDrawer(
   return {
     overlay_id: made.overlay.id,
     created: true,
+    language: seedLocale,
     ...(nodeId ? { node_id: nodeId } : {}),
     next: 'Publish the pages: the drawer reaches a shopper through each published page.',
   };
