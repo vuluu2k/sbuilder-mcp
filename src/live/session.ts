@@ -57,6 +57,8 @@ export class LiveSession {
   private roster = new Map<string, Peer>();
   /** opId → the page it was sent for; seq is per page, so only this page's acks move `seq`. */
   private pending = new Map<string, string>();
+  /** Every op id this session has seen acked; an id it never issued is never in it. */
+  private acked = new Set<string>();
   private seq = 0;
 
   constructor(
@@ -142,10 +144,14 @@ export class LiveSession {
 
   /**
    * Resolves true once the server has acked every one of `opIds`, false at
-   * `capMs`. An op that went nowhere never acks, so the answer is then false.
+   * `capMs`. An op that went nowhere never acks, so the answer is then false —
+   * and so does an id this session never issued (another room's, after a
+   * rejoin): absent from `pending` is not the same as acked.
+   *
+   * ponytail: `acked` grows by one short id per op for the life of the seat.
    */
   whenAcked(opIds: string[], capMs: number): Promise<boolean> {
-    const left = (): boolean => opIds.some((id) => this.pending.has(id));
+    const left = (): boolean => opIds.some((id) => !this.acked.has(id));
     if (!left()) return Promise.resolve(true);
     return new Promise((resolve) => {
       const check = (): void => {
@@ -209,7 +215,7 @@ export class LiveSession {
       case 'ack': {
         const opId = String(e.opId ?? '');
         const forPage = this.pending.get(opId);
-        this.pending.delete(opId);
+        if (this.pending.delete(opId)) this.acked.add(opId);
         const s = Number(e.seq ?? 0);
         if (forPage === this.pageId && s > this.seq) this.seq = s;
         for (const w of [...this.ackWaiters]) w();

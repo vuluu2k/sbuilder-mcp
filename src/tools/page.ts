@@ -161,7 +161,10 @@ export class PageSession {
    * the editor, which filters by page, dropped all of them.
    */
   attachLive(live: LiveSession, siteId: string): void {
-    if (this.live !== live) this.live?.close();
+    if (this.live !== live) {
+      this.live?.close();
+      this.forgetBroadcast();
+    }
     this.live = live;
     this.liveSite = siteId;
     this.unwatch();
@@ -191,12 +194,24 @@ export class PageSession {
     if (this.pageId && this.siteId === siteId) live.start(this.pageId);
   }
 
+  /**
+   * A new seat (or none) cannot vouch for what the old one sent: its queued
+   * frames die with it, and its op ids mean nothing to the new room. A copy
+   * with unsaved edits therefore names no peer until a save has stored it; a
+   * clean copy IS the stored page, which every room already has.
+   */
+  private forgetBroadcast(): void {
+    this.broadcastRev = this.doc && !this.hasUnsaved() ? this.doc.rev : -1;
+    this.sentOps = [];
+  }
+
   /** Leave the room, if in one. */
   private unwatch: () => void = () => {};
 
   leaveLive(): void {
     this.unwatch();
     this.live?.close();
+    this.forgetBroadcast();
     this.live = null;
     this.liveSite = '';
   }

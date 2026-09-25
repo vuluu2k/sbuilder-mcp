@@ -40,6 +40,7 @@ function world(opts: { revs?: boolean; fence?: boolean } = {}) {
   const puts: any[] = [];
   const peers: Array<string | undefined> = [];
   let losePut = false;
+  let failPut = false;
   let gets = 0;
   let hook: (() => void) | undefined;
   let putHook: (() => void) | undefined;
@@ -55,6 +56,10 @@ function world(opts: { revs?: boolean; fence?: boolean } = {}) {
       peers.push(((init?.headers ?? {}) as Record<string, string>)['X-WB-Live-Peer']);
       if (putHook) queueMicrotask(putHook);
       putHook = undefined;
+      if (failPut) {
+        failPut = false;
+        return json({ error: 'boom' }, 500);
+      }
       if (opts.fence !== false && body.baseRev && body.baseRev !== server.rev) {
         return json({ error: 'page: the draft was saved elsewhere since it was loaded', code: 'source_stale', details: { rev: String(server.rev) } }, 409);
       }
@@ -85,7 +90,7 @@ function world(opts: { revs?: boolean; fence?: boolean } = {}) {
     edit(server.doc);
     server.rev += 1;
   };
-  return { ps, server, puts, gets: () => gets, elsewhere, onGet: (f: () => void) => (hook = f), onPut: (f: () => void) => (putHook = f), peers, acks: { on: true }, fake: null as FakeSocket | null, losePut: () => (losePut = true), holdGet: (p: Promise<void>) => (held = p) };
+  return { ps, server, puts, gets: () => gets, elsewhere, onGet: (f: () => void) => (hook = f), onPut: (f: () => void) => (putHook = f), peers, acks: { on: true }, fake: null as FakeSocket | null, losePut: () => (losePut = true), failPut: () => (failPut = true), frames: [] as any[], holdGet: (p: Promise<void>) => (held = p) };
 }
 
 const setText = (id: string, text: string) => [{ op: 'set' as const, path: ['nodes', id, 'specials', 'text'], value: text }];
@@ -135,6 +140,7 @@ describe("the room's {t:'source'} frame", () => {
     // The server acks every ops frame unless the test says otherwise.
     fake.send = (data: string) => {
       const f = JSON.parse(data);
+      w.frames.push(f);
       if (f.t === 'ops' && w.acks.on) {
         queueMicrotask(() => fake.onmessage!({ data: JSON.stringify({ t: 'ack', opId: f.opId, seq: 1 }) }));
       }
@@ -309,6 +315,20 @@ describe("the room's {t:'source'} frame", () => {
     expect(w.gets()).toBe(reads);
     expect(w.server.doc.nodes.he.specials.text).toBe('Two');
   });
+
+  it('a rejoin forgets the ops the old room never acked: no header', async () => {
+    const w = world({ fence: false });
+    room(w)({ t: 'welcome', peerId: 'A', peers: [] });
+    await w.ps.open('s1', 'pg');
+    w.acks.on = false;
+    w.failPut();
+    await expect(w.ps.applyAndSave(setText('he', 'Lost'))).rejects.toThrow();
+    w.acks.on = true;
+    room(w)({ t: 'welcome', peerId: 'B', peers: [] });
+    await w.ps.applyAndSave(setText('tx', 'Next'));
+    // Room B never saw 'Lost'; the save still carries it.
+    expect(w.peers.at(-1)).toBeUndefined();
+  }, 10_000);
 
   it('its own save, another page, and an unknown frame type change nothing', async () => {
     const w = world({ fence: false });

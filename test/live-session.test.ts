@@ -47,6 +47,16 @@ describe('LiveSession', () => {
     expect(live.humanPresent).toBe(false);
   });
 
+  it('whenAcked: an op id this session never issued is not acked', async () => {
+    const { live, deliver } = harness();
+    live.start('pg_1');
+    deliver({ t: 'welcome', peerId: 'me', peers: [] });
+    expect(await live.whenAcked(['from-another-room'], 5)).toBe(false);
+    const { opIds } = live.publish([{ op: 'set', path: ['nodes', 'a', 'style', 'gap'], value: '8px' }]);
+    deliver({ t: 'ack', opId: opIds[0], seq: 1 });
+    expect(await live.whenAcked(opIds, 5)).toBe(true);
+  });
+
   it('publishes patches as one ops frame carrying an opId', () => {
     const { fake, live, deliver } = harness();
     live.start('pg_1');
