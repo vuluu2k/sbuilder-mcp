@@ -417,7 +417,8 @@ mọi bất đồng.
 với bản đang lưu và phát thành op theo node cho ĐÚNG trang đó, khi có người trong phòng đang
 mở trang ấy (thêm hai lần đọc, chỉ khi đó). Global section và overlay không cần gì: nền tảng
 tự báo khi chúng được lưu. Ngoại lệ là đổi tên root: phòng không đồng bộ `root_node_id`, nên
-editor đang mở phải tải lại mới thấy.
+editor đang mở phải tải lại mới thấy. Thay trang mà CHÍNH phiên này đang mở sẽ đánh dấu bản của
+nó là cũ, nên lần sửa kế tiếp kéo lại trước, thay vì lưu bản cũ đè lên lần ghi đó.
 
 ## `sb_look`
 

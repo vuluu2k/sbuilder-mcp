@@ -107,7 +107,10 @@ export function remapIds<T extends IdDoc>(doc: T, idFor: (id: string, node: unkn
  * paints white in any editor before web_builder `7322af49a`.
  */
 export function withFreshIds<T extends IdDoc>(doc: T): T {
-  return remapIds(doc, (id, node) =>
+  // A DEEP copy: remapIds rebuilds only id/data/config, so `specials`/`style`
+  // would otherwise be the generated seed's own objects — and a caller editing
+  // one page would edit that seed for every later create in this process.
+  return remapIds(structuredClone(doc), (id, node) =>
     id === PAGE_ROOT_ID ? id : genId((node as { data?: { type?: string } })?.data?.type ?? 'node'),
   );
 }

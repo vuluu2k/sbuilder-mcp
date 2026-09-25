@@ -136,7 +136,8 @@ type DocShape = { root_node_id?: string; nodes: Record<string, unknown> };
  */
 export interface PageWriteWatcher {
   watching(siteId: string, pageId: string, doc: unknown): boolean;
-  written(siteId: string, pageId: string, before: DocShape, after: DocShape): void;
+  /** `before`/`after` are undefined when that read failed. */
+  written(siteId: string, pageId: string, before: DocShape | undefined, after: DocShape | undefined): void;
 }
 
 let watcher: PageWriteWatcher | null = null;
@@ -173,7 +174,12 @@ export async function request(opts: RequestOpts): Promise<unknown> {
   const before = await read().catch(() => undefined);
   const out = await send(opts);
   const after = await read().catch(() => undefined);
-  if (before?.nodes && after?.nodes) w.written(siteId, pageId, before, after);
+  // The write already succeeded; an announce that throws must not report it failed.
+  try {
+    w.written(siteId, pageId, before, after);
+  } catch (e) {
+    console.error(`sbuilder: page ${pageId} was written; announcing it failed: ${(e as Error).message}`);
+  }
   return out;
 }
 

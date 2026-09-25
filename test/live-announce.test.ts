@@ -123,3 +123,33 @@ describe('every page-document write this server makes reaches the live room', ()
     expect(ops(fake)).toEqual([]);
   });
 });
+
+describe('a raw write to the page this session has open', () => {
+  it.each(['pg_a', 'pg_b'])('%s: the next edit does not resurrect what the raw write removed', async (pg) => {
+    const { ctx, ps, docs } = world();
+    await ps.open('s1', pg);
+    const next = page();
+    next.nodes.sec.data.nodes = ['he'];
+    delete next.nodes.tx;
+    await request({
+      base: ctx.base, method: 'PUT', path: `/api/sites/s1/pages/${pg}/source`, token: 'jwt',
+      body: { document: next, schemaVersion: 2 }, fetchImpl: ctx.fetchImpl,
+    });
+    await ps.applyAndSave([{ op: 'set', path: ['nodes', 'he', 'specials', 'text'], value: 'Mine' }]);
+    expect(docs[pg].nodes.tx).toBeUndefined();
+    expect(docs[pg].nodes.sec.data.nodes).toEqual(['he']);
+    expect(docs[pg].nodes.he.specials.text).toBe('Mine');
+  });
+
+  it('a throwing announce does not fail a write that succeeded', async () => {
+    const { ctx, fake, docs } = world();
+    fake.send = () => { throw new Error('socket gone'); };
+    const next = page();
+    next.nodes.he.specials.text = 'Changed';
+    await expect(request({
+      base: ctx.base, method: 'PUT', path: '/api/sites/s1/pages/pg_b/source', token: 'jwt',
+      body: { document: next, schemaVersion: 2 }, fetchImpl: ctx.fetchImpl,
+    })).resolves.toBeTruthy();
+    expect(docs.pg_b.nodes.he.specials.text).toBe('Changed');
+  });
+});

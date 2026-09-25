@@ -48,3 +48,19 @@ describe('every page create mints fresh node ids', () => {
     }
   });
 });
+
+describe('a created page shares nothing with the generated seed', () => {
+  const makers: Array<[string, () => Doc]> = [
+    ['layout', () => layoutDocument(layoutNames()[0]) as Doc],
+    ['seed', () => seedDocument(seededTypes()[0]) as Doc],
+  ];
+  it.each(makers)('%s: mutating one create does not reach the next', (_name, make) => {
+    const a = make();
+    const clean = JSON.stringify(Object.values(make().nodes).map((n) => [n.specials, n.style]));
+    for (const n of Object.values(a.nodes)) {
+      for (const k of ['specials', 'style', 'config']) if (n[k]) n[k].__poisoned = true;
+    }
+    const b = make();
+    expect(JSON.stringify(Object.values(b.nodes).map((n) => [n.specials, n.style]))).toBe(clean);
+  });
+});

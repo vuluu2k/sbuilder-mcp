@@ -133,8 +133,20 @@ export class PageSession {
     this.unwatch = watchPageWrites({
       // The session's own document is already on the wire as its patch batch.
       watching: (site, page, doc) =>
-        this.live !== null && this.liveSite === site && doc !== this.doc?.doc && this.peersOn(page).length > 0,
-      written: (_site, page, before, after) => {
+        this.live !== null &&
+        this.liveSite === site &&
+        doc !== this.doc?.doc &&
+        (this.isOpen(site, page) || this.peersOn(page).length > 0),
+      written: (site, page, before, after) => {
+        // A write to the page THIS session holds replaced what its copy was
+        // read from: saving that copy next would resurrect whatever the write
+        // removed. The yield rule re-pulls before the next save.
+        if (this.isOpen(site, page)) this.markStale('the page was written by another call');
+        if (this.peersOn(page).length === 0) return;
+        if (!before?.nodes || !after?.nodes) {
+          console.error(`sbuilder: page ${page} was written but could not be re-read; the live room was not told`);
+          return;
+        }
         // `root_node_id` is outside what the room syncs; ops against a renamed
         // root would unset the node the editor draws from. It must re-read.
         if (before.root_node_id !== after.root_node_id) {
@@ -336,6 +348,10 @@ export class PageSession {
     }
     console.error(`sbuilder: page changed under this session (${reason}); re-pulled and reapplied`);
     return this.applyAndSave(patches);
+  }
+
+  private isOpen(siteId: string, pageId: string): boolean {
+    return this.doc !== null && this.siteId === siteId && this.pageId === pageId;
   }
 
   /** Names of the people in the live room who are on this page right now. */

@@ -430,7 +430,9 @@ run beside a human; the human wins every disagreement.
 against the page as stored and published as node-level ops for THAT page, whenever someone in
 the room is on it (two extra reads, only then). Shared sections and overlays need nothing:
 the platform announces their saves itself. A root RENAME is the exception: `root_node_id` is
-not something the room syncs, so an open editor must reload to see it.
+not something the room syncs, so an open editor must reload to see it. A replace of the page
+THIS session has open marks its copy stale, so the next edit re-pulls first instead of saving
+the old copy back over the write.
 
 ## `sb_look`
 
