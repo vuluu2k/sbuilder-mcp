@@ -213,4 +213,33 @@ describe('tokensFromPage', () => {
     expect(t.headingColor).toBe('#222');
     expect(t.sectionPadding).toBe('64px 24px');
   });
+
+  it('reads neither the shared header nor an overlay composed onto ROOT', () => {
+    const doc = {
+      root_node_id: 'ROOT',
+      nodes: {
+        ROOT: { id: 'ROOT', data: { type: 'root', parent: null, nodes: ['hd', 'cart', 'pop', 'sec'] } },
+        hd: { id: 'hd', data: { type: 'flex-section', parent: 'ROOT', nodes: ['hh', 'hb', 'ht'] }, specials: { globalId: 'g1', globalKind: 'header' }, style: { padding: '1px' } },
+        hh: { id: 'hh', data: { type: 'heading', parent: 'hd', nodes: [] }, style: { color: '#fff001' } },
+        hb: { id: 'hb', data: { type: 'button', parent: 'hd', nodes: [] }, style: { backgroundColor: '#fff002', color: '#fff003' } },
+        ht: { id: 'ht', data: { type: 'text', parent: 'hd', nodes: [] }, style: { color: '#fff004' } },
+        cart: { id: 'cart', data: { type: 'cart-drawer', parent: 'ROOT', nodes: ['cb', 'ct'] }, specials: { overlayId: 'ov1', overlayKind: 'cart' } },
+        cb: { id: 'cb', data: { type: 'button', parent: 'cart', nodes: [] }, style: { backgroundColor: '#0f0001', color: '#0f0002', borderRadius: '99px' } },
+        ct: { id: 'ct', data: { type: 'text', parent: 'cart', nodes: [] }, style: { color: '#0f0003' } },
+        pop: { id: 'pop', data: { type: 'popup', parent: 'ROOT', nodes: ['ph'] }, specials: { overlayId: 'ov2', overlayKind: 'popup' } },
+        ph: { id: 'ph', data: { type: 'heading', parent: 'pop', nodes: [] }, style: { color: '#0f0004' } },
+        sec: { id: 'sec', data: { type: 'flex-section', parent: 'ROOT', nodes: ['h2', 'p2', 'b2'] }, style: { padding: '64px 24px' } },
+        h2: { id: 'h2', data: { type: 'heading', parent: 'sec', nodes: [] }, style: { color: '#222' } },
+        p2: { id: 'p2', data: { type: 'text', parent: 'sec', nodes: [] }, style: { color: '#444' } },
+        b2: { id: 'b2', data: { type: 'button', parent: 'sec', nodes: [] }, style: { backgroundColor: '#e85' } },
+      },
+    };
+    const t = tokensFromPage(doc as never);
+    expect(t).toEqual({
+      headingColor: '#222',
+      textColor: '#444',
+      buttonBg: '#e85',
+      sectionPadding: '64px 24px',
+    });
+  });
 });
