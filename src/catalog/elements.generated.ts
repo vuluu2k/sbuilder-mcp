@@ -13529,6 +13529,13 @@ export const ELEMENTS: Record<string, CatalogElement> = {
             ]
           },
           {
+            "key": "menu_look",
+            "label": "Menu look",
+            "controls": [
+              "menu_look"
+            ]
+          },
+          {
             "key": "size",
             "label": "Size",
             "controls": [
@@ -13615,6 +13622,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
       "menu_skins",
       "menu_source",
       "menu_structure",
+      "menu_look",
       "width_select",
       "height_select",
       "size_bounds",
@@ -13948,6 +13956,16 @@ export const ELEMENTS: Record<string, CatalogElement> = {
         "width": "480px",
         "gap": "0px",
         "padding": "32px 16px 32px 16px"
+      },
+      "config": {
+        "megaWidth": "auto"
+      },
+      "responsive": {
+        "mobile": {
+          "config": {
+            "megaWidth": "full"
+          }
+        }
       }
     },
     "inspector": [
@@ -13960,7 +13978,8 @@ export const ELEMENTS: Record<string, CatalogElement> = {
             "controls": [
               "width_select",
               "height_select",
-              "size_bounds"
+              "size_bounds",
+              "mega_width"
             ]
           },
           {
@@ -14025,6 +14044,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
       "width_select",
       "height_select",
       "size_bounds",
+      "mega_width",
       "direction",
       "gap",
       "padding",
@@ -41061,6 +41081,17 @@ export const ELEMENT_VALUES: Record<string, Record<string, ValueVocabulary>> = {
         "dropdown"
       ],
       "readBy": "SUBMENU_STYLES (VOCAB in schema/src/elements/menu/meta.ts)"
+    }
+  },
+  "menu-panel": {
+    "megaWidth": {
+      "target": "config",
+      "writeKey": "megaWidth",
+      "values": [
+        "auto",
+        "full"
+      ],
+      "readBy": "MEGA_WIDTHS (VOCAB in schema/src/elements/menu-panel/meta.ts)"
     }
   },
   "chat-widget": {
