@@ -448,7 +448,10 @@ repo over a number here, and fix the line when you catch one stale.
   `handbuilt_menu`.** No drawer on a phone, no site menu to edit once, a cart that was a box
   wrapping an icon with the click on the icon only, in a `container-section` capped at 1440px.
   It now creates the SITE MENU first (`POST /menus`, reused BY NAME so a re-run makes no
-  duplicate) with rows that are REFERENCES — `{type:"page", pageId}`, `{type:"productCategory",
+  duplicate — EXCEPT a menu whose every row links nowhere (`menuSnapshot`'s unlinked +
+  unresolved = all rows, e.g. `sb_menu`'s four `type:'none'` placeholders), whose rows are PUT
+  with the real ones: reusing it by name put a header linking nowhere on every page and
+  reported only `reused:true`; a menu with any working link is the merchant's and is kept) with rows that are REFERENCES — `{type:"page", pageId}`, `{type:"productCategory",
   entityId}`, `{type:"product", entityId}` — because a stored address dies when a slug changes;
   resolves them through `menuSnapshot` (the same code `action:"menu"` binds with); and builds the
   editor's own Navigation composition (`pickerPresets.ts` navigationTree): desktop `menu` hidden

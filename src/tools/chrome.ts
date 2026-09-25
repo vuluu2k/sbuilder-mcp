@@ -236,16 +236,25 @@ export function footerMenus(
 
 export interface MenuPlan {
   name: string;
-  would?: 'create' | 'reuse';
+  would?: 'create' | 'reuse' | 'fill';
   id?: string;
   created?: boolean;
+  filled?: boolean;
   items?: MenuItemInput[];
+  rows?: Array<Record<string, unknown>>;
 }
+
+const rowCount = (items: Array<{ items?: unknown[] }>): number =>
+  items.reduce((n, it) => n + 1 + rowCount((it.items ?? []) as Array<{ items?: unknown[] }>), 0);
 
 /**
  * ONE SITE MENU PER NAME. A menu of that name already on the site is reused
  * as it is — the merchant may have edited it since — so a re-run creates no
- * duplicate.
+ * duplicate. The exception is a menu that links NOWHERE: every row unlinked
+ * or unresolved (what `sb_menu` seeds — four `type:'none'` placeholders), or
+ * no rows at all. Reusing that puts a header on every page whose links go
+ * nowhere, so its rows are replaced with the real ones; a menu with even one
+ * working link is the merchant's and stays untouched.
  */
 async function ensureMenu(
   ctx: ToolContext,
@@ -256,7 +265,22 @@ async function ensureMenu(
   dryRun: boolean,
 ): Promise<MenuPlan> {
   const found = existing.find((m) => m.name === name);
-  if (found) return { name, would: 'reuse', id: found.id };
+  if (found) {
+    const snap = await menuSnapshot(ctx, siteId, found.id);
+    const rows = snap.menu?.items ?? [];
+    const placeholder = snap.unlinked + snap.unresolved.length === rowCount(rows);
+    if (!placeholder) return { name, would: 'reuse', id: found.id, rows: snap.snapshot };
+    if (dryRun) return { name, would: 'fill', id: found.id, rows: snap.snapshot, items };
+    await request({
+      base: ctx.base,
+      method: 'PUT',
+      path: `/api/sites/${encodeURIComponent(siteId)}/menus/${encodeURIComponent(found.id)}`,
+      token: siteToken(ctx),
+      body: { name, items },
+      fetchImpl: ctx.fetchImpl,
+    });
+    return { name, id: found.id, filled: true };
+  }
   if (dryRun) return { name, would: 'create', items };
   const made = (await request({
     base: ctx.base,
@@ -494,7 +518,11 @@ export async function buildChrome(
   const out = await shareChrome(ctx, session, siteId, kind, chromeDocument(spec), onto);
   return {
     ...out,
-    menus: plans.map((p) => ({ name: p.name, id: p.id, ...(p.created ? { created: true } : { reused: true }) })),
+    menus: plans.map((p) => ({
+      name: p.name,
+      id: p.id,
+      ...(p.created ? { created: true } : p.filled ? { filled: true } : { reused: true }),
+    })),
     next:
       'Publish the pages: a global section reaches a visitor through each page it is ' +
       'composed onto, so a saved page keeps the old chrome until it is published again.',

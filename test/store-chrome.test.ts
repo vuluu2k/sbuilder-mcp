@@ -61,6 +61,11 @@ function store(opts: { menus?: Array<{ id: string; name: string; items: unknown[
       return json({ menu: m }, 201);
     }
     const one = /\/menus\/([^/]+)$/.exec(path);
+    if (one && method === 'PUT') {
+      const m = menus.find((x) => x.id === one[1])!;
+      m.items = body.items;
+      return json({ menu: m });
+    }
     if (one) return json({ menu: menus.find((m) => m.id === one[1]) });
     if (path.endsWith('/product-categories')) {
       return json({
@@ -154,6 +159,49 @@ describe('sb_store action:"chrome" builds a real header', () => {
     await client.callTool({ name: 'sb_store', arguments: { action: 'chrome', dry_run: false } });
     expect(calls.filter((c) => c.method === 'POST' && c.path.endsWith('/menus'))).toEqual([]);
     expect(ofType(globals[0].document, 'menu')[0].specials.menuId).toBe('mn_x');
+    await close();
+  });
+
+  const placeholder = ['Home', 'Categories', 'Contact', 'About us'].map((label, i) => ({
+    id: `ph${i}`,
+    label,
+    link: { type: 'none' },
+  }));
+
+  it('fills a reused menu whose every row is a placeholder with the real links', async () => {
+    const { calls, menus, ctx } = store({ menus: [{ id: 'mn_x', name: 'Main menu', items: placeholder }] });
+    const { client, close } = await connectedClient(ctx);
+    const out = parse(await client.callTool({ name: 'sb_store', arguments: { action: 'chrome', dry_run: false } }));
+    const put = calls.filter((c) => c.method === 'PUT' && c.path === '/api/sites/s1/menus/mn_x');
+    expect(put.length).toBe(1);
+    expect(links(put[0].body.items)).toContainEqual({ type: 'page', pageId: 'pg_home' });
+    expect(links(menus[0].items).every((l: any) => l.type !== 'none')).toBe(true);
+    expect(out.menus[0]).toMatchObject({ id: 'mn_x', filled: true });
+    await close();
+  });
+
+  it("keeps the merchant's own linked menu exactly as it is", async () => {
+    const own = [
+      { id: 'o1', label: 'Shop', link: { type: 'page', pageId: 'pg_home' } },
+      { id: 'o2', label: 'Blog', link: { type: 'none' } },
+    ];
+    const { calls, menus, ctx } = store({ menus: [{ id: 'mn_x', name: 'Main menu', items: own }] });
+    const { client, close } = await connectedClient(ctx);
+    const out = parse(await client.callTool({ name: 'sb_store', arguments: { action: 'chrome', dry_run: false } }));
+    expect(calls.filter((c) => c.method === 'PUT' && c.path.includes('/menus/'))).toEqual([]);
+    expect(menus[0].items).toBe(own);
+    expect(out.menus[0]).toMatchObject({ id: 'mn_x', reused: true });
+    await close();
+  });
+
+  it('dry run shows the rows of a menu it would reuse, and what it would fill', async () => {
+    const { calls, ctx } = store({ menus: [{ id: 'mn_x', name: 'Main menu', items: placeholder }] });
+    const { client, close } = await connectedClient(ctx);
+    const out = parse(await client.callTool({ name: 'sb_store', arguments: { action: 'chrome' } }));
+    expect(out.menus[0]).toMatchObject({ name: 'Main menu', would: 'fill', id: 'mn_x' });
+    expect(out.menus[0].rows.map((r: any) => r.label)).toEqual(['Home', 'Categories', 'Contact', 'About us']);
+    expect(out.menus[0].items.length).toBeGreaterThan(0);
+    expect(calls.filter((c) => c.method !== 'GET')).toEqual([]);
     await close();
   });
 
