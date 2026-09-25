@@ -438,7 +438,8 @@ the room is on it (two extra reads, only then). Shared sections and overlays nee
 the platform announces their saves itself. A root RENAME is the exception: `root_node_id` is
 not something the room syncs, so an open editor must reload to see it. A replace of the page
 THIS session has open marks its copy stale, so the next edit re-pulls first instead of saving
-the old copy back over the write.
+the old copy back over the write — with or without a live room, and so does a
+`POST …/pages/{id}/versions/{v}/restore` or `…/history/{h}/restore`.
 
 ## `sb_look`
 

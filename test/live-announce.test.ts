@@ -188,3 +188,52 @@ describe('a raw write to the open page with NO live room', () => {
     expect(docs.pg_a.nodes.he.specials.text).toBe('Mine');
   });
 });
+
+describe('a platform-side restore of the open page', () => {
+  function restoreWorld() {
+    const docs: Record<string, Doc> = { pg_a: page() };
+    const restored = page();
+    restored.nodes.sec.data.nodes = ['he'];
+    delete restored.nodes.tx;
+    const f = vi.fn(async (url: unknown, init?: RequestInit) => {
+      const path = new URL(String(url)).pathname;
+      const method = init?.method ?? 'GET';
+      const id = path.split('/')[5];
+      if (path.endsWith('/restore')) docs[id] = JSON.parse(JSON.stringify(restored));
+      else if (method === 'PUT') docs[id] = JSON.parse(String(init!.body)).document;
+      return new Response(JSON.stringify({ source: { pageId: id, document: docs[id] } }), {
+        status: 200, headers: { 'content-type': 'application/json' },
+      });
+    }) as unknown as typeof fetch;
+    const s = new Session('http://x', f);
+    (s as unknown as { access: string }).access = 'jwt';
+    const ctx = { base: 'http://x', session: s, fetchImpl: f, notices: new Notices(), undo: new UndoLog() };
+    return { ctx, docs };
+  }
+
+  it.each(['versions/v1', 'history/h1'])('%s/restore: the next edit keeps what the restore brought back', async (seg) => {
+    const { ctx, docs } = restoreWorld();
+    const ps = new PageSession(ctx as never);
+    await ps.open('s1', 'pg_a');
+    await request({
+      base: ctx.base, method: 'POST', path: `/api/sites/s1/pages/pg_a/${seg}/restore`, token: 'jwt',
+      fetchImpl: ctx.fetchImpl,
+    });
+    await ps.applyAndSave([{ op: 'set', path: ['nodes', 'he', 'specials', 'text'], value: 'Mine' }]);
+    expect(docs.pg_a.nodes.tx).toBeUndefined();
+    expect(docs.pg_a.nodes.he.specials.text).toBe('Mine');
+  });
+
+  it('every open session hears the write, not only the last one constructed', async () => {
+    const { ctx, docs } = restoreWorld();
+    const first = new PageSession(ctx as never);
+    await first.open('s1', 'pg_a');
+    new PageSession(ctx as never);
+    await request({
+      base: ctx.base, method: 'POST', path: '/api/sites/s1/pages/pg_a/versions/v1/restore', token: 'jwt',
+      fetchImpl: ctx.fetchImpl,
+    });
+    await first.applyAndSave([{ op: 'set', path: ['nodes', 'he', 'specials', 'text'], value: 'Mine' }]);
+    expect(docs.pg_a.nodes.tx).toBeUndefined();
+  });
+});

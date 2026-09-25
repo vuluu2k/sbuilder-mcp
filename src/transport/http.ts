@@ -159,16 +159,23 @@ export function watchPageWrites(w: PageWriteWatcher): () => void {
  * and was, until this hook, the only thing that told the session.
  */
 type SourceWritten = (siteId: string, pageId: string, doc: unknown) => void;
-let sourceWritten: SourceWritten | null = null;
+const sourceWritten = new Set<SourceWritten>();
 
+/** Every listener hears every write; returns the unsubscribe. */
 export function onPageSourceWrite(fn: SourceWritten): () => void {
-  sourceWritten = fn;
+  sourceWritten.add(fn);
   return () => {
-    if (sourceWritten === fn) sourceWritten = null;
+    sourceWritten.delete(fn);
   };
 }
 
 const SOURCE_WRITE = /^\/api\/sites\/([^/]+)\/pages\/([^/]+)\/source$/;
+/**
+ * A restore replaces the draft ON THE PLATFORM with no document in the body —
+ * page.ts tells agents to use exactly these — so the open copy is stale the
+ * same way, and the next save would overwrite the restore.
+ */
+const SOURCE_RESTORE = /^\/api\/sites\/([^/]+)\/pages\/([^/]+)\/(?:versions|history)\/[^/]+\/restore$/;
 
 /**
  * EVERY PAGE-DOCUMENT WRITE REACHES THE LIVE ROOM, whichever door it came
@@ -180,12 +187,18 @@ const SOURCE_WRITE = /^\/api\/sites\/([^/]+)\/pages\/([^/]+)\/source$/;
  * peer is on that page) and published as node-level ops.
  */
 export async function request(opts: RequestOpts): Promise<unknown> {
+  const restore = opts.method === 'POST' ? SOURCE_RESTORE.exec(opts.path) : null;
+  if (restore) {
+    const out = await send(opts);
+    for (const fn of sourceWritten) fn(decodeURIComponent(restore[1]), decodeURIComponent(restore[2]), undefined);
+    return out;
+  }
   const m = opts.method !== 'GET' ? SOURCE_WRITE.exec(opts.path) : null;
   const doc = (opts.body as { document?: unknown } | undefined)?.document;
   if (!m || !doc) return send(opts);
   const [siteId, pageId] = [decodeURIComponent(m[1]), decodeURIComponent(m[2])];
   const out = await announced(opts, siteId, pageId, doc);
-  sourceWritten?.(siteId, pageId, doc);
+  for (const fn of sourceWritten) fn(siteId, pageId, doc);
   return out;
 }
 
