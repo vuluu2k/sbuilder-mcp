@@ -6,6 +6,13 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.68.0] - 2026-09-25
+
+### Changed
+- Catalog được sinh ra đã được làm mới dựa trên nền tảng: thêm hai element dataset mới, `flash-sale-price` (giá sản phẩm tự chuyển sang giá sale khi sản phẩm nằm trong một flash sale) và `flash-sale-progress` (thanh thể hiện tình trạng bán/cháy hàng của một flash sale đang chạy), và element `countdown` có thêm tùy chọn `sourceFlashSale` để đếm ngược theo flash sale đang chạy thay vì phải nhập sẵn thời điểm kết thúc.
+- Catalog giờ mang thêm 6 operation flash-sale mới (liệt kê flash sale đang chạy, và liệt kê/tạo/lấy/cập nhật/xóa flash sale của site), có thể tìm thấy qua `sb_api_find` và gọi qua `sb_api_call`.
+- Giá trị mặc định của thẻ và chip trên khắp catalog — element tài khoản, voucher, countdown, tab, accordion, biến thể và bộ lọc — giờ đọc theo token `var(--wb-sc-*)` của theme thay vì màu cố định, nên một site theme tối không còn hiện chữ tối đè lên nền sáng cố định ở những element này.
+
 ## [0.67.0] - 2026-09-25
 
 ### Added

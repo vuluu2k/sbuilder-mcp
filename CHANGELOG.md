@@ -6,6 +6,13 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.68.0] - 2026-09-25
+
+### Changed
+- The generated catalog was regenerated against the platform: two new dataset elements, `flash-sale-price` (a product price that swaps to the sale price while a flash sale covers the product) and `flash-sale-progress` (a stock/urgency bar for a running flash sale), and the `countdown` element gains a `sourceFlashSale` option that counts down to the flash sale running right now instead of a typed end time.
+- The catalog now carries 6 new flash-sale operations (list active flash sales, and list/create/get/update/delete a site's flash sales), discoverable through `sb_api_find` and callable through `sb_api_call`.
+- Card and chip defaults across the catalog — account, voucher, countdown, tab, accordion, variant, and filter elements — now read the theme's `var(--wb-sc-*)` tokens instead of a hardcoded color, so a dark-themed site no longer shows dark text pinned to a light background on these elements.
+
 ## [0.67.0] - 2026-09-25
 
 ### Added
