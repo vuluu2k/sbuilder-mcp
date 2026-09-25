@@ -16,6 +16,15 @@ WB_REPO=<scratch>/wb npm run codegen:check    # exits 1 naming every stale file
 WB_REPO=<scratch>/wb npm run codegen          # writes src/catalog/*.generated.ts
 ```
 
+**A WHOLE-DIRECTORY `node_modules` SYMLINK UNDOES THE PIN.** `node_modules/@webbuilder/*` are
+workspace links (`../../editor`, `../../schema`, `../../runtime`), so through a symlinked root
+they resolve to the ORIGINAL checkout's live working tree, not the worktree's ref. Measured:
+`codegen:check` against a clean detached e183370a6 read "current" in the morning and "STALE —
+checkout.generated.ts" that afternoon, because the other checkout's `editor/` had moved on
+(`var(--wb-sc-buttonBg, …)` in the form seeds). Make `<scratch>/wb/node_modules` a real
+directory: symlink every entry of the original EXCEPT `@webbuilder`, and point
+`@webbuilder/{editor,schema,runtime}` at `<scratch>/wb/…`. The check then read "current" again.
+
 Never point it at a working tree somebody is editing — it refuses one (see below). After a
 regen, the counts pinned in `test/readme-counts.test.ts`, `test/inert-*.test.ts` and both
 READMEs move with the platform; update them, never loosen the assertion.
