@@ -124,12 +124,18 @@ const LOCALE_TAG = /^[A-Za-z]{2,8}(-[A-Za-z0-9]{1,8})*$/;
  * older than the merge would store `{locale}` as the WHOLE of settings. Each
  * door is tried with every credential (key, then session) before the next.
  */
-async function setLocale(
+type LocaleChange = { from: string | null; to: string; unchanged?: true };
+
+/**
+ * Validate the tag and READ settings now; the returned `write` is the only
+ * part that changes anything, so a caller can do every check first and write
+ * last.
+ */
+async function planLocale(
   ctx: ToolContext,
   siteId: string,
   locale: string,
-  dryRun: boolean,
-): Promise<{ from: string | null; to: string; unchanged?: true }> {
+): Promise<LocaleChange & { write(): Promise<void> }> {
   if (!LOCALE_TAG.test(locale)) {
     throw new Error(`sbuilder: "${locale}" is not a language tag — use one like "vi", "en" or "en-GB".`);
   }
@@ -153,9 +159,20 @@ async function setLocale(
   if (!got) throw refusal(siteId, 'read settings', [...refused], ctx);
   const current = got.settings ?? {};
   const from = typeof current.locale === 'string' ? current.locale : null;
-  if (from === locale) return { from, to: locale, unchanged: true };
-  if (dryRun) return { from, to: locale };
+  if (from === locale) return { from, to: locale, unchanged: true, write: async () => {} };
+  return { from, to: locale, write: () => writeLocale(ctx, siteId, path, creds, current, locale, refused) };
+}
 
+async function writeLocale(
+  ctx: ToolContext,
+  siteId: string,
+  path: string,
+  creds: Array<{ token: string | undefined; name: string }>,
+  current: Record<string, unknown>,
+  locale: string,
+  refused: Set<string>,
+): Promise<void> {
+  const is403 = (e: unknown): boolean => e instanceof ApiError && e.status === 403;
   // The whole body with EVERY credential before the locale-only one: a session
   // that may write settings keeps the safe door open where the key alone would
   // have taken the merge.
@@ -164,7 +181,7 @@ async function setLocale(
     for (const c of creds) {
       try {
         await request({ base: ctx.base, method: 'PUT', path, token: c.token, body, fetchImpl: ctx.fetchImpl });
-        return { from, to: locale };
+        return;
       } catch (e) {
         if (!is403(e)) throw e;
         refused.add(c.name);
@@ -210,11 +227,13 @@ export function registerThemeTools(server: McpServer, ctx: ToolContext): void {
     },
     async ({ site_id: given, colors, text_styles, locale, dry_run }) => {
       const site_id = siteFor(ctx, given);
+      const report = ({ from, to, unchanged }: LocaleChange) => ({ locale: { from, to, ...(unchanged ? { unchanged } : {}) } });
       if (locale && !colors && !text_styles) {
-        const lang = { locale: await setLocale(ctx, site_id, locale, dry_run !== false) };
+        const plan = await planLocale(ctx, site_id, locale);
+        if (dry_run === false) await plan.write();
         return text({
-          ...(dry_run !== false && !lang.locale?.unchanged ? { dry_run: true } : {}),
-          ...lang,
+          ...(dry_run !== false && !plan.unchanged ? { dry_run: true } : {}),
+          ...report(plan),
           on: site_id,
         });
       }
@@ -290,10 +309,13 @@ export function registerThemeTools(server: McpServer, ctx: ToolContext): void {
       // THE LOCALE IS WRITTEN LAST — after every check and after the theme PUT —
       // so a refused token, an empty theme or a failed theme write leaves the
       // site exactly as it was rather than half-changed.
-      const writeLocale = async (dry: boolean) =>
-        locale ? { locale: await setLocale(ctx, site_id, locale, dry) } : {};
+      // The tag check and the settings READ happen here, before anything is
+      // written; only the settings write waits until after the theme PUT.
+      const plan = locale ? await planLocale(ctx, site_id, locale) : null;
+      const lang = plan ? report(plan) : {};
       if (!changes.length) {
-        return text({ unchanged: true, ...(await writeLocale(dry_run !== false)), note: 'Every value named already holds that value.' });
+        if (plan && dry_run === false) await plan.write();
+        return text({ unchanged: true, ...lang, note: 'Every value named already holds that value.' });
       }
       // The document goes back WHOLE, so this can only ever be true — asserted
       // anyway, because the one failure this endpoint cannot take back is a
@@ -303,7 +325,6 @@ export function registerThemeTools(server: McpServer, ctx: ToolContext): void {
       }
 
       if (dry_run !== false) {
-        const lang = await writeLocale(true);
         return text({
           dry_run: true,
           would_change: changes,
@@ -328,9 +349,8 @@ export function registerThemeTools(server: McpServer, ctx: ToolContext): void {
       // resolution reads through it — the next call in this session would
       // report the colour this write just replaced as what a node paints.
       clearThemeCache();
-      let lang: Awaited<ReturnType<typeof writeLocale>>;
       try {
-        lang = await writeLocale(false);
+        await plan?.write();
       } catch (e) {
         throw new Error(`sbuilder: the theme WAS saved; only the locale was not: ${(e as Error).message.replace(/^sbuilder: /, '')}`);
       }

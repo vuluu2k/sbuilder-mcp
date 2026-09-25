@@ -229,6 +229,28 @@ describe('sb_theme locale', () => {
     await close();
   });
 
+  it('a bad language tag refuses the call before the theme is written', async () => {
+    const { ctx, calls } = site({ locale: 'en', texts: [] });
+    const { client, close } = await connectedClient(ctx);
+    const out = parse(
+      await client.callTool({ name: 'sb_theme', arguments: { locale: 'not a tag', colors: { primary: '#111111' }, dry_run: false } }),
+    );
+    expect(out.error).toMatch(/language tag/);
+    expect(calls.filter((c) => c.method === 'PUT')).toEqual([]);
+    await close();
+  });
+
+  it('a settings read refused 403 refuses the call before the theme is written', async () => {
+    const { ctx, calls } = site({ locale: 'en', texts: [], refuseGet: () => true });
+    const { client, close } = await connectedClient(ctx);
+    const out = parse(
+      await client.callTool({ name: 'sb_theme', arguments: { locale: 'vi', colors: { primary: '#111111' }, dry_run: false } }),
+    );
+    expect(out.error).toMatch(/403.*read settings/);
+    expect(calls.filter((c) => c.method === 'PUT')).toEqual([]);
+    await close();
+  });
+
   it('a bad colour token refuses the call before the locale is written', async () => {
     const { ctx, calls } = site({ locale: 'en', texts: [] });
     const { client, close } = await connectedClient(ctx);
