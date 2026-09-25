@@ -9381,7 +9381,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
         "lineHeight": "130%",
         "fontSize": "20px",
         "fontWeight": "600",
-        "color": "#171717"
+        "color": "var(--wb-sc-heading, #171717)"
       }
     },
     "inspector": [
@@ -13824,7 +13824,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
       "states": {
         "hover": {
           "style": {
-            "color": "#676767"
+            "color": "var(--wb-sc-text, #676767)"
           }
         }
       }
@@ -13947,7 +13947,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
     "contentTips": [
       "this skin carries no text of its own — labels come from the menu data",
       "Default and Hover are separate state slots; edit Hover with the State switcher",
-      "the default look is the theme link colour (ink #171717 on a default theme) and the text-2 font, with a #676767 hover"
+      "the default look is the theme link colour (ink #171717 on a default theme) and the text-2 font, with a hover in the theme body-text colour"
     ],
     "semantics": [
       "menu-item",
@@ -14839,8 +14839,8 @@ export const ELEMENTS: Record<string, CatalogElement> = {
         "paddingLeft": "6px",
         "paddingRight": "6px",
         "borderRadius": "999px",
-        "backgroundColor": "#171717",
-        "color": "#ffffff",
+        "backgroundColor": "var(--wb-sc-buttonBg, #171717)",
+        "color": "var(--wb-sc-buttonText, #ffffff)",
         "fontSize": "12px",
         "fontWeight": "600",
         "lineHeight": "1"
@@ -26465,8 +26465,8 @@ export const ELEMENTS: Record<string, CatalogElement> = {
         "height": "fit-content",
         "padding": "2px 8px",
         "borderRadius": "4px",
-        "backgroundColor": "#171717",
-        "color": "#ffffff",
+        "backgroundColor": "var(--wb-sc-buttonBg, #171717)",
+        "color": "var(--wb-sc-buttonText, #ffffff)",
         "fontSize": "12px",
         "fontWeight": "600",
         "lineHeight": "1"

@@ -73,7 +73,7 @@ export const CHECKOUT_FORM_DOCUMENT = {
         "lineHeight": "130%",
         "fontSize": "20px",
         "fontWeight": "600",
-        "color": "#171717"
+        "color": "var(--wb-sc-heading, #171717)"
       },
       "config": {},
       "specials": {
@@ -908,7 +908,7 @@ export const FORM_TEMPLATES = {
             "lineHeight": "130%",
             "fontSize": "20px",
             "fontWeight": "600",
-            "color": "#171717"
+            "color": "var(--wb-sc-heading, #171717)"
           },
           "config": {},
           "specials": {
@@ -1174,7 +1174,7 @@ export const FORM_TEMPLATES = {
             "lineHeight": "130%",
             "fontSize": "20px",
             "fontWeight": "600",
-            "color": "#171717"
+            "color": "var(--wb-sc-heading, #171717)"
           },
           "config": {},
           "specials": {
@@ -1351,7 +1351,7 @@ export const FORM_TEMPLATES = {
             "lineHeight": "130%",
             "fontSize": "20px",
             "fontWeight": "600",
-            "color": "#171717"
+            "color": "var(--wb-sc-heading, #171717)"
           },
           "config": {},
           "specials": {
@@ -1751,7 +1751,7 @@ export const FORM_TEMPLATES = {
             "lineHeight": "130%",
             "fontSize": "20px",
             "fontWeight": "600",
-            "color": "#171717"
+            "color": "var(--wb-sc-heading, #171717)"
           },
           "config": {},
           "specials": {
@@ -2261,7 +2261,7 @@ export const FORM_TEMPLATES = {
             "lineHeight": "130%",
             "fontSize": "20px",
             "fontWeight": "600",
-            "color": "#171717"
+            "color": "var(--wb-sc-heading, #171717)"
           },
           "config": {},
           "specials": {
@@ -2633,7 +2633,7 @@ export const FORM_TEMPLATES = {
             "lineHeight": "130%",
             "fontSize": "20px",
             "fontWeight": "600",
-            "color": "#171717"
+            "color": "var(--wb-sc-heading, #171717)"
           },
           "config": {},
           "specials": {
@@ -2999,7 +2999,7 @@ export const FORM_TEMPLATES = {
             "lineHeight": "130%",
             "fontSize": "20px",
             "fontWeight": "600",
-            "color": "#171717"
+            "color": "var(--wb-sc-heading, #171717)"
           },
           "config": {},
           "specials": {
@@ -3254,7 +3254,7 @@ export const FORM_TEMPLATES = {
             "lineHeight": "130%",
             "fontSize": "20px",
             "fontWeight": "600",
-            "color": "#171717"
+            "color": "var(--wb-sc-heading, #171717)"
           },
           "config": {},
           "specials": {
@@ -3553,7 +3553,7 @@ export const FORM_TEMPLATES = {
             "lineHeight": "130%",
             "fontSize": "20px",
             "fontWeight": "600",
-            "color": "#171717"
+            "color": "var(--wb-sc-heading, #171717)"
           },
           "config": {},
           "specials": {
@@ -3920,7 +3920,7 @@ export const FORM_TEMPLATES = {
             "lineHeight": "130%",
             "fontSize": "20px",
             "fontWeight": "600",
-            "color": "#171717"
+            "color": "var(--wb-sc-heading, #171717)"
           },
           "config": {},
           "specials": {
@@ -4144,7 +4144,7 @@ export const FORM_TEMPLATES = {
             "lineHeight": "130%",
             "fontSize": "20px",
             "fontWeight": "600",
-            "color": "#171717"
+            "color": "var(--wb-sc-heading, #171717)"
           },
           "config": {},
           "specials": {
@@ -4407,7 +4407,7 @@ export const FORM_TEMPLATES = {
             "lineHeight": "130%",
             "fontSize": "20px",
             "fontWeight": "600",
-            "color": "#171717"
+            "color": "var(--wb-sc-heading, #171717)"
           },
           "config": {},
           "specials": {
@@ -4676,7 +4676,7 @@ export const FORM_TEMPLATES = {
             "lineHeight": "130%",
             "fontSize": "20px",
             "fontWeight": "600",
-            "color": "#171717"
+            "color": "var(--wb-sc-heading, #171717)"
           },
           "config": {},
           "specials": {
@@ -4975,7 +4975,7 @@ export const FORM_TEMPLATES = {
             "lineHeight": "130%",
             "fontSize": "20px",
             "fontWeight": "600",
-            "color": "#171717"
+            "color": "var(--wb-sc-heading, #171717)"
           },
           "config": {},
           "specials": {
@@ -5222,7 +5222,7 @@ export const FORM_TEMPLATES = {
             "lineHeight": "130%",
             "fontSize": "20px",
             "fontWeight": "600",
-            "color": "#171717"
+            "color": "var(--wb-sc-heading, #171717)"
           },
           "config": {},
           "specials": {
@@ -5517,7 +5517,7 @@ export const FORM_TEMPLATES = {
             "lineHeight": "130%",
             "fontSize": "20px",
             "fontWeight": "600",
-            "color": "#171717"
+            "color": "var(--wb-sc-heading, #171717)"
           },
           "config": {},
           "specials": {
@@ -5692,7 +5692,7 @@ export const FORM_TEMPLATES = {
             "lineHeight": "130%",
             "fontSize": "20px",
             "fontWeight": "600",
-            "color": "#171717"
+            "color": "var(--wb-sc-heading, #171717)"
           },
           "config": {},
           "specials": {
@@ -5880,7 +5880,7 @@ export const FORM_TEMPLATES = {
             "lineHeight": "130%",
             "fontSize": "20px",
             "fontWeight": "600",
-            "color": "#171717"
+            "color": "var(--wb-sc-heading, #171717)"
           },
           "config": {},
           "specials": {

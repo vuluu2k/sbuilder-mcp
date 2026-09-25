@@ -3113,7 +3113,7 @@ export const STORE_PAGE_SEEDS: Record<string, { schema_version: number; root_nod
               "alt": ""
             }
           ],
-          "layout": "bottom",
+          "layout": "single",
           "activeIndex": 0
         },
         "specials": {},
@@ -3825,7 +3825,7 @@ export const STORE_PAGE_SEEDS: Record<string, { schema_version: number; root_nod
               "alt": ""
             }
           ],
-          "layout": "bottom",
+          "layout": "single",
           "activeIndex": 0
         },
         "specials": {},

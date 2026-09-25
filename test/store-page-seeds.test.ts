@@ -97,6 +97,23 @@ describe('a store page opens with what the editor gives a merchant', () => {
     expect(Object.keys(STORE_PAGE_SEEDS.product.nodes)).not.toContain('injected');
   });
 
+  // A card's media-dataset seeded with the gallery's `bottom` layout rendered a
+  // strip of thumbnails under every product card on the category and search pages.
+  it('a repeater card shows one image, never a gallery strip', () => {
+    const cards: string[] = [];
+    for (const [type, doc] of Object.entries(STORE_PAGE_SEEDS)) {
+      const nodes = doc.nodes as Record<string, { data: { type: string; parent?: string }; config?: { layout?: string } }>;
+      const inRepeater = (id?: string): boolean =>
+        !!id && (nodes[id]?.data.type === 'list-dataset' || inRepeater(nodes[id]?.data.parent));
+      for (const [id, n] of Object.entries(nodes)) {
+        if (n.data.type !== 'media-dataset' || !inRepeater(n.data.parent)) continue;
+        cards.push(`${type}/${id}`);
+        expect(n.config?.layout, `${type}/${id}`).toBe('single');
+      }
+    }
+    expect(cards.length).toBeGreaterThan(0);
+  });
+
   it('summarises what a seed will place, for the dry run', () => {
     expect(seedSummary('product')?.nodes).toBeGreaterThan(20);
     expect(seedSummary('page')).toBeNull();
