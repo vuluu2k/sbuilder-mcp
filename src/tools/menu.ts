@@ -38,7 +38,7 @@ import type { ToolContext } from './context.js';
 import type { PageSession } from './page.js';
 import { setKeys } from '../domains/site/builder.js';
 
-interface MenuLink {
+export interface MenuLink {
   type: string;
   pageId?: string;
   entityId?: string;
@@ -53,14 +53,14 @@ interface MenuItem {
   items?: MenuItem[];
 }
 
-interface MenuItemInput {
+export interface MenuItemInput {
   id?: string;
   label: string;
   link?: MenuLink;
   items?: MenuItemInput[];
 }
 
-interface Menu {
+export interface Menu {
   id: string;
   name: string;
   items?: MenuItem[];
@@ -74,7 +74,7 @@ interface Step {
   body?: unknown;
 }
 
-const DEFAULT_MENU_NAME = 'Main menu';
+export const DEFAULT_MENU_NAME = 'Main menu';
 
 /** The four rows every fresh menu element already carries, as create input. */
 const DEFAULT_MENU_ITEMS: MenuItemInput[] = ['Home', 'Categories', 'Contact', 'About us'].map((label) => ({
@@ -331,6 +331,32 @@ function classifyLinks(
   return { unresolved, unlinked };
 }
 
+/**
+ * Steps 2-4 of the editor's sync for one menu: read it fresh, resolve every
+ * reference to the address the storefront serves, and build the snapshot a
+ * menu node carries as `specials.menuItems` (keeping any row's `panelId` from
+ * `current`). `bindMenu` runs it for a node on the open page; `sb_store
+ * action:"chrome"` runs it for the menus in a header it is about to create.
+ */
+export async function menuSnapshot(
+  ctx: ToolContext,
+  siteId: string,
+  menuId: string,
+  current?: unknown,
+): Promise<{ menu?: Menu; snapshot: Array<Record<string, unknown>>; unresolved: string[]; unlinked: number }> {
+  const detail = (await request({
+    base: ctx.base,
+    method: 'GET',
+    path: `/api/sites/${encodeURIComponent(siteId)}/menus/${encodeURIComponent(menuId)}`,
+    token: siteToken(ctx),
+    fetchImpl: ctx.fetchImpl,
+  })) as { menu?: Menu };
+  const items = detail.menu?.items ?? [];
+  const resolve = await resolveLinks(ctx, siteId, items);
+  const snapshot = preservePanels(current, buildSnapshot(items, resolve));
+  return { menu: detail.menu, snapshot, ...classifyLinks(items, resolve) };
+}
+
 export async function bindMenu(
   ctx: ToolContext,
   session: PageSession,
@@ -445,27 +471,21 @@ export async function bindMenu(
 
   const bindPatches = setKeys(doc, nodeId, { menuId: menu.id }, { namespace: 'specials' });
 
-  const detail = await get<{ menu?: Menu }>(`/api/sites/${site}/menus/${encodeURIComponent(menu.id)}`);
-  const fullMenu = detail.menu ?? menu;
+  const snap = await menuSnapshot(ctx, siteId, menu.id, node.specials.menuItems);
+  const fullMenu = snap.menu ?? menu;
   steps.push({
     step: n++,
     what: `read "${fullMenu.name}"'s items`,
     method: 'GET',
     path: `/api/sites/${site}/menus/${menu.id}`,
   });
-
-  const items = fullMenu.items ?? [];
-  const resolve = await resolveLinks(ctx, siteId, items);
   steps.push({
     step: n++,
     what: 'resolve each item\'s reference to the address the storefront serves',
     method: 'GET',
     path: '(page / category / article listings, only the kinds these rows reference)',
   });
-
-  const built = buildSnapshot(items, resolve);
-  const snapshot = preservePanels(node.specials.menuItems, built);
-  const { unresolved, unlinked } = classifyLinks(items, resolve);
+  const { snapshot, unresolved, unlinked } = snap;
 
   const itemsPatches = setKeys(doc, nodeId, { menuItems: snapshot }, { namespace: 'specials' });
 

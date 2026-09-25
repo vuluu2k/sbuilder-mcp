@@ -1586,10 +1586,15 @@ từ `sb_store` — phải làm lại bằng tay: tạo master, biết rằng `d
 trang nhưng gốc là SECTION, rồi cho mỗi trang một con của ROOT mang `globalRef` + `globalKind`,
 đặt ĐẦU TIÊN, vì header nằm sau nội dung giữa là lỗi thứ tự band ở lần lưu kế tiếp.
 
-Menu dựng từ **chính những trang site đang có**, trang chủ trước, mỗi trang gọi tên theo cách một
-menu gọi chứ không theo cách cơ sở dữ liệu gọi. Diện mạo lấy từ TRANG CHỦ — rule 0, áp cho trang
-mà cả site vốn đã đi theo. Truyền `footer: true` để làm footer dùng chung, và nó đặt CUỐI vì cùng
-lý do thứ tự band.
+Trước tiên nó tạo một MENU CỦA SITE (`POST /api/sites/{siteId}/menus`, chạy lại thì dùng lại
+theo tên) mà mỗi dòng là THAM CHIẾU — trang chủ và các trang nội dung là `{type:"page", pageId}`,
+mỗi danh mục có hàng là `{type:"productCategory", entityId}` kèm danh mục con hoặc vài sản phẩm
+đầu làm dòng con — rồi dựng header trên nó: một element `menu` bind vào đó (hover, dropdown) ẩn
+trên mobile, một `hamburger-menu` chỉ hiện trên mobile chứa `menu-drawer` có nút ✕ (`close_menu`)
+và một menu dọc kiểu collapse bind cùng menu site, icon tài khoản tới `/account` và icon giỏ hàng
+mang `open_cart` kèm satellite `cart-count`, trong một dải `section-wide`. Không ghi màu nào; mọi
+node mặc preset của theme. Truyền `footer: true` để làm footer dùng chung — các cột link, mỗi cột
+là một `menu` dọc bind vào menu site riêng — và nó đặt CUỐI vì cùng lý do thứ tự band.
 
 Bỏ qua khi site đã có sẵn loại đó, vì hai header không phải là một menu, và bỏ qua khi dưới hai
 trang, vì menu tới một trang là link tới chính nó. Nó **không nguyên tử và không giả vờ là thế**:
@@ -1732,22 +1737,30 @@ gốc là **section** chứ không phải ROOT, rồi cho mỗi trang một con 
 `specials.globalRef` + `globalKind` — **đặt đầu tiên**, vì header nằm sau nội dung giữa là
 lỗi thứ tự band và lần lưu kế tiếp bị từ chối (bẫy 3). Footer thì đặt cuối, cùng một lý do.
 
-Menu được dựng từ chính các trang site đang có, trang chủ trước. Diện mạo thì đọc từ **trang
-chủ** — quy tắc 0 áp cho cả site thay vì cho một trang: pattern mà phần còn lại của site đang
-theo chính là thứ header của nó nên mặc. Trang chủ trống thì không sinh token nào, thay vì
-bịa ra một bảng màu.
+**Điều hướng là một menu thật, không phải một hàng button.** Hàng button là thứ phiên bản trước
+dựng, và chính `sb_review` báo nó là `handbuilt_menu`: không có drawer trên điện thoại và không có
+menu site để sửa một lần. Giờ luồng tạo menu site trước — các dòng tham chiếu trang, danh mục hay
+sản phẩm bằng id, không bằng địa chỉ, nên đổi slug trang vẫn giữ dòng — rồi phân giải chúng qua
+đúng code mà `action:"menu"` dùng và dựng header như thẻ Navigation của editor: `menu` desktop
+(`expandType:"hover"`, `submenuStyle:"dropdown"`) ẩn trên mobile, và `hamburger-menu` ẩn ở mọi
+chiều rộng khác, chứa `menu-drawer` có ✕ mang `close_menu` phía trên một `menu` dọc
+(`submenuStyle:"collapse"`). `config.hidden` không cascade, nên mỗi chiều rộng tự nói. Giỏ hàng là
+chính icon mang `open_cart`, gắn badge bằng satellite `cart-count`; icon tài khoản tới `/account`.
+Dải mặc `section-wide`, vì `container-section` mặc định chặn ở 1440px. Các cột link của footer mỗi
+cột là một `menu` dọc trên menu site riêng.
 
 **Bỏ qua chứ không làm hai lần.** Site đã có sẵn một section dùng chung thuộc loại đó thì trả
-về `skipped` — thêm cái thứ hai là có hai header chứ không phải có menu — site dưới hai trang
-cũng vậy, vì một menu tới đúng một trang chỉ là link tới chính nó. Cả hai được kiểm trước
+về `skipped` — thêm cái thứ hai là có hai header chứ không phải có menu — site có dưới hai
+trang hoặc danh mục có hàng để link cũng vậy, vì một menu tới đúng một chỗ chỉ là link tới chính nó. Cả hai được kiểm trước
 nhánh dry run, nên một lần dry run cũng báo đúng như vậy.
 
 **Không nguyên tử, và không được giả vờ là nguyên tử.** Một trang không nhận reference thì
 không huỷ master: trang đó nằm trong `failed` kèm slug và lý do, còn những trang đã nhận nằm
 trong `carried`.
 
-**Dry run** (mặc định) trả về `would_create`, `menu` sẽ dựng, danh sách slug trong `onto`, và
-token lấy từ đâu. **Khi chạy thật** trả về id của master trong `created`, `carried`, `failed`
+**Dry run** (mặc định) trả về `would_create`, các `menus` của site sẽ tạo hoặc dùng lại (kèm các
+dòng), `tree` của header, và danh sách slug trong `onto`. **Khi chạy thật** trả về id của master
+trong `created`, `menus` (tạo mới hay dùng lại), `carried`, `failed`
 nếu có, kèm nhắc nhở: một global section chỉ tới được khách qua trang đã **publish** sau đó —
 trang mới lưu vẫn giữ chrome cũ.
 

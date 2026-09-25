@@ -194,6 +194,14 @@ export function addSubtree(
     // who passed children has expressed an intent and is never overridden.
     const children = s.children?.length ? s.children : (ELEMENT_SEEDS[s.type] ?? []);
     for (const child of children) {
+      // A child the element declares as a SATELLITE (an icon's cart-count)
+      // hangs off `config[key]`, exactly as a top-level `sb_add` of one does.
+      const sat = (SATELLITE_RULES[s.type] ?? []).find((r) => r.type === child.type);
+      if (sat && !n.config[sat.configKey]) {
+        const satId = build(child, n.id);
+        patches.push({ op: 'set', path: ['nodes', n.id, 'config', sat.configKey], value: satId });
+        continue;
+      }
       requireContainer(s.type, n.id);
       requireAllowed(s.type, child.type, guard);
       const childId = build(child, n.id);

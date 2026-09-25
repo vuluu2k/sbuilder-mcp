@@ -1636,10 +1636,15 @@ master, know that its `document` is page-shaped but rooted at the SECTION, then 
 ROOT child carrying `globalRef` + `globalKind`, FIRST, because a header after middle content is a
 band-order refusal on the next save.
 
-The menu is built from the pages the site ALREADY HAS, home first, each named the way a menu
-would name it rather than the way a database does. The look comes off the HOME page — rule 0,
-applied to the one page the rest of the site already follows. Pass `footer: true` for a shared
-footer instead, which goes in LAST for the same band-order reason.
+It first creates a SITE MENU (`POST /api/sites/{siteId}/menus`, reused by name on a re-run)
+whose rows are REFERENCES — home and the content pages as `{type:"page", pageId}`, each stocked
+category as `{type:"productCategory", entityId}` with its sub-categories or first products as
+children — and builds the header on it: a `menu` element bound to it (hover, dropdown) hidden on
+mobile, a `hamburger-menu` shown only on mobile holding a `menu-drawer` with a ✕ (`close_menu`) and
+a vertical collapse menu bound to the same site menu, an account icon to `/account` and a cart icon
+carrying `open_cart` with a `cart-count` satellite, in a `section-wide` band. No colour is written;
+every node wears its theme preset. Pass `footer: true` for a shared footer instead — link columns,
+each a vertical `menu` bound to its own site menu — which goes in LAST for the same band-order reason.
 
 Skipped when the site already shares one of that kind, because a second header is two headers
 rather than a menu, and below two pages, because a menu to one page is a link to itself. It is
@@ -1783,23 +1788,31 @@ By hand means: create the master, know that its `document` is page-SHAPED but ro
 `specials.globalRef` + `globalKind` — **first**, because a header after middle content is a
 band-order refusal on the next save (trap 3). A footer goes last, for the same reason.
 
-The menu is built from the pages this site already has, home first. The look is read off the
-**home page** — rule 0 applied to a site rather than to a page: whatever pattern the rest of
-the site already follows is the one its header should wear. A blank home page yields no
-tokens rather than an invented palette.
+**The navigation is a real menu, never a row of buttons.** A row of buttons is what the
+previous version built, and `sb_review` itself reported it as `handbuilt_menu`: no drawer on a
+phone and no site menu to edit once. Now the flow creates the site menu first — rows that
+reference a page, a category or a product by id, never by address, so a re-slugged page keeps its
+row — then resolves them through the same code `action:"menu"` uses and builds the header as the
+editor's own Navigation card composes it: the desktop `menu` (`expandType:"hover"`,
+`submenuStyle:"dropdown"`) hidden on mobile, and a `hamburger-menu` hidden everywhere else,
+holding a `menu-drawer` with a ✕ carrying `close_menu` over a vertical `menu`
+(`submenuStyle:"collapse"`). `config.hidden` does not cascade, so each width says its own. The
+cart is the icon itself carrying `open_cart`, badged by a `cart-count` satellite; the account
+icon goes to `/account`. The band wears `section-wide`, because the default `container-section`
+caps it at 1440px. A footer's link columns are each a vertical `menu` on its own site menu.
 
 **Skipped rather than done twice.** A site that already shares a section of that kind
 answers `skipped` — a second header is two headers, not a menu — and so does a site with
-fewer than two pages, because a menu to one page is a link to itself. Both are checked
+fewer than two pages or stocked categories to link, because a menu to one place is a link to itself. Both are checked
 before the dry run, so a dry run reports them too.
 
 **Not atomic, and it must not pretend to be.** One page that will not take the reference
 does not undo the master: it is reported under `failed` with its slug and the reason, while
 the pages that took it are listed under `carried`.
 
-**Dry run** (the default) returns `would_create`, the `menu` it would build, the `onto`
-slugs it would build it onto, and where the tokens came from. **Executing** returns the
-master's id as `created`, `carried`, any `failed`, and the reminder that a global section
+**Dry run** (the default) returns `would_create`, the site `menus` it would create or reuse
+(with their rows), the header's `tree`, and the `onto` slugs. **Executing** returns the
+master's id as `created`, the `menus` (created or reused), `carried`, any `failed`, and the reminder that a global section
 reaches a visitor only through a page that has been **published** since — a saved page keeps
 the old chrome.
 

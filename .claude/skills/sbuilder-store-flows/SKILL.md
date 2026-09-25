@@ -437,3 +437,19 @@ repo over a number here, and fix the line when you catch one stale.
   cart icons wired to nothing and `sb_review` said nothing. `sb_store action:"cart"` creates it
   from `OVERLAY_SEEDS.cart` (codegen, the editor's `cartDrawerSeed()`), under fresh ids, and
   `readiness` reports `cartDrawer` off `GET /overlays` — silent when that list is unread.
+
+- **`action:"chrome"` BUILT ITS NAVIGATION AS A ROW OF BUTTONS, and `sb_review` flagged it as
+  `handbuilt_menu`.** No drawer on a phone, no site menu to edit once, a cart that was a box
+  wrapping an icon with the click on the icon only, in a `container-section` capped at 1440px.
+  It now creates the SITE MENU first (`POST /menus`, reused BY NAME so a re-run makes no
+  duplicate) with rows that are REFERENCES — `{type:"page", pageId}`, `{type:"productCategory",
+  entityId}`, `{type:"product", entityId}` — because a stored address dies when a slug changes;
+  resolves them through `menuSnapshot` (the same code `action:"menu"` binds with); and builds the
+  editor's own Navigation composition (`pickerPresets.ts` navigationTree): desktop `menu` hidden
+  on mobile, `hamburger-menu` → `menu-drawer` (✕ `close_menu` + vertical collapse menu) shown only
+  on mobile — `config.hidden` is NON-cascading, so each width must say its own. Cart = the icon
+  carrying `open_cart` with a `cart-count` SATELLITE (nested satellites in a spec now attach by
+  `config[key]`). No colour literals: the menu-item / dropdown skins still carry the platform's
+  own `#171717`/Inter defaults, which are being moved to tokens upstream — regenerate, do not
+  paint over them here.
+

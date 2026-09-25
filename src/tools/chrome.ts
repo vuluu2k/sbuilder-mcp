@@ -1,11 +1,14 @@
 import { request } from '../transport/http.js';
 import { siteToken } from './credentialpick.js';
 import { siteFor, type ToolContext } from './context.js';
-import { addSubtree, removeNode } from '../domains/site/builder.js';
-import { menuLabel, navSpec, tokensFromPage } from '../domains/site/importmap.js';
-import { globalDocumentFrom } from './importpage.js';
-import { childrenOf, SPEC_GLOBAL_ID, SPEC_GLOBAL_REF, type DocLike } from '../core/tree.js';
+import { addSubtree, removeNode, type NodeSpec } from '../domains/site/builder.js';
+import { menuLabel } from '../domains/site/importmap.js';
+import { PageDoc } from '../domains/site/document.js';
+import { childrenOf, subtreeIds, SPEC_GLOBAL_ID, SPEC_GLOBAL_REF, type DocLike } from '../core/tree.js';
 import { middleEnd } from '../domains/site/traps.js';
+import { setEvent } from './live.js';
+import { DEFAULT_MENU_NAME, menuSnapshot, type Menu, type MenuItemInput } from './menu.js';
+import { redact } from '../transport/http.js';
 import type { PageSession } from './page.js';
 
 /**
@@ -28,11 +31,6 @@ import type { PageSession } from './page.js';
  * So it moved here and both callers share it. Nothing about the shape is new;
  * what is new is that it can be asked for.
  */
-export interface ChromeLink {
-  text: string;
-  href: string;
-}
-
 export interface ChromeOutcome {
   created?: string;
   carried: string[];
@@ -66,26 +64,16 @@ export async function shareChrome(
   session: PageSession,
   siteId: string,
   kind: 'header' | 'footer',
-  links: ChromeLink[],
+  document: ReturnType<typeof chromeDocument>,
   pages: Array<{ id: string; slug: string }>,
-  tokens: Parameters<typeof navSpec>[1],
 ): Promise<ChromeOutcome> {
   const out: ChromeOutcome = { carried: [], failed: [] };
-  const spec = navSpec(links, tokens);
-  if (!spec) {
-    out.skipped = 'no links to put in it';
-    return out;
-  }
   const made = (await request({
     base: ctx.base,
     method: 'POST',
     path: `/api/sites/${encodeURIComponent(siteId)}/global-sections`,
     token: siteToken(ctx),
-    body: {
-      name: kind === 'header' ? 'Header' : 'Footer',
-      kind,
-      document: globalDocumentFrom(spec),
-    },
+    body: { name: kind === 'header' ? 'Header' : 'Footer', kind, document },
     fetchImpl: ctx.fetchImpl,
   })) as { globalSection?: { id?: unknown } };
   const gid = made.globalSection?.id;
@@ -123,10 +111,15 @@ export async function shareChrome(
 }
 
 /** Every page this site has, as the menu would name them. */
-export async function sitePages(
-  ctx: ToolContext,
-  siteId: string,
-): Promise<Array<{ id: string; slug: string; name: string; isHome: boolean }>> {
+export interface NavPage {
+  id: string;
+  slug: string;
+  name: string;
+  isHome: boolean;
+  type: string;
+}
+
+export async function sitePages(ctx: ToolContext, siteId: string): Promise<NavPage[]> {
   const got = (await request({
     base: ctx.base,
     method: 'GET',
@@ -139,19 +132,376 @@ export async function sitePages(
     slug: String(p.slug ?? ''),
     name: String(p.name ?? p.title ?? p.slug ?? ''),
     isHome: p.isHomepage === true || p.slug === '',
+    type: String(p.type ?? 'page'),
   }));
 }
 
-/** The link list a menu built from these pages would carry, home first. */
-export function chromeLinks(
-  pages: Array<{ slug: string; name: string; isHome: boolean }>,
-): ChromeLink[] {
-  return [...pages]
-    .sort((a, b) => Number(b.isHome) - Number(a.isHome))
-    .map((p) => ({ text: menuLabel(p.name), href: p.isHome ? '/' : `/${p.slug}` }));
+/**
+ * THE PAGES A MENU LINKS TO are the ones a visitor navigates to by name. The
+ * store's templates (product, category, checkout, search, account …) are
+ * reached THROUGH a product or a fixed path, never from a menu row, and
+ * login/register belong behind `/account` (see sbuilder-store-flows).
+ */
+const CONTENT_TYPES = new Set(['page', 'about', 'contact', 'faq', 'policy']);
+
+export interface NavCategory {
+  id: string;
+  name: string;
+  parentId: string;
+  products: Array<{ id: string; name: string }>;
 }
 
-export { siteFor, tokensFromPage };
+/**
+ * The catalogue as a menu would show it: only categories that hold products,
+ * because a menu row into an empty collection is a dead end a shopper meets.
+ * TOLERANT: a listing that fails yields no categories rather than no chrome.
+ */
+// ponytail: one request per category, capped; a counts endpoint if a store has hundreds.
+const MAX_CATEGORIES = 24;
+export async function stockedCategories(ctx: ToolContext, siteId: string): Promise<NavCategory[]> {
+  const site = encodeURIComponent(siteId);
+  const get = async <T>(path: string): Promise<T | null> => {
+    try {
+      return (await request({ base: ctx.base, method: 'GET', path, token: siteToken(ctx), fetchImpl: ctx.fetchImpl })) as T;
+    } catch {
+      return null;
+    }
+  };
+  const cats =
+    (await get<{ categories?: Array<Record<string, unknown>> }>(`/api/sites/${site}/product-categories`))?.categories ?? [];
+  const out: NavCategory[] = [];
+  for (const c of cats.slice(0, MAX_CATEGORIES)) {
+    const id = String(c.id ?? '');
+    if (!id) continue;
+    const got = await get<{ products?: Array<Record<string, unknown>> }>(
+      `/api/sites/${site}/product-categories/${encodeURIComponent(id)}/products`,
+    );
+    const products = (got?.products ?? []).map((p) => ({ id: String(p.id ?? ''), name: String(p.name ?? '') }));
+    if (products.length) out.push({ id, name: String(c.name ?? ''), parentId: String(c.parentId ?? ''), products });
+  }
+  return out;
+}
+
+const pageRow = (p: NavPage): MenuItemInput => ({ label: menuLabel(p.name), link: { type: 'page', pageId: p.id } });
+const categoryRow = (c: NavCategory, items?: MenuItemInput[]): MenuItemInput => ({
+  label: menuLabel(c.name),
+  link: { type: 'productCategory', entityId: c.id },
+  ...(items?.length ? { items } : {}),
+});
+
+/**
+ * The header menu: home, the stocked top-level categories, then the content
+ * pages — every row a REFERENCE (page id, category id, product id), never an
+ * address, so a re-slugged page keeps its row working. A category gets child
+ * rows: its own stocked sub-categories, or, having none, its first products.
+ */
+export function headerMenuItems(pages: NavPage[], cats: NavCategory[]): MenuItemInput[] {
+  const content = pages.filter((p) => CONTENT_TYPES.has(p.type) || p.isHome);
+  const home = content.find((p) => p.isHome);
+  const roots = cats.filter((c) => !c.parentId || !cats.some((x) => x.id === c.parentId)).slice(0, 6);
+  return [
+    ...(home ? [pageRow(home)] : []),
+    ...roots.map((c) => {
+      const subs = cats.filter((x) => x.parentId === c.id);
+      return categoryRow(
+        c,
+        subs.length
+          ? subs.map((x) => categoryRow(x))
+          : c.products.slice(0, 6).map((p) => ({ label: menuLabel(p.name), link: { type: 'product', entityId: p.id } })),
+      );
+    }),
+    ...content.filter((p) => !p.isHome && p.type !== 'policy').map(pageRow),
+  ];
+}
+
+const FOOTER_TITLES = {
+  vi: { shop: 'Cửa hàng', info: 'Thông tin' },
+  en: { shop: 'Shop', info: 'Information' },
+};
+
+/** The footer's link columns: one site menu each, so each is edited once. */
+export function footerMenus(
+  pages: NavPage[],
+  cats: NavCategory[],
+  lang: 'vi' | 'en',
+): Array<{ name: string; title: string; items: MenuItemInput[] }> {
+  const t = FOOTER_TITLES[lang];
+  const roots = cats.filter((c) => !c.parentId || !cats.some((x) => x.id === c.parentId));
+  const info = pages.filter((p) => CONTENT_TYPES.has(p.type) && !p.isHome);
+  return [
+    { name: 'Footer — Shop', title: t.shop, items: roots.map((c) => categoryRow(c)) },
+    { name: 'Footer — Info', title: t.info, items: info.map(pageRow) },
+  ].filter((m) => m.items.length > 0);
+}
+
+export interface MenuPlan {
+  name: string;
+  would?: 'create' | 'reuse';
+  id?: string;
+  created?: boolean;
+  items?: MenuItemInput[];
+}
+
+/**
+ * ONE SITE MENU PER NAME. A menu of that name already on the site is reused
+ * as it is — the merchant may have edited it since — so a re-run creates no
+ * duplicate.
+ */
+async function ensureMenu(
+  ctx: ToolContext,
+  siteId: string,
+  existing: Menu[],
+  name: string,
+  items: MenuItemInput[],
+  dryRun: boolean,
+): Promise<MenuPlan> {
+  const found = existing.find((m) => m.name === name);
+  if (found) return { name, would: 'reuse', id: found.id };
+  if (dryRun) return { name, would: 'create', items };
+  const made = (await request({
+    base: ctx.base,
+    method: 'POST',
+    path: `/api/sites/${encodeURIComponent(siteId)}/menus`,
+    token: siteToken(ctx),
+    body: { name, items },
+    fetchImpl: ctx.fetchImpl,
+  })) as { menu?: Menu };
+  if (!made.menu?.id) throw new Error(`sbuilder: the platform accepted the "${name}" menu and returned no menu`);
+  existing.push(made.menu);
+  return { name, id: made.menu.id, created: true };
+}
+
+/** A menu node bound to a site menu, carrying the snapshot both renderers read. */
+function menuSpec(
+  bound: { menuId?: string; menuItems?: unknown },
+  config: Record<string, unknown>,
+  extra: Partial<NodeSpec> = {},
+): NodeSpec {
+  return {
+    type: 'menu',
+    ...extra,
+    config: { ...config, ...(extra.config ?? {}) },
+    specials: { ...(bound.menuId ? { menuId: bound.menuId } : {}), ...(bound.menuItems ? { menuItems: bound.menuItems } : {}) },
+  };
+}
+
+const ROW = { flexDirection: 'row', alignItems: 'center' };
+
+/**
+ * THE HEADER, as the editor's own "Navigation" card composes it
+ * (`editor/src/element/pickerPresets.ts` navigationTree): a desktop `menu`
+ * hidden on mobile, and a `hamburger-menu` shown ONLY on mobile holding a
+ * `menu-drawer` with a ✕ carrying `close_menu` over a vertical `menu`. Both
+ * menus bind the SAME site menu, so it is edited once. `config.hidden` is
+ * NON-cascading (`render/style/cascade.go`), so the base value is desktop's
+ * alone and each narrower slot says its own.
+ *
+ * The cart is the ICON itself carrying `open_cart`, badged by a `cart-count`
+ * SATELLITE — not a box wrapping two nodes with the click on one of them.
+ * The section wears `section-wide` (`--wb-content-max: none`): the default
+ * `container-section` caps the band at 1440px, which squeezes a top bar.
+ * No colour is written: every node wears its element's theme preset.
+ */
+export function headerSpec(bound: { menuId?: string; menuItems?: unknown }, brand: string): NodeSpec {
+  const heading = (text: string): NodeSpec => ({
+    type: 'heading',
+    specials: { text, htmlTag: 'h4' },
+    config: { textGlobalStyle: 'heading-5' },
+    style: { fontSize: 'var(--wb-ts-heading-5-size)', width: 'fit-content' },
+  });
+  return {
+    type: 'flex-section',
+    specials: { stylePreset: 'section-wide' },
+    children: [
+      {
+        type: 'flex-block',
+        // A header bar never stacks: on a phone only the ☰ is left in it.
+        style: { ...ROW, justifyContent: 'space-between', gap: '24px', padding: '12px 24px' },
+        responsive: { mobile: { style: ROW } },
+        children: [
+          ...(brand ? [heading(brand)] : []),
+          menuSpec(
+            bound,
+            { expandType: 'hover', submenuStyle: 'dropdown' },
+            { style: { width: 'fit-content' }, responsive: { mobile: { config: { hidden: true } } } },
+          ),
+          {
+            type: 'flex-block',
+            style: { ...ROW, width: 'fit-content', gap: '16px' },
+            responsive: { mobile: { style: ROW } },
+            children: [
+              { type: 'icon', name: 'Account', specials: { name: 'UserLine' } },
+              { type: 'icon', name: 'Cart', specials: { name: 'ShoppingCartLine' }, children: [{ type: 'cart-count' }] },
+              {
+                type: 'hamburger-menu',
+                config: { hidden: true },
+                responsive: { laptop: { config: { hidden: true } }, tablet: { config: { hidden: true } } },
+                children: [
+                  {
+                    type: 'menu-drawer',
+                    children: [
+                      {
+                        type: 'flex-block',
+                        style: { ...ROW, justifyContent: 'space-between', gap: '16px', minHeight: '56px' },
+                        responsive: { mobile: { style: ROW } },
+                        children: [
+                          ...(brand ? [heading(brand)] : []),
+                          { type: 'icon', name: 'Close menu', specials: { name: 'CloseLine' }, config: { iconSize: 20 } },
+                        ],
+                      },
+                      menuSpec(
+                        bound,
+                        { expandType: 'click', submenuStyle: 'collapse' },
+                        { style: { flexDirection: 'column', alignItems: 'stretch', gap: '8px' } },
+                      ),
+                    ],
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      },
+    ],
+  };
+}
+
+/** The footer: one titled column per menu, each a VERTICAL menu bound to its site menu. */
+export function footerSpec(
+  columns: Array<{ title: string; bound: { menuId?: string; menuItems?: unknown } }>,
+): NodeSpec {
+  return {
+    type: 'flex-section',
+    specials: { stylePreset: 'section-wide' },
+    children: [
+      {
+        type: 'flex-block',
+        style: { flexDirection: 'row', flexWrap: 'wrap', gap: '48px', padding: '48px 24px' },
+        children: columns.map((c) => ({
+          type: 'flex-block',
+          style: { flexDirection: 'column', width: 'fit-content', gap: '12px' },
+          children: [
+            {
+              type: 'heading',
+              specials: { text: c.title, htmlTag: 'h4' },
+              config: { textGlobalStyle: 'heading-6' },
+              style: { fontSize: 'var(--wb-ts-heading-6-size)' },
+            },
+            menuSpec(
+              c.bound,
+              { expandType: 'click', submenuStyle: 'collapse' },
+              { style: { flexDirection: 'column', alignItems: 'flex-start', gap: '8px' } },
+            ),
+          ],
+        })),
+      },
+    ],
+  };
+}
+
+/** The clicks the header's named controls carry, written through `setEvent` so each sole navigation gets its `<a href>`. */
+const CHROME_EVENTS: Record<string, { action: string; payload?: Record<string, unknown> }> = {
+  Account: { action: 'go_to_url', payload: { url: '/account' } },
+  Cart: { action: 'open_cart' },
+  'Close menu': { action: 'close_menu' },
+};
+
+/** A global section's document: page-shaped, rooted at the SECTION. */
+export function chromeDocument(spec: NodeSpec): {
+  schema_version: number;
+  root_node_id: string;
+  nodes: Record<string, unknown>;
+} {
+  const scratch = PageDoc.from({ schema_version: 2, root_node_id: '', nodes: {} });
+  const { patches, ids } = addSubtree(scratch, scratch.doc.root_node_id, spec);
+  scratch.apply(patches);
+  for (const id of ids) {
+    const ev = CHROME_EVENTS[String(scratch.doc.nodes[id]?.data.name ?? '')];
+    if (ev) scratch.apply(setEvent(scratch, id, 'click', ev.action, ev.payload));
+  }
+  const rootId = ids[0];
+  const nodes: Record<string, unknown> = {};
+  for (const id of subtreeIds(scratch.doc, rootId)) nodes[id] = scratch.doc.nodes[id];
+  (nodes[rootId] as { data: { parent: unknown } }).data.parent = null;
+  return { schema_version: 2, root_node_id: rootId, nodes };
+}
+
+/** The spec as a caller reads it: types, nested. */
+export function specTree(s: NodeSpec): unknown {
+  const label = s.name ? `${s.type} (${s.name})` : s.type;
+  return s.children?.length ? { [label]: s.children.map(specTree) } : label;
+}
+
+/**
+ * `sb_store action:"chrome"`: the site menus, then the shared header or footer
+ * built on them, then every page given a reference to it.
+ */
+export async function buildChrome(
+  ctx: ToolContext,
+  session: PageSession,
+  siteId: string,
+  kind: 'header' | 'footer',
+  opts: { dryRun: boolean; language: 'vi' | 'en' },
+): Promise<unknown> {
+  if (await hasGlobal(ctx, siteId, kind)) {
+    return { skipped: `this site already shares a ${kind} — a second one is two of them, not a menu` };
+  }
+  const site = encodeURIComponent(siteId);
+  const get = async <T>(path: string): Promise<T> =>
+    (await request({ base: ctx.base, method: 'GET', path, token: siteToken(ctx), fetchImpl: ctx.fetchImpl })) as T;
+  const pages = await sitePages(ctx, siteId);
+  const cats = await stockedCategories(ctx, siteId);
+  const wanted =
+    kind === 'header'
+      ? [{ name: DEFAULT_MENU_NAME, title: '', items: headerMenuItems(pages, cats) }]
+      : footerMenus(pages, cats, opts.language);
+  if (wanted.every((m) => m.items.length < 2)) {
+    return { skipped: 'fewer than two pages or stocked categories to link — a menu to one place is a link to itself' };
+  }
+  const existing = (await get<{ menus?: Menu[] }>(`/api/sites/${site}/menus`)).menus ?? [];
+  const plans: MenuPlan[] = [];
+  for (const m of wanted) plans.push(await ensureMenu(ctx, siteId, existing, m.name, m.items, opts.dryRun));
+
+  const bound = await Promise.all(
+    plans.map(async (p) =>
+      p.id && !opts.dryRun ? { menuId: p.id, menuItems: (await menuSnapshot(ctx, siteId, p.id)).snapshot } : {},
+    ),
+  );
+  // The brand line is the site's own name; a site that will not say leaves the header without one.
+  const brand =
+    kind === 'header'
+      ? String((await get<{ site?: { name?: unknown } }>(`/api/sites/${site}`).catch(() => undefined))?.site?.name ?? '')
+      : '';
+  const spec =
+    kind === 'header'
+      ? headerSpec(bound[0], brand)
+      : footerSpec(wanted.map((m, i) => ({ title: m.title, bound: bound[i] })));
+  // Every page wears it, templates included: a product page is still this site.
+  const onto = pages;
+  if (opts.dryRun) {
+    return {
+      dry_run: true,
+      would_create: kind,
+      menus: redact(plans),
+      tree: specTree(spec),
+      onto: onto.map((p) => p.slug || '/'),
+      note:
+        'Nothing was sent. The menus are site records every menu node binds by id, so the ' +
+        'header and its mobile drawer are edited once; the header is ONE shared master every ' +
+        'page references. Re-call with dry_run:false.',
+    };
+  }
+  const out = await shareChrome(ctx, session, siteId, kind, chromeDocument(spec), onto);
+  return {
+    ...out,
+    menus: plans.map((p) => ({ name: p.name, id: p.id, ...(p.created ? { created: true } : { reused: true }) })),
+    next:
+      'Publish the pages: a global section reaches a visitor through each page it is ' +
+      'composed onto, so a saved page keeps the old chrome until it is published again.',
+  };
+}
+
+export { siteFor };
 
 /**
  * ATTACHING A SHARED SECTION TO A PAGE, which nothing here could do.

@@ -43,15 +43,7 @@ import { siteFor, type ToolContext } from './context.js';
 import { withFreshIds } from '../domains/site/ids.js';
 import { siteChrome, wearChrome, type PageSession } from './page.js';
 import { addSubtree } from '../domains/site/builder.js';
-import {
-  attachGlobal,
-  chromeLinks,
-  detachGlobal,
-  hasGlobal,
-  shareChrome,
-  sitePages,
-} from './chrome.js';
-import { tokensFromPage } from '../domains/site/importmap.js';
+import { attachGlobal, buildChrome, detachGlobal } from './chrome.js';
 import { bindMenu } from './menu.js';
 import { attachOverlay, ensureCartDrawer } from './overlay.js';
 import { installApp } from './app.js';
@@ -462,8 +454,9 @@ export function registerStoreTools(server: McpServer, ctx: ToolContext, session:
         'four. action:"form" seeds any of the platform\'s other form templates (login, ' +
         'register, forgot, reset, verify, contact, subscribe, booking, review and more) with ' +
         'its own field document, which is the part that cannot be guessed. action:"chrome" ' +
-        'gives every page ONE shared header, built from the pages this site already has — the ' +
-        'gap sb_review reports as siteChrome. action:"menu" binds a menu node on the open page ' +
+        'gives every page ONE shared header (footer:true — footer) built on a real site menu of ' +
+        'page/category/product references: a desktop menu, a mobile drawer, cart and account ' +
+        'icons — the gap sb_review reports as siteChrome. action:"menu" binds a menu node on the open page ' +
         'to the site\'s menu and resolves its links, the way the editor does. ' +
         'action:"overlay_attach" puts a pop-up on the open page (kind:"popup") or points a ' +
         'list-dataset at a quick-view panel (kind:"quickview", list_id), creating either from ' +
@@ -626,48 +619,12 @@ export function registerStoreTools(server: McpServer, ctx: ToolContext, session:
         return text(await ensureCartDrawer(ctx, session, siteId, dry_run !== false));
       }
       if (action === 'chrome') {
-        // SKIPPED WHEN THE SITE ALREADY SHARES ONE, because a second header is
-        // two headers rather than a menu — and below two pages, because a menu
-        // to one page is a link to itself. Both are `sb_import_site`'s own
-        // rules, kept because they were right there.
-        // NAMED `chromeKind`, not `kind`: the tool's own `kind` argument is the
-        // OVERLAY enum, and shadowing it here reads as the same idea twice.
-        const chromeKind = footer === true ? 'footer' : 'header';
-        if (await hasGlobal(ctx, siteId, chromeKind)) {
-          return text({
-            skipped: `this site already shares a ${chromeKind} — a second one is two of them, not a menu`,
-          });
-        }
-        const pages = await sitePages(ctx, siteId);
-        if (pages.length < 2) {
-          return text({ skipped: 'a menu to one page is a link to itself' });
-        }
-        const links = chromeLinks(pages);
-        // RULE 0: the look comes off the HOME page, which is the one page whose
-        // pattern the rest of the site already follows. A site with nothing on
-        // its home page yields no tokens rather than an invented palette.
-        const home = pages.find((p) => p.isHome) ?? pages[0];
-        await session.open(siteId, home.id);
-        const tokens = tokensFromPage(session.current().doc);
-        if (dry_run !== false) {
-          return text({
-            dry_run: true,
-            would_create: chromeKind,
-            menu: links,
-            onto: pages.map((p) => p.slug),
-            tokens_from: Object.keys(tokens).length ? 'the home page' : 'nothing — the home page is blank',
-            note:
-              'Nothing was sent. This creates ONE shared master and gives every page a reference ' +
-              'to it, so the menu becomes one edit instead of one per page.',
-          });
-        }
-        const out = await shareChrome(ctx, session, siteId, chromeKind, links, pages, tokens);
-        return text({
-          ...out,
-          next:
-            'Publish the pages: a global section reaches a visitor through each page it is ' +
-            'composed onto, so a saved page keeps the old chrome until it is published again.',
-        });
+        return text(
+          await buildChrome(ctx, session, siteId, footer === true ? 'footer' : 'header', {
+            dryRun: dry_run !== false,
+            language: (language ?? 'vi') as 'vi' | 'en',
+          }),
+        );
       }
       if (action === 'form') {
         if (!template) {
