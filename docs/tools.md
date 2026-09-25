@@ -287,6 +287,9 @@ section, a child a parent's whitelist excludes, and any add into a non-container
 `addDetachedNode` does: `data.parent` is the host, it is NOT in the host's children, and the
 host's base `config[<key>]` points at it (`cartCountId` for the badge). `index` is ignored; a
 host that already has a live one refuses. `sb_remove` on a satellite clears that key too.
+A satellite the editor births as a subtree (a list's `list-empty`: glyph, headline, body) arrives
+with that seed unless you pass children — top-level or NESTED in a spec, where it takes the place
+of the one the owner would have minted.
 
 
 A created element arrives with the BINDINGS its type needs: a `text-dataset` already reads

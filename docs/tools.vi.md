@@ -289,6 +289,9 @@ container.
 `addDetachedNode` của editor: `data.parent` là node chủ, KHÔNG nằm trong danh sách con của chủ,
 và `config[<key>]` ở base của chủ trỏ tới nó (`cartCountId` cho huy hiệu). `index` bị bỏ qua;
 chủ đã có một cái còn sống thì bị từ chối. `sb_remove` một satellite cũng xoá key đó.
+Satellite mà editor sinh ra thành cả cây con (`list-empty` của một list: glyph, tiêu đề, dòng mô tả)
+đến kèm cây seed đó trừ khi bạn truyền children — ở cấp ngoài cùng hay LỒNG trong một spec, khi đó
+nó thay chỗ cái mà node chủ lẽ ra tự tạo.
 
 
 Phần tử vừa tạo mang sẵn BINDINGS mà kiểu của nó cần: `text-dataset` đã đọc `product.title`,
