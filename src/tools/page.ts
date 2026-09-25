@@ -95,6 +95,9 @@ export function reviewField(
  * discard local work on every call, and would turn one hero section into forty
  * round trips.
  */
+/** How long a save in the live room waits for its ops' acks before leaving `X-WB-Live-Peer` off. */
+const LIVE_ACK_CAP_MS = 2_000;
+
 export class PageSession {
   private doc: PageDoc | null = null;
   private siteId = '';
@@ -127,6 +130,15 @@ export class PageSession {
    * re-pull cannot see them move — they are counted as moved here instead.
    */
   private remoteTouched = new Set<string>();
+  /**
+   * The document revision up to which every local change since the last
+   * pull/save went out as ops the moment it was made (`applyAndPublish`, fully
+   * syncable, socket open). Any other mutation of the copy — a direct
+   * `doc.apply`, a healed root, a publish that queued — leaves `rev` past it.
+   * `sentOps` are the op ids published since the last save.
+   */
+  private broadcastRev = -1;
+  private sentOps: string[] = [];
   /** The open read handed back an empty document and a ROOT was invented for it. */
   private openedSeeded = false;
   private warnings: ComposeWarning[] = [];
@@ -254,8 +266,11 @@ export class PageSession {
    */
   applyAndPublish(patches: Patch[]): void {
     const d = this.current();
+    const wasCarried = d.rev === this.broadcastRev;
     d.apply(patches);
-    this.live?.publish(patches);
+    const out = this.live?.publish(patches);
+    if (out) this.sentOps.push(...out.opIds);
+    if (wasCarried && out?.sent) this.broadcastRev = d.rev;
     // Move the cursor to what was just touched, but ONLY when a real
     // measurement exists. Presence with a made-up coordinate is theatre;
     // presence with a measured one is information.
@@ -346,6 +361,29 @@ export class PageSession {
     }
   }
 
+  /**
+   * THE ONE PLACE `X-WB-Live-Peer` IS DECIDED (web_builder e79cdb7f3). A dirty
+   * editor tab adopts a save naming a peer in its room WITHOUT the conflict
+   * banner, trusting that the change already reached it as ops — so a save
+   * that claims it wrongly is silently overwritten by the human's next
+   * autosave. Named only when all hold: this seat is in the room on this page;
+   * every change since the last save went out as ops the moment it was made;
+   * and the server has ACKED every one of those ops. Anything else answers
+   * undefined, and the tab shows its banner — the safe failure.
+   *
+   * ponytail: waits up to LIVE_ACK_CAP_MS for acks on every in-room save; a
+   * round trip is normally milliseconds, and the cap is what an op that went
+   * nowhere costs.
+   */
+  private async livePeer(d: PageDoc, ops: string[]): Promise<string | undefined> {
+    const live = this.live;
+    if (!live || this.liveSite !== this.siteId || live.page !== this.pageId || !live.peerId) return undefined;
+    if (d.rev !== this.broadcastRev) return undefined;
+    if (!(await live.whenAcked(ops, LIVE_ACK_CAP_MS))) return undefined;
+    // Re-checked: a change made while waiting that did not go out.
+    return d.rev === this.broadcastRev && live.peerId ? live.peerId : undefined;
+  }
+
   private touchedSnapshot(d: PageDoc, patches: Patch[]): Map<string, string> {
     const touched = [...new Set(patches.map((p) => String(p.path[1])))];
     return new Map(touched.map((id) => [id, JSON.stringify(d.doc.nodes[id] ?? null)]));
@@ -357,7 +395,9 @@ export class PageSession {
    * rule: the next write re-pulls first. Judged after any save in flight, whose
    * own frame can arrive before its answer.
    */
-  sourceSaved(pageId: string, rev: number): void {
+  sourceSaved(pageId: string, rev: number, peerId?: string): void {
+    // Our own save's echo, recognised even when its PUT answer never came back.
+    if (peerId && peerId === this.live?.peerId) return;
     const check = (): void => {
       if (this.isOpen(this.liveSite, pageId) && this.sourceRev > 0 && rev > this.sourceRev) {
         this.markStale(`the page was saved elsewhere (rev ${rev})`);
@@ -419,8 +459,11 @@ export class PageSession {
   applyRemote(patches: Patch[]): void {
     if (!this.doc) return;
     const clean = !this.hasUnsaved();
+    const carried = this.doc.rev === this.broadcastRev;
     this.doc.apply(patches);
     if (clean) this.savedRev = this.doc.rev;
+    // The peer broadcast it; it does not break what this session's ops carry.
+    if (carried) this.broadcastRev = this.doc.rev;
     for (const p of patches) this.remoteTouched.add(String(p.path[1]));
   }
 
@@ -500,6 +543,7 @@ export class PageSession {
     );
     d.apply(restampPatches(d.doc, { globals: saved.globals, overlays: saved.overlays }));
     this.savedRev = d.rev;
+    this.broadcastRev = d.rev;
     this.sourceRev = saved.rev ?? 0;
   }
 
@@ -523,6 +567,8 @@ export class PageSession {
     this.warnings = composeWarnings(src.warnings);
     // Freshly pulled IS the stored state.
     this.savedRev = this.doc.rev;
+    this.broadcastRev = this.doc.rev;
+    this.sentOps = [];
     this.remoteTouched.clear();
     // WHAT THE READ ACTUALLY RETURNED, kept so `save` can tell a page this
     // session emptied from a page that arrived empty because the read failed
@@ -632,6 +678,7 @@ export class PageSession {
       console.error(`sbuilder: page ${this.pageId} root ${old} → ${PAGE_ROOT_ID} on save`);
       this.doc = PageDoc.from(healed);
       this.savedRev = -1; // a fresh PageDoc restarts at rev 0; it still has to be stored
+      this.broadcastRev = -1; // the rename is not synced: no room ever saw it
       // Inherited problems were worded with the old root's id.
       return this.save(new Set([...inherited].map((p) => p.split(old).join(PAGE_ROOT_ID))));
     }
@@ -687,12 +734,17 @@ export class PageSession {
     // somebody else stored since this copy was read — the yield rule, enforced
     // server-side. `applyAndSave` rebases the write it was carrying; any other
     // caller gets the re-pull and the loud refusal of the stale branch above.
+    const ops = this.sentOps;
+    this.sentOps = [];
+    const peer = await this.livePeer(d, ops);
+    const revAtSend = d.rev;
     const pending = saveSource(
       this.ctx,
       this.siteId,
       this.pageId,
       d.doc as unknown as { schema_version?: number; root_node_id: string; nodes: Record<string, unknown> },
       this.sourceRev,
+      peer,
     );
     this.saving = pending;
     // What a peer touched BEFORE this body was built is in the save; what it
@@ -704,6 +756,7 @@ export class PageSession {
       saved = await pending;
     } catch (e) {
       for (const id of sent) this.remoteTouched.add(id);
+      this.sentOps = [...ops, ...this.sentOps];
       if (!isSourceStale(e)) throw e;
       this.stale = 'the page was saved elsewhere since this session read it (409 source_stale)';
       if (staleThrows) throw e;
@@ -720,11 +773,15 @@ export class PageSession {
     // with a warning and a 200. Applied locally rather than published: these are
     // the server's own numbers coming back, not an edit anybody made, and a peer
     // in the room gets them from its own save.
+    // Stored, so nothing up to `revAtSend` is owed to the room any more; a
+    // change made while the PUT was in flight still is, unless it was carried.
+    const owed = d.rev !== revAtSend && this.broadcastRev !== d.rev;
     d.apply(restampPatches(d.doc, { globals: saved.globals, overlays: saved.overlays }));
     // AFTER the re-stamp, which is itself a revision: the point of comparison is
     // "is the document now different from what the server holds", and the
     // re-stamp wrote the server's own answer back into it.
     this.savedRev = d.rev;
+    if (!owed) this.broadcastRev = d.rev;
     await ensureSiteTheme(this.ctx, this.siteId);
   }
 }

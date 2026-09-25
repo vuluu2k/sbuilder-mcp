@@ -37,6 +37,8 @@ export interface RevStamp {
   rev: number;
 }
 
+const LIVE_PEER = /^[A-Za-z0-9_-]{1,64}$/;
+
 function sourcePath(siteId: string, pageId: string): string {
   return `/api/sites/${encodeURIComponent(siteId)}/pages/${encodeURIComponent(pageId)}/source`;
 }
@@ -91,6 +93,14 @@ export async function saveSource(
   pageId: string,
   document: { schema_version?: number; root_node_id: string; nodes: Record<string, unknown> },
   baseRev?: number,
+  /**
+   * `X-WB-Live-Peer` (web_builder e79cdb7f3): the realtime peer that ALREADY
+   * broadcast this save's whole change as ops. An editor tab with unsaved edits
+   * adopts such a save without its conflict banner, so only PageSession passes
+   * it, and only then — a raw write adopted silently is overwritten by the
+   * human's next autosave.
+   */
+  livePeer?: string,
 ): Promise<PageSource> {
   const out = (await request({
     base: ctx.base,
@@ -99,6 +109,7 @@ export async function saveSource(
     token: siteToken(ctx),
     // Only when the read reported one: an older platform has no fence to name.
     body: { document, schemaVersion: document.schema_version ?? 1, ...(baseRev ? { baseRev } : {}) },
+    ...(livePeer && LIVE_PEER.test(livePeer) ? { headers: { 'X-WB-Live-Peer': livePeer } } : {}),
     fetchImpl: ctx.fetchImpl,
   })) as { source: PageSource };
   return out.source;

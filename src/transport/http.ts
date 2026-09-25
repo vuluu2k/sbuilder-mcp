@@ -19,6 +19,8 @@ export interface RequestOpts {
   token?: string;
   query?: Record<string, string | number | boolean | undefined>;
   body?: unknown;
+  /** Extra request headers (`X-WB-Live-Peer`). */
+  headers?: Record<string, string>;
   /** Injected in tests; defaults to global fetch. */
   fetchImpl?: typeof fetch;
 }
@@ -227,7 +229,7 @@ async function send(opts: RequestOpts): Promise<unknown> {
   // whatever the agent asked for — and a separate announcement call would be one
   // more thing that can fail while the real work succeeds, leaving a working
   // install invisible on the operator's screen.
-  const headers: Record<string, string> = { Accept: 'application/json', ...identityHeaders() };
+  const headers: Record<string, string> = { Accept: 'application/json', ...identityHeaders(), ...opts.headers };
   if (opts.token) headers.Authorization = `Bearer ${opts.token}`;
   if (opts.body !== undefined) headers['Content-Type'] = 'application/json';
   const body = withPageRoot(opts);

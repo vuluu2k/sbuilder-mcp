@@ -411,6 +411,11 @@ node it is changing — whenever a real measurement from `sb_look` exists. Prese
 invented coordinate would be theatre, so absent a measurement the cursor simply does not
 move.
 
+A save whose every change went out as ops, all acked by the server, names this seat in
+`X-WB-Live-Peer`, so an editor tab with unsaved edits takes it in without its conflict banner.
+Every other write — `sb_api_call`, `sb_page_repair`, store flows, restores, and any save with a
+change the room did not receive — sends no header, and the tab shows the banner.
+
 **An API key opens the room.** `realtime.go:44` gives a `wbk_` bearer the same door as a
 session, decided from the token's own shape and gated on `member.read` through the key's
 DELEGATED principal — so the key joins only if the member who minted it may, and only on the

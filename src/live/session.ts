@@ -16,7 +16,7 @@ export interface LiveOpts {
   /** "I can no longer prove my document matches the room." */
   onDesync(reason: string): void;
   /** A page's draft was saved — by anyone, this client included (web_builder 1dbc88a2c). */
-  onSource?(pageId: string, rev: number): void;
+  onSource?(pageId: string, rev: number, peerId?: string): void;
 }
 
 /**
@@ -113,10 +113,17 @@ export class LiveSession {
    * addressed when a write replaced ITS document (the room is per site, and an
    * editor keeps only the frames for the page it shows).
    */
-  publish(patches: Patch[], pageId = this.pageId): void {
-    if (!pageId) return;
+  /**
+   * True only when EVERY patch went out on the wire now — none filtered as
+   * unsyncable, none queued behind a handshake or a reconnect (a queued frame
+   * can still be dropped past the cap).
+   */
+  publish(patches: Patch[], pageId = this.pageId): { sent: boolean; opIds: string[] } {
+    const opIds: string[] = [];
+    if (!pageId) return { sent: false, opIds };
     const ops = syncable(patches);
-    if (ops.length === 0) return;
+    if (ops.length === 0) return { sent: patches.length === 0, opIds };
+    let sent = ops.length === patches.length;
     // The wire caps an `ops` frame at 4 MiB and CLOSES the socket past it, so a
     // batch (sb_set edits[], a big sb_add) is split into frames under a budget
     // that leaves room for the envelope. Each frame gets its own opId, and a
@@ -125,8 +132,44 @@ export class LiveSession {
     for (const chunk of chunkBySize(ops, OPS_FRAME_BUDGET)) {
       const opId = randomBytes(8).toString('hex');
       this.pending.set(opId, pageId);
-      this.socket.send({ t: 'ops', pageId, ops: chunk, opId });
+      opIds.push(opId);
+      if (!this.socket.send({ t: 'ops', pageId, ops: chunk, opId })) sent = false;
     }
+    return { sent, opIds };
+  }
+
+  private ackWaiters = new Set<() => void>();
+
+  /**
+   * Resolves true once the server has acked every one of `opIds`, false at
+   * `capMs`. An op that went nowhere never acks, so the answer is then false.
+   */
+  whenAcked(opIds: string[], capMs: number): Promise<boolean> {
+    const left = (): boolean => opIds.some((id) => this.pending.has(id));
+    if (!left()) return Promise.resolve(true);
+    return new Promise((resolve) => {
+      const check = (): void => {
+        if (left()) return;
+        clearTimeout(timer);
+        this.ackWaiters.delete(check);
+        resolve(true);
+      };
+      const timer = setTimeout(() => {
+        this.ackWaiters.delete(check);
+        resolve(false);
+      }, capMs);
+      this.ackWaiters.add(check);
+    });
+  }
+
+  /** This connection's realtime peer id (the welcome's), '' before it. */
+  get peerId(): string {
+    return this.selfId;
+  }
+
+  /** The page this seat announced. */
+  get page(): string {
+    return this.pageId;
   }
 
   /** Presence only — never document state. */
@@ -169,6 +212,7 @@ export class LiveSession {
         this.pending.delete(opId);
         const s = Number(e.seq ?? 0);
         if (forPage === this.pageId && s > this.seq) this.seq = s;
+        for (const w of [...this.ackWaiters]) w();
         break;
       }
       case 'ops': {
@@ -192,7 +236,9 @@ export class LiveSession {
       }
       case 'source': {
         const rev = Number(e.rev ?? 0);
-        if (typeof e.pageId === 'string' && rev > 0) this.opts.onSource?.(e.pageId, rev);
+        if (typeof e.pageId === 'string' && rev > 0) {
+          this.opts.onSource?.(e.pageId, rev, typeof e.peerId === 'string' ? e.peerId : undefined);
+        }
         break;
       }
       case 'snapreq':

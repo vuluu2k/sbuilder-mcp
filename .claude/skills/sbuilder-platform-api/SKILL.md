@@ -114,6 +114,15 @@ repo over a number here, and fix the line when you catch one stale.
   rule uses (snapshot taken BEFORE the patches were applied, or every node reads as "moved"),
   and marks stale on a frame whose rev is past its own — judged after any save in flight,
   because our own save's frame can land before its PUT answers.
+  **`X-WB-Live-Peer` IS A CLAIM THAT THE ROOM ALREADY HAS THE CHANGE (web_builder e79cdb7f3).**
+  A dirty editor tab adopts a save naming a peer in its room WITHOUT the conflict banner, so a
+  save that claims it wrongly is silently overwritten by the human's next autosave. It is decided
+  in ONE place, `PageSession.livePeer`: in the room on this page, `broadcastRev === rev` (every
+  change since the last save went out the moment it was made — no direct `doc.apply`, healed
+  root, unsyncable patch or queued frame), and every op since the last save ACKED (bounded
+  wait). Raw writes (`sb_api_call`, `sb_page_repair`, store flows, restores, menu bind, chrome
+  attach, `recompose`) never pass it. A `source` frame whose `peerId` is ours is our own echo,
+  even when the PUT answer was lost. When unsure, leave it off: the banner is the safe failure.
 
   **AND "WHICH MACHINE" HAD NO FIELD, so every agent in the room was the same robot.** `Kind`
   answered person-or-machine and stopped there; the editor paints one glyph (`&#129302;`) for

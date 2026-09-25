@@ -150,12 +150,13 @@ export class RealtimeSocket {
     };
   }
 
-  send(e: RealtimeEvent): void {
-    if (this.closed) return;
+  /** True when the frame went out now; false when queued (or closed). */
+  send(e: RealtimeEvent): boolean {
+    if (this.closed) return false;
     const frame = JSON.stringify(e);
     if (this.ready && this.ws?.readyState === OPEN) {
       this.ws.send(frame);
-      return;
+      return true;
     }
     if (this.queue.length >= QUEUE_MAX) {
       // ponytail: drops the oldest past the cap; the peer re-pulls on the gap.
@@ -163,6 +164,7 @@ export class RealtimeSocket {
       this.queue.shift();
     }
     this.queue.push(frame);
+    return false;
   }
 
   close(): void {

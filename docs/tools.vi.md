@@ -407,6 +407,11 @@ nên ai đang mở editor sẽ thấy trang mọc dần, và con trỏ của age
 sửa — với điều kiện đã có số đo thật từ `sb_look`. Con trỏ với toạ độ bịa ra chỉ là diễn, nên
 khi chưa đo thì con trỏ đơn giản là không nhúc nhích.
 
+Một lần lưu mà mọi thay đổi đã phát thành op và đều được server ack sẽ ghi seat này vào
+`X-WB-Live-Peer`, nên tab editor đang có sửa đổi chưa lưu nhận nó mà không hiện banner xung
+đột. Mọi lần ghi khác — `sb_api_call`, `sb_page_repair`, các store flow, restore, và mọi lần
+lưu có thay đổi mà phòng không nhận được — không gửi header, và tab hiện banner.
+
 **Cần một phiên.** Socket live chỉ nhận session token — `realtime.go:38` từ chối API key —
 và một lần xác thực socket bị từ chối vẫn bắn `onopen`, nên một agent chỉ có API key sẽ
 "vào phòng", phát mọi sửa đổi vào khoảng không, và không bao giờ biết vì sao không ai thấy.

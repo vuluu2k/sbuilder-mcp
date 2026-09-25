@@ -29,7 +29,7 @@ class FakeSocket implements SocketLike {
   onclose: (() => void) | null = null;
   onerror: ((e: unknown) => void) | null = null;
   readyState = 1;
-  send() {}
+  send(_data: string) {}
   close() {}
 }
 
@@ -38,6 +38,8 @@ function world(opts: { revs?: boolean; fence?: boolean } = {}) {
   const revs = opts.revs !== false;
   const server = { doc: page(), rev: 100 };
   const puts: any[] = [];
+  const peers: Array<string | undefined> = [];
+  let losePut = false;
   let gets = 0;
   let hook: (() => void) | undefined;
   let putHook: (() => void) | undefined;
@@ -50,6 +52,7 @@ function world(opts: { revs?: boolean; fence?: boolean } = {}) {
     if (method === 'PUT') {
       const body = JSON.parse(String(init!.body));
       puts.push(body);
+      peers.push(((init?.headers ?? {}) as Record<string, string>)['X-WB-Live-Peer']);
       if (putHook) queueMicrotask(putHook);
       putHook = undefined;
       if (opts.fence !== false && body.baseRev && body.baseRev !== server.rev) {
@@ -57,6 +60,10 @@ function world(opts: { revs?: boolean; fence?: boolean } = {}) {
       }
       server.doc = body.document;
       server.rev += 1;
+      if (losePut) {
+        losePut = false;
+        throw new TypeError('fetch failed');
+      }
     } else {
       gets += 1;
       if (hook) queueMicrotask(hook);
@@ -78,7 +85,7 @@ function world(opts: { revs?: boolean; fence?: boolean } = {}) {
     edit(server.doc);
     server.rev += 1;
   };
-  return { ps, server, puts, gets: () => gets, elsewhere, onGet: (f: () => void) => (hook = f), onPut: (f: () => void) => (putHook = f), holdGet: (p: Promise<void>) => (held = p) };
+  return { ps, server, puts, gets: () => gets, elsewhere, onGet: (f: () => void) => (hook = f), onPut: (f: () => void) => (putHook = f), peers, acks: { on: true }, fake: null as FakeSocket | null, losePut: () => (losePut = true), holdGet: (p: Promise<void>) => (held = p) };
 }
 
 const setText = (id: string, text: string) => [{ op: 'set' as const, path: ['nodes', id, 'specials', 'text'], value: text }];
@@ -125,16 +132,24 @@ describe('PUT …/source carries baseRev', () => {
 describe("the room's {t:'source'} frame", () => {
   function room(w: ReturnType<typeof world>) {
     const fake = new FakeSocket();
+    // The server acks every ops frame unless the test says otherwise.
+    fake.send = (data: string) => {
+      const f = JSON.parse(data);
+      if (f.t === 'ops' && w.acks.on) {
+        queueMicrotask(() => fake.onmessage!({ data: JSON.stringify({ t: 'ack', opId: f.opId, seq: 1 }) }));
+      }
+    };
     const sock = new RealtimeSocket('ws://x', () => 'tok', () => fake);
     const live = new LiveSession(sock, {
       onRemote: (patches) => w.ps.applyRemote(patches),
       onDesync: () => {},
-      onSource: (pageId, rev) => w.ps.sourceSaved(pageId, rev),
+      onSource: (pageId, rev, peerId) => w.ps.sourceSaved(pageId, rev, peerId),
     });
     sock.connect();
     fake.onopen!();
     w.ps.attachLive(live, 's1');
     live.start('pg');
+    w.fake = fake;
     return (e: Record<string, unknown>) => fake.onmessage!({ data: JSON.stringify(e) });
   }
 
@@ -242,6 +257,57 @@ describe("the room's {t:'source'} frame", () => {
     await w.ps.applyAndSave(setText('he', 'Mine'));
     expect(w.server.doc.nodes.he.specials.text).toBe('Mine');
     expect(w.gets() - reads).toBe(1);
+  });
+
+  it('a save carrying a change that never went out as ops sends no X-WB-Live-Peer', async () => {
+    const w = world({ fence: false });
+    const deliver = room(w);
+    deliver({ t: 'welcome', peerId: 'me', peers: [] });
+    await w.ps.open('s1', 'pg');
+    await w.ps.applyAndSave(setText('he', 'One'));
+    expect(w.peers.at(-1)).toBe('me');
+    // Applied to the copy without publishing — what wearChrome and a healed
+    // root do. The room never saw it, so the save must not claim it did.
+    w.ps.current().apply(setText('tx', 'Quiet'));
+    await w.ps.applyAndSave(setText('he', 'Two'));
+    expect(w.peers.at(-1)).toBeUndefined();
+    // Stored now, so the next ops-carried save may claim it again.
+    await w.ps.applyAndSave(setText('he', 'Three'));
+    expect(w.peers.at(-1)).toBe('me');
+  });
+
+  it('a change published while the socket was not open is not carried: no header', async () => {
+    const w = world({ fence: false });
+    const deliver = room(w);
+    deliver({ t: 'welcome', peerId: 'me', peers: [] });
+    await w.ps.open('s1', 'pg');
+    w.fake!.readyState = 0;
+    await w.ps.applyAndSave(setText('he', 'Offline'));
+    expect(w.peers.at(-1)).toBeUndefined();
+  });
+
+  it('ops the server has not acked at save time: no header', async () => {
+    const w = world({ fence: false });
+    const deliver = room(w);
+    deliver({ t: 'welcome', peerId: 'me', peers: [] });
+    await w.ps.open('s1', 'pg');
+    w.acks.on = false;
+    await w.ps.applyAndSave(setText('he', 'Unacked'));
+    expect(w.peers.at(-1)).toBeUndefined();
+  }, 10_000);
+
+  it('its own echo (peerId) does not stale the session when the PUT answer was lost', async () => {
+    const w = world({ fence: false });
+    const deliver = room(w);
+    deliver({ t: 'welcome', peerId: 'me', peers: [] });
+    await w.ps.open('s1', 'pg');
+    w.losePut();
+    await expect(w.ps.applyAndSave(setText('he', 'One'))).rejects.toThrow();
+    deliver({ t: 'source', pageId: 'pg', rev: w.server.rev, peerId: 'me' });
+    const reads = w.gets();
+    await w.ps.applyAndSave(setText('he', 'Two'));
+    expect(w.gets()).toBe(reads);
+    expect(w.server.doc.nodes.he.specials.text).toBe('Two');
   });
 
   it('its own save, another page, and an unknown frame type change nothing', async () => {
