@@ -138,8 +138,9 @@ describe('every write re-checks the room', () => {
     await ps.applyAndSave([
       { op: 'set', path: ['nodes', 'rt', 'style', 'gap'], value: '8px' },
     ]);
+    // The first save renamed the fixture's 'rt' root to ROOT.
     await ps.applyAndSave([
-      { op: 'set', path: ['nodes', 'rt', 'style', 'gap'], value: '12px' },
+      { op: 'set', path: ['nodes', ps.current().doc.root_node_id, 'style', 'gap'], value: '12px' },
     ]);
     expect(joiner).toHaveBeenCalledTimes(1);
   });

@@ -58,7 +58,9 @@ describe('PageSession', () => {
     ps.current().apply([{ op: 'set', path: ['nodes', 'rt', 'specials', 'touched'], value: 1 }]);
     await ps.save();
     expect(saved.length).toBe(1);
-    expect((saved[0].document as Record<string, unknown>).root_node_id).toBe('rt');
+    // The fixture roots at 'rt'; a save renames a minted root to the editor's ROOT.
+    expect((saved[0].document as Record<string, unknown>).root_node_id).toBe('ROOT');
+    expect(ps.current().doc.root_node_id).toBe('ROOT');
   });
 
   it('refuses to save a document the platform would reject, before sending it', async () => {

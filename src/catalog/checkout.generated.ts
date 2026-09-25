@@ -516,10 +516,10 @@ export const CHECKOUT_FORM_DOCUMENT = {
 
 export const CHECKOUT_PAGE_DOCUMENT = {
   "schema_version": 2,
-  "root_node_id": "ckp_1",
+  "root_node_id": "ROOT",
   "nodes": {
-    "ckp_1": {
-      "id": "ckp_1",
+    "ROOT": {
+      "id": "ROOT",
       "data": {
         "type": "root",
         "parent": null,
@@ -541,7 +541,7 @@ export const CHECKOUT_PAGE_DOCUMENT = {
       "id": "ckp_2",
       "data": {
         "type": "flex-section",
-        "parent": "ckp_1",
+        "parent": "ROOT",
         "nodes": [
           "ckp_3",
           "ckp_4",

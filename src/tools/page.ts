@@ -7,6 +7,7 @@ import { previewUrl } from '../vision/preview.js';
 import { bandIds, proveLive, type LiveProof } from '../domains/site/liveproof.js';
 import { canvasVerdict, driftOf } from '../domains/site/pagestate.js';
 import { PageDoc, type OutlineNode } from '../domains/site/document.js';
+import { canonicalRoot, PAGE_ROOT_ID } from '../domains/site/ids.js';
 import {
   addSubtree,
   setKeys,
@@ -251,6 +252,7 @@ export class PageSession {
     // `RealtimeSocket` owns its own reconnect with backoff, and re-attaching a
     // second LiveSession over a live one would be the bug, not the fix.
     await this.ensureLive(this.siteId);
+    if (this.stale) return this.rebase(patches);
     const before = new Set(validateForSave(d));
     const after = validateForSave(d.preview(patches));
     const introduced = after.filter((p) => !before.has(p));
@@ -283,6 +285,44 @@ export class PageSession {
     }
     this.applyAndPublish(patches);
     await this.save(before);
+  }
+
+  /**
+   * THE YIELD RULE, WITHOUT MAKING THE CALLER REDO WORK IT DID NOT NEED TO.
+   *
+   * A stale session still discards its copy and re-pulls. But a patch batch
+   * addresses nodes BY ID, so it applies to the fresh tree exactly as it would
+   * have to the old one — unless the other side changed one of the very nodes it
+   * touches. Only then does it fail loudly; otherwise it is reapplied after
+   * the re-pull (a desync arriving DURING that re-pull rebases again).
+   * Unsaved local edits are never rebased: those are exactly what a re-pull
+   * throws away, so that case keeps the old refusal.
+   */
+  private async rebase(patches: Patch[]): Promise<void> {
+    const reason = this.stale!;
+    const old = this.current();
+    const dirty = old.rev !== this.savedRev;
+    const touched = [...new Set(patches.map((p) => String(p.path[1])))];
+    const snap = (d: PageDoc, id: string): string => JSON.stringify(d.doc.nodes[id] ?? null);
+    const before = new Map(touched.map((id) => [id, snap(old, id)]));
+    this.stale = null;
+    await this.open(this.siteId, this.pageId);
+    const fresh = this.current();
+    const moved = touched.filter((id) => snap(fresh, id) !== before.get(id));
+    if (dirty || moved.length > 0) {
+      throw new Error(
+        `sbuilder: the page changed under this session (${reason})` +
+          (moved.length ? `, and the other side edited ${moved.join(', ')} — what this change touches` : '') +
+          '. It has been re-loaded from the server; re-read it with sb_outline and reapply your change.',
+      );
+    }
+    console.error(`sbuilder: page changed under this session (${reason}); re-pulled and reapplied`);
+    return this.applyAndSave(patches);
+  }
+
+  /** Names of the people in the live room who are on this page right now. */
+  peersOn(pageId: string): string[] {
+    return (this.live?.peers ?? []).filter((p) => p.pageId === pageId).map((p) => p.name || p.userId);
   }
 
   applyRemote(patches: Patch[]): void {
@@ -469,6 +509,24 @@ export class PageSession {
     // `applyAndPublish` has already broadcast the patches over the live socket,
     // so a local rollback would leave every watching editor showing an edit
     // this session no longer has.
+    // A MINTED ROOT IS RENAMED ON THE WAY OUT, and the session's own copy with
+    // it — `withPageRoot` would heal the bytes anyway, but a session still
+    // holding `sppro_1` would then be editing a tree the server no longer has.
+    // Not a patch: `root_node_id` is outside what the room syncs, so an editor
+    // open on this page keeps its old copy until it re-reads (sb_page_repair
+    // says so when one is). So while a peer is HERE the local copy keeps the
+    // old id the room shares — `withPageRoot` still heals the stored bytes.
+    const healed = this.peersOn(this.pageId).length
+      ? null
+      : canonicalRoot(d.doc as unknown as { root_node_id: string; nodes: Record<string, unknown> });
+    if (healed) {
+      const old = d.doc.root_node_id;
+      console.error(`sbuilder: page ${this.pageId} root ${old} → ${PAGE_ROOT_ID} on save`);
+      this.doc = PageDoc.from(healed);
+      this.savedRev = -1; // a fresh PageDoc restarts at rev 0; it still has to be stored
+      // Inherited problems were worded with the old root's id.
+      return this.save(new Set([...inherited].map((p) => p.split(old).join(PAGE_ROOT_ID))));
+    }
     const problems = validateForSave(d).filter((p) => !inherited.has(p));
     if (problems.length > 0) {
       throw new Error(`sbuilder: refusing to save — ${problems.join(' ')}`);
@@ -654,6 +712,14 @@ async function existingHomepage(
   return { id: home.id, name: typeof home.name === 'string' ? home.name : '' };
 }
 
+/** Why a root that is not `ROOT` matters, said the same way by every surface. */
+export function mintedRootNote(root: string): string {
+  return (
+    `This page's root is "${root}", not "ROOT". The storefront renders it, but an editor built ` +
+    'before web_builder 7322af49a paints the canvas WHITE and may autosave the page blank.'
+  );
+}
+
 export function registerPageTools(server: McpServer, ctx: ToolContext): PageSession {
   const session = new PageSession(ctx);
 
@@ -689,9 +755,14 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
           'read is blank, not the page: re-open it, and if it is still blank restore it from ' +
           'GET /api/sites/{siteId}/pages/{pageId}/history.'
         : undefined;
+      const root = doc.doc.root_node_id;
+      const minted_root = root !== PAGE_ROOT_ID
+        ? mintedRootNote(root) + ' The next save from here renames it; sb_page_repair does it without an edit.'
+        : undefined;
       const warnings = session.composeWarnings();
       return text({
         outline,
+        ...(minted_root ? { minted_root } : {}),
         // Said ONLY when it is news. 'already' is the steady state after the
         // first open and repeating it on every page is the shape that drifts.
         ...(live === 'joined'
@@ -703,6 +774,90 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
         ...(seeded_empty ? { seeded_empty } : {}),
         ...(warnings.length ? { compose_warnings: warnings } : {}),
         ...reviewField(ctx, doc),
+      });
+    },
+  );
+
+  server.registerTool(
+    'sb_page_repair',
+    {
+      description:
+        'Rename a page root that is not "ROOT" (sppro_1, rt_<hex> — left by older seeds) to ROOT, ' +
+          'for one page or, without page_id, every page on the site. Draft only; a published page ' +
+          'is listed for re-publishing. dry_run (default true) lists what would change.',
+      inputSchema: {
+        site_id: z.string().optional(),
+        page_id: z.string().optional(),
+        dry_run: z.boolean().optional(),
+      },
+      annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true },
+    },
+    async ({ site_id: given, page_id, dry_run }) => {
+      const siteId = siteFor(ctx, given);
+      const listed = (await request({
+        base: ctx.base,
+        method: 'GET',
+        path: `/api/sites/${encodeURIComponent(siteId)}/pages`,
+        token: siteToken(ctx),
+        fetchImpl: ctx.fetchImpl,
+      })) as { pages?: Array<Record<string, unknown>> };
+      const pages = (listed.pages ?? []).filter((p) => typeof p.id === 'string' && (!page_id || p.id === page_id));
+      if (page_id && pages.length === 0) throw new Error(`sbuilder: no page "${page_id}" on site ${siteId}`);
+      const found: Array<{ id: string; name: unknown; type: unknown; root: string; published: boolean }> = [];
+      const cannot: Array<{ id: string; root: string; why: string }> = [];
+      const healedDocs = new Map<string, Parameters<typeof saveSource>[3]>();
+      for (const p of pages) {
+        const id = p.id as string;
+        const doc = (await loadSource(ctx, siteId, id)).document as Parameters<typeof saveSource>[3];
+        const root = doc?.root_node_id ?? '';
+        if (root === PAGE_ROOT_ID || !doc?.nodes || Object.keys(doc.nodes).length === 0) continue;
+        const healed = canonicalRoot(doc);
+        if (!healed) {
+          cannot.push({ id, root, why: doc.nodes[root] ? 'another node is already called ROOT' : 'root_node_id names no node' });
+          continue;
+        }
+        healedDocs.set(id, healed);
+        found.push({ id, name: p.name, type: p.type, root, published: !!p.publishedAt });
+      }
+      const republish = found.filter((f) => f.published).map((f) => f.id);
+      if (dry_run !== false) {
+        return text({
+          dry_run: true,
+          checked: pages.length,
+          would_repair: found,
+          ...(cannot.length ? { cannot } : {}),
+          note: found.length ? 'Re-call with dry_run:false to write each draft with root ROOT.' : 'Every page already roots at ROOT.',
+        });
+      }
+      const repaired: string[] = [];
+      const failed: Array<{ id: string; error: string }> = [];
+      const editorsOpen: Record<string, string[]> = {};
+      for (const f of found) {
+        try {
+          await saveSource(ctx, siteId, f.id, healedDocs.get(f.id)!);
+          repaired.push(f.id);
+          const peers = session.peersOn(f.id);
+          if (peers.length) editorsOpen[f.id] = peers;
+        } catch (e) {
+          failed.push({ id: f.id, error: (e as Error).message.slice(0, 200) });
+        }
+      }
+      // The open page, if it was one of these, now differs from what this session holds.
+      const open = session.peek() ? session.location() : null;
+      if (open && open.siteId === siteId && repaired.includes(open.pageId)) await session.open(siteId, open.pageId);
+      return text({
+        repaired,
+        ...(failed.length ? { failed } : {}),
+        ...(cannot.length ? { cannot } : {}),
+        ...(republish.length
+          ? { republish: { pages: republish, note: 'Only the DRAFT was fixed. The live copy still carries the old root — sb_publish each one.' } }
+          : {}),
+        ...(Object.keys(editorsOpen).length
+          ? {
+              editors_open: editorsOpen,
+              warning: 'Someone has these pages open in the editor. A tab loaded BEFORE this repair still holds the old root and puts it back on its next autosave — reload those tabs.',
+            }
+          : {}),
       });
     },
   );

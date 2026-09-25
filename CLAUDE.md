@@ -156,7 +156,9 @@ with its own test. Full text and history: `sbuilder-document-model`.
 The live-edit client is NEVER the authority on a document. It does not answer `snapreq` for
 anyone and publishes no convergence checkpoint of its own. On any evidence of divergence —
 a gap in `seq`, a checkpoint at its own seq, a rejected save — it discards its copy,
-re-pulls, and makes the next save FAIL LOUDLY so the caller re-reads and reapplies.
+re-pulls. The next write is then reapplied ONCE onto the fresh tree (patches address nodes by
+id) unless the other side changed a node it touches or local edits were unsaved — then it
+FAILS LOUDLY so the caller re-reads and reapplies.
 
 This is what lets `src/live/session.ts` be one small class instead of the editor's outbox
 deferral plus inbox arbitration plus "who pulls" tie-break — roughly a thousand lines whose

@@ -295,7 +295,9 @@ describe('the seeded documents are placeholders, not values', () => {
     // no diff. A placeholder that reached the platform would make every checkout
     // page on every site share its node ids.
     expect([...a].some((id) => id.startsWith('ckp_'))).toBe(false);
-    expect([...a].filter((id) => b.has(id))).toEqual([]);
+    // ROOT is the one shared id, by design: it is the editor's literal page root.
+    expect(a.has('ROOT')).toBe(true);
+    expect([...a].filter((id) => id !== 'ROOT' && b.has(id))).toEqual([]);
   });
 });
 

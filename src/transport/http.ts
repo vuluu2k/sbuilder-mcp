@@ -11,6 +11,7 @@
  * dropped on the floor is the second.
  */
 import { identityHeaders } from './identity.js';
+import { canonicalRoot, PAGE_ROOT_ID } from '../domains/site/ids.js';
 export interface RequestOpts {
   base: string;
   method: string;
@@ -91,6 +92,28 @@ export function redact(value: unknown): unknown {
   return value;
 }
 
+/** A write that carries a PAGE document: create, source save, the partner PATCH. */
+const PAGE_WRITE = /\/pages(\/[^/]+(\/source)?)?$/;
+
+/**
+ * EVERY PAGE DOCUMENT LEAVES THIS PROCESS ROOTED AT `ROOT`.
+ *
+ * The one place all of them pass — `saveSource`, `sb_page_create`'s seed, the
+ * checkout and app-scaffold creates, and a raw `sb_api_call` — so a minted root
+ * (`sppro_1`, `rt_<hex>`) is renamed here whichever door it came through. The Go
+ * renderer draws either; an editor before web_builder `7322af49a` paints the
+ * minted one white and may autosave the page blank.
+ */
+export function withPageRoot(opts: Pick<RequestOpts, 'method' | 'path' | 'body'>): unknown {
+  const body = opts.body as { document?: { root_node_id?: string; nodes?: Record<string, unknown> } } | undefined;
+  const doc = body?.document;
+  if (opts.method === 'GET' || !doc?.nodes || !PAGE_WRITE.test(opts.path)) return opts.body;
+  const healed = canonicalRoot(doc as { root_node_id?: string; nodes: Record<string, unknown> });
+  if (!healed) return opts.body;
+  console.error(`sbuilder: healed page root ${doc.root_node_id} → ${PAGE_ROOT_ID} on ${opts.method} ${opts.path}`);
+  return { ...body, document: healed };
+}
+
 export function buildUrl(base: string, path: string, query?: RequestOpts['query']): string {
   const url = base.replace(/\/$/, '') + path;
   if (!query) return url;
@@ -112,11 +135,12 @@ export async function request(opts: RequestOpts): Promise<unknown> {
   const headers: Record<string, string> = { Accept: 'application/json', ...identityHeaders() };
   if (opts.token) headers.Authorization = `Bearer ${opts.token}`;
   if (opts.body !== undefined) headers['Content-Type'] = 'application/json';
+  const body = withPageRoot(opts);
 
   const res = await doFetch(buildUrl(opts.base, opts.path, opts.query), {
     method: opts.method,
     headers,
-    body: opts.body === undefined ? undefined : JSON.stringify(opts.body),
+    body: body === undefined ? undefined : JSON.stringify(body),
   });
 
   const raw = await res.text();

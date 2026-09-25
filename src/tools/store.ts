@@ -40,7 +40,7 @@ import { text } from '../mcp/response.js';
 import { request, redact } from '../transport/http.js';
 import { siteToken } from './credentialpick.js';
 import { siteFor, type ToolContext } from './context.js';
-import { genId } from '../domains/site/ids.js';
+import { genId, PAGE_ROOT_ID, remapIds } from '../domains/site/ids.js';
 import type { PageSession } from './page.js';
 import { addSubtree } from '../domains/site/builder.js';
 import {
@@ -179,19 +179,15 @@ function fillDocument(
  * The generated documents carry STABLE placeholder ids (`ckf_1`, `ckp_1`) so
  * that re-running codegen produces no diff. Placeholders are not values: the
  * editor mints an id per node at drop time, and two checkouts built by this tool
- * must be as unrelated as two built by hand. Longest first, so one id is never
- * rewritten inside another.
+ * must be as unrelated as two built by hand. A page's `ROOT` is the one id that
+ * is NOT re-minted: it is the editor's literal, and a minted root (`rt_<hex>`)
+ * paints white in any editor before web_builder `7322af49a`. Structural, via
+ * `remapIds`, so text that quotes an id is left alone.
  */
-function withFreshIds<T extends { nodes: Record<string, { data?: { type?: string } }> }>(doc: T): T {
-  const map = new Map<string, string>();
-  for (const [id, node] of Object.entries(doc.nodes)) {
-    map.set(id, genId(node?.data?.type ?? 'node'));
-  }
-  let json = JSON.stringify(doc);
-  for (const [from, to] of [...map].sort((a, b) => b[0].length - a[0].length)) {
-    json = json.split(from).join(to);
-  }
-  return JSON.parse(json) as T;
+export function withFreshIds<T extends { nodes: Record<string, { data?: { type?: string } }> }>(doc: T): T {
+  return remapIds(doc, (id, node) =>
+    id === PAGE_ROOT_ID ? id : genId((node as { data?: { type?: string } })?.data?.type ?? 'node'),
+  );
 }
 
 function pageDocumentFor(formId: string, headline: string): unknown {

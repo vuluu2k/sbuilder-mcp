@@ -54,3 +54,51 @@ export function genId(type: string): string {
     return id;
   }
 }
+
+/** The id every page document's root carries — the editor's seeds spell it literally. */
+export const PAGE_ROOT_ID = 'ROOT';
+
+type IdDoc = { root_node_id?: string; nodes: Record<string, unknown> };
+
+/**
+ * Rename a document's node ids STRUCTURALLY: the `nodes` keys, and every string
+ * VALUE anywhere in a node that equals an old id exactly — `id`, `data.parent`,
+ * `data.nodes[]`, and the satellite references in `config` (`emptyStateId`,
+ * `accordionItemId`, …) — plus `root_node_id`.
+ *
+ * Never a substitution over the serialised JSON: that rewrote an id wherever it
+ * appeared INSIDE a string, so a heading or an href quoting one was corrupted.
+ * An exact-value match cannot touch text that merely contains an id.
+ */
+export function remapIds<T extends IdDoc>(doc: T, idFor: (id: string, node: unknown) => string): T {
+  const map = new Map<string, string>();
+  for (const [id, node] of Object.entries(doc.nodes)) map.set(id, idFor(id, node));
+  const walk = (v: unknown): unknown => {
+    if (typeof v === 'string') return map.get(v) ?? v;
+    if (Array.isArray(v)) return v.map(walk);
+    if (v && typeof v === 'object') {
+      return Object.fromEntries(Object.entries(v).map(([k, x]) => [k, walk(x)]));
+    }
+    return v;
+  };
+  const nodes: Record<string, unknown> = {};
+  for (const [id, node] of Object.entries(doc.nodes)) nodes[map.get(id)!] = walk(node);
+  const out = { ...doc, nodes };
+  if (typeof doc.root_node_id === 'string') out.root_node_id = map.get(doc.root_node_id) ?? doc.root_node_id;
+  return out;
+}
+
+/**
+ * A PAGE document whose root is not `ROOT`, renamed so it is — or null when it
+ * already is, or cannot safely be (no root node, or `ROOT` taken by another node).
+ *
+ * The Go renderer follows `root_node_id` wherever it points, so a minted root
+ * (`sppro_1`, `rt_<hex>`) publishes fine. The EDITOR is what breaks: builds before
+ * web_builder `7322af49a` render a hard-coded `node-id="ROOT"`, draw a white canvas,
+ * and may re-seed — and autosave — an empty document over the page.
+ */
+export function canonicalRoot<T extends IdDoc>(doc: T): T | null {
+  const root = doc.root_node_id;
+  if (!root || root === PAGE_ROOT_ID || !doc.nodes[root] || doc.nodes[PAGE_ROOT_ID]) return null;
+  return remapIds(doc, (id) => (id === root ? PAGE_ROOT_ID : id));
+}

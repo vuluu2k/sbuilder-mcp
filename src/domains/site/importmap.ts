@@ -1,6 +1,7 @@
 import type { NodeSpec } from './builder.js';
 import type { DocLike, NodeLike } from '../../core/tree.js';
-import { walk } from '../../core/tree.js';
+import { pageChildren, walk } from '../../core/tree.js';
+import { isGlobal } from './traps.js';
 import { stickySeeds } from './sticky.js';
 import { TEXT_STYLE_KEYS } from '../../catalog/elements.generated.js';
 import { normalizeUrl } from './discover.js';
@@ -253,7 +254,10 @@ export function tokensFromPage(doc: DocLike): PageTokens {
   let section: NodeLike | undefined;
   let block: NodeLike | undefined;
 
-  walk(doc, doc.root_node_id, (n) => {
+  // THE PAGE'S OWN BANDS ONLY. A shared header is usually dark with white type
+  // and no padding, so reading it first dressed an inserted band in white text
+  // on the page's light background.
+  const visit = (n: NodeLike): void => {
     const t = n.data.type;
     if (!heading && t === 'heading') heading = n;
     else if (!text && t === 'text') text = n;
@@ -263,7 +267,8 @@ export function tokensFromPage(doc: DocLike): PageTokens {
       button = n;
     } else if (!section && t === 'flex-section') section = n;
     else if (!block && t === 'flex-block') block = n;
-  });
+  };
+  for (const id of pageChildren(doc)) if (!isGlobal(doc, id)) walk(doc, id, visit);
 
   const h = styleOf(heading);
   const p = styleOf(text);

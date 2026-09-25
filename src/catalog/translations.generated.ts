@@ -4,7 +4,7 @@
 export const TRANSLATION_SOURCE = {
   "elements": 64,
   "pairs": 175,
-  "neverKeys": 173,
+  "neverKeys": 174,
   "entityTypes": 12
 } as const;
 
@@ -360,6 +360,7 @@ export const NEVER_TRANSLATED: string[] = [
   "bookMaxDays",
   "bookMinDays",
   "bookSlots",
+  "bookingHost",
   "boundBundleItems",
   "boundCompareCents",
   "boundHref",

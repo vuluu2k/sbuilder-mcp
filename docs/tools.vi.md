@@ -726,6 +726,25 @@ liệu field), không phải một `NodeSpec` mà một mẫu có thể soạn o
 không có `formId`, hay một ô nhập với nút bấm không gửi đi đâu, chính là loại element trông xong
 mà chết mà bảng `INERT_ON_ADD` của repo này sinh ra để chặn.
 
+## `sb_page_repair`
+
+| Tham số | Kiểu | Ghi chú |
+| --- | --- | --- |
+| `site_id` | string? | Mặc định lấy `SB_SITE` |
+| `page_id` | string? | Bỏ trống để kiểm tra mọi trang của site |
+| `dry_run` | boolean? | Mặc định `true` — chỉ liệt kê những gì sẽ đổi |
+
+**GỐC CỦA TRANG LÀ `ROOT`, VÀ CÁC BẢN CŨ CỦA SERVER NÀY KHÔNG GIỮ NÓ.** Seed từ
+`sb_page_create` và `sb_store action:"checkout"` đã đổi tên gốc (`sppro_1`, `plabo_1`,
+`rt_<hex>`). Storefront vẽ được cả hai; editor build trước web_builder `7322af49a` vẽ canvas
+trắng và có thể autosave trang thành rỗng. Tool này đổi gốc về `ROOT` trong BẢN NHÁP — số
+node và thứ tự con giữ nguyên. Trang đã publish được liệt kê ở `republish`; tab editor đang
+mở trang vừa sửa (thấy qua live room) được nêu ở `editors_open`, vì tab mở trước lần sửa sẽ
+ghi lại gốc cũ ở lần autosave kế tiếp.
+
+Mọi lần ghi tài liệu trang giờ cũng tự đổi tên này trên đường ra, và `sb_page_open` báo gốc
+tự sinh qua `minted_root`, nên tool này dành cho những trang không ai đang sửa.
+
 ## `sb_page_list` / `sb_page_create` / `sb_publish`
 
 Vòng đời trang, thành tool hạng nhất thay vì đi vòng qua `sb_api_call`. `sb_page_list` trả

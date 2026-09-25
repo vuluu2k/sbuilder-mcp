@@ -403,3 +403,14 @@ repo over a number here, and fix the line when you catch one stale.
   REFUSES to run on a read that came back empty, for the reason `save()` does: a read that
   failed open must not become a write that empties the page. That guard was not foresight — the
   repo's own page-create test went red on the first run without it.
+
+- **A PAGE SEED'S ROOT MUST STAY `ROOT`, and codegen once renamed it to `sppro_1`.** `stableIds()`
+  numbered EVERY node, root included, and `sb_store`'s fresh-id pass minted `rt_<hex>`. The Go
+  renderer follows `root_node_id` wherever it points, so every storefront looked fine — while
+  editors before web_builder `7322af49a` painted those pages white and, before `469815330`,
+  autosaved them blank. Measured on a live site: 9 of 15 pages. Now: a `root`-typed node keeps
+  `ROOT` (`stableIds`, `withFreshIds`), codegen exits 1 on a page seed that does not, every page
+  write heals on the way out (`withPageRoot` in `src/transport/http.ts`), and `sb_page_repair`
+  fixes stored drafts. Overlays and forms root at their own element BY DESIGN — do not "fix"
+  them. The id rename is structural (`remapIds`): the old JSON-wide substitution also rewrote
+  any text that quoted an id.

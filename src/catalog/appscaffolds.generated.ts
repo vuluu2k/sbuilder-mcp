@@ -45,7 +45,7 @@ export const APP_SCAFFOLDS: Record<
       },
       "document": {
         "schema_version": 2,
-        "root_node_id": "crs1_7",
+        "root_node_id": "ROOT",
         "nodes": {
           "crs1_1": {
             "id": "crs1_1",
@@ -273,7 +273,7 @@ export const APP_SCAFFOLDS: Record<
             "id": "crs1_6",
             "data": {
               "type": "flex-section",
-              "parent": "crs1_7",
+              "parent": "ROOT",
               "nodes": [
                 "crs1_1",
                 "crs1_2",
@@ -313,8 +313,8 @@ export const APP_SCAFFOLDS: Record<
             "events": [],
             "bindings": []
           },
-          "crs1_7": {
-            "id": "crs1_7",
+          "ROOT": {
+            "id": "ROOT",
             "data": {
               "type": "root",
               "parent": null,
@@ -344,7 +344,7 @@ export const APP_SCAFFOLDS: Record<
       },
       "document": {
         "schema_version": 2,
-        "root_node_id": "crs2_7",
+        "root_node_id": "ROOT",
         "nodes": {
           "crs2_1": {
             "id": "crs2_1",
@@ -640,7 +640,7 @@ export const APP_SCAFFOLDS: Record<
             "id": "crs2_6",
             "data": {
               "type": "flex-section",
-              "parent": "crs2_7",
+              "parent": "ROOT",
               "nodes": [
                 "crs2_1"
               ],
@@ -676,8 +676,8 @@ export const APP_SCAFFOLDS: Record<
             "events": [],
             "bindings": []
           },
-          "crs2_7": {
-            "id": "crs2_7",
+          "ROOT": {
+            "id": "ROOT",
             "data": {
               "type": "root",
               "parent": null,
@@ -707,7 +707,7 @@ export const APP_SCAFFOLDS: Record<
       },
       "document": {
         "schema_version": 2,
-        "root_node_id": "crs3_3",
+        "root_node_id": "ROOT",
         "nodes": {
           "crs3_1": {
             "id": "crs3_1",
@@ -743,7 +743,7 @@ export const APP_SCAFFOLDS: Record<
             "id": "crs3_2",
             "data": {
               "type": "flex-section",
-              "parent": "crs3_3",
+              "parent": "ROOT",
               "nodes": [
                 "crs3_1"
               ],
@@ -779,8 +779,8 @@ export const APP_SCAFFOLDS: Record<
             "events": [],
             "bindings": []
           },
-          "crs3_3": {
-            "id": "crs3_3",
+          "ROOT": {
+            "id": "ROOT",
             "data": {
               "type": "root",
               "parent": null,
@@ -810,7 +810,7 @@ export const APP_SCAFFOLDS: Record<
       },
       "document": {
         "schema_version": 2,
-        "root_node_id": "crs4_3",
+        "root_node_id": "ROOT",
         "nodes": {
           "crs4_1": {
             "id": "crs4_1",
@@ -840,7 +840,7 @@ export const APP_SCAFFOLDS: Record<
             "id": "crs4_2",
             "data": {
               "type": "flex-section",
-              "parent": "crs4_3",
+              "parent": "ROOT",
               "nodes": [
                 "crs4_1"
               ],
@@ -876,8 +876,8 @@ export const APP_SCAFFOLDS: Record<
             "events": [],
             "bindings": []
           },
-          "crs4_3": {
-            "id": "crs4_3",
+          "ROOT": {
+            "id": "ROOT",
             "data": {
               "type": "root",
               "parent": null,

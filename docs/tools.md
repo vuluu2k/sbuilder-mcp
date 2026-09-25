@@ -747,6 +747,26 @@ whole → save the field document), not a `NodeSpec` a pattern can compose offli
 `form` node with no `formId`, or an input with a button that submits nowhere, is exactly the
 class of convincing-but-inert element this repo's `INERT_ON_ADD` table exists to stop adding.
 
+## `sb_page_repair`
+
+| Arg | Type | Notes |
+| --- | --- | --- |
+| `site_id` | string? | Defaults to `SB_SITE` |
+| `page_id` | string? | Omit to check every page on the site |
+| `dry_run` | boolean? | Default `true` — lists what would change |
+
+**A PAGE'S ROOT IS `ROOT`, AND OLDER BUILDS OF THIS SERVER DID NOT KEEP IT.** Seeds from
+`sb_page_create` and `sb_store action:"checkout"` renamed it (`sppro_1`, `plabo_1`,
+`rt_<hex>`). The storefront renders either; an editor built before web_builder `7322af49a`
+paints the canvas white and may autosave the page blank. This renames the root to `ROOT`
+in the DRAFT — the node count and child order are unchanged. A published page is listed
+under `republish`; an editor tab open on a repaired page (seen in the live room) is named
+under `editors_open`, because a tab loaded before the repair puts the old root back on its
+next autosave.
+
+Every write of a page document now does the same rename on the way out, and `sb_page_open`
+flags a minted root as `minted_root`, so this tool is for pages nobody is editing.
+
 ## `sb_page_list` / `sb_page_create` / `sb_publish`
 
 The page lifecycle, first-class rather than through `sb_api_call`. `sb_page_list` returns

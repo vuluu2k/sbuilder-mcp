@@ -17,6 +17,7 @@ import { buildRequestShapes } from './shapes.js';
 import { reportInertDrift } from './inert-drift.js';
 import { deadKeysModule, reportDeadKeys, scanDeadKeys } from './deadkey-scan.js';
 import { credentialFor } from '../src/transport/credential.js';
+import { PAGE_ROOT_ID, remapIds } from '../src/domains/site/ids.js';
 import type { ApiOperation, ApiParam } from '../src/catalog/types.js';
 import type {
   CatalogElement,
@@ -3356,6 +3357,7 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = ${JSON.stringify(
     },
     'ckp',
   );
+  assertPageRoot('checkout page', checkoutPageDoc);
   const pageJson = JSON.stringify(checkoutPageDoc);
   if (pageJson.split(FORM_ID_SENTINEL).length - 1 !== 1) {
     console.error('the checkout page seed no longer carries exactly one form id');
@@ -3495,11 +3497,13 @@ export type FormTemplateKey = keyof typeof FORM_TEMPLATES;
       );
       process.exit(1);
     }
-    return {
+    const out = {
       schema_version: (doc.schema_version as number) ?? docVersion,
       root_node_id: root,
       nodes,
     };
+    assertPageRoot(`${type} page`, out);
+    return out;
   };
 
   // ---- What a store page opens with ------------------------------------
@@ -3989,6 +3993,7 @@ export const OVERLAY_SEEDS: Record<'popup' | 'quickview', OverlayDocument> = ${J
       spec.build() as { nodes: Record<string, unknown> },
       `crs${i + 1}`,
     ) as { schema_version?: number; root_node_id: string; nodes: Record<string, unknown> };
+    assertPageRoot(`courses scaffold "${spec.slug || spec.type}"`, built);
     const name = { vi: '', en: '' };
     for (const lang of ['vi', 'en'] as const) {
       const h = walkI18n(coursesLocale[lang], spec.nameKey);
@@ -4624,17 +4629,32 @@ export const PLATFORM_SOURCE: {
  *
  * These ids are a placeholder, not a value: `sb_store` mints fresh ones on every
  * run, exactly as the editor does, so two checkouts never share a node id.
+ *
+ * A PAGE'S ROOT IS NOT A PLACEHOLDER. Every page seed the editor builds spells it
+ * `'ROOT'`, and renaming it (`sppro_1`) shipped pages the Go renderer drew and
+ * editors before web_builder `7322af49a` painted white — then autosaved blank. A
+ * node of type `root` keeps `ROOT`; an overlay or a form roots at its own element
+ * and is numbered like the rest. The rename is structural (`remapIds`), never a
+ * substitution over the JSON, which also rewrote any text that quoted an id.
  */
 function stableIds<T extends { nodes: Record<string, unknown> }>(doc: T, prefix: string): T {
-  const map = new Map<string, string>();
   let n = 0;
-  for (const id of Object.keys(doc.nodes)) map.set(id, `${prefix}_${++n}`);
-  let json = JSON.stringify(doc);
-  // Longest first, so one id is never rewritten inside another.
-  for (const [from, to] of [...map].sort((a, b) => b[0].length - a[0].length)) {
-    json = json.split(from).join(to);
+  return remapIds(doc, (_id, node) => {
+    n += 1;
+    return (node as { data?: { type?: string } })?.data?.type === 'root' ? PAGE_ROOT_ID : `${prefix}_${n}`;
+  });
+}
+
+/** A page document must root at `ROOT` — see `stableIds`. Exits naming the seed. */
+function assertPageRoot(what: string, doc: { root_node_id?: string; nodes: Record<string, unknown> }): void {
+  const root = doc.nodes[PAGE_ROOT_ID] as { data?: { type?: string } } | undefined;
+  if (doc.root_node_id !== PAGE_ROOT_ID || root?.data?.type !== 'root') {
+    console.error(
+      `the ${what} seed roots at ${JSON.stringify(doc.root_node_id)}, not a "ROOT" node of type root — ` +
+        'an editor before web_builder 7322af49a paints that page white and may autosave it blank.',
+    );
+    process.exit(1);
   }
-  return JSON.parse(json) as T;
 }
 
 await main();

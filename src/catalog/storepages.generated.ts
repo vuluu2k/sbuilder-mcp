@@ -45,10 +45,10 @@ export const COMPLETION_HEADLINE: Record<string, string> = {
 export const PAGE_LAYOUT_SEEDS: Record<string, { schema_version: number; root_node_id: string; nodes: Record<string, unknown> }> = {
   "about": {
     "schema_version": 2,
-    "root_node_id": "plabo_1",
+    "root_node_id": "ROOT",
     "nodes": {
-      "plabo_1": {
-        "id": "plabo_1",
+      "ROOT": {
+        "id": "ROOT",
         "data": {
           "type": "root",
           "parent": null,
@@ -151,7 +151,7 @@ export const PAGE_LAYOUT_SEEDS: Record<string, { schema_version: number; root_no
         "id": "plabo_5",
         "data": {
           "type": "flex-section",
-          "parent": "plabo_1",
+          "parent": "ROOT",
           "nodes": [
             "plabo_2",
             "plabo_3",
@@ -196,10 +196,10 @@ export const PAGE_LAYOUT_SEEDS: Record<string, { schema_version: number; root_no
   },
   "policy": {
     "schema_version": 2,
-    "root_node_id": "plpol_1",
+    "root_node_id": "ROOT",
     "nodes": {
-      "plpol_1": {
-        "id": "plpol_1",
+      "ROOT": {
+        "id": "ROOT",
         "data": {
           "type": "root",
           "parent": null,
@@ -273,7 +273,7 @@ export const PAGE_LAYOUT_SEEDS: Record<string, { schema_version: number; root_no
         "id": "plpol_4",
         "data": {
           "type": "flex-section",
-          "parent": "plpol_1",
+          "parent": "ROOT",
           "nodes": [
             "plpol_2",
             "plpol_3"
@@ -317,10 +317,10 @@ export const PAGE_LAYOUT_SEEDS: Record<string, { schema_version: number; root_no
   },
   "faq": {
     "schema_version": 2,
-    "root_node_id": "plfaq_1",
+    "root_node_id": "ROOT",
     "nodes": {
-      "plfaq_1": {
-        "id": "plfaq_1",
+      "ROOT": {
+        "id": "ROOT",
         "data": {
           "type": "root",
           "parent": null,
@@ -562,7 +562,7 @@ export const PAGE_LAYOUT_SEEDS: Record<string, { schema_version: number; root_no
         "id": "plfaq_8",
         "data": {
           "type": "flex-section",
-          "parent": "plfaq_1",
+          "parent": "ROOT",
           "nodes": [
             "plfaq_2",
             "plfaq_3"
@@ -606,10 +606,10 @@ export const PAGE_LAYOUT_SEEDS: Record<string, { schema_version: number; root_no
   },
   "articles": {
     "schema_version": 2,
-    "root_node_id": "plart_1",
+    "root_node_id": "ROOT",
     "nodes": {
-      "plart_1": {
-        "id": "plart_1",
+      "ROOT": {
+        "id": "ROOT",
         "data": {
           "type": "root",
           "parent": null,
@@ -1108,7 +1108,7 @@ export const PAGE_LAYOUT_SEEDS: Record<string, { schema_version: number; root_no
         "id": "plart_13",
         "data": {
           "type": "flex-section",
-          "parent": "plart_1",
+          "parent": "ROOT",
           "nodes": [
             "plart_2",
             "plart_3"
@@ -1152,10 +1152,10 @@ export const PAGE_LAYOUT_SEEDS: Record<string, { schema_version: number; root_no
   },
   "login": {
     "schema_version": 2,
-    "root_node_id": "pllog_1",
+    "root_node_id": "ROOT",
     "nodes": {
-      "pllog_1": {
-        "id": "pllog_1",
+      "ROOT": {
+        "id": "ROOT",
         "data": {
           "type": "root",
           "parent": null,
@@ -1204,7 +1204,7 @@ export const PAGE_LAYOUT_SEEDS: Record<string, { schema_version: number; root_no
         "id": "pllog_3",
         "data": {
           "type": "flex-section",
-          "parent": "pllog_1",
+          "parent": "ROOT",
           "nodes": [
             "pllog_2"
           ],
@@ -1247,10 +1247,10 @@ export const PAGE_LAYOUT_SEEDS: Record<string, { schema_version: number; root_no
   },
   "register": {
     "schema_version": 2,
-    "root_node_id": "plreg_1",
+    "root_node_id": "ROOT",
     "nodes": {
-      "plreg_1": {
-        "id": "plreg_1",
+      "ROOT": {
+        "id": "ROOT",
         "data": {
           "type": "root",
           "parent": null,
@@ -1299,7 +1299,7 @@ export const PAGE_LAYOUT_SEEDS: Record<string, { schema_version: number; root_no
         "id": "plreg_3",
         "data": {
           "type": "flex-section",
-          "parent": "plreg_1",
+          "parent": "ROOT",
           "nodes": [
             "plreg_2"
           ],
@@ -1444,10 +1444,10 @@ export const PAGE_TYPES: readonly {
 export const STORE_PAGE_SEEDS: Record<string, { schema_version: number; root_node_id: string; nodes: Record<string, unknown> }> = {
   "product": {
     "schema_version": 2,
-    "root_node_id": "sppro_1",
+    "root_node_id": "ROOT",
     "nodes": {
-      "sppro_1": {
-        "id": "sppro_1",
+      "ROOT": {
+        "id": "ROOT",
         "data": {
           "type": "root",
           "parent": null,
@@ -2576,7 +2576,7 @@ export const STORE_PAGE_SEEDS: Record<string, { schema_version: number; root_nod
         "id": "sppro_24",
         "data": {
           "type": "flex-section",
-          "parent": "sppro_1",
+          "parent": "ROOT",
           "nodes": [
             "sppro_2"
           ],
@@ -2619,10 +2619,10 @@ export const STORE_PAGE_SEEDS: Record<string, { schema_version: number; root_nod
   },
   "category": {
     "schema_version": 2,
-    "root_node_id": "spcat_1",
+    "root_node_id": "ROOT",
     "nodes": {
-      "spcat_1": {
-        "id": "spcat_1",
+      "ROOT": {
+        "id": "ROOT",
         "data": {
           "type": "root",
           "parent": null,
@@ -3293,7 +3293,7 @@ export const STORE_PAGE_SEEDS: Record<string, { schema_version: number; root_nod
         "id": "spcat_14",
         "data": {
           "type": "flex-section",
-          "parent": "spcat_1",
+          "parent": "ROOT",
           "nodes": [
             "spcat_2",
             "spcat_3"
@@ -3337,10 +3337,10 @@ export const STORE_PAGE_SEEDS: Record<string, { schema_version: number; root_nod
   },
   "search": {
     "schema_version": 2,
-    "root_node_id": "spsea_1",
+    "root_node_id": "ROOT",
     "nodes": {
-      "spsea_1": {
-        "id": "spsea_1",
+      "ROOT": {
+        "id": "ROOT",
         "data": {
           "type": "root",
           "parent": null,
@@ -4005,7 +4005,7 @@ export const STORE_PAGE_SEEDS: Record<string, { schema_version: number; root_nod
         "id": "spsea_14",
         "data": {
           "type": "flex-section",
-          "parent": "spsea_1",
+          "parent": "ROOT",
           "nodes": [
             "spsea_2",
             "spsea_3"
@@ -4049,10 +4049,10 @@ export const STORE_PAGE_SEEDS: Record<string, { schema_version: number; root_nod
   },
   "blog": {
     "schema_version": 2,
-    "root_node_id": "spblo_1",
+    "root_node_id": "ROOT",
     "nodes": {
-      "spblo_1": {
-        "id": "spblo_1",
+      "ROOT": {
+        "id": "ROOT",
         "data": {
           "type": "root",
           "parent": null,
@@ -4570,7 +4570,7 @@ export const STORE_PAGE_SEEDS: Record<string, { schema_version: number; root_nod
         "id": "spblo_13",
         "data": {
           "type": "flex-section",
-          "parent": "spblo_1",
+          "parent": "ROOT",
           "nodes": [
             "spblo_2",
             "spblo_3"
@@ -4614,10 +4614,10 @@ export const STORE_PAGE_SEEDS: Record<string, { schema_version: number; root_nod
   },
   "post": {
     "schema_version": 2,
-    "root_node_id": "sppos_1",
+    "root_node_id": "ROOT",
     "nodes": {
-      "sppos_1": {
-        "id": "sppos_1",
+      "ROOT": {
+        "id": "ROOT",
         "data": {
           "type": "root",
           "parent": null,
@@ -4809,7 +4809,7 @@ export const STORE_PAGE_SEEDS: Record<string, { schema_version: number; root_nod
         "id": "sppos_6",
         "data": {
           "type": "flex-section",
-          "parent": "sppos_1",
+          "parent": "ROOT",
           "nodes": [
             "sppos_2",
             "sppos_3",
@@ -4855,10 +4855,10 @@ export const STORE_PAGE_SEEDS: Record<string, { schema_version: number; root_nod
   },
   "complete": {
     "schema_version": 2,
-    "root_node_id": "spcom_1",
+    "root_node_id": "ROOT",
     "nodes": {
-      "spcom_1": {
-        "id": "spcom_1",
+      "ROOT": {
+        "id": "ROOT",
         "data": {
           "type": "root",
           "parent": null,
@@ -4880,7 +4880,7 @@ export const STORE_PAGE_SEEDS: Record<string, { schema_version: number; root_nod
         "id": "spcom_2",
         "data": {
           "type": "flex-section",
-          "parent": "spcom_1",
+          "parent": "ROOT",
           "nodes": [
             "spcom_3",
             "spcom_4",
