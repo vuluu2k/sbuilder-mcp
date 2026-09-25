@@ -144,6 +144,15 @@ describe('sb_page_repair', () => {
     await close();
   });
 
+  it('sb_page_state reports a minted root instead of calling the canvas fine', async () => {
+    const { f } = site();
+    const { client, close } = await connectedClient(ctxOver(f));
+    const out = JSON.parse(((await client.callTool({ name: 'sb_page_state', arguments: { site_id: 's1', page_id: 'pg_a' } })).content as any)[0].text);
+    expect(out.canvas.minted_root).toBe('sppro_1');
+    expect(out.canvas.warning).toMatch(/sb_page_repair/);
+    await close();
+  });
+
   it('sb_page_open flags a minted root', async () => {
     const { f } = site();
     const { client, close } = await connectedClient(ctxOver(f));

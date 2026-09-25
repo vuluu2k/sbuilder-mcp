@@ -1959,6 +1959,11 @@ vậy, và đó đúng là cách hai bản sao tách nhau ra. Đọc trên tài 
 
 Ba phán quyết, và cách chữa khác nhau:
 
+(Và một cảnh báo cho canvas KHÔNG trắng: root không phải `ROOT` — `sppro_1`, `rt_<hex>` từ
+seed cũ — qua được cổng này, nhưng editor build trước web_builder `7322af49a` vẽ nó trắng và
+có thể tự lưu trang thành rỗng. `canvas.minted_root` nêu tên nó và `canvas.warning` chỉ tới
+`sb_page_repair`.)
+
 - **alias `rootId`** — chữa được trong một lần lưu, và được gọi tên riêng vì nếu không người
   đọc chẳng hiểu vì sao một tài liệu đầy node lại sắp biến mất. Đây là hình dạng
   `editor/src/element/completionPage.ts:91` từng ship trước `8e40bbab`.

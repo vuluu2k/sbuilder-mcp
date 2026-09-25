@@ -2111,7 +2111,8 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
     },
     async ({ site_id: given, page_id }) => {
       const site_id = siteFor(ctx, given);
-      const here = session.location();
+      // No open page is fine when page_id names one — `location()` throws.
+      const here = session.peek() ? session.location() : { siteId: '', pageId: '' };
       const pageId = page_id ?? here.pageId;
       if (!pageId) {
         throw new Error('sbuilder: sb_page_state needs page_id, or a page opened with sb_page_open.');
@@ -2199,7 +2200,13 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
           : null,
         canvas: canvas.blank
           ? { blank: true, nodes: canvas.nodes, why: canvas.why, fix: canvas.fix }
-          : { blank: false, nodes: canvas.nodes },
+          : {
+              blank: false,
+              nodes: canvas.nodes,
+              ...(canvas.minted_root
+                ? { minted_root: canvas.minted_root, warning: `${canvas.why} ${canvas.fix}` }
+                : {}),
+            },
         drift,
         session: open
           ? { open: true, rev: session.current().rev, unsaved: session.hasUnsaved() }

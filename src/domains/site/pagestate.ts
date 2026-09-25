@@ -37,12 +37,16 @@
  * bytes, and the stored bytes still carry the alias.
  */
 
+import { PAGE_ROOT_ID } from './ids.js';
+
 /** What the editor's own hydrate gate will do with this document. */
 export interface CanvasVerdict {
   /** True when the editor will discard this document and show an empty ROOT. */
   blank: boolean;
   /** How many nodes the document holds, which is what the canvas would mount. */
   nodes: number;
+  /** The root's id when it is not `ROOT` — a page an older editor paints white. */
+  minted_root?: string;
   why?: string;
   fix?: string;
 }
@@ -57,7 +61,21 @@ export function canvasVerdict(document: unknown): CanvasVerdict {
   const nodes = (d.nodes ?? {}) as Record<string, unknown>;
   const count = Object.keys(nodes).length;
   const root = typeof d.root_node_id === 'string' ? d.root_node_id : '';
-  if (root && nodes[root]) return { blank: false, nodes: count };
+  if (root && nodes[root]) {
+    if (root === PAGE_ROOT_ID) return { blank: false, nodes: count };
+    // NOT BLANK TO THIS GATE, AND NOT FINE. The current editor follows
+    // root_node_id; one built before web_builder `7322af49a` renders a
+    // hard-coded node-id="ROOT", paints white, and may autosave the page blank.
+    return {
+      blank: false,
+      nodes: count,
+      minted_root: root,
+      why:
+        `The root is "${root}", not "ROOT". The storefront and a current editor draw it; an editor ` +
+        'built before web_builder 7322af49a paints the canvas WHITE and may autosave the page blank.',
+      fix: 'Run sb_page_repair on this page (then sb_publish it) before anyone opens it in the editor.',
+    };
+  }
   // THE ALIAS IS WORTH NAMING SEPARATELY, because the repair is one save and
   // the reader otherwise has no idea why a document with plenty of nodes is
   // about to vanish. `rootId` is the key an app block and a section template

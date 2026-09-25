@@ -1997,6 +1997,11 @@ is exactly how the two copies come apart. Read against the RAW document, never a
 
 Three verdicts, and the fixes differ:
 
+(And one warning on a canvas that is NOT blank: a root that is not `ROOT` — `sppro_1`,
+`rt_<hex>` from older seeds — passes this gate, while an editor built before web_builder
+`7322af49a` paints it white and may autosave it blank. `canvas.minted_root` names it and
+`canvas.warning` points at `sb_page_repair`.)
+
 - **the `rootId` alias** — repairable in one save, and named separately because the reader
   otherwise has no idea why a document full of nodes is about to vanish. It is the shape
   `editor/src/element/completionPage.ts:91` shipped before `8e40bbab`.

@@ -41,6 +41,18 @@ describe('canvasVerdict mirrors the editor hydrate gate', () => {
     expect(v.fix).toMatch(/Do NOT open/);
   });
 
+  /**
+   * The current editor draws a minted root; one before web_builder `7322af49a`
+   * hard-codes `ROOT`, paints white and may autosave the page blank. Not blank
+   * to the gate, and not fine either.
+   */
+  it('names a minted root, which the current gate passes and an older editor paints white', () => {
+    const v = canvasVerdict({ root_node_id: 'sppro_1', nodes: { sppro_1: {}, a: {} } });
+    expect(v.blank).toBe(false);
+    expect(v.minted_root).toBe('sppro_1');
+    expect(v.fix).toContain('sb_page_repair');
+  });
+
   it('treats an empty document as normal for a new page', () => {
     const v = canvasVerdict({ root_node_id: '', nodes: {} });
     expect(v.blank).toBe(true);
