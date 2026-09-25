@@ -1084,6 +1084,11 @@ comes from the same measurement pass the boxes do, so what is framed is exactly 
 is **refused by name** rather than answered with the wrong picture.
 
 
+**And the site's language, once per site per process**, under `site_language`: when the page's
+copy is Vietnamese and the site's `locale` is not `vi`, or the reverse. `<html lang>` is served
+from the locale, so the page is read aloud and indexed in the wrong language, and nothing on the
+page shows it. The fix it names is `sb_theme locale:"…"`.
+
 **And what stands between this store and a paid order**, under `store_gaps`, with a
 `store_notice` said once per process. These are the platform's OWN readiness rules, and they
 live only in the editor (`editor/src/editor/storeReadiness.ts`) — no API exposes them, so an
@@ -1674,6 +1679,13 @@ safe.) There is deliberately no argument here that can express "drop everything 
 
 A token id or style slug the site does not have is **refused**, with the real ones named: every
 preset resolves through those ids, so an invented one would be stored and read by nothing.
+
+`locale` sets the site's LANGUAGE — `settings.locale`, what `<html lang>` is served from, so
+the voice a screen reader picks and the language a search engine indexes. It keeps every other
+setting (read, change, send the whole document back), falls back to the locale-only body the
+platform merges for a narrower credential, then to the session when a key is refused. A 403 on
+every door is reported as one, naming the credential. Dry run by default: `{ dry_run, locale:
+{ from, to } }`.
 
 Republish afterwards. A theme is compiled into each page's stylesheet, so a saved page keeps
 the old palette until it is published again.

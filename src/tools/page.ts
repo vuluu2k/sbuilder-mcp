@@ -47,7 +47,7 @@ import { siteToken } from './credentialpick.js';
 import { validateForSave } from '../domains/site/validate.js';
 import { reviewDesign, REVIEW_NOTICE } from '../domains/site/review.js';
 import { compactFindings } from '../domains/site/findings.js';
-import { readinessGaps, READINESS_NOTICE } from '../domains/site/readiness.js';
+import { readinessGaps, READINESS_NOTICE, siteLanguage } from '../domains/site/readiness.js';
 import { gatherReadiness } from '../domains/site/readiness-fetch.js';
 import { globalWarning, restampPatches, RESPONSIVE_NOTICE } from '../domains/site/traps.js';
 import { catalogBrowse, catalogMatches, traitsFor } from '../catalog/element-search.js';
@@ -1488,9 +1488,12 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
           (input.forms ?? []).flatMap((f) => (f.id && f.type ? [[f.id, f.type]] : [])),
         );
         const gaps = readinessGaps(input);
+        const lang = siteLanguage(input.siteLocale, input.pageNodes);
+        const said = lang ? ctx.notices.once(`site-language:${siteId}`, lang) : undefined;
+        if (said) store.site_language = said;
         if (gaps.length > 0) {
           const notice = ctx.notices.once('readiness', READINESS_NOTICE);
-          store = { store_gaps: gaps, ...(notice ? { store_notice: notice } : {}) };
+          store = { ...store, store_gaps: gaps, ...(notice ? { store_notice: notice } : {}) };
         }
       } catch {
         // Readiness is additional information, never the reason a review fails.

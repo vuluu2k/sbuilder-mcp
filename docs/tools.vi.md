@@ -1053,6 +1053,11 @@ không có trên trang đã render, hoặc render ra kích thước bằng 0, b�
 không trả về một bức ảnh sai.
 
 
+**Và ngôn ngữ của site, một lần mỗi site mỗi process**, ở `site_language`: khi nội dung trang
+là tiếng Việt mà `locale` của site không phải `vi`, hoặc ngược lại. `<html lang>` được phục vụ từ
+locale, nên trang bị đọc to và được index sai ngôn ngữ, và không gì trên trang cho thấy điều đó.
+Cách sửa nó nêu là `sb_theme locale:"…"`.
+
 **Và những gì chắn giữa cửa hàng này với một đơn đã thanh toán**, ở `store_gaps`, kèm
 `store_notice` chỉ nói một lần mỗi process. Đây là luật kiểm tra sẵn sàng của chính nền tảng,
 và chúng chỉ tồn tại trong editor (`editor/src/editor/storeReadiness.ts`) — không API nào lộ
@@ -1627,6 +1632,12 @@ phân giải qua các id đó, nên một id bịa ra sẽ được lưu và kh�
 
 Publish lại sau khi đổi. Theme được biên dịch vào stylesheet của từng trang, nên trang đã lưu vẫn
 giữ bảng màu cũ cho tới khi được publish lần nữa.
+
+`locale` đặt NGÔN NGỮ của site — `settings.locale`, thứ `<html lang>` được phục vụ từ đó, tức
+giọng mà trình đọc màn hình chọn và ngôn ngữ công cụ tìm kiếm index. Nó giữ mọi setting khác
+(đọc, đổi, gửi lại nguyên tài liệu), lùi về body chỉ-có-locale mà nền tảng gộp cho một credential
+hẹp hơn, rồi về session khi key bị từ chối. 403 ở mọi cửa được báo đúng là 403, nêu tên
+credential. Mặc định dry run: `{ dry_run, locale: { from, to } }`.
 
 ## `sb_store`
 

@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { text } from '../mcp/response.js';
-import { request } from '../transport/http.js';
+import { ApiError, request } from '../transport/http.js';
 import { siteToken } from './credentialpick.js';
 import { siteFor, type ToolContext } from './context.js';
 import { STARTER_THEME } from '../domains/site/theme.js';
@@ -110,6 +110,60 @@ export async function ensureSiteTheme(ctx: ToolContext, siteId: string): Promise
   }
 }
 
+/** The platform's own guard (`sitesettings.LocaleTag`): a BCP-47-shaped tag. */
+const LOCALE_TAG = /^[A-Za-z]{2,8}(-[A-Za-z0-9]{1,8})*$/;
+
+/**
+ * THE SITE'S LANGUAGE — `settings.locale`, what `<html lang>` is served from.
+ *
+ * The PUT replaces the whole settings document, so the first door is the one
+ * that cannot lose anything: read, change the locale, send the whole thing
+ * back. A caller allowed only the language (web_builder 58dbfefb: a key with
+ * pages.write) is refused that, and the platform merges a body that is EXACTLY
+ * `{locale}` instead — so that is the second door. Never the first: a server
+ * older than the merge would store `{locale}` as the WHOLE of settings. A
+ * key refused on both tries the session when there is one.
+ */
+async function setLocale(
+  ctx: ToolContext,
+  siteId: string,
+  locale: string,
+  dryRun: boolean,
+): Promise<{ from: string | null; to: string; unchanged?: true }> {
+  if (!LOCALE_TAG.test(locale)) {
+    throw new Error(`sbuilder: "${locale}" is not a language tag — use one like "vi", "en" or "en-GB".`);
+  }
+  const path = `/api/sites/${encodeURIComponent(siteId)}/settings`;
+  const got = (await request({ base: ctx.base, method: 'GET', path, token: siteToken(ctx), fetchImpl: ctx.fetchImpl })) as {
+    settings?: Record<string, unknown> | null;
+  };
+  const current = got?.settings ?? {};
+  const from = typeof current.locale === 'string' ? current.locale : null;
+  if (from === locale) return { from, to: locale, unchanged: true };
+  if (dryRun) return { from, to: locale };
+
+  const tokens = [siteToken(ctx)];
+  if (ctx.apiKey && ctx.session.loggedIn()) tokens.push(ctx.session.token());
+  const bodies = [{ settings: { ...current, locale } }, { settings: { locale } }];
+  for (const token of tokens) {
+    for (const body of bodies) {
+      try {
+        await request({ base: ctx.base, method: 'PUT', path, token, body, fetchImpl: ctx.fetchImpl });
+        return { from, to: locale };
+      } catch (e) {
+        if (!(e instanceof ApiError && e.status === 403)) throw e;
+      }
+    }
+  }
+  throw new Error(
+    `sbuilder: 403 — the platform refused to write settings.locale on ${siteId} with ` +
+      (ctx.apiKey ? 'the API key' : 'the session') +
+      (ctx.apiKey && !ctx.session.loggedIn() ? ' (no session to try: set SB_EMAIL/SB_PASSWORD)' : '') +
+      '. The whole-settings write needs settings permission; a locale-only write needs ' +
+      'pages.write on a platform that has it. Nothing was changed.',
+  );
+}
+
 export function registerThemeTools(server: McpServer, ctx: ToolContext): void {
   server.registerTool(
     'sb_theme',
@@ -118,7 +172,8 @@ export function registerThemeTools(server: McpServer, ctx: ToolContext): void {
         "The site's palette and type scale — the layer every element's style preset resolves " +
         'from, so one token repaints every page at once. Call it with nothing to read what the ' +
         'site actually has. `colors` and `text_styles` PATCH the saved document: what you do not ' +
-        'name is kept.',
+        'name is kept. `locale` sets the site\'s language (settings.locale, what <html lang> is ' +
+        'served from) — site-wide, every other setting kept.',
       inputSchema: {
         site_id: z.string().optional(),
         colors: z
@@ -129,12 +184,21 @@ export function registerThemeTools(server: McpServer, ctx: ToolContext): void {
           .record(z.record(z.string()))
           .optional()
           .describe('Text style slug -> base declarations, e.g. { "h1": { "fontSize": "48px" } }'),
+        locale: z.string().optional().describe('Site language tag, e.g. "vi" or "en"'),
         dry_run: z.boolean().optional(),
       },
       annotations: { readOnlyHint: false, destructiveHint: false },
     },
-    async ({ site_id: given, colors, text_styles, dry_run }) => {
+    async ({ site_id: given, colors, text_styles, locale, dry_run }) => {
       const site_id = siteFor(ctx, given);
+      const lang = locale ? { locale: await setLocale(ctx, site_id, locale, dry_run !== false) } : {};
+      if (locale && !colors && !text_styles) {
+        return text({
+          ...(dry_run !== false && !lang.locale?.unchanged ? { dry_run: true } : {}),
+          ...lang,
+          on: site_id,
+        });
+      }
       const { theme, origin } = await readTheme(ctx, site_id);
 
       // READ. What the site actually paints from, which is what rule 0 wants
@@ -205,7 +269,7 @@ export function registerThemeTools(server: McpServer, ctx: ToolContext): void {
       }
 
       if (!changes.length) {
-        return text({ unchanged: true, note: 'Every value named already holds that value.' });
+        return text({ unchanged: true, ...lang, note: 'Every value named already holds that value.' });
       }
       // The document goes back WHOLE, so this can only ever be true — asserted
       // anyway, because the one failure this endpoint cannot take back is a
@@ -218,6 +282,7 @@ export function registerThemeTools(server: McpServer, ctx: ToolContext): void {
         return text({
           dry_run: true,
           would_change: changes,
+          ...lang,
           on: site_id,
           built_from: origin === 'site' ? "this site's saved theme" : 'the starter theme',
           note:
@@ -240,6 +305,7 @@ export function registerThemeTools(server: McpServer, ctx: ToolContext): void {
       clearThemeCache();
       return text({
         changed: changes,
+        ...lang,
         on: site_id,
         next:
           'Republish the pages that should show it — a theme is compiled into each page\'s ' +

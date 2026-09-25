@@ -32,7 +32,7 @@ export async function gatherReadiness(
   };
   const site = encodeURIComponent(siteId);
 
-  const [pageList, gateways, shipping, globals, productList, categoryList, pageLinks, formList, articleList, blogCategoryList, courseList, siteRecord, overlayList] =
+  const [pageList, gateways, shipping, globals, productList, categoryList, pageLinks, formList, articleList, blogCategoryList, courseList, siteRecord, overlayList, settings] =
     await Promise.all([
     get<{ pages?: Array<ReadinessPage & { id?: string; isDefaultTemplate?: boolean }> }>(`/api/sites/${site}/pages`),
     get<{ paymentGateways?: Array<{ enabled?: boolean; configured?: boolean }> }>(
@@ -49,12 +49,8 @@ export async function gatherReadiness(
     get<{ products?: Array<{ status?: string; priceCents?: number }>; total?: number }>(
       `/api/sites/${site}/products?limit=200`,
     ),
-    // THE CATEGORIES, and the pages they point at. `/collections/{slug}` resolves
-    // through PublishedForEntity: the category's OWN page when a page-link names
-    // one, else the DEFAULT TEMPLATE for the `category` type — and nothing on
-    // that shared template narrows the product feed to the category in the URL.
-    // So two categories with no page-links means at most one of them can be
-    // right, and the rest list the whole catalogue.
+    // THE CATEGORIES, and the pages they point at: the ones with no page-link
+    // are served by the shared `category` template (see categoryScope).
     get<{ categories?: unknown[]; productCategories?: unknown[]; total?: number }>(
       `/api/sites/${site}/product-categories`,
     ),
@@ -88,6 +84,8 @@ export async function gatherReadiness(
     // THE OVERLAYS, for the one a cart control opens: no `cart` overlay means
     // every `open_cart` on the site opens nothing.
     get<{ overlays?: Array<{ kind?: string }> }>(`/api/sites/${site}/overlays`),
+    // `<html lang>` is served from this; see siteLanguage in readiness.ts.
+    get<{ settings?: { locale?: unknown } | null }>(`/api/sites/${site}/settings`),
   ]);
 
   // A gateway counts only when it is BOTH enabled and configured — the editor's
@@ -161,6 +159,7 @@ export async function gatherReadiness(
     courses: Array.isArray(courseList?.courses)
       ? (courseList?.total ?? courseList.courses.length)
       : null,
+    siteLocale: typeof settings?.settings?.locale === 'string' ? settings.settings.locale : null,
     maintenanceMode:
       typeof siteRecord?.site?.maintenanceMode === 'boolean'
         ? siteRecord.site.maintenanceMode

@@ -263,6 +263,14 @@ repo over a number here, and fix the line when you catch one stale.
   And the projected listing shows something worth knowing: the platform writes a `__pre_restore`
   version of its own before restoring, so a RESTORE is itself undoable.
 
+- **`settings.locale` IS WRITTEN WHOLE-FIRST, LOCALE-ONLY SECOND — never the other way.**
+  `PUT /api/sites/{siteId}/settings` replaces the whole document; web_builder `58dbfefb` made a
+  body that is EXACTLY `{settings:{locale}}` MERGE instead, and lets a `pages.write` key send it
+  (that PUT answered 403 to a key before). A server older than the merge stores `{locale}` as
+  the WHOLE of settings, so `sb_theme locale` reads, sends the merged document, and only on a 403
+  tries the narrow body — a 403 there is the same gate on either server, so it cannot wipe. Then
+  the session, when a key was refused and one exists; a 403 on every door is reported as a 403.
+
 ## Phases — how reach and capability grew
 
 All three phases are shipped, and their plans live in `docs/superpowers/plans/`:

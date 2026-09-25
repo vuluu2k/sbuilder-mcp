@@ -97,6 +97,8 @@ export interface ReadinessInput {
    * read. The one input here that describes a state rather than a shape.
    */
   maintenanceMode?: boolean | null;
+  /** `settings.locale` — what `<html lang>` is served from; null when unread or unset. */
+  siteLocale?: string | null;
   /** How many product categories the store has; null when the list was unread. */
   categories?: number | null;
   /** How many of them point at a page of their own; null when unread. */
@@ -663,6 +665,41 @@ export function readinessGaps(input: ReadinessInput): ReadinessGap[] {
   }
 
   return gaps;
+}
+
+// Letters only Vietnamese writes; French or Spanish copy shares none of them.
+const VI_LETTERS = /[ăâđêôơưạảấầẩẫậắằẳẵặẹẻẽếềểễệỉịọỏốồổỗộớờởỡợụủứừửữựỳỵỷỹ]/i;
+
+/**
+ * THE SITE SAYS ONE LANGUAGE AND THE PAGE ANOTHER. `settings.locale` is what
+ * `<html lang>` is served from — the voice a screen reader picks, the language
+ * a search engine indexes, the storefront's own built-in strings — and a site
+ * is born with its creator's language, so a Vietnamese shop made from an `en`
+ * account reads its whole catalogue in an English voice. Nothing on the page
+ * shows it.
+ *
+ * ponytail: a letter-set heuristic over text nodes, vi vs not-vi only; a real
+ * language detector if a third market ever matters.
+ */
+export function siteLanguage(locale: string | null | undefined, nodes: NodeLike[]): string | null {
+  if (!locale) return null;
+  const texts = nodes
+    .map((n) => n.specials?.text)
+    .filter((t): t is string => typeof t === 'string')
+    .map((t) => t.replace(/<[^>]*>/g, ' ').trim())
+    .filter((t) => /[a-zà-ỹ]{3}/i.test(t));
+  if (texts.length < 3) return null;
+  const vi = texts.filter((t) => VI_LETTERS.test(t)).length / texts.length;
+  const siteVi = /^vi\b/i.test(locale);
+  const content = vi >= 0.5 ? 'Vietnamese' : vi === 0 ? 'not Vietnamese' : null;
+  if (!content || (content === 'Vietnamese') === siteVi) return null;
+  const want = content === 'Vietnamese' ? 'vi' : 'en';
+  return (
+    `The site's locale is "${locale}" but this page's copy is ${content} — <html lang> ` +
+    'is served from the locale, so screen readers and search engines read the page in the ' +
+    `wrong language, and the storefront's built-in strings follow it. sb_theme locale:"${want}" ` +
+    'sets it (site-wide).'
+  );
 }
 
 export const READINESS_NOTICE =
