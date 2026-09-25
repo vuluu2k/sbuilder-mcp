@@ -6,6 +6,24 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.65.0] - 2026-09-25
+
+### Added
+- `sb_page_create` now infers the page's type from its name (about, contact, policy, faq) when no `type` argument is passed, and opens it with that purpose's own layout.
+- `sb_page_repair` is a new tool that renames a page's root node to `ROOT` on one page, or every page on a site, when an older seed minted a different id (`sppro_1`, `rt_<hex>`); it defaults `dry_run` to true and lists the pages it would touch before writing anything.
+- `sb_page_open` now reports `minted_root` when the opened page's root node is not called `ROOT`, warning that an editor built before web_builder `7322af49a` renders such a page as a blank white canvas and may autosave an empty document over it.
+- `sb_store` action `form` now creates a login, register, or contact page as its own purpose type (`login`, `register`, `contact`) instead of a generic `page`, matching the platform's own routed page types.
+
+### Changed
+- Every page document this server writes — `sb_page_create`'s seed, `sb_store`'s checkout and app-scaffold creates, and any raw `sb_api_call` carrying a page document — now leaves the process rooted at `ROOT`, healed in transport regardless of which tool produced it.
+- A session whose save is rejected because the page changed underneath it now re-pulls the fresh document and reapplies the pending patches once automatically, instead of always requiring the caller to re-read and redo the edit; it still fails loudly when the other side touched one of the same nodes or local edits were unsaved.
+- `sb_page_list`'s `page_types_note` now explains that about, contact, policy, faq, login, and register name a content page's purpose with its own type and icon, and that `sb_page_create` picks that type from the name automatically.
+- The generated catalog was regenerated against the platform: 119 elements and 568 operations, including 18 page types and coverage for `FormKnobs`, `TextFieldKnobs`, and `SearchPanelKnobs` field-skin keys.
+- `sb_import_site`'s page-token reader now reads only the page's own bands when picking up heading, text, and button styles, skipping a composed global header or footer so an inserted band no longer inherits a dark header's white-on-dark styling.
+
+### Fixed
+- A newly added `countdown` element is now flagged as inert on add, since it seeds with no end time and paints four boxes counting down to nothing until `specials.endsAt` or `specials.sourceCode` is set.
+
 ## [0.64.0] - 2026-09-24
 
 ### Added

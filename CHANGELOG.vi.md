@@ -6,6 +6,24 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.65.0] - 2026-09-25
+
+### Added
+- `sb_page_create` giờ tự suy ra type của trang từ tên (about, contact, policy, faq) khi không truyền tham số `type`, và mở trang đó với layout đúng với mục đích của nó.
+- `sb_page_repair` là một tool mới, đổi tên node root của trang thành `ROOT` trên một trang, hoặc trên mọi trang của một site, khi một seed cũ hơn đã sinh ra một id khác (`sppro_1`, `rt_<hex>`); tool mặc định `dry_run` là true và liệt kê các trang sẽ bị ảnh hưởng trước khi ghi bất cứ thứ gì.
+- `sb_page_open` giờ báo cáo `minted_root` khi node root của trang đang mở không mang tên `ROOT`, cảnh báo rằng một editor được build trước web_builder `7322af49a` sẽ render trang đó thành một canvas trắng và có thể autosave một tài liệu rỗng đè lên nó.
+- Action `form` của `sb_store` giờ tạo trang login, register, hoặc contact đúng theo type mục đích của nó (`login`, `register`, `contact`) thay vì một `page` chung chung, khớp với các page type đã được nền tảng định tuyến sẵn.
+
+### Changed
+- Mọi tài liệu trang mà server này ghi ra — seed của `sb_page_create`, các lệnh tạo checkout và app-scaffold của `sb_store`, và bất kỳ `sb_api_call` thô nào mang theo tài liệu trang — giờ đều rời khỏi tiến trình với root là `ROOT`, được chữa ở tầng transport bất kể tool nào tạo ra nó.
+- Một session mà lệnh lưu bị từ chối vì trang đã thay đổi bên dưới nó giờ sẽ tự động đọc lại tài liệu mới nhất và áp lại các patch đang chờ một lần, thay vì luôn bắt caller phải đọc lại và làm lại thay đổi; session vẫn báo lỗi rõ ràng khi bên kia đã sửa đúng những node này hoặc khi còn thay đổi cục bộ chưa lưu.
+- `page_types_note` của `sb_page_list` giờ giải thích rằng about, contact, policy, faq, login và register đặt tên cho mục đích của một trang nội dung với type và icon riêng của nó, và `sb_page_create` tự chọn type đó từ tên trang.
+- Catalog được sinh ra đã được làm mới dựa trên nền tảng: 119 element và 568 operation, bao gồm 18 page type và độ phủ cho các key field-skin `FormKnobs`, `TextFieldKnobs`, và `SearchPanelKnobs`.
+- Bộ đọc token trang của `sb_import_site` giờ chỉ đọc các band thuộc về chính trang khi lấy style heading, text và button, bỏ qua một header hoặc footer dùng chung đã compose, để một band mới chèn vào không còn bị kế thừa kiểu chữ trắng-trên-nền-tối của header.
+
+### Fixed
+- Một element `countdown` mới được thêm giờ được đánh dấu là inert khi thêm, vì nó được gieo sẵn không có thời gian kết thúc và vẽ ra bốn ô đếm ngược về không cho đến khi `specials.endsAt` hoặc `specials.sourceCode` được thiết lập.
+
 ## [0.64.0] - 2026-09-24
 
 ### Added
