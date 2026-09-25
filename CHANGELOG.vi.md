@@ -6,6 +6,33 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.66.0] - 2026-09-25
+
+### Added
+- `sb_add` giờ có thể tạo một satellite trên host của nó — ví dụ badge `cart-count` trên icon giỏ hàng — thay vì từ chối vì host không phải container, và `sb_remove` xoá satellite đó và dọn tham chiếu trên host; remedy `cartCount` của readiness giờ chỉ đích danh `sb_add`.
+- Action `cart` của `sb_store` giờ gieo cart drawer của site bằng đúng ngôn ngữ của site, đọc từ `settings.locale`, thay vì luôn gieo bằng tiếng Anh, và rơi về tiếng Anh khi không có seed theo locale.
+- Action `chrome` của `sb_store` giờ tạo một site menu thật và nối header vào đó — menu desktop kiểu hover/dropdown ẩn trên mobile, một hamburger drawer chứa menu dọc riêng trên mobile, icon tài khoản trỏ tới `/account`, và icon giỏ hàng mang `open_cart` kèm badge `cart-count` — thay cho hàng nút bấm mà chính `sb_review` từng gắn cờ `handbuilt_menu`; nó cũng tạo cart drawer cho site khi icon giỏ hàng trên header sẽ mở ra không gì cả.
+- `sb_review` cảnh báo một lần cho mỗi site (`site_language`) khi nội dung trang không khớp `settings.locale` của site, và `sb_theme` có thêm tham số `locale` để đặt nó.
+- `sb_publish` liệt kê các trang khác đang có draft chưa publish dưới `unpublished_drafts`, và `publish_drafts: true` sẽ publish luôn các trang đó trong cùng lệnh gọi.
+- Một lần lưu trang giờ gửi revision của draft dưới dạng `baseRev` và nhường bước — đọc lại và rebase — khi nền tảng báo draft đã thay đổi bên dưới nó (`source_stale`) hoặc phát ra một revision mới hơn; nó chỉ đích danh live peer khi lưu (`X-WB-Live-Peer`) khi mọi patch trong lần lưu đó đã được phòng xác nhận, để một tab editor còn thay đổi chưa lưu có thể nhận lấy lần lưu này thay vì âm thầm mất nó sau đó.
+
+### Changed
+- Một lần ghi tài liệu trang không đi qua `sb_set` — một PUT thô qua `sb_api_call`, `sb_page_repair`, khôi phục version hoặc history, hay một flow của `sb_store` — giờ đến được với editor đang xem trang đó dưới dạng ops và đánh dấu bản sao của session này là cũ, thay vì bên này âm thầm ghi đè bên kia.
+- Catalog được sinh ra đã được làm mới dựa trên nền tảng: 120 element và cart drawer seed theo từng locale.
+
+### Fixed
+- Đã đóng một số race trong luồng lưu-và-rebase có thể làm mất một thay đổi khi truy cập đồng thời: một rebase sau lỗi 409 không còn gửi lại các ops đã gửi lên phòng, một lần lưu vừa hoàn tất không còn xoá slot in-flight của một lần lưu khác, một chỉnh sửa của peer đến giữa lúc đang lưu không còn bị lần lưu đó xoá mất, một source frame đến trong lúc đang đọc lại được xét đúng theo revision mà nó thực sự báo, và thay đổi của chính editor không còn bị nhầm là thay đổi cục bộ chưa lưu của session này.
+- Rejoin vào một phòng live không còn vouch cho các ops mà phòng cũ chưa từng ack, và frame auth/session không bao giờ bị báo là nơi cung cấp snapshot (`noSnapshot`), đóng lại hai cách một lần lưu cũ có thể bị phát lại dưới tên một peer.
+- Lần ghi locale của `sb_theme` không còn áp dụng nửa chừng: nó kiểm tra language tag và đọc settings trước khi PUT theme, thử toàn bộ settings body với từng credential trước khi rơi về body chỉ có locale, và chỉ ghi locale sau khi lần lưu theme và mọi kiểm tra khác thành công.
+- Action `chrome` của `sb_store` không còn ghi đè menu đã liên kết đầy đủ của merchant khi một lỗi lookup tạm thời khiến nó trông như chưa được liên kết, và giờ điền các liên kết thật vào một menu placeholder được dùng lại (bốn dòng `type:none`) thay vì để trống; dry run của nó giờ tóm tắt cart drawer sẽ tạo thay vì nhúng nguyên tài liệu seed.
+- Ảnh trên thẻ sản phẩm giờ hiển thị một thumbnail vuông duy nhất thay vì một dải ba ảnh trống, và ô category giờ bind `category.image` thay vì binding ảnh sản phẩm mà nó thừa hưởng từ pattern media chung.
+- Gap `categoryScope` của `sb_review` giờ chỉ nổ ra khi trang đang mở là category template dùng chung với mọi product repeater được ghim vào một collection có tên, không còn nổ ra trên mọi site có hơn một category.
+- Gap `order_goes_nowhere` của `sb_review` giờ chỉ xét form checkout, không còn gắn cờ mọi trang login, register, quên mật khẩu và đặt lại mật khẩu chỉ vì cart drawer được compose lên các trang đó cũng có cart total.
+- Một satellite lồng bên trong một node spec giờ được seed và gắn đúng cách thay vì sinh ra trống trơn hoặc bị từ chối vì host không phải container.
+- Mỗi lần tạo trang qua `sb_page_create` và `sb_store` giờ sinh id node mới thay vì dùng nguyên id placeholder từ codegen, nên hai trang cùng loại không còn trùng id.
+- `sb_page_state` giờ báo `canvas.minted_root` khi node root của một trang không mang tên `ROOT`, cảnh báo rằng một editor cũ hơn có thể vẽ trang đó trắng trơn và autosave đè lên nó.
+- Trang mà flow `form` của `sb_store` tạo ra giờ mang header và footer chung của site, khớp với các trang do `sb_page_create` tạo.
+
 ## [0.65.0] - 2026-09-25
 
 ### Added

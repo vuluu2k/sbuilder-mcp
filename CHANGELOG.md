@@ -6,6 +6,33 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.66.0] - 2026-09-25
+
+### Added
+- `sb_add` can now create a satellite on its host — such as the `cart-count` badge on a cart icon — instead of refusing it as a non-container, and `sb_remove` removes one and clears the host's reference to it; the `cartCount` readiness remedy now names `sb_add`.
+- `sb_store` action `cart` now seeds the site's cart drawer in the site's own language, read from `settings.locale`, instead of always seeding English, falling back to English when no per-locale seed exists.
+- `sb_store` action `chrome` now builds a real site menu and wires the header to it — a hover/dropdown desktop menu hidden on mobile, a hamburger drawer holding its own vertical menu on mobile, an account icon to `/account`, and a cart icon carrying `open_cart` badged by `cart-count` — replacing the row of buttons `sb_review` itself flagged as `handbuilt_menu`; it also creates the site's cart drawer when the header's cart icon would otherwise open nothing.
+- `sb_review` warns once per site (`site_language`) when the page's copy doesn't match the site's `settings.locale`, and `sb_theme` gains a `locale` argument to set it.
+- `sb_publish` lists other pages with unpublished drafts as `unpublished_drafts`, and `publish_drafts: true` publishes them in the same call.
+- A page save now sends the draft's revision as `baseRev` and yields — re-pulling and rebasing — when the platform reports the draft moved underneath it (`source_stale`) or broadcasts a newer revision; it names the live peer on a save (`X-WB-Live-Peer`) only once every patch in that save is confirmed acknowledged by the room, so an editor tab with unsaved edits can adopt the save instead of quietly losing it later.
+
+### Changed
+- A page-document write that bypasses `sb_set` — a raw `sb_api_call` PUT, `sb_page_repair`, a version or history restore, or a `sb_store` flow — now reaches a live editor watching that page as ops and marks this session's own copy stale, instead of one side silently overwriting the other.
+- The generated catalog was regenerated against the platform: 120 elements and per-locale cart drawer seeds.
+
+### Fixed
+- Closed several races in the save-and-rebase path that could lose an edit under concurrent access: a 409 rebase no longer republishes ops already sent to the room, a finishing save no longer clears another in-flight save's slot, a peer's edit landing mid-save is no longer discarded by that save, a source frame arriving during a re-read is judged against the revision it actually reports, and an editor's own change is no longer mistaken for this session's unsaved edit.
+- Rejoining a live room no longer vouches for ops the previous room never acknowledged, and the auth/session frame is never reported as a snapshot provider (`noSnapshot`), closing two ways a stale save could be replayed under a peer's name.
+- `sb_theme`'s locale write no longer partially applies: it validates the language tag and reads settings before the theme PUT, tries the full settings body with every credential before falling back to a locale-only body, and writes the locale only after the theme save and every other check succeed.
+- `sb_store` action `chrome` no longer overwrites a merchant's fully-linked menu when a transient lookup failure makes it look unresolved, and now fills a reused placeholder menu (four `type:none` rows) in with real links instead of leaving it empty; its dry run now summarizes the cart drawer it would create instead of embedding the full seed document.
+- A product card's image now shows as one square thumbnail instead of a strip of three empty ones, and a category tile now binds `category.image` instead of the product-image binding it inherited from the generic media pattern.
+- `sb_review`'s `categoryScope` gap now fires only when the open page is the shared category template with every product repeater pinned to a named collection, not on every site with more than one category.
+- `sb_review`'s `order_goes_nowhere` gap now judges only the checkout form, no longer flagging every login, register, forgot-password, and reset-password page because the cart drawer composed onto them also holds a cart total.
+- A nested satellite given as part of a node spec is now seeded and attached correctly instead of being born bare or refused as a child of a non-container.
+- Every page `sb_page_create` and `sb_store` create now mints fresh node ids instead of shipping the codegen placeholder ids verbatim, so two pages of the same type no longer share ids.
+- `sb_page_state` now reports `canvas.minted_root` when a page's root node isn't called `ROOT`, warning that an older editor may paint it blank and autosave over it.
+- The page a `sb_store` action `form` flow creates now wears the site's global header and footer, matching pages created by `sb_page_create`.
+
 ## [0.65.0] - 2026-09-25
 
 ### Added
