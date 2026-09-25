@@ -6,6 +6,18 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.67.0] - 2026-09-25
+
+### Added
+- `sb_review` cảnh báo một lần cho mỗi site (`cartDrawerLanguage`) khi cart drawer của site vẫn còn mang từ seed của một locale khác, và `sb_store` action `cart` có thêm tham số `relocalize` để viết lại đúng những từ đó thành seed của locale site, giữ nguyên text đã được merchant chỉnh sửa; một lần chạy thật cần có một trang của site đang mở, vì drawer được ghi thông qua lần lưu trang.
+
+### Changed
+- Catalog được sinh ra đã được làm mới dựa trên nền tảng: repeater media-dataset trên thẻ category/search giờ hiện một thumbnail duy nhất thay vì một dải ảnh, và một số giá trị mặc định (hover của form/menu, badge cart-count) giờ đọc theo token `var(--wb-sc-*)` của theme thay vì màu cố định.
+
+### Fixed
+- Một lần ghi không phải GET vào một global section dùng chung, hoặc một frame global/overlay từ phòng live, giờ đánh dấu bản sao của trang đang mở là cũ khi nó compose từ master đó, để lần lưu tiếp theo đọc lại trang thay vì decompose header, footer hay cart drawer cũ đè lên thay đổi của merchant.
+- Dry run của action `cart` trong `sb_store` giờ giải thích lý do vì sao một drawer mới tạo sẽ ra tiếng Anh — không đọc được settings của site, `settings.locale` chưa được đặt, hoặc một locale không có seed — thay vì im lặng về việc rơi về tiếng Anh.
+
 ## [0.66.1] - 2026-09-25
 
 ### Fixed

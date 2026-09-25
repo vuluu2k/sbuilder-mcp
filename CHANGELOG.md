@@ -6,6 +6,18 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.67.0] - 2026-09-25
+
+### Added
+- `sb_review` warns once per site (`cartDrawerLanguage`) when the site's cart drawer still carries another locale's seed words, and `sb_store` action `cart` gains a `relocalize` argument that rewrites exactly those words to the site locale's seed, leaving merchant-edited text untouched; a real run needs a page of the site open, since the drawer is written through the page save.
+
+### Changed
+- The generated catalog was regenerated against the platform: a category/search card's media-dataset repeater now shows a single thumbnail instead of a strip, and several defaults (form/menu hover, cart-count badge) now read the theme's `var(--wb-sc-*)` tokens instead of a hardcoded color.
+
+### Fixed
+- A non-GET write to a shared global section, or a global/overlay frame from the live room, now marks the open page's copy stale when it composes that master, so the next save re-pulls the page instead of decomposing an old header, footer, or cart drawer back over the merchant's change.
+- `sb_store` action `cart`'s dry run now explains why a newly created drawer would come out in English — unreadable site settings, an unset `settings.locale`, or a locale with no seed — instead of staying silent about the fallback.
+
 ## [0.66.1] - 2026-09-25
 
 ### Fixed
