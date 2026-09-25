@@ -316,6 +316,7 @@ export function joinRoom(ctx: ToolContext, session: PageSession, siteId: string)
     onRemote: (patches) => session.applyRemote(patches),
     onDesync: (reason) => session.markStale(reason),
     onSource: (pageId, rev, peerId) => session.sourceSaved(pageId, rev, peerId),
+    onMaster: (kind, id, op, rev) => session.masterSaved(kind, id, op, rev),
   });
   socket.connect();
   session.attachLive(live, siteId);

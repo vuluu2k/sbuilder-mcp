@@ -171,6 +171,25 @@ export function onPageSourceWrite(fn: SourceWritten): () => void {
   };
 }
 
+/**
+ * A SHARED MASTER'S WRITE IS A WRITE TO EVERY PAGE COMPOSING IT. A non-GET to
+ * `/global-sections/{id}` or `/global-sections/{id}/document` replaces what an
+ * open copy's header or footer was composed from, and that copy's next save
+ * decomposes the OLD composition back over the master. The room announces it
+ * (`global` frame) only to a session that is in one.
+ */
+type GlobalWritten = (siteId: string, globalId: string) => void;
+const globalWritten = new Set<GlobalWritten>();
+
+export function onGlobalWrite(fn: GlobalWritten): () => void {
+  globalWritten.add(fn);
+  return () => {
+    globalWritten.delete(fn);
+  };
+}
+
+const GLOBAL_WRITE = /^\/api\/sites\/([^/]+)\/global-sections\/([^/]+)(?:\/document)?$/;
+
 const SOURCE_WRITE = /^\/api\/sites\/([^/]+)\/pages\/([^/]+)\/source$/;
 /**
  * A restore replaces the draft ON THE PLATFORM with no document in the body —
@@ -189,6 +208,12 @@ const SOURCE_RESTORE = /^\/api\/sites\/([^/]+)\/pages\/([^/]+)\/(?:versions|hist
  * peer is on that page) and published as node-level ops.
  */
 export async function request(opts: RequestOpts): Promise<unknown> {
+  const global = opts.method !== 'GET' ? GLOBAL_WRITE.exec(opts.path) : null;
+  if (global) {
+    const out = await send(opts);
+    for (const fn of globalWritten) fn(decodeURIComponent(global[1]), decodeURIComponent(global[2]));
+    return out;
+  }
   const restore = opts.method === 'POST' ? SOURCE_RESTORE.exec(opts.path) : null;
   if (restore) {
     const out = await send(opts);

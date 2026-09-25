@@ -17,6 +17,12 @@ export interface LiveOpts {
   onDesync(reason: string): void;
   /** A page's draft was saved — by anyone, this client included (web_builder 1dbc88a2c). */
   onSource?(pageId: string, rev: number, peerId?: string): void;
+  /**
+   * A shared master changed: `{t:'global', op, globalId, rev}` or
+   * `{t:'overlay', op, overlayId, rev}` (realtime/event.go EvGlobal, EvOverlay).
+   * Site-wide, never page-scoped — the receiver decides whether its copy composes it.
+   */
+  onMaster?(kind: 'global' | 'overlay', id: string, op: string, rev: number): void;
 }
 
 /**
@@ -245,6 +251,12 @@ export class LiveSession {
         if (typeof e.pageId === 'string' && rev > 0) {
           this.opts.onSource?.(e.pageId, rev, typeof e.peerId === 'string' ? e.peerId : undefined);
         }
+        break;
+      }
+      case 'global':
+      case 'overlay': {
+        const id = e.t === 'global' ? e.globalId : e.overlayId;
+        if (typeof id === 'string' && id) this.opts.onMaster?.(e.t, id, String(e.op ?? ''), Number(e.rev ?? 0));
         break;
       }
       case 'snapreq':

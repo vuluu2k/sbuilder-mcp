@@ -42,7 +42,8 @@ import {
 import { skinLevelNote } from '../domains/site/fieldskin.js';
 import { siteTheme } from '../domains/site/theme-fetch.js';
 import { ensureSiteTheme } from './theme.js';
-import { request, redact, watchPageWrites, onPageSourceWrite } from '../transport/http.js';
+import { request, redact, watchPageWrites, onPageSourceWrite, onGlobalWrite } from '../transport/http.js';
+import { SPEC_GLOBAL_ID, SPEC_GLOBAL_REV, SPEC_OVERLAY_ID, SPEC_OVERLAY_REV, type NodeLike } from '../core/tree.js';
 import { siteToken } from './credentialpick.js';
 import { validateForSave } from '../domains/site/validate.js';
 import { reviewDesign, REVIEW_NOTICE } from '../domains/site/review.js';
@@ -152,6 +153,37 @@ export class PageSession {
     onPageSourceWrite((site, page, doc) => {
       if (doc !== this.doc?.doc && this.isOpen(site, page)) this.markStale('the page was written by another call');
     });
+    onGlobalWrite((site, id) => {
+      if (this.siteId === site && this.composedMaster('global', id)) {
+        this.markStale(`shared section ${id} was written by another call`);
+      }
+    });
+  }
+
+  /** The node this copy composed from that master (stamped `globalId` / `overlayId`), if any. */
+  private composedMaster(kind: 'global' | 'overlay', id: string): NodeLike | undefined {
+    if (!this.doc) return undefined;
+    const stamp = kind === 'global' ? SPEC_GLOBAL_ID : SPEC_OVERLAY_ID;
+    return Object.values(this.doc.doc.nodes).find((n) => n.specials?.[stamp] === id);
+  }
+
+  /**
+   * A shared master was saved or deleted (the room's `global` / `overlay`
+   * frame). Past the rev this copy composed — or re-stamped from its OWN save,
+   * whose echo this is otherwise — the copy is stale: the yield rule, the next
+   * write re-pulls first. `meta` is a rename, and moves no content. Judged
+   * after any save in flight, whose re-stamp carries the new rev.
+   */
+  masterSaved(kind: 'global' | 'overlay', id: string, op: string, rev: number): void {
+    if (op === 'meta') return;
+    const check = (): void => {
+      const n = this.composedMaster(kind, id);
+      if (!n || this.siteId !== this.liveSite) return;
+      const had = Number(n.specials?.[kind === 'global' ? SPEC_GLOBAL_REV : SPEC_OVERLAY_REV] ?? 0);
+      if (op === 'deleted' || rev > had) this.markStale(`${kind} ${id} was ${op} elsewhere (rev ${rev})`);
+    };
+    if (this.saving) void this.saving.then(check, check);
+    else check();
   }
 
   /**

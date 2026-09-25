@@ -107,6 +107,11 @@ repo over a number here, and fix the line when you catch one stale.
   replaces the draft with NO document in the body, so `SOURCE_RESTORE` matches those paths
   too — page.ts tells agents to restore that way, and the next `sb_set` saved over it. The
   listeners are a Set: a single slot let the last `PageSession` constructed silence the rest.
+  A SHARED MASTER is the same data loss one level up: a non-GET to
+  `/global-sections/{id}[/document]` (`onGlobalWrite`) or a room `global`/`overlay` frame
+  (`{t, op, globalId|overlayId, rev}`, realtime/event.go) marks the open copy stale when it
+  composes that master — a frame only when `rev` is past the copy's `globalRev`/`overlayRev`
+  stamp (our own save's echo is not), `meta` never, `deleted` always.
   **THE SERVER NOW FENCES THE DRAFT (web_builder 1dbc88a2c).** GET/PUT `…/source` answer `rev`
   (µs write time); PUT with `baseRev` ≠ current → 409 `source_stale` (details.rev), and every
   save broadcasts `{t:'source', pageId, rev}`. `PageSession` sends `baseRev` only when a read
