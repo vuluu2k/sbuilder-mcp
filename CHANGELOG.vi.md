@@ -6,6 +6,11 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.66.1] - 2026-09-25
+
+### Fixed
+- Tiêu đề và text hướng dẫn ở trạng thái rỗng của cart drawer giờ cũng được dịch theo ngôn ngữ của site cùng với phần còn lại của seed, nên site không còn hiện lại tiếng Anh "Your cart is empty" và "Add something you like and it will show up here." khi giỏ hàng trống.
+
 ## [0.66.0] - 2026-09-25
 
 ### Added

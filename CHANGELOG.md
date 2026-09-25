@@ -6,6 +6,11 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.66.1] - 2026-09-25
+
+### Fixed
+- The cart drawer's empty-state heading and helper text now localize with the rest of the seed, so a site's own language no longer reverts to "Your cart is empty" and "Add something you like and it will show up here." on an empty cart.
+
 ## [0.66.0] - 2026-09-25
 
 ### Added
