@@ -6,6 +6,14 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.70.0] - 2026-09-26
+
+### Added
+- `sb_review` cảnh báo một lần cho mỗi site (`cartDrawerThumbnail`) khi cart drawer được gieo trước khi nền tảng sửa lại seed hiện thumbnail của một line dưới dạng gallery (ảnh chính cộng dải ảnh thu nhỏ) bị nhồi vào một line cao 64px, và action `cart` của `sb_store` với `relocalize: true` giờ cũng sửa luôn, đặt thumbnail đó thành một ảnh duy nhất thông qua lần lưu của trang đang mở.
+
+### Changed
+- `relocalize` của action `cart` trong `sb_store` không còn yêu cầu `settings.locale` phải được đặt khi thứ duy nhất cần sửa là thumbnail dạng gallery; nó vẫn từ chối khi không có cả từ ngôn ngữ lẫn thumbnail nào cần relocalize.
+
 ## [0.69.0] - 2026-09-26
 
 ### Added

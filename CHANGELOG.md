@@ -6,6 +6,14 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.70.0] - 2026-09-26
+
+### Added
+- `sb_review` warns once per site (`cartDrawerThumbnail`) when a cart drawer seeded before the platform fixed its seed renders a line's thumbnail as a gallery (feature image plus a thumbs strip) squeezed into a 64px line, and `sb_store` action `cart` with `relocalize: true` now also fixes it, setting that thumbnail to a single image through the open page's save.
+
+### Changed
+- `sb_store` action `cart`'s `relocalize` no longer requires `settings.locale` to be set when the only thing left to fix is a gallery thumbnail; it still refuses when there is neither a locale word nor a thumbnail to relocalize.
+
 ## [0.69.0] - 2026-09-26
 
 ### Added
