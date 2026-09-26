@@ -22,7 +22,7 @@ const blank = (): Doc => ({
  * A fresh store: a home page, an about page, a policy page, the product
  * template, one category holding a product and one empty. No menu, no chrome.
  */
-function store(opts: { menus?: Array<{ id: string; name: string; items: unknown[] }>; overlays?: Array<{ id: string; kind: string }>; fail?: RegExp } = {}) {
+function store(opts: { noPolicy?: boolean; menus?: Array<{ id: string; name: string; items: unknown[] }>; overlays?: Array<{ id: string; kind: string }>; fail?: RegExp } = {}) {
   const calls: Array<{ method: string; path: string; body?: any }> = [];
   const overlays = [...(opts.overlays ?? [])];
   const menus = [...(opts.menus ?? [])];
@@ -33,6 +33,7 @@ function store(opts: { menus?: Array<{ id: string; name: string; items: unknown[
     { id: 'pg_pol', slug: 'chinh-sach', path: '/chinh-sach', name: 'Chính sách', type: 'policy' },
     { id: 'pg_prod', slug: 'product', path: '/product', name: 'Product', type: 'product', isDefaultTemplate: true },
   ];
+  if (opts.noPolicy) pages.splice(2, 1);
   const docs: Record<string, Doc> = Object.fromEntries(pages.map((p) => [p.id, blank()]));
   const f = (async (url: unknown, init?: RequestInit) => {
     const path = new URL(String(url)).pathname;
@@ -275,6 +276,18 @@ describe('sb_store action:"chrome" builds a real header', () => {
       expect(m.style.flexDirection).toBe('column');
       expect(m.specials.menuId).toMatch(/^mn_/);
     }
+    await close();
+  });
+
+  // Measured on a fresh store: one stocked category and one content page are two
+  // columns of one link each — two places — and the footer was skipped as "a menu
+  // to one place" because each column was counted on its own.
+  it('two columns of one link each still make a footer', async () => {
+    const { globals, ctx } = store({ noPolicy: true });
+    const { client, close } = await connectedClient(ctx);
+    const out = parse(await client.callTool({ name: 'sb_store', arguments: { action: 'chrome', footer: true, dry_run: false } }));
+    expect(out.skipped).toBeUndefined();
+    expect(ofType(globals[0].document, 'menu')).toHaveLength(2);
     await close();
   });
 });

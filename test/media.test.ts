@@ -393,3 +393,31 @@ describe('uploadMedia() — the server-side fetch', () => {
     }
   });
 });
+
+// The platform answers BOTH doors with `{ url, key, size, asset }` and the asset
+// row carries only its object key (`server/internal/media/rest/{rest,fromurl}.go`).
+// Reading `asset.url` alone told every agent "the server returned no url" after
+// a successful upload and cost it a sb_media_list round trip.
+describe('uploadMedia() — the url the platform actually returns', () => {
+  const real = { url: 'http://cdn/r.jpg', key: 'sites/s1/r.jpg', size: 9, asset: { id: 'mda_1', objectKey: 'sites/s1/r.jpg' } };
+  it.each([
+    ['the server-side fetch', { url: 'https://cdn.example/r.jpg' }, true],
+    ['the multipart door', { url: 'https://cdn.example/r.jpg' }, false],
+  ])('%s', async (_n, source, viaServer) => {
+    const f = vi.fn(async (u: unknown) => {
+      const s = String(u);
+      if (s.endsWith('/from-url')) {
+        return viaServer
+          ? new Response(JSON.stringify(real), { status: 200, headers: { 'content-type': 'application/json' } })
+          : new Response('{"error":"not found"}', { status: 404, headers: { 'content-type': 'application/json' } });
+      }
+      if (s.startsWith('https://cdn.example')) {
+        return new Response(new Uint8Array([0xff, 0xd8, 0xff]), { status: 200, headers: { 'content-type': 'image/jpeg' } });
+      }
+      return new Response(JSON.stringify(real), { status: 200, headers: { 'content-type': 'application/json' } });
+    }) as unknown as typeof fetch;
+    const asset = await uploadMedia(ctxWith(f), 's1', source);
+    expect(asset.url).toBe('http://cdn/r.jpg');
+    expect(asset.id).toBe('mda_1');
+  });
+});

@@ -482,7 +482,9 @@ export async function buildChrome(
     kind === 'header'
       ? [{ name: DEFAULT_MENU_NAME, title: '', items: headerMenuItems(pages, cats) }]
       : footerMenus(pages, cats, opts.language);
-  if (wanted.every((m) => m.items.length < 2)) {
+  // Counted across the whole band: a footer's two columns of one link each still
+  // go to two places.
+  if (wanted.reduce((n, m) => n + m.items.length, 0) < 2) {
     return { skipped: 'fewer than two pages or stocked categories to link — a menu to one place is a link to itself' };
   }
   const existing = (await get<{ menus?: Menu[] }>(`/api/sites/${site}/menus`)).menus ?? [];

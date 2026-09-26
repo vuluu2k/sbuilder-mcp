@@ -13,6 +13,17 @@ export interface UploadedAsset {
 }
 
 /**
+ * Both upload doors answer `{ url, key, size, asset }`, and the asset ROW carries
+ * only its object key — the url is top-level. Reading `asset.url` alone reported
+ * "no url" after every successful upload.
+ */
+function uploaded(parsed: unknown): UploadedAsset {
+  const body = (parsed ?? {}) as { url?: string; asset?: UploadedAsset };
+  if (!body.asset) return body as UploadedAsset;
+  return { ...body.asset, url: body.asset.url ?? body.url };
+}
+
+/**
  * Put an image into the site's media library.
  *
  * MULTIPART, which is why this does not go through `request()`. That helper
@@ -127,8 +138,7 @@ async function fromUrl(
     // path answers with its own, better-worded diagnosis. Let it try.
     return null;
   }
-  const body = (parsed ?? {}) as { asset?: UploadedAsset };
-  return body.asset ?? (parsed as UploadedAsset);
+  return uploaded(parsed);
 }
 
 export async function uploadMedia(
@@ -285,6 +295,5 @@ export async function uploadMedia(
       env.fields,
     );
   }
-  const body = parsed as { asset?: UploadedAsset };
-  return body.asset ?? (parsed as UploadedAsset);
+  return uploaded(parsed);
 }
