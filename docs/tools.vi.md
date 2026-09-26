@@ -1765,6 +1765,16 @@ Cả hai tài liệu đều được **sinh ra** từ `formTemplates.ts` và `ch
 editor qua `npm run codegen`, không chép tay — một bản chép seed của nền tảng sẽ mục ngay lần
 nền tảng sửa nó, và người đầu tiên phát hiện là khách mua hàng.
 
+### `action: "checkout_sync"`
+
+Form đặt hàng giữ nguyên các lựa chọn thanh toán và giao hàng tại thời điểm nó được **lưu** —
+không có gì đọc lại phương thức của cửa hàng lúc render. Vì vậy phương thức giao hàng thêm sau
+(hoặc cổng thanh toán bật sau) khi đã tạo checkout sẽ không bao giờ tới người mua, và ô chọn giao
+hàng trống thì không đặt được đơn. `checkout_sync` đọc lại cửa hàng, ghi lại lựa chọn
+`payment_method` và `shipping_method` của mọi form `order` (phương thức form đã có thì giữ nhãn
+riêng của nó), rồi publish lại mọi trang `checkout`. **Dry run** trả về từng form kèm `changed`
+và `would_republish`; **khi chạy thật** trả về `republished`. Chạy lần hai sẽ báo `changed: false`.
+
 ### `action: "chrome"`
 
 Cho mọi trang **một** header dùng chung — hoặc, với `footer: true`, một footer dùng chung.

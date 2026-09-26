@@ -1817,6 +1817,16 @@ Both documents are **generated** from the editor's own `formTemplates.ts` and
 `checkoutPageSeed.ts` by `npm run codegen`, not hand-copied — a copy of the platform's seed
 rots the next time the platform edits it, and the first person to notice is a shopper.
 
+### `action: "checkout_sync"`
+
+An order form keeps the payment and delivery options it was **saved** with — nothing reads the
+store's methods at render time. So a shipping method added (or a gateway switched on) after the
+checkout was made never reaches the shopper, and an empty delivery select means no order can be
+placed. `checkout_sync` re-reads the store, rewrites every `order` form's `payment_method` and
+`shipping_method` options (a method the form already has keeps its own label), and republishes
+every `checkout` page. **Dry run** returns each form with `changed` and `would_republish`;
+**live** returns `republished`. A second run reports `changed: false`.
+
 ### `action: "chrome"`
 
 Give every page **one** shared header — or, with `footer: true`, one shared footer.

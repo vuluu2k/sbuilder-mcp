@@ -85,10 +85,14 @@ interface Step {
  * of the form empty rather than failing the flow. A store with no gateways gets
  * cash on delivery alone, which is the honest list — it is the only method that
  * store can take.
+ *
+ * `strict` is for REWRITING a form that already works: there a failed read is
+ * not "the store has none", and treating it so would empty a live checkout.
  */
 async function readStore(
   ctx: ToolContext,
   siteId: string,
+  strict = false,
 ): Promise<{ gateways: Gateway[]; shipping: string[] }> {
   const get = async <T>(path: string): Promise<T | null> => {
     try {
@@ -99,7 +103,8 @@ async function readStore(
         token: siteToken(ctx),
         fetchImpl: ctx.fetchImpl,
       })) as T;
-    } catch {
+    } catch (e) {
+      if (strict) throw e;
       return null;
     }
   };
@@ -117,6 +122,119 @@ async function readStore(
   };
 }
 
+type PaymentMethod = { value: string; label: string; description: string };
+
+function paymentMethods(gateways: Gateway[], lang: Language): PaymentMethod[] {
+  const t = CHECKOUT_TEXT[lang];
+  const desc = (provider: string): string =>
+    t.paymentDesc[provider.toLowerCase() as keyof typeof t.paymentDesc] ??
+    t.paymentDesc.gateway ??
+    '';
+  // Cash on delivery leads, under a stable id rather than its label, so the
+  // label can be reworded or translated without the stored value moving.
+  return [
+    { value: 'cod', label: t.codLabel, description: t.paymentDesc.cod ?? '' },
+    ...gateways.map((g) => ({
+      value: g.provider,
+      label: g.label || g.providerLabel || g.provider,
+      description: desc(g.provider),
+    })),
+  ];
+}
+
+type FormNode = { specials?: Record<string, unknown> };
+
+/**
+ * Rewrite an order form's payment and delivery answers to the store's CURRENT
+ * ones, in place. The options are baked in when the document is saved and read
+ * by nothing at render time, so a delivery method added after the checkout was
+ * made leaves its select empty — measured: an E2E store whose only shipping
+ * method arrived second could not take an order. A method the merchant already
+ * has keeps its own label and description; only the set moves.
+ */
+export function syncOrderDocument(
+  doc: { nodes?: Record<string, FormNode> },
+  fresh: PaymentMethod[],
+  shipping: string[],
+): { changed: boolean; payment_methods?: string[]; delivery_options?: string[] } {
+  const out: { changed: boolean; payment_methods?: string[]; delivery_options?: string[] } = { changed: false };
+  for (const node of Object.values(doc.nodes ?? {})) {
+    const sp = node.specials;
+    if (sp?.name === 'payment_method') {
+      const had = new Map(
+        ((sp.methods as PaymentMethod[] | undefined) ?? []).map((m) => [m.value, m] as const),
+      );
+      const next = fresh.map((m) => had.get(m.value) ?? m);
+      if (JSON.stringify(next) !== JSON.stringify(sp.methods ?? [])) {
+        sp.methods = next;
+        if (!next.some((m) => m.value === sp.defaultValue)) sp.defaultValue = next[0]?.value ?? '';
+        out.changed = true;
+      }
+      out.payment_methods = next.map((m) => m.value);
+    }
+    if (sp?.name === 'shipping_method') {
+      if (JSON.stringify(sp.options ?? []) !== JSON.stringify(shipping)) {
+        sp.options = [...shipping];
+        out.changed = true;
+      }
+      out.delivery_options = [...shipping];
+    }
+  }
+  return out;
+}
+
+/**
+ * `action:"checkout_sync"` — every order form on the site brought up to date,
+ * then the checkout pages republished, because a form-document edit reaches the
+ * storefront only through a page publish.
+ */
+async function syncCheckout(ctx: ToolContext, siteId: string, lang: Language, dryRun: boolean) {
+  const site = encodeURIComponent(siteId);
+  const send = async <T>(method: string, path: string, body?: unknown): Promise<T> =>
+    (await request({ base: ctx.base, method, path, token: siteToken(ctx), body, fetchImpl: ctx.fetchImpl })) as T;
+  const { gateways, shipping } = await readStore(ctx, siteId, true);
+  const fresh = paymentMethods(gateways, lang);
+  const forms = ((await send<{ forms?: Array<{ id: string; name?: string; type?: string }> }>(
+    'GET',
+    `/api/sites/${site}/forms`,
+  )).forms ?? []).filter((f) => f.type === CHECKOUT_FORM.type);
+
+  const results: Array<Record<string, unknown>> = [];
+  for (const f of forms) {
+    const path = `/api/sites/${site}/forms/${encodeURIComponent(f.id)}/document`;
+    const doc = (await send<{ document?: { nodes?: Record<string, FormNode> } }>('GET', path)).document;
+    if (!doc) continue;
+    const r = syncOrderDocument(doc, fresh, shipping);
+    if (r.changed && !dryRun) await send('PUT', path, { document: doc });
+    results.push({ form_id: f.id, name: f.name, ...r });
+  }
+  // Listed and republished even when no form changed, so a run whose publish
+  // failed last time is repaired by simply running again.
+  const pages = forms.length
+    ? ((await send<{ pages?: Array<{ id: string; type?: string }> }>('GET', `/api/sites/${site}/pages`)).pages ?? [])
+        .filter((p) => p.type === 'checkout')
+        .map((p) => p.id)
+    : [];
+  let republished: string[] = [];
+  if (!dryRun && pages.length) {
+    const pub = await send<{ published?: Array<{ pageId: string }> }>('POST', `/api/sites/${site}/publish`, { pageIds: pages });
+    republished = (pub.published ?? []).map((p) => p.pageId);
+  }
+  return {
+    ...(dryRun ? { dry_run: true } : {}),
+    forms: results,
+    ...(dryRun ? { would_republish: pages } : { republished }),
+    ...(forms.length === 0 ? { note: 'No order form on this site — run action:"checkout" to make one.' } : {}),
+    ...(shipping.length === 0
+      ? { delivery_gap: 'The store has no delivery method, so the select stays empty. Create one with POST /api/sites/{siteId}/shipping-methods, then run this again.' }
+      : {}),
+    ...(!dryRun && pages.some((p) => !republished.includes(p))
+      ? { not_published: 'The publish answered and skipped some checkout pages, so they still show the old options. Publish them with sb_publish.' }
+      : {}),
+    ...(results.some((r) => r.changed) && !dryRun ? { hint: 'An order form placed on a page that is not a checkout page shows the new options after sb_publish of that page.' } : {}),
+  };
+}
+
 /**
  * The form document with this store's real answers in it.
  *
@@ -131,22 +249,7 @@ function fillDocument(
   shipping: string[],
   lang: Language,
 ): { document: unknown; methods: Array<{ value: string; label: string }>; shipping: string[] } {
-  const t = CHECKOUT_TEXT[lang];
-  const desc = (provider: string): string =>
-    t.paymentDesc[provider.toLowerCase() as keyof typeof t.paymentDesc] ??
-    t.paymentDesc.gateway ??
-    '';
-  // Cash on delivery leads, under a stable id rather than its label, so the
-  // label can be reworded or translated without the stored value moving.
-  const methods = [
-    { value: 'cod', label: t.codLabel, description: t.paymentDesc.cod ?? '' },
-    ...gateways.map((g) => ({
-      value: g.provider,
-      label: g.label || g.providerLabel || g.provider,
-      description: desc(g.provider),
-    })),
-  ];
-
+  const methods = paymentMethods(gateways, lang);
   const doc = withFreshIds(
     JSON.parse(JSON.stringify(CHECKOUT_FORM_DOCUMENT)) as {
       nodes: Record<string, { data?: { type?: string }; specials?: Record<string, unknown> }>;
@@ -451,7 +554,10 @@ export function registerStoreTools(server: McpServer, ctx: ToolContext, session:
         'Run a store flow that must happen in a fixed order. action:"checkout" makes the order ' +
         'form, configures it, saves its fields with this store\'s real payment and delivery ' +
         'options, then creates and PUBLISHES the checkout page — /checkout 404s without all ' +
-        'four. action:"form" seeds any of the platform\'s other form templates (login, ' +
+        'four. action:"checkout_sync" re-reads the store\'s payment and delivery methods into ' +
+        'every existing order form and republishes the checkout page — run it after adding a ' +
+        'shipping method or switching on a gateway, since the form keeps the options it was ' +
+        'saved with. action:"form" seeds any of the platform\'s other form templates (login, ' +
         'register, forgot, reset, verify, contact, subscribe, booking, review and more) with ' +
         'its own field document, which is the part that cannot be guessed. action:"chrome" ' +
         'gives every page ONE shared header (footer:true — footer) built on a real site menu of ' +
@@ -473,6 +579,7 @@ export function registerStoreTools(server: McpServer, ctx: ToolContext, session:
       inputSchema: {
         action: z.enum([
           'checkout',
+          'checkout_sync',
           'form',
           'chrome',
           'menu',
@@ -646,6 +753,7 @@ export function registerStoreTools(server: McpServer, ctx: ToolContext, session:
         );
       }
       const lang = (language ?? 'vi') as Language;
+      if (action === 'checkout_sync') return text(await syncCheckout(ctx, siteId, lang, dry_run !== false));
       const t = CHECKOUT_TEXT[lang];
       const site = encodeURIComponent(siteId);
 
@@ -800,8 +908,9 @@ export function registerStoreTools(server: McpServer, ctx: ToolContext, session:
           ? {
               delivery_gap:
                 'The delivery select is EMPTY, so a shopper cannot complete the order. Create a ' +
-                'method with POST /api/sites/{siteId}/shipping-methods, then re-save this form\'s ' +
-                'document — the options are baked in at save time, not read at render time.',
+                'method with POST /api/sites/{siteId}/shipping-methods, then run ' +
+                'sb_store action:"checkout_sync" — the options are baked in at save time, not ' +
+                'read at render time.',
             }
           : {}),
       });
