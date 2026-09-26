@@ -41,6 +41,14 @@ describe('request shapes recovered from the handlers', () => {
     expect(p).toContain('variants');
   });
 
+  // A field with a trailing `// comment` matched neither FIELD nor EMBED, so
+  // `slug`, `parentId` and `position` were missing from every category body —
+  // and a nested category could not be created from the call sheet.
+  it('keeps a field that carries a trailing comment', () => {
+    const c = names('post:/api/sites/{siteId}/product-categories');
+    expect(c).toEqual(expect.arrayContaining(['name', 'slug', 'parentId', 'position']));
+  });
+
   // The whole point of the table: a merchant operation an agent would otherwise
   // have to guess, and `sb_undo` cannot protect without.
   it('covers the great majority of write operations', () => {

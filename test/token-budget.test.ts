@@ -176,7 +176,12 @@ describe('token budget — a diet without a scale comes back', () => {
       name: 'sb_api_find',
       arguments: { id: 'post:/api/sites/{siteId}/orders' },
     });
-    expect(chars(orders)).toBeLessThan(5_500);
+    //
+    // Raised 5,500 → 6,500 when the shape reader stopped dropping every field
+    // that carries a trailing `// comment`: the order gained `subtotalCents`,
+    // `discountCents` and `totalCents` with the notes that say they are DERIVED
+    // (measured 5,778). Real fields the struct always had, not dilution.
+    expect(chars(orders)).toBeLessThan(6_500);
     // The one every storefront build calls, and the one that must stay cheap.
     //
     // The ceiling MOVED once, deliberately, and the reason is the shape of a
@@ -203,7 +208,14 @@ describe('token budget — a diet without a scale comes back', () => {
       name: 'sb_api_find',
       arguments: { id: 'post:/api/sites/{siteId}/products' },
     });
-    expect(chars(products)).toBeLessThan(4_200);
+    //
+    // 4,200 → 8,500, and this one is not growth at all: the shape reader dropped
+    // every field with a trailing `// comment`, which on `products.Product` was
+    // `description`, `images`, `attributes`, the whole of `seo`, and — inside
+    // `variants` — `priceCents`, `stock` and `compareAtCents`. The sheet an agent
+    // used to create a product was missing the PRICE. Measured 7,398 once the
+    // fields came back; the headroom is the paragraph above's argument again.
+    expect(chars(products)).toBeLessThan(8_500);
     await close();
   });
 });

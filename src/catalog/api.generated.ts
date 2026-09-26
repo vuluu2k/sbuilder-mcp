@@ -18959,7 +18959,7 @@ export const API_DEFINITIONS: Record<string, unknown> = {
         "type": "string"
       },
       "slug": {
-        "description": "unique per (siteId, slug) within its own type",
+        "description": "unique per (siteId, slug) within its own type; derived from Name when empty on create",
         "type": "string"
       },
       "updatedAt": {

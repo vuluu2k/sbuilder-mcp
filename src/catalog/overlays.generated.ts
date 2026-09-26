@@ -289,7 +289,7 @@ export const OVERLAY_SEEDS: Record<'cart' | 'popup' | 'quickview', OverlayDocume
               "alt": ""
             }
           ],
-          "layout": "bottom",
+          "layout": "single",
           "activeIndex": 0
         },
         "specials": {},
@@ -2330,7 +2330,7 @@ export const CART_SEEDS: Record<string, OverlayDocument> = {
               "alt": ""
             }
           ],
-          "layout": "bottom",
+          "layout": "single",
           "activeIndex": 0
         },
         "specials": {},
@@ -3164,7 +3164,7 @@ export const CART_SEEDS: Record<string, OverlayDocument> = {
               "alt": ""
             }
           ],
-          "layout": "bottom",
+          "layout": "single",
           "activeIndex": 0
         },
         "specials": {},

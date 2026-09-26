@@ -368,6 +368,11 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
         "type": "string"
       },
       {
+        "name": "description",
+        "type": "string",
+        "note": "HTML, sanitised on write"
+      },
+      {
         "name": "passScore",
         "type": "number",
         "note": "PassScore is the PERCENTAGE of available points a student must earn."
@@ -445,6 +450,11 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
       {
         "name": "title",
         "type": "string"
+      },
+      {
+        "name": "description",
+        "type": "string",
+        "note": "HTML, sanitised on write"
       },
       {
         "name": "passScore",
@@ -527,6 +537,11 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
           {
             "name": "kind",
             "type": "QuestionKind"
+          },
+          {
+            "name": "prompt",
+            "type": "string",
+            "note": "HTML, sanitised on write"
           },
           {
             "name": "points",
@@ -627,6 +642,11 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
   "post:/api/auth/register": {
     "fields": [
       {
+        "name": "name",
+        "type": "string",
+        "note": "display name (register only; ignored on login)"
+      },
+      {
         "name": "email",
         "type": "string"
       },
@@ -692,6 +712,11 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
   },
   "post:/api/auth/login": {
     "fields": [
+      {
+        "name": "name",
+        "type": "string",
+        "note": "display name (register only; ignored on login)"
+      },
       {
         "name": "email",
         "type": "string"
@@ -1005,12 +1030,27 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
         "type": "string"
       },
       {
+        "name": "slug",
+        "type": "string",
+        "note": "unique per (siteId, slug) within the blog namespace; derived from Name when empty on create"
+      },
+      {
         "name": "description",
         "type": "string"
       },
       {
         "name": "image",
         "type": "string"
+      },
+      {
+        "name": "parentId",
+        "type": "string",
+        "note": "\"\" = root; must reference same-site parent; no cycles"
+      },
+      {
+        "name": "position",
+        "type": "number",
+        "note": "sibling order within the same parent"
       },
       {
         "name": "seo",
@@ -1085,12 +1125,27 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
         "type": "string"
       },
       {
+        "name": "slug",
+        "type": "string",
+        "note": "unique per (siteId, slug) within the blog namespace; derived from Name when empty on create"
+      },
+      {
         "name": "description",
         "type": "string"
       },
       {
         "name": "image",
         "type": "string"
+      },
+      {
+        "name": "parentId",
+        "type": "string",
+        "note": "\"\" = root; must reference same-site parent; no cycles"
+      },
+      {
+        "name": "position",
+        "type": "number",
+        "note": "sibling order within the same parent"
       },
       {
         "name": "seo",
@@ -1374,12 +1429,37 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
         "type": "string"
       },
       {
+        "name": "summary",
+        "type": "string",
+        "note": "short; plain text"
+      },
+      {
+        "name": "description",
+        "type": "string",
+        "note": "long; HTML allowed, sanitised on write"
+      },
+      {
         "name": "coverImage",
         "type": "string"
       },
       {
+        "name": "previewUrl",
+        "type": "string",
+        "note": "trailer video, public"
+      },
+      {
         "name": "status",
         "type": "CourseStatus"
+      },
+      {
+        "name": "level",
+        "type": "string",
+        "note": "free-form: \"Cơ bản\", \"Nâng cao\"…"
+      },
+      {
+        "name": "language",
+        "type": "string",
+        "note": "BCP-47-ish; display only"
       },
       {
         "name": "tags",
@@ -1500,6 +1580,11 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
         ]
       },
       {
+        "name": "number",
+        "type": "number",
+        "note": "Server-assigned / derived."
+      },
+      {
         "name": "sectionCount",
         "type": "number"
       },
@@ -1514,6 +1599,11 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
       {
         "name": "enrollmentCount",
         "type": "number"
+      },
+      {
+        "name": "publishedAt",
+        "type": "string (RFC3339)",
+        "note": "first time Status became active"
       },
       {
         "name": "createdAt",
@@ -1546,12 +1636,37 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
         "type": "string"
       },
       {
+        "name": "summary",
+        "type": "string",
+        "note": "short; plain text"
+      },
+      {
+        "name": "description",
+        "type": "string",
+        "note": "long; HTML allowed, sanitised on write"
+      },
+      {
         "name": "coverImage",
         "type": "string"
       },
       {
+        "name": "previewUrl",
+        "type": "string",
+        "note": "trailer video, public"
+      },
+      {
         "name": "status",
         "type": "CourseStatus"
+      },
+      {
+        "name": "level",
+        "type": "string",
+        "note": "free-form: \"Cơ bản\", \"Nâng cao\"…"
+      },
+      {
+        "name": "language",
+        "type": "string",
+        "note": "BCP-47-ish; display only"
       },
       {
         "name": "tags",
@@ -1672,6 +1787,11 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
         ]
       },
       {
+        "name": "number",
+        "type": "number",
+        "note": "Server-assigned / derived."
+      },
+      {
         "name": "sectionCount",
         "type": "number"
       },
@@ -1686,6 +1806,11 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
       {
         "name": "enrollmentCount",
         "type": "number"
+      },
+      {
+        "name": "publishedAt",
+        "type": "string (RFC3339)",
+        "note": "first time Status became active"
       },
       {
         "name": "createdAt",
@@ -1946,12 +2071,37 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
         "type": "string"
       },
       {
+        "name": "summary",
+        "type": "string",
+        "note": "short; plain text"
+      },
+      {
+        "name": "description",
+        "type": "string",
+        "note": "long; HTML allowed, sanitised on write"
+      },
+      {
         "name": "coverImage",
         "type": "string"
       },
       {
+        "name": "previewUrl",
+        "type": "string",
+        "note": "trailer video, public"
+      },
+      {
         "name": "status",
         "type": "CourseStatus"
+      },
+      {
+        "name": "level",
+        "type": "string",
+        "note": "free-form: \"Cơ bản\", \"Nâng cao\"…"
+      },
+      {
+        "name": "language",
+        "type": "string",
+        "note": "BCP-47-ish; display only"
       },
       {
         "name": "tags",
@@ -2072,6 +2222,11 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
         ]
       },
       {
+        "name": "number",
+        "type": "number",
+        "note": "Server-assigned / derived."
+      },
+      {
         "name": "sectionCount",
         "type": "number"
       },
@@ -2086,6 +2241,11 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
       {
         "name": "enrollmentCount",
         "type": "number"
+      },
+      {
+        "name": "publishedAt",
+        "type": "string (RFC3339)",
+        "note": "first time Status became active"
       },
       {
         "name": "createdAt",
@@ -2208,6 +2368,11 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
         "type": "string"
       },
       {
+        "name": "slug",
+        "type": "string",
+        "note": "unique per (site, course)"
+      },
+      {
         "name": "kind",
         "type": "LessonKind"
       },
@@ -2302,6 +2467,11 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
       {
         "name": "title",
         "type": "string"
+      },
+      {
+        "name": "slug",
+        "type": "string",
+        "note": "unique per (site, course)"
       },
       {
         "name": "kind",
@@ -2808,8 +2978,23 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
         ]
       },
       {
+        "name": "defaultAddress",
+        "type": "number",
+        "note": "index into Addresses; -1 = none"
+      },
+      {
         "name": "tags",
         "type": "string[]"
+      },
+      {
+        "name": "ordersCount",
+        "type": "number",
+        "note": "computed via OrderStats; stored as 0"
+      },
+      {
+        "name": "totalSpentCents",
+        "type": "number",
+        "note": "computed via OrderStats; stored as 0"
       },
       {
         "name": "registered",
@@ -2843,6 +3028,8 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
     "readOnly": [
       "id",
       "siteId",
+      "ordersCount",
+      "totalSpentCents",
       "registered",
       "createdAt",
       "updatedAt"
@@ -2917,8 +3104,23 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
         ]
       },
       {
+        "name": "defaultAddress",
+        "type": "number",
+        "note": "index into Addresses; -1 = none"
+      },
+      {
         "name": "tags",
         "type": "string[]"
+      },
+      {
+        "name": "ordersCount",
+        "type": "number",
+        "note": "computed via OrderStats; stored as 0"
+      },
+      {
+        "name": "totalSpentCents",
+        "type": "number",
+        "note": "computed via OrderStats; stored as 0"
       },
       {
         "name": "registered",
@@ -2952,6 +3154,8 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
     "readOnly": [
       "id",
       "siteId",
+      "ordersCount",
+      "totalSpentCents",
       "registered",
       "createdAt",
       "updatedAt"
@@ -2976,8 +3180,28 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
         "type": "string"
       },
       {
+        "name": "type",
+        "type": "string",
+        "note": "DiscountPercentage | DiscountFixed | DiscountFreeShipping"
+      },
+      {
+        "name": "value",
+        "type": "number",
+        "note": "percentage: 1–100; fixed: cents; free_shipping: 0"
+      },
+      {
         "name": "minOrderCents",
         "type": "number"
+      },
+      {
+        "name": "usageLimit",
+        "type": "number",
+        "note": "0 = unlimited"
+      },
+      {
+        "name": "usedCount",
+        "type": "number",
+        "note": "computed via RedemptionCounter; stored as 0"
       },
       {
         "name": "startsAt",
@@ -3029,6 +3253,7 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
     "readOnly": [
       "id",
       "siteId",
+      "usedCount",
       "createdAt",
       "updatedAt"
     ]
@@ -3052,8 +3277,28 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
         "type": "string"
       },
       {
+        "name": "type",
+        "type": "string",
+        "note": "DiscountPercentage | DiscountFixed | DiscountFreeShipping"
+      },
+      {
+        "name": "value",
+        "type": "number",
+        "note": "percentage: 1–100; fixed: cents; free_shipping: 0"
+      },
+      {
         "name": "minOrderCents",
         "type": "number"
+      },
+      {
+        "name": "usageLimit",
+        "type": "number",
+        "note": "0 = unlimited"
+      },
+      {
+        "name": "usedCount",
+        "type": "number",
+        "note": "computed via RedemptionCounter; stored as 0"
       },
       {
         "name": "startsAt",
@@ -3105,6 +3350,7 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
     "readOnly": [
       "id",
       "siteId",
+      "usedCount",
       "createdAt",
       "updatedAt"
     ]
@@ -4355,6 +4601,11 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
             "type": "number"
           },
           {
+            "name": "totalCents",
+            "type": "number",
+            "note": "derived: PriceCents × Quantity"
+          },
+          {
             "name": "taxClassId",
             "type": "string",
             "note": "TaxClassID is the class this line was taxed under, copied from the product at the moment of sale."
@@ -4517,6 +4768,16 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
         "note": "GiftCardCents is how much stored value paid for this order. NOT A DISCOUNT, and deliberately not folded into TotalCents: a gift card is money the merchant was already paid, so the goods still cost what they cost and the tax on them is…"
       },
       {
+        "name": "subtotalCents",
+        "type": "number",
+        "note": "Derived totals — recomputed by the Store on every write."
+      },
+      {
+        "name": "discountCents",
+        "type": "number",
+        "note": "resolved from DiscountCode on create"
+      },
+      {
         "name": "shippingCents",
         "type": "number"
       },
@@ -4543,6 +4804,11 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
         "note": "ShippingTaxCents is the part of TaxCents that the DELIVERY FEE accounts for, and it is only non-zero on an order whose lines carry more than one tax rate."
       },
       {
+        "name": "totalCents",
+        "type": "number",
+        "note": "Subtotal - Discount + Shipping + Tax (≥0)"
+      },
+      {
         "name": "depositCents",
         "type": "number",
         "note": "DepositCents is how much the NEXT payment against this order asks for — đặt cọc."
@@ -4567,6 +4833,8 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
       "siteId",
       "number",
       "discountId",
+      "subtotalCents",
+      "totalCents",
       "createdAt",
       "updatedAt"
     ]
@@ -4644,6 +4912,11 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
             "type": "number"
           },
           {
+            "name": "totalCents",
+            "type": "number",
+            "note": "derived: PriceCents × Quantity"
+          },
+          {
             "name": "taxClassId",
             "type": "string",
             "note": "TaxClassID is the class this line was taxed under, copied from the product at the moment of sale."
@@ -4806,6 +5079,16 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
         "note": "GiftCardCents is how much stored value paid for this order. NOT A DISCOUNT, and deliberately not folded into TotalCents: a gift card is money the merchant was already paid, so the goods still cost what they cost and the tax on them is…"
       },
       {
+        "name": "subtotalCents",
+        "type": "number",
+        "note": "Derived totals — recomputed by the Store on every write."
+      },
+      {
+        "name": "discountCents",
+        "type": "number",
+        "note": "resolved from DiscountCode on create"
+      },
+      {
         "name": "shippingCents",
         "type": "number"
       },
@@ -4832,6 +5115,11 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
         "note": "ShippingTaxCents is the part of TaxCents that the DELIVERY FEE accounts for, and it is only non-zero on an order whose lines carry more than one tax rate."
       },
       {
+        "name": "totalCents",
+        "type": "number",
+        "note": "Subtotal - Discount + Shipping + Tax (≥0)"
+      },
+      {
         "name": "depositCents",
         "type": "number",
         "note": "DepositCents is how much the NEXT payment against this order asks for — đặt cọc."
@@ -4856,6 +5144,8 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
       "siteId",
       "number",
       "discountId",
+      "subtotalCents",
+      "totalCents",
       "createdAt",
       "updatedAt"
     ]
@@ -5375,6 +5665,26 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
         "type": "string"
       },
       {
+        "name": "description",
+        "type": "string",
+        "note": "long; HTML allowed, sanitised on write"
+      },
+      {
+        "name": "summary",
+        "type": "string",
+        "note": "short description"
+      },
+      {
+        "name": "images",
+        "type": "string[]",
+        "note": "gallery URLs; first = primary"
+      },
+      {
+        "name": "videos",
+        "type": "string[]",
+        "note": "gallery video URLs"
+      },
+      {
         "name": "modelUrl",
         "type": "string",
         "note": "ModelURL is the product's 3D model (."
@@ -5393,7 +5703,168 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
       },
       {
         "name": "seo",
-        "type": "SEO"
+        "type": "SEO",
+        "fields": [
+          {
+            "name": "title",
+            "type": "string",
+            "note": "<title> / meta title"
+          },
+          {
+            "name": "description",
+            "type": "string",
+            "note": "meta description"
+          },
+          {
+            "name": "keywords",
+            "type": "string",
+            "note": "meta keywords (comma-separated)"
+          },
+          {
+            "name": "canonical",
+            "type": "string",
+            "note": "rel=canonical URL; \"\" = self"
+          },
+          {
+            "name": "ogTitle",
+            "type": "string",
+            "note": "Open Graph title; \"\" = fall back to Title"
+          },
+          {
+            "name": "ogDesc",
+            "type": "string",
+            "note": "Open Graph description; \"\" = fall back to Description"
+          },
+          {
+            "name": "ogImage",
+            "type": "string",
+            "note": "Open Graph/social image URL; \"\" = primary product image"
+          },
+          {
+            "name": "twitterCard",
+            "type": "string",
+            "note": "\"summary\" | \"summary_large_image\"; \"\" = default"
+          },
+          {
+            "name": "noIndex",
+            "type": "boolean",
+            "note": "emit robots noindex"
+          },
+          {
+            "name": "noFollow",
+            "type": "boolean",
+            "note": "emit robots nofollow"
+          },
+          {
+            "name": "metaTags",
+            "type": "MetaTag[]",
+            "note": "Advanced (free-form; see the security note above)."
+          },
+          {
+            "name": "jsonld",
+            "type": "string[]",
+            "note": "raw application/ld+json blocks"
+          }
+        ]
+      },
+      {
+        "name": "attributes",
+        "type": "ProductAttribute[]",
+        "note": "option axis definitions",
+        "fields": [
+          {
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "name": "values",
+            "type": "string[]"
+          },
+          {
+            "name": "position",
+            "type": "number"
+          }
+        ]
+      },
+      {
+        "name": "variants",
+        "type": "Variant[]",
+        "note": "concrete purchasable rows",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string"
+          },
+          {
+            "name": "sku",
+            "type": "string"
+          },
+          {
+            "name": "barcode",
+            "type": "string",
+            "note": "GTIN/UPC/EAN/ISBN; free-form"
+          },
+          {
+            "name": "options",
+            "type": "{ [string]: string }",
+            "note": "{\"Size\":\"M\",\"Color\":\"Red\"}"
+          },
+          {
+            "name": "priceCents",
+            "type": "number",
+            "note": "retail price in minor units"
+          },
+          {
+            "name": "compareAtCents",
+            "type": "number",
+            "note": "strike-through/MSRP; 0 = none"
+          },
+          {
+            "name": "costCents",
+            "type": "number",
+            "note": "unit cost (for margin); 0 = unset"
+          },
+          {
+            "name": "stock",
+            "type": "number",
+            "note": "on-hand quantity"
+          },
+          {
+            "name": "reserved",
+            "type": "number",
+            "note": "allocated to open orders; ≤ Stock normally"
+          },
+          {
+            "name": "wholesale",
+            "type": "PriceTier[]",
+            "note": "volume price breaks (ascending MinQty); optional"
+          },
+          {
+            "name": "weightGrams",
+            "type": "number"
+          },
+          {
+            "name": "images",
+            "type": "string[]"
+          },
+          {
+            "name": "videos",
+            "type": "string[]"
+          },
+          {
+            "name": "hidden",
+            "type": "boolean"
+          },
+          {
+            "name": "preOrder",
+            "type": "boolean",
+            "note": "sellable past 0 stock"
+          },
+          {
+            "name": "position",
+            "type": "number"
+          }
+        ]
       },
       {
         "name": "kind",
@@ -5445,6 +5916,41 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
         "note": "TaxClassID names which of the site's tax classes this product is sold under — \"\" meaning the site's own rate, which is every product in every store that has not defined a class. A CLASS ID rather than a rate: the rate belongs to the…"
       },
       {
+        "name": "featured",
+        "type": "boolean",
+        "note": "Merchandising flags."
+      },
+      {
+        "name": "publishedAt",
+        "type": "string (RFC3339)",
+        "note": "first time Status became active; zero until then"
+      },
+      {
+        "name": "number",
+        "type": "number",
+        "note": "Server-assigned identity/denormalised helpers — callers must NOT set these; the Store recomputes them on every write."
+      },
+      {
+        "name": "priceCents",
+        "type": "number",
+        "note": "min non-hidden variant price; 0 if all hidden"
+      },
+      {
+        "name": "compareAtCents",
+        "type": "number",
+        "note": "CompareAt of the min-price visible variant; 0 = none"
+      },
+      {
+        "name": "totalStock",
+        "type": "number",
+        "note": "Σ variant Stock values"
+      },
+      {
+        "name": "availableStock",
+        "type": "number",
+        "note": "Σ variant Available() values"
+      },
+      {
         "name": "createdAt",
         "type": "string (RFC3339)"
       },
@@ -5463,6 +5969,12 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
     "readOnly": [
       "id",
       "siteId",
+      "number",
+      "publishedAt",
+      "priceCents",
+      "compareAtCents",
+      "totalStock",
+      "availableStock",
       "createdAt",
       "updatedAt"
     ]
@@ -5490,6 +6002,26 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
         "type": "string"
       },
       {
+        "name": "description",
+        "type": "string",
+        "note": "long; HTML allowed, sanitised on write"
+      },
+      {
+        "name": "summary",
+        "type": "string",
+        "note": "short description"
+      },
+      {
+        "name": "images",
+        "type": "string[]",
+        "note": "gallery URLs; first = primary"
+      },
+      {
+        "name": "videos",
+        "type": "string[]",
+        "note": "gallery video URLs"
+      },
+      {
         "name": "modelUrl",
         "type": "string",
         "note": "ModelURL is the product's 3D model (."
@@ -5508,7 +6040,168 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
       },
       {
         "name": "seo",
-        "type": "SEO"
+        "type": "SEO",
+        "fields": [
+          {
+            "name": "title",
+            "type": "string",
+            "note": "<title> / meta title"
+          },
+          {
+            "name": "description",
+            "type": "string",
+            "note": "meta description"
+          },
+          {
+            "name": "keywords",
+            "type": "string",
+            "note": "meta keywords (comma-separated)"
+          },
+          {
+            "name": "canonical",
+            "type": "string",
+            "note": "rel=canonical URL; \"\" = self"
+          },
+          {
+            "name": "ogTitle",
+            "type": "string",
+            "note": "Open Graph title; \"\" = fall back to Title"
+          },
+          {
+            "name": "ogDesc",
+            "type": "string",
+            "note": "Open Graph description; \"\" = fall back to Description"
+          },
+          {
+            "name": "ogImage",
+            "type": "string",
+            "note": "Open Graph/social image URL; \"\" = primary product image"
+          },
+          {
+            "name": "twitterCard",
+            "type": "string",
+            "note": "\"summary\" | \"summary_large_image\"; \"\" = default"
+          },
+          {
+            "name": "noIndex",
+            "type": "boolean",
+            "note": "emit robots noindex"
+          },
+          {
+            "name": "noFollow",
+            "type": "boolean",
+            "note": "emit robots nofollow"
+          },
+          {
+            "name": "metaTags",
+            "type": "MetaTag[]",
+            "note": "Advanced (free-form; see the security note above)."
+          },
+          {
+            "name": "jsonld",
+            "type": "string[]",
+            "note": "raw application/ld+json blocks"
+          }
+        ]
+      },
+      {
+        "name": "attributes",
+        "type": "ProductAttribute[]",
+        "note": "option axis definitions",
+        "fields": [
+          {
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "name": "values",
+            "type": "string[]"
+          },
+          {
+            "name": "position",
+            "type": "number"
+          }
+        ]
+      },
+      {
+        "name": "variants",
+        "type": "Variant[]",
+        "note": "concrete purchasable rows",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string"
+          },
+          {
+            "name": "sku",
+            "type": "string"
+          },
+          {
+            "name": "barcode",
+            "type": "string",
+            "note": "GTIN/UPC/EAN/ISBN; free-form"
+          },
+          {
+            "name": "options",
+            "type": "{ [string]: string }",
+            "note": "{\"Size\":\"M\",\"Color\":\"Red\"}"
+          },
+          {
+            "name": "priceCents",
+            "type": "number",
+            "note": "retail price in minor units"
+          },
+          {
+            "name": "compareAtCents",
+            "type": "number",
+            "note": "strike-through/MSRP; 0 = none"
+          },
+          {
+            "name": "costCents",
+            "type": "number",
+            "note": "unit cost (for margin); 0 = unset"
+          },
+          {
+            "name": "stock",
+            "type": "number",
+            "note": "on-hand quantity"
+          },
+          {
+            "name": "reserved",
+            "type": "number",
+            "note": "allocated to open orders; ≤ Stock normally"
+          },
+          {
+            "name": "wholesale",
+            "type": "PriceTier[]",
+            "note": "volume price breaks (ascending MinQty); optional"
+          },
+          {
+            "name": "weightGrams",
+            "type": "number"
+          },
+          {
+            "name": "images",
+            "type": "string[]"
+          },
+          {
+            "name": "videos",
+            "type": "string[]"
+          },
+          {
+            "name": "hidden",
+            "type": "boolean"
+          },
+          {
+            "name": "preOrder",
+            "type": "boolean",
+            "note": "sellable past 0 stock"
+          },
+          {
+            "name": "position",
+            "type": "number"
+          }
+        ]
       },
       {
         "name": "kind",
@@ -5560,6 +6253,41 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
         "note": "TaxClassID names which of the site's tax classes this product is sold under — \"\" meaning the site's own rate, which is every product in every store that has not defined a class. A CLASS ID rather than a rate: the rate belongs to the…"
       },
       {
+        "name": "featured",
+        "type": "boolean",
+        "note": "Merchandising flags."
+      },
+      {
+        "name": "publishedAt",
+        "type": "string (RFC3339)",
+        "note": "first time Status became active; zero until then"
+      },
+      {
+        "name": "number",
+        "type": "number",
+        "note": "Server-assigned identity/denormalised helpers — callers must NOT set these; the Store recomputes them on every write."
+      },
+      {
+        "name": "priceCents",
+        "type": "number",
+        "note": "min non-hidden variant price; 0 if all hidden"
+      },
+      {
+        "name": "compareAtCents",
+        "type": "number",
+        "note": "CompareAt of the min-price visible variant; 0 = none"
+      },
+      {
+        "name": "totalStock",
+        "type": "number",
+        "note": "Σ variant Stock values"
+      },
+      {
+        "name": "availableStock",
+        "type": "number",
+        "note": "Σ variant Available() values"
+      },
+      {
         "name": "createdAt",
         "type": "string (RFC3339)"
       },
@@ -5578,6 +6306,12 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
     "readOnly": [
       "id",
       "siteId",
+      "number",
+      "publishedAt",
+      "priceCents",
+      "compareAtCents",
+      "totalStock",
+      "availableStock",
       "createdAt",
       "updatedAt"
     ]
@@ -5627,6 +6361,11 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
         "type": "string"
       },
       {
+        "name": "slug",
+        "type": "string",
+        "note": "unique per (siteId, slug) within its own type; derived from Name when empty on create"
+      },
+      {
         "name": "description",
         "type": "string"
       },
@@ -5635,8 +6374,80 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
         "type": "string"
       },
       {
+        "name": "parentId",
+        "type": "string",
+        "note": "\"\" = root; must reference same-type parent; no cycles"
+      },
+      {
+        "name": "position",
+        "type": "number",
+        "note": "sibling order within the same parent"
+      },
+      {
         "name": "seo",
-        "type": "SEO"
+        "type": "SEO",
+        "fields": [
+          {
+            "name": "title",
+            "type": "string",
+            "note": "<title> / meta title"
+          },
+          {
+            "name": "description",
+            "type": "string",
+            "note": "meta description"
+          },
+          {
+            "name": "keywords",
+            "type": "string",
+            "note": "meta keywords (comma-separated)"
+          },
+          {
+            "name": "canonical",
+            "type": "string",
+            "note": "rel=canonical URL; \"\" = self"
+          },
+          {
+            "name": "ogTitle",
+            "type": "string",
+            "note": "Open Graph title; \"\" = fall back to Title"
+          },
+          {
+            "name": "ogDesc",
+            "type": "string",
+            "note": "Open Graph description; \"\" = fall back to Description"
+          },
+          {
+            "name": "ogImage",
+            "type": "string",
+            "note": "Open Graph/social image URL; \"\" = primary product image"
+          },
+          {
+            "name": "twitterCard",
+            "type": "string",
+            "note": "\"summary\" | \"summary_large_image\"; \"\" = default"
+          },
+          {
+            "name": "noIndex",
+            "type": "boolean",
+            "note": "emit robots noindex"
+          },
+          {
+            "name": "noFollow",
+            "type": "boolean",
+            "note": "emit robots nofollow"
+          },
+          {
+            "name": "metaTags",
+            "type": "MetaTag[]",
+            "note": "Advanced (free-form; see the security note above)."
+          },
+          {
+            "name": "jsonld",
+            "type": "string[]",
+            "note": "raw application/ld+json blocks"
+          }
+        ]
       },
       {
         "name": "createdAt",
@@ -5671,6 +6482,11 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
         "type": "string"
       },
       {
+        "name": "slug",
+        "type": "string",
+        "note": "unique per (siteId, slug) within its own type; derived from Name when empty on create"
+      },
+      {
         "name": "description",
         "type": "string"
       },
@@ -5679,8 +6495,80 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
         "type": "string"
       },
       {
+        "name": "parentId",
+        "type": "string",
+        "note": "\"\" = root; must reference same-type parent; no cycles"
+      },
+      {
+        "name": "position",
+        "type": "number",
+        "note": "sibling order within the same parent"
+      },
+      {
         "name": "seo",
-        "type": "SEO"
+        "type": "SEO",
+        "fields": [
+          {
+            "name": "title",
+            "type": "string",
+            "note": "<title> / meta title"
+          },
+          {
+            "name": "description",
+            "type": "string",
+            "note": "meta description"
+          },
+          {
+            "name": "keywords",
+            "type": "string",
+            "note": "meta keywords (comma-separated)"
+          },
+          {
+            "name": "canonical",
+            "type": "string",
+            "note": "rel=canonical URL; \"\" = self"
+          },
+          {
+            "name": "ogTitle",
+            "type": "string",
+            "note": "Open Graph title; \"\" = fall back to Title"
+          },
+          {
+            "name": "ogDesc",
+            "type": "string",
+            "note": "Open Graph description; \"\" = fall back to Description"
+          },
+          {
+            "name": "ogImage",
+            "type": "string",
+            "note": "Open Graph/social image URL; \"\" = primary product image"
+          },
+          {
+            "name": "twitterCard",
+            "type": "string",
+            "note": "\"summary\" | \"summary_large_image\"; \"\" = default"
+          },
+          {
+            "name": "noIndex",
+            "type": "boolean",
+            "note": "emit robots noindex"
+          },
+          {
+            "name": "noFollow",
+            "type": "boolean",
+            "note": "emit robots nofollow"
+          },
+          {
+            "name": "metaTags",
+            "type": "MetaTag[]",
+            "note": "Advanced (free-form; see the security note above)."
+          },
+          {
+            "name": "jsonld",
+            "type": "string[]",
+            "note": "raw application/ld+json blocks"
+          }
+        ]
       },
       {
         "name": "createdAt",

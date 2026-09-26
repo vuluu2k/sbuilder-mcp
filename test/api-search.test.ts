@@ -135,15 +135,25 @@ describe('summarizeOperation()', () => {
     const put = searchOperations('source', { limit: 50 }).find(
       (o) => o.method === 'PUT' && o.path.endsWith('/source'),
     )!;
-    expect(summarizeOperation(put).body).toBe('none_declared');
+    // The document declares no body here, but the handler's decode names one.
+    expect(summarizeOperation(put).body).toBe('described');
+    const bare = searchOperations('', { limit: 500 }).find(
+      (o) => WRITE.has(o.method) && !o.params.some((p) => p.in === 'body') && !REQUEST_SHAPES[o.id],
+    )!;
+    expect(summarizeOperation(bare).body).toBe('none_declared');
     const described = searchOperations('', { limit: 500 }).find(
       (o) => o.bodyDescribed && WRITE.has(o.method),
     )!;
     expect(summarizeOperation(described).body).toBe('described');
     const loose = searchOperations('', { limit: 500 }).find(
-      (o) => o.params.some((p) => p.in === 'body') && !o.bodyDescribed && WRITE.has(o.method),
+      (o) =>
+        o.params.some((p) => p.in === 'body') && !o.bodyDescribed && WRITE.has(o.method) && !REQUEST_SHAPES[o.id],
     )!;
     expect(summarizeOperation(loose).body).toBe('undescribed');
+    // The case the E2E run hit: `POST /api/sites` declares `body object`, and its
+    // inline decode struct is the whole answer.
+    const create = searchOperations('', { limit: 600 }).find((o) => o.id === 'post:/api/sites')!;
+    expect(summarizeOperation(create).body).toBe('described');
   });
 
   /**

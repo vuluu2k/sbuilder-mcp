@@ -133,6 +133,13 @@ const TYPE_OPEN = /^type\s+([A-Za-z_]\w*)\s+struct\s*\{\s*$/;
 const TYPE_ONELINE = /^type\s+([A-Za-z_]\w*)\s+struct\s*\{(.*)\}\s*$/;
 /** `Name Type `tag`` — the tag is optional, the two columns are not. */
 const FIELD = /^\s+([A-Z]\w*(?:,\s*[A-Z]\w*)*)\s+([^`]+?)\s*(?:`([^`]*)`)?\s*$/;
+/**
+ * A trailing `// comment` after the tag. Both patterns above anchor on `$`, so a
+ * commented field matched neither and was dropped — `slug`, `parentId` and
+ * `position` vanished from every category body that way. The comment is kept as
+ * the field's doc: it is usually the one line that says what the value means.
+ */
+const TRAILING = /^([^`]*?(?:`[^`]*`)?)\s*\/\/\s?(.*)$/;
 /** An embedded type carries no name column: `products.Product` or `*Foo`. */
 const EMBED = /^\s+\*?([A-Za-z_]\w*(?:\.[A-Za-z_]\w*)?)\s*(?:`([^`]*)`)?\s*$/;
 
@@ -205,7 +212,7 @@ function parseStructBody(dir: string, name: string, body: string[]): GoStruct {
       doc.push(trimmed.replace(/^\/\/\s?/, ''));
       continue;
     }
-    if (/\bstruct\s*\{\s*$/.test(trimmed)) {
+    if (/\bstruct\s*\{\s*(?:\/\/.*)?$/.test(trimmed)) {
       const fieldName = trimmed.split(/\s+/)[0];
       const tag = /`([^`]*)`/.exec(trimmed)?.[1];
       fields.push({ goName: fieldName, goType: 'object', jsonName: jsonNameOf(tag), doc });
@@ -213,7 +220,10 @@ function parseStructBody(dir: string, name: string, body: string[]): GoStruct {
       skipDepth = 1;
       continue;
     }
-    const f = FIELD.exec(line);
+    const trailing = TRAILING.exec(line);
+    const code = trailing ? trailing[1] : line;
+    if (trailing) doc = [...doc, trailing[2]];
+    const f = FIELD.exec(code);
     if (f) {
       const names = f[1].split(',').map((s) => s.trim());
       const goType = f[2].trim();
@@ -226,7 +236,7 @@ function parseStructBody(dir: string, name: string, body: string[]): GoStruct {
       doc = [];
       continue;
     }
-    const e = EMBED.exec(line);
+    const e = EMBED.exec(code);
     if (e) {
       embeds.push(e[1]);
       doc = [];

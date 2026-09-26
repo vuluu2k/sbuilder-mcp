@@ -169,6 +169,14 @@ above today's measurement gets raised again without anybody looking.
     was replaced rather than deleted — it asserted a GET's declared body is still reported,
     behind an `if (odd)` guard, because its author took such a GET for a rarity that might not
     exist. There are 90.
+  - **A FIELD WITH A TRAILING `// comment` WAS DROPPED, SILENTLY, for as long as the reader
+    existed.** `FIELD` and `EMBED` both anchored on `$` right after the tag, so
+    `Slug string \`json:"slug"\` // unique per site` matched neither. Found 2026-09-26 by an E2E
+    run that could not create a nested category (`slug`, `parentId`, `position` absent) —
+    and the same bug had taken `description`, `images`, `attributes` and
+    `variants[].priceCents` off the product sheet: the PRICE. The trailing comment is now the
+    field's doc. Lesson: a shape that LOOKS complete is not evidence; the diff was 7,628 →
+    8,516 lines and no count anywhere had moved.
   - **A struct is keyed by DIRECTORY, not package name.** Every `internal/*/rest/*.go` file
     declares `package rest`, so `products/rest` and `loyalty/rest` both define
     `adjustRequest`; keying on the package name silently gave one of them the other's fields.

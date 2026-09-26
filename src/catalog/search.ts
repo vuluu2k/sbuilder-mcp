@@ -485,7 +485,10 @@ export function summarizeOperation(op: ApiOperation): OperationLine {
   if (summaryIsShared(op.id)) out.summary_shared = true;
   // A copied body is not this route's, so the line says nothing rather than
   // `described` — see `copiedBodyDonor`.
-  if (hasBody && !copiedBodyDonor(op.id))
+  // The handler's own decode outranks the document, as it does on the call sheet;
+  // without this the line said `undescribed` for a body the sheet then described.
+  if (REQUEST_SHAPES[op.id]) out.body = 'described';
+  else if (hasBody && !copiedBodyDonor(op.id))
     out.body = op.bodyDescribed && op.bodyRef ? 'described' : 'undescribed';
   else if (isWrite) out.body = 'none_declared';
   return out;
