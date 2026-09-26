@@ -6,6 +6,19 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.69.0] - 2026-09-26
+
+### Added
+- `sb_store` có thêm action `checkout_sync`, đọc lại các cổng thanh toán và phương thức giao hàng hiện tại của store rồi ghi vào mọi order form đang có (giữ nguyên label riêng của từng phương thức) và republish lại các trang checkout, dùng cho trường hợp một gateway hay phương thức giao hàng được thêm sau khi checkout đã được dựng, khiến select trong form vẫn trỏ vào các tùy chọn cũ.
+
+### Changed
+- Catalog được sinh ra đã được làm mới dựa trên nền tảng (`web_builder` `a3a735283`): ảnh của cart line giờ được catalog là một thumbnail duy nhất thay vì một dải ảnh phía dưới, và `slug` suy ra của category giờ cũng được catalog.
+
+### Fixed
+- Bộ sinh catalog trước đây bỏ rơi mọi field Go có comment cuối dòng, âm thầm làm mất `slug`, `parentId`, `position` của category và `description`, `images`, `attributes`, `variants[].priceCents` của product khỏi catalog; `sb_api_find` giờ cũng báo body của `POST /api/sites` là "described" thay vì "undescribed".
+- `sb_media_upload` và đường upload riêng của store giờ đọc URL của file đã tải lên từ trường `url` ở cấp cao nhất của response khi bản thân asset không mang URL, thay vì báo mọi lần upload thành công là không có URL.
+- Action `chrome` của `sb_store` giờ dựng footer bất cứ khi nào tổng số link trên các cột đạt từ hai trở lên, thay vì bỏ qua khi mỗi cột riêng lẻ có ít hơn hai link — một footer có hai cột mỗi cột một link trước đây bị dựng trống.
+
 ## [0.68.0] - 2026-09-25
 
 ### Changed

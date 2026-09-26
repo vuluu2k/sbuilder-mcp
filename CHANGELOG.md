@@ -6,6 +6,19 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.69.0] - 2026-09-26
+
+### Added
+- `sb_store` gains action `checkout_sync`, which re-reads a store's current payment gateways and shipping methods into every existing order form (keeping each method's own label) and republishes the checkout pages, for when a gateway or shipping method is added after the checkout was built and the form's select is left pointing at stale options.
+
+### Changed
+- The generated catalog was regenerated against the platform (`web_builder` `a3a735283`): a cart-line's image now catalogs as a single thumbnail instead of a bottom strip, and a category's derived `slug` is now catalogued.
+
+### Fixed
+- The catalog generator was dropping every Go field that carried a trailing line comment, silently hiding `slug`, `parentId`, and `position` on categories and `description`, `images`, `attributes`, and `variants[].priceCents` on products from the catalog; `sb_api_find` also now reports a described body for `POST /api/sites` instead of `undescribed`.
+- `sb_media_upload` and the store's own upload path now read the uploaded file's URL from the response's top-level `url` when the asset entry itself carries none, instead of reporting every successful upload as having no URL.
+- `sb_store` action `chrome` now builds a footer whenever its columns carry two or more links in total, instead of skipping it whenever every individual column holds fewer than two — a footer with two columns of one link each was rendered empty.
+
 ## [0.68.0] - 2026-09-25
 
 ### Changed
