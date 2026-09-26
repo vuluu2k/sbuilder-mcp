@@ -17,7 +17,7 @@
  * that fires on a correctly built site is one the reader learns to ignore.
  */
 
-import { cartRelocalize, cartSeedLocale } from './cartlang.js';
+import { cartGalleryThumbs, cartRelocalize, cartSeedLocale } from './cartlang.js';
 
 /** The purchase binding an Add-to-cart / Buy-now button carries. */
 const PRODUCT_ACTION_BINDING_ID = 'bind-product-action';
@@ -55,7 +55,8 @@ export type ReadinessGapId =
   | 'maintenancePage'
   | 'cartCount'
   | 'cartDrawer'
-  | 'cartDrawerLanguage';
+  | 'cartDrawerLanguage'
+  | 'cartDrawerThumbnail';
 
 export interface ReadinessGap {
   id: ReadinessGapId;
@@ -417,6 +418,17 @@ export function readinessGaps(input: ReadinessInput): ReadinessGap[] {
           `rewrites exactly those seed strings to the "${locale}" seed's, and leaves edited text alone.`,
       });
     }
+  }
+
+  if (input.cartOverlay?.root_node_id && cartGalleryThumbs(input.cartOverlay, input.cartOverlay.root_node_id).length) {
+    gaps.push({
+      id: 'cartDrawerThumbnail',
+      draft: false,
+      problem:
+        'The cart drawer\'s line thumbnail is a GALLERY (feature image plus a thumbs strip) squeezed ' +
+        'into a 64px line — a drawer seeded before the platform fixed its seed.',
+      fix: 'Open any page of this site, then sb_store action:"cart" relocalize:true dry_run:false — it sets that thumbnail to a single image.',
+    });
   }
 
   if (!isStore(input)) return gaps;

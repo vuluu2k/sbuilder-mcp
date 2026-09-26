@@ -64,3 +64,19 @@ export function cartRelocalize(doc: { nodes: Record<string, unknown> }, rootId: 
   });
   return out;
 }
+
+/**
+ * A CART LINE THUMBNAIL SEEDED AS A GALLERY. Drawers seeded before
+ * web_builder `3e5efbb52` carry a childless `media-dataset` with no `layout`,
+ * which renders the feature image PLUS a thumbs strip inside a 64px line. The
+ * seed now says `single`; a layout the merchant chose explicitly is theirs.
+ */
+export function cartGalleryThumbs(doc: { nodes: Record<string, unknown> }, rootId: string): string[] {
+  const out: string[] = [];
+  walk(doc as unknown as DocLike, rootId, (n) => {
+    const layout = (n as { config?: { layout?: unknown } }).config?.layout;
+    if (n.data.type === 'media-dataset' && !(n.data.nodes ?? []).length && (layout === undefined || layout === 'bottom'))
+      out.push(n.id);
+  });
+  return out;
+}

@@ -1129,6 +1129,7 @@ publish panel then listed five gaps.
 | `siteChrome` | Two or more pages and NO global section, so each page carries its own header and footer. Changing the menu is one edit per page, the copies drift, and a visitor meets a slightly different site on every click. Asked of every site, not only a store — it is the one question here that is not about money |
 | `cartDrawer` | Something opens the cart but the site has no cart drawer, so it opens nothing. Fix: `sb_store action:"cart"` |
 | `cartDrawerLanguage` | The cart drawer still carries ANOTHER locale's seed words (exact match against the editor's per-locale seeds, e.g. "Your cart" / "Checkout" on a `vi` site) — a store made before the drawer was seeded in the site's language. Text the merchant edited never matches. Asked of every site. Fix: open a page of the site, then `sb_store action:"cart" relocalize:true dry_run:false` |
+| `cartDrawerThumbnail` | The cart drawer's line thumbnail is a GALLERY (feature image plus thumbs strip) in a 64px line — a drawer seeded before the platform fixed its seed. Asked of every site. Fix: open a page of the site, then `sb_store action:"cart" relocalize:true dry_run:false` |
 | `cartCount` | Something opens the cart but nothing shows what is in it. `cart-count` is opt-in because `open_cart` is an ACTION any element can carry, so a site built with these tools never gets one: a shopper adds an item, sees a toast fade, and then no evidence anywhere that their basket is not empty |
 | `categoryScope` | The open page is the shared `category` template and every product repeater on it is pinned to ONE named collection (`collectionType: "collection"`), so every `/collections/{slug}` shows that one. Since the platform scopes a category template itself, `all_products` / `page_collection` follow the URL and a shared template is correct — no page per category is needed |
 
@@ -1780,7 +1781,7 @@ afterwards.
 
 ### `action: "checkout"`
 
-`sb_review` names eighteen readiness gaps. Most are one call each — a delivery option, a
+`sb_review` names its readiness gaps. Most are one call each — a delivery option, a
 gateway, a product, a page of the right type — because the call sheet says what those calls
 take. The checkout is the one that is not, because it is four writes whose order is the
 whole contract, written down only in `editor/src/features/pages/checkoutPage.ts`:
@@ -1938,7 +1939,9 @@ better, `language_note` saying why (locale unset, a locale with no seed, or sett
 and style; text the merchant edited is left alone. The result lists `changes`
 (`node_id`, `key`, `from`, `to`) and `language`. It writes through the OPEN PAGE's save —
 the overlays API has no document write (`PATCH /overlays/{id}` ignores one) — so a real run
-needs a page of the site open. `sb_review` reports the drawer as `cartDrawerLanguage`.
+needs a page of the site open. `sb_review` reports the drawer as `cartDrawerLanguage`. The same pass
+turns a line thumbnail seeded as a gallery (no `layout`, or `bottom`) into a single image and lists
+it under `thumbnails`; `sb_review` reports that one as `cartDrawerThumbnail`.
 
 ### `action: "overlay_attach"`
 

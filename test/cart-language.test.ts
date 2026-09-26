@@ -77,8 +77,14 @@ describe('cartDrawerLanguage', () => {
 });
 
 /** A vi site, its English cart drawer composed onto the open page `pg`. */
-function site(edited = false) {
+/** A drawer seeded before the platform fixed it: the line thumbnail has no layout. */
+const oldThumb = (d: Doc) => {
+  for (const n of Object.values(d.nodes)) if (n.data.type === 'media-dataset') delete n.config.layout;
+};
+
+function site(edited = false, old = false, locale: string | null = 'vi') {
   const cart = drawer('en', (d) => {
+    if (old) oldThumb(d);
     if (!edited) return;
     const btn = Object.values(d.nodes).find((n) => n.specials?.text === 'Checkout');
     btn.specials.text = 'Pay now';
@@ -105,7 +111,7 @@ function site(edited = false) {
       const master = structuredClone(cart);
       return json({ overlays: [{ id: 'ov_cart', kind: 'cart', document: master }] });
     }
-    if (path.endsWith('/settings')) return json({ settings: { locale: 'vi' } });
+    if (path.endsWith('/settings')) return json({ settings: locale ? { locale } : {} });
     if (path.endsWith('/source')) return json({ source: { pageId: 'pg', document: method === 'PUT' ? body.document : page } });
     return json({});
   }) as unknown as typeof fetch;
@@ -148,6 +154,41 @@ describe('sb_store action:"cart" relocalize', () => {
     expect(out.changes.length).toBe(out.changes.filter((c: any) => c.from !== 'Pay now').length);
     // Through the page save — the overlays API ignores a document.
     expect(calls.filter((c) => c.method !== 'GET' && c.path.includes('/overlays'))).toEqual([]);
+    await close();
+  });
+});
+
+describe('a cart line thumbnail seeded as a gallery', () => {
+  const thumbGap = (d: Doc) => readinessGaps({ ...base, cartOverlay: d }).find((g) => g.id === 'cartDrawerThumbnail');
+
+  it('is reported for an old drawer, not for today\'s seed', () => {
+    expect(thumbGap(drawer('vi', oldThumb))?.fix).toMatch(/relocalize:true/);
+    expect(thumbGap(drawer('vi'))).toBeUndefined();
+  });
+
+  it('relocalize sets it to a single image through the page save', async () => {
+    const { ctx, calls } = site(false, true);
+    const { client, close } = await connectedClient(ctx as never);
+    await client.callTool({ name: 'sb_page_open', arguments: { page_id: 'pg' } });
+    const out = parse(await client.callTool({ name: 'sb_store', arguments: { action: 'cart', relocalize: true, dry_run: false } }));
+    expect(out.thumbnails.length).toBeGreaterThan(0);
+    const sent = calls.find((c) => c.method === 'PUT' && c.path === '/api/sites/s1/pages/pg/source')!.body.document as Doc;
+    const thumbs = Object.values(sent.nodes).filter((n) => n.data.type === 'media-dataset');
+    expect(thumbs.map((n) => n.config.layout)).toEqual(thumbs.map(() => 'single'));
+    await close();
+  });
+
+  // The gap is asked of every site, so its fix must work where no locale is
+  // set: the words stay, the thumbnail is still healed.
+  it('heals the thumbnail on a site with no locale, leaving the words', async () => {
+    const { ctx, calls } = site(false, true, null);
+    const { client, close } = await connectedClient(ctx as never);
+    await client.callTool({ name: 'sb_page_open', arguments: { page_id: 'pg' } });
+    const out = parse(await client.callTool({ name: 'sb_store', arguments: { action: 'cart', relocalize: true, dry_run: false } }));
+    expect(out.changes).toEqual([]);
+    expect(out.thumbnails.length).toBeGreaterThan(0);
+    const sent = calls.find((c) => c.method === 'PUT' && c.path === '/api/sites/s1/pages/pg/source')!.body.document as Doc;
+    expect(texts(sent)).toContain('Your cart');
     await close();
   });
 });

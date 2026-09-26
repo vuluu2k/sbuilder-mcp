@@ -1,7 +1,7 @@
 /**
  * THE STORE FLOWS THAT MUST BE ORDERED.
  *
- * `sb_review` names EIGHTEEN readiness gaps (`ReadinessGapId`). Most are one
+ * `sb_review` names its readiness gaps (`ReadinessGapId`). Most are one
  * call each — a delivery option, a payment gateway, a product, a page of the
  * right type — because `REQUEST_SHAPES` tells the caller what those calls take.
  * The ones that are not are the flows in this file: each is several writes in
@@ -638,7 +638,8 @@ export function registerStoreTools(server: McpServer, ctx: ToolContext, session:
           .optional()
           .describe(
             'action:"cart" — rewrite an EXISTING drawer\'s seed words that are in another language ' +
-              'to the site locale\'s (edited text untouched); needs a page of the site open',
+              'to the site locale\'s (edited text untouched), and turn a gallery line thumbnail into a ' +
+              'single image; needs a page of the site open',
           ),
         dry_run: z.boolean().optional(),
       },

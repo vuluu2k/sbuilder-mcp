@@ -1099,6 +1099,7 @@ hoàn toàn bằng bộ tool này review sạch, publish và render đúng; bả
 | `siteChrome` | Từ hai trang trở lên mà KHÔNG có global section nào, nên mỗi trang tự mang header/footer riêng. Đổi menu là sửa từng trang, các bản sao lệch dần, và khách gặp một site hơi khác ở mỗi lần bấm. Hỏi cho mọi site chứ không riêng cửa hàng — đây là câu hỏi duy nhất ở đây không liên quan tới tiền |
 | `cartDrawer` | Có thứ mở giỏ nhưng site không có ngăn giỏ, nên bấm vào không mở gì. Sửa: `sb_store action:"cart"` |
 | `cartDrawerLanguage` | Ngăn giỏ vẫn mang chữ seed của MỘT NGÔN NGỮ KHÁC (khớp chính xác với seed theo locale của editor, ví dụ "Your cart" / "Checkout" trên site `vi`) — store tạo trước khi ngăn giỏ được seed theo ngôn ngữ site. Chữ merchant đã sửa không bao giờ khớp. Hỏi với mọi site. Sửa: mở một trang của site, rồi `sb_store action:"cart" relocalize:true dry_run:false` |
+| `cartDrawerThumbnail` | Thumbnail của dòng sản phẩm trong ngăn giỏ là một GALLERY (ảnh chính kèm dải ảnh nhỏ) nhét trong dòng 64px — ngăn giỏ seed trước khi nền tảng sửa seed. Hỏi với mọi site. Sửa: mở một trang của site, rồi `sb_store action:"cart" relocalize:true dry_run:false` |
 | `cartCount` | Có thứ mở được giỏ nhưng không có gì cho thấy trong giỏ có gì. `cart-count` là tuỳ chọn vì `open_cart` là một HÀNH ĐỘNG mà element nào cũng mang được, nên site dựng bằng bộ công cụ này không bao giờ tự có: khách thêm hàng, thấy một toast tắt đi, rồi không còn dấu hiệu nào cho thấy giỏ không rỗng |
 | `categoryScope` | Trang đang mở là template `category` dùng chung và mọi repeater sản phẩm trên đó đều ghim vào MỘT collection cố định (`collectionType: "collection"`), nên mọi `/collections/{slug}` đều hiện collection đó. Nền tảng đã tự thu hẹp template danh mục theo URL: `all_products` / `page_collection` đi theo URL, một template dùng chung là đúng — không cần mỗi danh mục một trang |
 
@@ -1727,7 +1728,7 @@ mà `sb_page_create` làm, báo trong `page.chrome`. Nhớ publish trang sau đ�
 
 ### `action: "checkout"`
 
-`sb_review` nêu mười tám readiness gap. Phần lớn chỉ còn một lệnh gọi mỗi cái — một phương
+`sb_review` nêu các readiness gap của nó. Phần lớn chỉ còn một lệnh gọi mỗi cái — một phương
 thức giao hàng, một cổng thanh toán, một sản phẩm, một trang đúng type — vì call sheet đã nói
 rõ những lệnh đó nhận gì. Checkout là cái còn lại, vì nó là **bốn lệnh ghi mà thứ tự chính là
 hợp đồng**, và chỉ được ghi lại ở đúng một chỗ:
@@ -1882,7 +1883,9 @@ Ngăn giỏ được seed theo ngôn ngữ của site (`settings.locale`, subtag
 style; chữ merchant đã sửa được để nguyên. Kết quả liệt kê `changes` (`node_id`, `key`,
 `from`, `to`) và `language`. Nó ghi qua lần lưu của TRANG ĐANG MỞ — API overlays không có
 đường ghi document (`PATCH /overlays/{id}` bỏ qua nó) — nên chạy thật cần đang mở một trang
-của site. `sb_review` báo ngăn giỏ này là `cartDrawerLanguage`.
+của site. `sb_review` báo ngăn giỏ này là `cartDrawerLanguage`. Cùng lượt đó, thumbnail của dòng
+sản phẩm bị seed thành gallery (không có `layout`, hoặc `bottom`) được chuyển về một ảnh và liệt kê
+trong `thumbnails`; `sb_review` báo lỗi này là `cartDrawerThumbnail`.
 
 ### `action: "overlay_attach"`
 

@@ -59,7 +59,7 @@ import type { PageSession } from './page.js';
 import { setKeys } from '../domains/site/builder.js';
 import { CART_SEEDS, OVERLAY_SEEDS } from '../catalog/overlays.generated.js';
 import { withFreshIds } from '../domains/site/ids.js';
-import { cartRelocalize, cartSeedLocale } from '../domains/site/cartlang.js';
+import { cartGalleryThumbs, cartRelocalize, cartSeedLocale } from '../domains/site/cartlang.js';
 
 interface Step {
   step: number;
@@ -431,31 +431,36 @@ export async function relocalizeCartDrawer(
   if (!cart?.id) throw new Error('sbuilder: this site has no cart drawer — sb_store action:"cart" without relocalize creates one.');
   const settings = (await get(`/api/sites/${site}/settings`)) as { settings?: { locale?: unknown } | null };
   const raw = settings.settings?.locale;
-  if (typeof raw !== 'string' || !raw) {
-    throw new Error('sbuilder: settings.locale is unset, so there is no site language to relocalize to — set it with sb_theme locale first.');
-  }
-  const language = cartSeedLocale(raw);
+  // No locale means no language to move the WORDS to; the thumbnail needs none.
+  const language = typeof raw === 'string' && raw ? cartSeedLocale(raw) : null;
 
   const open = session.peek() ? session.location() : null;
   const composed =
     open?.siteId === siteId
       ? Object.values(session.current().doc.nodes).find((n) => n.specials?.overlayId === cart.id)
       : undefined;
-  const changes = composed
-    ? cartRelocalize(session.current().doc, composed.id, language)
+  const target = composed
+    ? { doc: session.current().doc, root: composed.id }
     : cart.document?.root_node_id
-      ? cartRelocalize(cart.document, cart.document.root_node_id, language)
-      : [];
-  if (dryRun || changes.length === 0) {
+      ? { doc: cart.document, root: cart.document.root_node_id }
+      : null;
+  const changes = target && language ? cartRelocalize(target.doc, target.root, language) : [];
+  const thumbnails = target ? cartGalleryThumbs(target.doc, target.root) : [];
+  if (!language && thumbnails.length === 0) {
+    throw new Error('sbuilder: settings.locale is unset, so there is no site language to relocalize to — set it with sb_theme locale first.');
+  }
+  const thumbNote = thumbnails.length ? { thumbnails, thumbnails_note: 'These line thumbnails become a single image (config.layout "single").' } : {};
+  if (dryRun || changes.length + thumbnails.length === 0) {
     return {
       ...(dryRun ? { dry_run: true } : {}),
       overlay_id: cart.id,
       language,
       changes,
-      ...(changes.length === 0
-        ? { note: 'Nothing to change — no seed word from another language is left in the drawer.' }
+      ...thumbNote,
+      ...(changes.length + thumbnails.length === 0
+        ? { note: 'Nothing to change — no seed word from another language and no gallery thumbnail is left in the drawer.' }
         : {
-            plan: redact([{ step: 1, what: 'rewrite those strings in the composed drawer and save the open page', method: 'PUT', path: `/api/sites/${site}/pages/{open page}/source` }]),
+            plan: redact([{ step: 1, what: 'apply those changes to the composed drawer and save the open page', method: 'PUT', path: `/api/sites/${site}/pages/{open page}/source` }]),
             note: 'Nothing was sent. Re-call with dry_run:false; it writes through the open page\'s save.',
           }),
     };
@@ -465,13 +470,15 @@ export async function relocalizeCartDrawer(
       `sbuilder: the drawer is written through a page save, so relocalize needs a page of site "${siteId}" open — sb_page_open one, then re-run.`,
     );
   }
-  await session.applyAndSave(
-    changes.map((c) => ({ op: 'set' as const, path: ['nodes', c.node_id, 'specials', c.key], value: c.to })),
-  );
+  await session.applyAndSave([
+    ...changes.map((c) => ({ op: 'set' as const, path: ['nodes', c.node_id, 'specials', c.key], value: c.to })),
+    ...thumbnails.map((id) => ({ op: 'set' as const, path: ['nodes', id, 'config', 'layout'], value: 'single' })),
+  ]);
   return {
     overlay_id: cart.id,
     language,
     changes,
+    ...thumbNote,
     next: 'Publish the pages: the drawer reaches a shopper through each published page.',
   };
 }
