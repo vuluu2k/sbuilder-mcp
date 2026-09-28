@@ -129,6 +129,10 @@ menu is a separate record, so add each content page to it (`sb_store action:"men
 node; the rows live in `GET/PUT /api/sites/{siteId}/menus`): `sb_review` reports
 `unreachablePage`.
 
+**9c. The chrome is TWO sections.** `sb_store action:"chrome"` builds the header; the footer is
+`footer:true` on a second call, and a site built without it ends every page at its last
+section — no policy links, no contact, no copyright line. `sb_review` reports `siteFooter`.
+
 `sb_review` answers step 10's last question with eight checks: `checkoutPage`,
 `payment`, `productPage`, `catalogue`, `shipping`, `accountPage`, `searchPage`,
 `cartTrigger`. The first five stand between the store and a PAID ORDER; the rest

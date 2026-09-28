@@ -333,6 +333,16 @@ describe('readinessGaps() — is this a site at all', () => {
     expect(ids({})).not.toContain('siteChrome');
   });
 
+  // The footer is an opt-in flag on the chrome flow, so "header only" is what a
+  // site built here has by default.
+  it('reports a shared header with no shared footer, and only then', () => {
+    expect(ids({ globalKinds: ['header'] })).toContain('siteFooter');
+    expect(ids({ globalKinds: ['header', 'footer'] })).not.toContain('siteFooter');
+    expect(ids({ globalKinds: [] })).not.toContain('siteFooter'); // siteChrome's finding
+    expect(ids({ globalKinds: null })).not.toContain('siteFooter');
+    expect(ids({ globalKinds: ['header'], pages: [{ type: 'page', status: 'published' }] })).not.toContain('siteFooter');
+  });
+
   // Reads `toContain` rather than an exact list: this case is about siteChrome,
   // and a two-page site with no 404 page reports `errorPage` beside it — see the
   // errorPage block below, which owns that assertion.

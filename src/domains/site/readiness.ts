@@ -60,7 +60,8 @@ export type ReadinessGapId =
   | 'pageSeo'
   | 'homepage'
   | 'unreachablePage'
-  | 'productImages';
+  | 'productImages'
+  | 'siteFooter';
 
 export interface ReadinessGap {
   id: ReadinessGapId;
@@ -371,6 +372,34 @@ export function readinessGaps(input: ReadinessInput): ReadinessGap[] {
         'Make them shared: POST /api/sites/{siteId}/global-sections with { name, kind: "header" | ' +
         '"footer", document }, then PUT .../{id}/document with { subtree }. A page then carries a ' +
         'globalRef instead of a copy, and one edit reaches every page.',
+    });
+  }
+
+  // A HEADER AND NO FOOTER.
+  //
+  // `sb_store action:"chrome"` builds the header; the footer is an opt-in flag
+  // on the same call, so a site built here has a shared header and, on every
+  // page, either its own footer or none — no policy links, no contact, no
+  // copyright line, and nothing below the last section but the end of the
+  // document. The same threshold as siteChrome, asked only once the site HAS
+  // shared chrome (an empty list is siteChrome's finding, not this one).
+  if (
+    pages &&
+    pages.length >= 2 &&
+    input.globalKinds &&
+    input.globalKinds.length > 0 &&
+    !input.globalKinds.includes('footer')
+  ) {
+    gaps.push({
+      id: 'siteFooter',
+      draft: false,
+      problem:
+        'The site shares a header and no footer, so every page ends at its last section — ' +
+        'no policy links, no contact, no copyright line, and each page that has a footer of ' +
+        'its own drifts from the next.',
+      fix:
+        'sb_store action:"chrome" footer:true builds one shared footer on a real site menu and ' +
+        'attaches it to every page. Put the policy, contact and about pages in it.',
     });
   }
 
