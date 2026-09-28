@@ -6,6 +6,13 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.76.1] - 2026-09-28
+
+### Fixed
+- `sb_review`'s `unreachablePage` gap now reads a page's `/source` response under its `source.document` envelope instead of a bare `document`, so a link found in another page's body is actually counted; previously every page appeared to carry no links and every candidate page was reported unreachable.
+- `sb_review`'s `no_h1` finding no longer points at a shared header's brand line when that header is composed onto every page; it now recognizes a shared section by either its stored `globalRef` stamp or its composed `globalId` stamp, and fires only on a page's own heading, staying silent when a page has no heading of its own.
+- `sb_review`'s `pageSeo` gap now reads "1 page carries" instead of "1 page carry" when only a single page is missing `settings.title` or `settings.description`.
+
 ## [0.76.0] - 2026-09-28
 
 ### Added

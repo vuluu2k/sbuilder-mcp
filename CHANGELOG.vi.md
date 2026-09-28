@@ -6,6 +6,13 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.76.1] - 2026-09-28
+
+### Fixed
+- Gap `unreachablePage` của `sb_review` giờ đọc response `/source` của trang theo đúng envelope `source.document` thay vì `document` trần trụi, nên một link tìm thấy trong thân một trang khác giờ được tính đúng; trước đó mọi trang đều bị coi là không mang link nào và mọi trang ứng viên đều bị báo là không thể tới được.
+- Finding `no_h1` của `sb_review` không còn trỏ vào dòng thương hiệu của header dùng chung khi header đó được dựng vào mọi trang; giờ nhận diện một section dùng chung qua cả stamp `globalRef` đã lưu lẫn stamp `globalId` được dựng, và chỉ báo trên heading của chính trang đó, im lặng khi trang không có heading riêng nào.
+- Gap `pageSeo` của `sb_review` giờ hiển thị "1 page carries" thay vì "1 page carry" khi chỉ có một trang thiếu `settings.title` hoặc `settings.description`.
+
 ## [0.76.0] - 2026-09-28
 
 ### Added
