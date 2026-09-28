@@ -6,6 +6,11 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.72.0] - 2026-09-28
+
+### Added
+- `sb_review` có thêm gap readiness `pageSeo`: liệt kê các trang page, about, contact, policy, faq và blog đã publish nhưng thiếu `settings.title` hoặc `settings.description`, vì storefront sẽ dùng tên site làm `<title>` và bỏ hẳn meta description khi thiếu một trong hai — khiến các trang này không thể phân biệt trên kết quả tìm kiếm dù canvas hay screenshot đều không cho thấy điều đó.
+
 ## [0.71.0] - 2026-09-28
 
 ### Added

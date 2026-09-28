@@ -6,6 +6,11 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.72.0] - 2026-09-28
+
+### Added
+- `sb_review` gains a `pageSeo` readiness gap: it lists published page, about, contact, policy, faq, and blog pages missing `settings.title` or `settings.description`, since the storefront falls back to the site name as `<title>` and drops the meta description entirely when either is unset, leaving every such page indistinguishable in a search result even though nothing on the canvas or in a screenshot shows it.
+
 ## [0.71.0] - 2026-09-28
 
 ### Added
