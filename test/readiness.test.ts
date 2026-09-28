@@ -189,6 +189,7 @@ describe('readinessGaps() — the catalogue', () => {
   it('names the drafts when products exist and none is active', () => {
     const g = gap({ active: 0, purchasable: 0, inactive: 4 })!;
     expect(g.problem).toMatch(/4 products and none is active/);
+    expect(gap({ active: 0, purchasable: 0, inactive: 1 })!.problem).toMatch(/has 1 product and none/);
     expect(g.problem).toMatch(/checkout refuses/);
     expect(g.fix).toMatch(/status: "active"/);
     expect(g.fix).toMatch(/PATCH is 405/);

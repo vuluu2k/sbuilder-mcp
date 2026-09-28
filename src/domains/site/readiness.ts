@@ -738,7 +738,7 @@ export function readinessGaps(input: ReadinessInput): ReadinessGap[] {
         id: 'catalogue',
         draft: false,
         problem:
-          `The store has ${input.products.inactive} products and none is active — a product ` +
+          `The store has ${input.products.inactive} product${input.products.inactive === 1 ? '' : 's'} and none is active — a product ` +
           'created without status is stored as "draft", which the storefront never lists and ' +
           'the checkout refuses. Every product list renders its empty state.',
         fix:
