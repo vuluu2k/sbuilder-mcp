@@ -6,6 +6,11 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.76.2] - 2026-09-28
+
+### Fixed
+- Gap `productImages` của `sb_review` giờ hiển thị "1 active product has no image" thay vì "1 active product have no image" khi chỉ có một sản phẩm active thiếu `images`.
+
 ## [0.76.1] - 2026-09-28
 
 ### Fixed

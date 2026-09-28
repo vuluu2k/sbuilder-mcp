@@ -6,6 +6,11 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.76.2] - 2026-09-28
+
+### Fixed
+- `sb_review`'s `productImages` gap now reads "1 active product has no image" instead of "1 active product have no image" when only a single active product is missing `images`.
+
 ## [0.76.1] - 2026-09-28
 
 ### Fixed
