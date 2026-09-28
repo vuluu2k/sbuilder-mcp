@@ -784,7 +784,7 @@ export function readinessGaps(input: ReadinessInput): ReadinessGap[] {
       id: 'productImages',
       draft: false,
       problem:
-        `${n} of ${input.products.active} active products have no image, so every card, cart ` +
+        `${n} of ${input.products.active} active products ${n === 1 ? 'has' : 'have'} no image, so every card, cart ` +
         "line and product page shows the platform's grey placeholder where the photo goes.",
       fix:
         'Get a picture into the library (sb_media_upload: a file, a url, or query + pick), then ' +

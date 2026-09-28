@@ -204,6 +204,8 @@ describe('readinessGaps() — the catalogue', () => {
     const gaps = readinessGaps({ ...ready, products: { active: 5, purchasable: 5, unpictured: 2 } } as never);
     expect(gaps.map((g) => g.id)).toEqual(['productImages']);
     expect(gaps[0].problem).toMatch(/^2 of 5 active products have no image/);
+    expect(gap({ active: 5, purchasable: 5, unpictured: 1 })).toBeUndefined(); // that id is catalogue's
+    expect(readinessGaps({ ...ready, products: { active: 5, purchasable: 5, unpictured: 1 } } as never)[0].problem).toMatch(/^1 of 5 active products has no image/);
     expect(gaps[0].fix).toMatch(/sb_media_upload/);
     expect(ids({ active: 5, purchasable: 5, unpictured: 0 })).toEqual([]);
     expect(ids({ active: 5, purchasable: 5 })).toEqual([]);
