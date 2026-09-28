@@ -114,6 +114,12 @@ republishes every page carrying a global it touched.
 published storefront URL, not the preview → open the cart drawer → `sb_review`
 for the store gaps.
 
+**9b. Every page needs its own `<title>` and description — nothing on screen shows the lack.**
+A page whose `settings` carry no `title` serves the SITE NAME as its `<title>`, and no
+`description` serves no meta description, so a site built here publishes N pages a search
+result cannot tell apart. `PATCH /api/v1/pages/{id}` with the whole `settings` blob (it
+REPLACES) plus `title`, `description` and an `ogImage`. `sb_review` reports it as `pageSeo`.
+
 `sb_review` answers step 10's last question with eight checks: `checkoutPage`,
 `payment`, `productPage`, `catalogue`, `shipping`, `accountPage`, `searchPage`,
 `cartTrigger`. The first five stand between the store and a PAID ORDER; the rest

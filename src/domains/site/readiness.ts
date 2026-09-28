@@ -56,7 +56,8 @@ export type ReadinessGapId =
   | 'cartCount'
   | 'cartDrawer'
   | 'cartDrawerLanguage'
-  | 'cartDrawerThumbnail';
+  | 'cartDrawerThumbnail'
+  | 'pageSeo';
 
 export interface ReadinessGap {
   id: ReadinessGapId;
@@ -69,7 +70,23 @@ export interface ReadinessGap {
 export interface ReadinessPage {
   type: string;
   status: string;
+  name?: string;
+  /**
+   * The page's own SEO blob — what the storefront writes into <head>. Absent
+   * means the list did not carry it, and the pageSeo rule stays silent.
+   */
+  settings?: Record<string, unknown> | null;
 }
+
+/**
+ * The page types a search engine INDEXES under the page's own settings. Entity
+ * templates (product, category, post, course) get their <title> and
+ * description merged from the entity (storefront/entityroute.go
+ * mergeEntitySettings); error and maintain have no address; the fixed-path and
+ * auth types are chrome a crawler is not sent to. Mirrors page.SlugTypes minus
+ * the auth four, plus the blog listing.
+ */
+const INDEXED_PAGE_TYPES = new Set(['page', 'about', 'contact', 'policy', 'faq', 'blog']);
 
 interface NodeLike {
   data: { type: string };
@@ -292,6 +309,46 @@ export function readinessGaps(input: ReadinessInput): ReadinessGap[] {
           'storefront serves it as the BODY of a 404 — so give it the site\'s header and ' +
           'footer and a link back to the home page.',
     });
+  }
+
+  // EVERY PAGE ANSWERS WITH THE SAME <title>, AND NO DESCRIPTION.
+  //
+  // storefront.go pageSettings.head: a page whose settings carry no `title`
+  // serves the SITE NAME as its <title>, and no `description` means no meta
+  // description at all — so a site built through these tools, where nothing
+  // ever asks for either, publishes N pages that a search result cannot tell
+  // apart. Invisible on the canvas, invisible in a screenshot, and the one
+  // thing a search engine reads first.
+  //
+  // Only the types whose head IS the page's own settings (INDEXED_PAGE_TYPES),
+  // only published pages, and only when the list carried `settings` at all —
+  // an absent blob is "not read", not "empty".
+  if (pages) {
+    const bare = pages.filter((p) => {
+      if (p.status !== 'published' || !INDEXED_PAGE_TYPES.has(p.type)) return false;
+      const st = p.settings;
+      if (!st || typeof st !== 'object') return false;
+      const has = (k: string) => typeof st[k] === 'string' && (st[k] as string).trim() !== '';
+      return !(has('title') && has('description'));
+    });
+    if (bare.length > 0) {
+      const named = bare.map((p) => p.name).filter((n): n is string => !!n).slice(0, 3);
+      gaps.push({
+        id: 'pageSeo',
+        draft: false,
+        problem:
+          `${bare.length} published page${bare.length === 1 ? '' : 's'}` +
+          (named.length ? ` (${named.join(', ')}${bare.length > named.length ? ', …' : ''})` : '') +
+          ' carry no settings.title or settings.description. Each serves the SITE NAME as its ' +
+          '<title> and no meta description — a search result cannot tell them apart, and ' +
+          'nothing on the canvas or in a screenshot shows it.',
+        fix:
+          'PATCH /api/v1/pages/{id} with {settings: {...existing, title, description}} — ' +
+          '`settings` REPLACES the blob, so read the page and send it back whole. Title is ' +
+          'what the tab and the result show (under ~60 chars); description is the ' +
+          'two-line summary under it. ogImage takes a share picture.',
+      });
+    }
   }
 
   // ONE PAGE QUIETLY BECAME THE WHOLE ACCOUNT AREA.

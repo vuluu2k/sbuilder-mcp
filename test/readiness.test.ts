@@ -377,6 +377,68 @@ describe('readinessGaps() — is this a site at all', () => {
  * itself with a built-in receipt, this fallback carries none of the site. And
  * nothing reports it: the only person who meets it already took a wrong turn.
  */
+/**
+ * A page with no settings.title serves the site name as its <title>, and no
+ * description serves none — so a site built through these tools, where nothing
+ * asks for either, publishes pages a search result cannot tell apart.
+ */
+describe('readinessGaps() — page SEO', () => {
+  const site = (pages: unknown) =>
+    readinessGaps({
+      pages,
+      liveGateways: null,
+      shippingMethods: null,
+      pageNodes: [],
+      globalNodes: null,
+      globalKinds: ['header'],
+    } as never);
+  const ids = (pages: unknown) => site(pages).map((g) => g.id);
+  const full = { title: 'Áo thun', description: 'Áo thun cotton cho bé, giao trong ngày.' };
+
+  it('reports published content pages whose settings lack a title or a description', () => {
+    const g = site([
+      { type: 'page', status: 'published', name: 'Trang chủ', settings: {} },
+      { type: 'about', status: 'published', name: 'Giới thiệu', settings: { title: 'Về chúng tôi' } },
+      { type: 'page', status: 'published', name: 'Ưu đãi', settings: full },
+    ]).find((x) => x.id === 'pageSeo')!;
+    expect(g.problem).toMatch(/^2 published pages \(Trang chủ, Giới thiệu\)/);
+    expect(g.fix).toMatch(/PATCH \/api\/v1\/pages\/\{id\}/);
+    expect(g.fix).toMatch(/REPLACES/);
+  });
+
+  it('is silent when every indexed page carries both', () => {
+    expect(ids([{ type: 'page', status: 'published', settings: full }])).not.toContain('pageSeo');
+  });
+
+  it('ignores drafts, entity templates, and the addressless and fixed-path types', () => {
+    expect(
+      ids([
+        { type: 'page', status: 'draft', settings: {} },
+        { type: 'product', status: 'published', settings: {} },
+        { type: 'category', status: 'published', settings: {} },
+        { type: 'post', status: 'published', settings: {} },
+        { type: 'error', status: 'published', settings: {} },
+        { type: 'maintain', status: 'published', settings: {} },
+        { type: 'checkout', status: 'published', settings: {} },
+        { type: 'account', status: 'published', settings: {} },
+        { type: 'login', status: 'published', settings: {} },
+      ]),
+    ).not.toContain('pageSeo');
+  });
+
+  it('is SILENT when the list did not carry settings at all', () => {
+    expect(ids([{ type: 'page', status: 'published' }])).not.toContain('pageSeo');
+  });
+
+  it('treats a whitespace title as missing and names at most three pages', () => {
+    const rows = ['a', 'b', 'c', 'd'].map((n) => ({
+      type: 'page', status: 'published', name: n, settings: { title: '  ', description: 'x' },
+    }));
+    const g = site(rows).find((x) => x.id === 'pageSeo')!;
+    expect(g.problem).toMatch(/^4 published pages \(a, b, c, …\)/);
+  });
+});
+
 describe('readinessGaps() — the 404 page', () => {
   const twoPages = [
     { type: 'page', status: 'published' },
