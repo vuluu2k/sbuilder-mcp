@@ -6,6 +6,11 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.76.0] - 2026-09-28
+
+### Added
+- `sb_review` có thêm gap readiness `siteFooter`: vì `sb_store` action `chrome` dựng header dùng chung còn footer là một cờ tùy chọn ở một lệnh riêng, một site dựng theo cách này có thể khiến mọi trang kết thúc ở section cuối cùng, không có link chính sách, không có liên hệ, không có dòng bản quyền; gap báo khi site đã có ít nhất một global section và từ hai trang trở lên nhưng không trang nào có footer, trỏ tới `sb_store` action `chrome` với `footer:true`.
+
 ## [0.75.0] - 2026-09-28
 
 ### Added

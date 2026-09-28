@@ -6,6 +6,11 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.76.0] - 2026-09-28
+
+### Added
+- `sb_review` gains a `siteFooter` readiness gap: since `sb_store` action `chrome` builds the shared header and treats the footer as an opt-in flag on a separate call, a site built this way can end every page at its last section with no policy links, no contact, and no copyright line; it fires once the site already has at least one global section and two or more pages but no footer among them, pointing at `sb_store` action `chrome` with `footer:true`.
+
 ## [0.75.0] - 2026-09-28
 
 ### Added
