@@ -1,4 +1,4 @@
-import { childrenOf, childrenWithSatellites, isOverlay, pageChildren, appBlockRoot, SPEC_GLOBAL_REF, SPEC_APP_BLOCK_REF, type DocLike } from '../../core/tree.js';
+import { childrenOf, childrenWithSatellites, isOverlay, isSharedSection, pageChildren, appBlockRoot, SPEC_GLOBAL_REF, SPEC_APP_BLOCK_REF, type DocLike } from '../../core/tree.js';
 import { STUCK_STATE, stickyBlockedBy, stuckHostOf, isPinnedNode } from './sticky.js';
 import { bandOf, type Band } from './traps.js';
 import { HOVER_STATE, hoverHome } from './hover.js';
@@ -785,7 +785,25 @@ export function reviewDesign(
   // level but the one a search engine and a screen reader look for first.
   // Nothing on the canvas shows the tag. Page bands only (`band` excludes the
   // overlays): a drawer heading is not the page's.
+  //
+  // NAMED ON THE PAGE'S OWN HEADING, never a shared section's. The draft
+  // composes the global header in, so its brand line is the first heading on
+  // EVERY page — measured on a local store: one node id reported on six pages,
+  // and the fix would have made the site name the h1 everywhere. A shared h1
+  // still counts as present (that is a site's own decision); a page whose only
+  // headings are shared has none of its own and is left alone.
   {
+    const shared = new Set<string>();
+    for (const sectionId of pageChildren(d)) {
+      if (!isSharedSection(d, sectionId)) continue;
+      const stack = [sectionId];
+      while (stack.length) {
+        const id = stack.pop()!;
+        if (shared.has(id)) continue;
+        shared.add(id);
+        for (const k of childrenWithSatellites(d, id)) stack.push(k);
+      }
+    }
     const level = (id: string): string | null => {
       const n = d.nodes[id];
       const tag = n.specials?.htmlTag;
@@ -793,8 +811,9 @@ export function reviewDesign(
       return n.data.type === 'heading' ? 'h2' : null;
     };
     const headings = walkOrder.filter((id) => band.has(id) && level(id) !== null);
-    if (headings.length > 0 && !headings.some((id) => level(id) === 'h1')) {
-      const first = headings[0];
+    const own = headings.filter((id) => !shared.has(id));
+    if (own.length > 0 && !headings.some((id) => level(id) === 'h1')) {
+      const first = own[0];
       out.push({
         code: 'no_h1',
         nodeId: first,

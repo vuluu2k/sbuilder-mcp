@@ -499,7 +499,8 @@ export function readinessGaps(input: ReadinessInput): ReadinessGap[] {
         draft: false,
         problem:
           pageCount(bare) +
-          ' carry no settings.title or settings.description. Each serves the SITE NAME as its ' +
+          (bare.length === 1 ? ' carries' : ' carry') +
+          ' no settings.title or settings.description. Each serves the SITE NAME as its ' +
           '<title> and no meta description — a search result cannot tell them apart, and ' +
           'nothing on the canvas or in a screenshot shows it.',
         fix:

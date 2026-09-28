@@ -21,7 +21,8 @@ function platform(forms: unknown, pages?: unknown[]) {
     if (/\/api\/sites\/[^/]+$/.test(path)) return json({ site: { maintenanceMode: true } });
     if (path.endsWith('/pages')) return json({ pages: pages ?? [{ type: 'page', status: 'published' }] });
     if (path.endsWith('/source'))
-      return json({ document: { nodes: { b1: { data: { type: 'button' }, specials: { href: '/story' } } } } });
+      // The envelope the platform really sends (transport/pages.ts loadSource unwraps `source`).
+      return json({ source: { document: { nodes: { b1: { data: { type: 'button' }, specials: { href: '/story' } } } } } });
     if (path.endsWith('/global-sections')) return json({ globalSections: [{ kind: 'header' }] });
     if (path.endsWith('/menus'))
       return json({

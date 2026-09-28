@@ -28,6 +28,18 @@ export const SPEC_GLOBAL_KIND = 'globalKind';
 export const SPEC_GLOBAL_REV = 'globalRev';
 export const SPEC_OVERLAY_REV = 'overlayRev';
 export const SPEC_GLOBAL_REF = 'globalRef';
+/**
+ * Is this node a shared section, by EITHER stamp: the stored reference
+ * (`globalRef`, what a client writes) or the composed one (`globalId`, what a
+ * page read back from the platform carries). A check knowing only one misses
+ * the other on every read — measured: a header composed as `globalId` on all
+ * six pages of a store, and a rule keyed on `globalRef` treating it as the
+ * page's own.
+ */
+export function isSharedSection(doc: DocLike, id: string): boolean {
+  const s = doc.nodes[id]?.specials ?? {};
+  return typeof s[SPEC_GLOBAL_ID] === 'string' || typeof s[SPEC_GLOBAL_REF] === 'string';
+}
 /** The specials stamps a composed APP BLOCK carries (appblocks.go:97-100). */
 export const SPEC_APP_BLOCK_ID = 'appBlockId';
 export const SPEC_APP_BLOCK_REF = 'appBlockRef';

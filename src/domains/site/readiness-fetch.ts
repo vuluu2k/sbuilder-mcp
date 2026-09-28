@@ -217,12 +217,15 @@ export async function gatherReadiness(
       .slice(0, 40);
     const sources = await Promise.all(
       others.map((p) =>
-        get<{ document?: { nodes?: Record<string, unknown> } }>(
+        // `{ source: { document } }` — the envelope transport/pages.ts loadSource
+        // unwraps; read bare, this pass saw no link in any page (measured on a
+        // local store, every page's document present and every href missed).
+        get<{ source?: { document?: { nodes?: Record<string, unknown> } } }>(
           `/api/sites/${site}/pages/${encodeURIComponent(p.id!)}/source`,
         ),
       ),
     );
-    const nodes = sources.flatMap((src) => Object.values(src?.document?.nodes ?? {}));
+    const nodes = sources.flatMap((src) => Object.values(src?.source?.document?.nodes ?? {}));
     input.menuLinks.hrefs.push(...hrefsIn(nodes as ReadinessInput['pageNodes']));
   }
 

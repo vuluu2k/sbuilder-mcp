@@ -71,6 +71,38 @@ describe('reviewDesign()', () => {
     expect(codes(d)).not.toContain('no_h1');
   });
 
+  /**
+   * The draft composes the shared header in, so its brand line is the first
+   * heading on every page. Measured: one node id reported on six pages.
+   */
+  it('names the page\'s own heading, never the shared header\'s, and is silent when only the header has one', () => {
+    const d = emptyDoc();
+    d.apply(
+      addSubtree(d, 'ROOT', {
+        type: 'flex-section',
+        specials: { globalRef: 'gs_1', globalKind: 'header' },
+        children: [{ type: 'heading', specials: { text: 'Cửa hàng' } }],
+      }).patches,
+    );
+    expect(codes(d)).not.toContain('no_h1');
+    // The COMPOSED stamp, which is what a page read back from the platform carries.
+    const header = d.node('ROOT').data.nodes[0];
+    d.apply([
+      { op: 'unset', path: ['nodes', header, 'specials', 'globalRef'] },
+      { op: 'set', path: ['nodes', header, 'specials', 'globalId'], value: 'gs_1' },
+    ]);
+    expect(codes(d)).not.toContain('no_h1');
+    d.apply(
+      addSubtree(d, 'ROOT', {
+        type: 'flex-section',
+        children: [{ type: 'heading', specials: { text: 'Hàng mới về' } }],
+      }).patches,
+    );
+    const f = reviewDesign(d).find((x) => x.code === 'no_h1')!;
+    const middle = d.node('ROOT').data.nodes[1];
+    expect(f.nodeId).toBe(d.node(middle).data.nodes[0]);
+  });
+
   it('counts a text element promoted to h1, and stays silent on a page with no headings', () => {
     const d = emptyDoc();
     d.apply(
