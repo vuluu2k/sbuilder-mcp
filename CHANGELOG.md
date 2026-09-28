@@ -6,6 +6,11 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.75.0] - 2026-09-28
+
+### Added
+- `sb_review` gains a `productImages` readiness gap: since the renderer falls back to its grey `ImagePlaceholder` whenever a node has no `src`, an active product created without `images` shows that same placeholder on every card, cart line, and its own product page with nothing erroring anywhere; it counts active products with no non-empty `images` entry and fires after the pricing gaps, pointing at `sb_media_upload` (or `POST /api/media/{siteId}/from-url`) followed by a `PUT` of the product with `images: [url, …]`.
+
 ## [0.74.1] - 2026-09-28
 
 ### Fixed

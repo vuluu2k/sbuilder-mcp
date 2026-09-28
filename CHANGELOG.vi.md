@@ -6,6 +6,11 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.75.0] - 2026-09-28
+
+### Added
+- `sb_review` có thêm gap readiness `productImages`: vì renderer dùng `ImagePlaceholder` màu xám mặc định bất cứ khi nào một node không có `src`, một sản phẩm active được tạo mà không có `images` sẽ hiện cùng ô xám đó trên mọi thẻ, mọi dòng giỏ hàng và trên chính trang sản phẩm mà không lỗi ở đâu cả; gap đếm số sản phẩm active không có mục `images` nào khác rỗng và báo sau các gap về giá, trỏ tới `sb_media_upload` (hoặc `POST /api/media/{siteId}/from-url`) rồi `PUT` lại sản phẩm với `images: [url, …]`.
+
 ## [0.74.1] - 2026-09-28
 
 ### Fixed
