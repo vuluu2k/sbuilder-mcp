@@ -6,6 +6,11 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.74.0] - 2026-09-28
+
+### Added
+- `sb_review` gains an `unreachablePage` readiness gap: since a menu is a record separate from the page it links, a site can publish a page that no menu item and no href in the shared header, footer, or open page points at, so the address resolves and the sitemap lists it while no visitor ever arrives; it checks only published content pages (never the home page) and stays silent until both the menus and the shared sections have been read.
+
 ## [0.73.0] - 2026-09-28
 
 ### Added

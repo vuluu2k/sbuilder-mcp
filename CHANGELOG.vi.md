@@ -6,6 +6,11 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.74.0] - 2026-09-28
+
+### Added
+- `sb_review` có thêm gap readiness `unreachablePage`: vì menu là một bản ghi riêng biệt với trang mà nó trỏ tới, một site có thể publish một trang mà không mục menu nào và không href nào trong header/footer dùng chung hay trên trang đang mở trỏ tới, nên địa chỉ vẫn vào được và sitemap vẫn liệt kê trong khi không khách nào tới được; gap này chỉ xét các trang nội dung đã publish (không tính trang chủ) và im lặng cho tới khi cả menu lẫn các section dùng chung đều đã đọc được.
+
 ## [0.73.0] - 2026-09-28
 
 ### Added
