@@ -1101,6 +1101,7 @@ hoàn toàn bằng bộ tool này review sạch, publish và render đúng; bả
 | `cartTrigger` | Không gì mở được giỏ; khách đóng ngăn giỏ rồi không quay lại được |
 | `siteChrome` | Từ hai trang trở lên mà KHÔNG có global section nào, nên mỗi trang tự mang header/footer riêng. Đổi menu là sửa từng trang, các bản sao lệch dần, và khách gặp một site hơi khác ở mỗi lần bấm. Hỏi cho mọi site chứ không riêng cửa hàng — đây là câu hỏi duy nhất ở đây không liên quan tới tiền |
 | `homepage` | Không trang ĐÃ PUBLISH nào mang `isHomepage`, nên "/" trả 404 trong khi mọi trang khác vào được theo slug. `draft: true` khi trang chủ có nhưng chưa publish. Sửa: `PATCH /api/v1/pages/{id}` với `isHomepage: true` (chuyển ngôi sao và xoá slug), hoặc `sb_page_create` với `is_homepage: true` — nó nhận lại trang chủ site đã có. Im lặng khi danh sách trang không mang cờ |
+| `unreachablePage` | Trang nội dung đã publish mà không mục menu nào (theo id trang hay url, mọi cấp) và không `href` nào trong header/footer dùng chung hay trên trang đang mở trỏ tới — kể cả snapshot của node `menu`. Địa chỉ vẫn vào được và sitemap vẫn liệt kê; không khách nào tới. Không bao giờ là trang chủ, bản nháp hay template thực thể. Sửa: thêm `{ label, link: { type: "page", pageId } }` vào menu của site (`GET`/`PUT /api/sites/{siteId}/menus`), hoặc link từ footer. Im lặng khi chưa đọc được menu hay global section |
 | `cartDrawer` | Có thứ mở giỏ nhưng site không có ngăn giỏ, nên bấm vào không mở gì. Sửa: `sb_store action:"cart"` |
 | `cartDrawerLanguage` | Ngăn giỏ vẫn mang chữ seed của MỘT NGÔN NGỮ KHÁC (khớp chính xác với seed theo locale của editor, ví dụ "Your cart" / "Checkout" trên site `vi`) — store tạo trước khi ngăn giỏ được seed theo ngôn ngữ site. Chữ merchant đã sửa không bao giờ khớp. Hỏi với mọi site. Sửa: mở một trang của site, rồi `sb_store action:"cart" relocalize:true dry_run:false` |
 | `cartDrawerThumbnail` | Thumbnail của dòng sản phẩm trong ngăn giỏ là một GALLERY (ảnh chính kèm dải ảnh nhỏ) nhét trong dòng 64px — ngăn giỏ seed trước khi nền tảng sửa seed. Hỏi với mọi site. Sửa: mở một trang của site, rồi `sb_store action:"cart" relocalize:true dry_run:false` |
@@ -1111,8 +1112,8 @@ hoàn toàn bằng bộ tool này review sạch, publish và render đúng; bả
 Mỗi khoảng trống mang `draft: true` khi trang ĐÃ CÓ nhưng chưa publish, vì "publish cái đã
 làm" và "tạo mới" là hai việc khác nhau. Sắp theo mức chặn giảm dần.
 
-Bốn lệnh GET phụ trả giá cho việc này (pages, payment-gateways, shipping-methods,
-global-sections) và không cái nào làm hỏng được review: một lệnh thất bại thì luật đó **im
+Năm lệnh GET phụ trả giá cho việc này (pages, payment-gateways, shipping-methods,
+global-sections, menus) và không cái nào làm hỏng được review: một lệnh thất bại thì luật đó **im
 lặng** thay vì báo một khoảng trống cửa hàng có thể không có. Một cảnh báo nổ trên cửa hàng
 đúng là cảnh báo người ta học cách bỏ qua.
 

@@ -420,6 +420,63 @@ describe('readinessGaps() — the home page', () => {
   });
 });
 
+/**
+ * A menu is a separate record and every tool here authors one page, so a site
+ * can carry a published About page nothing links to: the address works, the
+ * sitemap lists it, and no visitor ever arrives.
+ */
+describe('readinessGaps() — the page nobody can reach', () => {
+  const about = { id: 'pg_about', type: 'about', status: 'published', name: 'Giới thiệu', path: '/about' };
+  const home = { id: 'pg_home', type: 'page', status: 'published', name: 'Trang chủ', path: '/', isHomepage: true };
+  const gap = (extra: Partial<ReadinessInput>) =>
+    readinessGaps({
+      pages: [home, about],
+      liveGateways: null,
+      shippingMethods: null,
+      pageNodes: [],
+      globalNodes: [],
+      globalKinds: ['header'],
+      menuLinks: { pageIds: [], hrefs: [] },
+      ...extra,
+    } as never).find((g) => g.id === 'unreachablePage');
+
+  it('reports a published content page no menu and no chrome link points at', () => {
+    const g = gap({})!;
+    expect(g.problem).toMatch(/^1 published page \(Giới thiệu\)/);
+    expect(g.fix).toMatch(/menus/);
+  });
+
+  it('is silent when a menu references the page by id, or by its address', () => {
+    expect(gap({ menuLinks: { pageIds: ['pg_about'], hrefs: [] } })).toBeUndefined();
+    expect(gap({ menuLinks: { pageIds: [], hrefs: ['/about/'] } })).toBeUndefined();
+  });
+
+  it('counts an href in the shared chrome, including a menu node\'s own snapshot rows', () => {
+    expect(gap({ globalNodes: [node('button', { specials: { href: '/about?utm=x' } })] })).toBeUndefined();
+    expect(
+      gap({ globalNodes: [node('menu', { specials: { menuItems: [{ label: 'Về', href: '', items: [{ label: 'x', href: '/about' }] }] } })] }),
+    ).toBeUndefined();
+  });
+
+  it('never names the home page, a draft, an entity template, or a page without an id', () => {
+    expect(
+      gap({
+        pages: [
+          home,
+          { id: 'pg_d', type: 'page', status: 'draft', path: '/d' },
+          { id: 'pg_p', type: 'product', status: 'published', path: '/products' },
+          { type: 'page', status: 'published', path: '/no-id' },
+        ],
+      }),
+    ).toBeUndefined();
+  });
+
+  it('is SILENT when the menus or the shared sections were not read', () => {
+    expect(gap({ menuLinks: null })).toBeUndefined();
+    expect(gap({ globalNodes: null })).toBeUndefined();
+  });
+});
+
 describe('readinessGaps() — page SEO', () => {
   const site = (pages: unknown) =>
     readinessGaps({

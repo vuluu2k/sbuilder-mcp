@@ -21,6 +21,16 @@ function platform(forms: unknown) {
     if (/\/api\/sites\/[^/]+$/.test(path)) return json({ site: { maintenanceMode: true } });
     if (path.endsWith('/pages')) return json({ pages: [{ type: 'page', status: 'published' }] });
     if (path.endsWith('/global-sections')) return json({ globalSections: [{ kind: 'header' }] });
+    if (path.endsWith('/menus'))
+      return json({
+        menus: [
+          {
+            items: [
+              { label: 'Shop', link: { type: 'page', pageId: 'pg_shop' }, items: [{ label: 'Sale', link: { type: 'url', url: '/sale' } }] },
+            ],
+          },
+        ],
+      });
     return json({});
   }) as unknown as typeof fetch;
   const session = new Session('http://x', f);
@@ -88,5 +98,16 @@ describe('gatherReadiness reads the form list', () => {
     const input = await gatherReadiness(ctx, 's1', [formNode('f_login'), formNode('f_register')]);
     expect(input.forms).toBeNull();
     expect(readinessGaps(input).map((g) => g.id)).not.toContain('mergedAuthPage');
+  });
+});
+
+// THE SAME WIRING, FOR WHAT A VISITOR CAN REACH: the gap's own tests hand
+// `menuLinks` in directly and pass whether or not anything reads the menus.
+describe('gatherReadiness reads the menus', () => {
+  it('asks for them and walks every level into page ids and urls', async () => {
+    const { ctx, paths } = platform({ forms: [] });
+    const input = await gatherReadiness(ctx, 's1', []);
+    expect(paths.some((p) => p.endsWith('/menus'))).toBe(true);
+    expect(input.menuLinks).toEqual({ pageIds: ['pg_shop'], hrefs: ['/sale'] });
   });
 });

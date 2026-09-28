@@ -1131,6 +1131,7 @@ publish panel then listed five gaps.
 | `cartTrigger` | Nothing opens the cart on its own; a shopper who closes the drawer cannot get back |
 | `siteChrome` | Two or more pages and NO global section, so each page carries its own header and footer. Changing the menu is one edit per page, the copies drift, and a visitor meets a slightly different site on every click. Asked of every site, not only a store — it is the one question here that is not about money |
 | `homepage` | No PUBLISHED page carries `isHomepage`, so "/" answers 404 while every page on the site is reachable by slug. `draft: true` when the home page exists unpublished. Fix: `PATCH /api/v1/pages/{id}` with `isHomepage: true` (it moves the star and clears the slug), or `sb_page_create` with `is_homepage: true`, which adopts the one the site has. Silent when the list did not carry the flag |
+| `unreachablePage` | A published content page that no menu item (by page id or url, any depth) and no `href` in the shared header/footer or on the open page points at — a `menu` node's own snapshot rows included. The address works and the sitemap lists it; no visitor ever arrives. Never the home page, a draft or an entity template. Fix: append `{ label, link: { type: "page", pageId } }` to the site menu (`GET`/`PUT /api/sites/{siteId}/menus`), or link it from the footer. Silent when the menus or the shared sections were not read |
 | `cartDrawer` | Something opens the cart but the site has no cart drawer, so it opens nothing. Fix: `sb_store action:"cart"` |
 | `cartDrawerLanguage` | The cart drawer still carries ANOTHER locale's seed words (exact match against the editor's per-locale seeds, e.g. "Your cart" / "Checkout" on a `vi` site) — a store made before the drawer was seeded in the site's language. Text the merchant edited never matches. Asked of every site. Fix: open a page of the site, then `sb_store action:"cart" relocalize:true dry_run:false` |
 | `cartDrawerThumbnail` | The cart drawer's line thumbnail is a GALLERY (feature image plus thumbs strip) in a 64px line — a drawer seeded before the platform fixed its seed. Asked of every site. Fix: open a page of the site, then `sb_store action:"cart" relocalize:true dry_run:false` |
@@ -1141,7 +1142,7 @@ publish panel then listed five gaps.
 Each gap carries `draft: true` when the page EXISTS but is unpublished, because "publish the
 one you made" and "create one" are different jobs. Ordered most-blocking first.
 
-Four extra GETs pay for this (pages, payment-gateways, shipping-methods, global-sections) and
+Five extra GETs pay for this (pages, payment-gateways, shipping-methods, global-sections, menus) and
 none of them can fail the review: a fetch that fails leaves that rule **silent** rather than
 reporting a gap the store may not have. A warning that fires on a correct store is one the
 reader learns to ignore.

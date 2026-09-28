@@ -32,7 +32,7 @@ export async function gatherReadiness(
   };
   const site = encodeURIComponent(siteId);
 
-  const [pageList, gateways, shipping, globals, productList, categoryList, pageLinks, formList, articleList, blogCategoryList, courseList, siteRecord, overlayList, settings] =
+  const [pageList, gateways, shipping, globals, productList, categoryList, pageLinks, formList, articleList, blogCategoryList, courseList, siteRecord, overlayList, settings, menuList] =
     await Promise.all([
     get<{ pages?: Array<ReadinessPage & { id?: string; isDefaultTemplate?: boolean }> }>(`/api/sites/${site}/pages`),
     get<{ paymentGateways?: Array<{ enabled?: boolean; configured?: boolean }> }>(
@@ -88,6 +88,9 @@ export async function gatherReadiness(
     get<{ overlays?: Array<{ kind?: string; document?: ReadinessInput['cartOverlay'] }> }>(`/api/sites/${site}/overlays`),
     // `<html lang>` is served from this; see siteLanguage in readiness.ts.
     get<{ settings?: { locale?: unknown } | null }>(`/api/sites/${site}/settings`),
+    // THE MENUS, for what a visitor can reach: a page nothing links to is
+    // published, listed in the sitemap, and never arrived at.
+    get<{ menus?: Array<{ items?: unknown[] }> }>(`/api/sites/${site}/menus`),
   ]);
 
   // A gateway counts only when it is BOTH enabled and configured — the editor's
@@ -143,8 +146,29 @@ export async function gatherReadiness(
   // counts as the category template, and a row without the flag is read as one.
   const open = openPageId ? pageList?.pages?.find((p) => p.id === openPageId) : undefined;
 
+  // Every level of every menu: page references by id, url links by address.
+  const menuLinks = Array.isArray(menuList?.menus)
+    ? (() => {
+        const pageIds: string[] = [];
+        const hrefs: string[] = [];
+        const walk = (items: unknown): void => {
+          if (!Array.isArray(items)) return;
+          for (const it of items) {
+            if (!it || typeof it !== 'object') continue;
+            const r = it as { link?: { type?: unknown; pageId?: unknown; url?: unknown }; items?: unknown };
+            if (r.link?.type === 'page' && typeof r.link.pageId === 'string') pageIds.push(r.link.pageId);
+            if (r.link?.type === 'url' && typeof r.link.url === 'string') hrefs.push(r.link.url);
+            walk(r.items);
+          }
+        };
+        for (const m of menuList!.menus!) walk(m?.items);
+        return { pageIds, hrefs };
+      })()
+    : null;
+
   return {
     pages: pageList?.pages ?? null,
+    menuLinks,
     openPageType: open && open.isDefaultTemplate !== false ? open.type : undefined,
     products,
     liveGateways,

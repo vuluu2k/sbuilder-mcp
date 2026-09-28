@@ -58,7 +58,8 @@ export type ReadinessGapId =
   | 'cartDrawerLanguage'
   | 'cartDrawerThumbnail'
   | 'pageSeo'
-  | 'homepage';
+  | 'homepage'
+  | 'unreachablePage';
 
 export interface ReadinessGap {
   id: ReadinessGapId;
@@ -72,6 +73,9 @@ export interface ReadinessPage {
   type: string;
   status: string;
   name?: string;
+  id?: string;
+  /** The served address ("/about"); absent means the list did not carry it. */
+  path?: string;
   /** The page served at "/". Absent means the list did not carry the flag. */
   isHomepage?: boolean;
   /**
@@ -134,6 +138,13 @@ export interface ReadinessInput {
   openPageType?: string;
   /** The site's pages; null when the list could not be read. */
   pages: ReadinessPage[] | null;
+  /**
+   * Every target the site's MENUS point at — page ids of `page` links and the
+   * urls of `url` links, every level deep; null when the menus were unread.
+   * With the hrefs on the shared sections and the open page, this is what
+   * "reachable" means to a visitor.
+   */
+  menuLinks?: { pageIds: string[]; hrefs: string[] } | null;
   /** Gateways a shopper could really pay through; null when unread. */
   liveGateways: number | null;
   /** Delivery options the site offers; null when unread. */
@@ -215,6 +226,32 @@ const drafted = (pages: ReadinessPage[], type: string) =>
  * different question asked second. Shared chrome is a different question asked
  * FIRST, because it is true of every site and not only of a store.
  */
+/** "/about/", "/about?x=1" and "/about" are one address; "" is the home page. */
+function normalizePath(p: string): string {
+  const s = p.split(/[?#]/)[0].replace(/\/+$/, '');
+  return s === '' ? '/' : s;
+}
+
+/** Every href a set of nodes carries: `specials.href`, and a menu node's own snapshot rows. */
+function hrefsIn(nodes: NodeLike[]): Set<string> {
+  const out = new Set<string>();
+  const rows = (items: unknown): void => {
+    if (!Array.isArray(items)) return;
+    for (const it of items) {
+      if (!it || typeof it !== 'object') continue;
+      const r = it as { href?: unknown; items?: unknown };
+      if (typeof r.href === 'string' && r.href !== '') out.add(normalizePath(r.href));
+      rows(r.items);
+    }
+  };
+  for (const n of nodes) {
+    const h = n.specials?.href;
+    if (typeof h === 'string' && h !== '') out.add(normalizePath(h));
+    rows(n.specials?.menuItems);
+  }
+  return out;
+}
+
 export function readinessGaps(input: ReadinessInput): ReadinessGap[] {
   const gaps: ReadinessGap[] = [];
   const pages = input.pages;
@@ -244,6 +281,49 @@ export function readinessGaps(input: ReadinessInput): ReadinessGap[] {
           : 'Make one: PATCH /api/v1/pages/{id} { "isHomepage": true } on the page that should ' +
             'answer at "/" — it moves the star and clears the slug. Or sb_page_create with ' +
             'is_homepage: true, which adopts the home page the site already has.',
+      });
+    }
+  }
+
+  // A PAGE NO VISITOR CAN GET TO.
+  //
+  // Every tool here authors one page and a menu is a separate record, so a
+  // site can carry a published About page that nothing links to: the sitemap
+  // lists it, the address works, and no visitor ever arrives. Reachable means
+  // a menu item references the page or its path, or something in the shared
+  // chrome or on the open page carries its path as an href (a `menu` node's
+  // own snapshot included). Content pages only, never the home page, and only
+  // when both the menus and the shared sections were read — a footer link
+  // this rule could not see must not become a finding.
+  if (pages && input.menuLinks && input.globalNodes) {
+    const reach = new Set<string>(input.menuLinks.hrefs.map(normalizePath));
+    for (const h of hrefsIn([...input.globalNodes, ...input.pageNodes])) reach.add(h);
+    const byId = new Set(input.menuLinks.pageIds);
+    const orphans = pages.filter(
+      (p) =>
+        p.status === 'published' &&
+        INDEXED_PAGE_TYPES.has(p.type) &&
+        p.isHomepage !== true &&
+        typeof p.id === 'string' &&
+        typeof p.path === 'string' &&
+        !byId.has(p.id) &&
+        !reach.has(normalizePath(p.path)),
+    );
+    if (orphans.length > 0) {
+      const named = orphans.map((p) => p.name).filter((n): n is string => !!n).slice(0, 3);
+      gaps.push({
+        id: 'unreachablePage',
+        draft: false,
+        problem:
+          `${orphans.length} published page${orphans.length === 1 ? '' : 's'}` +
+          (named.length ? ` (${named.join(', ')}${orphans.length > named.length ? ', …' : ''})` : '') +
+          ' that no menu item and no link in the shared header or footer points at. The address ' +
+          'works and the sitemap lists it; no visitor ever arrives.',
+        fix:
+          'Add it to the site menu — read GET /api/sites/{siteId}/menus, append ' +
+          '{ label, link: { type: "page", pageId } } and PUT the menu back; every bound menu ' +
+          'node follows. Or link it from the footer with sb_event go_to_url. A page kept out ' +
+          'on purpose (a landing page for ads) can stay out — say so.',
       });
     }
   }

@@ -122,7 +122,10 @@ REPLACES) plus `title`, `description` and an `ogImage`. `sb_review` reports it a
 And ONE `h1` per page: every `heading` ships as h2, the platform's own seeds included, so set
 `specials.htmlTag: "h1"` on the heading the page is about — `sb_review` reports `no_h1`.
 A site whose pages all carry slugs has no front door: `sb_review` reports `homepage` when no
-published page holds `isHomepage`.
+published page holds `isHomepage`. And a page nothing links to is a page nobody visits — the
+menu is a separate record, so add each content page to it (`sb_store action:"menu"` binds the
+node; the rows live in `GET/PUT /api/sites/{siteId}/menus`): `sb_review` reports
+`unreachablePage`.
 
 `sb_review` answers step 10's last question with eight checks: `checkoutPage`,
 `payment`, `productPage`, `catalogue`, `shipping`, `accountPage`, `searchPage`,
