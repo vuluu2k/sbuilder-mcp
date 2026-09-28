@@ -226,6 +226,15 @@ const drafted = (pages: ReadinessPage[], type: string) =>
  * different question asked second. Shared chrome is a different question asked
  * FIRST, because it is true of every site and not only of a store.
  */
+/** "N published pages (a, b, c, …)" — the head of a problem sentence that names its pages. */
+function pageCount(rows: ReadinessPage[]): string {
+  const named = rows.map((p) => p.name).filter((n): n is string => !!n).slice(0, 3);
+  return (
+    `${rows.length} published page${rows.length === 1 ? '' : 's'}` +
+    (named.length ? ` (${named.join(', ')}${rows.length > named.length ? ', …' : ''})` : '')
+  );
+}
+
 /** "/about/", "/about?x=1" and "/about" are one address; "" is the home page. */
 function normalizePath(p: string): string {
   const s = p.split(/[?#]/)[0].replace(/\/+$/, '');
@@ -233,7 +242,7 @@ function normalizePath(p: string): string {
 }
 
 /** Every href a set of nodes carries: `specials.href`, and a menu node's own snapshot rows. */
-function hrefsIn(nodes: NodeLike[]): Set<string> {
+export function hrefsIn(nodes: NodeLike[]): Set<string> {
   const out = new Set<string>();
   const rows = (items: unknown): void => {
     if (!Array.isArray(items)) return;
@@ -250,6 +259,31 @@ function hrefsIn(nodes: NodeLike[]): Set<string> {
     rows(n.specials?.menuItems);
   }
   return out;
+}
+
+/**
+ * Published content pages nothing points at. Reachable means a menu item
+ * references the page or its path, or a node in the shared chrome, on the open
+ * page, or (menuLinks.hrefs, appended by gatherReadiness only when this list
+ * is otherwise non-empty) in the body of any other published page carries its
+ * path as an href. Empty when the menus or the shared sections were unread.
+ */
+export function unreachablePages(input: ReadinessInput): ReadinessPage[] {
+  const pages = input.pages;
+  if (!pages || !input.menuLinks || !input.globalNodes) return [];
+  const reach = new Set<string>(input.menuLinks.hrefs.map(normalizePath));
+  for (const h of hrefsIn([...input.globalNodes, ...input.pageNodes])) reach.add(h);
+  const byId = new Set(input.menuLinks.pageIds);
+  return pages.filter(
+    (p) =>
+      p.status === 'published' &&
+      INDEXED_PAGE_TYPES.has(p.type) &&
+      p.isHomepage !== true &&
+      typeof p.id === 'string' &&
+      typeof p.path === 'string' &&
+      !byId.has(p.id) &&
+      !reach.has(normalizePath(p.path)),
+  );
 }
 
 export function readinessGaps(input: ReadinessInput): ReadinessGap[] {
@@ -285,7 +319,7 @@ export function readinessGaps(input: ReadinessInput): ReadinessGap[] {
     }
   }
 
-  // A PAGE NO VISITOR CAN GET TO.
+  // A PAGE NO VISITOR CAN GET TO — see unreachablePages().
   //
   // Every tool here authors one page and a menu is a separate record, so a
   // site can carry a published About page that nothing links to: the sitemap
@@ -295,30 +329,16 @@ export function readinessGaps(input: ReadinessInput): ReadinessGap[] {
   // own snapshot included). Content pages only, never the home page, and only
   // when both the menus and the shared sections were read — a footer link
   // this rule could not see must not become a finding.
-  if (pages && input.menuLinks && input.globalNodes) {
-    const reach = new Set<string>(input.menuLinks.hrefs.map(normalizePath));
-    for (const h of hrefsIn([...input.globalNodes, ...input.pageNodes])) reach.add(h);
-    const byId = new Set(input.menuLinks.pageIds);
-    const orphans = pages.filter(
-      (p) =>
-        p.status === 'published' &&
-        INDEXED_PAGE_TYPES.has(p.type) &&
-        p.isHomepage !== true &&
-        typeof p.id === 'string' &&
-        typeof p.path === 'string' &&
-        !byId.has(p.id) &&
-        !reach.has(normalizePath(p.path)),
-    );
+  {
+    const orphans = unreachablePages(input);
     if (orphans.length > 0) {
-      const named = orphans.map((p) => p.name).filter((n): n is string => !!n).slice(0, 3);
       gaps.push({
         id: 'unreachablePage',
         draft: false,
         problem:
-          `${orphans.length} published page${orphans.length === 1 ? '' : 's'}` +
-          (named.length ? ` (${named.join(', ')}${orphans.length > named.length ? ', …' : ''})` : '') +
-          ' that no menu item and no link in the shared header or footer points at. The address ' +
-          'works and the sitemap lists it; no visitor ever arrives.',
+          pageCount(orphans) +
+          ' that no menu item and no link in the shared header, footer or any other page ' +
+          'points at. The address works and the sitemap lists it; no visitor ever arrives.',
         fix:
           'Add it to the site menu — read GET /api/sites/{siteId}/menus, append ' +
           '{ label, link: { type: "page", pageId } } and PUT the menu back; every bound menu ' +
@@ -444,13 +464,11 @@ export function readinessGaps(input: ReadinessInput): ReadinessGap[] {
       return !(has('title') && has('description'));
     });
     if (bare.length > 0) {
-      const named = bare.map((p) => p.name).filter((n): n is string => !!n).slice(0, 3);
       gaps.push({
         id: 'pageSeo',
         draft: false,
         problem:
-          `${bare.length} published page${bare.length === 1 ? '' : 's'}` +
-          (named.length ? ` (${named.join(', ')}${bare.length > named.length ? ', …' : ''})` : '') +
+          pageCount(bare) +
           ' carry no settings.title or settings.description. Each serves the SITE NAME as its ' +
           '<title> and no meta description — a search result cannot tell them apart, and ' +
           'nothing on the canvas or in a screenshot shows it.',

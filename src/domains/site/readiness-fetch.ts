@@ -1,7 +1,7 @@
 import { request } from '../../transport/http.js';
 import { siteToken } from '../../tools/credentialpick.js';
 import type { ToolContext } from '../../tools/context.js';
-import type { ReadinessInput, ReadinessPage } from './readiness.js';
+import { hrefsIn, unreachablePages, type ReadinessInput, type ReadinessPage } from './readiness.js';
 
 /**
  * Gather what the readiness rules need, tolerating every failure.
@@ -166,7 +166,7 @@ export async function gatherReadiness(
       })()
     : null;
 
-  return {
+  const input: ReadinessInput = {
     pages: pageList?.pages ?? null,
     menuLinks,
     openPageType: open && open.isDefaultTemplate !== false ? open.type : undefined,
@@ -196,4 +196,29 @@ export async function gatherReadiness(
         ? siteRecord.site.maintenanceMode
         : null,
   };
+
+  // THE SECOND PASS, PAID ONLY WHEN THE FIRST FOUND A CANDIDATE. A page linked
+  // from the BODY of another page — a "read our story" button on the home
+  // page — is reachable, and neither the menus nor the chrome show it. Reading
+  // every page's document on every review would be one GET per page for a
+  // question that is usually already answered, so the sources are read only
+  // when a page looks unreachable, and only the other published pages' — the
+  // open page's nodes are already in hand. Capped; a source that fails to read
+  // counts as carrying no link.
+  if (input.menuLinks && unreachablePages(input).length > 0) {
+    const others = (input.pages ?? [])
+      .filter((p) => p.status === 'published' && typeof p.id === 'string' && p.id !== openPageId)
+      .slice(0, 40);
+    const sources = await Promise.all(
+      others.map((p) =>
+        get<{ document?: { nodes?: Record<string, unknown> } }>(
+          `/api/sites/${site}/pages/${encodeURIComponent(p.id!)}/source`,
+        ),
+      ),
+    );
+    const nodes = sources.flatMap((src) => Object.values(src?.document?.nodes ?? {}));
+    input.menuLinks.hrefs.push(...hrefsIn(nodes as ReadinessInput['pageNodes']));
+  }
+
+  return input;
 }

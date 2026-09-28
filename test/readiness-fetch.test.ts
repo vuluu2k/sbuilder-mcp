@@ -7,7 +7,7 @@ import { UndoLog } from '../src/tools/undo.js';
 import type { ToolContext } from '../src/tools/context.js';
 
 /** A platform answering each readiness read, recording the paths asked for. */
-function platform(forms: unknown) {
+function platform(forms: unknown, pages?: unknown[]) {
   const paths: string[] = [];
   const f = (async (url: unknown) => {
     const path = new URL(String(url)).pathname;
@@ -19,7 +19,9 @@ function platform(forms: unknown) {
     if (path.includes('/blog-categories')) return json({ blogCategories: [{}], total: 2 });
     if (path.includes('/courses')) return json({ courses: [{}], total: 5 });
     if (/\/api\/sites\/[^/]+$/.test(path)) return json({ site: { maintenanceMode: true } });
-    if (path.endsWith('/pages')) return json({ pages: [{ type: 'page', status: 'published' }] });
+    if (path.endsWith('/pages')) return json({ pages: pages ?? [{ type: 'page', status: 'published' }] });
+    if (path.endsWith('/source'))
+      return json({ document: { nodes: { b1: { data: { type: 'button' }, specials: { href: '/story' } } } } });
     if (path.endsWith('/global-sections')) return json({ globalSections: [{ kind: 'header' }] });
     if (path.endsWith('/menus'))
       return json({
@@ -109,5 +111,19 @@ describe('gatherReadiness reads the menus', () => {
     const input = await gatherReadiness(ctx, 's1', []);
     expect(paths.some((p) => p.endsWith('/menus'))).toBe(true);
     expect(input.menuLinks).toEqual({ pageIds: ['pg_shop'], hrefs: ['/sale'] });
+    // No candidate, so no page source was read.
+    expect(paths.some((p) => p.endsWith('/source'))).toBe(false);
+  });
+
+  // A page linked only from the BODY of another page is reachable, and only
+  // that page's document says so — read on demand, never on every review.
+  it('reads the other pages\' sources only when a page looks unreachable, and counts their links', async () => {
+    const { ctx, paths } = platform({ forms: [] }, [
+      { id: 'pg_home', type: 'page', status: 'published', path: '/', isHomepage: true },
+      { id: 'pg_story', type: 'about', status: 'published', path: '/story', name: 'Câu chuyện' },
+    ]);
+    const input = await gatherReadiness(ctx, 's1', [], 'pg_story');
+    expect(paths.filter((p) => p.endsWith('/source'))).toEqual(['/api/sites/s1/pages/pg_home/source']);
+    expect(readinessGaps(input).map((g) => g.id)).not.toContain('unreachablePage');
   });
 });
