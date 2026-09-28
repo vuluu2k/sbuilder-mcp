@@ -45,6 +45,12 @@ Three things the first live release cost, so nobody pays them twice:
   release — the changelog described the features correctly — but the version understated
   them. If a push is meant to land a minor, either make the LAST commit the `feat`, or
   dispatch the run with `bump=minor` instead of relying on the push trigger.
+- **A run that fails at "Wait for npm to expose the released version" has ALREADY released.**
+  Measured on v0.74.0 (2026-09-28): npm publish succeeded, the GitHub Release was created, and
+  `npm view` took longer than the 5-minute wait to show the version, so only the MCP Registry
+  steps were skipped. Do NOT dispatch a run to "finish" it: resume mode is keyed on "tag
+  pushed AND not on npm", so with the version on npm it takes the normal path and bumps
+  again. The next release carries the registry entry; the wait is now 15 minutes.
 - **Never re-run a failed release run.** It replays the OLD commit, whose `package.json`
   predates the release commit, so it bumps again. Dispatch a fresh run on `main` instead:
   resume mode sees the pushed tag and the missing npm version and publishes that version.

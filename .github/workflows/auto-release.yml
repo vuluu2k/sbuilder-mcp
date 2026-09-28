@@ -394,11 +394,15 @@ jobs:
         run: |
           PKG=$(node -p "require('./package.json').name")
           VER="${{ steps.final.outputs.version }}"
-          for i in $(seq 1 30); do
+          # 15 minutes, not 5: v0.74.0 took longer than 30×10s to appear on npm
+          # view, the publish itself had succeeded, and the registry step was
+          # skipped — with no way to run it later, since resume mode is keyed
+          # on "tag pushed AND not on npm" and a dispatch would bump again.
+          for i in $(seq 1 90); do
             if npm view "${PKG}@${VER}" version >/dev/null 2>&1; then
               echo "npm has ${PKG}@${VER}"; exit 0
             fi
-            echo "waiting for npm ${PKG}@${VER}... ($i/30)"; sleep 10
+            echo "waiting for npm ${PKG}@${VER}... ($i/90)"; sleep 10
           done
           echo "npm did not expose ${VER} within timeout" >&2; exit 1
 
