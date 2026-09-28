@@ -5,7 +5,7 @@ export const TRANSLATION_SOURCE = {
   "elements": 66,
   "pairs": 180,
   "neverKeys": 178,
-  "entityTypes": 12
+  "entityTypes": 11
 } as const;
 
 /** Every entity type a translation record can name, including "node". */
@@ -15,7 +15,6 @@ export const TRANSLATION_ENTITY_TYPES: string[] = [
   "article",
   "blogCategory",
   "course",
-  "review",
   "courseSection",
   "courseLesson",
   "node",
@@ -555,6 +554,9 @@ export const TRANSLATABLE_ENTITY_FIELDS: Record<
       "list": "attributes"
     },
     {
+      "key": "slug"
+    },
+    {
       "key": "seoTitle"
     },
     {
@@ -577,6 +579,9 @@ export const TRANSLATABLE_ENTITY_FIELDS: Record<
     {
       "key": "description",
       "html": true
+    },
+    {
+      "key": "slug"
     },
     {
       "key": "seoTitle"
@@ -610,6 +615,9 @@ export const TRANSLATABLE_ENTITY_FIELDS: Record<
       "key": "tags"
     },
     {
+      "key": "slug"
+    },
+    {
       "key": "seoTitle"
     },
     {
@@ -631,6 +639,9 @@ export const TRANSLATABLE_ENTITY_FIELDS: Record<
     },
     {
       "key": "description"
+    },
+    {
+      "key": "slug"
     },
     {
       "key": "seoTitle"
@@ -675,6 +686,9 @@ export const TRANSLATABLE_ENTITY_FIELDS: Record<
       "key": "tags"
     },
     {
+      "key": "slug"
+    },
+    {
       "key": "seoTitle"
     },
     {
@@ -688,12 +702,6 @@ export const TRANSLATABLE_ENTITY_FIELDS: Record<
     },
     {
       "key": "ogDesc"
-    }
-  ],
-  "review": [
-    {
-      "key": "reply",
-      "html": true
     }
   ],
   "courseSection": [
@@ -721,6 +729,9 @@ export const TRANSLATABLE_ENTITY_FIELDS: Record<
     },
     {
       "key": "ogDesc"
+    },
+    {
+      "key": "slug"
     }
   ],
   "uiString": [

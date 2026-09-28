@@ -66,6 +66,15 @@ describe('what a translation may rewrite', () => {
     expect(String(sheet.node_note)).toMatch(/BREAKS the render/);
   });
 
+  // A machine-sourced row is stored, counted and never served — the silent
+  // half of a bilingual store built through the key surface.
+  it('names the review gate and the route that opens it', () => {
+    const gate = String(translationCallSheet().review_gate);
+    expect(gate).toMatch(/source "human"/);
+    expect(gate).toMatch(/defaults source to "machine"/);
+    expect(gate).toMatch(/translations\/review/);
+  });
+
   // It rides on the call sheet the agent is already reading when it decides
   // what to send — no new tool.
   it('attaches to a translations operation and to nothing else', () => {

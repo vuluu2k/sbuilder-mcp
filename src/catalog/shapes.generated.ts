@@ -9,7 +9,7 @@ export const SHAPE_SOURCE = {
   "fromHandlers": 197,
   "fromSwaggerOnly": 0,
   "withReadOnly": 28,
-  "structsRead": 1931
+  "structsRead": 1977
 } as const;
 
 export const REQUEST_SHAPES: Record<string, RequestShape> = {
@@ -4743,6 +4743,11 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
         "type": "string"
       },
       {
+        "name": "locale",
+        "type": "string",
+        "note": "Locale is the language the SHOPPER was reading the storefront in at checkout — a SNAPSHOT, for the same reason every other checkout-time fact on this struct is one: a merchant who later reorders or trims the site's language list must not…"
+      },
+      {
         "name": "discountCode",
         "type": "string",
         "note": "DiscountCode is the code entered at checkout (input)."
@@ -5052,6 +5057,11 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
       {
         "name": "currency",
         "type": "string"
+      },
+      {
+        "name": "locale",
+        "type": "string",
+        "note": "Locale is the language the SHOPPER was reading the storefront in at checkout — a SNAPSHOT, for the same reason every other checkout-time fact on this struct is one: a merchant who later reorders or trims the site's language list must not…"
       },
       {
         "name": "discountCode",

@@ -134,6 +134,8 @@ export async function gatherReadiness(
         purchasable: rows.filter(
           (p) => (p.status ?? 'active') === 'active' && (p.priceCents ?? 0) > 0,
         ).length,
+        // Drafts and archived: what a catalogue built without status:"active" is.
+        inactive: rows.filter((p) => (p.status ?? 'active') !== 'active').length,
       }
     : null;
 

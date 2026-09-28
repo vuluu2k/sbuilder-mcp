@@ -8056,6 +8056,34 @@ export const API_OPERATIONS: ApiOperation[] = [
         "description": "Site ID"
       },
       {
+        "name": "q",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Case-insensitive substring of the campaign name (GET only)"
+      },
+      {
+        "name": "status",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "off|scheduled|running|ended — derived status, evaluated now (GET only)"
+      },
+      {
+        "name": "limit",
+        "in": "query",
+        "required": false,
+        "type": "integer",
+        "description": "Page size, default 50, max 200 (GET only)"
+      },
+      {
+        "name": "offset",
+        "in": "query",
+        "required": false,
+        "type": "integer",
+        "description": "Page offset, default 0 (GET only)"
+      },
+      {
         "name": "flashSale",
         "in": "body",
         "required": false,
@@ -8082,6 +8110,34 @@ export const API_OPERATIONS: ApiOperation[] = [
         "required": true,
         "type": "string",
         "description": "Site ID"
+      },
+      {
+        "name": "q",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Case-insensitive substring of the campaign name (GET only)"
+      },
+      {
+        "name": "status",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "off|scheduled|running|ended — derived status, evaluated now (GET only)"
+      },
+      {
+        "name": "limit",
+        "in": "query",
+        "required": false,
+        "type": "integer",
+        "description": "Page size, default 50, max 200 (GET only)"
+      },
+      {
+        "name": "offset",
+        "in": "query",
+        "required": false,
+        "type": "integer",
+        "description": "Page offset, default 0 (GET only)"
       },
       {
         "name": "flashSale",
@@ -18421,6 +18477,10 @@ export const API_DEFINITIONS: Record<string, unknown> = {
         "items": {
           "$ref": "#/definitions/github_com_webbuilder_server_internal_orders.OrderItem"
         }
+      },
+      "locale": {
+        "description": "Locale is the language the SHOPPER was reading the storefront in at\ncheckout — a SNAPSHOT, for the same reason every other checkout-time fact\non this struct is one: a merchant who later reorders or trims the site's\nlanguage list must not have an already-placed order start mailing its\nbuyer in a different language than the one they bought in.\n\n\"\" means the site's DEFAULT locale — every order placed before this field\nexisted, every order typed by staff, and every order placed through a\nsurface that has not been taught to send one yet. It is never trusted\noutright: Checkout.Create normalises it against the site's published\nlocales (SiteLocales port) before it is stored, so a stale or tampered\nclaim can only ever fall back to \"\", never choose an unpublished\nlanguage. See Checkout.normalizeLocale.",
+        "type": "string"
       },
       "note": {
         "type": "string"

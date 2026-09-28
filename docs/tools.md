@@ -104,7 +104,9 @@ operation is not.
 ### Filling a catalogue
 
 The four operations that create or replace a whole product carry a `product_traps` note —
-three facts a body shape cannot say. **Price lives on the variant**: `products.Product` has
+four facts a body shape cannot say. **Send `status: "active"`**: a product created without
+one is stored as `draft`, which the storefront never lists and the checkout refuses, and the
+write still answers 201. **Price lives on the variant**: `products.Product` has
 no price column, so a product posted with no `variants[]` is a catalogue entry nobody can
 buy. **A colliding slug is renamed, not refused** — the write still answers 200/201, so
 re-running an import does not error, it doubles the catalogue in silence. **An image can be

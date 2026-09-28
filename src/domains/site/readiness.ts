@@ -127,7 +127,7 @@ export interface ReadinessInput {
    * option reports READY on an empty catalogue, and every repeater on it renders
    * its empty state to a shopper.
    */
-  products: { active: number; purchasable: number } | null;
+  products: { active: number; purchasable: number; inactive?: number } | null;
   /** Every node of the open page. */
   pageNodes: NodeLike[];
   /** Every node of every global section master; null when unread. */
@@ -510,7 +510,24 @@ export function readinessGaps(input: ReadinessInput): ReadinessGap[] {
   // NOTHING TO SELL. Checked before the delivery option, because a shipping
   // method for an empty catalogue is furniture.
   if (input.products) {
-    if (input.products.active === 0) {
+    if (input.products.active === 0 && (input.products.inactive ?? 0) > 0) {
+      // PRODUCTS EXIST AND NONE IS ACTIVE. A product created without a status is
+      // stored as "draft" (products.go: an empty Status becomes ProductStatusDraft),
+      // the storefront lists only "active", and since web_builder b4d60a862 the
+      // checkout refuses any other status outright — so a catalogue built through
+      // the API without saying status:"active" is a store with nothing to buy.
+      gaps.push({
+        id: 'catalogue',
+        draft: false,
+        problem:
+          `The store has ${input.products.inactive} products and none is active — a product ` +
+          'created without status is stored as "draft", which the storefront never lists and ' +
+          'the checkout refuses. Every product list renders its empty state.',
+        fix:
+          'PUT /api/v1/products/{id} with the whole object read back and status: "active" ' +
+          '(PATCH is 405). Send status: "active" on every POST /api/v1/products from now on.',
+      });
+    } else if (input.products.active === 0) {
       gaps.push({
         id: 'catalogue',
         draft: false,
@@ -518,7 +535,9 @@ export function readinessGaps(input: ReadinessInput): ReadinessGap[] {
           'The store has no active products. Every product list on the site renders its empty ' +
           'state, the product template has nothing to bind to, and there is nothing to add to a ' +
           'cart — on a site that otherwise reports ready.',
-        fix: 'Create products (sb_api_find "create product"). priceCents is minor units — VND × 100.',
+        fix:
+          'Create products (sb_api_find "create product") with status: "active" — one created ' +
+          'without a status is a draft. priceCents is minor units — VND × 100.',
       });
     } else if (input.products.purchasable === 0) {
       gaps.push({

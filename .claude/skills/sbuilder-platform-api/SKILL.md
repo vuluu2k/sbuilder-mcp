@@ -302,6 +302,14 @@ repo over a number here, and fix the line when you catch one stale.
   WHOLE body goes with every credential (key, then session) before the narrow one: trying the
   narrow body with the key first took the merge when a session could have written safely. The
   GET falls back the same way, and the 403 names each credential refused.
+- **A TRANSLATION IS SERVED ONLY ONCE A PERSON STANDS BEHIND IT.** Since web_builder
+  `c6184c085` the storefront, search, slug routing and shopper mail read only rows whose
+  `source` is `"human"`. `PUT /api/v1/translations` — the key surface — defaults `source` to
+  `"machine"` on purpose (an app must not mislabel an unread value as reviewed), so a bilingual
+  store built through the key is stored, counted by `/api/v1/translations/progress`, and shown
+  to nobody until `POST /api/sites/{siteId}/translations/review` (one row) or `…/review/bulk`
+  approves it — a session route. The site-scoped `PUT /api/sites/{siteId}/translations`
+  defaults to `"human"`. The call sheet says this as `translation_fields.review_gate`.
 
 ## Phases — how reach and capability grew
 

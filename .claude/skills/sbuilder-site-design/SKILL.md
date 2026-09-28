@@ -18,8 +18,12 @@ costs a rebuild, and every one of them was learned by doing it wrong first.
 
 **2. The CATALOGUE before the pages.** Products first, then categories, then
 media — because a page binds to data, and a product grid built against an empty
-catalogue is judged against its empty state. Three facts that cost a retry each:
+catalogue is judged against its empty state. Four facts that cost a retry each:
 
+- **Send `status: "active"` on every product you create.** A product created without a
+  status is stored as `draft` (`products/product.go`, empty Status → draft): the storefront
+  never lists it and, since web_builder `b4d60a862`, the checkout REFUSES it as a line. A
+  catalogue built without the word is a store with nothing to buy, and `sb_review` now says so.
 - `priceCents` is MINOR UNITS: VND × 100. A 189.000 ₫ shirt is `18900000`.
 - `PATCH /api/v1/products/{id}` is **405**. Use PUT, and send the whole object —
   read it back first.

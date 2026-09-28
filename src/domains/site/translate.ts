@@ -83,5 +83,18 @@ export function translationCallSheet(): Record<string, unknown> {
       'that element allows. Translating any OTHER special BREAKS the render rather than ' +
       'degrading it: `name` is a lucide icon id, `src` a URL, `filterSource` a registry id the ' +
       'renderer switches on. Never walk a document translating every string you find.',
+    // THE REVIEW GATE (web_builder c6184c085). The storefront, search, slug routing
+    // and shopper mail read only rows whose source is "human". The key surface
+    // defaults source to "machine" — deliberately, so an app cannot mislabel an
+    // unread value as reviewed — so a translation written there is stored,
+    // counted by /progress, and never SHOWN until a review call approves it.
+    review_gate:
+      'Only rows with source "human" are served — on the storefront, in search, in slug ' +
+      'routing and in shopper mail. PUT /api/v1/translations defaults source to "machine": ' +
+      'the row is stored and counted by GET /api/v1/translations/progress, and shown to ' +
+      'nobody until POST /api/sites/{siteId}/translations/review {locale, entityType, ' +
+      'entityId, field} or …/review/bulk approves it (session credential). Send ' +
+      '"source": "human" only when a person read the text; the site-scoped PUT ' +
+      '/api/sites/{siteId}/translations already defaults to "human".',
   };
 }

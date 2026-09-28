@@ -392,6 +392,8 @@ describe('the product-write call sheet', () => {
     expect(all.toLowerCase()).toContain('priceCents'.toLowerCase());
     expect(all).toMatch(/renam/i);
     expect(all).toMatch(/from-url/);
+    expect(all).toMatch(/status: "active"/);
+    expect(all).toMatch(/draft/);
   });
 });
 

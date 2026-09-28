@@ -107,8 +107,10 @@ mà trông chắc chắn thì không.
 
 ### Lấp đầy một catalogue
 
-Bốn operation tạo hoặc thay toàn bộ một product mang thêm ghi chú `product_traps` — ba sự
-thật một body shape không nói được. **Giá nằm ở variant**: `products.Product` không có cột
+Bốn operation tạo hoặc thay toàn bộ một product mang thêm ghi chú `product_traps` — bốn sự
+thật một body shape không nói được. **Gửi `status: "active"`**: product tạo mà không kèm
+status được lưu là `draft`, storefront không bao giờ liệt kê và checkout từ chối, còn lệnh ghi
+vẫn trả 201. **Giá nằm ở variant**: `products.Product` không có cột
 giá, nên một product gửi lên không kèm `variants[]` là một mục catalogue không ai mua được.
 **Slug trùng bị ĐỔI TÊN, không bị từ chối** — lệnh ghi vẫn trả 200/201, nên chạy lại một lần
 import không báo lỗi mà nhân đôi catalogue trong im lặng. **Ảnh có thể lấy trực tiếp từ

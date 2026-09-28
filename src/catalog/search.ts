@@ -360,12 +360,20 @@ export function describeOperation(op: ApiOperation): Record<string, unknown> {
     };
   }
 
-  // FILLING A CATALOGUE WAS REACHABLE AND FIVE FACTS ABOUT IT WERE NOT, each
+  // FILLING A CATALOGUE WAS REACHABLE AND SIX FACTS ABOUT IT WERE NOT, each
   // failing silently. Attached to the call sheet for the same reason the
   // translation table is: this is where the agent is when it decides what to
   // send, on both credential surfaces a product can be created or replaced on.
   if (PRODUCT_WRITE_IDS.has(op.id)) {
     out.product_traps = {
+      // THE STATUS NOBODY SENDS. An empty Status becomes ProductStatusDraft
+      // (products/product.go), the storefront lists only "active", and since
+      // web_builder b4d60a862 the checkout REFUSES any other status as a line.
+      // The write answers 201 either way.
+      status:
+        'Send status: "active". A product created without one is stored as "draft" — the ' +
+        'storefront never lists it and the checkout refuses it — and the write still ' +
+        'answers 201. PATCH is 405: to activate later, PUT the whole object back.',
       price:
         'Price lives on the VARIANT, not the product — variants[].priceCents. A product ' +
         'posted with no variant renders a catalogue entry nobody can buy.',

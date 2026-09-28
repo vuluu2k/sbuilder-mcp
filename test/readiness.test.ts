@@ -186,6 +186,14 @@ describe('readinessGaps() — the catalogue', () => {
     expect(gap({ active: 0, purchasable: 0 })!.problem).toMatch(/no active products/i);
   });
 
+  it('names the drafts when products exist and none is active', () => {
+    const g = gap({ active: 0, purchasable: 0, inactive: 4 })!;
+    expect(g.problem).toMatch(/4 products and none is active/);
+    expect(g.problem).toMatch(/checkout refuses/);
+    expect(g.fix).toMatch(/status: "active"/);
+    expect(g.fix).toMatch(/PATCH is 405/);
+  });
+
   it('reports a catalogue priced entirely at zero, and says how many', () => {
     const g = gap({ active: 7, purchasable: 0 })!;
     expect(g.problem).toMatch(/All 7 active products are priced at zero/);
