@@ -6,6 +6,11 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.74.1] - 2026-09-28
+
+### Fixed
+- Gap `unreachablePage` của `sb_review` không còn báo sai với trang chỉ được liên kết từ thân nội dung của một trang khác, ví dụ nút "đọc câu chuyện" trên trang chủ; khi tìm thấy một trang mồ côi ứng viên, gap giờ đọc thêm thân các trang đã publish khác (tối đa 40 trang) và tính mọi href tìm thấy ở đó là đã tới được trang này.
+
 ## [0.74.0] - 2026-09-28
 
 ### Added

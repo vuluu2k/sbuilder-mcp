@@ -6,6 +6,11 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.74.1] - 2026-09-28
+
+### Fixed
+- `sb_review`'s `unreachablePage` gap no longer false-positives on a page that is only linked from the body of another page, such as a "read our story" button on the home page; when a candidate orphan page is found, it now also reads the other published pages' bodies (up to 40) and counts any href found there as reaching it.
+
 ## [0.74.0] - 2026-09-28
 
 ### Added
