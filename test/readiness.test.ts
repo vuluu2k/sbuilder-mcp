@@ -382,6 +382,44 @@ describe('readinessGaps() — is this a site at all', () => {
  * description serves none — so a site built through these tools, where nothing
  * asks for either, publishes pages a search result cannot tell apart.
  */
+/**
+ * The empty slug is the home page, resolved by the isHomepage flag — a site
+ * whose pages all carry slugs serves a 404 at its own front door.
+ */
+describe('readinessGaps() — the home page', () => {
+  const site = (pages: unknown) =>
+    readinessGaps({
+      pages,
+      liveGateways: null,
+      shippingMethods: null,
+      pageNodes: [],
+      globalNodes: null,
+      globalKinds: ['header'],
+    } as never);
+  const gap = (pages: unknown) => site(pages).find((g) => g.id === 'homepage');
+
+  it('reports a site where no page is the home page', () => {
+    const g = gap([
+      { type: 'page', status: 'published', isHomepage: false },
+      { type: 'about', status: 'published', isHomepage: false },
+    ])!;
+    expect(g.draft).toBe(false);
+    expect(g.problem).toMatch(/"\/" answers 404/);
+    expect(g.fix).toMatch(/isHomepage/);
+  });
+
+  it('says PUBLISH when the home page exists as a draft', () => {
+    const g = gap([{ type: 'page', status: 'draft', isHomepage: true }])!;
+    expect(g.draft).toBe(true);
+    expect(g.fix).toMatch(/^Publish/);
+  });
+
+  it('is silent once a home page is published, and when the list carried no flag', () => {
+    expect(gap([{ type: 'page', status: 'published', isHomepage: true }])).toBeUndefined();
+    expect(gap([{ type: 'page', status: 'published' }])).toBeUndefined();
+  });
+});
+
 describe('readinessGaps() — page SEO', () => {
   const site = (pages: unknown) =>
     readinessGaps({

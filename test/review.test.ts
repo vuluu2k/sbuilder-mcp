@@ -48,6 +48,43 @@ describe('reviewDesign()', () => {
     expect(reviewDesign(d).some((f) => f.nodeId === id && f.code === 'empty_container')).toBe(false);
   });
 
+  /**
+   * Every heading ships as h2 and nothing on the canvas shows the tag, so a
+   * page built here has headings at every level but the one a search engine
+   * and a screen reader look for first.
+   */
+  it('reports a page whose headings include no h1, naming the first heading', () => {
+    const d = emptyDoc();
+    d.apply(
+      addSubtree(d, 'ROOT', {
+        type: 'flex-section',
+        children: [{ type: 'heading', specials: { text: 'Áo thun' } }, { type: 'heading', specials: { text: 'Mới về', htmlTag: 'h3' } }],
+      }).patches,
+    );
+    const f = reviewDesign(d).find((x) => x.code === 'no_h1')!;
+    expect(f).toBeDefined();
+    expect(f.problem).toMatch(/^2 headings and none is an h1/);
+    const section = d.node('ROOT').data.nodes[0];
+    expect(f.nodeId).toBe(d.node(section).data.nodes[0]);
+    expect(f.fix).toContain('"htmlTag": "h1"');
+    d.apply(setKeys(d, f.nodeId, { htmlTag: 'h1' }, { namespace: 'specials' }));
+    expect(codes(d)).not.toContain('no_h1');
+  });
+
+  it('counts a text element promoted to h1, and stays silent on a page with no headings', () => {
+    const d = emptyDoc();
+    d.apply(
+      addSubtree(d, 'ROOT', {
+        type: 'flex-section',
+        children: [{ type: 'text', specials: { text: 'Cửa hàng', htmlTag: 'h1' } }, { type: 'heading', specials: { text: 'Mới về' } }],
+      }).patches,
+    );
+    expect(codes(d)).not.toContain('no_h1');
+    const e = emptyDoc();
+    e.apply(addSubtree(e, 'ROOT', { type: 'flex-section', children: [{ type: 'text', specials: { text: 'Chỉ có chữ' } }] }).patches);
+    expect(codes(e)).not.toContain('no_h1');
+  });
+
   it('reports the PLACEHOLDER the element ships with, still published', () => {
     const d = emptyDoc();
     d.apply(addSubtree(d, 'ROOT', { type: 'flex-section', children: [{ type: 'text' }] }).patches);
@@ -293,7 +330,8 @@ describe('reviewDesign()', () => {
       addSubtree(d, 'ROOT', {
         type: 'flex-section',
         children: [
-          { type: 'heading', specials: { text: 'Autumn sale' } },
+          // The page's title is an h1 — every heading ships as h2 (see no_h1).
+          { type: 'heading', specials: { text: 'Autumn sale', htmlTag: 'h1' } },
           { type: 'text', specials: { text: 'Up to 50% off, this week only.' } },
           { type: 'button', specials: { text: 'Shop now' } },
         ],
@@ -309,7 +347,7 @@ describe('reviewDesign()', () => {
       nodes: {
         rt: { id: 'rt', data: { type: 'root', parent: null, nodes: ['fs', 'cart'], isCanvas: true, hidden: false, custom: {} }, style: {}, config: {}, specials: {}, responsive: {}, events: [], bindings: [] },
         fs: { id: 'fs', data: { type: 'flex-section', parent: 'rt', nodes: ['he'], isCanvas: true, hidden: false, custom: {} }, style: {}, config: {}, specials: {}, responsive: {}, events: [], bindings: [] },
-        he: { id: 'he', data: { type: 'heading', parent: 'fs', nodes: [], isCanvas: false, hidden: false, custom: {} }, style: {}, config: {}, specials: { text: 'Real copy' }, responsive: {}, events: [], bindings: [] },
+        he: { id: 'he', data: { type: 'heading', parent: 'fs', nodes: [], isCanvas: false, hidden: false, custom: {} }, style: {}, config: {}, specials: { text: 'Real copy', htmlTag: 'h1' }, responsive: {}, events: [], bindings: [] },
         // An empty container inside the drawer. This used to be skipped on the
         // reasoning that an overlay "is not this page's to fix" — false: an
         // overlay's content reaches storage through the PAGE SAVE, so sb_set on

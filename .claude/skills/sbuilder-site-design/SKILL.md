@@ -119,6 +119,10 @@ A page whose `settings` carry no `title` serves the SITE NAME as its `<title>`, 
 `description` serves no meta description, so a site built here publishes N pages a search
 result cannot tell apart. `PATCH /api/v1/pages/{id}` with the whole `settings` blob (it
 REPLACES) plus `title`, `description` and an `ogImage`. `sb_review` reports it as `pageSeo`.
+And ONE `h1` per page: every `heading` ships as h2, the platform's own seeds included, so set
+`specials.htmlTag: "h1"` on the heading the page is about — `sb_review` reports `no_h1`.
+A site whose pages all carry slugs has no front door: `sb_review` reports `homepage` when no
+published page holds `isHomepage`.
 
 `sb_review` answers step 10's last question with eight checks: `checkoutPage`,
 `payment`, `productPage`, `catalogue`, `shipping`, `accountPage`, `searchPage`,

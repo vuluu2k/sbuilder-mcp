@@ -778,5 +778,36 @@ export function reviewDesign(
   // it, and threading it through every rule would put the same argument in eight
   // signatures.
   for (const f of out) if (inOverlay.has(f.nodeId)) f.overlay = true;
+  // A PAGE WITH HEADINGS AND NO <h1>. `heading` ships as h2
+  // (render/nodes/heading/html.go: SpecialString "htmlTag", default "h2"), and
+  // `text` / `text-dataset` take the same key, so a page built here — and every
+  // page the platform seeds, product title included — has headings at every
+  // level but the one a search engine and a screen reader look for first.
+  // Nothing on the canvas shows the tag. Page bands only (`band` excludes the
+  // overlays): a drawer heading is not the page's.
+  {
+    const level = (id: string): string | null => {
+      const n = d.nodes[id];
+      const tag = n.specials?.htmlTag;
+      if (typeof tag === 'string' && /^h[1-6]$/.test(tag)) return tag;
+      return n.data.type === 'heading' ? 'h2' : null;
+    };
+    const headings = walkOrder.filter((id) => band.has(id) && level(id) !== null);
+    if (headings.length > 0 && !headings.some((id) => level(id) === 'h1')) {
+      const first = headings[0];
+      out.push({
+        code: 'no_h1',
+        nodeId: first,
+        type: d.nodes[first].data.type,
+        problem:
+          `${headings.length} heading${headings.length === 1 ? '' : 's'} and none is an h1 — ` +
+          'every heading ships as h2, so the page has no main title for a search engine or a ' +
+          'screen reader. Invisible on the canvas.',
+        key: 'htmlTag',
+        fix: fill('no_h1', { id: first }),
+      });
+    }
+  }
+
   return out;
 }

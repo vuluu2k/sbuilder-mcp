@@ -57,7 +57,8 @@ export type ReadinessGapId =
   | 'cartDrawer'
   | 'cartDrawerLanguage'
   | 'cartDrawerThumbnail'
-  | 'pageSeo';
+  | 'pageSeo'
+  | 'homepage';
 
 export interface ReadinessGap {
   id: ReadinessGapId;
@@ -71,6 +72,8 @@ export interface ReadinessPage {
   type: string;
   status: string;
   name?: string;
+  /** The page served at "/". Absent means the list did not carry the flag. */
+  isHomepage?: boolean;
   /**
    * The page's own SEO blob — what the storefront writes into <head>. Absent
    * means the list did not carry it, and the pageSeo rule stays silent.
@@ -215,6 +218,35 @@ const drafted = (pages: ReadinessPage[], type: string) =>
 export function readinessGaps(input: ReadinessInput): ReadinessGap[] {
   const gaps: ReadinessGap[] = [];
   const pages = input.pages;
+
+  // NOTHING ANSWERS AT "/".
+  //
+  // storefront.go: the empty slug is the home page, resolved by the
+  // isHomepage flag — a site whose pages all carry slugs serves a 404 at its
+  // own front door, while every page on it is reachable and reviews clean.
+  // Reached by an agent that built pages by name and never named one home, or
+  // demoted the home page by moving the star (page.ts explains the flag). Only
+  // when the list carried the flag at all.
+  if (pages && pages.length > 0 && pages.some((p) => typeof p.isHomepage === 'boolean')) {
+    const home = pages.filter((p) => p.isHomepage === true);
+    if (!home.some((p) => p.status === 'published')) {
+      const draft = home.length > 0;
+      gaps.push({
+        id: 'homepage',
+        draft,
+        problem: draft
+          ? 'The home page exists but is not published, so "/" — the address on every card, ' +
+            'link and search result — answers 404 while every other page is live.'
+          : 'No page is the home page, so "/" answers 404. Every page on the site is reachable ' +
+            'by its slug and none of them is the front door.',
+        fix: draft
+          ? 'Publish the home page.'
+          : 'Make one: PATCH /api/v1/pages/{id} { "isHomepage": true } on the page that should ' +
+            'answer at "/" — it moves the star and clears the slug. Or sb_page_create with ' +
+            'is_homepage: true, which adopts the home page the site already has.',
+      });
+    }
+  }
 
   // A SITE WITH NO SHARED SECTION IS NOT A SITE, IT IS A STACK OF PAGES.
   //

@@ -118,7 +118,9 @@ export async function runSmoke(): Promise<void> {
   // of this check asserted the section built above was clean; it was not — the
   // heading still carried the placeholder the element ships with, and the
   // reviewer said so. The check was wrong, not the reviewer.
-  doc.apply(setKeys(doc, built.ids[1], { text: 'Autumn sale' }, { namespace: 'specials' }));
+  // And make it the page's h1 — every heading ships as h2, and a page with
+  // headings and no h1 is a finding too (no_h1). Same lesson, one rule later.
+  doc.apply(setKeys(doc, built.ids[1], { text: 'Autumn sale', htmlTag: 'h1' }, { namespace: 'specials' }));
   check('a finished section reviews clean', reviewDesign(doc).length === 0);
   // ...and an unfilled one must. A reviewer that never fires is indistinguishable
   // from one that is not wired up.

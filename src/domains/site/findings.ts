@@ -106,6 +106,10 @@ export const FIX: Record<string, string> = {
     'Rewrite it with the same values: sb_set id "<id>", namespace style, state "hover", ' +
     'keys { … } — read them off the node first, because that one call both writes them where ' +
     'the renderer looks AND clears the slot nobody reads. Nothing else to do afterwards.',
+  no_h1:
+    'Make the page\'s main title an h1: sb_set id "<id>", namespace specials, keys ' +
+    '{ "htmlTag": "h1" } — ONE per page, on the heading the page is about (the first one ' +
+    'is named here; pick a different one if it is not the title). Every heading ships as h2.',
   stuck_no_host:
     'Pin something: sb_set id "<id>" (or the section it lives in), namespace style, keys ' +
     '{ "position": "sticky" } — sb_set seeds the offset and the layer order with it. Until ' +
