@@ -6,6 +6,12 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.73.0] - 2026-09-28
+
+### Added
+- `sb_review` gains a `no_h1` finding: every heading on a page ships as h2 (the renderer's default `htmlTag`, shared by `text` and `text-dataset`), so a page with headings and no h1 has no main title for a search engine or a screen reader, invisible on the canvas; it fires on the first heading in the page's own bands, skipping overlays.
+- `sb_review` gains a `homepage` readiness gap: a site resolves "/" by the `isHomepage` flag, so a site whose pages all carry slugs answers 404 at its own front door while every page reviews clean; it reports a draft home page separately from no home page at all, and stays silent when the page list does not carry the flag.
+
 ## [0.72.0] - 2026-09-28
 
 ### Added

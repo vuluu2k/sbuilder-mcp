@@ -6,6 +6,12 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.73.0] - 2026-09-28
+
+### Added
+- `sb_review` có thêm finding `no_h1`: mọi heading trên trang đều được dựng thành h2 (giá trị mặc định `htmlTag` của renderer, dùng chung với `text` và `text-dataset`), nên một trang có heading mà không có h1 thì không có tiêu đề chính cho máy tìm kiếm hay trình đọc màn hình, và điều này vô hình trên canvas; finding báo trên heading đầu tiên trong band của chính trang đó, bỏ qua overlay.
+- `sb_review` có thêm gap readiness `homepage`: site phân giải "/" bằng cờ `isHomepage`, nên một site mà mọi trang đều có slug sẽ trả 404 ngay tại trang chủ dù mọi trang khác review sạch; gap báo riêng trường hợp trang chủ tồn tại nhưng chưa publish với trường hợp không trang nào là trang chủ, và im lặng khi danh sách trang không mang cờ này.
+
 ## [0.72.0] - 2026-09-28
 
 ### Added
