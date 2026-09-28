@@ -6,6 +6,16 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.71.0] - 2026-09-28
+
+### Added
+- Gap readiness `catalogue` của `sb_review` giờ báo riêng "có N sản phẩm, không cái nào active" thay vì gộp chung với catalogue rỗng, dành cho store có toàn bộ sản phẩm được tạo mà không kèm `status` nên bị lưu thành draft.
+- `product_traps` của `sb_api_find` có thêm bẫy `status`: một sản phẩm tạo không kèm `status` sẽ bị lưu thành "draft" — storefront không liệt kê và checkout từ chối nó như một dòng hàng — dù request ghi vẫn trả về 201.
+- Call sheet bản dịch (qua `sb_api_find`) có thêm `review_gate`, giải thích rằng `PUT /api/v1/translations` mặc định `source` của một dòng là "machine", dòng này được lưu và tính vào tiến độ nhưng không hiện ở storefront, trong tìm kiếm, trong slug routing hay trong mail gửi khách cho tới khi `POST /api/sites/{siteId}/translations/review` (hoặc bản `/bulk`) duyệt nó.
+
+### Changed
+- Catalog được sinh ra đã được làm mới dựa trên nền tảng (`web_builder` `84f1f10bc`): các operation liệt kê flash sale campaign có thêm tham số truy vấn `q`, `status`, `limit`, `offset`; request shape của order/checkout giờ catalog thêm field `locale` lưu lại ngôn ngữ storefront của khách tại thời điểm checkout; `slug` giờ được catalog là field dịch được trên product, category, article, blog category, course và page; và `review` không còn là một entity type dịch được nữa.
+
 ## [0.70.0] - 2026-09-26
 
 ### Added

@@ -6,6 +6,16 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.71.0] - 2026-09-28
+
+### Added
+- `sb_review`'s `catalogue` readiness gap now reports "N products and none active" separately from an empty catalogue, for a store whose products were all created without `status` and stored as drafts.
+- `sb_api_find`'s `product_traps` gains a `status` trap: a product created without `status` is stored as "draft" — the storefront never lists it and the checkout refuses it as a line — even though the write still answers 201.
+- The translation call sheet (via `sb_api_find`) gains `review_gate`, explaining that `PUT /api/v1/translations` defaults a row's `source` to "machine", which is stored and counted but never shown on the storefront, in search, in slug routing, or in shopper mail until `POST /api/sites/{siteId}/translations/review` (or its `/bulk` form) approves it.
+
+### Changed
+- The generated catalog was regenerated against the platform (`web_builder` `84f1f10bc`): flash sale campaign listing operations gain query parameters `q`, `status`, `limit`, and `offset`; the order/checkout request shapes now catalog a `locale` field that snapshots the shopper's storefront language at checkout; `slug` is now catalogued as a translatable field on products, categories, articles, blog categories, courses, and pages; and `review` is no longer a translatable entity type.
+
 ## [0.70.0] - 2026-09-26
 
 ### Added
