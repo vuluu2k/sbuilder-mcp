@@ -200,6 +200,15 @@ describe('readinessGaps() — the catalogue', () => {
     expect(g.fix).toMatch(/VND × 100/);
   });
 
+  it('reports active products with no image, after the money questions', () => {
+    const gaps = readinessGaps({ ...ready, products: { active: 5, purchasable: 5, unpictured: 2 } } as never);
+    expect(gaps.map((g) => g.id)).toEqual(['productImages']);
+    expect(gaps[0].problem).toMatch(/^2 of 5 active products have no image/);
+    expect(gaps[0].fix).toMatch(/sb_media_upload/);
+    expect(ids({ active: 5, purchasable: 5, unpictured: 0 })).toEqual([]);
+    expect(ids({ active: 5, purchasable: 5 })).toEqual([]);
+  });
+
   it('is silent once one product is purchasable', () => {
     expect(ids({ active: 7, purchasable: 1 })).toEqual([]);
   });

@@ -59,7 +59,8 @@ export type ReadinessGapId =
   | 'cartDrawerThumbnail'
   | 'pageSeo'
   | 'homepage'
-  | 'unreachablePage';
+  | 'unreachablePage'
+  | 'productImages';
 
 export interface ReadinessGap {
   id: ReadinessGapId;
@@ -158,7 +159,7 @@ export interface ReadinessInput {
    * option reports READY on an empty catalogue, and every repeater on it renders
    * its empty state to a shopper.
    */
-  products: { active: number; purchasable: number; inactive?: number } | null;
+  products: { active: number; purchasable: number; inactive?: number; unpictured?: number } | null;
   /** Every node of the open page. */
   pageNodes: NodeLike[];
   /** Every node of every global section master; null when unread. */
@@ -737,6 +738,29 @@ export function readinessGaps(input: ReadinessInput): ReadinessGap[] {
         fix: 'Set priceCents on each product and its variants. Minor units: VND × 100.',
       });
     }
+  }
+
+  // A CARD WITH THE PLATFORM'S GREY SQUARE WHERE THE PHOTO GOES.
+  //
+  // render/nodes/image/html.go: no src → nodes.ImagePlaceholder, "a card
+  // instead of a broken icon". So a product created without `images` renders
+  // on every card, in every drawer line and on its own page as the same grey
+  // placeholder — nothing errors, and a catalogue of twenty reads as a
+  // template nobody finished. Asked after the money questions: a store with
+  // no photos still takes an order.
+  if (input.products && input.products.active > 0 && (input.products.unpictured ?? 0) > 0) {
+    const n = input.products.unpictured!;
+    gaps.push({
+      id: 'productImages',
+      draft: false,
+      problem:
+        `${n} of ${input.products.active} active products have no image, so every card, cart ` +
+        "line and product page shows the platform's grey placeholder where the photo goes.",
+      fix:
+        'Get a picture into the library (sb_media_upload: a file, a url, or query + pick), then ' +
+        'PUT the whole product back with images: [url, …] — first is the primary. POST ' +
+        '/api/media/{siteId}/from-url ingests straight from a url in one hop.',
+    });
   }
 
   if (input.shippingMethods === 0) {

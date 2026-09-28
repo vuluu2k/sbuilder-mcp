@@ -32,7 +32,9 @@ catalogue is judged against its empty state. Four facts that cost a retry each:
   ("Red / Green / Blue", "S / M / L") while the real sizes sit unused.
 
 **3. Media.** `sb_media_upload`, or `POST /api/v1/media` (multipart) — the second
-door, and the key's own.
+door, and the key's own. Then PUT each product back with `images: [url, …]`: a product with
+no image renders the platform's grey placeholder on every card, cart line and its own page
+(`render/nodes/image/html.go`), and `sb_review` reports it as `productImages`.
 
 **4. Delivery, then payment.** Shipping methods first: the checkout seeds a
 shipping select whose options ARE the site's own methods, so a store with none

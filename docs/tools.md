@@ -1128,6 +1128,7 @@ publish panel then listed five gaps.
 | `payment` | No live gateway — nothing but cash on delivery, and an online order dead-ends |
 | `productPage` | No published `product` page, so every link out of a product card 404s |
 | `shipping` | No delivery option: the checkout's select is empty and every order ships free |
+| `productImages` | Active products with no `images`: every card, cart line and product page shows the platform's grey placeholder (`render/nodes/image/html.go`, no src → `ImagePlaceholder`). Fix: `sb_media_upload`, then PUT the product back with `images: [url, …]` — first is the primary |
 | `cartTrigger` | Nothing opens the cart on its own; a shopper who closes the drawer cannot get back |
 | `siteChrome` | Two or more pages and NO global section, so each page carries its own header and footer. Changing the menu is one edit per page, the copies drift, and a visitor meets a slightly different site on every click. Asked of every site, not only a store — it is the one question here that is not about money |
 | `homepage` | No PUBLISHED page carries `isHomepage`, so "/" answers 404 while every page on the site is reachable by slug. `draft: true` when the home page exists unpublished. Fix: `PATCH /api/v1/pages/{id}` with `isHomepage: true` (it moves the star and clears the slug), or `sb_page_create` with `is_homepage: true`, which adopts the one the site has. Silent when the list did not carry the flag |

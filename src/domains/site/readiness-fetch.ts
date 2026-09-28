@@ -46,7 +46,7 @@ export async function gatherReadiness(
     // credential, so the check answers for a session install as well as a
     // key-only one. A page is enough to tell empty from not; `total` carries the
     // real count when the platform sends it.
-    get<{ products?: Array<{ status?: string; priceCents?: number }>; total?: number }>(
+    get<{ products?: Array<{ status?: string; priceCents?: number; images?: unknown }>; total?: number }>(
       `/api/sites/${site}/products?limit=200`,
     ),
     // THE CATEGORIES, and the pages they point at: the ones with no page-link
@@ -139,6 +139,12 @@ export async function gatherReadiness(
         ).length,
         // Drafts and archived: what a catalogue built without status:"active" is.
         inactive: rows.filter((p) => (p.status ?? 'active') !== 'active').length,
+        // Active and pictureless: the grey placeholder on every card.
+        unpictured: rows.filter(
+          (p) =>
+            (p.status ?? 'active') === 'active' &&
+            !(Array.isArray(p.images) && p.images.some((u) => typeof u === 'string' && u !== '')),
+        ).length,
       }
     : null;
 

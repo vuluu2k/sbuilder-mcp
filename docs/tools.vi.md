@@ -1098,6 +1098,7 @@ hoàn toàn bằng bộ tool này review sạch, publish và render đúng; bả
 | `payment` | Chưa có cổng thanh toán sống — chỉ còn thanh toán khi nhận hàng, đơn online tắc |
 | `productPage` | Chưa publish trang `product`, nên mọi liên kết từ thẻ sản phẩm đều 404 |
 | `shipping` | Không có phương thức giao: ô chọn ở trang thanh toán trống và mọi đơn miễn phí ship |
+| `productImages` | Sản phẩm active không có `images`: mọi thẻ, dòng giỏ hàng và trang sản phẩm hiện ô xám placeholder của platform (`render/nodes/image/html.go`, không src → `ImagePlaceholder`). Sửa: `sb_media_upload`, rồi PUT nguyên product kèm `images: [url, …]` — ảnh đầu là ảnh chính |
 | `cartTrigger` | Không gì mở được giỏ; khách đóng ngăn giỏ rồi không quay lại được |
 | `siteChrome` | Từ hai trang trở lên mà KHÔNG có global section nào, nên mỗi trang tự mang header/footer riêng. Đổi menu là sửa từng trang, các bản sao lệch dần, và khách gặp một site hơi khác ở mỗi lần bấm. Hỏi cho mọi site chứ không riêng cửa hàng — đây là câu hỏi duy nhất ở đây không liên quan tới tiền |
 | `homepage` | Không trang ĐÃ PUBLISH nào mang `isHomepage`, nên "/" trả 404 trong khi mọi trang khác vào được theo slug. `draft: true` khi trang chủ có nhưng chưa publish. Sửa: `PATCH /api/v1/pages/{id}` với `isHomepage: true` (chuyển ngôi sao và xoá slug), hoặc `sb_page_create` với `is_homepage: true` — nó nhận lại trang chủ site đã có. Im lặng khi danh sách trang không mang cờ |
