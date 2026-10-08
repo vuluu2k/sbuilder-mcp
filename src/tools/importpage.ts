@@ -622,7 +622,7 @@ export function registerImportTools(
       // per page would give the first page element defaults and every later page
       // the defaults of the blank page before it — rule 0 failing on every page
       // at once. The open page if there is one, the site's home page otherwise.
-      let tokenDoc = session.peek();
+      let tokenDoc = session.page() ? session.peek() : null;
       if (!tokenDoc && home && typeof home.id === 'string') {
         try {
           tokenDoc = PageDoc.from((await loadSource(ctx, siteId, home.id)).document);

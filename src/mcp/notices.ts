@@ -16,6 +16,15 @@ export class Notices {
     return body;
   }
 
+  /**
+   * What `once` WOULD return, without spending it. A dry run uses this: it
+   * must show the same warnings as the real call, and the real call must
+   * still have them to show.
+   */
+  peek(key: string, body: string): string | undefined {
+    return this.said.has(key) ? undefined : body;
+  }
+
   reset(): void {
     this.said.clear();
   }

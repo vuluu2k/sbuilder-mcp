@@ -39,7 +39,7 @@ export interface RevStamp {
 
 const LIVE_PEER = /^[A-Za-z0-9_-]{1,64}$/;
 
-function sourcePath(siteId: string, pageId: string): string {
+export function sourcePath(siteId: string, pageId: string): string {
   return `/api/sites/${encodeURIComponent(siteId)}/pages/${encodeURIComponent(pageId)}/source`;
 }
 

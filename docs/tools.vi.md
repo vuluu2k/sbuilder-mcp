@@ -204,7 +204,8 @@ thao tác trên đúng một tài liệu đang mở.
 | Tham số | Kiểu | Ghi chú |
 | --- | --- | --- |
 | `site_id` | string? | Mặc định lấy `SB_SITE` |
-| `page_id` | string | |
+| `page_id` | string? | Một trong `page_id` / `form_id` |
+| `form_id` | string? | Mở tài liệu trường của một biểu mẫu thay cho trang |
 
 Mọi tool nhận `site_id` đều coi nó là tuỳ chọn và lùi về `SB_SITE` — một khoá chỉ thuộc
 một site, nên bản cài đã biết sẵn. Tham số truyền tay luôn thắng.
@@ -212,6 +213,18 @@ một site, nên bản cài đã biết sẵn. Tham số truyền tay luôn th�
 Nạp tài liệu **bản nháp** của trang và trả về outline. Thứ nhận được đã *ghép sẵn*: global
 section, site overlay và app block đã được gộp lên ROOT. Findings đi kèm, đúng hình dạng
 `sb_review` trả về — xem bên dưới.
+
+**`form_id` mở TÀI LIỆU TRƯỜNG của biểu mẫu** (`GET/PUT /api/sites/{siteId}/forms/{id}/document`)
+trong cùng phiên, để `sb_outline`, `sb_add`, `sb_set`, `sb_remove`, `sb_review` và `sb_undo`
+sửa trường, giá trị mặc định và quy tắc trường phụ thuộc. Quy tắc nằm ở `specials.formRules`
+trên gốc biểu mẫu: một mảng JSON `{ id, name?, join: and|or, conditions: [{ field, op, value }],
+targets: [{ field, action }] }`, `op` là một trong is, isNot, filled, empty, contains,
+notContains, `action` là một trong hidden, shown, optional, required — từ vựng được sinh từ nền
+tảng. `field` là `specials.name` của trường (chỉ dùng id node khi trường không có tên). `sb_set`
+cảnh báo (`form_rule`) khi JSON sai, join/op/action lạ, trường không có trong biểu mẫu, hoặc quy
+tắc nhắm vào chính trường điều kiện của nó — nền tảng lặng lẽ bỏ từng quy tắc như vậy. Tài liệu
+biểu mẫu không có phòng live, bản xem trước hay `sb_look`; thay đổi lưu vào biểu mẫu, và trang
+chứa nó hiện ra sau khi xuất bản lại.
 
 **SATELLITE CÓ TRÊN BẢN ĐỒ.** Tám kiểu element sở hữu node treo ở `config[<key>]` chứ không
 ở `data.nodes` — ô chọn biến thể, hai nút của bộ đếm số lượng, trạng thái rỗng của repeater —
@@ -256,7 +269,7 @@ warnings? }` với `warnings` khoá theo id node.
 | Tham số | Kiểu | Ghi chú |
 | --- | --- | --- |
 | `query` | string | Element cần làm gì |
-| `limit` | number? | Mặc định 8, tối đa 30 |
+| `limit` | number? | Mặc định 8, tối đa 60 |
 | `detail` | boolean? | Thêm `useWhen`, `avoidWhen`, `contentTips` vào mọi kết quả |
 
 Tìm trong chính AI hints của nền tảng trên cả 122 element. Mỗi kết quả là
@@ -265,12 +278,26 @@ khi đúng — bốn trường để **chọn**. Bản thân các hint, do độ
 này, đi kèm `sb_traits_for` của element đã chọn, hoặc kèm mọi kết quả khi `detail: true`;
 hint của mười kết quả từng tốn 7 KB cho một lựa chọn vốn chỉ dựa vào description.
 
+Kết quả được xếp hạng theo tầng: trùng khớp type, rồi trùng khớp nhãn (không phân biệt hoa
+thường và dấu), rồi type bắt đầu bằng từ khoá, rồi từ nguyên vẹn trong type, nhãn,
+`semantics`/`useWhen`, mô tả, và cuối cùng là các key config/specials của chính element cùng
+các giá trị mà từ vựng của chúng cho phép — nhờ đó `pagination`, `load_more`, `sort` tìm ra
+element làm việc đó. Khớp chuỗi con là tín hiệu yếu nhất.
+
 ## `sb_traits_for`
 
 `type`, `control?`. Không có `control`: AI hints của element, inspector của nó dưới dạng tên
 tab → nhóm → control, mọi control có đích ghi khai báo sẵn ở dạng đầy đủ, default được gieo
 sẵn và luật chứa con — hình dạng ở mục [Thiết kế như người thật](#sb_traits_for--inspector-không-phải-bản-tóm-tắt).
 Có `control`: đúng một control đó, đầy đủ.
+
+Ngoài ra trả về, mỗi trường chỉ khi không rỗng: `base_only` (các key config của element mà
+renderer chỉ đọc ở base; `sb_set` tự ghi chúng vào base dù bạn chỉ định breakpoint nào),
+`preconditions` (thiết lập không có tác dụng trừ khi một key bên cạnh mang giá trị nhất định,
+kèm điều sẽ hiển thị nếu không thoả), `events` (các hành động click/form theo từng trigger) và
+`binding_events` (danh sách thay thế khi node mang binding mua hàng), và `bindable` (đúng các
+specials mà `sb_bind` chấp nhận, kể cả field binding được sinh như `boundProductId`). Control khai báo nào ghi vào key chỉ-base
+được đánh dấu `responsive: false`.
 
 ## `sb_add`
 
@@ -398,6 +425,26 @@ báo là xong), node chuyển vào chính cây con của nó, và `specials` kè
 không mang gợi ý `force`, đó là cách phân biệt mà không cần thử.
 
 ---
+
+### Kiểm tra cảnh báo, và dry run nói đúng sự thật
+
+Kết quả `sb_add` và `sb_set` có `checks: [{ code, id?, key, problem, fix }]` — `sb_add` kiểm
+tra mọi node trong spec lồng nhau. Mã: `unknown_key` (key config/specials mà element không được
+biết là có đọc — vẫn được ghi, vì 412/577 control của inspector không khai báo đích ghi và một
+lệnh từ chối sẽ chặn cả key thật), `unknown_value`, `animation`, `dead_key`, `precondition`,
+`unsupported_setting`. Mỗi cảnh báo nói một lần mỗi process; dry run hiện nó mà không tiêu, nên
+lần ghi thật vẫn hiện lại.
+
+Dry run của `sb_add`, `sb_set`, `sb_move`, `sb_remove`, `sb_duplicate`, `sb_bind`, `sb_event` và `sb_template_use` (mẫu dựng sẵn) chạy
+cùng bước kiểm tra trước khi lưu như lần ghi thật và trả `would_refuse: "<lý do>"` khi lệnh
+thật sẽ bị từ chối (ví dụ một section nằm trên header toàn cục). Không áp dụng gì cục bộ, không
+gửi gì đi; dry run của `sb_template_use` đọc trang đích mà không mở nó — trang đang mở giữ
+nguyên.
+
+`sb_bind` từ chối field nằm ngoài các specials mà element hiển thị binding, kèm danh sách hợp
+lệ. `sb_event` từ chối `go_to_url` / `open_page` thiếu `payload.url` (`open_page` chỉ có id
+trang không tạo liên kết) và `popup` thiếu `payload.id` (overlay id của pop-up), nêu payload
+mong đợi. `force: true` để ghi đè cả hai.
 
 # Sửa trực tiếp và thị giác
 
@@ -1042,6 +1089,17 @@ tài liệu:
 | `hover_dead` | Hover được lưu ở `states.hover` trên element giữ hover ở chỗ khác — `button` giữ nó trong map phẳng `config.stateHover` mà renderer của chính nó compile. Được lưu, được publish, không ai vẽ. Mọi site server này dựng trước khi biết khác biệt đó đều dính |
 | `stuck_no_host` | Override `stuck` trên node không có gì được ghim ở trên. `render/css.go` chỉ sinh CSS stuck khi có stuck host, nên phần tạo dáng được lưu, save, publish và không bao giờ vẽ. Thường do host bị bỏ ghim về sau, hoặc do import |
 | `no_h1` | Trang có heading mà không cái nào là `h1`. Mọi `heading` sinh ra là h2 (`specials.htmlTag`), `text` / `text-dataset` cũng đọc key đó, nên trang dựng ở đây — và mọi trang platform seed — không có tiêu đề chính cho máy tìm kiếm hay trình đọc màn hình. Canvas không hiện tag. Báo trên heading đầu tiên CỦA TRANG — dòng thương hiệu trong header dùng chung được bỏ qua, theo cả hai stamp (`globalRef`/`globalId`); đặt h1 lên đúng heading nói về trang, một cái thôi |
+| `invalid_action` | Sự kiện đã lưu có action mà element không hỗ trợ trên trigger đó (nút đã gắn mua hàng chỉ nhận `bindingEvents`). Được lưu nhưng không bao giờ chạy |
+| `action_missing_target` | `go_to_url` / `open_page` thiếu `payload.url` (renderer không tự phân giải id trang), hoặc `popup` thiếu `payload.id`. Bấm vào không có tác dụng |
+| `no_data_context` | Element gắn dữ liệu (`product.*`, `category.*`, `article.*`, `course.*`) nằm ngoài mọi repeater và mọi pin, trên loại trang không cung cấp bản ghi đó. Nó hiện placeholder mãi mãi |
+| `unread_value` | Giá trị config/specials đã lưu nằm ngoài từ vựng của renderer, ở base hoặc bất kỳ breakpoint nào. Publish ra giá trị mặc định mà không báo lỗi |
+| `custom_code_native` | **`severity: "maintenance"`** — khối `custom-code` chủ yếu là markup mà element native đã có (form, heading, ảnh, nút, danh sách link, iframe YouTube/Vimeo/Maps). Chỉ là gợi ý: vẫn chạy, nhưng không sửa được trong inspector, bỏ qua theme và `sb_review` không nhìn vào được. Script bên thứ ba và embed lạ không bao giờ bị báo |
+
+Finding chỉ mang `severity` khi không phải lỗi: `maintenance` (vẫn chạy nhưng khó sửa hoặc lệch)
+hoặc `permission` (bị chặn bởi quyền hoặc credential). Finding maintenance được trả riêng trong
+`advice`, dùng chung bảng `fixes`, và không bao giờ chặn kết luận sạch: khi mọi thứ còn lại chỉ là
+advice, `sb_review` trả `findings: []` kèm verdict. `custom_code_native` không báo form bên thứ ba
+gửi sang host khác (embed Mailchimp, Klaviyo) — form native không gửi được tới đó.
 
 Ba mã cuối là những luật RENDER mà một document hoàn toàn hợp lệ vẫn có thể vi
 phạm. `form` seed sẵn `formId: ""` và form chỉ được compose trên đường RENDER, nên
@@ -2100,7 +2158,15 @@ nó đè lên bản này.
 
 ## `sb_undo`
 
-Trả lại thứ mà một lệnh `PUT` qua `sb_api_call` đã ghi đè.
+Khôi phục thứ mà một thao tác ghi đã thay thế: chỉnh sửa trang hoặc tài liệu form qua server này
+(`sb_add`, `sb_set`, `sb_remove`, `sb_duplicate`, `sb_move`, `sb_bind`, `sb_event`,
+`sb_template_use`, …) hoặc một PUT qua `sb_api_call`. Mỗi lần lưu trang ghi lại tài liệu nó thay
+thế, trừ khi lần lưu không đổi gì; dry run không ghi gì. Trang được khôi phục qua đường lưu thông
+thường, nên editor đang mở thấy ngay và cơ chế chặn theo revision bản nháp vẫn áp dụng, và sẽ
+**bị từ chối** nếu đã có người khác lưu trang kể từ lần lưu gần nhất của process này. Một lần undo
+cũng ghi lại thứ nó thay thế, nên ngay sau đó `index: 1` là redo; muốn lùi xa hơn thì chọn index
+lớn hơn. Các mục chỉ sống trong process này, tối đa 20; lịch sử của nền tảng
+(`GET …/pages/{pageId}/history`) vẫn còn sau khi khởi động lại.
 
 | Tham số | Kiểu | Ghi chú |
 | --- | --- | --- |

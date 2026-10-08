@@ -18,9 +18,7 @@
  */
 
 import { cartGalleryThumbs, cartRelocalize, cartSeedLocale } from './cartlang.js';
-
-/** The purchase binding an Add-to-cart / Buy-now button carries. */
-const PRODUCT_ACTION_BINDING_ID = 'bind-product-action';
+import { PRODUCT_ACTION_BINDING_ID } from './navhref.js';
 
 /** Element types that only make sense in a store. */
 const COMMERCE_TYPES = [

@@ -541,6 +541,16 @@ repo over a number here, and fix the line when you catch one stale.
   indistinguishable from one a human built; uniqueness comes from REMEMBERING what has been
   issued, which is the right scope since one process builds one document.
 
+- **A FORM'S FIELD DOCUMENT IS EDITABLE THROUGH THE PAGE TOOLS (`sb_page_open form_id`).** It
+  roots at the `form` node, not `ROOT` — never heal it. GET `…/forms/{id}/document` answers
+  `{ document }` (null when never saved), PUT takes `{ document }` and answers `{ schema }`; no
+  rev fence, so `onFormDocumentWrite` marks the open copy stale for writes through other doors
+  (`sb_undo`, `sb_api_call`). No live room (patches would land on the room's last page), no
+  preview — `location()` refuses; `page()` is the null-safe form. Rules are
+  `specials.formRules` on the form root, a JSON STRING (the editor `JSON.stringify`s), keyed
+  by each field's `specials.name.trim() || nodeId` — a named field's node id is NOT a key.
+  Every reader drops a bad rule one entry at a time, silently, so `formRuleChecks` warns.
+
 ## The five traps
 
 Each fails SILENTLY. Each is encoded in `src/domains/site/traps.ts` (trap 5 in

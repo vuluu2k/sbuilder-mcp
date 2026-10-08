@@ -30,6 +30,7 @@ import { request, redact } from '../transport/http.js';
 import { text } from '../mcp/response.js';
 import { tokenFor } from './api.js';
 import type { ToolContext } from './context.js';
+import type { PageSession } from './page.js';
 
 export interface UndoEntry {
   /** 1 is the most recent. Stable only until the next write. */
@@ -44,6 +45,14 @@ export interface UndoEntry {
 
 interface Stored extends UndoEntry {
   body: Record<string, unknown>;
+  /**
+   * Recorded by a PageSession save, so it restores through `restorePage`. A
+   * raw `sb_api_call` PUT to the same path records under the same operation id
+   * and must keep the raw path: its write never moved the fence.
+   */
+  session?: boolean;
+  /** Nodes a live PEER's ops changed that this save carried — an undo would erase them. */
+  peer?: string[];
 }
 
 /** Twenty is more than a session reaches back, and bounds what one process holds. */
@@ -82,11 +91,36 @@ export function restoreBodyFrom(operationId: string, response: unknown): Record<
   return pick(inner as Record<string, unknown>);
 }
 
+/** The operation a page draft save is, and the key every page undo entry carries. */
+export const PAGE_SOURCE_OP = 'put:/api/sites/{siteId}/pages/{pageId}/source';
+
+/**
+ * What this process last stored for a page: the draft rev the save answered
+ * (0 on a platform that reports none) and the document as stored. A page undo
+ * restores only over exactly that — anything else is somebody else's edit.
+ */
+export interface PageFence {
+  siteId: string;
+  pageId: string;
+  rev: number;
+  json: string;
+}
+
 export class UndoLog {
   private readonly entries: Stored[] = [];
+  private readonly fences = new Map<string, PageFence>();
+
+  /** A PageSession save stored this page; `sb_undo` restores only over it. */
+  fence(path: string, f: PageFence): void {
+    this.fences.set(path, f);
+  }
+
+  fenceFor(path: string): PageFence | undefined {
+    return this.fences.get(path);
+  }
 
   /** Record the state a PUT is about to replace. Silent when nothing usable came back. */
-  record(operationId: string, path: string, before: unknown): void {
+  record(operationId: string, path: string, before: unknown, meta: { session?: boolean; peer?: string[] } = {}): void {
     const body = restoreBodyFrom(operationId, before);
     if (!body) return;
     this.entries.unshift({
@@ -96,6 +130,8 @@ export class UndoLog {
       at: new Date().toISOString(),
       fields: Object.keys(body),
       body,
+      ...(meta.session ? { session: true } : {}),
+      ...(meta.peer?.length ? { peer: meta.peer } : {}),
     });
     // Oldest out. A cap that grows without bound is a memory leak wearing a
     // safety feature's clothes.
@@ -103,20 +139,34 @@ export class UndoLog {
   }
 
   list(): UndoEntry[] {
-    return this.entries.map(({ body: _body, ...rest }, i) => ({ ...rest, index: i + 1 }));
+    return this.entries.map(({ body: _body, session: _s, peer: _p, ...rest }, i) => ({ ...rest, index: i + 1 }));
   }
 
   at(index: number): Stored | undefined {
     return this.entries[index - 1];
   }
 
-  /** Drop an entry once it has been put back, so undo is not a loop. */
-  drop(index: number): void {
-    this.entries.splice(index - 1, 1);
+  /** Peer-touched nodes carried by this entry's save and every later save of the same path. */
+  peersThrough(entry: Stored): string[] {
+    const upTo = this.entries.indexOf(entry);
+    const out = new Set<string>();
+    for (const e of this.entries.slice(0, upTo + 1)) if (e.path === entry.path) for (const p of e.peer ?? []) out.add(p);
+    return [...out];
+  }
+
+  /**
+   * Drop an entry once it has been put back, so undo is not a loop. By
+   * reference: a page restore is itself a save, which records its own entry
+   * (the redo) ahead of this one and shifts every index.
+   */
+  drop(entry: Stored): void {
+    const i = this.entries.indexOf(entry);
+    if (i >= 0) this.entries.splice(i, 1);
   }
 
   clear(): void {
     this.entries.length = 0;
+    this.fences.clear();
   }
 }
 
@@ -133,17 +183,16 @@ export class UndoLog {
  * ignore. And the entry is dropped once it is put back, so undo is a step
  * backwards rather than a loop between two states.
  */
-export function registerUndoTools(server: McpServer, ctx: ToolContext): void {
+export function registerUndoTools(server: McpServer, ctx: ToolContext, pages: PageSession): void {
   server.registerTool(
     'sb_undo',
     {
       description:
-        'Put back what a PUT through sb_api_call replaced — settings, a product, a form, ' +
-        'anything with a shape. IN THIS PROCESS ONLY, capped, and gone when it exits. For a ' +
-        'PAGE the platform keeps its own: GET .../pages/{pageId}/history lists the autosave ' +
-        'checkpoint it writes on every draft save, versions lists the labelled snapshots, and ' +
-        'either restores. That one survives everything and is the better answer whenever the ' +
-        'thing to recover is a page. No argument lists what is undoable here.',
+        'Put back what a write replaced — a page or form edit made here (sb_add, sb_set, ' +
+        'sb_duplicate …), or a PUT through sb_api_call. An undo records what IT replaced, so ' +
+        'the newest entry right after one is its redo. A page is refused if anyone else saved ' +
+        'it since. IN THIS PROCESS ONLY, capped; the platform\'s own page history (GET ' +
+        '.../pages/{pageId}/history) survives a restart. No argument lists what is undoable.',
       inputSchema: {
         index: z.number().int().min(1).optional().describe('1 is the most recent write'),
         dry_run: z.boolean().optional(),
@@ -158,8 +207,8 @@ export function registerUndoTools(server: McpServer, ctx: ToolContext): void {
           ...(undoable.length === 0
             ? {
                 note:
-                  'Nothing to undo. Only a PUT through sb_api_call is recorded, only in this ' +
-                  'process, and only when the platform could be read first.',
+                  'Nothing to undo. Page and form saves made here and PUTs through sb_api_call ' +
+                  'are recorded, only in this process.',
               }
             : { next: 'Pass an index with dry_run:false to put that state back.' }),
         });
@@ -167,6 +216,33 @@ export function registerUndoTools(server: McpServer, ctx: ToolContext): void {
       const entry = ctx.undo.at(index);
       if (!entry) {
         throw new Error(`sbuilder: no undo entry ${index} — call sb_undo with no argument to list`);
+      }
+      // A page save PageSession made restores through PageSession, never a raw PUT;
+      // a raw sb_api_call PUT to the same path keeps the raw path below.
+      const fence = entry.session && entry.operationId === PAGE_SOURCE_OP ? ctx.undo.fenceFor(entry.path) : undefined;
+      if (fence) {
+        const target = entry.body.document as { root_node_id: string; nodes: Record<string, unknown> };
+        if (dry_run !== false) {
+          return text({
+            dry_run: true,
+            would_restore: redact({ page: fence.pageId, nodes: Object.keys(target.nodes ?? {}).length }),
+            recorded_at: entry.at,
+            note: 'Nothing was sent. Re-call with dry_run:false; refused if the page was saved elsewhere since.',
+          });
+        }
+        // Every save between this entry and now counts, not just this one: a
+        // person's edit carried by a LATER save is erased by restoring an
+        // earlier state just the same.
+        const peer = ctx.undo.peersThrough(entry);
+        const changed = await pages.restorePage(fence.siteId, fence.pageId, target, fence, peer);
+        ctx.undo.drop(entry);
+        return text({
+          restored: entry.path,
+          from: entry.at,
+          changed_nodes: changed,
+          open: fence.pageId,
+          ...(changed ? { redo: 'sb_undo index:1 puts back what this replaced' } : {}),
+        });
       }
       const op = findOperation(entry.operationId);
       if (!op) throw new Error(`sbuilder: operation ${entry.operationId} is no longer in the catalog`);
@@ -187,7 +263,7 @@ export function registerUndoTools(server: McpServer, ctx: ToolContext): void {
         body: entry.body,
         fetchImpl: ctx.fetchImpl,
       });
-      ctx.undo.drop(index);
+      ctx.undo.drop(entry);
       return text({ restored: entry.path, operation: entry.operationId, from: entry.at });
     },
   );

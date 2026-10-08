@@ -84,7 +84,7 @@ in this client: one would put the very key the platform exists to hold back into
 | `sb_site_list` | List the sites this account can operate |
 | `sb_api_find` | Find API operations by intent — one line per match — then read one operation's call sheet by id: real parameter schemas, the credential it needs, and the body's fields read off the handler that decodes them, each carrying the trap its own doc comment records |
 | `sb_api_call` | Execute an operation, or any route by method+path; dry run by default. Field selection and local result pagination |
-| `sb_page_open` | Open a page for editing and return its outline |
+| `sb_page_open` | Open a page for editing and return its outline — or, with `form_id`, a form's field document (fields, defaults, dependent-field rules) |
 | `sb_outline` | The open page as a compressed tree — never a raw document dump |
 | `sb_node_read` | One node in full, with a warning if it is a shared global |
 | `sb_catalog_search` | Find an element by what it should do, using the platform's own AI hints |
@@ -112,7 +112,7 @@ in this client: one would put the very key the platform exists to hold back into
 | `sb_import_site` | Read a WHOLE site from one URL — its sitemap, or the links on that page — and give each page found its own draft page here, built from this site's tokens; the entry page's own colours and type scale also patch into this SITE'S theme, so it stops being purely a read |
 | `sb_theme` | Read or patch the site's palette and type scale — the layer every style preset resolves from, so one token repaints every page; `locale` sets the site's language |
 | `sb_store` | Run a store flow that must happen in a fixed order — `checkout` (the four writes that make a working one), `checkout_sync` (the store's current payment and delivery methods into every existing order form, checkout page republished), `form` (any of the platform's 17 templates with its own field document), `chrome` (one shared header or footer on a real site menu — desktop menu, mobile drawer, cart and account icons), `menu` (a menu node bound to the site's menu, its links resolved), `overlay_attach` (a pop-up or quick view on the open page), `cart` (the site's cart drawer, when it has none; `relocalize` puts an existing one in the site's language) and `app` (a built-in app plus the pages it needs), `global_attach` / `global_detach` (put an EXISTING shared section on the open page, or take it off) |
-| `sb_undo` | Put back what a PUT replaced. The SECOND answer for a page, not the only one: the platform has versions, history and restore (`sb_api_find` "page versions"), which outlive this process — reach for those first and use this for every other shaped PUT |
+| `sb_undo` | Undo / redo this session's writes — page and form edits and `sb_api_call` PUTs; a page is refused if someone else saved it since. The platform's versions and history (`sb_api_find` "page versions") outlive this process |
 
 Twenty-eight tools, **574 API operations** (197 of the 255 writes carrying a body shape read
 off the handler), 122 elements, 79 binding sources. `sb_api_find`
@@ -124,7 +124,7 @@ Every result is compact JSON, every directive is said once per process, and ever
 carries MCP annotations — a client that honours them stops asking a person to confirm a
 read.
 
-Full reference: [`docs/tools.md`](./docs/tools.md).
+Full reference: [`docs/tools.md`](./docs/tools.md). What the builder supports natively, and where it stops: [`docs/capabilities.md`](./docs/capabilities.md).
 
 ## How it stays in sync
 

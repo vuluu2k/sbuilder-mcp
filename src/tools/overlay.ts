@@ -385,7 +385,7 @@ export async function ensureCartDrawer(
       note: 'Nothing was sent. Re-call with dry_run:false to create it; it shows on every page.',
     };
   }
-  const open = session.peek() ? session.location() : null;
+  const open = session.page();
   const onPage = open?.siteId === siteId;
   if (onPage) await session.applyAndSave([]);
   const made = (await request({ base: ctx.base, method: 'POST', path, token: siteToken(ctx), body, fetchImpl: ctx.fetchImpl })) as {
@@ -434,7 +434,7 @@ export async function relocalizeCartDrawer(
   // No locale means no language to move the WORDS to; the thumbnail needs none.
   const language = typeof raw === 'string' && raw ? cartSeedLocale(raw) : null;
 
-  const open = session.peek() ? session.location() : null;
+  const open = session.page();
   const composed =
     open?.siteId === siteId
       ? Object.values(session.current().doc.nodes).find((n) => n.specials?.overlayId === cart.id)

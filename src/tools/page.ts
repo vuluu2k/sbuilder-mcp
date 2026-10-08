@@ -2,7 +2,8 @@ import { z } from 'zod';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { composeWarnings, type ComposeWarning } from '../domains/site/findings.js';
 import { text } from '../mcp/response.js';
-import { isSourceStale, loadSource, saveSource } from '../transport/pages.js';
+import { isSourceStale, loadSource, saveSource, sourcePath } from '../transport/pages.js';
+import { PAGE_SOURCE_OP } from './undo.js';
 import { previewUrl } from '../vision/preview.js';
 import { bandIds, proveLive, type LiveProof } from '../domains/site/liveproof.js';
 import { canvasVerdict, driftOf } from '../domains/site/pagestate.js';
@@ -31,21 +32,14 @@ import {
   seededTypes,
 } from '../domains/site/storepage.js';
 import { PAGE_TYPES } from '../catalog/storepages.generated.js';
-import {
-  animationNote,
-  deadKeyNote,
-  unknownValueNote,
-  unknownWriteNote,
-  preconditionNotes,
-  unsupportedSettingNote,
-} from '../domains/site/vocabulary.js';
 import { skinLevelNote } from '../domains/site/fieldskin.js';
 import { siteTheme } from '../domains/site/theme-fetch.js';
 import { ensureSiteTheme } from './theme.js';
-import { request, redact, watchPageWrites, onPageSourceWrite, onGlobalWrite } from '../transport/http.js';
+import { request, redact, watchPageWrites, onPageSourceWrite, onGlobalWrite, onFormDocumentWrite } from '../transport/http.js';
 import { SPEC_GLOBAL_ID, SPEC_GLOBAL_REV, SPEC_OVERLAY_ID, SPEC_OVERLAY_REV, type NodeLike } from '../core/tree.js';
 import { siteToken } from './credentialpick.js';
 import { validateForSave } from '../domains/site/validate.js';
+import { sayChecks, specCheck, writeCheck } from '../domains/site/writecheck.js';
 import { reviewDesign, REVIEW_NOTICE } from '../domains/site/review.js';
 import { compactFindings } from '../domains/site/findings.js';
 import { readinessGaps, READINESS_NOTICE, siteLanguage } from '../domains/site/readiness.js';
@@ -81,12 +75,22 @@ export function reviewField(
   ctx: ToolContext,
   doc: PageDoc,
   formTypes?: Record<string, string>,
+  pageType?: string,
 ): Record<string, unknown> {
-  const all = reviewDesign(doc, { formTypes });
+  const all = reviewDesign(doc, { formTypes, pageType });
   if (all.length === 0) return {};
-  const { findings, fixes } = compactFindings(all);
-  const notice = ctx.notices.once('review', REVIEW_NOTICE);
-  return { findings, fixes, ...(notice ? { findings_notice: notice } : {}) };
+  // MAINTENANCE IS ADVICE, kept out of `findings`: it works for a visitor, so
+  // it must not stand between a page and its clean verdict. One `fixes` map
+  // serves both lists.
+  const { findings, fixes } = compactFindings(all.filter((f) => f.severity !== 'maintenance'));
+  const advice = compactFindings(all.filter((f) => f.severity === 'maintenance'));
+  const notice = findings.length ? ctx.notices.once('review', REVIEW_NOTICE) : undefined;
+  return {
+    ...(findings.length ? { findings } : {}),
+    ...(advice.findings.length ? { advice: advice.findings } : {}),
+    fixes: { ...fixes, ...advice.fixes },
+    ...(notice ? { findings_notice: notice } : {}),
+  };
 }
 
 /**
@@ -101,6 +105,36 @@ const LIVE_ACK_CAP_MS = 2_000;
 
 /** What `LiveSession.publish` did with a batch. */
 type Published = { sent: boolean; opIds: string[] };
+
+/**
+ * Why `applyAndSave` would refuse this batch on this document, or null — the
+ * ONE place that question is answered, so a dry run and the real write cannot
+ * disagree. A dry run that skipped it previewed a section above a global
+ * header as fine, and the real call then refused it.
+ *
+ * Refuses what the write INTRODUCES, and a page the write leaves still
+ * unstorable (see `applyAndSave` for why both). Runs on `preview`, a copy.
+ */
+export function saveRefusal(d: PageDoc, patches: Patch[]): { before: Set<string>; refusal: string | null } {
+  const before = new Set(validateForSave(d));
+  const after = validateForSave(d.preview(patches));
+  const introduced = after.filter((p) => !before.has(p));
+  if (introduced.length > 0) return { before, refusal: `refusing to save — ${introduced.join(' ')}` };
+  if (after.length > 0) {
+    return {
+      before,
+      refusal:
+        'refusing to save — this page already cannot be stored, and this write does not repair ' +
+        `it, so nothing was applied: ${after.join(' ')}`,
+    };
+  }
+  return { before, refusal: null };
+}
+
+/** `once` for a real write, `peek` for a dry run — the same notes, spent once. */
+function noticeFor(ctx: ToolContext, dryRun: boolean | undefined): (key: string, body: string) => string | undefined {
+  return dryRun !== false ? (k, b) => ctx.notices.peek(k, b) : (k, b) => ctx.notices.once(k, b);
+}
 
 export class PageSession {
   private doc: PageDoc | null = null;
@@ -147,11 +181,26 @@ export class PageSession {
   private openedSeeded = false;
   private warnings: ComposeWarning[] = [];
   private boxes: Box[] = [];
+  /**
+   * Set when the open document is a FORM's field document (`openForm`) rather
+   * than a page. It saves through PUT …/forms/{id}/document, has no live room,
+   * no revision fence and no preview — the page inlines the form, so a page
+   * republish is what shows an edit. `storedJson` is the document as last
+   * stored, recorded for `sb_undo` before each save replaces it — for a page
+   * as well as a form, so an agent's own edits step back like an editor's.
+   */
+  private formId = '';
+  private storedJson = '';
 
   constructor(private readonly ctx: ToolContext) {
     // Its own save is skipped by identity: that document IS this copy.
     onPageSourceWrite((site, page, doc) => {
       if (doc !== this.doc?.doc && this.isOpen(site, page)) this.markStale('the page was written by another call');
+    });
+    onFormDocumentWrite((site, form, doc) => {
+      if (this.doc && doc !== this.doc.doc && this.formId === form && this.siteId === site) {
+        this.markStale('the form document was written by another call');
+      }
     });
     onGlobalWrite((site, id) => {
       if (this.siteId === site && this.composedMaster('global', id)) {
@@ -299,7 +348,30 @@ export class PageSession {
 
   location(): { siteId: string; pageId: string } {
     this.current();
+    if (this.formId) {
+      throw new Error(
+        `sbuilder: the open document is form ${this.formId}'s field document, not a page — the ` +
+          'preview, sb_look and page-level flows act on pages. Edits are already saved; open the ' +
+          'page that places the form (sb_page_open page_id) and sb_publish it to show them.',
+      );
+    }
     return { siteId: this.siteId, pageId: this.pageId };
+  }
+
+  /** The open PAGE, or null when nothing (or a form document) is open. */
+  page(): { siteId: string; pageId: string } | null {
+    return this.doc && !this.formId ? { siteId: this.siteId, pageId: this.pageId } : null;
+  }
+
+  /** The site of whatever is open — a page or a form document. */
+  site(): string {
+    this.current();
+    return this.siteId;
+  }
+
+  /** The form whose field document is open, or undefined for a page. */
+  form(): string | undefined {
+    return this.formId || undefined;
   }
 
   /** Remember where each node landed, so the presence cursor can be honest. */
@@ -322,7 +394,8 @@ export class PageSession {
     // again: insert/remove address by index, so a peer that applied the first
     // copy would apply the second on top — a remove at index 2 takes the
     // human's next section with it. Its own op ids still decide the header.
-    const out = published ?? this.live?.publish(patches) ?? { sent: false, opIds: [] };
+    // A form document is in no room: its patches would land on whatever page the room last heard of.
+    const out = published ?? (this.formId ? undefined : this.live?.publish(patches)) ?? { sent: false, opIds: [] };
     this.sentOps.push(...out.opIds);
     if (wasCarried && out.sent) this.broadcastRev = d.rev;
     // Move the cursor to what was just touched, but ONLY when a real
@@ -330,7 +403,7 @@ export class PageSession {
     // presence with a measured one is information.
     const touched = String(patches[0]?.path[1] ?? '');
     const box = this.boxes.find((b) => b.id === touched);
-    if (box && this.live) {
+    if (box && this.live && !this.formId) {
       this.live.select(touched);
       this.live.cursor(box.x + box.w / 2, box.y + box.h / 2);
     }
@@ -371,14 +444,10 @@ export class PageSession {
     // costs one branch per write. A dropped socket is NOT this method's problem —
     // `RealtimeSocket` owns its own reconnect with backoff, and re-attaching a
     // second LiveSession over a live one would be the bug, not the fix.
-    await this.ensureLive(this.siteId);
+    if (!this.formId) await this.ensureLive(this.siteId);
     if (this.stale) return this.rebase(patches, undefined, published);
-    const before = new Set(validateForSave(d));
-    const after = validateForSave(d.preview(patches));
-    const introduced = after.filter((p) => !before.has(p));
-    if (introduced.length > 0) {
-      throw new Error(`sbuilder: refusing to save — ${introduced.join(' ')}`);
-    }
+    const { before, refusal } = saveRefusal(d, patches);
+    if (refusal) throw new Error(`sbuilder: ${refusal}`);
     // AND REFUSE BEFORE APPLYING WHEN THE PAGE STILL CANNOT BE STORED.
     //
     // This used to apply, publish, and only then let `save()` discover the
@@ -397,12 +466,7 @@ export class PageSession {
     // An edit that REPAIRS the page still passes, which is what keeps a broken
     // page editable: `after` is the state this write would leave behind, so a
     // write that clears the damage leaves it empty and goes through.
-    if (after.length > 0) {
-      throw new Error(
-        `sbuilder: refusing to save — this page already cannot be stored, and this write does ` +
-          `not repair it, so nothing was applied: ${after.join(' ')}`,
-      );
-    }
+    // (Both checks live in `saveRefusal`, so a dry run asks the same question.)
     // What the touched nodes were BEFORE this write, for the rebase a 409
     // source_stale needs: by then the patches are already in the local copy.
     const snap = this.touchedSnapshot(d, patches);
@@ -486,7 +550,7 @@ export class PageSession {
     const before = base ? base.before : this.touchedSnapshot(old, patches);
     const peer = new Set(this.remoteTouched);
     this.stale = null;
-    await this.open(this.siteId, this.pageId);
+    await this.reopen();
     const after = this.touchedSnapshot(this.current(), patches);
     const moved = [...before.keys()].filter((id) => peer.has(id) || after.get(id) !== before.get(id));
     if (dirty || moved.length > 0) {
@@ -515,7 +579,10 @@ export class PageSession {
    * refuse as "unsaved edits" on the next re-pull.
    */
   applyRemote(patches: Patch[]): void {
-    if (!this.doc) return;
+    // A FORM DOCUMENT IS IN NO ROOM. The seat still sits on the last page it
+    // announced, so these ops are THAT page's — applied here they would land in
+    // the form and go out with its next PUT.
+    if (!this.doc || this.formId) return;
     const clean = !this.hasUnsaved();
     const carried = this.doc.rev === this.broadcastRev;
     this.doc.apply(patches);
@@ -539,6 +606,11 @@ export class PageSession {
   /** The yield rule's local half: the next save re-pulls instead of overwriting. */
   markStale(reason: string): void {
     this.stale = reason;
+  }
+
+  /** The room lost sync. It speaks only for a page, so an open form document is not its to mark. */
+  roomDesync(reason: string): void {
+    if (!this.formId) this.markStale(reason);
   }
 
   /**
@@ -575,6 +647,7 @@ export class PageSession {
    * Cheaper than the alternative, which was for every caller to remember this.
    */
   async recompose(): Promise<void> {
+    if (this.formId) throw new Error('sbuilder: a form document carries no global sections to recompose');
     await this.open(this.siteId, this.pageId);
     // A READ THAT FAILED OPEN MUST NOT BECOME A WRITE THAT EMPTIES THE PAGE,
     // and this path is the one place that guard could be skipped.
@@ -603,6 +676,86 @@ export class PageSession {
     this.savedRev = d.rev;
     this.broadcastRev = d.rev;
     this.sourceRev = saved.rev ?? 0;
+    // Nothing changed, so nothing to undo — but the rev moved, and the fence must follow it.
+    this.stored(d, false);
+  }
+
+  /**
+   * A page save landed: the document it replaced becomes an `sb_undo` entry
+   * (unless the save changed nothing), and the fence a restore must match moves
+   * to what is stored now.
+   */
+  private stored(d: PageDoc, changed: boolean, peer: ReadonlySet<string> = new Set()): void {
+    const path = sourcePath(this.siteId, this.pageId);
+    if (changed) {
+      const before = JSON.parse(this.storedJson) as { schema_version?: number };
+      this.ctx.undo.record(
+        PAGE_SOURCE_OP,
+        path,
+        { document: before, schemaVersion: before.schema_version ?? 1 },
+        { session: true, peer: [...peer] },
+      );
+    }
+    this.storedJson = JSON.stringify(d.doc);
+    this.ctx.undo.fence(path, { siteId: this.siteId, pageId: this.pageId, rev: this.sourceRev, json: this.storedJson });
+  }
+
+  /**
+   * `sb_undo` for a page: put `target` back THROUGH THE NORMAL SAVE PATH — the
+   * difference as whole-node patches through `applyAndSave`, so the live room
+   * sees it as ops, `baseRev` fences it, and the save records what it replaced
+   * (the redo). Re-reads first and REFUSES unless the draft is exactly what
+   * this process last stored (`fence`): anything else is someone else's edit,
+   * and an undo over it would erase that edit silently.
+   *
+   * THE FENCE ONLY SEES SAVES, AND A LIVE PEER'S EDIT CAN ARRIVE WITHOUT ONE.
+   * Its ops are merged into this copy (`applyRemote`) and ride out in the
+   * agent's next save, so that save's "before" predates the human's edit and
+   * restoring it would erase that edit under a fence that still matches. So it
+   * REFUSES — loudly, naming the nodes — when the recorded save carried a peer
+   * op (`peer`) or a peer op has landed since. Refusing rather than restoring
+   * only the agent's own nodes: a node both sides touched (a parent's child
+   * list, one text) has no honest half to put back.
+   */
+  async restorePage(
+    siteId: string,
+    pageId: string,
+    target: { root_node_id: string; nodes: Record<string, unknown> },
+    fence: { rev: number; json: string },
+    peer: string[] = [],
+  ): Promise<number> {
+    // Restoring re-opens the page, which replaces WHATEVER is open — another
+    // page or a form — so unsaved edits anywhere would be dropped silently.
+    if (this.hasUnsaved()) {
+      throw new Error('sbuilder: refusing to undo — the open document holds unsaved edits; save or re-open it first.');
+    }
+    const since = this.isOpen(siteId, pageId) ? [...this.remoteTouched] : [];
+    if (peer.length || since.length) {
+      throw new Error(
+        `sbuilder: refusing to undo — a person in the live room edited ${[...new Set([...peer, ...since])].join(', ')} ` +
+          (peer.length ? 'and that edit went out in the save being undone' : 'since that save') +
+          '; restoring would erase it. Re-read with sb_outline and reverse your own change by hand ' +
+          '(or restore from GET …/pages/{pageId}/history).',
+      );
+    }
+    await this.open(siteId, pageId);
+    const d = this.current();
+    // Rev when both sides have one; an older platform reports none, and the
+    // document is then compared whole — a false refusal is the safe failure.
+    const moved = fence.rev > 0 && this.sourceRev > 0 ? this.sourceRev !== fence.rev : JSON.stringify(d.doc) !== fence.json;
+    if (moved) {
+      throw new Error(
+        `sbuilder: refusing to undo — page ${pageId}'s draft moved since this process last saved it ` +
+          `(rev ${this.sourceRev}, last stored here ${fence.rev}): someone else saved it, and restoring ` +
+          'would erase that edit. It has been re-loaded; re-read it with sb_outline and redo the change by hand.',
+      );
+    }
+    if (target.root_node_id !== d.doc.root_node_id) {
+      throw new Error('sbuilder: refusing to undo — that state has a different root node, which ops cannot express; restore it with GET …/pages/{pageId}/history instead.');
+    }
+    const patches = documentPatches(d.doc, target);
+    if (patches.length > 0) await this.applyAndSave(patches);
+    return patches.length;
   }
 
   async open(siteId: string, pageId: string): Promise<OutlineNode[]> {
@@ -619,6 +772,8 @@ export class PageSession {
     this.doc = PageDoc.from(src.document);
     this.siteId = siteId;
     this.pageId = pageId;
+    this.formId = '';
+    this.stale = null;
     this.sourceRev = src.rev ?? 0;
     // The platform's own account of what it could not compose. Typed on the
     // response since the transport was written and read by nothing until now.
@@ -628,6 +783,7 @@ export class PageSession {
     this.broadcastRev = this.doc.rev;
     this.sentOps = [];
     this.remoteTouched.clear();
+    this.storedJson = JSON.stringify(this.doc.doc);
     // WHAT THE READ ACTUALLY RETURNED, kept so `save` can tell a page this
     // session emptied from a page that arrived empty because the read failed
     // open. `PageDoc.from` seeds a ROOT for `{ root_node_id: "", nodes: {} }`,
@@ -646,6 +802,47 @@ export class PageSession {
     return this.doc.outline();
   }
 
+  /**
+   * Open a FORM's field document — the fields, their defaults and the rules on
+   * the form root's `specials.formRules` — so the page tools edit it. GET
+   * answers `{ document }`, null for a form whose document was never saved.
+   * No room is joined: the live protocol syncs pages, and this is not one.
+   */
+  async openForm(siteId: string, formId: string): Promise<OutlineNode[]> {
+    const got = (await request({
+      base: this.ctx.base,
+      method: 'GET',
+      path: formDocPath(siteId, formId),
+      token: siteToken(this.ctx),
+      fetchImpl: this.ctx.fetchImpl,
+    })) as { document?: unknown };
+    if (!got?.document) {
+      throw new Error(
+        `sbuilder: form ${formId} has no field document yet — create forms with sb_store action:"form".`,
+      );
+    }
+    this.doc = PageDoc.from(got.document);
+    this.siteId = siteId;
+    this.pageId = '';
+    this.formId = formId;
+    this.stale = null;
+    this.sourceRev = 0;
+    this.warnings = [];
+    this.savedRev = this.doc.rev;
+    this.broadcastRev = -1;
+    this.sentOps = [];
+    this.remoteTouched.clear();
+    this.openedSeeded = false;
+    this.storedJson = JSON.stringify(got.document);
+    return this.doc.outline();
+  }
+
+  /** Re-read whatever is open, page or form. */
+  private async reopen(): Promise<void> {
+    if (this.formId) await this.openForm(this.siteId, this.formId);
+    else await this.open(this.siteId, this.pageId);
+  }
+
   /** What the last open's join attempt did, for the tool that reports it. */
   private liveState: 'joined' | 'already' | string = 'already';
 
@@ -656,6 +853,11 @@ export class PageSession {
   /** What the server said it could not compose when this page was opened. */
   composeWarnings(): ComposeWarning[] {
     return this.warnings;
+  }
+
+  /** What a dry run reports: the refusal the real write would hit, or undefined. */
+  wouldRefuse(patches: Patch[]): string | undefined {
+    return saveRefusal(this.current(), patches).refusal ?? undefined;
   }
 
   current(): PageDoc {
@@ -692,7 +894,7 @@ export class PageSession {
       // silently dropped edit is the outcome this whole rule exists to prevent.
       const reason = this.stale;
       this.stale = null;
-      await this.open(this.siteId, this.pageId);
+      await this.reopen();
       throw new Error(
         `sbuilder: the page changed under this session (${reason}). It has been re-loaded from ` +
           'the server; re-read it with sb_outline and reapply your change.',
@@ -700,6 +902,7 @@ export class PageSession {
     }
     const d = this.current();
     if (d.rev === this.savedRev) return;
+    if (this.formId) return this.saveForm(d, inherited);
     // THE SAME BASELINE `applyAndSave` USES, and the two gates disagreeing is
     // precisely the defect `6980ebb` named and half-closed.
     //
@@ -794,6 +997,7 @@ export class PageSession {
     // caller gets the re-pull and the loud refusal of the stale branch above.
     const ops = this.sentOps;
     this.sentOps = [];
+    const sentJson = JSON.stringify(d.doc);
     const peer = await this.livePeer(d, ops);
     const revAtSend = d.rev;
     const pending = saveSource(
@@ -840,8 +1044,36 @@ export class PageSession {
     // re-stamp wrote the server's own answer back into it.
     this.savedRev = d.rev;
     if (!owed) this.broadcastRev = d.rev;
+    this.stored(d, sentJson !== this.storedJson, sent);
     await ensureSiteTheme(this.ctx, this.siteId);
   }
+
+  /**
+   * A form document's save: the same validation, then PUT `{ document }` (the
+   * handler's `documentBody`). No `baseRev` — the route has no fence — so the
+   * process-wide write hook is what keeps another door from being overwritten.
+   * The replaced state goes to `sb_undo`, as a PUT through sb_api_call would.
+   */
+  private async saveForm(d: PageDoc, inherited: ReadonlySet<string>): Promise<void> {
+    const problems = validateForSave(d).filter((p) => !inherited.has(p));
+    if (problems.length > 0) throw new Error(`sbuilder: refusing to save — ${problems.join(' ')}`);
+    const path = formDocPath(this.siteId, this.formId);
+    await request({
+      base: this.ctx.base,
+      method: 'PUT',
+      path,
+      token: siteToken(this.ctx),
+      body: { document: d.doc },
+      fetchImpl: this.ctx.fetchImpl,
+    });
+    this.ctx.undo.record('put:/api/sites/{siteId}/forms/{id}/document', path, { document: JSON.parse(this.storedJson) });
+    this.storedJson = JSON.stringify(d.doc);
+    this.savedRev = d.rev;
+  }
+}
+
+function formDocPath(siteId: string, formId: string): string {
+  return `/api/sites/${encodeURIComponent(siteId)}/forms/${encodeURIComponent(formId)}/document`;
 }
 
 const specSchema: z.ZodType<NodeSpec> = z.lazy(() =>
@@ -1028,12 +1260,28 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
     {
       description:
         'Open a page for editing and return its outline. Call before any sb_add / sb_set / ' +
-          'sb_move / sb_remove. Find page ids with sb_api_find "list pages".',
-      inputSchema: { site_id: z.string().optional(), page_id: z.string() },
+          'sb_move / sb_remove. Find page ids with sb_api_find "list pages". Or form_id: edit that ' +
+          "form's field document (fields, specials.formRules on its root).",
+      inputSchema: {
+        site_id: z.string().optional(),
+        page_id: z.string().optional(),
+        form_id: z.string().optional(),
+      },
       annotations: { readOnlyHint: true },
     },
-    async ({ site_id: given, page_id }) => {
-      const outline = await session.open(siteFor(ctx, given), page_id);
+    async ({ site_id: given, page_id, form_id }) => {
+      if (!page_id === !form_id) throw new Error('sbuilder: sb_page_open takes page_id or form_id, exactly one');
+      if (form_id) {
+        const outline = await session.openForm(siteFor(ctx, given), form_id);
+        const note = ctx.notices.once(
+          'form-document',
+          'A form document saves to the form, not a page: it has no live room, preview or sb_look. ' +
+            'Rules live on the form root as specials.formRules (JSON), keyed by each field\'s specials.name. ' +
+            'Republish the page placing the form to show an edit.',
+        );
+        return text({ form: form_id, outline, ...(note ? { note } : {}), ...reviewField(ctx, session.current()) });
+      }
+      const outline = await session.open(siteFor(ctx, given), page_id!);
       // `open` joined the room on the way through — this only reports what it did.
       const live = session.liveStatus();
       const doc = session.current();
@@ -1143,7 +1391,7 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
         }
       }
       // The open page, if it was one of these, now differs from what this session holds.
-      const open = session.peek() ? session.location() : null;
+      const open = session.page();
       if (open && open.siteId === siteId && repaired.includes(open.pageId)) await session.open(siteId, open.pageId);
       return text({
         repaired,
@@ -1193,7 +1441,7 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
       // used to return — on a page visibly painting them. Design rule 0 told the
       // agent to read the pattern off what is there, and there was nothing
       // there to read, so it invented one. See domains/site/theme.ts.
-      const { theme, from } = await siteTheme(ctx, session.location().siteId);
+      const { theme, from } = await siteTheme(ctx, session.site());
       const preset = presetLayer(theme, from, node as never);
       return text({ node, ...(preset ? { preset } : {}), ...(warn ? { warning: warn } : {}) });
     },
@@ -1279,22 +1527,32 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
         for (const c of n.children ?? []) walkSpec(c as { type: string; children?: unknown[] });
       };
       walkSpec(spec as { type: string; children?: unknown[] });
+      // A DRY RUN PEEKS: it must show what the real write will show, and the
+      // real write must still have it to show.
+      const say = noticeFor(ctx, dry_run);
       const inert = inertHintsFor(types)
-        .map((h) => ctx.notices.once(`inert:${h.type}`, h.note))
+        .map((h) => say(`inert:${h.type}`, h.note))
         .filter((n): n is string => !!n)
         .join(' ');
+      // Keys an element does not read, and values it does not know — on EVERY
+      // node of the nested spec, as each will be born. Warned, still written.
+      const found = sayChecks(specCheck(spec), say);
+      const checks = found.length ? { checks: found } : {};
 
       if (dry_run !== false) {
+        const refuse = session.wouldRefuse(patches);
         return text({
           dry_run: true,
           would_add: ids.length,
           patches: patches.length,
+          ...(refuse ? { would_refuse: refuse } : {}),
           ...(inert ? { inert } : {}),
+          ...checks,
           ...forced,
         });
       }
       await session.applyAndSave(patches);
-      return text({ added: ids, rev: d.rev, ...(inert ? { inert } : {}), ...forced });
+      return text({ added: ids, rev: d.rev, ...(inert ? { inert } : {}), ...checks, ...forced });
     },
   );
 
@@ -1346,6 +1604,7 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
     },
     async ({ id, namespace, keys, breakpoint, base, state, unset, edits, dry_run, force }) => {
       const d = session.current();
+      const say = noticeFor(ctx, dry_run);
       // One shape inside: a single edit is a batch of one.
       const batch: SetEdit[] = edits ?? [];
       if (!edits) {
@@ -1385,7 +1644,7 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
         if (n) hostNotes[e.id] = n;
       }
       const hoverNote = [...hoverTypes]
-        .map((t) => ctx.notices.once(`hover-home:${t}`, hoverRoutingNote(t) as string))
+        .map((t) => say(`hover-home:${t}`, hoverRoutingNote(t) as string))
         .filter((n): n is string => !!n)
         .join(' ');
       // CONFIG THAT WENT TO BASE BECAUSE PUBLISH READS IT NOWHERE ELSE. Keyed on
@@ -1399,7 +1658,7 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
       }
       const baseNote = [...movedToBase]
         .map((k) =>
-          ctx.notices.once(`base-only:${k}`, baseOnlyNote([k], batch[0].breakpoint ?? 'desktop')),
+          say(`base-only:${k}`, baseOnlyNote([k], batch[0].breakpoint ?? 'desktop')),
         )
         .filter((n): n is string => !!n)
         .join(' ');
@@ -1422,7 +1681,7 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
         return !!n && presetIdOf(n as never) !== null;
       });
       if (wearers.length) {
-        const { theme, from } = await siteTheme(ctx, session.location().siteId);
+        const { theme, from } = await siteTheme(ctx, session.site());
         const seen = new Set<string>();
         for (const e of wearers) {
           const layer = presetLayer(theme, from, d.doc.nodes[e.id] as never);
@@ -1430,83 +1689,29 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
           const note = detachNote(layer, Object.keys(e.keys));
           if (!note) continue;
           seen.add(layer.id);
-          const once = ctx.notices.once(`preset-detach:${layer.id}`, note);
+          const once = say(`preset-detach:${layer.id}`, note);
           if (once) detachNotes.push(once);
         }
       }
       const presetNote = detachNotes.join(' ');
-      // A CONFIG VALUE THE RENDERER DOES NOT KNOW. `EffectiveCollectionType` and
-      // its two siblings are NORMALISERS, not validators: an unrecognised word
-      // collapses to a default, so a repeater set to "bestseller" publishes and
-      // renders the whole catalogue under whatever heading is above it. Keyed on
-      // key+value, because the answer is about that pair and a batch fixing ten
-      // repeaters the same wrong way should say it once.
-      const valueNotes: string[] = [];
-      for (const e of batch) {
-        // THE ELEMENT-SCOPED VOCABULARIES REACH `specials` TOO, and they have to:
-        // `specials.part` on a cart-total, `specials.source` on a breadcrumb and
-        // `specials.field` on a member-field are words with a fixed list, and a
-        // wrong one is the same silent normalisation a config key gets. Scoped
-        // by node TYPE because the key is not unique — two controls write
-        // `specials.source` with different vocabularies, and only the element
-        // says which one this node means.
-        const type = d.doc.nodes[e.id]?.data.type ?? '';
-        if (type) {
-          for (const [k, v] of Object.entries(e.keys)) {
-            const n = unknownWriteNote(type, e.namespace, k, v);
-            if (!n) continue;
-            const once = ctx.notices.once(`value:${type}.${e.namespace}.${k}=${JSON.stringify(v)}`, n);
-            if (once) valueNotes.push(once);
-          }
-          // …AND THE ONE A PER-KEY TABLE CANNOT GIVE: values that are each legal
-          // and mean nothing TOGETHER. `filterValueMode: "auto"` with
-          // `filterSource: "blog_category"` passed every check above and
-          // published a filter that renders nothing.
-          //
-          // Asked of the node AS IT WILL BE, not of the write: the node may
-          // already carry the neighbour this write needs, and the write may
-          // supply the neighbour a stored value was missing — so a question
-          // about one key alone answers the wrong thing in both directions.
-          if (e.namespace === 'specials') {
-            const after = { ...(d.doc.nodes[e.id]?.specials ?? {}), ...e.keys };
-            for (const [k, v] of Object.entries(e.keys)) {
-              const un = unsupportedSettingNote(type, k, v);
-              if (!un) continue;
-              const once = ctx.notices.once(`unsupported:${type}.${k}=${JSON.stringify(v)}`, un);
-              if (once) valueNotes.push(once);
-            }
-            for (const n of preconditionNotes(type, after)) {
-              const once = ctx.notices.once(`precondition:${type}:${n.slice(0, 60)}`, n);
-              if (once) valueNotes.push(once);
-            }
-          }
-        }
-        // AND THE QUIETER ONE: a key an element SEEDS that no renderer anywhere
-        // reads. The vocabularies above answer "this value means something other
-        // than you think"; this answers "no value means anything". Keyed on the
-        // KEY rather than on key+value, because the answer does not depend on
-        // what was written and a caller trying three spellings deserves one
-        // reply. Outside the type check, since a dead key is dead on every node.
-        for (const k of Object.keys(e.keys)) {
-          const n = deadKeyNote(e.namespace, k);
-          if (!n) continue;
-          const once = ctx.notices.once(`dead-key:${e.namespace}.${k}`, n);
-          if (once) valueNotes.push(once);
-        }
-        if (e.namespace !== 'config') continue;
-        for (const [k, v] of Object.entries(e.keys)) {
-          // THE ENTRANCE ANIMATION IS ITS OWN QUESTION, because it is an object
-          // rather than a word and every way of missing it renders NOTHING
-          // rather than a normalised something. Keyed on the whole value: two
-          // nodes given the same wrong animation deserve one answer, and two
-          // given different wrong ones deserve two.
-          const n = k === 'animation' ? animationNote(v) : unknownValueNote(k, v);
-          if (!n) continue;
-          const once = ctx.notices.once(`config-value:${k}=${JSON.stringify(v)}`, n);
-          if (once) valueNotes.push(once);
-        }
-      }
-      const valueNote = valueNotes.join(' ');
+      // WHAT EACH WRITE MEANS ON ITS ELEMENT — a key it does not read, a value
+      // outside its vocabulary (`EffectiveCollectionType` and its siblings are
+      // NORMALISERS: "bestseller" renders the whole catalogue), a dead key, a
+      // pair legal apart and meaningless together, an animation that will not
+      // run. All of it lives in `writecheck.ts` so sb_add asks the same thing.
+      // The precondition question is asked of the node AS IT WILL BE.
+      const checked = batch.flatMap((e) => {
+        const n = d.doc.nodes[e.id];
+        const type = n?.data.type ?? '';
+        if (!type) return [];
+        return writeCheck(type, e.namespace, e.keys, {
+          id: e.id,
+          doc: d.doc,
+          ...(e.namespace === 'specials' ? { specials: { ...(n?.specials ?? {}), ...e.keys } } : {}),
+        });
+      });
+      const found = sayChecks(checked, say);
+      const checks = found.length ? { checks: found } : {};
       // A FIELD-SKIN KNOB ON THE WRONG NODE renders nowhere. The FORM dresses
       // every field it holds with the input vocabulary; a payment card, choice
       // group, timeslot or file field carries its own, and a knob written on a
@@ -1521,7 +1726,7 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
         const n = skinLevelNote(type, Object.keys(e.keys));
         if (!n) continue;
         skinSeen.add(type);
-        const once = ctx.notices.once(`field-skin:${type}`, n);
+        const once = say(`field-skin:${type}`, n);
         if (once) skinNotes.push(once);
       }
       const skinNote = skinNotes.join(' ');
@@ -1552,14 +1757,16 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
       if (dry_run !== false) {
         const note = ctx.notices.once('responsive', RESPONSIVE_NOTICE);
         const sw = stuck();
+        const refuse = session.wouldRefuse(patches);
         return text({
           dry_run: true,
           patches,
+          ...(refuse ? { would_refuse: refuse } : {}),
           ...(Object.keys(sw).length ? { warnings: sw } : {}),
           ...(hoverNote ? { hover: hoverNote } : {}),
           ...(baseNote ? { base_only: baseNote } : {}),
           ...(presetNote ? { preset: presetNote } : {}),
-          ...(valueNote ? { value: valueNote } : {}),
+          ...checks,
           ...(skinNote ? { field_skin: skinNote } : {}),
           ...(Object.keys(hostNotes).length ? { hover_host: hostNotes } : {}),
           ...(note ? { note } : {}),
@@ -1581,7 +1788,7 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
           ...(hoverNote ? { hover: hoverNote } : {}),
           ...(baseNote ? { base_only: baseNote } : {}),
           ...(presetNote ? { preset: presetNote } : {}),
-          ...(valueNote ? { value: valueNote } : {}),
+          ...checks,
           ...(skinNote ? { field_skin: skinNote } : {}),
           ...(hostNotes[batch[0].id] ? { hover_host: hostNotes[batch[0].id] } : {}),
           ...forced,
@@ -1594,7 +1801,7 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
         ...(hoverNote ? { hover: hoverNote } : {}),
         ...(baseNote ? { base_only: baseNote } : {}),
         ...(presetNote ? { preset: presetNote } : {}),
-        ...(valueNote ? { value: valueNote } : {}),
+        ...checks,
         ...(skinNote ? { field_skin: skinNote } : {}),
         ...(Object.keys(hostNotes).length ? { hover_host: hostNotes } : {}),
         ...forced,
@@ -1621,7 +1828,10 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
       const guard: GuardOpts = { force, forced: [] };
       const patches = moveNode(d, id, parent_id, index, guard);
       const forced = guard.forced!.length ? { forced: guard.forced } : {};
-      if (dry_run !== false) return text({ dry_run: true, patches, ...forced });
+      if (dry_run !== false) {
+        const refuse = session.wouldRefuse(patches);
+        return text({ dry_run: true, patches, ...(refuse ? { would_refuse: refuse } : {}), ...forced });
+      }
       await session.applyAndSave(patches);
       return text({ moved: id, rev: d.rev, ...forced });
     },
@@ -1663,7 +1873,8 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
       // deep, so length is what separates them without re-deriving the walk.
       const nodes = patches.filter((p) => p.op === 'unset' && p.path.length === 2).length;
       if (dry_run !== false) {
-        return text({ dry_run: true, removing: nodes, patches: patches.length, ...forced });
+        const refuse = session.wouldRefuse(patches);
+        return text({ dry_run: true, removing: nodes, patches: patches.length, ...(refuse ? { would_refuse: refuse } : {}), ...forced });
       }
       await session.applyAndSave(patches);
       return text({ removed: id, rev: d.rev, ...forced });
@@ -1687,6 +1898,9 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
       // with no checkout page, no gateway and no way back to the cart.
       let store: Record<string, unknown> = {};
       let formTypes: Record<string, string> | undefined;
+      // The page's TYPE says which record it supplies — `no_data_context` stays
+      // silent without it rather than guessing.
+      let pageType: string | undefined;
       try {
         const { siteId, pageId } = session.location();
         const input = await gatherReadiness(ctx, siteId, Object.values(doc.doc.nodes) as never, pageId);
@@ -1694,6 +1908,7 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
         formTypes = Object.fromEntries(
           (input.forms ?? []).flatMap((f) => (f.id && f.type ? [[f.id, f.type]] : [])),
         );
+        pageType = input.pages?.find((p) => p.id === pageId)?.type;
         const gaps = readinessGaps(input);
         const lang = siteLanguage(input.siteLocale, input.pageNodes);
         const said = lang ? ctx.notices.once(`site-language:${siteId}`, lang) : undefined;
@@ -1705,10 +1920,12 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
       } catch {
         // Readiness is additional information, never the reason a review fails.
       }
-      const field = reviewField(ctx, doc, formTypes);
-      const clean = Object.keys(field).length === 0;
+      const field = reviewField(ctx, doc, formTypes, pageType);
+      // Clean = no finding a visitor meets; `advice` (maintenance) rides beside the verdict.
+      const clean = !field.findings;
       return text({
-        ...(clean ? { findings: [], verdict: 'Nothing a visitor would notice on this page.' } : field),
+        ...(clean ? { findings: [], verdict: 'Nothing a visitor would notice on this page.' } : {}),
+        ...field,
         ...store,
       });
     },
@@ -1732,7 +1949,10 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
       const guard: GuardOpts = { force, forced: [] };
       const { patches, ids } = duplicateNode(d, id, guard);
       const forced = guard.forced!.length ? { forced: guard.forced } : {};
-      if (dry_run !== false) return text({ dry_run: true, would_copy: ids.length, ...forced });
+      if (dry_run !== false) {
+        const refuse = session.wouldRefuse(patches);
+        return text({ dry_run: true, would_copy: ids.length, ...(refuse ? { would_refuse: refuse } : {}), ...forced });
+      }
       await session.applyAndSave(patches);
       return text({ duplicated: id, into: ids[0], nodes: ids.length, rev: d.rev, ...forced });
     },
@@ -1795,8 +2015,13 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
       // being a pattern rather than a snapshot.
       const pattern = PATTERN_BY_ID.get(template_id);
       if (pattern) {
-        await session.open(site_id, page_id);
-        const doc = session.current();
+        // A DRY RUN READS THE TARGET WITHOUT OPENING IT. `session.open` swaps
+        // the session's page, so a preview onto another page used to leave
+        // every later sb_set/sb_add aimed at a page the caller never opened.
+        const doc =
+          dry_run !== false
+            ? PageDoc.from((await loadSource(ctx, site_id, page_id)).document)
+            : (await session.open(site_id, page_id), session.current());
         const read = tokensFromPage(doc.doc);
         // A BLANK PAGE HAS NO PATTERN TO READ, and the next authority is the
         // site's THEME rather than nothing — every element's style preset
@@ -1846,8 +2071,10 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
         }
         const { patches, ids } = addSubtree(doc, doc.doc.root_node_id, spec, middleEnd(doc.doc));
         if (dry_run !== false) {
+          const refuse = saveRefusal(doc, patches).refusal;
           return text({
             dry_run: true,
+            ...(refuse ? { would_refuse: refuse } : {}),
             would_add: pattern.name,
             nodes: ids.length,
             into: page_id,
@@ -2396,7 +2623,7 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
     async ({ site_id: given, page_id }) => {
       const site_id = siteFor(ctx, given);
       // No open page is fine when page_id names one — `location()` throws.
-      const here = session.peek() ? session.location() : { siteId: '', pageId: '' };
+      const here = session.page() ?? { siteId: '', pageId: '' };
       const pageId = page_id ?? here.pageId;
       if (!pageId) {
         throw new Error('sbuilder: sb_page_state needs page_id, or a page opened with sb_page_open.');

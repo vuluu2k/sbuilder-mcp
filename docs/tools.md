@@ -199,7 +199,8 @@ on the one open document.
 | Arg | Type | Notes |
 | --- | --- | --- |
 | `site_id` | string? | Defaults to `SB_SITE` |
-| `page_id` | string | |
+| `page_id` | string? | One of `page_id` / `form_id` |
+| `form_id` | string? | Open a form's field document instead |
 
 Every tool that takes a `site_id` treats it as optional and falls back to
 `SB_SITE` — a key belongs to one site, so the install already knows it. An explicit
@@ -208,6 +209,18 @@ argument always wins.
 Loads the page's **draft** document and returns its outline. What comes back is *composed*:
 global sections, site overlays and app blocks have been merged onto ROOT. Findings ride
 along in the same shape `sb_review` returns them — see below.
+
+**`form_id` opens a FORM's field document** (`GET/PUT /api/sites/{siteId}/forms/{id}/document`)
+in the same session, so `sb_outline`, `sb_add`, `sb_set`, `sb_remove`, `sb_review` and
+`sb_undo` edit its fields, defaults and dependent-field rules. Rules are `specials.formRules`
+on the form root: a JSON array of `{ id, name?, join: and|or, conditions: [{ field, op, value }],
+targets: [{ field, action }] }`, `op` one of is, isNot, filled, empty, contains, notContains,
+`action` one of hidden, shown, optional, required — the vocabulary is generated from the
+platform. `field` is the field's `specials.name` (its node id only when it has no name).
+`sb_set` warns (`form_rule`) on invalid JSON, an unknown join/op/action, a field the form does
+not have, and a rule that targets its own condition field — the platform drops such a rule
+silently, one rule at a time. A form document has no live room, preview or `sb_look`; edits
+save to the form, and the page that places it shows them once republished.
 
 **SATELLITES ARE ON THE MAP.** Eight element types own nodes that hang off `config[<key>]`
 instead of `data.nodes` — a variant option's box, the quantity stepper's buttons, a
@@ -254,7 +267,7 @@ emitted, so a bad id in the fourth edit refuses the whole batch. The result is t
 | Arg | Type | Notes |
 | --- | --- | --- |
 | `query` | string | What the element should do |
-| `limit` | number? | Default 8, max 30 |
+| `limit` | number? | Default 8, max 60 |
 | `detail` | boolean? | Add `useWhen`, `avoidWhen`, `contentTips` to every match |
 
 Searches the platform's own AI hints across all 122 elements. Each match is
@@ -264,12 +277,26 @@ team for exactly this purpose, come with `sb_traits_for` for the element chosen,
 match with `detail: true`; ten matches' worth of hints was 7 KB for a choice made from the
 description.
 
+Results are ranked in tiers: exact type, then exact label (ignoring case and diacritics), then
+a type that starts with the query, then whole words in the type, the label,
+`semantics`/`useWhen`, the description, and last the element's own config/specials keys and
+the values their vocabularies allow — so `pagination`, `load_more` and `sort` find the element
+that does them. A bare substring is the weakest signal.
+
 ## `sb_traits_for`
 
 `type`, `control?`. Without `control`: the element's AI hints, its inspector as tab → group
 → control names, every control with a declared write target in full, its seeded defaults
 and its containment rules — the shape is under [Designing like a person](#sb_traits_for--the-inspector-not-a-summary).
 With `control`: that one control in full.
+
+Also returns, each only when non-empty: `base_only` (this element's config keys the renderer
+reads from base only; `sb_set` routes them there whatever breakpoint you name),
+`preconditions` (settings that do nothing unless a neighbouring key holds a given value, with
+what renders otherwise), `events` (click/form actions per trigger) and `binding_events` (the
+list that replaces it once the node carries a purchase binding), and `bindable` (exactly the
+specials `sb_bind` accepts, including generated binding fields such as `boundProductId`). A declared control that writes a base-only key is marked
+`responsive: false`.
 
 ## `sb_add`
 
@@ -401,6 +428,26 @@ be a no-op reported as done), a node moved into its own subtree, and `specials` 
 A hard refusal carries no `force` hint, which is how you tell them apart without trying.
 
 ---
+
+### Checks that warn, and dry runs that tell the truth
+
+`sb_add` and `sb_set` results carry `checks: [{ code, id?, key, problem, fix }]` — `sb_add`
+checks every node of the nested spec. Codes: `unknown_key` (a config/specials key the element
+is not known to read — still written, because 412 of 577 inspector controls declare no write
+target and a refusal would block real keys), `unknown_value`, `animation`, `dead_key`,
+`precondition`, `unsupported_setting`. Each note is said once per process; a dry run shows it
+without spending it, so the real write shows it again.
+
+Dry runs of `sb_add`, `sb_set`, `sb_move`, `sb_remove`, `sb_duplicate`, `sb_bind`, `sb_event` and a built-in `sb_template_use` run the
+same save validation as the real write and return `would_refuse: "<reason>"` when the real
+call would be refused (a section above a global header, say). Nothing is applied locally or
+sent, and a `sb_template_use` dry run reads its target without opening it — the open page is
+unchanged.
+
+`sb_bind` refuses a field outside the specials the element renders bindings into, listing the
+allowed ones. `sb_event` refuses `go_to_url` / `open_page` without `payload.url` (an
+`open_page` carrying only a page id renders no link) and `popup` without `payload.id`, the
+pop-up's overlay id, naming the expected payload. `force: true` overrides both.
 
 # Live editing and sight
 
@@ -1071,6 +1118,18 @@ box. Returns `{ findings, fixes, findings_notice? }`, in document order:
 | `hover_dead` | A hover stored in `states.hover` on an element that keeps its hover somewhere else — a `button` keeps it in the flat `config.stateHover` map its own renderer compiles. Stored, published, painted by nobody. Every site this server built before it learned the difference carries these |
 | `stuck_no_host` | A `stuck` override on a node with nothing pinned above it. `render/css.go` emits stuck CSS only under a stuck host, so the styling is stored, saved, published and never painted. Usually a host that was un-pinned later, or an import |
 | `no_h1` | The page has headings and none is an `h1`. Every `heading` ships as h2 (`specials.htmlTag`), and `text` / `text-dataset` take the same key, so a page built here — and every page the platform seeds — has no main title for a search engine or a screen reader. Nothing on the canvas shows the tag. Named on the page's OWN first heading — a shared header's brand line is skipped, by either stamp (`globalRef`/`globalId`); put the h1 on the one the page is about, once |
+| `invalid_action` | A stored event whose action the element does not offer on that trigger (a purchase-bound button offers only `bindingEvents`). Stored, never fires |
+| `action_missing_target` | `go_to_url` / `open_page` with no `payload.url` (no renderer resolves a page id), or `popup` with no `payload.id`. The click does nothing |
+| `no_data_context` | A record-bound element (`product.*`, `category.*`, `article.*`, `course.*`) outside any repeater and any pin, on a page type that supplies no such record. It renders its placeholder for ever |
+| `unread_value` | A stored config/specials value outside the renderer's vocabulary, at base or any breakpoint. It publishes as the fallback with no error |
+| `custom_code_native` | **`severity: "maintenance"`** — a `custom-code` block that is mostly markup a native element covers (form, heading, image, button, link list, YouTube/Vimeo/Maps iframe). Advice only: it works, but cannot be edited in the inspector, ignores the theme and is invisible to `sb_review`. Third-party scripts and unknown embeds are never flagged |
+
+Findings carry `severity` only when it is not an error: `maintenance` (works, but hard to edit
+or drifts) or `permission` (blocked by credentials or scope). Maintenance findings come back
+separately under `advice`, sharing the `fixes` map, and never withhold the clean verdict:
+`sb_review` reports `findings: []` and its verdict when everything left is advice.
+`custom_code_native` never flags a third-party form posting to another host (a Mailchimp or
+Klaviyo embed) — a native form cannot post there.
 
 The two dataset codes exist because the obvious advice is wrong inside a repeater. An
 `image` in a product card renders `specials.src`, so setting it puts ONE picture on every
@@ -2165,7 +2224,15 @@ returns `installed`, `created`, `present` and any `failed`.
 
 ## `sb_undo`
 
-Put back what a `PUT` through `sb_api_call` replaced.
+Puts back what a write replaced: a page or form-document edit made through this server
+(`sb_add`, `sb_set`, `sb_remove`, `sb_duplicate`, `sb_move`, `sb_bind`, `sb_event`,
+`sb_template_use`, …) or a PUT through `sb_api_call`. Every page save records the document it
+replaced, unless the save changed nothing; a dry run records nothing. A page is restored
+through the normal save path, so an open editor sees it live and the draft revision guard
+applies, and it is **refused** if anyone else saved the page since this process last did. An
+undo records what it replaced, so right after one, `index: 1` is its redo; step further back by
+choosing a higher index. Entries live in this process only, capped at 20; the platform's own
+`GET …/pages/{pageId}/history` survives a restart.
 
 | Arg | Type | Notes |
 | --- | --- | --- |

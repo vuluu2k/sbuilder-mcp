@@ -117,6 +117,26 @@ export const FIX: Record<string, string> = {
     'Make the page\'s main title an h1: sb_set id "<id>", namespace specials, keys ' +
     '{ "htmlTag": "h1" } — ONE per page, on the heading the page is about (the first one ' +
     'is named here; pick a different one if it is not the title). Every heading ships as h2.',
+  invalid_action:
+    'Re-issue it through sb_event (id "<id>", trigger "<key>"), which refuses an action the ' +
+    'element does not offer and lists the ones it does — or sb_event action "none" to drop it. ' +
+    'A purchase is a BINDING (sb_bind action "add_to_cart"), never a click action.',
+  action_missing_target:
+    'Give the action its target: sb_event id "<id>", action "<key>", payload ' +
+    '{ "url": "/path" } for go_to_url / open_page (open_page needs the resolved url — no ' +
+    'renderer resolves a page id), { "id": "<popup id>" } for popup.',
+  no_data_context:
+    'Give it a record: put it inside a list-dataset / dataset-block, pin one with sb_bind ' +
+    '(target id), or move it to a page whose type supplies "<key>" (product, category, course, ' +
+    'post, blog). Off those it renders its placeholder for ever.',
+  unread_value:
+    'Write a value the renderer reads: sb_traits_for "<type>" lists them; sb_set id "<id>" ' +
+    'with one, at the same breakpoint it is stored at.',
+  // ADVICE, never a blocker: the snippet works. The cost is that nobody can edit
+  // it in the inspector, it ignores the theme, and it is invisible to sb_review.
+  custom_code_native:
+    'Consider rebuilding it natively: sb_catalog_search "<key>" → sb_traits_for → sb_add, ' +
+    'then sb_remove id "<id>". Keep custom-code for a script or embed no element covers.',
   stuck_no_host:
     'Pin something: sb_set id "<id>" (or the section it lives in), namespace style, keys ' +
     '{ "position": "sticky" } — sb_set seeds the offset and the layer order with it. Until ' +

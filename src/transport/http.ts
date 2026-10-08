@@ -172,6 +172,22 @@ export function onPageSourceWrite(fn: SourceWritten): () => void {
 }
 
 /**
+ * The same stale half for a FORM's field document (`sb_page_open form_id`): a
+ * write through any other door — `sb_undo`, `sb_api_call`, a store flow —
+ * replaces what the open copy was read from.
+ */
+const formWritten = new Set<SourceWritten>();
+
+export function onFormDocumentWrite(fn: SourceWritten): () => void {
+  formWritten.add(fn);
+  return () => {
+    formWritten.delete(fn);
+  };
+}
+
+const FORM_DOC_WRITE = /^\/api\/sites\/([^/]+)\/forms\/([^/]+)\/document$/;
+
+/**
  * A SHARED MASTER'S WRITE IS A WRITE TO EVERY PAGE COMPOSING IT. A non-GET to
  * `/global-sections/{id}` or `/global-sections/{id}/document` replaces what an
  * open copy's header or footer was composed from, and that copy's next save
@@ -212,6 +228,13 @@ export async function request(opts: RequestOpts): Promise<unknown> {
   if (global) {
     const out = await send(opts);
     for (const fn of globalWritten) fn(decodeURIComponent(global[1]), decodeURIComponent(global[2]));
+    return out;
+  }
+  const form = opts.method !== 'GET' ? FORM_DOC_WRITE.exec(opts.path) : null;
+  if (form) {
+    const out = await send(opts);
+    const doc = (opts.body as { document?: unknown } | undefined)?.document;
+    for (const fn of formWritten) fn(decodeURIComponent(form[1]), decodeURIComponent(form[2]), doc);
     return out;
   }
   const restore = opts.method === 'POST' ? SOURCE_RESTORE.exec(opts.path) : null;

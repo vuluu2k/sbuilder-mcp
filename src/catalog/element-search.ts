@@ -1,4 +1,6 @@
-import { ELEMENTS, TRAIT_WRITES } from './elements.generated.js';
+import { ELEMENTS, TRAIT_WRITES, WRITE_PRECONDITIONS } from './elements.generated.js';
+import { isBaseOnlyConfig } from '../domains/site/baseonly.js';
+import { bindableFields } from '../domains/site/writecheck.js';
 import {
   animationValues,
   animationVocabulary,
@@ -69,6 +71,88 @@ export function largestCategorySize(): number {
   return Math.max(...Object.values(catalogBrowse()).map((g) => g.length));
 }
 
+/** Lowercase, diacritics off, camelCase and snake_case split — the unit a word match compares. */
+function words(s: string): string[] {
+  return s
+    .replace(/([a-z0-9])([A-Z])/g, '$1 $2')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .split(/[^a-z0-9]+/)
+    .filter(Boolean);
+}
+
+/** Two spellings of one name compare equal: "Product list", "product-list", "PRÓDUCT LÍST". */
+const slug = (s: string) => words(s).join('-');
+
+interface SearchIndex {
+  type: string;
+  label: string;
+  typeWords: Set<string>;
+  labelWords: Set<string>;
+  hintWords: Set<string>;
+  descWords: Set<string>;
+  capWords: Set<string>;
+  hay: string;
+}
+
+/**
+ * CAPABILITY is the element's own generated config/specials keys and the
+ * vocabulary VALUES they take — so "pagination", "load_more" and "sort" find
+ * the element that does them from the shared metadata, with no alias table to
+ * drift. The weakest word signal, because a key name is not a purpose.
+ */
+let index: Array<{ el: (typeof ELEMENTS)[string]; ix: SearchIndex }> | null = null;
+function searchIndex() {
+  return (index ??= Object.values(ELEMENTS).map((el) => {
+    const cap = [
+      ...Object.keys(el.defaults?.config ?? {}),
+      ...Object.keys(el.defaults?.specials ?? {}),
+      ...Object.values(elementVocabularies(el.type)).flatMap((v) => [v.writeKey, ...v.values]),
+    ];
+    const hints = [...el.semantics, ...el.useWhen];
+    return {
+      el,
+      ix: {
+        type: el.type,
+        label: slug(el.label),
+        typeWords: new Set(words(el.type)),
+        labelWords: new Set(words(el.label)),
+        hintWords: new Set(words(hints.join(' '))),
+        descWords: new Set(words(`${el.category} ${el.description}`)),
+        capWords: new Set(words(cap.join(' '))),
+        hay: words([el.type, el.label, el.category, el.description, ...hints].join(' ')).join(' '),
+      },
+    };
+  }));
+}
+
+/** A whole word, or its plural — "image" finds "images" without a stemmer. */
+const has = (set: Set<string>, t: string) => set.has(t) || set.has(`${t}s`);
+
+/**
+ * Tiered, so a stronger signal is never outvoted by a pile of weaker ones:
+ * exact type > exact label > the type's own words > the label's > semantics and
+ * useWhen > description > capability > bare substring. Measured before this:
+ * "list" returned address-book first and not `list` at all, because a flat
+ * substring count over prose ranks whatever mentions a word most.
+ */
+function score(ix: SearchIndex, q: string, terms: string[]): number {
+  let s = 0;
+  if (ix.type === q) s += 1e6;
+  if (ix.label === q) s += 1e5;
+  if (ix.type.startsWith(q)) s += 1e4;
+  for (const t of terms) {
+    if (has(ix.typeWords, t)) s += 1000;
+    if (has(ix.labelWords, t)) s += 300;
+    if (has(ix.hintWords, t)) s += 30;
+    if (has(ix.descWords, t)) s += 10;
+    if (has(ix.capWords, t)) s += 3;
+    if (ix.hay.includes(t)) s += 1;
+  }
+  return s;
+}
+
 /**
  * Four fields to CHOOSE by.
  *
@@ -81,14 +165,10 @@ export function catalogMatches(
   query: string,
   opts: { limit?: number; detail?: boolean } = {},
 ): CatalogMatch[] {
-  const terms = query.toLowerCase().split(/[^a-z0-9]+/).filter(Boolean);
-  return Object.values(ELEMENTS)
-    .map((el) => {
-      const hay = [el.type, el.label, el.category, el.description, ...el.semantics, ...el.useWhen]
-        .join(' ')
-        .toLowerCase();
-      return { el, score: terms.filter((t) => hay.includes(t)).length };
-    })
+  const terms = words(query);
+  const q = terms.join('-');
+  return searchIndex()
+    .map(({ el, ix }) => ({ el, score: score(ix, q, terms) }))
     .filter((s) => s.score > 0)
     .sort((a, b) => b.score - a.score || a.el.type.localeCompare(b.el.type))
     .slice(0, opts.limit ?? DEFAULT_CATALOG_LIMIT)
@@ -108,7 +188,7 @@ export function catalogMatches(
 /**
  * What one inspector control writes.
  *
- * 118 of the 435 controls declare it in the platform's trait registry. The rest
+ * 165 of the 577 controls declare it in the platform's trait registry. The rest
  * live inside a Vue widget's prop closure, which is not machine-readable — so
  * they come back named but undescribed, with the honest reason. Saying nothing
  * would read as "this control writes nothing".
@@ -159,8 +239,29 @@ export function traitsFor(type: string, control?: string): Record<string, unknow
     return { type, control, ...describeControl(control) };
   }
 
+  // Read from base only whatever breakpoint is asked for — sb_set routes them
+  // there, so a "tablet-only" value of one of these is the desktop value too.
+  const baseOnly = [
+    ...new Set([
+      ...Object.keys(el.defaults?.config ?? {}),
+      ...el.controls.flatMap((c) =>
+        (TRAIT_WRITES[c]?.writes ?? []).filter((w) => w.target === 'config').map((w) => w.writeKey),
+      ),
+    ]),
+  ].filter((k) => isBaseOnlyConfig(type, k));
+
   const declared: Record<string, unknown> = {};
-  for (const c of el.controls) if (TRAIT_WRITES[c]) declared[c] = describeControl(c);
+  for (const c of el.controls) {
+    if (!TRAIT_WRITES[c]) continue;
+    const base = TRAIT_WRITES[c].writes.some(
+      (w) => w.target === 'config' && isBaseOnlyConfig(type, w.writeKey),
+    );
+    declared[c] = { ...describeControl(c), ...(base ? { responsive: false } : {}) };
+  }
+  const preconditions = WRITE_PRECONDITIONS.filter((p) => p.types.includes(type)).map(
+    ({ types: _, ...p }) => p,
+  );
+  const bindable = bindableFields(type);
 
   return {
     type: el.type,
@@ -170,6 +271,15 @@ export function traitsFor(type: string, control?: string): Record<string, unknow
       groups: t.groups.map((g) => ({ group: g.label, controls: g.controls })),
     })),
     declared,
+    ...(baseOnly.length ? { base_only: baseOnly } : {}),
+    // Legal apart, meaningless together — the platform's own declaration.
+    ...(preconditions.length ? { preconditions } : {}),
+    // The click actions per trigger; binding_events replaces them once the node
+    // carries a purchase binding (add_to_cart is the BINDING, never an event).
+    ...(el.events ? { events: el.events } : {}),
+    ...(el.bindingEvents ? { binding_events: el.bindingEvents } : {}),
+    // The specials a record binding may target on this element.
+    ...(bindable.length ? { bindable } : {}),
     // The keys this element actually seeds. For `config` and `specials` —
     // which, unlike `style`, are NOT open — this is the machine-readable
     // answer to "what does this element store", and often the only one.

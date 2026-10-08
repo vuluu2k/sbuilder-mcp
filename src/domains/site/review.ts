@@ -5,7 +5,8 @@ import { HOVER_STATE, hoverHome } from './hover.js';
 import { ELEMENTS, BINDING_SOURCES, BOUND_SPECIALS , FIRST_CHILD_ONLY, SATELLITE_RULES, ELEMENT_SEEDS } from '../../catalog/elements.generated.js';
 import type { PageDoc } from './document.js';
 import { fill } from './findings.js';
-import { deadNavigation } from './navhref.js';
+import { deadNavigation, liveEventTable, PAYLOAD_NEEDS, type NodeEventLike } from './navhref.js';
+import { unknownValueNote, unknownWriteNote, vocabularyFor, vocabularyForWrite } from './vocabulary.js';
 
 /**
  * A defect somebody looking at the page would see.
@@ -41,6 +42,13 @@ export interface Finding {
    * ten problems. The flag lets a caller say "site-wide" once.
    */
   overlay?: boolean;
+  /**
+   * ABSENT means `error` — it will not work for a visitor — which is every code
+   * this file had before the field existed, so no old finding grew a byte.
+   * `maintenance`: it works, but is hard to edit or drifts from the theme; advice,
+   * never a blocker. `permission`: blocked by a credential or scope, not by the page.
+   */
+  severity?: 'maintenance' | 'permission';
   fix: string;
 }
 
@@ -58,7 +66,8 @@ export const REVIEW_NOTICE =
   'finding names, then review again until the list is empty. Do not report the page as done ' +
   'while findings stand; if you believe one is a false positive, say which and why. ' +
   'A finding marked overlay:true is in the cart drawer or a pop-up — fix it the same way ' +
-  '(sb_set lands there), but it is SITE-WIDE, so fix it once rather than once per page.';
+  '(sb_set lands there), but it is SITE-WIDE, so fix it once rather than once per page. ' +
+  '`advice` lists what works but is hard to edit — never a blocker.';
 
 /** The specials keys an element seeds that hold its visible content. */
 function contentKeys(type: string): string[] {
@@ -156,6 +165,65 @@ function drawsItsOwnContent(type: string): boolean {
   return (BOUND_SPECIALS[type] ?? []).some((k) => !LINK_SPECIALS.has(k));
 }
 
+
+/** Binding-source prefixes that name a RECORD (not `site.*`, which every page has). */
+const RECORD_ENTITIES = new Set(['product', 'category', 'course', 'article', 'blogCategory']);
+
+/**
+ * Which records a page TYPE supplies outside any repeater — read off the
+ * platform's own seeds (STORE_PAGE_SEEDS bind exactly these at top level).
+ */
+const PAGE_ENTITIES: Record<string, string[]> = {
+  product: ['product'],
+  category: ['category'],
+  course: ['course'],
+  post: ['article'],
+  blog: ['blogCategory', 'category'],
+};
+
+/** Does this node or an ancestor PIN a record (`bindings[0].target.id`)? */
+function pinnedAbove(d: DocLike, id: string): boolean {
+  for (let x: string | null | undefined = id; x && d.nodes[x]; x = d.nodes[x].data.parent) {
+    const b0 = (d.nodes[x] as { bindings?: Array<{ target?: { id?: string } }> }).bindings?.[0];
+    if (b0?.target?.id) return true;
+  }
+  return false;
+}
+
+/**
+ * The native element a custom-code snippet re-implements, or null.
+ *
+ * Judged on the MARKUP left once every <script>, <style> and comment is
+ * stripped — so an analytics tag, a chat widget's mount div, or HTML built
+ * inside a script is never flagged — and only when that markup outweighs the
+ * script (mostly markup). An iframe counts only for the three hosts a native
+ * embed exists for; any other iframe is a third-party embed and stays.
+ * ponytail: tag-presence heuristic, not a parser — tighten if it cries wolf.
+ */
+function nativeFor(code: string): string | null {
+  const scripts = code.match(/<script\b[\s\S]*?(<\/script>|$)/gi) ?? [];
+  const markup = code
+    .replace(/<script\b[\s\S]*?(<\/script>|$)/gi, '')
+    .replace(/<style\b[\s\S]*?(<\/style>|$)/gi, '')
+    .replace(/<!--[\s\S]*?-->/g, '');
+  if (markup.trim().length < scripts.join('').length) return null;
+  // A form POSTING TO ANOTHER HOST (a Mailchimp / Klaviyo embed) is a
+  // third-party integration, not hand-built markup: a native form submits to
+  // this platform only, so there is nothing native to swap it for.
+  if (/<form\b[^>]*\baction\s*=\s*["']?(https?:)?\/\//i.test(markup)) return null;
+  const iframe = /<iframe\b[^>]*\bsrc\s*=\s*["']?([^"'\s>]+)/i.exec(markup)?.[1] ?? '';
+  if (/youtube(-nocookie)?\.com|youtu\.be/i.test(iframe)) return 'youtube';
+  if (/vimeo\.com/i.test(iframe)) return 'vimeo';
+  if (/google\.[a-z.]+\/maps|maps\.google\./i.test(iframe)) return 'google-map';
+  if (/<form\b/i.test(markup)) return 'form';
+  if (/<(nav|ul|ol)\b/i.test(markup) && (markup.match(/<a\b/gi) ?? []).length >= 2) return 'menu';
+  if (/<h[1-6]\b/i.test(markup)) return 'heading';
+  if (/<video\b/i.test(markup)) return 'video';
+  if (/<img\b/i.test(markup)) return 'image';
+  if (/<button\b/i.test(markup)) return 'button';
+  return null;
+}
+
 /**
  * Everything wrong with this page that a person would notice.
  *
@@ -180,7 +248,11 @@ function drawsItsOwnContent(type: string): boolean {
 export function reviewDesign(
   doc: PageDoc,
   /** The site's forms by id → type, when read; lets `order_goes_nowhere` ask the form itself. */
-  opts: { formTypes?: Record<string, string> } = {},
+  opts: {
+    formTypes?: Record<string, string>;
+    /** The page record's `type`. Without it `no_data_context` stays silent rather than guess. */
+    pageType?: string;
+  } = {},
 ): Finding[] {
   const d: DocLike = doc.doc;
   const out: Finding[] = [];
@@ -358,6 +430,126 @@ export function reviewDesign(
         fix: fill('dead_nav', { url: dead.url }),
         ...(inOverlay.has(id) ? { overlay: true } : {}),
       });
+    }
+
+    // AN EVENT THE ELEMENT CANNOT FIRE, OR ONE WITH NOWHERE TO GO. `sb_event`
+    // refuses both at write time; a document gets here by other roads (an
+    // import, a template, a hand-built sb_api_call). Same table setEvent reads
+    // (`liveEventTable` in tools/live.ts): bindingEvents once a purchase binds.
+    const events = (n as unknown as { events?: NodeEventLike[] }).events ?? [];
+    if (events.length) {
+      const table = liveEventTable(d.nodes as never, id);
+      for (const ev of events) {
+        const trigger = String(ev?.name ?? '');
+        const action = String(ev?.action ?? '');
+        if (!table?.[trigger]?.includes(action)) {
+          out.push({
+            code: 'invalid_action',
+            nodeId: id,
+            type,
+            problem:
+              `"${action}" on ${trigger || '(no trigger)'} is not an action a ${type} offers` +
+              (table?.[trigger] ? ` there (${table[trigger].join(', ')})` : '') +
+              ' — it is stored and never fires.',
+            key: trigger,
+            fix: fill('invalid_action', { id, key: trigger }),
+          });
+          continue;
+        }
+        // The same table `sb_event` refuses by — one list, so the two cannot drift.
+        const need = PAYLOAD_NEEDS[action]?.key;
+        const v = (ev.payload ?? {})[need ?? ''];
+        if (need && (typeof v !== 'string' || v.trim() === '')) {
+          out.push({
+            code: 'action_missing_target',
+            nodeId: id,
+            type,
+            problem: `Its ${trigger} "${action}" carries no payload.${need}, so the click does nothing.`,
+            key: action,
+            fix: fill('action_missing_target', { id, key: action }),
+          });
+        }
+      }
+    }
+
+    // A RECORD-BOUND ELEMENT WITH NO RECORD. Inside a repeater the row supplies
+    // one; on an entity page (product, category, post…) the page does; a pin
+    // (`bindings[0].target.id`, render/html.go pinnedEntityID) does for its
+    // subtree. Anywhere else the binding resolves to nothing and the element
+    // renders its seeded placeholder for ever — saved, published, no warning.
+    // Overlays are skipped: one drawer serves every page type.
+    if (opts.pageType !== undefined && !inRepeater.get(id) && !inOverlay.has(id)) {
+      const entities = PAGE_ENTITIES[opts.pageType] ?? [];
+      const missing = ((n as { bindings?: Array<{ source?: string }> }).bindings ?? [])
+        .map((b) => String(b?.source ?? '').split('.')[0])
+        .find((e) => RECORD_ENTITIES.has(e) && !entities.includes(e));
+      if (missing && !pinnedAbove(d, id)) {
+        out.push({
+          code: 'no_data_context',
+          nodeId: id,
+          type,
+          problem:
+            `Bound to a ${missing} record, but it sits in no repeater and a "${opts.pageType}" ` +
+            'page supplies none — it renders its placeholder on the published page.',
+          key: missing,
+          fix: fill('no_data_context', { id, key: missing }),
+        });
+      }
+    }
+
+    // A STORED VALUE NO RENDERER READS. The same vocabulary `sb_set` warns from
+    // (`unknownWriteNote` / `unknownValueNote`), asked of what the document
+    // already holds — base and every breakpoint — because an import or a write
+    // made before the warning existed is still publishing the fallback.
+    {
+      const layered = n as unknown as {
+        config?: Record<string, unknown>;
+        responsive?: Record<string, { config?: Record<string, unknown>; specials?: Record<string, unknown> }>;
+      };
+      const layers: Array<[string, Record<string, unknown> | undefined]> = [
+        ['config', layered.config],
+        ['specials', n.specials as Record<string, unknown> | undefined],
+        ...Object.values(layered.responsive ?? {}).flatMap(
+          (r) => [['config', r?.config], ['specials', r?.specials]] as Array<[string, Record<string, unknown> | undefined]>,
+        ),
+      ];
+      const said = new Set<string>();
+      for (const [ns, slot] of layers) {
+        for (const [k, v] of Object.entries(slot ?? {})) {
+          const unread =
+            unknownWriteNote(type, ns, k, v) ?? (ns === 'config' ? unknownValueNote(k, v) : null);
+          if (!unread || said.has(`${ns}.${k}=${String(v)}`)) continue;
+          said.add(`${ns}.${k}=${String(v)}`);
+          const legal = (vocabularyForWrite(type, ns, k) ?? (ns === 'config' ? vocabularyFor(k) : null))?.values ?? [];
+          out.push({
+            code: 'unread_value',
+            nodeId: id,
+            type,
+            problem:
+              `${ns}.${k} = ${JSON.stringify(v)} is not a value the renderer reads; it publishes ` +
+              `as its fallback with no error. Legal: ${legal.map((x) => x || '""').join(', ')}.`,
+            key: `${ns}.${k}`,
+            fix: fill('unread_value', { id, type }),
+          });
+        }
+      }
+    }
+
+    if (type === 'custom-code') {
+      const native = nativeFor(String((n.specials ?? {}).code ?? ''));
+      if (native) {
+        out.push({
+          code: 'custom_code_native',
+          nodeId: id,
+          type,
+          severity: 'maintenance',
+          problem:
+            `Hand-written markup a native ${native} covers. It works, but no inspector can edit ` +
+            'it, it ignores the theme, and sb_review cannot see inside it.',
+          key: native,
+          fix: fill('custom_code_native', { id, key: native }),
+        });
+      }
     }
 
     // PINNING FAILS WITH NOTHING ON SCREEN AND NOTHING IN THE LOG — both halves

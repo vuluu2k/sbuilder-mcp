@@ -1,4 +1,5 @@
 import type { Patch } from '../../core/patch.js';
+import { ELEMENTS } from '../../catalog/elements.generated.js';
 
 /**
  * THE BRIDGE BETWEEN A CLICK ACTION AND THE THING A RENDERER ACTUALLY READS.
@@ -62,8 +63,14 @@ export interface NodeEventLike {
  */
 export const NAVIGATION_ACTIONS = ['go_to_url', 'open_page', 'go_to_checkout'] as const;
 
-/** The two that a renderer expects to meet as an `<a href>`. */
-const PROJECTABLE = new Set(['go_to_url', 'open_page']);
+/**
+ * The actions a SOLE click projects onto `specials.href` — the platform's
+ * `projectsHref` (`schema/src/actions/engine.ts`). `scroll_to` degrades to a
+ * fragment link (`#<targetId>`), because publish stamps every node's id as
+ * its DOM id; until the catalog carries it, `sb_event` refuses it as an
+ * action no element offers, so this branch is inert rather than a guess.
+ */
+const PROJECTABLE = new Set(['go_to_url', 'open_page', 'scroll_to']);
 
 /**
  * The destination an event projects onto `specials.href`, or undefined.
@@ -75,6 +82,10 @@ const PROJECTABLE = new Set(['go_to_url', 'open_page']);
  */
 export function eventHref(ev: NodeEventLike | null | undefined): string | undefined {
   if (!ev || !PROJECTABLE.has(ev.action ?? '')) return undefined;
+  if (ev.action === 'scroll_to') {
+    const id = (ev.payload ?? {}).targetId;
+    return typeof id === 'string' && id !== '' ? `#${id}` : undefined;
+  }
   const url = (ev.payload ?? {}).url;
   return typeof url === 'string' && url !== '' ? url : undefined;
 }
@@ -158,9 +169,74 @@ export function deadNavigation(node: {
   specials?: Record<string, unknown>;
 }): { url: string } | null {
   const sole = soleNavigationClick(node.events, hasPurchaseBinding(node.bindings));
-  if (!sole) return null;
+  // A scroll still runs with no href — publish emits its ScrollControl call
+  // beside the fragment link — so only the no-JS fallback is missing, not the click.
+  if (!sole || sole.action === 'scroll_to') return null;
   const url = eventHref(sole);
   if (url === undefined) return null;
   const href = (node.specials ?? {}).href;
   return typeof href === 'string' && href !== '' ? null : { url };
+}
+
+/**
+ * The payload key each action cannot work without, read off
+ * `schema/src/actions/actions/{goToUrl,openPage,openPopup}.ts` and the Go that
+ * consumes them (`navhref.ts`'s `eventHref`, `popupTargetProps` in
+ * `render/nodes/helpers.go`). `open_page` asks for `url` rather than the `id`
+ * the platform validates, because the url is what renders.
+ */
+export const PAYLOAD_NEEDS: Record<string, { key: string; why: string; shape: string }> = {
+  go_to_url: {
+    key: 'url',
+    why: 'publishes with no href and goes nowhere',
+    shape: '{ "url": "/path or https://…", "openInNewTab": false }',
+  },
+  open_page: {
+    key: 'url',
+    why: 'publishes with no href — neither renderer can resolve a page id, only a url',
+    shape: '{ "linkType": "page", "id": "<page id>", "label": "<page name>", "url": "/<page path>" }',
+  },
+  popup: {
+    key: 'id',
+    why: 'publishes a PopupControl call with no target, which opens nothing',
+    shape: '{ "id": "<the pop-up\'s overlay id, from sb_store popup>", "label": "<name>" }',
+  },
+  scroll_to: {
+    key: 'targetId',
+    why: 'publishes a ScrollControl call with no target, which scrolls nowhere',
+    shape: '{ "targetId": "<the section or block node id>", "label": "<name>" }',
+  },
+};
+
+/**
+ * The click-action allow-list that is LIVE for this node — the one table
+ * `sb_event` refuses by and `sb_review` reports by, so the two cannot drift.
+ *
+ * `activeEvents` in the platform (`return action ? binding_events : events`):
+ * a purchase-bound control swaps to `meta.bindingEvents`.
+ *
+ * PLUS ONE CONTEXT RULE THE META CANNOT STATE: `close_popup` inside a pop-up.
+ * The action declares the click trigger and is wired for ANY node
+ * (`islandCallForAction`, render/nodes/helpers.go — EventAttrs never consults
+ * the meta), and it resolves its panel by proximity (`closest('.wb-popup')`).
+ * No element meta lists it, yet the platform's own pop-up seed
+ * (`editor/src/features/overlays/seed.ts`) ships a button carrying it, and the
+ * editor keeps it selectable through `withCurrent`. So inside a `popup` it is
+ * live; outside one it has no panel to close.
+ */
+export function liveEventTable(
+  nodes: Record<string, { data?: { type?: string; parent?: string | null }; bindings?: Array<{ id?: string }> } | undefined>,
+  id: string,
+): Record<string, string[]> | undefined {
+  const node = nodes[id];
+  const meta = ELEMENTS[node?.data?.type ?? ''];
+  if (!meta?.events) return undefined;
+  const table = (hasPurchaseBinding(node?.bindings) && meta.bindingEvents) || meta.events;
+  if (!table.click || table.click.includes('close_popup')) return table;
+  const seen = new Set<string>();
+  for (let p = node?.data?.parent; p && !seen.has(p); p = nodes[p]?.data?.parent) {
+    seen.add(p);
+    if (nodes[p]?.data?.type === 'popup') return { ...table, click: [...table.click, 'close_popup'] };
+  }
+  return table;
 }

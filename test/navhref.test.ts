@@ -80,7 +80,9 @@ describe('a navigation click projects the href the renderer actually reads', () 
    */
   it('projects nothing for an open_page with no resolved url', () => {
     const { d, id } = pageWith('button');
-    d.apply(setEvent(d, id, 'click', 'open_page', { pageId: 'pg_x' }));
+    // sb_event now refuses this (soft) — force is the road such a document takes.
+    expect(() => setEvent(d, id, 'click', 'open_page', { pageId: 'pg_x' }, {})).toThrow(/payload\.url/);
+    d.apply(setEvent(d, id, 'click', 'open_page', { pageId: 'pg_x' }, { force: true }));
     expect(specials(d, id).href).toBeUndefined();
   });
 

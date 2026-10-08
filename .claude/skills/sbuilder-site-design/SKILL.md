@@ -104,6 +104,16 @@ with a `#171717` active state (rule 4).
 sections, then the surfaces the page does not show you: satellites, field skin,
 the cart drawer, every empty state.
 
+**7a. Native first; `custom-code` only for a gap you can name.** The order is
+`sb_catalog_search` → `sb_traits_for` → one nested `sb_add` per section →
+`sb_bind` / `sb_event` → `sb_look` + `sb_review`. The reason: a custom-code block
+renders, but no inspector can edit it, it ignores the theme presets, and
+`sb_review` cannot see inside it. So a hand-written form, heading, image, link list
+or YouTube/Vimeo/Maps iframe ships unreviewed and drifts on the next palette change.
+`sb_review` reports these as `custom_code_native` with `severity: "maintenance"`.
+That finding is advice, not a defect. A plain third-party script or an unknown
+embed is the legitimate use and is not flagged.
+
 **8. The purchase controls.** `sb_bind` with `action: "add_to_cart"` on the buy
 button — a purchase is a BINDING. `sb_event` with `open_cart` on a standalone
 cart control in the header — that one is an EVENT. Getting these two backwards

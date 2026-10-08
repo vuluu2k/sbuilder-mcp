@@ -3,6 +3,7 @@ import { z } from 'zod';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { text, images } from '../mcp/response.js';
 import { BINDING_SOURCES, ELEMENTS } from '../catalog/elements.generated.js';
+import { bindableFields } from '../domains/site/writecheck.js';
 import { previewUrl } from '../vision/preview.js';
 import { uploadMedia } from '../transport/media.js';
 import { request } from '../transport/http.js';
@@ -33,6 +34,8 @@ import { soft, type GuardOpts } from '../domains/site/guard.js';
 import {
   hrefPatches,
   hasPurchaseBinding,
+  liveEventTable,
+  PAYLOAD_NEEDS,
   PRODUCT_ACTION_BINDING_ID,
   type NodeEventLike,
 } from '../domains/site/navhref.js';
@@ -95,6 +98,26 @@ export function bindNode(
         'every other namespace, so the binding would be stored and never applied.',
     );
   }
+  // A FIELD THE ELEMENT NEVER PAINTS. `BOUND_SPECIALS` is read off each
+  // element's html.go, so a `specials.boundImage` binding on a text-dataset is
+  // stored, saved, published and rendered as placeholder text forever. Soft:
+  // the list is the catalog's copy of the renderer. The element's own generated
+  // binding fields count too — `boundProductId` is read by the runtime, not
+  // html.go, and every default product binding carries it.
+  const type = (node as unknown as { data?: { type?: string } }).data?.type ?? '';
+  const key = field.slice(dot + 1);
+  const allowed = bindableFields(type);
+  if (action === undefined && allowed.length) {
+    if (!allowed.includes(key)) {
+      soft(guard, () => {
+        throw new Error(
+          `sbuilder: a ${type} renders a binding only into ${allowed.map((k) => `specials.${k}`).join(', ')} ` +
+            `— "${field}" would be stored and never painted. Allowed fields: ${allowed.join(', ')}. ` +
+            'Bind one of those, or swap to an element that shows this value (sb_catalog_search).',
+        );
+      });
+    }
+  }
   // A PURCHASE BINDING, which is what makes a button add to the cart.
   //
   // It is not an ordinary binding and cannot be written as one: the renderer
@@ -138,23 +161,6 @@ export function bindNode(
 }
 
 /**
- * The click-action allow-list that is LIVE for this node.
- *
- * `activeEvents` in the platform, whose whole rule is one line in
- * `ActionTrait.vue`: `return action ? def.binding_events : def.events`. A
- * purchase control is a different kind of control — an unbound button navigates,
- * a bound one hands off to the cart or the checkout — and the two sets are
- * mutually exclusive, because "add this product, then go to an arbitrary URL" is
- * not a thing the cart runtime can express.
- */
-function liveEventTable(type: string, node: { bindings?: Array<{ id?: string }> }): Record<string, string[]> | undefined {
-  const meta = ELEMENTS[type];
-  if (!meta?.events) return undefined;
-  const bound = (node.bindings ?? []).some((b) => b?.id === PRODUCT_ACTION_BINDING_ID);
-  return (bound && meta.bindingEvents) || meta.events;
-}
-
-/**
  * Put a click action on a node, or take one off.
  *
  * THE ONE THING NO TOOL COULD DO. `NodeSpec` carries no `events`, `sb_set`
@@ -180,6 +186,7 @@ function liveEventTable(type: string, node: { bindings?: Array<{ id?: string }> 
  * the event alone therefore produced a control that renders, saves, publishes
  * and does nothing. See `domains/site/navhref.ts` for the measurement.
  */
+
 export function setEvent(
   doc: PageDoc,
   id: string,
@@ -214,7 +221,7 @@ export function setEvent(
     ];
   }
 
-  const table = liveEventTable(node.data.type, node);
+  const table = liveEventTable(doc.doc.nodes as never, id);
   if (!table) {
     throw new Error(
       `sbuilder: a ${node.data.type} declares no click actions, so an event on it would be ` +
@@ -239,6 +246,24 @@ export function setEvent(
           : '') +
         `Allowed: ${allowed.join(', ')}.`,
     );
+  }
+
+  // A NAVIGATION WITH NOWHERE TO GO. The renderer turns a sole go_to_url /
+  // open_page click into `<a href>` from `payload.url` ALONE (navhref.ts) — an
+  // `open_page` with only a page id projects nothing, since neither renderer
+  // can resolve one — and a `popup` with no `payload.id` publishes a call with
+  // no target that opens nothing. All three store, save and publish clean.
+  const need = PAYLOAD_NEEDS[action];
+  if (need) {
+    const v = (payload ?? {})[need.key];
+    if (typeof v !== 'string' || v === '') {
+      soft(guard, () => {
+        throw new Error(
+          `sbuilder: "${action}" needs payload.${need.key} — without it the click ${need.why}. ` +
+            `Expected payload: ${need.shape}.`,
+        );
+      });
+    }
   }
 
   const value = { id: `ev_${action}`, name: trigger, action, payload: payload ?? {} };
@@ -314,7 +339,7 @@ export function joinRoom(ctx: ToolContext, session: PageSession, siteId: string)
   );
   const live = new LiveSession(socket, {
     onRemote: (patches) => session.applyRemote(patches),
-    onDesync: (reason) => session.markStale(reason),
+    onDesync: (reason) => session.roomDesync(reason),
     onSource: (pageId, rev, peerId) => session.sourceSaved(pageId, rev, peerId),
     onMaster: (kind, id, op, rev) => session.masterSaved(kind, id, op, rev),
   });
@@ -776,7 +801,10 @@ export function registerLiveTools(
       const guard: GuardOpts = { force, forced: [] };
       const patches = setEvent(d, id, trigger ?? 'click', action, payload, guard);
       const forced = guard.forced!.length ? { forced: guard.forced } : {};
-      if (dry_run !== false) return text({ dry_run: true, patches, ...forced });
+      if (dry_run !== false) {
+        const refuse = session.wouldRefuse(patches);
+        return text({ dry_run: true, patches, ...(refuse ? { would_refuse: refuse } : {}), ...forced });
+      }
       await session.applyAndSave(patches);
       return text({ node: id, trigger: trigger ?? 'click', action, rev: d.rev, ...forced });
     },
@@ -813,7 +841,10 @@ export function registerLiveTools(
       const guard: GuardOpts = { force, forced: [] };
       const patches = bindNode(d, id, source, field, action, guard);
       const forced = guard.forced!.length ? { forced: guard.forced } : {};
-      if (dry_run !== false) return text({ dry_run: true, patches, ...forced });
+      if (dry_run !== false) {
+        const refuse = session.wouldRefuse(patches);
+        return text({ dry_run: true, patches, ...(refuse ? { would_refuse: refuse } : {}), ...forced });
+      }
       await session.applyAndSave(patches);
       return text({ bound: id, source, field, ...(action ? { action } : {}), rev: d.rev, ...forced });
     },

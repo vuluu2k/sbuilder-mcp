@@ -236,9 +236,11 @@ describe('sb_set through the server', () => {
       })) as { content: Array<{ text?: string }> };
       const raw = res.content[0].text ?? '';
       expect(raw, raw).not.toMatch(/^sbuilder:/);
-      const out = JSON.parse(raw) as { value?: string };
-      expect(out.value).toMatch(/read by NOTHING/);
-      expect(out.value).toMatch(new RegExp(dead.key));
+      // The note moved from a `value` string into the structured `checks` list.
+      const out = JSON.parse(raw) as { checks?: Array<{ code: string; problem: string }> };
+      const note = out.checks?.find((c) => c.code === 'dead_key')?.problem;
+      expect(note).toMatch(/read by NOTHING/);
+      expect(note).toMatch(new RegExp(dead.key));
     } finally {
       await close();
     }
