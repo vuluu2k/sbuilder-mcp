@@ -6,6 +6,14 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.76.4] - 2026-10-08
+
+### Added
+- `sb_look` báo thêm hai finding bố cục `title_bar_stranded` và `title_bar_offcenter` khi một hàng tiêu đề kèm nút được dựng tay để nút lệch khỏi mép phải hoặc lệch tâm dọc so với tiêu đề, và bỏ qua các hàng khai báo bố cục căn giữa.
+
+### Fixed
+- `sb_import` và `sb_import_site` giờ ánh xạ một tiêu đề đi kèm một nút duy nhất như "Xem tất cả" thành hàng space-between căn giữa theo chiều dọc, nên nút nằm sát mép phải, cùng tâm dọc với tiêu đề và xếp dọc căn trái trên mobile.
+
 ## [0.76.3] - 2026-09-28
 
 ### Fixed

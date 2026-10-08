@@ -6,6 +6,14 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.76.4] - 2026-10-08
+
+### Added
+- `sb_look` reports two new layout findings, `title_bar_stranded` and `title_bar_offcenter`, when a hand-built heading-plus-action row leaves the button short of the right edge or off the heading's centre line, and skips rows that declare a centred layout.
+
+### Fixed
+- `sb_import` and `sb_import_site` now map a heading beside a single action such as "Xem tất cả" to a space-between row with centred alignment, so the button sits on the right edge, shares the heading's centre line, and stacks left-aligned on mobile.
+
 ## [0.76.3] - 2026-09-28
 
 ### Fixed
