@@ -9,7 +9,7 @@ export const PLATFORM_SOURCE: {
   /** True when `--dirty` read a working tree, so half-finished work can be described here. */
   dirty: boolean;
 } = {
-  "commit": "748533085287a088a78dea651aaadd00f1e08b35",
-  "committedAt": "2026-10-08T14:30:31+07:00",
+  "commit": "66a8763e023084106c5edd15bb48c3bab490ed8f",
+  "committedAt": "2026-10-08T17:50:54+07:00",
   "dirty": false
 };

@@ -821,6 +821,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
         "go_to_url",
         "open_page",
         "popup",
+        "scroll_to",
         "open_menu",
         "close_menu",
         "toggle_menu",
@@ -1739,6 +1740,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
         "go_to_url",
         "open_page",
         "popup",
+        "scroll_to",
         "change_tab",
         "open_dropdown",
         "close_dropdown",
@@ -1900,6 +1902,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
         "go_to_url",
         "open_page",
         "popup",
+        "scroll_to",
         "open_menu",
         "close_menu",
         "toggle_menu",
@@ -7672,7 +7675,8 @@ export const ELEMENTS: Record<string, CatalogElement> = {
         "prefillValue": "",
         "setRange": false,
         "minValue": 1,
-        "maxValue": 500
+        "maxValue": 500,
+        "step": 0
       },
       "style": {
         "width": "100%"
@@ -7761,6 +7765,13 @@ export const ELEMENTS: Record<string, CatalogElement> = {
             ]
           },
           {
+            "key": "number_step",
+            "label": "Number step",
+            "controls": [
+              "field_number_step"
+            ]
+          },
+          {
             "key": "spacing",
             "label": "Spacing",
             "controls": [
@@ -7798,6 +7809,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
       "size_bounds",
       "field_name",
       "field_number_range",
+      "field_number_step",
       "padding_margin",
       "display",
       "class_css"
@@ -7813,7 +7825,8 @@ export const ELEMENTS: Record<string, CatalogElement> = {
     ],
     "contentTips": [
       "Say the unit in the label, not in the placeholder — the placeholder disappears the moment anyone types.",
-      "Set a range only when a value outside it is genuinely wrong. A range that merely reflects what you expect turns an unusual customer into a blocked one."
+      "Set a range only when a value outside it is genuinely wrong. A range that merely reflects what you expect turns an unusual customer into a blocked one.",
+      "Counting people, rooms or items? Set step to 1 so a fractional answer like 2.5 is refused; leave it 0 for measurements."
     ],
     "semantics": [
       "form",

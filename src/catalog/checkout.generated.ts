@@ -1606,7 +1606,8 @@ export const FORM_TEMPLATES = {
             "prefillValue": "",
             "setRange": true,
             "minValue": 1,
-            "maxValue": 500
+            "maxValue": 500,
+            "step": 0
           },
           "responsive": {},
           "events": [],
@@ -3784,7 +3785,8 @@ export const FORM_TEMPLATES = {
             "prefillValue": "",
             "setRange": true,
             "minValue": 1,
-            "maxValue": 500
+            "maxValue": 10,
+            "step": 1
           },
           "responsive": {},
           "events": [],
@@ -4310,7 +4312,8 @@ export const FORM_TEMPLATES = {
             "prefillValue": "",
             "setRange": true,
             "minValue": 1,
-            "maxValue": 500
+            "maxValue": 20,
+            "step": 1
           },
           "responsive": {},
           "events": [],
