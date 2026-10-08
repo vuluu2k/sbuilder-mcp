@@ -6,6 +6,15 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.79.0] - 2026-10-08
+
+### Added
+- `sb_traits_for` và `sb_set` hiển thị action `scroll_to` trên element button, icon và image.
+- `sb_traits_for` và `sb_set` hiển thị `specials.step` của field `form-number`, trong đó `1` chỉ nhận số nguyên, cùng control `number_step` của form skin và gợi ý khi nào nên dùng.
+
+### Changed
+- Catalog được sinh lại từ nền tảng mới nhất, và mặc định của `form-number` giờ có `maxValue` và `step` riêng cho từng field.
+
 ## [0.78.0] - 2026-10-08
 
 ### Added

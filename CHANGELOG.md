@@ -6,6 +6,15 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.79.0] - 2026-10-08
+
+### Added
+- `sb_traits_for` and `sb_set` expose the `scroll_to` action on button, icon and image elements.
+- `sb_traits_for` and `sb_set` expose `specials.step` on `form-number` fields, where `1` accepts whole numbers only, along with a form-skin `number_step` control and guidance on when to use it.
+
+### Changed
+- The catalog is regenerated from the current platform, and `form-number` defaults now carry per-field `maxValue` and `step` values.
+
 ## [0.78.0] - 2026-10-08
 
 ### Added
