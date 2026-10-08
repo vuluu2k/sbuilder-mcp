@@ -106,9 +106,10 @@ export const FIX: Record<string, string> = {
   order_goes_nowhere:
     'Send the shopper on: sb_event id "<id>", trigger "form:success", action "go_to_url", ' +
     'payload { "url": "/checkout/complete" }. That path resolves by page TYPE and serves a ' +
-    'built-in receipt even with no completion page, so it is never a link to a 404. Do NOT ' +
-    'reach for the form record\'s settings.afterSubmit "redirect" — the API stores it and the ' +
-    'platform carries it nowhere.',
+    'built-in receipt even with no completion page, so it is never a link to a 404. The form ' +
+    'record\'s settings.afterSubmit { action: "redirect", pageId | url } also navigates now, ' +
+    'but a pageId whose page is unpublished silently falls back to the message, and this ' +
+    'check reads only the node\'s events — so prefer the event.',
   hover_dead:
     'Rewrite it with the same values: sb_set id "<id>", namespace style, state "hover", ' +
     'keys { … } — read them off the node first, because that one call both writes them where ' +
@@ -142,6 +143,18 @@ export const FIX: Record<string, string> = {
     '{ "position": "sticky" } — sb_set seeds the offset and the layer order with it. Until ' +
     'then the platform compiles no rule for this state at all, so the override is stored, ' +
     'published and never painted. To drop it instead, remove the stuck slot.',
+  // FORM DOCUMENT findings (`sb_page_open form_id`) — stored by the platform, answerable by nobody.
+  form_options_empty:
+    'Give it choices: sb_set id "<id>", namespace specials, keys { "options": ["…", "…"] } — ' +
+    'each string is both what the visitor sees and the value posted. Or sb_remove it.',
+  form_timeslot_dead:
+    'Give it hours that make a slot: sb_set id "<id>", namespace specials, keys ' +
+    '{ "start": "09:00", "end": "18:00", "step": 60 } — "HH:MM", start before end, step in ' +
+    'minutes > 0 and no longer than the day.',
+  form_booking_dates:
+    'Keep one date (an appointment) or two (a stay: check-in then check-out) — sb_remove id ' +
+    '"<id>", or ask for it as text. Booking rules (closedDates, min/maxStayNights, capacity) ' +
+    'read only the first two date fields.',
 };
 
 /** The template for `code`, with every `<name>` in `vars` substituted. */

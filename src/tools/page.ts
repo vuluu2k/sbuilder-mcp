@@ -39,13 +39,13 @@ import { request, redact, watchPageWrites, onPageSourceWrite, onGlobalWrite, onF
 import { SPEC_GLOBAL_ID, SPEC_GLOBAL_REV, SPEC_OVERLAY_ID, SPEC_OVERLAY_REV, type NodeLike } from '../core/tree.js';
 import { siteToken } from './credentialpick.js';
 import { validateForSave } from '../domains/site/validate.js';
-import { sayChecks, specCheck, writeCheck } from '../domains/site/writecheck.js';
+import { formDocChecks, sayChecks, specCheck, writeCheck, type CheckedNote } from '../domains/site/writecheck.js';
 import { reviewDesign, REVIEW_NOTICE } from '../domains/site/review.js';
 import { compactFindings } from '../domains/site/findings.js';
 import { readinessGaps, READINESS_NOTICE, siteLanguage } from '../domains/site/readiness.js';
 import { gatherReadiness } from '../domains/site/readiness-fetch.js';
 import { globalWarning, restampPatches, RESPONSIVE_NOTICE } from '../domains/site/traps.js';
-import { catalogBrowse, catalogMatches, traitsFor } from '../catalog/element-search.js';
+import { catalogBrowse, catalogMatches, searchWithTemplates, traitsFor } from '../catalog/element-search.js';
 import { layoutForPageName, missingUsualPages, purposeTypeForName, type InventoryPage } from '../domains/site/inventory.js';
 import {
   LAYOUT_PATTERNS,
@@ -76,8 +76,10 @@ export function reviewField(
   doc: PageDoc,
   formTypes?: Record<string, string>,
   pageType?: string,
+  formDocType?: string,
+  formRedirects?: ReadonlySet<string>,
 ): Record<string, unknown> {
-  const all = reviewDesign(doc, { formTypes, pageType });
+  const all = reviewDesign(doc, { formTypes, pageType, formDocType, formRedirects });
   if (all.length === 0) return {};
   // MAINTENANCE IS ADVICE, kept out of `findings`: it works for a visitor, so
   // it must not stand between a page and its clean verdict. One `fixes` map
@@ -190,6 +192,8 @@ export class PageSession {
    * as well as a form, so an agent's own edits step back like an editor's.
    */
   private formId = '';
+  /** The open form RECORD's type (`booking`, `contact` …), read best-effort on open; '' when unknown. */
+  private formRecordType = '';
   private storedJson = '';
 
   constructor(private readonly ctx: ToolContext) {
@@ -773,6 +777,7 @@ export class PageSession {
     this.siteId = siteId;
     this.pageId = pageId;
     this.formId = '';
+    this.formRecordType = '';
     this.stale = null;
     this.sourceRev = src.rev ?? 0;
     // The platform's own account of what it could not compose. Typed on the
@@ -821,6 +826,17 @@ export class PageSession {
         `sbuilder: form ${formId} has no field document yet — create forms with sb_store action:"form".`,
       );
     }
+    // The RECORD's type decides which document rules apply (a booking form reads
+    // its first two dates as the stay). Best-effort: a failed read only silences
+    // the type-specific warnings.
+    const rec = (await request({
+      base: this.ctx.base,
+      method: 'GET',
+      path: formDocPath(siteId, formId).replace(/\/document$/, ''),
+      token: siteToken(this.ctx),
+      fetchImpl: this.ctx.fetchImpl,
+    }).catch(() => null)) as { form?: { type?: unknown } } | null;
+    this.formRecordType = typeof rec?.form?.type === 'string' ? rec.form.type : '';
     this.doc = PageDoc.from(got.document);
     this.siteId = siteId;
     this.pageId = '';
@@ -858,6 +874,18 @@ export class PageSession {
   /** What a dry run reports: the refusal the real write would hit, or undefined. */
   wouldRefuse(patches: Patch[]): string | undefined {
     return saveRefusal(this.current(), patches).refusal ?? undefined;
+  }
+
+  /** The open form RECORD's type, or undefined (a page, or a read that failed). */
+  formType(): string | undefined {
+    return (this.formId && this.formRecordType) || undefined;
+  }
+
+  /** What this batch leaves wrong in an open FORM document; [] on a page. */
+  formChecks(patches: Patch[]): CheckedNote[] {
+    if (!this.formId) return [];
+    const d = this.current();
+    return formDocChecks(d.doc, d.preview(patches).doc, this.formType());
   }
 
   current(): PageDoc {
@@ -1279,7 +1307,7 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
             'Rules live on the form root as specials.formRules (JSON), keyed by each field\'s specials.name. ' +
             'Republish the page placing the form to show an edit.',
         );
-        return text({ form: form_id, outline, ...(note ? { note } : {}), ...reviewField(ctx, session.current()) });
+        return text({ form: form_id, outline, ...(note ? { note } : {}), ...reviewField(ctx, session.current(), undefined, undefined, session.formType()) });
       }
       const outline = await session.open(siteFor(ctx, given), page_id!);
       // `open` joined the room on the way through — this only reports what it did.
@@ -1468,7 +1496,7 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
     async ({ query, limit, detail }) =>
       text(
         query && query.trim()
-          ? catalogMatches(query, { limit, detail })
+          ? searchWithTemplates(query, catalogMatches(query, { limit, detail }))
           : {
               elements: catalogBrowse(),
               note:
@@ -1536,7 +1564,7 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
         .join(' ');
       // Keys an element does not read, and values it does not know — on EVERY
       // node of the nested spec, as each will be born. Warned, still written.
-      const found = sayChecks(specCheck(spec), say);
+      const found = sayChecks([...specCheck(spec), ...session.formChecks(patches)], say);
       const checks = found.length ? { checks: found } : {};
 
       if (dry_run !== false) {
@@ -1710,7 +1738,7 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
           ...(e.namespace === 'specials' ? { specials: { ...(n?.specials ?? {}), ...e.keys } } : {}),
         });
       });
-      const found = sayChecks(checked, say);
+      const found = sayChecks([...checked, ...session.formChecks(patches)], say);
       const checks = found.length ? { checks: found } : {};
       // A FIELD-SKIN KNOB ON THE WRONG NODE renders nowhere. The FORM dresses
       // every field it holds with the input vocabulary; a payment card, choice
@@ -1898,6 +1926,7 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
       // with no checkout page, no gateway and no way back to the cart.
       let store: Record<string, unknown> = {};
       let formTypes: Record<string, string> | undefined;
+      let formRedirects: Set<string> | undefined;
       // The page's TYPE says which record it supplies — `no_data_context` stays
       // silent without it rather than guessing.
       let pageType: string | undefined;
@@ -1907,6 +1936,12 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
         // The page names a form only by id; this list says what KIND it is.
         formTypes = Object.fromEntries(
           (input.forms ?? []).flatMap((f) => (f.id && f.type ? [[f.id, f.type]] : [])),
+        );
+        formRedirects = new Set(
+          (input.forms ?? []).flatMap((f) => {
+            const a = f.settings?.afterSubmit;
+            return f.id && a?.action === 'redirect' && (a.url || a.pageId) ? [f.id] : [];
+          }),
         );
         pageType = input.pages?.find((p) => p.id === pageId)?.type;
         const gaps = readinessGaps(input);
@@ -1920,7 +1955,7 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
       } catch {
         // Readiness is additional information, never the reason a review fails.
       }
-      const field = reviewField(ctx, doc, formTypes, pageType);
+      const field = reviewField(ctx, doc, formTypes, pageType, session.formType(), formRedirects);
       // Clean = no finding a visitor meets; `advice` (maintenance) rides beside the verdict.
       const clean = !field.findings;
       return text({

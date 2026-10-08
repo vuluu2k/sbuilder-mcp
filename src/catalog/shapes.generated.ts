@@ -4,12 +4,12 @@
 import type { RequestShape } from './types.js';
 
 export const SHAPE_SOURCE = {
-  "writeOperations": 255,
-  "shaped": 197,
-  "fromHandlers": 197,
-  "fromSwaggerOnly": 0,
+  "writeOperations": 376,
+  "shaped": 298,
+  "fromHandlers": 288,
+  "fromSwaggerOnly": 10,
   "withReadOnly": 28,
-  "structsRead": 1977
+  "structsRead": 3107
 } as const;
 
 export const REQUEST_SHAPES: Record<string, RequestShape> = {
@@ -342,6 +342,29 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
     ],
     "source": "go",
     "goType": "versionInput"
+  },
+  "put:/api/orgs/{orgId}/apps/{appId}/versions/{versionId}/islands": {
+    "fields": [
+      {
+        "name": "islands",
+        "type": "apps.Island[]",
+        "note": "Islands is never omitted-means-keep.",
+        "fields": [
+          {
+            "name": "name",
+            "type": "string",
+            "note": "Name is the BARE name, local to this app."
+          },
+          {
+            "name": "moduleKey",
+            "type": "string",
+            "note": "ModuleKey is the stored object key for the uploaded module — an OBJECT KEY, never a URL, for the reason IconKey is: the URL prefix is storage configuration, and baking it into a row would freeze today's CDN into the database."
+          }
+        ]
+      }
+    ],
+    "source": "go",
+    "goType": "islandsInput"
   },
   "post:/api/sites/{siteId}/quizzes": {
     "fields": [
@@ -3827,6 +3850,16 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
       "fontGroupId"
     ]
   },
+  "post:/api/sites/{siteId}/forms/notify-addresses": {
+    "fields": [
+      {
+        "name": "email",
+        "type": "string"
+      }
+    ],
+    "source": "go",
+    "goType": "(inline)"
+  },
   "post:/api/sites/{siteId}/forms": {
     "fields": [
       {
@@ -3875,6 +3908,11 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
             "name": "booking",
             "type": "BookingSettings",
             "note": "Booking is the booking-form rulebook (TypeBooking only — see booking."
+          },
+          {
+            "name": "confirmation",
+            "type": "ConfirmationSettings",
+            "note": "Confirmation is the visitor \"we received your message\" email's own settings (ConfirmationEligible types only — see confirmation."
           },
           {
             "name": "skipStorage",
@@ -3970,6 +4008,11 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
             "note": "Booking is the booking-form rulebook (TypeBooking only — see booking."
           },
           {
+            "name": "confirmation",
+            "type": "ConfirmationSettings",
+            "note": "Confirmation is the visitor \"we received your message\" email's own settings (ConfirmationEligible types only — see confirmation."
+          },
+          {
             "name": "skipStorage",
             "type": "boolean",
             "note": "SkipStorage turns OFF storing responses (sink-only forms). Deliberately NAMED FOR THE NON-DEFAULT so the Go zero value is the product default."
@@ -4018,6 +4061,11 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
       {
         "name": "document",
         "type": "object"
+      },
+      {
+        "name": "type",
+        "type": "forms.Type",
+        "note": "Type, when present, changes the form's type in the SAME write."
       }
     ],
     "source": "go",
@@ -4033,6 +4081,11 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
         "name": "deposit",
         "type": "forms.DepositState",
         "note": "Deposit is the OTHER door, on its own: {\"deposit\":\"refunded\"} records the merchant's refund of a deposit that was due."
+      },
+      {
+        "name": "read",
+        "type": "boolean | null",
+        "note": "Read is a THIRD door, also on its own: {\"read\":true|false} marks the response opened/unopened for the inbox."
       }
     ],
     "source": "go",
@@ -4286,6 +4339,146 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
       "updatedAt"
     ]
   },
+  "post:/api/sites/{siteId}/locations": {
+    "fields": [
+      {
+        "name": "siteId",
+        "type": "string"
+      },
+      {
+        "name": "id",
+        "type": "string"
+      },
+      {
+        "name": "name",
+        "type": "string"
+      },
+      {
+        "name": "code",
+        "type": "string"
+      },
+      {
+        "name": "addressLine",
+        "type": "string"
+      },
+      {
+        "name": "provinceCode",
+        "type": "string"
+      },
+      {
+        "name": "wardCode",
+        "type": "string"
+      },
+      {
+        "name": "phone",
+        "type": "string"
+      },
+      {
+        "name": "isOnline",
+        "type": "boolean"
+      },
+      {
+        "name": "isLegacyDefault",
+        "type": "boolean"
+      },
+      {
+        "name": "active",
+        "type": "boolean"
+      },
+      {
+        "name": "position",
+        "type": "number"
+      },
+      {
+        "name": "createdAt",
+        "type": "string (RFC3339)"
+      },
+      {
+        "name": "updatedAt",
+        "type": "string (RFC3339)"
+      }
+    ],
+    "source": "go",
+    "goType": "locations.Location",
+    "readOnly": [
+      "siteId",
+      "id",
+      "isOnline",
+      "isLegacyDefault",
+      "createdAt",
+      "updatedAt"
+    ]
+  },
+  "put:/api/sites/{siteId}/locations/{id}": {
+    "fields": [
+      {
+        "name": "siteId",
+        "type": "string"
+      },
+      {
+        "name": "id",
+        "type": "string"
+      },
+      {
+        "name": "name",
+        "type": "string"
+      },
+      {
+        "name": "code",
+        "type": "string"
+      },
+      {
+        "name": "addressLine",
+        "type": "string"
+      },
+      {
+        "name": "provinceCode",
+        "type": "string"
+      },
+      {
+        "name": "wardCode",
+        "type": "string"
+      },
+      {
+        "name": "phone",
+        "type": "string"
+      },
+      {
+        "name": "isOnline",
+        "type": "boolean"
+      },
+      {
+        "name": "isLegacyDefault",
+        "type": "boolean"
+      },
+      {
+        "name": "active",
+        "type": "boolean"
+      },
+      {
+        "name": "position",
+        "type": "number"
+      },
+      {
+        "name": "createdAt",
+        "type": "string (RFC3339)"
+      },
+      {
+        "name": "updatedAt",
+        "type": "string (RFC3339)"
+      }
+    ],
+    "source": "go",
+    "goType": "locations.Location",
+    "readOnly": [
+      "siteId",
+      "id",
+      "isOnline",
+      "isLegacyDefault",
+      "createdAt",
+      "updatedAt"
+    ]
+  },
   "put:/api/sites/{siteId}/loyalty": {
     "fields": [
       {
@@ -4528,6 +4721,20 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
     "source": "go",
     "goType": "menus.Menu"
   },
+  "post:/api/sites/{siteId}/orders/{id}/carrier-shipments": {
+    "fields": [
+      {
+        "name": "provider",
+        "type": "string"
+      },
+      {
+        "name": "service",
+        "type": "string"
+      }
+    ],
+    "source": "go",
+    "goType": "carrierShipmentRequest"
+  },
   "post:/api/sites/{siteId}/orders": {
     "fields": [
       {
@@ -4628,6 +4835,16 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
             "name": "noDiscount",
             "type": "boolean",
             "note": "NoDiscount keeps this line out of every discount base — a flash-sale line whose campaign does not stack with codes."
+          },
+          {
+            "name": "weightGrams",
+            "type": "number",
+            "note": "WeightGrams is one unit's shipping weight, copied from the variant at purchase (ProductLine."
+          },
+          {
+            "name": "discountCents",
+            "type": "number",
+            "note": "DiscountCents is this line's share of the order's DiscountCents, stamped by checkout (discounts."
           }
         ]
       },
@@ -4729,14 +4946,32 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
         "note": "ShippingMethod is the delivery option this order was placed under — the merchant-authored NAME, the same string internal/shipping keys a method by."
       },
       {
-        "name": "ShipToProvinceCode",
+        "name": "shipToProvinceCode",
         "type": "string",
         "note": "ShipToProvinceCode is where the order is going, as the platform's own admin-unit code (\"84_VN101\") — the key a delivery ZONE is matched on."
       },
       {
-        "name": "shipToProvinceCode",
+        "name": "shipToWardCode",
         "type": "string",
         "note": "ShipToWardCode is the same key one level down — the ward the parcel is going to, as the platform's own admin-unit code."
+      },
+      {
+        "name": "shippingProvider",
+        "type": "string",
+        "note": "ShippingProvider, ShippingService and ShippingEstimatedDelivery record WHICH carrier service priced ShippingCents (\"ghn\", \"2\", \"2026-10-02\"), stamped by resolveShipping from the ShippingQuote."
+      },
+      {
+        "name": "shippingService",
+        "type": "string"
+      },
+      {
+        "name": "shippingEstimatedDelivery",
+        "type": "string"
+      },
+      {
+        "name": "shippingBreakdown",
+        "type": "object",
+        "note": "ShippingBreakdown is the shipping engine's own explanation of ShippingCents (ShippingQuote."
       },
       {
         "name": "currency",
@@ -4746,6 +4981,25 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
         "name": "locale",
         "type": "string",
         "note": "Locale is the language the SHOPPER was reading the storefront in at checkout — a SNAPSHOT, for the same reason every other checkout-time fact on this struct is one: a merchant who later reorders or trims the site's language list must not…"
+      },
+      {
+        "name": "channel",
+        "type": "string",
+        "note": "Channel names WHICH SURFACE placed this order — \"\" (web/manual, the behaviour every order had before this field existed) or \"pos\" (the POS built-in app, spec docs/superpowers/specs/2026-09-28-pos-app-design."
+      },
+      {
+        "name": "locationId",
+        "type": "string",
+        "note": "LocationID is WHICH LOCATION this order's stock claim belongs to — a SNAPSHOT stamped once at Checkout. \"\" is the pre-P1 value — every order placed before this field existed, and every order a LocationSource-less composition still creates…"
+      },
+      {
+        "name": "shiftId",
+        "type": "string",
+        "note": "ShiftID is the POS shift this sale was rung up in, and CashierID the member who rang it up (POS P2, spec §9 E1/E12)."
+      },
+      {
+        "name": "cashierId",
+        "type": "string"
       },
       {
         "name": "discountCode",
@@ -4944,6 +5198,16 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
             "name": "noDiscount",
             "type": "boolean",
             "note": "NoDiscount keeps this line out of every discount base — a flash-sale line whose campaign does not stack with codes."
+          },
+          {
+            "name": "weightGrams",
+            "type": "number",
+            "note": "WeightGrams is one unit's shipping weight, copied from the variant at purchase (ProductLine."
+          },
+          {
+            "name": "discountCents",
+            "type": "number",
+            "note": "DiscountCents is this line's share of the order's DiscountCents, stamped by checkout (discounts."
           }
         ]
       },
@@ -5045,14 +5309,32 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
         "note": "ShippingMethod is the delivery option this order was placed under — the merchant-authored NAME, the same string internal/shipping keys a method by."
       },
       {
-        "name": "ShipToProvinceCode",
+        "name": "shipToProvinceCode",
         "type": "string",
         "note": "ShipToProvinceCode is where the order is going, as the platform's own admin-unit code (\"84_VN101\") — the key a delivery ZONE is matched on."
       },
       {
-        "name": "shipToProvinceCode",
+        "name": "shipToWardCode",
         "type": "string",
         "note": "ShipToWardCode is the same key one level down — the ward the parcel is going to, as the platform's own admin-unit code."
+      },
+      {
+        "name": "shippingProvider",
+        "type": "string",
+        "note": "ShippingProvider, ShippingService and ShippingEstimatedDelivery record WHICH carrier service priced ShippingCents (\"ghn\", \"2\", \"2026-10-02\"), stamped by resolveShipping from the ShippingQuote."
+      },
+      {
+        "name": "shippingService",
+        "type": "string"
+      },
+      {
+        "name": "shippingEstimatedDelivery",
+        "type": "string"
+      },
+      {
+        "name": "shippingBreakdown",
+        "type": "object",
+        "note": "ShippingBreakdown is the shipping engine's own explanation of ShippingCents (ShippingQuote."
       },
       {
         "name": "currency",
@@ -5062,6 +5344,25 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
         "name": "locale",
         "type": "string",
         "note": "Locale is the language the SHOPPER was reading the storefront in at checkout — a SNAPSHOT, for the same reason every other checkout-time fact on this struct is one: a merchant who later reorders or trims the site's language list must not…"
+      },
+      {
+        "name": "channel",
+        "type": "string",
+        "note": "Channel names WHICH SURFACE placed this order — \"\" (web/manual, the behaviour every order had before this field existed) or \"pos\" (the POS built-in app, spec docs/superpowers/specs/2026-09-28-pos-app-design."
+      },
+      {
+        "name": "locationId",
+        "type": "string",
+        "note": "LocationID is WHICH LOCATION this order's stock claim belongs to — a SNAPSHOT stamped once at Checkout. \"\" is the pre-P1 value — every order placed before this field existed, and every order a LocationSource-less composition still creates…"
+      },
+      {
+        "name": "shiftId",
+        "type": "string",
+        "note": "ShiftID is the POS shift this sale was rung up in, and CashierID the member who rang it up (POS P2, spec §9 E1/E12)."
+      },
+      {
+        "name": "cashierId",
+        "type": "string"
       },
       {
         "name": "discountCode",
@@ -5192,6 +5493,27 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
         "name": "note",
         "type": "string",
         "note": "Note is anything the merchant wants on the record (\"giao buổi chiều\", \"2/3 kiện\")."
+      },
+      {
+        "name": "provider",
+        "type": "string",
+        "note": "Provider is the connected carrier that issued this waybill (\"ghn\", \"ghtk\"); \"\" for a manual parcel."
+      },
+      {
+        "name": "service",
+        "type": "string"
+      },
+      {
+        "name": "carrierStatus",
+        "type": "string"
+      },
+      {
+        "name": "feeCents",
+        "type": "number"
+      },
+      {
+        "name": "codCents",
+        "type": "number"
       },
       {
         "name": "shippedAt",
@@ -5620,6 +5942,1402 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
     "source": "go",
     "goType": "(inline)"
   },
+  "post:/api/sites/{siteId}/pos/debts/settle": {
+    "fields": [
+      {
+        "name": "clientRef",
+        "type": "string"
+      },
+      {
+        "name": "customerId",
+        "type": "string"
+      },
+      {
+        "name": "registerId",
+        "type": "string"
+      },
+      {
+        "name": "tenders",
+        "type": "TenderInput[]",
+        "fields": [
+          {
+            "name": "method",
+            "type": "string"
+          },
+          {
+            "name": "amountCents",
+            "type": "number"
+          },
+          {
+            "name": "receivedCents",
+            "type": "number"
+          },
+          {
+            "name": "reference",
+            "type": "string"
+          }
+        ]
+      },
+      {
+        "name": "orderIds",
+        "type": "string[]"
+      }
+    ],
+    "source": "go",
+    "goType": "pos.SettleInput"
+  },
+  "put:/api/sites/{siteId}/pos/fnb/settings": {
+    "fields": [
+      {
+        "name": "enabled",
+        "type": "boolean"
+      }
+    ],
+    "source": "go",
+    "goType": "pos.FnbSettings"
+  },
+  "post:/api/sites/{siteId}/pos/areas": {
+    "fields": [
+      {
+        "name": "locationId",
+        "type": "string",
+        "note": "POST only; an area never moves"
+      },
+      {
+        "name": "name",
+        "type": "string"
+      },
+      {
+        "name": "position",
+        "type": "number | null"
+      }
+    ],
+    "source": "go",
+    "goType": "pos.AreaInput"
+  },
+  "patch:/api/sites/{siteId}/pos/areas/{id}": {
+    "fields": [
+      {
+        "name": "locationId",
+        "type": "string",
+        "note": "POST only; an area never moves"
+      },
+      {
+        "name": "name",
+        "type": "string"
+      },
+      {
+        "name": "position",
+        "type": "number | null"
+      }
+    ],
+    "source": "go",
+    "goType": "pos.AreaInput"
+  },
+  "post:/api/sites/{siteId}/pos/tables": {
+    "fields": [
+      {
+        "name": "areaId",
+        "type": "string",
+        "note": "POST only; the location is the area's"
+      },
+      {
+        "name": "name",
+        "type": "string | null"
+      },
+      {
+        "name": "seats",
+        "type": "number | null"
+      },
+      {
+        "name": "position",
+        "type": "number | null"
+      },
+      {
+        "name": "active",
+        "type": "boolean | null"
+      }
+    ],
+    "source": "go",
+    "goType": "pos.TableInput"
+  },
+  "patch:/api/sites/{siteId}/pos/tables/{id}": {
+    "fields": [
+      {
+        "name": "areaId",
+        "type": "string",
+        "note": "POST only; the location is the area's"
+      },
+      {
+        "name": "name",
+        "type": "string | null"
+      },
+      {
+        "name": "seats",
+        "type": "number | null"
+      },
+      {
+        "name": "position",
+        "type": "number | null"
+      },
+      {
+        "name": "active",
+        "type": "boolean | null"
+      }
+    ],
+    "source": "go",
+    "goType": "pos.TableInput"
+  },
+  "post:/api/sites/{siteId}/pos/stations": {
+    "fields": [
+      {
+        "name": "name",
+        "type": "string | null"
+      },
+      {
+        "name": "position",
+        "type": "number | null"
+      }
+    ],
+    "source": "go",
+    "goType": "pos.StationInput"
+  },
+  "patch:/api/sites/{siteId}/pos/stations/{id}": {
+    "fields": [
+      {
+        "name": "name",
+        "type": "string | null"
+      },
+      {
+        "name": "position",
+        "type": "number | null"
+      }
+    ],
+    "source": "go",
+    "goType": "pos.StationInput"
+  },
+  "put:/api/sites/{siteId}/pos/product-routes": {
+    "fields": [
+      {
+        "name": "productIds",
+        "type": "string[]"
+      },
+      {
+        "name": "stationId",
+        "type": "string"
+      }
+    ],
+    "source": "go",
+    "goType": "productRoutesBody"
+  },
+  "post:/api/sites/{siteId}/pos/modifier-groups": {
+    "fields": [
+      {
+        "name": "name",
+        "type": "string"
+      },
+      {
+        "name": "minSelect",
+        "type": "number"
+      },
+      {
+        "name": "maxSelect",
+        "type": "number"
+      },
+      {
+        "name": "position",
+        "type": "number"
+      },
+      {
+        "name": "modifiers",
+        "type": "ModifierInput[]",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string"
+          },
+          {
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "name": "priceDeltaCents",
+            "type": "number"
+          },
+          {
+            "name": "position",
+            "type": "number"
+          },
+          {
+            "name": "active",
+            "type": "boolean | null",
+            "note": "nil = active"
+          }
+        ]
+      }
+    ],
+    "source": "go",
+    "goType": "pos.ModifierGroupInput"
+  },
+  "put:/api/sites/{siteId}/pos/modifier-groups/{id}": {
+    "fields": [
+      {
+        "name": "name",
+        "type": "string"
+      },
+      {
+        "name": "minSelect",
+        "type": "number"
+      },
+      {
+        "name": "maxSelect",
+        "type": "number"
+      },
+      {
+        "name": "position",
+        "type": "number"
+      },
+      {
+        "name": "modifiers",
+        "type": "ModifierInput[]",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string"
+          },
+          {
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "name": "priceDeltaCents",
+            "type": "number"
+          },
+          {
+            "name": "position",
+            "type": "number"
+          },
+          {
+            "name": "active",
+            "type": "boolean | null",
+            "note": "nil = active"
+          }
+        ]
+      }
+    ],
+    "source": "go",
+    "goType": "pos.ModifierGroupInput"
+  },
+  "put:/api/sites/{siteId}/pos/modifier-groups/{id}/products": {
+    "fields": [
+      {
+        "name": "productIds",
+        "type": "string[]"
+      }
+    ],
+    "source": "go",
+    "goType": "groupProductsBody"
+  },
+  "post:/api/sites/{siteId}/pos/tabs": {
+    "fields": [
+      {
+        "name": "locationId",
+        "type": "string"
+      },
+      {
+        "name": "tableId",
+        "type": "string"
+      },
+      {
+        "name": "guestCount",
+        "type": "number"
+      },
+      {
+        "name": "note",
+        "type": "string"
+      },
+      {
+        "name": "clientRef",
+        "type": "string"
+      }
+    ],
+    "source": "go",
+    "goType": "pos.OpenTabInput"
+  },
+  "post:/api/sites/{siteId}/pos/tabs/{id}/lines": {
+    "fields": [
+      {
+        "name": "lines",
+        "type": "LineInput[]",
+        "fields": [
+          {
+            "name": "productId",
+            "type": "string"
+          },
+          {
+            "name": "variantId",
+            "type": "string"
+          },
+          {
+            "name": "qty",
+            "type": "number"
+          },
+          {
+            "name": "modifierIds",
+            "type": "string[]"
+          },
+          {
+            "name": "note",
+            "type": "string"
+          }
+        ]
+      },
+      {
+        "name": "clientRef",
+        "type": "string"
+      }
+    ],
+    "source": "go",
+    "goType": "pos.AddLinesInput"
+  },
+  "patch:/api/sites/{siteId}/pos/tabs/{id}/lines/{lineId}": {
+    "fields": [
+      {
+        "name": "qty",
+        "type": "number | null"
+      },
+      {
+        "name": "note",
+        "type": "string | null"
+      },
+      {
+        "name": "modifierIds",
+        "type": "string[] | null"
+      },
+      {
+        "name": "expectedVersion",
+        "type": "number"
+      }
+    ],
+    "source": "go",
+    "goType": "pos.LinePatch"
+  },
+  "post:/api/sites/{siteId}/pos/tabs/{id}/lines/{lineId}/void": {
+    "fields": [
+      {
+        "name": "qty",
+        "type": "number",
+        "note": "0 = all that is still live"
+      },
+      {
+        "name": "reason",
+        "type": "string"
+      },
+      {
+        "name": "expectedVersion",
+        "type": "number"
+      }
+    ],
+    "source": "go",
+    "goType": "pos.VoidLineInput"
+  },
+  "post:/api/sites/{siteId}/pos/tabs/{id}/send": {
+    "fields": [
+      {
+        "name": "clientRef",
+        "type": "string"
+      }
+    ],
+    "source": "go",
+    "goType": "(inline)"
+  },
+  "post:/api/sites/{siteId}/pos/tabs/{id}/move": {
+    "fields": [
+      {
+        "name": "tableId",
+        "type": "string",
+        "note": "\"\" = takeaway"
+      },
+      {
+        "name": "expectedVersion",
+        "type": "number"
+      }
+    ],
+    "source": "go",
+    "goType": "pos.MoveTabInput"
+  },
+  "post:/api/sites/{siteId}/pos/tabs/{id}/transfer": {
+    "fields": [
+      {
+        "name": "toTabId",
+        "type": "string"
+      },
+      {
+        "name": "toTableId",
+        "type": "string"
+      },
+      {
+        "name": "lines",
+        "type": "LineQty[]",
+        "fields": [
+          {
+            "name": "lineId",
+            "type": "string"
+          },
+          {
+            "name": "qty",
+            "type": "number"
+          }
+        ]
+      },
+      {
+        "name": "expectedVersion",
+        "type": "number"
+      }
+    ],
+    "source": "go",
+    "goType": "pos.TabTransferInput"
+  },
+  "post:/api/sites/{siteId}/pos/tabs/{id}/bills": {
+    "fields": [
+      {
+        "name": "lines",
+        "type": "LineQty[]",
+        "fields": [
+          {
+            "name": "lineId",
+            "type": "string"
+          },
+          {
+            "name": "qty",
+            "type": "number"
+          }
+        ]
+      },
+      {
+        "name": "expectedVersion",
+        "type": "number"
+      },
+      {
+        "name": "registerId",
+        "type": "string"
+      },
+      {
+        "name": "customerId",
+        "type": "string"
+      },
+      {
+        "name": "customerPhone",
+        "type": "string"
+      },
+      {
+        "name": "customerName",
+        "type": "string"
+      },
+      {
+        "name": "discountCode",
+        "type": "string"
+      },
+      {
+        "name": "discountCents",
+        "type": "number"
+      },
+      {
+        "name": "sellerStaffId",
+        "type": "string"
+      },
+      {
+        "name": "paymentMethod",
+        "type": "string"
+      },
+      {
+        "name": "expectedTotalCents",
+        "type": "number | null"
+      },
+      {
+        "name": "clientRef",
+        "type": "string"
+      },
+      {
+        "name": "note",
+        "type": "string"
+      }
+    ],
+    "source": "go",
+    "goType": "pos.BillInput"
+  },
+  "post:/api/sites/{siteId}/pos/tabs/{id}/cancel": {
+    "fields": [
+      {
+        "name": "reason",
+        "type": "string"
+      },
+      {
+        "name": "expectedVersion",
+        "type": "number"
+      }
+    ],
+    "source": "go",
+    "goType": "pos.CancelTabInput"
+  },
+  "post:/api/sites/{siteId}/pos/kitchen/tickets/{id}/bump": {
+    "fields": [
+      {
+        "name": "lineIds",
+        "type": "string[]"
+      }
+    ],
+    "source": "go",
+    "goType": "(inline)"
+  },
+  "post:/api/sites/{siteId}/pos/kitchen/tickets/{id}/recall": {
+    "fields": [
+      {
+        "name": "lineIds",
+        "type": "string[]"
+      }
+    ],
+    "source": "go",
+    "goType": "(inline)"
+  },
+  "post:/api/sites/{siteId}/pos/kitchen/tickets/{id}/reprint": {
+    "fields": [
+      {
+        "name": "lineIds",
+        "type": "string[]"
+      }
+    ],
+    "source": "go",
+    "goType": "(inline)"
+  },
+  "post:/api/sites/{siteId}/pos/quote": {
+    "fields": [
+      {
+        "name": "locationId",
+        "type": "string",
+        "note": "LocationID is where the sale takes its stock from — resolved exactly like ReceiptInput."
+      },
+      {
+        "name": "lines",
+        "type": "SaleLine[]",
+        "fields": [
+          {
+            "name": "productId",
+            "type": "string"
+          },
+          {
+            "name": "variantId",
+            "type": "string"
+          },
+          {
+            "name": "qty",
+            "type": "number"
+          }
+        ]
+      },
+      {
+        "name": "customerPhone",
+        "type": "string"
+      },
+      {
+        "name": "customerName",
+        "type": "string"
+      },
+      {
+        "name": "discountCents",
+        "type": "number"
+      },
+      {
+        "name": "note",
+        "type": "string"
+      },
+      {
+        "name": "paymentMethod",
+        "type": "string"
+      },
+      {
+        "name": "cashReceivedCents",
+        "type": "number"
+      },
+      {
+        "name": "registerId",
+        "type": "string",
+        "note": "RegisterID is the till the sale is rung up at (P2)."
+      },
+      {
+        "name": "clientRef",
+        "type": "string",
+        "note": "ClientRef is the device's idempotency key (P3 Q28/R7, a UUID): the order id is derived from it, so a replay answers the first sale (replayed: true) and a different body under it is refused."
+      },
+      {
+        "name": "expectedTotalCents",
+        "type": "number | null",
+        "note": "ExpectedTotalCents is the total the counter SHOWED (Q29)."
+      },
+      {
+        "name": "customerId",
+        "type": "string",
+        "note": "CustomerID (P3 §5."
+      },
+      {
+        "name": "discountCode",
+        "type": "string",
+        "note": "DiscountCode is a discount code typed at the counter (§4), resolved by checkout exactly as on the web."
+      },
+      {
+        "name": "sellerStaffId",
+        "type": "string",
+        "note": "SellerStaffID (P-HR H9) is the \"Người bán\" the counter picked: a staff profile clocked in at the register's location, else 409 seller_not_clocked_in."
+      }
+    ],
+    "source": "go",
+    "goType": "pos.SaleRequest"
+  },
+  "post:/api/sites/{siteId}/pos/customers": {
+    "fields": [
+      {
+        "name": "name",
+        "type": "string"
+      },
+      {
+        "name": "phone",
+        "type": "string"
+      }
+    ],
+    "source": "go",
+    "goType": "pos.CustomerInput"
+  },
+  "put:/api/sites/{siteId}/pos/tiers": {
+    "fields": [
+      {
+        "name": "tiers",
+        "type": "pos.TierInput[]",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string"
+          },
+          {
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "name": "minSpendCents",
+            "type": "number"
+          },
+          {
+            "name": "discountBps",
+            "type": "number"
+          }
+        ]
+      }
+    ],
+    "source": "go",
+    "goType": "tiersBody"
+  },
+  "post:/api/sites/{siteId}/pos/receipts": {
+    "fields": [
+      {
+        "name": "locationId",
+        "type": "string",
+        "note": "LocationID is where the goods are received."
+      },
+      {
+        "name": "supplier",
+        "type": "string"
+      },
+      {
+        "name": "supplierId",
+        "type": "string",
+        "note": "SupplierID (P4) wins over Supplier: the server copies its name in."
+      },
+      {
+        "name": "purchaseOrderId",
+        "type": "string",
+        "note": "PurchaseOrderID (P4) is the order this receipt answers (§4."
+      },
+      {
+        "name": "clientRef",
+        "type": "string",
+        "note": "ClientRef (P4, K27) is the device's idempotency key (a UUID): a replay answers the first receipt (replayed: true) BEFORE any order/state gate; different lines under it are refused."
+      },
+      {
+        "name": "note",
+        "type": "string"
+      },
+      {
+        "name": "lines",
+        "type": "ReceiptLineInput[]",
+        "fields": [
+          {
+            "name": "productId",
+            "type": "string"
+          },
+          {
+            "name": "variantId",
+            "type": "string"
+          },
+          {
+            "name": "qty",
+            "type": "number"
+          },
+          {
+            "name": "unitCostCents",
+            "type": "number"
+          },
+          {
+            "name": "poLineId",
+            "type": "string",
+            "note": "PoLineID (P4): the purchase-order line received against; \"\" = off-order."
+          }
+        ]
+      }
+    ],
+    "source": "go",
+    "goType": "pos.ReceiptInput"
+  },
+  "post:/api/sites/{siteId}/pos/sales": {
+    "fields": [
+      {
+        "name": "locationId",
+        "type": "string",
+        "note": "LocationID is where the sale takes its stock from — resolved exactly like ReceiptInput."
+      },
+      {
+        "name": "lines",
+        "type": "SaleLine[]",
+        "fields": [
+          {
+            "name": "productId",
+            "type": "string"
+          },
+          {
+            "name": "variantId",
+            "type": "string"
+          },
+          {
+            "name": "qty",
+            "type": "number"
+          }
+        ]
+      },
+      {
+        "name": "customerPhone",
+        "type": "string"
+      },
+      {
+        "name": "customerName",
+        "type": "string"
+      },
+      {
+        "name": "discountCents",
+        "type": "number"
+      },
+      {
+        "name": "note",
+        "type": "string"
+      },
+      {
+        "name": "paymentMethod",
+        "type": "string"
+      },
+      {
+        "name": "cashReceivedCents",
+        "type": "number"
+      },
+      {
+        "name": "registerId",
+        "type": "string",
+        "note": "RegisterID is the till the sale is rung up at (P2)."
+      },
+      {
+        "name": "clientRef",
+        "type": "string",
+        "note": "ClientRef is the device's idempotency key (P3 Q28/R7, a UUID): the order id is derived from it, so a replay answers the first sale (replayed: true) and a different body under it is refused."
+      },
+      {
+        "name": "expectedTotalCents",
+        "type": "number | null",
+        "note": "ExpectedTotalCents is the total the counter SHOWED (Q29)."
+      },
+      {
+        "name": "customerId",
+        "type": "string",
+        "note": "CustomerID (P3 §5."
+      },
+      {
+        "name": "discountCode",
+        "type": "string",
+        "note": "DiscountCode is a discount code typed at the counter (§4), resolved by checkout exactly as on the web."
+      },
+      {
+        "name": "sellerStaffId",
+        "type": "string",
+        "note": "SellerStaffID (P-HR H9) is the \"Người bán\" the counter picked: a staff profile clocked in at the register's location, else 409 seller_not_clocked_in."
+      }
+    ],
+    "source": "go",
+    "goType": "pos.SaleRequest"
+  },
+  "post:/api/sites/{siteId}/pos/transfers": {
+    "fields": [
+      {
+        "name": "fromLocationId",
+        "type": "string"
+      },
+      {
+        "name": "toLocationId",
+        "type": "string"
+      },
+      {
+        "name": "note",
+        "type": "string"
+      },
+      {
+        "name": "lines",
+        "type": "TransferLineInput[]",
+        "fields": [
+          {
+            "name": "productId",
+            "type": "string"
+          },
+          {
+            "name": "variantId",
+            "type": "string"
+          },
+          {
+            "name": "qty",
+            "type": "number"
+          }
+        ]
+      }
+    ],
+    "source": "go",
+    "goType": "pos.TransferInput"
+  },
+  "post:/api/sites/{siteId}/pos/returns": {
+    "fields": [
+      {
+        "name": "clientRef",
+        "type": "string"
+      },
+      {
+        "name": "orderId",
+        "type": "string"
+      },
+      {
+        "name": "registerId",
+        "type": "string"
+      },
+      {
+        "name": "lines",
+        "type": "ReturnLineInput[]",
+        "fields": [
+          {
+            "name": "productId",
+            "type": "string"
+          },
+          {
+            "name": "variantId",
+            "type": "string"
+          },
+          {
+            "name": "quantity",
+            "type": "number"
+          }
+        ]
+      },
+      {
+        "name": "restock",
+        "type": "boolean",
+        "note": "Restock puts the units back on sale at RestockLocationID (\"\" = the order's own location); false (damaged goods) moves no stock."
+      },
+      {
+        "name": "restockLocationId",
+        "type": "string"
+      },
+      {
+        "name": "reason",
+        "type": "string"
+      },
+      {
+        "name": "note",
+        "type": "string"
+      },
+      {
+        "name": "refund",
+        "type": "RefundInput",
+        "fields": [
+          {
+            "name": "tenders",
+            "type": "TenderInput[]"
+          },
+          {
+            "name": "overrideCents",
+            "type": "number | null"
+          }
+        ]
+      }
+    ],
+    "source": "go",
+    "goType": "pos.ReturnInput"
+  },
+  "post:/api/sites/{siteId}/pos/registers": {
+    "fields": [
+      {
+        "name": "locationId",
+        "type": "string"
+      },
+      {
+        "name": "name",
+        "type": "string"
+      },
+      {
+        "name": "code",
+        "type": "string"
+      },
+      {
+        "name": "active",
+        "type": "boolean | null"
+      }
+    ],
+    "source": "go",
+    "goType": "pos.RegisterInput"
+  },
+  "put:/api/sites/{siteId}/pos/registers/{id}": {
+    "fields": [
+      {
+        "name": "locationId",
+        "type": "string"
+      },
+      {
+        "name": "name",
+        "type": "string"
+      },
+      {
+        "name": "code",
+        "type": "string"
+      },
+      {
+        "name": "active",
+        "type": "boolean | null"
+      }
+    ],
+    "source": "go",
+    "goType": "pos.RegisterInput"
+  },
+  "post:/api/sites/{siteId}/pos/shifts": {
+    "fields": [
+      {
+        "name": "registerId",
+        "type": "string"
+      },
+      {
+        "name": "openingFloatCents",
+        "type": "number"
+      }
+    ],
+    "source": "go",
+    "goType": "pos.OpenShiftInput"
+  },
+  "post:/api/sites/{siteId}/pos/shifts/{id}/cash-movements": {
+    "fields": [
+      {
+        "name": "kind",
+        "type": "MovementKind"
+      },
+      {
+        "name": "amountCents",
+        "type": "number"
+      },
+      {
+        "name": "reason",
+        "type": "string"
+      },
+      {
+        "name": "clientRef",
+        "type": "string"
+      }
+    ],
+    "source": "go",
+    "goType": "pos.MovementInput"
+  },
+  "post:/api/sites/{siteId}/pos/shifts/{id}/close": {
+    "fields": [
+      {
+        "name": "countedCashCents",
+        "type": "number | null"
+      },
+      {
+        "name": "note",
+        "type": "string"
+      }
+    ],
+    "source": "go",
+    "goType": "pos.CloseInput"
+  },
+  "post:/api/sites/{siteId}/pos/suppliers": {
+    "fields": [
+      {
+        "name": "code",
+        "type": "string"
+      },
+      {
+        "name": "name",
+        "type": "string"
+      },
+      {
+        "name": "phone",
+        "type": "string"
+      },
+      {
+        "name": "email",
+        "type": "string"
+      },
+      {
+        "name": "address",
+        "type": "string"
+      },
+      {
+        "name": "taxCode",
+        "type": "string"
+      },
+      {
+        "name": "contactName",
+        "type": "string"
+      },
+      {
+        "name": "note",
+        "type": "string"
+      },
+      {
+        "name": "active",
+        "type": "boolean | null"
+      }
+    ],
+    "source": "go",
+    "goType": "pos.SupplierInput"
+  },
+  "put:/api/sites/{siteId}/pos/suppliers/{id}": {
+    "fields": [
+      {
+        "name": "code",
+        "type": "string"
+      },
+      {
+        "name": "name",
+        "type": "string"
+      },
+      {
+        "name": "phone",
+        "type": "string"
+      },
+      {
+        "name": "email",
+        "type": "string"
+      },
+      {
+        "name": "address",
+        "type": "string"
+      },
+      {
+        "name": "taxCode",
+        "type": "string"
+      },
+      {
+        "name": "contactName",
+        "type": "string"
+      },
+      {
+        "name": "note",
+        "type": "string"
+      },
+      {
+        "name": "active",
+        "type": "boolean | null"
+      }
+    ],
+    "source": "go",
+    "goType": "pos.SupplierInput"
+  },
+  "post:/api/sites/{siteId}/pos/purchase-orders": {
+    "fields": [
+      {
+        "name": "supplierId",
+        "type": "string"
+      },
+      {
+        "name": "locationId",
+        "type": "string"
+      },
+      {
+        "name": "expectedOn",
+        "type": "string"
+      },
+      {
+        "name": "note",
+        "type": "string"
+      },
+      {
+        "name": "lines",
+        "type": "PurchaseOrderLineInput[]",
+        "fields": [
+          {
+            "name": "productId",
+            "type": "string"
+          },
+          {
+            "name": "variantId",
+            "type": "string"
+          },
+          {
+            "name": "qty",
+            "type": "number"
+          },
+          {
+            "name": "unitCostCents",
+            "type": "number"
+          }
+        ]
+      }
+    ],
+    "source": "go",
+    "goType": "pos.PurchaseOrderInput"
+  },
+  "put:/api/sites/{siteId}/pos/purchase-orders/{id}": {
+    "fields": [
+      {
+        "name": "supplierId",
+        "type": "string"
+      },
+      {
+        "name": "locationId",
+        "type": "string"
+      },
+      {
+        "name": "expectedOn",
+        "type": "string"
+      },
+      {
+        "name": "note",
+        "type": "string"
+      },
+      {
+        "name": "lines",
+        "type": "PurchaseOrderLineInput[]",
+        "fields": [
+          {
+            "name": "productId",
+            "type": "string"
+          },
+          {
+            "name": "variantId",
+            "type": "string"
+          },
+          {
+            "name": "qty",
+            "type": "number"
+          },
+          {
+            "name": "unitCostCents",
+            "type": "number"
+          }
+        ]
+      }
+    ],
+    "source": "go",
+    "goType": "pos.PurchaseOrderInput"
+  },
+  "post:/api/sites/{siteId}/pos/stocktakes": {
+    "fields": [
+      {
+        "name": "locationId",
+        "type": "string"
+      },
+      {
+        "name": "scope",
+        "type": "StocktakeScope"
+      },
+      {
+        "name": "blind",
+        "type": "boolean | null"
+      },
+      {
+        "name": "note",
+        "type": "string"
+      }
+    ],
+    "source": "go",
+    "goType": "pos.StocktakeInput"
+  },
+  "post:/api/sites/{siteId}/pos/stocktakes/{id}/counts": {
+    "fields": [
+      {
+        "name": "clientRef",
+        "type": "string"
+      },
+      {
+        "name": "lines",
+        "type": "StocktakeCountLine[]",
+        "fields": [
+          {
+            "name": "productId",
+            "type": "string"
+          },
+          {
+            "name": "variantId",
+            "type": "string"
+          },
+          {
+            "name": "code",
+            "type": "string"
+          },
+          {
+            "name": "qty",
+            "type": "number"
+          },
+          {
+            "name": "mode",
+            "type": "string"
+          }
+        ]
+      }
+    ],
+    "source": "go",
+    "goType": "pos.StocktakeCountInput"
+  },
+  "post:/api/sites/{siteId}/pos/stocktakes/{id}/finish": {
+    "fields": [
+      {
+        "name": "clientRef",
+        "type": "string"
+      },
+      {
+        "name": "zeroUncounted",
+        "type": "boolean | null"
+      },
+      {
+        "name": "excludeVariantIds",
+        "type": "string[]"
+      }
+    ],
+    "source": "go",
+    "goType": "pos.StocktakeApproveInput"
+  },
+  "post:/api/sites/{siteId}/pos/stocktakes/{id}/reopen": {
+    "fields": [
+      {
+        "name": "clientRef",
+        "type": "string"
+      },
+      {
+        "name": "zeroUncounted",
+        "type": "boolean | null"
+      },
+      {
+        "name": "excludeVariantIds",
+        "type": "string[]"
+      }
+    ],
+    "source": "go",
+    "goType": "pos.StocktakeApproveInput"
+  },
+  "post:/api/sites/{siteId}/pos/stocktakes/{id}/approve": {
+    "fields": [
+      {
+        "name": "clientRef",
+        "type": "string"
+      },
+      {
+        "name": "zeroUncounted",
+        "type": "boolean | null"
+      },
+      {
+        "name": "excludeVariantIds",
+        "type": "string[]"
+      }
+    ],
+    "source": "go",
+    "goType": "pos.StocktakeApproveInput"
+  },
+  "post:/api/sites/{siteId}/pos/stocktakes/{id}/cancel": {
+    "fields": [
+      {
+        "name": "clientRef",
+        "type": "string"
+      },
+      {
+        "name": "zeroUncounted",
+        "type": "boolean | null"
+      },
+      {
+        "name": "excludeVariantIds",
+        "type": "string[]"
+      }
+    ],
+    "source": "go",
+    "goType": "pos.StocktakeApproveInput"
+  },
+  "post:/api/sites/{siteId}/pos-devices/pairings": {
+    "fields": [
+      {
+        "name": "role",
+        "type": "string"
+      },
+      {
+        "name": "label",
+        "type": "string"
+      },
+      {
+        "name": "pairUrl",
+        "type": "string"
+      }
+    ],
+    "source": "go",
+    "goType": "createRequest"
+  },
+  "post:/api/sites/{siteId}/pos-devices/pairings/{id}/events": {
+    "fields": [
+      {
+        "name": "kind",
+        "type": "string"
+      },
+      {
+        "name": "data",
+        "type": "object"
+      }
+    ],
+    "source": "go",
+    "goType": "pcEventRequest"
+  },
+  "post:/api/pos-devices/redeem": {
+    "fields": [
+      {
+        "name": "code",
+        "type": "string"
+      }
+    ],
+    "source": "go",
+    "goType": "redeemRequest"
+  },
+  "post:/api/pos-devices/events": {
+    "fields": [
+      {
+        "name": "kind",
+        "type": "string"
+      },
+      {
+        "name": "id",
+        "type": "string"
+      },
+      {
+        "name": "code",
+        "type": "string"
+      }
+    ],
+    "source": "go",
+    "goType": "deviceEventRequest"
+  },
   "post:/api/sites/{siteId}/inventory/adjust": {
     "fields": [
       {
@@ -5647,10 +7365,39 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
       {
         "name": "note",
         "type": "string"
+      },
+      {
+        "name": "locationId",
+        "type": "string",
+        "note": "LocationID is WHERE the count or delivery is (POS P1)."
       }
     ],
     "source": "go",
     "goType": "adjustRequest"
+  },
+  "post:/api/sites/{siteId}/inventory/cost": {
+    "fields": [
+      {
+        "name": "productId",
+        "type": "string"
+      },
+      {
+        "name": "variantId",
+        "type": "string"
+      },
+      {
+        "name": "costCents",
+        "type": "number",
+        "note": "CostCents is the new unit cost in hundredths of the currency — VND too, never rounded to whole đồng (K6)."
+      },
+      {
+        "name": "note",
+        "type": "string",
+        "note": "Note is required: a cost nobody explained is a cost anybody could have changed."
+      }
+    ],
+    "source": "go",
+    "goType": "costRequest"
   },
   "post:/api/sites/{siteId}/products": {
     "fields": [
@@ -5873,6 +7620,11 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
           {
             "name": "position",
             "type": "number"
+          },
+          {
+            "name": "costSource",
+            "type": "string",
+            "note": "CostSource says who owns CostCents: \"\" = the merchant typed it (or nobody did), \"avg\" = the system's weighted average, moved only by priced receipts/returns and the \"adjust cost\" action (POS P4, K2/K3)."
           }
         ]
       },
@@ -5972,6 +7724,11 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
         "name": "pageId",
         "type": "string",
         "note": "PageID is a READ-MODEL PROJECTION of which page template serves this product. The SOURCE OF TRUTH is page_entity_links, in the page bounded context; this is a copy kept current by page's outbound link observer."
+      },
+      {
+        "name": "onlineLocationId",
+        "type": "string",
+        "note": "OnlineLocationID is a READ TOKEN, never stored: the site's online location at the moment the product was read. A PUT WITHOUT it is accepted and skips the check: that is the API-client shape (a script that GETs nothing before it PUTs), and…"
       }
     ],
     "source": "go",
@@ -6210,6 +7967,11 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
           {
             "name": "position",
             "type": "number"
+          },
+          {
+            "name": "costSource",
+            "type": "string",
+            "note": "CostSource says who owns CostCents: \"\" = the merchant typed it (or nobody did), \"avg\" = the system's weighted average, moved only by priced receipts/returns and the \"adjust cost\" action (POS P4, K2/K3)."
           }
         ]
       },
@@ -6309,6 +8071,11 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
         "name": "pageId",
         "type": "string",
         "note": "PageID is a READ-MODEL PROJECTION of which page template serves this product. The SOURCE OF TRUTH is page_entity_links, in the page bounded context; this is a copy kept current by page's outbound link observer."
+      },
+      {
+        "name": "onlineLocationId",
+        "type": "string",
+        "note": "OnlineLocationID is a READ TOKEN, never stored: the site's online location at the moment the product was read. A PUT WITHOUT it is accepted and skips the check: that is the API-client shape (a script that GETs nothing before it PUTs), and…"
       }
     ],
     "source": "go",
@@ -7249,7 +9016,8 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
           },
           {
             "name": "stock",
-            "type": "number"
+            "type": "number | null",
+            "note": "Stock is a pointer so an OMITTED count is distinguishable from 0: on PUT an absent `stock` keeps the stored figure (no recount), an explicit 0 recounts to 0."
           },
           {
             "name": "hidden",
@@ -7341,7 +9109,8 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
           },
           {
             "name": "stock",
-            "type": "number"
+            "type": "number | null",
+            "note": "Stock is a pointer so an OMITTED count is distinguishable from 0: on PUT an absent `stock` keeps the stored figure (no recount), an explicit 0 recounts to 0."
           },
           {
             "name": "hidden",
@@ -7568,12 +9337,27 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
         "note": "Restocked says the merchant judged the returned units sellable and put them back."
       },
       {
+        "name": "source",
+        "type": "string",
+        "note": "Source is who filed the return: \"\" for a shopper or the manage screen, SourcePOS for a counter return — refunded through the drawer at the moment it is filed, which is why RefundedInWindow (the Z report's \"refunded outside the counter\"…"
+      },
+      {
+        "name": "restockLocationId",
+        "type": "string",
+        "note": "RestockLocationID is the location the units go back onto the shelf at."
+      },
+      {
         "name": "createdAt",
         "type": "string (RFC3339)"
       },
       {
         "name": "updatedAt",
         "type": "string (RFC3339)"
+      },
+      {
+        "name": "refundedAt",
+        "type": "string (RFC3339) | null",
+        "note": "RefundedAt is the instant the request FIRST became refunded — the date reports net a return on (POS P5), which updated_at cannot be (a later staff-note edit moves it)."
       }
     ],
     "source": "go",
@@ -7662,12 +9446,27 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
         "note": "Restocked says the merchant judged the returned units sellable and put them back."
       },
       {
+        "name": "source",
+        "type": "string",
+        "note": "Source is who filed the return: \"\" for a shopper or the manage screen, SourcePOS for a counter return — refunded through the drawer at the moment it is filed, which is why RefundedInWindow (the Z report's \"refunded outside the counter\"…"
+      },
+      {
+        "name": "restockLocationId",
+        "type": "string",
+        "note": "RestockLocationID is the location the units go back onto the shelf at."
+      },
+      {
         "name": "createdAt",
         "type": "string (RFC3339)"
       },
       {
         "name": "updatedAt",
         "type": "string (RFC3339)"
+      },
+      {
+        "name": "refundedAt",
+        "type": "string (RFC3339) | null",
+        "note": "RefundedAt is the instant the request FIRST became refunded — the date reports net a return on (POS P5), which updated_at cannot be (a later staff-note edit moves it)."
       }
     ],
     "source": "go",
@@ -7887,6 +9686,323 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
     "source": "go",
     "goType": "putDocumentBody"
   },
+  "put:/api/sites/{siteId}/shipping-carriers/{provider}": {
+    "fields": [
+      {
+        "name": "enabled",
+        "type": "boolean"
+      },
+      {
+        "name": "sandbox",
+        "type": "boolean"
+      },
+      {
+        "name": "credentials",
+        "type": "{ [string]: string }"
+      },
+      {
+        "name": "pickupName",
+        "type": "string"
+      },
+      {
+        "name": "pickupPhone",
+        "type": "string"
+      },
+      {
+        "name": "pickupAddress",
+        "type": "string"
+      },
+      {
+        "name": "pickupProvinceCode",
+        "type": "string"
+      },
+      {
+        "name": "pickupWardCode",
+        "type": "string"
+      },
+      {
+        "name": "defaultWeightGrams",
+        "type": "number"
+      }
+    ],
+    "source": "go",
+    "goType": "connectionBody"
+  },
+  "post:/api/sites/{siteId}/shipping-carriers/{provider}/rotate-webhook-secret": {
+    "fields": [
+      {
+        "name": "sandbox",
+        "type": "boolean"
+      },
+      {
+        "name": "credentials",
+        "type": "{ [string]: string }"
+      }
+    ],
+    "source": "go",
+    "goType": "checkBody"
+  },
+  "post:/api/sites/{siteId}/shipping-carriers/{provider}/webhook-url": {
+    "fields": [
+      {
+        "name": "sandbox",
+        "type": "boolean"
+      },
+      {
+        "name": "credentials",
+        "type": "{ [string]: string }"
+      }
+    ],
+    "source": "go",
+    "goType": "checkBody"
+  },
+  "post:/api/sites/{siteId}/shipping-carriers/{provider}/test": {
+    "fields": [
+      {
+        "name": "sandbox",
+        "type": "boolean"
+      },
+      {
+        "name": "credentials",
+        "type": "{ [string]: string }"
+      }
+    ],
+    "source": "go",
+    "goType": "checkBody"
+  },
+  "patch:/api/sites/{siteId}/shipping-config": {
+    "fields": [
+      {
+        "name": "priority",
+        "type": "Priority | null",
+        "fields": [
+          {
+            "name": "groups",
+            "type": "GroupSetting[]"
+          },
+          {
+            "name": "feeOrder",
+            "type": "Mode",
+            "note": "ModeAsc (customer-friendly) | ModeDesc"
+          }
+        ]
+      },
+      {
+        "name": "methods",
+        "type": "MethodPatch[]",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string"
+          },
+          {
+            "name": "name",
+            "type": "string | null"
+          },
+          {
+            "name": "description",
+            "type": "string | null"
+          },
+          {
+            "name": "feeCents",
+            "type": "number | null"
+          },
+          {
+            "name": "disabled",
+            "type": "boolean | null"
+          },
+          {
+            "name": "carrier",
+            "type": "string | null"
+          },
+          {
+            "name": "carrierService",
+            "type": "string | null"
+          },
+          {
+            "name": "position",
+            "type": "number | null"
+          },
+          {
+            "name": "isDefault",
+            "type": "boolean | null"
+          },
+          {
+            "name": "priorityOverride",
+            "type": "OptionalPriority"
+          },
+          {
+            "name": "rules",
+            "type": "Rule[] | null"
+          },
+          {
+            "name": "fallbacks",
+            "type": "{ [string]: number } | null"
+          }
+        ]
+      },
+      {
+        "name": "deleteMethods",
+        "type": "string[]"
+      },
+      {
+        "name": "zones",
+        "type": "ZonePatch[]",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string"
+          },
+          {
+            "name": "name",
+            "type": "string | null"
+          },
+          {
+            "name": "provinces",
+            "type": "string[] | null"
+          },
+          {
+            "name": "wardCodes",
+            "type": "string[] | null"
+          },
+          {
+            "name": "hidden",
+            "type": "boolean | null"
+          },
+          {
+            "name": "position",
+            "type": "number | null"
+          }
+        ]
+      },
+      {
+        "name": "deleteZones",
+        "type": "string[]"
+      },
+      {
+        "name": "confirm",
+        "type": "Confirm",
+        "fields": [
+          {
+            "name": "freeship",
+            "type": "boolean"
+          },
+          {
+            "name": "zoneInUse",
+            "type": "boolean"
+          }
+        ]
+      }
+    ],
+    "source": "go",
+    "goType": "shipping.Patch"
+  },
+  "post:/api/sites/{siteId}/shipping-config/preview": {
+    "fields": [
+      {
+        "name": "draft",
+        "type": "shipping.Patch | null",
+        "fields": [
+          {
+            "name": "priority",
+            "type": "Priority | null"
+          },
+          {
+            "name": "methods",
+            "type": "MethodPatch[]"
+          },
+          {
+            "name": "deleteMethods",
+            "type": "string[]"
+          },
+          {
+            "name": "zones",
+            "type": "ZonePatch[]"
+          },
+          {
+            "name": "deleteZones",
+            "type": "string[]"
+          },
+          {
+            "name": "confirm",
+            "type": "Confirm"
+          }
+        ]
+      },
+      {
+        "name": "ask",
+        "type": "shipping.PreviewAsk",
+        "fields": [
+          {
+            "name": "provinceCode",
+            "type": "string"
+          },
+          {
+            "name": "wardCode",
+            "type": "string"
+          },
+          {
+            "name": "subtotalCents",
+            "type": "number"
+          },
+          {
+            "name": "weightGrams",
+            "type": "number"
+          },
+          {
+            "name": "qty",
+            "type": "number"
+          },
+          {
+            "name": "categoryIds",
+            "type": "string[]"
+          },
+          {
+            "name": "payment",
+            "type": "Payment"
+          }
+        ]
+      }
+    ],
+    "source": "go",
+    "goType": "previewBody"
+  },
+  "post:/api/sites/{siteId}/shipping-config/check": {
+    "fields": [
+      {
+        "name": "draft",
+        "type": "shipping.Patch | null",
+        "fields": [
+          {
+            "name": "priority",
+            "type": "Priority | null"
+          },
+          {
+            "name": "methods",
+            "type": "MethodPatch[]"
+          },
+          {
+            "name": "deleteMethods",
+            "type": "string[]"
+          },
+          {
+            "name": "zones",
+            "type": "ZonePatch[]"
+          },
+          {
+            "name": "deleteZones",
+            "type": "string[]"
+          },
+          {
+            "name": "confirm",
+            "type": "Confirm"
+          }
+        ]
+      }
+    ],
+    "source": "go",
+    "goType": "checkBody"
+  },
   "post:/api/sites/{siteId}/shipping-methods": {
     "fields": [
       {
@@ -7928,72 +10044,40 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
         "note": "ZoneFees prices this method PER ZONE, keyed by zone id — the map behind FeeForZone. A MAP ON THE ROW rather than a method×zone table, and that is a considered exception to the normalise-everything rule: these fees are never queried,…"
       },
       {
+        "name": "carrier",
+        "type": "string",
+        "note": "Carrier makes this a CARRIER-BACKED method: a carriers."
+      },
+      {
+        "name": "carrierService",
+        "type": "string",
+        "note": "CarrierService is the carrier's own service id (carriers."
+      },
+      {
         "name": "position",
         "type": "number",
         "note": "Position is the merchant's arrangement; ties break on Name."
       },
       {
-        "name": "createdAt",
-        "type": "string (RFC3339)"
-      },
-      {
-        "name": "updatedAt",
-        "type": "string (RFC3339)"
-      }
-    ],
-    "source": "go",
-    "goType": "shipping.Method",
-    "readOnly": [
-      "id",
-      "siteId",
-      "createdAt",
-      "updatedAt"
-    ]
-  },
-  "put:/api/sites/{siteId}/shipping-methods/{id}": {
-    "fields": [
-      {
-        "name": "id",
-        "type": "string"
-      },
-      {
-        "name": "siteId",
-        "type": "string"
-      },
-      {
-        "name": "name",
-        "type": "string",
-        "note": "Name is what the shopper reads AND the pairing key an order form's chosen option is matched against — see the package doc."
-      },
-      {
-        "name": "description",
-        "type": "string",
-        "note": "Description is the reassurance beside the option (\"2-3 ngày làm việc\")."
-      },
-      {
-        "name": "feeCents",
-        "type": "number",
-        "note": "FeeCents is what this option costs, in minor units."
-      },
-      {
-        "name": "freeOverCents",
-        "type": "number",
-        "note": "FreeOverCents waives the fee once the order's subtotal reaches it. ZERO MEANS \"never free\", not \"always free\"."
-      },
-      {
-        "name": "disabled",
+        "name": "isDefault",
         "type": "boolean",
-        "note": "Disabled keeps a method configured but unofferable."
+        "note": "IsDefault marks the one method a shopper gets when they name none (or name one this ask cannot use)."
       },
       {
-        "name": "zoneFees",
-        "type": "{ [string]: number }",
-        "note": "ZoneFees prices this method PER ZONE, keyed by zone id — the map behind FeeForZone. A MAP ON THE ROW rather than a method×zone table, and that is a considered exception to the normalise-everything rule: these fees are never queried,…"
-      },
-      {
-        "name": "position",
-        "type": "number",
-        "note": "Position is the merchant's arrangement; ties break on Name."
+        "name": "priorityOverride",
+        "type": "Priority | null",
+        "note": "PriorityOverride replaces the site's priority document for THIS method's rules; nil follows the site order.",
+        "fields": [
+          {
+            "name": "groups",
+            "type": "GroupSetting[]"
+          },
+          {
+            "name": "feeOrder",
+            "type": "Mode",
+            "note": "ModeAsc (customer-friendly) | ModeDesc"
+          }
+        ]
       },
       {
         "name": "createdAt",
@@ -8039,47 +10123,14 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
         "note": "Position is the merchant's arrangement, and it is LOAD-BEARING: a province listed in two zones resolves to the first, so the order is how a merchant expresses \"this one wins\"."
       },
       {
-        "name": "createdAt",
-        "type": "string (RFC3339)"
-      },
-      {
-        "name": "updatedAt",
-        "type": "string (RFC3339)"
-      }
-    ],
-    "source": "go",
-    "goType": "shipping.Zone",
-    "readOnly": [
-      "id",
-      "siteId",
-      "createdAt",
-      "updatedAt"
-    ]
-  },
-  "put:/api/sites/{siteId}/shipping-zones/{id}": {
-    "fields": [
-      {
-        "name": "id",
-        "type": "string"
-      },
-      {
-        "name": "siteId",
-        "type": "string"
-      },
-      {
-        "name": "name",
-        "type": "string",
-        "note": "Name is what the merchant reads on the settings screen (\"Nội thành Hà Nội\")."
-      },
-      {
-        "name": "provinces",
+        "name": "wardCodes",
         "type": "string[]",
-        "note": "Provinces are the admin-unit codes this zone covers (\"84_VN101\")."
+        "note": "WardCodes narrows the zone to individual wards (\"84_VN101_W1\"), the finest address level the checkout collects."
       },
       {
-        "name": "position",
-        "type": "number",
-        "note": "Position is the merchant's arrangement, and it is LOAD-BEARING: a province listed in two zones resolves to the first, so the order is how a merchant expresses \"this one wins\"."
+        "name": "hidden",
+        "type": "boolean",
+        "note": "Hidden marks a zone Derive synthesised so first-zone-wins survives the move to rules."
       },
       {
         "name": "createdAt",
@@ -8341,6 +10392,562 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
     "source": "go",
     "goType": "(inline)"
   },
+  "post:/api/sites/{siteId}/payroll/rates": {
+    "fields": [
+      {
+        "name": "staffId",
+        "type": "string"
+      },
+      {
+        "name": "effectiveFrom",
+        "type": "string"
+      },
+      {
+        "name": "payType",
+        "type": "string"
+      },
+      {
+        "name": "rateCents",
+        "type": "number"
+      },
+      {
+        "name": "commissionBps",
+        "type": "number"
+      },
+      {
+        "name": "overtimeBps",
+        "type": "number"
+      },
+      {
+        "name": "monthlyAllowanceCents",
+        "type": "number"
+      },
+      {
+        "name": "shiftAllowanceCents",
+        "type": "number"
+      }
+    ],
+    "source": "go",
+    "goType": "staff.PayRateInput"
+  },
+  "post:/api/sites/{siteId}/payroll/adjustments": {
+    "fields": [
+      {
+        "name": "clientRef",
+        "type": "string"
+      },
+      {
+        "name": "staffId",
+        "type": "string"
+      },
+      {
+        "name": "month",
+        "type": "string"
+      },
+      {
+        "name": "kind",
+        "type": "string"
+      },
+      {
+        "name": "amountCents",
+        "type": "number"
+      },
+      {
+        "name": "note",
+        "type": "string"
+      }
+    ],
+    "source": "go",
+    "goType": "staff.AdjustmentInput"
+  },
+  "post:/api/sites/{siteId}/payroll/periods/{month}/approve": {
+    "fields": [
+      {
+        "name": "clientRef",
+        "type": "string"
+      },
+      {
+        "name": "previewHash",
+        "type": "string"
+      }
+    ],
+    "source": "go",
+    "goType": "staff.ApproveInput"
+  },
+  "post:/api/sites/{siteId}/payroll/periods/{month}/carry": {
+    "fields": [
+      {
+        "name": "staffId",
+        "type": "string"
+      },
+      {
+        "name": "clientRef",
+        "type": "string"
+      }
+    ],
+    "source": "go",
+    "goType": "staff.CarryInput"
+  },
+  "post:/api/sites/{siteId}/payroll/periods/{month}/forgive": {
+    "fields": [
+      {
+        "name": "staffId",
+        "type": "string"
+      },
+      {
+        "name": "clientRef",
+        "type": "string"
+      },
+      {
+        "name": "note",
+        "type": "string"
+      }
+    ],
+    "source": "go",
+    "goType": "staff.ForgiveInput"
+  },
+  "post:/api/sites/{siteId}/payroll/payslips/{id}/paid": {
+    "fields": [
+      {
+        "name": "method",
+        "type": "string"
+      },
+      {
+        "name": "note",
+        "type": "string"
+      },
+      {
+        "name": "paidAt",
+        "type": "string (RFC3339) | null"
+      }
+    ],
+    "source": "go",
+    "goType": "staff.PaidInput"
+  },
+  "put:/api/sites/{siteId}/staff/settings": {
+    "fields": [
+      {
+        "name": "enabled",
+        "type": "boolean"
+      },
+      {
+        "name": "graceMinutes",
+        "type": "number"
+      },
+      {
+        "name": "roundingMinutes",
+        "type": "number"
+      },
+      {
+        "name": "standardWorkdays",
+        "type": "number"
+      },
+      {
+        "name": "autoCloseHours",
+        "type": "number"
+      },
+      {
+        "name": "allowUnscheduled",
+        "type": "boolean"
+      },
+      {
+        "name": "pinMaxAttempts",
+        "type": "number"
+      },
+      {
+        "name": "pinLockMinutes",
+        "type": "number"
+      },
+      {
+        "name": "updatedAt",
+        "type": "string (RFC3339)"
+      }
+    ],
+    "source": "go",
+    "goType": "staff.Settings"
+  },
+  "post:/api/sites/{siteId}/staff/members": {
+    "fields": [
+      {
+        "name": "code",
+        "type": "string"
+      },
+      {
+        "name": "name",
+        "type": "string"
+      },
+      {
+        "name": "phone",
+        "type": "string"
+      },
+      {
+        "name": "memberUserId",
+        "type": "string"
+      },
+      {
+        "name": "homeLocationId",
+        "type": "string"
+      },
+      {
+        "name": "note",
+        "type": "string"
+      },
+      {
+        "name": "active",
+        "type": "boolean | null"
+      },
+      {
+        "name": "removeFutureSchedule",
+        "type": "boolean"
+      }
+    ],
+    "source": "go",
+    "goType": "staff.MemberInput"
+  },
+  "put:/api/sites/{siteId}/staff/members/{id}": {
+    "fields": [
+      {
+        "name": "code",
+        "type": "string"
+      },
+      {
+        "name": "name",
+        "type": "string"
+      },
+      {
+        "name": "phone",
+        "type": "string"
+      },
+      {
+        "name": "memberUserId",
+        "type": "string"
+      },
+      {
+        "name": "homeLocationId",
+        "type": "string"
+      },
+      {
+        "name": "note",
+        "type": "string"
+      },
+      {
+        "name": "active",
+        "type": "boolean | null"
+      },
+      {
+        "name": "removeFutureSchedule",
+        "type": "boolean"
+      }
+    ],
+    "source": "go",
+    "goType": "staff.MemberInput"
+  },
+  "put:/api/sites/{siteId}/staff/members/{id}/pin": {
+    "fields": [
+      {
+        "name": "pin",
+        "type": "string"
+      },
+      {
+        "name": "currentPin",
+        "type": "string"
+      }
+    ],
+    "source": "go",
+    "goType": "pinBody"
+  },
+  "post:/api/sites/{siteId}/staff/templates": {
+    "fields": [
+      {
+        "name": "name",
+        "type": "string"
+      },
+      {
+        "name": "startMinute",
+        "type": "number"
+      },
+      {
+        "name": "endMinute",
+        "type": "number"
+      },
+      {
+        "name": "breakMinutes",
+        "type": "number"
+      },
+      {
+        "name": "locationId",
+        "type": "string"
+      },
+      {
+        "name": "position",
+        "type": "number"
+      },
+      {
+        "name": "active",
+        "type": "boolean | null"
+      }
+    ],
+    "source": "go",
+    "goType": "staff.TemplateInput"
+  },
+  "put:/api/sites/{siteId}/staff/templates/{id}": {
+    "fields": [
+      {
+        "name": "name",
+        "type": "string"
+      },
+      {
+        "name": "startMinute",
+        "type": "number"
+      },
+      {
+        "name": "endMinute",
+        "type": "number"
+      },
+      {
+        "name": "breakMinutes",
+        "type": "number"
+      },
+      {
+        "name": "locationId",
+        "type": "string"
+      },
+      {
+        "name": "position",
+        "type": "number"
+      },
+      {
+        "name": "active",
+        "type": "boolean | null"
+      }
+    ],
+    "source": "go",
+    "goType": "staff.TemplateInput"
+  },
+  "post:/api/sites/{siteId}/staff/schedule": {
+    "fields": [
+      {
+        "name": "clientRef",
+        "type": "string"
+      },
+      {
+        "name": "entries",
+        "type": "ScheduleInput[]",
+        "fields": [
+          {
+            "name": "staffId",
+            "type": "string"
+          },
+          {
+            "name": "locationId",
+            "type": "string"
+          },
+          {
+            "name": "templateId",
+            "type": "string"
+          },
+          {
+            "name": "startsAt",
+            "type": "string (RFC3339) | null"
+          },
+          {
+            "name": "endsAt",
+            "type": "string (RFC3339) | null"
+          },
+          {
+            "name": "workDate",
+            "type": "string"
+          },
+          {
+            "name": "kind",
+            "type": "string"
+          },
+          {
+            "name": "paidLeave",
+            "type": "boolean"
+          },
+          {
+            "name": "breakMinutes",
+            "type": "number | null"
+          },
+          {
+            "name": "note",
+            "type": "string"
+          }
+        ]
+      }
+    ],
+    "source": "go",
+    "goType": "staff.ScheduleBatch"
+  },
+  "put:/api/sites/{siteId}/staff/schedule/{id}": {
+    "fields": [
+      {
+        "name": "staffId",
+        "type": "string"
+      },
+      {
+        "name": "locationId",
+        "type": "string"
+      },
+      {
+        "name": "templateId",
+        "type": "string"
+      },
+      {
+        "name": "startsAt",
+        "type": "string (RFC3339) | null"
+      },
+      {
+        "name": "endsAt",
+        "type": "string (RFC3339) | null"
+      },
+      {
+        "name": "workDate",
+        "type": "string"
+      },
+      {
+        "name": "kind",
+        "type": "string"
+      },
+      {
+        "name": "paidLeave",
+        "type": "boolean"
+      },
+      {
+        "name": "breakMinutes",
+        "type": "number | null"
+      },
+      {
+        "name": "note",
+        "type": "string"
+      }
+    ],
+    "source": "go",
+    "goType": "staff.ScheduleInput"
+  },
+  "post:/api/sites/{siteId}/staff/schedule/copy-week": {
+    "fields": [
+      {
+        "name": "fromWeekStart",
+        "type": "string"
+      },
+      {
+        "name": "toWeekStart",
+        "type": "string"
+      },
+      {
+        "name": "locationId",
+        "type": "string"
+      },
+      {
+        "name": "dryRun",
+        "type": "boolean"
+      }
+    ],
+    "source": "go",
+    "goType": "staff.CopyWeekInput"
+  },
+  "post:/api/sites/{siteId}/staff/clock": {
+    "fields": [
+      {
+        "name": "clientRef",
+        "type": "string"
+      },
+      {
+        "name": "registerId",
+        "type": "string"
+      },
+      {
+        "name": "action",
+        "type": "string"
+      },
+      {
+        "name": "staffId",
+        "type": "string"
+      },
+      {
+        "name": "pin",
+        "type": "string"
+      },
+      {
+        "name": "token",
+        "type": "string"
+      }
+    ],
+    "source": "go",
+    "goType": "staff.ClockRequest"
+  },
+  "post:/api/sites/{siteId}/staff/attendance": {
+    "fields": [
+      {
+        "name": "staffId",
+        "type": "string"
+      },
+      {
+        "name": "locationId",
+        "type": "string"
+      },
+      {
+        "name": "clockInAt",
+        "type": "string (RFC3339)"
+      },
+      {
+        "name": "clockOutAt",
+        "type": "string (RFC3339) | null"
+      },
+      {
+        "name": "reason",
+        "type": "string"
+      }
+    ],
+    "source": "go",
+    "goType": "staff.ManualAttendanceInput"
+  },
+  "patch:/api/sites/{siteId}/staff/attendance/{id}": {
+    "fields": [
+      {
+        "name": "clockInAt",
+        "type": "string (RFC3339) | null"
+      },
+      {
+        "name": "clockOutAt",
+        "type": "string (RFC3339) | null"
+      },
+      {
+        "name": "overtimeApprovedMinutes",
+        "type": "number | null"
+      },
+      {
+        "name": "unscheduledApproved",
+        "type": "boolean | null"
+      },
+      {
+        "name": "void",
+        "type": "boolean"
+      },
+      {
+        "name": "reason",
+        "type": "string"
+      }
+    ],
+    "source": "go",
+    "goType": "staff.AttendancePatch"
+  },
+  "put:/api/sites/{siteId}/staff/me/pin": {
+    "fields": [
+      {
+        "name": "pin",
+        "type": "string"
+      },
+      {
+        "name": "currentPin",
+        "type": "string"
+      }
+    ],
+    "source": "go",
+    "goType": "pinBody"
+  },
   "post:/api/templates/{siteId}": {
     "fields": [
       {
@@ -8351,6 +10958,289 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
     ],
     "source": "go",
     "goType": "useBody"
+  },
+  "post:/api/sites/{siteId}/events": {
+    "fields": [
+      {
+        "name": "name",
+        "type": "string | null"
+      },
+      {
+        "name": "summary",
+        "type": "string | null"
+      },
+      {
+        "name": "venueName",
+        "type": "string | null"
+      },
+      {
+        "name": "venueAddress",
+        "type": "string | null"
+      },
+      {
+        "name": "holdMinutes",
+        "type": "number | null"
+      },
+      {
+        "name": "checkinOpensMin",
+        "type": "number | null"
+      },
+      {
+        "name": "checkinClosesMin",
+        "type": "number | null"
+      },
+      {
+        "name": "expectedUpdatedAt",
+        "type": "string (RFC3339) | null"
+      }
+    ],
+    "source": "go",
+    "goType": "eventBody"
+  },
+  "put:/api/sites/{siteId}/events/{id}": {
+    "fields": [
+      {
+        "name": "name",
+        "type": "string | null"
+      },
+      {
+        "name": "summary",
+        "type": "string | null"
+      },
+      {
+        "name": "venueName",
+        "type": "string | null"
+      },
+      {
+        "name": "venueAddress",
+        "type": "string | null"
+      },
+      {
+        "name": "holdMinutes",
+        "type": "number | null"
+      },
+      {
+        "name": "checkinOpensMin",
+        "type": "number | null"
+      },
+      {
+        "name": "checkinClosesMin",
+        "type": "number | null"
+      },
+      {
+        "name": "expectedUpdatedAt",
+        "type": "string (RFC3339) | null"
+      }
+    ],
+    "source": "go",
+    "goType": "eventBody"
+  },
+  "post:/api/sites/{siteId}/events/{id}/sessions": {
+    "fields": [
+      {
+        "name": "label",
+        "type": "string | null"
+      },
+      {
+        "name": "startsAt",
+        "type": "string (RFC3339) | null"
+      },
+      {
+        "name": "endsAt",
+        "type": "string (RFC3339) | null"
+      },
+      {
+        "name": "notifyBuyers",
+        "type": "boolean | null"
+      }
+    ],
+    "source": "go",
+    "goType": "sessionBody"
+  },
+  "put:/api/sites/{siteId}/events/{id}/sessions/{sid}": {
+    "fields": [
+      {
+        "name": "label",
+        "type": "string | null"
+      },
+      {
+        "name": "startsAt",
+        "type": "string (RFC3339) | null"
+      },
+      {
+        "name": "endsAt",
+        "type": "string (RFC3339) | null"
+      },
+      {
+        "name": "notifyBuyers",
+        "type": "boolean | null"
+      }
+    ],
+    "source": "go",
+    "goType": "sessionBody"
+  },
+  "post:/api/sites/{siteId}/events/{id}/sessions/{sid}/cancel": {
+    "fields": [
+      {
+        "name": "mode",
+        "type": "string",
+        "note": "Mode is REQUIRED — void_refund | keep — and never defaulted: either guess is a silent failure for somebody."
+      },
+      {
+        "name": "notifyBuyers",
+        "type": "boolean"
+      }
+    ],
+    "source": "go",
+    "goType": "cancelSessionBody"
+  },
+  "post:/api/sites/{siteId}/events/{id}/types": {
+    "fields": [
+      {
+        "name": "name",
+        "type": "string | null"
+      },
+      {
+        "name": "description",
+        "type": "string | null"
+      },
+      {
+        "name": "priceCents",
+        "type": "number | null"
+      },
+      {
+        "name": "defaultCapacity",
+        "type": "number | null"
+      },
+      {
+        "name": "perOrderMax",
+        "type": "number | null"
+      },
+      {
+        "name": "saleStartsAt",
+        "type": "optTime"
+      },
+      {
+        "name": "saleEndsAt",
+        "type": "optTime"
+      },
+      {
+        "name": "position",
+        "type": "number | null"
+      },
+      {
+        "name": "active",
+        "type": "boolean | null"
+      }
+    ],
+    "source": "go",
+    "goType": "typeBody"
+  },
+  "put:/api/sites/{siteId}/events/{id}/types/{tid}": {
+    "fields": [
+      {
+        "name": "name",
+        "type": "string | null"
+      },
+      {
+        "name": "description",
+        "type": "string | null"
+      },
+      {
+        "name": "priceCents",
+        "type": "number | null"
+      },
+      {
+        "name": "defaultCapacity",
+        "type": "number | null"
+      },
+      {
+        "name": "perOrderMax",
+        "type": "number | null"
+      },
+      {
+        "name": "saleStartsAt",
+        "type": "optTime"
+      },
+      {
+        "name": "saleEndsAt",
+        "type": "optTime"
+      },
+      {
+        "name": "position",
+        "type": "number | null"
+      },
+      {
+        "name": "active",
+        "type": "boolean | null"
+      }
+    ],
+    "source": "go",
+    "goType": "typeBody"
+  },
+  "put:/api/sites/{siteId}/events/{id}/offerings/{sid}/{tid}": {
+    "fields": [
+      {
+        "name": "capacity",
+        "type": "number | null"
+      }
+    ],
+    "source": "go",
+    "goType": "offeringBody"
+  },
+  "post:/api/sites/{siteId}/gate/scan": {
+    "fields": [
+      {
+        "name": "clientRef",
+        "type": "string"
+      },
+      {
+        "name": "sessionId",
+        "type": "string"
+      },
+      {
+        "name": "code",
+        "type": "string"
+      },
+      {
+        "name": "gate",
+        "type": "string"
+      },
+      {
+        "name": "deviceRef",
+        "type": "string"
+      }
+    ],
+    "source": "go",
+    "goType": "scanBody"
+  },
+  "post:/api/sites/{siteId}/tickets/issued/{id}/move": {
+    "fields": [
+      {
+        "name": "toSessionId",
+        "type": "string"
+      }
+    ],
+    "source": "go",
+    "goType": "moveBody"
+  },
+  "put:/api/sites/{siteId}/tickets/settings": {
+    "fields": [
+      {
+        "name": "defaultHoldMinutes",
+        "type": "number | null"
+      },
+      {
+        "name": "defaultCheckinOpensMin",
+        "type": "number | null"
+      },
+      {
+        "name": "defaultCheckinClosesMin",
+        "type": "number | null"
+      }
+    ],
+    "source": "go",
+    "goType": "settingsBody"
   },
   "post:/api/sites/{siteId}/translations/review": {
     "fields": [

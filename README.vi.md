@@ -111,8 +111,8 @@ nhét ngược lại vào mọi bản cài.
 | `sb_store` | Chạy một luồng cửa hàng bắt buộc đúng thứ tự — `checkout` (bốn lệnh ghi tạo nên trang thanh toán), `checkout_sync` (đưa phương thức thanh toán và giao hàng hiện tại vào mọi form đặt hàng đã có, publish lại trang thanh toán), `form` (một trong 17 template của nền tảng kèm field document của nó), `chrome` (một header hoặc footer dùng chung trên menu thật của site — menu desktop, drawer mobile, icon giỏ hàng và tài khoản), `menu` (một node menu bind vào menu của site, link đã phân giải), `overlay_attach` (một pop-up hay quick view trên trang đang mở), `cart` (ngăn giỏ hàng của site, khi chưa có; `relocalize` đưa ngăn giỏ đã có về ngôn ngữ của site), `app` (một app dựng sẵn kèm những trang nó cần), và `global_attach` / `global_detach` (đặt một section dùng chung ĐÃ CÓ lên trang đang mở, hoặc gỡ ra) |
 | `sb_undo` | Hoàn tác / làm lại các thao tác ghi trong phiên — chỉnh sửa trang, form và PUT qua `sb_api_call`; trang bị từ chối nếu người khác đã lưu sau đó. Version và history của nền tảng (`sb_api_find` "page versions") sống lâu hơn process này |
 
-Hai mươi tám tool, **574 operation API** (197 trong 255 lệnh ghi có hình dạng body đọc thẳng
-từ handler), 122 element, 79 nguồn binding. `sb_api_find` là
+Hai mươi tám tool, **814 operation API** (298 trong 376 lệnh ghi có hình dạng body đọc thẳng
+từ handler), 123 element, 79 nguồn binding. `sb_api_find` là
 một chỉ mục chứ không phải mỗi endpoint một tool, nên danh sách tool vẫn ngắn trong khi mọi
 thứ nền tảng làm được vẫn với tới — và operation mới thêm bên nền tảng sẽ tự có sau lần
 `npm run codegen` kế tiếp.

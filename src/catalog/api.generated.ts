@@ -3,9 +3,9 @@
 import type { ApiOperation } from './types.js';
 
 export const SWAGGER_SOURCE = {
-  "operations": 574,
-  "definitions": 110,
-  "bodyCarrying": 219,
+  "operations": 814,
+  "definitions": 272,
+  "bodyCarrying": 354,
   "bodyUndescribed": 92,
   "generatedFrom": "server/docs/swagger.json"
 } as const;
@@ -498,6 +498,19 @@ export const API_OPERATIONS: ApiOperation[] = [
     "credential": "siteScoped"
   },
   {
+    "id": "get:/_wb/account/tickets",
+    "method": "GET",
+    "path": "/_wb/account/tickets",
+    "tags": [
+      "storeaccount"
+    ],
+    "summary": "The signed-in shopper's tickets",
+    "params": [],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
     "id": "post:/_wb/account/verify",
     "method": "POST",
     "path": "/_wb/account/verify",
@@ -643,9 +656,17 @@ export const API_OPERATIONS: ApiOperation[] = [
       "storecheckout"
     ],
     "summary": "Price a basket",
-    "params": [],
-    "bodyDescribed": false,
-    "bodyRef": null,
+    "params": [
+      {
+        "name": "body",
+        "in": "body",
+        "required": true,
+        "type": "object",
+        "description": "the basket: lines (or formId + quantity), shippingMethod, discount/gift-card codes, provinceCode, wardCode and paymentMethod"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "internal_orders_public.quoteRequest",
     "credential": "siteScoped"
   },
   {
@@ -667,6 +688,27 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/_wb/checkout/shipping-options",
+    "method": "POST",
+    "path": "/_wb/checkout/shipping-options",
+    "tags": [
+      "storecheckout"
+    ],
+    "summary": "List priced delivery options for a basket",
+    "params": [
+      {
+        "name": "body",
+        "in": "body",
+        "required": true,
+        "type": "object",
+        "description": "the basket (lines or formId + quantity), provinceCode, wardCode, paymentMethod"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "internal_orders_public.quoteRequest",
     "credential": "siteScoped"
   },
   {
@@ -1179,6 +1221,106 @@ export const API_OPERATIONS: ApiOperation[] = [
       "internal"
     ],
     "summary": "Receive a SePay bank-transfer notification",
+    "params": [],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/_wb/shipping/callbacks/{siteId}/{provider}/{secret}",
+    "method": "POST",
+    "path": "/_wb/shipping/callbacks/{siteId}/{provider}/{secret}",
+    "tags": [
+      "shipping"
+    ],
+    "summary": "Carrier status webhook (GHN JSON, GHTK form)",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "provider",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Carrier id: ghn, ghtk"
+      },
+      {
+        "name": "secret",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "The connection's webhook secret"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/_wb/t/lookup",
+    "method": "GET",
+    "path": "/_wb/t/lookup",
+    "tags": [
+      "storefront"
+    ],
+    "summary": "Public ticket page, QR image, holder edit and lookup",
+    "params": [],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/_wb/t/lookup",
+    "method": "POST",
+    "path": "/_wb/t/lookup",
+    "tags": [
+      "storefront"
+    ],
+    "summary": "Public ticket page, QR image, holder edit and lookup",
+    "params": [],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/_wb/t/{token}",
+    "method": "GET",
+    "path": "/_wb/t/{token}",
+    "tags": [
+      "storefront"
+    ],
+    "summary": "Public ticket page, QR image, holder edit and lookup",
+    "params": [],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/_wb/t/{token}/holder",
+    "method": "POST",
+    "path": "/_wb/t/{token}/holder",
+    "tags": [
+      "storefront"
+    ],
+    "summary": "Public ticket page, QR image, holder edit and lookup",
+    "params": [],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/_wb/t/{token}/qr.png",
+    "method": "GET",
+    "path": "/_wb/t/{token}/qr.png",
+    "tags": [
+      "storefront"
+    ],
+    "summary": "Public ticket page, QR image, holder edit and lookup",
     "params": [],
     "bodyDescribed": false,
     "bodyRef": null,
@@ -3619,6 +3761,61 @@ export const API_OPERATIONS: ApiOperation[] = [
     "credential": "siteScoped"
   },
   {
+    "id": "post:/api/pos-devices/events",
+    "method": "POST",
+    "path": "/api/pos-devices/events",
+    "tags": [
+      "pos"
+    ],
+    "summary": "Send a scan or hello from a paired device (Bearer wbpd_ token; 30 per 10s)",
+    "params": [
+      {
+        "name": "body",
+        "in": "body",
+        "required": true,
+        "type": "object",
+        "description": "kind scan|hello, id, code"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "internal_posdevices_rest.deviceEventRequest",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/api/pos-devices/redeem",
+    "method": "POST",
+    "path": "/api/pos-devices/redeem",
+    "tags": [
+      "pos"
+    ],
+    "summary": "Exchange a pairing code for a device token (single use; 10/min per IP)",
+    "params": [
+      {
+        "name": "body",
+        "in": "body",
+        "required": true,
+        "type": "object",
+        "description": "code"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "internal_posdevices_rest.redeemRequest",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/pos-devices/stream",
+    "method": "GET",
+    "path": "/api/pos-devices/stream",
+    "tags": [
+      "pos"
+    ],
+    "summary": "Stream events to a paired device (scanner: ack, revoked; display: display, revoked)",
+    "params": [],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
     "id": "get:/api/public/capabilities",
     "method": "GET",
     "path": "/api/public/capabilities",
@@ -4917,7 +5114,7 @@ export const API_OPERATIONS: ApiOperation[] = [
         "in": "path",
         "required": true,
         "type": "string",
-        "description": "App key: mail | multilingual | agent | chat | booking | loyalty | payments | courses"
+        "description": "App key: mail | multilingual | agent | chat | booking | loyalty | payments | courses | shipping | pos | tickets"
       }
     ],
     "bodyDescribed": false,
@@ -4945,7 +5142,7 @@ export const API_OPERATIONS: ApiOperation[] = [
         "in": "path",
         "required": true,
         "type": "string",
-        "description": "App key: mail | multilingual | agent | chat | booking | loyalty | payments | courses"
+        "description": "App key: mail | multilingual | agent | chat | booking | loyalty | payments | courses | shipping | pos | tickets"
       }
     ],
     "bodyDescribed": false,
@@ -8019,6 +8216,657 @@ export const API_OPERATIONS: ApiOperation[] = [
     "credential": "siteScoped"
   },
   {
+    "id": "get:/api/sites/{siteId}/events",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/events",
+    "tags": [
+      "tickets"
+    ],
+    "summary": "List events",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "status",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "draft | published | ended | cancelled"
+      },
+      {
+        "name": "q",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Name substring"
+      },
+      {
+        "name": "limit",
+        "in": "query",
+        "required": false,
+        "type": "integer",
+        "description": "Page size (default 50, max 200)"
+      },
+      {
+        "name": "offset",
+        "in": "query",
+        "required": false,
+        "type": "integer",
+        "description": "Rows to skip"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/api/sites/{siteId}/events",
+    "method": "POST",
+    "path": "/api/sites/{siteId}/events",
+    "tags": [
+      "tickets"
+    ],
+    "summary": "Create an event (draft)",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "body",
+        "in": "body",
+        "required": true,
+        "type": "object",
+        "description": "name, summary, venueName, venueAddress, holdMinutes, checkinOpensMin, checkinClosesMin"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "internal_tickets_rest.eventBody",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/sites/{siteId}/events/{id}",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/events/{id}",
+    "tags": [
+      "tickets"
+    ],
+    "summary": "Read an event with its sessions, ticket types and capacity grid",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Event ID"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "put:/api/sites/{siteId}/events/{id}",
+    "method": "PUT",
+    "path": "/api/sites/{siteId}/events/{id}",
+    "tags": [
+      "tickets"
+    ],
+    "summary": "Edit an event",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Event ID"
+      },
+      {
+        "name": "body",
+        "in": "body",
+        "required": true,
+        "type": "object",
+        "description": "fields to change"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "internal_tickets_rest.eventBody",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "delete:/api/sites/{siteId}/events/{id}",
+    "method": "DELETE",
+    "path": "/api/sites/{siteId}/events/{id}",
+    "tags": [
+      "tickets"
+    ],
+    "summary": "Delete an event nobody bought",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Event ID"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/api/sites/{siteId}/events/{id}/cancel",
+    "method": "POST",
+    "path": "/api/sites/{siteId}/events/{id}/cancel",
+    "tags": [
+      "tickets"
+    ],
+    "summary": "Cancel an event",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Event ID"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "put:/api/sites/{siteId}/events/{id}/offerings/{sid}/{tid}",
+    "method": "PUT",
+    "path": "/api/sites/{siteId}/events/{id}/offerings/{sid}/{tid}",
+    "tags": [
+      "tickets"
+    ],
+    "summary": "Set one cell's capacity",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Event ID"
+      },
+      {
+        "name": "sid",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Session ID"
+      },
+      {
+        "name": "tid",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Ticket type ID"
+      },
+      {
+        "name": "body",
+        "in": "body",
+        "required": true,
+        "type": "object",
+        "description": "capacity"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "internal_tickets_rest.offeringBody",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/api/sites/{siteId}/events/{id}/publish",
+    "method": "POST",
+    "path": "/api/sites/{siteId}/events/{id}/publish",
+    "tags": [
+      "tickets"
+    ],
+    "summary": "Publish an event",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Event ID"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/api/sites/{siteId}/events/{id}/resync",
+    "method": "POST",
+    "path": "/api/sites/{siteId}/events/{id}/resync",
+    "tags": [
+      "tickets"
+    ],
+    "summary": "Re-project a published event into the catalogue",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Event ID"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/sites/{siteId}/events/{id}/sessions",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/events/{id}/sessions",
+    "tags": [
+      "tickets"
+    ],
+    "summary": "List an event's sessions",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Event ID"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/api/sites/{siteId}/events/{id}/sessions",
+    "method": "POST",
+    "path": "/api/sites/{siteId}/events/{id}/sessions",
+    "tags": [
+      "tickets"
+    ],
+    "summary": "Add a session",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Event ID"
+      },
+      {
+        "name": "body",
+        "in": "body",
+        "required": true,
+        "type": "object",
+        "description": "label, startsAt, endsAt"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "internal_tickets_rest.sessionBody",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "put:/api/sites/{siteId}/events/{id}/sessions/{sid}",
+    "method": "PUT",
+    "path": "/api/sites/{siteId}/events/{id}/sessions/{sid}",
+    "tags": [
+      "tickets"
+    ],
+    "summary": "Edit a session",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Event ID"
+      },
+      {
+        "name": "sid",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Session ID"
+      },
+      {
+        "name": "body",
+        "in": "body",
+        "required": true,
+        "type": "object",
+        "description": "label, startsAt, endsAt, notifyBuyers"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "internal_tickets_rest.sessionBody",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "delete:/api/sites/{siteId}/events/{id}/sessions/{sid}",
+    "method": "DELETE",
+    "path": "/api/sites/{siteId}/events/{id}/sessions/{sid}",
+    "tags": [
+      "tickets"
+    ],
+    "summary": "Delete a session nobody bought",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Event ID"
+      },
+      {
+        "name": "sid",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Session ID"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/api/sites/{siteId}/events/{id}/sessions/{sid}/cancel",
+    "method": "POST",
+    "path": "/api/sites/{siteId}/events/{id}/sessions/{sid}/cancel",
+    "tags": [
+      "tickets"
+    ],
+    "summary": "Cancel a session",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Event ID"
+      },
+      {
+        "name": "sid",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Session ID"
+      },
+      {
+        "name": "body",
+        "in": "body",
+        "required": true,
+        "type": "object",
+        "description": "mode, notifyBuyers"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "internal_tickets_rest.cancelSessionBody",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/sites/{siteId}/events/{id}/types",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/events/{id}/types",
+    "tags": [
+      "tickets"
+    ],
+    "summary": "List an event's ticket types",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Event ID"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/api/sites/{siteId}/events/{id}/types",
+    "method": "POST",
+    "path": "/api/sites/{siteId}/events/{id}/types",
+    "tags": [
+      "tickets"
+    ],
+    "summary": "Add a ticket type",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Event ID"
+      },
+      {
+        "name": "body",
+        "in": "body",
+        "required": true,
+        "type": "object",
+        "description": "name, priceCents, defaultCapacity, ..."
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "internal_tickets_rest.typeBody",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "put:/api/sites/{siteId}/events/{id}/types/{tid}",
+    "method": "PUT",
+    "path": "/api/sites/{siteId}/events/{id}/types/{tid}",
+    "tags": [
+      "tickets"
+    ],
+    "summary": "Edit a ticket type",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Event ID"
+      },
+      {
+        "name": "tid",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Ticket type ID"
+      },
+      {
+        "name": "body",
+        "in": "body",
+        "required": true,
+        "type": "object",
+        "description": "fields to change"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "internal_tickets_rest.typeBody",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "delete:/api/sites/{siteId}/events/{id}/types/{tid}",
+    "method": "DELETE",
+    "path": "/api/sites/{siteId}/events/{id}/types/{tid}",
+    "tags": [
+      "tickets"
+    ],
+    "summary": "Delete a ticket type nobody bought",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Event ID"
+      },
+      {
+        "name": "tid",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Ticket type ID"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/api/sites/{siteId}/events/{id}/unpublish",
+    "method": "POST",
+    "path": "/api/sites/{siteId}/events/{id}/unpublish",
+    "tags": [
+      "tickets"
+    ],
+    "summary": "Take an event off sale",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Event ID"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
     "id": "get:/api/sites/{siteId}/filter-facets",
     "method": "GET",
     "path": "/api/sites/{siteId}/filter-facets",
@@ -8663,6 +9511,34 @@ export const API_OPERATIONS: ApiOperation[] = [
     "credential": "siteScoped"
   },
   {
+    "id": "get:/api/sites/{siteId}/forms/unread",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/forms/unread",
+    "tags": [
+      "forms"
+    ],
+    "summary": "List or create site forms",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "form",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "Form to create (POST only)"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "github_com_webbuilder_server_internal_forms.Form",
+    "credential": "siteScoped"
+  },
+  {
     "id": "get:/api/sites/{siteId}/forms/{id}",
     "method": "GET",
     "path": "/api/sites/{siteId}/forms/{id}",
@@ -8803,6 +9679,34 @@ export const API_OPERATIONS: ApiOperation[] = [
     "credential": "siteScoped"
   },
   {
+    "id": "get:/api/sites/{siteId}/forms/{id}/placements",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/forms/{id}/placements",
+    "tags": [
+      "forms"
+    ],
+    "summary": "List where a form is placed",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Form ID"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
     "id": "get:/api/sites/{siteId}/forms/{id}/schema",
     "method": "GET",
     "path": "/api/sites/{siteId}/forms/{id}/schema",
@@ -8868,6 +9772,20 @@ export const API_OPERATIONS: ApiOperation[] = [
         "description": "Comma-separated status SET (OR) — replaces status when given"
       },
       {
+        "name": "unread",
+        "in": "query",
+        "required": false,
+        "type": "boolean",
+        "description": "1/true: only unread responses (spam excluded)"
+      },
+      {
+        "name": "source",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Filter by utm_source — an exact value, or (none) for responses with no utm_source"
+      },
+      {
         "name": "limit",
         "in": "query",
         "required": false,
@@ -8894,6 +9812,62 @@ export const API_OPERATIONS: ApiOperation[] = [
       "forms"
     ],
     "summary": "Export a form's responses as an Excel workbook",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Form ID"
+      },
+      {
+        "name": "status",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Same filters as the list: one status"
+      },
+      {
+        "name": "statuses",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Comma-separated status SET (OR) — replaces status when given"
+      },
+      {
+        "name": "unread",
+        "in": "query",
+        "required": false,
+        "type": "boolean",
+        "description": "1/true: only unread responses (spam excluded)"
+      },
+      {
+        "name": "source",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Filter by utm_source — an exact value, or (none) for responses with no utm_source"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/sites/{siteId}/forms/{id}/submissions/sources",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/forms/{id}/submissions/sources",
+    "tags": [
+      "forms"
+    ],
+    "summary": "Count a form's responses by traffic source",
     "params": [
       {
         "name": "siteId",
@@ -9034,6 +10008,153 @@ export const API_OPERATIONS: ApiOperation[] = [
         "required": false,
         "type": "object",
         "description": "PATCH only: {\\"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/api/sites/{siteId}/gate/scan",
+    "method": "POST",
+    "path": "/api/sites/{siteId}/gate/scan",
+    "tags": [
+      "gate"
+    ],
+    "summary": "Scan a ticket at the gate",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "body",
+        "in": "body",
+        "required": true,
+        "type": "object",
+        "description": "clientRef, sessionId, code, gate, deviceRef"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "internal_tickets_rest.scanBody",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/sites/{siteId}/gate/search",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/gate/search",
+    "tags": [
+      "gate"
+    ],
+    "summary": "Find a ticket by name or short code",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "sessionId",
+        "in": "query",
+        "required": true,
+        "type": "string",
+        "description": "Session ID"
+      },
+      {
+        "name": "q",
+        "in": "query",
+        "required": true,
+        "type": "string",
+        "description": "Name or short code (3 or more characters)"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/sites/{siteId}/gate/sessions",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/gate/sessions",
+    "tags": [
+      "gate"
+    ],
+    "summary": "The sessions the gate can admit right now",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/sites/{siteId}/gate/sessions/{id}/entries",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/gate/sessions/{id}/entries",
+    "tags": [
+      "gate"
+    ],
+    "summary": "Arrivals of a session per 15 minutes",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Session ID"
+      },
+      {
+        "name": "bucket",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Bucket width: 15m (default)"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/sites/{siteId}/gate/sessions/{id}/stats",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/gate/sessions/{id}/stats",
+    "tags": [
+      "gate"
+    ],
+    "summary": "The gate counter of a session",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Session ID"
       }
     ],
     "bodyDescribed": false,
@@ -9699,6 +10820,13 @@ export const API_OPERATIONS: ApiOperation[] = [
         "required": false,
         "type": "integer",
         "description": "The threshold; 0 means only what has run out"
+      },
+      {
+        "name": "location",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "A location id (that location's counters), 'all' (every location summed, with a per-location breakdown), or omitted (the online location)"
       }
     ],
     "bodyDescribed": false,
@@ -9724,6 +10852,34 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/api/sites/{siteId}/inventory/cost",
+    "method": "POST",
+    "path": "/api/sites/{siteId}/inventory/cost",
+    "tags": [
+      "products"
+    ],
+    "summary": "Adjust a variant's average cost",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "body",
+        "in": "body",
+        "required": true,
+        "type": "object",
+        "description": "productId, variantId, costCents, note"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "internal_products_rest.costRequest",
     "credential": "siteScoped"
   },
   {
@@ -9755,6 +10911,167 @@ export const API_OPERATIONS: ApiOperation[] = [
         "required": false,
         "type": "string",
         "description": "Narrow to one variant"
+      },
+      {
+        "name": "location",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Narrow to one location; the legacy-default location also shows the movements recorded before locations existed"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/sites/{siteId}/locations",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/locations",
+    "tags": [
+      "locations"
+    ],
+    "summary": "List or create a site's stock locations",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/api/sites/{siteId}/locations",
+    "method": "POST",
+    "path": "/api/sites/{siteId}/locations",
+    "tags": [
+      "locations"
+    ],
+    "summary": "List or create a site's stock locations",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/sites/{siteId}/locations/{id}",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/locations/{id}",
+    "tags": [
+      "locations"
+    ],
+    "summary": "Read, update or delete one stock location",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Location ID"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "put:/api/sites/{siteId}/locations/{id}",
+    "method": "PUT",
+    "path": "/api/sites/{siteId}/locations/{id}",
+    "tags": [
+      "locations"
+    ],
+    "summary": "Read, update or delete one stock location",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Location ID"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "delete:/api/sites/{siteId}/locations/{id}",
+    "method": "DELETE",
+    "path": "/api/sites/{siteId}/locations/{id}",
+    "tags": [
+      "locations"
+    ],
+    "summary": "Read, update or delete one stock location",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Location ID"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/api/sites/{siteId}/locations/{id}/make-online",
+    "method": "POST",
+    "path": "/api/sites/{siteId}/locations/{id}/make-online",
+    "tags": [
+      "locations"
+    ],
+    "summary": "Make a location the site's online location",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Location ID"
       }
     ],
     "bodyDescribed": false,
@@ -10464,6 +11781,20 @@ export const API_OPERATIONS: ApiOperation[] = [
         "description": "Filter by order status"
       },
       {
+        "name": "channel",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Filter by order channel (\\"
+      },
+      {
+        "name": "location",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Filter by order location id (exact match)"
+      },
+      {
         "name": "sort",
         "in": "query",
         "required": false,
@@ -10490,6 +11821,13 @@ export const API_OPERATIONS: ApiOperation[] = [
         "required": false,
         "type": "integer",
         "description": "Page offset"
+      },
+      {
+        "name": "issue",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Problem filter: deposit_shipping = booking deposits charged a delivery fee"
       },
       {
         "name": "order",
@@ -10541,6 +11879,20 @@ export const API_OPERATIONS: ApiOperation[] = [
         "description": "Filter by order status"
       },
       {
+        "name": "channel",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Filter by order channel (\\"
+      },
+      {
+        "name": "location",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Filter by order location id (exact match)"
+      },
+      {
         "name": "sort",
         "in": "query",
         "required": false,
@@ -10567,6 +11919,13 @@ export const API_OPERATIONS: ApiOperation[] = [
         "required": false,
         "type": "integer",
         "description": "Page offset"
+      },
+      {
+        "name": "issue",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Problem filter: deposit_shipping = booking deposits charged a delivery fee"
       },
       {
         "name": "order",
@@ -10739,6 +12098,111 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": true,
     "bodyRef": "github_com_webbuilder_server_internal_orders.Order",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/api/sites/{siteId}/orders/{id}/carrier-shipments",
+    "method": "POST",
+    "path": "/api/sites/{siteId}/orders/{id}/carrier-shipments",
+    "tags": [
+      "orders"
+    ],
+    "summary": "Push an order to a connected carrier (Tạo vận đơn)",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Order ID"
+      },
+      {
+        "name": "body",
+        "in": "body",
+        "required": true,
+        "type": "object",
+        "description": "Carrier provider id (ghn|ghtk) and optional service"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "internal_orders_rest.carrierShipmentRequest",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/api/sites/{siteId}/orders/{id}/carrier-shipments/{shipmentId}/cancel",
+    "method": "POST",
+    "path": "/api/sites/{siteId}/orders/{id}/carrier-shipments/{shipmentId}/cancel",
+    "tags": [
+      "orders"
+    ],
+    "summary": "Cancel a carrier waybill",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Order ID"
+      },
+      {
+        "name": "shipmentId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Shipment ID"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/api/sites/{siteId}/orders/{id}/carrier-shipments/{shipmentId}/label",
+    "method": "POST",
+    "path": "/api/sites/{siteId}/orders/{id}/carrier-shipments/{shipmentId}/label",
+    "tags": [
+      "orders"
+    ],
+    "summary": "Print a carrier waybill label (In vận đơn)",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Order ID"
+      },
+      {
+        "name": "shipmentId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Shipment ID"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
     "credential": "siteScoped"
   },
   {
@@ -12346,6 +13810,4374 @@ export const API_OPERATIONS: ApiOperation[] = [
     "credential": "siteScoped"
   },
   {
+    "id": "get:/api/sites/{siteId}/payroll/adjustments",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/payroll/adjustments",
+    "tags": [
+      "payroll"
+    ],
+    "summary": "Payroll adjustments",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "month",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "YYYY-MM"
+      },
+      {
+        "name": "staffId",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Staff filter"
+      },
+      {
+        "name": "adjustment",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "POST only"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "github_com_webbuilder_server_internal_staff.AdjustmentInput",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/api/sites/{siteId}/payroll/adjustments",
+    "method": "POST",
+    "path": "/api/sites/{siteId}/payroll/adjustments",
+    "tags": [
+      "payroll"
+    ],
+    "summary": "Payroll adjustments",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "month",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "YYYY-MM"
+      },
+      {
+        "name": "staffId",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Staff filter"
+      },
+      {
+        "name": "adjustment",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "POST only"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "github_com_webbuilder_server_internal_staff.AdjustmentInput",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "delete:/api/sites/{siteId}/payroll/adjustments/{id}",
+    "method": "DELETE",
+    "path": "/api/sites/{siteId}/payroll/adjustments/{id}",
+    "tags": [
+      "payroll"
+    ],
+    "summary": "Remove a payroll adjustment",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Adjustment ID"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/sites/{siteId}/payroll/payslips/{id}/events",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/payroll/payslips/{id}/events",
+    "tags": [
+      "payroll"
+    ],
+    "summary": "A payslip's paid/unpaid history",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Payslip ID"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/api/sites/{siteId}/payroll/payslips/{id}/paid",
+    "method": "POST",
+    "path": "/api/sites/{siteId}/payroll/payslips/{id}/paid",
+    "tags": [
+      "payroll"
+    ],
+    "summary": "Mark a payslip paid / unpaid",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Payslip ID"
+      },
+      {
+        "name": "body",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "POST: {method, note, paidAt}; DELETE: {note}"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "github_com_webbuilder_server_internal_staff.PaidInput",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "delete:/api/sites/{siteId}/payroll/payslips/{id}/paid",
+    "method": "DELETE",
+    "path": "/api/sites/{siteId}/payroll/payslips/{id}/paid",
+    "tags": [
+      "payroll"
+    ],
+    "summary": "Mark a payslip paid / unpaid",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Payslip ID"
+      },
+      {
+        "name": "body",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "POST: {method, note, paidAt}; DELETE: {note}"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "github_com_webbuilder_server_internal_staff.PaidInput",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/sites/{siteId}/payroll/periods",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/payroll/periods",
+    "tags": [
+      "payroll"
+    ],
+    "summary": "A year of payroll months",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "year",
+        "in": "query",
+        "required": true,
+        "type": "integer",
+        "description": "Year"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/sites/{siteId}/payroll/periods/{month}",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/payroll/periods/{month}",
+    "tags": [
+      "payroll"
+    ],
+    "summary": "One month's payroll",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "month",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "YYYY-MM"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/api/sites/{siteId}/payroll/periods/{month}/approve",
+    "method": "POST",
+    "path": "/api/sites/{siteId}/payroll/periods/{month}/approve",
+    "tags": [
+      "payroll"
+    ],
+    "summary": "Approve a month's payroll",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "month",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "YYYY-MM"
+      },
+      {
+        "name": "body",
+        "in": "body",
+        "required": true,
+        "type": "object",
+        "description": "Approval"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "github_com_webbuilder_server_internal_staff.ApproveInput",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/api/sites/{siteId}/payroll/periods/{month}/carry",
+    "method": "POST",
+    "path": "/api/sites/{siteId}/payroll/periods/{month}/carry",
+    "tags": [
+      "payroll"
+    ],
+    "summary": "Carry a negative payslip to next month",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "month",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "YYYY-MM"
+      },
+      {
+        "name": "body",
+        "in": "body",
+        "required": true,
+        "type": "object",
+        "description": "{staffId, clientRef}"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "github_com_webbuilder_server_internal_staff.CarryInput",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/sites/{siteId}/payroll/periods/{month}/export.csv",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/payroll/periods/{month}/export.csv",
+    "tags": [
+      "payroll"
+    ],
+    "summary": "A month's payroll as CSV",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "month",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "YYYY-MM"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/api/sites/{siteId}/payroll/periods/{month}/forgive",
+    "method": "POST",
+    "path": "/api/sites/{siteId}/payroll/periods/{month}/forgive",
+    "tags": [
+      "payroll"
+    ],
+    "summary": "Forgive a negative payslip (\"Xoá phần âm\")",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "month",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "YYYY-MM"
+      },
+      {
+        "name": "body",
+        "in": "body",
+        "required": true,
+        "type": "object",
+        "description": "{staffId, clientRef, note}"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "github_com_webbuilder_server_internal_staff.ForgiveInput",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/sites/{siteId}/payroll/rates",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/payroll/rates",
+    "tags": [
+      "payroll"
+    ],
+    "summary": "Pay rates",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "staffId",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "One person's rates"
+      },
+      {
+        "name": "rate",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "POST only"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "github_com_webbuilder_server_internal_staff.PayRateInput",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/api/sites/{siteId}/payroll/rates",
+    "method": "POST",
+    "path": "/api/sites/{siteId}/payroll/rates",
+    "tags": [
+      "payroll"
+    ],
+    "summary": "Pay rates",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "staffId",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "One person's rates"
+      },
+      {
+        "name": "rate",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "POST only"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "github_com_webbuilder_server_internal_staff.PayRateInput",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "delete:/api/sites/{siteId}/payroll/rates/{id}",
+    "method": "DELETE",
+    "path": "/api/sites/{siteId}/payroll/rates/{id}",
+    "tags": [
+      "payroll"
+    ],
+    "summary": "Remove a pay rate",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Rate ID"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/api/sites/{siteId}/pos-devices/pairings",
+    "method": "POST",
+    "path": "/api/sites/{siteId}/pos-devices/pairings",
+    "tags": [
+      "pos"
+    ],
+    "summary": "Start pairing a phone scanner or customer display with this counter",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "site id"
+      },
+      {
+        "name": "body",
+        "in": "body",
+        "required": true,
+        "type": "object",
+        "description": "role (scanner|display), label, pairUrl"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "internal_posdevices_rest.createRequest",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "delete:/api/sites/{siteId}/pos-devices/pairings/{id}",
+    "method": "DELETE",
+    "path": "/api/sites/{siteId}/pos-devices/pairings/{id}",
+    "tags": [
+      "pos"
+    ],
+    "summary": "Disconnect a paired device (its token stops working; its stream gets \"revoked\")",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "site id"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "pairing id"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/api/sites/{siteId}/pos-devices/pairings/{id}/events",
+    "method": "POST",
+    "path": "/api/sites/{siteId}/pos-devices/pairings/{id}/events",
+    "tags": [
+      "pos"
+    ],
+    "summary": "Send an ack to a paired scanner or a cart snapshot to a paired display",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "site id"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "pairing id"
+      },
+      {
+        "name": "body",
+        "in": "body",
+        "required": true,
+        "type": "object",
+        "description": "kind ack|display, data"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "internal_posdevices_rest.pcEventRequest",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/sites/{siteId}/pos-devices/pairings/{id}/stream",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/pos-devices/pairings/{id}/stream",
+    "tags": [
+      "pos"
+    ],
+    "summary": "Stream a pairing's device events to the counter (scan, hello, revoked)",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "site id"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "pairing id"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/sites/{siteId}/pos/areas",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/pos/areas",
+    "tags": [
+      "pos"
+    ],
+    "summary": "List or create floor areas",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "locationId",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Location filter (GET)"
+      },
+      {
+        "name": "area",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "POST only"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "github_com_webbuilder_server_internal_pos.AreaInput",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/api/sites/{siteId}/pos/areas",
+    "method": "POST",
+    "path": "/api/sites/{siteId}/pos/areas",
+    "tags": [
+      "pos"
+    ],
+    "summary": "List or create floor areas",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "locationId",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Location filter (GET)"
+      },
+      {
+        "name": "area",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "POST only"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "github_com_webbuilder_server_internal_pos.AreaInput",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "patch:/api/sites/{siteId}/pos/areas/{id}",
+    "method": "PATCH",
+    "path": "/api/sites/{siteId}/pos/areas/{id}",
+    "tags": [
+      "pos"
+    ],
+    "summary": "Rename, reorder or delete a floor area",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Area ID"
+      },
+      {
+        "name": "area",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "PATCH only"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "github_com_webbuilder_server_internal_pos.AreaInput",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "delete:/api/sites/{siteId}/pos/areas/{id}",
+    "method": "DELETE",
+    "path": "/api/sites/{siteId}/pos/areas/{id}",
+    "tags": [
+      "pos"
+    ],
+    "summary": "Rename, reorder or delete a floor area",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Area ID"
+      },
+      {
+        "name": "area",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "PATCH only"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "github_com_webbuilder_server_internal_pos.AreaInput",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/sites/{siteId}/pos/context",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/pos/context",
+    "tags": [
+      "pos"
+    ],
+    "summary": "The POS boot read",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/sites/{siteId}/pos/customers",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/pos/customers",
+    "tags": [
+      "pos"
+    ],
+    "summary": "Find or create a customer at the counter",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "phone",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Phone to look up (GET only)"
+      },
+      {
+        "name": "customer",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "Guest to create (POST only)"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "github_com_webbuilder_server_internal_pos.CustomerInput",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/api/sites/{siteId}/pos/customers",
+    "method": "POST",
+    "path": "/api/sites/{siteId}/pos/customers",
+    "tags": [
+      "pos"
+    ],
+    "summary": "Find or create a customer at the counter",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "phone",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Phone to look up (GET only)"
+      },
+      {
+        "name": "customer",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "Guest to create (POST only)"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "github_com_webbuilder_server_internal_pos.CustomerInput",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/sites/{siteId}/pos/customers/{id}",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/pos/customers/{id}",
+    "tags": [
+      "pos"
+    ],
+    "summary": "One customer at the counter",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Customer ID"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/sites/{siteId}/pos/debtors",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/pos/debtors",
+    "tags": [
+      "pos"
+    ],
+    "summary": "Customers who owe the counter",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "limit",
+        "in": "query",
+        "required": false,
+        "type": "integer",
+        "description": "Page size, default 20, max 200"
+      },
+      {
+        "name": "offset",
+        "in": "query",
+        "required": false,
+        "type": "integer",
+        "description": "Page offset"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/sites/{siteId}/pos/debts",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/pos/debts",
+    "tags": [
+      "pos"
+    ],
+    "summary": "Counter debts",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "customerId",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "One customer's debts"
+      },
+      {
+        "name": "openOnly",
+        "in": "query",
+        "required": false,
+        "type": "boolean",
+        "description": "Only debts with a balance"
+      },
+      {
+        "name": "limit",
+        "in": "query",
+        "required": false,
+        "type": "integer",
+        "description": "Page size, default 20, max 200"
+      },
+      {
+        "name": "offset",
+        "in": "query",
+        "required": false,
+        "type": "integer",
+        "description": "Page offset"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/api/sites/{siteId}/pos/debts/settle",
+    "method": "POST",
+    "path": "/api/sites/{siteId}/pos/debts/settle",
+    "tags": [
+      "pos"
+    ],
+    "summary": "Collect a customer's counter debt",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "body",
+        "in": "body",
+        "required": true,
+        "type": "object",
+        "description": "clientRef, customerId, registerId, tenders, orderIds"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "github_com_webbuilder_server_internal_pos.SettleInput",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/sites/{siteId}/pos/floor",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/pos/floor",
+    "tags": [
+      "pos"
+    ],
+    "summary": "The floor plan of one location, with live table states",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "locationId",
+        "in": "query",
+        "required": true,
+        "type": "string",
+        "description": "Location"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/sites/{siteId}/pos/fnb/settings",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/pos/fnb/settings",
+    "tags": [
+      "pos"
+    ],
+    "summary": "The site's F&B mode (\"Chế độ quán ăn\")",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "body",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "PUT only"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "github_com_webbuilder_server_internal_pos.FnbSettings",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "put:/api/sites/{siteId}/pos/fnb/settings",
+    "method": "PUT",
+    "path": "/api/sites/{siteId}/pos/fnb/settings",
+    "tags": [
+      "pos"
+    ],
+    "summary": "The site's F&B mode (\"Chế độ quán ăn\")",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "body",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "PUT only"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "github_com_webbuilder_server_internal_pos.FnbSettings",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/sites/{siteId}/pos/kitchen/tickets",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/pos/kitchen/tickets",
+    "tags": [
+      "pos"
+    ],
+    "summary": "Kitchen tickets of one location",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "locationId",
+        "in": "query",
+        "required": true,
+        "type": "string",
+        "description": "Location"
+      },
+      {
+        "name": "stationId",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Station"
+      },
+      {
+        "name": "status",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "pending|done"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/api/sites/{siteId}/pos/kitchen/tickets/{id}/bump",
+    "method": "POST",
+    "path": "/api/sites/{siteId}/pos/kitchen/tickets/{id}/bump",
+    "tags": [
+      "pos"
+    ],
+    "summary": "Bump, recall or reprint a kitchen ticket",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Ticket id"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/api/sites/{siteId}/pos/kitchen/tickets/{id}/recall",
+    "method": "POST",
+    "path": "/api/sites/{siteId}/pos/kitchen/tickets/{id}/recall",
+    "tags": [
+      "pos"
+    ],
+    "summary": "Bump, recall or reprint a kitchen ticket",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Ticket id"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/api/sites/{siteId}/pos/kitchen/tickets/{id}/reprint",
+    "method": "POST",
+    "path": "/api/sites/{siteId}/pos/kitchen/tickets/{id}/reprint",
+    "tags": [
+      "pos"
+    ],
+    "summary": "Bump, recall or reprint a kitchen ticket",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Ticket id"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/sites/{siteId}/pos/lookup",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/pos/lookup",
+    "tags": [
+      "pos"
+    ],
+    "summary": "Look up a scanned code",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "code",
+        "in": "query",
+        "required": true,
+        "type": "string",
+        "description": "Scanned barcode or SKU"
+      },
+      {
+        "name": "locationId",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Location whose available figure to answer (omitted = online)"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/sites/{siteId}/pos/menu",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/pos/menu",
+    "tags": [
+      "pos"
+    ],
+    "summary": "The F&B side of the products on the counter's screen",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "productIds",
+        "in": "query",
+        "required": true,
+        "type": "string",
+        "description": "Comma-separated product ids"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/sites/{siteId}/pos/modifier-groups",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/pos/modifier-groups",
+    "tags": [
+      "pos"
+    ],
+    "summary": "List or create modifier groups",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "group",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "POST only"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "github_com_webbuilder_server_internal_pos.ModifierGroupInput",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/api/sites/{siteId}/pos/modifier-groups",
+    "method": "POST",
+    "path": "/api/sites/{siteId}/pos/modifier-groups",
+    "tags": [
+      "pos"
+    ],
+    "summary": "List or create modifier groups",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "group",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "POST only"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "github_com_webbuilder_server_internal_pos.ModifierGroupInput",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "put:/api/sites/{siteId}/pos/modifier-groups/{id}",
+    "method": "PUT",
+    "path": "/api/sites/{siteId}/pos/modifier-groups/{id}",
+    "tags": [
+      "pos"
+    ],
+    "summary": "Replace or delete a modifier group",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Group ID"
+      },
+      {
+        "name": "group",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "PUT only"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "github_com_webbuilder_server_internal_pos.ModifierGroupInput",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "delete:/api/sites/{siteId}/pos/modifier-groups/{id}",
+    "method": "DELETE",
+    "path": "/api/sites/{siteId}/pos/modifier-groups/{id}",
+    "tags": [
+      "pos"
+    ],
+    "summary": "Replace or delete a modifier group",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Group ID"
+      },
+      {
+        "name": "group",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "PUT only"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "github_com_webbuilder_server_internal_pos.ModifierGroupInput",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "put:/api/sites/{siteId}/pos/modifier-groups/{id}/products",
+    "method": "PUT",
+    "path": "/api/sites/{siteId}/pos/modifier-groups/{id}/products",
+    "tags": [
+      "pos"
+    ],
+    "summary": "Set the products a modifier group is offered on",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Group ID"
+      },
+      {
+        "name": "body",
+        "in": "body",
+        "required": true,
+        "type": "object",
+        "description": "Products"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "internal_pos_rest.groupProductsBody",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "put:/api/sites/{siteId}/pos/product-routes",
+    "method": "PUT",
+    "path": "/api/sites/{siteId}/pos/product-routes",
+    "tags": [
+      "pos"
+    ],
+    "summary": "Route products to a station",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "body",
+        "in": "body",
+        "required": true,
+        "type": "object",
+        "description": "Routing"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "internal_pos_rest.productRoutesBody",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/sites/{siteId}/pos/purchase-orders",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/pos/purchase-orders",
+    "tags": [
+      "pos"
+    ],
+    "summary": "List or create purchase orders",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "status",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "draft | ordered | partial | received | closed | cancelled (GET only)"
+      },
+      {
+        "name": "supplierId",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Supplier filter (GET only)"
+      },
+      {
+        "name": "locationId",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Receiving-location filter (GET only)"
+      },
+      {
+        "name": "open",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "1 = ordered + partial only (GET only)"
+      },
+      {
+        "name": "limit",
+        "in": "query",
+        "required": false,
+        "type": "integer",
+        "description": "Page size, default 20, max 200 (GET only)"
+      },
+      {
+        "name": "offset",
+        "in": "query",
+        "required": false,
+        "type": "integer",
+        "description": "Page offset (GET only)"
+      },
+      {
+        "name": "purchaseOrder",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "Purchase order (POST only)"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "github_com_webbuilder_server_internal_pos.PurchaseOrderInput",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/api/sites/{siteId}/pos/purchase-orders",
+    "method": "POST",
+    "path": "/api/sites/{siteId}/pos/purchase-orders",
+    "tags": [
+      "pos"
+    ],
+    "summary": "List or create purchase orders",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "status",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "draft | ordered | partial | received | closed | cancelled (GET only)"
+      },
+      {
+        "name": "supplierId",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Supplier filter (GET only)"
+      },
+      {
+        "name": "locationId",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Receiving-location filter (GET only)"
+      },
+      {
+        "name": "open",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "1 = ordered + partial only (GET only)"
+      },
+      {
+        "name": "limit",
+        "in": "query",
+        "required": false,
+        "type": "integer",
+        "description": "Page size, default 20, max 200 (GET only)"
+      },
+      {
+        "name": "offset",
+        "in": "query",
+        "required": false,
+        "type": "integer",
+        "description": "Page offset (GET only)"
+      },
+      {
+        "name": "purchaseOrder",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "Purchase order (POST only)"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "github_com_webbuilder_server_internal_pos.PurchaseOrderInput",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/sites/{siteId}/pos/purchase-orders/{id}",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/pos/purchase-orders/{id}",
+    "tags": [
+      "pos"
+    ],
+    "summary": "Get, edit or delete a purchase order",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Purchase order ID"
+      },
+      {
+        "name": "purchaseOrder",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "Purchase order (PUT only)"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "github_com_webbuilder_server_internal_pos.PurchaseOrderInput",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "put:/api/sites/{siteId}/pos/purchase-orders/{id}",
+    "method": "PUT",
+    "path": "/api/sites/{siteId}/pos/purchase-orders/{id}",
+    "tags": [
+      "pos"
+    ],
+    "summary": "Get, edit or delete a purchase order",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Purchase order ID"
+      },
+      {
+        "name": "purchaseOrder",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "Purchase order (PUT only)"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "github_com_webbuilder_server_internal_pos.PurchaseOrderInput",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "delete:/api/sites/{siteId}/pos/purchase-orders/{id}",
+    "method": "DELETE",
+    "path": "/api/sites/{siteId}/pos/purchase-orders/{id}",
+    "tags": [
+      "pos"
+    ],
+    "summary": "Get, edit or delete a purchase order",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Purchase order ID"
+      },
+      {
+        "name": "purchaseOrder",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "Purchase order (PUT only)"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "github_com_webbuilder_server_internal_pos.PurchaseOrderInput",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/api/sites/{siteId}/pos/purchase-orders/{id}/cancel",
+    "method": "POST",
+    "path": "/api/sites/{siteId}/pos/purchase-orders/{id}/cancel",
+    "tags": [
+      "pos"
+    ],
+    "summary": "Order or cancel a purchase order",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Purchase order ID"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/api/sites/{siteId}/pos/purchase-orders/{id}/order",
+    "method": "POST",
+    "path": "/api/sites/{siteId}/pos/purchase-orders/{id}/order",
+    "tags": [
+      "pos"
+    ],
+    "summary": "Order or cancel a purchase order",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Purchase order ID"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/api/sites/{siteId}/pos/quote",
+    "method": "POST",
+    "path": "/api/sites/{siteId}/pos/quote",
+    "tags": [
+      "pos"
+    ],
+    "summary": "Price a counter sale without making it",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "sale",
+        "in": "body",
+        "required": true,
+        "type": "object",
+        "description": "lines, customerId, discountCode, discountCents"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "github_com_webbuilder_server_internal_pos.SaleRequest",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/sites/{siteId}/pos/receipts",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/pos/receipts",
+    "tags": [
+      "pos"
+    ],
+    "summary": "List or post stock receipts",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "limit",
+        "in": "query",
+        "required": false,
+        "type": "integer",
+        "description": "Page size, default 20, max 200 (GET only)"
+      },
+      {
+        "name": "offset",
+        "in": "query",
+        "required": false,
+        "type": "integer",
+        "description": "Page offset (GET only)"
+      },
+      {
+        "name": "receipt",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "Receipt to post (POST only)"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "github_com_webbuilder_server_internal_pos.ReceiptInput",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/api/sites/{siteId}/pos/receipts",
+    "method": "POST",
+    "path": "/api/sites/{siteId}/pos/receipts",
+    "tags": [
+      "pos"
+    ],
+    "summary": "List or post stock receipts",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "limit",
+        "in": "query",
+        "required": false,
+        "type": "integer",
+        "description": "Page size, default 20, max 200 (GET only)"
+      },
+      {
+        "name": "offset",
+        "in": "query",
+        "required": false,
+        "type": "integer",
+        "description": "Page offset (GET only)"
+      },
+      {
+        "name": "receipt",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "Receipt to post (POST only)"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "github_com_webbuilder_server_internal_pos.ReceiptInput",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/sites/{siteId}/pos/receipts/{id}",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/pos/receipts/{id}",
+    "tags": [
+      "pos"
+    ],
+    "summary": "Get one stock receipt with its lines",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Receipt ID"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/sites/{siteId}/pos/registers",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/pos/registers",
+    "tags": [
+      "pos"
+    ],
+    "summary": "List or create POS registers",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "locationId",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Only this location's registers (GET only)"
+      },
+      {
+        "name": "register",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "Register to create (POST only)"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "github_com_webbuilder_server_internal_pos.RegisterInput",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/api/sites/{siteId}/pos/registers",
+    "method": "POST",
+    "path": "/api/sites/{siteId}/pos/registers",
+    "tags": [
+      "pos"
+    ],
+    "summary": "List or create POS registers",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "locationId",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Only this location's registers (GET only)"
+      },
+      {
+        "name": "register",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "Register to create (POST only)"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "github_com_webbuilder_server_internal_pos.RegisterInput",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "put:/api/sites/{siteId}/pos/registers/{id}",
+    "method": "PUT",
+    "path": "/api/sites/{siteId}/pos/registers/{id}",
+    "tags": [
+      "pos"
+    ],
+    "summary": "Edit a POS register",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Register ID"
+      },
+      {
+        "name": "register",
+        "in": "body",
+        "required": true,
+        "type": "object",
+        "description": "Fields to change (blank = unchanged)"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "github_com_webbuilder_server_internal_pos.RegisterInput",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/sites/{siteId}/pos/returns",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/pos/returns",
+    "tags": [
+      "pos"
+    ],
+    "summary": "Counter returns",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "orderId",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "GET: the order"
+      },
+      {
+        "name": "body",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "POST: the return"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "github_com_webbuilder_server_internal_pos.ReturnInput",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/api/sites/{siteId}/pos/returns",
+    "method": "POST",
+    "path": "/api/sites/{siteId}/pos/returns",
+    "tags": [
+      "pos"
+    ],
+    "summary": "Counter returns",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "orderId",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "GET: the order"
+      },
+      {
+        "name": "body",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "POST: the return"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "github_com_webbuilder_server_internal_pos.ReturnInput",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/sites/{siteId}/pos/returns/lookup",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/pos/returns/lookup",
+    "tags": [
+      "pos"
+    ],
+    "summary": "Find a sale to take back",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "orderId",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Order id"
+      },
+      {
+        "name": "number",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Order number, e.g. #1004"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/sites/{siteId}/pos/sales",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/pos/sales",
+    "tags": [
+      "pos"
+    ],
+    "summary": "List counter sales",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "shiftId",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "One shift's sales"
+      },
+      {
+        "name": "registerId",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Every shift of one register"
+      },
+      {
+        "name": "locationId",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Location filter"
+      },
+      {
+        "name": "pending",
+        "in": "query",
+        "required": false,
+        "type": "boolean",
+        "description": "Only sales still waiting: not cancelled and not fulfilled"
+      },
+      {
+        "name": "limit",
+        "in": "query",
+        "required": false,
+        "type": "integer",
+        "description": "Page size, default 20, max 200"
+      },
+      {
+        "name": "offset",
+        "in": "query",
+        "required": false,
+        "type": "integer",
+        "description": "Page offset"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/api/sites/{siteId}/pos/sales",
+    "method": "POST",
+    "path": "/api/sites/{siteId}/pos/sales",
+    "tags": [
+      "pos"
+    ],
+    "summary": "Start a counter sale",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "sale",
+        "in": "body",
+        "required": true,
+        "type": "object",
+        "description": "Sale"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "github_com_webbuilder_server_internal_pos.SaleRequest",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/sites/{siteId}/pos/sales/{orderId}",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/pos/sales/{orderId}",
+    "tags": [
+      "pos"
+    ],
+    "summary": "One counter sale",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "orderId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Order ID"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/api/sites/{siteId}/pos/sales/{orderId}/cancel",
+    "method": "POST",
+    "path": "/api/sites/{siteId}/pos/sales/{orderId}/cancel",
+    "tags": [
+      "pos"
+    ],
+    "summary": "Complete or cancel a counter sale",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "orderId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Order ID"
+      },
+      {
+        "name": "body",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "Payment lines (complete only; optional)"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "github_com_webbuilder_server_internal_pos.CompleteInput",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/api/sites/{siteId}/pos/sales/{orderId}/complete",
+    "method": "POST",
+    "path": "/api/sites/{siteId}/pos/sales/{orderId}/complete",
+    "tags": [
+      "pos"
+    ],
+    "summary": "Complete or cancel a counter sale",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "orderId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Order ID"
+      },
+      {
+        "name": "body",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "Payment lines (complete only; optional)"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "github_com_webbuilder_server_internal_pos.CompleteInput",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/sites/{siteId}/pos/sales/{orderId}/transfer-qr",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/pos/sales/{orderId}/transfer-qr",
+    "tags": [
+      "pos"
+    ],
+    "summary": "A transfer QR for part of a counter sale",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "orderId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Sale (order) id"
+      },
+      {
+        "name": "amountCents",
+        "in": "query",
+        "required": false,
+        "type": "integer",
+        "description": "Amount of this transfer, in hundredths"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/api/sites/{siteId}/pos/sales/{orderId}/void",
+    "method": "POST",
+    "path": "/api/sites/{siteId}/pos/sales/{orderId}/void",
+    "tags": [
+      "pos"
+    ],
+    "summary": "Void a paid counter sale",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "orderId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Order ID"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/sites/{siteId}/pos/search",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/pos/search",
+    "tags": [
+      "pos"
+    ],
+    "summary": "Search items by name, SKU or barcode",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "q",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Search text"
+      },
+      {
+        "name": "limit",
+        "in": "query",
+        "required": false,
+        "type": "integer",
+        "description": "Page size, default 20, max 200"
+      },
+      {
+        "name": "locationId",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Location whose counters filter, sort and fill available (omitted = online)"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/sites/{siteId}/pos/settings",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/pos/settings",
+    "tags": [
+      "pos"
+    ],
+    "summary": "Read or change the POS settings",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "settings",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "New settings (PUT only)"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "github_com_webbuilder_server_internal_pos.Settings",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "put:/api/sites/{siteId}/pos/settings",
+    "method": "PUT",
+    "path": "/api/sites/{siteId}/pos/settings",
+    "tags": [
+      "pos"
+    ],
+    "summary": "Read or change the POS settings",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "settings",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "New settings (PUT only)"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "github_com_webbuilder_server_internal_pos.Settings",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/sites/{siteId}/pos/shifts",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/pos/shifts",
+    "tags": [
+      "pos"
+    ],
+    "summary": "List or open shifts",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "locationId",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Location filter (GET only)"
+      },
+      {
+        "name": "registerId",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Register filter (GET only)"
+      },
+      {
+        "name": "status",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "open | closed (GET only)"
+      },
+      {
+        "name": "date",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Site-local open day YYYY-MM-DD (GET only)"
+      },
+      {
+        "name": "limit",
+        "in": "query",
+        "required": false,
+        "type": "integer",
+        "description": "Page size, default 20, max 200 (GET only)"
+      },
+      {
+        "name": "offset",
+        "in": "query",
+        "required": false,
+        "type": "integer",
+        "description": "Page offset (GET only)"
+      },
+      {
+        "name": "shift",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "Shift to open (POST only)"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "github_com_webbuilder_server_internal_pos.OpenShiftInput",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/api/sites/{siteId}/pos/shifts",
+    "method": "POST",
+    "path": "/api/sites/{siteId}/pos/shifts",
+    "tags": [
+      "pos"
+    ],
+    "summary": "List or open shifts",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "locationId",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Location filter (GET only)"
+      },
+      {
+        "name": "registerId",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Register filter (GET only)"
+      },
+      {
+        "name": "status",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "open | closed (GET only)"
+      },
+      {
+        "name": "date",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Site-local open day YYYY-MM-DD (GET only)"
+      },
+      {
+        "name": "limit",
+        "in": "query",
+        "required": false,
+        "type": "integer",
+        "description": "Page size, default 20, max 200 (GET only)"
+      },
+      {
+        "name": "offset",
+        "in": "query",
+        "required": false,
+        "type": "integer",
+        "description": "Page offset (GET only)"
+      },
+      {
+        "name": "shift",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "Shift to open (POST only)"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "github_com_webbuilder_server_internal_pos.OpenShiftInput",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/sites/{siteId}/pos/shifts/current",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/pos/shifts/current",
+    "tags": [
+      "pos"
+    ],
+    "summary": "A register's open shift",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "registerId",
+        "in": "query",
+        "required": true,
+        "type": "string",
+        "description": "Register ID"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/sites/{siteId}/pos/shifts/{id}",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/pos/shifts/{id}",
+    "tags": [
+      "pos"
+    ],
+    "summary": "One shift: live summary or Z report",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Shift ID"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/api/sites/{siteId}/pos/shifts/{id}/cash-movements",
+    "method": "POST",
+    "path": "/api/sites/{siteId}/pos/shifts/{id}/cash-movements",
+    "tags": [
+      "pos"
+    ],
+    "summary": "Pay in/out, close or force-close a shift",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Shift ID"
+      },
+      {
+        "name": "body",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "MovementInput / CloseInput / ForceCloseInput by action"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "github_com_webbuilder_server_internal_pos.ForceCloseInput",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/api/sites/{siteId}/pos/shifts/{id}/close",
+    "method": "POST",
+    "path": "/api/sites/{siteId}/pos/shifts/{id}/close",
+    "tags": [
+      "pos"
+    ],
+    "summary": "Pay in/out, close or force-close a shift",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Shift ID"
+      },
+      {
+        "name": "body",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "MovementInput / CloseInput / ForceCloseInput by action"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "github_com_webbuilder_server_internal_pos.ForceCloseInput",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/api/sites/{siteId}/pos/shifts/{id}/force-close",
+    "method": "POST",
+    "path": "/api/sites/{siteId}/pos/shifts/{id}/force-close",
+    "tags": [
+      "pos"
+    ],
+    "summary": "Pay in/out, close or force-close a shift",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Shift ID"
+      },
+      {
+        "name": "body",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "MovementInput / CloseInput / ForceCloseInput by action"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "github_com_webbuilder_server_internal_pos.ForceCloseInput",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/sites/{siteId}/pos/stations",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/pos/stations",
+    "tags": [
+      "pos"
+    ],
+    "summary": "List or create kitchen/bar stations",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "station",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "POST only"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "github_com_webbuilder_server_internal_pos.StationInput",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/api/sites/{siteId}/pos/stations",
+    "method": "POST",
+    "path": "/api/sites/{siteId}/pos/stations",
+    "tags": [
+      "pos"
+    ],
+    "summary": "List or create kitchen/bar stations",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "station",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "POST only"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "github_com_webbuilder_server_internal_pos.StationInput",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "patch:/api/sites/{siteId}/pos/stations/{id}",
+    "method": "PATCH",
+    "path": "/api/sites/{siteId}/pos/stations/{id}",
+    "tags": [
+      "pos"
+    ],
+    "summary": "Rename, reorder or delete a station",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Station ID"
+      },
+      {
+        "name": "station",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "PATCH only"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "github_com_webbuilder_server_internal_pos.StationInput",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "delete:/api/sites/{siteId}/pos/stations/{id}",
+    "method": "DELETE",
+    "path": "/api/sites/{siteId}/pos/stations/{id}",
+    "tags": [
+      "pos"
+    ],
+    "summary": "Rename, reorder or delete a station",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Station ID"
+      },
+      {
+        "name": "station",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "PATCH only"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "github_com_webbuilder_server_internal_pos.StationInput",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/sites/{siteId}/pos/stocktakes",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/pos/stocktakes",
+    "tags": [
+      "pos"
+    ],
+    "summary": "List or start stocktakes",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "status",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "counting | review | approved | cancelled (GET only)"
+      },
+      {
+        "name": "locationId",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Location filter (GET only)"
+      },
+      {
+        "name": "limit",
+        "in": "query",
+        "required": false,
+        "type": "integer",
+        "description": "Page size, default 20, max 200 (GET only)"
+      },
+      {
+        "name": "offset",
+        "in": "query",
+        "required": false,
+        "type": "integer",
+        "description": "Page offset (GET only)"
+      },
+      {
+        "name": "stocktake",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "Stocktake (POST only)"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "github_com_webbuilder_server_internal_pos.StocktakeInput",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/api/sites/{siteId}/pos/stocktakes",
+    "method": "POST",
+    "path": "/api/sites/{siteId}/pos/stocktakes",
+    "tags": [
+      "pos"
+    ],
+    "summary": "List or start stocktakes",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "status",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "counting | review | approved | cancelled (GET only)"
+      },
+      {
+        "name": "locationId",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Location filter (GET only)"
+      },
+      {
+        "name": "limit",
+        "in": "query",
+        "required": false,
+        "type": "integer",
+        "description": "Page size, default 20, max 200 (GET only)"
+      },
+      {
+        "name": "offset",
+        "in": "query",
+        "required": false,
+        "type": "integer",
+        "description": "Page offset (GET only)"
+      },
+      {
+        "name": "stocktake",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "Stocktake (POST only)"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "github_com_webbuilder_server_internal_pos.StocktakeInput",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/sites/{siteId}/pos/stocktakes/{id}",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/pos/stocktakes/{id}",
+    "tags": [
+      "pos"
+    ],
+    "summary": "Get one stocktake with its lines",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Stocktake ID"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/api/sites/{siteId}/pos/stocktakes/{id}/approve",
+    "method": "POST",
+    "path": "/api/sites/{siteId}/pos/stocktakes/{id}/approve",
+    "tags": [
+      "pos"
+    ],
+    "summary": "Finish, reopen, approve or cancel a stocktake",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Stocktake ID"
+      },
+      {
+        "name": "body",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "Approval (approve only)"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "github_com_webbuilder_server_internal_pos.StocktakeApproveInput",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/api/sites/{siteId}/pos/stocktakes/{id}/cancel",
+    "method": "POST",
+    "path": "/api/sites/{siteId}/pos/stocktakes/{id}/cancel",
+    "tags": [
+      "pos"
+    ],
+    "summary": "Finish, reopen, approve or cancel a stocktake",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Stocktake ID"
+      },
+      {
+        "name": "body",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "Approval (approve only)"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "github_com_webbuilder_server_internal_pos.StocktakeApproveInput",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/api/sites/{siteId}/pos/stocktakes/{id}/counts",
+    "method": "POST",
+    "path": "/api/sites/{siteId}/pos/stocktakes/{id}/counts",
+    "tags": [
+      "pos"
+    ],
+    "summary": "Count into a stocktake",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Stocktake ID"
+      },
+      {
+        "name": "body",
+        "in": "body",
+        "required": true,
+        "type": "object",
+        "description": "Count batch"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "github_com_webbuilder_server_internal_pos.StocktakeCountInput",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/api/sites/{siteId}/pos/stocktakes/{id}/finish",
+    "method": "POST",
+    "path": "/api/sites/{siteId}/pos/stocktakes/{id}/finish",
+    "tags": [
+      "pos"
+    ],
+    "summary": "Finish, reopen, approve or cancel a stocktake",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Stocktake ID"
+      },
+      {
+        "name": "body",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "Approval (approve only)"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "github_com_webbuilder_server_internal_pos.StocktakeApproveInput",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/api/sites/{siteId}/pos/stocktakes/{id}/reopen",
+    "method": "POST",
+    "path": "/api/sites/{siteId}/pos/stocktakes/{id}/reopen",
+    "tags": [
+      "pos"
+    ],
+    "summary": "Finish, reopen, approve or cancel a stocktake",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Stocktake ID"
+      },
+      {
+        "name": "body",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "Approval (approve only)"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "github_com_webbuilder_server_internal_pos.StocktakeApproveInput",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/sites/{siteId}/pos/stream",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/pos/stream",
+    "tags": [
+      "pos"
+    ],
+    "summary": "Live F&B events of one location (SSE)",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "locationId",
+        "in": "query",
+        "required": true,
+        "type": "string",
+        "description": "Location"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/sites/{siteId}/pos/suppliers",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/pos/suppliers",
+    "tags": [
+      "pos"
+    ],
+    "summary": "List or create suppliers",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "q",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Name / code / phone search (GET only)"
+      },
+      {
+        "name": "active",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "true | false (GET only)"
+      },
+      {
+        "name": "limit",
+        "in": "query",
+        "required": false,
+        "type": "integer",
+        "description": "Page size, default 20, max 200 (GET only)"
+      },
+      {
+        "name": "offset",
+        "in": "query",
+        "required": false,
+        "type": "integer",
+        "description": "Page offset (GET only)"
+      },
+      {
+        "name": "supplier",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "Supplier (POST only)"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "github_com_webbuilder_server_internal_pos.SupplierInput",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/api/sites/{siteId}/pos/suppliers",
+    "method": "POST",
+    "path": "/api/sites/{siteId}/pos/suppliers",
+    "tags": [
+      "pos"
+    ],
+    "summary": "List or create suppliers",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "q",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Name / code / phone search (GET only)"
+      },
+      {
+        "name": "active",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "true | false (GET only)"
+      },
+      {
+        "name": "limit",
+        "in": "query",
+        "required": false,
+        "type": "integer",
+        "description": "Page size, default 20, max 200 (GET only)"
+      },
+      {
+        "name": "offset",
+        "in": "query",
+        "required": false,
+        "type": "integer",
+        "description": "Page offset (GET only)"
+      },
+      {
+        "name": "supplier",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "Supplier (POST only)"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "github_com_webbuilder_server_internal_pos.SupplierInput",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/sites/{siteId}/pos/suppliers/{id}",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/pos/suppliers/{id}",
+    "tags": [
+      "pos"
+    ],
+    "summary": "Get, update or delete a supplier",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Supplier ID"
+      },
+      {
+        "name": "supplier",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "Supplier (PUT only)"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "github_com_webbuilder_server_internal_pos.SupplierInput",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "put:/api/sites/{siteId}/pos/suppliers/{id}",
+    "method": "PUT",
+    "path": "/api/sites/{siteId}/pos/suppliers/{id}",
+    "tags": [
+      "pos"
+    ],
+    "summary": "Get, update or delete a supplier",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Supplier ID"
+      },
+      {
+        "name": "supplier",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "Supplier (PUT only)"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "github_com_webbuilder_server_internal_pos.SupplierInput",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "delete:/api/sites/{siteId}/pos/suppliers/{id}",
+    "method": "DELETE",
+    "path": "/api/sites/{siteId}/pos/suppliers/{id}",
+    "tags": [
+      "pos"
+    ],
+    "summary": "Get, update or delete a supplier",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Supplier ID"
+      },
+      {
+        "name": "supplier",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "Supplier (PUT only)"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "github_com_webbuilder_server_internal_pos.SupplierInput",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/sites/{siteId}/pos/tables",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/pos/tables",
+    "tags": [
+      "pos"
+    ],
+    "summary": "List or create tables",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "locationId",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Location filter (GET)"
+      },
+      {
+        "name": "areaId",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Area filter (GET)"
+      },
+      {
+        "name": "table",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "POST only"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "github_com_webbuilder_server_internal_pos.TableInput",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/api/sites/{siteId}/pos/tables",
+    "method": "POST",
+    "path": "/api/sites/{siteId}/pos/tables",
+    "tags": [
+      "pos"
+    ],
+    "summary": "List or create tables",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "locationId",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Location filter (GET)"
+      },
+      {
+        "name": "areaId",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Area filter (GET)"
+      },
+      {
+        "name": "table",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "POST only"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "github_com_webbuilder_server_internal_pos.TableInput",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "patch:/api/sites/{siteId}/pos/tables/{id}",
+    "method": "PATCH",
+    "path": "/api/sites/{siteId}/pos/tables/{id}",
+    "tags": [
+      "pos"
+    ],
+    "summary": "Edit, disable or delete a table",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Table ID"
+      },
+      {
+        "name": "table",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "PATCH only"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "github_com_webbuilder_server_internal_pos.TableInput",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "delete:/api/sites/{siteId}/pos/tables/{id}",
+    "method": "DELETE",
+    "path": "/api/sites/{siteId}/pos/tables/{id}",
+    "tags": [
+      "pos"
+    ],
+    "summary": "Edit, disable or delete a table",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Table ID"
+      },
+      {
+        "name": "table",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "PATCH only"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "github_com_webbuilder_server_internal_pos.TableInput",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/sites/{siteId}/pos/tabs",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/pos/tabs",
+    "tags": [
+      "pos"
+    ],
+    "summary": "List or open tabs",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "locationId",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Location (GET)"
+      },
+      {
+        "name": "status",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "open|closed|cancelled (GET)"
+      },
+      {
+        "name": "tableId",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Table (GET)"
+      },
+      {
+        "name": "body",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "POST only"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "github_com_webbuilder_server_internal_pos.OpenTabInput",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/api/sites/{siteId}/pos/tabs",
+    "method": "POST",
+    "path": "/api/sites/{siteId}/pos/tabs",
+    "tags": [
+      "pos"
+    ],
+    "summary": "List or open tabs",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "locationId",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Location (GET)"
+      },
+      {
+        "name": "status",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "open|closed|cancelled (GET)"
+      },
+      {
+        "name": "tableId",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Table (GET)"
+      },
+      {
+        "name": "body",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "POST only"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "github_com_webbuilder_server_internal_pos.OpenTabInput",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/sites/{siteId}/pos/tabs/{id}",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/pos/tabs/{id}",
+    "tags": [
+      "pos"
+    ],
+    "summary": "One tab, whole",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Tab id"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/api/sites/{siteId}/pos/tabs/{id}/bills",
+    "method": "POST",
+    "path": "/api/sites/{siteId}/pos/tabs/{id}/bills",
+    "tags": [
+      "pos"
+    ],
+    "summary": "Send, move, transfer, bill or cancel a tab",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Tab id"
+      },
+      {
+        "name": "body",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "bills; see the description for the others"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "github_com_webbuilder_server_internal_pos.BillInput",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/api/sites/{siteId}/pos/tabs/{id}/cancel",
+    "method": "POST",
+    "path": "/api/sites/{siteId}/pos/tabs/{id}/cancel",
+    "tags": [
+      "pos"
+    ],
+    "summary": "Send, move, transfer, bill or cancel a tab",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Tab id"
+      },
+      {
+        "name": "body",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "bills; see the description for the others"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "github_com_webbuilder_server_internal_pos.BillInput",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/api/sites/{siteId}/pos/tabs/{id}/lines",
+    "method": "POST",
+    "path": "/api/sites/{siteId}/pos/tabs/{id}/lines",
+    "tags": [
+      "pos"
+    ],
+    "summary": "Add items to a tab",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Tab id"
+      },
+      {
+        "name": "body",
+        "in": "body",
+        "required": true,
+        "type": "object",
+        "description": "Lines"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "github_com_webbuilder_server_internal_pos.AddLinesInput",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "patch:/api/sites/{siteId}/pos/tabs/{id}/lines/{lineId}",
+    "method": "PATCH",
+    "path": "/api/sites/{siteId}/pos/tabs/{id}/lines/{lineId}",
+    "tags": [
+      "pos"
+    ],
+    "summary": "Edit or remove an unsent line",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Tab id"
+      },
+      {
+        "name": "lineId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Line id"
+      },
+      {
+        "name": "expectedVersion",
+        "in": "query",
+        "required": false,
+        "type": "integer",
+        "description": "DELETE only"
+      },
+      {
+        "name": "body",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "PATCH only"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "github_com_webbuilder_server_internal_pos.LinePatch",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "delete:/api/sites/{siteId}/pos/tabs/{id}/lines/{lineId}",
+    "method": "DELETE",
+    "path": "/api/sites/{siteId}/pos/tabs/{id}/lines/{lineId}",
+    "tags": [
+      "pos"
+    ],
+    "summary": "Edit or remove an unsent line",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Tab id"
+      },
+      {
+        "name": "lineId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Line id"
+      },
+      {
+        "name": "expectedVersion",
+        "in": "query",
+        "required": false,
+        "type": "integer",
+        "description": "DELETE only"
+      },
+      {
+        "name": "body",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "PATCH only"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "github_com_webbuilder_server_internal_pos.LinePatch",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/api/sites/{siteId}/pos/tabs/{id}/lines/{lineId}/void",
+    "method": "POST",
+    "path": "/api/sites/{siteId}/pos/tabs/{id}/lines/{lineId}/void",
+    "tags": [
+      "pos"
+    ],
+    "summary": "Void a line already sent to the kitchen",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Tab id"
+      },
+      {
+        "name": "lineId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Line id"
+      },
+      {
+        "name": "body",
+        "in": "body",
+        "required": true,
+        "type": "object",
+        "description": "Void"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "github_com_webbuilder_server_internal_pos.VoidLineInput",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/api/sites/{siteId}/pos/tabs/{id}/move",
+    "method": "POST",
+    "path": "/api/sites/{siteId}/pos/tabs/{id}/move",
+    "tags": [
+      "pos"
+    ],
+    "summary": "Send, move, transfer, bill or cancel a tab",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Tab id"
+      },
+      {
+        "name": "body",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "bills; see the description for the others"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "github_com_webbuilder_server_internal_pos.BillInput",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/sites/{siteId}/pos/tabs/{id}/prebill",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/pos/tabs/{id}/prebill",
+    "tags": [
+      "pos"
+    ],
+    "summary": "The provisional bill (phiếu tạm tính)",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Tab id"
+      },
+      {
+        "name": "lines",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "lineId[:qty],…"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/api/sites/{siteId}/pos/tabs/{id}/send",
+    "method": "POST",
+    "path": "/api/sites/{siteId}/pos/tabs/{id}/send",
+    "tags": [
+      "pos"
+    ],
+    "summary": "Send, move, transfer, bill or cancel a tab",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Tab id"
+      },
+      {
+        "name": "body",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "bills; see the description for the others"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "github_com_webbuilder_server_internal_pos.BillInput",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/api/sites/{siteId}/pos/tabs/{id}/transfer",
+    "method": "POST",
+    "path": "/api/sites/{siteId}/pos/tabs/{id}/transfer",
+    "tags": [
+      "pos"
+    ],
+    "summary": "Send, move, transfer, bill or cancel a tab",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Tab id"
+      },
+      {
+        "name": "body",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "bills; see the description for the others"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "github_com_webbuilder_server_internal_pos.BillInput",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/sites/{siteId}/pos/tiers",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/pos/tiers",
+    "tags": [
+      "pos"
+    ],
+    "summary": "The counter member tiers",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "body",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "{tiers: TierInput[]} (PUT only)"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "internal_pos_rest.tiersBody",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "put:/api/sites/{siteId}/pos/tiers",
+    "method": "PUT",
+    "path": "/api/sites/{siteId}/pos/tiers",
+    "tags": [
+      "pos"
+    ],
+    "summary": "The counter member tiers",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "body",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "{tiers: TierInput[]} (PUT only)"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "internal_pos_rest.tiersBody",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/sites/{siteId}/pos/transfers",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/pos/transfers",
+    "tags": [
+      "pos"
+    ],
+    "summary": "List or create stock transfers",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "status",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "draft | sent | received | cancelled (GET only)"
+      },
+      {
+        "name": "limit",
+        "in": "query",
+        "required": false,
+        "type": "integer",
+        "description": "Page size, default 20, max 200 (GET only)"
+      },
+      {
+        "name": "offset",
+        "in": "query",
+        "required": false,
+        "type": "integer",
+        "description": "Page offset (GET only)"
+      },
+      {
+        "name": "transfer",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "Transfer to create (POST only)"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "github_com_webbuilder_server_internal_pos.TransferInput",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/api/sites/{siteId}/pos/transfers",
+    "method": "POST",
+    "path": "/api/sites/{siteId}/pos/transfers",
+    "tags": [
+      "pos"
+    ],
+    "summary": "List or create stock transfers",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "status",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "draft | sent | received | cancelled (GET only)"
+      },
+      {
+        "name": "limit",
+        "in": "query",
+        "required": false,
+        "type": "integer",
+        "description": "Page size, default 20, max 200 (GET only)"
+      },
+      {
+        "name": "offset",
+        "in": "query",
+        "required": false,
+        "type": "integer",
+        "description": "Page offset (GET only)"
+      },
+      {
+        "name": "transfer",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "Transfer to create (POST only)"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "github_com_webbuilder_server_internal_pos.TransferInput",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/sites/{siteId}/pos/transfers/{id}",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/pos/transfers/{id}",
+    "tags": [
+      "pos"
+    ],
+    "summary": "Get one stock transfer with its lines",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Transfer ID"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/api/sites/{siteId}/pos/transfers/{id}/cancel",
+    "method": "POST",
+    "path": "/api/sites/{siteId}/pos/transfers/{id}/cancel",
+    "tags": [
+      "pos"
+    ],
+    "summary": "Send, receive or cancel a stock transfer",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Transfer ID"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/api/sites/{siteId}/pos/transfers/{id}/receive",
+    "method": "POST",
+    "path": "/api/sites/{siteId}/pos/transfers/{id}/receive",
+    "tags": [
+      "pos"
+    ],
+    "summary": "Send, receive or cancel a stock transfer",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Transfer ID"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/api/sites/{siteId}/pos/transfers/{id}/send",
+    "method": "POST",
+    "path": "/api/sites/{siteId}/pos/transfers/{id}/send",
+    "tags": [
+      "pos"
+    ],
+    "summary": "Send, receive or cancel a stock transfer",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Transfer ID"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
     "id": "get:/api/sites/{siteId}/product-categories",
     "method": "GET",
     "path": "/api/sites/{siteId}/product-categories",
@@ -13756,6 +19588,489 @@ export const API_OPERATIONS: ApiOperation[] = [
     "credential": "siteScoped"
   },
   {
+    "id": "get:/api/sites/{siteId}/reports/events",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/reports/events",
+    "tags": [
+      "reports"
+    ],
+    "summary": "Ticket revenue per event",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "from",
+        "in": "query",
+        "required": true,
+        "type": "string",
+        "description": "First day, YYYY-MM-DD"
+      },
+      {
+        "name": "to",
+        "in": "query",
+        "required": true,
+        "type": "string",
+        "description": "Last day, YYYY-MM-DD"
+      },
+      {
+        "name": "channel",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "all | pos | web"
+      },
+      {
+        "name": "locationId",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Location filter"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/sites/{siteId}/reports/payments",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/reports/payments",
+    "tags": [
+      "reports"
+    ],
+    "summary": "Counter payments by method, debt opened and collected",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "from",
+        "in": "query",
+        "required": true,
+        "type": "string",
+        "description": "First day, YYYY-MM-DD"
+      },
+      {
+        "name": "to",
+        "in": "query",
+        "required": true,
+        "type": "string",
+        "description": "Last day, YYYY-MM-DD"
+      },
+      {
+        "name": "locationId",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Location filter"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/sites/{siteId}/reports/payments/export.csv",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/reports/payments/export.csv",
+    "tags": [
+      "reports"
+    ],
+    "summary": "Counter payments as CSV",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "from",
+        "in": "query",
+        "required": true,
+        "type": "string",
+        "description": "First day, YYYY-MM-DD"
+      },
+      {
+        "name": "to",
+        "in": "query",
+        "required": true,
+        "type": "string",
+        "description": "Last day, YYYY-MM-DD"
+      },
+      {
+        "name": "locationId",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Location filter"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/sites/{siteId}/reports/products",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/reports/products",
+    "tags": [
+      "reports"
+    ],
+    "summary": "Best sellers",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "from",
+        "in": "query",
+        "required": true,
+        "type": "string",
+        "description": "First day, YYYY-MM-DD"
+      },
+      {
+        "name": "to",
+        "in": "query",
+        "required": true,
+        "type": "string",
+        "description": "Last day, YYYY-MM-DD"
+      },
+      {
+        "name": "channel",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "all | pos | web"
+      },
+      {
+        "name": "locationId",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Location filter"
+      },
+      {
+        "name": "sort",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "revenue (default) | quantity | profit"
+      },
+      {
+        "name": "limit",
+        "in": "query",
+        "required": false,
+        "type": "integer",
+        "description": "Page size (default 50, max 200)"
+      },
+      {
+        "name": "offset",
+        "in": "query",
+        "required": false,
+        "type": "integer",
+        "description": "Offset"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/sites/{siteId}/reports/products/export.csv",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/reports/products/export.csv",
+    "tags": [
+      "reports"
+    ],
+    "summary": "Best sellers as CSV (≤ 10000 rows, else report_too_large)",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "from",
+        "in": "query",
+        "required": true,
+        "type": "string",
+        "description": "First day, YYYY-MM-DD"
+      },
+      {
+        "name": "to",
+        "in": "query",
+        "required": true,
+        "type": "string",
+        "description": "Last day, YYYY-MM-DD"
+      },
+      {
+        "name": "channel",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "all | pos | web"
+      },
+      {
+        "name": "locationId",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Location filter"
+      },
+      {
+        "name": "sort",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "revenue | quantity | profit"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/sites/{siteId}/reports/profit",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/reports/profit",
+    "tags": [
+      "reports"
+    ],
+    "summary": "Monthly P&L: net revenue − COGS − payroll",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "from",
+        "in": "query",
+        "required": true,
+        "type": "string",
+        "description": "First month, YYYY-MM"
+      },
+      {
+        "name": "to",
+        "in": "query",
+        "required": true,
+        "type": "string",
+        "description": "Last month, inclusive, YYYY-MM (≤ 12 months)"
+      },
+      {
+        "name": "locationId",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Location filter"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/sites/{siteId}/reports/profit/export.csv",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/reports/profit/export.csv",
+    "tags": [
+      "reports"
+    ],
+    "summary": "Monthly P&L as CSV (payroll columns only with payroll.read)",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "from",
+        "in": "query",
+        "required": true,
+        "type": "string",
+        "description": "First month, YYYY-MM"
+      },
+      {
+        "name": "to",
+        "in": "query",
+        "required": true,
+        "type": "string",
+        "description": "Last month, YYYY-MM"
+      },
+      {
+        "name": "locationId",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Location filter"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/sites/{siteId}/reports/sales",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/reports/sales",
+    "tags": [
+      "reports"
+    ],
+    "summary": "Revenue report by day, location, channel or shift",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "from",
+        "in": "query",
+        "required": true,
+        "type": "string",
+        "description": "First day, YYYY-MM-DD (site time zone)"
+      },
+      {
+        "name": "to",
+        "in": "query",
+        "required": true,
+        "type": "string",
+        "description": "Last day, inclusive, YYYY-MM-DD (≤ 366 days)"
+      },
+      {
+        "name": "groupBy",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "day (default) | location | channel | shift"
+      },
+      {
+        "name": "channel",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "all | pos | web"
+      },
+      {
+        "name": "locationId",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Location filter"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/sites/{siteId}/reports/sales/export.csv",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/reports/sales/export.csv",
+    "tags": [
+      "reports"
+    ],
+    "summary": "Revenue report as CSV",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "from",
+        "in": "query",
+        "required": true,
+        "type": "string",
+        "description": "First day, YYYY-MM-DD"
+      },
+      {
+        "name": "to",
+        "in": "query",
+        "required": true,
+        "type": "string",
+        "description": "Last day, YYYY-MM-DD"
+      },
+      {
+        "name": "groupBy",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "day | location | channel | shift"
+      },
+      {
+        "name": "channel",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "all | pos | web"
+      },
+      {
+        "name": "locationId",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Location filter"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/sites/{siteId}/reports/shifts/{shiftId}",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/reports/shifts/{shiftId}",
+    "tags": [
+      "reports"
+    ],
+    "summary": "One shift's sales (no cost) — its opener or pos.manage",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "shiftId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Shift ID"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
     "id": "post:/api/sites/{siteId}/restore",
     "method": "POST",
     "path": "/api/sites/{siteId}/restore",
@@ -14701,6 +21016,384 @@ export const API_OPERATIONS: ApiOperation[] = [
     "credential": "siteScoped"
   },
   {
+    "id": "get:/api/sites/{siteId}/shipping-carriers",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/shipping-carriers",
+    "tags": [
+      "shipping"
+    ],
+    "summary": "List shipping carriers with this store's connection state",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "put:/api/sites/{siteId}/shipping-carriers/{provider}",
+    "method": "PUT",
+    "path": "/api/sites/{siteId}/shipping-carriers/{provider}",
+    "tags": [
+      "shipping"
+    ],
+    "summary": "Connect, update or disconnect one carrier",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "provider",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Carrier id: ghn, ghtk"
+      },
+      {
+        "name": "body",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "Connection (PUT only)"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "internal_shipping_carriers_rest.connectionBody",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "delete:/api/sites/{siteId}/shipping-carriers/{provider}",
+    "method": "DELETE",
+    "path": "/api/sites/{siteId}/shipping-carriers/{provider}",
+    "tags": [
+      "shipping"
+    ],
+    "summary": "Connect, update or disconnect one carrier",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "provider",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Carrier id: ghn, ghtk"
+      },
+      {
+        "name": "body",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "Connection (PUT only)"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "internal_shipping_carriers_rest.connectionBody",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/api/sites/{siteId}/shipping-carriers/{provider}/rotate-webhook-secret",
+    "method": "POST",
+    "path": "/api/sites/{siteId}/shipping-carriers/{provider}/rotate-webhook-secret",
+    "tags": [
+      "shipping"
+    ],
+    "summary": "Rotate a carrier's webhook secret, reveal its webhook URL, or test its credentials",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "provider",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Carrier id: ghn, ghtk"
+      },
+      {
+        "name": "body",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "Unsaved draft (test only)"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "internal_shipping_carriers_rest.checkBody",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/api/sites/{siteId}/shipping-carriers/{provider}/test",
+    "method": "POST",
+    "path": "/api/sites/{siteId}/shipping-carriers/{provider}/test",
+    "tags": [
+      "shipping"
+    ],
+    "summary": "Rotate a carrier's webhook secret, reveal its webhook URL, or test its credentials",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "provider",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Carrier id: ghn, ghtk"
+      },
+      {
+        "name": "body",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "Unsaved draft (test only)"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "internal_shipping_carriers_rest.checkBody",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/api/sites/{siteId}/shipping-carriers/{provider}/webhook-url",
+    "method": "POST",
+    "path": "/api/sites/{siteId}/shipping-carriers/{provider}/webhook-url",
+    "tags": [
+      "shipping"
+    ],
+    "summary": "Rotate a carrier's webhook secret, reveal its webhook URL, or test its credentials",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "provider",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Carrier id: ghn, ghtk"
+      },
+      {
+        "name": "body",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "Unsaved draft (test only)"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "internal_shipping_carriers_rest.checkBody",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/sites/{siteId}/shipping-config",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/shipping-config",
+    "tags": [
+      "shipping"
+    ],
+    "summary": "Read or edit the site's shipping config (rules engine)",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "If-Match",
+        "in": "header",
+        "required": false,
+        "type": "string",
+        "description": "Quoted config version (PATCH: required)"
+      },
+      {
+        "name": "patch",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "Changes (PATCH only)"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "github_com_webbuilder_server_internal_shipping.Patch",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "patch:/api/sites/{siteId}/shipping-config",
+    "method": "PATCH",
+    "path": "/api/sites/{siteId}/shipping-config",
+    "tags": [
+      "shipping"
+    ],
+    "summary": "Read or edit the site's shipping config (rules engine)",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "If-Match",
+        "in": "header",
+        "required": false,
+        "type": "string",
+        "description": "Quoted config version (PATCH: required)"
+      },
+      {
+        "name": "patch",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "Changes (PATCH only)"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "github_com_webbuilder_server_internal_shipping.Patch",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/api/sites/{siteId}/shipping-config/check",
+    "method": "POST",
+    "path": "/api/sites/{siteId}/shipping-config/check",
+    "tags": [
+      "shipping"
+    ],
+    "summary": "Save-time checks (coverage, freeship-by-accident, dead and duplicate rules, change summary)",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "body",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "{draft?}"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "internal_shipping_rest.checkBody",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/api/sites/{siteId}/shipping-config/preview",
+    "method": "POST",
+    "path": "/api/sites/{siteId}/shipping-config/preview",
+    "tags": [
+      "shipping"
+    ],
+    "summary": "Price one test order (Thử phí)",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "body",
+        "in": "body",
+        "required": true,
+        "type": "object",
+        "description": "{draft?, ask}"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "internal_shipping_rest.previewBody",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/sites/{siteId}/shipping-config/versions",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/shipping-config/versions",
+    "tags": [
+      "shipping"
+    ],
+    "summary": "List the site's shipping config versions, newest first (≤50)",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/api/sites/{siteId}/shipping-config/versions/{id}/restore",
+    "method": "POST",
+    "path": "/api/sites/{siteId}/shipping-config/versions/{id}/restore",
+    "tags": [
+      "shipping"
+    ],
+    "summary": "Restore a config version as a NEW version",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Version ID"
+      },
+      {
+        "name": "If-Match",
+        "in": "header",
+        "required": true,
+        "type": "string",
+        "description": "Quoted current config version"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
     "id": "get:/api/sites/{siteId}/shipping-methods",
     "method": "GET",
     "path": "/api/sites/{siteId}/shipping-methods",
@@ -14784,7 +21477,7 @@ export const API_OPERATIONS: ApiOperation[] = [
         "in": "body",
         "required": false,
         "type": "object",
-        "description": "Method to update (PUT only)"
+        "description": "Method to update (PUT only; an omitted key keeps its stored value)"
       }
     ],
     "bodyDescribed": true,
@@ -14819,7 +21512,7 @@ export const API_OPERATIONS: ApiOperation[] = [
         "in": "body",
         "required": false,
         "type": "object",
-        "description": "Method to update (PUT only)"
+        "description": "Method to update (PUT only; an omitted key keeps its stored value)"
       }
     ],
     "bodyDescribed": true,
@@ -14854,7 +21547,7 @@ export const API_OPERATIONS: ApiOperation[] = [
         "in": "body",
         "required": false,
         "type": "object",
-        "description": "Method to update (PUT only)"
+        "description": "Method to update (PUT only; an omitted key keeps its stored value)"
       }
     ],
     "bodyDescribed": true,
@@ -14960,6 +21653,1175 @@ export const API_OPERATIONS: ApiOperation[] = [
     "credential": "siteScoped"
   },
   {
+    "id": "get:/api/sites/{siteId}/staff/accounts",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/staff/accounts",
+    "tags": [
+      "staff"
+    ],
+    "summary": "Accounts a staff profile can link to",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/sites/{siteId}/staff/attendance",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/staff/attendance",
+    "tags": [
+      "staff"
+    ],
+    "summary": "Attendance",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "from",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "YYYY-MM-DD"
+      },
+      {
+        "name": "to",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "YYYY-MM-DD"
+      },
+      {
+        "name": "locationId",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Location"
+      },
+      {
+        "name": "staffId",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Staff"
+      },
+      {
+        "name": "status",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "open | closed | missing_out | void"
+      },
+      {
+        "name": "limit",
+        "in": "query",
+        "required": false,
+        "type": "integer",
+        "description": "Page size"
+      },
+      {
+        "name": "offset",
+        "in": "query",
+        "required": false,
+        "type": "integer",
+        "description": "Page offset"
+      },
+      {
+        "name": "row",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "POST only"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "github_com_webbuilder_server_internal_staff.ManualAttendanceInput",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/api/sites/{siteId}/staff/attendance",
+    "method": "POST",
+    "path": "/api/sites/{siteId}/staff/attendance",
+    "tags": [
+      "staff"
+    ],
+    "summary": "Attendance",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "from",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "YYYY-MM-DD"
+      },
+      {
+        "name": "to",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "YYYY-MM-DD"
+      },
+      {
+        "name": "locationId",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Location"
+      },
+      {
+        "name": "staffId",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Staff"
+      },
+      {
+        "name": "status",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "open | closed | missing_out | void"
+      },
+      {
+        "name": "limit",
+        "in": "query",
+        "required": false,
+        "type": "integer",
+        "description": "Page size"
+      },
+      {
+        "name": "offset",
+        "in": "query",
+        "required": false,
+        "type": "integer",
+        "description": "Page offset"
+      },
+      {
+        "name": "row",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "POST only"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "github_com_webbuilder_server_internal_staff.ManualAttendanceInput",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/sites/{siteId}/staff/attendance/live",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/staff/attendance/live",
+    "tags": [
+      "staff"
+    ],
+    "summary": "Who is clocked in at a location",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "locationId",
+        "in": "query",
+        "required": true,
+        "type": "string",
+        "description": "Location ID"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/sites/{siteId}/staff/attendance/overlap",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/staff/attendance/overlap",
+    "tags": [
+      "staff"
+    ],
+    "summary": "Staff on a cash shift",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "locationId",
+        "in": "query",
+        "required": true,
+        "type": "string",
+        "description": "Location ID"
+      },
+      {
+        "name": "from",
+        "in": "query",
+        "required": true,
+        "type": "string",
+        "description": "RFC 3339"
+      },
+      {
+        "name": "to",
+        "in": "query",
+        "required": true,
+        "type": "string",
+        "description": "RFC 3339"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "patch:/api/sites/{siteId}/staff/attendance/{id}",
+    "method": "PATCH",
+    "path": "/api/sites/{siteId}/staff/attendance/{id}",
+    "tags": [
+      "staff"
+    ],
+    "summary": "Correct an attendance",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Attendance ID"
+      },
+      {
+        "name": "patch",
+        "in": "body",
+        "required": true,
+        "type": "object",
+        "description": "Correction"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "github_com_webbuilder_server_internal_staff.AttendancePatch",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/sites/{siteId}/staff/attendance/{id}/edits",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/staff/attendance/{id}/edits",
+    "tags": [
+      "staff"
+    ],
+    "summary": "An attendance's correction history",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Attendance ID"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/api/sites/{siteId}/staff/clock",
+    "method": "POST",
+    "path": "/api/sites/{siteId}/staff/clock",
+    "tags": [
+      "staff"
+    ],
+    "summary": "Clock in or out at a register",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "body",
+        "in": "body",
+        "required": true,
+        "type": "object",
+        "description": "Clock press"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "github_com_webbuilder_server_internal_staff.ClockRequest",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/sites/{siteId}/staff/me",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/staff/me",
+    "tags": [
+      "staff"
+    ],
+    "summary": "My staff profile",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/sites/{siteId}/staff/me/attendance",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/staff/me/attendance",
+    "tags": [
+      "staff"
+    ],
+    "summary": "My attendance",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "month",
+        "in": "query",
+        "required": true,
+        "type": "string",
+        "description": "YYYY-MM"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/sites/{siteId}/staff/me/clock-token",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/staff/me/clock-token",
+    "tags": [
+      "staff"
+    ],
+    "summary": "My clock-in QR",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/sites/{siteId}/staff/me/payslips",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/staff/me/payslips",
+    "tags": [
+      "staff"
+    ],
+    "summary": "My payslips",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "put:/api/sites/{siteId}/staff/me/pin",
+    "method": "PUT",
+    "path": "/api/sites/{siteId}/staff/me/pin",
+    "tags": [
+      "staff"
+    ],
+    "summary": "Change my PIN",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "body",
+        "in": "body",
+        "required": true,
+        "type": "object",
+        "description": "{currentPin, pin}"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "internal_staff_rest.pinBody",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/sites/{siteId}/staff/me/schedule",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/staff/me/schedule",
+    "tags": [
+      "staff"
+    ],
+    "summary": "My schedule",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "from",
+        "in": "query",
+        "required": true,
+        "type": "string",
+        "description": "YYYY-MM-DD"
+      },
+      {
+        "name": "to",
+        "in": "query",
+        "required": true,
+        "type": "string",
+        "description": "YYYY-MM-DD"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/sites/{siteId}/staff/members",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/staff/members",
+    "tags": [
+      "staff"
+    ],
+    "summary": "Staff profiles",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "active",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "true | false"
+      },
+      {
+        "name": "q",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Name / code / phone search"
+      },
+      {
+        "name": "limit",
+        "in": "query",
+        "required": false,
+        "type": "integer",
+        "description": "Page size, max 200"
+      },
+      {
+        "name": "offset",
+        "in": "query",
+        "required": false,
+        "type": "integer",
+        "description": "Page offset"
+      },
+      {
+        "name": "member",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "POST only"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "github_com_webbuilder_server_internal_staff.MemberInput",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/api/sites/{siteId}/staff/members",
+    "method": "POST",
+    "path": "/api/sites/{siteId}/staff/members",
+    "tags": [
+      "staff"
+    ],
+    "summary": "Staff profiles",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "active",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "true | false"
+      },
+      {
+        "name": "q",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Name / code / phone search"
+      },
+      {
+        "name": "limit",
+        "in": "query",
+        "required": false,
+        "type": "integer",
+        "description": "Page size, max 200"
+      },
+      {
+        "name": "offset",
+        "in": "query",
+        "required": false,
+        "type": "integer",
+        "description": "Page offset"
+      },
+      {
+        "name": "member",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "POST only"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "github_com_webbuilder_server_internal_staff.MemberInput",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/sites/{siteId}/staff/members/{id}",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/staff/members/{id}",
+    "tags": [
+      "staff"
+    ],
+    "summary": "One staff profile",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Staff ID"
+      },
+      {
+        "name": "member",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "PUT only"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "github_com_webbuilder_server_internal_staff.MemberInput",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "put:/api/sites/{siteId}/staff/members/{id}",
+    "method": "PUT",
+    "path": "/api/sites/{siteId}/staff/members/{id}",
+    "tags": [
+      "staff"
+    ],
+    "summary": "One staff profile",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Staff ID"
+      },
+      {
+        "name": "member",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "PUT only"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "github_com_webbuilder_server_internal_staff.MemberInput",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "delete:/api/sites/{siteId}/staff/members/{id}",
+    "method": "DELETE",
+    "path": "/api/sites/{siteId}/staff/members/{id}",
+    "tags": [
+      "staff"
+    ],
+    "summary": "One staff profile",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Staff ID"
+      },
+      {
+        "name": "member",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "PUT only"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "github_com_webbuilder_server_internal_staff.MemberInput",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "put:/api/sites/{siteId}/staff/members/{id}/pin",
+    "method": "PUT",
+    "path": "/api/sites/{siteId}/staff/members/{id}/pin",
+    "tags": [
+      "staff"
+    ],
+    "summary": "Set or reset a staff PIN",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Staff ID"
+      },
+      {
+        "name": "body",
+        "in": "body",
+        "required": true,
+        "type": "object",
+        "description": "{pin}"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "internal_staff_rest.pinBody",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/api/sites/{siteId}/staff/members/{id}/unlock",
+    "method": "POST",
+    "path": "/api/sites/{siteId}/staff/members/{id}/unlock",
+    "tags": [
+      "staff"
+    ],
+    "summary": "Unlock a staff PIN",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Staff ID"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/sites/{siteId}/staff/roster",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/staff/roster",
+    "tags": [
+      "staff"
+    ],
+    "summary": "Who the counter can clock in",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "locationId",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Narrow scheduledToday to one location"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/sites/{siteId}/staff/schedule",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/staff/schedule",
+    "tags": [
+      "staff"
+    ],
+    "summary": "The work/leave schedule",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "from",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "YYYY-MM-DD (GET)"
+      },
+      {
+        "name": "to",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "YYYY-MM-DD (GET)"
+      },
+      {
+        "name": "locationId",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Location filter"
+      },
+      {
+        "name": "staffId",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Staff filter"
+      },
+      {
+        "name": "batch",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "POST only"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "github_com_webbuilder_server_internal_staff.ScheduleBatch",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/api/sites/{siteId}/staff/schedule",
+    "method": "POST",
+    "path": "/api/sites/{siteId}/staff/schedule",
+    "tags": [
+      "staff"
+    ],
+    "summary": "The work/leave schedule",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "from",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "YYYY-MM-DD (GET)"
+      },
+      {
+        "name": "to",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "YYYY-MM-DD (GET)"
+      },
+      {
+        "name": "locationId",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Location filter"
+      },
+      {
+        "name": "staffId",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Staff filter"
+      },
+      {
+        "name": "batch",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "POST only"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "github_com_webbuilder_server_internal_staff.ScheduleBatch",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/api/sites/{siteId}/staff/schedule/copy-week",
+    "method": "POST",
+    "path": "/api/sites/{siteId}/staff/schedule/copy-week",
+    "tags": [
+      "staff"
+    ],
+    "summary": "Copy a week of the schedule",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "body",
+        "in": "body",
+        "required": true,
+        "type": "object",
+        "description": "Copy"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "github_com_webbuilder_server_internal_staff.CopyWeekInput",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "put:/api/sites/{siteId}/staff/schedule/{id}",
+    "method": "PUT",
+    "path": "/api/sites/{siteId}/staff/schedule/{id}",
+    "tags": [
+      "staff"
+    ],
+    "summary": "Edit or remove one schedule row",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Schedule entry ID"
+      },
+      {
+        "name": "entry",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "PUT only"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "github_com_webbuilder_server_internal_staff.ScheduleInput",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "delete:/api/sites/{siteId}/staff/schedule/{id}",
+    "method": "DELETE",
+    "path": "/api/sites/{siteId}/staff/schedule/{id}",
+    "tags": [
+      "staff"
+    ],
+    "summary": "Edit or remove one schedule row",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Schedule entry ID"
+      },
+      {
+        "name": "entry",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "PUT only"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "github_com_webbuilder_server_internal_staff.ScheduleInput",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/sites/{siteId}/staff/settings",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/staff/settings",
+    "tags": [
+      "staff"
+    ],
+    "summary": "Nhân sự settings",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "settings",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "PUT only"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "github_com_webbuilder_server_internal_staff.Settings",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "put:/api/sites/{siteId}/staff/settings",
+    "method": "PUT",
+    "path": "/api/sites/{siteId}/staff/settings",
+    "tags": [
+      "staff"
+    ],
+    "summary": "Nhân sự settings",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "settings",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "PUT only"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "github_com_webbuilder_server_internal_staff.Settings",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/sites/{siteId}/staff/templates",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/staff/templates",
+    "tags": [
+      "staff"
+    ],
+    "summary": "Shift templates",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "active",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "true | false"
+      },
+      {
+        "name": "template",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "POST only"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "github_com_webbuilder_server_internal_staff.TemplateInput",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/api/sites/{siteId}/staff/templates",
+    "method": "POST",
+    "path": "/api/sites/{siteId}/staff/templates",
+    "tags": [
+      "staff"
+    ],
+    "summary": "Shift templates",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "active",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "true | false"
+      },
+      {
+        "name": "template",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "POST only"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "github_com_webbuilder_server_internal_staff.TemplateInput",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "put:/api/sites/{siteId}/staff/templates/{id}",
+    "method": "PUT",
+    "path": "/api/sites/{siteId}/staff/templates/{id}",
+    "tags": [
+      "staff"
+    ],
+    "summary": "Edit a shift template",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Template ID"
+      },
+      {
+        "name": "template",
+        "in": "body",
+        "required": true,
+        "type": "object",
+        "description": "Template"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "github_com_webbuilder_server_internal_staff.TemplateInput",
+    "credential": "siteScoped"
+  },
+  {
     "id": "post:/api/sites/{siteId}/template",
     "method": "POST",
     "path": "/api/sites/{siteId}/template",
@@ -15027,6 +22889,538 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/sites/{siteId}/tickets/export",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/tickets/export",
+    "tags": [
+      "tickets"
+    ],
+    "summary": "Export the attendees as CSV",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "eventId",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Event ID"
+      },
+      {
+        "name": "sessionId",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Session ID"
+      },
+      {
+        "name": "status",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "valid | used | void"
+      },
+      {
+        "name": "q",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Name, email or short code"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/sites/{siteId}/tickets/issued",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/tickets/issued",
+    "tags": [
+      "tickets"
+    ],
+    "summary": "List the attendees (issued tickets)",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "eventId",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Event ID"
+      },
+      {
+        "name": "sessionId",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Session ID"
+      },
+      {
+        "name": "typeId",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Ticket type ID (narrows within the event)"
+      },
+      {
+        "name": "status",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "valid | used | void"
+      },
+      {
+        "name": "q",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Name, email or short code"
+      },
+      {
+        "name": "limit",
+        "in": "query",
+        "required": false,
+        "type": "integer",
+        "description": "Page size (default 50, max 200)"
+      },
+      {
+        "name": "offset",
+        "in": "query",
+        "required": false,
+        "type": "integer",
+        "description": "Rows to skip"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/sites/{siteId}/tickets/issued/{id}",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/tickets/issued/{id}",
+    "tags": [
+      "tickets"
+    ],
+    "summary": "Read one ticket with its history",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Ticket ID"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/api/sites/{siteId}/tickets/issued/{id}/move",
+    "method": "POST",
+    "path": "/api/sites/{siteId}/tickets/issued/{id}/move",
+    "tags": [
+      "tickets"
+    ],
+    "summary": "Move a ticket to another session",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Ticket ID"
+      },
+      {
+        "name": "body",
+        "in": "body",
+        "required": true,
+        "type": "object",
+        "description": "toSessionId"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "internal_tickets_rest.moveBody",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/api/sites/{siteId}/tickets/issued/{id}/reissue",
+    "method": "POST",
+    "path": "/api/sites/{siteId}/tickets/issued/{id}/reissue",
+    "tags": [
+      "tickets"
+    ],
+    "summary": "Re-issue a ticket (new QR)",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Ticket ID"
+      },
+      {
+        "name": "body",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "reason"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "internal_tickets_rest.reasonBody",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/api/sites/{siteId}/tickets/issued/{id}/resend",
+    "method": "POST",
+    "path": "/api/sites/{siteId}/tickets/issued/{id}/resend",
+    "tags": [
+      "tickets"
+    ],
+    "summary": "Re-send one ticket",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Ticket ID"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/api/sites/{siteId}/tickets/issued/{id}/restore",
+    "method": "POST",
+    "path": "/api/sites/{siteId}/tickets/issued/{id}/restore",
+    "tags": [
+      "tickets"
+    ],
+    "summary": "Restore a voided ticket",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Ticket ID"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/api/sites/{siteId}/tickets/issued/{id}/undo-checkin",
+    "method": "POST",
+    "path": "/api/sites/{siteId}/tickets/issued/{id}/undo-checkin",
+    "tags": [
+      "tickets"
+    ],
+    "summary": "Undo an admission",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Ticket ID"
+      },
+      {
+        "name": "body",
+        "in": "body",
+        "required": true,
+        "type": "object",
+        "description": "reason"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "internal_tickets_rest.reasonBody",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/api/sites/{siteId}/tickets/issued/{id}/void",
+    "method": "POST",
+    "path": "/api/sites/{siteId}/tickets/issued/{id}/void",
+    "tags": [
+      "tickets"
+    ],
+    "summary": "Void a ticket",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Ticket ID"
+      },
+      {
+        "name": "body",
+        "in": "body",
+        "required": true,
+        "type": "object",
+        "description": "reason"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "internal_tickets_rest.reasonBody",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/sites/{siteId}/tickets/late-payments",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/tickets/late-payments",
+    "tags": [
+      "tickets"
+    ],
+    "summary": "Orders paid after their seats were released",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/api/sites/{siteId}/tickets/late-payments/{orderId}/restore",
+    "method": "POST",
+    "path": "/api/sites/{siteId}/tickets/late-payments/{orderId}/restore",
+    "tags": [
+      "tickets"
+    ],
+    "summary": "Restore a late-paid order",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "orderId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Order ID"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/api/sites/{siteId}/tickets/orders/{orderId}/resend",
+    "method": "POST",
+    "path": "/api/sites/{siteId}/tickets/orders/{orderId}/resend",
+    "tags": [
+      "tickets"
+    ],
+    "summary": "Re-send every ticket of an order",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "orderId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Order ID"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/sites/{siteId}/tickets/refused",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/tickets/refused",
+    "tags": [
+      "tickets"
+    ],
+    "summary": "Tickets refused as already used more than once",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "sessionId",
+        "in": "query",
+        "required": true,
+        "type": "string",
+        "description": "Session ID"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/sites/{siteId}/tickets/scans",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/tickets/scans",
+    "tags": [
+      "tickets"
+    ],
+    "summary": "The recent scan log of a session",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "sessionId",
+        "in": "query",
+        "required": true,
+        "type": "string",
+        "description": "Session ID"
+      },
+      {
+        "name": "limit",
+        "in": "query",
+        "required": false,
+        "type": "integer",
+        "description": "Rows (default 50, max 200)"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/sites/{siteId}/tickets/settings",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/tickets/settings",
+    "tags": [
+      "tickets"
+    ],
+    "summary": "The site's ticketing defaults",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "put:/api/sites/{siteId}/tickets/settings",
+    "method": "PUT",
+    "path": "/api/sites/{siteId}/tickets/settings",
+    "tags": [
+      "tickets"
+    ],
+    "summary": "Change the site's ticketing defaults",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "body",
+        "in": "body",
+        "required": true,
+        "type": "object",
+        "description": "defaults"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "internal_tickets_rest.settingsBody",
     "credential": "siteScoped"
   },
   {
@@ -17940,11 +26334,15 @@ export const API_DEFINITIONS: Record<string, unknown> = {
         "type": "string"
       },
       "message": {
-        "description": "Message is shown when Action is \"message\".",
+        "description": "Message is shown when Action is \"message\". Kept (not cleared) when\nAction is \"redirect\" — switching back to \"message\" restores it rather\nthan asking the merchant to retype it.",
         "type": "string"
       },
       "pageId": {
-        "description": "PageID is navigated to when Action is \"redirect\".",
+        "description": "PageID is navigated to when Action is \"redirect\": a page of this site.\nExactly one of PageID / URL is set on a valid redirect (see Validate).",
+        "type": "string"
+      },
+      "url": {
+        "description": "URL is navigated to when Action is \"redirect\" and PageID is empty: an\nexternal http(s) link (see ValidRedirectURL). Only checked — and only\nmeaningful — when Action is \"redirect\"; a \"message\" form may carry\nwhatever was last typed here, ignored until the action changes back.",
         "type": "string"
       }
     }
@@ -18033,6 +26431,18 @@ export const API_DEFINITIONS: Record<string, unknown> = {
       }
     }
   },
+  "github_com_webbuilder_server_internal_forms.ConfirmationSettings": {
+    "type": "object",
+    "properties": {
+      "enabled": {
+        "type": "boolean"
+      },
+      "message": {
+        "description": "Message is the merchant's own added sentence, plain text, trimmed by\nNormalize, at most ConfirmationMessageMax runes (Validate refuses\nlonger). Optional: an empty message still sends the fixed thank-you\nalone.",
+        "type": "string"
+      }
+    }
+  },
   "github_com_webbuilder_server_internal_forms.DayRule": {
     "type": "object",
     "properties": {
@@ -18116,6 +26526,14 @@ export const API_DEFINITIONS: Record<string, unknown> = {
         "allOf": [
           {
             "$ref": "#/definitions/github_com_webbuilder_server_internal_forms.BookingSettings"
+          }
+        ]
+      },
+      "confirmation": {
+        "description": "Confirmation is the visitor \"we received your message\" email's own\nsettings (ConfirmationEligible types only — see confirmation.go). Off\nby default, like Booking ignored outside the types it applies to, and\n`omitzero` for the same reason.",
+        "allOf": [
+          {
+            "$ref": "#/definitions/github_com_webbuilder_server_internal_forms.ConfirmationSettings"
           }
         ]
       },
@@ -18242,6 +26660,18 @@ export const API_DEFINITIONS: Record<string, unknown> = {
       }
     }
   },
+  "github_com_webbuilder_server_internal_httpx.ErrorDataResponse": {
+    "type": "object",
+    "properties": {
+      "code": {
+        "type": "string"
+      },
+      "details": {},
+      "error": {
+        "type": "string"
+      }
+    }
+  },
   "github_com_webbuilder_server_internal_httpx.ErrorResponse": {
     "type": "object",
     "properties": {
@@ -18267,6 +26697,13 @@ export const API_DEFINITIONS: Record<string, unknown> = {
     "properties": {
       "code": {
         "type": "string"
+      },
+      "details": {
+        "description": "Details: the same additive key as ErrorResponse.Details, omitted when\nempty so WriteFieldErrors' body is unchanged.",
+        "type": "object",
+        "additionalProperties": {
+          "type": "string"
+        }
       },
       "error": {
         "type": "string"
@@ -18426,6 +26863,13 @@ export const API_DEFINITIONS: Record<string, unknown> = {
       "billTo": {
         "$ref": "#/definitions/github_com_webbuilder_server_internal_orders.Address"
       },
+      "cashierId": {
+        "type": "string"
+      },
+      "channel": {
+        "description": "Channel names WHICH SURFACE placed this order — \"\" (web/manual, the\nbehaviour every order had before this field existed) or \"pos\" (the POS\nbuilt-in app, spec docs/superpowers/specs/2026-09-28-pos-app-design.md).\nA SNAPSHOT set once at Checkout.Create, the same convention Locale uses\nright above: SERVER-OWNED once set, so UpdateOrder preserves it from the\nexisting row rather than trusting the request body — no edit screen ever\nsends a channel, and the column is deliberately absent from\nUpdateOrderRow's SET list (see postgres/query.sql's comment), so the\npreserve line is the only place a value survives an edit at all.",
+        "type": "string"
+      },
       "createdAt": {
         "type": "string"
       },
@@ -18482,6 +26926,10 @@ export const API_DEFINITIONS: Record<string, unknown> = {
         "description": "Locale is the language the SHOPPER was reading the storefront in at\ncheckout — a SNAPSHOT, for the same reason every other checkout-time fact\non this struct is one: a merchant who later reorders or trims the site's\nlanguage list must not have an already-placed order start mailing its\nbuyer in a different language than the one they bought in.\n\n\"\" means the site's DEFAULT locale — every order placed before this field\nexisted, every order typed by staff, and every order placed through a\nsurface that has not been taught to send one yet. It is never trusted\noutright: Checkout.Create normalises it against the site's published\nlocales (SiteLocales port) before it is stored, so a stale or tampered\nclaim can only ever fall back to \"\", never choose an unpublished\nlanguage. See Checkout.normalizeLocale.",
         "type": "string"
       },
+      "locationId": {
+        "description": "LocationID is WHICH LOCATION this order's stock claim belongs to — a\nSNAPSHOT stamped once at Checkout.Create (D3, spec §8), never re-derived\nafterwards: Checkout.Create stamps the site's CURRENT online location\n(LocationSource port) at the moment of the sale, and every later stock\nmove of THIS order (cancel, delete, un-fulfil, a return's restock) must\nkeep moving that same location's counters even if the site's online\nlocation is swapped to somewhere else afterwards (C5) or the location is\nlater deactivated (D8) — an order is a record of where it was placed,\nnot a pointer to wherever \"online\" currently means.\n\n\"\" is the pre-P1 value — every order placed before this field existed,\nand every order a LocationSource-less composition still creates — and it\nresolves to the site's LEGACY DEFAULT location, never to \"whatever is\nonline now\" (see products.StockAdjustment.LocationID's own comment).\nmigrations/0016's comment (\"'' = the site's CURRENT online location\")\npredates D3 and is wrong on that; an applied migration is never edited,\nso this comment is the correction.\n\nSERVER-OWNED once set, exactly like Channel right above: UpdateOrder\npreserves it from the existing row rather than trusting the request\nbody, and the column is deliberately absent from UpdateOrderRow's SET\nlist (see postgres/query.sql's comment) — no edit screen may move an\norder's stock claim to a different location.",
+        "type": "string"
+      },
       "note": {
         "type": "string"
       },
@@ -18494,18 +26942,40 @@ export const API_DEFINITIONS: Record<string, unknown> = {
       "paymentMethod": {
         "type": "string"
       },
+      "shiftId": {
+        "description": "ShiftID is the POS shift this sale was rung up in, and CashierID the\nmember who rang it up (POS P2, spec §9 E1/E12). \"\" on every web/manual\norder and on a POS sale made while no shift was open. Stamped by\ninternal/pos before Checkout.Create and SERVER-OWNED from then on, like\nChannel: the manage POST clears both, UpdateOrder preserves both from the\nexisting row, and UpdateOrderRow's SET omits both columns. The shift's\nexpected cash and its close gate are computed from shift_id in SQL\n(ShiftSalesTotals / PendingByShift), so a dropped ShiftID is a sale that\nsilently leaves the drawer it was paid into.",
+        "type": "string"
+      },
       "shipTo": {
         "$ref": "#/definitions/github_com_webbuilder_server_internal_orders.Address"
       },
       "shipToProvinceCode": {
-        "description": "ShipToWardCode is the same key one level down — the ward the parcel is\ngoing to, as the platform's own admin-unit code.\n\nNothing reads it yet. It is stored because the shopper already gave it and\nit cannot be recovered afterwards: a column added when the first reader\narrives would leave every order placed before it permanently unable to\nanswer. See forms.OrderAddress.WardCode.",
+        "description": "ShipToProvinceCode is where the order is going, as the platform's own\nadmin-unit code (\"84_VN101\") — the key a delivery ZONE is matched on.\n\nKept beside ShipTo rather than inside it: an Address is the human line a\nlabel is printed from, and this is a machine value that only the shipping\nlookup reads. Empty for every order placed before the province select\nexisted, and for one typed by staff — both then price at the method's\nflat fee, exactly as they did before zones.",
         "type": "string"
+      },
+      "shipToWardCode": {
+        "description": "ShipToWardCode is the same key one level down — the ward the parcel is\ngoing to, as the platform's own admin-unit code.\n\nRead by resolveShipping (zone/rate lookup, see shipping.go) and by carrier\ndispatch (address.Resolver.Resolve, see carrier.go), both keyed off it\nalongside ShipToProvinceCode. Still stored unconditionally because the\nshopper already gave it and it cannot be recovered afterwards: a column\nadded when the first reader arrives would leave every order placed before\nit permanently unable to answer. See forms.OrderAddress.WardCode.",
+        "type": "string"
+      },
+      "shippingBreakdown": {
+        "description": "ShippingBreakdown is the shipping engine's own explanation of\nShippingCents (ShippingQuote.Breakdown — engine, rule, outcome, and a\nsubstitution's {requested, used, reason}), stamped by resolveShipping and\nstored verbatim so \"why did this order pay X\" has an answer. SERVER-OWNED\non the ShippingProvider terms: resolveShipping clears whatever a body sent\nbefore pricing, and UpdateOrder preserves it from the stored row. nil on a\nmanual/legacy order and on every order placed before 0020.",
+        "type": "object"
       },
       "shippingCents": {
         "type": "integer"
       },
+      "shippingEstimatedDelivery": {
+        "type": "string"
+      },
       "shippingMethod": {
         "description": "ShippingMethod is the delivery option this order was placed under — the\nmerchant-authored NAME, the same string internal/shipping keys a method\nby. It is what ShippingCents was derived FROM on a storefront order, and\nkeeping it on the record is what lets a merchant see why a fee is what it\nis (or why it is zero, when the option no longer exists).\n\nEmpty on every order that names no option, which is every order placed\nbefore this field existed and every merchant-typed order whose\nShippingCents was entered by hand.",
+        "type": "string"
+      },
+      "shippingProvider": {
+        "description": "ShippingProvider, ShippingService and ShippingEstimatedDelivery record\nWHICH carrier service priced ShippingCents (\"ghn\", \"2\", \"2026-10-02\"),\nstamped by resolveShipping from the ShippingQuote. Empty for a flat/zone\nmethod and on every order placed before carriers existed. SERVER-OWNED:\nUpdateOrder preserves them from the stored row, because no edit screen\nsends them and a blanked provider hides why the fee is what it is.",
+        "type": "string"
+      },
+      "shippingService": {
         "type": "string"
       },
       "shippingTaxCents": {
@@ -18561,6 +27031,10 @@ export const API_DEFINITIONS: Record<string, unknown> = {
   "github_com_webbuilder_server_internal_orders.OrderItem": {
     "type": "object",
     "properties": {
+      "discountCents": {
+        "description": "DiscountCents is this line's share of the order's DiscountCents, stamped\nby checkout (discounts.Allocate) on every new order: Σ over the lines =\nthe order's discount, except free shipping (which cuts no line). A return\nrefunds a line's NET of it (POS P3 §7.3). SERVER-OWNED: never read from a\nrequest, preserved on edit (PreserveLineDiscount). 0 on a legacy order,\nwhich a return then estimates proportionally. Total math never reads it.",
+        "type": "integer"
+      },
       "flashItemId": {
         "description": "FlashItemID names the flash-sale item this line was priced by (\"\" = the\ncatalogue price). Set only by LineResolver.Items; the quota claim and its\nrelease key on it. See orders/flash.go.",
         "type": "string"
@@ -18610,6 +27084,10 @@ export const API_DEFINITIONS: Record<string, unknown> = {
       },
       "variantId": {
         "type": "string"
+      },
+      "weightGrams": {
+        "description": "WeightGrams is one unit's shipping weight, copied from the variant at\npurchase (ProductLine.WeightGrams); 0 = unknown, and a carrier then uses\nthe connection's default weight.",
+        "type": "integer"
       }
     }
   },
@@ -18652,8 +27130,17 @@ export const API_DEFINITIONS: Record<string, unknown> = {
         "description": "Carrier is the merchant's own name for who is carrying it (\"Giao Hàng\nNhanh\", \"Viettel Post\", \"shipper của shop\"). Free text on purpose — see\nTrackingURL for why there is no built-in carrier registry.",
         "type": "string"
       },
+      "carrierStatus": {
+        "type": "string"
+      },
+      "codCents": {
+        "type": "integer"
+      },
       "createdAt": {
         "type": "string"
+      },
+      "feeCents": {
+        "type": "integer"
       },
       "id": {
         "type": "string"
@@ -18663,6 +27150,13 @@ export const API_DEFINITIONS: Record<string, unknown> = {
         "type": "string"
       },
       "orderId": {
+        "type": "string"
+      },
+      "provider": {
+        "description": "Provider is the connected carrier that issued this waybill (\"ghn\",\n\"ghtk\"); \"\" for a manual parcel. Only the carrier-shipments endpoint sets\nit, and only a shipment with a Provider is reachable by a carrier webhook\n(see carrier.go). Service, CarrierStatus, FeeCents and CODCents are\nmeaningful only beside it: the carrier's service id, the normalized\nstatus (CarrierStatus* constants), what the carrier charges the shop and\nwhat it collects from the buyer, in cents.",
+        "type": "string"
+      },
+      "service": {
         "type": "string"
       },
       "shippedAt": {
@@ -18752,6 +27246,1336 @@ export const API_DEFINITIONS: Record<string, unknown> = {
       },
       "sandbox": {
         "type": "boolean"
+      }
+    }
+  },
+  "github_com_webbuilder_server_internal_pos.AddLinesInput": {
+    "type": "object",
+    "properties": {
+      "clientRef": {
+        "type": "string"
+      },
+      "lines": {
+        "type": "array",
+        "items": {
+          "$ref": "#/definitions/github_com_webbuilder_server_internal_pos.LineInput"
+        }
+      }
+    }
+  },
+  "github_com_webbuilder_server_internal_pos.AreaInput": {
+    "type": "object",
+    "properties": {
+      "locationId": {
+        "description": "POST only; an area never moves",
+        "type": "string"
+      },
+      "name": {
+        "type": "string"
+      },
+      "position": {
+        "type": "integer"
+      }
+    }
+  },
+  "github_com_webbuilder_server_internal_pos.BillInput": {
+    "type": "object",
+    "properties": {
+      "clientRef": {
+        "type": "string"
+      },
+      "customerId": {
+        "type": "string"
+      },
+      "customerName": {
+        "type": "string"
+      },
+      "customerPhone": {
+        "type": "string"
+      },
+      "discountCents": {
+        "type": "integer"
+      },
+      "discountCode": {
+        "type": "string"
+      },
+      "expectedTotalCents": {
+        "type": "integer"
+      },
+      "expectedVersion": {
+        "type": "integer"
+      },
+      "lines": {
+        "type": "array",
+        "items": {
+          "$ref": "#/definitions/github_com_webbuilder_server_internal_pos.LineQty"
+        }
+      },
+      "note": {
+        "type": "string"
+      },
+      "paymentMethod": {
+        "type": "string"
+      },
+      "registerId": {
+        "type": "string"
+      },
+      "sellerStaffId": {
+        "type": "string"
+      }
+    }
+  },
+  "github_com_webbuilder_server_internal_pos.CompleteInput": {
+    "type": "object",
+    "properties": {
+      "clientRef": {
+        "type": "string"
+      },
+      "debtCents": {
+        "type": "integer"
+      },
+      "paymentMethod": {
+        "type": "string"
+      },
+      "registerId": {
+        "type": "string"
+      },
+      "tenders": {
+        "type": "array",
+        "items": {
+          "$ref": "#/definitions/github_com_webbuilder_server_internal_pos.TenderInput"
+        }
+      }
+    }
+  },
+  "github_com_webbuilder_server_internal_pos.CounterReturn": {
+    "type": "object",
+    "properties": {
+      "debtOffsetCents": {
+        "type": "integer"
+      },
+      "estimated": {
+        "type": "boolean"
+      },
+      "lines": {
+        "type": "array",
+        "items": {
+          "$ref": "#/definitions/github_com_webbuilder_server_internal_pos.RefundLine"
+        }
+      },
+      "refundCents": {
+        "type": "integer"
+      },
+      "refundTenders": {
+        "type": "array",
+        "items": {
+          "$ref": "#/definitions/github_com_webbuilder_server_internal_pos.Tender"
+        }
+      },
+      "replayed": {
+        "type": "boolean"
+      },
+      "restockLocationId": {
+        "type": "string"
+      },
+      "return": {
+        "$ref": "#/definitions/github_com_webbuilder_server_internal_pos.ReturnRecord"
+      },
+      "roundingAdjusted": {
+        "type": "boolean"
+      }
+    }
+  },
+  "github_com_webbuilder_server_internal_pos.CustomerInput": {
+    "type": "object",
+    "properties": {
+      "name": {
+        "type": "string"
+      },
+      "phone": {
+        "type": "string"
+      }
+    }
+  },
+  "github_com_webbuilder_server_internal_pos.Debt": {
+    "type": "object",
+    "properties": {
+      "balanceCents": {
+        "type": "integer"
+      },
+      "createdAt": {
+        "type": "string"
+      },
+      "customerId": {
+        "type": "string"
+      },
+      "locationId": {
+        "type": "string"
+      },
+      "orderId": {
+        "type": "string"
+      },
+      "orderNumber": {
+        "type": "string"
+      },
+      "originalCents": {
+        "type": "integer"
+      },
+      "settledAt": {
+        "type": "string"
+      },
+      "shiftId": {
+        "type": "string"
+      },
+      "updatedAt": {
+        "type": "string"
+      }
+    }
+  },
+  "github_com_webbuilder_server_internal_pos.DebtAllocation": {
+    "type": "object",
+    "properties": {
+      "appliedCents": {
+        "type": "integer"
+      },
+      "orderId": {
+        "type": "string"
+      },
+      "settlementId": {
+        "type": "string"
+      }
+    }
+  },
+  "github_com_webbuilder_server_internal_pos.DebtSettlement": {
+    "type": "object",
+    "properties": {
+      "actorId": {
+        "type": "string"
+      },
+      "actorName": {
+        "type": "string"
+      },
+      "batchId": {
+        "type": "string"
+      },
+      "createdAt": {
+        "type": "string"
+      },
+      "customerId": {
+        "type": "string"
+      },
+      "id": {
+        "type": "string"
+      },
+      "shiftId": {
+        "type": "string"
+      },
+      "totalCents": {
+        "type": "integer"
+      }
+    }
+  },
+  "github_com_webbuilder_server_internal_pos.FnbSettings": {
+    "type": "object",
+    "properties": {
+      "enabled": {
+        "type": "boolean"
+      }
+    }
+  },
+  "github_com_webbuilder_server_internal_pos.ForceCloseInput": {
+    "type": "object",
+    "properties": {
+      "note": {
+        "type": "string"
+      },
+      "resolve": {
+        "type": "array",
+        "items": {
+          "$ref": "#/definitions/github_com_webbuilder_server_internal_pos.ResolutionInput"
+        }
+      }
+    }
+  },
+  "github_com_webbuilder_server_internal_pos.Item": {
+    "type": "object",
+    "properties": {
+      "available": {
+        "type": "integer"
+      },
+      "barcode": {
+        "type": "string"
+      },
+      "image": {
+        "type": "string"
+      },
+      "name": {
+        "type": "string"
+      },
+      "preOrder": {
+        "type": "boolean"
+      },
+      "priceCents": {
+        "type": "integer"
+      },
+      "productId": {
+        "type": "string"
+      },
+      "sku": {
+        "type": "string"
+      },
+      "variantId": {
+        "type": "string"
+      }
+    }
+  },
+  "github_com_webbuilder_server_internal_pos.LineInput": {
+    "type": "object",
+    "properties": {
+      "modifierIds": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "note": {
+        "type": "string"
+      },
+      "productId": {
+        "type": "string"
+      },
+      "qty": {
+        "type": "integer"
+      },
+      "variantId": {
+        "type": "string"
+      }
+    }
+  },
+  "github_com_webbuilder_server_internal_pos.LinePatch": {
+    "type": "object",
+    "properties": {
+      "expectedVersion": {
+        "type": "integer"
+      },
+      "modifierIds": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "note": {
+        "type": "string"
+      },
+      "qty": {
+        "type": "integer"
+      }
+    }
+  },
+  "github_com_webbuilder_server_internal_pos.LineQty": {
+    "type": "object",
+    "properties": {
+      "lineId": {
+        "type": "string"
+      },
+      "qty": {
+        "type": "integer"
+      }
+    }
+  },
+  "github_com_webbuilder_server_internal_pos.ModifierGroupInput": {
+    "type": "object",
+    "properties": {
+      "maxSelect": {
+        "type": "integer"
+      },
+      "minSelect": {
+        "type": "integer"
+      },
+      "modifiers": {
+        "type": "array",
+        "items": {
+          "$ref": "#/definitions/github_com_webbuilder_server_internal_pos.ModifierInput"
+        }
+      },
+      "name": {
+        "type": "string"
+      },
+      "position": {
+        "type": "integer"
+      }
+    }
+  },
+  "github_com_webbuilder_server_internal_pos.ModifierInput": {
+    "type": "object",
+    "properties": {
+      "active": {
+        "description": "nil = active",
+        "type": "boolean"
+      },
+      "id": {
+        "type": "string"
+      },
+      "name": {
+        "type": "string"
+      },
+      "position": {
+        "type": "integer"
+      },
+      "priceDeltaCents": {
+        "type": "integer"
+      }
+    }
+  },
+  "github_com_webbuilder_server_internal_pos.OpenShiftInput": {
+    "type": "object",
+    "properties": {
+      "openingFloatCents": {
+        "type": "integer"
+      },
+      "registerId": {
+        "type": "string"
+      }
+    }
+  },
+  "github_com_webbuilder_server_internal_pos.OpenTabInput": {
+    "type": "object",
+    "properties": {
+      "clientRef": {
+        "type": "string"
+      },
+      "guestCount": {
+        "type": "integer"
+      },
+      "locationId": {
+        "type": "string"
+      },
+      "note": {
+        "type": "string"
+      },
+      "tableId": {
+        "type": "string"
+      }
+    }
+  },
+  "github_com_webbuilder_server_internal_pos.PurchaseOrderInput": {
+    "type": "object",
+    "properties": {
+      "expectedOn": {
+        "type": "string"
+      },
+      "lines": {
+        "type": "array",
+        "items": {
+          "$ref": "#/definitions/github_com_webbuilder_server_internal_pos.PurchaseOrderLineInput"
+        }
+      },
+      "locationId": {
+        "type": "string"
+      },
+      "note": {
+        "type": "string"
+      },
+      "supplierId": {
+        "type": "string"
+      }
+    }
+  },
+  "github_com_webbuilder_server_internal_pos.PurchaseOrderLineInput": {
+    "type": "object",
+    "properties": {
+      "productId": {
+        "type": "string"
+      },
+      "qty": {
+        "type": "integer"
+      },
+      "unitCostCents": {
+        "type": "integer"
+      },
+      "variantId": {
+        "type": "string"
+      }
+    }
+  },
+  "github_com_webbuilder_server_internal_pos.Receipt": {
+    "type": "object",
+    "properties": {
+      "actorId": {
+        "type": "string"
+      },
+      "clientRef": {
+        "type": "string"
+      },
+      "createdAt": {
+        "type": "string"
+      },
+      "id": {
+        "type": "string"
+      },
+      "lineCount": {
+        "type": "integer"
+      },
+      "lines": {
+        "type": "array",
+        "items": {
+          "$ref": "#/definitions/github_com_webbuilder_server_internal_pos.ReceiptLine"
+        }
+      },
+      "locationId": {
+        "description": "LocationID is the stock location the receipt received INTO (POS P1).\n\"\" only on a receipt posted before locations existed, and it means the\nsite's LEGACY DEFAULT location (D3) — never \"whatever is online now\", as\nmigrations/0002's comment (applied, so never edited) still says.",
+        "type": "string"
+      },
+      "note": {
+        "type": "string"
+      },
+      "number": {
+        "type": "string"
+      },
+      "purchaseOrderId": {
+        "type": "string"
+      },
+      "siteId": {
+        "type": "string"
+      },
+      "supplier": {
+        "type": "string"
+      },
+      "supplierId": {
+        "description": "P4 (§4.2, K14, K27): the supplier the receipt names (\"\" = only the\nfree-text Supplier, as on every pre-P4 receipt — when set, Supplier is\nits name snapshotted at receive time), the purchase order it answers\n(\"\" = none) and the device's idempotency key (\"\" = none).",
+        "type": "string"
+      },
+      "totalCostCents": {
+        "type": "integer"
+      },
+      "totalQty": {
+        "type": "integer"
+      }
+    }
+  },
+  "github_com_webbuilder_server_internal_pos.ReceiptInput": {
+    "type": "object",
+    "properties": {
+      "clientRef": {
+        "description": "ClientRef (P4, K27) is the device's idempotency key (a UUID): a replay\nanswers the first receipt (replayed: true) BEFORE any order/state gate;\ndifferent lines under it are refused.",
+        "type": "string"
+      },
+      "lines": {
+        "type": "array",
+        "items": {
+          "$ref": "#/definitions/github_com_webbuilder_server_internal_pos.ReceiptLineInput"
+        }
+      },
+      "locationId": {
+        "description": "LocationID is where the goods are received. Omitted: the online\nlocation when the site has at most one active location, else refused\nwith ErrLocationRequired (the device must say where it is).\nOmitted with a PurchaseOrderID: the order's receiving location.",
+        "type": "string"
+      },
+      "note": {
+        "type": "string"
+      },
+      "purchaseOrderId": {
+        "description": "PurchaseOrderID (P4) is the order this receipt answers (§4.2).",
+        "type": "string"
+      },
+      "supplier": {
+        "type": "string"
+      },
+      "supplierId": {
+        "description": "SupplierID (P4) wins over Supplier: the server copies its name in.",
+        "type": "string"
+      }
+    }
+  },
+  "github_com_webbuilder_server_internal_pos.ReceiptLine": {
+    "type": "object",
+    "properties": {
+      "barcode": {
+        "type": "string"
+      },
+      "id": {
+        "type": "string"
+      },
+      "poLineId": {
+        "description": "PoLineID is the purchase-order line this line receives against; \"\" =\nan off-order line (an extra, a gift — K18) or no order at all.",
+        "type": "string"
+      },
+      "position": {
+        "type": "integer"
+      },
+      "productId": {
+        "type": "string"
+      },
+      "qty": {
+        "type": "integer"
+      },
+      "receiptId": {
+        "type": "string"
+      },
+      "sku": {
+        "type": "string"
+      },
+      "unitCostCents": {
+        "type": "integer"
+      },
+      "variantId": {
+        "type": "string"
+      },
+      "variantName": {
+        "type": "string"
+      }
+    }
+  },
+  "github_com_webbuilder_server_internal_pos.ReceiptLineInput": {
+    "type": "object",
+    "properties": {
+      "poLineId": {
+        "description": "PoLineID (P4): the purchase-order line received against; \"\" = off-order.",
+        "type": "string"
+      },
+      "productId": {
+        "type": "string"
+      },
+      "qty": {
+        "type": "integer"
+      },
+      "unitCostCents": {
+        "type": "integer"
+      },
+      "variantId": {
+        "type": "string"
+      }
+    }
+  },
+  "github_com_webbuilder_server_internal_pos.ReceiptResult": {
+    "type": "object",
+    "properties": {
+      "receipt": {
+        "$ref": "#/definitions/github_com_webbuilder_server_internal_pos.Receipt"
+      },
+      "replayed": {
+        "type": "boolean"
+      }
+    }
+  },
+  "github_com_webbuilder_server_internal_pos.RefundInput": {
+    "type": "object",
+    "properties": {
+      "overrideCents": {
+        "type": "integer"
+      },
+      "tenders": {
+        "type": "array",
+        "items": {
+          "$ref": "#/definitions/github_com_webbuilder_server_internal_pos.TenderInput"
+        }
+      }
+    }
+  },
+  "github_com_webbuilder_server_internal_pos.RefundLine": {
+    "type": "object",
+    "properties": {
+      "estimated": {
+        "type": "boolean"
+      },
+      "productId": {
+        "type": "string"
+      },
+      "quantity": {
+        "type": "integer"
+      },
+      "refundCents": {
+        "type": "integer"
+      },
+      "variantId": {
+        "type": "string"
+      }
+    }
+  },
+  "github_com_webbuilder_server_internal_pos.RegisterInput": {
+    "type": "object",
+    "properties": {
+      "active": {
+        "type": "boolean"
+      },
+      "code": {
+        "type": "string"
+      },
+      "locationId": {
+        "type": "string"
+      },
+      "name": {
+        "type": "string"
+      }
+    }
+  },
+  "github_com_webbuilder_server_internal_pos.ResolutionInput": {
+    "type": "object",
+    "properties": {
+      "action": {
+        "$ref": "#/definitions/github_com_webbuilder_server_internal_pos.ResolveAction"
+      },
+      "orderId": {
+        "type": "string"
+      },
+      "paymentMethod": {
+        "type": "string"
+      }
+    }
+  },
+  "github_com_webbuilder_server_internal_pos.ResolveAction": {
+    "type": "string",
+    "enum": [
+      "complete",
+      "cancel"
+    ],
+    "x-enum-varnames": [
+      "ResolveComplete",
+      "ResolveCancel"
+    ]
+  },
+  "github_com_webbuilder_server_internal_pos.ReturnInput": {
+    "type": "object",
+    "properties": {
+      "clientRef": {
+        "type": "string"
+      },
+      "lines": {
+        "type": "array",
+        "items": {
+          "$ref": "#/definitions/github_com_webbuilder_server_internal_pos.ReturnLineInput"
+        }
+      },
+      "note": {
+        "type": "string"
+      },
+      "orderId": {
+        "type": "string"
+      },
+      "reason": {
+        "type": "string"
+      },
+      "refund": {
+        "$ref": "#/definitions/github_com_webbuilder_server_internal_pos.RefundInput"
+      },
+      "registerId": {
+        "type": "string"
+      },
+      "restock": {
+        "description": "Restock puts the units back on sale at RestockLocationID (\"\" = the\norder's own location); false (damaged goods) moves no stock.",
+        "type": "boolean"
+      },
+      "restockLocationId": {
+        "type": "string"
+      }
+    }
+  },
+  "github_com_webbuilder_server_internal_pos.ReturnLineInput": {
+    "type": "object",
+    "properties": {
+      "productId": {
+        "type": "string"
+      },
+      "quantity": {
+        "type": "integer"
+      },
+      "variantId": {
+        "type": "string"
+      }
+    }
+  },
+  "github_com_webbuilder_server_internal_pos.ReturnRecord": {
+    "type": "object",
+    "properties": {
+      "createdAt": {
+        "type": "string"
+      },
+      "customerId": {
+        "type": "string"
+      },
+      "id": {
+        "type": "string"
+      },
+      "lines": {
+        "type": "array",
+        "items": {
+          "$ref": "#/definitions/github_com_webbuilder_server_internal_pos.ReturnRecordLine"
+        }
+      },
+      "orderId": {
+        "type": "string"
+      },
+      "orderNumber": {
+        "type": "string"
+      },
+      "reason": {
+        "type": "string"
+      },
+      "refundCents": {
+        "type": "integer"
+      },
+      "restockLocationId": {
+        "type": "string"
+      },
+      "restocked": {
+        "type": "boolean"
+      },
+      "source": {
+        "type": "string"
+      },
+      "staffNote": {
+        "type": "string"
+      },
+      "status": {
+        "type": "string"
+      }
+    }
+  },
+  "github_com_webbuilder_server_internal_pos.ReturnRecordLine": {
+    "type": "object",
+    "properties": {
+      "name": {
+        "type": "string"
+      },
+      "priceCents": {
+        "type": "integer"
+      },
+      "productId": {
+        "type": "string"
+      },
+      "quantity": {
+        "type": "integer"
+      },
+      "variantId": {
+        "type": "string"
+      }
+    }
+  },
+  "github_com_webbuilder_server_internal_pos.Sale": {
+    "type": "object",
+    "properties": {
+      "cashierName": {
+        "description": "CashierName / RegisterName are set only by GET /pos/sales/{id}: who rang\nthe sale up (a live member name) and the till's name as its shift\nsnapshotted it.",
+        "type": "string"
+      },
+      "changeCents": {
+        "type": "integer"
+      },
+      "debt": {
+        "description": "Debt is the part of the sale left on the customer's account (§6) —\nset by complete and GET /pos/sales/{id}; absent when none.",
+        "allOf": [
+          {
+            "$ref": "#/definitions/github_com_webbuilder_server_internal_pos.Debt"
+          }
+        ]
+      },
+      "discount": {
+        "description": "Discount is which discount won and the customer's tier at the sale\n(§5.2 snapshot) — set on a new sale and by GET /pos/sales/{id}; absent\nwhen no discount applied and no tier was earned (every P2-shaped sale\nanswers exactly the keys it did before P3).",
+        "allOf": [
+          {
+            "$ref": "#/definitions/github_com_webbuilder_server_internal_pos.SaleDiscount"
+          }
+        ]
+      },
+      "order": {
+        "$ref": "#/definitions/github_com_webbuilder_server_internal_orders.Order"
+      },
+      "registerName": {
+        "type": "string"
+      },
+      "replayed": {
+        "type": "boolean"
+      },
+      "staffId": {
+        "description": "StaffID / StaffName are the sale's \"Người bán\" (P-HR H9) — set on a\nnew sale and by GET /pos/sales/{id}; absent when none (every pre-P-HR\nsale, and every sale while Nhân sự is off).",
+        "type": "string"
+      },
+      "staffName": {
+        "type": "string"
+      },
+      "tenders": {
+        "description": "P3: the sale's tender book (complete and GET /pos/sales/{id}), the\nchange given in cash, and whether this answer is a replay of a request\nthat already landed (R7, R15 — the device must not print twice).",
+        "type": "array",
+        "items": {
+          "$ref": "#/definitions/github_com_webbuilder_server_internal_pos.Tender"
+        }
+      },
+      "transferQrUrl": {
+        "type": "string"
+      }
+    }
+  },
+  "github_com_webbuilder_server_internal_pos.SaleDiscount": {
+    "type": "object",
+    "properties": {
+      "source": {
+        "type": "string"
+      },
+      "tier": {
+        "$ref": "#/definitions/github_com_webbuilder_server_internal_pos.TierRef"
+      }
+    }
+  },
+  "github_com_webbuilder_server_internal_pos.SaleLine": {
+    "type": "object",
+    "properties": {
+      "productId": {
+        "type": "string"
+      },
+      "qty": {
+        "type": "integer"
+      },
+      "variantId": {
+        "type": "string"
+      }
+    }
+  },
+  "github_com_webbuilder_server_internal_pos.SaleRequest": {
+    "type": "object",
+    "properties": {
+      "cashReceivedCents": {
+        "type": "integer"
+      },
+      "clientRef": {
+        "description": "ClientRef is the device's idempotency key (P3 Q28/R7, a UUID): the\norder id is derived from it, so a replay answers the first sale\n(replayed: true) and a different body under it is refused.",
+        "type": "string"
+      },
+      "customerId": {
+        "description": "CustomerID (P3 §5.1) names the customer the counter chose; it wins\nover CustomerPhone and must be this site's (customer_not_found).\nOmitted: the P2 phone link (guests only).",
+        "type": "string"
+      },
+      "customerName": {
+        "type": "string"
+      },
+      "customerPhone": {
+        "type": "string"
+      },
+      "discountCents": {
+        "type": "integer"
+      },
+      "discountCode": {
+        "description": "DiscountCode is a discount code typed at the counter (§4), resolved by\ncheckout exactly as on the web. It wins over DiscountCents and the\ncustomer's tier (Q10); the losers are dropped, never an error (R14).",
+        "type": "string"
+      },
+      "expectedTotalCents": {
+        "description": "ExpectedTotalCents is the total the counter SHOWED (Q29). When the\nserver's total differs, nothing is created: 409 total_changed with the\nfresh quote. nil = not checked (the P2 body).",
+        "type": "integer"
+      },
+      "lines": {
+        "type": "array",
+        "items": {
+          "$ref": "#/definitions/github_com_webbuilder_server_internal_pos.SaleLine"
+        }
+      },
+      "locationId": {
+        "description": "LocationID is where the sale takes its stock from — resolved exactly\nlike ReceiptInput.LocationID, and stamped on the order, whose every\nlater move (complete, cancel, return) happens there.",
+        "type": "string"
+      },
+      "note": {
+        "type": "string"
+      },
+      "paymentMethod": {
+        "type": "string"
+      },
+      "registerId": {
+        "description": "RegisterID is the till the sale is rung up at (P2). When it has an open\nshift the sale is stamped with it — whatever requireShift says (E7) —\nand takes the SHIFT's location snapshot (E9). Omitted: no shift, which\nrequireShift refuses.",
+        "type": "string"
+      },
+      "sellerStaffId": {
+        "description": "SellerStaffID (P-HR H9) is the \"Người bán\" the counter picked: a staff\nprofile clocked in at the register's location, else 409\nseller_not_clocked_in. Omitted: the profile linked to the selling\naccount (clocked in or not), or nobody. Ignored while Nhân sự is off.",
+        "type": "string"
+      }
+    }
+  },
+  "github_com_webbuilder_server_internal_pos.Settings": {
+    "type": "object",
+    "properties": {
+      "cardEnabled": {
+        "type": "boolean"
+      },
+      "cashierRefundLimitCents": {
+        "type": "integer"
+      },
+      "debtLimitCents": {
+        "type": "integer"
+      },
+      "requireShift": {
+        "type": "boolean"
+      },
+      "returnWindowDays": {
+        "type": "integer"
+      }
+    }
+  },
+  "github_com_webbuilder_server_internal_pos.SettleInput": {
+    "type": "object",
+    "properties": {
+      "clientRef": {
+        "type": "string"
+      },
+      "customerId": {
+        "type": "string"
+      },
+      "orderIds": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "registerId": {
+        "type": "string"
+      },
+      "tenders": {
+        "type": "array",
+        "items": {
+          "$ref": "#/definitions/github_com_webbuilder_server_internal_pos.TenderInput"
+        }
+      }
+    }
+  },
+  "github_com_webbuilder_server_internal_pos.SettleResult": {
+    "type": "object",
+    "properties": {
+      "allocations": {
+        "type": "array",
+        "items": {
+          "$ref": "#/definitions/github_com_webbuilder_server_internal_pos.DebtAllocation"
+        }
+      },
+      "balanceAfterCents": {
+        "type": "integer"
+      },
+      "changeCents": {
+        "type": "integer"
+      },
+      "replayed": {
+        "type": "boolean"
+      },
+      "settlement": {
+        "$ref": "#/definitions/github_com_webbuilder_server_internal_pos.DebtSettlement"
+      },
+      "tenders": {
+        "type": "array",
+        "items": {
+          "$ref": "#/definitions/github_com_webbuilder_server_internal_pos.Tender"
+        }
+      }
+    }
+  },
+  "github_com_webbuilder_server_internal_pos.StationInput": {
+    "type": "object",
+    "properties": {
+      "name": {
+        "type": "string"
+      },
+      "position": {
+        "type": "integer"
+      }
+    }
+  },
+  "github_com_webbuilder_server_internal_pos.StocktakeApproveInput": {
+    "type": "object",
+    "properties": {
+      "clientRef": {
+        "type": "string"
+      },
+      "excludeVariantIds": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "zeroUncounted": {
+        "type": "boolean"
+      }
+    }
+  },
+  "github_com_webbuilder_server_internal_pos.StocktakeCountInput": {
+    "type": "object",
+    "properties": {
+      "clientRef": {
+        "type": "string"
+      },
+      "lines": {
+        "type": "array",
+        "items": {
+          "$ref": "#/definitions/github_com_webbuilder_server_internal_pos.StocktakeCountLine"
+        }
+      }
+    }
+  },
+  "github_com_webbuilder_server_internal_pos.StocktakeCountLine": {
+    "type": "object",
+    "properties": {
+      "code": {
+        "type": "string"
+      },
+      "mode": {
+        "type": "string"
+      },
+      "productId": {
+        "type": "string"
+      },
+      "qty": {
+        "type": "integer"
+      },
+      "variantId": {
+        "type": "string"
+      }
+    }
+  },
+  "github_com_webbuilder_server_internal_pos.StocktakeInput": {
+    "type": "object",
+    "properties": {
+      "blind": {
+        "type": "boolean"
+      },
+      "locationId": {
+        "type": "string"
+      },
+      "note": {
+        "type": "string"
+      },
+      "scope": {
+        "$ref": "#/definitions/github_com_webbuilder_server_internal_pos.StocktakeScope"
+      }
+    }
+  },
+  "github_com_webbuilder_server_internal_pos.StocktakeScope": {
+    "type": "string",
+    "enum": [
+      "partial",
+      "full"
+    ],
+    "x-enum-varnames": [
+      "StocktakePartial",
+      "StocktakeFull"
+    ]
+  },
+  "github_com_webbuilder_server_internal_pos.SupplierInput": {
+    "type": "object",
+    "properties": {
+      "active": {
+        "type": "boolean"
+      },
+      "address": {
+        "type": "string"
+      },
+      "code": {
+        "type": "string"
+      },
+      "contactName": {
+        "type": "string"
+      },
+      "email": {
+        "type": "string"
+      },
+      "name": {
+        "type": "string"
+      },
+      "note": {
+        "type": "string"
+      },
+      "phone": {
+        "type": "string"
+      },
+      "taxCode": {
+        "type": "string"
+      }
+    }
+  },
+  "github_com_webbuilder_server_internal_pos.TableInput": {
+    "type": "object",
+    "properties": {
+      "active": {
+        "type": "boolean"
+      },
+      "areaId": {
+        "description": "POST only; the location is the area's",
+        "type": "string"
+      },
+      "name": {
+        "type": "string"
+      },
+      "position": {
+        "type": "integer"
+      },
+      "seats": {
+        "type": "integer"
+      }
+    }
+  },
+  "github_com_webbuilder_server_internal_pos.Tender": {
+    "type": "object",
+    "properties": {
+      "actorId": {
+        "type": "string"
+      },
+      "actorName": {
+        "type": "string"
+      },
+      "amountCents": {
+        "type": "integer"
+      },
+      "batchId": {
+        "type": "string"
+      },
+      "changeCents": {
+        "type": "integer"
+      },
+      "createdAt": {
+        "type": "string"
+      },
+      "customerId": {
+        "type": "string"
+      },
+      "id": {
+        "type": "string"
+      },
+      "kind": {
+        "$ref": "#/definitions/github_com_webbuilder_server_internal_pos.TenderKind"
+      },
+      "locationId": {
+        "type": "string"
+      },
+      "method": {
+        "type": "string"
+      },
+      "orderId": {
+        "type": "string"
+      },
+      "orderNumber": {
+        "type": "string"
+      },
+      "position": {
+        "type": "integer"
+      },
+      "receivedCents": {
+        "type": "integer"
+      },
+      "reference": {
+        "type": "string"
+      },
+      "registerId": {
+        "type": "string"
+      },
+      "returnId": {
+        "type": "string"
+      },
+      "settlementId": {
+        "type": "string"
+      },
+      "shiftId": {
+        "type": "string"
+      }
+    }
+  },
+  "github_com_webbuilder_server_internal_pos.TenderInput": {
+    "type": "object",
+    "properties": {
+      "amountCents": {
+        "type": "integer"
+      },
+      "method": {
+        "type": "string"
+      },
+      "receivedCents": {
+        "type": "integer"
+      },
+      "reference": {
+        "type": "string"
+      }
+    }
+  },
+  "github_com_webbuilder_server_internal_pos.TenderKind": {
+    "type": "string",
+    "enum": [
+      "sale",
+      "debt",
+      "refund"
+    ],
+    "x-enum-varnames": [
+      "TenderSale",
+      "TenderDebt",
+      "TenderRefund"
+    ]
+  },
+  "github_com_webbuilder_server_internal_pos.TierInput": {
+    "type": "object",
+    "properties": {
+      "discountBps": {
+        "type": "integer"
+      },
+      "id": {
+        "type": "string"
+      },
+      "minSpendCents": {
+        "type": "integer"
+      },
+      "name": {
+        "type": "string"
+      }
+    }
+  },
+  "github_com_webbuilder_server_internal_pos.TierRef": {
+    "type": "object",
+    "properties": {
+      "discountBps": {
+        "type": "integer"
+      },
+      "id": {
+        "type": "string"
+      },
+      "name": {
+        "type": "string"
+      }
+    }
+  },
+  "github_com_webbuilder_server_internal_pos.TransferInput": {
+    "type": "object",
+    "properties": {
+      "fromLocationId": {
+        "type": "string"
+      },
+      "lines": {
+        "type": "array",
+        "items": {
+          "$ref": "#/definitions/github_com_webbuilder_server_internal_pos.TransferLineInput"
+        }
+      },
+      "note": {
+        "type": "string"
+      },
+      "toLocationId": {
+        "type": "string"
+      }
+    }
+  },
+  "github_com_webbuilder_server_internal_pos.TransferLineInput": {
+    "type": "object",
+    "properties": {
+      "productId": {
+        "type": "string"
+      },
+      "qty": {
+        "type": "integer"
+      },
+      "variantId": {
+        "type": "string"
+      }
+    }
+  },
+  "github_com_webbuilder_server_internal_pos.VoidLineInput": {
+    "type": "object",
+    "properties": {
+      "expectedVersion": {
+        "type": "integer"
+      },
+      "qty": {
+        "description": "0 = all that is still live",
+        "type": "integer"
+      },
+      "reason": {
+        "type": "string"
       }
     }
   },
@@ -18905,6 +28729,10 @@ export const API_DEFINITIONS: Record<string, unknown> = {
         "description": "Server-assigned identity/denormalised helpers — callers must NOT set these;\nthe Store recomputes them on every write.",
         "type": "integer"
       },
+      "onlineLocationId": {
+        "description": "OnlineLocationID is a READ TOKEN, never stored: the site's online\nlocation at the moment the product was read. GET /products/{id} (and the\nPUT's response) fill it; a PUT that carries it is refused with\nErrOnlineLocationChanged when make-online has moved the online location\nsince — the form's stock numbers are then the OLD location's counts, and\nsaving them would write them into the NEW location's columns. The editor\nalways echoes it. A PUT WITHOUT it is accepted and skips the check: that\nis the API-client shape (a script that GETs nothing before it PUTs), and\nsuch a client owns the stock numbers it sends.",
+        "type": "string"
+      },
       "pageId": {
         "description": "PageID is a READ-MODEL PROJECTION of which page template serves this\nproduct. \"\" = no explicit link, so it falls through to the type's default\ntemplate — the same meaning an absent page_entity_links row carries.\n\nThe SOURCE OF TRUTH is page_entity_links, in the page bounded context;\nthis is a copy kept current by page's outbound link observer. It exists so\nthe manage list can filter and paginate by page in one indexed query\ninstead of downloading every product AND every link to join them in the\nbrowser. Anything that must be authoritative — the renderer choosing a\ntemplate — reads the source, never this.\n\nServer-owned like the fields above: a caller cannot set it, and every\nwrite path forces it back to the stored value.",
         "type": "string"
@@ -19031,11 +28859,13 @@ export const API_DEFINITIONS: Record<string, unknown> = {
     "type": "string",
     "enum": [
       "simple",
-      "bundle"
+      "bundle",
+      "ticket"
     ],
     "x-enum-varnames": [
       "ProductKindSimple",
-      "ProductKindBundle"
+      "ProductKindBundle",
+      "ProductKindTicket"
     ]
   },
   "github_com_webbuilder_server_internal_products.ProductStatus": {
@@ -19125,6 +28955,10 @@ export const API_DEFINITIONS: Record<string, unknown> = {
         "description": "unit cost (for margin); 0 = unset",
         "type": "integer"
       },
+      "costSource": {
+        "description": "CostSource says who owns CostCents: \"\" = the merchant typed it (or\nnobody did), \"avg\" = the system's weighted average, moved only by priced\nreceipts/returns and the \"adjust cost\" action (POS P4, K2/K3). SERVER-\nOWNED: never taken from a request body — normalizeVariants clears it and\nCarryStoredVariantState restores the stored one.",
+        "type": "string"
+      },
       "hidden": {
         "type": "boolean"
       },
@@ -19181,6 +29015,532 @@ export const API_DEFINITIONS: Record<string, unknown> = {
         "items": {
           "$ref": "#/definitions/github_com_webbuilder_server_internal_products.PriceTier"
         }
+      }
+    }
+  },
+  "github_com_webbuilder_server_internal_reports.Figures": {
+    "type": "object",
+    "properties": {
+      "cancelledOrders": {
+        "type": "integer"
+      },
+      "cogsCents": {
+        "type": "integer"
+      },
+      "discountCents": {
+        "type": "integer"
+      },
+      "grossProfitCents": {
+        "type": "integer"
+      },
+      "marginBps": {
+        "type": "integer"
+      },
+      "netCogsCents": {
+        "type": "integer"
+      },
+      "netRevenueCents": {
+        "type": "integer"
+      },
+      "orders": {
+        "type": "integer"
+      },
+      "returnsCents": {
+        "type": "integer"
+      },
+      "returnsCogsCents": {
+        "type": "integer"
+      },
+      "returnsCount": {
+        "type": "integer"
+      },
+      "returnsNotRestockedQty": {
+        "description": "ReturnsNotRestockedQty: units refunded but not put back on the shelf\n(R5 \"Hàng trả không nhập lại kho\") — their cost stays a loss.",
+        "type": "integer"
+      },
+      "returnsUnknownCostQty": {
+        "description": "ReturnsUnknownCostQty: restocked units whose original line cost was 0\n(R6) — their COGS reversal is 0, so the margin reads high.",
+        "type": "integer"
+      },
+      "revenueCents": {
+        "type": "integer"
+      },
+      "salesCents": {
+        "type": "integer"
+      },
+      "shippingCents": {
+        "type": "integer"
+      },
+      "taxCents": {
+        "type": "integer"
+      },
+      "totalCents": {
+        "type": "integer"
+      },
+      "unknownCostQty": {
+        "type": "integer"
+      }
+    }
+  },
+  "github_com_webbuilder_server_internal_reports.MethodRow": {
+    "type": "object",
+    "properties": {
+      "debtCents": {
+        "type": "integer"
+      },
+      "debtCount": {
+        "type": "integer"
+      },
+      "method": {
+        "type": "string"
+      },
+      "netCents": {
+        "description": "sale + debt − refund",
+        "type": "integer"
+      },
+      "refundCents": {
+        "type": "integer"
+      },
+      "refundCount": {
+        "type": "integer"
+      },
+      "saleCents": {
+        "type": "integer"
+      },
+      "saleCount": {
+        "type": "integer"
+      }
+    }
+  },
+  "github_com_webbuilder_server_internal_reports.MonthRow": {
+    "type": "object",
+    "properties": {
+      "cancelledOrders": {
+        "type": "integer"
+      },
+      "cogsCents": {
+        "type": "integer"
+      },
+      "discountCents": {
+        "type": "integer"
+      },
+      "grossProfitCents": {
+        "type": "integer"
+      },
+      "marginBps": {
+        "type": "integer"
+      },
+      "month": {
+        "type": "string"
+      },
+      "netCogsCents": {
+        "type": "integer"
+      },
+      "netRevenueCents": {
+        "type": "integer"
+      },
+      "operatingProfitCents": {
+        "type": "integer"
+      },
+      "orders": {
+        "type": "integer"
+      },
+      "payroll": {
+        "$ref": "#/definitions/github_com_webbuilder_server_internal_reports.Payroll"
+      },
+      "returnsCents": {
+        "type": "integer"
+      },
+      "returnsCogsCents": {
+        "type": "integer"
+      },
+      "returnsCount": {
+        "type": "integer"
+      },
+      "returnsNotRestockedQty": {
+        "description": "ReturnsNotRestockedQty: units refunded but not put back on the shelf\n(R5 \"Hàng trả không nhập lại kho\") — their cost stays a loss.",
+        "type": "integer"
+      },
+      "returnsUnknownCostQty": {
+        "description": "ReturnsUnknownCostQty: restocked units whose original line cost was 0\n(R6) — their COGS reversal is 0, so the margin reads high.",
+        "type": "integer"
+      },
+      "revenueCents": {
+        "type": "integer"
+      },
+      "salesCents": {
+        "type": "integer"
+      },
+      "shippingCents": {
+        "type": "integer"
+      },
+      "taxCents": {
+        "type": "integer"
+      },
+      "totalCents": {
+        "type": "integer"
+      },
+      "unknownCostQty": {
+        "type": "integer"
+      }
+    }
+  },
+  "github_com_webbuilder_server_internal_reports.PaymentsReport": {
+    "type": "object",
+    "properties": {
+      "currency": {
+        "type": "string"
+      },
+      "debtCollectedCents": {
+        "type": "integer"
+      },
+      "debtOpenedCents": {
+        "type": "integer"
+      },
+      "debtOpenedCount": {
+        "type": "integer"
+      },
+      "from": {
+        "type": "string"
+      },
+      "locationId": {
+        "type": "string"
+      },
+      "methods": {
+        "type": "array",
+        "items": {
+          "$ref": "#/definitions/github_com_webbuilder_server_internal_reports.MethodRow"
+        }
+      },
+      "netCashInCents": {
+        "description": "NetCashInCents = Σ NetCents over every method except debt_offset,\nwhich moves debt, not money (E3).",
+        "type": "integer"
+      },
+      "refundCents": {
+        "type": "integer"
+      },
+      "saleCents": {
+        "type": "integer"
+      },
+      "timezone": {
+        "type": "string"
+      },
+      "timezoneDefaulted": {
+        "type": "boolean"
+      },
+      "to": {
+        "type": "string"
+      }
+    }
+  },
+  "github_com_webbuilder_server_internal_reports.Payroll": {
+    "type": "object",
+    "properties": {
+      "grossCents": {
+        "type": "integer"
+      },
+      "staffCount": {
+        "type": "integer"
+      },
+      "status": {
+        "description": "approved | draft | off | unavailable",
+        "type": "string"
+      }
+    }
+  },
+  "github_com_webbuilder_server_internal_reports.ProfitReport": {
+    "type": "object",
+    "properties": {
+      "currency": {
+        "type": "string"
+      },
+      "from": {
+        "type": "string"
+      },
+      "locationId": {
+        "type": "string"
+      },
+      "months": {
+        "type": "array",
+        "items": {
+          "$ref": "#/definitions/github_com_webbuilder_server_internal_reports.MonthRow"
+        }
+      },
+      "payrollSiteWide": {
+        "description": "PayrollSiteWide: a location filter is set, and payroll is site-wide\nonly, so it is left out (\"Lương tính toàn cửa hàng\").",
+        "type": "boolean"
+      },
+      "returnsOfCancelledOrders": {
+        "type": "integer"
+      },
+      "timezone": {
+        "type": "string"
+      },
+      "timezoneDefaulted": {
+        "type": "boolean"
+      },
+      "to": {
+        "type": "string"
+      },
+      "totals": {
+        "$ref": "#/definitions/github_com_webbuilder_server_internal_reports.ProfitTotals"
+      }
+    }
+  },
+  "github_com_webbuilder_server_internal_reports.ProfitTotals": {
+    "type": "object",
+    "properties": {
+      "cancelledOrders": {
+        "type": "integer"
+      },
+      "cogsCents": {
+        "type": "integer"
+      },
+      "discountCents": {
+        "type": "integer"
+      },
+      "grossProfitCents": {
+        "type": "integer"
+      },
+      "marginBps": {
+        "type": "integer"
+      },
+      "netCogsCents": {
+        "type": "integer"
+      },
+      "netRevenueCents": {
+        "type": "integer"
+      },
+      "operatingProfitCents": {
+        "type": "integer"
+      },
+      "orders": {
+        "type": "integer"
+      },
+      "payroll": {
+        "$ref": "#/definitions/github_com_webbuilder_server_internal_reports.Payroll"
+      },
+      "returnsCents": {
+        "type": "integer"
+      },
+      "returnsCogsCents": {
+        "type": "integer"
+      },
+      "returnsCount": {
+        "type": "integer"
+      },
+      "returnsNotRestockedQty": {
+        "description": "ReturnsNotRestockedQty: units refunded but not put back on the shelf\n(R5 \"Hàng trả không nhập lại kho\") — their cost stays a loss.",
+        "type": "integer"
+      },
+      "returnsUnknownCostQty": {
+        "description": "ReturnsUnknownCostQty: restocked units whose original line cost was 0\n(R6) — their COGS reversal is 0, so the margin reads high.",
+        "type": "integer"
+      },
+      "revenueCents": {
+        "type": "integer"
+      },
+      "salesCents": {
+        "type": "integer"
+      },
+      "shippingCents": {
+        "type": "integer"
+      },
+      "taxCents": {
+        "type": "integer"
+      },
+      "totalCents": {
+        "type": "integer"
+      },
+      "unknownCostQty": {
+        "type": "integer"
+      }
+    }
+  },
+  "github_com_webbuilder_server_internal_reports.Row": {
+    "type": "object",
+    "properties": {
+      "cancelledOrders": {
+        "type": "integer"
+      },
+      "cogsCents": {
+        "type": "integer"
+      },
+      "discountCents": {
+        "type": "integer"
+      },
+      "grossProfitCents": {
+        "type": "integer"
+      },
+      "key": {
+        "type": "string"
+      },
+      "label": {
+        "type": "string"
+      },
+      "marginBps": {
+        "type": "integer"
+      },
+      "netCogsCents": {
+        "type": "integer"
+      },
+      "netRevenueCents": {
+        "type": "integer"
+      },
+      "orders": {
+        "type": "integer"
+      },
+      "returnsCents": {
+        "type": "integer"
+      },
+      "returnsCogsCents": {
+        "type": "integer"
+      },
+      "returnsCount": {
+        "type": "integer"
+      },
+      "returnsNotRestockedQty": {
+        "description": "ReturnsNotRestockedQty: units refunded but not put back on the shelf\n(R5 \"Hàng trả không nhập lại kho\") — their cost stays a loss.",
+        "type": "integer"
+      },
+      "returnsUnknownCostQty": {
+        "description": "ReturnsUnknownCostQty: restocked units whose original line cost was 0\n(R6) — their COGS reversal is 0, so the margin reads high.",
+        "type": "integer"
+      },
+      "revenueCents": {
+        "type": "integer"
+      },
+      "salesCents": {
+        "type": "integer"
+      },
+      "shippingCents": {
+        "type": "integer"
+      },
+      "taxCents": {
+        "type": "integer"
+      },
+      "totalCents": {
+        "type": "integer"
+      },
+      "unknownCostQty": {
+        "type": "integer"
+      }
+    }
+  },
+  "github_com_webbuilder_server_internal_reports.SalesReport": {
+    "type": "object",
+    "properties": {
+      "channel": {
+        "type": "string"
+      },
+      "currency": {
+        "type": "string"
+      },
+      "from": {
+        "type": "string"
+      },
+      "groupBy": {
+        "type": "string"
+      },
+      "locationId": {
+        "type": "string"
+      },
+      "returnsOfCancelledOrders": {
+        "description": "ReturnsOfCancelledOrders counts refunded returns left out because their\norder was later cancelled — its revenue already fell out (E4).",
+        "type": "integer"
+      },
+      "rows": {
+        "type": "array",
+        "items": {
+          "$ref": "#/definitions/github_com_webbuilder_server_internal_reports.Row"
+        }
+      },
+      "timezone": {
+        "type": "string"
+      },
+      "timezoneDefaulted": {
+        "type": "boolean"
+      },
+      "to": {
+        "type": "string"
+      },
+      "totals": {
+        "$ref": "#/definitions/github_com_webbuilder_server_internal_reports.Figures"
+      }
+    }
+  },
+  "github_com_webbuilder_server_internal_reports.ShiftInfo": {
+    "type": "object",
+    "properties": {
+      "closedAt": {
+        "type": "string"
+      },
+      "id": {
+        "type": "string"
+      },
+      "locationId": {
+        "type": "string"
+      },
+      "locationName": {
+        "type": "string"
+      },
+      "number": {
+        "type": "string"
+      },
+      "openedAt": {
+        "type": "string"
+      },
+      "openedByName": {
+        "type": "string"
+      },
+      "registerName": {
+        "type": "string"
+      }
+    }
+  },
+  "github_com_webbuilder_server_internal_reports.ShiftProduct": {
+    "type": "object",
+    "properties": {
+      "name": {
+        "type": "string"
+      },
+      "productId": {
+        "type": "string"
+      },
+      "quantity": {
+        "type": "integer"
+      },
+      "revenueCents": {
+        "type": "integer"
+      }
+    }
+  },
+  "github_com_webbuilder_server_internal_reports.ShiftReport": {
+    "type": "object",
+    "properties": {
+      "cancelledOrders": {
+        "type": "integer"
+      },
+      "discountCents": {
+        "type": "integer"
+      },
+      "orders": {
+        "type": "integer"
+      },
+      "products": {
+        "type": "array",
+        "items": {
+          "$ref": "#/definitions/github_com_webbuilder_server_internal_reports.ShiftProduct"
+        }
+      },
+      "revenueCents": {
+        "type": "integer"
+      },
+      "shift": {
+        "$ref": "#/definitions/github_com_webbuilder_server_internal_reports.ShiftInfo"
+      },
+      "totalCents": {
+        "type": "integer"
       }
     }
   },
@@ -19263,11 +29623,23 @@ export const API_DEFINITIONS: Record<string, unknown> = {
         "description": "RefundCents is what the merchant actually gave back, which is NOT\nnecessarily what the lines are worth: a restocking fee, a partial\ngoodwill refund, or shipping refunded on a merchant-fault return all make\nthem differ. Recorded rather than derived for exactly that reason.",
         "type": "integer"
       },
+      "refundedAt": {
+        "description": "RefundedAt is the instant the request FIRST became refunded — the date\nreports net a return on (POS P5), which updated_at cannot be (a later\nstaff-note edit moves it). nil = never refunded. SERVER-OWNED: stamped\nonce by StampRefunded, preserved on every update.",
+        "type": "string"
+      },
+      "restockLocationId": {
+        "description": "RestockLocationID is the location the units go back onto the shelf at.\n\"\" means the ORDER's own location, which is what every return meant\nbefore counter returns let a cashier choose (spec §7.1). Preserved on\nupdate like Source: the place stock went is a fact, not an edit.",
+        "type": "string"
+      },
       "restocked": {
         "description": "Restocked says the merchant judged the returned units sellable and put\nthem back. FALSE by default and only ever set by a person: see the\npackage doc on why this is never automatic.",
         "type": "boolean"
       },
       "siteId": {
+        "type": "string"
+      },
+      "source": {
+        "description": "Source is who filed the return: \"\" for a shopper or the manage screen,\nSourcePOS for a counter return — refunded through the drawer at the\nmoment it is filed, which is why RefundedInWindow (the Z report's\n\"refunded outside the counter\" warning) skips it. SERVER-OWNED: set by\nthe filing path, preserved on every update (PreserveServerOwned).",
         "type": "string"
       },
       "staffNote": {
@@ -19364,9 +29736,250 @@ export const API_DEFINITIONS: Record<string, unknown> = {
       "StatusRejected"
     ]
   },
+  "github_com_webbuilder_server_internal_shipping.CategoryMode": {
+    "type": "string",
+    "enum": [
+      "none",
+      "only",
+      "any",
+      "exclude"
+    ],
+    "x-enum-comments": {
+      "CategoryAny": "some line is in the set",
+      "CategoryExclude": "no line is in the set",
+      "CategoryNone": "no condition (\"\" reads the same)",
+      "CategoryOnly": "every line is in the set"
+    },
+    "x-enum-descriptions": [
+      "no condition (\"\" reads the same)",
+      "every line is in the set",
+      "some line is in the set",
+      "no line is in the set"
+    ],
+    "x-enum-varnames": [
+      "CategoryNone",
+      "CategoryOnly",
+      "CategoryAny",
+      "CategoryExclude"
+    ]
+  },
+  "github_com_webbuilder_server_internal_shipping.Change": {
+    "type": "object",
+    "properties": {
+      "after": {
+        "type": "array",
+        "items": {
+          "$ref": "#/definitions/github_com_webbuilder_server_internal_shipping.MethodFee"
+        }
+      },
+      "ask": {
+        "$ref": "#/definitions/github_com_webbuilder_server_internal_shipping.ChangeAsk"
+      },
+      "before": {
+        "type": "array",
+        "items": {
+          "$ref": "#/definitions/github_com_webbuilder_server_internal_shipping.MethodFee"
+        }
+      }
+    }
+  },
+  "github_com_webbuilder_server_internal_shipping.ChangeAsk": {
+    "type": "object",
+    "properties": {
+      "payment": {
+        "$ref": "#/definitions/github_com_webbuilder_server_internal_shipping.Payment"
+      },
+      "provinceCode": {
+        "type": "string"
+      },
+      "subtotalCents": {
+        "type": "integer"
+      },
+      "wardCode": {
+        "type": "string"
+      }
+    }
+  },
+  "github_com_webbuilder_server_internal_shipping.ConfigCheck": {
+    "type": "object",
+    "properties": {
+      "changes": {
+        "type": "array",
+        "items": {
+          "$ref": "#/definitions/github_com_webbuilder_server_internal_shipping.Change"
+        }
+      },
+      "coverage": {
+        "$ref": "#/definitions/github_com_webbuilder_server_internal_shipping.CoverageReport"
+      },
+      "deadRules": {
+        "type": "array",
+        "items": {
+          "$ref": "#/definitions/github_com_webbuilder_server_internal_shipping.DeadRule"
+        }
+      },
+      "duplicates": {
+        "type": "array",
+        "items": {
+          "$ref": "#/definitions/github_com_webbuilder_server_internal_shipping.Duplicate"
+        }
+      },
+      "errors": {
+        "type": "array",
+        "items": {
+          "$ref": "#/definitions/github_com_webbuilder_server_internal_shipping.RuleError"
+        }
+      },
+      "freeshipAccident": {
+        "type": "array",
+        "items": {
+          "$ref": "#/definitions/github_com_webbuilder_server_internal_shipping.FreeshipFlag"
+        }
+      },
+      "freeshipIntroduced": {
+        "description": "FreeshipIntroduced: the accidents the draft adds over the saved config —\nwhat a save would refuse (freeship_unconfirmed) until acknowledged. Empty\nwithout a draft; an accident the saved config already has is not re-asked.",
+        "type": "array",
+        "items": {
+          "$ref": "#/definitions/github_com_webbuilder_server_internal_shipping.FreeshipFlag"
+        }
+      },
+      "missingCategories": {
+        "description": "MissingCategories: rules naming a category the tree no longer holds —\ncheckout skips that category, a save refuses it (invalid_rule).",
+        "allOf": [
+          {
+            "$ref": "#/definitions/github_com_webbuilder_server_internal_shipping.MissingCategoriesWarning"
+          }
+        ]
+      },
+      "order": {
+        "type": "object",
+        "additionalProperties": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  },
+  "github_com_webbuilder_server_internal_shipping.Confirm": {
+    "type": "object",
+    "properties": {
+      "freeship": {
+        "type": "boolean"
+      },
+      "zoneInUse": {
+        "type": "boolean"
+      }
+    }
+  },
+  "github_com_webbuilder_server_internal_shipping.CoverageReport": {
+    "type": "object",
+    "properties": {
+      "provinces": {
+        "type": "array",
+        "items": {
+          "$ref": "#/definitions/github_com_webbuilder_server_internal_shipping.ProvinceCoverage"
+        }
+      },
+      "uncovered": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      }
+    }
+  },
+  "github_com_webbuilder_server_internal_shipping.DeadRule": {
+    "type": "object",
+    "properties": {
+      "coveredBy": {
+        "type": "string"
+      },
+      "methodId": {
+        "type": "string"
+      },
+      "ruleId": {
+        "type": "string"
+      }
+    }
+  },
+  "github_com_webbuilder_server_internal_shipping.Duplicate": {
+    "type": "object",
+    "properties": {
+      "a": {
+        "type": "string"
+      },
+      "b": {
+        "type": "string"
+      },
+      "methodId": {
+        "type": "string"
+      }
+    }
+  },
+  "github_com_webbuilder_server_internal_shipping.FreeshipFlag": {
+    "type": "object",
+    "properties": {
+      "methodId": {
+        "type": "string"
+      },
+      "reason": {
+        "type": "string"
+      }
+    }
+  },
+  "github_com_webbuilder_server_internal_shipping.GroupKey": {
+    "type": "string",
+    "enum": [
+      "payment",
+      "zone",
+      "subtotal",
+      "weight",
+      "qty",
+      "category"
+    ],
+    "x-enum-varnames": [
+      "GroupPayment",
+      "GroupZone",
+      "GroupSubtotal",
+      "GroupWeight",
+      "GroupQty",
+      "GroupCategory"
+    ]
+  },
+  "github_com_webbuilder_server_internal_shipping.GroupSetting": {
+    "type": "object",
+    "properties": {
+      "customOrder": {
+        "description": "CustomOrder ranks values for ModeCustom: zone ids, category ids, payment\nclasses or RangeKeys. An id nobody has any more is skipped; a value\nmissing from the list sorts after every listed one (and still before the\nempty cell).",
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "enabled": {
+        "type": "boolean"
+      },
+      "group": {
+        "$ref": "#/definitions/github_com_webbuilder_server_internal_shipping.GroupKey"
+      },
+      "mode": {
+        "$ref": "#/definitions/github_com_webbuilder_server_internal_shipping.Mode"
+      }
+    }
+  },
   "github_com_webbuilder_server_internal_shipping.Method": {
     "type": "object",
     "properties": {
+      "carrier": {
+        "description": "Carrier makes this a CARRIER-BACKED method: a carriers.Registry provider\nid (\"ghn\", \"ghtk\") whose live quote prices the order instead of FeeCents.\n\"\" is a flat/zone method, exactly as before carriers existed. FeeCents and\nZoneFees still matter on a carrier method: they are the FALLBACK charged\nwhenever the carrier cannot answer (see rates.Quote) — never 0.",
+        "type": "string"
+      },
+      "carrierService": {
+        "description": "CarrierService is the carrier's own service id (carriers.ServiceOption);\n\"\" means the provider's DefaultService. Always \"\" when Carrier is \"\".",
+        "type": "string"
+      },
       "createdAt": {
         "type": "string"
       },
@@ -19389,6 +30002,10 @@ export const API_DEFINITIONS: Record<string, unknown> = {
       "id": {
         "type": "string"
       },
+      "isDefault": {
+        "description": "IsDefault marks the one method a shopper gets when they name none (or\nname one this ask cannot use). At most one per site: the stores clear it\non every other method when it is set here. Nothing reads it on the v1\nengine.",
+        "type": "boolean"
+      },
       "name": {
         "description": "Name is what the shopper reads AND the pairing key an order form's\nchosen option is matched against — see the package doc. Unique per site,\ncase-insensitively.",
         "type": "string"
@@ -19396,6 +30013,14 @@ export const API_DEFINITIONS: Record<string, unknown> = {
       "position": {
         "description": "Position is the merchant's arrangement; ties break on Name.",
         "type": "integer"
+      },
+      "priorityOverride": {
+        "description": "PriorityOverride replaces the site's priority document for THIS method's\nrules; nil follows the site order.",
+        "allOf": [
+          {
+            "$ref": "#/definitions/github_com_webbuilder_server_internal_shipping.Priority"
+          }
+        ]
       },
       "siteId": {
         "type": "string"
@@ -19413,11 +30038,404 @@ export const API_DEFINITIONS: Record<string, unknown> = {
       }
     }
   },
+  "github_com_webbuilder_server_internal_shipping.MethodFee": {
+    "type": "object",
+    "properties": {
+      "feeCents": {
+        "type": "integer"
+      },
+      "methodId": {
+        "type": "string"
+      },
+      "visible": {
+        "type": "boolean"
+      }
+    }
+  },
+  "github_com_webbuilder_server_internal_shipping.MethodPatch": {
+    "type": "object",
+    "properties": {
+      "carrier": {
+        "type": "string"
+      },
+      "carrierService": {
+        "type": "string"
+      },
+      "description": {
+        "type": "string"
+      },
+      "disabled": {
+        "type": "boolean"
+      },
+      "fallbacks": {
+        "type": "object",
+        "additionalProperties": {
+          "type": "integer",
+          "format": "int64"
+        }
+      },
+      "feeCents": {
+        "type": "integer"
+      },
+      "id": {
+        "type": "string"
+      },
+      "isDefault": {
+        "type": "boolean"
+      },
+      "name": {
+        "type": "string"
+      },
+      "position": {
+        "type": "integer"
+      },
+      "priorityOverride": {
+        "$ref": "#/definitions/github_com_webbuilder_server_internal_shipping.OptionalPriority"
+      },
+      "rules": {
+        "type": "array",
+        "items": {
+          "$ref": "#/definitions/github_com_webbuilder_server_internal_shipping.Rule"
+        }
+      }
+    }
+  },
+  "github_com_webbuilder_server_internal_shipping.MissingCategoriesWarning": {
+    "type": "object",
+    "properties": {
+      "categoryIds": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "ruleIds": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      }
+    }
+  },
+  "github_com_webbuilder_server_internal_shipping.Mode": {
+    "type": "string",
+    "enum": [
+      "specific",
+      "desc",
+      "asc",
+      "custom",
+      "most"
+    ],
+    "x-enum-comments": {
+      "ModeAsc": "Thấp → cao",
+      "ModeCustom": "Tuỳ chỉnh: CustomOrder ranks VALUES, not rows",
+      "ModeDesc": "Cao → thấp",
+      "ModeMost": "Danh mục \"Khớp nhiều nhất\"",
+      "ModeSpecific": "Thanh toán \"Cụ thể trước\", Khu vực \"Chi tiết nhất\""
+    },
+    "x-enum-descriptions": [
+      "Thanh toán \"Cụ thể trước\", Khu vực \"Chi tiết nhất\"",
+      "Cao → thấp",
+      "Thấp → cao",
+      "Tuỳ chỉnh: CustomOrder ranks VALUES, not rows",
+      "Danh mục \"Khớp nhiều nhất\""
+    ],
+    "x-enum-varnames": [
+      "ModeSpecific",
+      "ModeDesc",
+      "ModeAsc",
+      "ModeCustom",
+      "ModeMost"
+    ]
+  },
+  "github_com_webbuilder_server_internal_shipping.OptionalPriority": {
+    "type": "object",
+    "properties": {
+      "set": {
+        "type": "boolean"
+      },
+      "value": {
+        "$ref": "#/definitions/github_com_webbuilder_server_internal_shipping.Priority"
+      }
+    }
+  },
+  "github_com_webbuilder_server_internal_shipping.Outcome": {
+    "type": "string",
+    "enum": [
+      "fixed",
+      "weight_step",
+      "qty_step",
+      "percent",
+      "free",
+      "carrier",
+      "unsupported",
+      "contact"
+    ],
+    "x-enum-comments": {
+      "OutcomeContact": "fee 0 + note, COD only",
+      "OutcomeUnsupported": "hides the method"
+    },
+    "x-enum-descriptions": [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "hides the method",
+      "fee 0 + note, COD only"
+    ],
+    "x-enum-varnames": [
+      "OutcomeFixed",
+      "OutcomeWeightStep",
+      "OutcomeQtyStep",
+      "OutcomePercent",
+      "OutcomeFree",
+      "OutcomeCarrier",
+      "OutcomeUnsupported",
+      "OutcomeContact"
+    ]
+  },
+  "github_com_webbuilder_server_internal_shipping.Patch": {
+    "type": "object",
+    "properties": {
+      "confirm": {
+        "$ref": "#/definitions/github_com_webbuilder_server_internal_shipping.Confirm"
+      },
+      "deleteMethods": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "deleteZones": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "methods": {
+        "type": "array",
+        "items": {
+          "$ref": "#/definitions/github_com_webbuilder_server_internal_shipping.MethodPatch"
+        }
+      },
+      "priority": {
+        "$ref": "#/definitions/github_com_webbuilder_server_internal_shipping.Priority"
+      },
+      "zones": {
+        "type": "array",
+        "items": {
+          "$ref": "#/definitions/github_com_webbuilder_server_internal_shipping.ZonePatch"
+        }
+      }
+    }
+  },
+  "github_com_webbuilder_server_internal_shipping.Payment": {
+    "type": "string",
+    "enum": [
+      "all",
+      "cod",
+      "prepaid"
+    ],
+    "x-enum-comments": {
+      "PaymentAll": "a rule that does not care (\"\" reads the same)"
+    },
+    "x-enum-descriptions": [
+      "a rule that does not care (\"\" reads the same)",
+      "",
+      ""
+    ],
+    "x-enum-varnames": [
+      "PaymentAll",
+      "PaymentCOD",
+      "PaymentPrepaid"
+    ]
+  },
+  "github_com_webbuilder_server_internal_shipping.PreviewAsk": {
+    "type": "object",
+    "properties": {
+      "categoryIds": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "payment": {
+        "$ref": "#/definitions/github_com_webbuilder_server_internal_shipping.Payment"
+      },
+      "provinceCode": {
+        "type": "string"
+      },
+      "qty": {
+        "type": "integer"
+      },
+      "subtotalCents": {
+        "type": "integer"
+      },
+      "wardCode": {
+        "type": "string"
+      },
+      "weightGrams": {
+        "type": "integer"
+      }
+    }
+  },
+  "github_com_webbuilder_server_internal_shipping.Priority": {
+    "type": "object",
+    "properties": {
+      "feeOrder": {
+        "description": "ModeAsc (customer-friendly) | ModeDesc",
+        "allOf": [
+          {
+            "$ref": "#/definitions/github_com_webbuilder_server_internal_shipping.Mode"
+          }
+        ]
+      },
+      "groups": {
+        "type": "array",
+        "items": {
+          "$ref": "#/definitions/github_com_webbuilder_server_internal_shipping.GroupSetting"
+        }
+      }
+    }
+  },
+  "github_com_webbuilder_server_internal_shipping.ProvinceCoverage": {
+    "type": "object",
+    "properties": {
+      "cod": {
+        "type": "string"
+      },
+      "code": {
+        "type": "string"
+      },
+      "prepaid": {
+        "type": "string"
+      },
+      "wards": {
+        "type": "integer"
+      }
+    }
+  },
+  "github_com_webbuilder_server_internal_shipping.Range": {
+    "type": "object",
+    "properties": {
+      "max": {
+        "type": "integer"
+      },
+      "min": {
+        "type": "integer"
+      }
+    }
+  },
+  "github_com_webbuilder_server_internal_shipping.Rule": {
+    "type": "object",
+    "properties": {
+      "categoryIds": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "categoryMode": {
+        "$ref": "#/definitions/github_com_webbuilder_server_internal_shipping.CategoryMode"
+      },
+      "createdAt": {
+        "type": "string"
+      },
+      "eta": {
+        "type": "string"
+      },
+      "feeCents": {
+        "type": "integer"
+      },
+      "id": {
+        "type": "string"
+      },
+      "methodId": {
+        "type": "string"
+      },
+      "note": {
+        "type": "string"
+      },
+      "outcome": {
+        "$ref": "#/definitions/github_com_webbuilder_server_internal_shipping.Outcome"
+      },
+      "payment": {
+        "$ref": "#/definitions/github_com_webbuilder_server_internal_shipping.Payment"
+      },
+      "percentBps": {
+        "description": "Percent outcome: basis points of the subtotal (1% = 100), clamped to\n[PercentFloorCents, PercentCapCents]; a cap of 0 is no cap.",
+        "type": "integer"
+      },
+      "percentCapCents": {
+        "type": "integer"
+      },
+      "percentFloorCents": {
+        "type": "integer"
+      },
+      "qty": {
+        "$ref": "#/definitions/github_com_webbuilder_server_internal_shipping.Range"
+      },
+      "stepEachCents": {
+        "type": "integer"
+      },
+      "stepEachUnits": {
+        "type": "integer"
+      },
+      "stepFirstCents": {
+        "type": "integer"
+      },
+      "stepFirstUnits": {
+        "description": "Step outcomes: StepFirstCents covers the first StepFirstUnits (grams for\nweight_step, items for qty_step), then StepEachCents per StepEachUnits\nbegun — a partial step rounds UP.",
+        "type": "integer"
+      },
+      "subtotal": {
+        "$ref": "#/definitions/github_com_webbuilder_server_internal_shipping.Range"
+      },
+      "weight": {
+        "$ref": "#/definitions/github_com_webbuilder_server_internal_shipping.Range"
+      },
+      "zoneIds": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "zoneMode": {
+        "$ref": "#/definitions/github_com_webbuilder_server_internal_shipping.ZoneMode"
+      }
+    }
+  },
+  "github_com_webbuilder_server_internal_shipping.RuleError": {
+    "type": "object",
+    "properties": {
+      "code": {
+        "type": "string"
+      },
+      "field": {
+        "type": "string"
+      },
+      "index": {
+        "type": "integer"
+      },
+      "methodId": {
+        "type": "string"
+      },
+      "ruleId": {
+        "type": "string"
+      }
+    }
+  },
   "github_com_webbuilder_server_internal_shipping.Zone": {
     "type": "object",
     "properties": {
       "createdAt": {
         "type": "string"
+      },
+      "hidden": {
+        "description": "Hidden marks a zone Derive synthesised so first-zone-wins survives the\nmove to rules. Never authored by a merchant and never shown to one.",
+        "type": "boolean"
       },
       "id": {
         "type": "string"
@@ -19436,6 +30454,1003 @@ export const API_DEFINITIONS: Record<string, unknown> = {
         "items": {
           "type": "string"
         }
+      },
+      "siteId": {
+        "type": "string"
+      },
+      "updatedAt": {
+        "type": "string"
+      },
+      "wardCodes": {
+        "description": "WardCodes narrows the zone to individual wards (\"84_VN101_W1\"), the\nfinest address level the checkout collects. Matching on them is the rule\nengine's (evaluate.go); the v1 FeeForZone path ignores them.",
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      }
+    }
+  },
+  "github_com_webbuilder_server_internal_shipping.ZoneMode": {
+    "type": "string",
+    "enum": [
+      "any",
+      "in",
+      "out"
+    ],
+    "x-enum-comments": {
+      "ZoneAny": "\"\" reads the same"
+    },
+    "x-enum-descriptions": [
+      "\"\" reads the same",
+      "",
+      ""
+    ],
+    "x-enum-varnames": [
+      "ZoneAny",
+      "ZoneIn",
+      "ZoneOut"
+    ]
+  },
+  "github_com_webbuilder_server_internal_shipping.ZonePatch": {
+    "type": "object",
+    "properties": {
+      "hidden": {
+        "type": "boolean"
+      },
+      "id": {
+        "type": "string"
+      },
+      "name": {
+        "type": "string"
+      },
+      "position": {
+        "type": "integer"
+      },
+      "provinces": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "wardCodes": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      }
+    }
+  },
+  "github_com_webbuilder_server_internal_staff.AdjustmentInput": {
+    "type": "object",
+    "properties": {
+      "amountCents": {
+        "type": "integer"
+      },
+      "clientRef": {
+        "type": "string"
+      },
+      "kind": {
+        "type": "string"
+      },
+      "month": {
+        "type": "string"
+      },
+      "note": {
+        "type": "string"
+      },
+      "staffId": {
+        "type": "string"
+      }
+    }
+  },
+  "github_com_webbuilder_server_internal_staff.ApproveInput": {
+    "type": "object",
+    "properties": {
+      "clientRef": {
+        "type": "string"
+      },
+      "previewHash": {
+        "type": "string"
+      }
+    }
+  },
+  "github_com_webbuilder_server_internal_staff.Attendance": {
+    "type": "object",
+    "properties": {
+      "clockInAt": {
+        "type": "string"
+      },
+      "clockOutAt": {
+        "type": "string"
+      },
+      "corrected": {
+        "type": "boolean"
+      },
+      "createdAt": {
+        "type": "string"
+      },
+      "earlyMinutes": {
+        "type": "integer"
+      },
+      "id": {
+        "type": "string"
+      },
+      "inActorId": {
+        "type": "string"
+      },
+      "inClientRef": {
+        "type": "string"
+      },
+      "inMethod": {
+        "type": "string"
+      },
+      "lateMinutes": {
+        "type": "integer"
+      },
+      "locationId": {
+        "type": "string"
+      },
+      "outActorId": {
+        "type": "string"
+      },
+      "outClientRef": {
+        "type": "string"
+      },
+      "outMethod": {
+        "type": "string"
+      },
+      "overtimeApprovedMinutes": {
+        "type": "integer"
+      },
+      "overtimeMinutes": {
+        "type": "integer"
+      },
+      "paidMinutes": {
+        "type": "integer"
+      },
+      "registerId": {
+        "type": "string"
+      },
+      "scheduleEntryId": {
+        "type": "string"
+      },
+      "scheduledMinutes": {
+        "type": "integer"
+      },
+      "siteId": {
+        "type": "string"
+      },
+      "staffId": {
+        "type": "string"
+      },
+      "staffName": {
+        "type": "string"
+      },
+      "status": {
+        "type": "string"
+      },
+      "unscheduledApproved": {
+        "type": "boolean"
+      },
+      "updatedAt": {
+        "type": "string"
+      },
+      "voidReason": {
+        "type": "string"
+      },
+      "workDate": {
+        "type": "string"
+      }
+    }
+  },
+  "github_com_webbuilder_server_internal_staff.AttendancePatch": {
+    "type": "object",
+    "properties": {
+      "clockInAt": {
+        "type": "string"
+      },
+      "clockOutAt": {
+        "type": "string"
+      },
+      "overtimeApprovedMinutes": {
+        "type": "integer"
+      },
+      "reason": {
+        "type": "string"
+      },
+      "unscheduledApproved": {
+        "type": "boolean"
+      },
+      "void": {
+        "type": "boolean"
+      }
+    }
+  },
+  "github_com_webbuilder_server_internal_staff.CarryInput": {
+    "type": "object",
+    "properties": {
+      "clientRef": {
+        "type": "string"
+      },
+      "staffId": {
+        "type": "string"
+      }
+    }
+  },
+  "github_com_webbuilder_server_internal_staff.ClockRequest": {
+    "type": "object",
+    "properties": {
+      "action": {
+        "type": "string"
+      },
+      "clientRef": {
+        "type": "string"
+      },
+      "pin": {
+        "type": "string"
+      },
+      "registerId": {
+        "type": "string"
+      },
+      "staffId": {
+        "type": "string"
+      },
+      "token": {
+        "type": "string"
+      }
+    }
+  },
+  "github_com_webbuilder_server_internal_staff.ClockResult": {
+    "type": "object",
+    "properties": {
+      "attendance": {
+        "$ref": "#/definitions/github_com_webbuilder_server_internal_staff.Attendance"
+      },
+      "replayed": {
+        "type": "boolean"
+      },
+      "schedule": {
+        "$ref": "#/definitions/github_com_webbuilder_server_internal_staff.ScheduleRef"
+      },
+      "staff": {
+        "$ref": "#/definitions/github_com_webbuilder_server_internal_staff.StaffRef"
+      }
+    }
+  },
+  "github_com_webbuilder_server_internal_staff.ClockToken": {
+    "type": "object",
+    "properties": {
+      "expiresAt": {
+        "type": "string"
+      },
+      "qrPng": {
+        "type": "string"
+      },
+      "token": {
+        "type": "string"
+      }
+    }
+  },
+  "github_com_webbuilder_server_internal_staff.CopySkip": {
+    "type": "object",
+    "properties": {
+      "reason": {
+        "type": "string"
+      },
+      "sourceId": {
+        "type": "string"
+      },
+      "staffId": {
+        "type": "string"
+      },
+      "withEntryId": {
+        "type": "string"
+      },
+      "workDate": {
+        "type": "string"
+      }
+    }
+  },
+  "github_com_webbuilder_server_internal_staff.CopyWeekInput": {
+    "type": "object",
+    "properties": {
+      "dryRun": {
+        "type": "boolean"
+      },
+      "fromWeekStart": {
+        "type": "string"
+      },
+      "locationId": {
+        "type": "string"
+      },
+      "toWeekStart": {
+        "type": "string"
+      }
+    }
+  },
+  "github_com_webbuilder_server_internal_staff.CopyWeekResult": {
+    "type": "object",
+    "properties": {
+      "created": {
+        "type": "array",
+        "items": {
+          "$ref": "#/definitions/github_com_webbuilder_server_internal_staff.ScheduleEntry"
+        }
+      },
+      "dryRun": {
+        "type": "boolean"
+      },
+      "skipped": {
+        "type": "array",
+        "items": {
+          "$ref": "#/definitions/github_com_webbuilder_server_internal_staff.CopySkip"
+        }
+      }
+    }
+  },
+  "github_com_webbuilder_server_internal_staff.ForgiveInput": {
+    "type": "object",
+    "properties": {
+      "clientRef": {
+        "type": "string"
+      },
+      "note": {
+        "type": "string"
+      },
+      "staffId": {
+        "type": "string"
+      }
+    }
+  },
+  "github_com_webbuilder_server_internal_staff.ManualAttendanceInput": {
+    "type": "object",
+    "properties": {
+      "clockInAt": {
+        "type": "string"
+      },
+      "clockOutAt": {
+        "type": "string"
+      },
+      "locationId": {
+        "type": "string"
+      },
+      "reason": {
+        "type": "string"
+      },
+      "staffId": {
+        "type": "string"
+      }
+    }
+  },
+  "github_com_webbuilder_server_internal_staff.MemberInput": {
+    "type": "object",
+    "properties": {
+      "active": {
+        "type": "boolean"
+      },
+      "code": {
+        "type": "string"
+      },
+      "homeLocationId": {
+        "type": "string"
+      },
+      "memberUserId": {
+        "type": "string"
+      },
+      "name": {
+        "type": "string"
+      },
+      "note": {
+        "type": "string"
+      },
+      "phone": {
+        "type": "string"
+      },
+      "removeFutureSchedule": {
+        "type": "boolean"
+      }
+    }
+  },
+  "github_com_webbuilder_server_internal_staff.PaidInput": {
+    "type": "object",
+    "properties": {
+      "method": {
+        "type": "string"
+      },
+      "note": {
+        "type": "string"
+      },
+      "paidAt": {
+        "type": "string"
+      }
+    }
+  },
+  "github_com_webbuilder_server_internal_staff.PayRateInput": {
+    "type": "object",
+    "properties": {
+      "commissionBps": {
+        "type": "integer"
+      },
+      "effectiveFrom": {
+        "type": "string"
+      },
+      "monthlyAllowanceCents": {
+        "type": "integer"
+      },
+      "overtimeBps": {
+        "type": "integer"
+      },
+      "payType": {
+        "type": "string"
+      },
+      "rateCents": {
+        "type": "integer"
+      },
+      "shiftAllowanceCents": {
+        "type": "integer"
+      },
+      "staffId": {
+        "type": "string"
+      }
+    }
+  },
+  "github_com_webbuilder_server_internal_staff.ScheduleBatch": {
+    "type": "object",
+    "properties": {
+      "clientRef": {
+        "type": "string"
+      },
+      "entries": {
+        "type": "array",
+        "items": {
+          "$ref": "#/definitions/github_com_webbuilder_server_internal_staff.ScheduleInput"
+        }
+      }
+    }
+  },
+  "github_com_webbuilder_server_internal_staff.ScheduleEntry": {
+    "type": "object",
+    "properties": {
+      "batchIndex": {
+        "type": "integer"
+      },
+      "breakMinutes": {
+        "type": "integer"
+      },
+      "clientRef": {
+        "type": "string"
+      },
+      "createdAt": {
+        "type": "string"
+      },
+      "createdBy": {
+        "type": "string"
+      },
+      "endsAt": {
+        "type": "string"
+      },
+      "id": {
+        "type": "string"
+      },
+      "kind": {
+        "type": "string"
+      },
+      "locationId": {
+        "type": "string"
+      },
+      "note": {
+        "type": "string"
+      },
+      "paidLeave": {
+        "type": "boolean"
+      },
+      "siteId": {
+        "type": "string"
+      },
+      "staffId": {
+        "type": "string"
+      },
+      "startsAt": {
+        "type": "string"
+      },
+      "templateId": {
+        "type": "string"
+      },
+      "updatedAt": {
+        "type": "string"
+      },
+      "workDate": {
+        "type": "string"
+      }
+    }
+  },
+  "github_com_webbuilder_server_internal_staff.ScheduleInput": {
+    "type": "object",
+    "properties": {
+      "breakMinutes": {
+        "type": "integer"
+      },
+      "endsAt": {
+        "type": "string"
+      },
+      "kind": {
+        "type": "string"
+      },
+      "locationId": {
+        "type": "string"
+      },
+      "note": {
+        "type": "string"
+      },
+      "paidLeave": {
+        "type": "boolean"
+      },
+      "staffId": {
+        "type": "string"
+      },
+      "startsAt": {
+        "type": "string"
+      },
+      "templateId": {
+        "type": "string"
+      },
+      "workDate": {
+        "type": "string"
+      }
+    }
+  },
+  "github_com_webbuilder_server_internal_staff.ScheduleRef": {
+    "type": "object",
+    "properties": {
+      "endsAt": {
+        "type": "string"
+      },
+      "entryId": {
+        "type": "string"
+      },
+      "startsAt": {
+        "type": "string"
+      },
+      "templateName": {
+        "type": "string"
+      }
+    }
+  },
+  "github_com_webbuilder_server_internal_staff.Settings": {
+    "type": "object",
+    "properties": {
+      "allowUnscheduled": {
+        "type": "boolean"
+      },
+      "autoCloseHours": {
+        "type": "integer"
+      },
+      "enabled": {
+        "type": "boolean"
+      },
+      "graceMinutes": {
+        "type": "integer"
+      },
+      "pinLockMinutes": {
+        "type": "integer"
+      },
+      "pinMaxAttempts": {
+        "type": "integer"
+      },
+      "roundingMinutes": {
+        "type": "integer"
+      },
+      "standardWorkdays": {
+        "type": "integer"
+      },
+      "updatedAt": {
+        "type": "string"
+      }
+    }
+  },
+  "github_com_webbuilder_server_internal_staff.StaffRef": {
+    "type": "object",
+    "properties": {
+      "id": {
+        "type": "string"
+      },
+      "name": {
+        "type": "string"
+      }
+    }
+  },
+  "github_com_webbuilder_server_internal_staff.TemplateInput": {
+    "type": "object",
+    "properties": {
+      "active": {
+        "type": "boolean"
+      },
+      "breakMinutes": {
+        "type": "integer"
+      },
+      "endMinute": {
+        "type": "integer"
+      },
+      "locationId": {
+        "type": "string"
+      },
+      "name": {
+        "type": "string"
+      },
+      "position": {
+        "type": "integer"
+      },
+      "startMinute": {
+        "type": "integer"
+      }
+    }
+  },
+  "github_com_webbuilder_server_internal_tickets.Audit": {
+    "type": "object",
+    "properties": {
+      "actor": {
+        "type": "string"
+      },
+      "after": {
+        "type": "string"
+      },
+      "before": {
+        "type": "string"
+      },
+      "createdAt": {
+        "type": "string"
+      },
+      "id": {
+        "type": "string"
+      },
+      "kind": {
+        "type": "string"
+      },
+      "reason": {
+        "type": "string"
+      },
+      "siteId": {
+        "type": "string"
+      },
+      "ticketId": {
+        "type": "string"
+      }
+    }
+  },
+  "github_com_webbuilder_server_internal_tickets.Cell": {
+    "type": "object",
+    "properties": {
+      "capacity": {
+        "type": "integer"
+      },
+      "createdAt": {
+        "type": "string"
+      },
+      "eventId": {
+        "type": "string"
+      },
+      "held": {
+        "type": "integer"
+      },
+      "sessionId": {
+        "type": "string"
+      },
+      "siteId": {
+        "type": "string"
+      },
+      "sold": {
+        "type": "integer"
+      },
+      "typeId": {
+        "type": "string"
+      },
+      "updatedAt": {
+        "type": "string"
+      },
+      "variantId": {
+        "type": "string"
+      }
+    }
+  },
+  "github_com_webbuilder_server_internal_tickets.Delivery": {
+    "type": "object",
+    "properties": {
+      "actor": {
+        "type": "string"
+      },
+      "createdAt": {
+        "type": "string"
+      },
+      "id": {
+        "type": "string"
+      },
+      "kind": {
+        "type": "string"
+      },
+      "orderId": {
+        "type": "string"
+      },
+      "siteId": {
+        "type": "string"
+      },
+      "status": {
+        "type": "string"
+      },
+      "ticketId": {
+        "type": "string"
+      },
+      "toEmail": {
+        "type": "string"
+      }
+    }
+  },
+  "github_com_webbuilder_server_internal_tickets.Event": {
+    "type": "object",
+    "properties": {
+      "checkinClosesMin": {
+        "type": "integer"
+      },
+      "checkinOpensMin": {
+        "type": "integer"
+      },
+      "createdAt": {
+        "type": "string"
+      },
+      "holdMinutes": {
+        "type": "integer"
+      },
+      "id": {
+        "type": "string"
+      },
+      "name": {
+        "type": "string"
+      },
+      "productId": {
+        "type": "string"
+      },
+      "siteId": {
+        "type": "string"
+      },
+      "status": {
+        "type": "string"
+      },
+      "summary": {
+        "type": "string"
+      },
+      "timezone": {
+        "type": "string"
+      },
+      "updatedAt": {
+        "type": "string"
+      },
+      "venueAddress": {
+        "type": "string"
+      },
+      "venueName": {
+        "type": "string"
+      }
+    }
+  },
+  "github_com_webbuilder_server_internal_tickets.ScanResult": {
+    "type": "object",
+    "properties": {
+      "closesAt": {
+        "type": "string"
+      },
+      "opensAt": {
+        "type": "string"
+      },
+      "outcome": {
+        "type": "string"
+      },
+      "reason": {
+        "type": "string"
+      },
+      "replayed": {
+        "type": "boolean"
+      },
+      "serverNow": {
+        "type": "string"
+      },
+      "ticket": {
+        "$ref": "#/definitions/github_com_webbuilder_server_internal_tickets.ScanTicket"
+      },
+      "usedAt": {
+        "type": "string"
+      },
+      "usedGate": {
+        "type": "string"
+      }
+    }
+  },
+  "github_com_webbuilder_server_internal_tickets.ScanTicket": {
+    "type": "object",
+    "properties": {
+      "eventName": {
+        "type": "string"
+      },
+      "holderName": {
+        "type": "string"
+      },
+      "id": {
+        "type": "string"
+      },
+      "sessionLabel": {
+        "type": "string"
+      },
+      "shortCode": {
+        "type": "string"
+      },
+      "startsAt": {
+        "type": "string"
+      },
+      "typeName": {
+        "type": "string"
+      }
+    }
+  },
+  "github_com_webbuilder_server_internal_tickets.Session": {
+    "type": "object",
+    "properties": {
+      "createdAt": {
+        "type": "string"
+      },
+      "endsAt": {
+        "type": "string"
+      },
+      "eventId": {
+        "type": "string"
+      },
+      "id": {
+        "type": "string"
+      },
+      "label": {
+        "type": "string"
+      },
+      "siteId": {
+        "type": "string"
+      },
+      "startsAt": {
+        "type": "string"
+      },
+      "status": {
+        "type": "string"
+      },
+      "updatedAt": {
+        "type": "string"
+      }
+    }
+  },
+  "github_com_webbuilder_server_internal_tickets.Ticket": {
+    "type": "object",
+    "properties": {
+      "createdAt": {
+        "type": "string"
+      },
+      "eventId": {
+        "type": "string"
+      },
+      "eventName": {
+        "type": "string"
+      },
+      "holderEdits": {
+        "type": "integer"
+      },
+      "holderEmail": {
+        "type": "string"
+      },
+      "holderLockedAt": {
+        "type": "string"
+      },
+      "holderName": {
+        "type": "string"
+      },
+      "id": {
+        "type": "string"
+      },
+      "lineVariantId": {
+        "type": "string"
+      },
+      "movedFromVariantId": {
+        "type": "string"
+      },
+      "offeringVariantId": {
+        "type": "string"
+      },
+      "orderId": {
+        "type": "string"
+      },
+      "rev": {
+        "type": "integer"
+      },
+      "sessionId": {
+        "type": "string"
+      },
+      "sessionLabel": {
+        "type": "string"
+      },
+      "shortCode": {
+        "type": "string"
+      },
+      "siteId": {
+        "type": "string"
+      },
+      "startsAt": {
+        "type": "string"
+      },
+      "status": {
+        "type": "string"
+      },
+      "typeId": {
+        "type": "string"
+      },
+      "typeName": {
+        "type": "string"
+      },
+      "unitNo": {
+        "type": "integer"
+      },
+      "updatedAt": {
+        "type": "string"
+      },
+      "usedAt": {
+        "type": "string"
+      },
+      "usedBy": {
+        "type": "string"
+      },
+      "usedByName": {
+        "type": "string"
+      },
+      "usedGate": {
+        "type": "string"
+      },
+      "venue": {
+        "type": "string"
+      },
+      "voidReason": {
+        "type": "string"
+      }
+    }
+  },
+  "github_com_webbuilder_server_internal_tickets.Type": {
+    "type": "object",
+    "properties": {
+      "active": {
+        "type": "boolean"
+      },
+      "createdAt": {
+        "type": "string"
+      },
+      "defaultCapacity": {
+        "type": "integer"
+      },
+      "description": {
+        "type": "string"
+      },
+      "eventId": {
+        "type": "string"
+      },
+      "id": {
+        "type": "string"
+      },
+      "name": {
+        "type": "string"
+      },
+      "perOrderMax": {
+        "type": "integer"
+      },
+      "position": {
+        "type": "integer"
+      },
+      "priceCents": {
+        "type": "integer"
+      },
+      "saleEndsAt": {
+        "type": "string"
+      },
+      "saleStartsAt": {
+        "type": "string"
       },
       "siteId": {
         "type": "string"
@@ -19511,6 +31526,71 @@ export const API_DEFINITIONS: Record<string, unknown> = {
       }
     }
   },
+  "internal_orders_public.quoteRequest": {
+    "type": "object",
+    "properties": {
+      "discountCode": {
+        "type": "string"
+      },
+      "formId": {
+        "description": "FormID prices the ONE product a type=order form is PINNED to sell,\ninstead of an explicit Lines basket — a page carrying a single-product\norder form (server/internal/forms Form.Settings.OrderProductID) has no\nproduct id of its own to send, by design: that pin exists so the\nanonymous submit endpoint is never told which product to sell. This is\nthe display half of the same design — the page names the FORM, and the\nserver resolves the same product and clamps the same quantity submit\nwould (see forms.ResolvePinnedLine via PinnedLineResolver).\n\nMutually exclusive with Lines: a request naming both is refusing to say\nwhich basket it means, not stating two, and is refused with 400 rather\nthan guessed at.",
+        "type": "string"
+      },
+      "giftCardCode": {
+        "type": "string"
+      },
+      "lines": {
+        "type": "array",
+        "items": {
+          "$ref": "#/definitions/internal_orders_public.quoteRequestLine"
+        }
+      },
+      "paymentMethod": {
+        "description": "PaymentMethod is what the shopper picked on the form's payment field\n(the gateway id, \"cod\", or \"\" when the form never asks). Delivery may\nbe priced by it — a \"COD only\" fee, a \"prepaid only\" free delivery — so\na quote without it would show one fee while the order is charged\nanother (orders.PaymentClassOf).",
+        "type": "string"
+      },
+      "provinceCode": {
+        "description": "ProvinceCode is where the order is going, as the platform's own\nadmin-unit code — the key a delivery ZONE is matched on.\n\nIt arrived with zones (2026-09-06) and it is not optional politeness: a\nquote that left it out would price the flat fee while the checkout then\ncharged the zone fee, which is the shown-one-number-charged-another\nfailure this whole endpoint exists to prevent. Empty is normal and prices\nthe flat fee, exactly as it did before zones.",
+        "type": "string"
+      },
+      "quantity": {
+        "description": "Quantity is what the shopper asked for on a FormID quote — order.\nquantity's twin on the pinned form's own field, clamped the identical\nway (forms.MaxOrderQuantity/DefaultOrderQuantity). Ignored when FormID\nis empty; zero or negative default to one, exactly as an order form\nwith no quantity field sells one.",
+        "type": "integer"
+      },
+      "shippingMethod": {
+        "type": "string"
+      },
+      "wardCode": {
+        "description": "WardCode is the ward inside ProvinceCode. A carrier-backed method (GHN,\nGHTK…) prices by ward, so a quote without it shows the method's flat fee\nwhile the placed order is charged the carrier's — the same\nshown-one-number-charged-another failure ProvinceCode closes for zones.",
+        "type": "string"
+      }
+    }
+  },
+  "internal_orders_public.quoteRequestLine": {
+    "type": "object",
+    "properties": {
+      "productId": {
+        "type": "string"
+      },
+      "qty": {
+        "type": "integer"
+      },
+      "variantId": {
+        "type": "string"
+      }
+    }
+  },
+  "internal_orders_rest.carrierShipmentRequest": {
+    "type": "object",
+    "properties": {
+      "provider": {
+        "type": "string"
+      },
+      "service": {
+        "type": "string"
+      }
+    }
+  },
   "internal_payments_rest.chargeRequest": {
     "type": "object",
     "properties": {
@@ -19526,6 +31606,165 @@ export const API_DEFINITIONS: Record<string, unknown> = {
     "type": "object",
     "properties": {
       "note": {
+        "type": "string"
+      }
+    }
+  },
+  "internal_pos_rest.groupProductsBody": {
+    "type": "object",
+    "properties": {
+      "productIds": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      }
+    }
+  },
+  "internal_pos_rest.productRoutesBody": {
+    "type": "object",
+    "properties": {
+      "productIds": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "stationId": {
+        "type": "string"
+      }
+    }
+  },
+  "internal_pos_rest.tiersBody": {
+    "type": "object",
+    "properties": {
+      "tiers": {
+        "type": "array",
+        "items": {
+          "$ref": "#/definitions/github_com_webbuilder_server_internal_pos.TierInput"
+        }
+      }
+    }
+  },
+  "internal_posdevices_rest.CreateResponse": {
+    "type": "object",
+    "properties": {
+      "code": {
+        "type": "string"
+      },
+      "codeExpiresAt": {
+        "type": "string"
+      },
+      "pairing": {
+        "$ref": "#/definitions/internal_posdevices_rest.PairingView"
+      },
+      "qrPng": {
+        "type": "string"
+      }
+    }
+  },
+  "internal_posdevices_rest.PairingView": {
+    "type": "object",
+    "properties": {
+      "expiresAt": {
+        "type": "string"
+      },
+      "id": {
+        "type": "string"
+      },
+      "label": {
+        "type": "string"
+      },
+      "role": {
+        "type": "string"
+      }
+    }
+  },
+  "internal_posdevices_rest.RedeemResponse": {
+    "type": "object",
+    "properties": {
+      "expiresAt": {
+        "type": "string"
+      },
+      "label": {
+        "type": "string"
+      },
+      "role": {
+        "type": "string"
+      },
+      "siteId": {
+        "type": "string"
+      },
+      "token": {
+        "type": "string"
+      }
+    }
+  },
+  "internal_posdevices_rest.createRequest": {
+    "type": "object",
+    "properties": {
+      "label": {
+        "type": "string"
+      },
+      "pairUrl": {
+        "type": "string"
+      },
+      "role": {
+        "type": "string"
+      }
+    }
+  },
+  "internal_posdevices_rest.deviceEventRequest": {
+    "type": "object",
+    "properties": {
+      "code": {
+        "type": "string"
+      },
+      "id": {
+        "type": "string"
+      },
+      "kind": {
+        "type": "string"
+      }
+    }
+  },
+  "internal_posdevices_rest.pcEventRequest": {
+    "type": "object",
+    "properties": {
+      "data": {
+        "type": "array",
+        "items": {
+          "type": "integer"
+        }
+      },
+      "kind": {
+        "type": "string"
+      }
+    }
+  },
+  "internal_posdevices_rest.redeemRequest": {
+    "type": "object",
+    "properties": {
+      "code": {
+        "type": "string"
+      }
+    }
+  },
+  "internal_products_rest.costRequest": {
+    "type": "object",
+    "properties": {
+      "costCents": {
+        "description": "CostCents is the new unit cost in hundredths of the currency — VND too,\nnever rounded to whole đồng (K6).",
+        "type": "integer"
+      },
+      "note": {
+        "description": "Note is required: a cost nobody explained is a cost anybody could have\nchanged.",
+        "type": "string"
+      },
+      "productId": {
+        "type": "string"
+      },
+      "variantId": {
         "type": "string"
       }
     }
@@ -20614,6 +32853,7 @@ export const API_DEFINITIONS: Record<string, unknown> = {
         "type": "string"
       },
       "stock": {
+        "description": "Stock is a pointer so an OMITTED count is distinguishable from 0: on PUT\nan absent `stock` keeps the stored figure (no recount), an explicit 0\nrecounts to 0. On POST absent means 0, as before.",
         "type": "integer"
       },
       "weightGrams": {
@@ -20733,12 +32973,291 @@ export const API_DEFINITIONS: Record<string, unknown> = {
       }
     }
   },
+  "internal_shipping_carriers_rest.checkBody": {
+    "type": "object",
+    "properties": {
+      "credentials": {
+        "type": "object",
+        "additionalProperties": {
+          "type": "string"
+        }
+      },
+      "sandbox": {
+        "type": "boolean"
+      }
+    }
+  },
+  "internal_shipping_carriers_rest.connectionBody": {
+    "type": "object",
+    "properties": {
+      "credentials": {
+        "type": "object",
+        "additionalProperties": {
+          "type": "string"
+        }
+      },
+      "defaultWeightGrams": {
+        "type": "integer"
+      },
+      "enabled": {
+        "type": "boolean"
+      },
+      "pickupAddress": {
+        "type": "string"
+      },
+      "pickupName": {
+        "type": "string"
+      },
+      "pickupPhone": {
+        "type": "string"
+      },
+      "pickupProvinceCode": {
+        "type": "string"
+      },
+      "pickupWardCode": {
+        "type": "string"
+      },
+      "sandbox": {
+        "type": "boolean"
+      }
+    }
+  },
+  "internal_shipping_rest.checkBody": {
+    "type": "object",
+    "properties": {
+      "draft": {
+        "$ref": "#/definitions/github_com_webbuilder_server_internal_shipping.Patch"
+      }
+    }
+  },
+  "internal_shipping_rest.previewBody": {
+    "type": "object",
+    "properties": {
+      "ask": {
+        "$ref": "#/definitions/github_com_webbuilder_server_internal_shipping.PreviewAsk"
+      },
+      "draft": {
+        "$ref": "#/definitions/github_com_webbuilder_server_internal_shipping.Patch"
+      }
+    }
+  },
+  "internal_staff_rest.pinBody": {
+    "type": "object",
+    "properties": {
+      "currentPin": {
+        "type": "string"
+      },
+      "pin": {
+        "type": "string"
+      }
+    }
+  },
   "internal_templates_rest.useBody": {
     "type": "object",
     "properties": {
       "name": {
         "description": "Name is the new site's name. Required rather than defaulted to the\ntemplate's own name: a default would quietly produce two sites called\n\"Fashion starter\" for a user who pressed the button twice.",
         "type": "string"
+      }
+    }
+  },
+  "internal_tickets_rest.cancelSessionBody": {
+    "type": "object",
+    "properties": {
+      "mode": {
+        "description": "Mode is REQUIRED — void_refund | keep — and never defaulted: either\nguess is a silent failure for somebody.",
+        "type": "string"
+      },
+      "notifyBuyers": {
+        "type": "boolean"
+      }
+    }
+  },
+  "internal_tickets_rest.detailView": {
+    "type": "object",
+    "properties": {
+      "cells": {
+        "type": "array",
+        "items": {
+          "$ref": "#/definitions/github_com_webbuilder_server_internal_tickets.Cell"
+        }
+      },
+      "event": {
+        "$ref": "#/definitions/github_com_webbuilder_server_internal_tickets.Event"
+      },
+      "sessions": {
+        "type": "array",
+        "items": {
+          "$ref": "#/definitions/github_com_webbuilder_server_internal_tickets.Session"
+        }
+      },
+      "types": {
+        "type": "array",
+        "items": {
+          "$ref": "#/definitions/github_com_webbuilder_server_internal_tickets.Type"
+        }
+      }
+    }
+  },
+  "internal_tickets_rest.eventBody": {
+    "type": "object",
+    "properties": {
+      "checkinClosesMin": {
+        "type": "integer"
+      },
+      "checkinOpensMin": {
+        "type": "integer"
+      },
+      "expectedUpdatedAt": {
+        "type": "string"
+      },
+      "holdMinutes": {
+        "type": "integer"
+      },
+      "name": {
+        "type": "string"
+      },
+      "summary": {
+        "type": "string"
+      },
+      "venueAddress": {
+        "type": "string"
+      },
+      "venueName": {
+        "type": "string"
+      }
+    }
+  },
+  "internal_tickets_rest.moveBody": {
+    "type": "object",
+    "properties": {
+      "toSessionId": {
+        "type": "string"
+      }
+    }
+  },
+  "internal_tickets_rest.offeringBody": {
+    "type": "object",
+    "properties": {
+      "capacity": {
+        "type": "integer"
+      }
+    }
+  },
+  "internal_tickets_rest.optTime": {
+    "type": "object"
+  },
+  "internal_tickets_rest.reasonBody": {
+    "type": "object",
+    "properties": {
+      "reason": {
+        "type": "string"
+      }
+    }
+  },
+  "internal_tickets_rest.scanBody": {
+    "type": "object",
+    "properties": {
+      "clientRef": {
+        "type": "string"
+      },
+      "code": {
+        "type": "string"
+      },
+      "deviceRef": {
+        "type": "string"
+      },
+      "gate": {
+        "type": "string"
+      },
+      "sessionId": {
+        "type": "string"
+      }
+    }
+  },
+  "internal_tickets_rest.sessionBody": {
+    "type": "object",
+    "properties": {
+      "endsAt": {
+        "type": "string"
+      },
+      "label": {
+        "type": "string"
+      },
+      "notifyBuyers": {
+        "type": "boolean"
+      },
+      "startsAt": {
+        "type": "string"
+      }
+    }
+  },
+  "internal_tickets_rest.settingsBody": {
+    "type": "object",
+    "properties": {
+      "defaultCheckinClosesMin": {
+        "type": "integer"
+      },
+      "defaultCheckinOpensMin": {
+        "type": "integer"
+      },
+      "defaultHoldMinutes": {
+        "type": "integer"
+      }
+    }
+  },
+  "internal_tickets_rest.ticketView": {
+    "type": "object",
+    "properties": {
+      "audit": {
+        "type": "array",
+        "items": {
+          "$ref": "#/definitions/github_com_webbuilder_server_internal_tickets.Audit"
+        }
+      },
+      "deliveries": {
+        "type": "array",
+        "items": {
+          "$ref": "#/definitions/github_com_webbuilder_server_internal_tickets.Delivery"
+        }
+      },
+      "ticket": {
+        "$ref": "#/definitions/github_com_webbuilder_server_internal_tickets.Ticket"
+      },
+      "token": {
+        "type": "string"
+      }
+    }
+  },
+  "internal_tickets_rest.typeBody": {
+    "type": "object",
+    "properties": {
+      "active": {
+        "type": "boolean"
+      },
+      "defaultCapacity": {
+        "type": "integer"
+      },
+      "description": {
+        "type": "string"
+      },
+      "name": {
+        "type": "string"
+      },
+      "perOrderMax": {
+        "type": "integer"
+      },
+      "position": {
+        "type": "integer"
+      },
+      "priceCents": {
+        "type": "integer"
+      },
+      "saleEndsAt": {
+        "$ref": "#/definitions/internal_tickets_rest.optTime"
+      },
+      "saleStartsAt": {
+        "$ref": "#/definitions/internal_tickets_rest.optTime"
       }
     }
   }

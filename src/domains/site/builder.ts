@@ -51,6 +51,25 @@ export interface NodeSpec {
  *  deliberately allows one — an append is a legitimate thing to describe. */
 const APPEND = Number.MAX_SAFE_INTEGER;
 
+/**
+ * A STEP FORM READS ONLY ITS SEGMENTS. Once a form root holds any
+ * `form-segment`, the platform's schema walk (`forms/schema.go` DeriveSchema)
+ * reads the segments and ignores every other child of the root — so a field
+ * added beside them saves, renders nowhere in the schema, and its answers are
+ * never kept. Refused (soft) with the segment to use instead.
+ */
+function refuseBesideSegments(doc: PageDoc, parentId: string, type: string): void {
+  const root = doc.doc.nodes[doc.doc.root_node_id];
+  if (parentId !== doc.doc.root_node_id || root?.data.type !== 'form' || type === 'form-segment') return;
+  const segs = root.data.nodes.filter((x) => doc.doc.nodes[x]?.data.type === 'form-segment');
+  if (segs.length === 0) return;
+  throw new Error(
+    `sbuilder: this form is split into steps (${segs.join(', ')}); the platform reads only the ` +
+      `segments, so a ${type} placed on the form root is never part of the form. Add it inside a ` +
+      `segment (parent_id ${segs[0]}).`,
+  );
+}
+
 function requireContainer(parentType: string, parentId: string): void {
   if (!ELEMENTS[parentType]?.isContainer) {
     throw new Error(
@@ -178,8 +197,12 @@ export function addSubtree(
       );
     }
   } else {
-    requireContainer(parent.data.type, parentId);
+    // A DOCUMENT'S OWN ROOT always holds children — including a FORM document's,
+    // whose root is a `form`: a leaf on a page (its meta says isContainer:false,
+    // because the fields live elsewhere) and the field list in its own document.
+    if (parentId !== doc.doc.root_node_id) requireContainer(parent.data.type, parentId);
     requireAllowed(parent.data.type, spec.type, guard);
+    soft(guard, () => refuseBesideSegments(doc, parentId, spec.type));
   }
   soft(guard, () => refuseSecondTemplate(doc.doc, parentId, 'Adding'));
 
@@ -244,9 +267,23 @@ export function addSubtree(
     patches.push({ op: 'set', path: ['nodes', parentId, 'config', satellite.configKey], value: rootId });
     return { patches, ids };
   }
-  const at = index ?? parent.data.nodes.length;
+  const at = index ?? indexBeforeFormBar(doc, parentId, spec.type);
   patches.push({ op: 'insert', path: ['nodes', parentId, 'data', 'nodes'], index: at, value: rootId });
   return { patches, ids };
+}
+
+/**
+ * WHERE AN UNINDEXED CHILD LANDS: before the parent's first `form-submit` /
+ * `form-step-nav`, else appended — the editor's `indexBeforeStepBar`
+ * (formStepParts.ts, web_builder 59068e572), so a field added to a form lands
+ * above "Gửi" rather than under it. A page holds neither type, so it is a
+ * plain append there. Adding a bar or a submit itself still appends.
+ */
+const FORM_BARS = new Set(['form-submit', 'form-step-nav']);
+function indexBeforeFormBar(doc: PageDoc, parentId: string, type: string): number {
+  const kids = doc.doc.nodes[parentId]?.data.nodes ?? [];
+  const bar = FORM_BARS.has(type) ? -1 : kids.findIndex((id) => FORM_BARS.has(doc.doc.nodes[id]?.data.type ?? ''));
+  return bar === -1 ? kids.length : bar;
 }
 
 /**
@@ -748,8 +785,9 @@ export function moveNode(doc: PageDoc, id: string, newParentId: string, index: n
     throw new Error(`sbuilder: cannot move ${id} into its own descendant ${newParentId}`);
   }
 
-  requireContainer(newParent.data.type, newParentId);
+  if (newParentId !== doc.doc.root_node_id) requireContainer(newParent.data.type, newParentId);
   requireAllowed(newParent.data.type, n.data.type, guard);
+  if (n.data.parent !== newParentId) soft(guard, () => refuseBesideSegments(doc, newParentId, n.data.type));
   // Not for a REORDER: a node already in this parent is not a second template,
   // and refusing it would block the one move that is always safe.
   if (n.data.parent !== newParentId) soft(guard, () => refuseSecondTemplate(doc.doc, newParentId, 'Moving'));

@@ -3,7 +3,7 @@
 import type { CatalogElement, NodeSeed, SatelliteRule, TraitDescription, ValueVocabulary, WritePrecondition } from './element-types.js';
 
 export const ELEMENT_SOURCE = {
-  "count": 122,
+  "count": 123,
   "docSchemaVersion": 2
 } as const;
 
@@ -7207,18 +7207,6 @@ export const ELEMENTS: Record<string, CatalogElement> = {
               "width_select",
               "size_bounds"
             ]
-          }
-        ]
-      },
-      {
-        "tab": "advanced",
-        "groups": [
-          {
-            "key": "id_field",
-            "label": "ID field",
-            "controls": [
-              "field_name"
-            ]
           },
           {
             "key": "input_type",
@@ -7234,6 +7222,18 @@ export const ELEMENTS: Record<string, CatalogElement> = {
               "field_pattern"
             ]
           },
+          {
+            "key": "id_field",
+            "label": "ID field",
+            "controls": [
+              "field_name"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "advanced",
+        "groups": [
           {
             "key": "limit_chars",
             "label": "Limit characters",
@@ -7278,9 +7278,9 @@ export const ELEMENTS: Record<string, CatalogElement> = {
       "field_area_skin",
       "width_select",
       "size_bounds",
-      "field_name",
       "field_input_type",
       "field_pattern",
+      "field_name",
       "field_limit_chars",
       "padding_margin",
       "display",
@@ -7377,19 +7377,19 @@ export const ELEMENTS: Record<string, CatalogElement> = {
               "width_select",
               "size_bounds"
             ]
-          }
-        ]
-      },
-      {
-        "tab": "advanced",
-        "groups": [
+          },
           {
             "key": "id_field",
             "label": "ID field",
             "controls": [
               "field_name"
             ]
-          },
+          }
+        ]
+      },
+      {
+        "tab": "advanced",
+        "groups": [
           {
             "key": "file_type",
             "label": "File type",
@@ -7740,19 +7740,19 @@ export const ELEMENTS: Record<string, CatalogElement> = {
               "width_select",
               "size_bounds"
             ]
-          }
-        ]
-      },
-      {
-        "tab": "advanced",
-        "groups": [
+          },
           {
             "key": "id_field",
             "label": "ID field",
             "controls": [
               "field_name"
             ]
-          },
+          }
+        ]
+      },
+      {
+        "tab": "advanced",
+        "groups": [
           {
             "key": "number_range",
             "label": "Set number range",
@@ -7944,19 +7944,19 @@ export const ELEMENTS: Record<string, CatalogElement> = {
               "width_select",
               "size_bounds"
             ]
-          }
-        ]
-      },
-      {
-        "tab": "advanced",
-        "groups": [
+          },
           {
             "key": "id_field",
             "label": "ID field",
             "controls": [
               "field_name"
             ]
-          },
+          }
+        ]
+      },
+      {
+        "tab": "advanced",
+        "groups": [
           {
             "key": "spacing",
             "label": "Spacing",
@@ -8102,19 +8102,19 @@ export const ELEMENTS: Record<string, CatalogElement> = {
               "width_select",
               "size_bounds"
             ]
-          }
-        ]
-      },
-      {
-        "tab": "advanced",
-        "groups": [
+          },
           {
             "key": "id_field",
             "label": "ID field",
             "controls": [
               "field_name"
             ]
-          },
+          }
+        ]
+      },
+      {
+        "tab": "advanced",
+        "groups": [
           {
             "key": "spacing",
             "label": "Spacing",
@@ -8279,19 +8279,19 @@ export const ELEMENTS: Record<string, CatalogElement> = {
               "width_select",
               "size_bounds"
             ]
-          }
-        ]
-      },
-      {
-        "tab": "advanced",
-        "groups": [
+          },
           {
             "key": "id_field",
             "label": "ID field",
             "controls": [
               "field_name"
             ]
-          },
+          }
+        ]
+      },
+      {
+        "tab": "advanced",
+        "groups": [
           {
             "key": "spacing",
             "label": "Spacing",
@@ -8434,19 +8434,19 @@ export const ELEMENTS: Record<string, CatalogElement> = {
               "width_select",
               "size_bounds"
             ]
-          }
-        ]
-      },
-      {
-        "tab": "advanced",
-        "groups": [
+          },
           {
             "key": "id_field",
             "label": "ID field",
             "controls": [
               "field_name"
             ]
-          },
+          }
+        ]
+      },
+      {
+        "tab": "advanced",
+        "groups": [
           {
             "key": "spacing",
             "label": "Spacing",
@@ -8609,19 +8609,19 @@ export const ELEMENTS: Record<string, CatalogElement> = {
               "width_select",
               "size_bounds"
             ]
-          }
-        ]
-      },
-      {
-        "tab": "advanced",
-        "groups": [
+          },
           {
             "key": "id_field",
             "label": "ID field",
             "controls": [
               "field_name"
             ]
-          },
+          }
+        ]
+      },
+      {
+        "tab": "advanced",
+        "groups": [
           {
             "key": "spacing",
             "label": "Spacing",
@@ -8770,19 +8770,19 @@ export const ELEMENTS: Record<string, CatalogElement> = {
               "width_select",
               "size_bounds"
             ]
-          }
-        ]
-      },
-      {
-        "tab": "advanced",
-        "groups": [
+          },
           {
             "key": "id_field",
             "label": "ID field",
             "controls": [
               "field_name"
             ]
-          },
+          }
+        ]
+      },
+      {
+        "tab": "advanced",
+        "groups": [
           {
             "key": "spacing",
             "label": "Spacing",
@@ -8925,19 +8925,19 @@ export const ELEMENTS: Record<string, CatalogElement> = {
               "width_select",
               "size_bounds"
             ]
-          }
-        ]
-      },
-      {
-        "tab": "advanced",
-        "groups": [
+          },
           {
             "key": "id_field",
             "label": "ID field",
             "controls": [
               "field_name"
             ]
-          },
+          }
+        ]
+      },
+      {
+        "tab": "advanced",
+        "groups": [
           {
             "key": "spacing",
             "label": "Spacing",
@@ -9088,19 +9088,19 @@ export const ELEMENTS: Record<string, CatalogElement> = {
               "width_select",
               "size_bounds"
             ]
-          }
-        ]
-      },
-      {
-        "tab": "advanced",
-        "groups": [
+          },
           {
             "key": "id_field",
             "label": "ID field",
             "controls": [
               "field_name"
             ]
-          },
+          }
+        ]
+      },
+      {
+        "tab": "advanced",
+        "groups": [
           {
             "key": "spacing",
             "label": "Spacing",
@@ -9262,19 +9262,19 @@ export const ELEMENTS: Record<string, CatalogElement> = {
               "width_select",
               "size_bounds"
             ]
-          }
-        ]
-      },
-      {
-        "tab": "advanced",
-        "groups": [
+          },
           {
             "key": "id_field",
             "label": "ID field",
             "controls": [
               "field_name"
             ]
-          },
+          }
+        ]
+      },
+      {
+        "tab": "advanced",
+        "groups": [
           {
             "key": "accepted_dates",
             "label": "Accepted dates",
@@ -15750,6 +15750,218 @@ export const ELEMENTS: Record<string, CatalogElement> = {
       "discount",
       "voucher",
       "wallet",
+      "member"
+    ]
+  },
+  "my-tickets": {
+    "type": "my-tickets",
+    "label": "My tickets",
+    "category": "advanced",
+    "isContainer": false,
+    "isRootOnly": false,
+    "locked": false,
+    "hideInLayer": false,
+    "childAllows": [],
+    "defaults": {
+      "specials": {
+        "title": "Vé của tôi",
+        "signedOutText": "Đăng nhập để xem vé của bạn",
+        "buttonLabel": "Mở vé",
+        "emptyText": "Bạn chưa có vé nào.",
+        "loadFailedText": "Không tải được vé của bạn.",
+        "usedText": "Đã dùng",
+        "voidText": "Đã hủy"
+      },
+      "style": {
+        "display": "flex",
+        "flexDirection": "column",
+        "width": "100%",
+        "gap": "16px",
+        "fontSize": "13px",
+        "color": "var(--wb-sc-heading, #171717)"
+      },
+      "config": {
+        "gap": 12
+      }
+    },
+    "inspector": [
+      {
+        "tab": "general",
+        "groups": [
+          {
+            "key": "layout",
+            "label": "Layout",
+            "controls": [
+              "gap",
+              "padding",
+              "margin"
+            ]
+          },
+          {
+            "key": "account",
+            "label": "Account",
+            "controls": [
+              "account_title",
+              "account_signed_out_text"
+            ]
+          },
+          {
+            "key": "content",
+            "label": "Content",
+            "controls": [
+              "my_tickets_button_label"
+            ]
+          },
+          {
+            "key": "empty_state",
+            "label": "Preview",
+            "controls": [
+              "my_tickets_empty_text"
+            ]
+          },
+          {
+            "key": "messages",
+            "label": "Messages",
+            "controls": [
+              "my_tickets_load_failed_text"
+            ]
+          },
+          {
+            "key": "labels",
+            "label": "Labels",
+            "controls": [
+              "my_tickets_used_text",
+              "my_tickets_void_text"
+            ]
+          },
+          {
+            "key": "items",
+            "label": "Items list",
+            "controls": [
+              "my_tickets_gap"
+            ]
+          },
+          {
+            "key": "size",
+            "label": "Size",
+            "controls": [
+              "width_select",
+              "size_bounds"
+            ]
+          },
+          {
+            "key": "typography",
+            "label": "Typography",
+            "controls": [
+              "font_family",
+              "font_size",
+              "text_style",
+              "text_color"
+            ]
+          },
+          {
+            "key": "background",
+            "label": "Background",
+            "controls": [
+              "bg_color"
+            ]
+          },
+          {
+            "key": "shape",
+            "label": "Shape",
+            "controls": [
+              "border",
+              "corner",
+              "shadow"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "advanced",
+        "groups": [
+          {
+            "key": "state",
+            "label": "state",
+            "controls": []
+          },
+          {
+            "key": "spacing",
+            "label": "Spacing",
+            "controls": [
+              "padding_margin"
+            ]
+          },
+          {
+            "key": "display",
+            "label": "Display",
+            "controls": [
+              "display"
+            ]
+          },
+          {
+            "key": "animation",
+            "label": "Animation",
+            "controls": [
+              "animation"
+            ]
+          },
+          {
+            "key": "class_css",
+            "label": "Class",
+            "controls": [
+              "class_css"
+            ]
+          }
+        ]
+      }
+    ],
+    "controls": [
+      "gap",
+      "padding",
+      "margin",
+      "account_title",
+      "account_signed_out_text",
+      "my_tickets_button_label",
+      "my_tickets_empty_text",
+      "my_tickets_load_failed_text",
+      "my_tickets_used_text",
+      "my_tickets_void_text",
+      "my_tickets_gap",
+      "width_select",
+      "size_bounds",
+      "font_family",
+      "font_size",
+      "text_style",
+      "text_color",
+      "bg_color",
+      "border",
+      "corner",
+      "shadow",
+      "padding_margin",
+      "display",
+      "animation",
+      "class_css"
+    ],
+    "description": "The signed-in shopper's own event tickets — one row per ticket with the event, session, ticket type, a used/cancelled badge and an Open ticket link to the QR ticket page. A signed-out visitor sees a sign-in prompt instead.",
+    "useWhen": [
+      "An account page should let a member find the tickets they bought without digging through email",
+      "The store sells event tickets (Tickets app) and buyers sign in to shop"
+    ],
+    "avoidWhen": [
+      "The store sells no tickets — the element renders an honest empty list but has nothing to show",
+      "The page is public and anonymous — tickets are per-customer, a visitor only sees the sign-in prompt"
+    ],
+    "contentTips": [
+      "signedOutText is all an anonymous visitor ever sees — word it as an invitation to sign in, not an error",
+      "usedText and voidText are short badges printed on a row, one or two words; a valid ticket carries no badge",
+      "buttonLabel is the link text that opens the QR ticket page"
+    ],
+    "semantics": [
+      "tickets",
+      "account",
+      "events",
+      "qr",
       "member"
     ]
   },
@@ -44019,6 +44231,73 @@ export const TRAIT_WRITES: Record<string, TraitDescription> = {
   "my_vouchers_gap": {
     "key": "my_vouchers_gap",
     "label": "Card gap",
+    "writes": [
+      {
+        "target": "config",
+        "writeKey": "gap",
+        "type": "number",
+        "unit": "px"
+      }
+    ]
+  },
+  "my_tickets_button_label": {
+    "key": "my_tickets_button_label",
+    "label": "Button text",
+    "writes": [
+      {
+        "target": "specials",
+        "writeKey": "buttonLabel",
+        "type": "string"
+      }
+    ]
+  },
+  "my_tickets_empty_text": {
+    "key": "my_tickets_empty_text",
+    "label": "Empty text",
+    "writes": [
+      {
+        "target": "specials",
+        "writeKey": "emptyText",
+        "type": "string"
+      }
+    ]
+  },
+  "my_tickets_load_failed_text": {
+    "key": "my_tickets_load_failed_text",
+    "label": "Load failed",
+    "writes": [
+      {
+        "target": "specials",
+        "writeKey": "loadFailedText",
+        "type": "string"
+      }
+    ]
+  },
+  "my_tickets_used_text": {
+    "key": "my_tickets_used_text",
+    "label": "Used",
+    "writes": [
+      {
+        "target": "specials",
+        "writeKey": "usedText",
+        "type": "string"
+      }
+    ]
+  },
+  "my_tickets_void_text": {
+    "key": "my_tickets_void_text",
+    "label": "Cancelled",
+    "writes": [
+      {
+        "target": "specials",
+        "writeKey": "voidText",
+        "type": "string"
+      }
+    ]
+  },
+  "my_tickets_gap": {
+    "key": "my_tickets_gap",
+    "label": "Row gap",
     "writes": [
       {
         "target": "config",

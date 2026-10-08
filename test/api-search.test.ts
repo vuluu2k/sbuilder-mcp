@@ -57,27 +57,26 @@ describe('describeOperation()', () => {
   });
 
   /**
-   * THE INLINE IS NOW A FALLBACK NOTHING REACHES, and that is a measurement
-   * rather than dead code.
+   * THE INLINE IS THE FALLBACK FOR A HANDLER THE SHAPE READER CANNOT READ.
    *
-   * It used to be picked by "the first operation whose body is described and
-   * which has no decode-site shape". MEASURED after reads stopped being
-   * believed (`copiedBodyDonor`): NO operation is in that state — every WRITE
-   * whose body the document describes also has a shape read off its handler,
-   * and that wins above; every remaining candidate was a read carrying a copy.
-   *
-   * The branch stays because it is the honest answer for a handler the shape
-   * reader cannot read, which is a state the platform can re-enter at any time.
-   * It is exercised with a SYNTHETIC operation, so the test proves the
-   * behaviour instead of quietly proving nothing the day a specimen vanishes —
-   * which is exactly what happened here.
+   * For a while NO operation was in that state, and this test pinned the count
+   * at zero. The platform re-entered it, as predicted: at the 2026-10-08 regen
+   * (web_builder 748533085) ten described writes have no decode-site shape —
+   * a handler built by a factory (`ticketAction(...)` for void / reissue /
+   * undo-checkin), a body decoded into a variable typed by a call's result
+   * (`m, err := a.store.GetMethod(...)` in `PUT /shipping-methods/{id}`),
+   * a decode behind a shared helper (the POS sale/shift writes, the checkout
+   * quote). Each must still get the document's definition, so every real
+   * specimen is checked, and a SYNTHETIC one keeps the branch proven the day
+   * the specimens vanish again.
    */
   it('inlines the definition for a described body with no decode-site shape', () => {
-    expect(
-      API_OPERATIONS.filter(
-        (o) => o.bodyDescribed && WRITE.has(o.method) && !REQUEST_SHAPES[o.id],
-      ),
-    ).toHaveLength(0);
+    for (const op of API_OPERATIONS.filter(
+      (o) => o.bodyDescribed && WRITE.has(o.method) && !REQUEST_SHAPES[o.id],
+    )) {
+      const d = describeOperation(op) as Record<string, unknown>;
+      expect(d.body_schema, op.id).toBeDefined();
+    }
     const donor = API_OPERATIONS.find((o) => o.bodyDescribed && o.bodyRef)!;
     const synthetic = {
       ...donor,

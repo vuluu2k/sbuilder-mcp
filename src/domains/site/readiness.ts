@@ -113,7 +113,7 @@ export interface ReadinessInput {
    * node shows, never what KIND it is — so this list is the only way to tell a
    * login form from a register form on a page that holds both.
    */
-  forms?: Array<{ id?: string; type?: string }> | null;
+  forms?: Array<{ id?: string; type?: string; settings?: { afterSubmit?: { action?: string; pageId?: string; url?: string } } }> | null;
   /** How many blog articles the site has written; null when the list was unread. */
   articles?: number | null;
   /** How many blog categories the site has; null when the list was unread. */

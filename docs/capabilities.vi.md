@@ -40,7 +40,7 @@ khối HTML trong `custom-code` thì không, và `sb_review` không nhìn vào b
 | Ẩn/hiện | `config.hidden` theo breakpoint; `member-gate` (`specials.audience` members/guests) | có | có | `css.go` hiddenAt; `runtime/src/nodes/member-gate.ts` | một phần — chưa có ẩn/hiện theo dữ liệu hay state trên node thường |
 | Action | `schema/src/actions/enum.ts` (21 action; trigger click, form submit/success/error) | `ActionRow.vue` | `sb_event` (danh sách cho phép theo element trong `sb_traits_for`; payload được kiểm tra) | dispatch ở `runtime/src/core/boot.ts` | đủ với các action có trong danh sách; add_to_cart / buy_now là BINDING, không phải event |
 | Popup | `popup` trong `site_overlays`, mở bằng action `popup` với `payload.id` (overlay id) | có | overlay qua `sb_store` + `sb_event` | `runtime/src/nodes/popup-control.ts` | một phần — popup không nhận context của item; chỉ `quickview` (sản phẩm) có. Lý do đo được: `wbState` chỉ gieo id + biến thể sản phẩm (`server/render/scope/seed.go:116`), và popup là một overlay render một lần (`internal/page/overlay.go:244`) — thiết kế đúng là render theo từng dòng như quick view, một tính năng riêng |
-| Form | field `form-*`; `specials.formRules` trên gốc form ẩn/hiện/bắt buộc field theo câu trả lời khác (is, isNot, filled, empty, contains, notContains) | `FormRulesPanel.vue` | `sb_store action:"form"`, rồi `sb_page_open form_id` + `sb_set specials.formRules` (kiểm tra theo từ vựng rule được sinh) | `runtime/src/nodes/form-conditions.ts`; server kiểm lại rule và required/định dạng/độ dài/khoảng (`server/internal/forms/submit.go`, `rules.go`) | một phần — chưa có field dẫn xuất, so sánh số, validation chéo chỉ có xác nhận số điện thoại |
+| Form | field `form-*`; `specials.formRules` trên gốc form ẩn/hiện/bắt buộc field theo câu trả lời khác (is, isNot, filled, empty, contains, notContains) | `FormRulesPanel.vue` | `sb_store action:"form"`, rồi `sb_page_open form_id` + `sb_set specials.formRules` (kiểm tra theo từ vựng rule được sinh) | `runtime/src/nodes/form-conditions.ts`; server kiểm lại rule và required/định dạng/độ dài/khoảng (`server/internal/forms/submit.go`, `rules.go`) | một phần — 17 mẫu gồm booking và stay, tạo kèm `settings` của bản ghi (quy tắc đặt lịch); trùng tên/mapping bị từ chối trước khi lưu, trường không trả lời được bị cảnh báo. Chưa có field dẫn xuất, so sánh số; validation chéo chỉ có xác nhận số điện thoại và khoảng lưu trú |
 | Giá trị mặc định | `form-select defaultValue`, text/number `prefillValue` (binding) | có | có | có | đủ |
 | Điều hướng giữ query param | — | — | — | filter giữ các tham số không phải filter; UTM giữ trong session | **chưa có** dạng cơ chế chung |
 | State / biến dùng chung | — | — | — | — | **chưa có** (`node.states` là style hover/active, không phải dữ liệu) |
@@ -79,6 +79,25 @@ có thể có nhiều đích): `specials.formRules`, một mảng JSON
 notContains và `action` là một trong hidden, shown, optional, required. Server chạy lại đúng các
 rule đó khi submit (`server/internal/forms/rules.go`), nên field chỉ bắt buộc ở một nhánh cũng
 được kiểm ở đó.
+
+**Form dạng đặt lịch (lịch hẹn, salon, lưu trú khách sạn)** — nền tảng đã có bộ quy tắc đặt
+lịch phía server (sức chứa theo slot và theo ngày, báo trước và giới hạn xa nhất, ngày đóng cửa,
+số đêm lưu trú, đặt cọc, `server/internal/forms/booking.go`).
+
+1. Cài app Booking: `sb_store action:"app" app_key:"booking"`. Thiếu app, nền tảng từ chối form
+   loại booking (`booking_app_required`).
+2. `sb_store action:"form" template:"booking"` cho lịch hẹn (một ngày + khung giờ), hoặc
+   `template:"stay"` cho lưu trú (hai ngày), kèm `settings: { booking: { … } }` —
+   `maxPerSlot` / `slotCapacity` cho salon, `minStayNights` / `maxStayNights` / `closedDates`
+   cho khách sạn.
+3. `sb_page_open form_id:<id>`, rồi `sb_add` trường — một `form-select` "Dịch vụ" có `options`
+   và `specials.name` — trường mới nằm trên nút gửi; thêm quy tắc ở node gốc qua
+   `specials.formRules`.
+4. **Quy tắc lưu trú theo vị trí:** trên form booking, HAI trường ngày ĐẦU TIÊN
+   (`form-calendar` / `form-date`) theo thứ tự trong tài liệu là ngày nhận và trả phòng. Giữ một
+   ngày (lịch hẹn) hoặc hai (lưu trú); ngày thứ ba bị mọi quy tắc đặt lịch bỏ qua và sẽ bị cảnh
+   báo.
+5. Đặt form lên một trang và publish lại trang đó.
 
 **Popup về item vừa bấm** — với sản phẩm, `quickview` (list `config.quickviewId`) là câu trả lời
 native: list render một panel cho mỗi card dưới chính bản ghi của card đó. Popup tổng quát mang

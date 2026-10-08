@@ -37,7 +37,8 @@
 import { z } from 'zod';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { text } from '../mcp/response.js';
-import { request, redact } from '../transport/http.js';
+import { request, redact, ApiError } from '../transport/http.js';
+import { API_DEFINITIONS } from '../catalog/api.generated.js';
 import { siteToken } from './credentialpick.js';
 import { siteFor, type ToolContext } from './context.js';
 import { withFreshIds } from '../domains/site/ids.js';
@@ -294,16 +295,13 @@ function pageDocumentFor(formId: string, headline: string): unknown {
  * wording runs the order number into the total ("Đơn hàng #1003129.000 ₫").
  * Nothing is broken; nothing sent them anywhere.
  *
- * The form record HAS a setting for this and it does not work:
- * `settings.afterSubmit.action = "redirect"` is accepted by the API, stored, and
- * carried nowhere — `forms/pagesource.go` says so outright ("Only the MESSAGE
- * behaviour is carried today"), and `page.FormRef.RedirectPath` is assigned by
- * nothing in the platform. Writing `specials.sentRedirect` on the node does not
- * survive either: the composer overwrites that special from the same empty
- * field on every render. So the platform's seed cannot carry this, and neither
- * can any setting an agent can reach.
+ * The form record's `settings.afterSubmit.action = "redirect"` IS carried since
+ * web_builder fcfde38ac (`forms/pagesource.go` → `specials.sentRedirect`, followed
+ * by the runtime after the success chain) — it used to be stored and carried
+ * nowhere, which is why this seed does not lean on it. A `pageId` target that is
+ * unpublished still falls back to the message, so the seed keeps the event.
  *
- * What does work is the form's own success chain, which the island runs BEFORE
+ * What works regardless is the form's own success chain, which the island runs BEFORE
  * afterSubmit and which `form`'s meta declares `go_to_url` on. `/checkout/complete`
  * is the right destination unconditionally: it resolves by page TYPE, and it
  * backstops itself with a built-in receipt when the store has no completion page
@@ -422,6 +420,49 @@ async function placeFormOnPage(
   return { id, name: typeof made.page?.name === 'string' ? made.page.name : pageName, ...(chrome ? { chrome } : {}) };
 }
 
+type Schema = { $ref?: string; allOf?: Schema[]; properties?: Record<string, Schema>; additionalProperties?: Schema | boolean };
+const FORM_SETTINGS_REF = '#/definitions/github_com_webbuilder_server_internal_forms.Settings';
+
+/** A `$ref`, direct or behind the `allOf` swag writes for an embedded struct, resolved. */
+function resolve(s: Schema | undefined): Schema | undefined {
+  const ref = s?.$ref ?? s?.allOf?.[0]?.$ref;
+  return ref ? (API_DEFINITIONS[ref.replace('#/definitions/', '')] as Schema | undefined) : s;
+}
+
+/**
+ * Keys in a form's `settings` that the platform's Settings struct does not
+ * declare, as dotted paths — read off the GENERATED API definitions
+ * (forms.Settings → BookingSettings, DayRule …), so a new rule arrives with
+ * the next codegen. Go's decoder drops an unknown key without a word, so
+ * `maxPerSlott` would be stored as nothing. Silent when the catalog carries no
+ * definition: an old catalog must not invent warnings.
+ */
+export function unknownSettingKeys(value: unknown, schema: Schema | undefined = { $ref: FORM_SETTINGS_REF }, at = ''): string[] {
+  const s = resolve(schema);
+  if (!s || !value || typeof value !== 'object' || Array.isArray(value)) return [];
+  const out: string[] = [];
+  for (const [k, v] of Object.entries(value)) {
+    const path = at ? `${at}.${k}` : k;
+    const prop = s.properties ? s.properties[k] : typeof s.additionalProperties === 'object' ? s.additionalProperties : undefined;
+    if (!prop) {
+      if (s.properties) out.push(path);
+      continue;
+    }
+    out.push(...unknownSettingKeys(v, prop, path));
+  }
+  return out;
+}
+
+/** `b` over `a`, one level deep — `settings.booking` is a whole object on the wire too. */
+function mergeSettings(...layers: Array<Record<string, unknown> | undefined>): Record<string, unknown> {
+  const out: Record<string, unknown> = {};
+  const plain = (v: unknown): v is Record<string, unknown> => !!v && typeof v === 'object' && !Array.isArray(v);
+  for (const layer of layers) {
+    for (const [k, v] of Object.entries(layer ?? {})) out[k] = plain(v) && plain(out[k]) ? { ...out[k], ...v } : v;
+  }
+  return out;
+}
+
 async function seedForm(
   ctx: ToolContext,
   session: PageSession,
@@ -431,6 +472,7 @@ async function seedForm(
   pageName: string | undefined,
   headline: string | undefined,
   dryRun: boolean,
+  settings?: Record<string, unknown>,
 ): Promise<unknown> {
   const tpl = FORM_TEMPLATES[key as keyof typeof FORM_TEMPLATES] as {
     key: string;
@@ -444,6 +486,15 @@ async function seedForm(
   const fields = Object.values(document.nodes)
     .map((n) => (n as { specials?: { name?: string } }).specials?.name)
     .filter((n): n is string => typeof n === 'string' && n !== '');
+  const unknown = unknownSettingKeys(settings ?? {});
+  const settingsNote = unknown.length
+    ? {
+        settings_unknown: {
+          keys: unknown,
+          note: 'Not in the platform\'s form Settings shape — the decoder drops them, so they are stored as nothing. Booking rules live under settings.booking.',
+        },
+      }
+    : {};
 
   if (dryRun) {
     return {
@@ -477,6 +528,8 @@ async function seedForm(
               'on it in this same call — the three steps that otherwise get skipped.',
           }),
       preview: redact({ name, type: tpl.type }),
+      ...(settings ? { settings: redact(mergeSettings(tpl.settings, settings)) } : {}),
+      ...settingsNote,
     };
   }
 
@@ -492,7 +545,15 @@ async function seedForm(
 
   const created = await send<{
     form?: { id: string; name: string; type: string; settings?: Record<string, unknown> };
-  }>('POST', `/api/sites/${site}/forms`, { name, type: tpl.type });
+  }>('POST', `/api/sites/${site}/forms`, { name, type: tpl.type }).catch((e: unknown) => {
+    // forms/rest.go refuses a booking form on a site without the Booking app.
+    if (e instanceof ApiError && e.code === 'booking_app_required') {
+      throw new Error(
+        `sbuilder: ${e.message} — install it first with sb_store action:"app" app_key:"booking", then re-run this call.`,
+      );
+    }
+    throw e;
+  });
   const form = created.form;
   if (!form?.id) {
     throw new Error('sbuilder: the platform accepted the form create and returned no form');
@@ -503,7 +564,7 @@ async function seedForm(
     await send('PUT', `/api/sites/${site}/forms/${encodeURIComponent(form.id)}`, {
       name: form.name,
       type: form.type,
-      settings: { ...(form.settings ?? {}), ...tpl.settings },
+      settings: mergeSettings(form.settings, tpl.settings, settings),
     });
     await send('PUT', `/api/sites/${site}/forms/${encodeURIComponent(form.id)}/document`, {
       document,
@@ -533,6 +594,7 @@ async function seedForm(
   return {
     form: { id: form.id, type: form.type, name: form.name },
     fields,
+    ...settingsNote,
     ...(page ? { page } : {}),
     ...(page_failed ? { page_failed } : {}),
     next: page
@@ -558,7 +620,7 @@ export function registerStoreTools(server: McpServer, ctx: ToolContext, session:
         'every existing order form and republishes the checkout page — run it after adding a ' +
         'shipping method or switching on a gateway, since the form keeps the options it was ' +
         'saved with. action:"form" seeds any of the platform\'s other form templates (login, ' +
-        'register, forgot, reset, verify, contact, subscribe, booking, review and more) with ' +
+        'contact, booking, stay and more — settings merge into the record) with ' +
         'its own field document, which is the part that cannot be guessed. action:"chrome" ' +
         'gives every page ONE shared header (footer:true — footer) built on a real site menu of ' +
         'page/category/product references: a desktop menu, a mobile drawer, cart and account ' +
@@ -597,6 +659,10 @@ export function registerStoreTools(server: McpServer, ctx: ToolContext, session:
           .enum(FORM_TEMPLATE_KEYS)
           .optional()
           .describe('action:"form" — which of the platform\'s own form templates to seed'),
+        settings: z
+          .record(z.unknown())
+          .optional()
+          .describe('action:"form" {booking:{maxPerSlot:2}}'),
         name: z
           .string()
           .optional()
@@ -662,6 +728,7 @@ export function registerStoreTools(server: McpServer, ctx: ToolContext, session:
       app_key,
       global_id,
       relocalize,
+      settings,
       dry_run,
     }) => {
       const siteId = siteFor(ctx, given);
@@ -750,7 +817,7 @@ export function registerStoreTools(server: McpServer, ctx: ToolContext, session:
           );
         }
         return text(
-          await seedForm(ctx, session, siteId, template, name, page_name, headline, dry_run !== false),
+          await seedForm(ctx, session, siteId, template, name, page_name, headline, dry_run !== false, settings),
         );
       }
       const lang = (language ?? 'vi') as Language;

@@ -2,8 +2,8 @@
 // Source: <WB_REPO>/schema/src/elements/translatableFields.ts
 
 export const TRANSLATION_SOURCE = {
-  "elements": 66,
-  "pairs": 180,
+  "elements": 67,
+  "pairs": 187,
   "neverKeys": 178,
   "entityTypes": 11
 } as const;
@@ -146,6 +146,15 @@ export const TRANSLATABLE_SPECIALS: Record<string, string[]> = {
     "loadFailedText",
     "usedText",
     "expiredText"
+  ],
+  "my-tickets": [
+    "title",
+    "signedOutText",
+    "buttonLabel",
+    "emptyText",
+    "loadFailedText",
+    "usedText",
+    "voidText"
   ],
   "member-field": [
     "prefix",

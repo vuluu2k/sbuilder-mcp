@@ -49,6 +49,21 @@ describe('request shapes recovered from the handlers', () => {
     expect(c).toEqual(expect.arrayContaining(['name', 'slug', 'parentId', 'position']));
   });
 
+  // `tickets/rest` passes the error code AFTER the target —
+  // `decode(w, r, &b, invalidEvent)` — and anchoring on `&b)` lost every event
+  // and ticket write.
+  it('reads a decode whose target is not the last argument', () => {
+    expect(names('post:/api/sites/{siteId}/events')).toContain('name');
+  });
+
+  // A one-line `func … { …; return a }` closes on its own line; scanning on
+  // for the next column-0 `}` swallowed the handler below it. And the
+  // `_ = json.Unmarshal(raw, &probe)` re-read beside the real parse is a probe,
+  // not a second body. Both together had taken `POST /forms`.
+  it('reads the form create body past a one-line func and a discarded probe', () => {
+    expect(shape('post:/api/sites/{siteId}/forms')?.goType).toBe('forms.Form');
+  });
+
   // The whole point of the table: a merchant operation an agent would otherwise
   // have to guess, and `sb_undo` cannot protect without.
   it('covers the great majority of write operations', () => {

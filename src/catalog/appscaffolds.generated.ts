@@ -8,7 +8,7 @@
  * platform's own order — read off `builtinapps.Keys` rather than typed here,
  * and checked at codegen against that route's own `key` parameter description.
  */
-export const BUILTIN_APP_KEYS = ["mail","multilingual","agent","chat","booking","loyalty","payments","courses"] as const;
+export const BUILTIN_APP_KEYS = ["mail","multilingual","agent","chat","booking","loyalty","payments","courses","shipping","pos","tickets"] as const;
 
 /**
  * The pages an app needs that installing it does not create.

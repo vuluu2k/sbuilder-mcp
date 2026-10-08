@@ -181,7 +181,15 @@ describe('token budget — a diet without a scale comes back', () => {
     // that carries a trailing `// comment`: the order gained `subtotalCents`,
     // `discountCents` and `totalCents` with the notes that say they are DERIVED
     // (measured 5,778). Real fields the struct always had, not dilution.
-    expect(chars(orders)).toBeLessThan(6_500);
+    //
+    // Raised 6,500 → 9,500 at the 2026-10-08 regen (web_builder 748533085,
+    // measured 7,968): `orders.Order` grew carrier shipping
+    // (`shipToWardCode`, `shippingProvider`/`Service`/`EstimatedDelivery`/
+    // `Breakdown`), the POS origin (`channel`, `locationId`, `shiftId`,
+    // `cashierId`) and per-line `weightGrams`/`discountCents`. Platform
+    // capability, not padding; headroom so the next honest field is not a
+    // reflexive raise.
+    expect(chars(orders)).toBeLessThan(9_500);
     // The one every storefront build calls, and the one that must stay cheap.
     //
     // The ceiling MOVED once, deliberately, and the reason is the shape of a

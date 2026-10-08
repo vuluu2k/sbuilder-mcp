@@ -7,6 +7,7 @@ import {
 } from '../../core/tree.js';
 import { checkBandOrder } from './traps.js';
 import type { PageDoc } from './document.js';
+import { formClashes } from './formdoc.js';
 
 /**
  * Everything that would make the platform refuse this document on save.
@@ -24,6 +25,8 @@ export function validateForSave(doc: PageDoc): string[] {
 
   const band = checkBandOrder(d);
   if (band) problems.push(band);
+  // A FORM document's field-uniqueness rule (DeriveSchema → 409 on save). Empty for a page.
+  problems.push(...formClashes(d));
 
   // COMPOSITION STAMPS: only a DIRECT child of ROOT may carry one, and never the
   // same id twice.

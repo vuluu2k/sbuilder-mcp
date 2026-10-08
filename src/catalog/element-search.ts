@@ -1,4 +1,5 @@
 import { ELEMENTS, TRAIT_WRITES, WRITE_PRECONDITIONS } from './elements.generated.js';
+import { FORM_TEMPLATES } from './checkout.generated.js';
 import { isBaseOnlyConfig } from '../domains/site/baseonly.js';
 import { bindableFields } from '../domains/site/writecheck.js';
 import {
@@ -71,9 +72,15 @@ export function largestCategorySize(): number {
   return Math.max(...Object.values(catalogBrowse()).map((g) => g.length));
 }
 
-/** Lowercase, diacritics off, camelCase and snake_case split — the unit a word match compares. */
-function words(s: string): string[] {
+/**
+ * Lowercase, diacritics off, camelCase and snake_case split — the unit a word
+ * match compares. `đ` is a LETTER, not a base plus a combining mark, so NFD
+ * leaves it whole and "đặt" used to split into nothing; it folds to `d` first.
+ */
+export function searchWords(s: string): string[] {
   return s
+    .replace(/đ/g, 'd')
+    .replace(/Đ/g, 'D')
     .replace(/([a-z0-9])([A-Z])/g, '$1 $2')
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '')
@@ -83,7 +90,7 @@ function words(s: string): string[] {
 }
 
 /** Two spellings of one name compare equal: "Product list", "product-list", "PRÓDUCT LÍST". */
-const slug = (s: string) => words(s).join('-');
+const slug = (s: string) => searchWords(s).join('-');
 
 interface SearchIndex {
   type: string;
@@ -93,6 +100,7 @@ interface SearchIndex {
   hintWords: Set<string>;
   descWords: Set<string>;
   capWords: Set<string>;
+  copyWords: Set<string>;
   hay: string;
 }
 
@@ -111,17 +119,24 @@ function searchIndex() {
       ...Object.values(elementVocabularies(el.type)).flatMap((v) => [v.writeKey, ...v.values]),
     ];
     const hints = [...el.semantics, ...el.useWhen];
+    // The element's own VIETNAMESE default copy ("Giờ hẹn", "Chọn một mục") —
+    // the only words a Vietnamese query can meet, since every hint is English.
+    // Non-ASCII strings only: an ASCII default is a value ("native", "future"), not copy.
+    const copy = Object.values(el.defaults?.specials ?? {}).filter(
+      (v): v is string => typeof v === 'string' && /[^\x00-\x7f]/.test(v),
+    );
     return {
       el,
       ix: {
         type: el.type,
         label: slug(el.label),
-        typeWords: new Set(words(el.type)),
-        labelWords: new Set(words(el.label)),
-        hintWords: new Set(words(hints.join(' '))),
-        descWords: new Set(words(`${el.category} ${el.description}`)),
-        capWords: new Set(words(cap.join(' '))),
-        hay: words([el.type, el.label, el.category, el.description, ...hints].join(' ')).join(' '),
+        typeWords: new Set(searchWords(el.type)),
+        labelWords: new Set(searchWords(el.label)),
+        hintWords: new Set(searchWords(hints.join(' '))),
+        descWords: new Set(searchWords(`${el.category} ${el.description}`)),
+        capWords: new Set(searchWords(cap.join(' '))),
+        copyWords: new Set(searchWords(copy.join(' '))),
+        hay: searchWords([el.type, el.label, el.category, el.description, ...hints].join(' ')).join(' '),
       },
     };
   }));
@@ -147,6 +162,7 @@ function score(ix: SearchIndex, q: string, terms: string[]): number {
     if (has(ix.labelWords, t)) s += 300;
     if (has(ix.hintWords, t)) s += 30;
     if (has(ix.descWords, t)) s += 10;
+    if (ix.copyWords.has(t)) s += 5;
     if (has(ix.capWords, t)) s += 3;
     if (ix.hay.includes(t)) s += 1;
   }
@@ -165,7 +181,7 @@ export function catalogMatches(
   query: string,
   opts: { limit?: number; detail?: boolean } = {},
 ): CatalogMatch[] {
-  const terms = words(query);
+  const terms = searchWords(query);
   const q = terms.join('-');
   return searchIndex()
     .map(({ el, ix }) => ({ el, score: score(ix, q, terms) }))
@@ -183,6 +199,71 @@ export function catalogMatches(
         ? { useWhen: el.useWhen, avoidWhen: el.avoidWhen, contentTips: el.contentTips }
         : {}),
     }));
+}
+
+/** One of the platform's form templates, as a search answer. */
+export interface TemplateMatch {
+  template: string;
+  form_type: string;
+  title: string;
+  use: string;
+}
+
+let templateIndex: Array<{ key: string; type: string; title: string; titleWords: Set<string>; all: Set<string> }> | null = null;
+
+/**
+ * THE PLATFORM'S FORM TEMPLATES, found the way an agent asks for them: "đặt
+ * lịch", "ngày nhận phòng". A booking form is not an element — it is a form
+ * document `sb_store action:"form"` seeds — so an element search alone sends
+ * the caller to hand-assemble one field at a time. Indexed on the key, the
+ * title, the submit text and every field label.
+ *
+ * Strict on purpose, because each one costs the caller tokens: a single word
+ * must BE the key ("booking"), and several words must ALL be in one template.
+ * "email" is on half of them and asks for none.
+ */
+export function formTemplateMatches(query: string, limit = 3): TemplateMatch[] {
+  templateIndex ??= Object.values(FORM_TEMPLATES).map((t) => {
+    const nodes = Object.values(t.document.nodes) as Array<{ data: { type: string }; specials?: Record<string, unknown> }>;
+    const str = (v: unknown) => (typeof v === 'string' ? v : '');
+    const title = str(nodes.find((n) => n.data.type === 'form-title')?.specials?.text);
+    const copy = nodes.flatMap((n) => [str(n.specials?.label), str(n.specials?.text)]);
+    return {
+      key: t.key,
+      type: t.type,
+      title,
+      titleWords: new Set(searchWords(title)),
+      all: new Set(searchWords([t.key, ...copy].join(' '))),
+    };
+  });
+  const terms = searchWords(query);
+  if (terms.length === 0) return [];
+  return templateIndex
+    .filter((t) => (terms.length === 1 ? t.key === terms[0] : terms.every((w) => t.all.has(w))))
+    .map((t) => ({ t, score: terms.filter((w) => t.titleWords.has(w)).length }))
+    .sort((a, b) => b.score - a.score || a.t.key.localeCompare(b.t.key))
+    .slice(0, limit)
+    .map(({ t }) => ({
+      template: t.key,
+      form_type: t.type,
+      title: t.title,
+      use: `sb_store action:"form" template:"${t.key}"`,
+    }));
+}
+
+/**
+ * Elements and templates in ONE ranking. A template whose TITLE holds every
+ * word of the query ("đặt lịch" → "Đặt lịch hẹn") is the answer the caller
+ * meant and goes first — unless an element's type IS the query, which always
+ * wins. Otherwise templates trail the elements, as before.
+ */
+export function searchWithTemplates<E extends { type: string }>(query: string, elements: E[]): Array<E | TemplateMatch> {
+  const templates = formTemplateMatches(query);
+  const terms = searchWords(query);
+  const exactType = elements[0]?.type === terms.join('-');
+  const strong = templates.filter((t) => terms.every((w) => searchWords(`${t.template} ${t.title}`).includes(w)));
+  if (exactType || strong.length === 0) return [...elements, ...templates];
+  return [...strong, ...elements, ...templates.filter((t) => !strong.includes(t))];
 }
 
 /**

@@ -1,6 +1,6 @@
 # Bộ tool
 
-Bốn tool với tới 574 operation của nền tảng, và 197 trong 255 lệnh ghi trong số đó mang theo
+Bốn tool với tới 814 operation của nền tảng, và 298 trong 376 lệnh ghi trong số đó mang theo
 hình dạng body đọc thẳng từ handler decode chúng. `sb_api_find` là một chỉ mục, không phải mỗi
 endpoint một tool — [lý do](../README.vi.md#bộ-tool).
 
@@ -226,6 +226,15 @@ tắc nhắm vào chính trường điều kiện của nó — nền tảng l�
 biểu mẫu không có phòng live, bản xem trước hay `sb_look`; thay đổi lưu vào biểu mẫu, và trang
 chứa nó hiện ra sau khi xuất bản lại.
 
+Trong tài liệu form, `sb_add` không có `index` đặt trường mới lên trên nút gửi hoặc thanh bước,
+giống editor. Với form chia bước, nền tảng chỉ đọc các `form-segment`, nên trường thêm (hoặc
+chuyển) lên node gốc bên cạnh chúng bị từ chối, kèm tên segment nên dùng. Lần lưu nào khiến hai trường trả lời trùng `specials.name` (đã cắt khoảng trắng,
+phân biệt hoa thường; rỗng thì dùng id node) hoặc trùng `mapTo` bị từ chối trước khi gửi lên nền
+tảng (nền tảng cũng sẽ từ chối với 409); dry run báo `would_refuse`. `sb_add`/`sb_set` cảnh báo
+(`form_field`) khi trường lựa chọn không có options, khung giờ không tạo ra slot nào, có ngày thứ
+ba trên form loại booking, hoặc trường mới không có `specials.name`; `sb_review` báo ba trường hợp
+đầu là `form_options_empty`, `form_timeslot_dead`, `form_booking_dates`.
+
 **SATELLITE CÓ TRÊN BẢN ĐỒ.** Tám kiểu element sở hữu node treo ở `config[<key>]` chứ không
 ở `data.nodes` — ô chọn biến thể, hai nút của bộ đếm số lượng, trạng thái rỗng của repeater —
 và chúng giữ toàn bộ diện mạo của element. Chúng được liệt kê dưới chủ sở hữu kèm
@@ -272,7 +281,7 @@ warnings? }` với `warnings` khoá theo id node.
 | `limit` | number? | Mặc định 8, tối đa 60 |
 | `detail` | boolean? | Thêm `useWhen`, `avoidWhen`, `contentTips` vào mọi kết quả |
 
-Tìm trong chính AI hints của nền tảng trên cả 122 element. Mỗi kết quả là
+Tìm trong chính AI hints của nền tảng trên cả 123 element. Mỗi kết quả là
 `{ type, label, category, description }`, kèm `isContainer: true` / `isRootOnly: true` chỉ
 khi đúng — bốn trường để **chọn**. Bản thân các hint, do đội nền tảng viết đúng cho mục đích
 này, đi kèm `sb_traits_for` của element đã chọn, hoặc kèm mọi kết quả khi `detail: true`;
@@ -282,7 +291,10 @@ Kết quả được xếp hạng theo tầng: trùng khớp type, rồi trùng 
 thường và dấu), rồi type bắt đầu bằng từ khoá, rồi từ nguyên vẹn trong type, nhãn,
 `semantics`/`useWhen`, mô tả, và cuối cùng là các key config/specials của chính element cùng
 các giá trị mà từ vựng của chúng cho phép — nhờ đó `pagination`, `load_more`, `sort` tìm ra
-element làm việc đó. Khớp chuỗi con là tín hiệu yếu nhất.
+element làm việc đó. Khớp chuỗi con là tín hiệu yếu nhất. Truy vấn tiếng Việt còn khớp nội dung mặc định tiếng Việt
+của element (`đ` quy về `d`), và truy vấn nêu tên một mẫu form ("booking", "đặt lịch", "ngày
+nhận phòng") trả thêm `{ template, form_type, title, use }` bên cạnh các element, trong đó `use`
+là lệnh `sb_store` để tạo mẫu đó.
 
 ## `sb_traits_for`
 
@@ -1085,7 +1097,7 @@ tài liệu:
 | `dead_menu_link` | Mục menu không có `href` — renderer đọc `specials.menuItems` chứ không bao giờ đọc `menuId` |
 | `extra_repeater_child` | Repeater chứa nhiều hơn một child mà nó nhân bản cho mỗi bản ghi; phần còn lại không bao giờ xuất hiện |
 | `sticky_blocked` | Node đã ghim nằm dưới một ancestor cắt tràn. Sticky bám theo ancestor CUỘN ĐƯỢC gần nhất, nên ancestor đó trở thành chỗ bám và node ghim trong một hộp không bao giờ cuộn. Nó không nhúc nhích, và không gì báo cả. `key` chỉ ancestor cần sửa, không phải node |
-| `order_goes_nowhere` | Trang vừa cộng tổng giỏ vừa có form, mà không có gì trên `form:success` đưa khách đi đâu. Đơn được tạo còn trang đứng yên, mọi dòng tổng giờ là 0 vì giỏ vừa bị dọn — một đơn thành công trông y như đơn hỏng. `afterSubmit: "redirect"` của form record KHÔNG sửa được: API lưu nó và platform không mang đi đâu cả. Khi danh sách form của site cho biết form là loại gì thì chỉ form `order` mới tính, và tổng tiền của ngăn giỏ (overlay có trên mọi trang) không bao giờ tính — nên trang đăng nhập không phải trang thanh toán |
+| `order_goes_nowhere` | Trang vừa cộng tổng giỏ vừa có form, mà không có gì trên `form:success` đưa khách đi đâu. Đơn được tạo còn trang đứng yên, mọi dòng tổng giờ là 0 vì giỏ vừa bị dọn — một đơn thành công trông y như đơn hỏng. `afterSubmit: { action: "redirect", pageId | url }` của form record giờ CÓ điều hướng (platform đóng dấu nó thành `sentRedirect` và đi theo sau chuỗi `form:success`), nhưng một `pageId` trỏ tới trang chưa publish sẽ lặng lẽ quay về thông báo, và kiểm tra này chỉ đọc event trên node — nên event `form:success` là cách sửa nó công nhận. Khi danh sách form của site cho biết form là loại gì thì chỉ form `order` mới tính, và tổng tiền của ngăn giỏ (overlay có trên mọi trang) không bao giờ tính — nên trang đăng nhập không phải trang thanh toán |
 | `hover_dead` | Hover được lưu ở `states.hover` trên element giữ hover ở chỗ khác — `button` giữ nó trong map phẳng `config.stateHover` mà renderer của chính nó compile. Được lưu, được publish, không ai vẽ. Mọi site server này dựng trước khi biết khác biệt đó đều dính |
 | `stuck_no_host` | Override `stuck` trên node không có gì được ghim ở trên. `render/css.go` chỉ sinh CSS stuck khi có stuck host, nên phần tạo dáng được lưu, save, publish và không bao giờ vẽ. Thường do host bị bỏ ghim về sau, hoặc do import |
 | `no_h1` | Trang có heading mà không cái nào là `h1`. Mọi `heading` sinh ra là h2 (`specials.htmlTag`), `text` / `text-dataset` cũng đọc key đó, nên trang dựng ở đây — và mọi trang platform seed — không có tiêu đề chính cho máy tìm kiếm hay trình đọc màn hình. Canvas không hiện tag. Báo trên heading đầu tiên CỦA TRANG — dòng thương hiệu trong header dùng chung được bỏ qua, theo cả hai stamp (`globalRef`/`globalId`); đặt h1 lên đúng heading nói về trang, một cái thôi |
@@ -1780,6 +1792,17 @@ phải đi kèm, nếu không `Normalize()` đổi tên thành "Form" và chuy�
 đó document bị từ chối), rồi lưu field document với node id mới. Nếu một lệnh ghi sau đó
 hỏng thì form bị xoá lại — một form không ai thấy chính là thứ mồ côi mà lần thử lại sẽ nhân
 đôi.
+
+**`settings`** — cài đặt của bản ghi form, gộp MỘT tầng lên cài đặt của mẫu và gửi trong bước
+PUT-nguyên-vẹn: `settings.booking` gộp theo từng key, còn object sâu hơn (`booking.dayRules`)
+thay hẳn giá trị của mẫu chứ không gộp vào. Quy tắc đặt lịch nằm trong `booking`: `maxPerSlot`, `slotCapacity`, `maxPerDay`,
+`maxPerCustomer`, `minNoticeDays`, `maxAdvanceDays`, `closedDates` (`YYYY-MM-DD`),
+`minStayNights`, `maxStayNights`, `dayRules`, `depositProductId`, `depositPercent`,
+`serviceProducts`, `allowRepeatBooking`, `customerMail`, `reminderDaysBefore`,
+`depositHoldMinutes`. Dry run hiện cài đặt đã gộp. Key nào không có trong cấu trúc Settings
+được sinh từ nền tảng sẽ nằm ở `settings_unknown` — nền tảng bỏ qua nó mà không báo. Mẫu
+`booking`/`stay` cần app Booking: nền tảng từ chối với `booking_app_required`, nên chạy
+`sb_store action:"app" app_key:"booking"` trước.
 
 Mặc định nó **không tạo trang**. Đặt form ở đâu là quyết định thiết kế, và `/account` là
 trang duy nhất không được tự do chọn: `membersOnlyRedirectTarget` đưa mọi khách bị chặn về

@@ -306,10 +306,10 @@ describe('the seeded documents are placeholders, not values', () => {
  *
  * Measured on a store built entirely with these tools: the order is created and
  * the page stays put, showing a receipt-shaped list of totals that all read 0
- * because the cart it was summing has just been emptied. The form record HAS a
- * setting for this and it does not work — `afterSubmit: "redirect"` is stored by
- * the API and carried nowhere — so the seed cannot supply it and neither can any
- * setting an agent can reach. The form's own success chain is what works.
+ * because the cart it was summing has just been emptied. The record's own
+ * `afterSubmit: "redirect"` is carried since web_builder fcfde38ac, but an
+ * unpublished `pageId` target falls back to the message — the form's own success
+ * chain is the answer that does not depend on it.
  */
 describe('the seeded checkout sends the shopper on', () => {
   it('puts a form:success navigation on the form node', async () => {

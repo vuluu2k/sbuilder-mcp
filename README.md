@@ -114,8 +114,8 @@ in this client: one would put the very key the platform exists to hold back into
 | `sb_store` | Run a store flow that must happen in a fixed order — `checkout` (the four writes that make a working one), `checkout_sync` (the store's current payment and delivery methods into every existing order form, checkout page republished), `form` (any of the platform's 17 templates with its own field document), `chrome` (one shared header or footer on a real site menu — desktop menu, mobile drawer, cart and account icons), `menu` (a menu node bound to the site's menu, its links resolved), `overlay_attach` (a pop-up or quick view on the open page), `cart` (the site's cart drawer, when it has none; `relocalize` puts an existing one in the site's language) and `app` (a built-in app plus the pages it needs), `global_attach` / `global_detach` (put an EXISTING shared section on the open page, or take it off) |
 | `sb_undo` | Undo / redo this session's writes — page and form edits and `sb_api_call` PUTs; a page is refused if someone else saved it since. The platform's versions and history (`sb_api_find` "page versions") outlive this process |
 
-Twenty-eight tools, **574 API operations** (197 of the 255 writes carrying a body shape read
-off the handler), 122 elements, 79 binding sources. `sb_api_find`
+Twenty-eight tools, **814 API operations** (298 of the 376 writes carrying a body shape read
+off the handler), 123 elements, 79 binding sources. `sb_api_find`
 is an index rather than a tool per endpoint, so the tool list stays short while everything
 the platform can do stays reachable — and operations added to the platform arrive with the
 next `npm run codegen`.

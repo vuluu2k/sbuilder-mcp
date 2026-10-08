@@ -551,6 +551,14 @@ repo over a number here, and fix the line when you catch one stale.
   by each field's `specials.name.trim() || nodeId` — a named field's node id is NOT a key.
   Every reader drops a bad rule one entry at a time, silently, so `formRuleChecks` warns.
 
+- **A FORM DOCUMENT'S ROOT HOLDS CHILDREN ALTHOUGH ITS META SAYS `isContainer: false`.** On a
+  page `form` is a leaf (a reference to a separate document); in its own field document it is
+  the root every field hangs from. v0.77.0 shipped `sb_page_open form_id` with `addSubtree` /
+  `moveNode` still asking the meta, so `sb_add` refused every field on an undivided form — the
+  document root is now exempt. New fields go above the first `form-submit` / `form-step-nav`
+  (the editor's `indexBeforeStepBar`), and duplicate posted names / `mapTo` are refused before
+  the round trip because the platform refuses them with 409 (`forms/schema.go`).
+
 ## The five traps
 
 Each fails SILENTLY. Each is encoded in `src/domains/site/traps.ts` (trap 5 in

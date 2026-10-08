@@ -1,6 +1,6 @@
 # Tools
 
-Four tools reach 574 platform operations, and 197 of the 255 writes among them carry a body
+Four tools reach 814 platform operations, and 298 of the 376 writes among them carry a body
 shape read off the handler that decodes it. `sb_api_find` is an index, not a tool per
 endpoint — see [why](../README.md#tools).
 
@@ -222,6 +222,16 @@ not have, and a rule that targets its own condition field — the platform drops
 silently, one rule at a time. A form document has no live room, preview or `sb_look`; edits
 save to the form, and the page that places it shows them once republished.
 
+On a form document, `sb_add` with no `index` puts a new field above the send button or step bar,
+as the editor does. On a form split into steps the platform reads only the `form-segment`s, so a
+field added (or moved) onto the form root beside them is refused, naming the segment to use. A save that would leave two answering fields with the same `specials.name`
+(trimmed, case-sensitive; empty means the node id) or the same `mapTo` is refused before it
+reaches the platform, which would refuse it with 409 anyway; a dry run reports `would_refuse`.
+`sb_add`/`sb_set` warn (`form_field`) about a choice field with no options, a time slot whose
+hours make no slot, a third date field on a booking-type form, and a new field with no
+`specials.name`; `sb_review` reports the first three as `form_options_empty`,
+`form_timeslot_dead` and `form_booking_dates`.
+
 **SATELLITES ARE ON THE MAP.** Eight element types own nodes that hang off `config[<key>]`
 instead of `data.nodes` — a variant option's box, the quantity stepper's buttons, a
 repeater's empty state — and they carry the element's entire look. They are listed under
@@ -270,7 +280,7 @@ emitted, so a bad id in the fourth edit refuses the whole batch. The result is t
 | `limit` | number? | Default 8, max 60 |
 | `detail` | boolean? | Add `useWhen`, `avoidWhen`, `contentTips` to every match |
 
-Searches the platform's own AI hints across all 122 elements. Each match is
+Searches the platform's own AI hints across all 123 elements. Each match is
 `{ type, label, category, description }`, plus `isContainer: true` / `isRootOnly: true`
 only when true — four fields to **choose** by. The hints themselves, written by the platform
 team for exactly this purpose, come with `sb_traits_for` for the element chosen, or on every
@@ -281,7 +291,10 @@ Results are ranked in tiers: exact type, then exact label (ignoring case and dia
 a type that starts with the query, then whole words in the type, the label,
 `semantics`/`useWhen`, the description, and last the element's own config/specials keys and
 the values their vocabularies allow — so `pagination`, `load_more` and `sort` find the element
-that does them. A bare substring is the weakest signal.
+that does them. A bare substring is the weakest signal. Vietnamese queries also match each element's
+Vietnamese default copy (`đ` folds to `d`), and a query naming a form template ("booking",
+"đặt lịch", "ngày nhận phòng") returns `{ template, form_type, title, use }` beside the
+elements, where `use` is the `sb_store` call that seeds it.
 
 ## `sb_traits_for`
 
@@ -1114,7 +1127,7 @@ box. Returns `{ findings, fixes, findings_notice? }`, in document order:
 | `dead_menu_link` | A menu entry with no `href` — the renderer reads `specials.menuItems` and never `menuId` |
 | `extra_repeater_child` | A repeater holding more than the one child it clones per record; the rest never appear |
 | `sticky_blocked` | A pinned node under an ancestor that clips its overflow. Sticky resolves against its nearest SCROLLING ancestor, so that one becomes it and the node pins inside a box that never scrolls. It does not move, and nothing reports it. `key` names the ancestor to fix, not the node |
-| `order_goes_nowhere` | A page that totals a cart and carries a form, with nothing on `form:success` to send the shopper anywhere. The order is created and the page stays put, every total now reading 0 because the cart was just emptied — a completed order that looks like a failed one. The form record's own `afterSubmit: "redirect"` does NOT fix it: the API stores that and the platform carries it nowhere. Only an `order` form counts when the site's form list says what the form is, and the cart drawer's own total (an overlay on every page) never does — so a login page is not a checkout |
+| `order_goes_nowhere` | A page that totals a cart and carries a form, with nothing on `form:success` to send the shopper anywhere. The order is created and the page stays put, every total now reading 0 because the cart was just emptied — a completed order that looks like a failed one. The form record's own `afterSubmit: { action: "redirect", pageId | url }` does navigate (the platform stamps it as `sentRedirect` and follows it after the `form:success` chain), but a `pageId` whose page is unpublished silently falls back to the message, and this check reads only the node's events — so the `form:success` event is the fix it recognises. Only an `order` form counts when the site's form list says what the form is, and the cart drawer's own total (an overlay on every page) never does — so a login page is not a checkout |
 | `hover_dead` | A hover stored in `states.hover` on an element that keeps its hover somewhere else — a `button` keeps it in the flat `config.stateHover` map its own renderer compiles. Stored, published, painted by nobody. Every site this server built before it learned the difference carries these |
 | `stuck_no_host` | A `stuck` override on a node with nothing pinned above it. `render/css.go` emits stuck CSS only under a stuck host, so the styling is stored, saved, published and never painted. Usually a host that was un-pinned later, or an import |
 | `no_h1` | The page has headings and none is an `h1`. Every `heading` ships as h2 (`specials.htmlTag`), and `text` / `text-dataset` take the same key, so a page built here — and every page the platform seeds — has no main title for a search engine or a screen reader. Nothing on the canvas shows the tag. Named on the page's OWN first heading — a shared header's brand line is skipped, by either stamp (`globalRef`/`globalId`); put the h1 on the one the page is about, once |
@@ -1832,6 +1845,17 @@ WHOLE** (name and type must ride along or `Normalize()` renames it "Form" and tu
 `custom`, after which the document is refused), then save the field document with fresh node
 ids. If a later write fails the form is deleted again — a form nobody can see is the orphan
 the obvious retry duplicates.
+
+**`settings`** — the form record's settings, merged over the template's ONE level deep and
+sent in the PUT-whole step: `settings.booking` merges key by key, but a deeper object
+(`booking.dayRules`) replaces the template's rather than merging into it. Booking rules go under `booking`: `maxPerSlot`, `slotCapacity`,
+`maxPerDay`, `maxPerCustomer`, `minNoticeDays`, `maxAdvanceDays`, `closedDates` (`YYYY-MM-DD`),
+`minStayNights`, `maxStayNights`, `dayRules`, `depositProductId`, `depositPercent`,
+`serviceProducts`, `allowRepeatBooking`, `customerMail`, `reminderDaysBefore`,
+`depositHoldMinutes`. The dry run shows the merged settings. A key the platform's generated
+Settings shape does not declare is listed under `settings_unknown` — the platform drops it
+silently. A `booking`/`stay` template needs the Booking app: the platform refuses with
+`booking_app_required`, so run `sb_store action:"app" app_key:"booking"` first.
 
 By default it makes **no page**. Where a login form belongs is a design decision, and
 `/account` is the one page that is not a free choice: `membersOnlyRedirectTarget` sends every

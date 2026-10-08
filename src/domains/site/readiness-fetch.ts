@@ -62,7 +62,7 @@ export async function gatherReadiness(
     // page can tell a login form from a register form without this list. That
     // blindness is what let one page quietly become the site's whole account
     // area, which is the shape `mergedAuthPage` reports.
-    get<{ forms?: Array<{ id?: string; type?: string }> }>(`/api/sites/${site}/forms`),
+    get<{ forms?: ReadinessInput['forms'] }>(`/api/sites/${site}/forms`),
     // THE ARTICLES, for the same reason the products are read: /blog/{slug}
     // resolves to the site's `post` template, so a site that has written
     // articles and has no template 404s every one of them.

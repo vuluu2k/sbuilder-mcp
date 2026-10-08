@@ -40,7 +40,7 @@ a block of HTML in `custom-code` does not, and its interior is invisible to `sb_
 | Visibility | `config.hidden` per breakpoint; `member-gate` (`specials.audience` members/guests) | yes | yes | `css.go` hiddenAt; `runtime/src/nodes/member-gate.ts` | partial — no data- or state-driven visibility on ordinary nodes |
 | Actions | `schema/src/actions/enum.ts` (21 actions; triggers click, form submit/success/error) | `ActionRow.vue` | `sb_event` (allowed list per element in `sb_traits_for`; payload checked) | `runtime/src/core/boot.ts` dispatch | full for the listed actions; add_to_cart / buy_now are BINDINGS, not events |
 | Popups | `popup` in `site_overlays`, opened by the `popup` action with `payload.id` (the overlay id) | yes | `sb_store` overlays + `sb_event` | `runtime/src/nodes/popup-control.ts` | partial — a popup receives no item context; only `quickview` (products) does. Measured why: `wbState` seeds only product id + variations (`server/render/scope/seed.go:116`), and a popup is one overlay rendered once (`internal/page/overlay.go:244`) — the honest design is quick view's per-row render, a feature of its own |
-| Forms | `form-*` fields; the form root's `specials.formRules` hides/shows/requires fields by other answers (is, isNot, filled, empty, contains, notContains) | `FormRulesPanel.vue` | `sb_store action:"form"`, then `sb_page_open form_id` + `sb_set specials.formRules` (checked against the generated rule vocabulary) | `runtime/src/nodes/form-conditions.ts`; server re-checks rules and required/format/length/range (`server/internal/forms/submit.go`, `rules.go`) | partial — no derived fields, no numeric comparisons, cross-field validation only for confirm-phone |
+| Forms | `form-*` fields; the form root's `specials.formRules` hides/shows/requires fields by other answers (is, isNot, filled, empty, contains, notContains) | `FormRulesPanel.vue` | `sb_store action:"form"`, then `sb_page_open form_id` + `sb_set specials.formRules` (checked against the generated rule vocabulary) | `runtime/src/nodes/form-conditions.ts`; server re-checks rules and required/format/length/range (`server/internal/forms/submit.go`, `rules.go`) | partial — 17 templates incl. booking and stay, seeded with record `settings` (booking rules); duplicate names/mappings refused before save, unanswerable fields warned. No derived fields, no numeric comparisons, cross-field validation only for confirm-phone and the stay range |
 | Defaults | `form-select defaultValue`, text/number `prefillValue` (binding) | yes | yes | yes | full |
 | Navigation keeping query params | — | — | — | filters keep non-filter params; UTM kept in session | **absent** as a general mechanism |
 | Shared state / variables | — | — | — | — | **absent** (`node.states` is hover/active styling, not data) |
@@ -80,6 +80,25 @@ targets): `specials.formRules`, a JSON array of
 shown, optional, required. The server re-runs the same rules on submit
 (`server/internal/forms/rules.go`), so a field required only in one branch is enforced there
 too.
+
+**Booking-shaped forms (appointment, salon, hotel stay)** — the platform already has a
+server-side booking rulebook (capacity per slot and per day, notice and horizon, closed
+dates, stay nights, deposits, `server/internal/forms/booking.go`).
+
+1. Install the Booking app: `sb_store action:"app" app_key:"booking"`. Without it the
+   platform refuses a booking-type form (`booking_app_required`).
+2. `sb_store action:"form" template:"booking"` for an appointment (one date + a time slot),
+   or `template:"stay"` for lodging (two dates), with `settings: { booking: { … } }` —
+   `maxPerSlot` / `slotCapacity` for a salon, `minStayNights` / `maxStayNights` /
+   `closedDates` for a hotel.
+3. `sb_page_open form_id:<id>`, then `sb_add` fields — a "Dịch vụ" `form-select` with
+   `options` and a `specials.name` — which land above the send button; add rules on the
+   root as `specials.formRules`.
+4. **The stay rule is positional:** on a booking form the FIRST TWO date fields
+   (`form-calendar` / `form-date`), in document order, are check-in and check-out. Keep one
+   date (appointment) or two (stay); a third is ignored by every booking rule and is warned
+   about.
+5. Place the form on a page and republish that page.
 
 **A popup about the clicked item** — for products, `quickview` (list `config.quickviewId`)
 is the native answer: the list renders one panel per card under that card's own record. A

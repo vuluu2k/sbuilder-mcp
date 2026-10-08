@@ -444,8 +444,12 @@ const VAR_ANON = /^\s*var\s+(\w+)\s+struct\s*\{\s*$/;
  * `json.NewDecoder(r.Body).Decode(&x)`; `/api/v1` writes `decode(w, r, &x)`
  * through a package-local helper. Reading only the first left the PARTNER
  * surface — the one an API key opens — entirely unshaped.
+ *
+ * The target need not be the LAST argument: `tickets/rest` writes
+ * `decode(w, r, &b, invalidEvent)`, passing the route family's error code after
+ * it, and anchoring on `&b)` left every ticket and event write unshaped.
  */
-const DECODE = /\b[dD]ecode\w*\([^()]*&(\w+)\s*\)/;
+const DECODE = /\b[dD]ecode\w*\([^()]*&(\w+)\s*[,)]/;
 /**
  * A third spelling, and the narrowest: a handler that needs the raw bytes for a
  * size check reads them first and then unmarshals.
@@ -554,8 +558,13 @@ function readFuncs(lines: string[]): GoFunc[] {
       i++;
       continue;
     }
+    // A ONE-LINE func (`func (a *API) WithX(x X) *API { a.x = x; return a }`)
+    // closes on its own line. Scanning on for the next column-0 `}` swallowed the
+    // function BELOW it — `forms/rest`'s `WithPageWriteGate` ate `collection`,
+    // so `POST /forms` lost its shape and its routes went to the wrong owner.
     let end = i + 1;
-    for (; end < lines.length && !/^\}/.test(lines[end]); end++);
+    if (/\}\s*$/.test(lines[i])) end = i;
+    else for (; end < lines.length && !/^\}/.test(lines[end]); end++);
     out.push({ name: sig[1], routes: routesFor.get(sig[1]) ?? [], body: lines.slice(i, end) });
     i = end + 1;
   }
@@ -615,6 +624,13 @@ function extractDecodes(
       if (!NOT_A_BODY.has(ref)) decls.set(typed[1], { ref, inline: null });
       continue;
     }
+    // A RE-READ of bytes already in hand whose error is DISCARDED is a probe, not
+    // the body parse. `POST /forms` unmarshals `raw` into `forms.Form` (checked)
+    // and again into an anonymous `{settings:{notify}}` with `_ = json.Unmarshal`
+    // to ask whether a notify block was sent; counting the probe as a second body
+    // made the arm ambiguous and dropped the form's shape. Only the Unmarshal
+    // spelling: `_ = json.NewDecoder(r.Body).Decode(&b)` is a real optional body.
+    if (/^\s*_\s*=\s*json\.Unmarshal\(/.test(line)) continue;
     const dec = DECODE.exec(line) ?? (readsRawBody ? UNMARSHAL.exec(line) : null);
     if (!dec) continue;
     const hit = decls.get(dec[1]);

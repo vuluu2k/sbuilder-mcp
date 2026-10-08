@@ -5,6 +5,7 @@ import { HOVER_STATE, hoverHome } from './hover.js';
 import { ELEMENTS, BINDING_SOURCES, BOUND_SPECIALS , FIRST_CHILD_ONLY, SATELLITE_RULES, ELEMENT_SEEDS } from '../../catalog/elements.generated.js';
 import type { PageDoc } from './document.js';
 import { fill } from './findings.js';
+import { formFieldFindings } from './formdoc.js';
 import { deadNavigation, liveEventTable, PAYLOAD_NEEDS, type NodeEventLike } from './navhref.js';
 import { unknownValueNote, unknownWriteNote, vocabularyFor, vocabularyForWrite } from './vocabulary.js';
 
@@ -250,8 +251,12 @@ export function reviewDesign(
   /** The site's forms by id → type, when read; lets `order_goes_nowhere` ask the form itself. */
   opts: {
     formTypes?: Record<string, string>;
+    /** Forms whose record redirects after a send (`settings.afterSubmit`), by id. */
+    formRedirects?: ReadonlySet<string>;
     /** The page record's `type`. Without it `no_data_context` stays silent rather than guess. */
     pageType?: string;
+    /** The open FORM document's record type, when known — the third-date rule needs "booking". */
+    formDocType?: string;
   } = {},
 ): Finding[] {
   const d: DocLike = doc.doc;
@@ -600,10 +605,11 @@ export function reviewDesign(
     // read 0 because the cart it was summing has just been emptied. Nothing
     // errors, and the shopper cannot tell a completed order from a failed one.
     //
-    // Checked on the FORM NODE rather than on the form record, because the
-    // record's own `afterSubmit: "redirect"` is stored by the API and carried
-    // nowhere (`forms/pagesource.go`) — reading it would report a page as fine
-    // on the strength of a setting the platform ignores.
+    // The FORM NODE's event, or the RECORD's own `afterSubmit: "redirect"` —
+    // carried since web_builder fcfde38ac (`forms/pagesource.go` stamps
+    // `sentRedirect`; the runtime follows it after the `form:success` chain).
+    // A `pageId` target that is unpublished falls back to the message; that is
+    // the page's own defect (readiness reports unpublished pages), not this one.
     if (type === 'form') {
       const events = (n as unknown as { events?: Array<{ name?: string; action?: string }> }).events ?? [];
       const navigates = events.some(
@@ -624,7 +630,8 @@ export function reviewDesign(
       const sellsFromCart = walkOrder.some((x) => !inOverlay.has(x) && d.nodes[x]?.data.type === 'cart-total');
       const formType = opts.formTypes?.[String(n.specials?.formId ?? '')];
       const isOrder = formType ? formType === 'order' : sellsFromCart;
-      if (!navigates && isOrder && !inOverlay.has(id)) {
+      const redirects = opts.formRedirects?.has(String(n.specials?.formId ?? '')) ?? false;
+      if (!navigates && !redirects && isOrder && !inOverlay.has(id)) {
         out.push({
           code: 'order_goes_nowhere',
           nodeId: id,
@@ -1019,6 +1026,9 @@ export function reviewDesign(
       });
     }
   }
+
+  // A FORM DOCUMENT's fields that store fine and can never be answered.
+  for (const f of formFieldFindings(d, opts.formDocType)) out.push({ ...f, fix: fill(f.code, { id: f.nodeId }) });
 
   return out;
 }

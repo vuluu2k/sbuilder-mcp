@@ -176,3 +176,120 @@ describe('fixture 5 — navigation', () => {
     await close();
   });
 });
+
+/**
+ * A platform that keeps FORM RECORDS: POST creates one, PUT replaces it whole,
+ * GET reads it — beside fakePlatform's own field documents.
+ */
+function formsPlatform() {
+  const records = new Map<string, { id: string; name: string; type: string; settings: Record<string, unknown> }>();
+  let n = 0;
+  const p = fakePlatform((method, path, body) => {
+    if (method === 'POST' && path === '/api/sites/s1/forms') {
+      const b = body as { name: string; type: string };
+      const rec = { id: `frm_${++n}`, name: b.name, type: b.type, settings: { notify: { owner: true } } };
+      records.set(rec.id, rec);
+      return { form: rec };
+    }
+    const m = /^\/api\/sites\/s1\/forms\/(frm_\d+)$/.exec(path);
+    if (m && method === 'PUT') {
+      records.set(m[1], { ...(body as never), id: m[1] });
+      return { form: records.get(m[1]) };
+    }
+    if (m && method === 'GET') return { form: records.get(m[1]) };
+    return undefined;
+  });
+  return { p, records };
+}
+const formDocOf = (p: ReturnType<typeof fakePlatform>, id: string) => p.forms.get(id) as Doc;
+
+describe('fixture 6 — booking-shaped forms, native end to end', () => {
+  it('a salon: template booking → a "Dịch vụ" select → a rule → maxPerSlot, and it all reopens', async () => {
+    const { p, records } = formsPlatform();
+    const { call, close } = await p.connect();
+    const made = await call('sb_store', {
+      site_id: 's1',
+      action: 'form',
+      template: 'booking',
+      name: 'Đặt lịch salon',
+      settings: { booking: { maxPerSlot: 2, minNoticeDays: 1 } },
+      dry_run: false,
+    });
+    expect(made.isError).toBe(false);
+    const formId = (made.json.form as { id: string }).id;
+    // The PUT-whole step carried the rulebook, over what the platform seeded.
+    expect(records.get(formId)).toMatchObject({
+      type: 'booking',
+      settings: { notify: { owner: true }, booking: { maxPerSlot: 2, minNoticeDays: 1 } },
+    });
+
+    await call('sb_page_open', { site_id: 's1', form_id: formId });
+    const root = formDocOf(p, formId).root_node_id;
+    const add = await call('sb_add', {
+      parent_id: root,
+      dry_run: false,
+      spec: {
+        type: 'form-select',
+        specials: { name: 'dich_vu', label: 'Dịch vụ', required: true, options: ['Cắt tóc', 'Nhuộm tóc', 'Gội đầu'] },
+      },
+    });
+    expect(add.isError).toBe(false);
+    expect(add.json.checks).toBeUndefined(); // named, with options: nothing to say
+    const rules = [
+      { id: 'r1', join: 'and', conditions: [{ field: 'dich_vu', op: 'is', value: 'Nhuộm tóc' }], targets: [{ field: 'notes', action: 'required' }] },
+    ];
+    const set = await call('sb_set', { id: root, namespace: 'specials', keys: { formRules: JSON.stringify(rules) }, dry_run: false });
+    expect(set.isError).toBe(false);
+    expect(set.json.checks).toBeUndefined();
+
+    let doc = formDocOf(p, formId);
+    const select = ofType(doc, 'form-select')[0];
+    const kids = doc.nodes[root].data.nodes;
+    // Above "Đặt lịch", where the editor puts a new field.
+    expect(kids.indexOf(select.id)).toBeLessThan(kids.indexOf(ofType(doc, 'form-submit')[0].id));
+    expect(JSON.parse(String(doc.nodes[root].specials?.formRules))).toEqual(rules);
+    expect(ofType(doc, 'custom-code')).toEqual([]);
+
+    // Reopen: what the form builder would load is what was saved.
+    await call('sb_page_open', { site_id: 's1', form_id: formId });
+    expect((await call('sb_outline', { depth: 3 })).text).toContain(select.id);
+    doc = formDocOf(p, formId);
+    expect(doc.nodes[select.id].specials?.options).toEqual(['Cắt tóc', 'Nhuộm tóc', 'Gội đầu']);
+    const review = await call('sb_review', {});
+    expect(codes(review).filter((c) => c.startsWith('form_'))).toEqual([]);
+    await close();
+  });
+
+  it('a hotel: template stay → min/max nights; two dates are the stay and review is clean', async () => {
+    const { p, records } = formsPlatform();
+    const { call, close } = await p.connect();
+    const dry = await call('sb_store', {
+      site_id: 's1',
+      action: 'form',
+      template: 'stay',
+      settings: { booking: { minStayNights: 2, maxStayNights: 14 } },
+    });
+    expect(dry.json.settings).toEqual({ booking: { minStayNights: 2, maxStayNights: 14 } });
+    expect(dry.json.settings_unknown).toBeUndefined();
+    expect(p.writes).toEqual([]);
+
+    const made = await call('sb_store', {
+      site_id: 's1',
+      action: 'form',
+      template: 'stay',
+      settings: { booking: { minStayNights: 2, maxStayNights: 14 } },
+      dry_run: false,
+    });
+    const formId = (made.json.form as { id: string }).id;
+    expect(records.get(formId)?.settings).toMatchObject({ booking: { minStayNights: 2, maxStayNights: 14 } });
+    await call('sb_page_open', { site_id: 's1', form_id: formId });
+    const doc = formDocOf(p, formId);
+    expect(ofType(doc, 'form-calendar').map((n) => n.specials?.name)).toEqual(['nhan_phong', 'tra_phong']);
+    const review = await call('sb_review', {});
+    expect(codes(review).filter((c) => c.startsWith('form_'))).toEqual([]);
+    // A third date on this BOOKING form is said at the write, before it ships.
+    const third = await call('sb_add', { parent_id: doc.root_node_id, spec: { type: 'form-calendar', specials: { name: 'ngay_sinh' } } });
+    expect(JSON.stringify(third.json.checks)).toContain('check-in');
+    await close();
+  });
+});

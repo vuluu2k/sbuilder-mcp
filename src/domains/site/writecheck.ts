@@ -13,6 +13,8 @@ import { FIELD_SKIN_BY_NODE } from '../../catalog/fieldskin.generated.js';
 import { FORM_RULE_VOCAB } from '../../catalog/formrules.generated.js';
 import type { DocLike } from '../../core/tree.js';
 import type { NodeSpec } from './builder.js';
+import { fill } from './findings.js';
+import { collectsValue, formFieldFindings, formFields, nameFromLabel } from './formdoc.js';
 import {
   animationNote,
   deadKeyNote,
@@ -40,7 +42,15 @@ import {
  * that every element's own defaults are silent.
  */
 export interface WriteNote {
-  code: 'unknown_key' | 'unknown_value' | 'animation' | 'dead_key' | 'precondition' | 'unsupported_setting' | 'form_rule';
+  code:
+    | 'unknown_key'
+    | 'unknown_value'
+    | 'animation'
+    | 'dead_key'
+    | 'precondition'
+    | 'unsupported_setting'
+    | 'form_rule'
+    | 'form_field';
   id?: string;
   /** `<namespace>.<key>` */
   key: string;
@@ -294,6 +304,50 @@ export function formRuleChecks(doc: DocLike, raw: unknown): Array<{ problem: str
       }
     }
   });
+  return out;
+}
+
+/**
+ * A write into an open FORM document, judged on the document it LEAVES: a field
+ * it makes unanswerable (no options, a dead time slot, a third date on a
+ * booking form), and a field it ADDS with no `specials.name`.
+ *
+ * The unnamed one is a note, not a defect: the editor leaves a new field's name
+ * empty too (FieldNameRow.vue — "the node id is the honest resting value"), and
+ * the platform posts the answer under the node id. But that id is what the
+ * submissions table, the notification mail and every form rule then show, so
+ * an agent that can name the field should. Only what this write introduced is
+ * said; a page answers nothing.
+ */
+export function formDocChecks(before: DocLike, after: DocLike, formType?: string): CheckedNote[] {
+  const out: CheckedNote[] = [];
+  const had = new Set(formFieldFindings(before, formType).map((f) => `${f.code}:${f.nodeId}`));
+  for (const f of formFieldFindings(after, formType)) {
+    if (had.has(`${f.code}:${f.nodeId}`)) continue;
+    out.push({
+      once: `form-field:${f.code}:${f.nodeId}`,
+      note: { code: 'form_field', id: f.nodeId, key: `specials.${f.key}`, problem: f.problem, fix: fill(f.code, { id: f.nodeId }) },
+    });
+  }
+  for (const n of formFields(after)) {
+    if (before.nodes[n.id] || !collectsValue(n.data.type)) continue;
+    const name = n.specials?.name;
+    if (typeof name === 'string' && name.trim()) continue;
+    const label = typeof n.specials?.label === 'string' ? nameFromLabel(n.specials.label) : '';
+    const suggest = label && label !== 'label' ? label : 'a_short_key';
+    out.push({
+      once: `form-field:unnamed:${n.id}`,
+      note: {
+        code: 'form_field',
+        id: n.id,
+        key: 'specials.name',
+        problem:
+          `${n.data.type} ${n.id} has no specials.name, so its answer posts under the node id "${n.id}" — ` +
+          'which is what the submissions table, the notification mail and every form rule then show.',
+        fix: `sb_set id "${n.id}", namespace specials, keys { "name": "${suggest}" } — unique within the form.`,
+      },
+    });
+  }
   return out;
 }
 

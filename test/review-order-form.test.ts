@@ -37,4 +37,12 @@ describe('order_goes_nowhere is about the checkout form, not every form', () => 
     expect(codes(page({ pageTotal: true, drawer: true }))).toContain('order_goes_nowhere');
     expect(codes(page({ pageTotal: true }), { frm_1: 'order' })).toContain('order_goes_nowhere');
   });
+
+  it('a checkout form whose RECORD redirects after a send is not reported (web_builder fcfde38ac)', () => {
+    const d = page({ pageTotal: true });
+    expect(reviewDesign(d, { formTypes: { frm_1: 'order' }, formRedirects: new Set(['frm_1']) }).map((f) => f.code))
+      .not.toContain('order_goes_nowhere');
+    expect(reviewDesign(d, { formTypes: { frm_1: 'order' }, formRedirects: new Set(['frm_other']) }).map((f) => f.code))
+      .toContain('order_goes_nowhere');
+  });
 });
