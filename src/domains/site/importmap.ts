@@ -375,6 +375,24 @@ function textScale(slug: string, fallback: Record<string, string>): {
   return { style, config: { textGlobalStyle: slug } };
 }
 
+const holds = (c: Captured, kind: Captured['kind']): boolean =>
+  c.kind === kind || (c.children ?? []).some((k) => holds(k, kind));
+/** A button, or a packed run of nothing but buttons. */
+const isAction = (c: Captured): boolean =>
+  c.kind === 'button' || (c.kind === 'group' && !!c.children?.length && c.children.every((k) => k.kind === 'button'));
+
+/**
+ * A row of a heading block and ONE action — a shelf's title and its "see all".
+ * `align: 'center'` is a caller asking for a centred band, and keeps the
+ * equal-share answer it asked for.
+ */
+export function isTitleBar(c: Captured): boolean {
+  const kids = c.children ?? [];
+  if (c.kind !== 'group' || c.direction === 'column' || c.wrap || c.pack || c.align === 'center') return false;
+  if (kids.length !== 2) return false;
+  return holds(kids[0], 'heading') && !holds(kids[0], 'button') && isAction(kids[1]);
+}
+
 function one(c: Captured, t: PageTokens): NodeSpec | null {
   const n = shape(c, t);
   const x = c.extra;
@@ -683,6 +701,43 @@ function shape(c: Captured, t: PageTokens): NodeSpec | null {
             style: { flex: '0 0 auto', width: 'auto', display: 'flex', flexDirection: 'column' },
             children: [k],
           })),
+        };
+      }
+      // A TITLE BAR IS NOT TWO EQUAL COLUMNS. A heading with one action beside
+      // it ("Xem tất cả") went down the equal-share path below: each side got
+      // half the row, the action sat at the LEFT of its half — the middle of
+      // the band — and `flex-start` hung it from the heading's top edge. The
+      // shape wanted is the opposite on both axes: the heading takes what it
+      // needs, the action sits on the right edge, and both share a centre line.
+      // A phone stacks them and keeps them flush left.
+      if (kids.length === 2 && isTitleBar(c)) {
+        return {
+          type: 'flex-block',
+          style: {
+            width: '100%',
+            display: 'flex',
+            flexDirection: 'row',
+            flexWrap: 'nowrap',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            gap: '24px',
+          },
+          responsive: { mobile: { style: { flexDirection: 'column', alignItems: 'flex-start', gap: '12px' } } },
+          // `width: auto` on both, for the reason the packed row records:
+          // `flex-block` seeds `width: 100%`, which would hand the heading the
+          // whole line and push the action onto nothing.
+          children: [
+            {
+              type: 'flex-block',
+              style: { flex: '1 1 auto', width: 'auto', minWidth: '0', display: 'flex', flexDirection: 'column', gap: '8px' },
+              children: [kids[0]],
+            },
+            {
+              type: 'flex-block',
+              style: { flex: '0 0 auto', width: 'auto', display: 'flex', flexDirection: 'column' },
+              children: [kids[1]],
+            },
+          ],
         };
       }
       if (c.wrap) {

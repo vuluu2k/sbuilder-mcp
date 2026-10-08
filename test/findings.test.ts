@@ -24,7 +24,7 @@ describe('findings', () => {
     for (const code of [
       'empty_page', 'unknown_element', 'empty_container', 'empty_text', 'missing_media',
       'placeholder_content', 'default_seed_copy', 'form_fields_flush', 'dead_binding_source', 'dead_binding_field',
-      'off_canvas', 'text_too_small', 'overlap',
+      'off_canvas', 'text_too_small', 'overlap', 'title_bar_stranded', 'title_bar_offcenter',
     ]) expect(FIX[code], code).toBeTypeOf('string');
   });
 });

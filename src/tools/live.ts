@@ -438,7 +438,7 @@ export function registerLiveTools(
       // and judging its geometry produced thirteen false off-canvas findings
       // per page on a site whose pages were correct.
       const skip = offscreenNodes(doc);
-      const visual = node_id ? [] : measure(shots, skip);
+      const visual = node_id ? [] : measure(shots, skip, doc);
       const layout = compactFindings(visual);
       const layoutNotice = visual.length > 0 ? ctx.notices.once('measure', MEASURE_NOTICE) : undefined;
       // The legend rides with the first look only; the shape does not change after.

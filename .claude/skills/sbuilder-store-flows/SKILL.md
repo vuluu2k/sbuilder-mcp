@@ -392,6 +392,13 @@ repo over a number here, and fix the line when you catch one stale.
   links stacked in a 140px header where the equal-share version had been 52. Only the render
   showed it; the spec was correct to read at every step.
 
+  **AND A HEADING WITH ONE ACTION IS A THIRD SHAPE.** `sb_product_shelf`'s "Xem tất cả" went
+  down the equal-share path: the link sat at the left of the right half — mid-band — and the
+  `flex-start` row hung it from the heading's top. `isTitleBar` (`importmap.ts`) recognises a
+  row of a heading block + one button (or a packed run of buttons) and maps it to
+  `space-between` + `alignItems: center`, stacking flush left on mobile; `align:'center'` opts
+  out. `sb_look` reports the hand-built version as `title_bar_stranded` / `title_bar_offcenter`.
+
 - **A GLOBAL-SECTION EDGE IS RECORDED FROM THE COMPOSED STAMP ALONE, so attaching one takes
   TWO saves.** `Decompose` (`page/decompose.go:312`) builds its `GlobalWrite` list from nodes
   carrying `specials.globalId`; a node carrying `specials.globalRef` — the STORED form, the

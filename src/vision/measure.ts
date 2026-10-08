@@ -1,5 +1,6 @@
 import type { Box, Shot } from './shoot.js';
 import { fill } from '../domains/site/findings.js';
+import { childrenOf, subtreeIds, type DocLike } from '../core/tree.js';
 
 /**
  * A defect measured on the RENDERED page, not read off the document.
@@ -44,7 +45,7 @@ function overlaps(a: Box, b: Box): boolean {
  * 1440 and spills at 390 is the ordinary responsive failure, and saying which
  * width it happened at is most of the fix.
  */
-export function measureShot(shot: Shot, skip: ReadonlySet<string> = new Set()): VisualFinding[] {
+export function measureShot(shot: Shot, skip: ReadonlySet<string> = new Set(), doc?: DocLike): VisualFinding[] {
   const out: VisualFinding[] = [];
   const byId = new Map(shot.boxes.map((b) => [b.id, b]));
   const seen = new Set<string>();
@@ -131,7 +132,89 @@ export function measureShot(shot: Shot, skip: ReadonlySet<string> = new Set()): 
     }
   }
 
-  void byId;
+  if (doc) out.push(...titleBars(shot, doc, byId, skip));
+  return out;
+}
+
+type Rect = { x: number; y: number; w: number; h: number };
+function union(bs: Rect[]): Rect | null {
+  if (!bs.length) return null;
+  const x = Math.min(...bs.map((b) => b.x));
+  const y = Math.min(...bs.map((b) => b.y));
+  return { x, y, w: Math.max(...bs.map((b) => b.x + b.w)) - x, h: Math.max(...bs.map((b) => b.y + b.h)) - y };
+}
+
+type Styled = { style?: Record<string, unknown>; responsive?: Record<string, { style?: Record<string, unknown> }> };
+/** Every value a node declares for one style key, at any width. */
+function declared(doc: DocLike, id: string, key: string): unknown[] {
+  const n = doc.nodes[id] as unknown as Styled | undefined;
+  return [n?.style, ...Object.values(n?.responsive ?? {}).map((r) => r?.style)].map((s) => s?.[key]).filter((v) => v !== undefined);
+}
+/** Spacings that mean "not flush right" on purpose. */
+const SPREAD = new Set(['center', 'space-around', 'space-evenly']);
+/** Cross-axis answers that mean "not on the centre line" on purpose. */
+const LINED = new Set(['flex-end', 'end', 'baseline']);
+/** Containers an action may sit in, and nothing else. */
+const WRAPS = new Set(['flex-block']);
+const visible = (b: Box | undefined): b is Box => !!b && b.w > 0 && b.h > 0;
+
+/**
+ * A HEADING WITH ONE ACTION BESIDE IT, judged where the eye judges it.
+ *
+ * The row that went wrong split itself in two equal halves: the action sat at
+ * the left of its half — mid-band — and the top-aligned row hung it from the
+ * heading's top edge. Neither shows in the tree as a defect, because every
+ * style on it is a legitimate value. Only side-by-side pairs are judged, so a
+ * stacked phone layout is not reported; the action side must be buttons and
+ * their wrappers ONLY (the mapper's `isTitleBar`), so a text column beside a
+ * card or a grid holding buttons is a different shape; and a row that DECLARES
+ * a centred spacing or cross-axis line is left to its own decision.
+ */
+function titleBars(shot: Shot, doc: DocLike, byId: Map<string, Box>, skip: ReadonlySet<string>): VisualFinding[] {
+  const out: VisualFinding[] = [];
+  const typeOf = (id: string): string => doc.nodes[id]?.data.type ?? '';
+  for (const id of Object.keys(doc.nodes)) {
+    const kids = childrenOf(doc, id);
+    const row = byId.get(id);
+    if (kids.length !== 2 || !visible(row) || skip.has(id)) continue;
+    const trees = kids.map((k) => subtreeIds(doc, k));
+    const isAction = (t: string[]): boolean => {
+      const n = t.filter((x) => typeOf(x) === 'button').length;
+      return n >= 1 && n <= 3 && t.every((x) => typeOf(x) === 'button' || WRAPS.has(typeOf(x)));
+    };
+    const isHead = (t: string[]): boolean => t.some((x) => typeOf(x) === 'heading') && !t.some((x) => typeOf(x) === 'button');
+    const h = isHead(trees[0]) && isAction(trees[1]) ? 0 : isHead(trees[1]) && isAction(trees[0]) ? 1 : -1;
+    if (h === -1) continue;
+    const btnIds = trees[1 - h].filter((x) => typeOf(x) === 'button');
+    const head = union(trees[h].filter((x) => !childrenOf(doc, x).length).map((x) => byId.get(x)).filter(visible));
+    const btn = union(btnIds.map((x) => byId.get(x)).filter(visible));
+    if (!head || !btn) continue;
+    // Stacked (a phone), or the action leads: not this shape.
+    if (btn.x < head.x + head.w - SLOP || btn.y >= head.y + head.h || head.y >= btn.y + btn.h) continue;
+    const centredText = [id, kids[h], ...trees[h].filter((x) => typeOf(x) === 'heading')].some((x) =>
+      declared(doc, x, 'textAlign').includes('center'),
+    );
+    const rightGap = row.x + row.w - (btn.x + btn.w);
+    if (!centredText && !declared(doc, id, 'justifyContent').some((v) => SPREAD.has(String(v))) && rightGap > Math.max(24, row.w * 0.15)) {
+      out.push({
+        code: 'title_bar_stranded',
+        nodeId: btnIds[0],
+        width: shot.width,
+        problem: `Sits ${Math.round(rightGap)}px short of the right edge of its ${row.w}px row, beside a heading — it reads as floating mid-band.`,
+        fix: fill('title_bar_stranded', { id, cell: kids[1 - h] }),
+      });
+    }
+    const dy = Math.abs(btn.y + btn.h / 2 - (head.y + head.h / 2));
+    if (!declared(doc, id, 'alignItems').some((v) => LINED.has(String(v))) && dy > Math.max(6, head.h * 0.2)) {
+      out.push({
+        code: 'title_bar_offcenter',
+        nodeId: btnIds[0],
+        width: shot.width,
+        problem: `Its centre is ${Math.round(dy)}px off the heading's at ${shot.width}px wide — the pair does not share a line.`,
+        fix: fill('title_bar_offcenter', { id }),
+      });
+    }
+  }
   return out;
 }
 
@@ -154,10 +237,11 @@ function contains(outer: Box, inner: Box): boolean {
 export function measure(
   shots: Shot[],
   skip: ReadonlySet<string> = new Set(),
+  doc?: DocLike,
 ): Array<VisualFinding & { widths: number[] }> {
   const merged = new Map<string, VisualFinding & { widths: number[] }>();
   for (const shot of shots) {
-    for (const f of measureShot(shot, skip)) {
+    for (const f of measureShot(shot, skip, doc)) {
       const key = `${f.code}|${f.nodeId}`;
       const existing = merged.get(key);
       if (existing) existing.widths.push(f.width);

@@ -87,6 +87,13 @@ export const FIX: Record<string, string> = {
     'Give it a width that can shrink — sb_set id "<id>", namespace style, keys { "maxWidth": "100%" } at this breakpoint.',
   text_too_small:
     'Raise it for this breakpoint: sb_set id "<id>", namespace style, keys { "fontSize": "16px" }.',
+  title_bar_stranded:
+    'Put the action on the right edge: sb_set id "<id>", namespace style, keys ' +
+    '{ "justifyContent": "space-between", "alignItems": "center" }, and sb_set id "<cell>", ' +
+    'namespace style, keys { "flex": "0 0 auto", "width": "auto" }. On mobile give "<id>" ' +
+    '{ "flexDirection": "column", "alignItems": "flex-start" }.',
+  title_bar_offcenter:
+    'Centre the pair on one line: sb_set id "<id>", namespace style, keys { "alignItems": "center" } at this breakpoint.',
   overlap:
     'Check the two for a fixed height or a negative margin at this breakpoint; sb_look with node_id on each shows which one is out of place.',
   // Both sticky findings name a node OTHER than the one at fault, because in

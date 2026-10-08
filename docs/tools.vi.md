@@ -1178,6 +1178,8 @@ không tìm ra:
 | `off_canvas` | Nội dung tràn khỏi khung nhìn; trên điện thoại còn kéo theo thanh cuộn ngang cả trang |
 | `text_too_small` | Chữ render dưới 12px, chỉ tính nơi thật sự có chữ |
 | `overlap` | Hai element đè lên nhau — lồng nhau và sai số 1px không tính |
+| `title_bar_stranded` | Tiêu đề kèm một nút bên cạnh, nút cách xa mép phải của hàng — chỉ xét khi đứng cạnh nhau; hàng hoặc tiêu đề khai báo `center` được bỏ qua |
+| `title_bar_offcenter` | Cùng cặp đó, tâm dọc của nút lệch khỏi tâm khối tiêu đề |
 
 Mỗi lỗi kèm **các bề rộng** nó xảy ra, vì đó là phần lớn chẩn đoán: ổn ở 1440 mà hỏng ở 390
 là lỗi responsive, không phải element hỏng. Chúng tới dưới `layout`, với `layout_fixes` là

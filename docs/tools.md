@@ -1214,6 +1214,8 @@ reading the document cannot find:
 | `off_canvas` | Content past the viewport; on a phone it also drags a horizontal scrollbar across the page |
 | `text_too_small` | Body text rendering under 12px, only where text actually shows |
 | `overlap` | Two elements on top of each other — nesting and a pixel of rounding are not counted |
+| `title_bar_stranded` | A heading with one action beside it, the action well short of the row's right edge — side-by-side only; a row or heading that declares `center` is skipped |
+| `title_bar_offcenter` | The same pair, the action's centre off the heading block's |
 
 Each carries the **widths** it happens at, because that is most of the diagnosis: fine at
 1440 and broken at 390 is a responsive failure, not a broken element. They arrive as
