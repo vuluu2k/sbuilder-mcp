@@ -44,7 +44,7 @@ a block of HTML in `custom-code` does not, and its interior is invisible to `sb_
 | Defaults | `form-select defaultValue`, text/number `prefillValue` (binding) | yes | yes | yes | full |
 | Navigation keeping query params | — | — | — | filters keep non-filter params; UTM kept in session | **absent** as a general mechanism |
 | Shared state / variables | — | — | — | — | **absent** (`node.states` is hover/active styling, not data) |
-| Scroll to a section | `scroll_to` `{ targetId }` on button/icon/image — **added** on web_builder branch `feat/native-actions` (`4df4a0cd0`, not yet merged) | `ScrollEvent.vue` node picker | ready: `sb_event` needs `payload.targetId`, a sole click projects `#<id>`; enabled for agents once the platform ships and the catalog is regenerated | `runtime/src/nodes/scroll-control.ts` (smooth, reduced-motion aware, moves focus) | added upstream, pending release |
+| Scroll to a section | `scroll_to` `{ targetId }` on button/icon/image — web_builder #112 (`66a8763e0`) | `ScrollEvent.vue` node picker | `sb_event` needs `payload.targetId`; a sole click projects `#<id>` | `runtime/src/nodes/scroll-control.ts` (smooth, reduced-motion aware, moves focus) | supported (v0.79.0) |
 | Custom code | `custom-code` (`specials.code`) | Monaco, sandboxed iframe on the canvas | `sb_add`; `sb_review custom_code_native` advises when native elements cover it | written raw by the renderer | full — keep it for real third-party embeds |
 | Binding expressions | none — bindings are lookups by source key | — | — | `runtime/src/core/define.ts` dotted path only, no eval | absent by design; nothing is evaluated |
 
@@ -98,14 +98,19 @@ dates, stay nights, deposits, `server/internal/forms/booking.go`).
    (`form-calendar` / `form-date`), in document order, are check-in and check-out. Keep one
    date (appointment) or two (stay); a third is ignored by every booking rule and is warned
    about.
-5. Place the form on a page and republish that page.
+5. A head count is a `form-number` with `specials.step: 1` (the `event` and `stay` templates
+   seed it): the browser and the server both refuse 2.5 (`step_mismatch`). Leave `step: 0`
+   for a measurement.
+6. Place the form on a page and republish that page. On submit the server also refuses a slot
+   today that has already begun (`booking_slot_past`), a slot off the time-slot grid, and a
+   select/radio answer that is not one of its options (`not_an_option`).
 
 **A popup about the clicked item** — for products, `quickview` (list `config.quickviewId`)
 is the native answer: the list renders one panel per card under that card's own record. A
 general popup with item context is not supported by the platform yet (see the table); do not
 fake it with custom code that reads the DOM.
 
-**Jump to a section** — once `scroll_to` ships: `sb_event` on a button with
+**Jump to a section** — `sb_event` on a button with
 `action: "scroll_to"`, `payload: { targetId: "<section id>" }`. The click stores
 `specials.href: "#<id>"` too, so it still lands with JavaScript off.
 

@@ -44,7 +44,7 @@ khối HTML trong `custom-code` thì không, và `sb_review` không nhìn vào b
 | Giá trị mặc định | `form-select defaultValue`, text/number `prefillValue` (binding) | có | có | có | đủ |
 | Điều hướng giữ query param | — | — | — | filter giữ các tham số không phải filter; UTM giữ trong session | **chưa có** dạng cơ chế chung |
 | State / biến dùng chung | — | — | — | — | **chưa có** (`node.states` là style hover/active, không phải dữ liệu) |
-| Cuộn tới section | `scroll_to` `{ targetId }` trên button/icon/image — **đã thêm** ở branch `feat/native-actions` của web_builder (`4df4a0cd0`, chưa merge) | picker node `ScrollEvent.vue` | đã sẵn sàng: `sb_event` cần `payload.targetId`, click duy nhất chiếu ra `#<id>`; agent dùng được khi nền tảng phát hành và catalog được sinh lại | `runtime/src/nodes/scroll-control.ts` (mượt, tôn trọng reduced-motion, chuyển focus) | đã thêm ở upstream, chờ phát hành |
+| Cuộn tới section | `scroll_to` `{ targetId }` trên button/icon/image — web_builder #112 (`66a8763e0`) | picker node `ScrollEvent.vue` | `sb_event` cần `payload.targetId`; click duy nhất chiếu ra `#<id>` | `runtime/src/nodes/scroll-control.ts` (mượt, tôn trọng reduced-motion, chuyển focus) | đã hỗ trợ (v0.79.0) |
 | Custom code | `custom-code` (`specials.code`) | Monaco, iframe sandbox trên canvas | `sb_add`; `sb_review custom_code_native` gợi ý khi element native làm được | renderer ghi thô | đủ — giữ cho embed bên thứ ba thật sự |
 | Biểu thức binding | không có — binding là tra cứu theo source key | — | — | `runtime/src/core/define.ts` chỉ đường dẫn có dấu chấm, không eval | cố ý không có; không gì bị evaluate |
 
@@ -97,13 +97,17 @@ số đêm lưu trú, đặt cọc, `server/internal/forms/booking.go`).
    (`form-calendar` / `form-date`) theo thứ tự trong tài liệu là ngày nhận và trả phòng. Giữ một
    ngày (lịch hẹn) hoặc hai (lưu trú); ngày thứ ba bị mọi quy tắc đặt lịch bỏ qua và sẽ bị cảnh
    báo.
-5. Đặt form lên một trang và publish lại trang đó.
+5. Số người là một `form-number` với `specials.step: 1` (template `event` và `stay` đã seed
+   sẵn): cả trình duyệt lẫn server đều từ chối 2.5 (`step_mismatch`). Để `step: 0` cho số đo.
+6. Đặt form lên một trang và publish lại trang đó. Khi gửi, server còn từ chối slot hôm nay đã
+   bắt đầu (`booking_slot_past`), slot không nằm trên lưới khung giờ, và câu trả lời
+   select/radio không thuộc danh sách lựa chọn (`not_an_option`).
 
 **Popup về item vừa bấm** — với sản phẩm, `quickview` (list `config.quickviewId`) là câu trả lời
 native: list render một panel cho mỗi card dưới chính bản ghi của card đó. Popup tổng quát mang
 context của item thì nền tảng chưa hỗ trợ (xem bảng); đừng giả lập bằng custom code đọc DOM.
 
-**Nhảy tới một section** — khi `scroll_to` được phát hành: `sb_event` trên một nút với
+**Nhảy tới một section** — `sb_event` trên một nút với
 `action: "scroll_to"`, `payload: { targetId: "<id section>" }`. Lệnh click cũng lưu
 `specials.href: "#<id>"`, nên vẫn tới đúng chỗ khi tắt JavaScript.
 
