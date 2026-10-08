@@ -6,6 +6,21 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.78.0] - 2026-10-08
+
+### Added
+- `sb_store` with `action:"form"` accepts `settings` (booking options such as `maxPerSlot` and `minStayNights`), validates them against the platform's `forms.Settings` shape, and reports `booking_app_required` when the booking app is missing.
+- `sb_review` reports `form_options_empty`, `form_timeslot_dead` and `form_booking_dates` findings for booking-style forms, and `sb_add` and `sb_set` warn on a `form_field` problem.
+- Catalog search treats `đ` as `d`, defaults to Vietnamese content, and ranks form templates (for example "đặt lịch" to booking) before title matches.
+
+### Changed
+- The catalog is regenerated from the current platform, now covering 123 elements and 814 operations.
+- `order_goes_nowhere` in `sb_review` respects the `afterSubmit` redirect of a form record.
+
+### Fixed
+- `sb_add` now adds fields to the root `form` of a form document, inserting new fields above the submit button or step bar as the editor does, and refuses fields on the root of a multi-step form.
+- Duplicate `specials.name` and `mapTo` values on a form are refused before saving instead of failing with a platform 409.
+
 ## [0.77.0] - 2026-10-08
 
 ### Added

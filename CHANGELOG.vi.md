@@ -6,6 +6,21 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.78.0] - 2026-10-08
+
+### Added
+- `sb_store` với `action:"form"` nhận `settings` (tuỳ chọn đặt lịch như `maxPerSlot` và `minStayNights`), kiểm tra theo shape `forms.Settings` của nền tảng, và báo `booking_app_required` khi thiếu app booking.
+- `sb_review` báo thêm các finding `form_options_empty`, `form_timeslot_dead` và `form_booking_dates` cho form dạng đặt lịch, còn `sb_add` và `sb_set` cảnh báo lỗi `form_field`.
+- Tìm kiếm catalog coi `đ` là `d`, mặc định nội dung tiếng Việt, và xếp mẫu form (ví dụ "đặt lịch" ra booking) trước các kết quả khớp tiêu đề.
+
+### Changed
+- Catalog được sinh lại từ nền tảng mới nhất, gồm 123 element và 814 operation.
+- `order_goes_nowhere` trong `sb_review` tôn trọng `afterSubmit` redirect của bản ghi form.
+
+### Fixed
+- `sb_add` giờ thêm được field vào gốc `form` của form document, chèn field mới trên nút gửi hoặc thanh bước như editor, và từ chối field trên gốc của form chia bước.
+- Trùng `specials.name` và `mapTo` trên form bị từ chối trước khi lưu thay vì lỗi 409 từ nền tảng.
+
 ## [0.77.0] - 2026-10-08
 
 ### Added
