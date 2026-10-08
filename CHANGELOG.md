@@ -6,6 +6,21 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.77.0] - 2026-10-08
+
+### Added
+- `sb_catalog_search` ranks exact type and name matches first, then whole words, then element keys and vocabulary values, so searches such as pagination, sort or load_more find the right element.
+- `sb_traits_for` reports `base_only`, `preconditions`, `events`, `binding_events` and `bindable` for an element, and marks controls that write base-only keys with `responsive:false`.
+- `sb_add` and `sb_set` return a `checks` list (`unknown_key`, `unknown_value`, `form_rule` and others) in place of `value`.
+- `sb_review` reports `invalid_action`, `action_missing_target`, `no_data_context` and `unread_value` findings, and returns the `custom_code_native` maintenance hint separately under `advice`.
+- `sb_page_open` with `form_id` edits a form's document fields, including fields, defaults and dependent-field rules, using a rule vocabulary generated from the platform.
+- `sb_undo` undoes and redoes page operations, and refuses when the undo would erase live edits.
+
+### Changed
+- `sb_bind` refuses a field that cannot be bound, and `sb_event` refuses an action with no target (url, popup id or `targetId`) unless `force` is set.
+- The `dry_run` of the eight writing tools runs the same validation step as a real save and returns `would_refuse`, without consuming warnings, and a `sb_template_use` dry run no longer changes the open page.
+- `scroll_to` projects an `href` of `#id` and checks `targetId`, waiting for the platform to release the matching change.
+
 ## [0.76.4] - 2026-10-08
 
 ### Added

@@ -6,6 +6,21 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.77.0] - 2026-10-08
+
+### Added
+- `sb_catalog_search` xếp các kết quả trùng type và tên lên đầu, rồi đến từ nguyên vẹn, rồi key và giá trị từ vựng của element, nên tìm pagination, sort hay load_more ra đúng element.
+- `sb_traits_for` trả thêm `base_only`, `preconditions`, `events`, `binding_events` và `bindable` của element, và đánh dấu `responsive:false` trên control ghi key chỉ-base.
+- `sb_add` và `sb_set` trả danh sách `checks` (`unknown_key`, `unknown_value`, `form_rule` và các loại khác) thay cho `value`.
+- `sb_review` báo thêm các finding `invalid_action`, `action_missing_target`, `no_data_context` và `unread_value`, đồng thời trả gợi ý bảo trì `custom_code_native` riêng trong `advice`.
+- `sb_page_open` với `form_id` sửa các field document của form, gồm trường, giá trị mặc định và rule field phụ thuộc, dùng từ vựng rule sinh từ nền tảng.
+- `sb_undo` hoàn tác và làm lại các thao tác trên trang, và từ chối khi việc hoàn tác sẽ xoá các sửa đổi live.
+
+### Changed
+- `sb_bind` từ chối field không bind được, và `sb_event` từ chối action thiếu đích (url, id popup hoặc `targetId`) trừ khi đặt `force`.
+- `dry_run` của tám tool ghi chạy đúng bước validate của lần lưu thật và trả `would_refuse`, không tiêu cảnh báo, và `sb_template_use` ở chế độ dry run không còn đổi trang đang mở.
+- `scroll_to` chiếu `href` dạng `#id` và kiểm tra `targetId`, chờ nền tảng phát hành thay đổi tương ứng.
+
 ## [0.76.4] - 2026-10-08
 
 ### Added
