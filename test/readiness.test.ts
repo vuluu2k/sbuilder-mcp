@@ -519,8 +519,8 @@ describe('readinessGaps() — page SEO', () => {
       { type: 'page', status: 'published', name: 'Ưu đãi', settings: full },
     ]).find((x) => x.id === 'pageSeo')!;
     expect(g.problem).toMatch(/^2 published pages \(Trang chủ, Giới thiệu\)/);
-    expect(g.fix).toMatch(/PATCH \/api\/v1\/pages\/\{id\}/);
-    expect(g.fix).toMatch(/REPLACES/);
+    expect(g.fix).toMatch(/sb_page_update/);
+    expect(g.fix).toMatch(/merges/);
   });
 
   it('is silent when every indexed page carries both', () => {

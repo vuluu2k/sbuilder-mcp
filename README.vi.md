@@ -95,6 +95,7 @@ nhét ngược lại vào mọi bản cài.
 | `sb_template_use` | Thả một template vào trang |
 | `sb_page_list` | Mọi trang của site |
 | `sb_page_create` | Tạo một trang — trang cửa hàng sinh ra đã có sẵn tài liệu như trong editor; `type` là đường đi cho checkout, product, category, post, course |
+| `sb_page_update` | Sửa tên, slug, cờ trang chủ, thứ tự, SEO (title, description, Open Graph, robots, meta tag, JSON-LD) và cờ chỉ-thành-viên của một trang — merge vào `settings`, nên các khoá không nhắc tới vẫn còn nguyên |
 | `sb_publish` | Biên dịch bản nháp thành trang live (lan sang global dùng chung), báo bản nào đã lên live, và với `verify` kiểm origin đã phục vụ đúng bản đó chưa; liệt kê các trang khác còn nháp chưa publish (`publish_drafts` publish luôn) |
 | `sb_page_state` | Ba bản sao của một trang, bản nào là bản nào — bản NHÁP canvas editor hiển thị, dòng PUBLISHED storefront phục vụ, và bản phiên này giữ — kèm dự báo editor có render canvas TRẮNG không, và các điểm phục hồi nằm ở đâu |
 | `sb_page_repair` | Đổi gốc trang khác `ROOT` (do seed cũ để lại) về `ROOT` để mọi bản editor vẽ được — một trang hoặc cả site |

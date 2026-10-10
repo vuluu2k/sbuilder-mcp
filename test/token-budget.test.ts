@@ -130,7 +130,13 @@ describe('token budget — a diet without a scale comes back', () => {
     // visitor is served it. The storefront answers `max-age=60`, so the two
     // legitimately differ for a minute — long enough for a caller to reload,
     // see the old page, and go looking for a bug that is not there.
-    expect(JSON.stringify(tools).length).toBeLessThan(30_500);
+    //
+    // 30,500 -> 32,500 buys `sb_page_update` (+1,501, measured 31,995 against 30,494
+    // before it). Page SEO and metadata had no tool: `settings` REPLACES WHOLESALE and
+    // also holds membersOnly / courseGate, so a raw PATCH carrying only SEO un-gated a
+    // members page. Most of the cost is the strict `seo` shape, and it is the point —
+    // an unknown key would be stored and read by nothing.
+    expect(JSON.stringify(tools).length).toBeLessThan(32_500);
     for (const t of tools) expect(t.description, t.name).not.toMatch(/vanishes on publish/);
     const instructions = client.getInstructions() ?? '';
     expect(instructions.length).toBeGreaterThan(200);

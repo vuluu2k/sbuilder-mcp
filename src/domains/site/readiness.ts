@@ -502,10 +502,10 @@ export function readinessGaps(input: ReadinessInput): ReadinessGap[] {
           '<title> and no meta description — a search result cannot tell them apart, and ' +
           'nothing on the canvas or in a screenshot shows it.',
         fix:
-          'PATCH /api/v1/pages/{id} with {settings: {...existing, title, description}} — ' +
-          '`settings` REPLACES the blob, so read the page and send it back whole. Title is ' +
-          'what the tab and the result show (under ~60 chars); description is the ' +
-          'two-line summary under it. ogImage takes a share picture.',
+          'sb_page_update {page_id, seo: {title, description}} — it merges into the page ' +
+          'settings, keeping the rest. Title is what the tab and the result show (under ~60 ' +
+          'chars); description is the two-line summary under it. seo.ogImage takes a share ' +
+          'picture. Publish the page after.',
       });
     }
   }

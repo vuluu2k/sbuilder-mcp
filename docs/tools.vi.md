@@ -895,6 +895,26 @@ cần so từng byte. Nó trả về `serving`, các band `missing` nếu có, `
 bản sao của người khác còn có thể khác trong bao lâu. Một phép kiểm KHÔNG CHẠY ĐƯỢC được báo
 tách khỏi một trang không phục vụ đúng: lúc đó publish đã thành công rồi.
 
+## `sb_page_update`
+
+METADATA của một trang — thứ mà ô đổi tên trang và PageSeoDialog trong editor sửa — qua
+`PATCH /api/sites/{siteId}/pages/{pageId}` (dùng session). Nhận `page_id` cùng bất kỳ trường
+nào trong `name`, `slug` (server slugify và làm cho duy nhất; `slug_became` báo khi slug bị
+đổi), `is_homepage` (chuyển ngôi sao và xoá slug), `sort_order`, `members_only`, và `seo`:
+`title`, `description`, `keywords`, `canonical`, `ogTitle`, `ogDesc`, `ogImage`,
+`twitterCard` (`""`, `summary`, `summary_large_image`), `noIndex`, `noFollow`, `metaTags`
+(`[{attr: name|property|http-equiv, key, content, disabled}]`) và `jsonld` (các khối
+`application/ld+json` thô, mỗi khối phải parse được). Khoá `seo` lạ bị TỪ CHỐI — nó sẽ được
+lưu và không ai đọc.
+
+**Phía platform `settings` THAY CẢ CỤC** và chứa nhiều hơn SEO — `membersOnly`,
+`courseGate`, `courseLesson`, những khoá ở đây không biết. Nên tool GET trang rồi gửi lại
+nguyên blob cũ, chỉ đổi các khoá được nhắc, như editor làm; một PATCH thô chỉ mang SEO sẽ gỡ
+cổng thành viên của trang. Lệnh không đổi gì bị từ chối. Dry run (mặc định) trả request đã
+redact cùng `changes`, diff dạng `field: [trước, sau]`. Không nhận `type`: đổi loại trang là
+việc của `sb_page_create`. Settings được publish nguyên văn, nên storefront chỉ thấy thay đổi
+sau `sb_publish`.
+
 ## Dùng chung với các MCP server khác
 
 Bộ tool này trả lời ba trong năm câu hỏi mà một site đặt ra. Hai câu còn lại cần một nguồn
@@ -1178,7 +1198,7 @@ hoàn toàn bằng bộ tool này review sạch, publish và render đúng; bả
 | `cartDrawerLanguage` | Ngăn giỏ vẫn mang chữ seed của MỘT NGÔN NGỮ KHÁC (khớp chính xác với seed theo locale của editor, ví dụ "Your cart" / "Checkout" trên site `vi`) — store tạo trước khi ngăn giỏ được seed theo ngôn ngữ site. Chữ merchant đã sửa không bao giờ khớp. Hỏi với mọi site. Sửa: mở một trang của site, rồi `sb_store action:"cart" relocalize:true dry_run:false` |
 | `cartDrawerThumbnail` | Thumbnail của dòng sản phẩm trong ngăn giỏ là một GALLERY (ảnh chính kèm dải ảnh nhỏ) nhét trong dòng 64px — ngăn giỏ seed trước khi nền tảng sửa seed. Hỏi với mọi site. Sửa: mở một trang của site, rồi `sb_store action:"cart" relocalize:true dry_run:false` |
 | `cartCount` | Có thứ mở được giỏ nhưng không có gì cho thấy trong giỏ có gì. `cart-count` là tuỳ chọn vì `open_cart` là một HÀNH ĐỘNG mà element nào cũng mang được, nên site dựng bằng bộ công cụ này không bao giờ tự có: khách thêm hàng, thấy một toast tắt đi, rồi không còn dấu hiệu nào cho thấy giỏ không rỗng |
-| `pageSeo` | Trang nội dung đã publish (`page`, `about`, `contact`, `policy`, `faq`, `blog`) mà `settings` không có `title` hoặc `description`. Mỗi trang như vậy dùng TÊN SITE làm `<title>` và không có meta description, nên kết quả tìm kiếm không phân biệt nổi. Template thực thể lấy SEO từ thực thể; error/maintain không có địa chỉ. Sửa: `PATCH /api/v1/pages/{id}` gửi nguyên blob `settings` kèm `title` và `description` — `settings` thay cả cục, không merge. Im lặng khi danh sách trang không mang `settings` |
+| `pageSeo` | Trang nội dung đã publish (`page`, `about`, `contact`, `policy`, `faq`, `blog`) mà `settings` không có `title` hoặc `description`. Mỗi trang như vậy dùng TÊN SITE làm `<title>` và không có meta description, nên kết quả tìm kiếm không phân biệt nổi. Template thực thể lấy SEO từ thực thể; error/maintain không có địa chỉ. Sửa: `sb_page_update` với `seo: {title, description}` — tool đọc trang rồi merge, vì phía platform `settings` thay cả cục. Im lặng khi danh sách trang không mang `settings` |
 | `categoryScope` | Trang đang mở là template `category` dùng chung và mọi repeater sản phẩm trên đó đều ghim vào MỘT collection cố định (`collectionType: "collection"`), nên mọi `/collections/{slug}` đều hiện collection đó. Nền tảng đã tự thu hẹp template danh mục theo URL: `all_products` / `page_collection` đi theo URL, một template dùng chung là đúng — không cần mỗi danh mục một trang |
 
 Mỗi khoảng trống mang `draft: true` khi trang ĐÃ CÓ nhưng chưa publish, vì "publish cái đã

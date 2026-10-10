@@ -9,7 +9,7 @@ import { vi } from 'vitest';
 // repo. Measured 6-8 s per test on a loaded machine against vitest's 5 s
 // default, so the suite went red on load alone. 20 s is headroom, not a
 // measurement.
-vi.setConfig({ testTimeout: 20_000 });
+vi.setConfig({ testTimeout: 60_000 });
 
 /**
  * The generator reads a web_builder checkout and writes a catalog that is

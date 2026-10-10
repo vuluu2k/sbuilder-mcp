@@ -926,6 +926,26 @@ contain anyway. It reports `serving`, any `missing` bands, the `etag`, and `max_
 is how long somebody else's copy may still differ. A check that could not RUN is reported
 apart from a page that is not serving: the publish already succeeded by then.
 
+## `sb_page_update`
+
+A page's METADATA — what the editor's page-rename and PageSeoDialog edit — through
+`PATCH /api/sites/{siteId}/pages/{pageId}` (session-scoped). Takes `page_id` plus any of
+`name`, `slug` (the server slugifies and uniquifies it; `slug_became` reports a change),
+`is_homepage` (moves the star and clears the slug), `sort_order`, `members_only`, and `seo`:
+`title`, `description`, `keywords`, `canonical`, `ogTitle`, `ogDesc`, `ogImage`,
+`twitterCard` (`""`, `summary`, `summary_large_image`), `noIndex`, `noFollow`, `metaTags`
+(`[{attr: name|property|http-equiv, key, content, disabled}]`) and `jsonld` (raw
+`application/ld+json` blocks, each must parse). An unknown `seo` key is REFUSED — it would be
+stored and read by nothing.
+
+**`settings` REPLACES WHOLESALE on the platform** and holds more than SEO — `membersOnly`,
+`courseGate`, `courseLesson`, keys nobody here knows. So the tool GETs the page and sends the
+old blob back with only the named keys moved, as the editor does; a raw PATCH carrying only
+SEO un-gates a members page. A call that changes nothing is refused. The dry run (the
+default) returns the redacted request plus `changes`, a `field: [before, after]` diff.
+`type` is not taken: retyping a page is `sb_page_create` territory. Settings are published
+verbatim, so the storefront shows the change after `sb_publish`.
+
 ## Working with the other MCP servers
 
 These tools answer three of the five questions a site raises. The other two need a design
@@ -1210,7 +1230,7 @@ publish panel then listed five gaps.
 | `cartDrawerLanguage` | The cart drawer still carries ANOTHER locale's seed words (exact match against the editor's per-locale seeds, e.g. "Your cart" / "Checkout" on a `vi` site) — a store made before the drawer was seeded in the site's language. Text the merchant edited never matches. Asked of every site. Fix: open a page of the site, then `sb_store action:"cart" relocalize:true dry_run:false` |
 | `cartDrawerThumbnail` | The cart drawer's line thumbnail is a GALLERY (feature image plus thumbs strip) in a 64px line — a drawer seeded before the platform fixed its seed. Asked of every site. Fix: open a page of the site, then `sb_store action:"cart" relocalize:true dry_run:false` |
 | `cartCount` | Something opens the cart but nothing shows what is in it. `cart-count` is opt-in because `open_cart` is an ACTION any element can carry, so a site built with these tools never gets one: a shopper adds an item, sees a toast fade, and then no evidence anywhere that their basket is not empty |
-| `pageSeo` | Published content pages (`page`, `about`, `contact`, `policy`, `faq`, `blog`) whose `settings` carry no `title` or `description`. Each serves the SITE NAME as its `<title>` and no meta description, so a search result cannot tell them apart. Entity templates get theirs merged from the entity; error/maintain have no address. Fix: `PATCH /api/v1/pages/{id}` with the whole `settings` blob plus `title` and `description` — `settings` replaces, never merges. Silent when the page list did not carry `settings` |
+| `pageSeo` | Published content pages (`page`, `about`, `contact`, `policy`, `faq`, `blog`) whose `settings` carry no `title` or `description`. Each serves the SITE NAME as its `<title>` and no meta description, so a search result cannot tell them apart. Entity templates get theirs merged from the entity; error/maintain have no address. Fix: `sb_page_update` with `seo: {title, description}` — it reads the page and merges, because `settings` replaces wholesale on the platform. Silent when the page list did not carry `settings` |
 | `categoryScope` | The open page is the shared `category` template and every product repeater on it is pinned to ONE named collection (`collectionType: "collection"`), so every `/collections/{slug}` shows that one. Since the platform scopes a category template itself, `all_products` / `page_collection` follow the URL and a shared template is correct — no page per category is needed |
 
 Each gap carries `draft: true` when the page EXISTS but is unpublished, because "publish the

@@ -9,6 +9,7 @@ import { ELEMENT_SOURCE } from './catalog/elements.generated.js';
 import { registerApiTools } from './tools/api.js';
 import { registerSessionTools } from './tools/session.js';
 import { registerPageTools } from './tools/page.js';
+import { registerPageUpdateTools } from './tools/pageupdate.js';
 import { registerLiveTools } from './tools/live.js';
 import { registerStoreTools } from './tools/store.js';
 import { registerImportTools } from './tools/importpage.js';
@@ -76,6 +77,7 @@ export function createServer(ctx: ToolContext = buildContext()): McpServer {
   registerSessionTools(server, ctx);
   registerApiTools(server, ctx);
   const pageSession = registerPageTools(server, ctx);
+  registerPageUpdateTools(server, ctx);
   registerLiveTools(server, ctx, pageSession);
   registerStoreTools(server, ctx, pageSession);
   registerThemeTools(server, ctx);
