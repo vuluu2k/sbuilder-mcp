@@ -6,6 +6,14 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.82.4] - 2026-10-10
+
+### Fixed
+- `sb_media_upload` với `url` áp dụng hạn chót tổng cho cả lần tải, nên server nhỏ giọt từng byte không còn làm treo lệnh gọi.
+- `sb_media_upload` với `url` từ chối bản tải chuyển giao thức, đóng kết nối mà không trả lời hoặc trả status ngoài 200–599, thay vì treo hay làm sập process MCP.
+- `sb_media_upload` với `url` từ chối file lớn hơn giới hạn upload 100 MiB của platform, ngay từ `content-length` và cả khi nội dung đang về.
+- `sb_media_upload` với `url` tôn trọng họ địa chỉ IP được yêu cầu và từ chối địa chỉ phân giải không hợp lệ trong bước kiểm tra địa chỉ.
+
 ## [0.82.3] - 2026-10-10
 
 ### Fixed

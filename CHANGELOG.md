@@ -6,6 +6,14 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.82.4] - 2026-10-10
+
+### Fixed
+- `sb_media_upload` with `url` enforces a total time limit on the download, so a server that trickles bytes can no longer hang the call.
+- `sb_media_upload` with `url` rejects a download that switches protocols, closes without answering or returns a status outside 200–599, instead of hanging or crashing the MCP process.
+- `sb_media_upload` with `url` refuses a file larger than the platform's 100 MiB upload cap, early by `content-length` and while the body arrives.
+- `sb_media_upload` with `url` honours the requested IP family and rejects unparseable resolved addresses during the address check.
+
 ## [0.82.3] - 2026-10-10
 
 ### Fixed
