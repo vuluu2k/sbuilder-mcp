@@ -44,7 +44,7 @@ import { siteFor, type ToolContext } from './context.js';
 import { withFreshIds } from '../domains/site/ids.js';
 import { siteChrome, wearChrome, type PageSession } from './page.js';
 import { addSubtree } from '../domains/site/builder.js';
-import { attachGlobal, buildChrome, detachGlobal } from './chrome.js';
+import { attachGlobal, buildChrome, detachGlobal, promoteGlobal, saveTemplate } from './chrome.js';
 import { bindMenu } from './menu.js';
 import { attachOverlay, ensureCartDrawer, relocalizeCartDrawer } from './overlay.js';
 import { installApp } from './app.js';
@@ -637,7 +637,10 @@ export function registerStoreTools(server: McpServer, ctx: ToolContext, session:
         '(global_id) on the open page and action:"global_detach" takes it off, writing the ' +
         'reference the platform reads and placing it in the band ROOT\'s child order demands — ' +
         'the answer for a page that is missing the site\'s header, where action:"chrome" would ' +
-        'wrongly build a second one. Dry run returns the plan.',
+        'wrongly build a second one. action:"global_promote" turns a section on the open page ' +
+        '(node_id) into a NEW shared section (global_kind header|footer|custom, default custom) and ' +
+        'leaves the page referencing it; action:"template_save" saves one as a section template ' +
+        '(name). Dry run returns the plan.',
       inputSchema: {
         action: z.enum([
           'checkout',
@@ -650,6 +653,8 @@ export function registerStoreTools(server: McpServer, ctx: ToolContext, session:
           'app',
           'global_attach',
           'global_detach',
+          'global_promote',
+          'template_save',
         ]),
         site_id: z.string().optional(),
         language: z.enum(['vi', 'en']).optional().describe('Copy language, default vi'),
@@ -674,7 +679,11 @@ export function registerStoreTools(server: McpServer, ctx: ToolContext, session:
           .boolean()
           .optional()
           .describe('action:"chrome" — build a shared FOOTER instead of a header'),
-        node_id: z.string().optional().describe('action:"menu" — the menu node on the open page'),
+        node_id: z
+          .string()
+          .optional()
+          .describe('action:"menu" — the menu node; "global_promote"/"template_save" — the section'),
+        global_kind: z.enum(['header', 'footer', 'custom']).optional(),
         menu_id: z.string().optional(),
         kind: z
           .enum(['popup', 'quickview'])
@@ -727,6 +736,7 @@ export function registerStoreTools(server: McpServer, ctx: ToolContext, session:
       list_id,
       app_key,
       global_id,
+      global_kind,
       relocalize,
       settings,
       dry_run,
@@ -742,6 +752,14 @@ export function registerStoreTools(server: McpServer, ctx: ToolContext, session:
         // the only way to attach one until this action existed.
         const run = action === 'global_attach' ? attachGlobal : detachGlobal;
         return text(await run(ctx, session, siteId, global_id, { dryRun: dry_run !== false }));
+      }
+      if (action === 'global_promote') {
+        return text(
+          await promoteGlobal(ctx, session, siteId, node_id, global_kind ?? 'custom', name, { dryRun: dry_run !== false }),
+        );
+      }
+      if (action === 'template_save') {
+        return text(await saveTemplate(ctx, session, siteId, node_id, name, { dryRun: dry_run !== false }));
       }
       if (action === 'app') {
         if (!app_key) {

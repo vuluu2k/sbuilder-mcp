@@ -416,11 +416,19 @@ repo over a number here, and fix the line when you catch one stale.
   moved it to 18 and the page appeared.
 
   `PageSession.recompose` is that round trip. `sb_store action:"global_attach"` /
-  `"global_detach"`, `action:"chrome"` and `sb_page_create`'s own chrome attach all make it —
+  `"global_detach"`, `"global_promote"`, `action:"chrome"` and `sb_page_create`'s own chrome attach all make it —
   without it every page they touch wears the site's chrome and none is counted as doing so. It
   REFUSES to run on a read that came back empty, for the reason `save()` does: a read that
   failed open must not become a write that empties the page. That guard was not foresight — the
   repo's own page-create test went red on the first run without it.
+
+- **PROMOTING A SECTION REMOVES IT AND PLANTS THE REFERENCE IN ONE BATCH** (`promoteGlobal`,
+  `src/tools/chrome.ts`). The editor stamps the composed `globalId` onto the live node and lets
+  decompose write the master; this client may never author that stamp, so it removes the section
+  and adds a `globalRef` instead. Patches address child lists BY INDEX, so the add is computed on
+  a scratch copy that already has the removal applied. Two saves would leave a window where the
+  page lacks the section. `liftable` refuses any global, overlay or app-block stamp anywhere in the
+  subtree, for a master and a section template alike: a copied stamp decomposes over its original.
 
 - **A PAGE SEED'S ROOT MUST STAY `ROOT`, and codegen once renamed it to `sppro_1`.** `stableIds()`
   numbered EVERY node, root included, and `sb_store`'s fresh-id pass minted `rt_<hex>`. The Go

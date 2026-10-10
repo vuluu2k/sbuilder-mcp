@@ -4,12 +4,22 @@ import { siteFor, type ToolContext } from './context.js';
 import { addSubtree, removeNode, type NodeSpec } from '../domains/site/builder.js';
 import { menuLabel } from '../domains/site/importmap.js';
 import { PageDoc } from '../domains/site/document.js';
-import { childrenOf, subtreeIds, SPEC_GLOBAL_ID, SPEC_GLOBAL_REF, type DocLike } from '../core/tree.js';
+import {
+  childrenOf,
+  pageChildren,
+  subtreeIds,
+  SPEC_APP_BLOCK_ID,
+  SPEC_APP_BLOCK_REF,
+  SPEC_GLOBAL_ID,
+  SPEC_GLOBAL_REF,
+  SPEC_OVERLAY_ID,
+  type DocLike,
+} from '../core/tree.js';
 import { middleEnd } from '../domains/site/traps.js';
 import { setEvent } from './live.js';
 import { DEFAULT_MENU_NAME, menuSnapshot, type Menu, type MenuItemInput } from './menu.js';
 import { redact } from '../transport/http.js';
-import type { PageSession } from './page.js';
+import { saveRefusal, type PageSession } from './page.js';
 import { ensureCartDrawer } from './overlay.js';
 
 /**
@@ -446,9 +456,20 @@ export function chromeDocument(spec: NodeSpec): {
     const ev = CHROME_EVENTS[String(scratch.doc.nodes[id]?.data.name ?? '')];
     if (ev) scratch.apply(setEvent(scratch, id, 'click', ev.action, ev.payload));
   }
-  const rootId = ids[0];
+  return sectionDocument(scratch.doc, ids[0]);
+}
+
+/**
+ * One section as a standalone document — the `{schema_version, root_node_id, nodes}`
+ * shape a global master and a section template both store, rooted at the section.
+ * `subtreeIds` is satellite-aware, so a menu's or a list's skin travels with it.
+ */
+export function sectionDocument(
+  doc: DocLike,
+  rootId: string,
+): { schema_version: number; root_node_id: string; nodes: Record<string, unknown> } {
   const nodes: Record<string, unknown> = {};
-  for (const id of subtreeIds(scratch.doc, rootId)) nodes[id] = scratch.doc.nodes[id];
+  for (const id of subtreeIds(doc, rootId)) nodes[id] = structuredClone(doc.nodes[id]);
   (nodes[rootId] as { data: { parent: unknown } }).data.parent = null;
   return { schema_version: 2, root_node_id: rootId, nodes };
 }
@@ -805,5 +826,182 @@ export async function detachGlobal(
     detached: { globalId: hit.globalId, nodeId: hit.nodeId },
     pages_referencing: (await pagesReferencing(ctx, siteId, hit.globalId)).length,
     next: 'Publish the page, or the live copy keeps the section this draft no longer has.',
+  };
+}
+
+/**
+ * May this ROOT child be lifted out of the page into a stored document?
+ *
+ * Only an ORDINARY page section. A stamp copied into a stored document is the
+ * blank-page shape: a `globalId`/`globalRef` inside a master or a template
+ * decomposes over that master on the next save, an `overlayId` makes the cart
+ * drawer a band member (`promote.ts canPromoteToGlobal`), and an app block's
+ * interior is stored nowhere. So any stamp anywhere in the subtree refuses.
+ */
+function liftable(doc: DocLike, nodeId: string | undefined, action: string): string {
+  if (!nodeId) throw new Error(`sbuilder: action:"${action}" needs node_id — a section on the open page.`);
+  if (!pageChildren(doc).includes(nodeId)) {
+    throw new Error(
+      `sbuilder: action:"${action}" takes a page SECTION — a direct child of ROOT that is not an ` +
+        `overlay. "${nodeId}" is not one; sb_outline shows the page's sections.`,
+    );
+  }
+  const STAMPS = [SPEC_GLOBAL_ID, SPEC_GLOBAL_REF, SPEC_OVERLAY_ID, SPEC_APP_BLOCK_ID, SPEC_APP_BLOCK_REF];
+  for (const id of subtreeIds(doc, nodeId)) {
+    const s = doc.nodes[id]?.specials ?? {};
+    const hit = STAMPS.find((k) => s[k] !== undefined);
+    if (hit) {
+      throw new Error(
+        `sbuilder: "${nodeId}" ${id === nodeId ? 'is' : `contains ${id}, which is`} already a ` +
+          `shared or composed node (specials.${hit}); copying that stamp into a stored document ` +
+          'empties the original on the next save. Lift an ordinary section instead.',
+      );
+    }
+  }
+  return nodeId;
+}
+
+export interface PromoteOutcome extends AttachOutcome {
+  created?: { globalId: string; kind: string; name: string };
+}
+
+/**
+ * Turn a section on the OPEN page into a global section — the editor's "Set as
+ * Global" (`features/globalsections/promote.ts`).
+ *
+ * The page keeps the section by REFERENCE, not by stamp: the section is removed
+ * and a `globalRef` node takes its place in ONE patch batch, so no save ever
+ * holds the page without it. A header goes first and a footer last (trap 3);
+ * `custom` keeps the section's own position. Then the same recompose round trip
+ * attach needs, so the platform counts this page as carrying it.
+ */
+export async function promoteGlobal(
+  ctx: ToolContext,
+  session: PageSession,
+  siteId: string,
+  nodeId: string | undefined,
+  kind: 'header' | 'footer' | 'custom',
+  name: string | undefined,
+  opts: { dryRun: boolean },
+): Promise<PromoteOutcome> {
+  const doc = session.current();
+  const id = liftable(doc.doc, nodeId, 'global_promote');
+  if (kind !== 'custom') {
+    const same = (await listGlobals(ctx, siteId)).filter((g) => g.kind === kind);
+    if (same.length) {
+      throw new Error(
+        `sbuilder: this site already has a global ${kind} (${same.map((g) => g.id).join(', ')}). ` +
+          `Put it on this page with action:"global_attach", or promote with global_kind:"custom".`,
+      );
+    }
+  }
+  const label = name?.trim() || (kind === 'custom' ? `Section ${id}` : kind === 'header' ? 'Header' : 'Footer');
+  const document = sectionDocument(doc.doc, id);
+  // Remove first, then place the reference on a scratch copy of the result —
+  // patches address child lists by index, so the add must see the list the
+  // removal leaves. Built from the session's CURRENT doc each time: a live peer
+  // may move ROOT's children while the master is being created.
+  const swap = (gid: string) => {
+    const cur = session.current();
+    const remove = removeNode(cur, id);
+    const scratch = PageDoc.from(structuredClone(cur.doc));
+    scratch.apply(remove);
+    const at =
+      kind === 'custom' ? childrenOf(cur.doc, cur.doc.root_node_id).indexOf(id) : positionFor(scratch.doc, kind);
+    const add = addSubtree(
+      scratch,
+      scratch.doc.root_node_id,
+      { type: 'flex-section', specials: { globalRef: gid, globalKind: kind } },
+      at,
+    );
+    return { patches: [...remove, ...add.patches], refId: add.ids[0], at };
+  };
+  // CHECK THE SAVE BEFORE THE MASTER EXISTS. A refused save after the POST
+  // leaves a master no page uses — and for a header or footer, the site's one
+  // slot of that kind taken by it.
+  const plan = swap('gs_pending');
+  const { refusal } = saveRefusal(doc, plan.patches);
+  if (refusal) throw new Error(`sbuilder: ${refusal}`);
+  if (opts.dryRun) {
+    return {
+      dry_run: true,
+      created: { globalId: '(minted on create)', kind, name: label },
+      attached: { globalId: '(new)', kind, at: plan.at },
+      next:
+        `Nothing was sent. ${Object.keys(document.nodes).length} node(s) would become the master, ` +
+        `and node ${id} would be replaced by a reference to it at ROOT index ${plan.at}` +
+        (kind === 'custom' ? '' : ` (a ${kind} must sit ${kind === 'header' ? 'first' : 'last'} or every save is refused)`) +
+        '. Re-call with dry_run:false.',
+    };
+  }
+  const gsPath = `/api/sites/${encodeURIComponent(siteId)}/global-sections`;
+  const made = (await request({
+    base: ctx.base,
+    method: 'POST',
+    path: gsPath,
+    token: siteToken(ctx),
+    body: { name: label, kind, document },
+    fetchImpl: ctx.fetchImpl,
+  })) as { globalSection?: { id?: unknown } };
+  const gid = made.globalSection?.id;
+  if (typeof gid !== 'string' || !gid) throw new Error('sbuilder: the platform created no global section.');
+  const { patches, refId: refNode, at } = swap(gid);
+  try {
+    await session.applyAndSave(patches);
+  } catch (e) {
+    // Take the unused master back, so a retry is not refused as a second header.
+    let rolled = 'deleted again';
+    try {
+      await request({ base: ctx.base, method: 'DELETE', path: `${gsPath}/${encodeURIComponent(gid)}`, token: siteToken(ctx), fetchImpl: ctx.fetchImpl });
+    } catch {
+      rolled = `left behind as ${gid} — delete it or attach it with action:"global_attach"`;
+    }
+    throw new Error(`${(e as Error).message} (the new master was ${rolled})`);
+  }
+  await session.recompose();
+  return {
+    created: { globalId: gid, kind, name: label },
+    attached: { globalId: gid, kind, nodeId: refNode, at },
+    pages_referencing: (await pagesReferencing(ctx, siteId, gid)).length,
+    next:
+      'Publish this page. Other pages get it with action:"global_attach" global_id:"' +
+      `${gid}" — an edit inside it now lands on every page carrying it.`,
+  };
+}
+
+/**
+ * Save a section on the OPEN page as a reusable section template — the editor's
+ * "Save as template". The page is untouched; `sb_template_use` places a copy.
+ */
+export async function saveTemplate(
+  ctx: ToolContext,
+  session: PageSession,
+  siteId: string,
+  nodeId: string | undefined,
+  name: string | undefined,
+  opts: { dryRun: boolean },
+): Promise<{ dry_run?: true; template?: { id: string; name: string }; nodes: number; next: string }> {
+  const doc = session.current();
+  const id = liftable(doc.doc, nodeId, 'template_save');
+  if (!name?.trim()) throw new Error('sbuilder: action:"template_save" needs name — the template\'s name in the library.');
+  const document = sectionDocument(doc.doc, id);
+  const nodes = Object.keys(document.nodes).length;
+  if (opts.dryRun) {
+    return { dry_run: true, nodes, next: 'Nothing was sent. Re-call with dry_run:false to save it.' };
+  }
+  const made = (await request({
+    base: ctx.base,
+    method: 'POST',
+    path: `/api/sites/${encodeURIComponent(siteId)}/section-templates`,
+    token: siteToken(ctx),
+    body: { name: name.trim(), document },
+    fetchImpl: ctx.fetchImpl,
+  })) as { sectionTemplate?: { id?: unknown } };
+  const tid = made.sectionTemplate?.id;
+  if (typeof tid !== 'string' || !tid) throw new Error('sbuilder: the platform created no section template.');
+  return {
+    template: { id: tid, name: name.trim() },
+    nodes,
+    next: 'Place a copy with sb_template_use; sb_templates lists it.',
   };
 }

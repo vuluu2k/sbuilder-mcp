@@ -2176,6 +2176,27 @@ server performed on read.
 
 ---
 
+### `action: "global_promote"` / `action: "template_save"`
+
+The editor's "Set as Global" and "Save as template", for a section (`node_id`, a direct
+child of ROOT that is not an overlay) already on the open page.
+
+`global_promote` stores the section and everything under it, satellites included, as a NEW
+master (`global_kind`: `header`, `footer` or `custom`, default `custom`; `name` optional).
+In the same patch batch it swaps the section on the page for a `globalRef` to that master,
+so no save ever holds the page without the section. A header moves first and a footer last
+(the band rule); `custom` keeps its position. The page is then saved a second time, for the
+same reason attach saves twice. A second header or footer is refused and pointed at
+`global_attach`. Put the new master on other pages with `global_attach`.
+
+`template_save` stores the section as a section template in the site's own library
+(`name` required, not listed in the platform gallery). The page is untouched, and
+`sb_template_use` places a copy.
+
+**Both refuse a subtree carrying any `globalId`, `globalRef`, `overlayId` or app-block
+stamp.** A stamp copied into a stored document is how pages go blank: the next save
+decomposes over the original.
+
 ## `sb_page_state`
 
 | Arg | Type | Notes |

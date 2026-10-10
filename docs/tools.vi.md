@@ -2133,6 +2133,27 @@ bản ghi riêng, còn thứ nằm trong tài liệu trang là một phép compo
 
 ---
 
+### `action: "global_promote"` / `action: "template_save"`
+
+"Set as Global" và "Lưu làm mẫu" của editor, áp cho một section (`node_id`, con trực tiếp
+của ROOT và không phải overlay) đang có trên trang đang mở.
+
+`global_promote` lưu section cùng toàn bộ cây con của nó, kể cả satellite, thành một master
+MỚI (`global_kind`: `header`, `footer` hoặc `custom`, mặc định `custom`; `name` không bắt
+buộc). Trong cùng một lô patch, nó thay section trên trang bằng một `globalRef` trỏ tới
+master đó, nên không lần lưu nào giữ trang mà thiếu section. Header được chuyển lên đầu,
+footer xuống cuối (luật band); `custom` giữ nguyên vị trí. Sau đó trang được lưu thêm một
+lần nữa, cùng lý do attach phải lưu hai lần. Header hoặc footer thứ hai sẽ bị từ chối, kèm
+lời chỉ sang `global_attach`. Đặt master mới lên các trang khác bằng `global_attach`.
+
+`template_save` lưu section thành section template trong thư viện riêng của site (bắt buộc
+có `name`, không đưa lên gallery của nền tảng). Trang giữ nguyên, và `sb_template_use` đặt
+một bản sao.
+
+**Cả hai đều từ chối một cây con mang bất kỳ con dấu `globalId`, `globalRef`, `overlayId`
+hay app-block nào.** Con dấu bị chép vào một document được lưu chính là cách các trang bị
+trắng: lần lưu kế tiếp decompose đè lên bản gốc.
+
 ## `sb_page_state`
 
 | Tham số | Kiểu | Ghi chú |
