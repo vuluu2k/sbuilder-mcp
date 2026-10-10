@@ -311,6 +311,13 @@ repo over a number here, and fix the line when you catch one stale.
   approves it — a session route. The site-scoped `PUT /api/sites/{siteId}/translations`
   defaults to `"human"`. The call sheet says this as `translation_fields.review_gate`.
 
+- **A TRANSLATION OF A GLOBAL SECTION'S NODE IS KEYED BY THE MASTER'S NODE ID, so it is served on
+  EVERY page carrying that section.** Measured 2026-10-10 on a local origin/main stack: a custom
+  global attached to pages A and B, the heading translated once through `sb_translate` from page
+  B, and `/en/trang-a` served the translation too. `sb_translate action:"page"` therefore reads
+  the COMPOSED source and lists global nodes on every page that carries them, which is why a
+  shared header's rows show as `done` on page B after they were written from page A.
+
 ## Phases — how reach and capability grew
 
 All three phases are shipped, and their plans live in `docs/superpowers/plans/`:
