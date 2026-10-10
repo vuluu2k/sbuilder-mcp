@@ -29,10 +29,10 @@ function storefront() {
       new Response(JSON.stringify(value), { status, headers: { 'content-type': 'application/json' } });
 
     if (path.endsWith('/builtin-apps/courses') && method === 'POST') {
-      return json({ builtinApp: { key: 'courses' } });
+      return json({ builtinApp: { siteId: 's1', appKey: 'courses', installedAt: 'now' } });
     }
     if (path.endsWith('/builtin-apps/mail') && method === 'POST') {
-      return json({ builtinApp: { key: 'mail' } });
+      return json({ builtinApp: { siteId: 's1', appKey: 'mail', installedAt: 'now' } });
     }
     if (path.endsWith('/pages') && method === 'GET') {
       return json({ pages: [{ id: 'p1', slug: 'courses', type: 'page' }, ...created] });

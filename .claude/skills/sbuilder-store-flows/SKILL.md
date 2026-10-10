@@ -94,6 +94,25 @@ repo over a number here, and fix the line when you catch one stale.
   It deliberately makes NO page: where a login form belongs is a design decision, and
   `/account` is the one page that is not a free choice — see the entry above.
 
+- **EVENT TICKETS ARE SOLD THROUGH A PRODUCT THE `tickets` APP OWNS, NOT ONE YOU CREATE.**
+  The ordered `sb_api_call` recipe is in `docs/tools.md` › "Selling event tickets": install
+  the app, set the store timezone, create the event, add sessions and types, then publish.
+  Publish projects the event into one `kind:"ticket"` product (variant = session × type),
+  sold by the ordinary `/products/{slug}` page and `/checkout`. No tool wraps it, because each
+  step is one call. Loud refusals (`timezone_required`, `event_incomplete`,
+  `ticket_product_managed`, the 422 checkout codes) explain themselves. These three do not:
+  - **`priceCents` is hundredths for VND too** (`tickets/rest/events.go` addType). Sending
+    `200000` for 200.000 ₫ stores a 2.000 ₫ ticket and answers 201.
+  - **The `event` form template is a `contact` form.** It is the obvious pick for "sell
+    tickets", and it collects names with no seat, payment or QR.
+  - **An order form with only cash-class payment methods refuses every ticket order** at
+    Send (`ticket_requires_prepay`; prepaid = `orders/paymentclass.go` `prepaidMethods`).
+    `sb_review` cannot see it. Neither can a store whose gateway was switched on after the
+    checkout was saved, until `checkout_sync` runs. The page hides the refused cards, so the
+    first sign is a buyer who cannot pay. A related case: an unpaid order is cancelled after
+    `holdMinutes`, and money that lands later issues no tickets. It waits in
+    `/tickets/late-payments`.
+
 - **A PAGE AN AGENT CREATED WAS NOT PART OF THE SITE.** A page created through the editor
   carries the site's header and footer; `sb_page_create` attached NEITHER, so a site built with
   these tools was a stack of pages with no navigation and no footer — on a site that has both.
@@ -421,6 +440,13 @@ repo over a number here, and fix the line when you catch one stale.
   REFUSES to run on a read that came back empty, for the reason `save()` does: a read that
   failed open must not become a write that empties the page. That guard was not foresight — the
   repo's own page-create test went red on the first run without it.
+
+- **THE INSTALL RECORD IS `{siteId, appKey, installedAt}`, NOT `{key}`.** `installApp` read
+  `.key`, which the platform never sends, so `sb_store action:"app"` reported failure after
+  EVERY successful install, and `courses` never got its pages. The fixture in
+  `test/store-app.test.ts` had invented `key`, which is how it passed. Measured live on
+  2026-10-11. A fixture shape must come from the handler (`builtinapps.Install`), never be
+  invented.
 
 - **PROMOTING A SECTION REMOVES IT AND PLANTS THE REFERENCE IN ONE BATCH** (`promoteGlobal`,
   `src/tools/chrome.ts`). The editor stamps the composed `globalId` onto the live node and lets

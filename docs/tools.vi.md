@@ -117,6 +117,82 @@ import không báo lỗi mà nhân đôi catalogue trong im lặng. **Ảnh có 
 URL**: `POST /api/media/{siteId}/from-url` chạy đúng luồng ingest mà cửa upload dùng, đi một
 chặng thay vì tải xuống rồi upload lại.
 
+### Bán vé sự kiện
+
+*Các bước 1–9 đã chạy trọn vẹn trên platform local ngày 2026-10-11: trang sản phẩm hiển thị
+đủ hai trục và giá.*
+
+Sự kiện **không** phải là product do bạn tạo. App `tickets` sở hữu sự kiện, suất và loại vé.
+Khi **xuất bản**, sự kiện được chiếu thành MỘT product do server sở hữu (`kind: "ticket"`, mỗi
+cặp suất × loại vé là một variant), và trang sản phẩm, giỏ, checkout thông thường bán nó. Các
+id dưới đây là operation id của `sb_api_call`; mọi lệnh ghi cần `dry_run: false` mới chạy thật.
+
+| # | Lệnh | Body tối thiểu | Trả về | Hoàn tác |
+| --- | --- | --- | --- | --- |
+| 1 | `sb_store action:"app" app_key:"tickets"` | — | Bật app, không dựng trang nào. Trước bước này, mọi route `/events`, `/tickets`, `/gate` chỉ trả **404 "not found"** | `delete:/api/sites/{siteId}/builtin-apps/{key}`: gỡ bán mọi sự kiện trước, không xoá gì |
+| 2 | `put:/api/sites/{siteId}/settings` với `merge: true` | `{"settings":{"timezone":"Asia/Ho_Chi_Minh"}}` | Múi giờ IANA của shop; thiếu nó thì xuất bản bị từ chối. PUT này **thay cả tài liệu settings**, nên luôn gửi kèm `merge` | Có |
+| 3 | `post:/api/sites/{siteId}/events` | `{"name":"…","venueName":"…","venueAddress":"…"}` | `201 {event}` ở trạng thái `draft`. Tuỳ chọn: `summary`, `holdMinutes` (10–1440, mặc định 30), `checkinOpensMin`, `checkinClosesMin` | `delete:/api/sites/{siteId}/events/{id}`, khi chưa bán được gì |
+| 4 | `post:/api/sites/{siteId}/events/{id}/sessions` | `{"label":"Tối 20/12","startsAt":"2026-12-20T19:00:00+07:00","endsAt":"2026-12-20T22:00:00+07:00"}` | `201 {session}`. Bắt buộc cả hai mốc, `endsAt` sau `startsAt`, cách nhau tối đa 14 ngày | `delete:…/sessions/{sid}` khi chưa bán; đã bán thì `post:…/sessions/{sid}/cancel` với `mode` BẮT BUỘC (`void_refund` hoặc `keep`) |
+| 5 | `post:/api/sites/{siteId}/events/{id}/types` | `{"name":"GA","priceCents":20000000,"defaultCapacity":200}` | `201 {type}`. Bắt buộc `priceCents` và `defaultCapacity`. `perOrderMax` mặc định 10, `active` mặc định true. Tuỳ chọn `saleStartsAt`/`saleEndsAt` | `delete:…/types/{tid}` khi chưa bán; đã bán thì `put:…/types/{tid}` `{"active":false}` để đóng bán |
+| 6 | `put:/api/sites/{siteId}/events/{id}/offerings/{sid}/{tid}` (tuỳ chọn) | `{"capacity":50}` | Sức chứa của một ô, áp dạng delta lên tồn kho; thấp hơn số đã bán + đang giữ thì bị từ chối | Có |
+| 7 | `get:/api/sites/{siteId}/events/{id}` | — | `{event, sessions, types, cells}`. Hãy đọc: `cells` phải có một hàng cho mỗi suất × loại đang bật | — |
+| 8 | `post:/api/sites/{siteId}/events/{id}/publish` | — | `{event}` với `status:"published"` và một `productId`. Idempotent | `post:…/unpublish` đưa product về draft, vé đã bán vẫn hợp lệ. **`post:…/cancel` là vĩnh viễn**: chỉ sự kiện draft mới xuất bản được, nên sự kiện đã huỷ không bao giờ bán lại |
+| 9 | `get:/api/sites/{siteId}/products/{id}` với `productId` đó | — | `slug` của product; trang của nó là `/products/{slug}` | — |
+
+Bước 4 và 5 làm theo thứ tự nào cũng được: suất sinh một ô cho mỗi loại đang bật, loại sinh một
+ô cho mỗi suất đã lên lịch. Suất hoặc loại thêm **sau** khi xuất bản được chiếu vào product
+ngay.
+
+**Tiền tính theo phần trăm đơn vị với mọi loại tiền, kể cả VND.** `200.000 ₫` là
+`"priceCents": 20000000`. Gửi `200000` thì vé bán giá 2.000 ₫, và không gì từ chối nó.
+
+**Đưa sự kiện lên trang.** Product vé là một product bình thường. Mọi danh sách và thẻ product
+đều hiện nó, và một trang đã xuất bản thuộc type `product` (`sb_page_create`, seed có sẵn
+`product-variants`) bán nó ở `/products/{slug}`. Bộ chọn có hai trục: **`Suất`** (nhãn suất,
+hoặc giờ bắt đầu theo múi giờ shop) và **`Loại vé`** (tên loại). Tên hai trục cố định bằng
+tiếng Việt, dù shop dùng ngôn ngữ gì. Ảnh, mô tả, SEO, tag và slug đổi được qua
+`put:/api/sites/{siteId}/products/{id}` với `merge: true`. Mọi thay đổi tên, trạng thái,
+variant, giá, option hay trục đều bị từ chối **409 `ticket_product_managed`**; đếm tồn kho và
+xoá cũng vậy. Những thứ đó sửa trên sự kiện. `summary` bị viết lại thành `địa điểm · ngày đầu`
+mỗi lần sự kiện được chiếu lại, nên sửa nó cũng không giữ được.
+
+**Người mua thanh toán thế nào.** Người mua chọn suất và loại, thêm vào giỏ, rồi vào
+`/checkout` (`sb_store action:"checkout"`). Server kiểm từng dòng vé lúc tạo đơn và từ chối
+bằng **422** kèm một `code`, được island của form diễn đạt bằng ngôn ngữ của trang. Các bước
+kiểm chạy theo thứ tự sau:
+
+| Code | Nghĩa |
+| --- | --- |
+| `event_not_on_sale` | Sự kiện chưa xuất bản, suất đã huỷ hoặc đã kết thúc, hoặc loại vé đã tắt |
+| `ticket_sale_not_open` / `ticket_sale_closed` | Ngoài khoảng `saleStartsAt`/`saleEndsAt` (`details.opensAt`) |
+| `ticket_per_order_limit` | Mua quá `perOrderMax` của một loại (`details.max`) |
+| `ticket_email_required` | Không có email hợp lệ. Form đặt hàng cần một ô map vào `customer.email`. Form checkout được sinh ra có sẵn ô này (mặc định không bắt buộc), và trang sẽ bắt buộc nó khi giỏ có vé |
+| `free_ticket_mixed_cart` | Vé 0 ₫ nằm chung giỏ với dòng không phải vé cũng 0 ₫ |
+| `ticket_requires_prepay` | Phương thức thanh toán loại tiền mặt. Chỉ `bank_transfer`, `card`, `vnpay`, `momo`, `payos`, `zalopay`, `stripe`, `paypal`, `sepay` được tính là trả trước; mọi thứ khác, kể cả COD, bị từ chối. Giỏ toàn vé miễn phí không cần phương thức thanh toán |
+| `ticket_signing_disabled` | Secret ký của nền tảng chưa đặt. Chỉ người vận hành sửa được |
+
+Đơn vé chưa trả giữ chỗ trong `holdMinutes`, sau đó **tự bị huỷ**. Tiền về sau mốc đó không
+phát vé; đơn nằm chờ ở `get:/api/sites/{siteId}/tickets/late-payments` để người quyết định.
+Khi đơn chuyển `paid` (webhook cổng thanh toán, hoặc chủ shop đánh dấu đã trả), mỗi đơn vị
+được phát một vé, và người mua nhận email có QR cùng link `/_wb/t/<token>`. Giỏ toàn vé miễn
+phí được tính là đã trả ngay lúc tạo đơn. Khách đã đăng nhập xem vé qua element `my-tickets`
+trên trang tài khoản; các hàng vé chỉ hiện ở trang đã xuất bản. Khách vãng lai dùng
+`/_wb/t/lookup`. Danh sách người tham dự ở `get:/api/sites/{siteId}/tickets/issued`.
+
+**Lỗi khi quản lý** (`code` trong lỗi): `invalid_event_request` (400, trường ngoài khoảng
+hoặc thao tác sai trạng thái), `timezone_required` (409, thiếu bước 2), `event_incomplete`
+(409, `details.missing`: `sessions` | `types`), `event_has_sales`, `session_has_tickets`
+(`details.count`), `ticket_type_has_tickets`, `ticket_type_name_taken`, `capacity_below_sold`
+(`details.sold`, `details.held`), `session_has_admissions`, và `event_changed`
+(`expectedUpdatedAt` đã cũ).
+
+**Credential.** Các route này là site-scoped, nên session dùng được. API key chỉ dùng được khi
+được cấp đích danh `tickets.read`/`tickets.write`; soát vé ở cổng là quyền riêng
+`gate.read`/`gate.write`. Editor và viewer không có quyền nào trong số đó.
+
+Form template `event` (`sb_store action:"form"`) là một form `contact`. Nó thu tên và không
+bán gì: không chỗ ngồi, không thanh toán, không QR.
+
 ## `sb_api_call`
 
 Chạy một operation tìm được bằng `sb_api_find`.

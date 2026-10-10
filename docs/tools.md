@@ -113,6 +113,83 @@ re-running an import does not error, it doubles the catalogue in silence. **An i
 ingested from a URL**: `POST /api/media/{siteId}/from-url` runs the same ingest the upload
 door does, one hop instead of downloading and re-uploading it.
 
+### Selling event tickets
+
+An event is **not** a product you create. The `tickets` app owns events, sessions and ticket
+types, and **publishing** an event projects it into ONE server-owned product (`kind: "ticket"`,
+one variant per session × ticket type) that the ordinary product page, cart and checkout sell.
+Ids below are `sb_api_call` operation ids; every write takes `dry_run: false` to act. Steps 1–9
+were run end to end on a local platform on 2026-10-11, and the product page rendered with both
+axes and the price.
+
+| # | Call | Minimal body | What it answers | Undo |
+| --- | --- | --- | --- | --- |
+| 1 | `sb_store action:"app" app_key:"tickets"` | — | Turns the app on; no pages are scaffolded. Before this, every `/events`, `/tickets` and `/gate` route answers a bare **404 "not found"** | `delete:/api/sites/{siteId}/builtin-apps/{key}` — it unpublishes every event first; nothing is deleted |
+| 2 | `put:/api/sites/{siteId}/settings` with `merge: true` | `{"settings":{"timezone":"Asia/Ho_Chi_Minh"}}` | The store's IANA zone. Publish refuses without it. This PUT **replaces the whole settings document**, so never send it without `merge` | Yes |
+| 3 | `post:/api/sites/{siteId}/events` | `{"name":"…","venueName":"…","venueAddress":"…"}` | `201 {event}` in `draft`. Optional: `summary`, `holdMinutes` (10–1440, default 30), `checkinOpensMin`, `checkinClosesMin` | `delete:/api/sites/{siteId}/events/{id}` until anything is sold |
+| 4 | `post:/api/sites/{siteId}/events/{id}/sessions` | `{"label":"Tối 20/12","startsAt":"2026-12-20T19:00:00+07:00","endsAt":"2026-12-20T22:00:00+07:00"}` | `201 {session}`. Both instants are required, `endsAt` after `startsAt`, at most 14 days apart | `delete:…/sessions/{sid}` while unsold; after a sale, `post:…/sessions/{sid}/cancel` with a REQUIRED `mode` (`void_refund` or `keep`) |
+| 5 | `post:/api/sites/{siteId}/events/{id}/types` | `{"name":"GA","priceCents":20000000,"defaultCapacity":200}` | `201 {type}`. `priceCents` and `defaultCapacity` are required. `perOrderMax` defaults to 10, `active` to true. Optional `saleStartsAt`/`saleEndsAt` | `delete:…/types/{tid}` while unsold; after a sale, `put:…/types/{tid}` `{"active":false}` closes sales |
+| 6 | `put:/api/sites/{siteId}/events/{id}/offerings/{sid}/{tid}` (optional) | `{"capacity":50}` | One cell's capacity. Applied as a delta on stock; below sold + held, it is refused | Yes |
+| 7 | `get:/api/sites/{siteId}/events/{id}` | — | `{event, sessions, types, cells}`. Read it: `cells` should hold one row per session × active type | — |
+| 8 | `post:/api/sites/{siteId}/events/{id}/publish` | — | `{event}` with `status:"published"` and a `productId`. Idempotent | `post:…/unpublish` puts the product back to draft, and sold tickets stay valid. **`post:…/cancel` is final**: only a draft can be published, so a cancelled event never sells again |
+| 9 | `get:/api/sites/{siteId}/products/{id}` with that `productId` | — | The product's `slug`. Its page is `/products/{slug}` | — |
+
+Steps 4 and 5 can come in either order: a session gets a cell for every active type, and a
+type gets one for every scheduled session. A session or type added **after** publish is
+projected into the product immediately.
+
+**Money is in hundredths for every currency, VND included.** `200.000 ₫` is
+`"priceCents": 20000000`. Sending `200000` sells the ticket for 2.000 ₫, and nothing refuses it.
+
+**Getting the event onto a page.** The ticket product is a normal product. Every product list
+and card shows it, and a published page of type `product` (`sb_page_create`; its seed carries
+`product-variants`) sells it at `/products/{slug}`. The picker shows two axes, **`Suất`** (the
+session label, or its start time in the store's zone) and **`Loại vé`** (the type name). Both
+axis names are fixed Vietnamese strings, whatever the store's language. You can change images,
+description, SEO, tags and slug with `put:/api/sites/{siteId}/products/{id}` and `merge: true`.
+Any change to the name, status, variants, prices, options or axes is refused with **409
+`ticket_product_managed`**, and so is a stock count or a delete; edit those on the event.
+`summary` is rewritten as `venue · first date` every time the event is re-projected, so an
+edit to it does not last.
+
+**How a buyer checks out.** The buyer picks a session and a type, adds to cart, and goes to
+`/checkout` (`sb_store action:"checkout"`). The server checks every ticket line at order
+creation and refuses with **422** plus a `code`, which the form island words in the page's
+language. The checks run in this order:
+
+| Code | Meaning |
+| --- | --- |
+| `event_not_on_sale` | Event not published, session cancelled or already ended, or type inactive |
+| `ticket_sale_not_open` / `ticket_sale_closed` | Outside `saleStartsAt`/`saleEndsAt` (`details.opensAt`) |
+| `ticket_per_order_limit` | More than `perOrderMax` of one type (`details.max`) |
+| `ticket_email_required` | No valid email. The order form needs a box mapped to `customer.email`. The generated checkout form has one, optional by default, and the page makes it required once a ticket is in the cart |
+| `free_ticket_mixed_cart` | A 0 ₫ ticket in a cart with 0 ₫ non-ticket lines |
+| `ticket_requires_prepay` | A cash-class payment method. Only `bank_transfer`, `card`, `vnpay`, `momo`, `payos`, `zalopay`, `stripe`, `paypal` and `sepay` count as prepaid, and anything else, COD included, is refused. A cart that is all free tickets needs no payment method |
+| `ticket_signing_disabled` | The platform's signing secret is unset. Only the operator can fix this |
+
+An unpaid ticket order holds its seats for `holdMinutes`, then is **cancelled automatically**.
+Money that arrives after that issues no tickets; the order waits in
+`get:/api/sites/{siteId}/tickets/late-payments` for a person to decide. When the order turns
+`paid` (gateway webhook, or the merchant marking it paid), one ticket is issued per unit and
+the buyer receives an email with a QR code and a link to `/_wb/t/<token>`. A cart of free
+tickets is paid at creation. Signed-in buyers see their tickets through the `my-tickets`
+element on an account page; its rows appear on the published page only. Guests use
+`/_wb/t/lookup`. Attendees are listed at `get:/api/sites/{siteId}/tickets/issued`.
+
+**Management refusals** (`code` on the error): `invalid_event_request` (400, a field
+out of range or an action on the wrong status), `timezone_required` (409, step 2 missing),
+`event_incomplete` (409, `details.missing`: `sessions` | `types`), `event_has_sales`,
+`session_has_tickets` (`details.count`), `ticket_type_has_tickets`, `ticket_type_name_taken`,
+`capacity_below_sold` (`details.sold`, `details.held`), `session_has_admissions`, and
+`event_changed` (a stale `expectedUpdatedAt`).
+
+**Credentials.** The routes are site-scoped, so a session works. An API key works only with
+`tickets.read`/`tickets.write` granted by name; scanning at the door is a separate
+`gate.read`/`gate.write`. Editors and viewers have neither.
+
+The `event` form template (`sb_store action:"form"`) is a `contact` form. It collects names and
+sells nothing: no seats, no payment, no QR.
+
 ## `sb_api_call`
 
 Execute one operation found by `sb_api_find`.

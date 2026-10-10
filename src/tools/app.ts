@@ -139,11 +139,14 @@ export async function installApp(
     };
   }
 
-  const installed = await send<{ builtinApp?: { key?: string } }>(
+  // The record is `builtinapps.Install` — `{siteId, appKey, installedAt}`. This read
+  // `.key`, which the platform never sends, so EVERY install reported failure after
+  // succeeding and courses never got its pages (measured on a live platform).
+  const installed = await send<{ builtinApp?: { appKey?: string } }>(
     'POST',
     `/api/sites/${site}/builtin-apps/${encodeURIComponent(key)}`,
   );
-  if (installed.builtinApp?.key !== key) {
+  if (installed.builtinApp?.appKey !== key) {
     throw new Error(
       `sbuilder: the platform accepted installing "${key}" and returned no matching app`,
     );
