@@ -39,7 +39,11 @@ describe('sb_media_upload url fallback and pdf', () => {
       String(input).endsWith('/from-url')
         ? new Response('{"error":"not found"}', { status: 404, headers: { 'content-type': 'application/json' } })
         : new Response('SECRET', { status: 200 })) as unknown as typeof fetch;
-  const ctxOf = (f: typeof fetch) => ({ base: 'http://x', session: new Session('http://x', f), apiKey: 'wbk_k', siteId: 's1', fetchImpl: f, notices: new Notices(), undo: new UndoLog() });
+  const DNS: Record<string, string[]> = { localhost: ['127.0.0.1'], 'inward.example': ['10.1.2.3'], 'public.example': ['93.184.216.34'] };
+  const ctxOf = (f: typeof fetch) => ({
+    base: 'http://x', session: new Session('http://x', f), apiKey: 'wbk_k', siteId: 's1', fetchImpl: f,
+    notices: new Notices(), undo: new UndoLog(), lookupHost: async (h: string) => DNS[h] ?? [],
+  });
 
   it.each([
     'http://169.254.169.254/latest/meta-data/iam/x',
@@ -48,6 +52,11 @@ describe('sb_media_upload url fallback and pdf', () => {
     'http://192.168.1.10/a.png',
     'http://10.0.0.5/a.png',
     'http://[::1]/a.png',
+    'http://[::ffff:127.0.0.1]/a.png',
+    'http://[::127.0.0.1]/a.png',
+    'http://[2002:7f00:1::]/a.png',
+    'http://2130706433/a.png',
+    'http://inward.example/a.png',
     'file:///etc/hosts',
   ])('refuses a private or non-http url on the local fallback: %s', async (url) => {
     await expect(uploadMedia(ctxOf(fake()), 's1', { url, name: 'a.png' })).rejects.toThrow(/public http/);
@@ -58,5 +67,15 @@ describe('sb_media_upload url fallback and pdf', () => {
     await expect(uploadMedia(ctxOf(fake()), 's1', { path: join(homedir(), 'Documents', 'no-such.pdf') })).rejects.toThrow(
       /does not exist|working directory/,
     );
+  });
+
+  it('a redirect to a private address is refused at that hop', async () => {
+    const f = (async (input: string | URL) => {
+      const u = String(input);
+      if (u.endsWith('/from-url')) return new Response('{}', { status: 404, headers: { 'content-type': 'application/json' } });
+      if (u.startsWith('http://public.example')) return new Response(null, { status: 302, headers: { location: 'http://169.254.169.254/x' } });
+      return new Response('SECRET', { status: 200 });
+    }) as unknown as typeof fetch;
+    await expect(uploadMedia(ctxOf(f), 's1', { url: 'http://public.example/a.png' })).rejects.toThrow(/public http/);
   });
 });

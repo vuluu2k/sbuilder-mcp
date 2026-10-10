@@ -8,7 +8,8 @@ import { Notices } from '../src/mcp/notices.js';
 import { UndoLog } from '../src/tools/undo.js';
 
 function ctxWith(f: typeof fetch, apiKey = 'wbk_k') {
-  return { base: 'http://x', session: new Session('http://x', f), apiKey, fetchImpl: f };
+  // Hosts here are fixtures ('src', 'cdn2'): resolve them to a public address.
+  return { base: 'http://x', session: new Session('http://x', f), apiKey, fetchImpl: f, lookupHost: async () => ['93.184.216.34'] };
 }
 
 /**

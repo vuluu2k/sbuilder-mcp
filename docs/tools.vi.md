@@ -250,7 +250,8 @@ thể bị dẫn dụ đưa ra một đường dẫn bất kỳ, nên `.claude/`
 `~/Downloads/passwords.csv` đều nằm ngoài tầm với. `path` của `sb_media_upload` chỉ nhận loại media,
 xét trên file thật chứ không theo `name`. File `.pdf` chỉ được lấy từ hai thư mục đó. Khi platform
 không tự tải được một `url`, máy này sẽ tải, nên chỉ chấp nhận địa chỉ http(s) công khai: không
-dùng loopback, dải mạng riêng, link-local hay metadata của cloud. `if_match` nhận một version (`7` hoặc `"7"`), giá trị khác bị từ chối trước khi gửi.
+dùng loopback, dải mạng riêng, link-local hay metadata của cloud. Mọi địa chỉ mà host phân giải ra
+đều được kiểm tra, và redirect được đi theo từng bước, bước nào cũng kiểm tra lại. `if_match` nhận một version (`7` hoặc `"7"`), giá trị khác bị từ chối trước khi gửi.
 
 ---
 

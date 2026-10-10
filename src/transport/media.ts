@@ -2,6 +2,8 @@ import { identityHeaders } from './identity.js';
 import { readFile } from 'node:fs/promises';
 import { guardLocal } from './localfile.js';
 import { basename, extname } from 'node:path';
+import { lookup } from 'node:dns/promises';
+import { BlockList, isIP } from 'node:net';
 import { ApiError } from './http.js';
 import { siteToken } from '../tools/credentialpick.js';
 import type { ToolContext } from '../tools/context.js';
@@ -67,6 +69,8 @@ const TYPE_BY_EXT: Record<string, string> = {
   '.xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
   '.csv': 'text/csv',
 };
+
+const PDF_EXT: ReadonlySet<string> = new Set(['.pdf']);
 
 /** What a local `path` may be: the media types this server names, nothing else. */
 const MEDIA_EXT: ReadonlySet<string> = new Set(
@@ -156,6 +160,57 @@ async function fromUrl(
   return uploaded(parsed);
 }
 
+/**
+ * WHEN THE PLATFORM CANNOT FETCH A URL ITSELF, THIS MACHINE DOES — and an agent can
+ * be talked into naming any URL. A private address here reaches the user's own
+ * network (cloud metadata at 169.254.169.254, a dev server on localhost) and the
+ * bytes are re-uploaded to a public CDN. So every address the host resolves to is
+ * checked — a hostname regex is beaten by `[::ffff:127.0.0.1]` or a DNS name that
+ * points inward — and a redirect is followed by hand, each hop checked again.
+ *
+ * ponytail: resolve-then-fetch leaves a DNS-rebinding window between the two
+ * lookups; pinning the checked IP into the connection (an undici dispatcher) is the
+ * upgrade.
+ */
+// No ::ffff:0:0/96 rule: Node's BlockList already applies the IPv4 rules to an
+// IPv4-mapped address, and that rule would match EVERY IPv4 address (measured).
+const PRIVATE = new BlockList();
+for (const [net, bits] of [
+  ['0.0.0.0', 8], ['10.0.0.0', 8], ['100.64.0.0', 10], ['127.0.0.0', 8], ['169.254.0.0', 16],
+  ['172.16.0.0', 12], ['192.0.0.0', 24], ['192.168.0.0', 16], ['198.18.0.0', 15], ['224.0.0.0', 3],
+] as const) PRIVATE.addSubnet(net, bits, 'ipv4');
+for (const [net, bits] of [
+  // ::/96 (IPv4-compatible), 6to4, Teredo and old site-local carry or reach an IPv4 inside.
+  ['::', 96], ['2002::', 16], ['2001::', 32], ['fec0::', 10], ['64:ff9b::', 96], ['fc00::', 7], ['fe80::', 10], ['ff00::', 8],
+] as const) PRIVATE.addSubnet(net, bits, 'ipv6');
+
+async function assertPublic(ctx: ToolContext, raw: string): Promise<void> {
+  const u = new URL(raw);
+  const host = u.hostname.replace(/^\[|\]$/g, '');
+  const refuse = () => new Error('sbuilder: a media url must be a public http(s) address.');
+  if (!/^https?:$/.test(u.protocol)) throw refuse();
+  const addrs = isIP(host)
+    ? [host]
+    : await (ctx.lookupHost ?? (async (h: string) => (await lookup(h, { all: true })).map((a) => a.address)))(host).catch(() => {
+        throw new Error(`sbuilder: could not resolve ${host}.`);
+      });
+  for (const a of addrs) {
+    if (PRIVATE.check(a, isIP(a) === 6 ? 'ipv6' : 'ipv4')) throw refuse();
+  }
+}
+
+async function fetchPublic(ctx: ToolContext, doFetch: typeof fetch, url: string): Promise<Response> {
+  let at = url;
+  for (let hop = 0; hop < 4; hop++) {
+    await assertPublic(ctx, at);
+    const res = await doFetch(at, { redirect: 'manual' });
+    const next = res.status >= 300 && res.status < 400 ? res.headers.get('location') : null;
+    if (!next) return res;
+    at = new URL(next, at).toString();
+  }
+  throw new Error('sbuilder: too many redirects fetching the media url.');
+}
+
 export async function uploadMedia(
   ctx: ToolContext,
   siteId: string,
@@ -185,23 +240,13 @@ export async function uploadMedia(
     // URL. `name` still becomes the library's display name (the form field below).
     // A PDF is where the sensitive documents live (a tax return, a passport scan),
     // so it comes only from the working or temp directory; images from anywhere.
-    const real = await guardLocal(source.path, MEDIA_EXT, { confine: extname(source.path).toLowerCase() === '.pdf' });
+    let real = await guardLocal(source.path, MEDIA_EXT);
+    // Decided on the REAL name: a `pic.png` symlink to a PDF is a PDF.
+    if (extname(real).toLowerCase() === '.pdf') real = await guardLocal(real, PDF_EXT, { confine: true });
     bytes = await readFile(real);
     filename = basename(real);
   } else if (source.url) {
-    // THIS fetch runs on the USER's machine (the server's own door was missing), so a
-    // private address here reaches their network — cloud metadata, a dev server —
-    // and re-uploads it to a public URL. Public http(s) only.
-    // ponytail: hostname check, not resolved-IP; DNS rebinding needs a resolve-and-check.
-    const u = new URL(source.url);
-    if (
-      !/^https?:$/.test(u.protocol) ||
-      /^(localhost|127\.|10\.|192\.168\.|169\.254\.|172\.(1[6-9]|2\d|3[01])\.|0\.0\.0\.0|\[?::1\]?$|\[?f[cd][0-9a-f]{2}:|\[?fe80:)/i.test(u.hostname) ||
-      u.hostname.endsWith('.local') || u.hostname.endsWith('.internal')
-    ) {
-      throw new Error('sbuilder: a media url must be a public http(s) address.');
-    }
-    const res = await doFetch(source.url);
+    const res = await fetchPublic(ctx, doFetch, source.url);
     if (!res.ok) {
       throw new ApiError(res.status, 'source_unreachable', `could not fetch ${source.url}`);
     }
@@ -212,7 +257,7 @@ export async function uploadMedia(
     // CDN link), name it rather than uploading something called "".
     // The type comes from the response or the URL's own name, never from `name`
     // (still sent as the display name below).
-    filename = u.pathname.split('/').pop() || 'image';
+    filename = new URL(source.url).pathname.split('/').pop() || 'image';
   } else {
     throw new Error('sbuilder: give sb_media_upload either a local path or a url');
   }

@@ -246,7 +246,8 @@ or dot-folder. An agent can be talked into naming any path, so `.claude/`, `.mcp
 `~/Downloads/passwords.csv` stay out of reach. `sb_media_upload`'s `path` takes media types only,
 judged on the real file, never on `name`. A `.pdf` comes only from those two directories. When the
 platform cannot fetch a `url` itself, this machine fetches it, so only public http(s) addresses
-are allowed: no loopback, private ranges, link-local or cloud metadata. `if_match` takes a version (`7` or `"7"`), and
+are allowed: no loopback, private ranges, link-local or cloud metadata. Every address the host
+resolves to is checked, and a redirect is followed hop by hop with each hop checked again. `if_match` takes a version (`7` or `"7"`), and
 anything else is refused before sending.
 
 ---

@@ -33,6 +33,17 @@ One group per file under `src/tools/*.ts`, exporting `registerXTools(server, ctx
 7. **Say a directive once per process through `ctx.notices.once(...)`**, never inline in
    every result — `test/token-budget.test.ts` is the scale, and a repeated notice is the
    shape that drifts.
+8. **A local path or a URL in a tool argument is HOSTILE INPUT.** The agent can be
+   prompt-injected by content it reads, so it can be talked into any path. A read
+   exfiltrates (`{path:"~/.ssh/id_rsa", name:"x.png"}` once reached a public CDN URL);
+   a write plants code (`.claude/settings.local.json`, `.mcp.json`; `wx` stops only an
+   overwrite). Every path goes through `guardLocal` (`src/transport/localfile.ts`): an
+   extension allowlist judged on the REAL file, and `confine` for anything that is not a
+   plain media file. Every URL this machine fetches goes through `fetchPublic`
+   (`src/transport/media.ts`), which checks each resolved address and each redirect hop.
+   Never take a file's type from a caller-supplied name. Never echo data a GET read into
+   a dry-run preview: `redact()` only knows secret-looking KEY names. Found by a security
+   review on 2026-10-10, after v0.82.0 shipped the hole.
 
 ## Credentials
 

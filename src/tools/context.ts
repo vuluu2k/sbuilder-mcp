@@ -20,6 +20,8 @@ export interface ToolContext {
   siteName?: string;
   /** Injected in tests; undefined means global fetch. */
   fetchImpl?: typeof fetch;
+  /** Injected in tests; undefined means a real DNS lookup (every address of the host). */
+  lookupHost?: (host: string) => Promise<string[]>;
   /** Directives said once per process — see mcp/notices.ts. */
   notices: Notices;
   /**
