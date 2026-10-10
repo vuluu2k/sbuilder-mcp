@@ -6,6 +6,13 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.81.1] - 2026-10-10
+
+### Fixed
+- `sb_set` và `sb_add` gợi ý đúng icon cho tên gõ sai, ưu tiên tên chứa nguyên từ đã gõ, rồi đến lỗi gõ gần theo khoảng cách sửa, và tôn trọng đuôi `Fill` hoặc `Line` do người gọi viết.
+- `sb_duplicate` với `to_page_id` báo `parent_id` không có trên trang đích và hướng dẫn bỏ qua nó hoặc đọc id bằng `sb_outline`.
+- `sb_media_upload` với file font hướng dẫn cách tạo họ font thay vì gợi ý `sb_set` với `src`.
+
 ## [0.81.0] - 2026-10-10
 
 ### Added

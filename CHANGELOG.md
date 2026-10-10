@@ -6,6 +6,13 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.81.1] - 2026-10-10
+
+### Fixed
+- `sb_set` and `sb_add` suggest the right icon for a misspelled name, ranking names that contain the typed word first, then close typos by edit distance, and honoring a `Fill` or `Line` suffix the caller wrote.
+- `sb_duplicate` with `to_page_id` reports that `parent_id` is not on the target page and says to omit it or read ids with `sb_outline`.
+- `sb_media_upload` of a font file tells the caller how to create a font family instead of suggesting `sb_set` with `src`.
+
 ## [0.81.0] - 2026-10-10
 
 ### Added
