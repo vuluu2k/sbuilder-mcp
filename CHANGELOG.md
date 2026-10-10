@@ -6,6 +6,13 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.82.2] - 2026-10-10
+
+### Fixed
+- `sb_media_upload` with `url` resolves the host's DNS and refuses the fetch if any address is private, loopback, link-local, cloud-metadata or otherwise special (IPv4 and IPv6, including `::ffff:127.0.0.1`, 6to4 and Teredo forms).
+- `sb_media_upload` with `url` follows redirects one step at a time, re-checking every hop against the same address rules and stopping after four.
+- `sb_media_upload` with `path` restricts `.pdf` files to the allowed directories by the real file name rather than the name given.
+
 ## [0.82.1] - 2026-10-10
 
 ### Fixed

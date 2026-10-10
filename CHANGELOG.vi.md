@@ -6,6 +6,13 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.82.2] - 2026-10-10
+
+### Fixed
+- `sb_media_upload` với `url` phân giải DNS của host và từ chối tải nếu bất kỳ địa chỉ nào thuộc mạng riêng, loopback, link-local, metadata cloud hoặc dải đặc biệt khác (IPv4 và IPv6, gồm `::ffff:127.0.0.1`, 6to4 và Teredo).
+- `sb_media_upload` với `url` đi theo redirect từng bước, kiểm tra lại mỗi bước theo cùng quy tắc địa chỉ và dừng sau bốn lần.
+- `sb_media_upload` với `path` giới hạn file `.pdf` trong các thư mục được phép theo tên file thật chứ không theo tên được truyền vào.
+
 ## [0.82.1] - 2026-10-10
 
 ### Fixed
