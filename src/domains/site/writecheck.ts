@@ -15,6 +15,8 @@ import type { DocLike } from '../../core/tree.js';
 import type { NodeSpec } from './builder.js';
 import { fill } from './findings.js';
 import { collectsValue, formFieldFindings, formFields, nameFromLabel } from './formdoc.js';
+import { ICON_KEYS } from '../../catalog/icons.generated.js';
+import { iconNote } from './icons.js';
 import {
   animationNote,
   deadKeyNote,
@@ -45,6 +47,7 @@ export interface WriteNote {
   code:
     | 'unknown_key'
     | 'unknown_value'
+    | 'unknown_icon'
     | 'animation'
     | 'dead_key'
     | 'precondition'
@@ -84,15 +87,13 @@ const UNIVERSAL: Record<'config' | 'specials', string[]> = {
  * stores the picked site text style as `config.textGlobalStyle`, the key
  * `schema/src/theme.ts` names for every text-bearing element). Keyed by the
  * GENERATED control name, so a key is known only where the element offers the row.
+ * Every icon picker's key is generated (`ICON_KEYS`) and added in `keysOf`.
  *
  * ponytail: hand-read, and only the rows the platform's own seeds exercise
  * (test/seed-sweep.test.ts). Upgrade: have codegen read every widget's
- * `specialKey`/`configKey` into the catalog — blocked on a catalog regenerate.
+ * `specialKey`/`configKey` into the catalog, as it now does for IconPicker.
  */
 const WIDGET_WRITES: Record<string, ['config' | 'specials', string]> = {
-  button_icon: ['specials', 'icon'],
-  breadcrumb_icon: ['specials', 'icon'],
-  divider_icon: ['specials', 'iconName'],
   text_global_style: ['config', 'textGlobalStyle'],
 };
 
@@ -118,6 +119,7 @@ function keysOf(type: string): Record<'config' | 'specials', Set<string>> | null
   }
   for (const c of el.controls) for (const w of TRAIT_WRITES[c]?.writes ?? []) add(w.target, [w.writeKey]);
   for (const c of el.controls) if (WIDGET_WRITES[c]) add(WIDGET_WRITES[c][0], [WIDGET_WRITES[c][1]]);
+  for (const k of ICON_KEYS[type] ?? []) add(k.ns, [k.key]);
   // A control the trait registry does not describe is often an inspector row
   // named after the key it writes (`{ key: 'quickviewId', visible: false }` on
   // list-dataset), so its NAME counts as a key in either namespace.
@@ -196,6 +198,17 @@ export function writeCheck(
           ? `${type} reads ${other}.${k} — write it in namespace "${other}".`
           : `Check the spelling against sb_traits_for "${type}"; a CSS property belongs in namespace ` +
               '"style". Ignore this if the key is newer than this catalog.',
+      );
+      continue;
+    }
+    const icon = iconNote(type, namespace, k, v);
+    if (icon) {
+      push(
+        `icon:${type}.${namespace}.${k}=${JSON.stringify(v)}`,
+        'unknown_icon',
+        k,
+        icon.problem,
+        icon.near.length ? `Write one of: ${icon.near.join(', ')}.` : 'Find a name with sb_catalog_search query "icon:<word>".',
       );
       continue;
     }

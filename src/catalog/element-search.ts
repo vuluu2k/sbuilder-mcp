@@ -10,6 +10,7 @@ import {
   vocabulariesForWrites,
 } from '../domains/site/vocabulary.js';
 import { neverTranslatedOn, translatableSpecials } from '../domains/site/translate.js';
+import { iconKeysOf } from '../domains/site/icons.js';
 
 /** Eight to choose from; the hints for the chosen one come with sb_traits_for. */
 export const DEFAULT_CATALOG_LIMIT = 8;
@@ -361,6 +362,8 @@ export function traitsFor(type: string, control?: string): Record<string, unknow
     ...(el.bindingEvents ? { binding_events: el.bindingEvents } : {}),
     // The specials a record binding may target on this element.
     ...(bindable.length ? { bindable } : {}),
+    // Keys holding a RemixIcon name — sb_catalog_search query "icon:<word>" finds one.
+    ...(iconKeysOf(el.type).length ? { icon_keys: iconKeysOf(el.type) } : {}),
     // The keys this element actually seeds. For `config` and `specials` —
     // which, unlike `style`, are NOT open — this is the machine-readable
     // answer to "what does this element store", and often the only one.

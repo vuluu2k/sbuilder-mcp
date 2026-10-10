@@ -36,6 +36,13 @@ async function setup(globals: Array<{ id: string; kind: string }> = [], stampS3 
       posted.push({ path, body });
       return { globalSection: { id: 'gs_new' } };
     }
+    if (path.endsWith('/section-templates') && method === 'GET') {
+      return { sectionTemplates: [{ id: 'st_1', name: 'Hero', rev: 3, source: 'site' }, { id: 'st_p', name: 'Gallery', rev: 1, source: 'platform' }] };
+    }
+    if (path.endsWith('/section-templates/st_1/document') && method === 'PUT') {
+      posted.push({ path, body });
+      return { sectionTemplate: { id: 'st_1' } };
+    }
     if (path.endsWith('/section-templates') && method === 'POST') {
       posted.push({ path, body });
       return { sectionTemplate: { id: 'st_new' } };
@@ -130,6 +137,21 @@ describe('sb_store action:"template_save"', () => {
     expect(posted[0].path).toBe('/api/sites/s1/section-templates');
     expect(Object.keys(posted[0].body.document.nodes).sort()).toEqual(['s2', 't1']);
     expect(doc().nodes.ROOT.data.nodes).toEqual(['s1', 's2', 's3']);
+    await close();
+  });
+
+  it('with template_id rewrites that template, fenced on its rev', async () => {
+    const { call, close, posted } = await setup();
+    const dry = await call('sb_store', { action: 'template_save', node_id: 's2', template_id: 'st_1' });
+    expect(dry.json.dry_run).toBe(true);
+    expect(posted).toEqual([]);
+    const out = await call('sb_store', { action: 'template_save', node_id: 's2', template_id: 'st_1', dry_run: false });
+    expect(out.isError, out.text).toBe(false);
+    expect(posted[0].path).toBe('/api/sites/s1/section-templates/st_1/document');
+    expect(posted[0].body.rev).toBe(3);
+    expect(posted[0].body.document.root_node_id).toBe('s2');
+    expect((await call('sb_store', { action: 'template_save', node_id: 's2', template_id: 'st_p' })).text).toMatch(/platform template/);
+    expect((await call('sb_store', { action: 'template_save', node_id: 's2', template_id: 'nope' })).text).toMatch(/no section template/);
     await close();
   });
 

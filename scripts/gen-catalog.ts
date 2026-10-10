@@ -946,6 +946,19 @@ export const API_DEFINITIONS: Record<string, unknown> = ${JSON.stringify(
     process.exit(1);
   }
   const elements: Record<string, CatalogElement> = {};
+  // Controls a meta declares `visible: false` — present in `controls` (they are
+  // the element's own keys) but drawn as no row, so no picker behind one ever
+  // writes. `ICON_KEYS` needs the difference: `text-dataset` lists `icon` hidden.
+  const hiddenControls = new Map<string, Set<string>>();
+  const hiddenOf = (v: unknown, out = new Set<string>()): Set<string> => {
+    if (Array.isArray(v)) for (const x of v) hiddenOf(x, out);
+    else if (v && typeof v === 'object') {
+      const o = v as { key?: unknown; visible?: unknown; attributes?: unknown };
+      if (typeof o.key === 'string' && o.visible === false) out.add(o.key);
+      for (const x of Object.values(o)) if (x && typeof x === 'object') hiddenOf(x, out);
+    }
+    return out;
+  };
   for (const type of types) {
     const em = registry.ELEMENTS[type] as {
       label?: string;
@@ -975,6 +988,7 @@ export const API_DEFINITIONS: Record<string, unknown> = ${JSON.stringify(
       console.error(`element "${type}" has no AI description`);
       process.exit(1);
     }
+    hiddenControls.set(type, hiddenOf(em.traits));
     elements[type] = {
       type,
       label: em.label ?? type,
@@ -4668,6 +4682,136 @@ export const STARTER_THEME: StarterTheme = ${JSON.stringify(
       process.exit(1);
     }
   }
+  // WHICH KEYS HOLD AN ICON NAME, read off the editor's own picker. A name
+  // outside `ICON_NAMES` is stored, saved and published, then drawn as the
+  // DEFAULT star (`RenderIconSVG` falls back to `DefaultIcon`) or as nothing at
+  // all (`button`'s `generated.HasIcon` guard) — never as what was asked. So
+  // `sb_set`/`sb_add` must know which writes to check, and only the control that
+  // WRITES the key can say: `button` keeps its glyph in `specials.icon`, `divider`
+  // in `specials.iconName`, `list-dataset` in `config.listNavIcon`. Every write
+  // is an `IconPicker` (`specialKey` default 'name', `namespace` default
+  // 'specials'), reached either straight from a `widgets.ts` entry or through an
+  // inspector row's template (`FieldIconRow`, `PopupCloseRow`, `ImageNavRows`
+  // behind `ImageNavPopover`). A picker whose key, namespace or gate is not a
+  // literal EXITS 1 rather than being guessed, and so does a picker no widget
+  // reaches — a key this table silently lacks is a check silently missing.
+  type IconUse = { ns: 'specials' | 'config'; key: string; allowNone: boolean; when?: [string, string] };
+  const iconKeys = ((): Record<string, Array<{ ns: 'specials' | 'config'; key: string; allowNone?: true }>> => {
+    const die = (msg: string): never => {
+      console.error(`ICON_KEYS: ${msg} — teach the reader this shape; do not guess the key`);
+      process.exit(1);
+    };
+    const inspDir = resolve(repo, 'editor/src/components/inspector');
+    const kebab = (p: string) => p.replace(/[A-Z]/g, (c) => `-${c.toLowerCase()}`);
+    const attr = (attrs: string, prop: string): string | undefined => {
+      if (new RegExp(`(?:\\s:|\\sv-bind:)(?:${prop}|${kebab(prop)})=`).test(attrs)) die(`a bound :${kebab(prop)} in <IconPicker${attrs}>`);
+      return new RegExp(`\\s(?:${prop}|${kebab(prop)})="([^"]*)"`).exec(attrs)?.[1];
+    };
+    const reached = new Set<string>();
+    const memo = new Map<string, IconUse[]>();
+    const usesOf = (file: string): IconUse[] => {
+      const hit = memo.get(file);
+      if (hit) return hit;
+      memo.set(file, []);
+      const src = readFileSync(file, 'utf8');
+      const out: IconUse[] = [];
+      for (const m of src.matchAll(/<IconPicker\b([^>]*)>/g)) {
+        reached.add(file);
+        const a = m[1];
+        const ns = attr(a, 'namespace') ?? 'specials';
+        if (ns !== 'specials' && ns !== 'config') die(`namespace="${ns}" in ${file}`);
+        const vif = /\sv-if="([^"]*)"/.exec(a)?.[1];
+        const when = vif === undefined ? undefined : /^(\w+) === '([^']*)'$/.exec(vif);
+        if (vif !== undefined && !when) die(`v-if="${vif}" on an IconPicker in ${file}`);
+        out.push({
+          ns: ns as IconUse['ns'],
+          key: attr(a, 'specialKey') ?? 'name',
+          allowNone: /\sallow-none(?=[\s/>=]|$)/.test(a),
+          ...(when ? { when: [when[1], when[2]] as [string, string] } : {}),
+        });
+      }
+      // A child row that holds pickers, one level of prop pass-through at a time.
+      for (const im of src.matchAll(/^import (\w+) from '\.\/(\w+)\.vue';/gm)) {
+        const child = usesOf(join(inspDir, `${im[2]}.vue`));
+        if (!child.length) continue;
+        const tag = new RegExp(`<${im[1]}\\b([^>]*)>`).exec(src);
+        if (!tag) continue;
+        for (const u of child) {
+          if (!u.when) { out.push(u); continue; }
+          const [prop, val] = u.when;
+          const k = kebab(prop);
+          if (new RegExp(`\\s:(?:${prop}|${k})="props\\.${prop}"`).test(tag[1])) out.push(u);
+          else {
+            const lit = new RegExp(`\\s(?:${prop}|${k})="([^"]*)"`).exec(tag[1])?.[1];
+            if (lit === undefined) die(`<${im[1]}> in ${file} does not pass ${prop} through`);
+            if (lit === val) out.push({ ns: u.ns, key: u.key, allowNone: u.allowNone });
+          }
+        }
+      }
+      memo.set(file, out);
+      return out;
+    };
+    const widSrc = readFileSync(resolve(repo, 'editor/src/trait/widgets.ts'), 'utf8');
+    const compFile = new Map<string, string>();
+    for (const m of widSrc.matchAll(/^import (\w+) from '\.\.\/components\/inspector\/(\w+)\.vue';/gm)) {
+      compFile.set(m[1], join(inspDir, `${m[2]}.vue`));
+    }
+    const byControl = new Map<string, Array<Omit<IconUse, 'when'>>>();
+    for (const [control, body] of topLevelEntries(widSrc)) {
+      const comp = /component:\s*markRaw\((\w+)\)/.exec(body)?.[1];
+      if (!comp) continue;
+      const lit = (prop: string): string | undefined => {
+        const at = new RegExp(`\\b${prop}:\\s*`).exec(body);
+        if (!at) return undefined;
+        const v = /^(?:'([^']*)'|(true|false))/.exec(body.slice(at.index + at[0].length));
+        if (!v) die(`${control}: ${prop} is not a literal`);
+        return v![1] ?? v![2];
+      };
+      if (comp === 'IconPicker') {
+        const ns = lit('namespace') ?? 'specials';
+        if (ns !== 'specials' && ns !== 'config') die(`${control}: namespace '${ns}'`);
+        byControl.set(control, [{ ns: ns as IconUse['ns'], key: lit('specialKey') ?? 'name', allowNone: lit('allowNone') === 'true' }]);
+        continue;
+      }
+      const file = compFile.get(comp);
+      if (!file) continue;
+      const uses = usesOf(file).filter((u) => {
+        if (!u.when) return true;
+        const [prop, val] = u.when;
+        // Absent from the entry → the component's own `withDefaults` value.
+        const given = lit(prop) ??
+          new RegExp(`withDefaults\\([\\s\\S]*?\\}>\\(\\),\\s*\\{[^}]*\\b${prop}:\\s*'([^']*)'`).exec(readFileSync(file, 'utf8'))?.[1];
+        if (given === undefined) die(`${control}: cannot resolve ${prop} for ${comp}`);
+        return given === val;
+      });
+      if (uses.length) byControl.set(control, uses.map(({ ns, key, allowNone }) => ({ ns, key, allowNone })));
+    }
+    for (const f of readdirSync(inspDir)) {
+      const p = join(inspDir, f);
+      if (f.endsWith('.vue') && /<IconPicker\b/.test(readFileSync(p, 'utf8')) && !reached.has(p)) {
+        die(`${f} renders an IconPicker no widgets.ts entry reaches`);
+      }
+    }
+    const out: Record<string, Array<{ ns: 'specials' | 'config'; key: string; allowNone?: true }>> = {};
+    for (const el of Object.values(elements).sort((x, y) => x.type.localeCompare(y.type))) {
+      const seen = new Map<string, { ns: 'specials' | 'config'; key: string; allowNone?: true }>();
+      for (const c of el.controls) {
+        if (hiddenControls.get(el.type)?.has(c)) continue;
+        for (const u of byControl.get(c) ?? []) {
+          const id = `${u.ns}.${u.key}`;
+          const prev = seen.get(id);
+          // Either picker may store '' → the key legally holds it.
+          if (!prev || (u.allowNone && !prev.allowNone)) seen.set(id, { ns: u.ns, key: u.key, ...(u.allowNone ? { allowNone: true as const } : {}) });
+        }
+      }
+      if (seen.size) out[el.type] = [...seen.values()].sort((x, y) => `${x.ns}.${x.key}`.localeCompare(`${y.ns}.${y.key}`));
+    }
+    // The two poles: if either moves, the reader no longer reads the picker.
+    if (!out.icon?.some((k) => k.ns === 'specials' && k.key === 'name')) die('icon no longer holds specials.name');
+    if (!out.button?.some((k) => k.ns === 'specials' && k.key === 'icon')) die('button no longer holds specials.icon');
+    return out;
+  })();
+
   const iconsOut = `// GENERATED by scripts/gen-catalog.ts — do not edit by hand.
 // Source: <WB_REPO>/schema/src/iconManifest.json (the RemixIcon catalog the
 // editor's picker and the Go renderer share).
@@ -4683,9 +4827,21 @@ export const ICON_SOURCE = ${JSON.stringify({ names: iconNames.length, default: 
  * skipped, because the page then carries an empty box nobody put there.
  */
 export const ICON_NAMES: ReadonlySet<string> = new Set(${JSON.stringify(iconNames)});
+
+/**
+ * Which keys hold an icon name, per element type — read off every \`IconPicker\`
+ * the editor's inspector renders (\`editor/src/trait/widgets.ts\` and the rows it
+ * composes). A value outside \`ICON_NAMES\` written to one of these renders the
+ * default star or nothing (\`RenderIconSVG\` / \`HasIcon\`), never the icon asked
+ * for; \`allowNone\` marks a key whose picker offers "None" (\`''\`).
+ */
+export const ICON_KEYS: Record<string, ReadonlyArray<{ ns: 'specials' | 'config'; key: string; allowNone?: true }>> = ${JSON.stringify(iconKeys, null, 2)};
 `;
   emit(resolve(process.cwd(), 'src/catalog/icons.generated.ts'), iconsOut);
-  console.error(`${VERB} icons.generated.ts: ${iconNames.length} icon names`);
+  console.error(
+    `${VERB} icons.generated.ts: ${iconNames.length} icon names, ` +
+      `${Object.values(iconKeys).flat().length} icon keys on ${Object.keys(iconKeys).length} elements`,
+  );
 
   const dest = resolve(process.cwd(), 'src/catalog/api.generated.ts');
   emit(dest, out);

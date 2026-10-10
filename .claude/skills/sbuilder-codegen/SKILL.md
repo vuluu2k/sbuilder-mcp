@@ -1042,3 +1042,16 @@ above today's measurement gets raised again without anybody looking.
   file. An assertion that fails on its own bugs teaches the next reader to bypass it. What
   actually drifts is the vocabulary, and matching every `Key:` literal in the Go against the TS
   tables both ways catches that with nothing to get wrong.
+
+- **`ICON_KEYS` is read off the editor's `IconPicker`, never off key names.** `button` keeps its
+  glyph in `specials.icon`, `divider` and the form fields in `specials.iconName`, `list-dataset`
+  in `config.listNavIcon` — only the picker that WRITES the key says so. Reached either straight
+  from a `widgets.ts` entry (props `specialKey`/`namespace`/`allowNone`, defaults
+  `name`/`specials`/false) or through an inspector row's template (`FieldIconRow`,
+  `PopupCloseRow`, `ImageNavRows` behind `ImageNavPopover`, whose picker is `v-if="gate ===
+  'icon'"` — so only `list-dataset` gets `listNavIcon`, the two image strips draw a fixed
+  chevron). A `visible: false` control is skipped (`text-dataset` lists `icon` hidden). A
+  non-literal key, an unknown `v-if`, or a picker no widget reaches EXITS 1. An unknown name is
+  NOT an empty box: `RenderIconSVG` falls back to `StarFill`, and `button` guards with
+  `HasIcon` and draws nothing — wrong either way, silent either way. `''` is never flagged:
+  the "None" cell writes it and `form-text` seeds it.

@@ -972,6 +972,12 @@ export async function promoteGlobal(
 /**
  * Save a section on the OPEN page as a reusable section template — the editor's
  * "Save as template". The page is untouched; `sb_template_use` places a copy.
+ *
+ * With `templateId` it REWRITES that template's content instead — the editor's
+ * template edit mode. The agent's way in is the full toolset: place the template
+ * on a page with sb_template_use, edit it there, save it back over the template.
+ * The PUT is fenced on the template's `rev`, read from the list (there is no
+ * single-template GET), so an edit somebody else saved in between is refused.
  */
 export async function saveTemplate(
   ctx: ToolContext,
@@ -979,10 +985,36 @@ export async function saveTemplate(
   siteId: string,
   nodeId: string | undefined,
   name: string | undefined,
-  opts: { dryRun: boolean },
+  opts: { dryRun: boolean; templateId?: string },
 ): Promise<{ dry_run?: true; template?: { id: string; name: string }; nodes: number; next: string }> {
   const doc = session.current();
   const id = liftable(doc.doc, nodeId, 'template_save');
+  const base = `/api/sites/${encodeURIComponent(siteId)}/section-templates`;
+  if (opts.templateId) {
+    const list = (await request({ base: ctx.base, method: 'GET', path: base, token: siteToken(ctx), fetchImpl: ctx.fetchImpl })) as {
+      sectionTemplates?: Array<{ id?: string; name?: string; rev?: number; source?: string }>;
+    };
+    const t = (list.sectionTemplates ?? []).find((x) => x.id === opts.templateId);
+    if (!t) throw new Error(`sbuilder: this site has no section template "${opts.templateId}" — sb_templates lists them.`);
+    if (t.source && t.source !== 'site') {
+      throw new Error(`sbuilder: template "${opts.templateId}" is a ${t.source} template, not this site's own — save a new one instead.`);
+    }
+    const document = sectionDocument(doc.doc, id);
+    const nodes = Object.keys(document.nodes).length;
+    const path = `${base}/${encodeURIComponent(opts.templateId)}/document`;
+    if (opts.dryRun) {
+      return { dry_run: true, nodes, next: `Nothing was sent. Re-call with dry_run:false to replace "${t.name ?? opts.templateId}"'s content.` };
+    }
+    await request({ base: ctx.base, method: 'PUT', path, token: siteToken(ctx), body: { document, rev: t.rev ?? 0 }, fetchImpl: ctx.fetchImpl });
+    return {
+      template: { id: opts.templateId, name: t.name ?? '' },
+      nodes,
+      next:
+        'Pages that placed this template earlier keep their own copy; only new placements get this content. ' +
+        'A template shared with the organization goes back to review after a content change.' +
+        (name?.trim() ? ' `name` was not applied — a rewrite changes content only.' : ''),
+    };
+  }
   if (!name?.trim()) throw new Error('sbuilder: action:"template_save" needs name — the template\'s name in the library.');
   const document = sectionDocument(doc.doc, id);
   const nodes = Object.keys(document.nodes).length;
@@ -992,7 +1024,7 @@ export async function saveTemplate(
   const made = (await request({
     base: ctx.base,
     method: 'POST',
-    path: `/api/sites/${encodeURIComponent(siteId)}/section-templates`,
+    path: base,
     token: siteToken(ctx),
     body: { name: name.trim(), document },
     fetchImpl: ctx.fetchImpl,

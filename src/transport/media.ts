@@ -56,6 +56,12 @@ const TYPE_BY_EXT: Record<string, string> = {
   '.mp4': 'video/mp4',
   '.webm': 'video/webm',
   '.mov': 'video/quicktime',
+  // A site's own font files (`server/internal/media/ingest.go fontExtensions`) —
+  // the platform gates fonts on the extension and stores these canonical types.
+  '.woff2': 'font/woff2',
+  '.woff': 'font/woff',
+  '.ttf': 'font/ttf',
+  '.otf': 'font/otf',
 };
 
 function typeForName(name: string): string {
@@ -186,7 +192,7 @@ export async function uploadMedia(
   // `application/octet-stream` for a PNG is ordinary, and it is exactly the
   // value the platform refuses — so "the server declared a type" is not the
   // question; "the server declared a type that identifies the file" is.
-  const usable = declared.startsWith('image/') || declared.startsWith('video/');
+  const usable = declared.startsWith('image/') || declared.startsWith('video/') || declared.startsWith('font/');
   const type = (usable ? declared : '') || typeForName(filename) || declared;
 
   const form = new FormData();

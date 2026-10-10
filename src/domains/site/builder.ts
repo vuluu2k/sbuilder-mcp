@@ -676,6 +676,26 @@ function rebindPatch(doc: PageDoc, id: string, keys: Record<string, unknown>): P
  * (not part of this document at all).
  */
 export function duplicateNode(doc: PageDoc, id: string, guard?: GuardOpts): { patches: Patch[]; ids: string[] } {
+  const parentId = doc.has(id) ? doc.node(id).data.parent : null;
+  const at = parentId && doc.has(parentId) ? doc.node(parentId).data.nodes.indexOf(id) : -1;
+  return copyNodeInto(doc, id, doc, parentId ?? '', at < 0 ? APPEND : at + 1, guard);
+}
+
+/**
+ * Copy `id` and everything under it — satellites included — out of `src` into
+ * `target` under `parentId` at `index`, under fresh ids. `src === target` is a
+ * duplicate; a different document is the editor's paste onto another page. The
+ * patches address `target` only, and read `src` only.
+ */
+export function copyNodeInto(
+  src: PageDoc,
+  id: string,
+  target: PageDoc,
+  parentId: string,
+  index: number,
+  guard?: GuardOpts,
+): { patches: Patch[]; ids: string[] } {
+  const doc = src;
   const n = doc.node(id);
   if (id === doc.doc.root_node_id) throw new Error('sbuilder: cannot duplicate ROOT');
   refuseOverlay(doc, id, 'duplicating');
@@ -692,15 +712,21 @@ export function duplicateNode(doc: PageDoc, id: string, guard?: GuardOpts): { pa
         'again through its app.',
     );
   }
-  const parentId = n.data.parent;
-  if (!parentId || !doc.has(parentId)) {
+  if (!parentId || !target.has(parentId)) {
     throw new Error(`sbuilder: ${id} has no parent to be duplicated beside`);
+  }
+  if (src !== target) {
+    // Onto ANOTHER document the parent is the caller's choice, so it gets the
+    // checks sb_add gives one.
+    if (parentId !== target.doc.root_node_id) requireContainer(target.node(parentId).data.type, parentId);
+    requireAllowed(target.node(parentId).data.type, n.data.type, guard);
+    soft(guard, () => refuseAppBlockParent(target, parentId, 'pasting into'));
   }
   // A copy lands BESIDE the original, so duplicating a repeater's template makes
   // the second child the renderer will never draw. sb_add and sb_move already
   // refuse that; duplicate is the likeliest way to reach for it, since
   // "duplicate the card" is the move a designer makes constantly.
-  soft(guard, () => refuseSecondTemplate(doc.doc, parentId, 'Duplicating into'));
+  soft(guard, () => refuseSecondTemplate(target.doc, parentId, 'Duplicating into'));
 
   const patches: Patch[] = [];
   const ids: string[] = [];
@@ -757,13 +783,7 @@ export function duplicateNode(doc: PageDoc, id: string, guard?: GuardOpts): { pa
   };
 
   const rootId = copy(id, parentId);
-  const at = doc.node(parentId).data.nodes.indexOf(id);
-  patches.push({
-    op: 'insert',
-    path: ['nodes', parentId, 'data', 'nodes'],
-    index: at < 0 ? APPEND : at + 1,
-    value: rootId,
-  });
+  patches.push({ op: 'insert', path: ['nodes', parentId, 'data', 'nodes'], index, value: rootId });
   return { patches, ids };
 }
 

@@ -296,6 +296,11 @@ của element (`đ` quy về `d`), và truy vấn nêu tên một mẫu form ("b
 nhận phòng") trả thêm `{ template, form_type, title, use }` bên cạnh các element, trong đó `use`
 là lệnh `sb_store` để tạo mẫu đó.
 
+Truy vấn bắt đầu bằng `icon:` thì tìm trong 3.227 tên RemixIcon và trả `{ icons: [...] }`
+(`limit` mặc định 30): `icon:cart` → `ShoppingCartFill`, … So khớp theo gốc tên, không phân
+biệt hoa thường và dấu nối: trùng khớp trước, rồi tiền tố, rồi chuỗi con. `sb_traits_for` liệt
+kê các key chứa tên icon trong `icon_keys` (`button` → `specials.icon`).
+
 ## `sb_traits_for`
 
 `type`, `control?`. Không có `control`: AI hints của element, inspector của nó dưới dạng tên
@@ -443,7 +448,9 @@ không mang gợi ý `force`, đó là cách phân biệt mà không cần thử
 Kết quả `sb_add` và `sb_set` có `checks: [{ code, id?, key, problem, fix }]` — `sb_add` kiểm
 tra mọi node trong spec lồng nhau. Mã: `unknown_key` (key config/specials mà element không được
 biết là có đọc — vẫn được ghi, vì 412/577 control của inspector không khai báo đích ghi và một
-lệnh từ chối sẽ chặn cả key thật), `unknown_value`, `animation`, `dead_key`, `precondition`,
+lệnh từ chối sẽ chặn cả key thật), `unknown_value`, `unknown_icon` (tên nằm ngoài manifest icon
+ghi vào key mà một icon picker ghi — publish ra ngôi sao mặc định hoặc không có icon; phần fix
+liệt kê tối đa năm tên gần nhất), `animation`, `dead_key`, `precondition`,
 `unsupported_setting`. Mỗi cảnh báo nói một lần mỗi process; dry run hiện nó mà không tiêu, nên
 lần ghi thật vẫn hiện lại.
 
@@ -762,6 +769,19 @@ nó thật sự dùng.
 thiết kế làm liên tục. Style đi theo, và đó chính là mục đích. Từ chối ROOT, site overlay, và cây con có chứa
 app block — bản sao sẽ mang dấu của block và lần lưu sẽ rút nó về tham chiếu kèm một cảnh
 báo client này không hiển thị.
+
+**Sang trang khác — copy/paste của editor.** `to_page_id` đặt bản sao lên trang đó (`parent_id`,
+`index` không bắt buộc; mặc định là ROOT, trước footer dùng chung), còn `to_site_id` đặt sang
+site khác. Parent được kiểm tra như `sb_add` kiểm tra. Dry run ĐỌC trang đích và chạy kiểm
+tra lưu mà không mở trang. Lệnh thật thì mở trang đích, nên **trang đang mở của session đổi
+thành trang đích**. Copy khác site sẽ đi qua `POST /api/sites/{target}/clipboard/reconcile`
+trước, giống thao tác paste khác site của editor: ảnh được copy vào thư viện của site đích, còn
+các tham chiếu sản phẩm, menu, file code và trang không mang theo được thì bị xoá trắng. Cả hai
+được trả về ở `copiedAssets` và `droppedRefs`. Dry run không bao giờ gọi reconcile, vì reconcile
+copy ảnh ngay khi trả lời. Lệnh thật chạy mọi kiểm tra trên một bản đọc của trang đích TRƯỚC khi
+gọi reconcile và trước khi đổi trang, nên một lần paste bị từ chối không để lại ảnh mồ côi và
+session vẫn ở trang cũ. Paste khác site cần đăng nhập bằng session: API key chỉ mở được một
+site, nên bị từ chối ngay từ đầu.
 
 ## `sb_templates` / `sb_template_use`
 
@@ -1194,6 +1214,7 @@ tài liệu:
 | `action_missing_target` | `go_to_url` / `open_page` thiếu `payload.url` (renderer không tự phân giải id trang), hoặc `popup` thiếu `payload.id`. Bấm vào không có tác dụng |
 | `no_data_context` | Element gắn dữ liệu (`product.*`, `category.*`, `article.*`, `course.*`) nằm ngoài mọi repeater và mọi pin, trên loại trang không cung cấp bản ghi đó. Nó hiện placeholder mãi mãi |
 | `unread_value` | Giá trị config/specials đã lưu nằm ngoài từ vựng của renderer, ở base hoặc bất kỳ breakpoint nào. Publish ra giá trị mặc định mà không báo lỗi |
+| `unknown_icon` | Key icon đã lưu (`icon` `specials.name`, `button` `specials.icon`, `list-dataset` `config.listNavIcon`, …) chứa tên mà manifest icon không có. Publish ra ngôi sao mặc định hoặc không có icon; phần problem nêu các tên thật gần nhất |
 | `custom_code_native` | **`severity: "maintenance"`** — khối `custom-code` chủ yếu là markup mà element native đã có (form, heading, ảnh, nút, danh sách link, iframe YouTube/Vimeo/Maps). Chỉ là gợi ý: vẫn chạy, nhưng không sửa được trong inspector, bỏ qua theme và `sb_review` không nhìn vào được. Script bên thứ ba và embed lạ không bao giờ bị báo |
 
 Finding chỉ mang `severity` khi không phải lỗi: `maintenance` (vẫn chạy nhưng khó sửa hoặc lệch)
@@ -1348,6 +1369,15 @@ hoặc khi `node_id` đóng khung một element.
 
 Nó không chấm thẩm mỹ. Một hero có đọc xuôi hay không thì không đo được, và giả vờ đo được
 sẽ tiêu tốn sự chú ý của agent vào thứ nó không thể biết.
+
+**Font riêng của site.** `sb_media_upload` nhận file `.woff2`, `.woff`, `.ttf` hoặc `.otf` (nền tảng
+nhận font theo đuôi file). Nối font vào site theo cách phần cài đặt font của editor làm:
+1. `sb_api_call` `POST /api/sites/{siteId}/fonts` `{name, source:"upload"}` để tạo họ font.
+2. `PUT …/fonts/{groupId}/files` `{weight, url, format, sizeBytes}` để điền một ô. `weight` là khoá
+   của ô: `thin`, `light`, `regular`, `medium`, `semibold`, `bold`, `extrabold`, `black`, mỗi khoá
+   đều có thêm dạng `<key>_italic`. `format` là một trong `woff2`, `woff`, `truetype`, `opentype`.
+3. Dùng họ font theo TÊN: `fontFamily` trong cài đặt site hoặc một text style của theme. Renderer
+   tìm nhóm font đã upload có tên đó trước, rồi mới dùng Google Fonts.
 
 ## `sb_import`
 
@@ -2217,7 +2247,11 @@ lời chỉ sang `global_attach`. Đặt master mới lên các trang khác bằ
 
 `template_save` lưu section thành section template trong thư viện riêng của site (bắt buộc
 có `name`, không đưa lên gallery của nền tảng). Trang giữ nguyên, và `sb_template_use` đặt
-một bản sao.
+một bản sao. Có `template_id` thì nó GHI ĐÈ nội dung của template đó. Đây là chế độ sửa
+template của editor, dùng được với toàn bộ công cụ: đặt template bằng `sb_template_use`, sửa
+trên trang, rồi lưu ngược lại. Lệnh ghi được rào theo `rev` của template, nên nếu ai đó đã lưu
+một chỉnh sửa ở giữa thì lệnh bị từ chối. Chỉ ghi đè được template của chính site. Những trang
+đã đặt template trước đó giữ nguyên bản sao của chúng.
 
 **Cả hai đều từ chối một cây con mang bất kỳ con dấu `globalId`, `globalRef`, `overlayId`
 hay app-block nào.** Con dấu bị chép vào một document được lưu chính là cách các trang bị

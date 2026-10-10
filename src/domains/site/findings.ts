@@ -133,6 +133,9 @@ export const FIX: Record<string, string> = {
   unread_value:
     'Write a value the renderer reads: sb_traits_for "<type>" lists them; sb_set id "<id>" ' +
     'with one, at the same breakpoint it is stored at.',
+  unknown_icon:
+    'Write a real icon name: sb_set id "<id>", namespace <ns>, keys { "<key>": "<name>" } — the ' +
+    'problem lists the nearest ones; sb_catalog_search query "icon:<word>" lists more.',
   // ADVICE, never a blocker: the snippet works. The cost is that nobody can edit
   // it in the inspector, it ignores the theme, and it is invisible to sb_review.
   custom_code_native:

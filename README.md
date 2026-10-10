@@ -93,7 +93,7 @@ in this client: one would put the very key the platform exists to hold back into
 | `sb_set` | Write style/config/specials. Per breakpoint by default |
 | `sb_move` | Move a node to another parent |
 | `sb_remove` | Remove a node and its subtree |
-| `sb_duplicate` | Copy a node and its subtree under fresh ids, right after the original |
+| `sb_duplicate` | Copy a node and its subtree under fresh ids, right after the original — or onto another page or site, as the editor's copy/paste does (assets copied, references that cannot travel listed) |
 | `sb_templates` | The store's saved section templates, plus the BUILT-IN layouts — hero, feature trio, stats, FAQ, CTA band, product shelf, category strip, brand wall, trust band — composed against the page's own tokens |
 | `sb_template_use` | Instantiate a template into a page |
 | `sb_page_list` | Every page on the site |

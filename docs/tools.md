@@ -296,6 +296,11 @@ Vietnamese default copy (`đ` folds to `d`), and a query naming a form template 
 "đặt lịch", "ngày nhận phòng") returns `{ template, form_type, title, use }` beside the
 elements, where `use` is the `sb_store` call that seeds it.
 
+A query starting `icon:` searches the 3,227 RemixIcon names instead and answers
+`{ icons: [...] }` (`limit` defaults to 30): `icon:cart` → `ShoppingCartFill`, … Matching is on
+the name's stem, case- and separator-blind, exact first, then prefix, then substring.
+`sb_traits_for` lists the keys that hold one as `icon_keys` (`button` → `specials.icon`).
+
 ## `sb_traits_for`
 
 `type`, `control?`. Without `control`: the element's AI hints, its inspector as tab → group
@@ -447,7 +452,9 @@ A hard refusal carries no `force` hint, which is how you tell them apart without
 `sb_add` and `sb_set` results carry `checks: [{ code, id?, key, problem, fix }]` — `sb_add`
 checks every node of the nested spec. Codes: `unknown_key` (a config/specials key the element
 is not known to read — still written, because 412 of 577 inspector controls declare no write
-target and a refusal would block real keys), `unknown_value`, `animation`, `dead_key`,
+target and a refusal would block real keys), `unknown_value`, `unknown_icon` (a name outside
+the icon manifest written to a key an icon picker writes — it publishes the default star or no
+icon; the fix lists up to five nearest names), `animation`, `dead_key`,
 `precondition`, `unsupported_setting`. Each note is said once per process; a dry run shows it
 without spending it, so the real write shows it again.
 
@@ -783,6 +790,19 @@ original — the move a designer makes constantly. Styling comes with it, which 
 Refuses ROOT, site overlays, and a subtree that contains an app block — the copy would carry
 the block's stamps and the save would reduce it back to a reference with a warning this
 client does not surface.
+
+**Onto another page — the editor's copy/paste.** `to_page_id` puts the copy on that page
+instead (`parent_id`, `index` optional; the default is ROOT, before a global footer), and
+`to_site_id` on another site. The parent gets the same checks `sb_add` gives one. A dry run
+READS the target and runs the save check without opening it. A real run opens the target, so
+**the session's open page becomes the target**. A cross-site copy first goes through
+`POST /api/sites/{target}/clipboard/reconcile`, as the editor's cross-site paste does: images
+are copied into the target's library, and product, menu, code-file and page references that
+cannot travel are blanked. Both come back as `copiedAssets` and `droppedRefs`. The dry run
+never calls the reconcile, because the reconcile copies the images as it answers. The real run makes
+every check against a read of the target BEFORE the reconcile and before switching pages, so a
+refused paste leaves no orphaned images and keeps the session on its page. A cross-site paste
+needs a session login: an API key opens one site only, so it is refused up front.
 
 ## `sb_templates` / `sb_template_use`
 
@@ -1224,6 +1244,7 @@ box. Returns `{ findings, fixes, findings_notice? }`, in document order:
 | `action_missing_target` | `go_to_url` / `open_page` with no `payload.url` (no renderer resolves a page id), or `popup` with no `payload.id`. The click does nothing |
 | `no_data_context` | A record-bound element (`product.*`, `category.*`, `article.*`, `course.*`) outside any repeater and any pin, on a page type that supplies no such record. It renders its placeholder for ever |
 | `unread_value` | A stored config/specials value outside the renderer's vocabulary, at base or any breakpoint. It publishes as the fallback with no error |
+| `unknown_icon` | A stored icon key (`icon` `specials.name`, `button` `specials.icon`, `list-dataset` `config.listNavIcon`, …) holding a name the icon manifest lacks. It publishes the default star or no icon; the problem names the nearest real ones |
 | `custom_code_native` | **`severity: "maintenance"`** — a `custom-code` block that is mostly markup a native element covers (form, heading, image, button, link list, YouTube/Vimeo/Maps iframe). Advice only: it works, but cannot be edited in the inspector, ignores the theme and is invisible to `sb_review`. Third-party scripts and unknown embeds are never flagged |
 
 Findings carry `severity` only when it is not an error: `maintenance` (works, but hard to edit
@@ -1386,6 +1407,15 @@ present when nothing was measured, or when `node_id` frames one element.
 
 It does not judge taste. Whether a hero reads well is not measurable, and pretending
 otherwise would spend the agent's attention on what it cannot know.
+
+**A site's own font.** `sb_media_upload` takes a `.woff2`, `.woff`, `.ttf` or `.otf` file
+(the platform accepts fonts by extension). Wire it the way the editor's font settings do:
+1. `sb_api_call` `POST /api/sites/{siteId}/fonts` `{name, source:"upload"}` creates the family.
+2. `PUT …/fonts/{groupId}/files` `{weight, url, format, sizeBytes}` fills one slot. `weight` is a
+   slot key: `thin`, `light`, `regular`, `medium`, `semibold`, `bold`, `extrabold`, `black`, each
+   also as `<key>_italic`. `format` is one of `woff2`, `woff`, `truetype`, `opentype`.
+3. Use the family by its NAME: site settings `fontFamily` or a theme text style. The renderer
+   looks for an uploaded group of that name before it falls back to Google Fonts.
 
 ## `sb_import`
 
@@ -2260,7 +2290,11 @@ same reason attach saves twice. A second header or footer is refused and pointed
 
 `template_save` stores the section as a section template in the site's own library
 (`name` required, not listed in the platform gallery). The page is untouched, and
-`sb_template_use` places a copy.
+`sb_template_use` places a copy. With `template_id` it instead REWRITES that template's
+content. This is the editor's template edit mode, reached with the full toolset: place the
+template with `sb_template_use`, edit it on the page, then save it back. The write is fenced on
+the template's `rev`, so an edit somebody saved in between is refused. Only the site's own
+templates can be rewritten. Pages that placed the template earlier keep their own copy.
 
 **Both refuse a subtree carrying any `globalId`, `globalRef`, `overlayId` or app-block
 stamp.** A stamp copied into a stored document is how pages go blank: the next save

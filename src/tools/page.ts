@@ -17,6 +17,7 @@ import {
   moveNode,
   removeNode,
   duplicateNode,
+  copyNodeInto,
   type NodeSpec,
   type Breakpoint,
   type SetEdit,
@@ -36,7 +37,7 @@ import { skinLevelNote } from '../domains/site/fieldskin.js';
 import { siteTheme } from '../domains/site/theme-fetch.js';
 import { ensureSiteTheme } from './theme.js';
 import { request, redact, watchPageWrites, onPageSourceWrite, onGlobalWrite, onFormDocumentWrite } from '../transport/http.js';
-import { SPEC_GLOBAL_ID, SPEC_GLOBAL_REV, SPEC_OVERLAY_ID, SPEC_OVERLAY_REV, type NodeLike } from '../core/tree.js';
+import { SPEC_GLOBAL_ID, SPEC_GLOBAL_REV, SPEC_OVERLAY_ID, SPEC_OVERLAY_REV, subtreeIds, type NodeLike } from '../core/tree.js';
 import { siteToken } from './credentialpick.js';
 import { validateForSave } from '../domains/site/validate.js';
 import { formDocChecks, sayChecks, specCheck, writeCheck, type CheckedNote } from '../domains/site/writecheck.js';
@@ -46,6 +47,7 @@ import { readinessGaps, READINESS_NOTICE, siteLanguage } from '../domains/site/r
 import { gatherReadiness } from '../domains/site/readiness-fetch.js';
 import { globalWarning, restampPatches, RESPONSIVE_NOTICE } from '../domains/site/traps.js';
 import { catalogBrowse, catalogMatches, searchWithTemplates, traitsFor } from '../catalog/element-search.js';
+import { searchIcons } from '../domains/site/icons.js';
 import { layoutForPageName, missingUsualPages, purposeTypeForName, type InventoryPage } from '../domains/site/inventory.js';
 import {
   LAYOUT_PATTERNS,
@@ -1481,7 +1483,7 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
       description:
         'Find an element type by what it does — or OMIT query to browse every type, the only ' +
           'way to meet one you would not have searched for. detail:true adds the AI hints, as ' +
-          'does sb_traits_for.',
+          'does sb_traits_for. query "icon:<word>" lists icon names.',
       inputSchema: {
       query: z.string().optional(),
       limit: z.number().int().min(1).max(60).optional().describe('Default 8'),
@@ -1495,7 +1497,9 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
     // hand-assembled what a dozen purpose-built ones already do.
     async ({ query, limit, detail }) =>
       text(
-        query && query.trim()
+        /^\s*icon:/i.test(query ?? '')
+          ? { icons: searchIcons(query!.replace(/^\s*icon:/i, '').trim(), limit ?? 30) }
+          : query && query.trim()
           ? searchWithTemplates(query, catalogMatches(query, { limit, detail }))
           : {
               elements: catalogBrowse(),
@@ -1971,25 +1975,118 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
     {
       description:
         'Copy a node and everything under it, under fresh ids, right after the original. The ' +
-          'move a designer makes constantly — build one card, duplicate it twice.',
+          'move a designer makes constantly — build one card, duplicate it twice. to_page_id ' +
+          '(and to_site_id) pastes the copy onto another page instead, as the editor\'s copy/paste ' +
+          'does: a cross-site copy has its images copied into the target library and references ' +
+          'that cannot travel blanked and listed; the open page becomes the target.',
       inputSchema: {
         id: z.string(),
+        to_page_id: z.string().optional(),
+        to_site_id: z.string().optional(),
+        parent_id: z.string().optional().describe('with to_page_id: where on that page; default ROOT, before a footer'),
+        index: z.number().int().min(0).optional(),
         dry_run: z.boolean().optional(),
         force: z.boolean().optional().describe('Override a render-inference guard; reported as forced'),
       },
       annotations: { readOnlyHint: false, destructiveHint: false },
     },
-    async ({ id, dry_run, force }) => {
+    async ({ id, to_page_id, to_site_id, parent_id, index, dry_run, force }) => {
       const d = session.current();
       const guard: GuardOpts = { force, forced: [] };
-      const { patches, ids } = duplicateNode(d, id, guard);
-      const forced = guard.forced!.length ? { forced: guard.forced } : {};
-      if (dry_run !== false) {
-        const refuse = session.wouldRefuse(patches);
-        return text({ dry_run: true, would_copy: ids.length, ...(refuse ? { would_refuse: refuse } : {}), ...forced });
+      const forcedOf = () => (guard.forced!.length ? { forced: [...new Set(guard.forced)] } : {});
+      if (!to_page_id) {
+        if (to_site_id || parent_id || index !== undefined) {
+          throw new Error('sbuilder: to_site_id, parent_id and index go with to_page_id — the page the copy lands on.');
+        }
+        const { patches, ids } = duplicateNode(d, id, guard);
+        if (dry_run !== false) {
+          const refuse = session.wouldRefuse(patches);
+          return text({ dry_run: true, would_copy: ids.length, ...(refuse ? { would_refuse: refuse } : {}), ...forcedOf() });
+        }
+        await session.applyAndSave(patches);
+        return text({ duplicated: id, into: ids[0], nodes: ids.length, rev: d.rev, ...forcedOf() });
       }
+
+      // ONTO ANOTHER PAGE — the editor's paste (`useCanvasClipboard.ts`).
+      const from = session.location();
+      const toSite = to_site_id ?? from.siteId;
+      const crossSite = toSite !== from.siteId;
+      if (!crossSite && to_page_id === from.pageId) {
+        throw new Error('sbuilder: that is the open page — omit to_page_id to duplicate in place.');
+      }
+      if (crossSite && ctx.apiKey) {
+        // A key belongs to exactly ONE site, and every /api/sites route prefers it.
+        throw new Error(
+          'sbuilder: a cross-site paste needs a session login — an API key (SB_TOKEN) opens one site only. ' +
+            'Unset SB_TOKEN and connect with SB_EMAIL/SB_PASSWORD as a member of both sites.',
+        );
+      }
+      // A FROZEN copy of the source: opening the target replaces the session's document.
+      let src = PageDoc.from(structuredClone(d.doc));
+      const nodes = subtreeIds(src.doc, id).length;
+      const place = (target: PageDoc) => {
+        const parent = parent_id ?? target.doc.root_node_id;
+        const at = index ?? (parent === target.doc.root_node_id ? middleEnd(target.doc) : Number.MAX_SAFE_INTEGER);
+        return copyNodeInto(src, id, target, parent, at, guard);
+      };
+      // EVERY REFUSAL BEFORE ANYTHING MOVES — the editor's own order
+      // (useCanvasClipboard.ts `canAddNodeTree` before `reconcileClipboard`). The
+      // reconcile copies images into the target library as it answers, and opening
+      // the target replaces the session's page: a paste refused after either leaves
+      // orphaned assets or a caller on the wrong page. Checked on the ORIGINAL
+      // document, so the app-block and overlay checks see real ancestors.
+      const preview = PageDoc.from((await loadSource(ctx, toSite, to_page_id)).document);
+      const planned = place(preview);
+      const refuse = saveRefusal(preview, planned.patches).refusal;
+      if (dry_run !== false) {
+        return text({
+          dry_run: true,
+          would_copy: nodes,
+          onto: { site_id: toSite, page_id: to_page_id },
+          ...(crossSite ? { cross_site: 'images are copied into the target library; product, menu and page references that cannot travel are blanked and listed' } : {}),
+          ...(refuse ? { would_refuse: refuse } : {}),
+          ...forcedOf(),
+        });
+      }
+      if (refuse) throw new Error(`sbuilder: ${refuse}`);
+      let reconciled: { copiedAssets?: number; droppedRefs?: unknown[] } | undefined;
+      if (crossSite) {
+        const tree = { rootId: id, nodes: Object.fromEntries(subtreeIds(src.doc, id).map((n) => [n, src.doc.nodes[n]])) };
+        const got = (await request({
+          base: ctx.base,
+          method: 'POST',
+          path: `/api/sites/${encodeURIComponent(toSite)}/clipboard/reconcile`,
+          token: siteToken(ctx),
+          body: { sourceSiteId: from.siteId, tree },
+          fetchImpl: ctx.fetchImpl,
+        })) as { reconcile?: { tree?: { rootId?: string; nodes?: Record<string, unknown> }; copiedAssets?: number; droppedRefs?: unknown[] } };
+        const r = got.reconcile;
+        if (!r?.tree?.nodes || !r.tree.rootId || !(r.tree.rootId in r.tree.nodes)) {
+          throw new Error('sbuilder: the platform answered the reconcile with no tree — nothing was pasted.');
+        }
+        // A holder root so the copy can read the reconciled subtree as a document.
+        const holder = '__clipboard';
+        const rn = structuredClone(r.tree.nodes) as Record<string, { data: { parent: string | null } }>;
+        rn[r.tree.rootId].data.parent = holder;
+        src = PageDoc.from({
+          schema_version: 2,
+          root_node_id: holder,
+          nodes: { ...rn, [holder]: { id: holder, data: { type: 'root', parent: null, nodes: [r.tree.rootId] } } },
+        });
+        if (r.tree.rootId !== id) id = r.tree.rootId;
+        reconciled = { copiedAssets: r.copiedAssets ?? 0, droppedRefs: r.droppedRefs ?? [] };
+      }
+      await session.open(toSite, to_page_id);
+      const { patches, ids } = place(session.current());
       await session.applyAndSave(patches);
-      return text({ duplicated: id, into: ids[0], nodes: ids.length, rev: d.rev, ...forced });
+      return text({
+        copied: nodes,
+        into: ids[0],
+        onto: { site_id: toSite, page_id: to_page_id },
+        open_page: `${to_page_id} — the session now edits the page the copy landed on`,
+        ...(reconciled ?? {}),
+        ...forcedOf(),
+      });
     },
   );
 

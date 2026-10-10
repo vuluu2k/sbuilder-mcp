@@ -90,7 +90,7 @@ nhét ngược lại vào mọi bản cài.
 | `sb_set` | Ghi style/config/specials. Mặc định theo breakpoint |
 | `sb_move` | Chuyển node sang cha khác |
 | `sb_remove` | Xoá node và cả cây con |
-| `sb_duplicate` | Nhân bản một node và cả cây con dưới id mới, ngay sau bản gốc |
+| `sb_duplicate` | Nhân bản một node và cả cây con dưới id mới, ngay sau bản gốc — hoặc sang trang/site khác như copy/paste của editor (ảnh được copy, tham chiếu không mang theo được sẽ được liệt kê) |
 | `sb_templates` | Section template đã lưu của cửa hàng, cộng bộ layout DỰNG SẴN — hero, ba lợi ích, số liệu, FAQ, dải kêu gọi, kệ sản phẩm, dải danh mục, dải logo, dải cam kết — soạn theo token của chính trang |
 | `sb_template_use` | Thả một template vào trang |
 | `sb_page_list` | Mọi trang của site |

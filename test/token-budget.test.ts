@@ -148,7 +148,12 @@ describe('token budget — a diet without a scale comes back', () => {
     // a full-replace PUT that blanks `content` on a partial body, a page restore leaves an
     // open session editing a replaced tree, and which entities render through a template
     // page had no tool at all — the editor's three remaining page-level panels.
-    expect(JSON.stringify(tools).length).toBeLessThan(36_300);
+    //
+    // 36,300 -> 36,900 buys sb_duplicate's paste onto another page / site (~620; measured
+    // 36,638 with sb_catalog_search's `icon:` mode, +40). The editor's cross-page and
+    // cross-site paste needs the clipboard reconcile — images copied, references that
+    // cannot travel blanked — which a hand-built sb_api_call sequence gets wrong silently.
+    expect(JSON.stringify(tools).length).toBeLessThan(36_900);
     for (const t of tools) expect(t.description, t.name).not.toMatch(/vanishes on publish/);
     const instructions = client.getInstructions() ?? '';
     expect(instructions.length).toBeGreaterThan(200);

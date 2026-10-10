@@ -684,6 +684,7 @@ export function registerStoreTools(server: McpServer, ctx: ToolContext, session:
           .optional()
           .describe('action:"menu" — the menu node; "global_promote"/"template_save" — the section'),
         global_kind: z.enum(['header', 'footer', 'custom']).optional(),
+        template_id: z.string().optional().describe('action:"template_save" — overwrite this template\'s content'),
         menu_id: z.string().optional(),
         kind: z
           .enum(['popup', 'quickview'])
@@ -737,6 +738,7 @@ export function registerStoreTools(server: McpServer, ctx: ToolContext, session:
       app_key,
       global_id,
       global_kind,
+      template_id,
       relocalize,
       settings,
       dry_run,
@@ -759,7 +761,9 @@ export function registerStoreTools(server: McpServer, ctx: ToolContext, session:
         );
       }
       if (action === 'template_save') {
-        return text(await saveTemplate(ctx, session, siteId, node_id, name, { dryRun: dry_run !== false }));
+        return text(
+          await saveTemplate(ctx, session, siteId, node_id, name, { dryRun: dry_run !== false, templateId: template_id }),
+        );
       }
       if (action === 'app') {
         if (!app_key) {

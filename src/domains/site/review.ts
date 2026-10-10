@@ -8,6 +8,7 @@ import { fill } from './findings.js';
 import { formFieldFindings } from './formdoc.js';
 import { deadNavigation, liveEventTable, PAYLOAD_NEEDS, type NodeEventLike } from './navhref.js';
 import { unknownValueNote, unknownWriteNote, vocabularyFor, vocabularyForWrite } from './vocabulary.js';
+import { iconNote } from './icons.js';
 
 /**
  * A defect somebody looking at the page would see.
@@ -521,6 +522,22 @@ export function reviewDesign(
       const said = new Set<string>();
       for (const [ns, slot] of layers) {
         for (const [k, v] of Object.entries(slot ?? {})) {
+          // An icon name the manifest lacks draws the default star or nothing.
+          const icon = iconNote(type, ns, k, v);
+          if (icon) {
+            if (said.has(`${ns}.${k}=${String(v)}`)) continue;
+            said.add(`${ns}.${k}=${String(v)}`);
+            out.push({
+              code: 'unknown_icon',
+              nodeId: id,
+              type,
+              problem: icon.problem,
+              key: `${ns}.${k}`,
+              fix: fill('unknown_icon', { id, ns, key: k }),
+              ...(inOverlay.has(id) ? { overlay: true } : {}),
+            });
+            continue;
+          }
           const unread =
             unknownWriteNote(type, ns, k, v) ?? (ns === 'config' ? unknownValueNote(k, v) : null);
           if (!unread || said.has(`${ns}.${k}=${String(v)}`)) continue;
