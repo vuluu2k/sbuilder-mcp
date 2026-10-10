@@ -1,6 +1,7 @@
 import { identityHeaders } from './identity.js';
 import { readFile } from 'node:fs/promises';
-import { basename } from 'node:path';
+import { guardLocal } from './localfile.js';
+import { basename, extname } from 'node:path';
 import { ApiError } from './http.js';
 import { siteToken } from '../tools/credentialpick.js';
 import type { ToolContext } from '../tools/context.js';
@@ -66,6 +67,11 @@ const TYPE_BY_EXT: Record<string, string> = {
   '.xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
   '.csv': 'text/csv',
 };
+
+/** What a local `path` may be: the media types this server names, nothing else. */
+const MEDIA_EXT: ReadonlySet<string> = new Set(
+  Object.keys(TYPE_BY_EXT).filter((e) => !['.xlsx', '.xls', '.csv'].includes(e)).concat('.pdf'),
+);
 
 export function typeForName(name: string): string {
   const dot = name.lastIndexOf('.');
@@ -174,9 +180,27 @@ export async function uploadMedia(
   let filename: string;
   let declared = '';
   if (source.path) {
-    bytes = await readFile(source.path);
-    filename = source.name ?? basename(source.path);
+    // The type comes from the REAL file's name, never from `name` — otherwise
+    // {path:"~/.ssh/id_rsa", name:"x.png"} uploads a key as an image to a public
+    // URL. `name` still becomes the library's display name (the form field below).
+    // A PDF is where the sensitive documents live (a tax return, a passport scan),
+    // so it comes only from the working or temp directory; images from anywhere.
+    const real = await guardLocal(source.path, MEDIA_EXT, { confine: extname(source.path).toLowerCase() === '.pdf' });
+    bytes = await readFile(real);
+    filename = basename(real);
   } else if (source.url) {
+    // THIS fetch runs on the USER's machine (the server's own door was missing), so a
+    // private address here reaches their network — cloud metadata, a dev server —
+    // and re-uploads it to a public URL. Public http(s) only.
+    // ponytail: hostname check, not resolved-IP; DNS rebinding needs a resolve-and-check.
+    const u = new URL(source.url);
+    if (
+      !/^https?:$/.test(u.protocol) ||
+      /^(localhost|127\.|10\.|192\.168\.|169\.254\.|172\.(1[6-9]|2\d|3[01])\.|0\.0\.0\.0|\[?::1\]?$|\[?f[cd][0-9a-f]{2}:|\[?fe80:)/i.test(u.hostname) ||
+      u.hostname.endsWith('.local') || u.hostname.endsWith('.internal')
+    ) {
+      throw new Error('sbuilder: a media url must be a public http(s) address.');
+    }
     const res = await doFetch(source.url);
     if (!res.ok) {
       throw new ApiError(res.status, 'source_unreachable', `could not fetch ${source.url}`);
@@ -186,7 +210,9 @@ export async function uploadMedia(
     declared = (res.headers.get('content-type') ?? '').split(';')[0].trim();
     // A URL's last segment is usually the filename; when it is not (a query-only
     // CDN link), name it rather than uploading something called "".
-    filename = source.name ?? (new URL(source.url).pathname.split('/').pop() || 'image');
+    // The type comes from the response or the URL's own name, never from `name`
+    // (still sent as the display name below).
+    filename = u.pathname.split('/').pop() || 'image';
   } else {
     throw new Error('sbuilder: give sb_media_upload either a local path or a url');
   }

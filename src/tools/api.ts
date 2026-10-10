@@ -10,6 +10,7 @@ import {
 } from '../catalog/search.js';
 import { readFile, stat, writeFile } from 'node:fs/promises';
 import { basename } from 'node:path';
+import { guardLocal } from '../transport/localfile.js';
 import { request, redact, ApiError } from '../transport/http.js';
 import { typeForName } from '../transport/media.js';
 import { restoreBodyFrom } from './undo.js';
@@ -70,6 +71,14 @@ const SHIPPING_MOVED_FIX =
   ' — this site\'s shipping lives in the rules engine now: edit it with PATCH ' +
   '/api/sites/{siteId}/shipping-config (sb_api_call reads If-Match for you), then verify with ' +
   'POST /api/sites/{siteId}/shipping-config/preview.';
+
+/**
+ * `file` exists for one job — a catalogue spreadsheet in, a template out — and is
+ * no wider than that: see `guardLocal` for why a path argument is hostile input.
+ */
+const UPLOAD_EXT = new Set(['.xlsx', '.xls', '.csv']);
+// No .json (config files that run code) and no .xls (macros) on the way OUT.
+const DOWNLOAD_EXT = new Set(['.xlsx', '.csv', '.pdf']);
 
 const isPlain = (v: unknown): v is Record<string, unknown> =>
   !!v && typeof v === 'object' && !Array.isArray(v);
@@ -679,6 +688,10 @@ export async function callOperation(ctx: ToolContext, args: CallArgs): Promise<u
   // with `file` saves the answer's bytes (an xlsx template) rather than
   // pasting binary into the result.
   const download = !!args.file && (op.method === 'GET' || op.method === 'HEAD');
+  if (args.file) {
+    const path = await guardLocal(args.file.path, download ? DOWNLOAD_EXT : UPLOAD_EXT, { write: download, confine: true });
+    args.file = { ...args.file, path };
+  }
   if (download && !dryRun && (await stat(args.file!.path).then(() => true, () => false))) {
     throw new Error(`sbuilder: ${args.file!.path} already exists — nothing was overwritten; name a new path.`);
   }

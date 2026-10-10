@@ -242,7 +242,15 @@ hoặc `Name`, các dòng liền nhau cùng slug là biến thể của một s�
 `{result: {created, updated, errors: [{row, message}], stockRecounted, costIgnored}}` với HTTP 200
 kể cả khi có dòng lỗi — hãy đọc `errors`, mỗi lỗi ghi số dòng như Excel hiển thị. Dry run không
 gửi gì và báo kích thước file. Tải về không bao giờ ghi đè file đã có: hãy đặt tên đường dẫn
-mới. `if_match` nhận một version (`7` hoặc `"7"`), giá trị khác bị từ chối trước khi gửi.
+mới. `file` chỉ dùng được cho file bảng tính catalogue: upload phải là `.xlsx`, `.xls` hoặc `.csv`
+còn tải về phải là `.xlsx`, `.csv` hoặc `.pdf`, xét trên file THẬT sau khi đã giải symlink. Cả hai
+phải nằm trong thư mục làm việc hoặc thư mục tạm của hệ điều hành (không dùng thư mục làm việc
+nếu đó chính là thư mục home), và không bao giờ là file chấm hay nằm trong thư mục chấm. Agent có
+thể bị dẫn dụ đưa ra một đường dẫn bất kỳ, nên `.claude/`, `.mcp.json` và
+`~/Downloads/passwords.csv` đều nằm ngoài tầm với. `path` của `sb_media_upload` chỉ nhận loại media,
+xét trên file thật chứ không theo `name`. File `.pdf` chỉ được lấy từ hai thư mục đó. Khi platform
+không tự tải được một `url`, máy này sẽ tải, nên chỉ chấp nhận địa chỉ http(s) công khai: không
+dùng loopback, dải mạng riêng, link-local hay metadata của cloud. `if_match` nhận một version (`7` hoặc `"7"`), giá trị khác bị từ chối trước khi gửi.
 
 ---
 

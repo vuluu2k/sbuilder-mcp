@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { mkdtempSync, writeFileSync, readFileSync } from 'node:fs';
+import { mkdtempSync, writeFileSync, readFileSync, realpathSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { callOperation } from '../src/tools/api.js';
@@ -198,7 +198,7 @@ describe('sb_api_call — multipart file', () => {
       dry_run: false,
     });
     expect([...readFileSync(dest)]).toEqual([0x50, 0x4b, 3, 4]);
-    expect(out).toMatchObject({ saved: dest, bytes: 4 });
+    expect(out).toMatchObject({ saved: realpathSync(dest), bytes: 4 });
   });
 
   it('a dry run sends nothing and describes the multipart body', async () => {
@@ -210,7 +210,7 @@ describe('sb_api_call — multipart file', () => {
       file: { path: xlsx },
     })) as { would_send: { body: unknown } };
     expect(f.mock.calls).toHaveLength(0);
-    expect(out.would_send.body).toMatchObject({ multipart: { field: 'file', path: xlsx, bytes: 3 } });
+    expect(out.would_send.body).toMatchObject({ multipart: { field: 'file', path: realpathSync(xlsx), bytes: 3 } });
   });
 });
 
@@ -276,5 +276,43 @@ describe('sb_api_call — review fixes', () => {
       merge: true,
     });
     expect(JSON.stringify(out)).not.toContain('0123456789');
+  });
+
+  it('the file door only opens for a catalogue spreadsheet', async () => {
+    const f = platform({
+      'GET /api/sites/s1/products/import-template': () => new Response(new Uint8Array([1]), { status: 200 }),
+    });
+    const d = mkdtempSync(join(tmpdir(), 'sbguard-'));
+    const key = join(d, 'id_rsa');
+    writeFileSync(key, 'SECRET');
+    // Not a spreadsheet: never read, never sent.
+    await expect(
+      callOperation(ctx(f), { id: 'post:/api/sites/{siteId}/products/import', file: { path: key }, dry_run: false }),
+    ).rejects.toThrow(/must be one of/);
+    // A spreadsheet name that is a symlink to the key: refused too.
+    const { symlinkSync } = await import('node:fs');
+    const link = join(d, 'p.xlsx');
+    symlinkSync(key, link);
+    await expect(
+      callOperation(ctx(f), { id: 'post:/api/sites/{siteId}/products/import', file: { path: link }, dry_run: false }),
+    ).rejects.toThrow(/must be one of/); // the extension is the REAL file's
+    // A dot-folder download (.claude/, .vscode/ — config that runs code): refused.
+    const { mkdirSync } = await import('node:fs');
+    mkdirSync(join(d, '.vscode'));
+    await expect(
+      callOperation(ctx(f), { id: 'get:/api/sites/{siteId}/products/import-template', file: { path: join(d, '.vscode', 'x.csv') }, dry_run: false }),
+    ).rejects.toThrow(/dot-/);
+    // Nor a .json, which is config somewhere.
+    await expect(
+      callOperation(ctx(f), { id: 'get:/api/sites/{siteId}/products/import-template', file: { path: join(d, 'x.json') }, dry_run: false }),
+    ).rejects.toThrow(/must be one of/);
+    // A download outside the working directory and the temp directory: refused.
+    await expect(
+      callOperation(ctx(f), { id: 'get:/api/sites/{siteId}/products/import-template', file: { path: '/usr/x.xlsx' }, dry_run: false }),
+    ).rejects.toThrow(/working directory/);
+    await expect(
+      callOperation(ctx(f), { id: 'get:/api/sites/{siteId}/products/import-template', file: { path: join(d, 'x.plist') }, dry_run: false }),
+    ).rejects.toThrow(/must be one of/);
+    expect(f.mock.calls.length).toBe(0);
   });
 });
