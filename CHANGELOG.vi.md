@@ -6,6 +6,18 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.82.0] - 2026-10-10
+
+### Added
+- `sb_api_call` nhận `merge` trên PUT để trộn sâu `body` lên bản ghi hiện tại trước khi gửi, nên PUT thay cả bản ghi (settings, đơn hàng, cổng thanh toán) giữ lại các field người gọi bỏ qua.
+- `sb_api_call` nhận `file` để gửi file cục bộ dạng multipart (ví dụ bảng tính import sản phẩm), và GET với `file` lưu bytes phản hồi ra đường dẫn mới mà không ghi đè file đã có.
+- `sb_api_call` nhận `if_match` và tự đọc version trên các route yêu cầu `If-Match`, như PATCH shipping-config, và xung đột `shipping_config_moved` chỉ ra route cần đọc lại.
+- Form field trong catalog element có thêm thiết lập `urlParam` và `hideOnPage`.
+
+### Changed
+- `sb_api_call` trên PUT không có `merge` trả về `replace_warning` liệt kê các field lần ghi sẽ xoá, và bản xem trước `dry_run` chỉ in body của người gọi, không in dữ liệu đọc từ GET.
+- Kiểm tra readiness của shipping trỏ sang route shipping-config, vì route v1 trả 409 trên site đã lưu rules.
+
 ## [0.81.1] - 2026-10-10
 
 ### Fixed

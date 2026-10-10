@@ -6,6 +6,18 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.82.0] - 2026-10-10
+
+### Added
+- `sb_api_call` accepts `merge` on a PUT to deep-merge `body` over the current record before sending, so a PUT that replaces a whole record (settings, orders, payment gateways) keeps the fields the caller omits.
+- `sb_api_call` accepts `file` to send a local file as multipart (for example a product import spreadsheet), and a GET with `file` saves the response bytes to a new path without overwriting an existing file.
+- `sb_api_call` accepts `if_match` and reads the version itself on routes that require `If-Match`, such as the shipping-config PATCH, and a `shipping_config_moved` conflict names the route to re-read.
+- Form fields in the element catalog gain `urlParam` and `hideOnPage` settings.
+
+### Changed
+- `sb_api_call` on a PUT without `merge` returns a `replace_warning` listing the fields the write would erase, and its `dry_run` preview shows only the caller's body, never data read from a GET.
+- The shipping readiness check points at the shipping-config route, because the v1 route answers 409 on a site that has saved rules.
+
 ## [0.81.1] - 2026-10-10
 
 ### Fixed
