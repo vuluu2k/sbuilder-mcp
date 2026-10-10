@@ -208,42 +208,112 @@ const isPrivate = (a: string) => PRIVATE.check(a, isIP(a) === 6 ? 'ipv6' : 'ipv4
 export function pinnedLookup(
   resolve: (h: string) => Promise<Array<{ address: string; family: number }>> = (h) => lookup(h, { all: true }),
 ) {
-  return (host: string, opts: { all?: boolean }, cb: (...a: unknown[]) => void): void => {
-    resolve(host).then(
-      (addrs) => {
-        if (!addrs.length || addrs.some((a) => isPrivate(a.address))) {
-          cb(new Error('sbuilder: a media url must be a public http(s) address.'));
-        } else if (opts.all) cb(null, addrs);
-        else cb(null, addrs[0].address, addrs[0].family);
-      },
-      (e) => cb(e),
-    );
+  return (host: string, opts: { all?: boolean; family?: number }, cb: (...a: unknown[]) => void): void => {
+    resolve(host)
+      .then(
+        (all) => {
+          // The verdict is worked out INSIDE a try and `cb` is called once: a throw
+          // here would be an unhandled rejection, which ends the MCP process.
+          let err: Error | null = null;
+          let addrs = all;
+          try {
+            if (!all.length || all.some((a) => isIP(a.address) === 0 || isPrivate(a.address))) {
+              err = new Error('sbuilder: a media url must be a public http(s) address.');
+            } else if (opts.family === 4 || opts.family === 6) {
+              addrs = all.filter((a) => a.family === opts.family);
+              if (!addrs.length) err = new Error(`sbuilder: ${host} has no IPv${opts.family} address.`);
+            }
+          } catch (e) {
+            err = e as Error;
+          }
+          if (err) cb(err);
+          else if (opts.all) cb(null, addrs);
+          else cb(null, addrs[0].address, addrs[0].family);
+        },
+        (e) => cb(e),
+      )
+      .catch(() => {});
   };
 }
 
 const NULL_BODY = new Set([101, 204, 205, 304]);
+/** The platform's own upload cap (`media.MaxUploadBytes`, 100 MiB): nothing larger is worth holding. */
+const MAX_FETCH_BYTES = 100 << 20;
 
-function pinnedFetch(url: string): Promise<Response> {
+/**
+ * `lookupFn` is the pin, and `deadlineMs` the whole-request limit; both injectable
+ * only so a test can reach a local server quickly.
+ *
+ * EVERY WAY OUT SETTLES THE PROMISE ONCE, and nothing throws from a socket
+ * callback (an uncaught exception ends the MCP process): a total deadline (an idle
+ * timeout is reset by every trickled byte), a `101`/upgrade or a close with no
+ * answer is a rejection, and the body is refused early by content-length and
+ * capped as it arrives.
+ *
+ * ponytail: the body is held whole (about 3 copies at peak, up to the cap); stream
+ * it into the upload if concurrent large fetches ever matter.
+ */
+export function pinnedFetch(url: string, lookupFn: unknown = pinnedLookup(), deadlineMs = 60_000): Promise<Response> {
   const u = new URL(url);
   const send = u.protocol === 'https:' ? httpsRequest : httpRequest;
   return new Promise((resolve, reject) => {
+    let done = false;
+    const deadline = setTimeout(() => req.destroy(new Error('sbuilder: the media url took too long.')), deadlineMs);
+    const ok = (r: Response) => {
+      if (done) return;
+      done = true;
+      clearTimeout(deadline);
+      resolve(r);
+    };
+    const fail = (e: unknown) => {
+      if (done) return;
+      done = true;
+      clearTimeout(deadline);
+      reject(e);
+    };
     // The headers global fetch sends: many CDNs answer 403 to a request with no agent.
     const headers = { 'user-agent': 'sbuilder-mcp', accept: '*/*' };
-    const req = send(u, { method: 'GET', headers, lookup: pinnedLookup() as never }, (res) => {
-      const chunks: Buffer[] = [];
-      res.on('data', (c: Buffer) => chunks.push(c));
-      res.on('error', reject);
+    const req = send(u, { method: 'GET', headers, lookup: lookupFn as never }, (res) => {
+      if (Number(res.headers['content-length'] ?? 0) > MAX_FETCH_BYTES) {
+        req.destroy(new Error('sbuilder: the media url is larger than an upload may be.'));
+        return;
+      }
+      let chunks: Buffer[] = [];
+      let size = 0;
+      res.on('data', (c: Buffer) => {
+        size += c.length;
+        if (size > MAX_FETCH_BYTES) req.destroy(new Error('sbuilder: the media url is larger than an upload may be.'));
+        else chunks.push(c);
+      });
+      res.on('error', fail);
       res.on('end', () => {
-        const headers = new Headers();
-        for (const [k, v] of Object.entries(res.headers)) {
-          if (v !== undefined) headers.set(k, Array.isArray(v) ? v.join(', ') : v);
+        try {
+          const h = new Headers();
+          for (const [k, v] of Object.entries(res.headers)) {
+            if (v === undefined) continue;
+            try {
+              h.set(k, Array.isArray(v) ? v.join(', ') : v);
+            } catch {
+              // A header value fetch would refuse (non-ByteString) — not one this needs.
+            }
+          }
+          const status = res.statusCode ?? 502;
+          if (status < 200 || status > 599) throw new Error(`sbuilder: the media url answered status ${status}.`);
+          const body = NULL_BODY.has(status) ? null : Buffer.concat(chunks);
+          chunks = [];
+          ok(new Response(body, { status, headers: h }));
+        } catch (e) {
+          fail(e);
         }
-        const status = res.statusCode ?? 502;
-        resolve(new Response(NULL_BODY.has(status) ? null : Buffer.concat(chunks), { status, headers }));
       });
     });
     req.setTimeout(30_000, () => req.destroy(new Error('sbuilder: the media url timed out.')));
-    req.on('error', reject);
+    req.on('upgrade', (_res, sock) => {
+      sock.destroy();
+      fail(new Error('sbuilder: the media url tried to switch protocols.'));
+    });
+    req.on('error', fail);
+    req.on('close', () => fail(new Error('sbuilder: the media url closed without an answer.')));
     req.end();
   });
 }
