@@ -6,6 +6,11 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.82.6] - 2026-10-10
+
+### Fixed
+- `sb_store` with `action: "app"` reports a successful app install as a success, reading the `appKey` the platform returns instead of a nonexistent `key`, so installing an app such as courses now creates its pages.
+
 ## [0.82.5] - 2026-10-10
 
 ### Fixed

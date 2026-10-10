@@ -6,6 +6,11 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.82.6] - 2026-10-10
+
+### Fixed
+- `sb_store` với `action: "app"` báo đúng thành công khi cài app, đọc `appKey` mà platform trả về thay vì `key` không tồn tại, nên cài app như courses giờ tạo đủ các trang.
+
 ## [0.82.5] - 2026-10-10
 
 ### Fixed
