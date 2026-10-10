@@ -336,6 +336,16 @@ repo over a number here, and fix the line when you catch one stale.
   per-row `result.errors` on partial success; `sb_api_call file` sends it through `request()`,
   whose `send()` passes a FormData body through untouched.
 
+- **MEASURED LIVE 2026-10-11 (local origin/main 045c6f784): the store-operation paths work.**
+  `PATCH shipping-config` with the version `sb_api_call` reads itself (`"0"` → version 2,
+  `source: stored`); `/preview` prices it; the v1 `POST shipping-methods` then answers 409
+  `shipping_config_moved`, while `GET shipping-methods` still lists the method, so readiness
+  keeps seeing it. A settings `merge` kept every other key. A gateway `merge` changing only
+  `label` kept `sandbox` and the credentials, and the same PUT without `merge` warned that
+  `sandbox` would be erased. There is NO `cod` provider (`unknown payment provider`); the
+  built-in gateways are momo, payos and the like. The xlsx import created the template's 3
+  sample products.
+
 ## Phases — how reach and capability grew
 
 All three phases are shipped, and their plans live in `docs/superpowers/plans/`:

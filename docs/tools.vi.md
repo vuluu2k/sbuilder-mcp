@@ -133,6 +133,7 @@ Chạy một operation tìm được bằng `sb_api_find`.
 | `pick` | string[]? | Các field giữ lại trên mỗi item của một câu trả lời dạng danh sách (hoặc trên item duy nhất của câu trả lời `{ page: {…} }`) |
 | `max_items` | number? | Trần số item của một danh sách, áp sau phân trang của chính nền tảng |
 | `item_offset` | integer? | Bỏ qua số item này trong danh sách trả về (mặc định 0); giá trị dương chỉ dùng với GET/HEAD |
+| `site_id` | string? | Điền `{siteId}` giống `site_id` của mọi tool khác (mặc định lấy `SB_SITE`); `path_params.siteId` truyền rõ thì được ưu tiên |
 | `if_match` | string \| number? | Gửi thành `If-Match: "<version>"`. Bỏ trống trên PATCH shipping-config hoặc khôi phục một version của shipping-config thì tự đọc từ `GET …/shipping-config` trước |
 | `merge` | boolean? | Chỉ cho PUT: gộp sâu `body` lên bản ghi mà PUT thay thế (object gộp theo khoá, mảng thay nguyên) |
 | `file` | `{path, field?}`? | Một file cục bộ. Với phương thức khác GET, gửi multipart dưới `field` (mặc định `file`), các field vô hướng của `body` thành field của form; với GET, lưu byte của câu trả lời vào `path` |

@@ -22,6 +22,8 @@ import type { ApiOperation } from '../catalog/types.js';
 export interface CallArgs {
   /** Operation id from sb_api_find. Omit it to call by method + path. */
   id?: string;
+  /** Fills `{siteId}` like every other tool's `site_id`; an explicit path_params entry wins. */
+  site_id?: string;
   /** With `path`, when `id` is absent: a route the catalog does not carry. */
   method?: string;
   path?: string;
@@ -583,9 +585,11 @@ export async function callOperation(ctx: ToolContext, args: CallArgs): Promise<u
     // the environment already holds — made the model carry a 32-character
     // string through every raw call it made. An explicit argument still wins,
     // so a session spanning two sites works by naming each.
-    if (value === undefined && SITE_PARAMS.has(name.toLowerCase()) && ctx.siteId) {
-      value = ctx.siteId;
-    }
+    // `site_id` too, as every other tool takes it: without it in the schema the SDK
+    // dropped the argument SILENTLY and the call asked for path_params instead
+    // (measured on a live platform with SB_SITE unset).
+    const site = args.site_id || ctx.siteId;
+    if (value === undefined && SITE_PARAMS.has(name.toLowerCase()) && site) value = site;
     if (value === undefined) {
       // NAME THE ARGUMENT, not just the parameter. The call sheet lists these
       // under `params` while the call takes them in `path_params`, and a caller
@@ -895,6 +899,7 @@ export function registerApiTools(server: McpServer, ctx: ToolContext): void {
         .string()
         .optional()
         .describe('Bare platform path, e.g. "/api/sites/{siteId}/published"; {siteId} defaults to SB_SITE'),
+      site_id: z.string().optional(),
       path_params: z.record(z.string()).optional(),
       query: z.record(z.string()).optional(),
       body: z.unknown().optional(),

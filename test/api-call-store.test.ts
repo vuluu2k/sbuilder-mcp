@@ -316,3 +316,19 @@ describe('sb_api_call — review fixes', () => {
     expect(f.mock.calls.length).toBe(0);
   });
 });
+
+describe('sb_api_call site_id', () => {
+  // The SDK dropped an argument the schema lacked, SILENTLY: with SB_SITE unset
+  // every call asked for path_params although site_id had been passed.
+  it('fills {siteId} from site_id; an explicit path_params entry still wins', async () => {
+    const f = platform({
+      'GET /api/sites/s9/settings': () => json({ settings: {} }),
+      'GET /api/sites/s7/settings': () => json({ settings: { which: 7 } }),
+    });
+    const c = { ...ctx(f), siteId: undefined };
+    expect(await callOperation(c, { id: 'get:/api/sites/{siteId}/settings', site_id: 's9', dry_run: false })).toEqual({ settings: {} });
+    expect(
+      await callOperation(c, { id: 'get:/api/sites/{siteId}/settings', site_id: 's9', path_params: { siteId: 's7' }, dry_run: false }),
+    ).toEqual({ settings: { which: 7 } });
+  });
+});
