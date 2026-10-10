@@ -6,6 +6,15 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.81.0] - 2026-10-10
+
+### Added
+- `sb_set` and `sb_add` warn with `unknown_icon` and the nearest valid name when an icon key is not in the editor's icon list, and `sb_review` reports the same finding.
+- `sb_catalog_search` finds icons with an `icon:<word>` query, and `sb_traits_for` returns `icon_keys` for elements that take an icon.
+- `sb_duplicate` accepts `to_page_id` and `to_site_id` to paste a section onto another page or another site, running every check before the target page changes.
+- `sb_store` with `action:"template_save"` accepts `template_id` to overwrite an existing template's content, guarded by its revision.
+- `sb_media_upload` accepts font files (woff2, woff, ttf, otf).
+
 ## [0.80.0] - 2026-10-10
 
 ### Added

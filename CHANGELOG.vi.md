@@ -6,6 +6,15 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.81.0] - 2026-10-10
+
+### Added
+- `sb_set` và `sb_add` cảnh báo `unknown_icon` kèm tên hợp lệ gần nhất khi khoá icon không có trong danh sách icon của editor, và `sb_review` báo cùng phát hiện đó.
+- `sb_catalog_search` tìm icon bằng truy vấn `icon:<từ>`, và `sb_traits_for` trả về `icon_keys` cho các element nhận icon.
+- `sb_duplicate` nhận `to_page_id` và `to_site_id` để dán section sang trang hoặc site khác, chạy mọi kiểm tra trước khi đổi trang đích.
+- `sb_store` với `action:"template_save"` nhận `template_id` để ghi đè nội dung template có sẵn, có rào theo rev.
+- `sb_media_upload` nhận file font (woff2, woff, ttf, otf).
+
 ## [0.80.0] - 2026-10-10
 
 ### Added
