@@ -32,10 +32,10 @@ let index: Array<[name: string, stem: string]> | null = null;
  * Nothing found → retried on the query's longest word, so "ShoppingBasketIcon"
  * still lands near the basket.
  *
- * ponytail: substring ranking, no edit distance — a misspelling ("hart") finds
- * nothing. Add a Levenshtein fallback if callers misspell rather than guess.
+ * Substring ranking only — a SEARCH is a word someone chose. A misspelled NAME is
+ * `nearestIcons`' job, which tries edit distance first.
  */
-export function searchIcons(query: string, cap = 30): string[] {
+export function searchIcons(query: string, cap = 30, retryOnWord = true): string[] {
   index ??= [...ICON_NAMES].map((n) => [n, stemOf(n)]);
   const rank = (q: string) =>
     !q
@@ -46,7 +46,7 @@ export function searchIcons(query: string, cap = 30): string[] {
           .sort((a, b) => b.r - a.r || a.s.length - b.s.length || a.n.localeCompare(b.n))
           .map((x) => x.n);
   let hits = rank(stemOf(query));
-  if (!hits.length) {
+  if (!hits.length && retryOnWord) {
     const words = query.replace(/([a-z])([A-Z])/g, '$1 $2').toLowerCase().split(/[^a-z0-9]+/);
     const longest = words.filter((w) => w.length > 2).sort((a, b) => b.length - a.length)[0];
     if (longest) hits = rank(longest);
@@ -54,8 +54,64 @@ export function searchIcons(query: string, cap = 30): string[] {
   return hits.slice(0, cap);
 }
 
+/** Edit distance, capped: stops early past `max` (a name's stem is short). */
+function distance(a: string, b: string, max: number): number {
+  if (Math.abs(a.length - b.length) > max) return max + 1;
+  let prev = Array.from({ length: b.length + 1 }, (_, j) => j);
+  for (let i = 1; i <= a.length; i++) {
+    const cur = [i];
+    let best = i;
+    for (let j = 1; j <= b.length; j++) {
+      cur[j] = Math.min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+      best = Math.min(best, cur[j]);
+    }
+    if (best > max) return max + 1;
+    prev = cur;
+  }
+  return prev[b.length];
+}
+
+/**
+ * The names a WRONG value most likely meant. A typo first ("ShoppingCartt" is
+ * one edit from ShoppingCart, while a word search on "shopping" ranks the shorter
+ * ShoppingBag ahead of it — measured on a live platform), then the search.
+ * Fill before Line on a tie: the platform's own default (StarFill) is a Fill.
+ */
 export function nearestIcons(query: string): string[] {
-  return searchIcons(query, 5);
+  index ??= [...ICON_NAMES].map((n) => [n, stemOf(n)]);
+  const q = stemOf(query);
+  const max = Math.max(1, Math.floor(q.length / 4));
+  // The suffix the caller wrote wins a tie; otherwise Fill, the default's own.
+  const want = /line$/i.test(norm(query)) ? 'Line' : 'Fill';
+  const typos = q
+    ? index
+        .map(([n, s]) => ({ n, s, d: distance(q, s, max) }))
+        .filter((x) => x.d <= max)
+        .sort(
+          (a, b) =>
+            a.d - b.d ||
+            // ShoppingCart over ShoppingCart2 for "ShoppingCartt": a stem the query
+            // extends is a closer guess than a sibling the same distance away.
+            Number(q.startsWith(b.s) || b.s.startsWith(q)) - Number(q.startsWith(a.s) || a.s.startsWith(q)) ||
+            Number(b.n.endsWith(want)) - Number(a.n.endsWith(want)) ||
+            a.s.length - b.s.length ||
+            a.n.localeCompare(b.n),
+        )
+        .map((x) => x.n)
+    : [];
+  // A value that is a WHOLE WORD of real names ("cart" in Shopping·Cart, "user")
+  // means those names, not Car/Cast one edit away; a fragment inside another word
+  // ("hart" in c·hart) is more likely a typo (Heart). So: word hits, then typos,
+  // then whatever else the search finds.
+  const wordsOf = (n: string) => n.replace(/([a-z0-9])([A-Z])/g, '$1 $2').toLowerCase().split(' ');
+  const words = q
+    ? index
+        .filter(([n, st]) => st.startsWith(q) || wordsOf(n).includes(q))
+        .sort(([an, as], [bn, bs]) => as.length - bs.length || Number(bn.endsWith(want)) - Number(an.endsWith(want)) || an.localeCompare(bn))
+        .map(([n]) => n)
+    : [];
+  const order = [...words, ...typos, ...searchIcons(query, 5)];
+  return [...new Set(order)].slice(0, 5);
 }
 
 /**

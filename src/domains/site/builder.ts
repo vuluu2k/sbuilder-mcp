@@ -713,7 +713,11 @@ export function copyNodeInto(
     );
   }
   if (!parentId || !target.has(parentId)) {
-    throw new Error(`sbuilder: ${id} has no parent to be duplicated beside`);
+    throw new Error(
+      src === target
+        ? `sbuilder: ${id} has no parent to be duplicated beside`
+        : `sbuilder: parent "${parentId}" is not on the target page — omit parent_id to paste at the page's end, or read its ids with sb_outline.`,
+    );
   }
   if (src !== target) {
     // Onto ANOTHER document the parent is the caller's choice, so it gets the

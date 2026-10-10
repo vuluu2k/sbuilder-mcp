@@ -769,11 +769,16 @@ export function registerLiveTools(
         });
       }
       const asset = await uploadMedia(ctx, site_id, { path, url, name, folderId: folder_id });
+      const font = (asset as { mediaType?: string }).mediaType === 'font';
       return text({
         asset,
-        next: asset.url
-          ? `Use it: sb_set id "<node>", namespace specials, keys { "src": ${JSON.stringify(asset.url)} }`
-          : 'Uploaded, but the server returned no url — read it back with sb_media_list.',
+        next: !asset.url
+          ? 'Uploaded, but the server returned no url — read it back with sb_media_list.'
+          : font
+            ? `A font: give it a family — POST /api/sites/{siteId}/fonts {name, source:"upload"}, then PUT ` +
+              `…/fonts/{groupId}/files {weight, url: ${JSON.stringify(asset.url)}, format, sizeBytes}, ` +
+              'and use the family by NAME (settings fontFamily or a theme text style).'
+            : `Use it: sb_set id "<node>", namespace specials, keys { "src": ${JSON.stringify(asset.url)} }`,
       });
     },
   );

@@ -128,3 +128,19 @@ describe('icon discovery', () => {
     expect(body.icons.every((n) => /cart/i.test(n))).toBe(true);
   });
 });
+
+describe('nearestIcons — a misspelled name gets the icon it meant', () => {
+  // Measured on a live platform: "ShoppingCartt" was answered with ShoppingBag*,
+  // because a word search on "shopping" ranks the shorter stem first.
+  it('one typo lands on the intended stem, in the suffix the caller wrote', async () => {
+    const { nearestIcons } = await import('../src/domains/site/icons.js');
+    expect(nearestIcons('ShoppingCartt')[0]).toBe('ShoppingCartFill');
+    expect(nearestIcons('hart')[0]).toBe('HeartFill');
+    expect(nearestIcons('Serch')).toContain('SearchFill');
+    expect(nearestIcons('ri-home-line')[0]).toBe('HomeLine');
+    expect(nearestIcons('StarFil')[0]).toBe('StarFill');
+    // A real word that exists inside names is not a typo of a nearby stem.
+    expect(nearestIcons('cart')[0]).toMatch(/Cart/);
+    expect(nearestIcons('user')[0]).toMatch(/^User/);
+  });
+});
