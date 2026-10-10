@@ -4,7 +4,7 @@
 export const TRANSLATION_SOURCE = {
   "elements": 67,
   "pairs": 187,
-  "neverKeys": 178,
+  "neverKeys": 180,
   "entityTypes": 11
 } as const;
 
@@ -433,6 +433,7 @@ export const NEVER_TRANSLATED: string[] = [
   "formId",
   "formRules",
   "format",
+  "hideOnPage",
   "hideWhenEmpty",
   "hoverHostDepth",
   "href",
@@ -537,6 +538,7 @@ export const NEVER_TRANSLATED: string[] = [
   "target",
   "thresholdCents",
   "trackUrl",
+  "urlParam",
   "variant",
   "videoId",
   "videoSrc"
