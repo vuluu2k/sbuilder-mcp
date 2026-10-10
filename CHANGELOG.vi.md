@@ -6,6 +6,12 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.82.3] - 2026-10-10
+
+### Fixed
+- `sb_media_upload` với `url` ghim bước kiểm tra địa chỉ vào chính kết nối, nên câu trả lời DNS thay đổi giữa lúc kiểm tra và lúc kết nối (DNS rebinding) không còn dẫn tới host riêng hoặc loopback.
+- `sb_media_upload` với `url` gửi header user-agent khi tải file, nên các CDN trả 403 khi thiếu header này giờ cho tải bình thường.
+
 ## [0.82.2] - 2026-10-10
 
 ### Fixed
