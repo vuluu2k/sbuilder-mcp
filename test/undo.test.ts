@@ -128,7 +128,11 @@ describe('sb_undo end to end', () => {
         body: { document: {} },
       },
     });
-    expect(seen).toEqual([]);
+    // A dry-run PUT READS once — that is how it warns what the replace would
+    // erase — but writes nothing and records nothing to undo.
+    expect(seen.filter((s) => !s.startsWith('GET '))).toEqual([]);
+    const listed = parse(await client.callTool({ name: 'sb_undo', arguments: {} }));
+    expect(listed.undoable as unknown[]).toEqual([]);
     await close();
   });
 });

@@ -799,7 +799,11 @@ export function readinessGaps(input: ReadinessInput): ReadinessGap[] {
         'No delivery options. The checkout page seeds a shipping select whose options ARE the ' +
         "site's own methods, so the shopper meets a required-looking field with nothing in it " +
         'and every order ships free.',
-      fix: 'Add at least one shipping method (sb_api_find "shipping methods").',
+      // Through shipping-config, not the v1 methods route: once a site has saved
+      // rules, every v1 writer answers 409 shipping_config_moved.
+      fix:
+        'Add at least one shipping method: GET /api/sites/{siteId}/shipping-config, then PATCH it ' +
+        '(sb_api_call reads the If-Match version itself) and POST …/shipping-config/preview to check the price.',
     });
   }
   // THE OTHER FIXED PATHS.

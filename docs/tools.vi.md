@@ -133,6 +133,9 @@ Chạy một operation tìm được bằng `sb_api_find`.
 | `pick` | string[]? | Các field giữ lại trên mỗi item của một câu trả lời dạng danh sách (hoặc trên item duy nhất của câu trả lời `{ page: {…} }`) |
 | `max_items` | number? | Trần số item của một danh sách, áp sau phân trang của chính nền tảng |
 | `item_offset` | integer? | Bỏ qua số item này trong danh sách trả về (mặc định 0); giá trị dương chỉ dùng với GET/HEAD |
+| `if_match` | string \| number? | Gửi thành `If-Match: "<version>"`. Bỏ trống trên PATCH shipping-config hoặc khôi phục một version của shipping-config thì tự đọc từ `GET …/shipping-config` trước |
+| `merge` | boolean? | Chỉ cho PUT: gộp sâu `body` lên bản ghi mà PUT thay thế (object gộp theo khoá, mảng thay nguyên) |
+| `file` | `{path, field?}`? | Một file cục bộ. Với phương thức khác GET, gửi multipart dưới `field` (mặc định `file`), các field vô hướng của `body` thành field của form; với GET, lưu byte của câu trả lời vào `path` |
 
 Credential chọn theo path chứ không theo tham số: `/api/v1/…` dùng `SB_TOKEN`, còn lại
 dùng phiên. Thiếu `SB_TOKEN` thì báo đích danh tên biến, thay vì để nền tảng trả
@@ -191,6 +194,55 @@ trường nào cũng vậy, vì `{}` đọc lên như "nền tảng không trả
 nền tảng đã có trường `truncated`, thông tin cắt sẽ nằm ở `_truncated` chứ không ghi đè. Và
 khi riêng phần không phải danh sách đã vượt trần, không cắt thêm vì dung lượng — bỏ bớt
 item cũng không giúp — và ghi chú nói rõ vì sao.
+
+**PUT thay cả bản ghi — `merge` giữ lại những gì bạn không nhắc tới.** `PUT /settings`,
+`/orders/{id}`, `/payment-gateways/{provider}`, `/discounts/{id}`, `/customers/{id}`,
+`/articles/{id}` và `/loyalty` giải mã body vào một bản ghi mới, nên body thiếu là XOÁ: PUT cổng
+thanh toán không có `enabled` sẽ tắt cổng đó, PUT settings thiếu các khoá khác chỉ lưu đúng
+những gì đã gửi. Mọi PUT có shape body và có GET tương ứng đều đọc bản ghi trước (đó cũng là
+bản mà `sb_undo` khôi phục). Với `merge: true`, body được gộp sâu lên bản ghi đó — object theo
+từng khoá, mảng thay nguyên — rồi gửi đúng dạng PUT nhận (`{settings: …}` cho settings, bản ghi
+trần ở các route khác; field lấy theo call sheet). Kết quả có `merge: {changed}`, các đường dẫn
+lá đã đổi. Không có `merge`, PUT nào có body thiếu field mà bản ghi đang giữ sẽ kèm
+`replace_warning` liệt kê chúng — ở dry run là "sẽ bị xoá; truyền merge:true", khi gửi thật là
+"đã bị xoá; sb_undo trả lại". Vì vậy dry run của PUT có thực hiện đúng một GET; nó không ghi
+gì và không ghi nhận gì để hoàn tác. Bản xem trước chỉ hiện body CỦA BẠN cùng `merge.changed`,
+không bao giờ hiện bản ghi đã gộp, vì việc gộp lấy cả những gì GET trả về mà `redact()` chỉ che
+được các khoá có tên trông như bí mật. `null` trong body đặt field đó thành null, tức là xoá nó
+trong struct mới của Go, chứ không quay về giá trị đang lưu. Field do server quản lý (`id`,
+`siteId`, `createdAt`, `updatedAt`, `number`, danh sách read-only trong shape) không bao giờ bị
+báo là bị xoá. Body settings đúng dạng `{settings: {locale}}` cũng không bị báo gì, vì platform
+gộp riêng dạng đó. `merge` từ chối khoá nằm ngoài lớp bọc mà PUT nhận (`{locale}` thay cho
+`{settings: {locale}}`), vì nếu gộp thì sẽ báo một thay đổi mà server bỏ qua.
+
+**Phí vận chuyển trên rules engine: `If-Match`.** `PATCH /api/sites/{siteId}/shipping-config`
+và `POST …/shipping-config/versions/{id}/restore` từ chối ghi khi thiếu
+`If-Match: "<version>"` (428 `if_match_required`); version cũ là 409 `config_conflict`. Không
+truyền `if_match` thì lúc gửi sẽ đọc `GET …/shipping-config` và gửi `config.version` của nó —
+editor cũng làm vậy (`features/shipping/config.ts`) — và kết quả ghi rõ bằng
+`if_match: {sent, read_from}`; version mới nằm ở `config.version` của câu trả lời. Dry run không
+đọc gì, chỉ nói version sẽ lấy từ đâu. Khi phí vận chuyển của site đã chuyển sang rules engine,
+mọi route ghi v1 (`shipping-methods`, `shipping-zones` POST/PUT/DELETE) trả 409
+`shipping_config_moved`; lỗi đó chỉ đích danh route shipping-config là cách sửa.
+
+Quy trình: `GET …/shipping-config` (phương thức, rule, vùng và version) → `PATCH` nó — theo
+SỰ CÓ MẶT, khoá bỏ trống giữ giá trị đã lưu; phần tử `methods[]` không có `id` được tạo mới,
+`rules` của một phương thức thay cả bộ, `deleteMethods`/`deleteZones` để xoá, còn
+`confirm: {freeship, zoneInUse}` xác nhận hai lời từ chối đó → `POST …/shipping-config/preview`
+với `{ask: {provinceCode, wardCode, subtotalCents, weightGrams, qty, categoryIds}, draft?}` để
+tính phí một đơn thử (`draft` là body PATCH chỉ áp trong bộ nhớ) → `POST …/check` (`{draft?}`)
+để tìm vùng chưa phủ, miễn phí ship ngoài ý muốn và rule chết hoặc trùng. Hoàn tác là
+`GET …/versions` → `POST …/versions/{id}/restore`, tạo ra một version MỚI.
+
+**Multipart: `file`.** `POST /api/sites/{siteId}/products/import` nhận một file xlsx dưới field
+`file` và không đọc JSON. Nạp catalogue: `GET …/products/import-template` với `file: {path}` để
+lưu workbook mẫu (dòng ví dụ và hướng dẫn cột; cột khớp theo tên tiêu đề, bắt buộc có cột `Slug`
+hoặc `Name`, các dòng liền nhau cùng slug là biến thể của một sản phẩm) → điền vào →
+`POST …/products/import` với `file: {path}`. Nó upsert theo slug, rồi theo SKU, và trả
+`{result: {created, updated, errors: [{row, message}], stockRecounted, costIgnored}}` với HTTP 200
+kể cả khi có dòng lỗi — hãy đọc `errors`, mỗi lỗi ghi số dòng như Excel hiển thị. Dry run không
+gửi gì và báo kích thước file. Tải về không bao giờ ghi đè file đã có: hãy đặt tên đường dẫn
+mới. `if_match` nhận một version (`7` hoặc `"7"`), giá trị khác bị từ chối trước khi gửi.
 
 ---
 

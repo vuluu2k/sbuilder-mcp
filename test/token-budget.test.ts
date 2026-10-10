@@ -153,7 +153,12 @@ describe('token budget — a diet without a scale comes back', () => {
     // 36,638 with sb_catalog_search's `icon:` mode, +40). The editor's cross-page and
     // cross-site paste needs the clipboard reconcile — images copied, references that
     // cannot travel blanked — which a hand-built sb_api_call sequence gets wrong silently.
-    expect(JSON.stringify(tools).length).toBeLessThan(36_900);
+    //
+    // 36,900 -> 37,350 buys three sb_api_call args, +447 measured (36,638 -> 37,085):
+    // `if_match` (the shipping rules engine refuses every write without one, 428), `merge`
+    // (seven PUTs replace wholesale — an omitted `enabled` switches a gateway off), and
+    // `file` (the product import is multipart xlsx; JSON could not reach it).
+    expect(JSON.stringify(tools).length).toBeLessThan(37_350);
     for (const t of tools) expect(t.description, t.name).not.toMatch(/vanishes on publish/);
     const instructions = client.getInstructions() ?? '';
     expect(instructions.length).toBeGreaterThan(200);

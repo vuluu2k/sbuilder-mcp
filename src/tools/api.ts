@@ -8,7 +8,11 @@ import {
   summarizeOperation,
   findOperation,
 } from '../catalog/search.js';
-import { request, redact } from '../transport/http.js';
+import { readFile, stat, writeFile } from 'node:fs/promises';
+import { basename } from 'node:path';
+import { request, redact, ApiError } from '../transport/http.js';
+import { typeForName } from '../transport/media.js';
+import { restoreBodyFrom } from './undo.js';
 import { text } from '../mcp/response.js';
 import type { ToolContext } from './context.js';
 import { credentialFor } from '../transport/credential.js';
@@ -30,7 +34,87 @@ export interface CallArgs {
   max_items?: number;
   /** Skip items within this response, not within the server's dataset. */
   item_offset?: number;
+  /** `If-Match` version; read from the GET when a route needs one and none is given. */
+  if_match?: string | number;
+  /** PUT only: deep-merge `body` over the current record before sending. */
+  merge?: boolean;
+  /** Multipart: a non-GET sends this local file; a GET saves the answer's bytes here. */
+  file?: { path: string; field?: string };
 }
+
+/**
+ * ROUTES THAT REFUSE A WRITE WITHOUT `If-Match: "<version>"` (428
+ * if_match_required) — the shipping rules engine's one versioned document
+ * (`server/internal/shipping/rest/config.go`). The version is the GET's own
+ * `config.version`, which is what the editor sends (`features/shipping/config.ts`).
+ */
+const IF_MATCH_ROUTES = new Set([
+  'patch:/api/sites/{siteId}/shipping-config',
+  'post:/api/sites/{siteId}/shipping-config/versions/{id}/restore',
+]);
+
+const quoteVersion = (v: string | number): string => {
+  if (typeof v === 'number' || /^\d+$/.test(v)) return `"${v}"`;
+  // The server reads W/"7", "7" and 7 (shipping/rest/config.go ifMatch); anything
+  // else is a 400 if_match_invalid that reads like a server fault.
+  if (/^(W\/)?"\d+"$/.test(v)) return v;
+  throw new Error(`sbuilder: if_match must be a version number (7 or "7"), not ${JSON.stringify(v)}.`);
+};
+
+/**
+ * Once a site's shipping lives in the rules engine, every v1 method/zone
+ * writer answers 409 `shipping_config_moved` (`shipping/store.go movedLocked`).
+ * The platform's sentence does not say where the prices went.
+ */
+const SHIPPING_MOVED_FIX =
+  ' — this site\'s shipping lives in the rules engine now: edit it with PATCH ' +
+  '/api/sites/{siteId}/shipping-config (sb_api_call reads If-Match for you), then verify with ' +
+  'POST /api/sites/{siteId}/shipping-config/preview.';
+
+const isPlain = (v: unknown): v is Record<string, unknown> =>
+  !!v && typeof v === 'object' && !Array.isArray(v);
+
+/** `over` wins; objects merge key by key; arrays and scalars replace. */
+export function deepMerge(base: unknown, over: unknown): unknown {
+  if (!isPlain(base) || !isPlain(over)) return over;
+  const out: Record<string, unknown> = { ...base };
+  for (const [k, v] of Object.entries(over)) out[k] = deepMerge(base[k], v);
+  return out;
+}
+
+/** Leaf paths where `b` differs from `a` (arrays compared whole). */
+function changedPaths(a: unknown, b: unknown, at = ''): string[] {
+  if (isPlain(a) && isPlain(b)) {
+    return [...new Set([...Object.keys(a), ...Object.keys(b)])].flatMap((k) =>
+      changedPaths(a[k], b[k], at ? `${at}.${k}` : k),
+    );
+  }
+  return JSON.stringify(a) === JSON.stringify(b) ? [] : [at];
+}
+
+const isEmpty = (v: unknown): boolean =>
+  v === null || v === undefined || v === '' || v === false || v === 0 ||
+  (Array.isArray(v) && v.length === 0) || (isPlain(v) && Object.keys(v).length === 0);
+
+/**
+ * What a whole-document PUT of `body` would ERASE: every path holding a value
+ * now that the body leaves out. Go decodes a PUT into a fresh struct, so an
+ * omitted `enabled: true` arrives as false, and an omitted settings key is gone.
+ */
+/** Fields the server owns on every record: a PUT never sets them, so never "erases" them. */
+const SERVER_OWNED = new Set(['id', 'siteId', 'createdAt', 'updatedAt', 'deletedAt', 'createdBy', 'updatedBy', 'rev', 'version', 'number']);
+
+function erasedPaths(current: unknown, body: unknown, at = '', owned: ReadonlySet<string> = SERVER_OWNED): string[] {
+  if (!isPlain(current)) return [];
+  return Object.entries(current).flatMap(([k, v]) => {
+    const p = at ? `${at}.${k}` : k;
+    if (isEmpty(v) || owned.has(k)) return [];
+    if (!isPlain(body) || !(k in body)) return [p];
+    return isPlain(v) && isPlain(body[k]) ? erasedPaths(v, body[k], p, owned) : [];
+  });
+}
+
+const listPaths = (ps: string[]) => (ps.length > 12 ? `${ps.slice(0, 12).join(', ')}, …` : ps.join(', '));
 
 /** Past this many characters a list response is cut to fit and says so. */
 export const RESULT_CAP = 60_000;
@@ -510,11 +594,115 @@ export async function callOperation(ctx: ToolContext, args: CallArgs): Promise<u
 
   const token = tokenFor(ctx, op.credential);
   const dryRun = args.dry_run !== false;
+  if (args.merge && op.method !== 'PUT') {
+    throw new Error('sbuilder: merge is for a PUT — it merges body over the record the PUT replaces.');
+  }
+  if (args.merge && args.file) throw new Error('sbuilder: merge and file do not go together.');
+
+  // A PUT IS A REPLACE, AND THE PLATFORM HAS NO HISTORY. Read what is about to
+  // be destroyed first: `sb_undo` puts it back, `merge` builds on it, and a
+  // dry run warns what the replace would erase. Reads only, never a write.
+  const canRead =
+    op.method === 'PUT' && !args.file && !!REQUEST_SHAPES[op.id] &&
+    API_OPERATIONS.some((o) => o.id === `get:${op.path}`);
+  if (args.merge && !canRead) {
+    throw new Error(`sbuilder: merge needs a body shape and a matching GET; ${op.id} has none. Send the whole record.`);
+  }
+  let before: unknown;
+  if (canRead) {
+    try {
+      before = await request({
+        base: ctx.base,
+        method: 'GET',
+        path,
+        token: tokenFor(ctx, findOperation(`get:${op.path}`)?.credential ?? op.credential),
+        fetchImpl: ctx.fetchImpl,
+      });
+    } catch (e) {
+      // The row may not exist yet — the common case for a PUT that creates.
+      // Nothing to undo or warn about; but nothing to merge onto either.
+      if (args.merge) throw new Error(`sbuilder: merge could not read the current record: ${(e as Error).message}`);
+    }
+  }
+  const current = before === undefined ? null : restoreBodyFrom(op.id, before);
+  if (args.merge && !current) {
+    throw new Error(`sbuilder: merge found no record in the GET answer for ${op.id}. Send the whole record.`);
+  }
+  if (args.merge && isPlain(args.body) && isPlain(current)) {
+    // A key the record does not have at the top is a body in the wrong envelope
+    // ({locale} for {settings:{locale}}): merged, it would report a change the
+    // server ignores.
+    const stray = Object.keys(args.body).filter((k) => !(k in current));
+    if (stray.length && Object.keys(current).length === 1) {
+      throw new Error(
+        `sbuilder: this PUT takes { ${Object.keys(current)[0]}: … } — put ${stray.join(', ')} inside it.`,
+      );
+    }
+  }
+  const body = args.merge ? deepMerge(current, args.body) : args.body;
+  const merged = args.merge ? { changed: changedPaths(current, body) } : undefined;
+  // The settings PUT MERGES a body that is exactly {settings:{locale}}
+  // (sitesettings/rest/rest.go LocaleOnly), so nothing is erased there.
+  const localeOnly =
+    op.id.endsWith('/settings') && isPlain(args.body) && isPlain(args.body.settings) &&
+    Object.keys(args.body).length === 1 && Object.keys(args.body.settings).join() === 'locale';
+  const owned = new Set([...SERVER_OWNED, ...(REQUEST_SHAPES[op.id]?.readOnly ?? [])]);
+  const erased = !args.merge && current && !localeOnly ? erasedPaths(current, args.body, '', owned) : [];
+  const replaceWarning = erased.length
+    ? `This PUT replaces the whole record; ${erased.length} field(s) it holds now ` +
+      `${dryRun ? 'would be' : 'were'} erased: ${listPaths(erased)}. ` +
+      (dryRun ? 'Pass merge:true to keep them.' : 'sb_undo puts them back.')
+    : undefined;
+
+  // If-Match: given, or — on a route that refuses a write without one — the
+  // version the GET answers right now.
+  const headers: Record<string, string> = {};
+  let ifMatchRead: string | undefined;
+  if (args.if_match !== undefined) headers['If-Match'] = quoteVersion(args.if_match);
+  else if (IF_MATCH_ROUTES.has(op.id)) {
+    ifMatchRead = path.replace(/(\/shipping-config).*$/, '$1');
+    if (dryRun) {
+      headers['If-Match'] = `(read from GET ${ifMatchRead} at send)`;
+    } else {
+      const got = (await request({ base: ctx.base, method: 'GET', path: ifMatchRead, token, fetchImpl: ctx.fetchImpl })) as {
+        config?: { version?: number };
+      };
+      if (typeof got?.config?.version !== 'number') {
+        throw new Error(`sbuilder: GET ${ifMatchRead} answered no config.version; pass if_match.`);
+      }
+      headers['If-Match'] = quoteVersion(got.config.version);
+    }
+  }
+
+  // MULTIPART: a non-GET sends a local file under `field` (default "file") —
+  // the product import takes `file:formData/file` and cannot read JSON. A GET
+  // with `file` saves the answer's bytes (an xlsx template) rather than
+  // pasting binary into the result.
+  const download = !!args.file && (op.method === 'GET' || op.method === 'HEAD');
+  if (download && !dryRun && (await stat(args.file!.path).then(() => true, () => false))) {
+    throw new Error(`sbuilder: ${args.file!.path} already exists — nothing was overwritten; name a new path.`);
+  }
+  const field = args.file?.field ?? 'file';
+  const scalars = isPlain(args.body)
+    ? Object.entries(args.body).filter(([, v]) => ['string', 'number', 'boolean'].includes(typeof v))
+    : [];
+
   if (dryRun) {
     // THE DRY RUN IS THE DEFAULT, so a directive said only after a real send
     // reaches nobody who looks before they leap. Once per process either way:
     // a dry run that said it leaves the send that follows silent.
     const directive = op.raw ? ctx.notices.once('raw_call', RAW_CALL_NOTICE) : undefined;
+    const upload =
+      args.file && !download
+        ? {
+            multipart: {
+              field,
+              path: args.file.path,
+              bytes: (await stat(args.file.path)).size,
+              ...(scalars.length ? { fields: Object.fromEntries(scalars) } : {}),
+            },
+          }
+        : undefined;
     return {
       dry_run: true,
       ...(op.raw ? { uncatalogued: true } : {}),
@@ -524,46 +712,70 @@ export async function callOperation(ctx: ToolContext, args: CallArgs): Promise<u
         url: ctx.base.replace(/\/$/, '') + path,
         query: args.query,
         Authorization: token ? `Bearer ${token}` : undefined,
-        body: args.body,
+        ...(Object.keys(headers).length ? { headers } : {}),
+        // The CALLER's body, never the merged one: a merge folds in what the GET
+        // answered, and redact() hides only secret-looking KEY NAMES — a webhook
+        // URL or an account number under an ordinary key would be printed.
+        body: upload ?? args.body,
       }),
+      ...(download ? { would_save: args.file!.path } : {}),
+      ...(merged ? { merge: merged } : {}),
+      ...(replaceWarning ? { replace_warning: replaceWarning } : {}),
       // Shaping is part of what the call WOULD do, so the preview says it;
       // otherwise a dry run reads identically whether or not it was asked for.
       ...(args.pick !== undefined || args.max_items !== undefined || args.item_offset !== undefined
         ? { shaping: { pick: args.pick, max_items: args.max_items, item_offset: args.item_offset } }
         : {}),
-      note: 'Nothing was sent. Re-call with dry_run:false to execute.',
+      note:
+        before !== undefined
+          ? 'Nothing was written — only the current record was read, to ' +
+            (merged ? 'merge onto' : 'check what the replace would erase') +
+            '. Re-call with dry_run:false to execute.'
+          : 'Nothing was sent. Re-call with dry_run:false to execute.',
     };
   }
 
-  // A PUT IS A REPLACE, AND THE PLATFORM HAS NO HISTORY. Read what is about to
-  // be destroyed first, so `sb_undo` can put it back — one extra round trip on a
-  // write, never on a read and never on a dry run. Silent on failure: an undo
-  // that could not be prepared must not stop the write the caller asked for.
-  if (op.method === 'PUT' && REQUEST_SHAPES[op.id] && API_OPERATIONS.some((o) => o.id === `get:${op.path}`)) {
-    try {
-      const before = await request({
-        base: ctx.base,
-        method: 'GET',
-        path,
-        token: tokenFor(ctx, findOperation(`get:${op.path}`)?.credential ?? op.credential),
-        fetchImpl: ctx.fetchImpl,
-      });
-      ctx.undo.record(op.id, path, before);
-    } catch {
-      // The state could not be read — the row may not exist yet, which is the
-      // common case for a PUT that creates. Nothing to undo, nothing to say.
-    }
+  if (before !== undefined) ctx.undo.record(op.id, path, before);
+
+  let sendBody: unknown = body;
+  if (args.file && !download) {
+    const form = new FormData();
+    const name = basename(args.file.path);
+    const type = typeForName(name);
+    form.set(field, new Blob([await readFile(args.file.path)], type ? { type } : undefined), name);
+    for (const [k, v] of scalars) form.set(k, String(v));
+    sendBody = form;
   }
 
-  const raw = await request({
-    base: ctx.base,
-    method: op.method,
-    path,
-    token,
-    query: args.query,
-    body: args.body,
-    fetchImpl: ctx.fetchImpl,
-  });
+  let raw: unknown;
+  try {
+    raw = await request({
+      base: ctx.base,
+      method: op.method,
+      path,
+      token,
+      query: args.query,
+      body: sendBody,
+      ...(Object.keys(headers).length ? { headers } : {}),
+      ...(download ? { binary: true } : {}),
+      fetchImpl: ctx.fetchImpl,
+    });
+  } catch (e) {
+    if (e instanceof ApiError && e.code === 'shipping_config_moved') e.message += SHIPPING_MOVED_FIX;
+    throw e;
+  }
+  if (download && raw instanceof Uint8Array) {
+    // 'wx': a download never replaces a file that is already there.
+    try {
+      await writeFile(args.file!.path, raw, { flag: 'wx' });
+    } catch (e) {
+      if ((e as NodeJS.ErrnoException).code === 'EEXIST') {
+        throw new Error(`sbuilder: ${args.file!.path} already exists — nothing was overwritten; name a new path.`);
+      }
+      throw e;
+    }
+    return { ok: true, saved: args.file!.path, bytes: raw.byteLength };
+  }
   // A 204 HAS NO BODY, and `null` is not an answer a caller can read: a DELETE
   // that worked and a DELETE that returned nothing looked identical, so sixteen
   // page deletes in a row reported `null` sixteen times and the only way to know
@@ -578,9 +790,15 @@ export async function callOperation(ctx: ToolContext, args: CallArgs): Promise<u
           max_items: args.max_items,
           item_offset: args.item_offset,
         });
-  if (!op.raw) return answer;
+  const extra = {
+    ...(ifMatchRead ? { if_match: { sent: headers['If-Match'], read_from: `GET ${ifMatchRead}` } } : {}),
+    ...(merged ? { merge: merged } : {}),
+    ...(replaceWarning ? { replace_warning: replaceWarning } : {}),
+  };
+  const told = Object.keys(extra).length && isPlain(answer) ? { ...answer, ...extra } : answer;
+  if (!op.raw) return told;
   const note = ctx.notices.once('raw_call', RAW_CALL_NOTICE);
-  return { uncatalogued: true, ...(note ? { note } : {}), data: answer };
+  return { uncatalogued: true, ...(note ? { note } : {}), data: told };
 }
 
 /**
@@ -671,6 +889,12 @@ export function registerApiTools(server: McpServer, ctx: ToolContext): void {
       pick: z.array(z.string()).optional(),
       max_items: z.number().int().min(1).optional(),
       item_offset: z.number().int().min(0).optional().describe('Offset within this response, after API paging. Reads only.'),
+      if_match: z.union([z.string(), z.number()]).optional().describe('If-Match version; shipping-config reads it itself'),
+      merge: z.boolean().optional().describe('PUT: deep-merge body over the current record (arrays replace)'),
+      file: z
+        .object({ path: z.string(), field: z.string().optional() })
+        .optional()
+        .describe('Local file: multipart upload (field "file"); on a GET, saves the answer there'),
     },
       annotations: { readOnlyHint: false, destructiveHint: true, openWorldHint: true },
     },

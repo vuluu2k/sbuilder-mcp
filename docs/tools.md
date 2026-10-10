@@ -129,6 +129,9 @@ Execute one operation found by `sb_api_find`.
 | `pick` | string[]? | Fields to keep on each item of a list answer (or on the one item of a `{ page: {…} }` answer) |
 | `max_items` | number? | Cap on a list answer's items, applied after the platform's own paging |
 | `item_offset` | integer? | Skip this many items within the returned list (default 0); positive offsets require GET/HEAD |
+| `if_match` | string \| number? | Sent as `If-Match: "<version>"`. Omitted on the shipping-config PATCH or a shipping-config version restore, it is read from `GET …/shipping-config` first |
+| `merge` | boolean? | PUT only: deep-merge `body` over the record the PUT replaces (objects merge, arrays replace) |
+| `file` | `{path, field?}`? | A local file. On a non-GET, sent as multipart under `field` (default `file`), with `body`'s scalar fields as form fields; on a GET, the answer's bytes are saved to `path` |
 
 Credentials are chosen from the path, never from the argument: `/api/v1/…` uses `SB_TOKEN`,
 everything else uses the session. A missing `SB_TOKEN` is reported by name rather than
@@ -186,6 +189,57 @@ matches nothing does the same, because `{}` reads as "the platform answered noth
 platform's own answer already carries a `truncated` field, this one lands under `_truncated`
 instead of overwriting it. And when the non-list part of an answer alone exceeds the cap,
 no additional size cut is made — dropping items would not help — and the note says why.
+
+**A PUT replaces the whole record — `merge` keeps what you did not mention.** `PUT
+/settings`, `/orders/{id}`, `/payment-gateways/{provider}`, `/discounts/{id}`,
+`/customers/{id}`, `/articles/{id}` and `/loyalty` decode the body into a fresh record, so a
+partial body ERASES: a gateway PUT without `enabled` switches the gateway off, and a settings PUT
+without the other keys stores only what you sent. Every PUT with a body shape and a matching GET
+reads the record first (that read is also what `sb_undo` restores). With `merge: true` the body is
+deep-merged over it — objects key by key, arrays replaced whole — and sent in the shape the PUT
+takes (`{settings: …}` for settings, the bare record elsewhere; the fields are the call sheet's).
+The result carries `merge: {changed}`, the leaf paths that moved. Without `merge`, a PUT whose
+body leaves out fields the record holds carries `replace_warning`, naming them — on the dry run
+"would be erased; pass merge:true", on a send "were erased; sb_undo puts them back". A dry-run PUT
+therefore performs that one GET; it never writes and records nothing to undo. Its preview shows
+YOUR body and `merge.changed`, never the merged record, because a merge folds in what the GET
+answered and `redact()` hides only secret-looking key names. `null` in the body sets the field
+to null, which clears it in Go's fresh struct, and it does not fall back to the stored value.
+Server-owned fields (`id`, `siteId`, `createdAt`, `updatedAt`, `number`, the shape's read-only
+list) are never reported as erased. A settings body that is exactly `{settings: {locale}}`
+reports nothing either: the platform merges that one shape. `merge` refuses a key outside the
+envelope the PUT takes (`{locale}` for `{settings: {locale}}`), because the merge would report a
+change the server ignores.
+
+**Shipping on the rules engine: `If-Match`.** `PATCH /api/sites/{siteId}/shipping-config`
+and `POST …/shipping-config/versions/{id}/restore` refuse a write without
+`If-Match: "<version>"` (428 `if_match_required`); a stale one is 409 `config_conflict`. With no
+`if_match`, the send reads `GET …/shipping-config` and sends its `config.version` — the editor
+does the same (`features/shipping/config.ts`) — and the answer says so as
+`if_match: {sent, read_from}`; the new version is the answer's own `config.version`. A dry run
+reads nothing and shows where the version will come from. Once a site's shipping lives in the
+rules engine, every v1 writer (`shipping-methods`, `shipping-zones` POST/PUT/DELETE) answers
+409 `shipping_config_moved`; that error names the shipping-config route as the fix.
+
+The recipe: `GET …/shipping-config` (the methods, rules, zones and version) → `PATCH` it —
+PRESENCE-AWARE, so an omitted key keeps its stored value; `methods[]` entries without an `id`
+are created, a method's `rules` replace its set, `deleteMethods`/`deleteZones` remove, and
+`confirm: {freeship, zoneInUse}` acknowledges those two refusals → `POST …/shipping-config/preview`
+with `{ask: {provinceCode, wardCode, subtotalCents, weightGrams, qty, categoryIds}, draft?}` to
+price a test order (`draft` is a PATCH body applied in memory only) → `POST …/check` (`{draft?}`)
+for coverage gaps, accidental free shipping and dead or duplicate rules. Undo is
+`GET …/versions` → `POST …/versions/{id}/restore`, which lands as a NEW version.
+
+**Multipart: `file`.** `POST /api/sites/{siteId}/products/import` takes an xlsx under the form
+field `file` and cannot read JSON. Filling a catalogue: `GET …/products/import-template` with
+`file: {path}` saves the workbook (sample rows and a column guide; columns are matched by header
+name, a `Slug` or `Name` column is required, consecutive rows sharing a slug are one product's
+variants) → fill it → `POST …/products/import` with `file: {path}`. It upserts by slug, then by
+SKU, and answers `{result: {created, updated, errors: [{row, message}], stockRecounted,
+costIgnored}}` with HTTP 200 even when rows failed — read `errors`, which names each worksheet
+row as Excel numbers it. A dry run sends nothing and reports the file's size. A download never
+replaces an existing file: name a new path. `if_match` takes a version (`7` or `"7"`), and
+anything else is refused before sending.
 
 ---
 

@@ -19,8 +19,10 @@ export interface RequestOpts {
   token?: string;
   query?: Record<string, string | number | boolean | undefined>;
   body?: unknown;
-  /** Extra request headers (`X-WB-Live-Peer`). */
+  /** Extra request headers (`X-WB-Live-Peer`, `If-Match`). */
   headers?: Record<string, string>;
+  /** Answer a 2xx with the raw bytes rather than parsed JSON (an xlsx template). */
+  binary?: boolean;
   /** Injected in tests; defaults to global fetch. */
   fetchImpl?: typeof fetch;
 }
@@ -279,14 +281,18 @@ async function send(opts: RequestOpts): Promise<unknown> {
   // install invisible on the operator's screen.
   const headers: Record<string, string> = { Accept: 'application/json', ...identityHeaders(), ...opts.headers };
   if (opts.token) headers.Authorization = `Bearer ${opts.token}`;
-  if (opts.body !== undefined) headers['Content-Type'] = 'application/json';
+  // A FormData body is multipart, and fetch must write its Content-Type itself
+  // so the boundary matches the body it builds.
+  const multipart = opts.body instanceof FormData;
+  if (opts.body !== undefined && !multipart) headers['Content-Type'] = 'application/json';
   const body = withPageRoot(opts);
 
   const res = await doFetch(buildUrl(opts.base, opts.path, opts.query), {
     method: opts.method,
     headers,
-    body: body === undefined ? undefined : JSON.stringify(body),
+    body: body === undefined ? undefined : multipart ? (body as FormData) : JSON.stringify(body),
   });
+  if (opts.binary && res.ok) return new Uint8Array(await res.arrayBuffer());
 
   const raw = await res.text();
   let parsed: unknown = undefined;

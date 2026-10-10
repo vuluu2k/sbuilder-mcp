@@ -318,6 +318,24 @@ repo over a number here, and fix the line when you catch one stale.
   the COMPOSED source and lists global nodes on every page that carries them, which is why a
   shared header's rows show as `done` on page B after they were written from page A.
 
+- **SHIPPING IS ONE VERSIONED DOCUMENT NOW, AND ITS WRITES NEED `If-Match`.**
+  `PATCH /api/sites/{siteId}/shipping-config` and `…/versions/{id}/restore` answer 428
+  `if_match_required` without `If-Match: "<version>"` and 409 `config_conflict` on a stale one
+  (`shipping/rest/config.go`). The version is the GET's `config.version` — the editor reads that,
+  not the ETag, because a browser cannot see the header cross-origin. Once a site has stored
+  rules, every v1 writer (`shipping-methods`, `shipping-zones`) is 409 `shipping_config_moved`
+  (`store.go movedLocked`). `sb_api_call` reads the version when none is given and names the
+  route on that 409.
+- **SEVEN PUTS DECODE INTO A FRESH RECORD**, so a partial body erases: settings,
+  orders/{id}, payment-gateways/{provider} (`enabled` is a plain bool — omitted is OFF; credentials
+  are the exception, per-key pointers that keep the stored value), discounts/{id},
+  customers/{id}, articles/{id}, loyalty. `sb_api_call merge:true` merges over the
+  pre-read's `restoreBodyFrom` (the PUT's own shape, envelope included for settings), and a PUT
+  without it reports `replace_warning`. A dry-run PUT therefore makes that one GET.
+- **`POST …/products/import` is multipart xlsx** (`products/rest/excel.go`) and answers 200 with
+  per-row `result.errors` on partial success; `sb_api_call file` sends it through `request()`,
+  whose `send()` passes a FormData body through untouched.
+
 ## Phases — how reach and capability grew
 
 All three phases are shipped, and their plans live in `docs/superpowers/plans/`:

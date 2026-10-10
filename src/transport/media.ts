@@ -62,9 +62,12 @@ const TYPE_BY_EXT: Record<string, string> = {
   '.woff': 'font/woff',
   '.ttf': 'font/ttf',
   '.otf': 'font/otf',
+  // `sb_api_call file` — the product import takes a workbook.
+  '.xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  '.csv': 'text/csv',
 };
 
-function typeForName(name: string): string {
+export function typeForName(name: string): string {
   const dot = name.lastIndexOf('.');
   return dot < 0 ? '' : (TYPE_BY_EXT[name.slice(dot).toLowerCase()] ?? '');
 }

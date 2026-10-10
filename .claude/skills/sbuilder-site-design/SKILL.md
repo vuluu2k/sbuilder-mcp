@@ -31,6 +31,12 @@ catalogue is judged against its empty state. Four facts that cost a retry each:
   `options`. Set both, or the shopper picks from the element's seed values
   ("Red / Green / Blue", "S / M / L") while the real sizes sit unused.
 
+**Filling a catalogue in bulk:** `GET /api/sites/{siteId}/products/import-template` with
+`sb_api_call file: {path}` saves the xlsx (columns matched by header name; `Slug` or `Name`
+required; consecutive rows sharing a slug are one product's variants) → fill it →
+`POST …/products/import` with `file: {path}`. It answers 200 even when rows failed, so read
+`result.errors[]` (`{row, message}`, the row as Excel numbers it) — a 200 is not "all imported".
+
 **3. Media.** `sb_media_upload`, or `POST /api/v1/media` (multipart) — the second
 door, and the key's own. Then PUT each product back with `images: [url, …]`: a product with
 no image renders the platform's grey placeholder on every card, cart line and its own page
@@ -38,9 +44,16 @@ no image renders the platform's grey placeholder on every card, cart line and it
 
 **4. Delivery, then payment.** Shipping methods first: the checkout seeds a
 shipping select whose options ARE the site's own methods, so a store with none
-shows a required-looking field with nothing in it. Then a gateway:
+shows a required-looking field with nothing in it. Shipping is ONE versioned document,
+`/api/sites/{siteId}/shipping-config`: `GET` it → `PATCH` it (presence-aware — an omitted key
+keeps its value; every write needs `If-Match: "<version>"`, which `sb_api_call` reads from the
+GET when you pass none) → `POST …/preview` with `{ask: {provinceCode, subtotalCents, weightGrams,
+qty}}` to price a test order. Undo is `GET …/versions` → `POST …/versions/{id}/restore`. Once a
+site has stored rules, the old `shipping-methods` / `shipping-zones` writers answer 409
+`shipping_config_moved` — do not retry them. Then a gateway:
 `PUT /api/sites/{siteId}/payment-gateways/{provider}` with
-`{enabled, sandbox, label, credentials}`.
+`{enabled, sandbox, label, credentials}` — it REPLACES, so an omitted `enabled` switches the
+gateway off; pass `merge: true` to change one field.
 
 **5. The checkout, through the editor's own four-step flow.** Do not hand-build
 it — the field document's `mapTo` values are a vocabulary the server validates
