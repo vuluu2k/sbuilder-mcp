@@ -79,3 +79,35 @@ describe('sb_media_upload url fallback and pdf', () => {
     await expect(uploadMedia(ctxOf(f), 's1', { url: 'http://public.example/a.png' })).rejects.toThrow(/public http/);
   });
 });
+
+describe('the media url check is pinned to the connection (DNS rebinding)', () => {
+  it('pinnedLookup refuses a private answer and passes a public one', async () => {
+    const { pinnedLookup } = await import('../src/transport/media.js');
+    const run = (addrs: Array<{ address: string; family: number }>) =>
+      new Promise<unknown>((res) => pinnedLookup(async () => addrs)('h', { all: true }, (e: unknown, a: unknown) => res(e ?? a)));
+    expect(await run([{ address: '10.0.0.1', family: 4 }])).toBeInstanceOf(Error);
+    expect(await run([{ address: '93.184.216.34', family: 4 }, { address: '::1', family: 6 }])).toBeInstanceOf(Error);
+    expect(await run([{ address: '93.184.216.34', family: 4 }])).toEqual([{ address: '93.184.216.34', family: 4 }]);
+  });
+
+  it('a name that passed the check but connects inward is refused at the socket', async () => {
+    const { createServer } = await import('node:http');
+    let hit = false;
+    const server = createServer((_q, r) => {
+      hit = true;
+      r.end('SECRET');
+    });
+    await new Promise<void>((r) => server.listen(0, '127.0.0.1', r));
+    const port = (server.address() as { port: number }).port;
+    const { fetchPublic } = await import('../src/transport/media.js');
+    // The pre-check is told "public" (what a rebinding DNS answers first); the
+    // connection then resolves localhost for real.
+    const ctx = { lookupHost: async () => ['93.184.216.34'] } as never;
+    try {
+      await expect(fetchPublic(ctx, fetch, `http://localhost:${port}/a.png`)).rejects.toThrow(/public http/);
+      expect(hit).toBe(false);
+    } finally {
+      server.close();
+    }
+  });
+});

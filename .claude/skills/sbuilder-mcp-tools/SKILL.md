@@ -40,7 +40,8 @@ One group per file under `src/tools/*.ts`, exporting `registerXTools(server, ctx
    overwrite). Every path goes through `guardLocal` (`src/transport/localfile.ts`): an
    extension allowlist judged on the REAL file, and `confine` for anything that is not a
    plain media file. Every URL this machine fetches goes through `fetchPublic`
-   (`src/transport/media.ts`), which checks each resolved address and each redirect hop.
+   (`src/transport/media.ts`), which checks each resolved address and each redirect hop, and
+   pins the check into the socket's own `lookup` so DNS rebinding meets it too.
    Never take a file's type from a caller-supplied name. Never echo data a GET read into
    a dry-run preview: `redact()` only knows secret-looking KEY names. Found by a security
    review on 2026-10-10, after v0.82.0 shipped the hole.

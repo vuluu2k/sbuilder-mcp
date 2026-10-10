@@ -4,6 +4,8 @@ import { guardLocal } from './localfile.js';
 import { basename, extname } from 'node:path';
 import { lookup } from 'node:dns/promises';
 import { BlockList, isIP } from 'node:net';
+import { request as httpRequest } from 'node:http';
+import { request as httpsRequest } from 'node:https';
 import { ApiError } from './http.js';
 import { siteToken } from '../tools/credentialpick.js';
 import type { ToolContext } from '../tools/context.js';
@@ -168,9 +170,10 @@ async function fromUrl(
  * checked — a hostname regex is beaten by `[::ffff:127.0.0.1]` or a DNS name that
  * points inward — and a redirect is followed by hand, each hop checked again.
  *
- * ponytail: resolve-then-fetch leaves a DNS-rebinding window between the two
- * lookups; pinning the checked IP into the connection (an undici dispatcher) is the
- * upgrade.
+ * The check is PINNED to the connection: the real fetch goes through node:http(s)
+ * with a `lookup` that checks the very address it hands to the socket, so a DNS
+ * answer that changes between "check" and "connect" (rebinding) still meets the
+ * check. Only an injected `ctx.fetchImpl` (tests) skips that path.
  */
 // No ::ffff:0:0/96 rule: Node's BlockList already applies the IPv4 rules to an
 // IPv4-mapped address, and that rule would match EVERY IPv4 address (measured).
@@ -195,15 +198,61 @@ async function assertPublic(ctx: ToolContext, raw: string): Promise<void> {
         throw new Error(`sbuilder: could not resolve ${host}.`);
       });
   for (const a of addrs) {
-    if (PRIVATE.check(a, isIP(a) === 6 ? 'ipv6' : 'ipv4')) throw refuse();
+    if (isPrivate(a)) throw refuse();
   }
 }
 
-async function fetchPublic(ctx: ToolContext, doFetch: typeof fetch, url: string): Promise<Response> {
+const isPrivate = (a: string) => PRIVATE.check(a, isIP(a) === 6 ? 'ipv6' : 'ipv4');
+
+/** A `lookup` for node:net that refuses to hand a private address to the socket. */
+export function pinnedLookup(
+  resolve: (h: string) => Promise<Array<{ address: string; family: number }>> = (h) => lookup(h, { all: true }),
+) {
+  return (host: string, opts: { all?: boolean }, cb: (...a: unknown[]) => void): void => {
+    resolve(host).then(
+      (addrs) => {
+        if (!addrs.length || addrs.some((a) => isPrivate(a.address))) {
+          cb(new Error('sbuilder: a media url must be a public http(s) address.'));
+        } else if (opts.all) cb(null, addrs);
+        else cb(null, addrs[0].address, addrs[0].family);
+      },
+      (e) => cb(e),
+    );
+  };
+}
+
+const NULL_BODY = new Set([101, 204, 205, 304]);
+
+function pinnedFetch(url: string): Promise<Response> {
+  const u = new URL(url);
+  const send = u.protocol === 'https:' ? httpsRequest : httpRequest;
+  return new Promise((resolve, reject) => {
+    // The headers global fetch sends: many CDNs answer 403 to a request with no agent.
+    const headers = { 'user-agent': 'sbuilder-mcp', accept: '*/*' };
+    const req = send(u, { method: 'GET', headers, lookup: pinnedLookup() as never }, (res) => {
+      const chunks: Buffer[] = [];
+      res.on('data', (c: Buffer) => chunks.push(c));
+      res.on('error', reject);
+      res.on('end', () => {
+        const headers = new Headers();
+        for (const [k, v] of Object.entries(res.headers)) {
+          if (v !== undefined) headers.set(k, Array.isArray(v) ? v.join(', ') : v);
+        }
+        const status = res.statusCode ?? 502;
+        resolve(new Response(NULL_BODY.has(status) ? null : Buffer.concat(chunks), { status, headers }));
+      });
+    });
+    req.setTimeout(30_000, () => req.destroy(new Error('sbuilder: the media url timed out.')));
+    req.on('error', reject);
+    req.end();
+  });
+}
+
+export async function fetchPublic(ctx: ToolContext, doFetch: typeof fetch, url: string): Promise<Response> {
   let at = url;
   for (let hop = 0; hop < 4; hop++) {
     await assertPublic(ctx, at);
-    const res = await doFetch(at, { redirect: 'manual' });
+    const res = ctx.fetchImpl ? await doFetch(at, { redirect: 'manual' }) : await pinnedFetch(at);
     const next = res.status >= 300 && res.status < 400 ? res.headers.get('location') : null;
     if (!next) return res;
     at = new URL(next, at).toString();
