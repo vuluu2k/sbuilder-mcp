@@ -6,6 +6,19 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.80.0] - 2026-10-10
+
+### Added
+- `sb_translate` enables languages, lists a page's translatable strings as missing, done or outdated, writes translations, auto-translates and reviews them.
+- `sb_code` reads and writes the site and page custom code files, merging an update into the stored file because the platform's PUT replaces the whole record.
+- `sb_page_version` lists, snapshots and restores page versions and history, then reloads the open page.
+- `sb_page_update` accepts `default_template`, `render_for` and `render_default` to assign a template to a page.
+- `sb_page_update` edits a page's SEO and metadata, merging `settings` instead of overwriting them.
+- `sb_store` with `action:"global_promote"` turns a section on the open page into a new shared section, and `action:"template_save"` saves a section as a template, both previewing the plan under `dry_run`.
+
+### Fixed
+- `sb_store` with `action:"global_promote"` validates the save before creating the master, removes the master if the save is rejected, and refuses subtrees carrying a global, overlay or app block stamp.
+
 ## [0.79.0] - 2026-10-08
 
 ### Added

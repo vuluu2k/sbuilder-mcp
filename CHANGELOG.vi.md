@@ -6,6 +6,19 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.80.0] - 2026-10-10
+
+### Added
+- `sb_translate` bật ngôn ngữ, liệt kê chuỗi dịch được của trang theo trạng thái missing, done hoặc outdated, ghi bản dịch, dịch tự động và duyệt.
+- `sb_code` đọc và ghi file mã tuỳ chỉnh của site và trang, gộp bản cập nhật vào file đang lưu vì PUT của nền tảng thay cả bản ghi.
+- `sb_page_version` liệt kê, chụp và khôi phục phiên bản và lịch sử của trang, rồi đọc lại trang đang mở.
+- `sb_page_update` nhận `default_template`, `render_for` và `render_default` để gán template cho trang.
+- `sb_page_update` sửa SEO và metadata của trang, gộp `settings` thay vì ghi đè.
+- `sb_store` với `action:"global_promote"` biến một section trên trang đang mở thành section dùng chung mới, còn `action:"template_save"` lưu section thành template, cả hai đều xem trước kế hoạch khi `dry_run`.
+
+### Fixed
+- `sb_store` với `action:"global_promote"` kiểm tra lần lưu trước khi tạo master, xoá master nếu lưu bị từ chối, và từ chối cây con mang con dấu global, overlay hoặc app block.
+
 ## [0.79.0] - 2026-10-08
 
 ### Added
