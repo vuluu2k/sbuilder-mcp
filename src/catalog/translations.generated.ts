@@ -542,6 +542,782 @@ export const NEVER_TRANSLATED: string[] = [
   "videoSrc"
 ];
 
+/** One translatable field, as the editor's page collector reads it. */
+export interface TranslatableFieldSpec {
+  key: string;
+  /** Reaches a raw HTML sink: a machine fill skips it, a human writes it. */
+  html?: true;
+  /**
+   * One row per item: `strings`/`labels` address `<key>.<base text>`, the
+   * object form `<key>.<item id>.<textKey>` (nested `items` walked too).
+   */
+  list?: 'strings' | 'labels' | 'attributes' | { itemIdKey: string; textKey: string | string[] };
+  /** Translatable only while `specials[when.key] === when.equals`. */
+  when?: { key: string; equals: string };
+}
+
+/** Every translatable special per element, with its shape. */
+export const TRANSLATABLE_FIELDS: Record<string, TranslatableFieldSpec[]> = {
+  "popup": [
+    {
+      "key": "closeLabel"
+    }
+  ],
+  "select": [
+    {
+      "key": "placeholder"
+    },
+    {
+      "key": "filterValues",
+      "list": {
+        "itemIdKey": "value",
+        "textKey": "label"
+      }
+    }
+  ],
+  "filter-checkbox": [
+    {
+      "key": "filterValues",
+      "list": {
+        "itemIdKey": "value",
+        "textKey": "label"
+      }
+    },
+    {
+      "key": "filterAllLabel"
+    }
+  ],
+  "filter-radio": [
+    {
+      "key": "filterValues",
+      "list": {
+        "itemIdKey": "value",
+        "textKey": "label"
+      }
+    },
+    {
+      "key": "filterAllLabel"
+    }
+  ],
+  "filter-color": [
+    {
+      "key": "filterValues",
+      "list": {
+        "itemIdKey": "value",
+        "textKey": "label"
+      }
+    },
+    {
+      "key": "filterAllLabel"
+    }
+  ],
+  "filter-tag": [
+    {
+      "key": "filterValues",
+      "list": {
+        "itemIdKey": "value",
+        "textKey": "label"
+      }
+    },
+    {
+      "key": "filterAllLabel"
+    }
+  ],
+  "account-info": [
+    {
+      "key": "promptText"
+    },
+    {
+      "key": "loginLabel"
+    }
+  ],
+  "cart-count": [
+    {
+      "key": "placeholder"
+    }
+  ],
+  "cart-total": [
+    {
+      "key": "label"
+    },
+    {
+      "key": "placeholder"
+    }
+  ],
+  "free-ship-bar": [
+    {
+      "key": "remainingText"
+    },
+    {
+      "key": "reachedText"
+    }
+  ],
+  "flash-sale-progress": [
+    {
+      "key": "soldText"
+    },
+    {
+      "key": "almostText"
+    },
+    {
+      "key": "soldOutText"
+    }
+  ],
+  "voucher-list": [
+    {
+      "key": "title"
+    },
+    {
+      "key": "buttonLabel"
+    },
+    {
+      "key": "emptyText"
+    },
+    {
+      "key": "copiedText"
+    },
+    {
+      "key": "failedText"
+    }
+  ],
+  "countdown": [
+    {
+      "key": "expiredText"
+    },
+    {
+      "key": "dayLabel"
+    },
+    {
+      "key": "hourLabel"
+    },
+    {
+      "key": "minuteLabel"
+    },
+    {
+      "key": "secondLabel"
+    }
+  ],
+  "order-history": [
+    {
+      "key": "title"
+    },
+    {
+      "key": "emptyText"
+    },
+    {
+      "key": "signedOutText"
+    },
+    {
+      "key": "lookupNumberPlaceholder"
+    },
+    {
+      "key": "lookupContactPlaceholder"
+    },
+    {
+      "key": "lookupButtonText"
+    }
+  ],
+  "order-receipt": [
+    {
+      "key": "title"
+    },
+    {
+      "key": "numberLabel"
+    },
+    {
+      "key": "placedLabel"
+    },
+    {
+      "key": "statusLabel"
+    },
+    {
+      "key": "itemsLabel"
+    },
+    {
+      "key": "totalLabel"
+    },
+    {
+      "key": "dueLabel"
+    },
+    {
+      "key": "unavailableText"
+    }
+  ],
+  "course-outline": [
+    {
+      "key": "emptyText"
+    }
+  ],
+  "my-courses": [
+    {
+      "key": "emptyText"
+    },
+    {
+      "key": "signedOutText"
+    },
+    {
+      "key": "continueText"
+    }
+  ],
+  "course-player": [
+    {
+      "key": "completeLabel"
+    },
+    {
+      "key": "completedLabel"
+    },
+    {
+      "key": "certificateText"
+    },
+    {
+      "key": "lockedText"
+    },
+    {
+      "key": "lockedLabel"
+    },
+    {
+      "key": "emptyText"
+    }
+  ],
+  "wishlist-list": [
+    {
+      "key": "title"
+    },
+    {
+      "key": "emptyText"
+    }
+  ],
+  "address-book": [
+    {
+      "key": "title"
+    },
+    {
+      "key": "emptyText"
+    },
+    {
+      "key": "signedOutText"
+    },
+    {
+      "key": "addLabel"
+    }
+  ],
+  "points-card": [
+    {
+      "key": "title"
+    },
+    {
+      "key": "signedOutText"
+    }
+  ],
+  "my-vouchers": [
+    {
+      "key": "title"
+    },
+    {
+      "key": "signedOutText"
+    },
+    {
+      "key": "buttonLabel"
+    },
+    {
+      "key": "emptyText"
+    },
+    {
+      "key": "copiedText"
+    },
+    {
+      "key": "failedText"
+    },
+    {
+      "key": "loadFailedText"
+    },
+    {
+      "key": "usedText"
+    },
+    {
+      "key": "expiredText"
+    }
+  ],
+  "my-tickets": [
+    {
+      "key": "title"
+    },
+    {
+      "key": "signedOutText"
+    },
+    {
+      "key": "buttonLabel"
+    },
+    {
+      "key": "emptyText"
+    },
+    {
+      "key": "loadFailedText"
+    },
+    {
+      "key": "usedText"
+    },
+    {
+      "key": "voidText"
+    }
+  ],
+  "member-field": [
+    {
+      "key": "prefix"
+    },
+    {
+      "key": "suffix"
+    },
+    {
+      "key": "guestText"
+    }
+  ],
+  "accordion-content": [
+    {
+      "key": "label"
+    }
+  ],
+  "button": [
+    {
+      "key": "text"
+    },
+    {
+      "key": "textHtml",
+      "html": true
+    }
+  ],
+  "cart-order": [
+    {
+      "key": "emptyText"
+    }
+  ],
+  "payment-status": [
+    {
+      "key": "paidTitle"
+    },
+    {
+      "key": "paidText"
+    },
+    {
+      "key": "pendingTitle"
+    },
+    {
+      "key": "pendingText"
+    },
+    {
+      "key": "failedTitle"
+    },
+    {
+      "key": "failedText"
+    },
+    {
+      "key": "retryLabel"
+    },
+    {
+      "key": "referenceLabel"
+    }
+  ],
+  "collection-media": [
+    {
+      "key": "alt"
+    }
+  ],
+  "divider": [
+    {
+      "key": "label"
+    }
+  ],
+  "heading": [
+    {
+      "key": "text"
+    },
+    {
+      "key": "textHtml",
+      "html": true
+    }
+  ],
+  "form-text": [
+    {
+      "key": "label"
+    },
+    {
+      "key": "placeholder"
+    },
+    {
+      "key": "description"
+    }
+  ],
+  "form-number": [
+    {
+      "key": "label"
+    },
+    {
+      "key": "placeholder"
+    },
+    {
+      "key": "description"
+    }
+  ],
+  "form-select": [
+    {
+      "key": "label"
+    },
+    {
+      "key": "options",
+      "list": "labels"
+    },
+    {
+      "key": "placeholder"
+    },
+    {
+      "key": "description"
+    }
+  ],
+  "form-address": [
+    {
+      "key": "label"
+    },
+    {
+      "key": "description"
+    },
+    {
+      "key": "provinceLabel"
+    },
+    {
+      "key": "wardLabel"
+    },
+    {
+      "key": "detailLabel"
+    },
+    {
+      "key": "provincePlaceholder"
+    },
+    {
+      "key": "wardPlaceholder"
+    },
+    {
+      "key": "detailPlaceholder"
+    },
+    {
+      "key": "placeholder"
+    }
+  ],
+  "form-discount-code": [
+    {
+      "key": "label"
+    },
+    {
+      "key": "placeholder"
+    },
+    {
+      "key": "description"
+    },
+    {
+      "key": "buttonLabel"
+    },
+    {
+      "key": "appliedText"
+    },
+    {
+      "key": "unknownCodeText"
+    },
+    {
+      "key": "codeNotUsableText"
+    },
+    {
+      "key": "quoteFailedText"
+    }
+  ],
+  "form-radio": [
+    {
+      "key": "label"
+    },
+    {
+      "key": "options",
+      "list": "labels"
+    },
+    {
+      "key": "description"
+    }
+  ],
+  "form-payment": [
+    {
+      "key": "label"
+    },
+    {
+      "key": "description"
+    },
+    {
+      "key": "methods",
+      "list": {
+        "itemIdKey": "value",
+        "textKey": [
+          "label",
+          "description"
+        ]
+      }
+    }
+  ],
+  "form-timeslot": [
+    {
+      "key": "label"
+    },
+    {
+      "key": "description"
+    }
+  ],
+  "form-checkbox": [
+    {
+      "key": "label"
+    },
+    {
+      "key": "options",
+      "list": "labels"
+    },
+    {
+      "key": "description"
+    }
+  ],
+  "form-date": [
+    {
+      "key": "label"
+    },
+    {
+      "key": "description"
+    },
+    {
+      "key": "dayPlaceholder"
+    },
+    {
+      "key": "monthPlaceholder"
+    },
+    {
+      "key": "yearPlaceholder"
+    },
+    {
+      "key": "dayLabel"
+    },
+    {
+      "key": "monthLabel"
+    },
+    {
+      "key": "yearLabel"
+    },
+    {
+      "key": "timeLabel"
+    }
+  ],
+  "form-calendar": [
+    {
+      "key": "label"
+    },
+    {
+      "key": "description"
+    }
+  ],
+  "form-file": [
+    {
+      "key": "label"
+    },
+    {
+      "key": "placeholder"
+    },
+    {
+      "key": "hintText"
+    },
+    {
+      "key": "description"
+    },
+    {
+      "key": "buttonLabel"
+    }
+  ],
+  "form-paragraph": [
+    {
+      "key": "text"
+    }
+  ],
+  "form-link": [
+    {
+      "key": "text"
+    },
+    {
+      "key": "linkText"
+    }
+  ],
+  "form-step-button": [
+    {
+      "key": "text"
+    }
+  ],
+  "form-submit": [
+    {
+      "key": "text"
+    },
+    {
+      "key": "submittingText"
+    }
+  ],
+  "form-title": [
+    {
+      "key": "text"
+    }
+  ],
+  "image": [
+    {
+      "key": "alt"
+    }
+  ],
+  "image-comparison": [
+    {
+      "key": "beforeAlt"
+    },
+    {
+      "key": "afterAlt"
+    }
+  ],
+  "list-dataset": [
+    {
+      "key": "loadMoreLabel"
+    }
+  ],
+  "list-item": [
+    {
+      "key": "text"
+    }
+  ],
+  "product-image-feature": [
+    {
+      "key": "alt"
+    }
+  ],
+  "search-input": [
+    {
+      "key": "searchPlaceholder"
+    },
+    {
+      "key": "searchClearLabel"
+    },
+    {
+      "key": "searchToggleLabel"
+    }
+  ],
+  "tab-content": [
+    {
+      "key": "label"
+    }
+  ],
+  "text": [
+    {
+      "key": "text"
+    },
+    {
+      "key": "textHtml",
+      "html": true
+    }
+  ],
+  "text-marquee": [
+    {
+      "key": "text"
+    }
+  ],
+  "text-marquee-item": [
+    {
+      "key": "text"
+    }
+  ],
+  "breadcrumb": [
+    {
+      "key": "crumbs",
+      "list": {
+        "itemIdKey": "id",
+        "textKey": "label"
+      }
+    },
+    {
+      "key": "homeLabel"
+    }
+  ],
+  "menu": [
+    {
+      "key": "menuItems",
+      "list": {
+        "itemIdKey": "id",
+        "textKey": "label"
+      }
+    }
+  ],
+  "chat-widget": [
+    {
+      "key": "title"
+    },
+    {
+      "key": "launcherText"
+    }
+  ],
+  "qr-code": [
+    {
+      "key": "alt"
+    },
+    {
+      "key": "value",
+      "when": {
+        "key": "source",
+        "equals": "text"
+      }
+    }
+  ],
+  "bundle-items": [
+    {
+      "key": "heading"
+    },
+    {
+      "key": "quantitySeparator"
+    }
+  ],
+  "search-keywords": [
+    {
+      "key": "keywordItems",
+      "list": "strings"
+    }
+  ],
+  "locale-switcher": [
+    {
+      "key": "panelTitle"
+    }
+  ],
+  "theme-switcher": [
+    {
+      "key": "lightLabel"
+    },
+    {
+      "key": "darkLabel"
+    }
+  ],
+  "sale-badge": [
+    {
+      "key": "text"
+    }
+  ]
+};
+
+/** Content an element keeps in `config` (base only), addressed as `CONFIG_FIELD_PREFIX + key`. */
+export const TRANSLATABLE_CONFIG: Record<string, TranslatableFieldSpec[]> = {
+  "text-dataset": [
+    {
+      "key": "textValue"
+    },
+    {
+      "key": "moreText"
+    },
+    {
+      "key": "lessText"
+    }
+  ]
+};
+
+export const CONFIG_FIELD_PREFIX = "config.";
+
 /** The columns a translation may rewrite on each entity, SEO fields included. */
 export const TRANSLATABLE_ENTITY_FIELDS: Record<
   string,

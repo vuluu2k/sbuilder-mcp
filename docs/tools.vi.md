@@ -915,6 +915,75 @@ redact cùng `changes`, diff dạng `field: [trước, sau]`. Không nhận `typ
 việc của `sb_page_create`. Settings được publish nguyên văn, nên storefront chỉ thấy thay đổi
 sau `sb_publish`.
 
+**Trang template** (`product`, `category`, `post`, `blog`, `course`) — PageAssignPanel của
+editor. `default_template: true` đặt trang này làm mặc định cho loại của nó (`PUT
+…/pages/{id}/default-template`); `render_for: [ids]` chuyển các entity đó sang hiển thị qua
+trang này, còn `render_default: [ids]` trả chúng về mặc định của loại (`POST
+…/page-links/bulk`, loại link lấy theo loại trang — server từ chối nếu không khớp). Trang không
+phải template bị từ chối. Kết quả bulk (`assigned`, `moved`, `unchanged`, `skipped`) trả về ở
+`links`.
+
+## `sb_page_version`
+
+Các điểm khôi phục của trang TRÊN PLATFORM — hộp thoại Phiên bản và popover lịch sử của
+editor. `sb_undo` lo những gì process này ghi; còn đây là của mọi người. `action:"list"` trả
+các phiên bản có tên và lịch sử autosave (mỗi loại 20); `"save"` `{label}` chụp DRAFT hiện tại
+(phía server, nên không bao giờ là bản local chưa lưu); `"restore"` `{version_id |
+history_id}` thay draft (mặc định dry run). Nếu trang được khôi phục đang mở, session đọc lại
+nó, vì nếu không lần ghi kế tiếp sẽ rơi lên một cây mà server đã thay. Khôi phục chỉ đổi draft:
+publish sau đó.
+
+## `sb_code`
+
+Các file MÃ TUỲ CHỈNH của site (`/api/sites/{siteId}/code-files`), là chỗ đặt pixel theo dõi,
+tag analytics, widget chat và CSS toàn site. Mỗi file được chèn vào `head`, `body_start` hoặc
+`body_end` của mọi trang, hoặc của một trang nếu tạo kèm `page_id`. Đây không phải element
+`custom-code`, thứ render bên trong thân trang.
+`action:"list"` (`page_id` liệt kê file của trang đó cùng file toàn site), `"set"` (không có
+`id` thì tạo mới, mặc định `javascript` / `body_end` / bật; có `id` thì gộp các trường được
+nhắc vào bản đang lưu, vì **PUT của platform thay cả bản ghi và body thiếu sẽ xoá trắng
+`content`**) và `"remove"`. Mặc định mọi lệnh ghi là dry run.
+
+Mã được chèn lúc phục vụ trang, nên lệnh ghi có hiệu lực ngay ở request kế tiếp mà không cần
+publish. css được bọc trong `<style>`, javascript trong `<script>`, trừ khi nội dung đã mở đầu
+bằng thẻ đó. Markup trong file css/javascript sẽ bị bọc lần nữa và hiện ra thành chữ, nên bị
+từ chối, kèm gợi ý dùng `language:"html"`.
+
+## `sb_translate`
+
+Bảng **Đa ngôn ngữ** của editor gói thành một tool, qua các route session-scoped
+`/api/sites/{siteId}/translations`. Một `action`:
+
+- `status` {`locale`?}: ngôn ngữ mặc định của site, các `locales` đang bật, `auto_approve`,
+  máy dịch có được cấu hình không (`auto_translate.available`, kèm `budget_remaining` khi có
+  hạn mức) và số liệu `progress` cho `locale`.
+- `locales` {`add`?, `remove`?}: bật hoặc tắt ngôn ngữ trong `settings.locales`. PUT thay CẢ
+  tài liệu settings, nên tool GET trước rồi gửi lại nguyên văn, chỉ đổi `locales`. Ngôn ngữ
+  mặc định (`defaultLocale` → `locale` → phần tử đầu của `locales` → `vi`, đúng
+  `sitelang.DefaultOf` của nền tảng) luôn đứng đầu và không bao giờ gỡ được.
+- `page` {`page_id`, `locale`, `offset`?}: mọi chuỗi dịch được trên trang, thu thập đúng như
+  `editor/src/features/translations/pageFill.ts` — từ source ĐÃ COMPOSE (gồm global và
+  overlay), theo registry sinh ra (`TRANSLATABLE_FIELDS`: `html`, `list` theo chữ gốc hoặc
+  theo id của item kể cả `items` lồng nhau, `when` phụ thuộc một special anh em;
+  `TRANSLATABLE_CONFIG` dạng `config.<key>`), chỉ chuỗi không rỗng. Ghép với giá trị đã lưu
+  và source hash thành `missing | done | outdated` (dòng không có hash thì không bao giờ là
+  outdated). `counts` tính cả trang; `rows` 60 dòng mỗi lần, việc cần làm lên trước,
+  `next_offset` để xem tiếp.
+- `write` {`page_id`, `locale`, `entries: [{entity_id, field, value}]`, `source`?}: chỉ dòng
+  của node. Mỗi dòng được đối chiếu với bộ thu thập — một khoá registry không cho phép trên
+  element đó (`htmlTag`, `src`, `name` của icon), một id item không tồn tại, nguồn rỗng hay
+  `when` đang tắt đều làm CẢ lệnh bị từ chối, vì route là tất-cả-hoặc-không. Mỗi dòng mang
+  `sourceHash` (FNV-1a 32-bit hex của chữ hiện tại trên node). `source` mặc định `machine`.
+- `auto` {`page_id`, `locale`, `from`?}: dịch máy cả trang qua `POST …/translations/auto`
+  theo lô 40, bỏ các trường `html` (việc của người), `from` mặc định là ngôn ngữ mặc định của
+  site. Route chỉ điền chỗ còn thiếu, nên chạy lại là chạy tiếp. Bị từ chối khi không có máy dịch.
+- `review` {`locale`, `entries`? | `all: true`}: duyệt dòng qua `…/review/bulk`.
+
+**Cổng duyệt:** chỉ dòng `source: "human"` được phục vụ cho người mua. Dòng máy chờ đến khi
+được duyệt, hoặc khi bật `settings.translations.autoApprove`. Nói một lần mỗi process. Một
+`locale` không có trong `settings.locales` vẫn được lưu nhưng không storefront nào phục vụ —
+`locale_not_enabled` báo điều đó. Mọi lệnh ghi mặc định `dry_run: true`.
+
 ## Dùng chung với các MCP server khác
 
 Bộ tool này trả lời ba trong năm câu hỏi mà một site đặt ra. Hai câu còn lại cần một nguồn
@@ -2247,7 +2316,7 @@ lại suốt ba giai đoạn.** Nó từng viết "nền tảng không có lịc
 không có restore", điều đó đúng với tài liệu OpenAPI và sai với nền tảng: `saveDraftRaw` ghi
 một checkpoint tự động ở mỗi lần lưu nháp, `SaveVersion` tạo một bản chụp có nhãn, và cả hai
 đều khôi phục được. Chúng không có dòng `@Router` nào, nên tới được trình duyệt mà không tới
-được gì khác — giờ đã được chú thích và có trên call sheet (`sb_api_find "page versions"`).
+được gì khác — giờ đã được chú thích và có trên call sheet (`sb_page_version`).
 Khi thứ bị hỏng là một trang thì hãy dùng chúng trước: chúng là của chính nền tảng và sống
 lâu hơn mọi thứ, còn nhật ký bên dưới nằm trong tiến trình này và chết cùng nó. RESTORE LÀM
 ĐỔI BẢN NHÁP, nên nhớ publish sau đó. Xoá một trang thì vẫn là một chiều.

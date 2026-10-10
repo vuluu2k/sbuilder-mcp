@@ -10,11 +10,14 @@ import { registerApiTools } from './tools/api.js';
 import { registerSessionTools } from './tools/session.js';
 import { registerPageTools } from './tools/page.js';
 import { registerPageUpdateTools } from './tools/pageupdate.js';
+import { registerPageVersionTools } from './tools/pageversion.js';
+import { registerCodeTools } from './tools/code.js';
 import { registerLiveTools } from './tools/live.js';
 import { registerStoreTools } from './tools/store.js';
 import { registerImportTools } from './tools/importpage.js';
 import { registerUndoTools } from './tools/undo.js';
 import { registerThemeTools } from './tools/theme.js';
+import { registerTranslateTools } from './tools/translate.js';
 import type { ToolContext } from './tools/context.js';
 
 /**
@@ -78,9 +81,12 @@ export function createServer(ctx: ToolContext = buildContext()): McpServer {
   registerApiTools(server, ctx);
   const pageSession = registerPageTools(server, ctx);
   registerPageUpdateTools(server, ctx);
+  registerPageVersionTools(server, ctx, pageSession);
+  registerCodeTools(server, ctx);
   registerLiveTools(server, ctx, pageSession);
   registerStoreTools(server, ctx, pageSession);
   registerThemeTools(server, ctx);
+  registerTranslateTools(server, ctx, pageSession);
   registerImportTools(server, ctx, pageSession);
   registerUndoTools(server, ctx, pageSession);
   return server;

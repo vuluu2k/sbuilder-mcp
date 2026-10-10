@@ -1,11 +1,13 @@
 /**
- * THE PLATFORM HAS NO HISTORY, AND A HUMAN HAS CTRL+Z.
+ * MOST OF THE PLATFORM HAS NO HISTORY, AND A HUMAN HAS CTRL+Z.
  *
- * Page versions, history and restore have no route on either surface — the only
- * `restore` in `/api/v1` is `media/{id}/restore`. So every whole-document replace
- * this server can make is one-way: `PUT /settings` is not a patch, and a partial
- * body erases the store's configuration; `PUT .../forms/{id}/document` replaces a
- * checkout's fields; `PUT .../pages/{id}/source` replaces a page.
+ * Settings, form documents and the rest have no history on the platform. A PAGE
+ * does — named versions and autosave history, reached through `sb_page_version` —
+ * but those were recorded here as absent while they carried no `@Router` line.
+ * Every other whole-document replace this server can make is one-way: `PUT
+ * /settings` is not a patch, and a partial body erases the store's configuration;
+ * `PUT .../forms/{id}/document` replaces a checkout's fields; `PUT
+ * .../pages/{id}/source` replaces a page.
  *
  * A merchant clicking through the editor has undo. An agent had nothing, and the
  * damage it can do in one call is larger.

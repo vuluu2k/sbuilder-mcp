@@ -946,6 +946,75 @@ default) returns the redacted request plus `changes`, a `field: [before, after]`
 `type` is not taken: retyping a page is `sb_page_create` territory. Settings are published
 verbatim, so the storefront shows the change after `sb_publish`.
 
+**Template pages** (`product`, `category`, `post`, `blog`, `course`) — the editor's
+PageAssignPanel. `default_template: true` makes this page its type's default (`PUT
+…/pages/{id}/default-template`); `render_for: [ids]` moves those entities onto this page and
+`render_default: [ids]` returns them to the type default (`POST …/page-links/bulk`, link type
+taken from the page's type — the server refuses a mismatch). A non-template page is refused.
+The bulk answers (`assigned`, `moved`, `unchanged`, `skipped`) come back as `links`.
+
+## `sb_page_version`
+
+A page's PLATFORM recovery points — the editor's Versions dialog and history popover.
+`sb_undo` covers what this process wrote; these cover everyone's. `action:"list"` returns
+named versions and autosave history (20 each); `"save"` `{label}` snapshots the current DRAFT
+(server side, so never an unsaved local copy); `"restore"` `{version_id | history_id}`
+replaces the draft (dry run by default). If the restored page is the one open, the session
+re-reads it, because the next write would otherwise land on a tree the server has replaced.
+A restore changes the draft only: publish afterwards.
+
+## `sb_code`
+
+The site's CUSTOM CODE files (`/api/sites/{siteId}/code-files`), which is where tracking
+pixels, analytics tags, chat widgets and site-wide CSS go. Each file is injected at `head`,
+`body_start` or `body_end` of every page, or of one page when created with `page_id`. This is
+not the `custom-code` element, which renders inside the page body.
+`action:"list"` (`page_id` lists that page's files plus the site-wide ones), `"set"` (no `id`
+creates, defaulting to `javascript` / `body_end` / enabled; with `id` it merges the named
+fields over the stored row, because **the platform's PUT is a full replace and a partial body
+blanks `content`**) and `"remove"`. Writes are dry runs by default.
+
+Injected at serve time, so a write is live on the next request with no publish. css is
+wrapped in `<style>` and javascript in `<script>` unless the content already opens with that
+tag. Markup in a css/javascript file would be wrapped again and render as text, so it is
+refused with `language:"html"` named as the fix.
+
+## `sb_translate`
+
+The editor's **Multilingual** panel as one tool, over the session-scoped
+`/api/sites/{siteId}/translations` routes. One `action`:
+
+- `status` {`locale`?}: the site default, enabled `locales`, `auto_approve`, whether a machine
+  translator is configured (`auto_translate.available`, plus `budget_remaining` when capped),
+  and `progress` counts for `locale`.
+- `locales` {`add`?, `remove`?}: enable or disable languages in `settings.locales`. The PUT
+  replaces the WHOLE settings document, so the tool GETs it and sends it back with only
+  `locales` moved. The default (`defaultLocale` → `locale` → head of `locales` → `vi`, the
+  platform's `sitelang.DefaultOf`) is always first and can never be removed.
+- `page` {`page_id`, `locale`, `offset`?}: every translatable string on the page, collected
+  exactly as `editor/src/features/translations/pageFill.ts` does — from the COMPOSED source
+  (globals and overlays included), per the generated registry (`TRANSLATABLE_FIELDS`:
+  `html`, `list` by base text or by item id with nested `items`, `when` gated on a sibling;
+  `TRANSLATABLE_CONFIG` as `config.<key>`), non-blank only. Joined with the stored values and
+  source hashes into `missing | done | outdated` (a row with no stored hash is never outdated).
+  `counts` covers the page; `rows` is 60 at a time, work first, `next_offset` for more.
+- `write` {`page_id`, `locale`, `entries: [{entity_id, field, value}]`, `source`?}: node rows
+  only. Every row is checked against the collector — a key the registry does not allow on that
+  element (`htmlTag`, `src`, an icon `name`), a list item id that does not exist, an empty
+  source or a `when` that is off refuses the WHOLE call, as the route is all-or-nothing. Each row
+  carries `sourceHash` (FNV-1a 32-bit hex of the node's current text). `source` defaults to
+  `machine`.
+- `auto` {`page_id`, `locale`, `from`?}: machine-fill the page through `POST …/translations/auto`
+  in batches of 40, `html` fields dropped (a human's job), `from` defaulting to the site
+  default. The route fills only what is missing, so running again continues. Refused when no
+  translator is configured.
+- `review` {`locale`, `entries`? | `all: true`}: approve rows through `…/review/bulk`.
+
+**The review gate:** only `source: "human"` rows are served to shoppers. Machine rows wait
+until reviewed, or until `settings.translations.autoApprove`. Said once per process. A
+`locale` not in `settings.locales` is stored but served by no storefront —
+`locale_not_enabled` says so. Every write defaults to `dry_run: true`.
+
 ## Working with the other MCP servers
 
 These tools answer three of the five questions a site raises. The other two need a design
@@ -2314,7 +2383,7 @@ three phases.** It read "the platform has no page history, no versions and no re
 was true of the OpenAPI document and false of the platform: `saveDraftRaw` appends an autosave
 checkpoint on every draft save, `SaveVersion` mints a labelled snapshot, and both restore.
 They carried no `@Router` line, so they reached a browser and reached nothing else — now
-annotated and on the call sheet (`sb_api_find "page versions"`). Reach for them first when a
+annotated and on the call sheet (`sb_page_version`). Reach for them first when a
 page is what was wrecked: they are the platform's own and survive everything, while the log
 below lives in this process and dies with it. A RESTORE CHANGES THE DRAFT, so publish
 afterwards. A page DELETE is still one-way.

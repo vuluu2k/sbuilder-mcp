@@ -98,7 +98,9 @@ in this client: one would put the very key the platform exists to hold back into
 | `sb_template_use` | Instantiate a template into a page |
 | `sb_page_list` | Every page on the site |
 | `sb_page_create` | Create a page — a store type arrives with the editor's own starting document; `type` is the route for checkout, product, category, post, course |
-| `sb_page_update` | Edit a page's name, slug, home flag, order, SEO (title, description, Open Graph, robots, meta tags, JSON-LD) and members-only flag — merged into `settings`, so the keys it does not name survive |
+| `sb_page_update` | Edit a page's name, slug, home flag, order, SEO (title, description, Open Graph, robots, meta tags, JSON-LD) and members-only flag — merged into `settings`, so the keys it does not name survive. On a template page: make it the type's default, or choose which products/categories/posts render through it |
+| `sb_page_version` | A page's platform recovery points — list named versions and autosave history, snapshot the draft, restore one |
+| `sb_code` | The site's custom code files (tracking pixels, analytics, chat widgets, site CSS) injected into every page or one — list, create, merge-update, remove |
 | `sb_publish` | Compile the draft into the live page (cascades to shared globals), report which revision went live, and with `verify` check the origin is serving it; lists other pages with unpublished drafts (`publish_drafts` publishes them too) |
 | `sb_page_state` | Which of a page's three copies is which — the DRAFT the editor canvas shows, the PUBLISHED row the storefront serves, and this session's — plus whether the editor will render the canvas BLANK, and where the recovery points are |
 | `sb_page_repair` | Rename a page root that is not `ROOT` (left by older seeds) so every editor build draws it — one page or the whole site |
@@ -112,8 +114,9 @@ in this client: one would put the very key the platform exists to hold back into
 | `sb_import` | Read a page from any public URL and add its structure and content to the open page as real elements, styled with THIS page's own tokens — a translation, not a clone |
 | `sb_import_site` | Read a WHOLE site from one URL — its sitemap, or the links on that page — and give each page found its own draft page here, built from this site's tokens; the entry page's own colours and type scale also patch into this SITE'S theme, so it stops being purely a read |
 | `sb_theme` | Read or patch the site's palette and type scale — the layer every style preset resolves from, so one token repaints every page; `locale` sets the site's language |
+| `sb_translate` | Translate a site the way the editor's Multilingual panel does — enable languages, list a page's strings as missing / done / outdated, write or machine-fill them, approve machine rows |
 | `sb_store` | Run a store flow that must happen in a fixed order — `checkout` (the four writes that make a working one), `checkout_sync` (the store's current payment and delivery methods into every existing order form, checkout page republished), `form` (any of the platform's 17 templates with its own field document), `chrome` (one shared header or footer on a real site menu — desktop menu, mobile drawer, cart and account icons), `menu` (a menu node bound to the site's menu, its links resolved), `overlay_attach` (a pop-up or quick view on the open page), `cart` (the site's cart drawer, when it has none; `relocalize` puts an existing one in the site's language) and `app` (a built-in app plus the pages it needs), `global_attach` / `global_detach` (put an EXISTING shared section on the open page, or take it off), `global_promote` (make a section on the page a NEW shared section) and `template_save` (save a section as a reusable template) |
-| `sb_undo` | Undo / redo this session's writes — page and form edits and `sb_api_call` PUTs; a page is refused if someone else saved it since. The platform's versions and history (`sb_api_find` "page versions") outlive this process |
+| `sb_undo` | Undo / redo this session's writes — page and form edits and `sb_api_call` PUTs; a page is refused if someone else saved it since. The platform's versions and history (`sb_page_version`) outlive this process |
 
 Twenty-eight tools, **814 API operations** (298 of the 376 writes carrying a body shape read
 off the handler), 123 elements, 79 binding sources. `sb_api_find`

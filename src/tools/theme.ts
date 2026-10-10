@@ -111,7 +111,7 @@ export async function ensureSiteTheme(ctx: ToolContext, siteId: string): Promise
 }
 
 /** The platform's own guard (`sitesettings.LocaleTag`): a BCP-47-shaped tag. */
-const LOCALE_TAG = /^[A-Za-z]{2,8}(-[A-Za-z0-9]{1,8})*$/;
+export const LOCALE_TAG = /^[A-Za-z]{2,8}(-[A-Za-z0-9]{1,8})*$/;
 
 /**
  * THE SITE'S LANGUAGE — `settings.locale`, what `<html lang>` is served from.

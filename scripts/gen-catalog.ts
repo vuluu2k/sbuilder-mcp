@@ -10,9 +10,9 @@
  *
  * Run: WB_REPO=/path/to/web_builder npm run codegen
  */
-import { existsSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync, realpathSync, writeFileSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
-import { join, resolve } from 'node:path';
+import { join, resolve, sep } from 'node:path';
 import { buildRequestShapes } from './shapes.js';
 import { reportInertDrift } from './inert-drift.js';
 import { deadKeysModule, reportDeadKeys, scanDeadKeys } from './deadkey-scan.js';
@@ -445,6 +445,15 @@ function readNavigableFilters(repo: string): { value: string; types: string[] } 
   return { value: behavior[1], types: [...types].sort() };
 }
 
+/** One entry of the platform's translatable-field registry, as far as codegen reads it. */
+interface TrField {
+  key: string;
+  html?: boolean;
+  multiline?: boolean;
+  list?: string | { itemIdKey: string; textKey: string | readonly string[] };
+  when?: { key: string; equals: string };
+}
+
 /** A built node as the editor's factory returns it — ids and parents included. */
 interface RawNode {
   id: string;
@@ -652,6 +661,20 @@ function assertCommitted(repo: string): void {
     console.error('warning: --dirty — reading a working tree, so half-finished work can ship');
     return;
   }
+  // THE WORKSPACE PACKAGES MUST RESOLVE INSIDE WB_REPO. `node_modules/@webbuilder/*`
+  // are relative links (`../../schema`), so a worktree whose whole `node_modules` is a
+  // symlink to another checkout imports THAT checkout's working tree — every check
+  // below passes on the worktree while the catalog is read from somebody's
+  // uncommitted edits. Measured twice: form seeds gained `urlParam`/`hideOnPage` from
+  // a WIP `form-text/meta.ts` on a clean detached origin/main.
+  const root = realpathSync(repo);
+  const escaped = ['editor', 'schema', 'runtime']
+    .map((pkg) => join(repo, 'node_modules', '@webbuilder', pkg))
+    .filter(existsSync)
+    .map((link) => [link, realpathSync(link)])
+    .filter(([, real]) => !real.startsWith(root + sep))
+    .map(([link, real]) => `${link} -> ${real}`);
+  if (escaped.length) refuse('resolves @webbuilder/* to ANOTHER checkout from', escaped);
   const read = ['schema/src', 'editor/src', 'server/render', 'server/docs', 'runtime/src'];
   let out = '';
   try {
@@ -734,8 +757,6 @@ function assertCommitted(repo: string): void {
     // No git, or a command this git cannot run: say nothing rather than refuse
     // on the strength of a tool failure.
   }
-  return;
-  return;
 }
 
 function refuse(what: string, lines: string[]): never {
@@ -748,7 +769,9 @@ function refuse(what: string, lines: string[]): never {
   console.error(
     'Point WB_REPO at a PUBLISHED ref instead — the cheap way is a detached worktree:\n' +
       '  git -C <web_builder> worktree add --detach /tmp/wb origin/main\n' +
-      '  ln -s <web_builder>/node_modules /tmp/wb/node_modules   # and editor/, schema/, runtime/\n' +
+      '  mkdir /tmp/wb/node_modules; for e in <web_builder>/node_modules/* <web_builder>/node_modules/.bin; do\n' +
+      '    [ "${e##*/}" = @webbuilder ] || ln -s "$e" /tmp/wb/node_modules/; done\n' +
+      '  cp -RP <web_builder>/node_modules/@webbuilder /tmp/wb/node_modules/   # relative links: resolve in /tmp/wb\n' +
       'Pass --dirty to read this checkout on purpose.',
   );
   process.exit(1);
@@ -4323,7 +4346,9 @@ export const FORM_RULE_VOCAB = ${JSON.stringify({ joins: ruleJoins, ops: conditi
   const trMod = (await import(
     resolve(repo, 'schema/src/elements/translatableFields.ts')
   )) as {
-    TRANSLATABLE_SPECIALS: Record<string, ReadonlyArray<{ key: string }>>;
+    TRANSLATABLE_SPECIALS: Record<string, ReadonlyArray<TrField>>;
+    TRANSLATABLE_CONFIG: Record<string, ReadonlyArray<TrField>>;
+    CONFIG_FIELD_PREFIX: string;
     NEVER_TRANSLATED: readonly string[];
     TRANSLATION_ENTITY_TYPES: readonly string[];
     translatableEntityFieldsFor: (
@@ -4340,6 +4365,49 @@ export const FORM_RULE_VOCAB = ${JSON.stringify({ joins: ruleJoins, ops: conditi
     const keys = fields.map((f) => f.key);
     if (keys.length) trSpecials[type] = keys;
   }
+  // THE FIELD DESCRIPTORS, for `sb_translate`'s collector — the editor's
+  // `collectPageEntries` (editor/src/features/translations/pageFill.ts) walks
+  // exactly these: `html` (a machine fill skips it), `list` (one row per item,
+  // addressed by base text or by the item's own id) and `when` (translatable
+  // only while a sibling special holds a value — qr-code's `value` is a URL
+  // otherwise). `labelKey`, `multiline` and `richOf` steer the merchant's panel
+  // and the appliers, not which rows exist, so they are left behind.
+  const trDescriptor = (type: string, f: TrField) => {
+    const l = f.list;
+    if (
+      l !== undefined &&
+      !(l === 'strings' || l === 'labels' || l === 'attributes') &&
+      !(typeof l === 'object' && typeof l.itemIdKey === 'string' &&
+        (typeof l.textKey === 'string' || (Array.isArray(l.textKey) && l.textKey.every((k) => typeof k === 'string'))))
+    ) {
+      console.error(`${type}.${f.key}: unknown translatable list shape ${JSON.stringify(l)} — teach the reader`);
+      process.exit(1);
+    }
+    if (f.when && (typeof f.when.key !== 'string' || typeof f.when.equals !== 'string')) {
+      console.error(`${type}.${f.key}: unknown \`when\` shape ${JSON.stringify(f.when)} — teach the reader`);
+      process.exit(1);
+    }
+    return {
+      key: f.key,
+      ...(f.html ? { html: true } : {}),
+      ...(l !== undefined ? { list: l } : {}),
+      ...(f.when ? { when: { key: f.when.key, equals: f.when.equals } } : {}),
+    };
+  };
+  const trDescriptors = (table: Record<string, ReadonlyArray<TrField>>) => {
+    const out: Record<string, unknown[]> = {};
+    for (const [type, fields] of Object.entries(table)) {
+      if (fields.length) out[type] = fields.map((f) => trDescriptor(type, f));
+    }
+    return out;
+  };
+  const trFields = trDescriptors(trMod.TRANSLATABLE_SPECIALS);
+  const trConfig = trDescriptors(trMod.TRANSLATABLE_CONFIG ?? {});
+  if (typeof trMod.CONFIG_FIELD_PREFIX !== 'string' || !trMod.CONFIG_FIELD_PREFIX) {
+    console.error('CONFIG_FIELD_PREFIX is gone from translatableFields.ts — the config-field address moved');
+    process.exit(1);
+  }
+
   const trEntities: Record<string, unknown[]> = {};
   for (const t of trMod.TRANSLATION_ENTITY_TYPES) {
     const fields = trMod.translatableEntityFieldsFor(t);
@@ -4400,6 +4468,28 @@ export const TRANSLATABLE_SPECIALS: Record<string, string[]> = ${JSON.stringify(
  * because a positive-only list goes stale silently as elements ship new strings.
  */
 export const NEVER_TRANSLATED: string[] = ${JSON.stringify([...trMod.NEVER_TRANSLATED].sort(), null, 2)};
+
+/** One translatable field, as the editor's page collector reads it. */
+export interface TranslatableFieldSpec {
+  key: string;
+  /** Reaches a raw HTML sink: a machine fill skips it, a human writes it. */
+  html?: true;
+  /**
+   * One row per item: \`strings\`/\`labels\` address \`<key>.<base text>\`, the
+   * object form \`<key>.<item id>.<textKey>\` (nested \`items\` walked too).
+   */
+  list?: 'strings' | 'labels' | 'attributes' | { itemIdKey: string; textKey: string | string[] };
+  /** Translatable only while \`specials[when.key] === when.equals\`. */
+  when?: { key: string; equals: string };
+}
+
+/** Every translatable special per element, with its shape. */
+export const TRANSLATABLE_FIELDS: Record<string, TranslatableFieldSpec[]> = ${JSON.stringify(trFields, null, 2)};
+
+/** Content an element keeps in \`config\` (base only), addressed as \`CONFIG_FIELD_PREFIX + key\`. */
+export const TRANSLATABLE_CONFIG: Record<string, TranslatableFieldSpec[]> = ${JSON.stringify(trConfig, null, 2)};
+
+export const CONFIG_FIELD_PREFIX = ${JSON.stringify(trMod.CONFIG_FIELD_PREFIX)};
 
 /** The columns a translation may rewrite on each entity, SEO fields included. */
 export const TRANSLATABLE_ENTITY_FIELDS: Record<

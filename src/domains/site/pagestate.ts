@@ -116,7 +116,7 @@ export function canvasVerdict(document: unknown): CanvasVerdict {
     fix:
       'Do NOT open and save this page in the editor until it is repaired — that save is what ' +
       'makes the loss permanent. Recover the draft from a page version or from the published ' +
-      'copy (sb_api_find "page versions").',
+      'copy (sb_page_version).',
   };
 }
 

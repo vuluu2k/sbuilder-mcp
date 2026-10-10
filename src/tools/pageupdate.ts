@@ -37,6 +37,15 @@ const SEO = z
   .partial()
   .strict();
 
+/** Page type → the entity kind it renders (`editor/src/features/pagelinks/types.ts`). */
+const LINK_TYPE_FOR_PAGE_TYPE: Record<string, string> = {
+  product: 'product',
+  category: 'productCategory',
+  post: 'article',
+  blog: 'blogCategory',
+  course: 'course',
+};
+
 const PUBLISH_NOTICE =
   'Page settings are published verbatim: the storefront shows this change after sb_publish.';
 
@@ -46,7 +55,9 @@ export function registerPageUpdateTools(server: McpServer, ctx: ToolContext): vo
     {
       description:
         "Edit a page's name, slug, home flag, order, SEO (merged key by key) or members_only. " +
-        'Reads the page first and merges `settings`, so keys it does not name survive.',
+        'Reads the page first and merges `settings`, so keys it does not name survive. On a ' +
+        'template page (product, category, post, blog, course): default_template makes it the ' +
+        'type\'s default, render_for/render_default move entities onto it or back to the default.',
       inputSchema: {
         site_id: z.string().optional(),
         page_id: z.string(),
@@ -56,11 +67,27 @@ export function registerPageUpdateTools(server: McpServer, ctx: ToolContext): vo
         sort_order: z.number().int().optional(),
         seo: SEO.optional(),
         members_only: z.boolean().optional(),
+        default_template: z.literal(true).optional(),
+        render_for: z.array(z.string()).optional().describe('entity ids that should render through this page'),
+        render_default: z.array(z.string()).optional().describe('entity ids to return to the type default'),
         dry_run: z.boolean().optional(),
       },
       annotations: { readOnlyHint: false, destructiveHint: false },
     },
-    async ({ site_id: given, page_id, name, slug, is_homepage, sort_order, seo, members_only, dry_run }) => {
+    async ({
+      site_id: given,
+      page_id,
+      name,
+      slug,
+      is_homepage,
+      sort_order,
+      seo,
+      members_only,
+      default_template,
+      render_for,
+      render_default,
+      dry_run,
+    }) => {
       seo?.jsonld?.forEach((block, i) => {
         try {
           JSON.parse(block);
@@ -68,7 +95,8 @@ export function registerPageUpdateTools(server: McpServer, ctx: ToolContext): vo
           throw new Error(`sbuilder: seo.jsonld[${i}] is not JSON: ${(e as Error).message}`);
         }
       });
-      const path = `/api/sites/${encodeURIComponent(siteFor(ctx, given))}/pages/${encodeURIComponent(page_id)}`;
+      const site = `/api/sites/${encodeURIComponent(siteFor(ctx, given))}`;
+      const path = `${site}/pages/${encodeURIComponent(page_id)}`;
       const token = siteToken(ctx);
       const got = (await request({ base: ctx.base, method: 'GET', path, token, fetchImpl: ctx.fetchImpl })) as {
         page?: Record<string, unknown>;
@@ -107,6 +135,31 @@ export function registerPageUpdateTools(server: McpServer, ctx: ToolContext): vo
         body[key] = v;
       }
       if (Object.keys(changes).some((k) => k === 'members_only' || k.startsWith('seo.'))) body.settings = settings;
+
+      // WHICH ENTITIES RENDER THROUGH THIS PAGE — the editor's PageAssignPanel
+      // (`features/pagelinks`). The link type follows the page's TYPE; the server
+      // refuses a mismatch (422) itself, so this only names it up front.
+      const sends: Array<{ method: string; path: string; body?: unknown }> = [];
+      const linkType = LINK_TYPE_FOR_PAGE_TYPE[String(page.type ?? '')];
+      if ((default_template || render_for?.length || render_default?.length) && !linkType) {
+        throw new Error(
+          `sbuilder: page ${page_id} is a "${String(page.type ?? 'page')}" page, which renders no entities — ` +
+            `default_template/render_for need a ${Object.keys(LINK_TYPE_FOR_PAGE_TYPE).join(', ')} page.`,
+        );
+      }
+      if (default_template && page.isDefaultTemplate !== true) {
+        changes.default_template = [false, true];
+        sends.push({ method: 'PUT', path: `${path}/default-template` });
+      }
+      if (render_for?.length) {
+        changes.render_for = [null, `${render_for.length} ${linkType}`];
+        sends.push({ method: 'POST', path: `${site}/page-links/bulk`, body: { linkType, linkIds: render_for, pageId: page_id } });
+      }
+      if (render_default?.length) {
+        changes.render_default = [null, `${render_default.length} ${linkType}`];
+        sends.push({ method: 'POST', path: `${site}/page-links/bulk`, body: { linkType, linkIds: render_default, pageId: null } });
+      }
+      const patching = Object.keys(body).length > 0;
       if (Object.keys(changes).length === 0) {
         throw new Error('sbuilder: nothing to change — every field given already holds that value on this page.');
       }
@@ -114,18 +167,31 @@ export function registerPageUpdateTools(server: McpServer, ctx: ToolContext): vo
       if (dry_run !== false) {
         return text({
           dry_run: true,
-          would_send: redact({ method: 'PATCH', path, body }),
+          would_send: redact([...(patching ? [{ method: 'PATCH', path, body }] : []), ...sends]),
           changes,
           ...(ctx.notices.peek('page_update_publish', PUBLISH_NOTICE) ? { note: PUBLISH_NOTICE } : {}),
         });
       }
-      const res = (await request({ base: ctx.base, method: 'PATCH', path, token, body, fetchImpl: ctx.fetchImpl })) as {
-        page?: Record<string, unknown>;
-      };
+      const res = (
+        patching ? await request({ base: ctx.base, method: 'PATCH', path, token, body, fetchImpl: ctx.fetchImpl }) : {}
+      ) as { page?: Record<string, unknown> };
+      // NOT ATOMIC — separate routes. A refusal midway names what already landed.
+      const links: unknown[] = [];
+      const landed: string[] = patching ? ['PATCH page'] : [];
+      for (const r of sends) {
+        try {
+          const out = await request({ base: ctx.base, method: r.method, path: r.path, token, body: r.body, fetchImpl: ctx.fetchImpl });
+          if (r.path.endsWith('/bulk')) links.push(out);
+          landed.push(`${r.method} ${r.path.split('/').slice(-2).join('/')}`);
+        } catch (e) {
+          throw new Error(`${(e as Error).message} (already applied: ${landed.join(', ') || 'nothing'})`);
+        }
+      }
       const note = ctx.notices.once('page_update_publish', PUBLISH_NOTICE);
       return text({
         updated: page_id,
         changes,
+        ...(links.length ? { links } : {}),
         ...(res?.page?.slug !== undefined && slug !== undefined && res.page.slug !== slug ? { slug_became: res.page.slug } : {}),
         ...(note ? { note } : {}),
       });

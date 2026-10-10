@@ -11,7 +11,10 @@ description: How the committed catalog is generated from a web_builder checkout 
 
 ```bash
 cd <web_builder> && git fetch && git worktree add --detach <scratch>/wb origin/main
-ln -s <web_builder>/node_modules <scratch>/wb/node_modules   # plus schema/editor/runtime node_modules
+mkdir <scratch>/wb/node_modules                                # a REAL dir — see below
+for e in <web_builder>/node_modules/* <web_builder>/node_modules/.bin; do
+  [ "${e##*/}" = @webbuilder ] || ln -s "$e" <scratch>/wb/node_modules/; done
+cp -RP <web_builder>/node_modules/@webbuilder <scratch>/wb/node_modules/   # relative links → the worktree
 WB_REPO=<scratch>/wb npm run codegen:check    # exits 1 naming every stale file
 WB_REPO=<scratch>/wb npm run codegen          # writes src/catalog/*.generated.ts
 ```
@@ -24,6 +27,10 @@ checkout.generated.ts" that afternoon, because the other checkout's `editor/` ha
 (`var(--wb-sc-buttonBg, …)` in the form seeds). Make `<scratch>/wb/node_modules` a real
 directory: symlink every entry of the original EXCEPT `@webbuilder`, and point
 `@webbuilder/{editor,schema,runtime}` at `<scratch>/wb/…`. The check then read "current" again.
+Prose did not stop it: the code block above still said the whole-directory symlink, and two
+agents in one session (2026-10-10) followed it — the form seeds and the translations catalog
+picked up a WIP `form-text/meta.ts` from the user's checkout. So `assertCommitted` now REFUSES
+when any `node_modules/@webbuilder/*` realpath leaves `WB_REPO`.
 
 Never point it at a working tree somebody is editing — it refuses one (see below). After a
 regen, the counts pinned in `test/readme-counts.test.ts`, `test/inert-*.test.ts` and both
@@ -75,7 +82,7 @@ Writes nothing; exits 1 naming every file that would change. Point it at a COMMI
 rather than a working tree — a checkout somebody is mid-edit in will bake half-finished work
 into the catalog, which happened here (a `bundle-items` element and its relation-slot
 operations, from a concurrent session). A `git worktree add --detach <path> origin/main`
-with `node_modules` symlinked in is the cheap way to get one.
+with `node_modules` set up as in "Running it" is the cheap way to get one.
 
 Expect the token budget to move with it: a real platform addition grows a call sheet, and
 `test/token-budget.test.ts` is meant to catch RUNAWAY growth, not to freeze a byte count.

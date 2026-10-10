@@ -136,7 +136,19 @@ describe('token budget — a diet without a scale comes back', () => {
     // also holds membersOnly / courseGate, so a raw PATCH carrying only SEO un-gated a
     // members page. Most of the cost is the strict `seo` shape, and it is the point —
     // an unknown key would be stored and read by nothing.
-    expect(JSON.stringify(tools).length).toBeLessThan(32_500);
+    //
+    // +1,200 buys `sb_translate` (measured 1,185 for the tool alone, after cutting a
+    // 1,610 first draft: argument meanings live in its refusals and the review-gate
+    // notice, said once). The editor's Multilingual flow needs a collector mirrored
+    // from pageFill.ts, the FNV source fingerprint and a whole-settings merge to enable
+    // a language; rebuilt by hand through sb_api_call, each fails silently.
+    //
+    // 33,700 -> 36,300 buys `sb_code` (1,121), `sb_page_version` (827) and
+    // sb_page_update's template assignment (~330; measured 35,978 in all). Custom code is
+    // a full-replace PUT that blanks `content` on a partial body, a page restore leaves an
+    // open session editing a replaced tree, and which entities render through a template
+    // page had no tool at all — the editor's three remaining page-level panels.
+    expect(JSON.stringify(tools).length).toBeLessThan(36_300);
     for (const t of tools) expect(t.description, t.name).not.toMatch(/vanishes on publish/);
     const instructions = client.getInstructions() ?? '';
     expect(instructions.length).toBeGreaterThan(200);

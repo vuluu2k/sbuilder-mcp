@@ -62,7 +62,7 @@ fast enough that this is the normal state. Check it against a COMMITTED, PUSHED 
 refuses a dirty or unpublished checkout, and `--dirty` is the deliberate override):
 
 ```bash
-git -C <web_builder> worktree add --detach <scratch>/wb origin/main   # symlink node_modules in
+git -C <web_builder> worktree add --detach <scratch>/wb origin/main   # node_modules: see sbuilder-codegen
 WB_REPO=<scratch>/wb npm run codegen:check
 ```
 
