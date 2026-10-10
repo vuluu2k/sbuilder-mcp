@@ -6,6 +6,11 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.82.5] - 2026-10-10
+
+### Fixed
+- `sb_api_call` accepts `site_id` like every other tool and uses it to fill `{siteId}`, so calls no longer demand `path_params` when `SB_SITE` is unset.
+
 ## [0.82.4] - 2026-10-10
 
 ### Fixed

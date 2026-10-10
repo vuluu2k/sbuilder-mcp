@@ -6,6 +6,11 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.82.5] - 2026-10-10
+
+### Fixed
+- `sb_api_call` nhận `site_id` như mọi tool khác và dùng nó để điền `{siteId}`, nên lệnh gọi không còn đòi `path_params` khi chưa đặt `SB_SITE`.
+
 ## [0.82.4] - 2026-10-10
 
 ### Fixed
