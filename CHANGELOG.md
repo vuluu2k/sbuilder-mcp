@@ -6,6 +6,13 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.82.1] - 2026-10-10
+
+### Fixed
+- `sb_api_call` with `file` now refuses to read or write anything but catalogue spreadsheets (`.xlsx`, `.xls`, `.csv` for upload; `.xlsx`, `.csv`, `.pdf` for download), checked on the real file after symlinks resolve and only inside the working directory or a temp directory, and never a dotfile or dot-directory.
+- `sb_media_upload` with `path` accepts only media files judged on the real file rather than the `name` argument, with `.pdf` allowed only from the same two directories, so a secret file renamed to `x.png` no longer reaches the public CDN.
+- `sb_media_upload` with `url` fetches only public http(s) addresses when the platform cannot download them itself, refusing loopback, private-network, link-local and cloud-metadata hosts, and no longer takes the file type from `name`.
+
 ## [0.82.0] - 2026-10-10
 
 ### Added

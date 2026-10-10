@@ -6,6 +6,13 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.82.1] - 2026-10-10
+
+### Fixed
+- `sb_api_call` với `file` từ chối đọc hoặc ghi mọi thứ ngoài bảng tính catalogue (`.xlsx`, `.xls`, `.csv` khi upload; `.xlsx`, `.csv`, `.pdf` khi tải về), kiểm tra trên file thật sau khi giải symlink, chỉ trong thư mục làm việc hoặc thư mục tạm, và không bao giờ nhận file hay thư mục bắt đầu bằng dấu chấm.
+- `sb_media_upload` với `path` chỉ nhận file media, xét trên file thật chứ không theo tham số `name`, và chỉ cho `.pdf` từ hai thư mục trên, nên file bí mật đổi tên thành `x.png` không còn lên được CDN công khai.
+- `sb_media_upload` với `url` chỉ tải các địa chỉ http(s) công khai khi platform không tự tải được, từ chối loopback, mạng riêng, link-local và metadata cloud, và không còn lấy kiểu file từ `name`.
+
 ## [0.82.0] - 2026-10-10
 
 ### Added
