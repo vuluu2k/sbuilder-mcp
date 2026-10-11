@@ -176,6 +176,15 @@ repo over a number here, and fix the line when you catch one stale.
   under `built_in` (the site's own always first) and applied by `sb_template_use`, which needed
   no new tool and no new argument.
 
+- **`instantiate` INSERTS NOTHING — it only copies.** `POST …/section-templates/{id}/instantiate`
+  reads no body and answers `{document, droppedRefs}` after copying the images; the CALLER
+  places the tree. Until v0.82.7 `sb_template_use` sent `{pageId}`, reported success and left the
+  page unchanged — no test existed for it. Now: `source:"site"` rows place their listed
+  `document` directly (no POST), org/platform rows go through instantiate, both via
+  `heldTree` + `copyNodeInto` for fresh ids. Site-own path measured live 2026-10-11. The
+  org/platform path is NOT measured: the local DB has no `platform_settings.platform_org_id`,
+  so no such rows list; setting one changes the user's shared dev DB — ask first.
+
   **BUILT AS `Captured` TREES THROUGH `toSpecs`, never hand-assembled** — that is the whole
   design. The mapper already knows how to dress a section in the page's own tokens, give a row
   a stack breakpoint, and stop a stacked column becoming 280px of air; a pattern written by hand
