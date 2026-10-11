@@ -115,6 +115,8 @@ repo over a number here, and fix the line when you catch one stale.
   - **`GET /tickets/issued` without `eventId` is ALWAYS empty** — `listTicketsWhere` filters
     `event_id = $2` unconditionally, while the spec calls it optional. Measured 2026-10-11:
     2 tickets in the table, `{issued:[],total:0}` from the API until `eventId` was passed.
+    Fixed upstream in web_builder PR #116 (2026-10-12, total 0 → 2); until a deployment carries
+    it, keep passing `eventId`.
     Marking paid is `PUT /orders/{id}` + `merge:true` (bare PUT erases the lines); it issued
     the tickets and mailed them (local SMTP = mailpit :1025; signing needs `WB_PREVIEW_SECRET`).
 
@@ -186,9 +188,14 @@ repo over a number here, and fix the line when you catch one stale.
   places the tree. Until v0.82.7 `sb_template_use` sent `{pageId}`, reported success and left the
   page unchanged — no test existed for it. Now: `source:"site"` rows place their listed
   `document` directly (no POST), org/platform rows go through instantiate, both via
-  `heldTree` + `copyNodeInto` for fresh ids. Site-own path measured live 2026-10-11. The
-  org/platform path is NOT measured: the local DB has no `platform_settings.platform_org_id`,
-  so no such rows list; setting one changes the user's shared dev DB — ask first.
+  `heldTree` + `copyNodeInto` for fresh ids. Site-own path measured live 2026-10-11; the
+  ORG path measured live 2026-10-12, with no DB write: `POST /api/orgs`, `PUT
+  /api/sites/{id}/org {orgId}` on two sites, a template created with `listed:true` on A,
+  `POST …/{id}/share`, `POST /api/orgs/{orgId}/section-templates/{A}/{id}/review {approve:true}`
+  → it lists on B as `source:"org"`, instantiates, renders after publish. Platform rows take
+  the same branch here (`source !== "site"`); only the server's platform-org lookup differs,
+  and measuring it means writing `platform_settings.platform_org_id` in the user's SHARED dev
+  DB — the auto-mode classifier refuses that, so it needs the user's own hand or rule.
 
   **BUILT AS `Captured` TREES THROUGH `toSpecs`, never hand-assembled** — that is the whole
   design. The mapper already knows how to dress a section in the page's own tokens, give a row
