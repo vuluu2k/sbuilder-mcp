@@ -6,6 +6,16 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.85.0] - 2026-10-11
+
+### Added
+- `sb_api_find` và `sb_api_call` truy cập được 843 operation của platform, gồm đọc, sửa và xoá site (tên, slug, chuyển hướng subdomain, `maintenanceMode`), thành viên site và xuất site.
+- `sb_review` gợi ý bật lại shop đang bảo trì bằng `sb_api_call` trên `patch:/api/sites/{siteId}`.
+
+### Fixed
+- `sb_api_call` ghi "the handler's body" thay vì "(inline)" trong ghi chú `unknown_keys` khi handler không có struct body được đặt tên.
+- Phát vé qua `tickets/issued` không còn yêu cầu `eventId`.
+
 ## [0.84.0] - 2026-10-11
 
 ### Added

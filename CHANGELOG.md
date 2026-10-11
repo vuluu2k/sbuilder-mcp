@@ -6,6 +6,16 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.85.0] - 2026-10-11
+
+### Added
+- `sb_api_find` and `sb_api_call` reach 843 platform operations, including reading, editing and deleting a site (name, slug, subdomain redirect, `maintenanceMode`), site members and site export.
+- `sb_review` suggests switching a shop in maintenance mode back on with `sb_api_call` on `patch:/api/sites/{siteId}`.
+
+### Fixed
+- `sb_api_call` names "the handler's body" instead of "(inline)" in its `unknown_keys` note when the handler has no named body struct.
+- Issuing tickets through `tickets/issued` no longer requires an `eventId`.
+
 ## [0.84.0] - 2026-10-11
 
 ### Added
