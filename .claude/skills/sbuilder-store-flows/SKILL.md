@@ -112,6 +112,11 @@ repo over a number here, and fix the line when you catch one stale.
     first sign is a buyer who cannot pay. A related case: an unpaid order is cancelled after
     `holdMinutes`, and money that lands later issues no tickets. It waits in
     `/tickets/late-payments`.
+  - **`GET /tickets/issued` without `eventId` is ALWAYS empty** — `listTicketsWhere` filters
+    `event_id = $2` unconditionally, while the spec calls it optional. Measured 2026-10-11:
+    2 tickets in the table, `{issued:[],total:0}` from the API until `eventId` was passed.
+    Marking paid is `PUT /orders/{id}` + `merge:true` (bare PUT erases the lines); it issued
+    the tickets and mailed them (local SMTP = mailpit :1025; signing needs `WB_PREVIEW_SECRET`).
 
 - **A PAGE AN AGENT CREATED WAS NOT PART OF THE SITE.** A page created through the editor
   carries the site's header and footer; `sb_page_create` attached NEITHER, so a site built with

@@ -173,11 +173,17 @@ kiểm chạy theo thứ tự sau:
 
 Đơn vé chưa trả giữ chỗ trong `holdMinutes`, sau đó **tự bị huỷ**. Tiền về sau mốc đó không
 phát vé; đơn nằm chờ ở `get:/api/sites/{siteId}/tickets/late-payments` để người quyết định.
-Khi đơn chuyển `paid` (webhook cổng thanh toán, hoặc chủ shop đánh dấu đã trả), mỗi đơn vị
+Khi đơn chuyển `paid` (webhook cổng thanh toán, hoặc chủ shop đánh dấu đã trả:
+`put:/api/sites/{siteId}/orders/{id}` với `body:{payment:"paid"}` và **`merge:true`** — PUT thay
+cả đơn, thiếu nó là mất dòng hàng và thông tin khách; dùng API key thì
+`patch:/api/v1/orders/{id}` `{payment:"paid"}` chỉ đụng trường đó), mỗi đơn vị
 được phát một vé, và người mua nhận email có QR cùng link `/_wb/t/<token>`. Giỏ toàn vé miễn
 phí được tính là đã trả ngay lúc tạo đơn. Khách đã đăng nhập xem vé qua element `my-tickets`
 trên trang tài khoản; các hàng vé chỉ hiện ở trang đã xuất bản. Khách vãng lai dùng
-`/_wb/t/lookup`. Danh sách người tham dự ở `get:/api/sites/{siteId}/tickets/issued`.
+`/_wb/t/lookup`. Danh sách người tham dự ở `get:/api/sites/{siteId}/tickets/issued` với
+**`query:{eventId}` — thực tế là bắt buộc**: thiếu nó danh sách luôn rỗng, dù spec ghi là tuỳ
+chọn. Đo ngày 2026-10-11: đánh dấu đã trả một đơn 2 vé thì phát đúng 2 vé và gửi email đơn
+hàng, xác nhận thanh toán và vé.
 
 **Lỗi khi quản lý** (`code` trong lỗi): `invalid_event_request` (400, trường ngoài khoảng
 hoặc thao tác sai trạng thái), `timezone_required` (409, thiếu bước 2), `event_incomplete`

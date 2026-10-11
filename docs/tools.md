@@ -170,11 +170,17 @@ language. The checks run in this order:
 An unpaid ticket order holds its seats for `holdMinutes`, then is **cancelled automatically**.
 Money that arrives after that issues no tickets; the order waits in
 `get:/api/sites/{siteId}/tickets/late-payments` for a person to decide. When the order turns
-`paid` (gateway webhook, or the merchant marking it paid), one ticket is issued per unit and
+`paid` (gateway webhook, or the merchant marking it paid: `put:/api/sites/{siteId}/orders/{id}`
+with `body:{payment:"paid"}` and **`merge:true`** — the PUT replaces the whole order, so without
+it the lines and customer are erased; with an API key, `patch:/api/v1/orders/{id}`
+`{payment:"paid"}` touches only that field), one ticket is issued per unit and
 the buyer receives an email with a QR code and a link to `/_wb/t/<token>`. A cart of free
 tickets is paid at creation. Signed-in buyers see their tickets through the `my-tickets`
 element on an account page; its rows appear on the published page only. Guests use
-`/_wb/t/lookup`. Attendees are listed at `get:/api/sites/{siteId}/tickets/issued`.
+`/_wb/t/lookup`. Attendees are listed at `get:/api/sites/{siteId}/tickets/issued` with
+**`query:{eventId}` — required in practice**: without it the list is always empty, though the
+spec marks it optional. Measured 2026-10-11: marking a 2-unit order paid issued 2 tickets and
+sent the order, payment and ticket emails.
 
 **Management refusals** (`code` on the error): `invalid_event_request` (400, a field
 out of range or an action on the wrong status), `timezone_required` (409, step 2 missing),
