@@ -6,6 +6,15 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.83.0] - 2026-10-11
+
+### Added
+- `sb_api_find` and `sb_api_call` reach 830 platform operations, including product brands, blog tags, e-invoicing (providers, issuance queue, seller settings) and food-delivery apps.
+- `sb_page_create` and `sb_page_update` know the `brand` page type, which serves `/brands/{slug}`.
+
+### Changed
+- `sb_review` reports a `brandPage` gap when the site has product brands but no published brand page, since every `/brands/{slug}` URL answers 404 until one exists.
+
 ## [0.82.7] - 2026-10-11
 
 ### Fixed

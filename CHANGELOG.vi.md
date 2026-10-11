@@ -6,6 +6,15 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.83.0] - 2026-10-11
+
+### Added
+- `sb_api_find` và `sb_api_call` truy cập được 830 operation của platform, gồm thương hiệu sản phẩm, tag blog, hoá đơn điện tử (nhà cung cấp, hàng đợi phát hành, cài đặt bên bán) và app giao hàng.
+- `sb_page_create` và `sb_page_update` nhận loại trang `brand`, phục vụ `/brands/{slug}`.
+
+### Changed
+- `sb_review` báo thiếu `brandPage` khi site có thương hiệu sản phẩm mà chưa có trang brand đã publish, vì mọi URL `/brands/{slug}` trả 404 cho đến khi có trang đó.
+
 ## [0.82.7] - 2026-10-11
 
 ### Fixed
