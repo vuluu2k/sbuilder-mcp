@@ -6,6 +6,12 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.82.7] - 2026-10-11
+
+### Fixed
+- `sb_template_use` chèn template của chính site vào trang đang mở, thay vì báo thành công mà trang vẫn trống; `dry_run` không gửi request nào.
+- `sb_page_update` nhận `default_template` và `render_for` trên trang template brand.
+
 ## [0.82.6] - 2026-10-10
 
 ### Fixed

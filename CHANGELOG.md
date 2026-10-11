@@ -6,6 +6,12 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.82.7] - 2026-10-11
+
+### Fixed
+- `sb_template_use` inserts a site's own template into the open page, instead of reporting success while the page stays empty; `dry_run` sends no request.
+- `sb_page_update` accepts `default_template` and `render_for` on brand template pages.
+
 ## [0.82.6] - 2026-10-10
 
 ### Fixed
