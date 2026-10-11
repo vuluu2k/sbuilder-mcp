@@ -6,6 +6,17 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.83.1] - 2026-10-11
+
+### Added
+- `sb_bind` nhận nguồn binding `brand.*` và `blogCategory.*`, nâng số nguồn binding được biết từ 82 lên 94.
+
+### Changed
+- `sb_page_create` với loại trang `brand` hoặc `course`, hoặc với `seed: false`, trả gợi ý `next` nêu cách dựng trang, vì publish trang rỗng khiến mọi URL thực thể trả 500.
+
+### Fixed
+- `sb_review` không còn báo `dead_binding_source` cho binding `blogCategory.*` hợp lệ.
+
 ## [0.83.0] - 2026-10-11
 
 ### Added

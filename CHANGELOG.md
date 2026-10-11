@@ -6,6 +6,17 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.83.1] - 2026-10-11
+
+### Added
+- `sb_bind` accepts `brand.*` and `blogCategory.*` binding sources, raising the known binding sources from 82 to 94.
+
+### Changed
+- `sb_page_create` with the `brand` or `course` page type, or with `seed: false`, returns a `next` hint explaining how to build the page, since publishing an empty one makes every entity URL answer 500.
+
+### Fixed
+- `sb_review` no longer reports `dead_binding_source` for valid `blogCategory.*` bindings.
+
 ## [0.83.0] - 2026-10-11
 
 ### Added
