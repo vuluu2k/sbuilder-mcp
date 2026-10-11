@@ -6,6 +6,15 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.83.2] - 2026-10-11
+
+### Added
+- `sb_api_find` và `sb_api_call` truy cập được 833 operation của platform.
+
+### Fixed
+- Server đăng xuất phiên thiết bị khi tiến trình thoát (stdin đóng, SIGTERM, SIGINT) và trước khi `sb_connect` đăng nhập lại, nên phiên MCP bỏ lại không còn chiếm giới hạn 10 thiết bị của platform và đẩy merchant ra khỏi editor.
+- Việc đóng Chrome sau khi chụp ảnh không còn giết tiến trình trước khi kịp đăng xuất.
+
 ## [0.83.1] - 2026-10-11
 
 ### Added
