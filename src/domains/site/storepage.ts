@@ -2,8 +2,11 @@ import {
   COMPLETION_HEADLINE,
   COMPLETION_HEADLINE_SENTINEL,
   PAGE_LAYOUT_SEEDS,
+  PAGE_TYPES,
   STORE_PAGE_SEEDS } from '../../catalog/storepages.generated.js';
+import { BINDING_SOURCES } from '../../catalog/elements.generated.js';
 import { withFreshIds } from './ids.js';
+import { PAGE_ENTITIES } from './review.js';
 
 /**
  * WHAT A NEW STORE PAGE OPENS WITH — for an agent, as for a merchant.
@@ -67,6 +70,39 @@ export function seedDocument(
   const escaped = JSON.stringify(headline).slice(1, -1);
   return withFreshIds(
     JSON.parse(raw.split(COMPLETION_HEADLINE_SENTINEL).join(escaped)) as ReturnType<typeof seedDocument> & object,
+  );
+}
+
+/**
+ * What to put on an ENTITY TEMPLATE that opens empty, or null.
+ *
+ * An entity template (a type whose route carries `{slug}`) with an empty
+ * document answers 500 "entity render failed" at EVERY one of its URLs once
+ * published — `storefront/entityroute.go` refuses an empty body rather than
+ * serve a blank 200. Measured on a brand page: empty → 500 at /brands/acme,
+ * one heading → 200. The editor seeds some of these types and not others
+ * (brand and course today), and `seed:false` or a refused seed write leaves any
+ * of them empty, so the rule is "entity template + nothing seeded", not a name.
+ *
+ * A NOTE, NOT AN INVENTED SEED: the platform ships none for brand, and a seed
+ * authored here would be a document nothing upstream keeps current.
+ */
+export function emptyEntityTemplateNote(type: string | undefined): string | null {
+  const route = PAGE_TYPES.find((t) => t.type === type)?.routePattern;
+  const entity = type ? PAGE_ENTITIES[type]?.[0] : undefined;
+  if (!route?.includes('{slug}') || !entity) return null;
+  const has = (k: string) => BINDING_SOURCES.includes(`${entity}.${k}`);
+  const parts = [
+    ...(has('title') ? [`a heading bound to ${entity}.title`] : []),
+    ...(has('description') ? [`a text bound to ${entity}.description`] : []),
+    ...(type === 'brand'
+      ? ['a product grid narrowed to the brand the URL names: sb_template_use template_id "sb_product_shelf", then sb_set its list-dataset config.collectionType "page_brand" (a bare list-dataset has no card and renders empty)']
+      : []),
+  ];
+  return (
+    `This "${type}" page is EMPTY. Published like that, every ${route} answers 500 ` +
+    '"entity render failed". ' +
+    `Before publishing, sb_add ${parts.join(', ')} — bind the heading and text with sb_bind, field "specials.text".`
   );
 }
 

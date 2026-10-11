@@ -1060,6 +1060,19 @@ line, read from the platform's own i18n so a Vietnamese store does not open in E
 seed is a second write: if it fails, the page exists and is blank, and the result says so
 rather than failing the create.
 
+**AN EMPTY ENTITY TEMPLATE ANSWERS 500 AT EVERY ENTITY URL.** A published `brand`, `course`,
+`product`, `category`, `blog` or `post` page with an empty document makes every one of its URLs
+answer 500 "entity render failed" (`storefront/entityroute.go` refuses an empty body rather than
+serve a blank 200). Measured on a brand page: empty → 500 at `/brands/acme`, one heading → 200.
+The editor ships no seed for `brand` or `course`, so those open empty — as does any type created
+with `seed:false` or whose seed write failed — and the result then carries a `next` naming what to
+add. **The brand page recipe:** a heading bound to `brand.title` and a text bound to
+`brand.description` (`sb_bind`, field `specials.text`), plus the products of the brand the URL names: `sb_template_use template_id:"sb_product_shelf"`,
+then `sb_set` its `list-dataset` `config.collectionType: "page_brand"` (the brand twin of
+`page_collection`; a bare `list-dataset` has no card and renders nothing). Measured: `/brands/acme`
+and `/brands/khac` each listed only their own product. `brand.image` (the logo) and `brand.url` are bindable too. Build it, THEN
+publish: publishing it empty clears `sb_review`'s `brandPage` gap onto a URL family that 500s.
+
 **The new page WEARS THE SITE'S CHROME.** A page created through the editor carries the site's
 header and footer; one created here carried neither, so an agent building a site produced pages
 with no navigation and no footer on a site that has both — and nothing reported it, because
@@ -1473,7 +1486,7 @@ publish panel then listed five gaps.
 | `cartDrawerThumbnail` | The cart drawer's line thumbnail is a GALLERY (feature image plus thumbs strip) in a 64px line — a drawer seeded before the platform fixed its seed. Asked of every site. Fix: open a page of the site, then `sb_store action:"cart" relocalize:true dry_run:false` |
 | `cartCount` | Something opens the cart but nothing shows what is in it. `cart-count` is opt-in because `open_cart` is an ACTION any element can carry, so a site built with these tools never gets one: a shopper adds an item, sees a toast fade, and then no evidence anywhere that their basket is not empty |
 | `pageSeo` | Published content pages (`page`, `about`, `contact`, `policy`, `faq`, `blog`) whose `settings` carry no `title` or `description`. Each serves the SITE NAME as its `<title>` and no meta description, so a search result cannot tell them apart. Entity templates get theirs merged from the entity; error/maintain have no address. Fix: `sb_page_update` with `seo: {title, description}` — it reads the page and merges, because `settings` replaces wholesale on the platform. Silent when the page list did not carry `settings` |
-| `articleTemplate` / `blogCategoryPage` / `coursePage` / `brandPage` | The site has articles, blog categories, courses or product brands (counted from their own lists; brands from `GET /product-brands`) and no PUBLISHED page of type `post` / `blog` / `course` / `brand`. `/blog/{slug}`, `/blog-categories/{slug}`, `/courses/{slug}` and `/brands/{slug}` each resolve through that type's template (`storefront/entityroute.go`), so every such link 404s. `draft: true` when the page exists unpublished. Silent when the count is zero or unread. Blog TAGS have no storefront route, so nothing is asked of them |
+| `articleTemplate` / `blogCategoryPage` / `coursePage` / `brandPage` | The site has articles, blog categories, courses or product brands (counted from their own lists; brands from `GET /product-brands`) and no PUBLISHED page of type `post` / `blog` / `course` / `brand`. `/blog/{slug}`, `/blog-categories/{slug}`, `/courses/{slug}` and `/brands/{slug}` each resolve through that type's template (`storefront/entityroute.go`), so every such link 404s. `draft: true` when the page exists unpublished. For `course` and `brand`, which `sb_page_create` opens empty, the fix says to publish it WITH content — an empty entity template answers 500 at every one of its URLs. Silent when the count is zero or unread. Blog TAGS have no storefront route, so nothing is asked of them |
 | `categoryScope` | The open page is the shared `category` template and every product repeater on it is pinned to ONE named collection (`collectionType: "collection"`), so every `/collections/{slug}` shows that one. Since the platform scopes a category template itself, `all_products` / `page_collection` follow the URL and a shared template is correct — no page per category is needed |
 
 Each gap carries `draft: true` when the page EXISTS but is unpublished, because "publish the

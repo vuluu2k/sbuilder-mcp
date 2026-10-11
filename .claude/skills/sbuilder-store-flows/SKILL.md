@@ -523,3 +523,15 @@ repo over a number here, and fix the line when you catch one stale.
   own `#171717`/Inter defaults, which are being moved to tokens upstream — regenerate, do not
   paint over them here.
 
+
+- **AN EMPTY ENTITY TEMPLATE ANSWERS 500, NOT 404 — so publishing one is not a fix.**
+  `storefront/entityroute.go` turns an empty render body into 500 "entity render failed" at
+  EVERY URL of that type (`/brands/{slug}`, `/courses/{slug}`, …). The editor ships no seed for
+  `brand` or `course`, so `sb_page_create` makes them empty, and the readiness `brandPage` gap
+  cleared the moment the empty page was published — a false all-clear. Measured on the local
+  platform 2026-10-11: empty → 500 at `/brands/acme`, one heading → 200. `sb_page_create`
+  returns a `next` (`emptyEntityTemplateNote`, `{slug}` route + nothing seeded) and the readiness
+  fix says "WITH content". A brand page wants `brand.title` / `brand.description` bindings and a
+  product grid at `collectionType: "page_brand"` — `sb_product_shelf` then `sb_set` its list;
+  a bare `list-dataset` has no card and renders empty (measured: filtering per brand works). A note, not a hand-made seed: the platform
+  ships none, and one authored here would drift with nothing upstream keeping it current.

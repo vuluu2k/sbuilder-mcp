@@ -19,6 +19,7 @@
 
 import { cartGalleryThumbs, cartRelocalize, cartSeedLocale } from './cartlang.js';
 import { PRODUCT_ACTION_BINDING_ID } from './navhref.js';
+import { hasSeed } from './storepage.js';
 
 /** Element types that only make sense in a store. */
 const COMMERCE_TYPES = [
@@ -609,6 +610,13 @@ export function readinessGaps(input: ReadinessInput): ReadinessGap[] {
   ] as const) {
     if (!pages || (count ?? 0) === 0 || published(pages, type)) continue;
     const draft = drafted(pages, type);
+    // A type the platform ships no seed for opens EMPTY, and an empty entity
+    // template answers 500 at every one of its URLs (storefront/entityroute.go:
+    // empty body → "entity render failed") — so "publish it" alone trades the
+    // 404s for 500s and clears this gap. Measured on a brand page.
+    const withContent = hasSeed(type)
+      ? ''
+      : ` WITH content on it — an empty one answers 500 at every ${prefix}; sb_page_create's \`next\` says what to add`;
     gaps.push({
       id,
       draft,
@@ -616,8 +624,8 @@ export function readinessGaps(input: ReadinessInput): ReadinessGap[] {
         `This site has ${count} ${what}${count === 1 ? '' : count && count > 1 ? 's' : ''} and no ` +
         `published page of the "${type}" type. ${prefix} needs one, so every ${what} link 404s.`,
       fix: draft
-        ? `Publish the ${what} template page that already exists.`
-        : `Create a page of type "${type}" and publish it.`,
+        ? `Publish the ${what} template page that already exists${withContent}.`
+        : `Create a page of type "${type}" and publish it${withContent}.`,
     });
   }
 

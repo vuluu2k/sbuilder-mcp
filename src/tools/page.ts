@@ -26,6 +26,7 @@ import { baseOnlyNote } from '../domains/site/baseonly.js';
 import { detachNote, presetIdOf, presetLayer } from '../domains/site/theme.js';
 import { inertHintsFor } from '../domains/site/inert.js';
 import {
+  emptyEntityTemplateNote,
   hasSeed,
   layoutDocument,
   seedDocument,
@@ -2565,6 +2566,7 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
           body: redact(body),
           ...(summary ? { would_seed: { type, ...summary } } : {}),
           ...(layout ? { would_open_as: layout } : {}),
+          ...(!summary && !layout && emptyEntityTemplateNote(type) ? { next: emptyEntityTemplateNote(type) } : {}),
           ...(wear.header || wear.footer
             ? { would_wear: { ...(wear.header ? { header: wear.header } : {}), ...(wear.footer ? { footer: wear.footer } : {}) } }
             : {}),
@@ -2628,9 +2630,14 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
       const wearing =
         typeof newId === 'string' && newId ? await wearChrome(session, site_id, newId, wear) : undefined;
 
+      // An entity template that ended up with nothing on it 500s at every
+      // entity URL once published — say what to add, whatever the reason
+      // (no platform seed, seed:false, a refused seed write).
+      const blankNote = !seeded || 'failed' in seeded ? emptyEntityTemplateNote(type) : null;
       return text({
         ...res,
         ...(seeded ? { seeded } : {}),
+        ...(blankNote ? { next: blankNote } : {}),
         ...(wearing ? { chrome: wearing } : {}),
         ...(renamed
           ? {

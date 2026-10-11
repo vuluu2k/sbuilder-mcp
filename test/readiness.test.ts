@@ -911,6 +911,27 @@ describe('readinessGaps() — every entity prefix has a template check', () => {
     for (const c of CASES) expect(site(c.count), c.id).toContain(c.id);
   });
 
+  // PUBLISHING AN EMPTY ONE IS NOT A FIX. A published brand page with an empty
+  // document makes every /brands/{slug} answer 500 "entity render failed"
+  // (storefront/entityroute.go), and the editor ships no brand seed — so "create
+  // and publish" alone clears this gap onto a broken URL family. The seeded
+  // types (blog) open with content and are not told so.
+  it('tells an unseeded template to go live WITH content, in both the create and publish fix', () => {
+    const fixOf = (extra: Record<string, unknown>, id: string) =>
+      readinessGaps({
+        pages: [{ type: 'page', status: 'published' }],
+        liveGateways: null, shippingMethods: null, pageNodes: [], globalNodes: null, globalKinds: ['header'],
+        ...extra,
+      } as never).find((g) => g.id === id)!.fix;
+    for (const pages of [undefined, [{ type: 'page', status: 'published' }, { type: 'brand', status: 'draft' }]]) {
+      const fix = fixOf({ brands: 2, ...(pages ? { pages } : {}) }, 'brandPage');
+      expect(fix).toContain('500');
+      expect(fix).toMatch(/content/i);
+    }
+    expect(fixOf({ courses: 2 }, 'coursePage')).toContain('500');
+    expect(fixOf({ blogCategories: 2 }, 'blogCategoryPage')).not.toContain('500');
+  });
+
   it('is silent for each once its template is published', () => {
     for (const c of CASES) {
       const pages = [

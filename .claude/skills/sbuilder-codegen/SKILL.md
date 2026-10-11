@@ -210,7 +210,7 @@ above today's measurement gets raised again without anybody looking.
   asserts the coverage, so this number moves with the platform and a stale one here is caught
   by the next run, not by a reader). The
   directory has more entries than that because the loose `.ts` files beside the elements
-  are not elements. 79 binding sources, read from BOTH renderers — the Go scope and the
+  are not elements. 94 binding sources (2026-10-11), read from BOTH renderers, their NAMESPACES derived from the keys every `*Context` function returns — a hand-kept namespace list hid `blogCategory.*` and `brand.*`, so `sb_bind` refused them and `sb_review` called correct bindings dead — the Go scope and the
   editor's own binding context, which carries keys the Go side never spells out
   (`product.moneyOverride`, `site.*`, `course.*`). Reading one alone made `sb_review` call
   the platform's own seeded pricing binding dead on every page that showed a price.

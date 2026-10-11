@@ -273,24 +273,46 @@ function readBindingSources(repo: string): string[] {
   // pricing binding as dead, on every pricing element of every page. A check
   // that cries wolf about correct output is worse than no check.
   const files = ['server/render/scope/scope.go', 'schema/src/binding.ts'];
-  const found = new Set<string>();
+  const srcs: string[] = [];
   for (const rel of files) {
-    let src = '';
     try {
-      src = readFileSync(resolve(repo, rel), 'utf8');
+      // Comments stripped: scope.go's prose quotes row directives like
+      // `wb:text="line.title"`, and `line` is not a namespace any context binds.
+      srcs.push(readFileSync(resolve(repo, rel), 'utf8').replace(/^\s*\/\/[^\n]*$/gm, ''));
     } catch {
-      continue;
-    }
-    // SIX NAMESPACES, not four: `site`, `course` and `review` join the original
-    // product/category/article/collection. Missing one made the review call a
-    // seeded binding dead — currency-switcher ships `site.moneySwitch`.
-    const ns = 'product|category|article|collection|site|course|review|instructor';
-    for (const m of src.matchAll(new RegExp(`['"]((?:${ns})\\.[a-zA-Z]+)['"]`, 'g'))) {
-      found.add(m[1]);
+      /* a checkout without one side still has the other */
     }
   }
-  if (found.size < 15) {
-    console.error(`only ${found.size} binding sources found — have scope.go / binding.ts moved?`);
+  // THE NAMESPACES ARE DERIVED, never listed. They were a hand-kept regex
+  // alternation for months, and `blogCategory.*` and `brand.*` arrived behind it
+  // unseen — so `sb_bind` refused `brand.title` and `sb_review` called the
+  // platform's own `blogCategory.image` seed dead. Every key a `*Context`
+  // function (TS `export function xxxContext`, Go `func XxxContext`) RETURNS is
+  // what a binding can resolve to; its first segment is a namespace.
+  const KEY = /['"]([a-zA-Z]+)\.([a-zA-Z]+)['"]/g;
+  const contextKeys = new Set<string>();
+  for (const src of srcs) {
+    for (const m of src.matchAll(/^(?:export )?func(?:tion)? [A-Za-z]*Context\([^\n]*\n([\s\S]*?)^\}/gm)) {
+      for (const k of m[1].matchAll(KEY)) contextKeys.add(`${k[1]}.${k[2]}`);
+    }
+  }
+  const namespaces = new Set([...contextKeys].map((k) => k.split('.')[0]));
+  const found = new Set<string>();
+  for (const src of srcs) {
+    for (const m of src.matchAll(KEY)) if (namespaces.has(m[1])) found.add(`${m[1]}.${m[2]}`);
+  }
+  // A key a context function returns that the result lacks means the readers
+  // above disagree about the file's shape — exit rather than publish a list
+  // that refuses a binding the renderer resolves.
+  const missing = [...contextKeys].filter((k) => !found.has(k));
+  if (missing.length) {
+    console.error(`binding sources: *Context functions return keys the list lacks: ${missing.join(', ')}`);
+    process.exit(1);
+  }
+  if (found.size < 15 || namespaces.size < 5) {
+    console.error(
+      `only ${found.size} binding sources in ${namespaces.size} namespaces found — have scope.go / binding.ts moved?`,
+    );
     process.exit(1);
   }
   return [...found].sort();

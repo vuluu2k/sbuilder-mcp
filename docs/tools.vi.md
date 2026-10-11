@@ -1022,7 +1022,23 @@ danh sách rỗng.
 và `complete` mở ra với đúng tài liệu mà editor đưa cho người bán — sinh bằng cách GỌI các card
 của palette chứ không chép lại, nên hôm nào card thêm mảnh thì cả hai cửa cùng có. Trang product
 mang nguyên buy box (gallery, tiêu đề, giá, chọn biến thể, mô tả, bộ tăng giảm số lượng, Thêm vào
-giỏ, Mua ngay) đã bind sẵn, kèm BINDING `add_to_cart` — thứ khó đoán nhất. **Trang mới MANG CHROME CỦA SITE.** Trang tạo qua editor thì có sẵn header và footer của site;
+giỏ, Mua ngay) đã bind sẵn, kèm BINDING `add_to_cart` — thứ khó đoán nhất.
+
+**TEMPLATE ENTITY RỖNG TRẢ 500 Ở MỌI URL ENTITY.** Một trang `brand`, `course`, `product`,
+`category`, `blog` hay `post` đã publish mà tài liệu rỗng làm mọi URL của nó trả 500 "entity
+render failed" (`storefront/entityroute.go` từ chối body rỗng thay vì trả một trang 200 trắng).
+Đo trên trang brand: rỗng → 500 ở `/brands/acme`, thêm một heading → 200. Editor không có seed
+cho `brand` hay `course`, nên hai type này mở ra rỗng — cũng như mọi type tạo với `seed:false`
+hoặc khi ghi seed thất bại — và kết quả khi đó mang `next` nêu cần thêm gì. **Công thức trang
+brand:** một heading bind `brand.title` và một text bind `brand.description` (`sb_bind`, field
+`specials.text`), cộng sản phẩm của thương hiệu mà URL nêu tên: `sb_template_use template_id:"sb_product_shelf"`,
+rồi `sb_set` `list-dataset` của nó `config.collectionType: "page_brand"` (bản song sinh của
+`page_collection`; một `list-dataset` trần không có thẻ nên không hiện gì). Đã đo: `/brands/acme`
+và `/brands/khac` mỗi trang chỉ liệt kê đúng sản phẩm của mình. `brand.image` (logo) và
+`brand.url` cũng bind được. Dựng xong RỒI mới publish: publish khi còn rỗng sẽ xoá gap
+`brandPage` của `sb_review` trong khi cả họ URL đang trả 500.
+
+**Trang mới MANG CHROME CỦA SITE.** Trang tạo qua editor thì có sẵn header và footer của site;
 trang tạo ở đây thì không có gì cả — nên agent dựng site sẽ ra những trang không menu, không
 footer, trên một site có đủ cả hai, và không gì báo cả: `sb_review` đọc trang thì trang không
 sai, còn `siteChrome` hỏi SITE có global không thì có. Header và footer được đọc từ **TRANG
@@ -1437,7 +1453,7 @@ hoàn toàn bằng bộ tool này review sạch, publish và render đúng; bả
 | `cartDrawerThumbnail` | Thumbnail của dòng sản phẩm trong ngăn giỏ là một GALLERY (ảnh chính kèm dải ảnh nhỏ) nhét trong dòng 64px — ngăn giỏ seed trước khi nền tảng sửa seed. Hỏi với mọi site. Sửa: mở một trang của site, rồi `sb_store action:"cart" relocalize:true dry_run:false` |
 | `cartCount` | Có thứ mở được giỏ nhưng không có gì cho thấy trong giỏ có gì. `cart-count` là tuỳ chọn vì `open_cart` là một HÀNH ĐỘNG mà element nào cũng mang được, nên site dựng bằng bộ công cụ này không bao giờ tự có: khách thêm hàng, thấy một toast tắt đi, rồi không còn dấu hiệu nào cho thấy giỏ không rỗng |
 | `pageSeo` | Trang nội dung đã publish (`page`, `about`, `contact`, `policy`, `faq`, `blog`) mà `settings` không có `title` hoặc `description`. Mỗi trang như vậy dùng TÊN SITE làm `<title>` và không có meta description, nên kết quả tìm kiếm không phân biệt nổi. Template thực thể lấy SEO từ thực thể; error/maintain không có địa chỉ. Sửa: `sb_page_update` với `seo: {title, description}` — tool đọc trang rồi merge, vì phía platform `settings` thay cả cục. Im lặng khi danh sách trang không mang `settings` |
-| `articleTemplate` / `blogCategoryPage` / `coursePage` / `brandPage` | Site có bài viết, danh mục blog, khoá học hoặc thương hiệu sản phẩm (đếm từ chính danh sách của chúng; thương hiệu từ `GET /product-brands`) mà không có trang ĐÃ PUBLISH thuộc type `post` / `blog` / `course` / `brand`. `/blog/{slug}`, `/blog-categories/{slug}`, `/courses/{slug}` và `/brands/{slug}` đều phân giải qua template của type đó (`storefront/entityroute.go`), nên mọi link như vậy đều 404. `draft: true` khi trang đã có nhưng chưa publish. Im lặng khi số đếm bằng 0 hoặc không đọc được. TAG blog không có route storefront nên không bị hỏi |
+| `articleTemplate` / `blogCategoryPage` / `coursePage` / `brandPage` | Site có bài viết, danh mục blog, khoá học hoặc thương hiệu sản phẩm (đếm từ chính danh sách của chúng; thương hiệu từ `GET /product-brands`) mà không có trang ĐÃ PUBLISH thuộc type `post` / `blog` / `course` / `brand`. `/blog/{slug}`, `/blog-categories/{slug}`, `/courses/{slug}` và `/brands/{slug}` đều phân giải qua template của type đó (`storefront/entityroute.go`), nên mọi link như vậy đều 404. `draft: true` khi trang đã có nhưng chưa publish. Với `course` và `brand` — hai type `sb_page_create` mở ra rỗng — cách sửa nói rõ phải publish KÈM nội dung, vì template entity rỗng trả 500 ở mọi URL của nó. Im lặng khi số đếm bằng 0 hoặc không đọc được. TAG blog không có route storefront nên không bị hỏi |
 | `categoryScope` | Trang đang mở là template `category` dùng chung và mọi repeater sản phẩm trên đó đều ghim vào MỘT collection cố định (`collectionType: "collection"`), nên mọi `/collections/{slug}` đều hiện collection đó. Nền tảng đã tự thu hẹp template danh mục theo URL: `all_products` / `page_collection` đi theo URL, một template dùng chung là đúng — không cần mỗi danh mục một trang |
 
 Mỗi khoảng trống mang `draft: true` khi trang ĐÃ CÓ nhưng chưa publish, vì "publish cái đã

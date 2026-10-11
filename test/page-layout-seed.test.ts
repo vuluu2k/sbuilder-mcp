@@ -166,4 +166,34 @@ describe('sb_page_create opens a content page as something', () => {
     const body = await create(platform().f, { site_id: 's1', name: 'Giới thiệu' });
     expect(body.would_open_as).toBe('about');
   });
+
+  // AN EMPTY ENTITY TEMPLATE ANSWERS 500 AT EVERY ENTITY URL. Measured on the
+  // local platform: a published, empty `brand` page made every /brands/{slug}
+  // answer 500 "entity render failed" (storefront/entityroute.go: empty body →
+  // 500); one heading made /brands/acme answer 200. The editor ships no brand
+  // seed, so the created page IS empty and the caller must be told what to add.
+  it('tells the caller an unseeded entity template must get content before publish', async () => {
+    const h = platform();
+    const body = await create(h.f, { site_id: 's1', name: 'Thương hiệu', type: 'brand', chrome: false, dry_run: false });
+    expect(body.seeded).toBeUndefined();
+    const next = String(body.next);
+    expect(next).toContain('500');
+    expect(next).toContain('/brands/{slug}');
+    expect(next).toContain('brand.title');
+    expect(next).toContain('brand.description');
+    expect(next).toContain('page_brand');
+    // and in the dry run, before anything is created
+    expect(String((await create(platform().f, { site_id: 's1', name: 'B', type: 'brand' })).next)).toContain('500');
+  });
+
+  it('says the same of a seeded entity type created blank, and nothing of a seeded one', async () => {
+    const blank = await create(platform().f, { site_id: 's1', name: 'SP', type: 'product', seed: false, chrome: false, dry_run: false });
+    expect(String(blank.next)).toContain('product.title');
+    expect(String(blank.next)).not.toContain('page_brand');
+    const seeded = await create(platform().f, { site_id: 's1', name: 'SP', type: 'product', chrome: false, dry_run: false });
+    expect(seeded.next).toBeUndefined();
+    // not an entity template at all: no URL family to break
+    const plain = await create(platform().f, { site_id: 's1', name: 'Quà tặng', chrome: false, dry_run: false });
+    expect(plain.next).toBeUndefined();
+  });
 });

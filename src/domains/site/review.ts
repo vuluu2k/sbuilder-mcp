@@ -169,18 +169,20 @@ function drawsItsOwnContent(type: string): boolean {
 
 
 /** Binding-source prefixes that name a RECORD (not `site.*`, which every page has). */
-const RECORD_ENTITIES = new Set(['product', 'category', 'course', 'article', 'blogCategory']);
+const RECORD_ENTITIES = new Set(['product', 'category', 'course', 'article', 'blogCategory', 'brand']);
 
 /**
  * Which records a page TYPE supplies outside any repeater — read off the
  * platform's own seeds (STORE_PAGE_SEEDS bind exactly these at top level).
  */
-const PAGE_ENTITIES: Record<string, string[]> = {
+export const PAGE_ENTITIES: Record<string, string[]> = {
   product: ['product'],
   category: ['category'],
   course: ['course'],
   post: ['article'],
   blog: ['blogCategory', 'category'],
+  // /brands/{slug} — the page supplies brandContext (web_builder f70fe86d1).
+  brand: ['brand'],
 };
 
 /** Does this node or an ancestor PIN a record (`bindings[0].target.id`)? */
