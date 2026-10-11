@@ -1047,7 +1047,7 @@ behaviour rather than to an empty list.
 `sb_page_create` takes `name` plus `type`, `slug`, `is_homepage` and `settings`. **TYPE IS
 THE ROUTE** for several kinds: `checkout`, `product`, `category`, `post` and `course` resolve
 by type rather than by slug, so `/checkout` and `/products/{slug}` answer 404 until a page of
-that type is PUBLISHED. Omitted, it is read off the name — "Giới thiệu", "Liên hệ", a policy or an FAQ become `about`, `contact`, `policy`, `faq` (own icon, own slug, opened as their layout) — else `page`. Without this argument an agent can build a
+that type is PUBLISHED. Omitted, it is read off the name — "Giới thiệu", "Liên hệ", a policy or an FAQ become `about`, `contact`, `policy`, `faq` (own icon, own slug, opened as their layout) — else `page`. A type the platform does not know is REFUSED with the list: it would store it as `page` silently (`type:"home"` made a plain page at `/home`; a homepage is `is_homepage:true`). Without this argument an agent can build a
 shop it can never let anyone buy from — which is the first gap `sb_review` reports.
 
 **A STORE PAGE ARRIVES BUILT.** `product`, `category`, `search`, `blog`, `post` and `complete`

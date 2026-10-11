@@ -153,6 +153,16 @@ describe('sb_page_repair', () => {
     await close();
   });
 
+  it('sb_page_state with no site_id reads the open page\'s site', async () => {
+    const { f } = site();
+    const { client, close } = await connectedClient(ctxOver(f));
+    await client.callTool({ name: 'sb_page_open', arguments: { site_id: 's1', page_id: 'pg_a' } });
+    const res = (await client.callTool({ name: 'sb_page_state', arguments: {} })) as any;
+    expect(res.isError).toBeFalsy();
+    expect(JSON.parse(res.content[0].text).page).toBe('pg_a');
+    await close();
+  });
+
   it('sb_page_open flags a minted root', async () => {
     const { f } = site();
     const { client, close } = await connectedClient(ctxOver(f));

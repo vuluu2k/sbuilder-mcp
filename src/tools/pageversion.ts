@@ -37,8 +37,8 @@ export function registerPageVersionTools(server: McpServer, ctx: ToolContext, se
       annotations: { readOnlyHint: false, destructiveHint: true },
     },
     async ({ action, site_id: given, page_id, label, version_id, history_id, dry_run }) => {
-      const siteId = siteFor(ctx, given);
       const open = session.page();
+      const siteId = siteFor(ctx, given ?? (page_id ? undefined : open?.siteId));
       const pageId = page_id ?? (open?.siteId === siteId ? open.pageId : undefined);
       if (!pageId) throw new Error('sbuilder: sb_page_version needs page_id, or a page opened with sb_page_open.');
       const base = `/api/sites/${encodeURIComponent(siteId)}/pages/${encodeURIComponent(pageId)}`;

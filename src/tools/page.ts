@@ -2433,6 +2433,16 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
       // its own type is what gives it its icon and tells the next reader what it
       // is for. Only when the caller named no type; an explicit one wins.
       const askedType = type;
+      // AN UNKNOWN TYPE IS STORED AS "page", SILENTLY (page.go validType). Measured:
+      // type "home" created a plain page at /home and answered 201, so the site
+      // still had no homepage and nothing said so.
+      if (type !== undefined && !PAGE_TYPES.some((t) => t.type === type)) {
+        throw new Error(
+          `sbuilder: page type "${type}" does not exist — the platform would store it as "page". ` +
+            (/^home(page)?$/i.test(type) ? 'A homepage is is_homepage:true on any page. ' : '') +
+            `Types: ${PAGE_TYPES.map((t) => t.type).join(', ')}.`,
+        );
+      }
       type ??= purposeTypeForName(name);
       // TYPE IS THE ROUTE for several kinds of page: /checkout and
       // /products/{slug} resolve to the site's PUBLISHED page of that type and
@@ -2816,7 +2826,9 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
       annotations: { readOnlyHint: true },
     },
     async ({ site_id: given, page_id }) => {
-      const site_id = siteFor(ctx, given);
+      // The open page's site, like its page id: with no SB_SITE this refused a
+      // call on the page it had just been pointed at.
+      const site_id = siteFor(ctx, given ?? (page_id ? undefined : session.page()?.siteId));
       // No open page is fine when page_id names one — `location()` throws.
       const here = session.page() ?? { siteId: '', pageId: '' };
       const pageId = page_id ?? here.pageId;

@@ -12,7 +12,7 @@ annotation — `readOnlyHint` trên mười hai tool chỉ đọc, `destructiveH
 `sb_api_call` và `sb_page_create` nhận `name` cùng `type`, `slug`, `is_homepage` và `settings`. **TYPE CHÍNH LÀ
 ĐƯỜNG ĐI** với vài loại trang: `checkout`, `product`, `category`, `post` và `course` được
 định tuyến theo type chứ không theo slug, nên `/checkout` và `/products/{slug}` trả 404 cho
-tới khi có một trang loại đó ĐƯỢC PUBLISH. Bỏ trống thì đọc từ tên — "Giới thiệu", "Liên hệ", chính sách, hỏi đáp thành `about`, `contact`, `policy`, `faq` (icon riêng, slug riêng, mở sẵn layout cùng tên) — còn lại là `page`. Thiếu tham số này thì agent có
+tới khi có một trang loại đó ĐƯỢC PUBLISH. Bỏ trống thì đọc từ tên — "Giới thiệu", "Liên hệ", chính sách, hỏi đáp thành `about`, `contact`, `policy`, `faq` (icon riêng, slug riêng, mở sẵn layout cùng tên) — còn lại là `page`. Loại mà nền tảng không biết bị TỪ CHỐI kèm danh sách: nền tảng sẽ lặng lẽ lưu nó thành `page` (`type:"home"` tạo một trang thường ở `/home`; trang chủ là `is_homepage:true`). Thiếu tham số này thì agent có
 thể dựng một cửa hàng không ai mua được — đúng khoảng trống đầu tiên mà `sb_review` báo.
 
 `sb_publish` — nên client nào tôn trọng chúng sẽ thôi hỏi người dùng xác

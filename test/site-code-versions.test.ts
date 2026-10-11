@@ -102,6 +102,21 @@ describe('sb_page_version', () => {
   });
 });
 
+describe('sb_page_version on the open page', () => {
+  it('takes the open page\'s site when site_id is omitted', async () => {
+    const { fake, writes } = platform();
+    const { call, close } = await fake.connect();
+    try {
+      await call('sb_page_open', { site_id: 's1', page_id: 'px' });
+      const r = await call('sb_page_version', { action: 'save', label: 'x', dry_run: false });
+      expect(r.text).not.toMatch(/no site/);
+      expect(writes.at(-1)!.path).toBe('/api/sites/s1/pages/px/versions');
+    } finally {
+      await close();
+    }
+  });
+});
+
 describe('sb_page_update template assignment', () => {
   it('assigns by the page type\'s link type and sets the default', async () => {
     const { fake, writes } = platform();

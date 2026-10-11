@@ -171,6 +171,18 @@ describe('sb_page_create', () => {
     expect(body.body).toMatchObject({ name: 'Thanh toán', type: 'checkout', slug: 'thanh-toan' });
     await close();
   });
+
+  it('refuses a type the platform would silently store as "page"', async () => {
+    const { client, close } = await connectedClient();
+    const res = (await client.callTool({
+      name: 'sb_page_create',
+      arguments: { site_id: 's1', name: 'Home', type: 'home' },
+    })) as { isError?: boolean; content: Array<{ text: string }> };
+    expect(res.isError).toBe(true);
+    expect(res.content[0].text).toMatch(/is_homepage:true/);
+    expect(res.content[0].text).toMatch(/checkout/);
+    await close();
+  });
 });
 
 /** A fetch that answers one scripted JSON body for every request. */

@@ -3707,6 +3707,20 @@ export type FormTemplateKey = keyof typeof FORM_TEMPLATES;
       );
       process.exit(1);
     }
+    // THE SERVER'S LIST DECIDES what sb_page_create accepts (it refuses anything
+    // else, because page.go validType stores an unknown type as "page"), so the
+    // editor's list must equal it — or a type Go accepts would be refused here.
+    const goSrc = readFileSync(resolve(repo, 'server/internal/page/page.go'), 'utf8');
+    const goList = /var PageTypes = \[\]string\{([^}]*)\}/.exec(goSrc);
+    const goTypes = goList ? [...goList[1].matchAll(/"([a-zA-Z]+)"/g)].map((m) => m[1]) : [];
+    const off = [
+      ...goTypes.filter((t) => !pageTypes.some((p) => p.type === t)).map((t) => `${t} (server only)`),
+      ...pageTypes.filter((p) => !goTypes.includes(p.type)).map((p) => `${p.type} (editor only)`),
+    ];
+    if (!goTypes.length || off.length) {
+      console.error(`page types differ between page.go PageTypes and PAGE_TYPE_META: ${off.join(', ') || 'page.go list not found'}`);
+      process.exit(1);
+    }
   }
   const completionHeadline: Record<string, string> = {};
   for (const lang of ['vi', 'en']) {
