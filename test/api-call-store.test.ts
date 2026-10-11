@@ -164,6 +164,16 @@ describe('sb_api_call — merge for a full-replace PUT', () => {
     expect(out.unknown_keys?.note).toMatch(/feeCents/);
   });
 
+  it('an inline handler body is named as such, not "(inline)"', async () => {
+    const out = (await callOperation(ctx(platform({})), {
+      id: 'patch:/api/sites/{siteId}',
+      body: { maintenanceMode: false, maintenance: 1 },
+    })) as { unknown_keys?: { keys: string[]; note: string } };
+    expect(out.unknown_keys?.keys).toEqual(['maintenance']);
+    expect(out.unknown_keys?.note).toMatch(/the handler's body/);
+    expect(out.unknown_keys?.note).not.toMatch(/\(inline\)/);
+  });
+
   it('merge is refused off a PUT', async () => {
     await expect(
       callOperation(ctx(platform({})), { id: 'post:/api/sites/{siteId}/shipping-methods', body: {}, merge: true }),

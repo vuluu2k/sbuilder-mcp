@@ -1,6 +1,6 @@
 # Bộ tool
 
-Bốn tool với tới 833 operation của nền tảng, và 304 trong 384 lệnh ghi trong số đó mang theo
+Bốn tool với tới 843 operation của nền tảng, và 309 trong 389 lệnh ghi trong số đó mang theo
 hình dạng body đọc thẳng từ handler decode chúng. `sb_api_find` là một chỉ mục, không phải mỗi
 endpoint một tool — [lý do](../README.vi.md#bộ-tool).
 

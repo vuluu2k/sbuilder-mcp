@@ -115,8 +115,8 @@ repo over a number here, and fix the line when you catch one stale.
   - **`GET /tickets/issued` without `eventId` is ALWAYS empty** — `listTicketsWhere` filters
     `event_id = $2` unconditionally, while the spec calls it optional. Measured 2026-10-11:
     2 tickets in the table, `{issued:[],total:0}` from the API until `eventId` was passed.
-    Fixed upstream in web_builder PR #116 (2026-10-12, total 0 → 2); until a deployment carries
-    it, keep passing `eventId`.
+    Fixed upstream: web_builder PR #116, merged 2026-10-12 (8384af1dd; total 0 → 2). A
+    deployment older than that still needs `eventId`.
     Marking paid is `PUT /orders/{id}` + `merge:true` (bare PUT erases the lines); it issued
     the tickets and mailed them (local SMTP = mailpit :1025; signing needs `WB_PREVIEW_SECRET`).
 

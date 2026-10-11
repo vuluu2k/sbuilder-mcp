@@ -1,3 +1,4 @@
+import { API_OPERATIONS } from '../src/catalog/api.generated.js';
 import { describe, it, expect } from 'vitest';
 import { readinessGaps, type ReadinessInput } from '../src/domains/site/readiness.js';
 
@@ -994,6 +995,18 @@ describe('readinessGaps() — the maintenance page', () => {
 
   it('reports a switched-off site with no maintenance page', () => {
     expect(site({ maintenanceMode: true })).toContain('maintenancePage');
+  });
+
+  it('names the catalogued switch that turns the shop back on, drafted or not', () => {
+    for (const status of [undefined, 'draft']) {
+      const gap = readinessGaps({
+        pages: [{ type: 'page', status: 'published' }, ...(status ? [{ type: 'maintain', status }] : [])],
+        liveGateways: null, shippingMethods: null, pageNodes: [], globalNodes: null, globalKinds: ['header'],
+        maintenanceMode: true,
+      } as never).find((g) => g.id === 'maintenancePage');
+      expect(gap?.fix).toMatch(/patch:\/api\/sites\/\{siteId\}.*maintenanceMode/);
+    }
+    expect(API_OPERATIONS.some((o) => o.id === 'patch:/api/sites/{siteId}')).toBe(true);
   });
 
   it('is reported FIRST, because it is the only one already happening', () => {

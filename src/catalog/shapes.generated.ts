@@ -4,9 +4,9 @@
 import type { RequestShape } from './types.js';
 
 export const SHAPE_SOURCE = {
-  "writeOperations": 384,
-  "shaped": 304,
-  "fromHandlers": 294,
+  "writeOperations": 389,
+  "shaped": 309,
+  "fromHandlers": 299,
   "fromSwaggerOnly": 10,
   "withReadOnly": 30,
   "structsRead": 3194
@@ -10374,6 +10374,98 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
       {
         "name": "locale",
         "type": "string"
+      }
+    ],
+    "source": "go",
+    "goType": "(inline)"
+  },
+  "patch:/api/sites/{siteId}": {
+    "fields": [
+      {
+        "name": "name",
+        "type": "string"
+      },
+      {
+        "name": "slug",
+        "type": "string"
+      },
+      {
+        "name": "subdomainRedirect",
+        "type": "boolean | null",
+        "note": "Pointer, not bool: `false` is a MEANINGFUL value here (\"serve the built-in address directly\"), and a plain bool cannot be told apart from \"field omitted\" — a rename would silently switch redirecting off on every site."
+      },
+      {
+        "name": "subdomainRedirectCode",
+        "type": "number",
+        "note": "301 or 302; 0/absent keeps the site's current choice."
+      },
+      {
+        "name": "maintenanceMode",
+        "type": "boolean | null",
+        "note": "Takes the whole storefront offline."
+      }
+    ],
+    "source": "go",
+    "goType": "(inline)"
+  },
+  "put:/api/sites/{siteId}": {
+    "fields": [
+      {
+        "name": "name",
+        "type": "string"
+      },
+      {
+        "name": "slug",
+        "type": "string"
+      },
+      {
+        "name": "subdomainRedirect",
+        "type": "boolean | null",
+        "note": "Pointer, not bool: `false` is a MEANINGFUL value here (\"serve the built-in address directly\"), and a plain bool cannot be told apart from \"field omitted\" — a rename would silently switch redirecting off on every site."
+      },
+      {
+        "name": "subdomainRedirectCode",
+        "type": "number",
+        "note": "301 or 302; 0/absent keeps the site's current choice."
+      },
+      {
+        "name": "maintenanceMode",
+        "type": "boolean | null",
+        "note": "Takes the whole storefront offline."
+      }
+    ],
+    "source": "go",
+    "goType": "(inline)"
+  },
+  "post:/api/sites/{siteId}/members": {
+    "fields": [
+      {
+        "name": "email",
+        "type": "string"
+      },
+      {
+        "name": "role",
+        "type": "site.Role"
+      }
+    ],
+    "source": "go",
+    "goType": "(inline)"
+  },
+  "patch:/api/sites/{siteId}/members/{userId}": {
+    "fields": [
+      {
+        "name": "role",
+        "type": "site.Role"
+      }
+    ],
+    "source": "go",
+    "goType": "(inline)"
+  },
+  "put:/api/sites/{siteId}/members/{userId}": {
+    "fields": [
+      {
+        "name": "role",
+        "type": "site.Role"
       }
     ],
     "source": "go",

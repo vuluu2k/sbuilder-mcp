@@ -110,7 +110,7 @@ export function unknownBodyKeys(opId: string, body: unknown): { keys: string[]; 
   return {
     keys,
     note:
-      `Not fields of ${shape.goType}: the platform ignores them silently. ` +
+      `Not fields of ${shape.goType === '(inline)' ? "the handler's body" : shape.goType}: the platform ignores them silently. ` +
       `Its fields: ${shape.fields.map((f) => f.name).join(', ')}.`,
   };
 }

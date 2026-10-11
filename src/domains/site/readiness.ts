@@ -429,11 +429,13 @@ export function readinessGaps(input: ReadinessInput): ReadinessGap[] {
         'This storefront is switched OFF right now and has no published page of the "maintain" ' +
         'type, so every address is answering a bare 503 sentence — no header, no logo, no word ' +
         'about when it is back, and nothing that looks like this shop.',
-      fix: draft
-        ? 'Publish the maintenance page that already exists.'
-        : 'Create a page of type "maintain" and publish it. It has no address of its own — the ' +
-          'storefront serves it as the BODY of the 503 — so give it the shop\'s name and a line ' +
-          'saying when you are back.',
+      fix:
+        (draft
+          ? 'Publish the maintenance page that already exists.'
+          : 'Create a page of type "maintain" and publish it. It has no address of its own — the ' +
+            'storefront serves it as the BODY of the 503 — so give it the shop\'s name and a line ' +
+            'saying when you are back.') +
+        ' Or switch the shop back on: sb_api_call id "patch:/api/sites/{siteId}" body { "maintenanceMode": false }.',
     });
   }
 

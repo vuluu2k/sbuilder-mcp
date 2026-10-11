@@ -3,10 +3,10 @@
 import type { ApiOperation } from './types.js';
 
 export const SWAGGER_SOURCE = {
-  "operations": 833,
+  "operations": 843,
   "definitions": 278,
-  "bodyCarrying": 364,
-  "bodyUndescribed": 93,
+  "bodyCarrying": 373,
+  "bodyUndescribed": 102,
   "generatedFrom": "server/docs/swagger.json"
 } as const;
 
@@ -4205,6 +4205,118 @@ export const API_OPERATIONS: ApiOperation[] = [
         "required": true,
         "type": "object",
         "description": "status (skipped|failed) and reason"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/sites/{siteId}",
+    "method": "GET",
+    "path": "/api/sites/{siteId}",
+    "tags": [
+      "sites"
+    ],
+    "summary": "Read, edit or trash one site",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "site",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "PATCH/PUT: {name?, slug?, subdomainRedirect?, subdomainRedirectCode?, maintenanceMode?}"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "put:/api/sites/{siteId}",
+    "method": "PUT",
+    "path": "/api/sites/{siteId}",
+    "tags": [
+      "sites"
+    ],
+    "summary": "Read, edit or trash one site",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "site",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "PATCH/PUT: {name?, slug?, subdomainRedirect?, subdomainRedirectCode?, maintenanceMode?}"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "patch:/api/sites/{siteId}",
+    "method": "PATCH",
+    "path": "/api/sites/{siteId}",
+    "tags": [
+      "sites"
+    ],
+    "summary": "Read, edit or trash one site",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "site",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "PATCH/PUT: {name?, slug?, subdomainRedirect?, subdomainRedirectCode?, maintenanceMode?}"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "delete:/api/sites/{siteId}",
+    "method": "DELETE",
+    "path": "/api/sites/{siteId}",
+    "tags": [
+      "sites"
+    ],
+    "summary": "Read, edit or trash one site",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "site",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "PATCH/PUT: {name?, slug?, subdomainRedirect?, subdomainRedirectCode?, maintenanceMode?}"
       }
     ],
     "bodyDescribed": false,
@@ -9181,6 +9293,27 @@ export const API_OPERATIONS: ApiOperation[] = [
     "credential": "siteScoped"
   },
   {
+    "id": "get:/api/sites/{siteId}/export",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/export",
+    "tags": [
+      "sites"
+    ],
+    "summary": "Download the whole site as one archive",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
     "id": "get:/api/sites/{siteId}/filter-facets",
     "method": "GET",
     "path": "/api/sites/{siteId}/filter-facets",
@@ -12051,6 +12184,167 @@ export const API_OPERATIONS: ApiOperation[] = [
         "required": true,
         "type": "string",
         "description": "Site ID"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/sites/{siteId}/members",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/members",
+    "tags": [
+      "sites"
+    ],
+    "summary": "List or invite site members; change a member's role, or remove them",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "member",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "POST: {email, role}; PATCH/PUT: {role}"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/api/sites/{siteId}/members",
+    "method": "POST",
+    "path": "/api/sites/{siteId}/members",
+    "tags": [
+      "sites"
+    ],
+    "summary": "List or invite site members; change a member's role, or remove them",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "member",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "POST: {email, role}; PATCH/PUT: {role}"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "put:/api/sites/{siteId}/members/{userId}",
+    "method": "PUT",
+    "path": "/api/sites/{siteId}/members/{userId}",
+    "tags": [
+      "sites"
+    ],
+    "summary": "List or invite site members; change a member's role, or remove them",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "userId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Member's user ID (/{userId} routes)"
+      },
+      {
+        "name": "member",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "POST: {email, role}; PATCH/PUT: {role}"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "patch:/api/sites/{siteId}/members/{userId}",
+    "method": "PATCH",
+    "path": "/api/sites/{siteId}/members/{userId}",
+    "tags": [
+      "sites"
+    ],
+    "summary": "List or invite site members; change a member's role, or remove them",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "userId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Member's user ID (/{userId} routes)"
+      },
+      {
+        "name": "member",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "POST: {email, role}; PATCH/PUT: {role}"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "delete:/api/sites/{siteId}/members/{userId}",
+    "method": "DELETE",
+    "path": "/api/sites/{siteId}/members/{userId}",
+    "tags": [
+      "sites"
+    ],
+    "summary": "List or invite site members; change a member's role, or remove them",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "userId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Member's user ID (/{userId} routes)"
+      },
+      {
+        "name": "member",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "POST: {email, role}; PATCH/PUT: {role}"
       }
     ],
     "bodyDescribed": false,
