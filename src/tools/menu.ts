@@ -90,6 +90,9 @@ const DEFAULT_MENU_ITEMS: MenuItemInput[] = ['Home', 'Categories', 'Contact', 'A
  * would. `product` is NOT here: the editor's own resolver batches it BY ID
  * against a different route (`getProductsByIds`) because a shop may hold
  * thousands, so it is resolved separately in `resolveLinks` below.
+ * `course` and `brand` ARE in `ENTITY_URL_PREFIX` and are deliberately NOT
+ * here: `menus.LinkType.Valid()` (server/internal/menus/menus.go) refuses
+ * both, so a menu row of either kind is a save the platform rejects.
  */
 const ENTITY_ROUTES: Record<string, { segment: string; envelope: string; prefix: string }> = {
   productCategory: { segment: 'product-categories', envelope: 'categories', prefix: 'collections' },

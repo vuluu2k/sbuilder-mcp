@@ -878,12 +878,12 @@ describe('readinessGaps() — the article template', () => {
 });
 
 /**
- * THE FIVE ENTITY PREFIXES, AS ONE SET.
+ * THE SIX ENTITY PREFIXES, AS ONE SET.
  *
  * storefront/entityroute.go registers /products, /collections, /blog,
- * /blog-categories and /courses. Each resolves to the site's published page of
+ * /blog-categories, /courses and /brands. Each resolves to the site's published page of
  * its own TYPE, so each 404s everything under it when that page is missing.
- * This block is the proof that all five are now asked about, rather than four
+ * This block is the proof that all six are now asked about, rather than five
  * and whichever one nobody noticed.
  */
 describe('readinessGaps() — every entity prefix has a template check', () => {
@@ -902,6 +902,9 @@ describe('readinessGaps() — every entity prefix has a template check', () => {
     { count: { articles: 3 }, id: 'articleTemplate', type: 'post' },
     { count: { blogCategories: 3 }, id: 'blogCategoryPage', type: 'blog' },
     { count: { courses: 3 }, id: 'coursePage', type: 'course' },
+    // /brands/{slug} (entityroute.go linkTypeForPrefix "brands" → page.LinkBrand,
+    // entitylinks.go "brand" page type) — added at web_builder f70fe86d1.
+    { count: { brands: 3 }, id: 'brandPage', type: 'brand' },
   ];
 
   it('reports each one when its entities exist and its template does not', () => {

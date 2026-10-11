@@ -594,7 +594,9 @@ describe('a declaration the schema makes reaches the key it governs', () => {
   it('reads a typed array whose members are enum references', () => {
     for (const type of ['form-select', 'form-radio', 'form-checkbox']) {
       const v = vocabularyForWrite(type, 'config', 'optionSource')!;
-      expect(v.values, type).toEqual(['article', 'category', 'manual', 'product']);
+      // `brand` and `tag` joined at web_builder f70fe86d1 (formOptionSource.ts) —
+      // the platform widened its own declaration, so the pinned list follows it.
+      expect(v.values, type).toEqual(['article', 'brand', 'category', 'manual', 'product', 'tag']);
       expect(v.readBy, type).toMatch(/OPTION_SOURCES/);
     }
     // A MEMBER THAT CANNOT BE RESOLVED DROPS THE WHOLE LIST rather than

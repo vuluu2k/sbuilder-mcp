@@ -50,6 +50,7 @@ export type ReadinessGapId =
   | 'articleTemplate'
   | 'blogCategoryPage'
   | 'coursePage'
+  | 'brandPage'
   | 'maintenancePage'
   | 'cartCount'
   | 'cartDrawer'
@@ -87,7 +88,7 @@ export interface ReadinessPage {
 
 /**
  * The page types a search engine INDEXES under the page's own settings. Entity
- * templates (product, category, post, course) get their <title> and
+ * templates (product, category, post, course, brand) get their <title> and
  * description merged from the entity (storefront/entityroute.go
  * mergeEntitySettings); error and maintain have no address; the fixed-path and
  * auth types are chrome a crawler is not sent to. Mirrors page.SlugTypes minus
@@ -120,6 +121,8 @@ export interface ReadinessInput {
   blogCategories?: number | null;
   /** How many courses the site sells; null when the list was unread. */
   courses?: number | null;
+  /** How many product brands the site has; null when the list was unread. */
+  brands?: number | null;
   /**
    * Is the storefront switched OFF right now; null when the site could not be
    * read. The one input here that describes a state rather than a shape.
@@ -586,12 +589,13 @@ export function readinessGaps(input: ReadinessInput): ReadinessGap[] {
     });
   }
 
-  // THE LAST TWO ENTITY PREFIXES, the same hole in the same shape.
+  // THE LAST THREE ENTITY PREFIXES, the same hole in the same shape.
   //
-  // storefront/entityroute.go registers five: /products, /collections, /blog,
-  // /blog-categories and /courses. Each resolves to the site's published page of
-  // its own TYPE, so each 404s everything under it when that page is missing.
-  // Four of the five are now checked above; these are the other two.
+  // storefront/entityroute.go registers six: /products, /collections, /blog,
+  // /blog-categories, /courses and /brands. Each resolves to the site's
+  // published page of its own TYPE, so each 404s everything under it when that
+  // page is missing. Three are checked above; these are the other three. A
+  // brand has no status (bindings/entityroutes.go), so every brand is a URL.
   //
   // COUNTED, NOT ASSUMED. A site with no blog categories has nothing under
   // /blog-categories to break, and a site with no courses has not installed the
@@ -601,6 +605,7 @@ export function readinessGaps(input: ReadinessInput): ReadinessGap[] {
   for (const [count, type, id, prefix, what] of [
     [input.blogCategories, 'blog', 'blogCategoryPage' as const, '/blog-categories/{slug}', 'blog category'],
     [input.courses, 'course', 'coursePage' as const, '/courses/{slug}', 'course'],
+    [input.brands, 'brand', 'brandPage' as const, '/brands/{slug}', 'brand'],
   ] as const) {
     if (!pages || (count ?? 0) === 0 || published(pages, type)) continue;
     const draft = drafted(pages, type);

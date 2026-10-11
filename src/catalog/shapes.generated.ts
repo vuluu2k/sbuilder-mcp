@@ -4,12 +4,12 @@
 import type { RequestShape } from './types.js';
 
 export const SHAPE_SOURCE = {
-  "writeOperations": 376,
-  "shaped": 298,
-  "fromHandlers": 288,
+  "writeOperations": 381,
+  "shaped": 302,
+  "fromHandlers": 292,
   "fromSwaggerOnly": 10,
-  "withReadOnly": 28,
-  "structsRead": 3154
+  "withReadOnly": 30,
+  "structsRead": 3176
 } as const;
 
 export const REQUEST_SHAPES: Record<string, RequestShape> = {
@@ -3496,6 +3496,66 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
     ],
     "source": "go",
     "goType": "(inline)"
+  },
+  "put:/api/sites/{siteId}/einvoice/settings": {
+    "fields": [
+      {
+        "name": "enabled",
+        "type": "boolean"
+      },
+      {
+        "name": "issueMode",
+        "type": "string"
+      },
+      {
+        "name": "provider",
+        "type": "string"
+      },
+      {
+        "name": "sellerTaxCode",
+        "type": "string"
+      },
+      {
+        "name": "sellerName",
+        "type": "string"
+      },
+      {
+        "name": "sellerAddress",
+        "type": "string"
+      },
+      {
+        "name": "sellerEmail",
+        "type": "string"
+      },
+      {
+        "name": "sellerPhone",
+        "type": "string"
+      },
+      {
+        "name": "templateCode",
+        "type": "string"
+      },
+      {
+        "name": "invoiceSeries",
+        "type": "string"
+      },
+      {
+        "name": "updatedAt",
+        "type": "string (RFC3339)"
+      }
+    ],
+    "source": "go",
+    "goType": "einvoice.Settings"
+  },
+  "post:/api/sites/{siteId}/einvoice/jobs/{id}/cancel": {
+    "fields": [
+      {
+        "name": "reason",
+        "type": "string"
+      }
+    ],
+    "source": "go",
+    "goType": "cancelBody"
   },
   "post:/api/sites/{siteId}/flash-sales": {
     "fields": [
@@ -7338,6 +7398,106 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
     "source": "go",
     "goType": "deviceEventRequest"
   },
+  "post:/api/sites/{siteId}/product-brands": {
+    "fields": [
+      {
+        "name": "id",
+        "type": "string"
+      },
+      {
+        "name": "siteId",
+        "type": "string"
+      },
+      {
+        "name": "name",
+        "type": "string"
+      },
+      {
+        "name": "slug",
+        "type": "string"
+      },
+      {
+        "name": "logo",
+        "type": "string"
+      },
+      {
+        "name": "description",
+        "type": "string"
+      },
+      {
+        "name": "createdAt",
+        "type": "string (RFC3339)"
+      },
+      {
+        "name": "updatedAt",
+        "type": "string (RFC3339)"
+      },
+      {
+        "name": "productCount",
+        "type": "number",
+        "note": "ProductCount is READ-ONLY: how many products carry this brand, filled by ListBrands from one grouped query."
+      }
+    ],
+    "source": "go",
+    "goType": "products.Brand",
+    "readOnly": [
+      "id",
+      "siteId",
+      "createdAt",
+      "updatedAt",
+      "productCount"
+    ]
+  },
+  "put:/api/sites/{siteId}/product-brands/{id}": {
+    "fields": [
+      {
+        "name": "id",
+        "type": "string"
+      },
+      {
+        "name": "siteId",
+        "type": "string"
+      },
+      {
+        "name": "name",
+        "type": "string"
+      },
+      {
+        "name": "slug",
+        "type": "string"
+      },
+      {
+        "name": "logo",
+        "type": "string"
+      },
+      {
+        "name": "description",
+        "type": "string"
+      },
+      {
+        "name": "createdAt",
+        "type": "string (RFC3339)"
+      },
+      {
+        "name": "updatedAt",
+        "type": "string (RFC3339)"
+      },
+      {
+        "name": "productCount",
+        "type": "number",
+        "note": "ProductCount is READ-ONLY: how many products carry this brand, filled by ListBrands from one grouped query."
+      }
+    ],
+    "source": "go",
+    "goType": "products.Brand",
+    "readOnly": [
+      "id",
+      "siteId",
+      "createdAt",
+      "updatedAt",
+      "productCount"
+    ]
+  },
   "post:/api/sites/{siteId}/inventory/adjust": {
     "fields": [
       {
@@ -7456,7 +7616,13 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
       },
       {
         "name": "brand",
-        "type": "string"
+        "type": "string",
+        "note": "denormalised name of BrandID's row — see brand."
+      },
+      {
+        "name": "brandId",
+        "type": "string",
+        "note": "\"\" = no brand; ResolveBrand keeps Brand in step"
       },
       {
         "name": "seo",
@@ -7803,7 +7969,13 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
       },
       {
         "name": "brand",
-        "type": "string"
+        "type": "string",
+        "note": "denormalised name of BrandID's row — see brand."
+      },
+      {
+        "name": "brandId",
+        "type": "string",
+        "note": "\"\" = no brand; ResolveBrand keeps Brand in step"
       },
       {
         "name": "seo",

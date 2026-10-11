@@ -40579,6 +40579,14 @@ export const ELEMENTS: Record<string, CatalogElement> = {
             ]
           },
           {
+            "key": "brand_link",
+            "label": "Brand link",
+            "controls": [
+              "brand_link_page",
+              "brandLinkPageId"
+            ]
+          },
+          {
             "key": "collection_layout",
             "label": "Collection layout",
             "controls": [
@@ -40875,6 +40883,8 @@ export const ELEMENTS: Record<string, CatalogElement> = {
       "paginationItemActiveBorderWidth",
       "paginationItemActiveBorderStyle",
       "paginationItemActiveBorderRadius",
+      "brand_link_page",
+      "brandLinkPageId",
       "article_category",
       "articleSourceType",
       "articleCategoryId",
@@ -41976,6 +41986,8 @@ export const BINDING_SOURCES: string[] = [
   "course.title",
   "course.url",
   "product.attributes",
+  "product.brandLogo",
+  "product.brandUrl",
   "product.bundleItems",
   "product.compareAtCents",
   "product.compareAtPrice",
@@ -41989,6 +42001,7 @@ export const BINDING_SOURCES: string[] = [
   "product.priceCents",
   "product.ratingAverage",
   "product.ratingCount",
+  "product.tags",
   "product.title",
   "product.url",
   "product.variations",
@@ -43427,6 +43440,17 @@ export const TRAIT_WRITES: Record<string, TraitDescription> = {
       {
         "target": "specials",
         "writeKey": "logoShape",
+        "type": "string"
+      }
+    ]
+  },
+  "brand_link_page": {
+    "key": "brand_link_page",
+    "label": "Brand link",
+    "writes": [
+      {
+        "target": "config",
+        "writeKey": "brandLinkPageId",
         "type": "string"
       }
     ]
@@ -45065,6 +45089,7 @@ export const WRITE_PRECONDITIONS: WritePrecondition[] = [
           "attribute",
           "tag",
           "blog_category",
+          "blog_tag",
           "course_tag"
         ]
       },
@@ -45149,6 +45174,7 @@ export const CONFIG_VALUES: Record<
       "all_products",
       "collection",
       "featured",
+      "page_brand",
       "page_collection",
       "related",
       "slot"
@@ -45477,9 +45503,11 @@ export const ELEMENT_VALUES: Record<string, Record<string, ValueVocabulary>> = {
       "writeKey": "optionSource",
       "values": [
         "article",
+        "brand",
         "category",
         "manual",
-        "product"
+        "product",
+        "tag"
       ],
       "readBy": "OPTION_SOURCES (schema/src/elements/formOptionSource.ts)"
     }
@@ -45490,9 +45518,11 @@ export const ELEMENT_VALUES: Record<string, Record<string, ValueVocabulary>> = {
       "writeKey": "optionSource",
       "values": [
         "article",
+        "brand",
         "category",
         "manual",
-        "product"
+        "product",
+        "tag"
       ],
       "readBy": "OPTION_SOURCES (schema/src/elements/formOptionSource.ts)"
     }
@@ -45514,9 +45544,11 @@ export const ELEMENT_VALUES: Record<string, Record<string, ValueVocabulary>> = {
       "writeKey": "optionSource",
       "values": [
         "article",
+        "brand",
         "category",
         "manual",
-        "product"
+        "product",
+        "tag"
       ],
       "readBy": "OPTION_SOURCES (schema/src/elements/formOptionSource.ts)"
     }
@@ -45738,6 +45770,7 @@ export const ELEMENT_VALUES: Record<string, Record<string, ValueVocabulary>> = {
         "attribute",
         "availability",
         "blog_category",
+        "blog_tag",
         "brand",
         "category",
         "course_level",
@@ -45808,6 +45841,7 @@ export const ELEMENT_VALUES: Record<string, Record<string, ValueVocabulary>> = {
         "attribute",
         "availability",
         "blog_category",
+        "blog_tag",
         "brand",
         "category",
         "course_level",
@@ -45878,6 +45912,7 @@ export const ELEMENT_VALUES: Record<string, Record<string, ValueVocabulary>> = {
         "attribute",
         "availability",
         "blog_category",
+        "blog_tag",
         "brand",
         "category",
         "course_level",
@@ -45948,6 +45983,7 @@ export const ELEMENT_VALUES: Record<string, Record<string, ValueVocabulary>> = {
         "attribute",
         "availability",
         "blog_category",
+        "blog_tag",
         "brand",
         "category",
         "course_level",
@@ -46018,6 +46054,7 @@ export const ELEMENT_VALUES: Record<string, Record<string, ValueVocabulary>> = {
         "attribute",
         "availability",
         "blog_category",
+        "blog_tag",
         "brand",
         "category",
         "course_level",

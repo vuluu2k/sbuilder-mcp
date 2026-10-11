@@ -1,6 +1,6 @@
 # Tools
 
-Four tools reach 814 platform operations, and 298 of the 376 writes among them carry a body
+Four tools reach 830 platform operations, and 302 of the 381 writes among them carry a body
 shape read off the handler that decodes it. `sb_api_find` is an index, not a tool per
 endpoint — see [why](../README.md#tools).
 
@@ -1473,6 +1473,7 @@ publish panel then listed five gaps.
 | `cartDrawerThumbnail` | The cart drawer's line thumbnail is a GALLERY (feature image plus thumbs strip) in a 64px line — a drawer seeded before the platform fixed its seed. Asked of every site. Fix: open a page of the site, then `sb_store action:"cart" relocalize:true dry_run:false` |
 | `cartCount` | Something opens the cart but nothing shows what is in it. `cart-count` is opt-in because `open_cart` is an ACTION any element can carry, so a site built with these tools never gets one: a shopper adds an item, sees a toast fade, and then no evidence anywhere that their basket is not empty |
 | `pageSeo` | Published content pages (`page`, `about`, `contact`, `policy`, `faq`, `blog`) whose `settings` carry no `title` or `description`. Each serves the SITE NAME as its `<title>` and no meta description, so a search result cannot tell them apart. Entity templates get theirs merged from the entity; error/maintain have no address. Fix: `sb_page_update` with `seo: {title, description}` — it reads the page and merges, because `settings` replaces wholesale on the platform. Silent when the page list did not carry `settings` |
+| `articleTemplate` / `blogCategoryPage` / `coursePage` / `brandPage` | The site has articles, blog categories, courses or product brands (counted from their own lists; brands from `GET /product-brands`) and no PUBLISHED page of type `post` / `blog` / `course` / `brand`. `/blog/{slug}`, `/blog-categories/{slug}`, `/courses/{slug}` and `/brands/{slug}` each resolve through that type's template (`storefront/entityroute.go`), so every such link 404s. `draft: true` when the page exists unpublished. Silent when the count is zero or unread. Blog TAGS have no storefront route, so nothing is asked of them |
 | `categoryScope` | The open page is the shared `category` template and every product repeater on it is pinned to ONE named collection (`collectionType: "collection"`), so every `/collections/{slug}` shows that one. Since the platform scopes a category template itself, `all_products` / `page_collection` follow the URL and a shared template is correct — no page per category is needed |
 
 Each gap carries `draft: true` when the page EXISTS but is unpublished, because "publish the
@@ -2262,7 +2263,9 @@ The editor closes this the moment a menu node lands (`editor/src/features/menus/
 3. **Resolve** each row's reference to the address the storefront actually serves: `page` off
    the page list, `productCategory` → `/collections/{slug}`, `article` → `/blog/{slug}`,
    `blogCategory` → `/blog-categories/{slug}`, and `product` → `/products/{slug}` batched by
-   id, because a shop's catalogue is unbounded while a category tree is not. Only the kinds
+   id, because a shop's catalogue is unbounded while a category tree is not. `course` and
+   `brand` have storefront addresses but are NOT menu link kinds — `menus.LinkType.Valid()`
+   refuses them, so link those through a `url` row. Only the kinds
    the rows actually reference are fetched. **A listing that cannot be reached degrades that
    kind to an empty `href` rather than aborting the sync** — the editor's own resolver
    swallows its failures the same way.

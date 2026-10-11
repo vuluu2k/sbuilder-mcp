@@ -3,9 +3,9 @@
 import type { ApiOperation } from './types.js';
 
 export const SWAGGER_SOURCE = {
-  "operations": 814,
-  "definitions": 272,
-  "bodyCarrying": 354,
+  "operations": 830,
+  "definitions": 277,
+  "bodyCarrying": 362,
   "bodyUndescribed": 92,
   "generatedFrom": "server/docs/swagger.json"
 } as const;
@@ -643,6 +643,19 @@ export const API_OPERATIONS: ApiOperation[] = [
       "storecheckout"
     ],
     "summary": "Look up an order as a guest",
+    "params": [],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/_wb/checkout/payment-methods",
+    "method": "GET",
+    "path": "/_wb/checkout/payment-methods",
+    "tags": [
+      "storecheckout"
+    ],
+    "summary": "List the payment methods this site cannot take",
     "params": [],
     "bodyDescribed": false,
     "bodyRef": null,
@@ -5073,6 +5086,34 @@ export const API_OPERATIONS: ApiOperation[] = [
     "credential": "siteScoped"
   },
   {
+    "id": "get:/api/sites/{siteId}/blog-tags",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/blog-tags",
+    "tags": [
+      "blog"
+    ],
+    "summary": "Suggest existing blog tags",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "limit",
+        "in": "query",
+        "required": false,
+        "type": "integer",
+        "description": "Max rows (default 50, clamped to 200)"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
     "id": "get:/api/sites/{siteId}/builtin-apps",
     "method": "GET",
     "path": "/api/sites/{siteId}/builtin-apps",
@@ -7340,6 +7381,27 @@ export const API_OPERATIONS: ApiOperation[] = [
     "credential": "siteScoped"
   },
   {
+    "id": "get:/api/sites/{siteId}/delivery-apps",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/delivery-apps",
+    "tags": [
+      "pos"
+    ],
+    "summary": "List food-delivery apps",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
     "id": "get:/api/sites/{siteId}/discounts",
     "method": "GET",
     "path": "/api/sites/{siteId}/discounts",
@@ -8213,6 +8275,188 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/sites/{siteId}/einvoice/jobs",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/einvoice/jobs",
+    "tags": [
+      "pos"
+    ],
+    "summary": "List the e-invoice issuance queue",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "state",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "pending|issuing|issued|failed|cancelled"
+      },
+      {
+        "name": "limit",
+        "in": "query",
+        "required": false,
+        "type": "integer",
+        "description": "page size"
+      },
+      {
+        "name": "offset",
+        "in": "query",
+        "required": false,
+        "type": "integer",
+        "description": "offset"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/api/sites/{siteId}/einvoice/jobs/{id}/cancel",
+    "method": "POST",
+    "path": "/api/sites/{siteId}/einvoice/jobs/{id}/cancel",
+    "tags": [
+      "pos"
+    ],
+    "summary": "Cancel an e-invoice job",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Job ID"
+      },
+      {
+        "name": "body",
+        "in": "body",
+        "required": true,
+        "type": "object",
+        "description": "{reason}"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "internal_einvoice_rest.cancelBody",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/api/sites/{siteId}/einvoice/jobs/{id}/retry",
+    "method": "POST",
+    "path": "/api/sites/{siteId}/einvoice/jobs/{id}/retry",
+    "tags": [
+      "pos"
+    ],
+    "summary": "Retry a failed e-invoice job",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Job ID"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/sites/{siteId}/einvoice/providers",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/einvoice/providers",
+    "tags": [
+      "pos"
+    ],
+    "summary": "List e-invoice providers",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/sites/{siteId}/einvoice/settings",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/einvoice/settings",
+    "tags": [
+      "pos"
+    ],
+    "summary": "Read or replace the site's e-invoice seller settings",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "settings",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "Settings (PUT only)"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "github_com_webbuilder_server_internal_einvoice.Settings",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "put:/api/sites/{siteId}/einvoice/settings",
+    "method": "PUT",
+    "path": "/api/sites/{siteId}/einvoice/settings",
+    "tags": [
+      "pos"
+    ],
+    "summary": "Read or replace the site's e-invoice seller settings",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "settings",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "Settings (PUT only)"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "github_com_webbuilder_server_internal_einvoice.Settings",
     "credential": "siteScoped"
   },
   {
@@ -14566,6 +14810,48 @@ export const API_OPERATIONS: ApiOperation[] = [
     "credential": "siteScoped"
   },
   {
+    "id": "get:/api/sites/{siteId}/pos/catalog",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/pos/catalog",
+    "tags": [
+      "pos"
+    ],
+    "summary": "One page of the counter's catalogue (offline snapshot)",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "locationId",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Location whose counters to read (omitted = online)"
+      },
+      {
+        "name": "limit",
+        "in": "query",
+        "required": false,
+        "type": "integer",
+        "description": "Page size, default and max 200"
+      },
+      {
+        "name": "offset",
+        "in": "query",
+        "required": false,
+        "type": "integer",
+        "description": "Page offset"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
     "id": "get:/api/sites/{siteId}/pos/context",
     "method": "GET",
     "path": "/api/sites/{siteId}/pos/context",
@@ -18178,6 +18464,195 @@ export const API_OPERATIONS: ApiOperation[] = [
     "credential": "siteScoped"
   },
   {
+    "id": "get:/api/sites/{siteId}/product-brands",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/product-brands",
+    "tags": [
+      "products"
+    ],
+    "summary": "List or create product brands",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "limit",
+        "in": "query",
+        "required": false,
+        "type": "integer",
+        "description": "Page size (max 200)"
+      },
+      {
+        "name": "offset",
+        "in": "query",
+        "required": false,
+        "type": "integer",
+        "description": "Page offset"
+      },
+      {
+        "name": "brand",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "Brand to create (POST only)"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "github_com_webbuilder_server_internal_products.Brand",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/api/sites/{siteId}/product-brands",
+    "method": "POST",
+    "path": "/api/sites/{siteId}/product-brands",
+    "tags": [
+      "products"
+    ],
+    "summary": "List or create product brands",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "limit",
+        "in": "query",
+        "required": false,
+        "type": "integer",
+        "description": "Page size (max 200)"
+      },
+      {
+        "name": "offset",
+        "in": "query",
+        "required": false,
+        "type": "integer",
+        "description": "Page offset"
+      },
+      {
+        "name": "brand",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "Brand to create (POST only)"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "github_com_webbuilder_server_internal_products.Brand",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/sites/{siteId}/product-brands/{id}",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/product-brands/{id}",
+    "tags": [
+      "products"
+    ],
+    "summary": "Get, update or delete a product brand",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Brand ID"
+      },
+      {
+        "name": "brand",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "Updated brand (PUT only)"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "github_com_webbuilder_server_internal_products.Brand",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "put:/api/sites/{siteId}/product-brands/{id}",
+    "method": "PUT",
+    "path": "/api/sites/{siteId}/product-brands/{id}",
+    "tags": [
+      "products"
+    ],
+    "summary": "Get, update or delete a product brand",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Brand ID"
+      },
+      {
+        "name": "brand",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "Updated brand (PUT only)"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "github_com_webbuilder_server_internal_products.Brand",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "delete:/api/sites/{siteId}/product-brands/{id}",
+    "method": "DELETE",
+    "path": "/api/sites/{siteId}/product-brands/{id}",
+    "tags": [
+      "products"
+    ],
+    "summary": "Get, update or delete a product brand",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Brand ID"
+      },
+      {
+        "name": "brand",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "Updated brand (PUT only)"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "github_com_webbuilder_server_internal_products.Brand",
+    "credential": "siteScoped"
+  },
+  {
     "id": "get:/api/sites/{siteId}/product-categories",
     "method": "GET",
     "path": "/api/sites/{siteId}/product-categories",
@@ -18787,6 +19262,34 @@ export const API_OPERATIONS: ApiOperation[] = [
         "required": true,
         "type": "string",
         "description": "Site ID"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/sites/{siteId}/products/tags",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/products/tags",
+    "tags": [
+      "products"
+    ],
+    "summary": "Tags already used on this site's products",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "limit",
+        "in": "query",
+        "required": false,
+        "type": "integer",
+        "description": "Max tags (default 50, clamped to 200)"
       }
     ],
     "bodyDescribed": false,
@@ -26204,6 +26707,44 @@ export const API_DEFINITIONS: Record<string, unknown> = {
       }
     }
   },
+  "github_com_webbuilder_server_internal_einvoice.Settings": {
+    "type": "object",
+    "properties": {
+      "enabled": {
+        "type": "boolean"
+      },
+      "invoiceSeries": {
+        "type": "string"
+      },
+      "issueMode": {
+        "type": "string"
+      },
+      "provider": {
+        "type": "string"
+      },
+      "sellerAddress": {
+        "type": "string"
+      },
+      "sellerEmail": {
+        "type": "string"
+      },
+      "sellerName": {
+        "type": "string"
+      },
+      "sellerPhone": {
+        "type": "string"
+      },
+      "sellerTaxCode": {
+        "type": "string"
+      },
+      "templateCode": {
+        "type": "string"
+      },
+      "updatedAt": {
+        "type": "string"
+      }
+    }
+  },
   "github_com_webbuilder_server_internal_flashsales.FlashSale": {
     "type": "object",
     "properties": {
@@ -27334,6 +27875,14 @@ export const API_DEFINITIONS: Record<string, unknown> = {
       "debtCents": {
         "type": "integer"
       },
+      "invoice": {
+        "description": "Invoice (P9 E16) is the VAT buyer the cashier entered; nil = none.",
+        "allOf": [
+          {
+            "$ref": "#/definitions/github_com_webbuilder_server_internal_pos.InvoiceBuyer"
+          }
+        ]
+      },
       "paymentMethod": {
         "type": "string"
       },
@@ -27494,6 +28043,37 @@ export const API_DEFINITIONS: Record<string, unknown> = {
         "items": {
           "$ref": "#/definitions/github_com_webbuilder_server_internal_pos.ResolutionInput"
         }
+      }
+    }
+  },
+  "github_com_webbuilder_server_internal_pos.InvoiceBuyer": {
+    "type": "object",
+    "properties": {
+      "address": {
+        "type": "string"
+      },
+      "company": {
+        "type": "string"
+      },
+      "email": {
+        "type": "string"
+      },
+      "name": {
+        "type": "string"
+      },
+      "taxCode": {
+        "type": "string"
+      }
+    }
+  },
+  "github_com_webbuilder_server_internal_pos.InvoiceError": {
+    "type": "object",
+    "properties": {
+      "code": {
+        "type": "string"
+      },
+      "message": {
+        "type": "string"
       }
     }
   },
@@ -28076,6 +28656,14 @@ export const API_DEFINITIONS: Record<string, unknown> = {
           }
         ]
       },
+      "invoiceError": {
+        "description": "InvoiceError (P9 E9) is why the sale's e-invoice request (complete) or\nits cancellation (void) did not land — the sale itself stands. Absent\nwhen nothing went wrong.",
+        "allOf": [
+          {
+            "$ref": "#/definitions/github_com_webbuilder_server_internal_pos.InvoiceError"
+          }
+        ]
+      },
       "order": {
         "$ref": "#/definitions/github_com_webbuilder_server_internal_orders.Order"
       },
@@ -28579,6 +29167,39 @@ export const API_DEFINITIONS: Record<string, unknown> = {
       }
     }
   },
+  "github_com_webbuilder_server_internal_products.Brand": {
+    "type": "object",
+    "properties": {
+      "createdAt": {
+        "type": "string"
+      },
+      "description": {
+        "type": "string"
+      },
+      "id": {
+        "type": "string"
+      },
+      "logo": {
+        "type": "string"
+      },
+      "name": {
+        "type": "string"
+      },
+      "productCount": {
+        "description": "ProductCount is READ-ONLY: how many products carry this brand, filled by\nListBrands from one grouped query. Never stored; ignored on write.",
+        "type": "integer"
+      },
+      "siteId": {
+        "type": "string"
+      },
+      "slug": {
+        "type": "string"
+      },
+      "updatedAt": {
+        "type": "string"
+      }
+    }
+  },
   "github_com_webbuilder_server_internal_products.BundleItem": {
     "type": "object",
     "properties": {
@@ -28658,6 +29279,11 @@ export const API_DEFINITIONS: Record<string, unknown> = {
         "type": "integer"
       },
       "brand": {
+        "description": "denormalised name of BrandID's row — see brand.go",
+        "type": "string"
+      },
+      "brandId": {
+        "description": "\"\" = no brand; ResolveBrand keeps Brand in step",
         "type": "string"
       },
       "bundleItems": {
@@ -31509,6 +32135,14 @@ export const API_DEFINITIONS: Record<string, unknown> = {
     "type": "object",
     "properties": {
       "customerId": {
+        "type": "string"
+      }
+    }
+  },
+  "internal_einvoice_rest.cancelBody": {
+    "type": "object",
+    "properties": {
+      "reason": {
         "type": "string"
       }
     }

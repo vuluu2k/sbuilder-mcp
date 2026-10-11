@@ -5,7 +5,7 @@ export const TRANSLATION_SOURCE = {
   "elements": 67,
   "pairs": 187,
   "neverKeys": 180,
-  "entityTypes": 11
+  "entityTypes": 12
 } as const;
 
 /** Every entity type a translation record can name, including "node". */
@@ -14,6 +14,7 @@ export const TRANSLATION_ENTITY_TYPES: string[] = [
   "category",
   "article",
   "blogCategory",
+  "brand",
   "course",
   "courseSection",
   "courseLesson",
@@ -1444,6 +1445,14 @@ export const TRANSLATABLE_ENTITY_FIELDS: Record<
     },
     {
       "key": "ogDesc"
+    }
+  ],
+  "brand": [
+    {
+      "key": "title"
+    },
+    {
+      "key": "description"
     }
   ],
   "course": [

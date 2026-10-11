@@ -1,6 +1,6 @@
 # Bộ tool
 
-Bốn tool với tới 814 operation của nền tảng, và 298 trong 376 lệnh ghi trong số đó mang theo
+Bốn tool với tới 830 operation của nền tảng, và 302 trong 381 lệnh ghi trong số đó mang theo
 hình dạng body đọc thẳng từ handler decode chúng. `sb_api_find` là một chỉ mục, không phải mỗi
 endpoint một tool — [lý do](../README.vi.md#bộ-tool).
 
@@ -1437,6 +1437,7 @@ hoàn toàn bằng bộ tool này review sạch, publish và render đúng; bả
 | `cartDrawerThumbnail` | Thumbnail của dòng sản phẩm trong ngăn giỏ là một GALLERY (ảnh chính kèm dải ảnh nhỏ) nhét trong dòng 64px — ngăn giỏ seed trước khi nền tảng sửa seed. Hỏi với mọi site. Sửa: mở một trang của site, rồi `sb_store action:"cart" relocalize:true dry_run:false` |
 | `cartCount` | Có thứ mở được giỏ nhưng không có gì cho thấy trong giỏ có gì. `cart-count` là tuỳ chọn vì `open_cart` là một HÀNH ĐỘNG mà element nào cũng mang được, nên site dựng bằng bộ công cụ này không bao giờ tự có: khách thêm hàng, thấy một toast tắt đi, rồi không còn dấu hiệu nào cho thấy giỏ không rỗng |
 | `pageSeo` | Trang nội dung đã publish (`page`, `about`, `contact`, `policy`, `faq`, `blog`) mà `settings` không có `title` hoặc `description`. Mỗi trang như vậy dùng TÊN SITE làm `<title>` và không có meta description, nên kết quả tìm kiếm không phân biệt nổi. Template thực thể lấy SEO từ thực thể; error/maintain không có địa chỉ. Sửa: `sb_page_update` với `seo: {title, description}` — tool đọc trang rồi merge, vì phía platform `settings` thay cả cục. Im lặng khi danh sách trang không mang `settings` |
+| `articleTemplate` / `blogCategoryPage` / `coursePage` / `brandPage` | Site có bài viết, danh mục blog, khoá học hoặc thương hiệu sản phẩm (đếm từ chính danh sách của chúng; thương hiệu từ `GET /product-brands`) mà không có trang ĐÃ PUBLISH thuộc type `post` / `blog` / `course` / `brand`. `/blog/{slug}`, `/blog-categories/{slug}`, `/courses/{slug}` và `/brands/{slug}` đều phân giải qua template của type đó (`storefront/entityroute.go`), nên mọi link như vậy đều 404. `draft: true` khi trang đã có nhưng chưa publish. Im lặng khi số đếm bằng 0 hoặc không đọc được. TAG blog không có route storefront nên không bị hỏi |
 | `categoryScope` | Trang đang mở là template `category` dùng chung và mọi repeater sản phẩm trên đó đều ghim vào MỘT collection cố định (`collectionType: "collection"`), nên mọi `/collections/{slug}` đều hiện collection đó. Nền tảng đã tự thu hẹp template danh mục theo URL: `all_products` / `page_collection` đi theo URL, một template dùng chung là đúng — không cần mỗi danh mục một trang |
 
 Mỗi khoảng trống mang `draft: true` khi trang ĐÃ CÓ nhưng chưa publish, vì "publish cái đã
@@ -2203,7 +2204,8 @@ Editor đóng lỗ này ngay khi một node menu vừa đáp xuống (`editor/sr
    theo danh sách trang, `productCategory` → `/collections/{slug}`, `article` →
    `/blog/{slug}`, `blogCategory` → `/blog-categories/{slug}`, và `product` →
    `/products/{slug}` gom theo id, vì danh mục một shop thì không có trần còn cây category
-   thì có. Chỉ những loại mà các dòng thật sự tham chiếu mới được gọi. **Một listing không
+   thì có. `course` và `brand` có địa chỉ storefront nhưng KHÔNG phải loại link của menu —
+   `menus.LinkType.Valid()` từ chối chúng, nên hãy dùng một dòng `url`. Chỉ những loại mà các dòng thật sự tham chiếu mới được gọi. **Một listing không
    đọc được sẽ hạ loại đó xuống `href` rỗng chứ không huỷ cả lần đồng bộ** — resolver của
    chính editor cũng nuốt lỗi đúng như vậy.
 4. **Ghi** bản chụp đã phân giải vào `specials.menuItems`, mang theo `panelId` của từng dòng.

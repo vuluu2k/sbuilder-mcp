@@ -18,6 +18,8 @@ function platform(forms: unknown, pages?: unknown[]) {
     if (path.includes('/articles')) return json({ articles: [{}], total: 7 });
     if (path.includes('/blog-categories')) return json({ blogCategories: [{}], total: 2 });
     if (path.includes('/courses')) return json({ courses: [{}], total: 5 });
+    // products/rest/brand.go: httpx.WriteList(w, "brands", bs, total).
+    if (path.endsWith('/product-brands')) return json({ brands: [{ id: 'b1', name: 'Acme', slug: 'acme', productCount: 4 }], total: 3 });
     if (/\/api\/sites\/[^/]+$/.test(path)) return json({ site: { maintenanceMode: true } });
     if (path.endsWith('/pages')) return json({ pages: pages ?? [{ type: 'page', status: 'published' }] });
     if (path.endsWith('/source'))
@@ -86,6 +88,13 @@ describe('gatherReadiness reads the form list', () => {
     expect(paths.some((p) => p.endsWith('/courses'))).toBe(true);
     expect(input.blogCategories).toBe(2);
     expect(input.courses).toBe(5);
+  });
+
+  it('asks for the product brands and carries the total through', async () => {
+    const { ctx, paths } = platform({ forms: [] });
+    const input = await gatherReadiness(ctx, 's1', []);
+    expect(paths.some((p) => p.endsWith('/product-brands'))).toBe(true);
+    expect(input.brands).toBe(3);
   });
 
   // THE SWITCH, which decides whether the maintenance page matters at all.

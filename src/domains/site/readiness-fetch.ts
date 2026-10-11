@@ -32,7 +32,7 @@ export async function gatherReadiness(
   };
   const site = encodeURIComponent(siteId);
 
-  const [pageList, gateways, shipping, globals, productList, categoryList, pageLinks, formList, articleList, blogCategoryList, courseList, siteRecord, overlayList, settings, menuList] =
+  const [pageList, gateways, shipping, globals, productList, categoryList, pageLinks, formList, articleList, blogCategoryList, courseList, brandList, siteRecord, overlayList, settings, menuList] =
     await Promise.all([
     get<{ pages?: Array<ReadinessPage & { id?: string; isDefaultTemplate?: boolean }> }>(`/api/sites/${site}/pages`),
     get<{ paymentGateways?: Array<{ enabled?: boolean; configured?: boolean }> }>(
@@ -76,6 +76,8 @@ export async function gatherReadiness(
       `/api/sites/${site}/blog-categories?limit=1`,
     ),
     get<{ courses?: unknown[]; total?: number }>(`/api/sites/${site}/courses?limit=1`),
+    // /brands/{slug} — products/rest/brand.go answers {brands, total}.
+    get<{ brands?: unknown[]; total?: number }>(`/api/sites/${site}/product-brands?limit=1`),
     // THE SWITCH ITSELF. `maintain` is the one page type whose absence matters
     // only while a flag is on — see maintenanceGap. Read here rather than
     // guessed, because the alternative is telling every site on earth to build
@@ -196,6 +198,7 @@ export async function gatherReadiness(
     courses: Array.isArray(courseList?.courses)
       ? (courseList?.total ?? courseList.courses.length)
       : null,
+    brands: Array.isArray(brandList?.brands) ? (brandList?.total ?? brandList.brands.length) : null,
     siteLocale: typeof settings?.settings?.locale === 'string' ? settings.settings.locale : null,
     maintenanceMode:
       typeof siteRecord?.site?.maintenanceMode === 'boolean'

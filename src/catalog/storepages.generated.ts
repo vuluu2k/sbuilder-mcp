@@ -1615,6 +1615,12 @@ export const PAGE_TYPES: readonly {
     "app": "courses"
   },
   {
+    "type": "brand",
+    "group": "store",
+    "ownSlug": false,
+    "routePattern": "/brands/{slug}"
+  },
+  {
     "type": "search",
     "group": "main",
     "ownSlug": false,
