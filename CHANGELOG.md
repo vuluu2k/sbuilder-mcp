@@ -6,6 +6,12 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.83.3] - 2026-10-11
+
+### Fixed
+- `sb_page_create` rejects a page `type` that does not exist and lists the valid types, instead of letting the platform silently store it as `page`; a `home` type points to `is_homepage: true`.
+- `sb_page_state` and `sb_page_version` take the site of the open page when `SB_SITE` is not set, instead of refusing with "no site".
+
 ## [0.83.2] - 2026-10-11
 
 ### Added

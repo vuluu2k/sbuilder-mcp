@@ -6,6 +6,12 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.83.3] - 2026-10-11
+
+### Fixed
+- `sb_page_create` từ chối `type` trang không tồn tại và liệt kê các loại hợp lệ, thay vì để platform lặng lẽ lưu thành `page`; type `home` được chỉ sang `is_homepage: true`.
+- `sb_page_state` và `sb_page_version` lấy site của trang đang mở khi không có `SB_SITE`, thay vì từ chối với lỗi "no site".
+
 ## [0.83.2] - 2026-10-11
 
 ### Added
