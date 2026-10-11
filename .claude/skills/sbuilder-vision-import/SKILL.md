@@ -467,8 +467,11 @@ repo over a number here, and fix the line when you catch one stale.
   twenty seconds later, and two such scripts were killed by the OS for memory during this
   repo's own work. `playwright-core` exposes no `browser.process()` for `launch()`, so there is
   nothing to `unref` and no way to make the handler reachable — it is gone, and the contract is
-  written down instead. SIGINT/SIGTERM still close Chrome, which is the path the stdio server
-  actually takes.
+  written down instead. SIGINT/SIGTERM and stdin close still close Chrome, but from
+  `src/index.ts`, which owns every exit: a handler in `shoot.ts` re-raised the signal as soon
+  as Chrome closed and killed the server before it signed its device session out (2026-10-11).
+  A script that imports `shoot` directly gets no signal cleanup — `closeBrowser()` in a
+  `finally`.
 
 - **A `<video>` WITH A POSTER WAS DROPPED, AND IT WAS THE ONE MOST WORTH TAKING.** `visible()`
   treated a zero box as hidden, which is right for an element that sizes itself from its

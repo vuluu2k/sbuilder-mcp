@@ -47,7 +47,19 @@ export class Session {
     return this.access !== null;
   }
 
-  async login(email: string, password: string): Promise<void> {
+  private pending: Promise<void> = Promise.resolve();
+
+  /** Serialised: two concurrent sb_connect calls would each sign in and strand one device. */
+  login(email: string, password: string): Promise<void> {
+    const run = this.pending.then(() => this.signIn(email, password));
+    this.pending = run.catch(() => {});
+    return run;
+  }
+
+  private async signIn(email: string, password: string): Promise<void> {
+    // A second sb_connect in one process would otherwise strand the first
+    // device session — see logout().
+    await this.logout();
     const out = (await request({
       base: this.base,
       method: 'POST',
@@ -72,5 +84,34 @@ export class Session {
     })) as { tokens: TokenPair };
     this.access = out.tokens.accessToken;
     this.refreshToken = out.tokens.refreshToken;
+  }
+
+  /**
+   * Sign this device out. Best effort, never throws.
+   *
+   * EVERY password sign-in is its own DEVICE SESSION since web_builder 9db1b2a9e,
+   * capped at 10 per account; past the cap the one that has gone longest
+   * without a REFRESH is deleted. This client never refreshes (the access token
+   * lives 30 days), so a process that exits without signing out leaves a slot
+   * held, and about ten agent runs later the evicted session is the merchant's
+   * own editor — signed out mid-edit, by nothing they can see. A SIGKILLed
+   * process still leaks its slot; nothing on this side can prevent that.
+   */
+  async logout(): Promise<void> {
+    const refreshToken = this.refreshToken;
+    this.access = null;
+    this.refreshToken = null;
+    if (!refreshToken) return;
+    try {
+      await request({
+        base: this.base,
+        method: 'POST',
+        path: '/api/auth/logout',
+        body: { refreshToken },
+        fetchImpl: this.fetchImpl,
+      });
+    } catch (err) {
+      console.error('[sbuilder-mcp] sign-out failed:', (err as Error).message);
+    }
   }
 }

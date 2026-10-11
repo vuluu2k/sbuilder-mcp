@@ -3,10 +3,10 @@
 import type { ApiOperation } from './types.js';
 
 export const SWAGGER_SOURCE = {
-  "operations": 830,
-  "definitions": 277,
-  "bodyCarrying": 362,
-  "bodyUndescribed": 92,
+  "operations": 833,
+  "definitions": 278,
+  "bodyCarrying": 364,
+  "bodyUndescribed": 93,
   "generatedFrom": "server/docs/swagger.json"
 } as const;
 
@@ -1514,6 +1514,27 @@ export const API_OPERATIONS: ApiOperation[] = [
     "credential": "siteScoped"
   },
   {
+    "id": "post:/api/admin/accounts/{id}/sign-out",
+    "method": "POST",
+    "path": "/api/admin/accounts/{id}/sign-out",
+    "tags": [
+      "admin"
+    ],
+    "summary": "Sign an account out of every device",
+    "params": [
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Account (user) id"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
     "id": "get:/api/admin/address-units",
     "method": "GET",
     "path": "/api/admin/address-units",
@@ -1931,6 +1952,27 @@ export const API_OPERATIONS: ApiOperation[] = [
         "required": true,
         "type": "object",
         "description": "email + password"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "none"
+  },
+  {
+    "id": "post:/api/auth/logout",
+    "method": "POST",
+    "path": "/api/auth/logout",
+    "tags": [
+      "auth"
+    ],
+    "summary": "Sign out this device (revoke its refresh session)",
+    "params": [
+      {
+        "name": "body",
+        "in": "body",
+        "required": true,
+        "type": "object",
+        "description": "refreshToken"
       }
     ],
     "bodyDescribed": false,
@@ -8278,6 +8320,34 @@ export const API_OPERATIONS: ApiOperation[] = [
     "credential": "siteScoped"
   },
   {
+    "id": "post:/api/sites/{siteId}/einvoice/connection/check",
+    "method": "POST",
+    "path": "/api/sites/{siteId}/einvoice/connection/check",
+    "tags": [
+      "pos"
+    ],
+    "summary": "Test an e-invoice provider connection",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "body",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "{provider?, sandbox?, credentials?}"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "github_com_webbuilder_server_internal_einvoice.CheckInput",
+    "credential": "siteScoped"
+  },
+  {
     "id": "get:/api/sites/{siteId}/einvoice/jobs",
     "method": "GET",
     "path": "/api/sites/{siteId}/einvoice/jobs",
@@ -8428,7 +8498,7 @@ export const API_OPERATIONS: ApiOperation[] = [
       }
     ],
     "bodyDescribed": true,
-    "bodyRef": "github_com_webbuilder_server_internal_einvoice.Settings",
+    "bodyRef": "internal_einvoice_rest.settingsInput",
     "credential": "siteScoped"
   },
   {
@@ -8456,7 +8526,7 @@ export const API_OPERATIONS: ApiOperation[] = [
       }
     ],
     "bodyDescribed": true,
-    "bodyRef": "github_com_webbuilder_server_internal_einvoice.Settings",
+    "bodyRef": "internal_einvoice_rest.settingsInput",
     "credential": "siteScoped"
   },
   {
@@ -14693,6 +14763,13 @@ export const API_OPERATIONS: ApiOperation[] = [
         "description": "Location filter (GET)"
       },
       {
+        "name": "archived",
+        "in": "query",
+        "required": false,
+        "type": "boolean",
+        "description": "true = list archived areas (GET)"
+      },
+      {
         "name": "area",
         "in": "body",
         "required": false,
@@ -14728,6 +14805,13 @@ export const API_OPERATIONS: ApiOperation[] = [
         "description": "Location filter (GET)"
       },
       {
+        "name": "archived",
+        "in": "query",
+        "required": false,
+        "type": "boolean",
+        "description": "true = list archived areas (GET)"
+      },
+      {
         "name": "area",
         "in": "body",
         "required": false,
@@ -14746,7 +14830,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     "tags": [
       "pos"
     ],
-    "summary": "Rename, reorder or delete a floor area",
+    "summary": "Rename, reorder, restore, archive or delete a floor area",
     "params": [
       {
         "name": "siteId",
@@ -14781,7 +14865,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     "tags": [
       "pos"
     ],
-    "summary": "Rename, reorder or delete a floor area",
+    "summary": "Rename, reorder, restore, archive or delete a floor area",
     "params": [
       {
         "name": "siteId",
@@ -26707,41 +26791,20 @@ export const API_DEFINITIONS: Record<string, unknown> = {
       }
     }
   },
-  "github_com_webbuilder_server_internal_einvoice.Settings": {
+  "github_com_webbuilder_server_internal_einvoice.CheckInput": {
     "type": "object",
     "properties": {
-      "enabled": {
-        "type": "boolean"
-      },
-      "invoiceSeries": {
-        "type": "string"
-      },
-      "issueMode": {
-        "type": "string"
+      "credentials": {
+        "type": "object",
+        "additionalProperties": {
+          "type": "string"
+        }
       },
       "provider": {
         "type": "string"
       },
-      "sellerAddress": {
-        "type": "string"
-      },
-      "sellerEmail": {
-        "type": "string"
-      },
-      "sellerName": {
-        "type": "string"
-      },
-      "sellerPhone": {
-        "type": "string"
-      },
-      "sellerTaxCode": {
-        "type": "string"
-      },
-      "templateCode": {
-        "type": "string"
-      },
-      "updatedAt": {
-        "type": "string"
+      "sandbox": {
+        "type": "boolean"
       }
     }
   },
@@ -27807,6 +27870,10 @@ export const API_DEFINITIONS: Record<string, unknown> = {
   "github_com_webbuilder_server_internal_pos.AreaInput": {
     "type": "object",
     "properties": {
+      "archived": {
+        "description": "Archived (PATCH only): false restores an archived area; true is refused —\narchiving has one door, DELETE, which checks the open tabs.",
+        "type": "boolean"
+      },
       "locationId": {
         "description": "POST only; an area never moves",
         "type": "string"
@@ -32143,6 +32210,54 @@ export const API_DEFINITIONS: Record<string, unknown> = {
     "type": "object",
     "properties": {
       "reason": {
+        "type": "string"
+      }
+    }
+  },
+  "internal_einvoice_rest.settingsInput": {
+    "type": "object",
+    "properties": {
+      "credentials": {
+        "type": "object",
+        "additionalProperties": {
+          "type": "string"
+        }
+      },
+      "enabled": {
+        "type": "boolean"
+      },
+      "invoiceSeries": {
+        "type": "string"
+      },
+      "issueMode": {
+        "type": "string"
+      },
+      "provider": {
+        "type": "string"
+      },
+      "sandbox": {
+        "description": "Sandbox points the provider adapter at its test environment.",
+        "type": "boolean"
+      },
+      "sellerAddress": {
+        "type": "string"
+      },
+      "sellerEmail": {
+        "type": "string"
+      },
+      "sellerName": {
+        "type": "string"
+      },
+      "sellerPhone": {
+        "type": "string"
+      },
+      "sellerTaxCode": {
+        "type": "string"
+      },
+      "templateCode": {
+        "type": "string"
+      },
+      "updatedAt": {
         "type": "string"
       }
     }

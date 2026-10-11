@@ -1469,7 +1469,13 @@ function capturePage(limits: { maxSections: number; maxImages: number; maxTextCh
 async function withBrowser<T>(fn: (browser: Browser) => Promise<T>): Promise<T> {
   let browser: Browser | undefined;
   try {
-    browser = await chromium.launch({ channel: 'chrome' });
+    // No Playwright signal handlers: `src/index.ts` owns them (see shoot.ts).
+    browser = await chromium.launch({
+      channel: 'chrome',
+      handleSIGINT: false,
+      handleSIGTERM: false,
+      handleSIGHUP: false,
+    });
   } catch (e) {
     throw new Error(
       'sbuilder: could not start Chrome to read that page. This server uses the SYSTEM ' +

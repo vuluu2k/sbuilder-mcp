@@ -110,7 +110,7 @@ type Launcher = () => Promise<Browser>;
 // its SIGTERM handler closes browsers without exiting. Its handlers live until
 // the browser process closes, so a signal re-raised by this module could land
 // while Playwright is still listening and the server would survive a signal it
-// should die on. This module owns the handlers; Playwright gets none.
+// should die on. `src/index.ts` owns the handlers; Playwright gets none.
 const realLauncher: Launcher = () =>
   chromium.launch({
     channel: 'chrome',
@@ -171,9 +171,10 @@ export async function closeBrowser(): Promise<void> {
 
 /**
  * A kept browser is a child process, and a child process outlives a parent that
- * forgets it. SIGINT/SIGTERM close Chrome and then re-raise, so the exit code is
- * the one the signal would have produced. That is the path the MCP server
- * actually takes, because a stdio server is stopped by its client.
+ * forgets it. The MCP server closes it on every way out (stdin close, SIGINT,
+ * SIGTERM) in `src/index.ts`, which owns the signal handlers: a second handler
+ * here re-raised the signal the moment Chrome was closed — at once when none was
+ * open — and killed the process before the server signed its device session out.
  *
  * THERE USED TO BE A `beforeExit` HANDLER HERE TOO, and it could never fire.
  * `beforeExit` runs when the event loop DRAINS, and an open browser connection
@@ -190,12 +191,6 @@ export async function closeBrowser(): Promise<void> {
  * pooling is deliberate (a vision loop shoots constantly and must not pay a
  * launch each time); the cost of it is this one line at every other call site.
  */
-for (const signal of ['SIGINT', 'SIGTERM'] as const) {
-  process.once(signal, () => {
-    void closeBrowser().finally(() => process.kill(process.pid, signal));
-  });
-}
-
 /**
  * Photograph a rendered page at several widths, and measure every node.
  *

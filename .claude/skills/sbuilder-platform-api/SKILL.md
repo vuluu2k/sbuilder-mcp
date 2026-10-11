@@ -20,7 +20,16 @@ repo over a number here, and fix the line when you catch one stale.
 - **The session access token lives ~15 minutes and rotates.** `Session.token()` is a
   GETTER and every consumer must call it per use. A client that captures the string
   replays an expired token forever, and the failure is silent — a rejected socket auth
-  still fires `onopen`.
+  still fires `onopen`. (Measured 2026-10-11: the access TTL is now 30 days, refresh 180 —
+  `main.go` `NewTokenManager` — so nothing here refreshes; the getter rule still stands.)
+
+- **Every password sign-in is its own DEVICE SESSION** (web_builder 9db1b2a9e), capped at 10
+  per account; past the cap the one longest without a REFRESH is deleted, and its access
+  token dies with it. This client never refreshes, so a process that does not sign out
+  holds a slot, and ~10 agent runs later the evicted one is the merchant's editor. Hence
+  `Session.logout()` (`POST /api/auth/logout {refreshToken}`, idempotent 204) on stdin
+  close / SIGTERM / SIGINT and before a re-login. Measured live: sessions 1 → 2 on connect,
+  2 after a second `sb_connect`, back to 1 on close. A SIGKILL still leaks one.
 
 - **The platform writes exactly one error shape**, `{"error", "code"}`, never plain text.
   `code` is the branchable half; reading `statusText` throws it away. Two documented

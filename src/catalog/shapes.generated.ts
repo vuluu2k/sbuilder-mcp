@@ -4,12 +4,12 @@
 import type { RequestShape } from './types.js';
 
 export const SHAPE_SOURCE = {
-  "writeOperations": 381,
-  "shaped": 302,
-  "fromHandlers": 292,
+  "writeOperations": 384,
+  "shaped": 304,
+  "fromHandlers": 294,
   "fromSwaggerOnly": 10,
   "withReadOnly": 30,
-  "structsRead": 3176
+  "structsRead": 3194
 } as const;
 
 export const REQUEST_SHAPES: Record<string, RequestShape> = {
@@ -753,6 +753,16 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
     "goType": "credentials"
   },
   "post:/api/auth/refresh": {
+    "fields": [
+      {
+        "name": "refreshToken",
+        "type": "string"
+      }
+    ],
+    "source": "go",
+    "goType": "(inline)"
+  },
+  "post:/api/auth/logout": {
     "fields": [
       {
         "name": "refreshToken",
@@ -3540,12 +3550,39 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
         "type": "string"
       },
       {
+        "name": "sandbox",
+        "type": "boolean",
+        "note": "Sandbox points the provider adapter at its test environment."
+      },
+      {
         "name": "updatedAt",
         "type": "string (RFC3339)"
+      },
+      {
+        "name": "credentials",
+        "type": "{ [string]: string }"
       }
     ],
     "source": "go",
-    "goType": "einvoice.Settings"
+    "goType": "settingsInput"
+  },
+  "post:/api/sites/{siteId}/einvoice/connection/check": {
+    "fields": [
+      {
+        "name": "provider",
+        "type": "string"
+      },
+      {
+        "name": "sandbox",
+        "type": "boolean | null"
+      },
+      {
+        "name": "credentials",
+        "type": "{ [string]: string }"
+      }
+    ],
+    "source": "go",
+    "goType": "einvoice.CheckInput"
   },
   "post:/api/sites/{siteId}/einvoice/jobs/{id}/cancel": {
     "fields": [
@@ -6070,6 +6107,11 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
       {
         "name": "position",
         "type": "number | null"
+      },
+      {
+        "name": "archived",
+        "type": "boolean | null",
+        "note": "Archived (PATCH only): false restores an archived area; true is refused — archiving has one door, DELETE, which checks the open tabs."
       }
     ],
     "source": "go",
@@ -6089,6 +6131,11 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
       {
         "name": "position",
         "type": "number | null"
+      },
+      {
+        "name": "archived",
+        "type": "boolean | null",
+        "note": "Archived (PATCH only): false restores an archived area; true is refused — archiving has one door, DELETE, which checks the open tabs."
       }
     ],
     "source": "go",
