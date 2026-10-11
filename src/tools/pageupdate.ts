@@ -1,3 +1,4 @@
+import { isDeepStrictEqual } from 'node:util';
 import { z } from 'zod';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { text } from '../mcp/response.js';
@@ -113,7 +114,7 @@ export function registerPageUpdateTools(server: McpServer, ctx: ToolContext): vo
       // courseGate, courseLesson and keys unknown here — so the write is always the
       // whole old blob with only the named keys moved, as the editor's PageSeoDialog does.
       const changes: Record<string, [unknown, unknown]> = {};
-      const differs = (a: unknown, b: unknown) => JSON.stringify(a) !== JSON.stringify(b);
+      const differs = (a: unknown, b: unknown) => !isDeepStrictEqual(a, b);
       const settings = { ...old };
       for (const [k, v] of Object.entries(seo ?? {})) {
         if (differs(old[k], v)) changes[`seo.${k}`] = [old[k] ?? null, v];

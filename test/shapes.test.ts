@@ -85,3 +85,12 @@ describe('the segment arm: one POST handler switching on the route\'s own tail',
     expect(REQUEST_SHAPES['post:/api/sites/{siteId}/domains/{id}/primary']).toBeUndefined();
   });
 });
+
+describe('the suffix arm: a route peeled off with strings.CutSuffix before the method switch', () => {
+  it('gives each refund route refundRequest, and leaves the charge its own body', () => {
+    const f = (id: string) => REQUEST_SHAPES[id]?.fields.map((x) => x.name) ?? null;
+    expect(f('post:/api/sites/{siteId}/payment-transactions/{transactionId}/refund')).toEqual(['note']);
+    expect(f('post:/api/sites/{siteId}/payment-transactions/{transactionId}/refund-via-gateway')).toEqual(['note']);
+    expect(f('post:/api/sites/{siteId}/payment-transactions')).toEqual(['orderId', 'provider']);
+  });
+});

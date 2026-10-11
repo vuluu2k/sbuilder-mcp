@@ -129,7 +129,8 @@ export const FIX: Record<string, string> = {
   no_data_context:
     'Give it a record: put it inside a list-dataset / dataset-block, pin one with sb_bind ' +
     '(target id), or move it to a page whose type supplies "<key>" (product, category, course, ' +
-    'post, blog). Off those it renders its placeholder for ever.',
+    'post, blog). A cartLine field goes inside a cart-order instead. Off those it renders its ' +
+    'placeholder for ever.',
   unread_value:
     'Write a value the renderer reads: sb_traits_for "<type>" lists them; sb_set id "<id>" ' +
     'with one, at the same breakpoint it is stored at.',

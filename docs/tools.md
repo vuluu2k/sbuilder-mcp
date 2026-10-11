@@ -284,7 +284,10 @@ deep-merged over it — objects key by key, arrays replaced whole — and sent i
 takes (`{settings: …}` for settings, the bare record elsewhere; the fields are the call sheet's).
 The result carries `merge: {changed}`, the leaf paths that moved. Without `merge`, a PUT whose
 body leaves out fields the record holds carries `replace_warning`, naming them — on the dry run
-"would be erased; pass merge:true", on a send "were erased; sb_undo puts them back". A dry-run PUT
+"would be erased; pass merge:true", on a send "were erased; sb_undo puts them back". A body key the
+handler's Go struct has no field for is named under `unknown_keys` (dry run and send alike, any
+method with a body shape): `encoding/json` drops it without a word, so `price` for `feeCents` on
+a shipping method stored a fee of 0. Matched case-insensitively, as Go does. A dry-run PUT
 therefore performs that one GET; it never writes and records nothing to undo. Its preview shows
 YOUR body and `merge.changed`, never the merged record, because a merge folds in what the GET
 answered and `redact()` hides only secret-looking key names. `null` in the body sets the field

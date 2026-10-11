@@ -5,6 +5,8 @@
  * The shape has to match exactly: these patches go on the wire to peers running
  * the editor's own code, and a shape it does not recognise is dropped silently.
  */
+import { isDeepStrictEqual } from 'node:util';
+
 export type Path = (string | number)[];
 
 export type Patch =
@@ -167,7 +169,10 @@ export function documentPatches(
 ): Patch[] {
   const out: Patch[] = [];
   for (const [id, node] of Object.entries(after.nodes)) {
-    if (JSON.stringify(before.nodes[id]) !== JSON.stringify(node)) out.push({ op: 'set', path: ['nodes', id], value: node });
+    // Not JSON.stringify: a document read back from the platform (Postgres
+    // jsonb) orders keys differently from one built here, so every node
+    // "differed" — undoing one sb_move rewrote all five nodes of a page, live.
+    if (!isDeepStrictEqual(before.nodes[id], node)) out.push({ op: 'set', path: ['nodes', id], value: node });
   }
   for (const id of Object.keys(before.nodes)) {
     if (!(id in after.nodes)) out.push({ op: 'unset', path: ['nodes', id] });

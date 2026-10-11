@@ -56,4 +56,6 @@ export interface RequestShape {
   source: 'go';
   /** The Go type, for a reader who wants to go and look. */
   goType: string;
+  /** An embedded struct could not be read: `fields` may be incomplete. */
+  partial?: true;
 }

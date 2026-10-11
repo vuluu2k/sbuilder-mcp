@@ -288,7 +288,10 @@ từng khoá, mảng thay nguyên — rồi gửi đúng dạng PUT nhận (`{se
 trần ở các route khác; field lấy theo call sheet). Kết quả có `merge: {changed}`, các đường dẫn
 lá đã đổi. Không có `merge`, PUT nào có body thiếu field mà bản ghi đang giữ sẽ kèm
 `replace_warning` liệt kê chúng — ở dry run là "sẽ bị xoá; truyền merge:true", khi gửi thật là
-"đã bị xoá; sb_undo trả lại". Vì vậy dry run của PUT có thực hiện đúng một GET; nó không ghi
+"đã bị xoá; sb_undo trả lại". Khoá nào trong body mà struct Go của handler không có field tương ứng sẽ được liệt kê trong
+`unknown_keys` (cả dry run lẫn gửi thật, mọi method có shape body): `encoding/json` bỏ nó đi
+không một lời, nên `price` thay cho `feeCents` ở phương thức giao hàng đã lưu phí bằng 0. So
+khớp không phân biệt hoa thường, như Go. Vì vậy dry run của PUT có thực hiện đúng một GET; nó không ghi
 gì và không ghi nhận gì để hoàn tác. Bản xem trước chỉ hiện body CỦA BẠN cùng `merge.changed`,
 không bao giờ hiện bản ghi đã gộp, vì việc gộp lấy cả những gì GET trả về mà `redact()` chỉ che
 được các khoá có tên trông như bí mật. `null` trong body đặt field đó thành null, tức là xoá nó

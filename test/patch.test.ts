@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { isSyncablePath, isSyncablePatch, applyPatches, syncable, type Patch } from '../src/core/patch.js';
+import { isSyncablePath, isSyncablePatch, applyPatches, syncable, documentPatches, type Patch } from '../src/core/patch.js';
 
 describe('isSyncablePath()', () => {
   it('accepts a real node path', () => {
@@ -134,5 +134,13 @@ describe('applying a batch twice', () => {
     applyPatches(state, patches);
     state.nodes.n1.data.nodes.push('written-into-the-document');
     expect((patches[0] as { value: { data: { nodes: string[] } } }).value.data.nodes).toEqual([]);
+  });
+});
+
+describe('documentPatches()', () => {
+  it('ignores key order — a platform read orders keys its own way', () => {
+    const before = { nodes: { a: { style: { x: 1, y: 2 }, data: { type: 'text' } }, b: { data: { type: 'button', nodes: [] } } } };
+    const after = { nodes: { a: { data: { type: 'text' }, style: { y: 2, x: 1 } }, b: { data: { nodes: ['a'], type: 'button' } } } };
+    expect(documentPatches(before, after)).toEqual([{ op: 'set', path: ['nodes', 'b'], value: after.nodes.b }]);
   });
 });

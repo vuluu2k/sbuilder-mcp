@@ -169,7 +169,20 @@ function drawsItsOwnContent(type: string): boolean {
 
 
 /** Binding-source prefixes that name a RECORD (not `site.*`, which every page has). */
-const RECORD_ENTITIES = new Set(['product', 'category', 'course', 'article', 'blogCategory', 'brand']);
+// cartLine: only a cart-order's line row supplies it (render/nodes/cart-order,
+// scope.PlaceholderCartLine) — see ROW_SUPPLIER. searchRow is left out: no
+// element supplies it yet, so there is no right place to point at.
+const RECORD_ENTITIES = new Set(['product', 'category', 'course', 'article', 'blogCategory', 'brand', 'cartLine']);
+/** A record only one element type's rows supply, which is not a dataset repeater. */
+const ROW_SUPPLIER: Record<string, string> = { cartLine: 'cart-order' };
+
+/** Does this node sit inside an element of `type`? */
+function insideType(d: DocLike, id: string, type: string): boolean {
+  for (let x = d.nodes[id]?.data.parent; x && d.nodes[x]; x = d.nodes[x].data.parent) {
+    if (d.nodes[x].data.type === type) return true;
+  }
+  return false;
+}
 
 /**
  * Which records a page TYPE supplies outside any repeater — read off the
@@ -491,14 +504,17 @@ export function reviewDesign(
       const missing = ((n as { bindings?: Array<{ source?: string }> }).bindings ?? [])
         .map((b) => String(b?.source ?? '').split('.')[0])
         .find((e) => RECORD_ENTITIES.has(e) && !entities.includes(e));
-      if (missing && !pinnedAbove(d, id)) {
+      const supplied = missing && ROW_SUPPLIER[missing] ? insideType(d, id, ROW_SUPPLIER[missing]) : false;
+      if (missing && !supplied && !pinnedAbove(d, id)) {
         out.push({
           code: 'no_data_context',
           nodeId: id,
           type,
           problem:
-            `Bound to a ${missing} record, but it sits in no repeater and a "${opts.pageType}" ` +
-            'page supplies none — it renders its placeholder on the published page.',
+            (ROW_SUPPLIER[missing]
+              ? `Bound to a ${missing} field, but it sits outside any ${ROW_SUPPLIER[missing]} — only its line rows supply one, so it renders its placeholder on the published page.`
+              : `Bound to a ${missing} record, but it sits in no repeater and a "${opts.pageType}" ` +
+                'page supplies none — it renders its placeholder on the published page.'),
           key: missing,
           fix: fill('no_data_context', { id, key: missing }),
         });

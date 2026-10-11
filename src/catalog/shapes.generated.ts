@@ -5875,30 +5875,22 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
   "post:/api/sites/{siteId}/payment-transactions/{transactionId}/refund": {
     "fields": [
       {
-        "name": "orderId",
-        "type": "string"
-      },
-      {
-        "name": "provider",
+        "name": "note",
         "type": "string"
       }
     ],
     "source": "go",
-    "goType": "chargeRequest"
+    "goType": "refundRequest"
   },
   "post:/api/sites/{siteId}/payment-transactions/{transactionId}/refund-via-gateway": {
     "fields": [
       {
-        "name": "orderId",
-        "type": "string"
-      },
-      {
-        "name": "provider",
+        "name": "note",
         "type": "string"
       }
     ],
     "source": "go",
-    "goType": "chargeRequest"
+    "goType": "refundRequest"
   },
   "post:/api/sites/{id}/plan-checkout": {
     "fields": [

@@ -154,6 +154,16 @@ describe('sb_api_call — merge for a full-replace PUT', () => {
     expect(out.replace_warning).toMatch(/merge:true/);
   });
 
+  it('names body keys the handler\'s struct would drop silently', async () => {
+    const out = (await callOperation(ctx(platform({})), {
+      id: 'post:/api/sites/{siteId}/shipping-methods',
+      body: { name: 'Giao nhanh', FeeCents: 3, price: 30000 },
+    })) as { unknown_keys?: { keys: string[]; note: string } };
+    // FeeCents matches feeCents: Go's decoder is case-insensitive.
+    expect(out.unknown_keys?.keys).toEqual(['price']);
+    expect(out.unknown_keys?.note).toMatch(/feeCents/);
+  });
+
   it('merge is refused off a PUT', async () => {
     await expect(
       callOperation(ctx(platform({})), { id: 'post:/api/sites/{siteId}/shipping-methods', body: {}, merge: true }),

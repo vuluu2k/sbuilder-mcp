@@ -78,4 +78,17 @@ describe('every entity context the renderer binds is a source', () => {
     blog.d.apply(bindNode(blog.d, blog.id, 'blogCategory.image', 'specials.text'));
     expect(reviewDesign(blog.d, { pageType: 'blog' }).map((f) => f.code)).not.toContain('dead_binding_source');
   });
+
+  it('a cartLine field is supplied inside a cart-order and nowhere else', () => {
+    const loose = headingDoc();
+    loose.d.apply(bindNode(loose.d, loose.id, 'cartLine.quantity', 'specials.text'));
+    expect(reviewDesign(loose.d, { pageType: 'checkout' }).map((f) => f.code)).toContain('no_data_context');
+
+    const d = PageDoc.from({ schema_version: 2, root_node_id: '', nodes: {} });
+    d.apply(addSubtree(d, 'ROOT', { type: 'flex-section', children: [{ type: 'cart-order', children: [{ type: 'heading' }] }] }).patches);
+    const cart = d.node(d.node('ROOT').data.nodes[0]).data.nodes[0];
+    const id = d.node(cart).data.nodes.find((c: string) => d.node(c).data.type === 'heading')!;
+    d.apply(bindNode(d, id, 'cartLine.quantity', 'specials.text'));
+    expect(reviewDesign(d, { pageType: 'checkout' }).filter((f) => f.code === 'no_data_context' && f.nodeId === id)).toEqual([]);
+  });
 });

@@ -52,6 +52,11 @@ export interface RequestShape {
   source: 'go';
   /** The Go type, for a reader who wants to go and look. */
   goType: string;
+  /**
+   * An embedded struct could not be read, so `fields` may be missing some. A
+   * caller must not treat a key outside `fields` as unknown to the platform.
+   */
+  partial?: true;
 }
 
 interface GoStruct {
@@ -360,6 +365,8 @@ function renderType(goType: string): string {
 // ---------------------------------------------------------------------------
 
 const MAX_EMBED_DEPTH = 3;
+/** Set by `flatten` when an embed is dropped; read per decode site. */
+let embedMissed = false;
 /** A nested struct wider than this is a row, not an argument; name it and stop. */
 const MAX_NESTED_FIELDS = 20;
 
@@ -393,10 +400,14 @@ function flatten(
   seen.add(key);
 
   const out: ShapeField[] = [];
+  if (depth >= MAX_EMBED_DEPTH && s.embeds.length) embedMissed = true;
   if (depth < MAX_EMBED_DEPTH) {
     for (const embed of s.embeds) {
       const resolved = resolveRef(embed, s.dir, index, pkgs);
-      if (!resolved) continue;
+      if (!resolved) {
+        embedMissed = true;
+        continue;
+      }
       const inner = flatten(resolved, index, pkgs, depth + 1, seen, expandNested);
       if (inner) out.push(...inner);
     }
@@ -703,6 +714,36 @@ function segmentHop(
 }
 
 /**
+ * THE SUFFIX ARM. `payments/rest`'s `transactions` serves `…/{id}/refund` and
+ * `…/{id}/refund-via-gateway` from one handler that peels the route's tail with
+ * `strings.CutSuffix(id, "/refund")` BEFORE its method switch, and each branch
+ * decodes `refundRequest {note}`. The method arm found `case http.MethodPost:` —
+ * the CHARGE arm further down — and gave both refunds `chargeRequest`, so the
+ * call sheet asked for `orderId, provider` and a `note` read as unknown. The
+ * literal is closed by its quote, so "/refund" never matches
+ * "/refund-via-gateway". Null when the handler has no such branch.
+ */
+function suffixArm(body: string[], route: { path: string }): string[] | null {
+  const tail = route.path.split('/').filter((x) => x && !x.startsWith('{')).pop();
+  if (!tail) return null;
+  const opener = new RegExp(`(?:CutSuffix|HasSuffix|TrimSuffix)\\([^)]*"/${tail.replace(/[-.]/g, '\\$&')}"`);
+  const at = body.findIndex((l) => opener.test(l));
+  if (at === -1) return null;
+  // The branch is the brace block the matching line opens.
+  // Braces inside a Go string or rune literal are not structure.
+  let depth = 0;
+  for (let n = at; n < body.length; n++) {
+    for (const ch of body[n].replace(/"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'|`[^`]*`/g, '')) {
+      if (ch === '{') depth++;
+      else if (ch === '}') depth--;
+    }
+    // A one-line `if …; ok { … }` closes on the opener itself.
+    if (depth <= 0 && (n > at || body[at].includes('{'))) return body.slice(at, n + 1);
+  }
+  return null;
+}
+
+/**
  * THE SEGMENT ARM. `sitedomain/rest`'s `action` serves five POST routes from
  * one handler that switches on the route's trailing literal segment, each
  * `case "redirect":` arm decoding its own inline struct. The method arm sees
@@ -739,7 +780,7 @@ function readDecodeSites(file: string, dir: string): DecodeSite[] {
       // route there is nothing to be ambiguous about, so the whole body is read —
       // this is how `PUT .../pages/{pageId}/source`, `/settings` and `/theme` are
       // reached at all.
-      let arm = armLines(fn.body, route.method);
+      let arm = suffixArm(fn.body, route) ?? armLines(fn.body, route.method);
       if (arm.length === 0 && writeRoutes.length === 1) arm = fn.body;
       let decodes = arm.length > 0 ? extractDecodes(arm, dir) : [];
       // The method arm found several distinct bodies in one stretch — the shape
@@ -937,6 +978,7 @@ export function buildRequestShapes(repo: string, operationIds: Set<string>): Sha
 
       let fields: ShapeField[] | null = null;
       let goType = '(inline)';
+      embedMissed = false;
       if (site.inline) {
         const key = `${site.fromDir}::(inline)`;
         fields = flatten(key, new Map([[key, site.inline]]), pkgs);
@@ -948,7 +990,7 @@ export function buildRequestShapes(repo: string, operationIds: Set<string>): Sha
       }
       if (!fields || fields.length === 0) continue;
       const readOnly = site.inline ? undefined : readOnlyFor(goType, fields, omits);
-      shapes[id] = { fields, source: 'go', goType, ...(readOnly ? { readOnly } : {}) };
+      shapes[id] = { fields, source: 'go', goType, ...(readOnly ? { readOnly } : {}), ...(embedMissed ? { partial: true as const } : {}) };
     }
   }
 

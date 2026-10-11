@@ -1,3 +1,4 @@
+import { isDeepStrictEqual } from 'node:util';
 import { z } from 'zod';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { API_OPERATIONS, SWAGGER_SOURCE } from '../catalog/api.generated.js';
@@ -93,6 +94,27 @@ export function deepMerge(base: unknown, over: unknown): unknown {
   return out;
 }
 
+/**
+ * Top-level body keys the handler's Go struct has no field for. encoding/json
+ * DROPS them without a word, so a misspelt field is a write that "worked":
+ * measured, `price: 30000` on a shipping method stored `feeCents: 0`. Matched
+ * case-insensitively, as Go's decoder does. Silent when the shape is unknown or
+ * partial — a warning there would be a guess.
+ */
+export function unknownBodyKeys(opId: string, body: unknown): { keys: string[]; note: string } | undefined {
+  const shape = REQUEST_SHAPES[opId];
+  if (!shape || shape.partial || !isPlain(body)) return undefined;
+  const known = new Set(shape.fields.map((f) => f.name.toLowerCase()));
+  const keys = Object.keys(body).filter((k) => !known.has(k.toLowerCase()));
+  if (!keys.length) return undefined;
+  return {
+    keys,
+    note:
+      `Not fields of ${shape.goType}: the platform ignores them silently. ` +
+      `Its fields: ${shape.fields.map((f) => f.name).join(', ')}.`,
+  };
+}
+
 /** Leaf paths where `b` differs from `a` (arrays compared whole). */
 function changedPaths(a: unknown, b: unknown, at = ''): string[] {
   if (isPlain(a) && isPlain(b)) {
@@ -100,7 +122,7 @@ function changedPaths(a: unknown, b: unknown, at = ''): string[] {
       changedPaths(a[k], b[k], at ? `${at}.${k}` : k),
     );
   }
-  return JSON.stringify(a) === JSON.stringify(b) ? [] : [at];
+  return isDeepStrictEqual(a, b) ? [] : [at];
 }
 
 const isEmpty = (v: unknown): boolean =>
@@ -666,6 +688,7 @@ export async function callOperation(ctx: ToolContext, args: CallArgs): Promise<u
       `${dryRun ? 'would be' : 'were'} erased: ${listPaths(erased)}. ` +
       (dryRun ? 'Pass merge:true to keep them.' : 'sb_undo puts them back.')
     : undefined;
+  const unknownKeys = unknownBodyKeys(op.id, args.file ? undefined : args.body);
 
   // If-Match: given, or — on a route that refuses a write without one — the
   // version the GET answers right now.
@@ -738,6 +761,7 @@ export async function callOperation(ctx: ToolContext, args: CallArgs): Promise<u
       ...(download ? { would_save: args.file!.path } : {}),
       ...(merged ? { merge: merged } : {}),
       ...(replaceWarning ? { replace_warning: replaceWarning } : {}),
+      ...(unknownKeys ? { unknown_keys: unknownKeys } : {}),
       // Shaping is part of what the call WOULD do, so the preview says it;
       // otherwise a dry run reads identically whether or not it was asked for.
       ...(args.pick !== undefined || args.max_items !== undefined || args.item_offset !== undefined
@@ -811,6 +835,7 @@ export async function callOperation(ctx: ToolContext, args: CallArgs): Promise<u
     ...(ifMatchRead ? { if_match: { sent: headers['If-Match'], read_from: `GET ${ifMatchRead}` } } : {}),
     ...(merged ? { merge: merged } : {}),
     ...(replaceWarning ? { replace_warning: replaceWarning } : {}),
+    ...(unknownKeys ? { unknown_keys: unknownKeys } : {}),
   };
   const told = Object.keys(extra).length && isPlain(answer) ? { ...answer, ...extra } : answer;
   if (!op.raw) return told;

@@ -1,3 +1,4 @@
+import { isDeepStrictEqual } from 'node:util';
 import { z } from 'zod';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { composeWarnings, type ComposeWarning } from '../domains/site/findings.js';
@@ -749,7 +750,7 @@ export class PageSession {
     const d = this.current();
     // Rev when both sides have one; an older platform reports none, and the
     // document is then compared whole — a false refusal is the safe failure.
-    const moved = fence.rev > 0 && this.sourceRev > 0 ? this.sourceRev !== fence.rev : JSON.stringify(d.doc) !== fence.json;
+    const moved = fence.rev > 0 && this.sourceRev > 0 ? this.sourceRev !== fence.rev : !isDeepStrictEqual(d.doc, JSON.parse(fence.json));
     if (moved) {
       throw new Error(
         `sbuilder: refusing to undo — page ${pageId}'s draft moved since this process last saved it ` +

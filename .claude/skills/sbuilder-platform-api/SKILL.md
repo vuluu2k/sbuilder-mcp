@@ -31,6 +31,16 @@ repo over a number here, and fix the line when you catch one stale.
   close / SIGTERM / SIGINT and before a re-login. Measured live: sessions 1 → 2 on connect,
   2 after a second `sb_connect`, back to 1 on close. A SIGKILL still leaks one.
 
+- **A document read back is NOT byte-equal to the one written** (Postgres jsonb reorders keys),
+  so never compare platform data with `JSON.stringify` — `isDeepStrictEqual` (node:util).
+  Measured 2026-10-11: undoing one `sb_move` rewrote all five nodes of a page, live, because
+  every node "differed".
+
+- **Unknown body keys are DROPPED SILENTLY** — Go's `encoding/json` without
+  `DisallowUnknownFields`, case-insensitive on names. `price: 30000` on a shipping method stored
+  `feeCents: 0` and answered 201. `sb_api_call` names such keys under `unknown_keys` from
+  `REQUEST_SHAPES` (silent on a `partial` shape, one whose embed codegen could not read).
+
 - **The platform writes exactly one error shape**, `{"error", "code"}`, never plain text.
   `code` is the branchable half; reading `statusText` throws it away. Two documented
   supersets exist — `details` (`WriteErrorCodeDetails`) and `fields` (`fielderrors.go`, with

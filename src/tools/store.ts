@@ -34,6 +34,7 @@
  * `app.ts`) and are dispatched from here; the checkout and `form` are written
  * out below, because they came first.
  */
+import { isDeepStrictEqual } from 'node:util';
 import { z } from 'zod';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { text } from '../mcp/response.js';
@@ -166,7 +167,7 @@ export function syncOrderDocument(
         ((sp.methods as PaymentMethod[] | undefined) ?? []).map((m) => [m.value, m] as const),
       );
       const next = fresh.map((m) => had.get(m.value) ?? m);
-      if (JSON.stringify(next) !== JSON.stringify(sp.methods ?? [])) {
+      if (!isDeepStrictEqual(next, sp.methods ?? [])) {
         sp.methods = next;
         if (!next.some((m) => m.value === sp.defaultValue)) sp.defaultValue = next[0]?.value ?? '';
         out.changed = true;
@@ -174,7 +175,7 @@ export function syncOrderDocument(
       out.payment_methods = next.map((m) => m.value);
     }
     if (sp?.name === 'shipping_method') {
-      if (JSON.stringify(sp.options ?? []) !== JSON.stringify(shipping)) {
+      if (!isDeepStrictEqual(sp.options ?? [], shipping)) {
         sp.options = [...shipping];
         out.changed = true;
       }
