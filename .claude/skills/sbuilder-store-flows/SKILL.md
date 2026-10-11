@@ -192,10 +192,12 @@ repo over a number here, and fix the line when you catch one stale.
   ORG path measured live 2026-10-12, with no DB write: `POST /api/orgs`, `PUT
   /api/sites/{id}/org {orgId}` on two sites, a template created with `listed:true` on A,
   `POST …/{id}/share`, `POST /api/orgs/{orgId}/section-templates/{A}/{id}/review {approve:true}`
-  → it lists on B as `source:"org"`, instantiates, renders after publish. Platform rows take
-  the same branch here (`source !== "site"`); only the server's platform-org lookup differs,
-  and measuring it means writing `platform_settings.platform_org_id` in the user's SHARED dev
-  DB — the auto-mode classifier refuses that, so it needs the user's own hand or rule.
+  → it lists on B as `source:"org"`, instantiates, renders after publish. PLATFORM path measured
+  the same day on a SCRATCH database (never the shared one): `CREATE DATABASE wb_mcp_probe` +
+  `CREATE EXTENSION citus`, the :8091 server with `DB_AUTO_MIGRATE=true` on it, a user
+  registered through mailpit, the org flow above, then `platform_org_id` set IN THAT DB → a
+  site outside the org lists the row as `source:"platform"`, instantiates, renders. Dropped
+  afterwards (`DROP DATABASE … WITH (FORCE)`).
 
   **BUILT AS `Captured` TREES THROUGH `toSpecs`, never hand-assembled** — that is the whole
   design. The mapper already knows how to dress a section in the page's own tokens, give a row
