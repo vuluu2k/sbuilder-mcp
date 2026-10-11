@@ -1102,6 +1102,24 @@ export class PageSession {
   }
 }
 
+/** A section template's `{ root_node_id, nodes }` envelope (sectiontemplates/sectiontemplate.go). */
+type TemplateDoc = { root_node_id?: string; nodes?: Record<string, unknown> };
+
+/**
+ * A foreign subtree as a document `copyNodeInto` can read: a holder root over
+ * it, so the copy re-mints every id and strips the shared-master stamps.
+ */
+function heldTree(rootId: string, nodes: Record<string, unknown>): PageDoc {
+  const holder = '__held';
+  const rn = structuredClone(nodes) as Record<string, { data: { parent: string | null } }>;
+  rn[rootId].data.parent = holder;
+  return PageDoc.from({
+    schema_version: 2,
+    root_node_id: holder,
+    nodes: { ...rn, [holder]: { id: holder, data: { type: 'root', parent: null, nodes: [rootId] } } },
+  });
+}
+
 function formDocPath(siteId: string, formId: string): string {
   return `/api/sites/${encodeURIComponent(siteId)}/forms/${encodeURIComponent(formId)}/document`;
 }
@@ -2064,15 +2082,7 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
         if (!r?.tree?.nodes || !r.tree.rootId || !(r.tree.rootId in r.tree.nodes)) {
           throw new Error('sbuilder: the platform answered the reconcile with no tree — nothing was pasted.');
         }
-        // A holder root so the copy can read the reconciled subtree as a document.
-        const holder = '__clipboard';
-        const rn = structuredClone(r.tree.nodes) as Record<string, { data: { parent: string | null } }>;
-        rn[r.tree.rootId].data.parent = holder;
-        src = PageDoc.from({
-          schema_version: 2,
-          root_node_id: holder,
-          nodes: { ...rn, [holder]: { id: holder, data: { type: 'root', parent: null, nodes: [r.tree.rootId] } } },
-        });
+        src = heldTree(r.tree.rootId, r.tree.nodes);
         if (r.tree.rootId !== id) id = r.tree.rootId;
         reconciled = { copiedAssets: r.copiedAssets ?? 0, droppedRefs: r.droppedRefs ?? [] };
       }
@@ -2126,7 +2136,7 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
     'sb_template_use',
     {
       description:
-        'Instantiate a section template into a page — the site\'s own (the server copies it) or ' +
+        'Add a section template to a page, above the footer — a sb_templates row (another site\'s is copied in first) or ' +
           'one of the BUILT-IN layouts sb_templates lists, which are composed against this ' +
           "page's own tokens rather than copied.",
       inputSchema: {
@@ -2140,9 +2150,9 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
     async ({ site_id: given, template_id, page_id, dry_run }) => {
       const site_id = siteFor(ctx, given);
 
-      // A BUILT-IN IS NOT A SERVER COPY. The platform's own templates are
-      // instantiated by the platform, which is why the section arrives exactly
-      // as designed; a built-in has no row on the server, so it is composed HERE
+      // A BUILT-IN IS NOT A SERVER COPY. A server row is a stored tree
+      // (copied in by instantiate when another site owns it), which is why the
+      // section arrives exactly as designed; a built-in has no row on the server, so it is composed HERE
       // — against the target page's own tokens, which is the whole point of it
       // being a pattern rather than a snapshot.
       const pattern = PATTERN_BY_ID.get(template_id);
@@ -2252,23 +2262,69 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
         });
       }
 
-      const path = `/api/sites/${encodeURIComponent(site_id)}/section-templates/${encodeURIComponent(template_id)}/instantiate`;
-      if (dry_run !== false) {
-        return text({ dry_run: true, would_post: path, body: { pageId: page_id } });
-      }
-      const out = await request({
+      // A SERVER-SIDE TEMPLATE IS A TREE THIS SERVER INSERTS, as the editor does
+      // (TemplateCards.vue). The site's own is placed straight from the list's
+      // `document`; anyone else's (org, platform) goes through instantiate, which
+      // reads NO body, touches no page, copies the template's images into this
+      // site and answers `{ document, droppedRefs }`
+      // (sectiontemplates/rest/rest.go). Either way the ids are minted fresh here,
+      // as the editor's `cloneTree` does.
+      const tplBase = `/api/sites/${encodeURIComponent(site_id)}/section-templates`;
+      const listed = (await request({
         base: ctx.base,
-        method: 'POST',
-        path,
+        method: 'GET',
+        path: tplBase,
         token: siteToken(ctx),
-        body: { pageId: page_id },
         fetchImpl: ctx.fetchImpl,
-      });
+      })) as { sectionTemplates?: Array<{ id?: string; name?: string; source?: string; document?: TemplateDoc }> };
+      const row = (listed.sectionTemplates ?? []).find((t) => t.id === template_id);
+      if (!row) {
+        throw new Error(`sbuilder: no template "${template_id}" on this site's shelf or among the built-ins — list them with sb_templates.`);
+      }
+      const own = row.source === 'site';
+      const path = `${tplBase}/${encodeURIComponent(template_id)}/instantiate`;
+      const insert = (tree: TemplateDoc | undefined, target: PageDoc) => {
+        if (!tree?.nodes || !tree.root_node_id || !(tree.root_node_id in tree.nodes)) return null;
+        return copyNodeInto(heldTree(tree.root_node_id, tree.nodes), tree.root_node_id, target, target.doc.root_node_id, middleEnd(target.doc));
+      };
+      const doc =
+        dry_run !== false
+          ? PageDoc.from((await loadSource(ctx, site_id, page_id)).document)
+          : (await session.open(site_id, page_id), session.current());
+      // Checked on the listed document BEFORE instantiate: that call copies media,
+      // and a refusal after it would leave orphaned images in the library.
+      const planned = insert(row.document, doc);
+      const refuse = planned ? saveRefusal(doc, planned.patches).refusal : undefined;
+      if (dry_run !== false) {
+        return text({
+          dry_run: true,
+          ...(refuse ? { would_refuse: refuse } : {}),
+          would_add: row.name ?? template_id,
+          ...(planned ? { nodes: planned.ids.length } : {}),
+          into: page_id,
+          ...(own ? {} : { would_post: path, note: "instantiate copies the template's images into this site first" }),
+        });
+      }
+      if (refuse) throw new Error(`sbuilder: ${refuse}`);
+      let placed = planned;
+      let dropped: unknown[] = [];
+      if (!own) {
+        const out = (await request({ base: ctx.base, method: 'POST', path, token: siteToken(ctx), fetchImpl: ctx.fetchImpl })) as {
+          document?: TemplateDoc;
+          droppedRefs?: unknown[];
+        };
+        placed = insert(out.document, doc);
+        dropped = out.droppedRefs ?? [];
+      }
+      if (!placed) throw new Error(`sbuilder: template "${template_id}" carries no usable document — nothing was added.`);
+      await session.applyAndSave(placed.patches);
       return text({
-        instantiated: template_id,
+        added: row.name ?? template_id,
+        section: placed.ids[0],
+        nodes: placed.ids.length,
         into: page_id,
-        result: out,
-        note: 'Re-open the page with sb_page_open — this session still holds the old tree.',
+        rev: doc.rev,
+        ...(dropped.length ? { dropped_refs: dropped } : {}),
       });
     },
   );

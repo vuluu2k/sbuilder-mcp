@@ -592,7 +592,7 @@ liệt kê tối đa năm tên gần nhất), `animation`, `dead_key`, `precondi
 `unsupported_setting`. Mỗi cảnh báo nói một lần mỗi process; dry run hiện nó mà không tiêu, nên
 lần ghi thật vẫn hiện lại.
 
-Dry run của `sb_add`, `sb_set`, `sb_move`, `sb_remove`, `sb_duplicate`, `sb_bind`, `sb_event` và `sb_template_use` (mẫu dựng sẵn) chạy
+Dry run của `sb_add`, `sb_set`, `sb_move`, `sb_remove`, `sb_duplicate`, `sb_bind`, `sb_event` và `sb_template_use` chạy
 cùng bước kiểm tra trước khi lưu như lần ghi thật và trả `would_refuse: "<lý do>"` khi lệnh
 thật sẽ bị từ chối (ví dụ một section nằm trên header toàn cục). Không áp dụng gì cục bộ, không
 gửi gì đi; dry run của `sb_template_use` đọc trang đích mà không mở nó — trang đang mở giữ
@@ -926,8 +926,13 @@ site, nên bị từ chối ngay từ đầu.
 `sb_templates` liệt kê section template đã lưu dưới dạng
 `{ sectionTemplates: [{ id, name, description, categoryIds, source, listed, updatedAt }], total }`
 — các trường lệnh kế tiếp cần, không phải cả tài liệu của template. `sb_template_use` thả
-một cái vào trang — server tự copy, nên section tới đúng như lúc được thiết kế. Nhớ mở lại
-trang sau đó; phiên đang mở vẫn giữ cây cũ.
+một cái vào trang đang mở như editor làm: chèn vào cuối dải giữa của trang (trên footer), với id
+mới, qua phiên — nên không cần mở lại trang — và trả `section` (id gốc mới) cùng `nodes`. Template
+`source: "site"` được đặt thẳng từ `document` trong danh sách. Loại khác (của site cùng tổ chức,
+của nền tảng) trước hết đi qua `POST …/section-templates/{id}/instantiate`, lệnh này copy ảnh của
+nó vào thư viện của site và trả bản copy; những tham chiếu không mang theo được trả về ở
+`dropped_refs`. Dry run không gửi POST — việc copy media của instantiate là một tác dụng phụ — và
+xem trước lần chèn từ `document` trong danh sách, kèm `would_refuse` khi lần lưu sẽ bị từ chối.
 
 ### Layout dựng sẵn
 
@@ -936,8 +941,7 @@ trang sau đó; phiên đang mở vẫn giữ cây cũ.
 cho một trang chưa có gì — đo trên site thật, thư viện của nền tảng có **hai** mẫu, và đó là lý
 do agent được yêu cầu "một hero" phải tự bịa từ flex-block mỗi lần.
 
-`sb_template_use` nhận cả hai loại id. Template của site do **server** sao chép, nên section về
-đúng như đã thiết kế. Layout dựng sẵn thì được **soạn tại chỗ**, theo token của chính trang đích
+`sb_template_use` nhận cả hai loại id. Template phía server về đúng như đã thiết kế. Layout dựng sẵn thì được **soạn tại chỗ**, theo token của chính trang đích
 — cùng màu chữ tiêu đề, cùng nền nút, cùng padding section mà trang đang dùng. Trang chưa có gì
 thì lấy theo **theme của site**, mang dạng `var(--wb-color-…)` chứ không phải mã màu: một giá trị
 cứng trên node sẽ vĩnh viễn thắng style preset bên dưới, nên một band đóng đinh màu hôm nay sẽ
@@ -1073,7 +1077,7 @@ redact cùng `changes`, diff dạng `field: [trước, sau]`. Không nhận `typ
 việc của `sb_page_create`. Settings được publish nguyên văn, nên storefront chỉ thấy thay đổi
 sau `sb_publish`.
 
-**Trang template** (`product`, `category`, `post`, `blog`, `course`) — PageAssignPanel của
+**Trang template** (`product`, `category`, `post`, `blog`, `course`, `brand`) — PageAssignPanel của
 editor. `default_template: true` đặt trang này làm mặc định cho loại của nó (`PUT
 …/pages/{id}/default-template`); `render_for: [ids]` chuyển các entity đó sang hiển thị qua
 trang này, còn `render_default: [ids]` trả chúng về mặc định của loại (`POST

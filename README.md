@@ -95,7 +95,7 @@ in this client: one would put the very key the platform exists to hold back into
 | `sb_remove` | Remove a node and its subtree |
 | `sb_duplicate` | Copy a node and its subtree under fresh ids, right after the original — or onto another page or site, as the editor's copy/paste does (assets copied, references that cannot travel listed) |
 | `sb_templates` | The store's saved section templates, plus the BUILT-IN layouts — hero, feature trio, stats, FAQ, CTA band, product shelf, category strip, brand wall, trust band — composed against the page's own tokens |
-| `sb_template_use` | Instantiate a template into a page |
+| `sb_template_use` | Add a section template to a page |
 | `sb_page_list` | Every page on the site |
 | `sb_page_create` | Create a page — a store type arrives with the editor's own starting document; `type` is the route for checkout, product, category, post, course |
 | `sb_page_update` | Edit a page's name, slug, home flag, order, SEO (title, description, Open Graph, robots, meta tags, JSON-LD) and members-only flag — merged into `settings`, so the keys it does not name survive. On a template page: make it the type's default, or choose which products/categories/posts render through it |

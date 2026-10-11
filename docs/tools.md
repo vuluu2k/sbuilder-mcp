@@ -599,7 +599,7 @@ icon; the fix lists up to five nearest names), `animation`, `dead_key`,
 `precondition`, `unsupported_setting`. Each note is said once per process; a dry run shows it
 without spending it, so the real write shows it again.
 
-Dry runs of `sb_add`, `sb_set`, `sb_move`, `sb_remove`, `sb_duplicate`, `sb_bind`, `sb_event` and a built-in `sb_template_use` run the
+Dry runs of `sb_add`, `sb_set`, `sb_move`, `sb_remove`, `sb_duplicate`, `sb_bind`, `sb_event` and `sb_template_use` run the
 same save validation as the real write and return `would_refuse: "<reason>"` when the real
 call would be refused (a section above a global header, say). Nothing is applied locally or
 sent, and a `sb_template_use` dry run reads its target without opening it — the open page is
@@ -949,9 +949,15 @@ needs a session login: an API key opens one site only, so it is refused up front
 
 `sb_templates` lists the store's saved section templates as
 `{ sectionTemplates: [{ id, name, description, categoryIds, source, listed, updatedAt }], total }`
-— the fields the next call needs, not the template's whole document. `sb_template_use`
-instantiates one into a page — the server does the copy, so the section arrives exactly as
-designed. Re-open the page afterwards; the open session still holds the older tree.
+— the fields the next call needs, not the template's whole document. `sb_template_use` adds
+one to the open page as the editor does: inserted at the end of the page's middle band (above a
+footer), under fresh ids, through the session — so no re-open is needed — answering `section`
+(the new root id) and `nodes`. A `source: "site"` template is placed straight from its listed
+`document`. Any other (an organisation sibling's, the platform's) first goes through
+`POST …/section-templates/{id}/instantiate`, which copies its images into this site's library and
+returns the copy; references that could not travel come back as `dropped_refs`. A dry run makes
+no POST — instantiate's media copy is a side effect — and previews the insert from the listed
+document, with `would_refuse` when the save would be refused.
 
 ### Built-in layouts
 
@@ -960,8 +966,7 @@ second, under `built_in`. A template a merchant designed is this site's answer; 
 defaults for a page that has none — measured on a live site, the platform's own library held
 **two**, which is why an agent asked for "a hero" was inventing one from flex-blocks every time.
 
-`sb_template_use` takes either id. The site's own is copied BY THE SERVER, so it arrives exactly
-as designed. A built-in is **composed here**, against the target page's own tokens — the same
+`sb_template_use` takes either id. A server-side template arrives exactly as designed. A built-in is **composed here**, against the target page's own tokens — the same
 heading ink, button fill and section padding the page already uses. On a page that has none yet
 it falls back to the SITE'S THEME, carried as `var(--wb-color-…)` rather than the hex those
 resolve to: a literal on a node outranks the style preset beneath it permanently, so a band
@@ -1107,7 +1112,7 @@ default) returns the redacted request plus `changes`, a `field: [before, after]`
 `type` is not taken: retyping a page is `sb_page_create` territory. Settings are published
 verbatim, so the storefront shows the change after `sb_publish`.
 
-**Template pages** (`product`, `category`, `post`, `blog`, `course`) — the editor's
+**Template pages** (`product`, `category`, `post`, `blog`, `course`, `brand`) — the editor's
 PageAssignPanel. `default_template: true` makes this page its type's default (`PUT
 …/pages/{id}/default-template`); `render_for: [ids]` moves those entities onto this page and
 `render_default: [ids]` returns them to the type default (`POST …/page-links/bulk`, link type

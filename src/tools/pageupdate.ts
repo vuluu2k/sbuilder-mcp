@@ -44,6 +44,7 @@ const LINK_TYPE_FOR_PAGE_TYPE: Record<string, string> = {
   post: 'article',
   blog: 'blogCategory',
   course: 'course',
+  brand: 'brand',
 };
 
 const PUBLISH_NOTICE =
@@ -56,7 +57,7 @@ export function registerPageUpdateTools(server: McpServer, ctx: ToolContext): vo
       description:
         "Edit a page's name, slug, home flag, order, SEO (merged key by key) or members_only. " +
         'Reads the page first and merges `settings`, so keys it does not name survive. On a ' +
-        'template page (product, category, post, blog, course): default_template makes it the ' +
+        'template page (product, category, post, blog, course, brand): default_template makes it the ' +
         'type\'s default, render_for/render_default move entities onto it or back to the default.',
       inputSchema: {
         site_id: z.string().optional(),

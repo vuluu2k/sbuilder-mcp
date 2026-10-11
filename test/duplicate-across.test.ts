@@ -61,7 +61,7 @@ describe('sb_duplicate onto another page', () => {
     const d = doc('pg_9')!;
     const copy = d.nodes[d.nodes.ROOT.data.nodes[0]];
     expect(d.nodes[copy.data.nodes[0]].specials.text).toBe('Hi (reconciled)');
-    expect(Object.keys(d.nodes)).not.toContain('__clipboard');
+    expect(Object.keys(d.nodes)).not.toContain('__held');
     await close();
   });
 
