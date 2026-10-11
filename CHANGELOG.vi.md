@@ -6,6 +6,16 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.84.0] - 2026-10-11
+
+### Added
+- `sb_api_call` báo `unknown_keys` cho các key trong body mà struct Go của handler không có, vì platform vốn bỏ chúng lặng lẽ (ví dụ `price` trên phương thức giao hàng lưu `feeCents` bằng 0 mà vẫn trả 201).
+- `sb_review` báo binding `cartLine.*` dùng ngoài ngữ cảnh cart-order là `no_data_context`.
+
+### Fixed
+- Hoàn tác một `sb_move` chỉ ghi lại node đã thay đổi thay vì cả năm node của trang, vì việc so sánh tài liệu không còn phụ thuộc thứ tự key mà platform trả về.
+- Shape request của operation `/refund` và `/refund-via-gateway` giờ là `refundRequest` với `note`, nên `sb_api_call` không còn kiểm tra chúng theo shape của charge.
+
 ## [0.83.3] - 2026-10-11
 
 ### Fixed

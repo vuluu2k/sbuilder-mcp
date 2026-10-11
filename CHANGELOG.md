@@ -6,6 +6,16 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.84.0] - 2026-10-11
+
+### Added
+- `sb_api_call` reports `unknown_keys` for body keys the handler's Go struct does not have, which the platform otherwise drops silently (for example `price` on a delivery method saves `feeCents` as 0 and still returns 201).
+- `sb_review` flags `cartLine.*` bindings used outside a cart-order context as `no_data_context`.
+
+### Fixed
+- Undoing an `sb_move` rewrites only the node that changed instead of all five nodes on the page, because document comparisons no longer depend on the key order the platform returns.
+- The request shape of the `/refund` and `/refund-via-gateway` operations is now `refundRequest` with `note`, so `sb_api_call` no longer validates them against the charge shape.
+
 ## [0.83.3] - 2026-10-11
 
 ### Fixed
