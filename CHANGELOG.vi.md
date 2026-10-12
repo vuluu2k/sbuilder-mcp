@@ -6,6 +6,11 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.86.0] - 2026-10-12
+
+### Added
+- `sb_api_find` và `sb_api_call` truy cập được 849 operation của platform, gồm app giao hàng GrabFood: kết nối site, liệt kê đơn hàng được đẩy về, và nhận hoặc từ chối đơn.
+
 ## [0.85.0] - 2026-10-11
 
 ### Added
