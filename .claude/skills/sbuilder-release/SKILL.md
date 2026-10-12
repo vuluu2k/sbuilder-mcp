@@ -51,6 +51,14 @@ Three things the first live release cost, so nobody pays them twice:
   steps were skipped. Do NOT dispatch a run to "finish" it: resume mode is keyed on "tag
   pushed AND not on npm", so with the version on npm it takes the normal path and bumps
   again. The next release carries the registry entry; the wait is now 15 minutes.
+- **A run that fails at "Commit, tag and push" with the release COMMIT on main but no TAG**
+  (measured on v0.88.1, 2026-10-12: GitHub answered `unable to write file … fatal error in
+  commit_refs` to the tag push only). Nothing was published. Push the missing annotated tag on
+  that release commit (`git tag -a vX.Y.Z <sha> -m "Release vX.Y.Z" && git push origin vX.Y.Z`),
+  then dispatch ONE run on main: resume mode sees "tag on origin, not on npm" and publishes that
+  version with no second bump. Dispatching WITHOUT the tag would take the normal path and skip
+  to the next patch. The tag push and the dispatch are the user's call — the auto-mode
+  classifier refuses both as a CI bypass until the user says so.
 - **Never re-run a failed release run.** It replays the OLD commit, whose `package.json`
   predates the release commit, so it bumps again. Dispatch a fresh run on `main` instead:
   resume mode sees the pushed tag and the missing npm version and publishes that version.
