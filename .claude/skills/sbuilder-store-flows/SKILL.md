@@ -197,7 +197,9 @@ repo over a number here, and fix the line when you catch one stale.
   `CREATE EXTENSION citus`, the :8091 server with `DB_AUTO_MIGRATE=true` on it, a user
   registered through mailpit, the org flow above, then `platform_org_id` set IN THAT DB → a
   site outside the org lists the row as `source:"platform"`, instantiates, renders. Dropped
-  afterwards (`DROP DATABASE … WITH (FORCE)`).
+  afterwards (`DROP DATABASE … WITH (FORCE)`). With an IMAGE (2026-10-12): instantiate copied it into the
+  consumer's media (B's library 0 → 1) and rewrote `specials.src` to B's own object key — the
+  placed node never points back at A.
 
   **BUILT AS `Captured` TREES THROUGH `toSpecs`, never hand-assembled** — that is the whole
   design. The mapper already knows how to dress a section in the page's own tokens, give a row

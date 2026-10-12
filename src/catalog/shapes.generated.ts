@@ -4,12 +4,12 @@
 import type { RequestShape } from './types.js';
 
 export const SHAPE_SOURCE = {
-  "writeOperations": 389,
-  "shaped": 309,
-  "fromHandlers": 299,
+  "writeOperations": 393,
+  "shaped": 312,
+  "fromHandlers": 302,
   "fromSwaggerOnly": 10,
   "withReadOnly": 30,
-  "structsRead": 3194
+  "structsRead": 3224
 } as const;
 
 export const REQUEST_SHAPES: Record<string, RequestShape> = {
@@ -3193,6 +3193,48 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
       "createdAt",
       "updatedAt"
     ]
+  },
+  "put:/api/sites/{siteId}/delivery-apps/{app}/connection": {
+    "fields": [
+      {
+        "name": "enabled",
+        "type": "boolean"
+      },
+      {
+        "name": "externalMerchantId",
+        "type": "string"
+      }
+    ],
+    "source": "go",
+    "goType": "connectionInput"
+  },
+  "post:/api/sites/{siteId}/delivery-apps/orders/{id}/reject": {
+    "fields": [
+      {
+        "name": "reason",
+        "type": "string"
+      }
+    ],
+    "source": "go",
+    "goType": "rejectBody"
+  },
+  "post:/_wb/delivery/{app}/{path}": {
+    "fields": [
+      {
+        "name": "client_id",
+        "type": "string"
+      },
+      {
+        "name": "client_secret",
+        "type": "string"
+      },
+      {
+        "name": "grant_type",
+        "type": "string"
+      }
+    ],
+    "source": "go",
+    "goType": "(inline)"
   },
   "post:/api/sites/{siteId}/discounts": {
     "fields": [

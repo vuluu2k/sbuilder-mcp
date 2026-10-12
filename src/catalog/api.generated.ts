@@ -3,9 +3,9 @@
 import type { ApiOperation } from './types.js';
 
 export const SWAGGER_SOURCE = {
-  "operations": 843,
-  "definitions": 278,
-  "bodyCarrying": 373,
+  "operations": 849,
+  "definitions": 280,
+  "bodyCarrying": 376,
   "bodyUndescribed": 102,
   "generatedFrom": "server/docs/swagger.json"
 } as const;
@@ -782,6 +782,34 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "summary": "Published-page CSS lane assets",
     "params": [],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/_wb/delivery/{app}/{path}",
+    "method": "POST",
+    "path": "/_wb/delivery/{app}/{path}",
+    "tags": [
+      "pos"
+    ],
+    "summary": "Delivery-app partner endpoints (GrabFood)",
+    "params": [
+      {
+        "name": "app",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "App id (grabfood)"
+      },
+      {
+        "name": "path",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "oauth/token | orders | order-state | menu-sync-state"
+      }
+    ],
     "bodyDescribed": false,
     "bodyRef": null,
     "credential": "siteScoped"
@@ -7553,6 +7581,181 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/sites/{siteId}/delivery-apps/orders",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/delivery-apps/orders",
+    "tags": [
+      "pos"
+    ],
+    "summary": "List orders pushed by delivery apps",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "state",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "new|deciding|accepted|rejected|cancelled|completed"
+      },
+      {
+        "name": "limit",
+        "in": "query",
+        "required": false,
+        "type": "integer",
+        "description": "page size"
+      },
+      {
+        "name": "offset",
+        "in": "query",
+        "required": false,
+        "type": "integer",
+        "description": "offset"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/api/sites/{siteId}/delivery-apps/orders/{id}/accept",
+    "method": "POST",
+    "path": "/api/sites/{siteId}/delivery-apps/orders/{id}/accept",
+    "tags": [
+      "pos"
+    ],
+    "summary": "Accept a delivery-app order",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Order ID"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/api/sites/{siteId}/delivery-apps/orders/{id}/reject",
+    "method": "POST",
+    "path": "/api/sites/{siteId}/delivery-apps/orders/{id}/reject",
+    "tags": [
+      "pos"
+    ],
+    "summary": "Reject a delivery-app order",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Order ID"
+      },
+      {
+        "name": "body",
+        "in": "body",
+        "required": true,
+        "type": "object",
+        "description": "{reason}"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "internal_deliveryapps_rest.rejectBody",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/sites/{siteId}/delivery-apps/{app}/connection",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/delivery-apps/{app}/connection",
+    "tags": [
+      "pos"
+    ],
+    "summary": "Read or replace the site's connection to a delivery app",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "app",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "App id (grabfood, shopeefood)"
+      },
+      {
+        "name": "connection",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "Connection (PUT only)"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "internal_deliveryapps_rest.connectionInput",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "put:/api/sites/{siteId}/delivery-apps/{app}/connection",
+    "method": "PUT",
+    "path": "/api/sites/{siteId}/delivery-apps/{app}/connection",
+    "tags": [
+      "pos"
+    ],
+    "summary": "Read or replace the site's connection to a delivery app",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "app",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "App id (grabfood, shopeefood)"
+      },
+      {
+        "name": "connection",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "Connection (PUT only)"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "internal_deliveryapps_rest.connectionInput",
     "credential": "siteScoped"
   },
   {
@@ -32489,6 +32692,25 @@ export const API_DEFINITIONS: Record<string, unknown> = {
     "properties": {
       "days": {
         "type": "integer"
+      }
+    }
+  },
+  "internal_deliveryapps_rest.connectionInput": {
+    "type": "object",
+    "properties": {
+      "enabled": {
+        "type": "boolean"
+      },
+      "externalMerchantId": {
+        "type": "string"
+      }
+    }
+  },
+  "internal_deliveryapps_rest.rejectBody": {
+    "type": "object",
+    "properties": {
+      "reason": {
+        "type": "string"
       }
     }
   },
