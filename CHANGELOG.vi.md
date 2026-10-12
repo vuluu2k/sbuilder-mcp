@@ -6,6 +6,16 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.88.0] - 2026-10-12
+
+### Added
+- `sb_review` báo `default_seed_copy` cho trang dựng trước đó còn mang chữ mẫu tiếng Anh, như "Add To Cart", trên site tiếng Việt, kèm bản tiếng Việt nên dùng.
+
+### Changed
+- `sb_page_create` viết seed trang cửa hàng bằng tiếng Việt cho site tiếng Việt, lấy locale từ cài đặt của site khi không truyền.
+- `sb_page_create` dùng câu cảm ơn tiếng Anh cho trang hoàn tất đơn hàng của site `en-US`.
+- `sb_review` sửa câu báo `categoryImages`: ô danh mục thiếu ảnh giờ hiện placeholder thay vì ảnh vỡ.
+
 ## [0.87.0] - 2026-10-12
 
 ### Added

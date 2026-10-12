@@ -6,6 +6,16 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.88.0] - 2026-10-12
+
+### Added
+- `sb_review` reports `default_seed_copy` for pages built earlier that still carry the English seed copy, such as "Add To Cart", on a Vietnamese site, with the Vietnamese wording to use instead.
+
+### Changed
+- `sb_page_create` writes the store page seeds in Vietnamese for a Vietnamese site, taking the locale from the site's settings when none is passed.
+- `sb_page_create` uses English thank-you copy on the completed-order page of an `en-US` site.
+- `sb_review` words its `categoryImages` note to say that a collection tile without an image now shows a placeholder instead of a broken image.
+
 ## [0.87.0] - 2026-10-12
 
 ### Added
