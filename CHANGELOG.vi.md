@@ -6,6 +6,25 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.87.0] - 2026-10-12
+
+### Added
+- `sb_review` báo `example_copy` cho chữ, nhãn và alt còn mang nội dung mẫu của layout dựng sẵn, như "Tiêu đề chính", số liệu, lời hứa và lời khen khách hàng bịa.
+- `sb_review` báo `invisible_text` cho chữ có màu trùng với nền.
+- `sb_review` báo `demo_variant_options` cho bộ chọn biến thể hiện tuỳ chọn giả thay vì tuỳ chọn của chính sản phẩm.
+- `sb_review` báo `empty_page` cho trang chỉ có header và footer.
+- `sb_review` đánh dấu danh mục sản phẩm chưa có ảnh là thiếu sót `categoryImages` khi trang hiển thị ô danh mục.
+- `sb_template_use` cho biết còn bao nhiêu phần tử mang nội dung mẫu của layout.
+- `sb_page_create` cho biết khung layout vừa tạo đã có bao nhiêu phát hiện, để điền chữ giữ chỗ và các ô trống.
+
+### Changed
+- `sb_api_find` và `sb_api_call` nhận id operation không phân biệt hoa thường, nên `{siteID}` và `{siteId}` cùng tới một route khi khớp là duy nhất.
+- `sb_import` chỉ đọc token của trang từ các dải có nền sáng, nên dải đảo màu như call-to-action không còn quyết định màu nền nút của trang.
+
+### Fixed
+- `sb_add` vào gốc trang khi không có `index` đặt section mới trước footer thay vì sau footer, vị trí mà kiểm tra thứ tự dải từng từ chối lưu.
+- `sb_review` không còn báo `off_canvas` cho menu di động đang đóng trong header.
+
 ## [0.86.0] - 2026-10-12
 
 ### Added

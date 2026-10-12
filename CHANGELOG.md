@@ -6,6 +6,25 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.87.0] - 2026-10-12
+
+### Added
+- `sb_review` reports `example_copy` for text, labels and alt text that still carry a built-in layout's example copy, such as "Tiêu đề chính", invented figures, promises and customer quotes.
+- `sb_review` reports `invisible_text` for text whose colour matches its background.
+- `sb_review` reports `demo_variant_options` for a variant picker that shows fallback options instead of the product's own.
+- `sb_review` reports `empty_page` for a page that has only a header and footer.
+- `sb_review` flags product categories without an image as a `categoryImages` readiness gap when the page shows category tiles.
+- `sb_template_use` reports how many elements still carry the layout's example copy.
+- `sb_page_create` reports how many findings a seeded layout skeleton already has, so the placeholder copy and empty slots get filled.
+
+### Changed
+- `sb_api_find` and `sb_api_call` resolve an operation id regardless of letter case, so `{siteID}` and `{siteId}` reach the same route when the match is unique.
+- `sb_import` reads page tokens only from bands on a light ground, so an inverted band such as a call-to-action no longer supplies the page's button fill.
+
+### Fixed
+- `sb_add` on the page root without `index` places the new section before the footer instead of after it, which the band-order check refused to save.
+- `sb_review` no longer reports `off_canvas` findings for a header's closed mobile menu.
+
 ## [0.86.0] - 2026-10-12
 
 ### Added
