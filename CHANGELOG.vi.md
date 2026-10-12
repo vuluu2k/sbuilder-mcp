@@ -6,6 +6,16 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.88.1] - 2026-10-12
+
+### Added
+- Catalog API được làm mới lên 853 operation, gồm đăng nhập bằng thiết bị cho CLI; operation duyệt thiết bị không gọi được bằng phiên đăng nhập.
+
+### Fixed
+- Mọi lời gọi tool tiếp tục chạy sau khi access token hết hạn, vì token phiên bị từ chối sẽ được làm mới một lần và lời gọi được thử lại một lần; API key không bao giờ bị làm mới.
+- Các lần bị từ chối đồng thời dùng chung một lượt làm mới token, và việc đăng xuất hoặc đăng nhập lại trong lúc làm mới không còn bị ghi đè.
+- `sb_media_upload` và việc kết nối lại của `sb_live_join` làm mới token trước khi hết hạn, nên upload và phiên live vẫn chạy được sau thời hạn của token.
+
 ## [0.88.0] - 2026-10-12
 
 ### Added

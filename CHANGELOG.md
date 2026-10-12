@@ -6,6 +6,16 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.88.1] - 2026-10-12
+
+### Added
+- The API catalog is refreshed to 853 operations, including device sign-in for the CLI; the device approval operation cannot be called with a session.
+
+### Fixed
+- Every tool call keeps working after the access token expires, because a rejected session token is refreshed once and the call is retried once; API keys are never refreshed.
+- Concurrent rejections share a single token refresh, and signing out or back in during a refresh is no longer overwritten.
+- `sb_media_upload` and `sb_live_join` reconnects refresh the token before it expires, so uploads and live sessions survive past the token lifetime.
+
 ## [0.88.0] - 2026-10-12
 
 ### Added
