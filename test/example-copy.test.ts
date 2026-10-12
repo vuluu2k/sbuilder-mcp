@@ -68,3 +68,15 @@ describe('demo_variant_options and invisible_text', () => {
     expect(codes(d)).not.toContain('invisible_text'); // unknown ground: say nothing
   });
 });
+
+describe('the store seeds\' English copy, judged by the site\'s language', () => {
+  it('is reported on a Vietnamese site and left alone on an English one', () => {
+    const d = PageDoc.from({ schema_version: 2, root_node_id: '', nodes: {} });
+    d.apply(addSubtree(d, 'ROOT', { type: 'flex-section', children: [{ type: 'button', specials: { text: 'Add To Cart' } }] }).patches);
+    const seed = (siteLocale?: string) => reviewDesign(d, { siteLocale }).filter((f) => f.code === 'default_seed_copy');
+    expect(seed('vi')[0]?.problem).toMatch(/Thêm vào giỏ/);
+    expect(seed('en')).toEqual([]);
+    expect(seed(undefined)).toEqual([]);
+  });
+});
+

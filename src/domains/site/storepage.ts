@@ -1,3 +1,4 @@
+import { SEED_COPY_VI, langOf } from './seedcopy.js';
 import {
   COMPLETION_HEADLINE,
   COMPLETION_HEADLINE_SENTINEL,
@@ -50,6 +51,19 @@ export function seededTypes(): string[] {
  * An explicit `headline` wins over both — a merchant's own wording is not the
  * client's to overrule.
  */
+/** Rewrite every exact seed string the table carries, in place. */
+function localizeSeed(doc: { nodes: Record<string, unknown> }, table: Readonly<Record<string, string>>): void {
+  for (const n of Object.values(doc.nodes)) {
+    const sp = (n as { specials?: Record<string, unknown> }).specials;
+    if (!sp) continue;
+    for (const k of ['text', 'label']) {
+      const v = sp[k];
+      if (typeof v === 'string' && table[v]) sp[k] = table[v];
+    }
+  }
+}
+
+export { SEED_COPY_VI } from './seedcopy.js';
 export function seedDocument(
   type: string,
   opts: { locale?: string; headline?: string } = {},
@@ -58,19 +72,24 @@ export function seedDocument(
   if (!seed) return null;
 
   const raw = JSON.stringify(seed);
+  const vi = langOf(opts.locale ?? 'vi') === 'vi';
+  const out = (doc: ReturnType<typeof seedDocument> & object) => {
+    if (vi) localizeSeed(doc, SEED_COPY_VI);
+    return withFreshIds(doc);
+  };
   // Fresh ids per create, so two pages from one seed share nothing but ROOT.
   if (!raw.includes(COMPLETION_HEADLINE_SENTINEL)) {
-    return withFreshIds(JSON.parse(raw) as ReturnType<typeof seedDocument> & object);
+    return out(JSON.parse(raw) as ReturnType<typeof seedDocument> & object);
   }
-  const lang = opts.locale && opts.locale in COMPLETION_HEADLINE ? opts.locale : 'vi';
+  // Normalized: a site whose locale is "en-US" reads its own language here too.
+  const tag = langOf(opts.locale);
+  const lang = tag && tag in COMPLETION_HEADLINE ? tag : 'vi';
   const headline = opts.headline || COMPLETION_HEADLINE[lang];
   // JSON.stringify already escaped the seed; the substitute has to be escaped
   // the same way or an apostrophe in a merchant's own headline breaks the
   // document. Slicing the quotes off a stringified string is that escaping.
   const escaped = JSON.stringify(headline).slice(1, -1);
-  return withFreshIds(
-    JSON.parse(raw.split(COMPLETION_HEADLINE_SENTINEL).join(escaped)) as ReturnType<typeof seedDocument> & object,
-  );
+  return out(JSON.parse(raw.split(COMPLETION_HEADLINE_SENTINEL).join(escaped)) as ReturnType<typeof seedDocument> & object);
 }
 
 /**

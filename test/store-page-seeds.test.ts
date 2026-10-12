@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { hasSeed, seedDocument, seedSummary, seededTypes } from '../src/domains/site/storepage.js';
+import { hasSeed, seedDocument, seedSummary, seededTypes, SEED_COPY_VI } from '../src/domains/site/storepage.js';
 import {
   COMPLETION_HEADLINE,
   COMPLETION_HEADLINE_SENTINEL,
@@ -69,6 +69,28 @@ describe('a store page opens with what the editor gives a merchant', () => {
     expect(JSON.stringify(seedDocument('complete', { locale: 'en' }))).toContain(
       COMPLETION_HEADLINE.en,
     );
+    // A site locale read from settings is a full tag; it still picks the language.
+    expect(JSON.stringify(seedDocument('complete', { locale: 'en-US' }))).toContain(COMPLETION_HEADLINE.en);
+  });
+
+  it('writes the buy box and empty states in Vietnamese for a Vietnamese site, and keeps English for an English one', () => {
+    const texts = (locale: string) =>
+      Object.values(seedDocument('product', { locale })!.nodes).map((n) => (n as { specials?: { text?: string } }).specials?.text);
+    expect(texts('vi')).toContain('Thêm vào giỏ');
+    expect(texts('vi')).not.toContain('Add To Cart');
+    expect(texts('en')).toContain('Add To Cart');
+    expect(texts('vi_VN')).toContain('Thêm vào giỏ');
+    expect(texts('en-US')).toContain('Add To Cart');
+  });
+
+  it('SEED_COPY_VI carries every English line the store seeds hold — codegen cannot outrun it', () => {
+    const english = new Set<string>();
+    for (const doc of Object.values(STORE_PAGE_SEEDS))
+      for (const n of Object.values(doc.nodes)) {
+        for (const t of [(n as { specials?: { text?: string; label?: string } }).specials?.text, (n as { specials?: { label?: string } }).specials?.label])
+          if (typeof t === 'string' && /^[\x20-\x7E]+$/.test(t) && !t.startsWith('__SB_')) english.add(t);
+      }
+    expect([...english].filter((t) => !(t in SEED_COPY_VI))).toEqual([]);
   });
 
   it("lets the caller's own wording win over both", () => {

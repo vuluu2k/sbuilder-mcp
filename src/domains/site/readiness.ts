@@ -809,11 +809,11 @@ export function readinessGaps(input: ReadinessInput): ReadinessGap[] {
     });
   }
 
-  // A COLLECTION TILE WITH NO PICTURE IS A BROKEN-IMAGE ICON, not a grey card:
-  // render/nodes/collection-media writes `<img src="">` (the image element has a
-  // placeholder; this one does not). Measured on the sb_category_strip a store
-  // built here put on its home page — two broken icons above the category names.
-  // Asked only where a collection tile is actually on screen.
+  // A COLLECTION TILE WITH NO PICTURE. Measured on the sb_category_strip a store
+  // built here put on its home page: render/nodes/collection-media wrote
+  // `<img src="">`, two broken icons above the category names. web_builder PR
+  // #118 (74ca59dd2) gives it the image element's grey placeholder instead —
+  // better, still not the category. Asked only where a tile is on screen.
   if (
     (input.categoriesUnpictured ?? 0) > 0 &&
     [...input.pageNodes, ...(input.globalNodes ?? [])].some((n) => n.data?.type === 'collection-media')
@@ -824,7 +824,8 @@ export function readinessGaps(input: ReadinessInput): ReadinessGap[] {
       draft: false,
       problem:
         `${n} product categor${n === 1 ? 'y has' : 'ies have'} no image, and this page shows category ` +
-        'tiles — each renders a broken-image icon above its name.',
+        "tiles — each draws the platform's grey placeholder (a broken-image icon on a platform " +
+        'older than web_builder 74ca59dd2) where the picture goes.',
       fix:
         'Upload a picture (sb_media_upload), then PUT the category back with image: url ' +
         '(sb_api_call put:/api/sites/{siteId}/product-categories/{id}, merge:true).',

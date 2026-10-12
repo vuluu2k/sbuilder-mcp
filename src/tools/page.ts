@@ -83,8 +83,9 @@ export function reviewField(
   pageType?: string,
   formDocType?: string,
   formRedirects?: ReadonlySet<string>,
+  siteLocale?: string | null,
 ): Record<string, unknown> {
-  const all = reviewDesign(doc, { formTypes, pageType, formDocType, formRedirects });
+  const all = reviewDesign(doc, { formTypes, pageType, formDocType, formRedirects, siteLocale });
   if (all.length === 0) return {};
   // MAINTENANCE IS ADVICE, kept out of `findings`: it works for a visitor, so
   // it must not stand between a page and its clean verdict. One `fixes` map
@@ -1964,6 +1965,7 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
       // The page's TYPE says which record it supplies — `no_data_context` stays
       // silent without it rather than guessing.
       let pageType: string | undefined;
+      let siteLocale: string | null | undefined;
       try {
         const { siteId, pageId } = session.location();
         const input = await gatherReadiness(ctx, siteId, Object.values(doc.doc.nodes) as never, pageId);
@@ -1978,6 +1980,7 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
           }),
         );
         pageType = input.pages?.find((p) => p.id === pageId)?.type;
+        siteLocale = input.siteLocale;
         const gaps = readinessGaps(input);
         const lang = siteLanguage(input.siteLocale, input.pageNodes);
         const said = lang ? ctx.notices.once(`site-language:${siteId}`, lang) : undefined;
@@ -1989,7 +1992,7 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
       } catch {
         // Readiness is additional information, never the reason a review fails.
       }
-      const field = reviewField(ctx, doc, formTypes, pageType, session.formType(), formRedirects);
+      const field = reviewField(ctx, doc, formTypes, pageType, session.formType(), formRedirects, siteLocale);
       // Clean = no finding a visitor meets; `advice` (maintenance) rides beside the verdict.
       const clean = !field.findings;
       return text({
@@ -2443,7 +2446,7 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
       settings: z.record(z.unknown()).optional(),
       seed: z.boolean().optional().describe('Default true; false creates a blank page.'),
       chrome: z.boolean().optional().describe("Carry the site's header and footer, default true"),
-      locale: z.string().optional().describe("vi (default) or en — the complete page's wording."),
+      locale: z.string().optional().describe("vi or en — a store seed's wording; defaults to the site's language, else vi."),
       headline: z.string().optional().describe("The complete page's thank-you line."),
       dry_run: z.boolean().optional(),
     },
@@ -2634,7 +2637,26 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
       let seeded: Record<string, unknown> | null = null;
       const newId = res.page?.id;
       if ((willSeed || layout) && typeof newId === 'string' && newId) {
-        const document = layout ? layoutDocument(layout) : seedDocument(type ?? '', { locale, headline });
+        // The SITE's language when the caller named none — the seed's English
+        // copy is rewritten for a Vietnamese site (SEED_COPY_VI). Unreadable
+        // settings fall back to the old default rather than block the create.
+        const lang =
+          locale ??
+          (layout
+            ? undefined
+            : await request({
+                base: ctx.base,
+                method: 'GET',
+                path: `/api/sites/${encodeURIComponent(site_id)}/settings`,
+                token: siteToken(ctx),
+                fetchImpl: ctx.fetchImpl,
+              })
+                .then((r) => {
+                  const l = (r as { settings?: { locale?: unknown } | null })?.settings?.locale;
+                  return typeof l === 'string' && l ? l : undefined;
+                })
+                .catch(() => undefined));
+        const document = layout ? layoutDocument(layout) : seedDocument(type ?? '', { locale: lang, headline });
         if (document) {
           try {
             await request({

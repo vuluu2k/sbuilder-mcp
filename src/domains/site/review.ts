@@ -3,6 +3,7 @@ import { childrenOf, childrenWithSatellites, isOverlay, isSharedSection, pageChi
 import { STUCK_STATE, stickyBlockedBy, stuckHostOf, isPinnedNode } from './sticky.js';
 import { bandOf, isGlobal, type Band } from './traps.js';
 import { exampleCopy } from './examplecopy.js';
+import { SEED_COPY_VI, langOf } from './seedcopy.js';
 import { HOVER_STATE, hoverHome } from './hover.js';
 import { ELEMENTS, BINDING_SOURCES, BOUND_SPECIALS , FIRST_CHILD_ONLY, SATELLITE_RULES, ELEMENT_SEEDS } from '../../catalog/elements.generated.js';
 import type { PageDoc } from './document.js';
@@ -302,6 +303,8 @@ export function reviewDesign(
     pageType?: string;
     /** The open FORM document's record type, when known — the third-date rule needs "booking". */
     formDocType?: string;
+    /** The site's `settings.locale`, when read. Only the store seeds' English copy asks it. */
+    siteLocale?: string | null;
   } = {},
 ): Finding[] {
   const d: DocLike = doc.doc;
@@ -950,6 +953,27 @@ export function reviewDesign(
             `Still the platform's own seed copy (${JSON.stringify(value)}), in English. This ` +
             'surface was never authored — it is minted with the element and reads as if ' +
             'somebody wrote it.',
+          key,
+          fix: fill('default_seed_copy', { id, key }),
+        });
+      }
+
+      // THE STORE SEEDS' ENGLISH COPY ON A VIETNAMESE SITE ("Add To Cart") —
+      // fine on an English site, so asked only when the site's language is
+      // known. sb_page_create now seeds it in Vietnamese; this is for pages
+      // made before that, or with locale:"en" on a Vietnamese site.
+      else if (
+        typeof value === 'string' &&
+        SEED_COPY_VI[value] &&
+        langOf(opts.siteLocale) === 'vi'
+      ) {
+        out.push({
+          code: 'default_seed_copy',
+          nodeId: id,
+          type,
+          problem:
+            `Still the platform's English seed copy (${JSON.stringify(value)}) on a Vietnamese site — ` +
+            `"${SEED_COPY_VI[value]}" is what this storefront should say.`,
           key,
           fix: fill('default_seed_copy', { id, key }),
         });
