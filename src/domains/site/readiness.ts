@@ -61,6 +61,7 @@ export type ReadinessGapId =
   | 'homepage'
   | 'unreachablePage'
   | 'productImages'
+  | 'categoryImages'
   | 'siteFooter';
 
 export interface ReadinessGap {
@@ -133,6 +134,8 @@ export interface ReadinessInput {
   siteLocale?: string | null;
   /** How many product categories the store has; null when the list was unread. */
   categories?: number | null;
+  /** Product categories with no `image`; null when unread. */
+  categoriesUnpictured?: number | null;
   /** How many of them point at a page of their own; null when unread. */
   categoryPageLinks?: number | null;
   /**
@@ -803,6 +806,28 @@ export function readinessGaps(input: ReadinessInput): ReadinessGap[] {
         'Get a picture into the library (sb_media_upload: a file, a url, or query + pick), then ' +
         'PUT the whole product back with images: [url, …] — first is the primary. POST ' +
         '/api/media/{siteId}/from-url ingests straight from a url in one hop.',
+    });
+  }
+
+  // A COLLECTION TILE WITH NO PICTURE IS A BROKEN-IMAGE ICON, not a grey card:
+  // render/nodes/collection-media writes `<img src="">` (the image element has a
+  // placeholder; this one does not). Measured on the sb_category_strip a store
+  // built here put on its home page — two broken icons above the category names.
+  // Asked only where a collection tile is actually on screen.
+  if (
+    (input.categoriesUnpictured ?? 0) > 0 &&
+    [...input.pageNodes, ...(input.globalNodes ?? [])].some((n) => n.data?.type === 'collection-media')
+  ) {
+    const n = input.categoriesUnpictured!;
+    gaps.push({
+      id: 'categoryImages',
+      draft: false,
+      problem:
+        `${n} product categor${n === 1 ? 'y has' : 'ies have'} no image, and this page shows category ` +
+        'tiles — each renders a broken-image icon above its name.',
+      fix:
+        'Upload a picture (sb_media_upload), then PUT the category back with image: url ' +
+        '(sb_api_call put:/api/sites/{siteId}/product-categories/{id}, merge:true).',
     });
   }
 

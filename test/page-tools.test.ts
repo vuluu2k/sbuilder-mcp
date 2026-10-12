@@ -1,4 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
+import { fakePlatform } from './helpers/platform.js';
 import { PageSession, reviewField } from '../src/tools/page.js';
 import { Session } from '../src/transport/auth.js';
 import { Notices } from '../src/mcp/notices.js';
@@ -248,6 +249,12 @@ describe('the signals the platform sends that used to be dropped', () => {
     // and an agent reading it would not know its own slug had been taken.
     expect(out).toContain('slug_renamed');
     expect(out).toContain('shop');
+  });
+
+  it('says a layout skeleton arrives with findings to fill', async () => {
+    const f = answering({ page: { id: 'pg_9', name: 'Giới thiệu', slug: 'gioi-thieu', type: 'about' } });
+    const out = await callTool(f, 'sb_page_create', { site_id: 's1', name: 'Giới thiệu', dry_run: false });
+    expect(out).toMatch(/"about\\?" skeleton and it already has \d+ finding/);
   });
 
   it('surfaces a compose warning that came with the page', async () => {
@@ -791,5 +798,37 @@ describe('force on the writing tools', () => {
     const { call, ids } = await openPageWithAppBlock();
     const dry = await call('sb_set', { id: ids.section, namespace: 'style', keys: { color: 'red' }, force: true });
     expect(dry.forced).toBeUndefined();
+  });
+});
+
+describe('sb_add onto ROOT of a page that wears the site chrome', () => {
+  it('lands between the shared header and footer, so the save is not refused', async () => {
+    const fake = fakePlatform();
+    const g = (id: string, kind: string, gid: string) => ({
+      id, data: { type: 'flex-section', parent: 'ROOT', nodes: [], isCanvas: true },
+      style: {}, config: {}, events: [], bindings: [], specials: { globalId: gid, globalKind: kind }, responsive: {},
+    });
+    fake.pages.set('pg', {
+      rev: 1,
+      document: {
+        schema_version: 2, root_node_id: 'ROOT',
+        nodes: {
+          ROOT: { id: 'ROOT', data: { type: 'root', parent: null, nodes: ['h', 'f'], isCanvas: true }, style: {}, config: {}, events: [], bindings: [], specials: {}, responsive: {} },
+          h: g('h', 'header', 'gs_h'), f: g('f', 'footer', 'gs_f'),
+        },
+      },
+    });
+    const { call, close } = await fake.connect();
+    try {
+      await call('sb_page_open', { site_id: 's1', page_id: 'pg' });
+      const r = await call('sb_add', { parent_id: 'ROOT', spec: { type: 'flex-section' }, dry_run: false });
+      expect(r.text).not.toMatch(/refusing/);
+      const kids = (fake.pages.get('pg')!.document as { nodes: { ROOT: { data: { nodes: string[] } } } }).nodes.ROOT.data.nodes;
+      expect(kids[0]).toBe('h');
+      expect(kids[kids.length - 1]).toBe('f');
+      expect(kids).toHaveLength(3);
+    } finally {
+      await close();
+    }
   });
 });

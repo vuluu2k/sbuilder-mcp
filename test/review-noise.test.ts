@@ -49,6 +49,15 @@ describe('reviewDesign() and the self-drawing container', () => {
   it('still reports an empty ordinary section', () => {
     expect(codes(page('flex-section', []))).toContain('empty_container');
   });
+
+  it('does not call a childless search-input empty — it draws its own field', () => {
+    // The platform's search page seed ships it exactly like this.
+    expect(codes(page('search-input', []))).not.toContain('empty_container');
+  });
+
+  it('still reports a childless select — its face lives in its zones', () => {
+    expect(codes(page('select', []))).toContain('empty_container');
+  });
 });
 
 /**
@@ -99,3 +108,33 @@ describe('measure() and the parked overlay', () => {
     expect(found.map((f) => f.code)).toContain('off_canvas');
   });
 });
+
+describe('reviewDesign() and a page that is only its chrome', () => {
+  const doc = (kids: Record<string, unknown>) => ({
+    schema_version: 2,
+    root_node_id: 'ROOT',
+    nodes: {
+      ROOT: { id: 'ROOT', data: { type: 'root', parent: null, nodes: Object.keys(kids) }, specials: {} },
+      ...kids,
+    },
+  });
+  const ref = (id: string, kind: string) => ({
+    id, data: { type: 'flex-section', parent: 'ROOT', nodes: [] }, specials: { globalRef: `gs_${kind}`, globalKind: kind },
+  });
+  const codes = (d: unknown) => reviewDesign(PageDoc.from(d as never)).map((f: { code: string }) => f.code);
+
+  it('calls a page with nothing but the shared header and footer empty', () => {
+    expect(codes(doc({ h: ref('h', 'header'), f: ref('f', 'footer') }))).toContain('empty_page');
+  });
+
+  it('does not call a shared CUSTOM section chrome — it is body content', () => {
+    expect(codes(doc({ h: ref('h', 'header'), m: ref('m', 'custom'), f: ref('f', 'footer') }))).not.toContain('empty_page');
+  });
+
+  it('is quiet once a body section exists between them', () => {
+    const body = { id: 'b', data: { type: 'flex-section', parent: 'ROOT', nodes: ['t'] }, specials: {} };
+    const t = { id: 't', data: { type: 'text', parent: 'b', nodes: [] }, specials: { text: 'Xin chào' } };
+    expect(codes(doc({ h: ref('h', 'header'), b: body, t, f: ref('f', 'footer') }))).not.toContain('empty_page');
+  });
+});
+

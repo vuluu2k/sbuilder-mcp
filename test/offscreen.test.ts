@@ -106,6 +106,21 @@ describe('an overlay is recognised by what its renderer does, not only by its st
     ]);
     expect(offscreenNodes(d.doc).has('po_x')).toBe(false);
   });
+
+  it('sweeps a header\'s mobile menu — it lives nested, legitimately', () => {
+    // sb_store action:"chrome" builds exactly this: the drawer under a
+    // hamburger-menu inside the header's flex-block.
+    const d = PageDoc.from({ schema_version: 2, root_node_id: '', nodes: {} });
+    const add = addSubtree(d, 'ROOT', {
+      type: 'flex-section',
+      children: [{ type: 'flex-block', children: [{ type: 'hamburger-menu' }] }],
+    });
+    d.apply(add.patches);
+    const ham = add.ids.find((id) => d.node(id).data.type === 'hamburger-menu')!;
+    const skip = offscreenNodes(d.doc);
+    for (const id of [ham, ...d.node(ham).data.nodes]) expect(skip.has(id), id).toBe(true);
+    expect(skip.has(add.ids[0])).toBe(false);
+  });
 });
 
 describe('what the widened skip does to a measurement', () => {

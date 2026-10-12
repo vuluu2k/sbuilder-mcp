@@ -26,6 +26,16 @@ export const FIX: Record<string, string> = {
   // this surface EXISTS. An empty state is authored out of sight — it only shows
   // when the list is empty — so an agent that never saw it does not know there is
   // anything to write.
+  demo_variant_options:
+    'Clear the fallback: sb_set id "<id>", namespace config, keys { "attributes": [] }, base: true. ' +
+    'Products WITH options still show their own (the binding wins); products without show no picker.',
+  invisible_text:
+    'Give it a colour that reads on its ground: sb_set id "<id>", namespace style, keys { "color": … } ' +
+    '(or unset "color" so the theme decides). For a button, change its fill or its text — not both to the same.',
+  example_copy:
+    'Write this shop\'s own words: sb_set id "<id>", namespace specials, keys { "<key>": … }. ' +
+    'A figure, a delivery or return promise, or a customer quote must be TRUE for this shop — ' +
+    'if you do not know it, remove the element (sb_remove) rather than guess.',
   default_seed_copy:
     'Write it in the shop\'s own language and ink: sb_set id "<id>", namespace specials, ' +
     'keys { "<key>": … }. It is a seeded satellite (an empty state, an element\'s chrome), ' +

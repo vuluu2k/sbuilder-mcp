@@ -472,7 +472,7 @@ specials `sb_bind` accepts, including generated binding fields such as `boundPro
 | --- | --- | --- |
 | `parent_id` | string | |
 | `spec` | object | `{ type, name?, style?, config?, specials?, children? }` — **nested** |
-| `index` | number? | Defaults to append |
+| `index` | number? | Defaults to append — except onto ROOT of a page wearing a shared footer, where it defaults to the end of the MIDDLE band (appended after the footer, the band-order check refused the save) |
 | `dry_run` | boolean? | Defaults to true |
 | `force` | boolean? | Override a soft guard; the message is returned as `forced[]` instead of thrown. Hard guards ignore it — see "What every write checks" |
 
@@ -1387,7 +1387,7 @@ box. Returns `{ findings, fixes, findings_notice? }`, in document order:
 
 | Code | The defect |
 | --- | --- |
-| `empty_page` | Nothing on it — publishes blank |
+| `empty_page` | Nothing on it — publishes blank. Also a page holding ONLY the shared header and footer: the body between them is blank (an unseeded `account`, `contact` or `error` page) |
 | `missing_node` | A parent naming a child the document does not hold. The renderer walks to a hole, and the platform refuses every save until it is gone — reported here rather than thrown, because a review runs on a document that is already damaged and that is exactly when a caller needs one |
 | `dead_nav` | A sole navigation click with no `specials.href`. A renderer reads `node.events` NEVER: `EventAttrs` emits no `on:click` for one, assuming the href made it an anchor. So the control renders, publishes, and does nothing when a shopper clicks it |
 | `empty_container` | A section holding nothing — an empty band |
@@ -1400,6 +1400,9 @@ box. Returns `{ findings, fixes, findings_notice? }`, in document order:
 | `unknown_element` | A type the catalog does not know; run `npm run codegen` |
 | `unlinked_form` | A `form` naming no form — composes nothing and publishes an EMPTY BOX. The platform stays deliberately quiet about this one |
 | `default_seed_copy` | A seeded satellite still carrying the PLATFORM's own English copy — a repeater's empty state saying "No products yet" in `#171717` ink. Only ever visible when the list is empty, which is why nobody writes it |
+| `example_copy` | A built-in layout's example copy never replaced — "Tiêu đề chính", "Lợi ích một", the picture-slot sentence addressed to the agent, and invented CLAIMS ("1.000+", "4,9/5", a testimonial signed by a stranger). Derived by building every pattern, minus a short list of labels usable as they stand ("Mua ngay", "Xem tất cả"). `sb_template_use` says how many it just placed (`copy`) |
+| `invisible_text` | Text or a button whose LITERAL colour has under 1.5:1 contrast with the nearest literal fill under it — present in the HTML, unreadable on the page. Silent when either side is a theme var |
+| `demo_variant_options` | A `product-variants` still carrying its seeded Color Red/Green/Blue, Size S/M/L. That authored config is the platform's fallback for a product with no option axes, so every simple product offered options that do not exist. Clearing it (`config.attributes: []`) leaves products WITH options showing their own — measured |
 | `form_fields_flush` | A `form` / `form-segment` / `form-step-nav` stacking its fields with no `gap`, so each label reads as belonging to the control above it. Distinct from `config.fieldStackGap`, the smaller label-to-control gap INSIDE one field |
 | `dead_menu_link` | A menu entry with no `href` — the renderer reads `specials.menuItems` and never `menuId` |
 | `extra_repeater_child` | A repeater holding more than the one child it clones per record; the rest never appear |
@@ -1478,6 +1481,7 @@ publish panel then listed five gaps.
 | `payment` | No live gateway — nothing but cash on delivery, and an online order dead-ends |
 | `productPage` | No published `product` page, so every link out of a product card 404s |
 | `shipping` | No delivery option: the checkout's select is empty and every order ships free |
+| `categoryImages` | Product categories with no `image` while the open page (or a shared section) shows a `collection-media` tile — it renders `<img src="">`, a broken-image icon, not the image element's placeholder. Fix: upload, then PUT the category back with `image` (`merge:true`) |
 | `productImages` | Active products with no `images`: every card, cart line and product page shows the platform's grey placeholder (`render/nodes/image/html.go`, no src → `ImagePlaceholder`). Fix: `sb_media_upload`, then PUT the product back with `images: [url, …]` — first is the primary |
 | `cartTrigger` | Nothing opens the cart on its own; a shopper who closes the drawer cannot get back |
 | `siteChrome` | Two or more pages and NO global section, so each page carries its own header and footer. Changing the menu is one edit per page, the copies drift, and a visitor meets a slightly different site on every click. Asked of every site, not only a store — it is the one question here that is not about money |

@@ -90,6 +90,26 @@ describe('tokensFromPage()', () => {
     });
   });
 
+  it('reads nothing off a band on a dark or coloured ground — its type is inverted', () => {
+    // Measured: a hero re-added below an sb_cta_band took the band's white
+    // button and published a white "Mua ngay" on a white hero.
+    const d = emptyDoc();
+    const cta = addSubtree(d, 'ROOT', {
+      type: 'flex-section',
+      style: { backgroundColor: 'var(--wb-color-primary)' },
+      children: [{ type: 'button', specials: { text: 'Mua ngay' }, style: { backgroundColor: '#ffffff', color: '#166534' } }],
+    });
+    d.apply(cta.patches);
+    expect(tokensFromPage(d.doc).buttonBg).toBeUndefined();
+    const light = addSubtree(d, 'ROOT', {
+      type: 'flex-section',
+      style: { backgroundColor: '#f3f6f4' },
+      children: [{ type: 'button', specials: { text: 'Xem' }, style: { backgroundColor: '#166534', color: '#ffffff' } }],
+    });
+    d.apply(light.patches);
+    expect(tokensFromPage(d.doc)).toMatchObject({ buttonBg: '#166534', buttonColor: '#ffffff' });
+  });
+
   it('answers nothing for an empty page rather than inventing a palette', () => {
     // An empty page is a legitimate import target, and a made-up accent is
     // exactly the invention rule 0 exists to prevent.

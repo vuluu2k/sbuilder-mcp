@@ -1,6 +1,6 @@
 import type { NodeSpec } from './builder.js';
 import type { DocLike, NodeLike } from '../../core/tree.js';
-import { pageChildren, walk } from '../../core/tree.js';
+import { pageChildren } from '../../core/tree.js';
 import { isGlobal } from './traps.js';
 import { stickySeeds } from './sticky.js';
 import { TEXT_STYLE_KEYS } from '../../catalog/elements.generated.js';
@@ -268,7 +268,24 @@ export function tokensFromPage(doc: DocLike): PageTokens {
     } else if (!section && t === 'flex-section') section = n;
     else if (!block && t === 'flex-block') block = n;
   };
-  for (const id of pageChildren(doc)) if (!isGlobal(doc, id)) walk(doc, id, visit);
+  // NOT FROM A BAND ON A DARK OR COLOURED GROUND. Its type and buttons are
+  // inverted on purpose, so they say nothing about the page's own. Measured: a
+  // hero re-added below an sb_cta_band (primary-green ground, white button with
+  // green text) took that white button as the page's fill — and published a
+  // white "Mua ngay" on the white hero, plus a white eyebrow, both invisible.
+  // By id, not through walk(): its visitor gets the node, and a node is not
+  // guaranteed to carry its own id.
+  const read = (id: string, onDark: boolean, seen: Set<string>): void => {
+    const n = doc.nodes[id];
+    if (!n || seen.has(id)) return;
+    seen.add(id);
+    const t = n.data.type;
+    const dark = onDark || ((t === 'flex-section' || t === 'flex-block') && !lightGround(styleOf(n).backgroundColor));
+    if (!dark) visit(n);
+    for (const k of n.data.nodes ?? []) read(k, dark, seen);
+  };
+  const seen = new Set<string>();
+  for (const id of pageChildren(doc)) if (!isGlobal(doc, id)) read(id, false, seen);
 
   const h = styleOf(heading);
   const p = styleOf(text);
@@ -286,6 +303,29 @@ export function tokensFromPage(doc: DocLike): PageTokens {
     ...(str(s.padding) ? { sectionPadding: str(s.padding) } : {}),
     ...(str(bl.maxWidth) ? { sectionMaxWidth: str(bl.maxWidth) } : {}),
   };
+}
+
+/**
+ * Is this a ground ordinary type reads on? Unset, transparent, white, the
+ * theme's own background token, or a literal colour light enough. Anything
+ * else — a dark or saturated literal, another theme var — is treated as an
+ * inverted band, which only ever costs a token read, never a wrong one.
+ */
+function lightGround(bg: unknown): boolean {
+  const v = typeof bg === 'string' ? bg.trim().toLowerCase() : '';
+  if (!v || v === 'transparent' || v === 'white' || v === 'var(--wb-color-background)') return true;
+  let rgb: number[] | null = null;
+  const hex = /^#([0-9a-f]{3}|[0-9a-f]{6})$/.exec(v);
+  if (hex) {
+    const h = hex[1].length === 3 ? hex[1].replace(/./g, (c) => c + c) : hex[1];
+    rgb = [0, 2, 4].map((i) => parseInt(h.slice(i, i + 2), 16));
+  } else {
+    const m = /^rgba?\(\s*(\d+)[\s,]+(\d+)[\s,]+(\d+)/.exec(v);
+    if (m) rgb = [m[1], m[2], m[3]].map(Number);
+  }
+  if (!rgb) return false;
+  const [r, g, b] = rgb.map((c) => c / 255);
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b > 0.8;
 }
 
 /** A heading's tag, clamped to what HTML has. */

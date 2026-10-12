@@ -1,6 +1,8 @@
+import { isDeepStrictEqual } from 'node:util';
 import { childrenOf, childrenWithSatellites, isOverlay, isSharedSection, pageChildren, appBlockRoot, SPEC_GLOBAL_REF, SPEC_APP_BLOCK_REF, type DocLike } from '../../core/tree.js';
 import { STUCK_STATE, stickyBlockedBy, stuckHostOf, isPinnedNode } from './sticky.js';
-import { bandOf, type Band } from './traps.js';
+import { bandOf, isGlobal, type Band } from './traps.js';
+import { exampleCopy } from './examplecopy.js';
 import { HOVER_STATE, hoverHome } from './hover.js';
 import { ELEMENTS, BINDING_SOURCES, BOUND_SPECIALS , FIRST_CHILD_ONLY, SATELLITE_RULES, ELEMENT_SEEDS } from '../../catalog/elements.generated.js';
 import type { PageDoc } from './document.js';
@@ -168,6 +170,33 @@ function drawsItsOwnContent(type: string): boolean {
 }
 
 
+/** A literal #rgb / #rrggbb / rgb() colour as 0–255 channels, or null. */
+function rgbOf(v: unknown): number[] | null {
+  const c = typeof v === 'string' ? v.trim().toLowerCase() : '';
+  if (c === 'white') return [255, 255, 255];
+  if (c === 'black') return [0, 0, 0];
+  const hex = /^#([0-9a-f]{3}|[0-9a-f]{6})$/.exec(c);
+  if (hex) {
+    const h = hex[1].length === 3 ? hex[1].replace(/./g, (x) => x + x) : hex[1];
+    return [0, 2, 4].map((i) => parseInt(h.slice(i, i + 2), 16));
+  }
+  const m = /^rgb\(\s*(\d+)[\s,]+(\d+)[\s,]+(\d+)\s*\)$/.exec(c);
+  return m ? [m[1], m[2], m[3]].map(Number) : null;
+}
+
+/** WCAG contrast ratio of two sRGB colours. */
+function contrast(a: number[], b: number[]): number {
+  const lum = (rgb: number[]) => {
+    const [r, g, bl] = rgb.map((v) => {
+      const s = v / 255;
+      return s <= 0.03928 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4;
+    });
+    return 0.2126 * r + 0.7152 * g + 0.0722 * bl;
+  };
+  const [hi, lo] = [lum(a), lum(b)].sort((x, y) => y - x);
+  return (hi + 0.05) / (lo + 0.05);
+}
+
 /** Binding-source prefixes that name a RECORD (not `site.*`, which every page has). */
 // cartLine: only a cart-order's line row supplies it (render/nodes/cart-order,
 // scope.PlaceholderCartLine) — see ROW_SUPPLIER. searchRow is left out: no
@@ -290,6 +319,26 @@ export function reviewDesign(
       fix: fill('empty_page', {}),
     });
     return out;
+  }
+  // ONLY THE SHARED HEADER AND FOOTER is a blank page too. Measured: an "account"
+  // page created by sb_page_create (no seed for that type) wore the site chrome
+  // and nothing else, reviewed clean, and so did the readiness gap it was made
+  // to close — a shopper landing on /account met a header, a footer and nothing.
+  // Composed (globalId, what a read carries) or stored (globalRef) alike.
+  // HEADER AND FOOTER only: a `custom` shared section is body content.
+  const isChrome = (id: string): boolean => {
+    const sp = d.nodes[id]?.specials ?? {};
+    if (isGlobal(d, id)) return bandOf(d, id) !== 'middle';
+    return sp[SPEC_GLOBAL_REF] !== undefined && (sp.globalKind === 'header' || sp.globalKind === 'footer');
+  };
+  if (pageChildren(d).every(isChrome)) {
+    out.push({
+      code: 'empty_page',
+      nodeId: d.root_node_id,
+      type: 'root',
+      problem: 'Only the shared header and footer — the page between them is blank.',
+      fix: fill('empty_page', {}),
+    });
   }
 
   // Document order, depth-first from ROOT: the order a reader meets them.
@@ -425,6 +474,55 @@ export function reviewDesign(
         fix: fill('unknown_element', {}),
       });
       continue;
+    }
+
+    // TYPE THE SAME COLOUR AS WHAT IT SITS ON. Measured: a pattern dressed in
+    // tokens read off an inverted band published a white "Mua ngay" on its own
+    // white fill — present in the HTML, invisible on the page, clean in review.
+    // LITERAL COLOURS ONLY, on both sides, and the ground is the element's own
+    // fill or the nearest ancestor that sets one: a theme var or an unset page
+    // ground is not known here, and a dark theme would make a guessed "white"
+    // ground cry wolf on every light heading.
+    if ((type === 'text' || type === 'heading' || type === 'button') && !inOverlay.has(id)) {
+      const fg = rgbOf((n as { style?: Record<string, unknown> }).style?.color);
+      let ground: number[] | null = null;
+      for (let x: string | null | undefined = id; x && d.nodes[x] && !ground; x = d.nodes[x].data.parent) {
+        const bg = (d.nodes[x] as { style?: Record<string, unknown> }).style?.backgroundColor;
+        if (bg === undefined || bg === 'transparent' || bg === '') continue;
+        ground = rgbOf(bg);
+        if (!ground) break; // a var() or a gradient: unknown, say nothing
+      }
+      if (fg && ground && contrast(fg, ground) < 1.5) {
+        out.push({
+          code: 'invisible_text',
+          nodeId: id,
+          type,
+          problem: `Its colour is the colour it sits on (contrast ${contrast(fg, ground).toFixed(2)}:1) — the words are there and nobody can read them.`,
+          fix: fill('invisible_text', { id }),
+        });
+      }
+    }
+
+    // THE DEMO OPTIONS. product-variants seeds config.attributes Color
+    // Red/Green/Blue, Size S/M/L, and that authored config is the documented
+    // FALLBACK for a product with no option axes of its own (schema binding.ts:
+    // "the picker keeps its authored config"). So every simple product on a
+    // published page offered three colours and three sizes that do not exist —
+    // measured on a store built here, and reviewed clean.
+    if (type === 'product-variants') {
+      const authored = (n as { config?: Record<string, unknown> }).config?.attributes;
+      const seeded = (ELEMENTS[type]?.defaults as { config?: Record<string, unknown> } | undefined)?.config?.attributes;
+      if (Array.isArray(seeded) && seeded.length && isDeepStrictEqual(authored, seeded)) {
+        out.push({
+          code: 'demo_variant_options',
+          nodeId: id,
+          type,
+          problem:
+            'Still the picker\'s demo options (Color Red/Green/Blue, Size S/M/L). They render for ' +
+            'every product that has no options of its own — a shopper is offered choices that do not exist.',
+          fix: fill('demo_variant_options', { id }),
+        });
+      }
     }
 
     // A NAVIGATION CONTROL WITH NOWHERE TO GO, and it is the sharpest silent
@@ -744,6 +842,12 @@ export function reviewDesign(
     // is "add something inside it", which on the next save is decomposed away
     // again. Measured on a page built with `sb_add`: the header and footer refs
     // both flagged, and both correct.
+    // OR IT DRAWS ITS OWN CONTROL. `search-input` is a container only for the
+    // dropdown an author MAY compose under it; with no children it still renders
+    // its `<input>` (render/nodes/search-input/html.go). The platform's own
+    // search seed ships it childless, so every seeded search page was flagged.
+    // Not `select`: its face lives in its trigger/panel children.
+    const drawsOwnControl = type === 'search-input';
     const isReference =
       (n.specials ?? {})[SPEC_GLOBAL_REF] !== undefined ||
       (n.specials ?? {})[SPEC_APP_BLOCK_REF] !== undefined;
@@ -751,6 +855,7 @@ export function reviewDesign(
       meta.isContainer &&
       childrenOf(d, id).length === 0 &&
       !isReference &&
+      !drawsOwnControl &&
       !(bindings.length > 0 && drawsItsOwnContent(type))
     ) {
       out.push({
@@ -847,6 +952,21 @@ export function reviewDesign(
             'somebody wrote it.',
           key,
           fix: fill('default_seed_copy', { id, key }),
+        });
+      }
+
+      // A BUILT-IN LAYOUT'S EXAMPLE COPY — see examplecopy.ts.
+      else if (typeof value === 'string' && exampleCopy().has(value)) {
+        out.push({
+          code: 'example_copy',
+          nodeId: id,
+          type,
+          problem:
+            `Still the "${exampleCopy().get(value)}" layout's example copy (${JSON.stringify(value)}). ` +
+            'A shopper reads it as this shop speaking — and a number, a promise or a ' +
+            'testimonial in it is a claim nobody made.',
+          key,
+          fix: fill('example_copy', { id, key }),
         });
       }
     }

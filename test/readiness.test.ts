@@ -202,6 +202,15 @@ describe('readinessGaps() — the catalogue', () => {
     expect(g.fix).toMatch(/VND × 100/);
   });
 
+  it('reports picture-less categories only where a collection tile is on screen', () => {
+    const tile = { id: 'cm', data: { type: 'collection-media', parent: 'x', nodes: [] }, specials: {} };
+    const withTile = readinessGaps({ ...ready, categoriesUnpictured: 2, pageNodes: [tile] } as never);
+    expect(withTile.map((g) => g.id)).toEqual(['categoryImages']);
+    expect(withTile[0].problem).toMatch(/^2 product categories have no image/);
+    expect(readinessGaps({ ...ready, categoriesUnpictured: 2, pageNodes: [] } as never).map((g) => g.id)).toEqual([]);
+    expect(readinessGaps({ ...ready, categoriesUnpictured: 0, pageNodes: [tile] } as never).map((g) => g.id)).toEqual([]);
+  });
+
   it('reports active products with no image, after the money questions', () => {
     const gaps = readinessGaps({ ...ready, products: { active: 5, purchasable: 5, unpictured: 2 } } as never);
     expect(gaps.map((g) => g.id)).toEqual(['productImages']);

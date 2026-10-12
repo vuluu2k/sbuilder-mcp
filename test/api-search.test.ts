@@ -189,6 +189,11 @@ describe('findOperation()', () => {
     expect(findOperation('get:/api/sites')?.method).toBe('GET');
     expect(findOperation('nope')).toBeUndefined();
   });
+
+  it('takes {siteId} for a route the platform spells {siteID}', () => {
+    // The readiness fix for unreachablePage names GET /api/sites/{siteId}/menus.
+    expect(findOperation('get:/api/sites/{siteId}/menus')?.id).toBe('get:/api/sites/{siteID}/menus');
+  });
 });
 
 describe('request shapes — the handler outranks the document', () => {

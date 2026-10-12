@@ -380,6 +380,15 @@ Run these four, in this order. Three of them catch things `sb_review` cannot see
    but a picture still catches what no rule states.
 5. `sb_review` last, for the store gaps — they survive publish silently and a shopper is
    what finds them.
+6. **Look at the picture yourself** for what no rule states yet. Measured 2026-10-12 on a
+   store built end to end with these tools, every page reviewing clean before these rules
+   existed: the layouts' example copy and the agent-addressed picture-slot sentence published
+   on the home page (`example_copy` now), a white button on its own white fill
+   (`invisible_text`), Color/Size demo options on every simple product (`demo_variant_options`),
+   broken-image category tiles (`categoryImages`), and blank `contact`/`error` pages wearing
+   only the chrome (`empty_page`). What remains unflagged: the product seed's English
+   "Add To Cart" / "Buy It Now" on a Vietnamese site — review cannot know the site's language,
+   so rewrite them yourself.
 
 Then, once — not per edit — the three questions no still picture answers: **scroll** the
 published page and check the pinned header takes `wb-stuck`, **click** the cart trigger, and

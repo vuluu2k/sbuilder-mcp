@@ -33,7 +33,14 @@ const PRODUCT_WRITE_IDS = new Set([
 ]);
 
 export function findOperation(id: string): ApiOperation | undefined {
-  return API_OPERATIONS.find((o) => o.id === id);
+  const exact = API_OPERATIONS.find((o) => o.id === id);
+  if (exact) return exact;
+  // The platform spells one parameter two ways — `{siteId}` almost everywhere,
+  // `{siteID}` on the menu routes — and a caller (or a readiness fix text) that
+  // learned the common one was told "unknown operation" for one letter. Only a
+  // UNIQUE fold is taken, so two routes differing by case alone stay refused.
+  const folded = API_OPERATIONS.filter((o) => o.id.toLowerCase() === id.toLowerCase());
+  return folded.length === 1 ? folded[0] : undefined;
 }
 
 export function searchOperations(

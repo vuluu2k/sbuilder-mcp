@@ -469,7 +469,7 @@ specials mà `sb_bind` chấp nhận, kể cả field binding được sinh như
 | --- | --- | --- |
 | `parent_id` | string | |
 | `spec` | object | `{ type, name?, style?, config?, specials?, children? }` — **lồng nhau** |
-| `index` | number? | Mặc định nối vào cuối |
+| `index` | number? | Mặc định nối vào cuối — trừ khi thêm vào ROOT của trang có footer dùng chung: khi đó mặc định là cuối band GIỮA (nối sau footer thì bước kiểm tra thứ tự band chặn lần lưu) |
 | `dry_run` | boolean? | Mặc định true |
 | `force` | boolean? | Bỏ qua một guard mềm; thông điệp được trả về trong `forced[]` thay vì ném lỗi. Guard cứng bỏ qua tham số này — xem "Mỗi lần ghi kiểm tra gì" |
 
@@ -1356,7 +1356,7 @@ tài liệu:
 
 | Mã | Khiếm khuyết |
 | --- | --- |
-| `empty_page` | Không có gì — publish ra trang trắng |
+| `empty_page` | Không có gì — publish ra trang trắng. Cả trang CHỈ có header và footer dùng chung: phần thân ở giữa trống (trang `account`, `contact`, `error` không được seed) |
 | `missing_node` | Một node cha gọi tên đứa con tài liệu không có. Renderer đi vào một lỗ trống, và nền tảng từ chối mọi lần lưu cho tới khi nó biến mất — báo ở đây chứ không ném lỗi, vì một lần review chạy trên tài liệu đã hỏng, và đó đúng là lúc người gọi cần nó nhất |
 | `dead_nav` | Một click điều hướng duy nhất mà không có `specials.href`. Renderer KHÔNG BAO GIỜ đọc `node.events`: `EventAttrs` không phát `on:click` cho nó, vì cho rằng href đã biến nó thành anchor. Nên control đó render, publish, và bấm vào không làm gì |
 | `empty_container` | Section không chứa gì — một dải trống |
@@ -1368,6 +1368,9 @@ tài liệu:
 | `dead_binding_field` | Field binding ngoài `specials` — được lưu, được publish, và bị bỏ qua |
 | `unknown_element` | Type catalog không biết; chạy `npm run codegen` |
 | `unlinked_form` | `form` không trỏ tới form nào — compose ra rỗng và publish thành MỘT HỘP TRỐNG. Platform cố tình im lặng về lỗi này |
+| `example_copy` | Chữ mẫu của layout dựng sẵn chưa được thay — "Tiêu đề chính", "Lợi ích một", câu dặn agent trong ô ảnh trống, và các KHẲNG ĐỊNH bịa ("1.000+", "4,9/5", lời chứng thực ký tên người lạ). Lấy bằng cách dựng mọi pattern, trừ một danh sách ngắn nhãn dùng được nguyên ("Mua ngay", "Xem tất cả"). `sb_template_use` báo số phần tử vừa đặt còn chữ mẫu (`copy`) |
+| `invisible_text` | Chữ hoặc nút có màu LITERAL tương phản dưới 1.5:1 với nền literal gần nhất bên dưới — có trong HTML, không đọc được trên trang. Im lặng khi một bên là theme var |
+| `demo_variant_options` | `product-variants` vẫn mang Color Red/Green/Blue, Size S/M/L gieo sẵn. Config đó là bản dự phòng của platform cho sản phẩm không có trục tuỳ chọn, nên mọi sản phẩm đơn giản hiện tuỳ chọn không tồn tại. Xoá (`config.attributes: []`) thì sản phẩm CÓ tuỳ chọn vẫn hiện của nó — đã đo |
 | `default_seed_copy` | Một satellite được gieo sẵn vẫn mang nguyên chữ tiếng Anh của PLATFORM — empty state của repeater ghi "No products yet" bằng ink `#171717`. Chỉ hiện khi danh sách rỗng, nên không ai viết lại |
 | `form_fields_flush` | `form` / `form-segment` / `form-step-nav` xếp các field mà không có `gap`, khiến mỗi label đọc như thuộc về ô phía TRÊN nó. Khác với `config.fieldStackGap` — khoảng cách label↔control nhỏ hơn, nằm BÊN TRONG một field |
 | `dead_menu_link` | Mục menu không có `href` — renderer đọc `specials.menuItems` chứ không bao giờ đọc `menuId` |
@@ -1445,6 +1448,7 @@ hoàn toàn bằng bộ tool này review sạch, publish và render đúng; bả
 | `payment` | Chưa có cổng thanh toán sống — chỉ còn thanh toán khi nhận hàng, đơn online tắc |
 | `productPage` | Chưa publish trang `product`, nên mọi liên kết từ thẻ sản phẩm đều 404 |
 | `shipping` | Không có phương thức giao: ô chọn ở trang thanh toán trống và mọi đơn miễn phí ship |
+| `categoryImages` | Danh mục sản phẩm không có `image` trong khi trang đang mở (hoặc section dùng chung) có ô `collection-media` — nó render `<img src="">`, biểu tượng ảnh vỡ, không phải placeholder của image. Sửa: upload, rồi PUT danh mục kèm `image` (`merge:true`) |
 | `productImages` | Sản phẩm active không có `images`: mọi thẻ, dòng giỏ hàng và trang sản phẩm hiện ô xám placeholder của platform (`render/nodes/image/html.go`, không src → `ImagePlaceholder`). Sửa: `sb_media_upload`, rồi PUT nguyên product kèm `images: [url, …]` — ảnh đầu là ảnh chính |
 | `cartTrigger` | Không gì mở được giỏ; khách đóng ngăn giỏ rồi không quay lại được |
 | `siteChrome` | Từ hai trang trở lên mà KHÔNG có global section nào, nên mỗi trang tự mang header/footer riêng. Đổi menu là sửa từng trang, các bản sao lệch dần, và khách gặp một site hơi khác ở mỗi lần bấm. Hỏi cho mọi site chứ không riêng cửa hàng — đây là câu hỏi duy nhất ở đây không liên quan tới tiền |

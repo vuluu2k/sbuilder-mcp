@@ -80,8 +80,20 @@ export function offscreenNodes(doc: DocLike): Set<string> {
     if (!isOffscreenOverlay(doc, id)) continue;
     for (const n of subtreeIds(doc, id)) out.add(n);
   }
+  // THE MOBILE MENU LIVES INSIDE THE HEADER, legitimately, so the ROOT-only
+  // sweep above never reached it. Measured: a store header from sb_store
+  // action:"chrome" — its closed menu-drawer, parked at x −420 — gave four
+  // off_canvas findings at 390px on every page. Only the menu types: a popup
+  // nested in a section is still a document the platform refuses.
+  for (const [id, n] of Object.entries(doc.nodes)) {
+    if (!NESTED_OFFSCREEN.has(n?.data?.type ?? '') || out.has(id)) continue;
+    for (const k of subtreeIds(doc, id)) out.add(k);
+  }
   return out;
 }
+
+/** Overlay types that legitimately sit deep in a tree (a header's mobile menu). */
+const NESTED_OFFSCREEN: ReadonlySet<string> = new Set(['hamburger-menu', 'menu-drawer', 'menu-panel']);
 
 /**
  * The overlay this node sits in, for the RENDER question "what must be opened

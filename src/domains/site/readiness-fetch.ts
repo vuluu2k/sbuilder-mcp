@@ -112,6 +112,9 @@ export async function gatherReadiness(
   const blogCats = Array.isArray(rawBlogCats) ? rawBlogCats : null;
   const cats = categoryList?.categories ?? categoryList?.productCategories;
   const categories = Array.isArray(cats) ? (categoryList?.total ?? cats.length) : null;
+  const categoriesUnpictured = Array.isArray(cats)
+    ? cats.filter((c) => !String((c as { image?: unknown })?.image ?? '').trim()).length
+    : null;
   const links = pageLinks?.links ?? pageLinks?.pageLinks;
   const categoryPageLinks = Array.isArray(links)
     ? links.filter((l) => l?.linkType === 'productCategory').length
@@ -189,6 +192,7 @@ export async function gatherReadiness(
       : null,
     overlayKinds: Array.isArray(overlayList?.overlays) ? overlayList.overlays.map((o) => o.kind ?? '') : null,
     categories,
+    categoriesUnpictured,
     categoryPageLinks,
     forms: formList?.forms ?? null,
     articles: Array.isArray(articleList?.articles)

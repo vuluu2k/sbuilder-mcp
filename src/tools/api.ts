@@ -509,7 +509,7 @@ export function resolveOperation(args: CallArgs): ApiOperation & { raw?: true; b
     );
   }
   if (args.id) {
-    const op = API_OPERATIONS.find((o) => o.id === args.id);
+    const op = findOperation(args.id);
     if (!op) throw new Error(`sbuilder: unknown operation "${args.id}" — use sb_api_find first`);
     return op;
   }

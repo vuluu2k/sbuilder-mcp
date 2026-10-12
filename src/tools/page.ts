@@ -44,6 +44,7 @@ import { siteToken } from './credentialpick.js';
 import { validateForSave } from '../domains/site/validate.js';
 import { formDocChecks, sayChecks, specCheck, writeCheck, type CheckedNote } from '../domains/site/writecheck.js';
 import { reviewDesign, REVIEW_NOTICE } from '../domains/site/review.js';
+import { exampleCopy } from '../domains/site/examplecopy.js';
 import { compactFindings } from '../domains/site/findings.js';
 import { readinessGaps, READINESS_NOTICE, siteLanguage } from '../domains/site/readiness.js';
 import { gatherReadiness } from '../domains/site/readiness-fetch.js';
@@ -1566,7 +1567,16 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
     async ({ parent_id, spec, index, dry_run, force }) => {
       const d = session.current();
       const guard: GuardOpts = { force, forced: [] };
-      const { patches, ids } = addSubtree(d, parent_id, spec, index, guard);
+      // ROOT WITH NO INDEX MEANS "ANOTHER SECTION OF THE PAGE": the end of the
+      // middle band, as sb_template_use and sb_duplicate already place one.
+      // Appended last it landed after a shared footer, and the band-order check
+      // refused the save — on exactly the call empty_page's fix names.
+      // Only when a footer is there to land behind: a FORM document's root has
+      // none, and addSubtree's own default (above the submit button) is right.
+      const rootKids = d.doc.nodes[d.doc.root_node_id]?.data.nodes.length ?? 0;
+      const mid = parent_id === d.doc.root_node_id ? middleEnd(d.doc) : rootKids;
+      const at = index ?? (mid < rootKids ? mid : undefined);
+      const { patches, ids } = addSubtree(d, parent_id, spec, at, guard);
       const forced = guard.forced!.length ? { forced: guard.forced } : {};
       // ELEMENTS THAT RENDER CONVINCINGLY WHILE WIRED TO NOTHING. The add
       // succeeds completely, the tree is correct and the page photographs
@@ -2231,9 +2241,23 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
           });
         }
         await session.applyAndSave(patches);
+        // Say it at the moment it is placed: the example copy publishes as if the
+        // shop wrote it, and sb_review is the only other place it surfaces.
+        const examples = ids.filter((id) => {
+          const sp = (doc.doc.nodes[id] as { specials?: Record<string, unknown> } | undefined)?.specials ?? {};
+          return ['text', 'label', 'alt'].some((k) => typeof sp[k] === 'string' && exampleCopy().has(sp[k] as string));
+        }).length;
         return text({
           added: pattern.name,
           section: ids[0],
+          ...(examples
+            ? {
+                copy:
+                  `${examples} element(s) still carry the layout's example copy — write this shop's own ` +
+                  'words over them (sb_review lists each as example_copy); remove any number, promise ' +
+                  'or quote you cannot vouch for.',
+              }
+            : {}),
           nodes: ids.length,
           into: page_id,
           rev: doc.rev,
@@ -2645,10 +2669,22 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
       // entity URL once published — say what to add, whatever the reason
       // (no platform seed, seed:false, a refused seed write).
       const blankNote = !seeded || 'failed' in seeded ? emptyEntityTemplateNote(type) : null;
+      // A LAYOUT is the editor's skeleton, and it ships its elements' own
+      // placeholders ("Heading", "Enter your text here", an image with no src).
+      // Measured: an "about" page created here reviewed with four findings before
+      // anything else was done, and the create answer had said nothing about it.
+      const skeletonFindings =
+        seeded && 'layout' in seeded && layout
+          ? reviewDesign(PageDoc.from(layoutDocument(layout) as never), { pageType: type ?? 'page' }).length
+          : 0;
+      const skeletonNote = skeletonFindings
+        ? `This is the "${String(seeded?.layout)}" skeleton and it already has ${skeletonFindings} ` +
+          'finding(s) — placeholder copy, empty slots. Open it and fill them; sb_review lists each.'
+        : null;
       return text({
         ...res,
         ...(seeded ? { seeded } : {}),
-        ...(blankNote ? { next: blankNote } : {}),
+        ...(blankNote ? { next: blankNote } : skeletonNote ? { next: skeletonNote } : {}),
         ...(wearing ? { chrome: wearing } : {}),
         ...(renamed
           ? {
