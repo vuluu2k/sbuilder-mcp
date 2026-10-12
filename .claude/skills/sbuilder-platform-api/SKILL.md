@@ -23,6 +23,19 @@ repo over a number here, and fix the line when you catch one stale.
   still fires `onopen`. (Measured 2026-10-11: the access TTL is now 30 days, refresh 180 —
   `main.go` `NewTokenManager` — so nothing here refreshes; the getter rule still stands.)
 
+- **The access lifetime is an operator setting now** (web_builder af905a126,
+  `AUTH_ACCESS_TTL`, default still 720h), and every first-party client answers a 401 with ONE
+  `POST /api/auth/refresh` and ONE retry. This one never refreshed — measured with
+  `AUTH_ACCESS_TTL=1m`: v0.88.0 answered `401 unauthorized` to every call after the minute,
+  for the rest of the run. Now `send()` in http.ts asks `onUnauthorized` renewers (a Session
+  registers while signed in, recognises only its own current or retired token, shares one
+  refresh across concurrent 401s — a refresh token is single-use) and retries once; media
+  uploads (their own fetch) and live-socket reconnects call `Session.ensureFresh()` first
+  (renews within 30s of the pair's `expiresIn`). An API key is never renewed.
+  `/api/auth/device/*` (the CLI's browser sign-in) is in the catalog but routes with NO
+  credential like every `/api/auth/` path, so `device/approve` answers 401 — on purpose:
+  approving a code mints an account-wide credential for whoever holds it.
+
 - **Every password sign-in is its own DEVICE SESSION** (web_builder 9db1b2a9e), capped at 10
   per account; past the cap the one longest without a REFRESH is deleted, and its access
   token dies with it. This client never refreshes, so a process that does not sign out

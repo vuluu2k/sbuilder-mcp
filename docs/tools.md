@@ -1,6 +1,6 @@
 # Tools
 
-Four tools reach 849 platform operations, and 312 of the 393 writes among them carry a body
+Four tools reach 853 platform operations, and 316 of the 397 writes among them carry a body
 shape read off the handler that decodes it. `sb_api_find` is an index, not a tool per
 endpoint — see [why](../README.md#tools).
 

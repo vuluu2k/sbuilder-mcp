@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { RealtimeSocket, type SocketLike } from '../src/transport/socket.js';
 import { setAgentClient } from '../src/transport/identity.js';
 
@@ -37,6 +37,34 @@ describe('RealtimeSocket', () => {
     s.connect();
     sockets[1].onopen!();
     expect(JSON.parse(sockets[1].sent[0]).token).toBe('rotated');
+  });
+
+  it('renews (prepare) before a RECONNECT, so the next auth frame carries the new token', async () => {
+    vi.useFakeTimers();
+    try {
+      let token = 'old';
+      const sockets: FakeSocket[] = [];
+      const s = new RealtimeSocket(
+        'ws://x',
+        () => token,
+        () => {
+          const f = new FakeSocket();
+          sockets.push(f);
+          return f;
+        },
+        async () => {
+          token = 'renewed';
+        },
+      );
+      s.connect();
+      sockets[0].onclose!();
+      await vi.runAllTimersAsync();
+      sockets[1].onopen!();
+      expect(JSON.parse(sockets[1].sent[0]).token).toBe('renewed');
+      s.close();
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it('delivers decoded frames to the handler', () => {

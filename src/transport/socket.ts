@@ -62,6 +62,12 @@ export class RealtimeSocket {
     private readonly token: () => string,
     private readonly factory: (url: string) => SocketLike = (u) =>
       new WebSocket(u) as unknown as SocketLike,
+    /**
+     * Run before each RECONNECT — renews a session token near its end of life,
+     * since the getter above is synchronous and a reconnect is the moment an
+     * expired token would be presented. Failure never blocks the attempt.
+     */
+    private readonly prepare?: () => Promise<void>,
   ) {}
 
   get attempts(): number {
@@ -146,7 +152,12 @@ export class RealtimeSocket {
       this.ready = false;
       if (this.closed) return;
       const wait = Math.min(RETRY_BASE_MS * 2 ** this.attempt, RETRY_MAX_MS);
-      this.timer = setTimeout(() => this.connect(), wait);
+      this.timer = setTimeout(() => {
+        if (!this.prepare) return this.connect();
+        void this.prepare()
+          .catch(() => undefined)
+          .then(() => this.connect());
+      }, wait);
     };
 
     ws.onerror = () => {

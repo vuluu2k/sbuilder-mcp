@@ -3,10 +3,10 @@
 import type { ApiOperation } from './types.js';
 
 export const SWAGGER_SOURCE = {
-  "operations": 849,
-  "definitions": 280,
-  "bodyCarrying": 376,
-  "bodyUndescribed": 102,
+  "operations": 853,
+  "definitions": 282,
+  "bodyCarrying": 380,
+  "bodyUndescribed": 106,
   "generatedFrom": "server/docs/swagger.json"
 } as const;
 
@@ -1901,6 +1901,90 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "summary": "Email a code authorising a password change",
     "params": [],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "none"
+  },
+  {
+    "id": "post:/api/auth/device/approve",
+    "method": "POST",
+    "path": "/api/auth/device/approve",
+    "tags": [
+      "auth"
+    ],
+    "summary": "Approve or deny a pending device login",
+    "params": [
+      {
+        "name": "body",
+        "in": "body",
+        "required": true,
+        "type": "object",
+        "description": "userCode + decision (approve|deny)"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "none"
+  },
+  {
+    "id": "post:/api/auth/device/inspect",
+    "method": "POST",
+    "path": "/api/auth/device/inspect",
+    "tags": [
+      "auth"
+    ],
+    "summary": "Describe a pending device login by its typed user code",
+    "params": [
+      {
+        "name": "body",
+        "in": "body",
+        "required": true,
+        "type": "object",
+        "description": "userCode"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "none"
+  },
+  {
+    "id": "post:/api/auth/device/start",
+    "method": "POST",
+    "path": "/api/auth/device/start",
+    "tags": [
+      "auth"
+    ],
+    "summary": "Start a browser device login (sb CLI)",
+    "params": [
+      {
+        "name": "body",
+        "in": "body",
+        "required": true,
+        "type": "object",
+        "description": "client + clientVersion"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "none"
+  },
+  {
+    "id": "post:/api/auth/device/token",
+    "method": "POST",
+    "path": "/api/auth/device/token",
+    "tags": [
+      "auth"
+    ],
+    "summary": "Poll a device login; returns a token pair once approved",
+    "params": [
+      {
+        "name": "body",
+        "in": "body",
+        "required": true,
+        "type": "object",
+        "description": "deviceCode"
+      }
+    ],
     "bodyDescribed": false,
     "bodyRef": null,
     "credential": "none"
@@ -27052,6 +27136,43 @@ export const API_OPERATIONS: ApiOperation[] = [
 ];
 
 export const API_DEFINITIONS: Record<string, unknown> = {
+  "github_com_webbuilder_server_internal_auth.DeviceRequest": {
+    "type": "object",
+    "properties": {
+      "client": {
+        "type": "string"
+      },
+      "clientVersion": {
+        "type": "string"
+      },
+      "createdAt": {
+        "type": "string"
+      },
+      "expiresAt": {
+        "type": "string"
+      }
+    }
+  },
+  "github_com_webbuilder_server_internal_auth.DeviceStart": {
+    "type": "object",
+    "properties": {
+      "deviceCode": {
+        "type": "string"
+      },
+      "expiresIn": {
+        "type": "integer"
+      },
+      "interval": {
+        "type": "integer"
+      },
+      "userCode": {
+        "type": "string"
+      },
+      "verificationUri": {
+        "type": "string"
+      }
+    }
+  },
   "github_com_webbuilder_server_internal_codefiles.CodeFile": {
     "type": "object",
     "properties": {

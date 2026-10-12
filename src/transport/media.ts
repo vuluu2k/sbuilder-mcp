@@ -106,6 +106,8 @@ async function fromUrl(
   source: { name?: string; folderId?: string },
 ): Promise<UploadedAsset | null> {
   const doFetch = ctx.fetchImpl ?? fetch;
+  // Its own fetch, so the 401 renewal in http.ts never sees it — renew first.
+  if (!ctx.apiKey && ctx.session.loggedIn()) await ctx.session.ensureFresh().catch(() => undefined);
   const res = await doFetch(`${ctx.base.replace(/\/$/, '')}/api/media/${encodeURIComponent(siteId)}/from-url`, {
     method: 'POST',
     headers: {
@@ -336,6 +338,7 @@ export async function uploadMedia(
   source: { path?: string; url?: string; name?: string; folderId?: string },
 ): Promise<UploadedAsset> {
   const doFetch = ctx.fetchImpl ?? fetch;
+  if (!ctx.apiKey && ctx.session.loggedIn()) await ctx.session.ensureFresh().catch(() => undefined);
 
   // THE SERVER'S OWN DOOR FIRST, when the source is a URL.
   //

@@ -4,12 +4,12 @@
 import type { RequestShape } from './types.js';
 
 export const SHAPE_SOURCE = {
-  "writeOperations": 393,
-  "shaped": 312,
-  "fromHandlers": 302,
+  "writeOperations": 397,
+  "shaped": 316,
+  "fromHandlers": 306,
   "fromSwaggerOnly": 10,
   "withReadOnly": 30,
-  "structsRead": 3226
+  "structsRead": 3237
 } as const;
 
 export const REQUEST_SHAPES: Record<string, RequestShape> = {
@@ -656,6 +656,58 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
     "fields": [
       {
         "name": "ticket",
+        "type": "string"
+      }
+    ],
+    "source": "go",
+    "goType": "(inline)"
+  },
+  "post:/api/auth/device/start": {
+    "fields": [
+      {
+        "name": "client",
+        "type": "string"
+      },
+      {
+        "name": "clientVersion",
+        "type": "string"
+      }
+    ],
+    "source": "go",
+    "goType": "(inline)"
+  },
+  "post:/api/auth/device/inspect": {
+    "fields": [
+      {
+        "name": "userCode",
+        "type": "string"
+      },
+      {
+        "name": "decision",
+        "type": "string"
+      }
+    ],
+    "source": "go",
+    "goType": "deviceDecision"
+  },
+  "post:/api/auth/device/approve": {
+    "fields": [
+      {
+        "name": "userCode",
+        "type": "string"
+      },
+      {
+        "name": "decision",
+        "type": "string"
+      }
+    ],
+    "source": "go",
+    "goType": "deviceDecision"
+  },
+  "post:/api/auth/device/token": {
+    "fields": [
+      {
+        "name": "deviceCode",
         "type": "string"
       }
     ],

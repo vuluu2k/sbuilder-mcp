@@ -272,7 +272,23 @@ async function announced(opts: RequestOpts, siteId: string, pageId: string, doc:
   return out;
 }
 
-async function send(opts: RequestOpts): Promise<unknown> {
+/**
+ * A refused ACCESS TOKEN renews itself, once. web_builder af905a126 made the
+ * access lifetime an operator setting (AUTH_ACCESS_TTL, default still 30 days)
+ * and every first-party client now answers a 401 by calling POST
+ * /api/auth/refresh once and retrying once. This one never refreshed: on a
+ * deployment with a 1h lifetime every session call would 401 an hour in, for
+ * the rest of the run. A renewer recognises its OWN current token and returns
+ * the new one, or null — an API key belongs to no session and is never renewed.
+ */
+type Renewer = (stale: string) => Promise<string | null>;
+const renewers = new Set<Renewer>();
+export function onUnauthorized(r: Renewer): () => void {
+  renewers.add(r);
+  return () => renewers.delete(r);
+}
+
+async function send(opts: RequestOpts, retried = false): Promise<unknown> {
   const doFetch = opts.fetchImpl ?? fetch;
   // Identity rides on EVERY call rather than on a handshake of its own. There is
   // no "connect" request to hang it off — the first thing this server does is
@@ -292,6 +308,15 @@ async function send(opts: RequestOpts): Promise<unknown> {
     headers,
     body: body === undefined ? undefined : multipart ? (body as FormData) : JSON.stringify(body),
   });
+  if (res.status === 401 && opts.token && !retried) {
+    for (const renew of renewers) {
+      const fresh: string | null = await renew(opts.token).catch(() => null);
+      if (fresh && fresh !== opts.token) {
+        void res.body?.cancel().catch(() => undefined); // release the refused response
+        return send({ ...opts, token: fresh }, true);
+      }
+    }
+  }
   if (opts.binary && res.ok) return new Uint8Array(await res.arrayBuffer());
 
   const raw = await res.text();

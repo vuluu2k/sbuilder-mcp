@@ -336,6 +336,9 @@ export function joinRoom(ctx: ToolContext, session: PageSession, siteId: string)
   const socket = new RealtimeSocket(
     `${wsBase}/api/realtime/ws?site=${encodeURIComponent(siteId)}`,
     tokenFn,
+    undefined,
+    // A key never expires this way; a session renews near its end of life.
+    ctx.apiKey ? undefined : () => ctx.session.ensureFresh(),
   );
   const live = new LiveSession(socket, {
     onRemote: (patches) => session.applyRemote(patches),
