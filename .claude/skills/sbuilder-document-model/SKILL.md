@@ -706,6 +706,32 @@ platform treats an unproven guard as indistinguishable from an absent one.
   of the v1 documents are not this repo's doing either — `editor/src/features/courses/pageScaffold.ts:157`
   returns `{ schema_version: 1, … }`, which codegen captures verbatim into `APP_SCAFFOLDS`.
 
+- **A RECORD LIST'S BINDING IS THE MERCHANT'S FIELD ID, which no generated table can hold**
+  (web_builder PR #117, measured against d006efa05). `list-dataset` + `config.datasetSource:
+  'record'` + `config.recordCollectionId` repeats a Collection's PUBLISHED records
+  (`pagerender/recordfeed.go`, max 50). Its tiles are `text-dataset` / `collection-media` with
+  `datasetSource: 'record'` and `config.recordField: 'fld_<16 hex>'` — the field ID, never the
+  key, so a rename keeps rendering — plus, on text tiles, `recordFieldType` (`richtext` →
+  `record.html.<fid>` into `boundHtml`, else `record.<fid>` into `boundText`). Anything not
+  matching `RECORD_FIELD_ID` (`recordContext.ts:33`) binds `''`. `bindingsForConfig` takes the
+  generated `record|<kind>` row for the `target` and `recordTileBindings` (`domains/site/record.ts`)
+  writes the field; codegen runs the schema's own `datasetBindings` over
+  `RECORD_BINDING_PROBES` and `test/record-list.test.ts` holds the mirror to each, so a platform
+  change to the derivation goes red at the next codegen. `sb_set` re-derives on `recordField` /
+  `recordFieldType` as well as `kind` / `datasetSource`.
+  - **The record keys are base-only and the platform's ledger does not say so.** recordfeed.go
+    reads `n.Config[...]` raw and the editor writes all of them to base, but
+    `responsive-defaults.test.ts` guards SEEDS and these seed nothing per breakpoint — so
+    codegen adds every `record*` key the three metas seed (`readRecordBaseOnly`). Without it a
+    mobile-only `sb_set recordCollectionId` was a list that renders nothing on publish.
+  - `sb_bind` accepts `record.<fid>` / `record.html.<fid>` by PATTERN (BINDING_SOURCES is
+    static) and refuses `record.<fid>` into `boundHtml` (`rawSinkBindings.ts:102`
+    `RECORD_HTML_SOURCE` — the platform refuses that pair at render).
+  - `sb_review`: `record_list_unsourced`, `record_field_unset`, and `no_data_context` with
+    `key: "record"` when the NEAREST `list-dataset` is not a record list (the editor's
+    `owningList`), on any page type. It does NOT check a field ID exists in the collection — a
+    fetch per collection per review; deliberately skipped.
+
 - **AN OPT-IN SATELLITE COULD NOT BE CREATED, and the remedy named a call that did nothing.**
   `readiness`' `cartCount` fix said `sb_set {cartCountId}` "mints one"; it writes a string and
   mints nothing (pinned in `test/satellite-add.test.ts`), and `sb_add` into an icon was refused

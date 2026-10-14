@@ -4,6 +4,7 @@ import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { text, images } from '../mcp/response.js';
 import { BINDING_SOURCES, ELEMENTS } from '../catalog/elements.generated.js';
 import { bindableFields } from '../domains/site/writecheck.js';
+import { isRecordSource, RECORD_HTML_SOURCE, RECORD_SOURCE } from '../domains/site/record.js';
 import { previewUrl } from '../vision/preview.js';
 import { uploadMedia } from '../transport/media.js';
 import { request } from '../transport/http.js';
@@ -85,7 +86,32 @@ export function bindNode(
 ): Patch[] {
   const node = doc.node(id) as unknown as { bindings: Array<{ id?: string }> };
   soft(guard, () => refuseAppBlockInterior(doc, id, 'binding'));
-  if (!BINDING_SOURCES.includes(source)) {
+  // A RECORD source names a merchant field by ID, so no static list holds it
+  // (recordContext.ts: `record.<fid>`, richtext as `record.html.<fid>`).
+  if (isRecordSource(source)) {
+    if (!RECORD_SOURCE.test(source)) {
+      throw new Error(
+        `sbuilder: "${source}" names no record field. A record source is "record.fld_<16 hex>" ` +
+          '(or "record.html.fld_<16 hex>" for a richtext field) — the field ID from ' +
+          'GET …/collections/{id}/fields, never its key; anything else binds nothing.',
+      );
+    }
+    // record.html.<fid> is HTML: in a text sink its tags print as text.
+    if (field === 'specials.boundText' && RECORD_HTML_SOURCE.test(source)) {
+      throw new Error(
+        `sbuilder: "${source}" is a richtext field's HTML — in specials.boundText its tags would show ` +
+          'as text. Bind it into specials.boundHtml, or set the tile\'s config.recordFieldType to "richtext".',
+      );
+    }
+    // schema/src/rawSinkBindings.ts:102 — the platform refuses this pair at render.
+    if (field === 'specials.boundHtml' && !RECORD_HTML_SOURCE.test(source)) {
+      throw new Error(
+        `sbuilder: specials.boundHtml takes a record field only as "record.html.<fid>" (a richtext ` +
+          `field, sanitised on ingest) — "${source}" is unsanitised text and the renderer refuses it. ` +
+          'Bind it into specials.boundText, or bind the richtext field as record.html.<fid>.',
+      );
+    }
+  } else if (!BINDING_SOURCES.includes(source)) {
     throw new Error(
       `sbuilder: "${source}" is not a binding source the renderer provides, so the binding ` +
         `would render as a placeholder forever. Valid sources: ${BINDING_SOURCES.join(', ')}.`,
@@ -832,7 +858,7 @@ export function registerLiveTools(
           // The full list GROWS with the platform and would push the tool list
           // over its budget on its own; the refusal carries every source, so an
           // unknown one costs one round trip and the schema stays small.
-          `e.g. ${BINDING_SOURCES.slice(0, 4).join(', ')}; ${BINDING_SOURCES.length} in all, and a wrong one is refused with the list`,
+          `e.g. ${BINDING_SOURCES.slice(0, 4).join(', ')}; ${BINDING_SOURCES.length} in all, plus record.fld_<16 hex> for a Collections field; a wrong one is refused with the list`,
         ),
       field: z.string().describe('Where the value lands, always "specials.<key>"'),
       action: z

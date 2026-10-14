@@ -676,6 +676,11 @@ export const PAGE_LAYOUT_SEEDS: Record<string, { schema_version: number; root_no
           "loadingMode": "none",
           "layout": "grid",
           "quantity": 4,
+          "recordCollectionId": "",
+          "recordSortField": "",
+          "recordSortDesc": false,
+          "recordFilterField": "",
+          "recordFilterValue": "",
           "itemsPerRow": 4,
           "collectionType": "all_products",
           "collectionId": "all_products",
@@ -839,6 +844,7 @@ export const PAGE_LAYOUT_SEEDS: Record<string, { schema_version: number; root_no
           "imageRatio": "auto",
           "customImageRatioWidth": 16,
           "customImageRatioHeight": 9,
+          "recordField": "",
           "datasetSource": "article"
         },
         "specials": {
@@ -876,6 +882,8 @@ export const PAGE_LAYOUT_SEEDS: Record<string, { schema_version: number; root_no
         "config": {
           "datasetSource": "article",
           "kind": "title",
+          "recordField": "",
+          "recordFieldType": "",
           "textValue": "Article title",
           "descriptionDisplayType": "Full",
           "descriptionLines": 3,
@@ -919,6 +927,8 @@ export const PAGE_LAYOUT_SEEDS: Record<string, { schema_version: number; root_no
         "config": {
           "datasetSource": "article",
           "kind": "summary",
+          "recordField": "",
+          "recordFieldType": "",
           "textValue": "Article summary",
           "descriptionDisplayType": "Full",
           "descriptionLines": 3,
@@ -962,6 +972,8 @@ export const PAGE_LAYOUT_SEEDS: Record<string, { schema_version: number; root_no
         "config": {
           "datasetSource": "article",
           "kind": "date",
+          "recordField": "",
+          "recordFieldType": "",
           "textValue": "2026-08-13",
           "descriptionDisplayType": "Full",
           "descriptionLines": 3,
@@ -2055,6 +2067,8 @@ export const STORE_PAGE_SEEDS: Record<string, { schema_version: number; root_nod
         "config": {
           "datasetSource": "product",
           "kind": "title",
+          "recordField": "",
+          "recordFieldType": "",
           "textValue": "",
           "descriptionDisplayType": "Full",
           "descriptionLines": 3,
@@ -2468,6 +2482,8 @@ export const STORE_PAGE_SEEDS: Record<string, { schema_version: number; root_nod
         "config": {
           "datasetSource": "product",
           "kind": "description",
+          "recordField": "",
+          "recordFieldType": "",
           "textValue": "",
           "descriptionDisplayType": "Full",
           "descriptionLines": 3,
@@ -2893,6 +2909,8 @@ export const STORE_PAGE_SEEDS: Record<string, { schema_version: number; root_nod
         "config": {
           "datasetSource": "category",
           "kind": "title",
+          "recordField": "",
+          "recordFieldType": "",
           "textValue": "",
           "descriptionDisplayType": "Full",
           "descriptionLines": 3,
@@ -2944,6 +2962,11 @@ export const STORE_PAGE_SEEDS: Record<string, { schema_version: number; root_nod
           "loadingMode": "none",
           "layout": "grid",
           "quantity": 4,
+          "recordCollectionId": "",
+          "recordSortField": "",
+          "recordSortDesc": false,
+          "recordFilterField": "",
+          "recordFilterValue": "",
           "itemsPerRow": 4,
           "collectionType": "all_products",
           "collectionId": "all_products",
@@ -3320,6 +3343,8 @@ export const STORE_PAGE_SEEDS: Record<string, { schema_version: number; root_nod
         "config": {
           "datasetSource": "product",
           "kind": "title",
+          "recordField": "",
+          "recordFieldType": "",
           "textValue": "Product name",
           "descriptionDisplayType": "Full",
           "descriptionLines": 3,
@@ -3656,6 +3681,11 @@ export const STORE_PAGE_SEEDS: Record<string, { schema_version: number; root_nod
           "loadingMode": "none",
           "layout": "grid",
           "quantity": 4,
+          "recordCollectionId": "",
+          "recordSortField": "",
+          "recordSortDesc": false,
+          "recordFilterField": "",
+          "recordFilterValue": "",
           "itemsPerRow": 4,
           "collectionType": "all_products",
           "collectionId": "all_products",
@@ -4032,6 +4062,8 @@ export const STORE_PAGE_SEEDS: Record<string, { schema_version: number; root_nod
         "config": {
           "datasetSource": "product",
           "kind": "title",
+          "recordField": "",
+          "recordFieldType": "",
           "textValue": "Product name",
           "descriptionDisplayType": "Full",
           "descriptionLines": 3,
@@ -4323,6 +4355,8 @@ export const STORE_PAGE_SEEDS: Record<string, { schema_version: number; root_nod
         "config": {
           "datasetSource": "blogCategory",
           "kind": "title",
+          "recordField": "",
+          "recordFieldType": "",
           "textValue": "",
           "descriptionDisplayType": "Full",
           "descriptionLines": 3,
@@ -4374,6 +4408,11 @@ export const STORE_PAGE_SEEDS: Record<string, { schema_version: number; root_nod
           "loadingMode": "none",
           "layout": "grid",
           "quantity": 4,
+          "recordCollectionId": "",
+          "recordSortField": "",
+          "recordSortDesc": false,
+          "recordFilterField": "",
+          "recordFilterValue": "",
           "itemsPerRow": 4,
           "collectionType": "all_products",
           "collectionId": "all_products",
@@ -4537,6 +4576,7 @@ export const STORE_PAGE_SEEDS: Record<string, { schema_version: number; root_nod
           "imageRatio": "auto",
           "customImageRatioWidth": 16,
           "customImageRatioHeight": 9,
+          "recordField": "",
           "datasetSource": "article"
         },
         "specials": {
@@ -4574,6 +4614,8 @@ export const STORE_PAGE_SEEDS: Record<string, { schema_version: number; root_nod
         "config": {
           "datasetSource": "article",
           "kind": "title",
+          "recordField": "",
+          "recordFieldType": "",
           "textValue": "Article title",
           "descriptionDisplayType": "Full",
           "descriptionLines": 3,
@@ -4617,6 +4659,8 @@ export const STORE_PAGE_SEEDS: Record<string, { schema_version: number; root_nod
         "config": {
           "datasetSource": "article",
           "kind": "summary",
+          "recordField": "",
+          "recordFieldType": "",
           "textValue": "Article summary",
           "descriptionDisplayType": "Full",
           "descriptionLines": 3,
@@ -4660,6 +4704,8 @@ export const STORE_PAGE_SEEDS: Record<string, { schema_version: number; root_nod
         "config": {
           "datasetSource": "article",
           "kind": "date",
+          "recordField": "",
+          "recordFieldType": "",
           "textValue": "2026-08-13",
           "descriptionDisplayType": "Full",
           "descriptionLines": 3,
@@ -4890,6 +4936,7 @@ export const STORE_PAGE_SEEDS: Record<string, { schema_version: number; root_nod
           "imageRatio": "auto",
           "customImageRatioWidth": 16,
           "customImageRatioHeight": 9,
+          "recordField": "",
           "datasetSource": "article"
         },
         "specials": {
@@ -4927,6 +4974,8 @@ export const STORE_PAGE_SEEDS: Record<string, { schema_version: number; root_nod
         "config": {
           "datasetSource": "article",
           "kind": "title",
+          "recordField": "",
+          "recordFieldType": "",
           "textValue": "",
           "descriptionDisplayType": "Full",
           "descriptionLines": 3,
@@ -4970,6 +5019,8 @@ export const STORE_PAGE_SEEDS: Record<string, { schema_version: number; root_nod
         "config": {
           "datasetSource": "article",
           "kind": "date",
+          "recordField": "",
+          "recordFieldType": "",
           "textValue": "",
           "descriptionDisplayType": "Full",
           "descriptionLines": 3,
@@ -5013,6 +5064,8 @@ export const STORE_PAGE_SEEDS: Record<string, { schema_version: number; root_nod
         "config": {
           "datasetSource": "article",
           "kind": "description",
+          "recordField": "",
+          "recordFieldType": "",
           "textValue": "",
           "descriptionDisplayType": "Full",
           "descriptionLines": 3,

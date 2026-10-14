@@ -1,6 +1,6 @@
 # Tools
 
-Four tools reach 853 platform operations, and 316 of the 397 writes among them carry a body
+Four tools reach 892 platform operations, and 330 of the 416 writes among them carry a body
 shape read off the handler that decodes it. `sb_api_find` is an index, not a tool per
 endpoint — see [why](../README.md#tools).
 
@@ -493,7 +493,7 @@ A created element arrives with the BINDINGS its type needs: a `text-dataset` alr
 `product.title`, a `pricing-dataset` its six price keys, a `list-dataset` its repeater target.
 The editor derives them at drop time and nothing in the element's defaults carried them, so
 every dataset element this server minted used to save, publish and render its placeholder
-forever.
+forever. A record tile's binding comes from its `recordField` — see "Record lists" below.
 
 ## `sb_set`
 
@@ -833,6 +833,49 @@ placeholder (indistinguishable from "still loading"), and a `field` outside `spe
 stored, saved, published, and ignored forever — `applyBindings` reads the namespace off the
 field and skips anything else.
 
+A **record** source (a merchant Collection's field) is the one no list holds, because it names
+the field by ID: `record.fld_<16 hex>`, or `record.html.fld_<16 hex>` for a richtext field. Any
+other `record.*` is refused (a field KEY binds nothing), and so is `record.<fid>` into
+`specials.boundHtml` — that sink takes only the sanitised `record.html.<fid>`
+(`schema/src/rawSinkBindings.ts`). You rarely need `sb_bind` for one: a record tile derives its
+binding from its config, below.
+
+## Record lists (Collections)
+
+A `list-dataset` with `config.datasetSource: "record"` repeats a merchant Collection's
+**published** records (sorted and filtered server-side, `quantity` rows, at most 50). Build one:
+
+1. Create the data with `sb_api_call`: `POST /api/sites/{siteId}/collections` `{ name }` →
+   `POST …/collections/{id}/fields` `{ key, label, type }` (text, richtext, number, boolean,
+   date, select, url, image) → `POST …/collections/{id}/records`
+   `{ values: { <field KEY>: … }, published: true }`. A draft record never renders.
+2. Read the field IDs back: `GET …/collections/{id}/fields` — each has `id: "fld_…"`.
+3. `sb_add` the list with its card:
+
+```json
+{ "type": "list-dataset",
+  "config": { "datasetSource": "record", "recordCollectionId": "<collection id>" },
+  "children": [{ "type": "dataset-block", "children": [
+    { "type": "collection-media", "config": { "datasetSource": "record", "recordField": "fld_…" } },
+    { "type": "text-dataset", "config": { "datasetSource": "record", "recordField": "fld_…", "recordFieldType": "text" } }
+  ]}]}
+```
+
+A tile names its field by **ID, never key** (`config.recordField`), and a text tile names the
+field's type too (`config.recordFieldType`): `richtext` binds `record.html.<fid>` into
+`specials.boundHtml`, everything else `record.<fid>` into `specials.boundText`; a
+`collection-media` binds an image field into `specials.boundImage`. The bindings are DERIVED from
+that config — on `sb_add`, and again on every `sb_set` of `recordField`, `recordFieldType` or
+`datasetSource` — exactly as the platform's `datasetBindings` does. Sort and filter with
+`recordSortField` / `recordSortDesc` / `recordFilterField` / `recordFilterValue` (field IDs too).
+All the `record*` keys are **base-only**: the renderer reads them off base config, so `sb_set`
+routes them there whatever breakpoint you name.
+
+`sb_review` reports a record list naming no collection (`record_list_unsourced`), a tile naming
+no field ID (`record_field_unset`), and a `record.*` binding outside a record list
+(`no_data_context`). It does NOT check that a field ID exists in the collection — that needs a
+fetch per collection on every review; read `…/fields` yourself when in doubt.
+
 
 ## The purchase binding
 
@@ -861,11 +904,15 @@ names** — and, for each control the platform declares, what it writes:
 
 ```
 { type, hints: { useWhen, avoidWhen, contentTips },
-  inspector: [{ tab, groups: [{ group, controls: ["font_size", …] }] }],
+  inspector: [{ tab, groups: [{ group, controls: ["font_size", …] } | { group, same_as: "<an earlier group>" }] }],
   declared: { font_size: { label, writes, defaults? }, … },
   defaults, translatable?, config_values?, specials_values?, isContainer, isRootOnly,
   childAllows, undeclared_note, style_is_open_css }
 ```
+
+A group whose controls repeat an EARLIER group's exactly (more than three) comes back as
+`{ group, same_as }` — read that group's `controls`. Only `list-dataset` has such groups today
+(its per-source layout groups); it keeps the result under the token budget.
 
 `translatable` names which of this element's specials a translation may rewrite, and which of
 the ones it carries must NEVER be — translating those does not degrade the page, it BREAKS the
@@ -1397,7 +1444,9 @@ box. Returns `{ findings, fixes, findings_notice? }`, in document order:
 | `empty_text` / `missing_media` | An element left blank — empty space, or a broken image |
 | `static_in_dataset` | An element inside a repeater that renders only what the document authors — the same picture on every product card |
 | `unbound_dataset_element` | A dataset element with no binding at all — it waits for a bound special nothing writes |
-| `dead_binding_source` | A source the renderer never provides — shows the placeholder forever |
+| `dead_binding_source` | A source the renderer never provides — shows the placeholder forever. A `record.*` source counts only as `record.fld_<16 hex>` / `record.html.fld_<16 hex>`, and only the html form into `specials.boundHtml` |
+| `record_list_unsourced` | A `list-dataset` with `datasetSource: "record"` and no `config.recordCollectionId` — no rows are fetched, a visitor sees only the empty state |
+| `record_field_unset` | A record tile (`text-dataset` / `collection-media` with `datasetSource: "record"`) whose `config.recordField` is empty or not a `fld_…` ID — a field KEY binds nothing; it renders its placeholder on every row |
 | `dead_binding_field` | A binding field outside `specials` — stored, published, and ignored |
 | `unknown_element` | A type the catalog does not know; run `npm run codegen` |
 | `unlinked_form` | A `form` naming no form — composes nothing and publishes an EMPTY BOX. The platform stays deliberately quiet about this one |
@@ -1415,7 +1464,7 @@ box. Returns `{ findings, fixes, findings_notice? }`, in document order:
 | `no_h1` | The page has headings and none is an `h1`. Every `heading` ships as h2 (`specials.htmlTag`), and `text` / `text-dataset` take the same key, so a page built here — and every page the platform seeds — has no main title for a search engine or a screen reader. Nothing on the canvas shows the tag. Named on the page's OWN first heading — a shared header's brand line is skipped, by either stamp (`globalRef`/`globalId`); put the h1 on the one the page is about, once |
 | `invalid_action` | A stored event whose action the element does not offer on that trigger (a purchase-bound button offers only `bindingEvents`). Stored, never fires |
 | `action_missing_target` | `go_to_url` / `open_page` with no `payload.url` (no renderer resolves a page id), or `popup` with no `payload.id`. The click does nothing |
-| `no_data_context` | A record-bound element (`product.*`, `category.*`, `article.*`, `course.*`) outside any repeater and any pin, on a page type that supplies no such record. It renders its placeholder for ever |
+| `no_data_context` | A record-bound element (`product.*`, `category.*`, `article.*`, `course.*`) outside any repeater and any pin, on a page type that supplies no such record. It renders its placeholder for ever. A `record.*` binding is supplied only when its NEAREST `list-dataset` has `datasetSource: "record"`, on any page type (`key: "record"`) |
 | `unread_value` | A stored config/specials value outside the renderer's vocabulary, at base or any breakpoint. It publishes as the fallback with no error |
 | `unknown_icon` | A stored icon key (`icon` `specials.name`, `button` `specials.icon`, `list-dataset` `config.listNavIcon`, …) holding a name the icon manifest lacks. It publishes the default star or no icon; the problem names the nearest real ones |
 | `custom_code_native` | **`severity: "maintenance"`** — a `custom-code` block that is mostly markup a native element covers (form, heading, image, button, link list, YouTube/Vimeo/Maps iframe). Advice only: it works, but cannot be edited in the inspector, ignores the theme and is invisible to `sb_review`. Third-party scripts and unknown embeds are never flagged |

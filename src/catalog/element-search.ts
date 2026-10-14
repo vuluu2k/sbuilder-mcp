@@ -348,10 +348,23 @@ export function traitsFor(type: string, control?: string): Record<string, unknow
   return {
     type: el.type,
     hints: { useWhen: el.useWhen, avoidWhen: el.avoidWhen, contentTips: el.contentTips },
-    inspector: el.inspector.map((t) => ({
-      tab: t.tab,
-      groups: t.groups.map((g) => ({ group: g.label, controls: g.controls })),
-    })),
+    // A group whose control list REPEATS an earlier one is named, not re-sent:
+    // list-dataset carries the same ~35-control layout list under one group per
+    // data source (product, collection, article, record…), and the seventh copy
+    // is what pushed this result past its budget.
+    inspector: (() => {
+      const seen = new Map<string, string>();
+      return el.inspector.map((t) => ({
+        tab: t.tab,
+        groups: t.groups.map((g) => {
+          const key = g.controls.join('|');
+          const first = seen.get(key);
+          if (first !== undefined && g.controls.length > 3) return { group: g.label, same_as: first };
+          if (first === undefined) seen.set(key, g.label);
+          return { group: g.label, controls: g.controls };
+        }),
+      }));
+    })(),
     declared,
     ...(baseOnly.length ? { base_only: baseOnly } : {}),
     // Legal apart, meaningless together — the platform's own declaration.

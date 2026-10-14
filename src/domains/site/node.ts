@@ -1,6 +1,7 @@
 import { ELEMENTS, SATELLITE_RULES } from '../../catalog/elements.generated.js';
 import type { NodeSeed } from '../../catalog/element-types.js';
 import { genId } from './ids.js';
+import { recordTileBindings } from './record.js';
 
 export interface BuilderNode {
   id: string;
@@ -103,12 +104,16 @@ export function bindingsForConfig(
   const source = String(config?.datasetSource ?? '');
   if (!source) return null;
   const kind = String(config?.kind ?? '');
+  // A RECORD tile's source is its `config.recordField`, which no enumerated row
+  // can hold — the row supplies the target, `recordTileBindings` the field.
+  const done = (rows: unknown[]) =>
+    source === 'record' ? recordTileBindings(type, config ?? {}, copy(rows)) : (copy(rows) as unknown[]);
   const exact = table[`${source}|${kind}`];
-  if (exact) return copy(exact) as unknown[];
+  if (exact) return done(exact);
   // No kind axis on this element: any row for the source carries the same answer.
   const prefix = `${source}|`;
   for (const [key, value] of Object.entries(table)) {
-    if (key.startsWith(prefix)) return copy(value) as unknown[];
+    if (key.startsWith(prefix)) return done(value);
   }
   return null;
 }

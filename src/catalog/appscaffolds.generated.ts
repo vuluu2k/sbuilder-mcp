@@ -61,6 +61,8 @@ export const APP_SCAFFOLDS: Record<
             "config": {
               "datasetSource": "course",
               "kind": "title",
+              "recordField": "",
+              "recordFieldType": "",
               "textValue": "",
               "descriptionDisplayType": "Full",
               "descriptionLines": 3,
@@ -104,6 +106,8 @@ export const APP_SCAFFOLDS: Record<
             "config": {
               "datasetSource": "course",
               "kind": "summary",
+              "recordField": "",
+              "recordFieldType": "",
               "textValue": "",
               "descriptionDisplayType": "Full",
               "descriptionLines": 3,
@@ -147,6 +151,8 @@ export const APP_SCAFFOLDS: Record<
             "config": {
               "datasetSource": "course",
               "kind": "price",
+              "recordField": "",
+              "recordFieldType": "",
               "textValue": "",
               "descriptionDisplayType": "Full",
               "descriptionLines": 3,
@@ -240,6 +246,8 @@ export const APP_SCAFFOLDS: Record<
             "config": {
               "datasetSource": "course",
               "kind": "description",
+              "recordField": "",
+              "recordFieldType": "",
               "textValue": "",
               "descriptionDisplayType": "Full",
               "descriptionLines": 3,
@@ -368,6 +376,11 @@ export const APP_SCAFFOLDS: Record<
               "loadingMode": "none",
               "layout": "grid",
               "quantity": 4,
+              "recordCollectionId": "",
+              "recordSortField": "",
+              "recordSortDesc": false,
+              "recordFilterField": "",
+              "recordFilterValue": "",
               "itemsPerRow": 4,
               "collectionType": "all_products",
               "collectionId": "all_products",
@@ -529,6 +542,7 @@ export const APP_SCAFFOLDS: Record<
               "imageRatio": "auto",
               "customImageRatioWidth": 16,
               "customImageRatioHeight": 9,
+              "recordField": "",
               "datasetSource": "course"
             },
             "specials": {
@@ -564,6 +578,8 @@ export const APP_SCAFFOLDS: Record<
             "config": {
               "datasetSource": "course",
               "kind": "title",
+              "recordField": "",
+              "recordFieldType": "",
               "textValue": "",
               "descriptionDisplayType": "Full",
               "descriptionLines": 3,
@@ -607,6 +623,8 @@ export const APP_SCAFFOLDS: Record<
             "config": {
               "datasetSource": "course",
               "kind": "price",
+              "recordField": "",
+              "recordFieldType": "",
               "textValue": "",
               "descriptionDisplayType": "Full",
               "descriptionLines": 3,

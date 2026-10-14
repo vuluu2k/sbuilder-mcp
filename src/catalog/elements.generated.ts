@@ -1584,6 +1584,90 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "source": "product.bundleItems",
           "field": "specials.boundBundleItems"
         }
+      ],
+      "record|title": [
+        {
+          "id": "bind-bundle-items",
+          "source": "product.bundleItems",
+          "field": "specials.boundBundleItems"
+        }
+      ],
+      "record|vendor": [
+        {
+          "id": "bind-bundle-items",
+          "source": "product.bundleItems",
+          "field": "specials.boundBundleItems"
+        }
+      ],
+      "record|description": [
+        {
+          "id": "bind-bundle-items",
+          "source": "product.bundleItems",
+          "field": "specials.boundBundleItems"
+        }
+      ],
+      "record|summary": [
+        {
+          "id": "bind-bundle-items",
+          "source": "product.bundleItems",
+          "field": "specials.boundBundleItems"
+        }
+      ],
+      "record|content": [
+        {
+          "id": "bind-bundle-items",
+          "source": "product.bundleItems",
+          "field": "specials.boundBundleItems"
+        }
+      ],
+      "record|author": [
+        {
+          "id": "bind-bundle-items",
+          "source": "product.bundleItems",
+          "field": "specials.boundBundleItems"
+        }
+      ],
+      "record|date": [
+        {
+          "id": "bind-bundle-items",
+          "source": "product.bundleItems",
+          "field": "specials.boundBundleItems"
+        }
+      ],
+      "record|image": [
+        {
+          "id": "bind-bundle-items",
+          "source": "product.bundleItems",
+          "field": "specials.boundBundleItems"
+        }
+      ],
+      "record|price": [
+        {
+          "id": "bind-bundle-items",
+          "source": "product.bundleItems",
+          "field": "specials.boundBundleItems"
+        }
+      ],
+      "record|prices": [
+        {
+          "id": "bind-bundle-items",
+          "source": "product.bundleItems",
+          "field": "specials.boundBundleItems"
+        }
+      ],
+      "record|url": [
+        {
+          "id": "bind-bundle-items",
+          "source": "product.bundleItems",
+          "field": "specials.boundBundleItems"
+        }
+      ],
+      "record|name": [
+        {
+          "id": "bind-bundle-items",
+          "source": "product.bundleItems",
+          "field": "specials.boundBundleItems"
+        }
       ]
     },
     "inspector": [
@@ -11093,6 +11177,90 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "source": "site.moneySwitch",
           "field": "specials.payload"
         }
+      ],
+      "record|title": [
+        {
+          "id": "bind-payload",
+          "source": "site.moneySwitch",
+          "field": "specials.payload"
+        }
+      ],
+      "record|vendor": [
+        {
+          "id": "bind-payload",
+          "source": "site.moneySwitch",
+          "field": "specials.payload"
+        }
+      ],
+      "record|description": [
+        {
+          "id": "bind-payload",
+          "source": "site.moneySwitch",
+          "field": "specials.payload"
+        }
+      ],
+      "record|summary": [
+        {
+          "id": "bind-payload",
+          "source": "site.moneySwitch",
+          "field": "specials.payload"
+        }
+      ],
+      "record|content": [
+        {
+          "id": "bind-payload",
+          "source": "site.moneySwitch",
+          "field": "specials.payload"
+        }
+      ],
+      "record|author": [
+        {
+          "id": "bind-payload",
+          "source": "site.moneySwitch",
+          "field": "specials.payload"
+        }
+      ],
+      "record|date": [
+        {
+          "id": "bind-payload",
+          "source": "site.moneySwitch",
+          "field": "specials.payload"
+        }
+      ],
+      "record|image": [
+        {
+          "id": "bind-payload",
+          "source": "site.moneySwitch",
+          "field": "specials.payload"
+        }
+      ],
+      "record|price": [
+        {
+          "id": "bind-payload",
+          "source": "site.moneySwitch",
+          "field": "specials.payload"
+        }
+      ],
+      "record|prices": [
+        {
+          "id": "bind-payload",
+          "source": "site.moneySwitch",
+          "field": "specials.payload"
+        }
+      ],
+      "record|url": [
+        {
+          "id": "bind-payload",
+          "source": "site.moneySwitch",
+          "field": "specials.payload"
+        }
+      ],
+      "record|name": [
+        {
+          "id": "bind-payload",
+          "source": "site.moneySwitch",
+          "field": "specials.payload"
+        }
       ]
     },
     "inspector": [
@@ -11722,6 +11890,90 @@ export const ELEMENTS: Record<string, CatalogElement> = {
         }
       ],
       "blogCategory|name": [
+        {
+          "id": "bind-payload",
+          "source": "site.localeSwitch",
+          "field": "specials.payload"
+        }
+      ],
+      "record|title": [
+        {
+          "id": "bind-payload",
+          "source": "site.localeSwitch",
+          "field": "specials.payload"
+        }
+      ],
+      "record|vendor": [
+        {
+          "id": "bind-payload",
+          "source": "site.localeSwitch",
+          "field": "specials.payload"
+        }
+      ],
+      "record|description": [
+        {
+          "id": "bind-payload",
+          "source": "site.localeSwitch",
+          "field": "specials.payload"
+        }
+      ],
+      "record|summary": [
+        {
+          "id": "bind-payload",
+          "source": "site.localeSwitch",
+          "field": "specials.payload"
+        }
+      ],
+      "record|content": [
+        {
+          "id": "bind-payload",
+          "source": "site.localeSwitch",
+          "field": "specials.payload"
+        }
+      ],
+      "record|author": [
+        {
+          "id": "bind-payload",
+          "source": "site.localeSwitch",
+          "field": "specials.payload"
+        }
+      ],
+      "record|date": [
+        {
+          "id": "bind-payload",
+          "source": "site.localeSwitch",
+          "field": "specials.payload"
+        }
+      ],
+      "record|image": [
+        {
+          "id": "bind-payload",
+          "source": "site.localeSwitch",
+          "field": "specials.payload"
+        }
+      ],
+      "record|price": [
+        {
+          "id": "bind-payload",
+          "source": "site.localeSwitch",
+          "field": "specials.payload"
+        }
+      ],
+      "record|prices": [
+        {
+          "id": "bind-payload",
+          "source": "site.localeSwitch",
+          "field": "specials.payload"
+        }
+      ],
+      "record|url": [
+        {
+          "id": "bind-payload",
+          "source": "site.localeSwitch",
+          "field": "specials.payload"
+        }
+      ],
+      "record|name": [
         {
           "id": "bind-payload",
           "source": "site.localeSwitch",
@@ -18504,6 +18756,330 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "source": "product.url",
           "field": "specials.boundProductURL"
         }
+      ],
+      "record|title": [
+        {
+          "id": "bind-image",
+          "source": "product.image",
+          "field": "specials.boundImage",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "media"
+          }
+        },
+        {
+          "id": "bind-images",
+          "source": "product.images",
+          "field": "specials.boundImages"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        },
+        {
+          "id": "bind-product-url",
+          "source": "product.url",
+          "field": "specials.boundProductURL"
+        }
+      ],
+      "record|vendor": [
+        {
+          "id": "bind-image",
+          "source": "product.image",
+          "field": "specials.boundImage",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "media"
+          }
+        },
+        {
+          "id": "bind-images",
+          "source": "product.images",
+          "field": "specials.boundImages"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        },
+        {
+          "id": "bind-product-url",
+          "source": "product.url",
+          "field": "specials.boundProductURL"
+        }
+      ],
+      "record|description": [
+        {
+          "id": "bind-image",
+          "source": "product.image",
+          "field": "specials.boundImage",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "media"
+          }
+        },
+        {
+          "id": "bind-images",
+          "source": "product.images",
+          "field": "specials.boundImages"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        },
+        {
+          "id": "bind-product-url",
+          "source": "product.url",
+          "field": "specials.boundProductURL"
+        }
+      ],
+      "record|summary": [
+        {
+          "id": "bind-image",
+          "source": "product.image",
+          "field": "specials.boundImage",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "media"
+          }
+        },
+        {
+          "id": "bind-images",
+          "source": "product.images",
+          "field": "specials.boundImages"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        },
+        {
+          "id": "bind-product-url",
+          "source": "product.url",
+          "field": "specials.boundProductURL"
+        }
+      ],
+      "record|content": [
+        {
+          "id": "bind-image",
+          "source": "product.image",
+          "field": "specials.boundImage",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "media"
+          }
+        },
+        {
+          "id": "bind-images",
+          "source": "product.images",
+          "field": "specials.boundImages"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        },
+        {
+          "id": "bind-product-url",
+          "source": "product.url",
+          "field": "specials.boundProductURL"
+        }
+      ],
+      "record|author": [
+        {
+          "id": "bind-image",
+          "source": "product.image",
+          "field": "specials.boundImage",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "media"
+          }
+        },
+        {
+          "id": "bind-images",
+          "source": "product.images",
+          "field": "specials.boundImages"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        },
+        {
+          "id": "bind-product-url",
+          "source": "product.url",
+          "field": "specials.boundProductURL"
+        }
+      ],
+      "record|date": [
+        {
+          "id": "bind-image",
+          "source": "product.image",
+          "field": "specials.boundImage",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "media"
+          }
+        },
+        {
+          "id": "bind-images",
+          "source": "product.images",
+          "field": "specials.boundImages"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        },
+        {
+          "id": "bind-product-url",
+          "source": "product.url",
+          "field": "specials.boundProductURL"
+        }
+      ],
+      "record|image": [
+        {
+          "id": "bind-image",
+          "source": "product.image",
+          "field": "specials.boundImage",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "media"
+          }
+        },
+        {
+          "id": "bind-images",
+          "source": "product.images",
+          "field": "specials.boundImages"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        },
+        {
+          "id": "bind-product-url",
+          "source": "product.url",
+          "field": "specials.boundProductURL"
+        }
+      ],
+      "record|price": [
+        {
+          "id": "bind-image",
+          "source": "product.image",
+          "field": "specials.boundImage",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "media"
+          }
+        },
+        {
+          "id": "bind-images",
+          "source": "product.images",
+          "field": "specials.boundImages"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        },
+        {
+          "id": "bind-product-url",
+          "source": "product.url",
+          "field": "specials.boundProductURL"
+        }
+      ],
+      "record|prices": [
+        {
+          "id": "bind-image",
+          "source": "product.image",
+          "field": "specials.boundImage",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "media"
+          }
+        },
+        {
+          "id": "bind-images",
+          "source": "product.images",
+          "field": "specials.boundImages"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        },
+        {
+          "id": "bind-product-url",
+          "source": "product.url",
+          "field": "specials.boundProductURL"
+        }
+      ],
+      "record|url": [
+        {
+          "id": "bind-image",
+          "source": "product.image",
+          "field": "specials.boundImage",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "media"
+          }
+        },
+        {
+          "id": "bind-images",
+          "source": "product.images",
+          "field": "specials.boundImages"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        },
+        {
+          "id": "bind-product-url",
+          "source": "product.url",
+          "field": "specials.boundProductURL"
+        }
+      ],
+      "record|name": [
+        {
+          "id": "bind-image",
+          "source": "product.image",
+          "field": "specials.boundImage",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "media"
+          }
+        },
+        {
+          "id": "bind-images",
+          "source": "product.images",
+          "field": "specials.boundImages"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        },
+        {
+          "id": "bind-product-url",
+          "source": "product.url",
+          "field": "specials.boundProductURL"
+        }
       ]
     },
     "inspector": [
@@ -20001,6 +20577,210 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "source": "product.id",
           "field": "specials.boundProductId"
         }
+      ],
+      "record|title": [
+        {
+          "id": "bind-images",
+          "source": "product.images",
+          "field": "specials.boundImages",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "media"
+          }
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "record|vendor": [
+        {
+          "id": "bind-images",
+          "source": "product.images",
+          "field": "specials.boundImages",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "media"
+          }
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "record|description": [
+        {
+          "id": "bind-images",
+          "source": "product.images",
+          "field": "specials.boundImages",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "media"
+          }
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "record|summary": [
+        {
+          "id": "bind-images",
+          "source": "product.images",
+          "field": "specials.boundImages",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "media"
+          }
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "record|content": [
+        {
+          "id": "bind-images",
+          "source": "product.images",
+          "field": "specials.boundImages",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "media"
+          }
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "record|author": [
+        {
+          "id": "bind-images",
+          "source": "product.images",
+          "field": "specials.boundImages",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "media"
+          }
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "record|date": [
+        {
+          "id": "bind-images",
+          "source": "product.images",
+          "field": "specials.boundImages",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "media"
+          }
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "record|image": [
+        {
+          "id": "bind-images",
+          "source": "product.images",
+          "field": "specials.boundImages",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "media"
+          }
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "record|price": [
+        {
+          "id": "bind-images",
+          "source": "product.images",
+          "field": "specials.boundImages",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "media"
+          }
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "record|prices": [
+        {
+          "id": "bind-images",
+          "source": "product.images",
+          "field": "specials.boundImages",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "media"
+          }
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "record|url": [
+        {
+          "id": "bind-images",
+          "source": "product.images",
+          "field": "specials.boundImages",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "media"
+          }
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "record|name": [
+        {
+          "id": "bind-images",
+          "source": "product.images",
+          "field": "specials.boundImages",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "media"
+          }
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
       ]
     },
     "inspector": [
@@ -21068,6 +21848,150 @@ export const ELEMENTS: Record<string, CatalogElement> = {
         }
       ],
       "blogCategory|name": [
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "quantity"
+          }
+        }
+      ],
+      "record|title": [
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "quantity"
+          }
+        }
+      ],
+      "record|vendor": [
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "quantity"
+          }
+        }
+      ],
+      "record|description": [
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "quantity"
+          }
+        }
+      ],
+      "record|summary": [
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "quantity"
+          }
+        }
+      ],
+      "record|content": [
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "quantity"
+          }
+        }
+      ],
+      "record|author": [
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "quantity"
+          }
+        }
+      ],
+      "record|date": [
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "quantity"
+          }
+        }
+      ],
+      "record|image": [
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "quantity"
+          }
+        }
+      ],
+      "record|price": [
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "quantity"
+          }
+        }
+      ],
+      "record|prices": [
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "quantity"
+          }
+        }
+      ],
+      "record|url": [
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "quantity"
+          }
+        }
+      ],
+      "record|name": [
         {
           "id": "bind-product-id",
           "source": "product.id",
@@ -23250,6 +24174,270 @@ export const ELEMENTS: Record<string, CatalogElement> = {
         }
       ],
       "blogCategory|name": [
+        {
+          "id": "bind-attributes",
+          "source": "product.attributes",
+          "field": "specials.boundAttributes",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "variants"
+          }
+        },
+        {
+          "id": "bind-variations",
+          "source": "product.variations",
+          "field": "specials.boundVariations"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "record|title": [
+        {
+          "id": "bind-attributes",
+          "source": "product.attributes",
+          "field": "specials.boundAttributes",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "variants"
+          }
+        },
+        {
+          "id": "bind-variations",
+          "source": "product.variations",
+          "field": "specials.boundVariations"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "record|vendor": [
+        {
+          "id": "bind-attributes",
+          "source": "product.attributes",
+          "field": "specials.boundAttributes",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "variants"
+          }
+        },
+        {
+          "id": "bind-variations",
+          "source": "product.variations",
+          "field": "specials.boundVariations"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "record|description": [
+        {
+          "id": "bind-attributes",
+          "source": "product.attributes",
+          "field": "specials.boundAttributes",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "variants"
+          }
+        },
+        {
+          "id": "bind-variations",
+          "source": "product.variations",
+          "field": "specials.boundVariations"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "record|summary": [
+        {
+          "id": "bind-attributes",
+          "source": "product.attributes",
+          "field": "specials.boundAttributes",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "variants"
+          }
+        },
+        {
+          "id": "bind-variations",
+          "source": "product.variations",
+          "field": "specials.boundVariations"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "record|content": [
+        {
+          "id": "bind-attributes",
+          "source": "product.attributes",
+          "field": "specials.boundAttributes",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "variants"
+          }
+        },
+        {
+          "id": "bind-variations",
+          "source": "product.variations",
+          "field": "specials.boundVariations"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "record|author": [
+        {
+          "id": "bind-attributes",
+          "source": "product.attributes",
+          "field": "specials.boundAttributes",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "variants"
+          }
+        },
+        {
+          "id": "bind-variations",
+          "source": "product.variations",
+          "field": "specials.boundVariations"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "record|date": [
+        {
+          "id": "bind-attributes",
+          "source": "product.attributes",
+          "field": "specials.boundAttributes",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "variants"
+          }
+        },
+        {
+          "id": "bind-variations",
+          "source": "product.variations",
+          "field": "specials.boundVariations"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "record|image": [
+        {
+          "id": "bind-attributes",
+          "source": "product.attributes",
+          "field": "specials.boundAttributes",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "variants"
+          }
+        },
+        {
+          "id": "bind-variations",
+          "source": "product.variations",
+          "field": "specials.boundVariations"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "record|price": [
+        {
+          "id": "bind-attributes",
+          "source": "product.attributes",
+          "field": "specials.boundAttributes",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "variants"
+          }
+        },
+        {
+          "id": "bind-variations",
+          "source": "product.variations",
+          "field": "specials.boundVariations"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "record|prices": [
+        {
+          "id": "bind-attributes",
+          "source": "product.attributes",
+          "field": "specials.boundAttributes",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "variants"
+          }
+        },
+        {
+          "id": "bind-variations",
+          "source": "product.variations",
+          "field": "specials.boundVariations"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "record|url": [
+        {
+          "id": "bind-attributes",
+          "source": "product.attributes",
+          "field": "specials.boundAttributes",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "variants"
+          }
+        },
+        {
+          "id": "bind-variations",
+          "source": "product.variations",
+          "field": "specials.boundVariations"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "record|name": [
         {
           "id": "bind-attributes",
           "source": "product.attributes",
@@ -26480,6 +27668,450 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "source": "product.id",
           "field": "specials.boundProductId"
         }
+      ],
+      "record|title": [
+        {
+          "id": "bind-price",
+          "source": "product.price",
+          "field": "specials.boundPrice",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "title"
+          }
+        },
+        {
+          "id": "bind-compare",
+          "source": "product.compareAtPrice",
+          "field": "specials.boundCompare"
+        },
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents"
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-price-mo",
+          "source": "product.moneyOverride",
+          "field": "specials.boundMoneyOverride"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "record|vendor": [
+        {
+          "id": "bind-price",
+          "source": "product.price",
+          "field": "specials.boundPrice",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "vendor"
+          }
+        },
+        {
+          "id": "bind-compare",
+          "source": "product.compareAtPrice",
+          "field": "specials.boundCompare"
+        },
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents"
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-price-mo",
+          "source": "product.moneyOverride",
+          "field": "specials.boundMoneyOverride"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "record|description": [
+        {
+          "id": "bind-price",
+          "source": "product.price",
+          "field": "specials.boundPrice",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "description"
+          }
+        },
+        {
+          "id": "bind-compare",
+          "source": "product.compareAtPrice",
+          "field": "specials.boundCompare"
+        },
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents"
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-price-mo",
+          "source": "product.moneyOverride",
+          "field": "specials.boundMoneyOverride"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "record|summary": [
+        {
+          "id": "bind-price",
+          "source": "product.price",
+          "field": "specials.boundPrice",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "summary"
+          }
+        },
+        {
+          "id": "bind-compare",
+          "source": "product.compareAtPrice",
+          "field": "specials.boundCompare"
+        },
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents"
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-price-mo",
+          "source": "product.moneyOverride",
+          "field": "specials.boundMoneyOverride"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "record|content": [
+        {
+          "id": "bind-price",
+          "source": "product.price",
+          "field": "specials.boundPrice",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "content"
+          }
+        },
+        {
+          "id": "bind-compare",
+          "source": "product.compareAtPrice",
+          "field": "specials.boundCompare"
+        },
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents"
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-price-mo",
+          "source": "product.moneyOverride",
+          "field": "specials.boundMoneyOverride"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "record|author": [
+        {
+          "id": "bind-price",
+          "source": "product.price",
+          "field": "specials.boundPrice",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "author"
+          }
+        },
+        {
+          "id": "bind-compare",
+          "source": "product.compareAtPrice",
+          "field": "specials.boundCompare"
+        },
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents"
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-price-mo",
+          "source": "product.moneyOverride",
+          "field": "specials.boundMoneyOverride"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "record|date": [
+        {
+          "id": "bind-price",
+          "source": "product.price",
+          "field": "specials.boundPrice",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "date"
+          }
+        },
+        {
+          "id": "bind-compare",
+          "source": "product.compareAtPrice",
+          "field": "specials.boundCompare"
+        },
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents"
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-price-mo",
+          "source": "product.moneyOverride",
+          "field": "specials.boundMoneyOverride"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "record|image": [
+        {
+          "id": "bind-price",
+          "source": "product.price",
+          "field": "specials.boundPrice",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "image"
+          }
+        },
+        {
+          "id": "bind-compare",
+          "source": "product.compareAtPrice",
+          "field": "specials.boundCompare"
+        },
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents"
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-price-mo",
+          "source": "product.moneyOverride",
+          "field": "specials.boundMoneyOverride"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "record|price": [
+        {
+          "id": "bind-price",
+          "source": "product.price",
+          "field": "specials.boundPrice",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "price"
+          }
+        },
+        {
+          "id": "bind-compare",
+          "source": "product.compareAtPrice",
+          "field": "specials.boundCompare"
+        },
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents"
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-price-mo",
+          "source": "product.moneyOverride",
+          "field": "specials.boundMoneyOverride"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "record|prices": [
+        {
+          "id": "bind-price",
+          "source": "product.price",
+          "field": "specials.boundPrice",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare",
+          "source": "product.compareAtPrice",
+          "field": "specials.boundCompare"
+        },
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents"
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-price-mo",
+          "source": "product.moneyOverride",
+          "field": "specials.boundMoneyOverride"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "record|url": [
+        {
+          "id": "bind-price",
+          "source": "product.price",
+          "field": "specials.boundPrice",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "url"
+          }
+        },
+        {
+          "id": "bind-compare",
+          "source": "product.compareAtPrice",
+          "field": "specials.boundCompare"
+        },
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents"
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-price-mo",
+          "source": "product.moneyOverride",
+          "field": "specials.boundMoneyOverride"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "record|name": [
+        {
+          "id": "bind-price",
+          "source": "product.price",
+          "field": "specials.boundPrice",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "name"
+          }
+        },
+        {
+          "id": "bind-compare",
+          "source": "product.compareAtPrice",
+          "field": "specials.boundCompare"
+        },
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents"
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-price-mo",
+          "source": "product.moneyOverride",
+          "field": "specials.boundMoneyOverride"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
       ]
     },
     "inspector": [
@@ -28293,6 +29925,270 @@ export const ELEMENTS: Record<string, CatalogElement> = {
         }
       ],
       "blogCategory|name": [
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "record|title": [
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "record|vendor": [
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "record|description": [
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "record|summary": [
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "record|content": [
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "record|author": [
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "record|date": [
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "record|image": [
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "record|price": [
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "record|prices": [
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "record|url": [
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "record|name": [
         {
           "id": "bind-price-cents",
           "source": "product.priceCents",
@@ -31195,6 +33091,450 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "source": "product.id",
           "field": "specials.boundProductId"
         }
+      ],
+      "record|title": [
+        {
+          "id": "bind-price",
+          "source": "product.price",
+          "field": "specials.boundPrice",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare",
+          "source": "product.compareAtPrice",
+          "field": "specials.boundCompare"
+        },
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents"
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-price-mo",
+          "source": "product.moneyOverride",
+          "field": "specials.boundMoneyOverride"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "record|vendor": [
+        {
+          "id": "bind-price",
+          "source": "product.price",
+          "field": "specials.boundPrice",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare",
+          "source": "product.compareAtPrice",
+          "field": "specials.boundCompare"
+        },
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents"
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-price-mo",
+          "source": "product.moneyOverride",
+          "field": "specials.boundMoneyOverride"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "record|description": [
+        {
+          "id": "bind-price",
+          "source": "product.price",
+          "field": "specials.boundPrice",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare",
+          "source": "product.compareAtPrice",
+          "field": "specials.boundCompare"
+        },
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents"
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-price-mo",
+          "source": "product.moneyOverride",
+          "field": "specials.boundMoneyOverride"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "record|summary": [
+        {
+          "id": "bind-price",
+          "source": "product.price",
+          "field": "specials.boundPrice",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare",
+          "source": "product.compareAtPrice",
+          "field": "specials.boundCompare"
+        },
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents"
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-price-mo",
+          "source": "product.moneyOverride",
+          "field": "specials.boundMoneyOverride"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "record|content": [
+        {
+          "id": "bind-price",
+          "source": "product.price",
+          "field": "specials.boundPrice",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare",
+          "source": "product.compareAtPrice",
+          "field": "specials.boundCompare"
+        },
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents"
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-price-mo",
+          "source": "product.moneyOverride",
+          "field": "specials.boundMoneyOverride"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "record|author": [
+        {
+          "id": "bind-price",
+          "source": "product.price",
+          "field": "specials.boundPrice",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare",
+          "source": "product.compareAtPrice",
+          "field": "specials.boundCompare"
+        },
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents"
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-price-mo",
+          "source": "product.moneyOverride",
+          "field": "specials.boundMoneyOverride"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "record|date": [
+        {
+          "id": "bind-price",
+          "source": "product.price",
+          "field": "specials.boundPrice",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare",
+          "source": "product.compareAtPrice",
+          "field": "specials.boundCompare"
+        },
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents"
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-price-mo",
+          "source": "product.moneyOverride",
+          "field": "specials.boundMoneyOverride"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "record|image": [
+        {
+          "id": "bind-price",
+          "source": "product.price",
+          "field": "specials.boundPrice",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare",
+          "source": "product.compareAtPrice",
+          "field": "specials.boundCompare"
+        },
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents"
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-price-mo",
+          "source": "product.moneyOverride",
+          "field": "specials.boundMoneyOverride"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "record|price": [
+        {
+          "id": "bind-price",
+          "source": "product.price",
+          "field": "specials.boundPrice",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare",
+          "source": "product.compareAtPrice",
+          "field": "specials.boundCompare"
+        },
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents"
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-price-mo",
+          "source": "product.moneyOverride",
+          "field": "specials.boundMoneyOverride"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "record|prices": [
+        {
+          "id": "bind-price",
+          "source": "product.price",
+          "field": "specials.boundPrice",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare",
+          "source": "product.compareAtPrice",
+          "field": "specials.boundCompare"
+        },
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents"
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-price-mo",
+          "source": "product.moneyOverride",
+          "field": "specials.boundMoneyOverride"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "record|url": [
+        {
+          "id": "bind-price",
+          "source": "product.price",
+          "field": "specials.boundPrice",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare",
+          "source": "product.compareAtPrice",
+          "field": "specials.boundCompare"
+        },
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents"
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-price-mo",
+          "source": "product.moneyOverride",
+          "field": "specials.boundMoneyOverride"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "record|name": [
+        {
+          "id": "bind-price",
+          "source": "product.price",
+          "field": "specials.boundPrice",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare",
+          "source": "product.compareAtPrice",
+          "field": "specials.boundCompare"
+        },
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents"
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-price-mo",
+          "source": "product.moneyOverride",
+          "field": "specials.boundMoneyOverride"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
       ]
     },
     "inspector": [
@@ -32255,6 +34595,150 @@ export const ELEMENTS: Record<string, CatalogElement> = {
             "kind": "product_general"
           }
         }
+      ],
+      "record|title": [
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "product_general"
+          }
+        }
+      ],
+      "record|vendor": [
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "product_general"
+          }
+        }
+      ],
+      "record|description": [
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "product_general"
+          }
+        }
+      ],
+      "record|summary": [
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "product_general"
+          }
+        }
+      ],
+      "record|content": [
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "product_general"
+          }
+        }
+      ],
+      "record|author": [
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "product_general"
+          }
+        }
+      ],
+      "record|date": [
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "product_general"
+          }
+        }
+      ],
+      "record|image": [
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "product_general"
+          }
+        }
+      ],
+      "record|price": [
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "product_general"
+          }
+        }
+      ],
+      "record|prices": [
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "product_general"
+          }
+        }
+      ],
+      "record|url": [
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "product_general"
+          }
+        }
+      ],
+      "record|name": [
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "product_general"
+          }
+        }
       ]
     },
     "inspector": [
@@ -32458,7 +34942,8 @@ export const ELEMENTS: Record<string, CatalogElement> = {
       "config": {
         "imageRatio": "auto",
         "customImageRatioWidth": 16,
-        "customImageRatioHeight": 9
+        "customImageRatioHeight": 9,
+        "recordField": ""
       },
       "specials": {
         "src": "",
@@ -33341,6 +35826,150 @@ export const ELEMENTS: Record<string, CatalogElement> = {
             "kind": "media"
           }
         }
+      ],
+      "record|title": [
+        {
+          "id": "bind-image",
+          "source": "",
+          "field": "specials.boundImage",
+          "target": {
+            "type": "record",
+            "id": "",
+            "kind": "media"
+          }
+        }
+      ],
+      "record|vendor": [
+        {
+          "id": "bind-image",
+          "source": "",
+          "field": "specials.boundImage",
+          "target": {
+            "type": "record",
+            "id": "",
+            "kind": "media"
+          }
+        }
+      ],
+      "record|description": [
+        {
+          "id": "bind-image",
+          "source": "",
+          "field": "specials.boundImage",
+          "target": {
+            "type": "record",
+            "id": "",
+            "kind": "media"
+          }
+        }
+      ],
+      "record|summary": [
+        {
+          "id": "bind-image",
+          "source": "",
+          "field": "specials.boundImage",
+          "target": {
+            "type": "record",
+            "id": "",
+            "kind": "media"
+          }
+        }
+      ],
+      "record|content": [
+        {
+          "id": "bind-image",
+          "source": "",
+          "field": "specials.boundImage",
+          "target": {
+            "type": "record",
+            "id": "",
+            "kind": "media"
+          }
+        }
+      ],
+      "record|author": [
+        {
+          "id": "bind-image",
+          "source": "",
+          "field": "specials.boundImage",
+          "target": {
+            "type": "record",
+            "id": "",
+            "kind": "media"
+          }
+        }
+      ],
+      "record|date": [
+        {
+          "id": "bind-image",
+          "source": "",
+          "field": "specials.boundImage",
+          "target": {
+            "type": "record",
+            "id": "",
+            "kind": "media"
+          }
+        }
+      ],
+      "record|image": [
+        {
+          "id": "bind-image",
+          "source": "",
+          "field": "specials.boundImage",
+          "target": {
+            "type": "record",
+            "id": "",
+            "kind": "media"
+          }
+        }
+      ],
+      "record|price": [
+        {
+          "id": "bind-image",
+          "source": "",
+          "field": "specials.boundImage",
+          "target": {
+            "type": "record",
+            "id": "",
+            "kind": "media"
+          }
+        }
+      ],
+      "record|prices": [
+        {
+          "id": "bind-image",
+          "source": "",
+          "field": "specials.boundImage",
+          "target": {
+            "type": "record",
+            "id": "",
+            "kind": "media"
+          }
+        }
+      ],
+      "record|url": [
+        {
+          "id": "bind-image",
+          "source": "",
+          "field": "specials.boundImage",
+          "target": {
+            "type": "record",
+            "id": "",
+            "kind": "media"
+          }
+        }
+      ],
+      "record|name": [
+        {
+          "id": "bind-image",
+          "source": "",
+          "field": "specials.boundImage",
+          "target": {
+            "type": "record",
+            "id": "",
+            "kind": "media"
+          }
+        }
       ]
     },
     "inspector": [
@@ -33356,7 +35985,15 @@ export const ELEMENTS: Record<string, CatalogElement> = {
               "src",
               "alt",
               "datasetSource",
-              "imageField"
+              "imageField",
+              "recordField"
+            ]
+          },
+          {
+            "key": "record",
+            "label": "Data",
+            "controls": [
+              "record_field"
             ]
           },
           {
@@ -33451,6 +36088,8 @@ export const ELEMENTS: Record<string, CatalogElement> = {
       "alt",
       "datasetSource",
       "imageField",
+      "recordField",
+      "record_field",
       "width_select",
       "size_bounds",
       "image",
@@ -33508,6 +36147,8 @@ export const ELEMENTS: Record<string, CatalogElement> = {
       "config": {
         "datasetSource": "product",
         "kind": "title",
+        "recordField": "",
+        "recordFieldType": "",
         "textValue": "",
         "descriptionDisplayType": "Full",
         "descriptionLines": 3,
@@ -34399,6 +37040,150 @@ export const ELEMENTS: Record<string, CatalogElement> = {
             "kind": "name"
           }
         }
+      ],
+      "record|title": [
+        {
+          "id": "bind-text",
+          "source": "",
+          "field": "specials.boundText",
+          "target": {
+            "type": "record",
+            "id": "",
+            "kind": "title"
+          }
+        }
+      ],
+      "record|vendor": [
+        {
+          "id": "bind-text",
+          "source": "",
+          "field": "specials.boundText",
+          "target": {
+            "type": "record",
+            "id": "",
+            "kind": "title"
+          }
+        }
+      ],
+      "record|description": [
+        {
+          "id": "bind-text",
+          "source": "",
+          "field": "specials.boundText",
+          "target": {
+            "type": "record",
+            "id": "",
+            "kind": "description"
+          }
+        }
+      ],
+      "record|summary": [
+        {
+          "id": "bind-text",
+          "source": "",
+          "field": "specials.boundText",
+          "target": {
+            "type": "record",
+            "id": "",
+            "kind": "summary"
+          }
+        }
+      ],
+      "record|content": [
+        {
+          "id": "bind-text",
+          "source": "",
+          "field": "specials.boundText",
+          "target": {
+            "type": "record",
+            "id": "",
+            "kind": "content"
+          }
+        }
+      ],
+      "record|author": [
+        {
+          "id": "bind-text",
+          "source": "",
+          "field": "specials.boundText",
+          "target": {
+            "type": "record",
+            "id": "",
+            "kind": "author"
+          }
+        }
+      ],
+      "record|date": [
+        {
+          "id": "bind-text",
+          "source": "",
+          "field": "specials.boundText",
+          "target": {
+            "type": "record",
+            "id": "",
+            "kind": "date"
+          }
+        }
+      ],
+      "record|image": [
+        {
+          "id": "bind-text",
+          "source": "",
+          "field": "specials.boundText",
+          "target": {
+            "type": "record",
+            "id": "",
+            "kind": "image"
+          }
+        }
+      ],
+      "record|price": [
+        {
+          "id": "bind-text",
+          "source": "",
+          "field": "specials.boundText",
+          "target": {
+            "type": "record",
+            "id": "",
+            "kind": "price"
+          }
+        }
+      ],
+      "record|prices": [
+        {
+          "id": "bind-text",
+          "source": "",
+          "field": "specials.boundText",
+          "target": {
+            "type": "record",
+            "id": "",
+            "kind": "prices"
+          }
+        }
+      ],
+      "record|url": [
+        {
+          "id": "bind-text",
+          "source": "",
+          "field": "specials.boundText",
+          "target": {
+            "type": "record",
+            "id": "",
+            "kind": "url"
+          }
+        }
+      ],
+      "record|name": [
+        {
+          "id": "bind-text",
+          "source": "",
+          "field": "specials.boundText",
+          "target": {
+            "type": "record",
+            "id": "",
+            "kind": "name"
+          }
+        }
       ]
     },
     "inspector": [
@@ -34415,6 +37200,8 @@ export const ELEMENTS: Record<string, CatalogElement> = {
               "productId",
               "categoryId",
               "datasetSource",
+              "recordField",
+              "recordFieldType",
               "textValue",
               "descriptionDisplayType",
               "descriptionLines",
@@ -34437,6 +37224,8 @@ export const ELEMENTS: Record<string, CatalogElement> = {
               "productId",
               "categoryId",
               "datasetSource",
+              "recordField",
+              "recordFieldType",
               "textValue",
               "descriptionDisplayType",
               "descriptionLines",
@@ -34459,6 +37248,8 @@ export const ELEMENTS: Record<string, CatalogElement> = {
               "productId",
               "categoryId",
               "datasetSource",
+              "recordField",
+              "recordFieldType",
               "textValue",
               "descriptionDisplayType",
               "descriptionLines",
@@ -34480,6 +37271,8 @@ export const ELEMENTS: Record<string, CatalogElement> = {
               "productId",
               "categoryId",
               "datasetSource",
+              "recordField",
+              "recordFieldType",
               "textValue",
               "descriptionDisplayType",
               "descriptionLines",
@@ -34490,6 +37283,13 @@ export const ELEMENTS: Record<string, CatalogElement> = {
               "textGlobalStyle",
               "htmlTag",
               "moreButtonEnabled"
+            ]
+          },
+          {
+            "key": "record",
+            "label": "Data",
+            "controls": [
+              "record_field"
             ]
           },
           {
@@ -34607,6 +37407,8 @@ export const ELEMENTS: Record<string, CatalogElement> = {
       "productId",
       "categoryId",
       "datasetSource",
+      "recordField",
+      "recordFieldType",
       "textValue",
       "descriptionDisplayType",
       "descriptionLines",
@@ -34619,6 +37421,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
       "moreButtonEnabled",
       "collection",
       "article",
+      "record_field",
       "description_display",
       "width_select",
       "height_select",
@@ -35570,6 +38373,150 @@ export const ELEMENTS: Record<string, CatalogElement> = {
             "type": "blogCategory",
             "id": "",
             "kind": "blog_category_general"
+          }
+        }
+      ],
+      "record|title": [
+        {
+          "id": "bind-rating",
+          "source": "product.ratingAverage",
+          "field": "specials.boundRating",
+          "target": {
+            "type": "record",
+            "id": "",
+            "kind": "record_general"
+          }
+        }
+      ],
+      "record|vendor": [
+        {
+          "id": "bind-rating",
+          "source": "product.ratingAverage",
+          "field": "specials.boundRating",
+          "target": {
+            "type": "record",
+            "id": "",
+            "kind": "record_general"
+          }
+        }
+      ],
+      "record|description": [
+        {
+          "id": "bind-rating",
+          "source": "product.ratingAverage",
+          "field": "specials.boundRating",
+          "target": {
+            "type": "record",
+            "id": "",
+            "kind": "record_general"
+          }
+        }
+      ],
+      "record|summary": [
+        {
+          "id": "bind-rating",
+          "source": "product.ratingAverage",
+          "field": "specials.boundRating",
+          "target": {
+            "type": "record",
+            "id": "",
+            "kind": "record_general"
+          }
+        }
+      ],
+      "record|content": [
+        {
+          "id": "bind-rating",
+          "source": "product.ratingAverage",
+          "field": "specials.boundRating",
+          "target": {
+            "type": "record",
+            "id": "",
+            "kind": "record_general"
+          }
+        }
+      ],
+      "record|author": [
+        {
+          "id": "bind-rating",
+          "source": "product.ratingAverage",
+          "field": "specials.boundRating",
+          "target": {
+            "type": "record",
+            "id": "",
+            "kind": "record_general"
+          }
+        }
+      ],
+      "record|date": [
+        {
+          "id": "bind-rating",
+          "source": "product.ratingAverage",
+          "field": "specials.boundRating",
+          "target": {
+            "type": "record",
+            "id": "",
+            "kind": "record_general"
+          }
+        }
+      ],
+      "record|image": [
+        {
+          "id": "bind-rating",
+          "source": "product.ratingAverage",
+          "field": "specials.boundRating",
+          "target": {
+            "type": "record",
+            "id": "",
+            "kind": "record_general"
+          }
+        }
+      ],
+      "record|price": [
+        {
+          "id": "bind-rating",
+          "source": "product.ratingAverage",
+          "field": "specials.boundRating",
+          "target": {
+            "type": "record",
+            "id": "",
+            "kind": "record_general"
+          }
+        }
+      ],
+      "record|prices": [
+        {
+          "id": "bind-rating",
+          "source": "product.ratingAverage",
+          "field": "specials.boundRating",
+          "target": {
+            "type": "record",
+            "id": "",
+            "kind": "record_general"
+          }
+        }
+      ],
+      "record|url": [
+        {
+          "id": "bind-rating",
+          "source": "product.ratingAverage",
+          "field": "specials.boundRating",
+          "target": {
+            "type": "record",
+            "id": "",
+            "kind": "record_general"
+          }
+        }
+      ],
+      "record|name": [
+        {
+          "id": "bind-rating",
+          "source": "product.ratingAverage",
+          "field": "specials.boundRating",
+          "target": {
+            "type": "record",
+            "id": "",
+            "kind": "record_general"
           }
         }
       ]
@@ -36991,6 +39938,210 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "field": "specials.boundImage",
           "target": {
             "type": "blogCategory",
+            "id": "",
+            "kind": "media"
+          }
+        },
+        {
+          "id": "bind-images",
+          "source": "product.images",
+          "field": "specials.boundImages"
+        }
+      ],
+      "record|title": [
+        {
+          "id": "bind-image",
+          "source": "product.image",
+          "field": "specials.boundImage",
+          "target": {
+            "type": "record",
+            "id": "",
+            "kind": "media"
+          }
+        },
+        {
+          "id": "bind-images",
+          "source": "product.images",
+          "field": "specials.boundImages"
+        }
+      ],
+      "record|vendor": [
+        {
+          "id": "bind-image",
+          "source": "product.image",
+          "field": "specials.boundImage",
+          "target": {
+            "type": "record",
+            "id": "",
+            "kind": "media"
+          }
+        },
+        {
+          "id": "bind-images",
+          "source": "product.images",
+          "field": "specials.boundImages"
+        }
+      ],
+      "record|description": [
+        {
+          "id": "bind-image",
+          "source": "product.image",
+          "field": "specials.boundImage",
+          "target": {
+            "type": "record",
+            "id": "",
+            "kind": "media"
+          }
+        },
+        {
+          "id": "bind-images",
+          "source": "product.images",
+          "field": "specials.boundImages"
+        }
+      ],
+      "record|summary": [
+        {
+          "id": "bind-image",
+          "source": "product.image",
+          "field": "specials.boundImage",
+          "target": {
+            "type": "record",
+            "id": "",
+            "kind": "media"
+          }
+        },
+        {
+          "id": "bind-images",
+          "source": "product.images",
+          "field": "specials.boundImages"
+        }
+      ],
+      "record|content": [
+        {
+          "id": "bind-image",
+          "source": "product.image",
+          "field": "specials.boundImage",
+          "target": {
+            "type": "record",
+            "id": "",
+            "kind": "media"
+          }
+        },
+        {
+          "id": "bind-images",
+          "source": "product.images",
+          "field": "specials.boundImages"
+        }
+      ],
+      "record|author": [
+        {
+          "id": "bind-image",
+          "source": "product.image",
+          "field": "specials.boundImage",
+          "target": {
+            "type": "record",
+            "id": "",
+            "kind": "media"
+          }
+        },
+        {
+          "id": "bind-images",
+          "source": "product.images",
+          "field": "specials.boundImages"
+        }
+      ],
+      "record|date": [
+        {
+          "id": "bind-image",
+          "source": "product.image",
+          "field": "specials.boundImage",
+          "target": {
+            "type": "record",
+            "id": "",
+            "kind": "media"
+          }
+        },
+        {
+          "id": "bind-images",
+          "source": "product.images",
+          "field": "specials.boundImages"
+        }
+      ],
+      "record|image": [
+        {
+          "id": "bind-image",
+          "source": "product.image",
+          "field": "specials.boundImage",
+          "target": {
+            "type": "record",
+            "id": "",
+            "kind": "media"
+          }
+        },
+        {
+          "id": "bind-images",
+          "source": "product.images",
+          "field": "specials.boundImages"
+        }
+      ],
+      "record|price": [
+        {
+          "id": "bind-image",
+          "source": "product.image",
+          "field": "specials.boundImage",
+          "target": {
+            "type": "record",
+            "id": "",
+            "kind": "media"
+          }
+        },
+        {
+          "id": "bind-images",
+          "source": "product.images",
+          "field": "specials.boundImages"
+        }
+      ],
+      "record|prices": [
+        {
+          "id": "bind-image",
+          "source": "product.image",
+          "field": "specials.boundImage",
+          "target": {
+            "type": "record",
+            "id": "",
+            "kind": "media"
+          }
+        },
+        {
+          "id": "bind-images",
+          "source": "product.images",
+          "field": "specials.boundImages"
+        }
+      ],
+      "record|url": [
+        {
+          "id": "bind-image",
+          "source": "product.image",
+          "field": "specials.boundImage",
+          "target": {
+            "type": "record",
+            "id": "",
+            "kind": "media"
+          }
+        },
+        {
+          "id": "bind-images",
+          "source": "product.images",
+          "field": "specials.boundImages"
+        }
+      ],
+      "record|name": [
+        {
+          "id": "bind-image",
+          "source": "product.image",
+          "field": "specials.boundImage",
+          "target": {
+            "type": "record",
             "id": "",
             "kind": "media"
           }
@@ -39352,6 +42503,150 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "source": "blogCategory.title",
           "field": "specials.boundHrefLabel"
         }
+      ],
+      "record|title": [
+        {
+          "id": "bind-target",
+          "source": "",
+          "field": "",
+          "target": {
+            "type": "record",
+            "id": "",
+            "kind": "record_general"
+          }
+        }
+      ],
+      "record|vendor": [
+        {
+          "id": "bind-target",
+          "source": "",
+          "field": "",
+          "target": {
+            "type": "record",
+            "id": "",
+            "kind": "record_general"
+          }
+        }
+      ],
+      "record|description": [
+        {
+          "id": "bind-target",
+          "source": "",
+          "field": "",
+          "target": {
+            "type": "record",
+            "id": "",
+            "kind": "record_general"
+          }
+        }
+      ],
+      "record|summary": [
+        {
+          "id": "bind-target",
+          "source": "",
+          "field": "",
+          "target": {
+            "type": "record",
+            "id": "",
+            "kind": "record_general"
+          }
+        }
+      ],
+      "record|content": [
+        {
+          "id": "bind-target",
+          "source": "",
+          "field": "",
+          "target": {
+            "type": "record",
+            "id": "",
+            "kind": "record_general"
+          }
+        }
+      ],
+      "record|author": [
+        {
+          "id": "bind-target",
+          "source": "",
+          "field": "",
+          "target": {
+            "type": "record",
+            "id": "",
+            "kind": "record_general"
+          }
+        }
+      ],
+      "record|date": [
+        {
+          "id": "bind-target",
+          "source": "",
+          "field": "",
+          "target": {
+            "type": "record",
+            "id": "",
+            "kind": "record_general"
+          }
+        }
+      ],
+      "record|image": [
+        {
+          "id": "bind-target",
+          "source": "",
+          "field": "",
+          "target": {
+            "type": "record",
+            "id": "",
+            "kind": "record_general"
+          }
+        }
+      ],
+      "record|price": [
+        {
+          "id": "bind-target",
+          "source": "",
+          "field": "",
+          "target": {
+            "type": "record",
+            "id": "",
+            "kind": "record_general"
+          }
+        }
+      ],
+      "record|prices": [
+        {
+          "id": "bind-target",
+          "source": "",
+          "field": "",
+          "target": {
+            "type": "record",
+            "id": "",
+            "kind": "record_general"
+          }
+        }
+      ],
+      "record|url": [
+        {
+          "id": "bind-target",
+          "source": "",
+          "field": "",
+          "target": {
+            "type": "record",
+            "id": "",
+            "kind": "record_general"
+          }
+        }
+      ],
+      "record|name": [
+        {
+          "id": "bind-target",
+          "source": "",
+          "field": "",
+          "target": {
+            "type": "record",
+            "id": "",
+            "kind": "record_general"
+          }
+        }
       ]
     },
     "inspector": [
@@ -39604,6 +42899,11 @@ export const ELEMENTS: Record<string, CatalogElement> = {
         "loadingMode": "none",
         "layout": "grid",
         "quantity": 4,
+        "recordCollectionId": "",
+        "recordSortField": "",
+        "recordSortDesc": false,
+        "recordFilterField": "",
+        "recordFilterValue": "",
         "itemsPerRow": 4,
         "collectionType": "all_products",
         "collectionId": "all_products",
@@ -40517,6 +43817,150 @@ export const ELEMENTS: Record<string, CatalogElement> = {
             "kind": "blog_category_list"
           }
         }
+      ],
+      "record|title": [
+        {
+          "id": "bind-target",
+          "source": "",
+          "field": "",
+          "target": {
+            "type": "record",
+            "id": "",
+            "kind": "record_list"
+          }
+        }
+      ],
+      "record|vendor": [
+        {
+          "id": "bind-target",
+          "source": "",
+          "field": "",
+          "target": {
+            "type": "record",
+            "id": "",
+            "kind": "record_list"
+          }
+        }
+      ],
+      "record|description": [
+        {
+          "id": "bind-target",
+          "source": "",
+          "field": "",
+          "target": {
+            "type": "record",
+            "id": "",
+            "kind": "record_list"
+          }
+        }
+      ],
+      "record|summary": [
+        {
+          "id": "bind-target",
+          "source": "",
+          "field": "",
+          "target": {
+            "type": "record",
+            "id": "",
+            "kind": "record_list"
+          }
+        }
+      ],
+      "record|content": [
+        {
+          "id": "bind-target",
+          "source": "",
+          "field": "",
+          "target": {
+            "type": "record",
+            "id": "",
+            "kind": "record_list"
+          }
+        }
+      ],
+      "record|author": [
+        {
+          "id": "bind-target",
+          "source": "",
+          "field": "",
+          "target": {
+            "type": "record",
+            "id": "",
+            "kind": "record_list"
+          }
+        }
+      ],
+      "record|date": [
+        {
+          "id": "bind-target",
+          "source": "",
+          "field": "",
+          "target": {
+            "type": "record",
+            "id": "",
+            "kind": "record_list"
+          }
+        }
+      ],
+      "record|image": [
+        {
+          "id": "bind-target",
+          "source": "",
+          "field": "",
+          "target": {
+            "type": "record",
+            "id": "",
+            "kind": "record_list"
+          }
+        }
+      ],
+      "record|price": [
+        {
+          "id": "bind-target",
+          "source": "",
+          "field": "",
+          "target": {
+            "type": "record",
+            "id": "",
+            "kind": "record_list"
+          }
+        }
+      ],
+      "record|prices": [
+        {
+          "id": "bind-target",
+          "source": "",
+          "field": "",
+          "target": {
+            "type": "record",
+            "id": "",
+            "kind": "record_list"
+          }
+        }
+      ],
+      "record|url": [
+        {
+          "id": "bind-target",
+          "source": "",
+          "field": "",
+          "target": {
+            "type": "record",
+            "id": "",
+            "kind": "record_list"
+          }
+        }
+      ],
+      "record|name": [
+        {
+          "id": "bind-target",
+          "source": "",
+          "field": "",
+          "target": {
+            "type": "record",
+            "id": "",
+            "kind": "record_list"
+          }
+        }
       ]
     },
     "inspector": [
@@ -40543,6 +43987,13 @@ export const ELEMENTS: Record<string, CatalogElement> = {
             ]
           },
           {
+            "key": "record",
+            "label": "Data",
+            "controls": [
+              "record_source"
+            ]
+          },
+          {
             "key": "product_layout",
             "label": "Product layout",
             "controls": [
@@ -40554,6 +44005,52 @@ export const ELEMENTS: Record<string, CatalogElement> = {
               "list_dataset_dots",
               "layout",
               "quantity",
+              "recordCollectionId",
+              "recordSortField",
+              "recordSortDesc",
+              "recordFilterField",
+              "recordFilterValue",
+              "itemsPerRow",
+              "listNavIcon",
+              "listNavPosition",
+              "listNavIconSize",
+              "listNavIconColor",
+              "listNavButtonWidth",
+              "listNavButtonHeight",
+              "listNavButtonBg",
+              "paginationBg",
+              "paginationItemWidth",
+              "paginationItemHeight",
+              "paginationItemGap",
+              "paginationItemBg",
+              "paginationItemBorderColor",
+              "paginationItemBorderWidth",
+              "paginationItemBorderStyle",
+              "paginationItemBorderRadius",
+              "paginationItemActiveBg",
+              "paginationItemActiveBorderColor",
+              "paginationItemActiveBorderWidth",
+              "paginationItemActiveBorderStyle",
+              "paginationItemActiveBorderRadius"
+            ]
+          },
+          {
+            "key": "record_layout",
+            "label": "Layout",
+            "controls": [
+              "product_layout",
+              "gap",
+              "padding",
+              "margin",
+              "list_dataset_nav",
+              "list_dataset_dots",
+              "layout",
+              "quantity",
+              "recordCollectionId",
+              "recordSortField",
+              "recordSortDesc",
+              "recordFilterField",
+              "recordFilterValue",
               "itemsPerRow",
               "listNavIcon",
               "listNavPosition",
@@ -40598,6 +44095,11 @@ export const ELEMENTS: Record<string, CatalogElement> = {
               "list_dataset_dots",
               "layout",
               "quantity",
+              "recordCollectionId",
+              "recordSortField",
+              "recordSortDesc",
+              "recordFilterField",
+              "recordFilterValue",
               "itemsPerRow",
               "listNavIcon",
               "listNavPosition",
@@ -40644,6 +44146,11 @@ export const ELEMENTS: Record<string, CatalogElement> = {
               "list_dataset_dots",
               "layout",
               "quantity",
+              "recordCollectionId",
+              "recordSortField",
+              "recordSortDesc",
+              "recordFilterField",
+              "recordFilterValue",
               "itemsPerRow",
               "listNavIcon",
               "listNavPosition",
@@ -40680,6 +44187,11 @@ export const ELEMENTS: Record<string, CatalogElement> = {
               "list_dataset_dots",
               "layout",
               "quantity",
+              "recordCollectionId",
+              "recordSortField",
+              "recordSortDesc",
+              "recordFilterField",
+              "recordFilterValue",
               "itemsPerRow",
               "listNavIcon",
               "listNavPosition",
@@ -40853,6 +44365,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
       "collection_list",
       "collectionListType",
       "collectionIds",
+      "record_source",
       "product_layout",
       "gap",
       "padding",
@@ -40861,6 +44374,11 @@ export const ELEMENTS: Record<string, CatalogElement> = {
       "list_dataset_dots",
       "layout",
       "quantity",
+      "recordCollectionId",
+      "recordSortField",
+      "recordSortDesc",
+      "recordFilterField",
+      "recordFilterValue",
       "itemsPerRow",
       "listNavIcon",
       "listNavPosition",
@@ -42104,6 +45622,213 @@ export const BOUND_SPECIALS: Record<string, string[]> = {
     "boundText"
   ]
 };
+
+/**
+ * The platform's own `datasetBindings` answers for RECORD tiles, run at codegen.
+ * A tile's source is its `config.recordField`, so the `bindingsFor` table
+ * cannot hold it and `bindingsForConfig` derives it; test/record-list.test.ts
+ * holds that derivation to every probe here.
+ */
+export const RECORD_BINDING_PROBES: Array<{ type: string; config: Record<string, unknown>; bindings: unknown[] }> = [
+  {
+    "type": "text-dataset",
+    "config": {
+      "datasetSource": "record",
+      "recordField": "fld_0123456789abcdef",
+      "recordFieldType": "text"
+    },
+    "bindings": [
+      {
+        "id": "bind-text",
+        "source": "record.fld_0123456789abcdef",
+        "field": "specials.boundText",
+        "target": {
+          "type": "record",
+          "id": "",
+          "kind": "title"
+        }
+      }
+    ]
+  },
+  {
+    "type": "text-dataset",
+    "config": {
+      "datasetSource": "record",
+      "recordField": "fld_0123456789abcdef",
+      "recordFieldType": "richtext"
+    },
+    "bindings": [
+      {
+        "id": "bind-text",
+        "source": "record.html.fld_0123456789abcdef",
+        "field": "specials.boundHtml",
+        "target": {
+          "type": "record",
+          "id": "",
+          "kind": "title"
+        }
+      }
+    ]
+  },
+  {
+    "type": "text-dataset",
+    "config": {
+      "datasetSource": "record",
+      "recordField": "fld_0123456789abcdef",
+      "recordFieldType": "number"
+    },
+    "bindings": [
+      {
+        "id": "bind-text",
+        "source": "record.fld_0123456789abcdef",
+        "field": "specials.boundText",
+        "target": {
+          "type": "record",
+          "id": "",
+          "kind": "title"
+        }
+      }
+    ]
+  },
+  {
+    "type": "text-dataset",
+    "config": {
+      "datasetSource": "record",
+      "recordField": "fld_0123456789abcdef",
+      "recordFieldType": "text",
+      "kind": "description"
+    },
+    "bindings": [
+      {
+        "id": "bind-text",
+        "source": "record.fld_0123456789abcdef",
+        "field": "specials.boundText",
+        "target": {
+          "type": "record",
+          "id": "",
+          "kind": "description"
+        }
+      }
+    ]
+  },
+  {
+    "type": "text-dataset",
+    "config": {
+      "datasetSource": "record",
+      "recordField": "title",
+      "recordFieldType": "text"
+    },
+    "bindings": [
+      {
+        "id": "bind-text",
+        "source": "",
+        "field": "specials.boundText",
+        "target": {
+          "type": "record",
+          "id": "",
+          "kind": "title"
+        }
+      }
+    ]
+  },
+  {
+    "type": "text-dataset",
+    "config": {
+      "datasetSource": "record",
+      "recordField": "fld_0123456789ABCDEF",
+      "recordFieldType": "richtext"
+    },
+    "bindings": [
+      {
+        "id": "bind-text",
+        "source": "",
+        "field": "specials.boundHtml",
+        "target": {
+          "type": "record",
+          "id": "",
+          "kind": "title"
+        }
+      }
+    ]
+  },
+  {
+    "type": "collection-media",
+    "config": {
+      "datasetSource": "record",
+      "recordField": "fld_0123456789abcdef"
+    },
+    "bindings": [
+      {
+        "id": "bind-image",
+        "source": "record.fld_0123456789abcdef",
+        "field": "specials.boundImage",
+        "target": {
+          "type": "record",
+          "id": "",
+          "kind": "media"
+        }
+      }
+    ]
+  },
+  {
+    "type": "collection-media",
+    "config": {
+      "datasetSource": "record",
+      "recordField": "fld_0123456789abcdef",
+      "recordFieldType": "richtext"
+    },
+    "bindings": [
+      {
+        "id": "bind-image",
+        "source": "record.fld_0123456789abcdef",
+        "field": "specials.boundImage",
+        "target": {
+          "type": "record",
+          "id": "",
+          "kind": "media"
+        }
+      }
+    ]
+  },
+  {
+    "type": "collection-media",
+    "config": {
+      "datasetSource": "record",
+      "recordField": ""
+    },
+    "bindings": [
+      {
+        "id": "bind-image",
+        "source": "",
+        "field": "specials.boundImage",
+        "target": {
+          "type": "record",
+          "id": "",
+          "kind": "media"
+        }
+      }
+    ]
+  },
+  {
+    "type": "list-dataset",
+    "config": {
+      "datasetSource": "record",
+      "recordCollectionId": "col_1"
+    },
+    "bindings": [
+      {
+        "id": "bind-target",
+        "source": "",
+        "field": "",
+        "target": {
+          "type": "record",
+          "id": "",
+          "kind": "record_list"
+        }
+      }
+    ]
+  }
+];
 
 export const TRAIT_WRITES: Record<string, TraitDescription> = {
   "font_size": {
@@ -44773,6 +48498,49 @@ export const SATELLITE_RULES: Record<string, SatelliteRule[]> = {
             }
           ]
         },
+        "record": {
+          "type": "list-empty",
+          "children": [
+            {
+              "type": "icon",
+              "style": {
+                "color": "#d4d4d4"
+              },
+              "config": {
+                "iconSize": 32
+              },
+              "specials": {
+                "name": "Database2Line"
+              }
+            },
+            {
+              "type": "heading",
+              "style": {
+                "width": "auto",
+                "fontSize": "20px",
+                "fontWeight": "600",
+                "color": "#171717",
+                "textAlign": "center"
+              },
+              "specials": {
+                "htmlTag": "h3",
+                "text": "Nothing here yet"
+              }
+            },
+            {
+              "type": "text",
+              "style": {
+                "width": "auto",
+                "fontSize": "14px",
+                "color": "#737373",
+                "textAlign": "center"
+              },
+              "specials": {
+                "text": "New entries will show up here. Check back soon."
+              }
+            }
+          ]
+        },
         "cart": {
           "type": "list-empty",
           "children": [
@@ -46351,7 +50119,14 @@ export const BASE_ONLY_CONFIG: string[] = [
   "backgroundSceneColors",
   "backgroundSceneUrl",
   "backgroundSceneModelUrl",
-  "rowLimit"
+  "rowLimit",
+  "recordCollectionId",
+  "recordField",
+  "recordFieldType",
+  "recordFilterField",
+  "recordFilterValue",
+  "recordSortDesc",
+  "recordSortField"
 ];
 
 /**

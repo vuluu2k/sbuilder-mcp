@@ -257,6 +257,72 @@ function readBaseOnlyConfig(repo: string): { keys: string[]; exceptions: string[
 }
 
 /**
+ * THE RECORD-LIST KEYS ARE BASE-ONLY AND THE LEDGER ABOVE DOES NOT LIST THEM.
+ * `pagerender/recordfeed.go` reads `n.Config["recordCollectionId" | "recordSort*"
+ * | "recordFilter*"]` raw, `datasetBindings` derives a tile's binding from its
+ * BASE config (`recordField`, `recordFieldType`), and the editor writes all of
+ * them to base (`RecordSourceRows.vue` "All base-only config"; `setRecordField`
+ * sets `config.recordField` directly). The ledger guards SEEDS, and these seed
+ * nothing per breakpoint, so it never needed them — but `sb_set` writes per
+ * breakpoint by default, and a mobile `recordCollectionId` is a list that
+ * renders nothing on publish.
+ *
+ * Read off the metas' own declarations: every `record*` key a list-dataset /
+ * text-dataset / collection-media meta seeds in `defaults.config`. A meta that
+ * stops saying so (or renames the keys) exits here rather than shipping a table
+ * that forces nothing.
+ */
+function readRecordBaseOnly(repo: string, already: string[]): string[] {
+  const keys = new Set<string>();
+  for (const el of ['list-dataset', 'text-dataset', 'collection-media']) {
+    const src = readFileSync(resolve(repo, `schema/src/elements/${el}/meta.ts`), 'utf8');
+    for (const m of src.matchAll(/^\s+(record[A-Z][A-Za-z]*):\s/gm)) keys.add(m[1]);
+  }
+  // THE SERVER'S OWN READ: every record key the published feed takes off a
+  // list's base config must be one the metas seed, or a renamed sort/filter key
+  // would fall out of BASE_ONLY_CONFIG in silence.
+  const feed = readFileSync(resolve(repo, 'server/internal/page/pagerender/recordfeed.go'), 'utf8');
+  const read = [...new Set([...feed.matchAll(/"(record[A-Z][A-Za-z]*)"/g)].map((m) => m[1]))];
+  if (!read.length) {
+    console.error('record base-only keys: recordfeed.go reads no record* key — the feed moved');
+    process.exit(1);
+  }
+  for (const k of read) {
+    if (!keys.has(k)) {
+      console.error(`record base-only keys: recordfeed.go reads ${k}, which no record meta seeds`);
+      process.exit(1);
+    }
+  }
+  for (const want of ['recordCollectionId', 'recordField', 'recordFieldType']) {
+    if (!keys.has(want)) {
+      console.error(`record base-only keys: ${want} not seeded by any record meta — the record list moved`);
+      process.exit(1);
+    }
+  }
+  return [...keys].filter((k) => !already.includes(k)).sort();
+}
+
+/** One probe per shape a record tile's binding can take — see RECORD_BINDING_PROBES. */
+function recordBindingProbes(
+  factory: (type: string, config: Record<string, unknown>) => unknown[],
+): Array<{ type: string; config: Record<string, unknown>; bindings: unknown[] }> {
+  const fid = 'fld_0123456789abcdef';
+  const configs: Array<[string, Record<string, unknown>]> = [
+    ['text-dataset', { datasetSource: 'record', recordField: fid, recordFieldType: 'text' }],
+    ['text-dataset', { datasetSource: 'record', recordField: fid, recordFieldType: 'richtext' }],
+    ['text-dataset', { datasetSource: 'record', recordField: fid, recordFieldType: 'number' }],
+    ['text-dataset', { datasetSource: 'record', recordField: fid, recordFieldType: 'text', kind: 'description' }],
+    ['text-dataset', { datasetSource: 'record', recordField: 'title', recordFieldType: 'text' }],
+    ['text-dataset', { datasetSource: 'record', recordField: 'fld_0123456789ABCDEF', recordFieldType: 'richtext' }],
+    ['collection-media', { datasetSource: 'record', recordField: fid }],
+    ['collection-media', { datasetSource: 'record', recordField: fid, recordFieldType: 'richtext' }],
+    ['collection-media', { datasetSource: 'record', recordField: '' }],
+    ['list-dataset', { datasetSource: 'record', recordCollectionId: 'col_1' }],
+  ];
+  return configs.map(([type, config]) => ({ type, config, bindings: factory(type, config) }));
+}
+
+/**
  * The binding source keys the RENDERER provides, read out of the Go scope
  * builder. A `source` this list does not contain is a binding that resolves to
  * nothing and renders as the element's own placeholder — indistinguishable from
@@ -1247,6 +1313,8 @@ export const API_DEFINITIONS: Record<string, unknown> = ${JSON.stringify(
   const boundSpecials = readBoundSpecials(repo);
   const firstChildOnly = readFirstChildOnly(repo);
   const baseOnly = readBaseOnlyConfig(repo);
+  baseOnly.keys.push(...readRecordBaseOnly(repo, baseOnly.keys));
+  const recordProbes = recordBindingProbes(bindMod.datasetBindings);
 
   // ---- The ENTRANCE ANIMATION, and its three silent misses --------------
   //
@@ -3145,6 +3213,14 @@ export const ELEMENTS: Record<string, CatalogElement> = ${JSON.stringify(element
 export const BINDING_SOURCES: string[] = ${JSON.stringify(bindingSources, null, 2)};
 
 export const BOUND_SPECIALS: Record<string, string[]> = ${JSON.stringify(boundSpecials, null, 2)};
+
+/**
+ * The platform's own \`datasetBindings\` answers for RECORD tiles, run at codegen.
+ * A tile's source is its \`config.recordField\`, so the \`bindingsFor\` table
+ * cannot hold it and \`bindingsForConfig\` derives it; test/record-list.test.ts
+ * holds that derivation to every probe here.
+ */
+export const RECORD_BINDING_PROBES: Array<{ type: string; config: Record<string, unknown>; bindings: unknown[] }> = ${JSON.stringify(recordProbes, null, 2)};
 
 export const TRAIT_WRITES: Record<string, TraitDescription> = ${JSON.stringify(traits, null, 2)};
 
@@ -5087,7 +5163,11 @@ function bindingTable(
 ): { bindingsFor?: Record<string, unknown[]> } {
   // Declared HERE, not at module scope: this file runs `main()` at the top
   // level, so a const below that call is still in its temporal dead zone.
-  const BIND_SOURCES = ['product', 'category', 'article', 'course', 'instructor', 'blogCategory'];
+  // `record` (a merchant Collection, web_builder PR #117) is here for the rows
+  // that need no field — the list's `record_list` target, a tile's `target`.
+  // A tile's SOURCE names `config.recordField`, which no enumeration can hold;
+  // `bindingsForConfig` substitutes it, pinned by RECORD_BINDING_PROBES.
+  const BIND_SOURCES = ['product', 'category', 'article', 'course', 'instructor', 'blogCategory', 'record'];
   const BIND_KINDS = [
     'title', 'vendor', 'description', 'summary', 'content', 'author', 'date',
     'image', 'price', 'prices', 'url', 'name',

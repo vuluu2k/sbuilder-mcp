@@ -3,10 +3,10 @@
 import type { ApiOperation } from './types.js';
 
 export const SWAGGER_SOURCE = {
-  "operations": 853,
-  "definitions": 282,
-  "bodyCarrying": 380,
-  "bodyUndescribed": 106,
+  "operations": 892,
+  "definitions": 307,
+  "bodyCarrying": 405,
+  "bodyUndescribed": 109,
   "generatedFrom": "server/docs/swagger.json"
 } as const;
 
@@ -725,6 +725,48 @@ export const API_OPERATIONS: ApiOperation[] = [
     "credential": "siteScoped"
   },
   {
+    "id": "get:/_wb/collections/{slug}/records",
+    "method": "GET",
+    "path": "/_wb/collections/{slug}/records",
+    "tags": [
+      "storecollections"
+    ],
+    "summary": "Read a public collection from page code",
+    "params": [
+      {
+        "name": "slug",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Collection slug"
+      },
+      {
+        "name": "sort",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Field key, optionally :asc or :desc"
+      },
+      {
+        "name": "limit",
+        "in": "query",
+        "required": false,
+        "type": "integer",
+        "description": "Page size (default 50, max 50)"
+      },
+      {
+        "name": "offset",
+        "in": "query",
+        "required": false,
+        "type": "integer",
+        "description": "Page offset"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
     "id": "get:/_wb/course-outline",
     "method": "GET",
     "path": "/_wb/course-outline",
@@ -787,6 +829,34 @@ export const API_OPERATIONS: ApiOperation[] = [
     "credential": "siteScoped"
   },
   {
+    "id": "get:/_wb/delivery/{app}/{path}",
+    "method": "GET",
+    "path": "/_wb/delivery/{app}/{path}",
+    "tags": [
+      "pos"
+    ],
+    "summary": "Delivery-app partner endpoints (GrabFood)",
+    "params": [
+      {
+        "name": "app",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "App id (grabfood)"
+      },
+      {
+        "name": "path",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "oauth/token | orders | order-state | menu-sync-state | menu"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
     "id": "post:/_wb/delivery/{app}/{path}",
     "method": "POST",
     "path": "/_wb/delivery/{app}/{path}",
@@ -807,7 +877,7 @@ export const API_OPERATIONS: ApiOperation[] = [
         "in": "path",
         "required": true,
         "type": "string",
-        "description": "oauth/token | orders | order-state | menu-sync-state"
+        "description": "oauth/token | orders | order-state | menu-sync-state | menu"
       }
     ],
     "bodyDescribed": false,
@@ -3837,6 +3907,90 @@ export const API_OPERATIONS: ApiOperation[] = [
     "credential": "siteScoped"
   },
   {
+    "id": "get:/api/orgs/{orgId}/deploy-keys",
+    "method": "GET",
+    "path": "/api/orgs/{orgId}/deploy-keys",
+    "tags": [
+      "deploy-keys"
+    ],
+    "summary": "List or mint deploy keys",
+    "params": [
+      {
+        "name": "orgId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Organization ID"
+      },
+      {
+        "name": "key",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "name (POST only)"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/api/orgs/{orgId}/deploy-keys",
+    "method": "POST",
+    "path": "/api/orgs/{orgId}/deploy-keys",
+    "tags": [
+      "deploy-keys"
+    ],
+    "summary": "List or mint deploy keys",
+    "params": [
+      {
+        "name": "orgId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Organization ID"
+      },
+      {
+        "name": "key",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "name (POST only)"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "delete:/api/orgs/{orgId}/deploy-keys/{keyId}",
+    "method": "DELETE",
+    "path": "/api/orgs/{orgId}/deploy-keys/{keyId}",
+    "tags": [
+      "deploy-keys"
+    ],
+    "summary": "Revoke a deploy key",
+    "params": [
+      {
+        "name": "orgId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Organization ID"
+      },
+      {
+        "name": "keyId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Key ID"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
     "id": "get:/api/orgs/{orgId}/section-templates",
     "method": "GET",
     "path": "/api/orgs/{orgId}/section-templates",
@@ -6003,6 +6157,741 @@ export const API_OPERATIONS: ApiOperation[] = [
     "credential": "siteScoped"
   },
   {
+    "id": "get:/api/sites/{siteId}/collections",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/collections",
+    "tags": [
+      "collections"
+    ],
+    "summary": "List or create collections",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "body",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "Collection to create (POST only)"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "internal_collections_rest.collectionBody",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/api/sites/{siteId}/collections",
+    "method": "POST",
+    "path": "/api/sites/{siteId}/collections",
+    "tags": [
+      "collections"
+    ],
+    "summary": "List or create collections",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "body",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "Collection to create (POST only)"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "internal_collections_rest.collectionBody",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/sites/{siteId}/collections/records/{rid}",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/collections/records/{rid}",
+    "tags": [
+      "collections"
+    ],
+    "summary": "Get one record by id, without knowing its collection",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "rid",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Record ID"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "put:/api/sites/{siteId}/collections/{id}",
+    "method": "PUT",
+    "path": "/api/sites/{siteId}/collections/{id}",
+    "tags": [
+      "collections"
+    ],
+    "summary": "Rename or delete a collection",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Collection ID"
+      },
+      {
+        "name": "body",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "Replacement (PUT only)"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "internal_collections_rest.collectionBody",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "delete:/api/sites/{siteId}/collections/{id}",
+    "method": "DELETE",
+    "path": "/api/sites/{siteId}/collections/{id}",
+    "tags": [
+      "collections"
+    ],
+    "summary": "Rename or delete a collection",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Collection ID"
+      },
+      {
+        "name": "body",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "Replacement (PUT only)"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "internal_collections_rest.collectionBody",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/sites/{siteId}/collections/{id}/fields",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/collections/{id}/fields",
+    "tags": [
+      "collections"
+    ],
+    "summary": "List or create the fields of a collection",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Collection ID"
+      },
+      {
+        "name": "field",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "Field to create (POST only)"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "github_com_webbuilder_server_internal_collections.Field",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/api/sites/{siteId}/collections/{id}/fields",
+    "method": "POST",
+    "path": "/api/sites/{siteId}/collections/{id}/fields",
+    "tags": [
+      "collections"
+    ],
+    "summary": "List or create the fields of a collection",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Collection ID"
+      },
+      {
+        "name": "field",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "Field to create (POST only)"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "github_com_webbuilder_server_internal_collections.Field",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "put:/api/sites/{siteId}/collections/{id}/fields/order",
+    "method": "PUT",
+    "path": "/api/sites/{siteId}/collections/{id}/fields/order",
+    "tags": [
+      "collections"
+    ],
+    "summary": "Reorder the fields of a collection",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Collection ID"
+      },
+      {
+        "name": "body",
+        "in": "body",
+        "required": true,
+        "type": "object",
+        "description": "Every field id, in the new order"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "internal_collections_rest.orderBody",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "put:/api/sites/{siteId}/collections/{id}/fields/{fid}",
+    "method": "PUT",
+    "path": "/api/sites/{siteId}/collections/{id}/fields/{fid}",
+    "tags": [
+      "collections"
+    ],
+    "summary": "Replace or delete a field",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Collection ID"
+      },
+      {
+        "name": "fid",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Field ID"
+      },
+      {
+        "name": "field",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "Replacement (PUT only)"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "github_com_webbuilder_server_internal_collections.Field",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "delete:/api/sites/{siteId}/collections/{id}/fields/{fid}",
+    "method": "DELETE",
+    "path": "/api/sites/{siteId}/collections/{id}/fields/{fid}",
+    "tags": [
+      "collections"
+    ],
+    "summary": "Replace or delete a field",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Collection ID"
+      },
+      {
+        "name": "fid",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Field ID"
+      },
+      {
+        "name": "field",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "Replacement (PUT only)"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "github_com_webbuilder_server_internal_collections.Field",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/sites/{siteId}/collections/{id}/records",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/collections/{id}/records",
+    "tags": [
+      "collections"
+    ],
+    "summary": "List (sorted, filtered, paged) or create records",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Collection ID"
+      },
+      {
+        "name": "sort",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Field key to sort by (default: position)"
+      },
+      {
+        "name": "desc",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "true|1 for descending"
+      },
+      {
+        "name": "filterKey",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Field key to filter on"
+      },
+      {
+        "name": "filterValue",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Value the field must equal"
+      },
+      {
+        "name": "published",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "true|1 for published records only"
+      },
+      {
+        "name": "offset",
+        "in": "query",
+        "required": false,
+        "type": "integer",
+        "description": "Page offset"
+      },
+      {
+        "name": "limit",
+        "in": "query",
+        "required": false,
+        "type": "integer",
+        "description": "Page size (default 50, max 200)"
+      },
+      {
+        "name": "record",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "Record to create (POST only)"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "internal_collections_rest.recordBody",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/api/sites/{siteId}/collections/{id}/records",
+    "method": "POST",
+    "path": "/api/sites/{siteId}/collections/{id}/records",
+    "tags": [
+      "collections"
+    ],
+    "summary": "List (sorted, filtered, paged) or create records",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Collection ID"
+      },
+      {
+        "name": "sort",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Field key to sort by (default: position)"
+      },
+      {
+        "name": "desc",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "true|1 for descending"
+      },
+      {
+        "name": "filterKey",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Field key to filter on"
+      },
+      {
+        "name": "filterValue",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Value the field must equal"
+      },
+      {
+        "name": "published",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "true|1 for published records only"
+      },
+      {
+        "name": "offset",
+        "in": "query",
+        "required": false,
+        "type": "integer",
+        "description": "Page offset"
+      },
+      {
+        "name": "limit",
+        "in": "query",
+        "required": false,
+        "type": "integer",
+        "description": "Page size (default 50, max 200)"
+      },
+      {
+        "name": "record",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "Record to create (POST only)"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "internal_collections_rest.recordBody",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/sites/{siteId}/collections/{id}/records.csv",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/collections/{id}/records.csv",
+    "tags": [
+      "collections"
+    ],
+    "summary": "Download the records as CSV (UTF-8 with BOM, header = field keys, then _published true|false)",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Collection ID"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/api/sites/{siteId}/collections/{id}/records/import",
+    "method": "POST",
+    "path": "/api/sites/{siteId}/collections/{id}/records/import",
+    "tags": [
+      "collections"
+    ],
+    "summary": "Import records from CSV (all-or-nothing, max 5 MB); an optional _published column (true|false|1|0) sets each record's flag, absent or empty = published",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Collection ID"
+      },
+      {
+        "name": "csv",
+        "in": "body",
+        "required": true,
+        "type": "object",
+        "description": "CSV with a header row of field keys"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "put:/api/sites/{siteId}/collections/{id}/records/order",
+    "method": "PUT",
+    "path": "/api/sites/{siteId}/collections/{id}/records/order",
+    "tags": [
+      "collections"
+    ],
+    "summary": "Bulk reorder the records of a collection (public API; the editor uses /records/{rid}/move)",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Collection ID"
+      },
+      {
+        "name": "body",
+        "in": "body",
+        "required": true,
+        "type": "object",
+        "description": "Every record id, in the new order"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "internal_collections_rest.orderBody",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "put:/api/sites/{siteId}/collections/{id}/records/{rid}",
+    "method": "PUT",
+    "path": "/api/sites/{siteId}/collections/{id}/records/{rid}",
+    "tags": [
+      "collections"
+    ],
+    "summary": "Replace or delete a record",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Collection ID"
+      },
+      {
+        "name": "rid",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Record ID"
+      },
+      {
+        "name": "record",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "Replacement (PUT only)"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "internal_collections_rest.recordBody",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "delete:/api/sites/{siteId}/collections/{id}/records/{rid}",
+    "method": "DELETE",
+    "path": "/api/sites/{siteId}/collections/{id}/records/{rid}",
+    "tags": [
+      "collections"
+    ],
+    "summary": "Replace or delete a record",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Collection ID"
+      },
+      {
+        "name": "rid",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Record ID"
+      },
+      {
+        "name": "record",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "Replacement (PUT only)"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "internal_collections_rest.recordBody",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/api/sites/{siteId}/collections/{id}/records/{rid}/move",
+    "method": "POST",
+    "path": "/api/sites/{siteId}/collections/{id}/records/{rid}/move",
+    "tags": [
+      "collections"
+    ],
+    "summary": "Move a record one place up (-1) or down (1); a no-op at either end",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Collection ID"
+      },
+      {
+        "name": "rid",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Record ID"
+      },
+      {
+        "name": "body",
+        "in": "body",
+        "required": true,
+        "type": "object",
+        "description": "delta: -1 or 1"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "internal_collections_rest.moveBody",
+    "credential": "siteScoped"
+  },
+  {
     "id": "get:/api/sites/{siteId}/copy",
     "method": "GET",
     "path": "/api/sites/{siteId}/copy",
@@ -7738,6 +8627,34 @@ export const API_OPERATIONS: ApiOperation[] = [
     "credential": "siteScoped"
   },
   {
+    "id": "post:/api/sites/{siteId}/delivery-apps/orders/{id}/bill",
+    "method": "POST",
+    "path": "/api/sites/{siteId}/delivery-apps/orders/{id}/bill",
+    "tags": [
+      "pos"
+    ],
+    "summary": "Bill a completed delivery-app order's POS tab",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Order ID"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
     "id": "post:/api/sites/{siteId}/delivery-apps/orders/{id}/reject",
     "method": "POST",
     "path": "/api/sites/{siteId}/delivery-apps/orders/{id}/reject",
@@ -7770,6 +8687,34 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": true,
     "bodyRef": "internal_deliveryapps_rest.rejectBody",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/api/sites/{siteId}/delivery-apps/orders/{id}/route",
+    "method": "POST",
+    "path": "/api/sites/{siteId}/delivery-apps/orders/{id}/route",
+    "tags": [
+      "pos"
+    ],
+    "summary": "Send an accepted delivery-app order to the kitchen again",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Order ID"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
     "credential": "siteScoped"
   },
   {
@@ -7840,6 +8785,146 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": true,
     "bodyRef": "internal_deliveryapps_rest.connectionInput",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/sites/{siteId}/delivery-apps/{app}/menu",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/delivery-apps/{app}/menu",
+    "tags": [
+      "pos"
+    ],
+    "summary": "The menu a delivery app is served",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "app",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "App id (grabfood)"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "put:/api/sites/{siteId}/delivery-apps/{app}/menu/items/{variantId}/sold-out",
+    "method": "PUT",
+    "path": "/api/sites/{siteId}/delivery-apps/{app}/menu/items/{variantId}/sold-out",
+    "tags": [
+      "pos"
+    ],
+    "summary": "Mark a menu item sold out (or available again) on a delivery app",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "app",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "App id (grabfood)"
+      },
+      {
+        "name": "variantId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Variant ID"
+      },
+      {
+        "name": "body",
+        "in": "body",
+        "required": true,
+        "type": "object",
+        "description": "{soldOut}"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "internal_deliveryapps_rest.soldOutBody",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/api/sites/{siteId}/delivery-apps/{app}/menu/sync",
+    "method": "POST",
+    "path": "/api/sites/{siteId}/delivery-apps/{app}/menu/sync",
+    "tags": [
+      "pos"
+    ],
+    "summary": "Tell a delivery app to fetch the menu again now",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "app",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "App id (grabfood)"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/sites/{siteId}/delivery-apps/{app}/menu/syncs",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/delivery-apps/{app}/menu/syncs",
+    "tags": [
+      "pos"
+    ],
+    "summary": "The menu log of a delivery app",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "app",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "App id (grabfood)"
+      },
+      {
+        "name": "limit",
+        "in": "query",
+        "required": false,
+        "type": "integer",
+        "description": "page size"
+      },
+      {
+        "name": "offset",
+        "in": "query",
+        "required": false,
+        "type": "integer",
+        "description": "offset"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
     "credential": "siteScoped"
   },
   {
@@ -8849,6 +9934,69 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/sites/{siteId}/einvoice/orders/{orderId}",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/einvoice/orders/{orderId}",
+    "tags": [
+      "pos"
+    ],
+    "summary": "List one order's e-invoice jobs",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "orderId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Order ID"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/api/sites/{siteId}/einvoice/orders/{orderId}",
+    "method": "POST",
+    "path": "/api/sites/{siteId}/einvoice/orders/{orderId}",
+    "tags": [
+      "pos"
+    ],
+    "summary": "Issue an e-invoice for a paid order",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "orderId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Order ID"
+      },
+      {
+        "name": "body",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "{buyer?: {taxCode, name, company, address, email}}"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "internal_einvoice_rest.orderIssueBody",
     "credential": "siteScoped"
   },
   {
@@ -18548,6 +19696,34 @@ export const API_OPERATIONS: ApiOperation[] = [
     "credential": "siteScoped"
   },
   {
+    "id": "post:/api/sites/{siteId}/pos/tabs/{id}/delivery-bill",
+    "method": "POST",
+    "path": "/api/sites/{siteId}/pos/tabs/{id}/delivery-bill",
+    "tags": [
+      "pos"
+    ],
+    "summary": "Bill a GrabFood tab to GrabFood",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Tab id"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
     "id": "post:/api/sites/{siteId}/pos/tabs/{id}/lines",
     "method": "POST",
     "path": "/api/sites/{siteId}/pos/tabs/{id}/lines",
@@ -25636,6 +26812,257 @@ export const API_OPERATIONS: ApiOperation[] = [
     "credential": "apiKey"
   },
   {
+    "id": "get:/api/v1/collections",
+    "method": "GET",
+    "path": "/api/v1/collections",
+    "tags": [
+      "v1"
+    ],
+    "summary": "List collections",
+    "params": [],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "apiKey"
+  },
+  {
+    "id": "get:/api/v1/collections/{collection}",
+    "method": "GET",
+    "path": "/api/v1/collections/{collection}",
+    "tags": [
+      "v1"
+    ],
+    "summary": "Read one collection with its fields",
+    "params": [
+      {
+        "name": "collection",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Collection id or slug"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "apiKey"
+  },
+  {
+    "id": "get:/api/v1/collections/{collection}/records",
+    "method": "GET",
+    "path": "/api/v1/collections/{collection}/records",
+    "tags": [
+      "v1"
+    ],
+    "summary": "List records",
+    "params": [
+      {
+        "name": "collection",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Collection id or slug"
+      },
+      {
+        "name": "record",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "Record to create (POST only)"
+      },
+      {
+        "name": "sort",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Field key, optionally :asc or :desc"
+      },
+      {
+        "name": "published",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "true | false (drafts only) | all (default)"
+      },
+      {
+        "name": "limit",
+        "in": "query",
+        "required": false,
+        "type": "integer",
+        "description": "Page size (default 50, max 200)"
+      },
+      {
+        "name": "offset",
+        "in": "query",
+        "required": false,
+        "type": "integer",
+        "description": "Page offset"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "internal_publicapi.CollectionRecordInput",
+    "credential": "apiKey"
+  },
+  {
+    "id": "post:/api/v1/collections/{collection}/records",
+    "method": "POST",
+    "path": "/api/v1/collections/{collection}/records",
+    "tags": [
+      "v1"
+    ],
+    "summary": "List records",
+    "params": [
+      {
+        "name": "collection",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Collection id or slug"
+      },
+      {
+        "name": "record",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "Record to create (POST only)"
+      },
+      {
+        "name": "sort",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Field key, optionally :asc or :desc"
+      },
+      {
+        "name": "published",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "true | false (drafts only) | all (default)"
+      },
+      {
+        "name": "limit",
+        "in": "query",
+        "required": false,
+        "type": "integer",
+        "description": "Page size (default 50, max 200)"
+      },
+      {
+        "name": "offset",
+        "in": "query",
+        "required": false,
+        "type": "integer",
+        "description": "Page offset"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "internal_publicapi.CollectionRecordInput",
+    "credential": "apiKey"
+  },
+  {
+    "id": "get:/api/v1/collections/{collection}/records/{id}",
+    "method": "GET",
+    "path": "/api/v1/collections/{collection}/records/{id}",
+    "tags": [
+      "v1"
+    ],
+    "summary": "Read, replace or delete one record",
+    "params": [
+      {
+        "name": "collection",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Collection id or slug"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Record ID"
+      },
+      {
+        "name": "record",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "Replacement (PUT only; published REQUIRED)"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "internal_publicapi.CollectionRecordInput",
+    "credential": "apiKey"
+  },
+  {
+    "id": "put:/api/v1/collections/{collection}/records/{id}",
+    "method": "PUT",
+    "path": "/api/v1/collections/{collection}/records/{id}",
+    "tags": [
+      "v1"
+    ],
+    "summary": "Read, replace or delete one record",
+    "params": [
+      {
+        "name": "collection",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Collection id or slug"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Record ID"
+      },
+      {
+        "name": "record",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "Replacement (PUT only; published REQUIRED)"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "internal_publicapi.CollectionRecordInput",
+    "credential": "apiKey"
+  },
+  {
+    "id": "delete:/api/v1/collections/{collection}/records/{id}",
+    "method": "DELETE",
+    "path": "/api/v1/collections/{collection}/records/{id}",
+    "tags": [
+      "v1"
+    ],
+    "summary": "Read, replace or delete one record",
+    "params": [
+      {
+        "name": "collection",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Collection id or slug"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Record ID"
+      },
+      {
+        "name": "record",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "Replacement (PUT only; published REQUIRED)"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "internal_publicapi.CollectionRecordInput",
+    "credential": "apiKey"
+  },
+  {
     "id": "get:/api/v1/customers",
     "method": "GET",
     "path": "/api/v1/customers",
@@ -27150,6 +28577,10 @@ export const API_DEFINITIONS: Record<string, unknown> = {
       },
       "expiresAt": {
         "type": "string"
+      },
+      "known": {
+        "description": "Known is true only when Client is in KnownDeviceClients. /start is\nunauthenticated, so Client is whatever the requester typed; the approval\nscreen must not present an unknown one as an app name.",
+        "type": "boolean"
       }
     }
   },
@@ -27235,6 +28666,64 @@ export const API_DEFINITIONS: Record<string, unknown> = {
       "PlacementHead",
       "PlacementBodyStart",
       "PlacementBodyEnd"
+    ]
+  },
+  "github_com_webbuilder_server_internal_collections.Field": {
+    "type": "object",
+    "properties": {
+      "collectionId": {
+        "type": "string"
+      },
+      "id": {
+        "type": "string"
+      },
+      "key": {
+        "type": "string"
+      },
+      "label": {
+        "type": "string"
+      },
+      "options": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "position": {
+        "type": "integer"
+      },
+      "required": {
+        "type": "boolean"
+      },
+      "siteId": {
+        "type": "string"
+      },
+      "type": {
+        "$ref": "#/definitions/github_com_webbuilder_server_internal_collections.FieldType"
+      }
+    }
+  },
+  "github_com_webbuilder_server_internal_collections.FieldType": {
+    "type": "string",
+    "enum": [
+      "text",
+      "richtext",
+      "number",
+      "boolean",
+      "image",
+      "url",
+      "date",
+      "select"
+    ],
+    "x-enum-varnames": [
+      "TypeText",
+      "TypeRichText",
+      "TypeNumber",
+      "TypeBoolean",
+      "TypeImage",
+      "TypeURL",
+      "TypeDate",
+      "TypeSelect"
     ]
   },
   "github_com_webbuilder_server_internal_customers.Address": {
@@ -27406,6 +28895,26 @@ export const API_DEFINITIONS: Record<string, unknown> = {
       "value": {
         "description": "percentage: 1–100; fixed: cents; free_shipping: 0",
         "type": "integer"
+      }
+    }
+  },
+  "github_com_webbuilder_server_internal_einvoice.Buyer": {
+    "type": "object",
+    "properties": {
+      "address": {
+        "type": "string"
+      },
+      "company": {
+        "type": "string"
+      },
+      "email": {
+        "type": "string"
+      },
+      "name": {
+        "type": "string"
+      },
+      "taxCode": {
+        "type": "string"
       }
     }
   },
@@ -27750,6 +29259,10 @@ export const API_DEFINITIONS: Record<string, unknown> = {
             "$ref": "#/definitions/github_com_webbuilder_server_internal_forms.BookingSettings"
           }
         ]
+      },
+      "collectionId": {
+        "description": "CollectionID is the data table a custom form saves each accepted\nresponse into, as an unpublished record (see recordsink.go). Empty is\noff; any other type refuses it (Validate).",
+        "type": "string"
       },
       "confirmation": {
         "description": "Confirmation is the visitor \"we received your message\" email's own\nsettings (ConfirmationEligible types only — see confirmation.go). Off\nby default, like Booking ignored outside the types it applies to, and\n`omitzero` for the same reason.",
@@ -28551,6 +30064,17 @@ export const API_DEFINITIONS: Record<string, unknown> = {
       }
     }
   },
+  "github_com_webbuilder_server_internal_pos.BillResult": {
+    "type": "object",
+    "properties": {
+      "sale": {
+        "$ref": "#/definitions/github_com_webbuilder_server_internal_pos.Sale"
+      },
+      "tab": {
+        "$ref": "#/definitions/github_com_webbuilder_server_internal_pos.Tab"
+      }
+    }
+  },
   "github_com_webbuilder_server_internal_pos.CompleteInput": {
     "type": "object",
     "properties": {
@@ -28590,6 +30114,14 @@ export const API_DEFINITIONS: Record<string, unknown> = {
       },
       "estimated": {
         "type": "boolean"
+      },
+      "invoiceError": {
+        "description": "InvoiceError is why the sale's invoice adjustment did not land; the\nreturn stands (P9).",
+        "allOf": [
+          {
+            "$ref": "#/definitions/github_com_webbuilder_server_internal_pos.InvoiceError"
+          }
+        ]
       },
       "lines": {
         "type": "array",
@@ -28813,6 +30345,29 @@ export const API_DEFINITIONS: Record<string, unknown> = {
         "type": "integer"
       },
       "variantId": {
+        "type": "string"
+      }
+    }
+  },
+  "github_com_webbuilder_server_internal_pos.LineModifier": {
+    "type": "object",
+    "properties": {
+      "groupName": {
+        "type": "string"
+      },
+      "lineId": {
+        "type": "string"
+      },
+      "modifierId": {
+        "type": "string"
+      },
+      "name": {
+        "type": "string"
+      },
+      "priceDeltaCents": {
+        "type": "integer"
+      },
+      "siteId": {
         "type": "string"
       }
     }
@@ -29652,6 +31207,180 @@ export const API_DEFINITIONS: Record<string, unknown> = {
         "type": "string"
       },
       "taxCode": {
+        "type": "string"
+      }
+    }
+  },
+  "github_com_webbuilder_server_internal_pos.Tab": {
+    "type": "object",
+    "properties": {
+      "bills": {
+        "type": "array",
+        "items": {
+          "$ref": "#/definitions/github_com_webbuilder_server_internal_pos.TabBill"
+        }
+      },
+      "cancelReason": {
+        "type": "string"
+      },
+      "clientRef": {
+        "type": "string"
+      },
+      "closedAt": {
+        "type": "string"
+      },
+      "guestCount": {
+        "type": "integer"
+      },
+      "id": {
+        "type": "string"
+      },
+      "itemCount": {
+        "description": "View: live quantity on the tab (Σ qty−voidQty) and lines not yet sent.",
+        "type": "integer"
+      },
+      "lines": {
+        "type": "array",
+        "items": {
+          "$ref": "#/definitions/github_com_webbuilder_server_internal_pos.TabLine"
+        }
+      },
+      "locationId": {
+        "type": "string"
+      },
+      "note": {
+        "type": "string"
+      },
+      "number": {
+        "type": "string"
+      },
+      "openedAt": {
+        "type": "string"
+      },
+      "openedBy": {
+        "type": "string"
+      },
+      "siteId": {
+        "type": "string"
+      },
+      "source": {
+        "description": "Source is where the tab came from: \"\" = opened at the counter, otherwise\nthe delivery app's key (\"grabfood\"). SourceAmountCents is that order's NET\nin hundredths (0 on a counter tab). Both are written once, when the\ndelivery order opens its tab.",
+        "type": "string"
+      },
+      "sourceAmountCents": {
+        "type": "integer"
+      },
+      "status": {
+        "type": "string"
+      },
+      "tableId": {
+        "type": "string"
+      },
+      "unsentCount": {
+        "type": "integer"
+      },
+      "version": {
+        "type": "integer"
+      }
+    }
+  },
+  "github_com_webbuilder_server_internal_pos.TabBill": {
+    "type": "object",
+    "properties": {
+      "createdAt": {
+        "type": "string"
+      },
+      "number": {
+        "type": "string"
+      },
+      "orderId": {
+        "type": "string"
+      },
+      "siteId": {
+        "type": "string"
+      },
+      "status": {
+        "type": "string"
+      },
+      "tabId": {
+        "type": "string"
+      },
+      "totalCents": {
+        "type": "integer"
+      }
+    }
+  },
+  "github_com_webbuilder_server_internal_pos.TabLine": {
+    "type": "object",
+    "properties": {
+      "addedAt": {
+        "type": "string"
+      },
+      "addedBy": {
+        "type": "string"
+      },
+      "batchRef": {
+        "type": "string"
+      },
+      "billId": {
+        "type": "string"
+      },
+      "id": {
+        "type": "string"
+      },
+      "modifiers": {
+        "type": "array",
+        "items": {
+          "$ref": "#/definitions/github_com_webbuilder_server_internal_pos.LineModifier"
+        }
+      },
+      "name": {
+        "type": "string"
+      },
+      "note": {
+        "type": "string"
+      },
+      "position": {
+        "type": "integer"
+      },
+      "productId": {
+        "type": "string"
+      },
+      "qty": {
+        "type": "integer"
+      },
+      "sentAt": {
+        "type": "string"
+      },
+      "siteId": {
+        "type": "string"
+      },
+      "sourcePriceCents": {
+        "description": "SourcePriceCents is the delivery app's UNIT price for this line, in\nhundredths, snapshotted when the order was routed: nil = a counter line,\n0 = a free app item. A pointer so the two stay distinguishable in the\nrow and on the wire.",
+        "type": "integer"
+      },
+      "stationId": {
+        "type": "string"
+      },
+      "status": {
+        "type": "string"
+      },
+      "tabId": {
+        "type": "string"
+      },
+      "variantId": {
+        "type": "string"
+      },
+      "variantName": {
+        "type": "string"
+      },
+      "voidQty": {
+        "type": "integer"
+      },
+      "voidReason": {
+        "type": "string"
+      },
+      "voidedBy": {
         "type": "string"
       }
     }
@@ -32808,6 +34537,77 @@ export const API_DEFINITIONS: Record<string, unknown> = {
       }
     }
   },
+  "internal_collections_public.Record": {
+    "type": "object",
+    "properties": {
+      "id": {
+        "type": "string"
+      },
+      "values": {
+        "type": "object",
+        "additionalProperties": {}
+      }
+    }
+  },
+  "internal_collections_public.RecordListResponse": {
+    "type": "object",
+    "properties": {
+      "records": {
+        "type": "array",
+        "items": {
+          "$ref": "#/definitions/internal_collections_public.Record"
+        }
+      },
+      "total": {
+        "type": "integer"
+      }
+    }
+  },
+  "internal_collections_rest.collectionBody": {
+    "type": "object",
+    "properties": {
+      "name": {
+        "type": "string"
+      },
+      "publicRead": {
+        "type": "boolean"
+      },
+      "slug": {
+        "type": "string"
+      }
+    }
+  },
+  "internal_collections_rest.moveBody": {
+    "type": "object",
+    "properties": {
+      "delta": {
+        "type": "integer"
+      }
+    }
+  },
+  "internal_collections_rest.orderBody": {
+    "type": "object",
+    "properties": {
+      "ids": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      }
+    }
+  },
+  "internal_collections_rest.recordBody": {
+    "type": "object",
+    "properties": {
+      "published": {
+        "type": "boolean"
+      },
+      "values": {
+        "type": "object",
+        "additionalProperties": {}
+      }
+    }
+  },
   "internal_courses_rest.extendBody": {
     "type": "object",
     "properties": {
@@ -32819,11 +34619,22 @@ export const API_DEFINITIONS: Record<string, unknown> = {
   "internal_deliveryapps_rest.connectionInput": {
     "type": "object",
     "properties": {
+      "autoBillOnCompleted": {
+        "description": "AutoBillOnCompleted absent keeps the stored value; false clears it.",
+        "type": "boolean"
+      },
       "enabled": {
         "type": "boolean"
       },
       "externalMerchantId": {
         "type": "string"
+      },
+      "locationId": {
+        "type": "string"
+      },
+      "soldOutFromStock": {
+        "description": "SoldOutFromStock absent keeps the stored value; false clears it.",
+        "type": "boolean"
       }
     }
   },
@@ -32832,6 +34643,14 @@ export const API_DEFINITIONS: Record<string, unknown> = {
     "properties": {
       "reason": {
         "type": "string"
+      }
+    }
+  },
+  "internal_deliveryapps_rest.soldOutBody": {
+    "type": "object",
+    "properties": {
+      "soldOut": {
+        "type": "boolean"
       }
     }
   },
@@ -32851,9 +34670,21 @@ export const API_DEFINITIONS: Record<string, unknown> = {
       }
     }
   },
+  "internal_einvoice_rest.orderIssueBody": {
+    "type": "object",
+    "properties": {
+      "buyer": {
+        "$ref": "#/definitions/github_com_webbuilder_server_internal_einvoice.Buyer"
+      }
+    }
+  },
   "internal_einvoice_rest.settingsInput": {
     "type": "object",
     "properties": {
+      "autoIssueWeb": {
+        "description": "AutoIssueWeb (D6): enqueue an online order's invoice when it becomes\npaid, through the same MTT series as the counter's.",
+        "type": "boolean"
+      },
       "credentials": {
         "type": "object",
         "additionalProperties": {
@@ -33477,6 +35308,159 @@ export const API_DEFINITIONS: Record<string, unknown> = {
     "properties": {
       "category": {
         "$ref": "#/definitions/internal_publicapi.BlogCategory"
+      }
+    }
+  },
+  "internal_publicapi.Collection": {
+    "type": "object",
+    "properties": {
+      "createdAt": {
+        "type": "string"
+      },
+      "id": {
+        "type": "string"
+      },
+      "name": {
+        "type": "string"
+      },
+      "publicRead": {
+        "type": "boolean"
+      },
+      "slug": {
+        "type": "string"
+      },
+      "updatedAt": {
+        "type": "string"
+      }
+    }
+  },
+  "internal_publicapi.CollectionDetail": {
+    "type": "object",
+    "properties": {
+      "createdAt": {
+        "type": "string"
+      },
+      "fields": {
+        "type": "array",
+        "items": {
+          "$ref": "#/definitions/internal_publicapi.CollectionField"
+        }
+      },
+      "id": {
+        "type": "string"
+      },
+      "name": {
+        "type": "string"
+      },
+      "publicRead": {
+        "type": "boolean"
+      },
+      "slug": {
+        "type": "string"
+      },
+      "updatedAt": {
+        "type": "string"
+      }
+    }
+  },
+  "internal_publicapi.CollectionField": {
+    "type": "object",
+    "properties": {
+      "key": {
+        "type": "string"
+      },
+      "label": {
+        "type": "string"
+      },
+      "options": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "required": {
+        "type": "boolean"
+      },
+      "type": {
+        "type": "string"
+      }
+    }
+  },
+  "internal_publicapi.CollectionListResponse": {
+    "type": "object",
+    "properties": {
+      "collections": {
+        "type": "array",
+        "items": {
+          "$ref": "#/definitions/internal_publicapi.Collection"
+        }
+      },
+      "total": {
+        "type": "integer"
+      }
+    }
+  },
+  "internal_publicapi.CollectionRecord": {
+    "type": "object",
+    "properties": {
+      "createdAt": {
+        "type": "string"
+      },
+      "id": {
+        "type": "string"
+      },
+      "published": {
+        "type": "boolean"
+      },
+      "updatedAt": {
+        "type": "string"
+      },
+      "values": {
+        "type": "object",
+        "additionalProperties": {}
+      }
+    }
+  },
+  "internal_publicapi.CollectionRecordInput": {
+    "type": "object",
+    "properties": {
+      "published": {
+        "type": "boolean"
+      },
+      "values": {
+        "type": "object",
+        "additionalProperties": {}
+      }
+    }
+  },
+  "internal_publicapi.CollectionRecordListResponse": {
+    "type": "object",
+    "properties": {
+      "records": {
+        "type": "array",
+        "items": {
+          "$ref": "#/definitions/internal_publicapi.CollectionRecord"
+        }
+      },
+      "total": {
+        "description": "Total is the number of records matching the filter BEFORE paging.",
+        "type": "integer"
+      }
+    }
+  },
+  "internal_publicapi.CollectionRecordResponse": {
+    "type": "object",
+    "properties": {
+      "record": {
+        "$ref": "#/definitions/internal_publicapi.CollectionRecord"
+      }
+    }
+  },
+  "internal_publicapi.CollectionResponse": {
+    "type": "object",
+    "properties": {
+      "collection": {
+        "$ref": "#/definitions/internal_publicapi.CollectionDetail"
       }
     }
   },

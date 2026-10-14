@@ -4,12 +4,12 @@
 import type { RequestShape } from './types.js';
 
 export const SHAPE_SOURCE = {
-  "writeOperations": 397,
-  "shaped": 316,
-  "fromHandlers": 306,
+  "writeOperations": 416,
+  "shaped": 330,
+  "fromHandlers": 320,
   "fromSwaggerOnly": 10,
   "withReadOnly": 30,
-  "structsRead": 3237
+  "structsRead": 3356
 } as const;
 
 export const REQUEST_SHAPES: Record<string, RequestShape> = {
@@ -1480,6 +1480,184 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
       "createdAt",
       "updatedAt"
     ]
+  },
+  "post:/api/sites/{siteId}/collections": {
+    "fields": [
+      {
+        "name": "name",
+        "type": "string"
+      },
+      {
+        "name": "slug",
+        "type": "string"
+      },
+      {
+        "name": "publicRead",
+        "type": "boolean | null"
+      }
+    ],
+    "source": "go",
+    "goType": "collectionBody"
+  },
+  "put:/api/sites/{siteId}/collections/{id}": {
+    "fields": [
+      {
+        "name": "name",
+        "type": "string"
+      },
+      {
+        "name": "slug",
+        "type": "string"
+      },
+      {
+        "name": "publicRead",
+        "type": "boolean | null"
+      }
+    ],
+    "source": "go",
+    "goType": "collectionBody"
+  },
+  "post:/api/sites/{siteId}/collections/{id}/fields": {
+    "fields": [
+      {
+        "name": "id",
+        "type": "string"
+      },
+      {
+        "name": "siteId",
+        "type": "string"
+      },
+      {
+        "name": "collectionId",
+        "type": "string"
+      },
+      {
+        "name": "key",
+        "type": "string"
+      },
+      {
+        "name": "label",
+        "type": "string"
+      },
+      {
+        "name": "type",
+        "type": "FieldType"
+      },
+      {
+        "name": "required",
+        "type": "boolean"
+      },
+      {
+        "name": "options",
+        "type": "string[]"
+      },
+      {
+        "name": "position",
+        "type": "number"
+      }
+    ],
+    "source": "go",
+    "goType": "collections.Field"
+  },
+  "put:/api/sites/{siteId}/collections/{id}/fields/{fid}": {
+    "fields": [
+      {
+        "name": "id",
+        "type": "string"
+      },
+      {
+        "name": "siteId",
+        "type": "string"
+      },
+      {
+        "name": "collectionId",
+        "type": "string"
+      },
+      {
+        "name": "key",
+        "type": "string"
+      },
+      {
+        "name": "label",
+        "type": "string"
+      },
+      {
+        "name": "type",
+        "type": "FieldType"
+      },
+      {
+        "name": "required",
+        "type": "boolean"
+      },
+      {
+        "name": "options",
+        "type": "string[]"
+      },
+      {
+        "name": "position",
+        "type": "number"
+      }
+    ],
+    "source": "go",
+    "goType": "collections.Field"
+  },
+  "put:/api/sites/{siteId}/collections/{id}/fields/order": {
+    "fields": [
+      {
+        "name": "ids",
+        "type": "string[]"
+      }
+    ],
+    "source": "go",
+    "goType": "orderBody"
+  },
+  "post:/api/sites/{siteId}/collections/{id}/records": {
+    "fields": [
+      {
+        "name": "values",
+        "type": "{ [string]: any }"
+      },
+      {
+        "name": "published",
+        "type": "boolean | null"
+      }
+    ],
+    "source": "go",
+    "goType": "recordBody"
+  },
+  "put:/api/sites/{siteId}/collections/{id}/records/{rid}": {
+    "fields": [
+      {
+        "name": "values",
+        "type": "{ [string]: any }"
+      },
+      {
+        "name": "published",
+        "type": "boolean | null"
+      }
+    ],
+    "source": "go",
+    "goType": "recordBody"
+  },
+  "post:/api/sites/{siteId}/collections/{id}/records/{rid}/move": {
+    "fields": [
+      {
+        "name": "delta",
+        "type": "number"
+      }
+    ],
+    "source": "go",
+    "goType": "moveBody"
+  },
+  "put:/api/sites/{siteId}/collections/{id}/records/order": {
+    "fields": [
+      {
+        "name": "ids",
+        "type": "string[]"
+      }
+    ],
+    "source": "go",
+    "goType": "orderBody"
   },
   "post:/api/instructor/{siteId}/login": {
     "fields": [
@@ -3255,6 +3433,20 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
       {
         "name": "externalMerchantId",
         "type": "string"
+      },
+      {
+        "name": "locationId",
+        "type": "string"
+      },
+      {
+        "name": "soldOutFromStock",
+        "type": "boolean | null",
+        "note": "SoldOutFromStock absent keeps the stored value; false clears it."
+      },
+      {
+        "name": "autoBillOnCompleted",
+        "type": "boolean | null",
+        "note": "AutoBillOnCompleted absent keeps the stored value; false clears it."
       }
     ],
     "source": "go",
@@ -3270,6 +3462,16 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
     "source": "go",
     "goType": "rejectBody"
   },
+  "put:/api/sites/{siteId}/delivery-apps/{app}/menu/items/{variantId}/sold-out": {
+    "fields": [
+      {
+        "name": "soldOut",
+        "type": "boolean | null"
+      }
+    ],
+    "source": "go",
+    "goType": "soldOutBody"
+  },
   "post:/_wb/delivery/{app}/{path}": {
     "fields": [
       {
@@ -3282,6 +3484,16 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
       },
       {
         "name": "grant_type",
+        "type": "string"
+      }
+    ],
+    "source": "go",
+    "goType": "(inline)"
+  },
+  "post:/api/orgs/{orgId}/deploy-keys": {
+    "fields": [
+      {
+        "name": "name",
         "type": "string"
       }
     ],
@@ -3649,6 +3861,11 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
         "note": "Sandbox points the provider adapter at its test environment."
       },
       {
+        "name": "autoIssueWeb",
+        "type": "boolean",
+        "note": "AutoIssueWeb (D6): enqueue an online order's invoice when it becomes paid, through the same MTT series as the counter's."
+      },
+      {
         "name": "updatedAt",
         "type": "string (RFC3339)"
       },
@@ -3687,6 +3904,38 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
     ],
     "source": "go",
     "goType": "cancelBody"
+  },
+  "post:/api/sites/{siteId}/einvoice/orders/{orderId}": {
+    "fields": [
+      {
+        "name": "buyer",
+        "type": "einvoice.Buyer",
+        "fields": [
+          {
+            "name": "taxCode",
+            "type": "string"
+          },
+          {
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "name": "company",
+            "type": "string"
+          },
+          {
+            "name": "address",
+            "type": "string"
+          },
+          {
+            "name": "email",
+            "type": "string"
+          }
+        ]
+      }
+    ],
+    "source": "go",
+    "goType": "orderIssueBody"
   },
   "post:/api/sites/{siteId}/flash-sales": {
     "fields": [
@@ -4134,6 +4383,11 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
             "name": "reviewProductId",
             "type": "string",
             "note": "ReviewProductID is what a type=review form reviews, PINNED by the merchant — OrderProductID's twin, and the trustworthy half of the two answers this type accepts. THE PIN WINS when set, because it is the value a caller cannot change."
+          },
+          {
+            "name": "collectionId",
+            "type": "string",
+            "note": "CollectionID is the data table a custom form saves each accepted response into, as an unpublished record (see recordsink."
           }
         ]
       },
@@ -4232,6 +4486,11 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
             "name": "reviewProductId",
             "type": "string",
             "note": "ReviewProductID is what a type=review form reviews, PINNED by the merchant — OrderProductID's twin, and the trustworthy half of the two answers this type accepts. THE PIN WINS when set, because it is the value a caller cannot change."
+          },
+          {
+            "name": "collectionId",
+            "type": "string",
+            "note": "CollectionID is the data table a custom form saves each accepted response into, as an unpublished record (see recordsink."
           }
         ]
       },
@@ -4257,6 +4516,75 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
         "name": "type",
         "type": "forms.Type",
         "note": "Type, when present, changes the form's type in the SAME write."
+      },
+      {
+        "name": "settings",
+        "type": "forms.Settings | null",
+        "note": "Settings, when present, replace the stored settings WHOLE (the item PUT's shape) in the same write, judged with the type and the document as one form; absent, the stored settings are kept exactly.",
+        "fields": [
+          {
+            "name": "afterSubmit",
+            "type": "AfterSubmit"
+          },
+          {
+            "name": "notify",
+            "type": "Notify"
+          },
+          {
+            "name": "submitLabel",
+            "type": "string",
+            "note": "SubmitLabel / SubmittingLabel: the button's resting and in-flight text."
+          },
+          {
+            "name": "submittingLabel",
+            "type": "string"
+          },
+          {
+            "name": "booking",
+            "type": "BookingSettings",
+            "note": "Booking is the booking-form rulebook (TypeBooking only — see booking."
+          },
+          {
+            "name": "confirmation",
+            "type": "ConfirmationSettings",
+            "note": "Confirmation is the visitor \"we received your message\" email's own settings (ConfirmationEligible types only — see confirmation."
+          },
+          {
+            "name": "skipStorage",
+            "type": "boolean",
+            "note": "SkipStorage turns OFF storing responses (sink-only forms). Deliberately NAMED FOR THE NON-DEFAULT so the Go zero value is the product default."
+          },
+          {
+            "name": "limitOnePerIpPerDay",
+            "type": "boolean",
+            "note": "LimitOnePerIPPerDay is an OPTIONAL extra throttle."
+          },
+          {
+            "name": "submitSegmentId",
+            "type": "string",
+            "note": "SubmitSegmentID is which segment carries the submit button."
+          },
+          {
+            "name": "orderProductId",
+            "type": "string",
+            "note": "OrderProductID is what a type=order form sells."
+          },
+          {
+            "name": "orderSource",
+            "type": "OrderSource",
+            "note": "OrderSource is where a type=order form gets what it sells FROM: the pinned OrderProductID above, or the shopper's cart."
+          },
+          {
+            "name": "reviewProductId",
+            "type": "string",
+            "note": "ReviewProductID is what a type=review form reviews, PINNED by the merchant — OrderProductID's twin, and the trustworthy half of the two answers this type accepts. THE PIN WINS when set, because it is the value a caller cannot change."
+          },
+          {
+            "name": "collectionId",
+            "type": "string",
+            "note": "CollectionID is the data table a custom form saves each accepted response into, as an unpublished record (see recordsink."
+          }
+        ]
       }
     ],
     "source": "go",
@@ -8997,6 +9325,34 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
     ],
     "source": "go",
     "goType": "BlogCategoryInput"
+  },
+  "post:/api/v1/collections/{collection}/records": {
+    "fields": [
+      {
+        "name": "values",
+        "type": "{ [string]: any }"
+      },
+      {
+        "name": "published",
+        "type": "boolean | null"
+      }
+    ],
+    "source": "go",
+    "goType": "CollectionRecordInput"
+  },
+  "put:/api/v1/collections/{collection}/records/{id}": {
+    "fields": [
+      {
+        "name": "values",
+        "type": "{ [string]: any }"
+      },
+      {
+        "name": "published",
+        "type": "boolean | null"
+      }
+    ],
+    "source": "go",
+    "goType": "CollectionRecordInput"
   },
   "post:/api/v1/customers": {
     "fields": [

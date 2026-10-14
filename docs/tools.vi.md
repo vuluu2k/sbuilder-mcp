@@ -1,6 +1,6 @@
 # Bộ tool
 
-Bốn tool với tới 853 operation của nền tảng, và 316 trong 397 lệnh ghi trong số đó mang theo
+Bốn tool với tới 892 operation của nền tảng, và 330 trong 416 lệnh ghi trong số đó mang theo
 hình dạng body đọc thẳng từ handler decode chúng. `sb_api_find` là một chỉ mục, không phải mỗi
 endpoint một tool — [lý do](../README.vi.md#bộ-tool).
 
@@ -490,7 +490,8 @@ nó thay chỗ cái mà node chủ lẽ ra tự tạo.
 Phần tử vừa tạo mang sẵn BINDINGS mà kiểu của nó cần: `text-dataset` đã đọc `product.title`,
 `pricing-dataset` có đủ sáu khoá giá, `list-dataset` có target repeater. Editor suy chúng lúc
 kéo thả và defaults của element không mang, nên trước đây mọi phần tử dữ liệu server này tạo
-ra đều lưu được, publish được và render mãi placeholder.
+ra đều lưu được, publish được và render mãi placeholder. Binding của tile record lấy từ
+`recordField` — xem "Danh sách record" bên dưới.
 
 ## `sb_set`
 
@@ -809,6 +810,49 @@ Cả hai tham số đều được kiểm với từ vựng sinh tự động, v
 "đang tải"), còn `field` ngoài `specials` thì được lưu, được ghi, được publish, và bị bỏ qua
 mãi mãi — `applyBindings` đọc namespace từ field rồi bỏ qua mọi thứ khác.
 
+Nguồn **record** (một field trong Collection của merchant) là nguồn duy nhất không danh sách nào
+chứa được, vì nó gọi field bằng ID: `record.fld_<16 hex>`, hoặc `record.html.fld_<16 hex>` cho
+field richtext. Mọi `record.*` khác đều bị từ chối (KEY của field không gắn được gì), và
+`record.<fid>` vào `specials.boundHtml` cũng vậy — sink đó chỉ nhận `record.html.<fid>` đã được
+làm sạch (`schema/src/rawSinkBindings.ts`). Hiếm khi cần `sb_bind` cho nó: tile record tự suy
+binding từ config, xem dưới.
+
+## Danh sách record (Collections)
+
+`list-dataset` với `config.datasetSource: "record"` lặp các record **đã publish** của một
+Collection (server sắp xếp và lọc, `quantity` dòng, tối đa 50). Cách dựng:
+
+1. Tạo dữ liệu bằng `sb_api_call`: `POST /api/sites/{siteId}/collections` `{ name }` →
+   `POST …/collections/{id}/fields` `{ key, label, type }` (text, richtext, number, boolean,
+   date, select, url, image) → `POST …/collections/{id}/records`
+   `{ values: { <KEY của field>: … }, published: true }`. Record nháp không bao giờ hiện.
+2. Đọc lại ID của field: `GET …/collections/{id}/fields` — mỗi field có `id: "fld_…"`.
+3. `sb_add` danh sách cùng thẻ của nó:
+
+```json
+{ "type": "list-dataset",
+  "config": { "datasetSource": "record", "recordCollectionId": "<id collection>" },
+  "children": [{ "type": "dataset-block", "children": [
+    { "type": "collection-media", "config": { "datasetSource": "record", "recordField": "fld_…" } },
+    { "type": "text-dataset", "config": { "datasetSource": "record", "recordField": "fld_…", "recordFieldType": "text" } }
+  ]}]}
+```
+
+Tile gọi field bằng **ID, không bao giờ bằng key** (`config.recordField`), và tile chữ ghi cả
+kiểu của field (`config.recordFieldType`): `richtext` gắn `record.html.<fid>` vào
+`specials.boundHtml`, còn lại gắn `record.<fid>` vào `specials.boundText`; `collection-media`
+gắn field ảnh vào `specials.boundImage`. Binding được SUY từ config đó — khi `sb_add`, và lại
+lần nữa mỗi khi `sb_set` đổi `recordField`, `recordFieldType` hay `datasetSource` — đúng như
+`datasetBindings` của nền tảng. Sắp xếp và lọc bằng `recordSortField` / `recordSortDesc` /
+`recordFilterField` / `recordFilterValue` (cũng là ID field). Mọi khoá `record*` đều
+**chỉ-base**: renderer đọc chúng từ config base, nên `sb_set` đưa chúng về đó dù bạn chỉ định
+breakpoint nào.
+
+`sb_review` báo danh sách record không chỉ collection nào (`record_list_unsourced`), tile không
+có ID field (`record_field_unset`), và binding `record.*` nằm ngoài danh sách record
+(`no_data_context`). Nó KHÔNG kiểm ID field có tồn tại trong collection hay không — việc đó cần
+một lần fetch mỗi collection ở mỗi lần review; khi nghi ngờ hãy tự đọc `…/fields`.
+
 
 ## Binding mua hàng
 
@@ -837,11 +881,15 @@ với mỗi control nền tảng có khai báo, nó ghi vào đâu:
 
 ```
 { type, hints: { useWhen, avoidWhen, contentTips },
-  inspector: [{ tab, groups: [{ group, controls: ["font_size", …] }] }],
+  inspector: [{ tab, groups: [{ group, controls: ["font_size", …] } | { group, same_as: "<an earlier group>" }] }],
   declared: { font_size: { label, writes, defaults? }, … },
   defaults, translatable?, config_values?, specials_values?, isContainer, isRootOnly,
   childAllows, undeclared_note, style_is_open_css }
 ```
+
+Nhóm nào có danh sách control trùng hệt một nhóm TRƯỚC đó (hơn ba control) sẽ trả về
+`{ group, same_as }` — đọc `controls` của nhóm kia. Hiện chỉ `list-dataset` có nhóm như vậy
+(các nhóm layout theo từng nguồn); cách này giữ kết quả dưới ngân sách token.
 
 `translatable` nêu special nào của element này được phép dịch, và special nào nó đang mang mà
 TUYỆT ĐỐI không được dịch — dịch nhầm không làm trang xấu đi mà LÀM HỎNG render (`name` là id
@@ -1366,7 +1414,9 @@ tài liệu:
 | `empty_text` / `missing_media` | Element bỏ trống — khoảng trắng, hoặc ảnh vỡ |
 | `static_in_dataset` | Một element nằm trong repeater nhưng chỉ render nội dung do tài liệu ghi — cùng một tấm ảnh trên mọi thẻ sản phẩm |
 | `unbound_dataset_element` | Element dataset không có binding nào — nó chờ một `bound…` special mà không ai ghi |
-| `dead_binding_source` | Nguồn renderer không cung cấp — hiện placeholder mãi mãi |
+| `dead_binding_source` | Nguồn renderer không cung cấp — hiện placeholder mãi mãi. Nguồn `record.*` chỉ hợp lệ ở dạng `record.fld_<16 hex>` / `record.html.fld_<16 hex>`, và chỉ dạng html được vào `specials.boundHtml` |
+| `record_list_unsourced` | `list-dataset` có `datasetSource: "record"` mà không có `config.recordCollectionId` — không dòng nào được lấy, khách chỉ thấy trạng thái rỗng |
+| `record_field_unset` | Tile record (`text-dataset` / `collection-media` có `datasetSource: "record"`) mà `config.recordField` rỗng hoặc không phải ID `fld_…` — KEY của field không gắn được gì; mọi dòng đều hiện placeholder |
 | `dead_binding_field` | Field binding ngoài `specials` — được lưu, được publish, và bị bỏ qua |
 | `unknown_element` | Type catalog không biết; chạy `npm run codegen` |
 | `unlinked_form` | `form` không trỏ tới form nào — compose ra rỗng và publish thành MỘT HỘP TRỐNG. Platform cố tình im lặng về lỗi này |
@@ -1384,7 +1434,7 @@ tài liệu:
 | `no_h1` | Trang có heading mà không cái nào là `h1`. Mọi `heading` sinh ra là h2 (`specials.htmlTag`), `text` / `text-dataset` cũng đọc key đó, nên trang dựng ở đây — và mọi trang platform seed — không có tiêu đề chính cho máy tìm kiếm hay trình đọc màn hình. Canvas không hiện tag. Báo trên heading đầu tiên CỦA TRANG — dòng thương hiệu trong header dùng chung được bỏ qua, theo cả hai stamp (`globalRef`/`globalId`); đặt h1 lên đúng heading nói về trang, một cái thôi |
 | `invalid_action` | Sự kiện đã lưu có action mà element không hỗ trợ trên trigger đó (nút đã gắn mua hàng chỉ nhận `bindingEvents`). Được lưu nhưng không bao giờ chạy |
 | `action_missing_target` | `go_to_url` / `open_page` thiếu `payload.url` (renderer không tự phân giải id trang), hoặc `popup` thiếu `payload.id`. Bấm vào không có tác dụng |
-| `no_data_context` | Element gắn dữ liệu (`product.*`, `category.*`, `article.*`, `course.*`) nằm ngoài mọi repeater và mọi pin, trên loại trang không cung cấp bản ghi đó. Nó hiện placeholder mãi mãi |
+| `no_data_context` | Element gắn dữ liệu (`product.*`, `category.*`, `article.*`, `course.*`) nằm ngoài mọi repeater và mọi pin, trên loại trang không cung cấp bản ghi đó. Nó hiện placeholder mãi mãi. Binding `record.*` chỉ có dữ liệu khi `list-dataset` GẦN NHẤT bao nó có `datasetSource: "record"`, trên mọi loại trang (`key: "record"`) |
 | `unread_value` | Giá trị config/specials đã lưu nằm ngoài từ vựng của renderer, ở base hoặc bất kỳ breakpoint nào. Publish ra giá trị mặc định mà không báo lỗi |
 | `unknown_icon` | Key icon đã lưu (`icon` `specials.name`, `button` `specials.icon`, `list-dataset` `config.listNavIcon`, …) chứa tên mà manifest icon không có. Publish ra ngôi sao mặc định hoặc không có icon; phần problem nêu các tên thật gần nhất |
 | `custom_code_native` | **`severity: "maintenance"`** — khối `custom-code` chủ yếu là markup mà element native đã có (form, heading, ảnh, nút, danh sách link, iframe YouTube/Vimeo/Maps). Chỉ là gợi ý: vẫn chạy, nhưng không sửa được trong inspector, bỏ qua theme và `sb_review` không nhìn vào được. Script bên thứ ba và embed lạ không bao giờ bị báo |

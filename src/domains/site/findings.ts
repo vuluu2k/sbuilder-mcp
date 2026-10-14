@@ -139,8 +139,16 @@ export const FIX: Record<string, string> = {
   no_data_context:
     'Give it a record: put it inside a list-dataset / dataset-block, pin one with sb_bind ' +
     '(target id), or move it to a page whose type supplies "<key>" (product, category, course, ' +
-    'post, blog). A cartLine field goes inside a cart-order instead. Off those it renders its ' +
+    'post, blog). A cartLine field goes inside a cart-order instead; a record field inside a ' +
+    'list-dataset with datasetSource "record". Off those it renders its ' +
     'placeholder for ever.',
+  record_list_unsourced:
+    'Point it at a collection: sb_set id "<id>", namespace config, keys { "recordCollectionId": "<collection id>" } ' +
+    '(the ids are on GET /api/sites/{siteId}/collections). Only PUBLISHED records render.',
+  record_field_unset:
+    'Name the field by its ID: sb_set id "<id>", namespace config, keys { "recordField": "fld_…", ' +
+    '"recordFieldType": "<the field\'s type>" } — ids and types are on GET /api/sites/{siteId}/collections/{id}/fields. ' +
+    'A text-dataset shows text/richtext/number/boolean/date/select/url; a collection-media shows image.',
   unread_value:
     'Write a value the renderer reads: sb_traits_for "<type>" lists them; sb_set id "<id>" ' +
     'with one, at the same breakpoint it is stored at.',

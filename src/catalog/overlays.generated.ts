@@ -373,6 +373,8 @@ export const OVERLAY_SEEDS: Record<'cart' | 'popup' | 'quickview', OverlayDocume
         "config": {
           "datasetSource": "product",
           "kind": "title",
+          "recordField": "",
+          "recordFieldType": "",
           "textValue": "Product name",
           "descriptionDisplayType": "Full",
           "descriptionLines": 3,
@@ -1362,6 +1364,8 @@ export const OVERLAY_SEEDS: Record<'cart' | 'popup' | 'quickview', OverlayDocume
         "config": {
           "datasetSource": "product",
           "kind": "title",
+          "recordField": "",
+          "recordFieldType": "",
           "textValue": "",
           "descriptionDisplayType": "Full",
           "descriptionLines": 3,
@@ -1775,6 +1779,8 @@ export const OVERLAY_SEEDS: Record<'cart' | 'popup' | 'quickview', OverlayDocume
         "config": {
           "datasetSource": "product",
           "kind": "description",
+          "recordField": "",
+          "recordFieldType": "",
           "textValue": "",
           "descriptionDisplayType": "Full",
           "descriptionLines": 3,
@@ -2414,6 +2420,8 @@ export const CART_SEEDS: Record<string, OverlayDocument> = {
         "config": {
           "datasetSource": "product",
           "kind": "title",
+          "recordField": "",
+          "recordFieldType": "",
           "textValue": "Product name",
           "descriptionDisplayType": "Full",
           "descriptionLines": 3,
@@ -3248,6 +3256,8 @@ export const CART_SEEDS: Record<string, OverlayDocument> = {
         "config": {
           "datasetSource": "product",
           "kind": "title",
+          "recordField": "",
+          "recordFieldType": "",
           "textValue": "Product name",
           "descriptionDisplayType": "Full",
           "descriptionLines": 3,

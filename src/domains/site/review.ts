@@ -8,6 +8,7 @@ import { HOVER_STATE, hoverHome } from './hover.js';
 import { ELEMENTS, BINDING_SOURCES, BOUND_SPECIALS , FIRST_CHILD_ONLY, SATELLITE_RULES, ELEMENT_SEEDS } from '../../catalog/elements.generated.js';
 import type { PageDoc } from './document.js';
 import { fill } from './findings.js';
+import { isRecordSource, RECORD_FIELD_ID, RECORD_HTML_SOURCE, RECORD_SOURCE, RECORD_TILES } from './record.js';
 import { formFieldFindings } from './formdoc.js';
 import { deadNavigation, liveEventTable, PAYLOAD_NEEDS, type NodeEventLike } from './navhref.js';
 import { unknownValueNote, unknownWriteNote, vocabularyFor, vocabularyForWrite } from './vocabulary.js';
@@ -622,6 +623,65 @@ export function reviewDesign(
       }
     }
 
+    // COLLECTIONS RECORD LISTS (web_builder PR #117). Three silent shapes:
+    //   - a record list naming no collection: recordfeed.go:80-82 `continue`s, so
+    //     no row is fetched and the list renders only its empty state;
+    //   - a record tile naming no field ID: datasetBindings.ts:152-155 binds ''
+    //     and the tile shows its placeholder on every row;
+    //   - a `record.*` binding outside a record list: only that list's rows carry
+    //     a record context (recordContext.ts), and the NEAREST list is the one
+    //     whose row the tile reads (editor/src/element/recordList.ts owningList).
+    {
+      const cfg = (n as { config?: Record<string, unknown> }).config ?? {};
+      if (type === 'list-dataset' && cfg.datasetSource === 'record' && !String(cfg.recordCollectionId ?? '').trim()) {
+        out.push({
+          code: 'record_list_unsourced',
+          nodeId: id,
+          type,
+          problem:
+            'A record list (datasetSource "record") naming no collection — the renderer fetches no ' +
+            'rows for it, so a visitor sees only its empty state.',
+          fix: fill('record_list_unsourced', { id }),
+        });
+      }
+      if (RECORD_TILES.has(type) && cfg.datasetSource === 'record') {
+        const fid = cfg.recordField;
+        if (typeof fid !== 'string' || !RECORD_FIELD_ID.test(fid)) {
+          out.push({
+            code: 'record_field_unset',
+            nodeId: id,
+            type,
+            problem:
+              (fid ? `config.recordField "${String(fid)}" is not a field ID` : 'It names no config.recordField') +
+              ' — a record tile binds a field by its "fld_<16 hex>" ID, never its key, so it renders its ' +
+              'placeholder on every row.',
+            fix: fill('record_field_unset', { id }),
+          });
+        }
+      }
+      const recordBound = ((n as { bindings?: Array<{ source?: string }> }).bindings ?? []).some((b) =>
+        isRecordSource(String(b?.source ?? '')),
+      );
+      if (recordBound && !inOverlay.has(id)) {
+        let list: string | null | undefined = n.data.parent;
+        while (list && d.nodes[list] && d.nodes[list].data.type !== 'list-dataset') list = d.nodes[list].data.parent;
+        const lcfg = list && d.nodes[list] ? (d.nodes[list] as { config?: Record<string, unknown> }).config : undefined;
+        if (lcfg?.datasetSource !== 'record') {
+          out.push({
+            code: 'no_data_context',
+            nodeId: id,
+            type,
+            problem:
+              'Bound to a record field, but ' +
+              (list ? 'its nearest list-dataset is not a record list' : 'it sits in no list-dataset') +
+              ' — only a list-dataset with datasetSource "record" supplies one, so it renders its placeholder.',
+            key: 'record',
+            fix: fill('no_data_context', { id, key: 'record' }),
+          });
+        }
+      }
+    }
+
     // A STORED VALUE NO RENDERER READS. The same vocabulary `sb_set` warns from
     // (`unknownWriteNote` / `unknownValueNote`), asked of what the document
     // already holds — base and every breakpoint — because an import or a write
@@ -1130,7 +1190,11 @@ export function reviewDesign(
     // and the element falls back to its own placeholder — indistinguishable, on
     // screen, from data that has not loaded.
     for (const b of bindings) {
-      if (b.source && !BINDING_SOURCES.includes(b.source)) {
+      // A record source is a field ID, so no static list holds it; boundHtml takes
+      // one only as record.html.<fid> (schema/src/rawSinkBindings.ts:102).
+      const recordOk =
+        !!b.source && RECORD_SOURCE.test(b.source) && (b.field !== 'specials.boundHtml' || RECORD_HTML_SOURCE.test(b.source));
+      if (b.source && !recordOk && !BINDING_SOURCES.includes(b.source)) {
         out.push({
           code: 'dead_binding_source',
           nodeId: id,
