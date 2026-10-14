@@ -6,6 +6,19 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.89.0] - 2026-10-14
+
+### Added
+- `sb_add` builds a record list from a Collections collection, using a `list-dataset` with `datasetSource: "record"` and `recordCollectionId`, whose text and media tiles show one field each through `recordField` and `recordFieldType`.
+- `sb_bind` accepts `record.<fid>` and `record.html.<fid>` as binding sources for a Collections field.
+- `sb_review` reports `record_list_unsourced`, `record_field_unset` and `no_data_context` for record lists that are missing a collection or a field, and for `record.*` bindings used outside a record list.
+- The API catalog is refreshed to 892 operations, adding collections, fields, records with CSV import and export, `/api/v1/collections`, forms that save into data tables, GrabFood and MISA.
+
+### Changed
+- `sb_set` re-derives an element's bindings when `recordField` or `recordFieldType` changes, and the `record*` config keys are written to base only.
+- `sb_bind` refuses a `record.*` source that names no field ID, `record.<fid>` into `specials.boundHtml`, and `record.html.<fid>` into `specials.boundText`.
+- `sb_traits_for` returns `{group, same_as}` for a control group that repeats an earlier one, which keeps the result within the token budget.
+
 ## [0.88.1] - 2026-10-12
 
 ### Added

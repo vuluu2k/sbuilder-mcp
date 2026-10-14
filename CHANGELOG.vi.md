@@ -6,6 +6,19 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.89.0] - 2026-10-14
+
+### Added
+- `sb_add` dựng được danh sách bản ghi (record list) từ một collection trong Collections, dùng `list-dataset` với `datasetSource: "record"` và `recordCollectionId`, trong đó các ô text và media hiển thị mỗi ô một field qua `recordField` và `recordFieldType`.
+- `sb_bind` nhận `record.<fid>` và `record.html.<fid>` làm nguồn binding cho một field của Collections.
+- `sb_review` báo `record_list_unsourced`, `record_field_unset` và `no_data_context` cho record list thiếu collection hoặc field, và cho binding `record.*` dùng ngoài record list.
+- Catalog API được làm mới lên 892 operation, thêm collections, fields, records với nhập và xuất CSV, `/api/v1/collections`, form lưu vào bảng dữ liệu, GrabFood và MISA.
+
+### Changed
+- `sb_set` suy lại binding của element khi `recordField` hoặc `recordFieldType` thay đổi, và các key config `record*` chỉ được ghi ở base.
+- `sb_bind` từ chối nguồn `record.*` không chỉ ra ID của field, `record.<fid>` vào `specials.boundHtml`, và `record.html.<fid>` vào `specials.boundText`.
+- `sb_traits_for` trả `{group, same_as}` cho nhóm control lặp lại nhóm trước, giúp kết quả nằm trong ngân sách token.
+
 ## [0.88.1] - 2026-10-12
 
 ### Added
