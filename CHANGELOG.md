@@ -6,6 +6,20 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.90.0] - 2026-10-22
+
+### Added
+- `sb_review` reports `record_relation_unset`, `record_relation_orphan` and `record_relation_no_empty` for relation lists, and `hardcoded_dataset` for custom-code scripts that embed a data table.
+- `sb_page_state` returns `data.record_lists`, so editing a record changes no draft and the page needs no publish.
+- The Collections call sheet documents `rev` and `stale_record`, whole-unit integer money (unlike `priceCents`), upsert by `externalId`, `in_use`, pagination and the 60-second cache.
+- The API catalog is refreshed to 919 operations, and `/api/plans` and `/api/locales` are now part of it.
+
+### Changed
+- `sb_bind` accepts `record.id` and builds relation lists.
+- `sb_bind` reads the real fields of every collection visible to the row, including the parent row of a relation list, before writing, and refuses a field ID that does not exist, a gallery field, a wrong richtext form, or a node outside every record row.
+- `sb_bind` reports 401, 403 and 404 responses from the field lookup verbatim, and `force` overrides its refusals like any other soft guard.
+- Request shapes show Go string types that have a validator as a union of their allowed values, such as `"text" | … | "gallery"`, instead of the type name.
+
 ## [0.89.0] - 2026-10-14
 
 ### Added

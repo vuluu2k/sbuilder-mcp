@@ -6,6 +6,20 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.90.0] - 2026-10-22
+
+### Added
+- `sb_review` báo `record_relation_unset`, `record_relation_orphan` và `record_relation_no_empty` cho danh sách quan hệ (relation list), và `hardcoded_dataset` cho script custom-code nhúng bảng dữ liệu.
+- `sb_page_state` trả `data.record_lists`, nên sửa một bản ghi không đổi bản nháp và trang không cần publish.
+- Call sheet của Collections ghi rõ `rev` và `stale_record`, tiền dạng số nguyên theo đơn vị nguyên (khác `priceCents`), upsert theo `externalId`, `in_use`, phân trang và cache 60 giây.
+- Catalog API được làm mới lên 919 operation, và `/api/plans`, `/api/locales` nay nằm trong catalog.
+
+### Changed
+- `sb_bind` nhận `record.id` và dựng được danh sách quan hệ (relation list).
+- `sb_bind` đọc field thật của mọi collection mà dòng đó thấy, kể cả dòng cha của relation list, trước khi ghi, và từ chối ID field không tồn tại, field gallery, sai dạng richtext, hoặc node nằm ngoài mọi dòng bản ghi.
+- `sb_bind` báo nguyên văn phản hồi 401, 403 và 404 khi tra field, và `force` vượt được các lần từ chối như mọi soft guard khác.
+- Request shape hiển thị kiểu chuỗi Go có validator dưới dạng union các giá trị cho phép, như `"text" | … | "gallery"`, thay vì tên kiểu.
+
 ## [0.89.0] - 2026-10-14
 
 ### Added
