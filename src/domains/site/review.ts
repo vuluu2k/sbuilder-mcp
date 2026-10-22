@@ -273,6 +273,38 @@ function nativeFor(code: string): string | null {
 }
 
 /**
+ * A data table hand-kept inside a script: the largest set of FLAT object
+ * literals sharing one key set (≥3 keys, ≥4 objects). That is the shape of
+ * `const DATA = { hotels: [{…}, …] }` — records a Collection + record list
+ * serve natively, so editing a price stops meaning editing code.
+ * ponytail: brace-regex over flat objects, not a JS parser — nested records
+ * count only at their innermost level.
+ */
+export function hardcodedRecords(code: string): { count: number; keys: string[] } | null {
+  // Executable scripts only: JSON-LD and templates are data the page declares, not a table.
+  const scripts = [...code.matchAll(/<script\b([^>]*)>([\s\S]*?)(?:<\/script>|$)/gi)]
+    .filter((m) => !/(?<![\w-])type\s*=\s*["']?(?!(?:text|application)\/javascript|module)[^"'\s>]/i.test(m[1]))
+    .map((m) => m[2])
+    .join('\n');
+  // DISTINCT bodies: a minified bundle repeats `{enumerable:!0,configurable:!0,writable:!0}`;
+  // records differ row by row.
+  const groups = new Map<string, Set<string>>();
+  for (const m of scripts.matchAll(/\{([^{}]{1,4000})\}/g)) {
+    const keys = [...m[1].matchAll(/(?:^|,)\s*["']?([\p{L}_$][\p{L}\p{N}_$]*)["']?\s*:/gu)].map((k) => k[1]);
+    if (keys.length < 3) continue;
+    const sig = [...new Set(keys)].sort().join(',');
+    const bodies = groups.get(sig) ?? new Set<string>();
+    bodies.add(m[1].replace(/\s+/g, ''));
+    groups.set(sig, bodies);
+  }
+  let best: { count: number; keys: string[] } | null = null;
+  for (const [sig, bodies] of groups) {
+    if (bodies.size >= 4 && (!best || bodies.size > best.count)) best = { count: bodies.size, keys: sig.split(',') };
+  }
+  return best;
+}
+
+/**
  * Everything wrong with this page that a person would notice.
  *
  * OVERLAYS ARE WALKED, and used not to be — on the stated reasoning that the
@@ -644,6 +676,51 @@ export function reviewDesign(
           fix: fill('record_list_unsourced', { id }),
         });
       }
+      // RELATION LISTS (web_builder 1b6c07a91): a record list inside another record
+      // list's row. Without recordRelationField it repeats the WHOLE collection under
+      // every parent; with one but no record row above it has no parent id and shows
+      // only its empty state; with no empty state a parent with no children shows
+      // ghost placeholder cards (list-dataset/html.go recordRows → placeholders).
+      if (type === 'list-dataset' && cfg.datasetSource === 'record') {
+        let up: string | null | undefined = n.data.parent;
+        while (up && d.nodes[up] && d.nodes[up].data.type !== 'list-dataset') up = d.nodes[up].data.parent;
+        const parentCfg = up && d.nodes[up] ? (d.nodes[up] as { config?: Record<string, unknown> }).config : undefined;
+        const nested = parentCfg?.datasetSource === 'record';
+        const rel = String(cfg.recordRelationField ?? '');
+        if (nested && !rel) {
+          out.push({
+            code: 'record_relation_unset',
+            nodeId: id,
+            type,
+            problem:
+              `A record list inside another record list's row with no config.recordRelationField — ` +
+              'every parent row shows the SAME records (the whole collection), not its own children. ' +
+              'Intended only if that list is meant to repeat unchanged under every parent.',
+            fix: fill('record_relation_unset', { id }),
+          });
+        } else if (rel && (!nested || !RECORD_FIELD_ID.test(rel))) {
+          out.push({
+            code: 'record_relation_orphan',
+            nodeId: id,
+            type,
+            problem: !RECORD_FIELD_ID.test(rel)
+              ? `config.recordRelationField "${rel}" is not a field ID — the list matches no child and shows its empty state (or placeholder cards, without one).`
+              : 'A relation list (recordRelationField set) outside any record-list row has no parent id, ' +
+                'so it shows its empty state (or placeholder cards, without one) on every page.',
+            fix: fill('record_relation_orphan', { id }),
+          });
+        } else if (rel && d.nodes[String(cfg.emptyStateId ?? '')]?.data.type !== 'list-empty') {
+          out.push({
+            code: 'record_relation_no_empty',
+            nodeId: id,
+            type,
+            problem:
+              'A relation list with no empty state: a parent row with no children yet renders ' +
+              'placeholder cards on the live page.',
+            fix: fill('record_relation_no_empty', { id }),
+          });
+        }
+      }
       if (RECORD_TILES.has(type) && cfg.datasetSource === 'record') {
         const fid = cfg.recordField;
         if (typeof fid !== 'string' || !RECORD_FIELD_ID.test(fid)) {
@@ -737,6 +814,20 @@ export function reviewDesign(
     }
 
     if (type === 'custom-code') {
+      const rows = hardcodedRecords(String((n.specials ?? {}).code ?? ''));
+      if (rows) {
+        out.push({
+          code: 'hardcoded_dataset',
+          nodeId: id,
+          type,
+          severity: 'maintenance',
+          problem:
+            `Its script carries ${rows.count} records with the same fields (${rows.keys.slice(0, 6).join(', ')}` +
+            `${rows.keys.length > 6 ? ', …' : ''}) — a data table kept in code, so adding a row or changing ` +
+            'a value means editing this script and every copy of it.',
+          fix: fill('hardcoded_dataset', { id }),
+        });
+      }
       const native = nativeFor(String((n.specials ?? {}).code ?? ''));
       if (native) {
         out.push({

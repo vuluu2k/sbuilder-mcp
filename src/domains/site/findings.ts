@@ -145,10 +145,27 @@ export const FIX: Record<string, string> = {
   record_list_unsourced:
     'Point it at a collection: sb_set id "<id>", namespace config, keys { "recordCollectionId": "<collection id>" } ' +
     '(the ids are on GET /api/sites/{siteId}/collections). Only PUBLISHED records render.',
+  hardcoded_dataset:
+    'Move the rows into a Collection (POST /api/sites/{siteId}/collections, its fields, then ' +
+    'POST …/records/upsert keyed by externalId) and render them with a list-dataset whose ' +
+    'datasetSource is "record" — one card template, rows edited as data. Logic the platform has ' +
+    'no native control for yet (visitor filters, computed totals) may stay in code, reading ' +
+    'GET /_wb/collections/{slug}/records instead of its own copy.',
+  record_relation_unset:
+    'Link it to its parent row: sb_set id "<id>", namespace config, keys { "recordRelationField": "fld_…" } — ' +
+    'the ID of a "reference" field in THIS list\'s collection that targets the enclosing list\'s collection ' +
+    '(GET /api/sites/{siteId}/collections/{id}/fields, refCollectionId).',
+  record_relation_orphan:
+    'Move it inside a record list\'s item template (sb_move), or clear the link: sb_set id "<id>", ' +
+    'namespace config, keys { "recordRelationField": "" }.',
+  record_relation_no_empty:
+    'Give it an empty state: sb_add a "list-empty" into id "<id>" (it becomes config.emptyStateId), ' +
+    'e.g. a short "Chưa có dữ liệu" line.',
   record_field_unset:
     'Name the field by its ID: sb_set id "<id>", namespace config, keys { "recordField": "fld_…", ' +
     '"recordFieldType": "<the field\'s type>" } — ids and types are on GET /api/sites/{siteId}/collections/{id}/fields. ' +
-    'A text-dataset shows text/richtext/number/boolean/date/select/url; a collection-media shows image.',
+    'A text-dataset shows text/richtext/number/integer/boolean/date/select/url/reference (integer prints ' +
+    'unformatted, 3330000); a collection-media shows image. A gallery field binds nothing yet.',
   unread_value:
     'Write a value the renderer reads: sb_traits_for "<type>" lists them; sb_set id "<id>" ' +
     'with one, at the same breakpoint it is stored at.',

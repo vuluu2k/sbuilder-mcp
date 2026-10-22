@@ -33,7 +33,12 @@ export const CHECKOUT_FORM_DOCUMENT = {
           "ckf_10",
           "ckf_11",
           "ckf_12",
-          "ckf_13"
+          "ckf_13",
+          "ckf_14",
+          "ckf_15",
+          "ckf_16",
+          "ckf_17",
+          "ckf_18"
         ],
         "isCanvas": false,
         "hidden": false,
@@ -50,7 +55,7 @@ export const CHECKOUT_FORM_DOCUMENT = {
       "specials": {
         "formId": "",
         "segmentId": "",
-        "formRules": ""
+        "formRules": "[{\"id\":\"rule_vat\",\"join\":\"and\",\"conditions\":[{\"field\":\"xuat_hoa_don_vat\",\"op\":\"empty\",\"value\":\"\"}],\"targets\":[{\"field\":\"vat_tax_code\",\"action\":\"hidden\"},{\"field\":\"vat_company\",\"action\":\"hidden\"},{\"field\":\"vat_address\",\"action\":\"hidden\"},{\"field\":\"vat_email\",\"action\":\"hidden\"}]}]"
       },
       "responsive": {},
       "events": [],
@@ -452,6 +457,207 @@ export const CHECKOUT_FORM_DOCUMENT = {
     "ckf_12": {
       "id": "ckf_12",
       "data": {
+        "type": "form-checkbox",
+        "parent": "ckf_1",
+        "nodes": [],
+        "isCanvas": false,
+        "hidden": false,
+        "custom": {}
+      },
+      "style": {
+        "width": "100%"
+      },
+      "config": {
+        "columns": 1,
+        "optionSource": "manual"
+      },
+      "specials": {
+        "name": "xuat_hoa_don_vat",
+        "label": "Xuất hoá đơn VAT",
+        "description": "",
+        "required": false,
+        "showLabel": false,
+        "mapTo": "",
+        "options": [
+          "Xuất hoá đơn VAT"
+        ],
+        "defaultValue": ""
+      },
+      "responsive": {},
+      "events": [],
+      "bindings": []
+    },
+    "ckf_13": {
+      "id": "ckf_13",
+      "data": {
+        "type": "form-text",
+        "parent": "ckf_1",
+        "nodes": [],
+        "isCanvas": false,
+        "hidden": false,
+        "custom": {}
+      },
+      "style": {
+        "width": "100%"
+      },
+      "config": {
+        "iconPosition": "left"
+      },
+      "specials": {
+        "showIcon": false,
+        "iconName": "",
+        "name": "vat_tax_code",
+        "label": "Mã số thuế",
+        "placeholder": "Ví dụ: 0312345678 hoặc 0312345678-001",
+        "description": "",
+        "required": true,
+        "showLabel": true,
+        "mapTo": "order.vatTaxCode",
+        "prefillValue": "",
+        "urlParam": "",
+        "hideOnPage": false,
+        "multiline": false,
+        "inputType": "text",
+        "limitChars": false,
+        "minChars": 0,
+        "maxChars": 500,
+        "patternPreset": "",
+        "pattern": "",
+        "patternCountries": []
+      },
+      "responsive": {},
+      "events": [],
+      "bindings": []
+    },
+    "ckf_14": {
+      "id": "ckf_14",
+      "data": {
+        "type": "form-text",
+        "parent": "ckf_1",
+        "nodes": [],
+        "isCanvas": false,
+        "hidden": false,
+        "custom": {}
+      },
+      "style": {
+        "width": "100%"
+      },
+      "config": {
+        "iconPosition": "left"
+      },
+      "specials": {
+        "showIcon": false,
+        "iconName": "",
+        "name": "vat_company",
+        "label": "Tên công ty",
+        "placeholder": "",
+        "description": "",
+        "required": true,
+        "showLabel": true,
+        "mapTo": "order.vatCompany",
+        "prefillValue": "",
+        "urlParam": "",
+        "hideOnPage": false,
+        "multiline": false,
+        "inputType": "text",
+        "limitChars": false,
+        "minChars": 0,
+        "maxChars": 500,
+        "patternPreset": "",
+        "pattern": "",
+        "patternCountries": []
+      },
+      "responsive": {},
+      "events": [],
+      "bindings": []
+    },
+    "ckf_15": {
+      "id": "ckf_15",
+      "data": {
+        "type": "form-text",
+        "parent": "ckf_1",
+        "nodes": [],
+        "isCanvas": false,
+        "hidden": false,
+        "custom": {}
+      },
+      "style": {
+        "width": "100%"
+      },
+      "config": {
+        "iconPosition": "left"
+      },
+      "specials": {
+        "showIcon": false,
+        "iconName": "",
+        "name": "vat_address",
+        "label": "Địa chỉ công ty",
+        "placeholder": "",
+        "description": "",
+        "required": true,
+        "showLabel": true,
+        "mapTo": "order.vatAddress",
+        "prefillValue": "",
+        "urlParam": "",
+        "hideOnPage": false,
+        "multiline": false,
+        "inputType": "text",
+        "limitChars": false,
+        "minChars": 0,
+        "maxChars": 500,
+        "patternPreset": "",
+        "pattern": "",
+        "patternCountries": []
+      },
+      "responsive": {},
+      "events": [],
+      "bindings": []
+    },
+    "ckf_16": {
+      "id": "ckf_16",
+      "data": {
+        "type": "form-text",
+        "parent": "ckf_1",
+        "nodes": [],
+        "isCanvas": false,
+        "hidden": false,
+        "custom": {}
+      },
+      "style": {
+        "width": "100%"
+      },
+      "config": {
+        "iconPosition": "left"
+      },
+      "specials": {
+        "showIcon": false,
+        "iconName": "",
+        "name": "vat_email",
+        "label": "Email nhận hoá đơn",
+        "placeholder": "",
+        "description": "",
+        "required": false,
+        "showLabel": true,
+        "mapTo": "order.vatEmail",
+        "prefillValue": "",
+        "urlParam": "",
+        "hideOnPage": false,
+        "multiline": false,
+        "inputType": "email",
+        "limitChars": false,
+        "minChars": 0,
+        "maxChars": 500,
+        "patternPreset": "",
+        "pattern": "",
+        "patternCountries": []
+      },
+      "responsive": {},
+      "events": [],
+      "bindings": []
+    },
+    "ckf_17": {
+      "id": "ckf_17",
+      "data": {
         "type": "form-text",
         "parent": "ckf_1",
         "nodes": [],
@@ -491,8 +697,8 @@ export const CHECKOUT_FORM_DOCUMENT = {
       "events": [],
       "bindings": []
     },
-    "ckf_13": {
-      "id": "ckf_13",
+    "ckf_18": {
+      "id": "ckf_18",
       "data": {
         "type": "form-submit",
         "parent": "ckf_1",
@@ -1740,7 +1946,12 @@ export const FORM_TEMPLATES = {
               "fche_10",
               "fche_11",
               "fche_12",
-              "fche_13"
+              "fche_13",
+              "fche_14",
+              "fche_15",
+              "fche_16",
+              "fche_17",
+              "fche_18"
             ],
             "isCanvas": false,
             "hidden": false,
@@ -1757,7 +1968,7 @@ export const FORM_TEMPLATES = {
           "specials": {
             "formId": "",
             "segmentId": "",
-            "formRules": ""
+            "formRules": "[{\"id\":\"rule_vat\",\"join\":\"and\",\"conditions\":[{\"field\":\"xuat_hoa_don_vat\",\"op\":\"empty\",\"value\":\"\"}],\"targets\":[{\"field\":\"vat_tax_code\",\"action\":\"hidden\"},{\"field\":\"vat_company\",\"action\":\"hidden\"},{\"field\":\"vat_address\",\"action\":\"hidden\"},{\"field\":\"vat_email\",\"action\":\"hidden\"}]}]"
           },
           "responsive": {},
           "events": [],
@@ -2159,6 +2370,207 @@ export const FORM_TEMPLATES = {
         "fche_12": {
           "id": "fche_12",
           "data": {
+            "type": "form-checkbox",
+            "parent": "fche_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%"
+          },
+          "config": {
+            "columns": 1,
+            "optionSource": "manual"
+          },
+          "specials": {
+            "name": "xuat_hoa_don_vat",
+            "label": "Xuất hoá đơn VAT",
+            "description": "",
+            "required": false,
+            "showLabel": false,
+            "mapTo": "",
+            "options": [
+              "Xuất hoá đơn VAT"
+            ],
+            "defaultValue": ""
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "fche_13": {
+          "id": "fche_13",
+          "data": {
+            "type": "form-text",
+            "parent": "fche_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%"
+          },
+          "config": {
+            "iconPosition": "left"
+          },
+          "specials": {
+            "showIcon": false,
+            "iconName": "",
+            "name": "vat_tax_code",
+            "label": "Mã số thuế",
+            "placeholder": "Ví dụ: 0312345678 hoặc 0312345678-001",
+            "description": "",
+            "required": true,
+            "showLabel": true,
+            "mapTo": "order.vatTaxCode",
+            "prefillValue": "",
+            "urlParam": "",
+            "hideOnPage": false,
+            "multiline": false,
+            "inputType": "text",
+            "limitChars": false,
+            "minChars": 0,
+            "maxChars": 500,
+            "patternPreset": "",
+            "pattern": "",
+            "patternCountries": []
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "fche_14": {
+          "id": "fche_14",
+          "data": {
+            "type": "form-text",
+            "parent": "fche_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%"
+          },
+          "config": {
+            "iconPosition": "left"
+          },
+          "specials": {
+            "showIcon": false,
+            "iconName": "",
+            "name": "vat_company",
+            "label": "Tên công ty",
+            "placeholder": "",
+            "description": "",
+            "required": true,
+            "showLabel": true,
+            "mapTo": "order.vatCompany",
+            "prefillValue": "",
+            "urlParam": "",
+            "hideOnPage": false,
+            "multiline": false,
+            "inputType": "text",
+            "limitChars": false,
+            "minChars": 0,
+            "maxChars": 500,
+            "patternPreset": "",
+            "pattern": "",
+            "patternCountries": []
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "fche_15": {
+          "id": "fche_15",
+          "data": {
+            "type": "form-text",
+            "parent": "fche_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%"
+          },
+          "config": {
+            "iconPosition": "left"
+          },
+          "specials": {
+            "showIcon": false,
+            "iconName": "",
+            "name": "vat_address",
+            "label": "Địa chỉ công ty",
+            "placeholder": "",
+            "description": "",
+            "required": true,
+            "showLabel": true,
+            "mapTo": "order.vatAddress",
+            "prefillValue": "",
+            "urlParam": "",
+            "hideOnPage": false,
+            "multiline": false,
+            "inputType": "text",
+            "limitChars": false,
+            "minChars": 0,
+            "maxChars": 500,
+            "patternPreset": "",
+            "pattern": "",
+            "patternCountries": []
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "fche_16": {
+          "id": "fche_16",
+          "data": {
+            "type": "form-text",
+            "parent": "fche_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%"
+          },
+          "config": {
+            "iconPosition": "left"
+          },
+          "specials": {
+            "showIcon": false,
+            "iconName": "",
+            "name": "vat_email",
+            "label": "Email nhận hoá đơn",
+            "placeholder": "",
+            "description": "",
+            "required": false,
+            "showLabel": true,
+            "mapTo": "order.vatEmail",
+            "prefillValue": "",
+            "urlParam": "",
+            "hideOnPage": false,
+            "multiline": false,
+            "inputType": "email",
+            "limitChars": false,
+            "minChars": 0,
+            "maxChars": 500,
+            "patternPreset": "",
+            "pattern": "",
+            "patternCountries": []
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "fche_17": {
+          "id": "fche_17",
+          "data": {
             "type": "form-text",
             "parent": "fche_1",
             "nodes": [],
@@ -2198,8 +2610,8 @@ export const FORM_TEMPLATES = {
           "events": [],
           "bindings": []
         },
-        "fche_13": {
-          "id": "fche_13",
+        "fche_18": {
+          "id": "fche_18",
           "data": {
             "type": "form-submit",
             "parent": "fche_1",

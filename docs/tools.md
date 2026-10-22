@@ -1,6 +1,6 @@
 # Tools
 
-Four tools reach 892 platform operations, and 330 of the 416 writes among them carry a body
+Four tools reach 919 platform operations, and 344 of the 429 writes among them carry a body
 shape read off the handler that decodes it. `sb_api_find` is an index, not a tool per
 endpoint — see [why](../README.md#tools).
 
@@ -223,8 +223,8 @@ letting the platform answer `401 api_key_required`, which reads like a permissio
 
 **A route the catalog does not carry is still callable.** The catalog is a closed list read
 off one swagger document, and the platform serves routes it does not describe — 20 the
-platform never annotated, three registered directly on the router (`/api/permissions`,
-`/api/plans`, `/api/locales`), and anything newer than the last regen. `method` + `path`
+platform never annotated, one registered directly on the router (`/api/permissions`), and
+anything newer than the last regen. `method` + `path`
 reaches them under exactly the same rules: the credential follows the path prefix, `dry_run`
 defaults to `true`, `{siteId}` defaults to `SB_SITE`, and `pick` / `max_items` /
 `item_offset` apply. A `method` + `path` naming a route the catalog already holds is
@@ -240,7 +240,7 @@ What a raw call does NOT have is said once per process — as `directive` on a d
 is not a bare platform path is refused, because the base URL is this install's `SB_API` and
 a path carrying a host would send the credential elsewhere. A path carrying a query string
 or a fragment is refused too — the query belongs in `query`, not in `path`. When
-`sb_api_find` matches nothing, its answer lists the three router-only routes under
+`sb_api_find` matches nothing, its answer lists the router-only route under
 `outside_catalog`.
 
 A failed call carries the platform's one error shape, `{ error, code }`, and — when the
@@ -834,21 +834,31 @@ stored, saved, published, and ignored forever — `applyBindings` reads the name
 field and skips anything else.
 
 A **record** source (a merchant Collection's field) is the one no list holds, because it names
-the field by ID: `record.fld_<16 hex>`, or `record.html.fld_<16 hex>` for a richtext field. Any
-other `record.*` is refused (a field KEY binds nothing), and so is `record.<fid>` into
-`specials.boundHtml` — that sink takes only the sanitised `record.html.<fid>`
-(`schema/src/rawSinkBindings.ts`). You rarely need `sb_bind` for one: a record tile derives its
-binding from its config, below.
+the field by ID: `record.fld_<16 hex>`, or `record.html.fld_<16 hex>` for a richtext field, plus
+`record.id` — the row's own record id. Any other `record.*` is refused (a field KEY binds nothing),
+and so is `record.<fid>` into `specials.boundHtml` — that sink takes only the sanitised
+`record.html.<fid>` (`schema/src/rawSinkBindings.ts`). Before writing, `sb_bind` reads the fields
+of every collection the node's row can see (`GET …/collections/{id}/fields`) and refuses a field
+id that is not one of them (naming the ones that are), a `gallery` field (no renderer binds one
+yet), the wrong spelling for a richtext field, and a node in no record-list row. `force: true`
+overrides; a 401/403/404 from that read is reported as the platform said it. You rarely need
+`sb_bind` for one: a record tile derives its binding from its config, below.
 
 ## Record lists (Collections)
 
 A `list-dataset` with `config.datasetSource: "record"` repeats a merchant Collection's
 **published** records (sorted and filtered server-side, `quantity` rows, at most 50). Build one:
 
-1. Create the data with `sb_api_call`: `POST /api/sites/{siteId}/collections` `{ name }` →
-   `POST …/collections/{id}/fields` `{ key, label, type }` (text, richtext, number, boolean,
-   date, select, url, image) → `POST …/collections/{id}/records`
-   `{ values: { <field KEY>: … }, published: true }`. A draft record never renders.
+1. Create the data with `sb_api_call`: `POST /api/sites/{siteId}/collections` `{ name, slug }` →
+   `POST …/collections/{id}/fields` `{ key, label, type, required, options, refCollectionId }`
+   (`text`, `richtext`, `number`, `integer`, `boolean`, `image`, `gallery`, `url`, `date`,
+   `select`, `reference`) → records. Import with
+   `POST …/collections/{id}/records/upsert` `{ records: [{ externalId, values, published? }] }`:
+   keyed by `externalId`, so a second run writes nothing, and a `reference` value may name its
+   parent as `{ "externalId": "<key>" }` — seed parents first. A draft record never renders.
+   **Money is an `integer` of whole currency units** (`1850000` = 1.850.000 ₫) — unlike a
+   product's `priceCents`. A PUT carries the `rev` it read; a stale one is
+   `409 stale_record`. A DELETE something still points at is `409 in_use`.
 2. Read the field IDs back: `GET …/collections/{id}/fields` — each has `id: "fld_…"`.
 3. `sb_add` the list with its card:
 
@@ -871,10 +881,46 @@ that config — on `sb_add`, and again on every `sb_set` of `recordField`, `reco
 All the `record*` keys are **base-only**: the renderer reads them off base config, so `sb_set`
 routes them there whatever breakpoint you name.
 
+**Relation lists** — rooms of THIS hotel. A record list inside another record list's
+`dataset-block`, with `config.recordRelationField` = the ID of a `reference` field in its OWN
+collection that targets the outer collection, shows only the rows pointing at the enclosing row.
+Its tiles may also bind the PARENT row's fields (a room card can show the hotel name). It is
+never paged, and a parent with no children takes its empty state — keep the `list-empty` that
+`sb_add` seeds.
+
+```json
+{ "type": "list-dataset",
+  "config": { "datasetSource": "record", "recordCollectionId": "<hotels>" },
+  "children": [{ "type": "dataset-block", "children": [
+    { "type": "text-dataset", "config": { "datasetSource": "record", "recordField": "<hotels.name fld>", "recordFieldType": "text" } },
+    { "type": "list-dataset",
+      "config": { "datasetSource": "record", "recordCollectionId": "<room-types>", "recordRelationField": "<room-types.hotel fld>" },
+      "children": [{ "type": "dataset-block", "children": [
+        { "type": "text-dataset", "config": { "datasetSource": "record", "recordField": "<room-types.name fld>", "recordFieldType": "text" } },
+        { "type": "text-dataset", "config": { "datasetSource": "record", "recordField": "<room-types.nightly_price_vnd fld>", "recordFieldType": "integer" } }
+      ]}]}
+  ]}]}
+```
+
+A record edit needs NO page publish: pages holding a record list are assembled live, so the
+change shows within the storefront's ~60 s page cache and the page document never moves.
+`sb_page_state` lists the page's record lists under `data` for that reason.
+
+What the platform does NOT do yet (web_builder `docs/integrations/dynamic-data-contract.md` §9),
+so no tool here claims it: an integer shows unformatted (`3330000`, not `3.330.000 ₫`); a
+`gallery` binds nothing; no visitor search/filter/sort control drives a record list; no
+selected-record detail or popup; no form options from a collection; no computed price or
+capacity filter. And the editor's field picker lists no `integer` / `reference` field for a
+text tile yet, so a tile bound to one renders on every surface while its inspector row shows
+no field selected.
+
 `sb_review` reports a record list naming no collection (`record_list_unsourced`), a tile naming
-no field ID (`record_field_unset`), and a `record.*` binding outside a record list
-(`no_data_context`). It does NOT check that a field ID exists in the collection — that needs a
-fetch per collection on every review; read `…/fields` yourself when in doubt.
+no field ID (`record_field_unset`), a `record.*` binding outside a record list
+(`no_data_context`), a nested record list with no `recordRelationField` (`record_relation_unset`
+— every parent would show the same rows), a relation key with no record row above it or not a
+field id (`record_relation_orphan`), and a relation list with no empty state
+(`record_relation_no_empty`). It does NOT check that a tile's field ID exists in the collection
+— that needs a fetch per collection on every review; `sb_bind` does that check at write time.
 
 
 ## The purchase binding
@@ -1444,8 +1490,12 @@ box. Returns `{ findings, fixes, findings_notice? }`, in document order:
 | `empty_text` / `missing_media` | An element left blank — empty space, or a broken image |
 | `static_in_dataset` | An element inside a repeater that renders only what the document authors — the same picture on every product card |
 | `unbound_dataset_element` | A dataset element with no binding at all — it waits for a bound special nothing writes |
-| `dead_binding_source` | A source the renderer never provides — shows the placeholder forever. A `record.*` source counts only as `record.fld_<16 hex>` / `record.html.fld_<16 hex>`, and only the html form into `specials.boundHtml` |
+| `dead_binding_source` | A source the renderer never provides — shows the placeholder forever. A `record.*` source counts only as `record.fld_<16 hex>` / `record.html.fld_<16 hex>` / `record.id`, and only the html form into `specials.boundHtml` |
 | `record_list_unsourced` | A `list-dataset` with `datasetSource: "record"` and no `config.recordCollectionId` — no rows are fetched, a visitor sees only the empty state |
+| `hardcoded_dataset` | A `custom-code` script carrying ≥4 flat records with one key set (`const DATA = {hotels:[…]}`) — a data table kept in code; move it to a Collection + record list (maintenance) |
+| `record_relation_unset` | A record list nested in another record list's row with no `config.recordRelationField` — every parent shows the same rows |
+| `record_relation_orphan` | `config.recordRelationField` set on a list with no record-list row above it, or not a `fld_…` ID — it only ever shows its empty state |
+| `record_relation_no_empty` | A relation list with no `config.emptyStateId` — a parent with no children renders placeholder cards |
 | `record_field_unset` | A record tile (`text-dataset` / `collection-media` with `datasetSource: "record"`) whose `config.recordField` is empty or not a `fld_…` ID — a field KEY binds nothing; it renders its placeholder on every row |
 | `dead_binding_field` | A binding field outside `specials` — stored, published, and ignored |
 | `unknown_element` | A type the catalog does not know; run `npm run codegen` |
@@ -2588,6 +2638,12 @@ of twenty realistic ones is 1.4 MB. The platform appends an autosave checkpoint 
 draft save and mints a labelled snapshot on demand, so **the checkpoint before a
 whole-document PUT is already taken**; a restore changes the DRAFT only, and the platform
 writes a `__pre_restore` version of its own first, so a restore is itself undoable.
+
+`data` appears only when the page holds record lists: `record_lists` names each one's `{id,
+collection, relation?}`. THE DATA IS NOT IN THE DOCUMENT — a record edit moves neither the draft
+nor `drift` and needs no page publish; the storefront shows a `published: true` record within
+~60 s. Rolling data back is the collection's own business (CSV export / re-upsert), not a page
+version.
 
 `editor_note` names the draft's timestamp and what it means: an editor tab opened before it
 holds an older copy, because the editor loads the draft once and does not re-read it — so a

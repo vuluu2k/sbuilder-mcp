@@ -11,8 +11,11 @@
 /** `collections.NewID("fld")` — schema/src/elements/recordContext.ts:33. Anything else binds nothing. */
 export const RECORD_FIELD_ID = /^fld_[0-9a-f]{16}$/;
 
-/** A `record.*` source a context can supply: `record.<fid>` or `record.html.<fid>` (recordContext.ts). */
-export const RECORD_SOURCE = /^record\.(?:html\.)?fld_[0-9a-f]{16}$/;
+/**
+ * A `record.*` source a context can supply: `record.<fid>`, `record.html.<fid>`, or
+ * `record.id` — the row's own record id (recordContext.ts, web_builder 986c96a96).
+ */
+export const RECORD_SOURCE = /^record\.(?:id|(?:html\.)?fld_[0-9a-f]{16})$/;
 
 /** The only record source `specials.boundHtml` admits — schema/src/rawSinkBindings.ts:102. */
 export const RECORD_HTML_SOURCE = /^record\.html\.fld_[0-9a-f]{16}$/;
@@ -47,4 +50,62 @@ export function recordTileBindings(type: string, config: Record<string, unknown>
     }
     return row;
   });
+}
+
+/** One row of GET …/collections/{id}/fields, as much of it as a binding needs. */
+export interface RecordFieldRow {
+  id: string;
+  key: string;
+  type: string;
+}
+
+type NodeAt = (id: string) => { data: { type: string; parent: string | null }; config?: Record<string, unknown> } | undefined;
+
+/**
+ * The collections a `record.*` binding on `id` can read, nearest first. The
+ * NEAREST list-dataset is the row it reads (editor `owningList`); while that list
+ * is a RELATION list the parent row is merged under it (list-dataset/html.go
+ * relationRows), so the enclosing record list's fields resolve too. `[]` = no
+ * record row anywhere above — the binding resolves to nothing.
+ */
+export function recordScope(nodeAt: NodeAt, id: string): string[] {
+  const out: string[] = [];
+  let cur = nodeAt(id)?.data.parent ?? null;
+  while (cur) {
+    const n = nodeAt(cur);
+    if (!n) break;
+    if (n.data.type === 'list-dataset') {
+      if (n.config?.datasetSource !== 'record') break;
+      out.push(String(n.config.recordCollectionId ?? ''));
+      if (!String(n.config.recordRelationField ?? '')) break;
+    }
+    cur = n.data.parent;
+  }
+  return out;
+}
+
+/**
+ * Why a `record.<fid>` / `record.html.<fid>` binding would render nothing, given
+ * the fields of each collection in scope — or undefined when it resolves. The
+ * stringification is recordContext.ts: gallery emits nothing yet, richtext only
+ * under `record.html.`, every other type only under `record.`.
+ */
+export function recordFieldProblem(source: string, scope: Array<{ collectionId: string; fields: RecordFieldRow[] }>): string | undefined {
+  if (!scope.length) {
+    return `"${source}" sits in no record-list row — only a list-dataset with datasetSource "record" (or a relation list inside one) supplies a record, so it would render its placeholder.`;
+  }
+  if (source === 'record.id') return undefined;
+  const html = source.startsWith('record.html.');
+  const fid = source.slice(html ? 12 : 7);
+  const f = scope.flatMap((s) => s.fields).find((x) => x.id === fid);
+  if (!f) {
+    const avail = scope
+      .map((s) => `${s.collectionId}: ${s.fields.map((x) => `${x.id} (${x.key}, ${x.type})`).join(', ') || 'no fields'}`)
+      .join('; ');
+    return `${fid} is not a field of the collection(s) this row reads — ${avail}.`;
+  }
+  if (f.type === 'gallery') return `${fid} (${f.key}) is a gallery field, which the renderers do not bind yet — it emits nothing.`;
+  if (html && f.type !== 'richtext') return `${fid} (${f.key}) is ${f.type}, not richtext — bind it as "record.${fid}".`;
+  if (!html && f.type === 'richtext') return `${fid} (${f.key}) is richtext — bind it as "record.html.${fid}" into specials.boundHtml.`;
+  return undefined;
 }

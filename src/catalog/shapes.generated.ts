@@ -4,12 +4,12 @@
 import type { RequestShape } from './types.js';
 
 export const SHAPE_SOURCE = {
-  "writeOperations": 416,
-  "shaped": 330,
-  "fromHandlers": 320,
+  "writeOperations": 429,
+  "shaped": 344,
+  "fromHandlers": 334,
   "fromSwaggerOnly": 10,
-  "withReadOnly": 30,
-  "structsRead": 3356
+  "withReadOnly": 29,
+  "structsRead": 3453
 } as const;
 
 export const REQUEST_SHAPES: Record<string, RequestShape> = {
@@ -422,12 +422,12 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
       },
       {
         "name": "showAnswers",
-        "type": "ShowAnswers",
+        "type": "\"never\" | \"after_pass\" | \"always\"",
         "note": "ShowAnswers decides whether a finished attempt reveals which options were right."
       },
       {
         "name": "status",
-        "type": "Status"
+        "type": "\"draft\" | \"active\""
       },
       {
         "name": "questionCount",
@@ -506,12 +506,12 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
       },
       {
         "name": "showAnswers",
-        "type": "ShowAnswers",
+        "type": "\"never\" | \"after_pass\" | \"always\"",
         "note": "ShowAnswers decides whether a finished attempt reveals which options were right."
       },
       {
         "name": "status",
-        "type": "Status"
+        "type": "\"draft\" | \"active\""
       },
       {
         "name": "questionCount",
@@ -559,7 +559,7 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
           },
           {
             "name": "kind",
-            "type": "QuestionKind"
+            "type": "\"single\" | \"multi\" | \"boolean\" | \"essay\" | \"file\""
           },
           {
             "name": "prompt",
@@ -1389,11 +1389,11 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
       },
       {
         "name": "language",
-        "type": "Language"
+        "type": "\"html\" | \"css\" | \"javascript\""
       },
       {
         "name": "placement",
-        "type": "Placement"
+        "type": "\"head\" | \"body_start\" | \"body_end\""
       },
       {
         "name": "content",
@@ -1445,11 +1445,11 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
       },
       {
         "name": "language",
-        "type": "Language"
+        "type": "\"html\" | \"css\" | \"javascript\""
       },
       {
         "name": "placement",
-        "type": "Placement"
+        "type": "\"head\" | \"body_start\" | \"body_end\""
       },
       {
         "name": "content",
@@ -1470,16 +1470,14 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
       {
         "name": "updatedAt",
         "type": "string (RFC3339)"
+      },
+      {
+        "name": "expectedUpdatedAt",
+        "type": "string (RFC3339) | null"
       }
     ],
     "source": "go",
-    "goType": "codefiles.CodeFile",
-    "readOnly": [
-      "id",
-      "siteId",
-      "createdAt",
-      "updatedAt"
-    ]
+    "goType": "putBody"
   },
   "post:/api/sites/{siteId}/collections": {
     "fields": [
@@ -1541,7 +1539,7 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
       },
       {
         "name": "type",
-        "type": "FieldType"
+        "type": "\"text\" | \"richtext\" | \"number\" | \"boolean\" | \"image\" | \"url\" | \"date\" | \"select\" | \"integer\" | \"reference\" | \"gallery\""
       },
       {
         "name": "required",
@@ -1554,6 +1552,11 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
       {
         "name": "position",
         "type": "number"
+      },
+      {
+        "name": "refCollectionId",
+        "type": "string",
+        "note": "RefCollectionID is the target collection of a TypeReference field (\"\" for every other type)."
       }
     ],
     "source": "go",
@@ -1583,7 +1586,7 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
       },
       {
         "name": "type",
-        "type": "FieldType"
+        "type": "\"text\" | \"richtext\" | \"number\" | \"boolean\" | \"image\" | \"url\" | \"date\" | \"select\" | \"integer\" | \"reference\" | \"gallery\""
       },
       {
         "name": "required",
@@ -1596,6 +1599,11 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
       {
         "name": "position",
         "type": "number"
+      },
+      {
+        "name": "refCollectionId",
+        "type": "string",
+        "note": "RefCollectionID is the target collection of a TypeReference field (\"\" for every other type)."
       }
     ],
     "source": "go",
@@ -1620,6 +1628,14 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
       {
         "name": "published",
         "type": "boolean | null"
+      },
+      {
+        "name": "externalId",
+        "type": "string | null"
+      },
+      {
+        "name": "rev",
+        "type": "number"
       }
     ],
     "source": "go",
@@ -1634,6 +1650,14 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
       {
         "name": "published",
         "type": "boolean | null"
+      },
+      {
+        "name": "externalId",
+        "type": "string | null"
+      },
+      {
+        "name": "rev",
+        "type": "number"
       }
     ],
     "source": "go",
@@ -1658,6 +1682,30 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
     ],
     "source": "go",
     "goType": "orderBody"
+  },
+  "post:/api/sites/{siteId}/collections/{id}/records/upsert": {
+    "fields": [
+      {
+        "name": "records",
+        "type": "collections.UpsertItem[]",
+        "fields": [
+          {
+            "name": "externalId",
+            "type": "string"
+          },
+          {
+            "name": "values",
+            "type": "{ [string]: any }"
+          },
+          {
+            "name": "published",
+            "type": "boolean | null"
+          }
+        ]
+      }
+    ],
+    "source": "go",
+    "goType": "upsertBody"
   },
   "post:/api/instructor/{siteId}/login": {
     "fields": [
@@ -1712,7 +1760,7 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
       },
       {
         "name": "status",
-        "type": "CourseStatus"
+        "type": "\"draft\" | \"active\" | \"archived\" | \"review\""
       },
       {
         "name": "level",
@@ -1919,7 +1967,7 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
       },
       {
         "name": "status",
-        "type": "CourseStatus"
+        "type": "\"draft\" | \"active\" | \"archived\" | \"review\""
       },
       {
         "name": "level",
@@ -2127,12 +2175,12 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
       },
       {
         "name": "status",
-        "type": "InstructorStatus",
+        "type": "\"active\" | \"hidden\"",
         "note": "Status hides a teacher from public listings without deleting them, which is what a merchant actually wants when somebody stops teaching: the past courses keep their author."
       },
       {
         "name": "access",
-        "type": "AccessStatus",
+        "type": "\"\" | \"pending\" | \"approved\" | \"rejected\"",
         "note": "Access is how this teacher CAME TO BE one, and it is the marketplace track's first column."
       },
       {
@@ -2206,12 +2254,12 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
       },
       {
         "name": "status",
-        "type": "InstructorStatus",
+        "type": "\"active\" | \"hidden\"",
         "note": "Status hides a teacher from public listings without deleting them, which is what a merchant actually wants when somebody stops teaching: the past courses keep their author."
       },
       {
         "name": "access",
-        "type": "AccessStatus",
+        "type": "\"\" | \"pending\" | \"approved\" | \"rejected\"",
         "note": "Access is how this teacher CAME TO BE one, and it is the marketplace track's first column."
       },
       {
@@ -2265,7 +2313,7 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
           },
           {
             "name": "role",
-            "type": "InstructorRole"
+            "type": "\"owner\" | \"co_teacher\" | \"assistant\""
           },
           {
             "name": "revenueShare",
@@ -2315,6 +2363,213 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
     "source": "go",
     "goType": "reviewRequest"
   },
+  "post:/api/sites/{siteId}/courses": {
+    "fields": [
+      {
+        "name": "id",
+        "type": "string"
+      },
+      {
+        "name": "siteId",
+        "type": "string"
+      },
+      {
+        "name": "title",
+        "type": "string"
+      },
+      {
+        "name": "slug",
+        "type": "string"
+      },
+      {
+        "name": "summary",
+        "type": "string",
+        "note": "short; plain text"
+      },
+      {
+        "name": "description",
+        "type": "string",
+        "note": "long; HTML allowed, sanitised on write"
+      },
+      {
+        "name": "coverImage",
+        "type": "string"
+      },
+      {
+        "name": "previewUrl",
+        "type": "string",
+        "note": "trailer video, public"
+      },
+      {
+        "name": "status",
+        "type": "\"draft\" | \"active\" | \"archived\" | \"review\""
+      },
+      {
+        "name": "level",
+        "type": "string",
+        "note": "free-form: \"Cơ bản\", \"Nâng cao\"…"
+      },
+      {
+        "name": "language",
+        "type": "string",
+        "note": "BCP-47-ish; display only"
+      },
+      {
+        "name": "tags",
+        "type": "string[]"
+      },
+      {
+        "name": "instructor",
+        "type": "Instructor",
+        "fields": [
+          {
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "name": "title",
+            "type": "string"
+          },
+          {
+            "name": "avatar",
+            "type": "string"
+          },
+          {
+            "name": "bio",
+            "type": "string"
+          }
+        ]
+      },
+      {
+        "name": "seo",
+        "type": "SEO",
+        "fields": [
+          {
+            "name": "title",
+            "type": "string"
+          },
+          {
+            "name": "description",
+            "type": "string"
+          },
+          {
+            "name": "keywords",
+            "type": "string"
+          },
+          {
+            "name": "canonical",
+            "type": "string"
+          },
+          {
+            "name": "ogTitle",
+            "type": "string"
+          },
+          {
+            "name": "ogDesc",
+            "type": "string"
+          },
+          {
+            "name": "ogImage",
+            "type": "string"
+          },
+          {
+            "name": "twitterCard",
+            "type": "string"
+          },
+          {
+            "name": "noIndex",
+            "type": "boolean"
+          },
+          {
+            "name": "noFollow",
+            "type": "boolean"
+          }
+        ]
+      },
+      {
+        "name": "settings",
+        "type": "Settings",
+        "fields": [
+          {
+            "name": "grantOn",
+            "type": "string",
+            "note": "GrantOn is one of the GrantOn constants; \"\" reads as GrantOnPaid."
+          },
+          {
+            "name": "accessDays",
+            "type": "number",
+            "note": "AccessDays is how long an entitlement lasts from the moment it is granted."
+          },
+          {
+            "name": "seatCap",
+            "type": "number",
+            "note": "SeatCap caps how many ACTIVE entitlements this course may hold at once — a cohort with a real classroom, a live intake."
+          },
+          {
+            "name": "completionPercent",
+            "type": "number",
+            "note": "CompletionPercent is the share of lessons a student must finish before the course counts as completed (and a certificate, when enabled, is earned)."
+          },
+          {
+            "name": "certificate",
+            "type": "boolean",
+            "note": "Certificate turns on the completion certificate."
+          },
+          {
+            "name": "dripFromEnrollment",
+            "type": "boolean",
+            "note": "DripFromEnrollment makes Lesson. NAMED FOR THE NON-DEFAULT so the zero value is the simpler product behaviour, and because per-student drip is the thing a merchant has to opt into understanding: two students then see different lessons on…"
+          },
+          {
+            "name": "renewReminderDays",
+            "type": "number",
+            "note": "RenewReminderDays is how many days before an entitlement lapses the student is mailed."
+          },
+          {
+            "name": "renewReminderOff",
+            "type": "boolean",
+            "note": "RenewReminderOff silences the reminder for this course. NAMED FOR THE NON-DEFAULT, like DripFromEnrollment above: the zero value has to be the behaviour that serves a merchant who never opened the screen, and that is being reminded."
+          }
+        ]
+      },
+      {
+        "name": "number",
+        "type": "number",
+        "note": "Server-assigned / derived."
+      },
+      {
+        "name": "sectionCount",
+        "type": "number"
+      },
+      {
+        "name": "lessonCount",
+        "type": "number"
+      },
+      {
+        "name": "durationSec",
+        "type": "number"
+      },
+      {
+        "name": "enrollmentCount",
+        "type": "number"
+      },
+      {
+        "name": "publishedAt",
+        "type": "string (RFC3339)",
+        "note": "first time Status became active"
+      },
+      {
+        "name": "createdAt",
+        "type": "string (RFC3339)"
+      },
+      {
+        "name": "updatedAt",
+        "type": "string (RFC3339)"
+      }
+    ],
+    "source": "go",
+    "goType": "courses.Course"
+  },
   "put:/api/sites/{siteId}/courses/{courseId}": {
     "fields": [
       {
@@ -2354,7 +2609,7 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
       },
       {
         "name": "status",
-        "type": "CourseStatus"
+        "type": "\"draft\" | \"active\" | \"archived\" | \"review\""
       },
       {
         "name": "level",
@@ -2637,7 +2892,7 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
       },
       {
         "name": "kind",
-        "type": "LessonKind"
+        "type": "\"video\" | \"text\" | \"quiz\" | \"file\" | \"live\""
       },
       {
         "name": "position",
@@ -2738,7 +2993,7 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
       },
       {
         "name": "kind",
-        "type": "LessonKind"
+        "type": "\"video\" | \"text\" | \"quiz\" | \"file\" | \"live\""
       },
       {
         "name": "position",
@@ -3424,8 +3679,12 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
       "updatedAt"
     ]
   },
-  "put:/api/sites/{siteId}/delivery-apps/{app}/connection": {
+  "post:/api/sites/{siteId}/delivery-apps/{app}/connections": {
     "fields": [
+      {
+        "name": "name",
+        "type": "string"
+      },
       {
         "name": "enabled",
         "type": "boolean"
@@ -3441,12 +3700,44 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
       {
         "name": "soldOutFromStock",
         "type": "boolean | null",
-        "note": "SoldOutFromStock absent keeps the stored value; false clears it."
+        "note": "SoldOutFromStock absent keeps the stored value (true on create); false clears it."
       },
       {
         "name": "autoBillOnCompleted",
         "type": "boolean | null",
-        "note": "AutoBillOnCompleted absent keeps the stored value; false clears it."
+        "note": "AutoBillOnCompleted absent keeps the stored value (false on create); false clears it."
+      }
+    ],
+    "source": "go",
+    "goType": "connectionInput"
+  },
+  "put:/api/sites/{siteId}/delivery-apps/{app}/connections/{connectionId}": {
+    "fields": [
+      {
+        "name": "name",
+        "type": "string"
+      },
+      {
+        "name": "enabled",
+        "type": "boolean"
+      },
+      {
+        "name": "externalMerchantId",
+        "type": "string"
+      },
+      {
+        "name": "locationId",
+        "type": "string"
+      },
+      {
+        "name": "soldOutFromStock",
+        "type": "boolean | null",
+        "note": "SoldOutFromStock absent keeps the stored value (true on create); false clears it."
+      },
+      {
+        "name": "autoBillOnCompleted",
+        "type": "boolean | null",
+        "note": "AutoBillOnCompleted absent keeps the stored value (false on create); false clears it."
       }
     ],
     "source": "go",
@@ -3462,7 +3753,7 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
     "source": "go",
     "goType": "rejectBody"
   },
-  "put:/api/sites/{siteId}/delivery-apps/{app}/menu/items/{variantId}/sold-out": {
+  "put:/api/sites/{siteId}/delivery-apps/{app}/connections/{connectionId}/menu/items/{variantId}/sold-out": {
     "fields": [
       {
         "name": "soldOut",
@@ -3471,6 +3762,40 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
     ],
     "source": "go",
     "goType": "soldOutBody"
+  },
+  "put:/api/sites/{siteId}/delivery-apps/{app}/connections/{connectionId}/menu/products/{productId}/hidden": {
+    "fields": [
+      {
+        "name": "hidden",
+        "type": "boolean | null"
+      }
+    ],
+    "source": "go",
+    "goType": "hiddenBody"
+  },
+  "put:/api/sites/{siteId}/delivery-apps/{app}/connections/{connectionId}/selling-hours": {
+    "fields": [
+      {
+        "name": "periods",
+        "type": "deliveryapps.HoursPeriod[]",
+        "fields": [
+          {
+            "name": "weekday",
+            "type": "number"
+          },
+          {
+            "name": "start",
+            "type": "string"
+          },
+          {
+            "name": "end",
+            "type": "string"
+          }
+        ]
+      }
+    ],
+    "source": "go",
+    "goType": "sellingHoursBody"
   },
   "post:/_wb/delivery/{app}/{path}": {
     "fields": [
@@ -3863,7 +4188,17 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
       {
         "name": "autoIssueWeb",
         "type": "boolean",
-        "note": "AutoIssueWeb (D6): enqueue an online order's invoice when it becomes paid, through the same MTT series as the counter's."
+        "note": "AutoIssueWeb (D6): enqueue an online order's invoice when it becomes paid."
+      },
+      {
+        "name": "webHsm",
+        "type": "boolean",
+        "note": "WebHsm (H1, H4): ONLINE-order original invoices go out on the provider's có-mã HSM route under HsmInvoiceSeries, signed by the HSM the merchant registered with the provider; counter invoices always stay on the standard route."
+      },
+      {
+        "name": "hsmInvoiceSeries",
+        "type": "string",
+        "note": "HsmInvoiceSeries is the HSM route's own non-cash-register series (H2)."
       },
       {
         "name": "updatedAt",
@@ -3900,6 +4235,21 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
       {
         "name": "reason",
         "type": "string"
+      },
+      {
+        "name": "agreement",
+        "type": "einvoice.Agreement",
+        "note": "Agreement is the optional written agreement cited for cancelling an ISSUED invoice; absent or empty cites none.",
+        "fields": [
+          {
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "name": "date",
+            "type": "string"
+          }
+        ]
       }
     ],
     "source": "go",
@@ -3936,6 +4286,53 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
     ],
     "source": "go",
     "goType": "orderIssueBody"
+  },
+  "post:/api/sites/{siteId}/einvoice/jobs/{id}/replace": {
+    "fields": [
+      {
+        "name": "buyer",
+        "type": "einvoice.Buyer",
+        "fields": [
+          {
+            "name": "taxCode",
+            "type": "string"
+          },
+          {
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "name": "company",
+            "type": "string"
+          },
+          {
+            "name": "address",
+            "type": "string"
+          },
+          {
+            "name": "email",
+            "type": "string"
+          }
+        ]
+      },
+      {
+        "name": "agreement",
+        "type": "einvoice.Agreement",
+        "note": "Agreement is the optional written agreement cited for the replacement; absent or empty cites none.",
+        "fields": [
+          {
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "name": "date",
+            "type": "string"
+          }
+        ]
+      }
+    ],
+    "source": "go",
+    "goType": "replaceBody"
   },
   "post:/api/sites/{siteId}/flash-sales": {
     "fields": [
@@ -4376,7 +4773,7 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
           },
           {
             "name": "orderSource",
-            "type": "OrderSource",
+            "type": "\"pinned\" | \"cart\"",
             "note": "OrderSource is where a type=order form gets what it sells FROM: the pinned OrderProductID above, or the shopper's cart."
           },
           {
@@ -4479,7 +4876,7 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
           },
           {
             "name": "orderSource",
-            "type": "OrderSource",
+            "type": "\"pinned\" | \"cart\"",
             "note": "OrderSource is where a type=order form gets what it sells FROM: the pinned OrderProductID above, or the shopper's cart."
           },
           {
@@ -4571,7 +4968,7 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
           },
           {
             "name": "orderSource",
-            "type": "OrderSource",
+            "type": "\"pinned\" | \"cart\"",
             "note": "OrderSource is where a type=order form gets what it sells FROM: the pinned OrderProductID above, or the shopper's cart."
           },
           {
@@ -5521,6 +5918,23 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
         "type": "string"
       },
       {
+        "name": "vatTaxCode",
+        "type": "string",
+        "note": "VatTaxCode, VatCompany, VatAddress and VatEmail are the shopper's VAT invoice request (\"Xuất hoá đơn VAT\"): the buyer the e-invoice is made out to."
+      },
+      {
+        "name": "vatCompany",
+        "type": "string"
+      },
+      {
+        "name": "vatAddress",
+        "type": "string"
+      },
+      {
+        "name": "vatEmail",
+        "type": "string"
+      },
+      {
         "name": "discountCode",
         "type": "string",
         "note": "DiscountCode is the code entered at checkout (input)."
@@ -5614,7 +6028,11 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
       "subtotalCents",
       "totalCents",
       "createdAt",
-      "updatedAt"
+      "updatedAt",
+      "vatTaxCode",
+      "vatCompany",
+      "vatAddress",
+      "vatEmail"
     ]
   },
   "put:/api/sites/{siteId}/orders/{id}": {
@@ -5884,6 +6302,23 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
         "type": "string"
       },
       {
+        "name": "vatTaxCode",
+        "type": "string",
+        "note": "VatTaxCode, VatCompany, VatAddress and VatEmail are the shopper's VAT invoice request (\"Xuất hoá đơn VAT\"): the buyer the e-invoice is made out to."
+      },
+      {
+        "name": "vatCompany",
+        "type": "string"
+      },
+      {
+        "name": "vatAddress",
+        "type": "string"
+      },
+      {
+        "name": "vatEmail",
+        "type": "string"
+      },
+      {
         "name": "discountCode",
         "type": "string",
         "note": "DiscountCode is the code entered at checkout (input)."
@@ -5977,7 +6412,11 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
       "subtotalCents",
       "totalCents",
       "createdAt",
-      "updatedAt"
+      "updatedAt",
+      "vatTaxCode",
+      "vatCompany",
+      "vatAddress",
+      "vatEmail"
     ]
   },
   "post:/api/sites/{siteId}/orders/{id}/shipments": {
@@ -6078,6 +6517,21 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
     "source": "go",
     "goType": "(inline)"
   },
+  "post:/api/orgs/{id}/sites": {
+    "fields": [
+      {
+        "name": "name",
+        "type": "string"
+      },
+      {
+        "name": "slug",
+        "type": "string",
+        "note": "Slug may be empty — the site context derives one from the name."
+      }
+    ],
+    "source": "go",
+    "goType": "(inline)"
+  },
   "post:/api/orgs/{id}/members": {
     "fields": [
       {
@@ -6086,7 +6540,7 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
       },
       {
         "name": "role",
-        "type": "orgs.Role"
+        "type": "\"owner\" | \"admin\" | \"member\""
       }
     ],
     "source": "go",
@@ -6096,7 +6550,7 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
     "fields": [
       {
         "name": "role",
-        "type": "orgs.Role"
+        "type": "\"owner\" | \"admin\" | \"member\""
       }
     ],
     "source": "go",
@@ -6219,6 +6673,36 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
     "source": "go",
     "goType": "(inline)"
   },
+  "patch:/api/sites/{siteId}/pages/{pageId}": {
+    "fields": [
+      {
+        "name": "name",
+        "type": "string | null"
+      },
+      {
+        "name": "slug",
+        "type": "string | null"
+      },
+      {
+        "name": "type",
+        "type": "string | null"
+      },
+      {
+        "name": "isHomepage",
+        "type": "boolean | null"
+      },
+      {
+        "name": "sortOrder",
+        "type": "number | null"
+      },
+      {
+        "name": "settings",
+        "type": "object"
+      }
+    ],
+    "source": "go",
+    "goType": "page.UpdatePageInput"
+  },
   "post:/api/sites/{siteId}/pages/{pageId}/duplicate": {
     "fields": [
       {
@@ -6247,6 +6731,42 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
     ],
     "source": "go",
     "goType": "(inline)"
+  },
+  "post:/api/sites/{siteId}/pages": {
+    "fields": [
+      {
+        "name": "name",
+        "type": "string"
+      },
+      {
+        "name": "slug",
+        "type": "string"
+      },
+      {
+        "name": "type",
+        "type": "string",
+        "note": "page kind; defaults to \"main\""
+      },
+      {
+        "name": "isHomepage",
+        "type": "boolean"
+      },
+      {
+        "name": "sortOrder",
+        "type": "number"
+      },
+      {
+        "name": "settings",
+        "type": "object"
+      },
+      {
+        "name": "document",
+        "type": "object",
+        "note": "optional initial draft"
+      }
+    ],
+    "source": "go",
+    "goType": "page.CreatePageInput"
   },
   "post:/api/sites/{siteId}/publish": {
     "fields": [
@@ -6315,6 +6835,16 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
     "goType": "refundRequest"
   },
   "post:/api/sites/{id}/plan-checkout": {
+    "fields": [
+      {
+        "name": "planId",
+        "type": "string"
+      }
+    ],
+    "source": "go",
+    "goType": "(inline)"
+  },
+  "post:/api/sites/{siteId}/subscription": {
     "fields": [
       {
         "name": "planId",
@@ -9326,6 +9856,82 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
     "source": "go",
     "goType": "BlogCategoryInput"
   },
+  "post:/api/v1/code-files": {
+    "fields": [
+      {
+        "name": "pageId",
+        "type": "string"
+      },
+      {
+        "name": "name",
+        "type": "string"
+      },
+      {
+        "name": "language",
+        "type": "string"
+      },
+      {
+        "name": "placement",
+        "type": "string"
+      },
+      {
+        "name": "content",
+        "type": "string"
+      },
+      {
+        "name": "enabled",
+        "type": "boolean | null"
+      },
+      {
+        "name": "position",
+        "type": "number | null"
+      },
+      {
+        "name": "expectedUpdatedAt",
+        "type": "string (RFC3339) | null"
+      }
+    ],
+    "source": "go",
+    "goType": "CodeFileInput"
+  },
+  "put:/api/v1/code-files/{id}": {
+    "fields": [
+      {
+        "name": "pageId",
+        "type": "string"
+      },
+      {
+        "name": "name",
+        "type": "string"
+      },
+      {
+        "name": "language",
+        "type": "string"
+      },
+      {
+        "name": "placement",
+        "type": "string"
+      },
+      {
+        "name": "content",
+        "type": "string"
+      },
+      {
+        "name": "enabled",
+        "type": "boolean | null"
+      },
+      {
+        "name": "position",
+        "type": "number | null"
+      },
+      {
+        "name": "expectedUpdatedAt",
+        "type": "string (RFC3339) | null"
+      }
+    ],
+    "source": "go",
+    "goType": "CodeFileInput"
+  },
   "post:/api/v1/collections/{collection}/records": {
     "fields": [
       {
@@ -9335,6 +9941,14 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
       {
         "name": "published",
         "type": "boolean | null"
+      },
+      {
+        "name": "externalId",
+        "type": "string | null"
+      },
+      {
+        "name": "rev",
+        "type": "number"
       }
     ],
     "source": "go",
@@ -9349,10 +9963,42 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
       {
         "name": "published",
         "type": "boolean | null"
+      },
+      {
+        "name": "externalId",
+        "type": "string | null"
+      },
+      {
+        "name": "rev",
+        "type": "number"
       }
     ],
     "source": "go",
     "goType": "CollectionRecordInput"
+  },
+  "post:/api/v1/collections/{collection}/records/upsert": {
+    "fields": [
+      {
+        "name": "records",
+        "type": "collections.UpsertItem[]",
+        "fields": [
+          {
+            "name": "externalId",
+            "type": "string"
+          },
+          {
+            "name": "values",
+            "type": "{ [string]: any }"
+          },
+          {
+            "name": "published",
+            "type": "boolean | null"
+          }
+        ]
+      }
+    ],
+    "source": "go",
+    "goType": "CollectionUpsertInput"
   },
   "post:/api/v1/customers": {
     "fields": [
@@ -10988,6 +11634,22 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
       {
         "name": "name",
         "type": "string"
+      }
+    ],
+    "source": "go",
+    "goType": "(inline)"
+  },
+  "post:/api/site-imports": {
+    "fields": [
+      {
+        "name": "name",
+        "type": "string",
+        "note": "Name is the NEW site's name, and it is required: defaulting to the package's own name would silently produce two sites with one name for anyone importing the same file twice."
+      },
+      {
+        "name": "package",
+        "type": "object",
+        "note": "Package is the exported file, inline."
       }
     ],
     "source": "go",

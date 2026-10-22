@@ -389,8 +389,8 @@ describe('callOperation() — the raw form', () => {
   it('says the directive once per process', async () => {
     const f = ok();
     const ctx = await rawCtx(f) as unknown as ToolContext;
-    await callOperation(ctx, { method: 'GET', path: '/api/locales', dry_run: false });
-    const second = (await callOperation(ctx, { method: 'GET', path: '/api/locales', dry_run: false })) as { note?: string };
+    await callOperation(ctx, { method: 'GET', path: '/api/permissions', dry_run: false });
+    const second = (await callOperation(ctx, { method: 'GET', path: '/api/permissions', dry_run: false })) as { note?: string };
     expect(second.note).toBeUndefined();
   });
 
@@ -429,7 +429,7 @@ describe('callOperation() — the raw form', () => {
 
   it('dry-runs a raw call by default and marks it uncatalogued', async () => {
     const f = ok();
-    const out = (await callOperation(await rawCtx(f) as unknown as ToolContext, { method: 'POST', path: '/api/site-imports', body: { url: 'u' } })) as Record<string, unknown>;
+    const out = (await callOperation(await rawCtx(f) as unknown as ToolContext, { method: 'POST', path: '/api/raw-probe', body: { url: 'u' } })) as Record<string, unknown>;
     expect(calls(f)).toHaveLength(0);
     expect(out.dry_run).toBe(true);
     expect(out.uncatalogued).toBe(true);
@@ -487,24 +487,24 @@ describe('callOperation() — the raw form', () => {
   // send reaches nobody who looks before they leap.
   it('says the raw directive on a dry run, once', async () => {
     const ctx = await rawCtx(ok()) as unknown as ToolContext;
-    const first = (await callOperation(ctx, { method: 'POST', path: '/api/site-imports', body: { url: 'u' } })) as Record<string, unknown>;
+    const first = (await callOperation(ctx, { method: 'POST', path: '/api/raw-probe', body: { url: 'u' } })) as Record<string, unknown>;
     expect(first.directive).toMatch(/no call sheet/i);
-    const second = (await callOperation(ctx, { method: 'POST', path: '/api/site-imports', body: { url: 'u' } })) as Record<string, unknown>;
+    const second = (await callOperation(ctx, { method: 'POST', path: '/api/raw-probe', body: { url: 'u' } })) as Record<string, unknown>;
     expect(second.directive).toBeUndefined();
   });
 
   it('does not repeat the directive on the real send that follows a dry run', async () => {
     const f = ok();
     const ctx = await rawCtx(f) as unknown as ToolContext;
-    await callOperation(ctx, { method: 'GET', path: '/api/locales' });
-    const real = (await callOperation(ctx, { method: 'GET', path: '/api/locales', dry_run: false })) as { note?: string };
+    await callOperation(ctx, { method: 'GET', path: '/api/permissions' });
+    const real = (await callOperation(ctx, { method: 'GET', path: '/api/permissions', dry_run: false })) as { note?: string };
     expect(real.note).toBeUndefined();
   });
 
   it('redacts the credential in a raw dry run too', async () => {
     const out = (await callOperation(await rawCtx(ok()) as unknown as ToolContext, {
       method: 'POST',
-      path: '/api/site-imports',
+      path: '/api/raw-probe',
       body: { url: 'u' },
     })) as { would_send: Record<string, unknown> };
     expect(out.would_send.Authorization).toBe('[redacted]');

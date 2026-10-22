@@ -732,6 +732,21 @@ platform treats an unproven guard as indistinguishable from an absent one.
     `owningList`), on any page type. It does NOT check a field ID exists in the collection — a
     fetch per collection per review; deliberately skipped.
 
+- **RELATION LISTS AND `record.id` (web_builder 1b6c07a91 / 986c96a96, contract
+  `docs/integrations/dynamic-data-contract.md` upstream).** A record list inside another record
+  list's `dataset-block` with base `config.recordRelationField` = a `reference` field id of its
+  OWN collection shows only rows whose reference equals the enclosing row's `record.id`, and the
+  parent row is MERGED under each child (`relationRows`), so parent field ids resolve inside it —
+  a PLAIN nested list gets no such merge. `recordScope` (`domains/site/record.ts`) encodes exactly
+  that; `sb_bind` fetches `…/collections/{id}/fields` for that scope and refuses an id outside it,
+  a `gallery` field (emits nothing yet) and the wrong richtext spelling — the one place this
+  repo reads Collections at write time; review still does not (a fetch per review).
+  `sb_review`: `record_relation_unset` (nested, unlinked → same rows under every parent),
+  `record_relation_orphan`, `record_relation_no_empty` (`sb_add` seeds a list-empty, so this
+  fires on documents from elsewhere). The editor's `TILE_FIELD_TYPES` omits `integer` /
+  `reference` for `text-dataset`, so such a tile renders while its inspector picker shows empty —
+  an upstream gap, not something to "fix" by changing `recordFieldType`.
+
 - **AN OPT-IN SATELLITE COULD NOT BE CREATED, and the remedy named a call that did nothing.**
   `readiness`' `cartCount` fix said `sb_set {cartCountId}` "mints one"; it writes a string and
   mints nothing (pinned in `test/satellite-add.test.ts`), and `sb_add` into an icon was refused

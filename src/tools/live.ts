@@ -4,7 +4,14 @@ import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { text, images } from '../mcp/response.js';
 import { BINDING_SOURCES, ELEMENTS } from '../catalog/elements.generated.js';
 import { bindableFields } from '../domains/site/writecheck.js';
-import { isRecordSource, RECORD_HTML_SOURCE, RECORD_SOURCE } from '../domains/site/record.js';
+import {
+  isRecordSource,
+  RECORD_HTML_SOURCE,
+  RECORD_SOURCE,
+  recordFieldProblem,
+  recordScope,
+  type RecordFieldRow,
+} from '../domains/site/record.js';
 import { previewUrl } from '../vision/preview.js';
 import { uploadMedia } from '../transport/media.js';
 import { request } from '../transport/http.js';
@@ -42,9 +49,9 @@ import {
 } from '../domains/site/navhref.js';
 import { childrenOf, isOverlay, overlayRoot, subtreeIds } from '../core/tree.js';
 import { offscreenNodes, offscreenRootOf } from '../domains/site/offscreen.js';
-import { siteToken } from './credentialpick.js';
 import { searchStock, SearchUnavailable, NO_SEARCH_NEXT, type StockPhoto } from '../transport/stock.js';
 import { siteFor, type ToolContext } from './context.js';
+import { siteToken } from './credentialpick.js';
 import { projectList, MEDIA_FIELDS } from './project.js';
 import type { PageSession } from './page.js';
 
@@ -93,7 +100,8 @@ export function bindNode(
       throw new Error(
         `sbuilder: "${source}" names no record field. A record source is "record.fld_<16 hex>" ` +
           '(or "record.html.fld_<16 hex>" for a richtext field) — the field ID from ' +
-          'GET …/collections/{id}/fields, never its key; anything else binds nothing.',
+          'GET …/collections/{id}/fields, never its key — or "record.id", the row\'s own record id; ' +
+          'anything else binds nothing.',
       );
     }
     // record.html.<fid> is HTML: in a text sink its tags print as text.
@@ -858,7 +866,7 @@ export function registerLiveTools(
           // The full list GROWS with the platform and would push the tool list
           // over its budget on its own; the refusal carries every source, so an
           // unknown one costs one round trip and the schema stays small.
-          `e.g. ${BINDING_SOURCES.slice(0, 4).join(', ')}; ${BINDING_SOURCES.length} in all, plus record.fld_<16 hex> for a Collections field; a wrong one is refused with the list`,
+          `e.g. ${BINDING_SOURCES.slice(0, 4).join(', ')}; ${BINDING_SOURCES.length} in all, plus record.fld_<16 hex> / record.id for a Collections row; a wrong one is refused with the list`,
         ),
       field: z.string().describe('Where the value lands, always "specials.<key>"'),
       action: z
@@ -874,6 +882,44 @@ export function registerLiveTools(
       const d = session.current();
       const guard: GuardOpts = { force, forced: [] };
       const patches = bindNode(d, id, source, field, action, guard);
+      // The pattern says it COULD be a field; the collection says whether it IS
+      // one in this row's scope. A read failure (401/403/404) is reported as the
+      // platform said it, never as "unsupported" — and, like every soft guard,
+      // `force` gets past it, recorded under `forced`.
+      if (RECORD_SOURCE.test(source)) {
+        const scope = recordScope((x) => (d.has(x) ? (d.node(x) as never) : undefined), id);
+        // Resolved only when there is something to read: an empty scope is refused below
+        // without a fetch, and must not fail on a missing SB_SITE first.
+        const site = scope.length ? siteFor(ctx, session.page()?.siteId) : '';
+        let withFields: Array<{ collectionId: string; fields: RecordFieldRow[] }> | undefined;
+        try {
+          withFields = await Promise.all(
+            scope.map(async (cid) => {
+              if (!cid) return { collectionId: '(none set)', fields: [] as RecordFieldRow[] };
+              const got = (await request({
+                base: ctx.base,
+                method: 'GET',
+                path: `/api/sites/${encodeURIComponent(site)}/collections/${encodeURIComponent(cid)}/fields`,
+                token: siteToken(ctx),
+                fetchImpl: ctx.fetchImpl,
+              })) as { fields?: RecordFieldRow[] };
+              return { collectionId: cid, fields: got.fields ?? [] };
+            }),
+          );
+        } catch (e) {
+          const msg = e instanceof Error ? e.message : String(e);
+          soft(guard, () => {
+            throw new Error(`sbuilder: could not read the fields to check "${source}" against: ${msg}`);
+          });
+        }
+        if (withFields) {
+          const fields = withFields;
+          soft(guard, () => {
+            const why = recordFieldProblem(source, fields);
+            if (why) throw new Error(`sbuilder: ${why}`);
+          });
+        }
+      }
       const forced = guard.forced!.length ? { forced: guard.forced } : {};
       if (dry_run !== false) {
         const refuse = session.wouldRefuse(patches);

@@ -196,6 +196,18 @@ above today's measurement gets raised again without anybody looking.
     `CatalogProduct` omits `priceCents` and `totalStock`, which are not columns on
     `products.Product` at all, because price lives on the variant.
 
+  - **A NAMED STRING TYPE RENDERS AS ITS VALIDATOR'S UNION** (2026-10-22). `collections.Field`
+    printed `type: "FieldType"` — the one word that cannot be sent. The first version took
+    every typed const of the type and was WRONG on two shipped writes (caught in review):
+    `site.Role` consts are owner/admin/editor/viewer while a member write refuses `owner` and
+    takes custom `role_…` ids, and `Permission`'s `<domain>.read|write` are built at runtime.
+    CONSTS ARE WHAT GETS STORED, NOT WHAT A WRITE ACCEPTS. So `readEnums` now reads a
+    `func Valid…(x T) bool` / `func (x T) Valid() bool` in the same DIRECTORY and takes its
+    `case` / `x == Const` arms; a validator that looks anything up (`rolePermissions[r]`)
+    yields no union. A superset the handler narrows (`orgs.ValidRole` vs `Assignable`) is
+    accepted — that costs a loud 400; a SHORT list is the silent one. An array of one is
+    `("a" | "b")[]`; a qualified `pkg.X` resolves only when one directory declares it.
+
   A nested struct is expanded ONE level, and that level is load-bearing:
   `POST /api/v1/products` takes `variants: VariantInput[]`, and `products.Product` has no
   price column at all — price lives on the variant. A shape that stopped at the type name

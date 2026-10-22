@@ -469,13 +469,12 @@ export const RAW_CALL_NOTICE =
 /**
  * Routes registered DIRECTLY on the gin router, outside every annotated
  * dispatcher, so no `swag init` and no regen can ever carry them. Hand-kept
- * and three entries long on purpose: the generated answer for UNANNOTATED
- * routes is an @Router line upstream, not a table here.
+ * and short on purpose: the generated answer for UNANNOTATED routes is an
+ * @Router line upstream, not a table here. `/api/plans` and `/api/locales`
+ * left this table when web_builder annotated them (catalog regen at 872f5f018).
  */
 export const OUTSIDE_CATALOG = [
   { method: 'GET', path: '/api/permissions', why: 'the RBAC matrix, content domains and delegation scopes' },
-  { method: 'GET', path: '/api/plans', why: 'the public plan catalogue' },
-  { method: 'GET', path: '/api/locales', why: "the language list with each locale's currency" },
 ] as const;
 
 /**

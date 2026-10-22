@@ -193,6 +193,92 @@ function readStructs(file: string, root: string, index: StructIndex): void {
   }
 }
 
+/**
+ * A NAMED STRING TYPE IS A VOCABULARY THE SHAPE USED TO HIDE. `collections.Field`
+ * carries `type FieldType`, and the call sheet printed "FieldType" — the one word
+ * that cannot be sent.
+ *
+ * THE MEMBERS COME FROM THE VALIDATOR, NEVER FROM THE CONSTANTS. Typed consts
+ * describe values that get STORED, not what a write ACCEPTS: `site.Role` has
+ * consts owner/admin/editor/viewer while a write refuses `owner` and accepts any
+ * custom `role_…`, and `Permission`'s `<domain>.read|write` are built at runtime.
+ * So a union is emitted only for a type whose package declares
+ * `func Valid…(x T) bool` or `func (x T) Valid() bool` answering with `case` arms
+ * or `x == Const` comparisons, and it is exactly those arms resolved to their
+ * literals. A validator that looks anything up, or an arm naming no literal
+ * const, gives no union — silence beats a list that calls a working value wrong.
+ * The union is the TYPE's domain; a handler may narrow it (`orgs.ValidRole` takes
+ * owner, an invitation only `Assignable`) and says so with a 400. A list that is
+ * too SHORT is the silent failure, and a validator's own arms cannot be.
+ */
+const STRING_TYPE = /^type\s+([A-Za-z_]\w*)\s+string\s*(?:\/\/.*)?$/;
+const TYPED_CONST = /^\s*(?:const\s+)?([A-Za-z_]\w*)\s+([A-Za-z_]\w*)\s*=\s*"((?:[^"\\]|\\.)*)"/;
+const VALIDATOR = /^func\s+(?:Valid\w*\(\s*\w+\s+\*?([A-Za-z_]\w*)\s*\)|\(\s*\w+\s+\*?([A-Za-z_]\w*)\s*\)\s*(?:Valid|IsValid)\(\s*\))\s*bool\s*\{(.*)$/;
+/** `<dir>::<Type>` → the literals its validator accepts. */
+const enumValues = new Map<string, string[]>();
+const stringTypes = new Set<string>();
+let enumPkgs: PackageIndex = new Map();
+
+function readEnums(files: string[], root: string): void {
+  const consts = new Map<string, { type: string; value: string }>(); // `<dir>::<Name>`
+  const validators: Array<{ dir: string; type: string; body: string }> = [];
+  for (const file of files) {
+    const dir = dirOf(file, root);
+    if (!dir) continue;
+    const lines = readFileSync(file, 'utf8').split('\n');
+    let inConst = false;
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
+      const st = STRING_TYPE.exec(line);
+      if (st) stringTypes.add(`${dir}::${st[1]}`);
+      const v = VALIDATOR.exec(line);
+      if (v) {
+        let body = v[3];
+        if (!/\}\s*$/.test(line)) {
+          for (let j = i + 1; j < lines.length && !/^\}/.test(lines[j]); j++) body += `\n${lines[j]}`;
+        }
+        validators.push({ dir, type: v[1] ?? v[2], body });
+      }
+      if (/^const\s*\(\s*$/.test(line)) inConst = true;
+      else if (inConst && /^\)/.test(line)) inConst = false;
+      if (!inConst && !/^const\s/.test(line)) continue;
+      const c = TYPED_CONST.exec(line);
+      if (c) consts.set(`${dir}::${c[1]}`, { type: c[2], value: c[3] });
+    }
+  }
+  for (const { dir, type, body } of validators) {
+    const key = `${dir}::${type}`;
+    if (!stringTypes.has(key)) continue;
+    const names = [
+      ...[...body.matchAll(/^\s*case\s+([^:]+):/gm)].flatMap((m) => m[1].split(',').map((x) => x.trim())),
+      ...[...body.matchAll(/==\s*([A-Za-z_]\w*)/g)].map((m) => m[1]),
+    ];
+    if (!names.length || /\[|\bmap\b|\bstrings\.|\bregexp\b/.test(body.replace(/\/\/.*$/gm, ''))) continue;
+    const vals: string[] = [];
+    let ok = true;
+    for (const n of names) {
+      const c = consts.get(`${dir}::${n}`);
+      if (!c || c.type !== type) {
+        ok = false;
+        break;
+      }
+      if (!vals.includes(c.value)) vals.push(c.value);
+    }
+    if (ok && vals.length >= 2) enumValues.set(key, vals);
+  }
+}
+
+function enumOf(t: string, dir: string): string | undefined {
+  let key: string | undefined;
+  if (!t.includes('.')) key = `${dir}::${t}`;
+  else {
+    const dirs = enumPkgs.get(t);
+    if (dirs?.length === 1) key = `${dirs[0]}::${t.split('.')[1]}`;
+  }
+  const vals = key ? enumValues.get(key) : undefined;
+  return vals && vals.length >= 2 ? vals.map((v) => JSON.stringify(v)).join(' | ') : undefined;
+}
+
 function parseStructBody(dir: string, name: string, body: string[]): GoStruct {
   const fields: RawField[] = [];
   const embeds: string[] = [];
@@ -341,18 +427,19 @@ const SCALARS: Record<string, string> = {
   'interface{}': 'any',
 };
 
-function renderType(goType: string): string {
+function renderType(goType: string, dir = ''): string {
   let t = goType.trim();
   const nullable = t.startsWith('*');
   if (nullable) t = t.slice(1);
   let out: string;
   if (t.startsWith('[]')) {
-    out = `${renderType(t.slice(2))}[]`;
+    const el = renderType(t.slice(2), dir);
+    out = el.includes(' | ') ? `(${el})[]` : `${el}[]`;
   } else if (t.startsWith('map[')) {
     const close = t.indexOf(']');
-    out = `{ [${renderType(t.slice(4, close))}]: ${renderType(t.slice(close + 1))} }`;
+    out = `{ [${renderType(t.slice(4, close), dir)}]: ${renderType(t.slice(close + 1), dir)} }`;
   } else {
-    out = SCALARS[t] ?? t;
+    out = SCALARS[t] ?? enumOf(t, dir) ?? t;
   }
   // A pointer is how this platform spells "absent differs from zero", and that
   // distinction decides bodies: `SetStock *int` absent means "no count was
@@ -419,7 +506,7 @@ function flatten(
     const nested = expandNested ? nestedOf(f.goType, s.dir, index, pkgs) : undefined;
     out.push({
       name: f.jsonName ?? f.goName,
-      type: renderType(f.goType),
+      type: renderType(f.goType, s.dir),
       ...(note ? { note } : {}),
       ...(nested ? { fields: nested } : {}),
     });
@@ -958,6 +1045,15 @@ export function buildRequestShapes(repo: string, operationIds: Set<string>): Sha
   const files = goFiles(root);
   for (const file of files) readStructs(file, root, index);
   const pkgs = packageIndexOf(index);
+  enumValues.clear();
+  stringTypes.clear();
+  readEnums(files, root);
+  enumPkgs = new Map();
+  for (const k of stringTypes) {
+    const [d, name] = k.split('::');
+    const q = `${d.split('/').pop()}.${name}`;
+    enumPkgs.set(q, [...(enumPkgs.get(q) ?? []), d]);
+  }
 
   const omits = readEditorOmits(repo);
   const shapes: Record<string, RequestShape> = {};

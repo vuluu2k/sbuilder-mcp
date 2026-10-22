@@ -486,9 +486,9 @@ describe('parameters the doc block duplicated', () => {
 });
 
 describe('the routes the catalog cannot carry by construction', () => {
-  it('names the three router-registered routes, none of which the catalog holds', () => {
+  it('names the router-registered routes, none of which the catalog holds', () => {
     const paths = OUTSIDE_CATALOG.map((r) => `${r.method.toLowerCase()}:${r.path}`);
-    expect(paths).toEqual(['get:/api/permissions', 'get:/api/plans', 'get:/api/locales']);
+    expect(paths).toEqual(['get:/api/permissions']);
     for (const p of paths) expect(API_OPERATIONS.some((o) => o.id === p)).toBe(false);
   });
 });

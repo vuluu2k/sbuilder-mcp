@@ -367,6 +367,43 @@ export function describeOperation(op: ApiOperation): Record<string, unknown> {
     };
   }
 
+  // COLLECTIONS (merchant data tables) are reachable on both surfaces and the
+  // facts that decide a write live in handler code, not swagger: a stale rev,
+  // the money unit (whole units here, MINOR units on products), how an import
+  // names a parent, and when a record change reaches the storefront.
+  // web_builder docs/integrations/dynamic-data-contract.md §2–§6.
+  if (/\/collections(\/|$)/.test(op.path)) {
+    out.collections = {
+      values:
+        'record.values is keyed by field KEY (a page binds the field ID). integer = a whole ' +
+        'number — money in WHOLE currency units, 1850000 = 1.850.000 ₫, never cents (unlike ' +
+        'product priceCents). reference = "rec_…" of a record in the field\'s refCollectionId, ' +
+        'same site; gallery = 1..30 image URLs; date = YYYY-MM-DD. A field\'s type and ' +
+        'refCollectionId cannot change after creation.',
+      revision:
+        'PUT a record with the rev you read: a different stored rev is 409 stale_record and ' +
+        'nothing is written — re-read and reapply, never retry blind. PUT always needs published.',
+      import:
+        'records/upsert is the idempotent import: EVERY item needs an externalId (1..120, no ' +
+        'spaces); one naming an existing record replaces it (overwriting edits made since), a new ' +
+        'one is created, an unchanged one is not rewritten. A reference may be ' +
+        '{"externalId":"<parent key>"}; seed parents first. ≤500 items / 8 MiB (413). Any bad ' +
+        'item → 400 invalid_rows, nothing written; a 409 mid-batch can leave earlier writes — re-run it.',
+      delete:
+        '409 in_use names what still points at it (referencing collections/records, or the ' +
+        'pages and forms that read the table). Remove those first; do not retry.',
+      listing:
+        'Editor records: limit ≤200, offset, sort=<field key>, desc=true, filterKey+filterValue, ' +
+        'published=true, externalId. /api/v1: sort=<key>[:asc|:desc], published=true|false|all ' +
+        '(default all), ONE other <key>=<value> equality filter (two → 400 invalid_query). total ' +
+        'is the filtered count before paging.',
+      publishing:
+        'A record is public iff published:true; drafts never reach a storefront. A record ' +
+        'edit needs NO page publish — pages holding a record list read live (≈60 s page ' +
+        'cache) — and moves no page document.',
+    };
+  }
+
   // FILLING A CATALOGUE WAS REACHABLE AND SIX FACTS ABOUT IT WERE NOT, each
   // failing silently. Attached to the call sheet for the same reason the
   // translation table is: this is where the agent is when it decides what to

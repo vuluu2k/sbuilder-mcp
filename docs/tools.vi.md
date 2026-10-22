@@ -1,6 +1,6 @@
 # Bộ tool
 
-Bốn tool với tới 892 operation của nền tảng, và 330 trong 416 lệnh ghi trong số đó mang theo
+Bốn tool với tới 919 operation của nền tảng, và 344 trong 429 lệnh ghi trong số đó mang theo
 hình dạng body đọc thẳng từ handler decode chúng. `sb_api_find` là một chỉ mục, không phải mỗi
 endpoint một tool — [lý do](../README.vi.md#bộ-tool).
 
@@ -226,8 +226,7 @@ dùng phiên. Thiếu `SB_TOKEN` thì báo đích danh tên biến, thay vì đ�
 
 **Route không có trong catalog vẫn gọi được.** Catalog là một danh sách đóng đọc từ một tài
 liệu swagger, còn platform phục vụ cả những route tài liệu đó không mô tả — 20 route chưa
-từng được annotate, ba route đăng ký thẳng trên router (`/api/permissions`, `/api/plans`,
-`/api/locales`), và mọi thứ mới hơn lần regen gần nhất. `method` + `path` gọi tới chúng theo
+từng được annotate, một route đăng ký thẳng trên router (`/api/permissions`), và mọi thứ mới hơn lần regen gần nhất. `method` + `path` gọi tới chúng theo
 đúng các quy tắc cũ: credential theo tiền tố path, `dry_run` mặc định `true`, `{siteId}` lấy
 từ `SB_SITE`, và `pick` / `max_items` / `item_offset` vẫn áp dụng. Một cặp `method` + `path`
 gọi trúng route đã có trong catalog thì được trả lời như một operation trong catalog, kèm
@@ -243,7 +242,7 @@ Kết quả được bọc thành `{ uncatalogued: true, data }` để không nh
 catalog. Một path không phải path trần của platform bị từ chối, vì base URL là `SB_API` của
 bản cài này và một path mang host sẽ gửi credential đi nơi khác. Một path mang query string
 hoặc fragment cũng bị từ chối — query thuộc về `query`, không phải `path`. Khi
-`sb_api_find` không khớp gì, câu trả lời liệt kê ba route chỉ-có-trên-router dưới
+`sb_api_find` không khớp gì, câu trả lời liệt kê route chỉ-có-trên-router dưới
 `outside_catalog`.
 
 Một lệnh gọi thất bại mang đúng một hình dạng lỗi của nền tảng, `{ error, code }`, và — khi
@@ -812,9 +811,14 @@ mãi mãi — `applyBindings` đọc namespace từ field rồi bỏ qua mọi t
 
 Nguồn **record** (một field trong Collection của merchant) là nguồn duy nhất không danh sách nào
 chứa được, vì nó gọi field bằng ID: `record.fld_<16 hex>`, hoặc `record.html.fld_<16 hex>` cho
-field richtext. Mọi `record.*` khác đều bị từ chối (KEY của field không gắn được gì), và
-`record.<fid>` vào `specials.boundHtml` cũng vậy — sink đó chỉ nhận `record.html.<fid>` đã được
-làm sạch (`schema/src/rawSinkBindings.ts`). Hiếm khi cần `sb_bind` cho nó: tile record tự suy
+field richtext, cùng `record.id` — ID của chính record trên dòng đó. Mọi `record.*` khác đều bị
+từ chối (KEY của field không gắn được gì), và `record.<fid>` vào `specials.boundHtml` cũng vậy —
+sink đó chỉ nhận `record.html.<fid>` đã được làm sạch (`schema/src/rawSinkBindings.ts`). Trước
+khi ghi, `sb_bind` đọc field của mọi collection mà dòng chứa node nhìn thấy
+(`GET …/collections/{id}/fields`) và từ chối ID field không thuộc số đó (kèm danh sách field
+hợp lệ), field `gallery` (chưa renderer nào gắn được), sai dạng cho field richtext, và node không
+nằm trong dòng của danh sách record nào. `force: true` để ghi đè; lỗi 401/403/404 của lần đọc
+đó được báo nguyên văn như nền tảng trả. Hiếm khi cần `sb_bind` cho nó: tile record tự suy
 binding từ config, xem dưới.
 
 ## Danh sách record (Collections)
@@ -822,10 +826,16 @@ binding từ config, xem dưới.
 `list-dataset` với `config.datasetSource: "record"` lặp các record **đã publish** của một
 Collection (server sắp xếp và lọc, `quantity` dòng, tối đa 50). Cách dựng:
 
-1. Tạo dữ liệu bằng `sb_api_call`: `POST /api/sites/{siteId}/collections` `{ name }` →
-   `POST …/collections/{id}/fields` `{ key, label, type }` (text, richtext, number, boolean,
-   date, select, url, image) → `POST …/collections/{id}/records`
-   `{ values: { <KEY của field>: … }, published: true }`. Record nháp không bao giờ hiện.
+1. Tạo dữ liệu bằng `sb_api_call`: `POST /api/sites/{siteId}/collections` `{ name, slug }` →
+   `POST …/collections/{id}/fields` `{ key, label, type, required, options, refCollectionId }`
+   (`text`, `richtext`, `number`, `integer`, `boolean`, `image`, `gallery`, `url`, `date`,
+   `select`, `reference`) → record. Import bằng
+   `POST …/collections/{id}/records/upsert` `{ records: [{ externalId, values, published? }] }`:
+   khoá theo `externalId`, nên chạy lần hai không ghi gì, và giá trị `reference` có thể gọi bản
+   ghi cha là `{ "externalId": "<key>" }` — seed bản ghi cha trước. Record nháp không bao giờ hiện.
+   **Tiền là `integer` theo đơn vị tiền nguyên** (`1850000` = 1.850.000 ₫) — khác `priceCents`
+   của sản phẩm. PUT gửi kèm `rev` đã đọc; `rev` cũ bị `409 stale_record`. DELETE một record
+   còn bị trỏ tới thì bị `409 in_use`.
 2. Đọc lại ID của field: `GET …/collections/{id}/fields` — mỗi field có `id: "fld_…"`.
 3. `sb_add` danh sách cùng thẻ của nó:
 
@@ -848,10 +858,47 @@ lần nữa mỗi khi `sb_set` đổi `recordField`, `recordFieldType` hay `data
 **chỉ-base**: renderer đọc chúng từ config base, nên `sb_set` đưa chúng về đó dù bạn chỉ định
 breakpoint nào.
 
+**Danh sách quan hệ** — các phòng của CHÍNH khách sạn này. Một danh sách record đặt trong
+`dataset-block` của một danh sách record khác, với `config.recordRelationField` = ID của một field
+`reference` trong collection CỦA NÓ trỏ tới collection bên ngoài, chỉ hiện các dòng trỏ tới dòng
+bao quanh. Tile của nó cũng gắn được field của dòng CHA (thẻ phòng hiện được tên khách sạn). Nó
+không bao giờ phân trang, và dòng cha chưa có con thì hiện trạng thái rỗng — hãy giữ `list-empty`
+mà `sb_add` đã seed.
+
+```json
+{ "type": "list-dataset",
+  "config": { "datasetSource": "record", "recordCollectionId": "<hotels>" },
+  "children": [{ "type": "dataset-block", "children": [
+    { "type": "text-dataset", "config": { "datasetSource": "record", "recordField": "<fld hotels.name>", "recordFieldType": "text" } },
+    { "type": "list-dataset",
+      "config": { "datasetSource": "record", "recordCollectionId": "<room-types>", "recordRelationField": "<fld room-types.hotel>" },
+      "children": [{ "type": "dataset-block", "children": [
+        { "type": "text-dataset", "config": { "datasetSource": "record", "recordField": "<fld room-types.name>", "recordFieldType": "text" } },
+        { "type": "text-dataset", "config": { "datasetSource": "record", "recordField": "<fld room-types.nightly_price_vnd>", "recordFieldType": "integer" } }
+      ]}]}
+  ]}]}
+```
+
+Sửa record KHÔNG cần publish trang: trang có danh sách record được dựng trực tiếp lúc phục vụ,
+nên thay đổi hiện trong khoảng cache ~60 s của storefront và tài liệu trang không hề đổi. Vì
+thế `sb_page_state` liệt kê các danh sách record của trang dưới `data`.
+
+Những gì nền tảng CHƯA làm (web_builder `docs/integrations/dynamic-data-contract.md` §9), nên
+không tool nào ở đây tuyên bố có: integer hiện thô (`3330000`, không phải `3.330.000 ₫`);
+`gallery` không gắn được; chưa có control tìm/lọc/sắp xếp của khách điều khiển danh sách record;
+chưa có chi tiết/popup theo record đã chọn; chưa có option form lấy từ collection; chưa có giá
+tính toán hay lọc theo sức chứa. Và bộ chọn field của editor chưa liệt kê field `integer` /
+`reference` cho tile chữ, nên tile gắn với chúng vẫn render ở mọi bề mặt trong khi inspector
+hiện như chưa chọn field.
+
 `sb_review` báo danh sách record không chỉ collection nào (`record_list_unsourced`), tile không
-có ID field (`record_field_unset`), và binding `record.*` nằm ngoài danh sách record
-(`no_data_context`). Nó KHÔNG kiểm ID field có tồn tại trong collection hay không — việc đó cần
-một lần fetch mỗi collection ở mỗi lần review; khi nghi ngờ hãy tự đọc `…/fields`.
+có ID field (`record_field_unset`), binding `record.*` nằm ngoài danh sách record
+(`no_data_context`), danh sách record lồng nhau thiếu `recordRelationField`
+(`record_relation_unset` — mọi dòng cha hiện cùng một tập dòng), khoá quan hệ không có dòng record
+nào bên trên hoặc không phải ID field (`record_relation_orphan`), và danh sách quan hệ không có
+trạng thái rỗng (`record_relation_no_empty`). Nó KHÔNG kiểm ID field của tile có tồn tại trong
+collection hay không — việc đó cần một lần fetch mỗi collection ở mỗi lần review; `sb_bind` làm
+việc kiểm đó lúc ghi.
 
 
 ## Binding mua hàng
@@ -1414,8 +1461,12 @@ tài liệu:
 | `empty_text` / `missing_media` | Element bỏ trống — khoảng trắng, hoặc ảnh vỡ |
 | `static_in_dataset` | Một element nằm trong repeater nhưng chỉ render nội dung do tài liệu ghi — cùng một tấm ảnh trên mọi thẻ sản phẩm |
 | `unbound_dataset_element` | Element dataset không có binding nào — nó chờ một `bound…` special mà không ai ghi |
-| `dead_binding_source` | Nguồn renderer không cung cấp — hiện placeholder mãi mãi. Nguồn `record.*` chỉ hợp lệ ở dạng `record.fld_<16 hex>` / `record.html.fld_<16 hex>`, và chỉ dạng html được vào `specials.boundHtml` |
+| `dead_binding_source` | Nguồn renderer không cung cấp — hiện placeholder mãi mãi. Nguồn `record.*` chỉ hợp lệ ở dạng `record.fld_<16 hex>` / `record.html.fld_<16 hex>` / `record.id`, và chỉ dạng html được vào `specials.boundHtml` |
 | `record_list_unsourced` | `list-dataset` có `datasetSource: "record"` mà không có `config.recordCollectionId` — không dòng nào được lấy, khách chỉ thấy trạng thái rỗng |
+| `hardcoded_dataset` | Script của `custom-code` chứa ≥4 bản ghi phẳng cùng một bộ khoá (`const DATA = {hotels:[…]}`) — bảng dữ liệu nằm trong code; chuyển sang Collection + danh sách record (maintenance) |
+| `record_relation_unset` | Danh sách record lồng trong dòng của một danh sách record khác mà không có `config.recordRelationField` — mọi dòng cha hiện cùng một tập dòng |
+| `record_relation_orphan` | Có `config.recordRelationField` nhưng không có dòng record nào bên trên, hoặc không phải ID `fld_…` — chỉ bao giờ hiện trạng thái rỗng |
+| `record_relation_no_empty` | Danh sách quan hệ không có `config.emptyStateId` — dòng cha chưa có con thì render thẻ placeholder |
 | `record_field_unset` | Tile record (`text-dataset` / `collection-media` có `datasetSource: "record"`) mà `config.recordField` rỗng hoặc không phải ID `fld_…` — KEY của field không gắn được gì; mọi dòng đều hiện placeholder |
 | `dead_binding_field` | Field binding ngoài `specials` — được lưu, được publish, và bị bỏ qua |
 | `unknown_element` | Type catalog không biết; chạy `npm run codegen` |
@@ -2542,6 +2593,12 @@ LAN từ một header dùng chung sửa ở nơi khác — chứ không phải m
 khi được yêu cầu, nên **checkpoint trước một lần PUT toàn tài liệu đã được lấy sẵn**; một lần
 restore chỉ đổi bản NHÁP, và nền tảng tự ghi một version `__pre_restore` trước, nên restore
 cũng hoàn tác được.
+
+`data` chỉ có khi trang chứa danh sách record: `record_lists` liệt kê `{id, collection,
+relation?}` của từng cái. DỮ LIỆU KHÔNG NẰM TRONG TÀI LIỆU — sửa record không đổi bản nháp, không
+đổi `drift` và không cần publish trang; storefront thấy record `published: true` mới trong
+khoảng ~60 s. Khôi phục dữ liệu là việc của collection (xuất CSV / upsert lại), không phải
+version của trang.
 
 `editor_note` nêu mốc thời gian của bản nháp và ý nghĩa của nó: một tab editor mở trước mốc
 đó đang giữ bản cũ, vì editor nạp bản nháp một lần và không đọc lại — nên một lần lưu từ đây

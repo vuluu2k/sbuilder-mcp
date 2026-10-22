@@ -2959,8 +2959,32 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
           'a __pre_restore version of its own first, so a restore is itself undoable.',
       };
       const open = here.pageId === pageId && here.siteId === site_id;
+      // RECORDS ARE NOT IN THIS DOCUMENT. A record list stores a collection id;
+      // its rows are read live from Collections, so a record edit moves neither
+      // the draft nor `drift` — the page shows it within its cache window with
+      // no publish (dynamic-data-contract.md §6).
+      const recordLists = Object.entries(
+        ((src.document as { nodes?: Record<string, { data?: { type?: string }; config?: Record<string, unknown> }> })
+          ?.nodes ?? {}),
+      )
+        .filter(([, n]) => n?.data?.type === 'list-dataset' && n.config?.datasetSource === 'record')
+        .map(([id, n]) => ({
+          id,
+          collection: String(n.config?.recordCollectionId ?? ''),
+          ...(n.config?.recordRelationField ? { relation: String(n.config.recordRelationField) } : {}),
+        }));
+      const dataNote = recordLists.length
+        ? ctx.notices.once(
+            'record-data',
+            'Record lists read Collections live: a record edit (published:true) shows on the storefront ' +
+              'within ~60 s with NO page publish, and never changes this draft or its drift. Only ' +
+              'published records render; data rollback is the collection\'s own (CSV export / upsert), ' +
+              'not a page version.',
+          )
+        : undefined;
       return text({
         page: pageId,
+        ...(recordLists.length ? { data: { record_lists: recordLists, ...(dataNote ? { note: dataNote } : {}) } } : {}),
         draft: {
           updatedAt: src.updatedAt,
           schemaVersion: src.schemaVersion,

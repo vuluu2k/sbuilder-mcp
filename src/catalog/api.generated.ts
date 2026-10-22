@@ -3,10 +3,10 @@
 import type { ApiOperation } from './types.js';
 
 export const SWAGGER_SOURCE = {
-  "operations": 892,
-  "definitions": 307,
-  "bodyCarrying": 405,
-  "bodyUndescribed": 109,
+  "operations": 919,
+  "definitions": 329,
+  "bodyCarrying": 430,
+  "bodyUndescribed": 115,
   "generatedFrom": "server/docs/swagger.json"
 } as const;
 
@@ -592,6 +592,19 @@ export const API_OPERATIONS: ApiOperation[] = [
     "id": "get:/_wb/address/suggest",
     "method": "GET",
     "path": "/_wb/address/suggest",
+    "tags": [
+      "storefront"
+    ],
+    "summary": "Countries and administrative divisions for an address field",
+    "params": [],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/_wb/address/units",
+    "method": "GET",
+    "path": "/_wb/address/units",
     "tags": [
       "storefront"
     ],
@@ -2802,6 +2815,19 @@ export const API_OPERATIONS: ApiOperation[] = [
     "credential": "siteScoped"
   },
   {
+    "id": "get:/api/locales",
+    "method": "GET",
+    "path": "/api/locales",
+    "tags": [
+      "locales"
+    ],
+    "summary": "The enabled language catalogue, in switcher order",
+    "params": [],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
     "id": "post:/api/media/{siteId}",
     "method": "POST",
     "path": "/api/media/{siteId}",
@@ -3234,7 +3260,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     "tags": [
       "orgs"
     ],
-    "summary": "List the sites this organization operates",
+    "summary": "List the sites this organization operates, or open a blank one inside it",
     "params": [
       {
         "name": "id",
@@ -3242,6 +3268,41 @@ export const API_OPERATIONS: ApiOperation[] = [
         "required": true,
         "type": "string",
         "description": "Org ID"
+      },
+      {
+        "name": "site",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "name, slug (POST only; slug may be empty)"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/api/orgs/{id}/sites",
+    "method": "POST",
+    "path": "/api/orgs/{id}/sites",
+    "tags": [
+      "orgs"
+    ],
+    "summary": "List the sites this organization operates, or open a blank one inside it",
+    "params": [
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Org ID"
+      },
+      {
+        "name": "site",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "name, slug (POST only; slug may be empty)"
       }
     ],
     "bodyDescribed": false,
@@ -4082,6 +4143,19 @@ export const API_OPERATIONS: ApiOperation[] = [
     "credential": "siteScoped"
   },
   {
+    "id": "get:/api/plans",
+    "method": "GET",
+    "path": "/api/plans",
+    "tags": [
+      "plans"
+    ],
+    "summary": "The plan catalogue, for the landing page's pricing table",
+    "params": [],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
     "id": "post:/api/pos-devices/events",
     "method": "POST",
     "path": "/api/pos-devices/events",
@@ -4164,6 +4238,41 @@ export const API_OPERATIONS: ApiOperation[] = [
         "required": true,
         "type": "file",
         "description": "the image to hold"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/api/site-imports",
+    "method": "POST",
+    "path": "/api/site-imports",
+    "tags": [
+      "sitecopy"
+    ],
+    "summary": "Build a new site from an uploaded package or bundle",
+    "params": [
+      {
+        "name": "name",
+        "in": "formData",
+        "required": false,
+        "type": "string",
+        "description": "New site name (multipart)"
+      },
+      {
+        "name": "file",
+        "in": "formData",
+        "required": false,
+        "type": "file",
+        "description": "The exported package or bundle (multipart)"
+      },
+      {
+        "name": "payload",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "{name, package} (application/json)"
       }
     ],
     "bodyDescribed": false,
@@ -6079,7 +6188,14 @@ export const API_OPERATIONS: ApiOperation[] = [
         "in": "body",
         "required": false,
         "type": "object",
-        "description": "Replacement (PUT only)"
+        "description": "Replacement (PUT only); may carry expectedUpdatedAt"
+      },
+      {
+        "name": "expectedUpdatedAt",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "DELETE only: RFC 3339 updatedAt the caller last read; refuses with 409 when the row has changed"
       }
     ],
     "bodyDescribed": true,
@@ -6114,7 +6230,14 @@ export const API_OPERATIONS: ApiOperation[] = [
         "in": "body",
         "required": false,
         "type": "object",
-        "description": "Replacement (PUT only)"
+        "description": "Replacement (PUT only); may carry expectedUpdatedAt"
+      },
+      {
+        "name": "expectedUpdatedAt",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "DELETE only: RFC 3339 updatedAt the caller last read; refuses with 409 when the row has changed"
       }
     ],
     "bodyDescribed": true,
@@ -6149,7 +6272,14 @@ export const API_OPERATIONS: ApiOperation[] = [
         "in": "body",
         "required": false,
         "type": "object",
-        "description": "Replacement (PUT only)"
+        "description": "Replacement (PUT only); may carry expectedUpdatedAt"
+      },
+      {
+        "name": "expectedUpdatedAt",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "DELETE only: RFC 3339 updatedAt the caller last read; refuses with 409 when the row has changed"
       }
     ],
     "bodyDescribed": true,
@@ -6558,6 +6688,13 @@ export const API_OPERATIONS: ApiOperation[] = [
         "description": "true|1 for published records only"
       },
       {
+        "name": "externalId",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Only the record with this external id"
+      },
+      {
         "name": "offset",
         "in": "query",
         "required": false,
@@ -6640,6 +6777,13 @@ export const API_OPERATIONS: ApiOperation[] = [
         "required": false,
         "type": "string",
         "description": "true|1 for published records only"
+      },
+      {
+        "name": "externalId",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Only the record with this external id"
       },
       {
         "name": "offset",
@@ -6763,6 +6907,41 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": true,
     "bodyRef": "internal_collections_rest.orderBody",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/api/sites/{siteId}/collections/{id}/records/upsert",
+    "method": "POST",
+    "path": "/api/sites/{siteId}/collections/{id}/records/upsert",
+    "tags": [
+      "collections"
+    ],
+    "summary": "Create or replace records by external id (idempotent import)",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Collection ID"
+      },
+      {
+        "name": "body",
+        "in": "body",
+        "required": true,
+        "type": "object",
+        "description": "At most 500 records; a reference value may be {\\"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "internal_collections_rest.upsertBody",
     "credential": "siteScoped"
   },
   {
@@ -7337,10 +7516,9 @@ export const API_OPERATIONS: ApiOperation[] = [
     "method": "GET",
     "path": "/api/sites/{siteId}/courses",
     "tags": [
-      "courses",
       "courses"
     ],
-    "summary": "The app dashboard's counts",
+    "summary": "List or create courses",
     "params": [
       {
         "name": "siteId",
@@ -7350,15 +7528,15 @@ export const API_OPERATIONS: ApiOperation[] = [
         "description": "Site ID"
       },
       {
-        "name": "siteId",
-        "in": "path",
-        "required": true,
-        "type": "string",
-        "description": "Site ID"
+        "name": "course",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "Course to create (POST only)"
       }
     ],
-    "bodyDescribed": false,
-    "bodyRef": null,
+    "bodyDescribed": true,
+    "bodyRef": "github_com_webbuilder_server_internal_courses.Course",
     "credential": "siteScoped"
   },
   {
@@ -7366,10 +7544,9 @@ export const API_OPERATIONS: ApiOperation[] = [
     "method": "POST",
     "path": "/api/sites/{siteId}/courses",
     "tags": [
-      "courses",
       "courses"
     ],
-    "summary": "The app dashboard's counts",
+    "summary": "List or create courses",
     "params": [
       {
         "name": "siteId",
@@ -7379,15 +7556,15 @@ export const API_OPERATIONS: ApiOperation[] = [
         "description": "Site ID"
       },
       {
-        "name": "siteId",
-        "in": "path",
-        "required": true,
-        "type": "string",
-        "description": "Site ID"
+        "name": "course",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "Course to create (POST only)"
       }
     ],
-    "bodyDescribed": false,
-    "bodyRef": null,
+    "bodyDescribed": true,
+    "bodyRef": "github_com_webbuilder_server_internal_courses.Course",
     "credential": "siteScoped"
   },
   {
@@ -7395,18 +7572,10 @@ export const API_OPERATIONS: ApiOperation[] = [
     "method": "GET",
     "path": "/api/sites/{siteId}/courses/overview",
     "tags": [
-      "courses",
       "courses"
     ],
     "summary": "The app dashboard's counts",
     "params": [
-      {
-        "name": "siteId",
-        "in": "path",
-        "required": true,
-        "type": "string",
-        "description": "Site ID"
-      },
       {
         "name": "siteId",
         "in": "path",
@@ -8580,6 +8749,13 @@ export const API_OPERATIONS: ApiOperation[] = [
         "description": "new|deciding|accepted|rejected|cancelled|completed"
       },
       {
+        "name": "connection",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "store (connection) id: only its orders; an unknown id matches none"
+      },
+      {
         "name": "limit",
         "in": "query",
         "required": false,
@@ -8718,13 +8894,13 @@ export const API_OPERATIONS: ApiOperation[] = [
     "credential": "siteScoped"
   },
   {
-    "id": "get:/api/sites/{siteId}/delivery-apps/{app}/connection",
+    "id": "get:/api/sites/{siteId}/delivery-apps/{app}/connections",
     "method": "GET",
-    "path": "/api/sites/{siteId}/delivery-apps/{app}/connection",
+    "path": "/api/sites/{siteId}/delivery-apps/{app}/connections",
     "tags": [
       "pos"
     ],
-    "summary": "Read or replace the site's connection to a delivery app",
+    "summary": "List or add a delivery app's stores",
     "params": [
       {
         "name": "siteId",
@@ -8745,7 +8921,7 @@ export const API_OPERATIONS: ApiOperation[] = [
         "in": "body",
         "required": false,
         "type": "object",
-        "description": "Connection (PUT only)"
+        "description": "Store (POST only)"
       }
     ],
     "bodyDescribed": true,
@@ -8753,13 +8929,48 @@ export const API_OPERATIONS: ApiOperation[] = [
     "credential": "siteScoped"
   },
   {
-    "id": "put:/api/sites/{siteId}/delivery-apps/{app}/connection",
+    "id": "post:/api/sites/{siteId}/delivery-apps/{app}/connections",
+    "method": "POST",
+    "path": "/api/sites/{siteId}/delivery-apps/{app}/connections",
+    "tags": [
+      "pos"
+    ],
+    "summary": "List or add a delivery app's stores",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "app",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "App id (grabfood, shopeefood)"
+      },
+      {
+        "name": "connection",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "Store (POST only)"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "internal_deliveryapps_rest.connectionInput",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "put:/api/sites/{siteId}/delivery-apps/{app}/connections/{connectionId}",
     "method": "PUT",
-    "path": "/api/sites/{siteId}/delivery-apps/{app}/connection",
+    "path": "/api/sites/{siteId}/delivery-apps/{app}/connections/{connectionId}",
     "tags": [
       "pos"
     ],
-    "summary": "Read or replace the site's connection to a delivery app",
+    "summary": "Edit or remove one delivery-app store",
     "params": [
       {
         "name": "siteId",
@@ -8776,11 +8987,18 @@ export const API_OPERATIONS: ApiOperation[] = [
         "description": "App id (grabfood, shopeefood)"
       },
       {
+        "name": "connectionId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Store (connection) ID"
+      },
+      {
         "name": "connection",
         "in": "body",
         "required": false,
         "type": "object",
-        "description": "Connection (PUT only)"
+        "description": "Store (PUT only)"
       }
     ],
     "bodyDescribed": true,
@@ -8788,9 +9006,51 @@ export const API_OPERATIONS: ApiOperation[] = [
     "credential": "siteScoped"
   },
   {
-    "id": "get:/api/sites/{siteId}/delivery-apps/{app}/menu",
+    "id": "delete:/api/sites/{siteId}/delivery-apps/{app}/connections/{connectionId}",
+    "method": "DELETE",
+    "path": "/api/sites/{siteId}/delivery-apps/{app}/connections/{connectionId}",
+    "tags": [
+      "pos"
+    ],
+    "summary": "Edit or remove one delivery-app store",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "app",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "App id (grabfood, shopeefood)"
+      },
+      {
+        "name": "connectionId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Store (connection) ID"
+      },
+      {
+        "name": "connection",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "Store (PUT only)"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "internal_deliveryapps_rest.connectionInput",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/sites/{siteId}/delivery-apps/{app}/connections/{connectionId}/menu",
     "method": "GET",
-    "path": "/api/sites/{siteId}/delivery-apps/{app}/menu",
+    "path": "/api/sites/{siteId}/delivery-apps/{app}/connections/{connectionId}/menu",
     "tags": [
       "pos"
     ],
@@ -8809,6 +9069,13 @@ export const API_OPERATIONS: ApiOperation[] = [
         "required": true,
         "type": "string",
         "description": "App id (grabfood)"
+      },
+      {
+        "name": "connectionId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Store (connection) ID"
       }
     ],
     "bodyDescribed": false,
@@ -8816,9 +9083,9 @@ export const API_OPERATIONS: ApiOperation[] = [
     "credential": "siteScoped"
   },
   {
-    "id": "put:/api/sites/{siteId}/delivery-apps/{app}/menu/items/{variantId}/sold-out",
+    "id": "put:/api/sites/{siteId}/delivery-apps/{app}/connections/{connectionId}/menu/items/{variantId}/sold-out",
     "method": "PUT",
-    "path": "/api/sites/{siteId}/delivery-apps/{app}/menu/items/{variantId}/sold-out",
+    "path": "/api/sites/{siteId}/delivery-apps/{app}/connections/{connectionId}/menu/items/{variantId}/sold-out",
     "tags": [
       "pos"
     ],
@@ -8837,6 +9104,13 @@ export const API_OPERATIONS: ApiOperation[] = [
         "required": true,
         "type": "string",
         "description": "App id (grabfood)"
+      },
+      {
+        "name": "connectionId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Store (connection) ID"
       },
       {
         "name": "variantId",
@@ -8858,9 +9132,58 @@ export const API_OPERATIONS: ApiOperation[] = [
     "credential": "siteScoped"
   },
   {
-    "id": "post:/api/sites/{siteId}/delivery-apps/{app}/menu/sync",
+    "id": "put:/api/sites/{siteId}/delivery-apps/{app}/connections/{connectionId}/menu/products/{productId}/hidden",
+    "method": "PUT",
+    "path": "/api/sites/{siteId}/delivery-apps/{app}/connections/{connectionId}/menu/products/{productId}/hidden",
+    "tags": [
+      "pos"
+    ],
+    "summary": "Hide a product from a delivery app's menu (or show it again)",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "app",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "App id (grabfood)"
+      },
+      {
+        "name": "connectionId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Store (connection) ID"
+      },
+      {
+        "name": "productId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Product ID"
+      },
+      {
+        "name": "body",
+        "in": "body",
+        "required": true,
+        "type": "object",
+        "description": "{hidden}"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "internal_deliveryapps_rest.hiddenBody",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/api/sites/{siteId}/delivery-apps/{app}/connections/{connectionId}/menu/sync",
     "method": "POST",
-    "path": "/api/sites/{siteId}/delivery-apps/{app}/menu/sync",
+    "path": "/api/sites/{siteId}/delivery-apps/{app}/connections/{connectionId}/menu/sync",
     "tags": [
       "pos"
     ],
@@ -8879,6 +9202,13 @@ export const API_OPERATIONS: ApiOperation[] = [
         "required": true,
         "type": "string",
         "description": "App id (grabfood)"
+      },
+      {
+        "name": "connectionId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Store (connection) ID"
       }
     ],
     "bodyDescribed": false,
@@ -8886,9 +9216,9 @@ export const API_OPERATIONS: ApiOperation[] = [
     "credential": "siteScoped"
   },
   {
-    "id": "get:/api/sites/{siteId}/delivery-apps/{app}/menu/syncs",
+    "id": "get:/api/sites/{siteId}/delivery-apps/{app}/connections/{connectionId}/menu/syncs",
     "method": "GET",
-    "path": "/api/sites/{siteId}/delivery-apps/{app}/menu/syncs",
+    "path": "/api/sites/{siteId}/delivery-apps/{app}/connections/{connectionId}/menu/syncs",
     "tags": [
       "pos"
     ],
@@ -8909,6 +9239,13 @@ export const API_OPERATIONS: ApiOperation[] = [
         "description": "App id (grabfood)"
       },
       {
+        "name": "connectionId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Store (connection) ID"
+      },
+      {
         "name": "limit",
         "in": "query",
         "required": false,
@@ -8925,6 +9262,90 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/sites/{siteId}/delivery-apps/{app}/connections/{connectionId}/selling-hours",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/delivery-apps/{app}/connections/{connectionId}/selling-hours",
+    "tags": [
+      "pos"
+    ],
+    "summary": "Read or replace a delivery app's weekly opening hours",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "app",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "App id (grabfood)"
+      },
+      {
+        "name": "connectionId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Store (connection) ID"
+      },
+      {
+        "name": "body",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "{periods} (PUT only)"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "internal_deliveryapps_rest.sellingHoursBody",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "put:/api/sites/{siteId}/delivery-apps/{app}/connections/{connectionId}/selling-hours",
+    "method": "PUT",
+    "path": "/api/sites/{siteId}/delivery-apps/{app}/connections/{connectionId}/selling-hours",
+    "tags": [
+      "pos"
+    ],
+    "summary": "Read or replace a delivery app's weekly opening hours",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "app",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "App id (grabfood)"
+      },
+      {
+        "name": "connectionId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Store (connection) ID"
+      },
+      {
+        "name": "body",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "{periods} (PUT only)"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "internal_deliveryapps_rest.sellingHoursBody",
     "credential": "siteScoped"
   },
   {
@@ -9852,7 +10273,7 @@ export const API_OPERATIONS: ApiOperation[] = [
         "in": "query",
         "required": false,
         "type": "string",
-        "description": "pending|issuing|issued|failed|cancelled"
+        "description": "pending|issuing|issued|failed|cancelled|replaced"
       },
       {
         "name": "limit",
@@ -9901,11 +10322,88 @@ export const API_OPERATIONS: ApiOperation[] = [
         "in": "body",
         "required": true,
         "type": "object",
-        "description": "{reason}"
+        "description": "{reason, agreement?: {name?, date?}}"
       }
     ],
     "bodyDescribed": true,
     "bodyRef": "internal_einvoice_rest.cancelBody",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/sites/{siteId}/einvoice/jobs/{id}/events",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/einvoice/jobs/{id}/events",
+    "tags": [
+      "pos"
+    ],
+    "summary": "List one e-invoice job's history (who did what)",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Job ID"
+      },
+      {
+        "name": "limit",
+        "in": "query",
+        "required": false,
+        "type": "integer",
+        "description": "page size (default 50, max 200)"
+      },
+      {
+        "name": "offset",
+        "in": "query",
+        "required": false,
+        "type": "integer",
+        "description": "offset"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/api/sites/{siteId}/einvoice/jobs/{id}/replace",
+    "method": "POST",
+    "path": "/api/sites/{siteId}/einvoice/jobs/{id}/replace",
+    "tags": [
+      "pos"
+    ],
+    "summary": "Replace an issued e-invoice to correct its buyer",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Job ID (the issued invoice to replace)"
+      },
+      {
+        "name": "body",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "{buyer?: {taxCode, name, company, address, email}, agreement?: {name?, date?}}"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "internal_einvoice_rest.replaceBody",
     "credential": "siteScoped"
   },
   {
@@ -9997,6 +10495,41 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": true,
     "bodyRef": "internal_einvoice_rest.orderIssueBody",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/api/sites/{siteId}/einvoice/orders/{orderId}/returns/{returnId}/adjust",
+    "method": "POST",
+    "path": "/api/sites/{siteId}/einvoice/orders/{orderId}/returns/{returnId}/adjust",
+    "tags": [
+      "pos"
+    ],
+    "summary": "Queue the adjustment invoice for one refunded return of an order",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "orderId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Order ID"
+      },
+      {
+        "name": "returnId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Return ID (a refunded return of that order)"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
     "credential": "siteScoped"
   },
   {
@@ -14842,9 +15375,19 @@ export const API_OPERATIONS: ApiOperation[] = [
     "id": "get:/api/sites/{siteId}/pages",
     "method": "GET",
     "path": "/api/sites/{siteId}/pages",
-    "tags": [],
-    "summary": "",
-    "params": [],
+    "tags": [
+      "pages"
+    ],
+    "summary": "List a site's pages",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      }
+    ],
     "bodyDescribed": false,
     "bodyRef": null,
     "credential": "siteScoped"
@@ -14853,11 +15396,28 @@ export const API_OPERATIONS: ApiOperation[] = [
     "id": "post:/api/sites/{siteId}/pages",
     "method": "POST",
     "path": "/api/sites/{siteId}/pages",
-    "tags": [],
-    "summary": "",
-    "params": [],
-    "bodyDescribed": false,
-    "bodyRef": null,
+    "tags": [
+      "pages"
+    ],
+    "summary": "Create a page in a site",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "page",
+        "in": "body",
+        "required": true,
+        "type": "object",
+        "description": "Page to create"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "github_com_webbuilder_server_internal_page.CreatePageInput",
     "credential": "siteScoped"
   },
   {
@@ -14894,6 +15454,111 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": true,
     "bodyRef": "github_com_webbuilder_server_internal_page.CreatePageInput",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/sites/{siteId}/pages/{pageId}",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/pages/{pageId}",
+    "tags": [
+      "pages"
+    ],
+    "summary": "Read, update or delete a page",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "pageId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Page ID"
+      },
+      {
+        "name": "page",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "Fields to change (PATCH only)"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "github_com_webbuilder_server_internal_page.UpdatePageInput",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "patch:/api/sites/{siteId}/pages/{pageId}",
+    "method": "PATCH",
+    "path": "/api/sites/{siteId}/pages/{pageId}",
+    "tags": [
+      "pages"
+    ],
+    "summary": "Read, update or delete a page",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "pageId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Page ID"
+      },
+      {
+        "name": "page",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "Fields to change (PATCH only)"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "github_com_webbuilder_server_internal_page.UpdatePageInput",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "delete:/api/sites/{siteId}/pages/{pageId}",
+    "method": "DELETE",
+    "path": "/api/sites/{siteId}/pages/{pageId}",
+    "tags": [
+      "pages"
+    ],
+    "summary": "Read, update or delete a page",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "pageId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Page ID"
+      },
+      {
+        "name": "page",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "Fields to change (PATCH only)"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "github_com_webbuilder_server_internal_page.UpdatePageInput",
     "credential": "siteScoped"
   },
   {
@@ -21393,6 +22058,27 @@ export const API_OPERATIONS: ApiOperation[] = [
     "credential": "siteScoped"
   },
   {
+    "id": "get:/api/sites/{siteId}/published",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/published",
+    "tags": [
+      "pages"
+    ],
+    "summary": "List a site's published pages",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
     "id": "get:/api/sites/{siteId}/quiz-grading",
     "method": "GET",
     "path": "/api/sites/{siteId}/quiz-grading",
@@ -25166,8 +25852,92 @@ export const API_OPERATIONS: ApiOperation[] = [
     "credential": "siteScoped"
   },
   {
+    "id": "get:/api/sites/{siteId}/subscription",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/subscription",
+    "tags": [
+      "plans"
+    ],
+    "summary": "Read a site's subscription, or request a new one",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "subscription",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "{planId} (POST only)"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/api/sites/{siteId}/subscription",
+    "method": "POST",
+    "path": "/api/sites/{siteId}/subscription",
+    "tags": [
+      "plans"
+    ],
+    "summary": "Read a site's subscription, or request a new one",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "subscription",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "{planId} (POST only)"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
     "id": "post:/api/sites/{siteId}/template",
     "method": "POST",
+    "path": "/api/sites/{siteId}/template",
+    "tags": [
+      "sites"
+    ],
+    "summary": "Offer this site as its organization's template, or withdraw it",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "template",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "name, description (POST only)"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "delete:/api/sites/{siteId}/template",
+    "method": "DELETE",
     "path": "/api/sites/{siteId}/template",
     "tags": [
       "sites"
@@ -26812,6 +27582,167 @@ export const API_OPERATIONS: ApiOperation[] = [
     "credential": "apiKey"
   },
   {
+    "id": "get:/api/v1/code-files",
+    "method": "GET",
+    "path": "/api/v1/code-files",
+    "tags": [
+      "v1"
+    ],
+    "summary": "List or create code files",
+    "params": [
+      {
+        "name": "page_id",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Only this page's files"
+      },
+      {
+        "name": "codeFile",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "File to create (POST only)"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "internal_publicapi.CodeFileInput",
+    "credential": "apiKey"
+  },
+  {
+    "id": "post:/api/v1/code-files",
+    "method": "POST",
+    "path": "/api/v1/code-files",
+    "tags": [
+      "v1"
+    ],
+    "summary": "List or create code files",
+    "params": [
+      {
+        "name": "page_id",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Only this page's files"
+      },
+      {
+        "name": "codeFile",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "File to create (POST only)"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "internal_publicapi.CodeFileInput",
+    "credential": "apiKey"
+  },
+  {
+    "id": "get:/api/v1/code-files/{id}",
+    "method": "GET",
+    "path": "/api/v1/code-files/{id}",
+    "tags": [
+      "v1"
+    ],
+    "summary": "Read, replace or delete one code file",
+    "params": [
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Code file ID"
+      },
+      {
+        "name": "codeFile",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "Replacement (PUT only; enabled REQUIRED)"
+      },
+      {
+        "name": "expectedUpdatedAt",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "DELETE only: RFC 3339 updatedAt the file must still have"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "internal_publicapi.CodeFileInput",
+    "credential": "apiKey"
+  },
+  {
+    "id": "put:/api/v1/code-files/{id}",
+    "method": "PUT",
+    "path": "/api/v1/code-files/{id}",
+    "tags": [
+      "v1"
+    ],
+    "summary": "Read, replace or delete one code file",
+    "params": [
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Code file ID"
+      },
+      {
+        "name": "codeFile",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "Replacement (PUT only; enabled REQUIRED)"
+      },
+      {
+        "name": "expectedUpdatedAt",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "DELETE only: RFC 3339 updatedAt the file must still have"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "internal_publicapi.CodeFileInput",
+    "credential": "apiKey"
+  },
+  {
+    "id": "delete:/api/v1/code-files/{id}",
+    "method": "DELETE",
+    "path": "/api/v1/code-files/{id}",
+    "tags": [
+      "v1"
+    ],
+    "summary": "Read, replace or delete one code file",
+    "params": [
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Code file ID"
+      },
+      {
+        "name": "codeFile",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "Replacement (PUT only; enabled REQUIRED)"
+      },
+      {
+        "name": "expectedUpdatedAt",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "DELETE only: RFC 3339 updatedAt the file must still have"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "internal_publicapi.CodeFileInput",
+    "credential": "apiKey"
+  },
+  {
     "id": "get:/api/v1/collections",
     "method": "GET",
     "path": "/api/v1/collections",
@@ -26883,6 +27814,13 @@ export const API_OPERATIONS: ApiOperation[] = [
         "description": "true | false (drafts only) | all (default)"
       },
       {
+        "name": "externalId",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Only the record with this externalId (reserved, not a filter)"
+      },
+      {
         "name": "limit",
         "in": "query",
         "required": false,
@@ -26939,6 +27877,13 @@ export const API_OPERATIONS: ApiOperation[] = [
         "description": "true | false (drafts only) | all (default)"
       },
       {
+        "name": "externalId",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Only the record with this externalId (reserved, not a filter)"
+      },
+      {
         "name": "limit",
         "in": "query",
         "required": false,
@@ -26955,6 +27900,34 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": true,
     "bodyRef": "internal_publicapi.CollectionRecordInput",
+    "credential": "apiKey"
+  },
+  {
+    "id": "post:/api/v1/collections/{collection}/records/upsert",
+    "method": "POST",
+    "path": "/api/v1/collections/{collection}/records/upsert",
+    "tags": [
+      "v1"
+    ],
+    "summary": "Create or replace records by externalId (idempotent import)",
+    "params": [
+      {
+        "name": "collection",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Collection id or slug"
+      },
+      {
+        "name": "body",
+        "in": "body",
+        "required": true,
+        "type": "object",
+        "description": "Items keyed by externalId"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "internal_publicapi.CollectionUpsertInput",
     "credential": "apiKey"
   },
   {
@@ -28692,6 +29665,10 @@ export const API_DEFINITIONS: Record<string, unknown> = {
       "position": {
         "type": "integer"
       },
+      "refCollectionId": {
+        "description": "RefCollectionID is the target collection of a TypeReference field (\"\" for\nevery other type). Fixed at creation, like Type.",
+        "type": "string"
+      },
       "required": {
         "type": "boolean"
       },
@@ -28713,7 +29690,10 @@ export const API_DEFINITIONS: Record<string, unknown> = {
       "image",
       "url",
       "date",
-      "select"
+      "select",
+      "integer",
+      "reference",
+      "gallery"
     ],
     "x-enum-varnames": [
       "TypeText",
@@ -28723,8 +29703,214 @@ export const API_DEFINITIONS: Record<string, unknown> = {
       "TypeImage",
       "TypeURL",
       "TypeDate",
-      "TypeSelect"
+      "TypeSelect",
+      "TypeInteger",
+      "TypeReference",
+      "TypeGallery"
     ]
+  },
+  "github_com_webbuilder_server_internal_collections.UpsertItem": {
+    "type": "object",
+    "properties": {
+      "externalId": {
+        "type": "string"
+      },
+      "published": {
+        "type": "boolean"
+      },
+      "values": {
+        "type": "object",
+        "additionalProperties": {}
+      }
+    }
+  },
+  "github_com_webbuilder_server_internal_courses.Course": {
+    "type": "object",
+    "properties": {
+      "coverImage": {
+        "type": "string"
+      },
+      "createdAt": {
+        "type": "string"
+      },
+      "description": {
+        "description": "long; HTML allowed, sanitised on write",
+        "type": "string"
+      },
+      "durationSec": {
+        "type": "integer"
+      },
+      "enrollmentCount": {
+        "type": "integer"
+      },
+      "id": {
+        "type": "string"
+      },
+      "instructor": {
+        "$ref": "#/definitions/github_com_webbuilder_server_internal_courses.Instructor"
+      },
+      "language": {
+        "description": "BCP-47-ish; display only",
+        "type": "string"
+      },
+      "lessonCount": {
+        "type": "integer"
+      },
+      "level": {
+        "description": "free-form: \"Cơ bản\", \"Nâng cao\"…",
+        "type": "string"
+      },
+      "number": {
+        "description": "Server-assigned / derived. Callers must NOT set these.",
+        "type": "integer"
+      },
+      "previewUrl": {
+        "description": "trailer video, public",
+        "type": "string"
+      },
+      "publishedAt": {
+        "description": "first time Status became active",
+        "type": "string"
+      },
+      "sectionCount": {
+        "type": "integer"
+      },
+      "seo": {
+        "$ref": "#/definitions/github_com_webbuilder_server_internal_courses.SEO"
+      },
+      "settings": {
+        "$ref": "#/definitions/github_com_webbuilder_server_internal_courses.Settings"
+      },
+      "siteId": {
+        "type": "string"
+      },
+      "slug": {
+        "type": "string"
+      },
+      "status": {
+        "$ref": "#/definitions/github_com_webbuilder_server_internal_courses.CourseStatus"
+      },
+      "summary": {
+        "description": "short; plain text",
+        "type": "string"
+      },
+      "tags": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "title": {
+        "type": "string"
+      },
+      "updatedAt": {
+        "type": "string"
+      }
+    }
+  },
+  "github_com_webbuilder_server_internal_courses.CourseStatus": {
+    "type": "string",
+    "enum": [
+      "draft",
+      "active",
+      "archived",
+      "review"
+    ],
+    "x-enum-varnames": [
+      "CourseStatusDraft",
+      "CourseStatusActive",
+      "CourseStatusArchived",
+      "CourseStatusReview"
+    ]
+  },
+  "github_com_webbuilder_server_internal_courses.Instructor": {
+    "type": "object",
+    "properties": {
+      "avatar": {
+        "type": "string"
+      },
+      "bio": {
+        "type": "string"
+      },
+      "name": {
+        "type": "string"
+      },
+      "title": {
+        "type": "string"
+      }
+    }
+  },
+  "github_com_webbuilder_server_internal_courses.SEO": {
+    "type": "object",
+    "properties": {
+      "canonical": {
+        "type": "string"
+      },
+      "description": {
+        "type": "string"
+      },
+      "keywords": {
+        "type": "string"
+      },
+      "noFollow": {
+        "type": "boolean"
+      },
+      "noIndex": {
+        "type": "boolean"
+      },
+      "ogDesc": {
+        "type": "string"
+      },
+      "ogImage": {
+        "type": "string"
+      },
+      "ogTitle": {
+        "type": "string"
+      },
+      "title": {
+        "type": "string"
+      },
+      "twitterCard": {
+        "type": "string"
+      }
+    }
+  },
+  "github_com_webbuilder_server_internal_courses.Settings": {
+    "type": "object",
+    "properties": {
+      "accessDays": {
+        "description": "AccessDays is how long an entitlement lasts from the moment it is\ngranted. 0 = forever, which is what a course sold outright means and\ntherefore the zero value.\n\nA per-link override exists (CourseProduct.AccessDays) so one course can\nbe sold both as a 30-day rental and as lifetime access.",
+        "type": "integer"
+      },
+      "certificate": {
+        "description": "Certificate turns on the completion certificate.",
+        "type": "boolean"
+      },
+      "completionPercent": {
+        "description": "CompletionPercent is the share of lessons a student must finish before\nthe course counts as completed (and a certificate, when enabled, is\nearned). 0 reads as 100.",
+        "type": "integer"
+      },
+      "dripFromEnrollment": {
+        "description": "DripFromEnrollment makes Lesson.DripDays count from the student's own\ngrant date rather than from the course's publish date. NAMED FOR THE\nNON-DEFAULT so the zero value is the simpler product behaviour, and\nbecause per-student drip is the thing a merchant has to opt into\nunderstanding: two students then see different lessons on the same day.",
+        "type": "boolean"
+      },
+      "grantOn": {
+        "description": "GrantOn is one of the GrantOn constants; \"\" reads as GrantOnPaid.",
+        "type": "string"
+      },
+      "renewReminderDays": {
+        "description": "RenewReminderDays is how many days before an entitlement lapses the\nstudent is mailed. 0 reads as DefaultRenewReminderDays — the same\n\"0 means the product default\" shape CompletionPercent takes, and for its\nreason: a course saved before this field existed must behave sensibly,\nand a merchant who never opens the setting should still have their\nstudents reminded.\n\nIt only ever matters on a TIME-BOXED course. A lifetime entitlement has\nno expiry to warn about, so the whole sweep skips it whatever this says.",
+        "type": "integer"
+      },
+      "renewReminderOff": {
+        "description": "RenewReminderOff silences the reminder for this course. NAMED FOR THE\nNON-DEFAULT, like DripFromEnrollment above: the zero value has to be the\nbehaviour that serves a merchant who never opened the screen, and that\nis being reminded. A time-boxed course whose students lapse in silence\nloses renewals nobody ever sees — the merchant does not discover it,\nbecause a student who quietly drifts away files no ticket.",
+        "type": "boolean"
+      },
+      "seatCap": {
+        "description": "SeatCap caps how many ACTIVE entitlements this course may hold at once —\na cohort with a real classroom, a live intake. 0 = unlimited.",
+        "type": "integer"
+      }
+    }
   },
   "github_com_webbuilder_server_internal_customers.Address": {
     "type": "object",
@@ -28825,6 +30011,20 @@ export const API_DEFINITIONS: Record<string, unknown> = {
       }
     }
   },
+  "github_com_webbuilder_server_internal_deliveryapps.HoursPeriod": {
+    "type": "object",
+    "properties": {
+      "end": {
+        "type": "string"
+      },
+      "start": {
+        "type": "string"
+      },
+      "weekday": {
+        "type": "integer"
+      }
+    }
+  },
   "github_com_webbuilder_server_internal_discounts.Discount": {
     "type": "object",
     "properties": {
@@ -28898,6 +30098,17 @@ export const API_DEFINITIONS: Record<string, unknown> = {
       }
     }
   },
+  "github_com_webbuilder_server_internal_einvoice.Agreement": {
+    "type": "object",
+    "properties": {
+      "date": {
+        "type": "string"
+      },
+      "name": {
+        "type": "string"
+      }
+    }
+  },
   "github_com_webbuilder_server_internal_einvoice.Buyer": {
     "type": "object",
     "properties": {
@@ -28932,6 +30143,38 @@ export const API_DEFINITIONS: Record<string, unknown> = {
       },
       "sandbox": {
         "type": "boolean"
+      }
+    }
+  },
+  "github_com_webbuilder_server_internal_einvoice.JobEvent": {
+    "type": "object",
+    "properties": {
+      "action": {
+        "type": "string"
+      },
+      "actorId": {
+        "type": "string"
+      },
+      "actorKind": {
+        "type": "string"
+      },
+      "actorName": {
+        "type": "string"
+      },
+      "at": {
+        "type": "string"
+      },
+      "cause": {
+        "type": "string"
+      },
+      "id": {
+        "type": "string"
+      },
+      "impersonated": {
+        "type": "boolean"
+      },
+      "jobId": {
+        "type": "string"
       }
     }
   },
@@ -29746,6 +30989,19 @@ export const API_DEFINITIONS: Record<string, unknown> = {
       },
       "updatedAt": {
         "type": "string"
+      },
+      "vatAddress": {
+        "type": "string"
+      },
+      "vatCompany": {
+        "type": "string"
+      },
+      "vatEmail": {
+        "type": "string"
+      },
+      "vatTaxCode": {
+        "description": "VatTaxCode, VatCompany, VatAddress and VatEmail are the shopper's VAT\ninvoice request (\"Xuất hoá đơn VAT\"): the buyer the e-invoice is made out\nto. \"Requested\" means any of the four is non-empty; there is no flag.\nA SNAPSHOT written once, by the storefront checkout: Checkout.CreateWith\nnormalizes all four (a line break or tab becomes a space, whitespace runs\ncollapse, other control and format runes are removed, the ends are\ntrimmed) and refuses one over MaxVatRunes (VatTooLongError) or a malformed\ntax code (ErrVatTaxCodeInvalid) before anything is priced, debited or stored.\nSERVER-OWNED from then on,\nlike Channel: the manage POST clears them (only a shopper asks for an\ninvoice this way), UpdateOrder restores them from the existing row, and\nUpdateOrderRow's SET omits all four columns (0021). internal/einvoice\nreads them through its order port and never writes them.",
+        "type": "string"
       }
     }
   },
@@ -29960,6 +31216,32 @@ export const API_DEFINITIONS: Record<string, unknown> = {
       },
       "type": {
         "description": "page kind; defaults to \"main\"",
+        "type": "string"
+      }
+    }
+  },
+  "github_com_webbuilder_server_internal_page.UpdatePageInput": {
+    "type": "object",
+    "properties": {
+      "isHomepage": {
+        "type": "boolean"
+      },
+      "name": {
+        "type": "string"
+      },
+      "settings": {
+        "type": "array",
+        "items": {
+          "type": "integer"
+        }
+      },
+      "slug": {
+        "type": "string"
+      },
+      "sortOrder": {
+        "type": "integer"
+      },
+      "type": {
         "type": "string"
       }
     }
@@ -34599,12 +35881,29 @@ export const API_DEFINITIONS: Record<string, unknown> = {
   "internal_collections_rest.recordBody": {
     "type": "object",
     "properties": {
+      "externalId": {
+        "type": "string"
+      },
       "published": {
         "type": "boolean"
+      },
+      "rev": {
+        "type": "integer"
       },
       "values": {
         "type": "object",
         "additionalProperties": {}
+      }
+    }
+  },
+  "internal_collections_rest.upsertBody": {
+    "type": "object",
+    "properties": {
+      "records": {
+        "type": "array",
+        "items": {
+          "$ref": "#/definitions/github_com_webbuilder_server_internal_collections.UpsertItem"
+        }
       }
     }
   },
@@ -34620,7 +35919,7 @@ export const API_DEFINITIONS: Record<string, unknown> = {
     "type": "object",
     "properties": {
       "autoBillOnCompleted": {
-        "description": "AutoBillOnCompleted absent keeps the stored value; false clears it.",
+        "description": "AutoBillOnCompleted absent keeps the stored value (false on create); false clears it.",
         "type": "boolean"
       },
       "enabled": {
@@ -34632,8 +35931,19 @@ export const API_DEFINITIONS: Record<string, unknown> = {
       "locationId": {
         "type": "string"
       },
+      "name": {
+        "type": "string"
+      },
       "soldOutFromStock": {
-        "description": "SoldOutFromStock absent keeps the stored value; false clears it.",
+        "description": "SoldOutFromStock absent keeps the stored value (true on create); false clears it.",
+        "type": "boolean"
+      }
+    }
+  },
+  "internal_deliveryapps_rest.hiddenBody": {
+    "type": "object",
+    "properties": {
+      "hidden": {
         "type": "boolean"
       }
     }
@@ -34643,6 +35953,17 @@ export const API_DEFINITIONS: Record<string, unknown> = {
     "properties": {
       "reason": {
         "type": "string"
+      }
+    }
+  },
+  "internal_deliveryapps_rest.sellingHoursBody": {
+    "type": "object",
+    "properties": {
+      "periods": {
+        "type": "array",
+        "items": {
+          "$ref": "#/definitions/github_com_webbuilder_server_internal_deliveryapps.HoursPeriod"
+        }
       }
     }
   },
@@ -34665,8 +35986,30 @@ export const API_DEFINITIONS: Record<string, unknown> = {
   "internal_einvoice_rest.cancelBody": {
     "type": "object",
     "properties": {
+      "agreement": {
+        "description": "Agreement is the optional written agreement cited for cancelling an ISSUED\ninvoice; absent or empty cites none.",
+        "allOf": [
+          {
+            "$ref": "#/definitions/github_com_webbuilder_server_internal_einvoice.Agreement"
+          }
+        ]
+      },
       "reason": {
         "type": "string"
+      }
+    }
+  },
+  "internal_einvoice_rest.eventsPage": {
+    "type": "object",
+    "properties": {
+      "events": {
+        "type": "array",
+        "items": {
+          "$ref": "#/definitions/github_com_webbuilder_server_internal_einvoice.JobEvent"
+        }
+      },
+      "total": {
+        "type": "integer"
       }
     }
   },
@@ -34678,11 +36021,27 @@ export const API_DEFINITIONS: Record<string, unknown> = {
       }
     }
   },
+  "internal_einvoice_rest.replaceBody": {
+    "type": "object",
+    "properties": {
+      "agreement": {
+        "description": "Agreement is the optional written agreement cited for the replacement;\nabsent or empty cites none.",
+        "allOf": [
+          {
+            "$ref": "#/definitions/github_com_webbuilder_server_internal_einvoice.Agreement"
+          }
+        ]
+      },
+      "buyer": {
+        "$ref": "#/definitions/github_com_webbuilder_server_internal_einvoice.Buyer"
+      }
+    }
+  },
   "internal_einvoice_rest.settingsInput": {
     "type": "object",
     "properties": {
       "autoIssueWeb": {
-        "description": "AutoIssueWeb (D6): enqueue an online order's invoice when it becomes\npaid, through the same MTT series as the counter's.",
+        "description": "AutoIssueWeb (D6): enqueue an online order's invoice when it becomes\npaid. It goes out on the provider's standard route under InvoiceSeries, or\non the HSM route while WebHsm is on (the route is decided when the worker\ntakes the job).",
         "type": "boolean"
       },
       "credentials": {
@@ -34693,6 +36052,10 @@ export const API_DEFINITIONS: Record<string, unknown> = {
       },
       "enabled": {
         "type": "boolean"
+      },
+      "hsmInvoiceSeries": {
+        "description": "HsmInvoiceSeries is the HSM route's own non-cash-register series (H2).\nThe template number is TemplateCode on both routes. Kept when WebHsm is\nturned off, so adjustments and replacements of HSM invoices keep it.",
+        "type": "string"
       },
       "invoiceSeries": {
         "type": "string"
@@ -34727,6 +36090,10 @@ export const API_DEFINITIONS: Record<string, unknown> = {
       },
       "updatedAt": {
         "type": "string"
+      },
+      "webHsm": {
+        "description": "WebHsm (H1, H4): ONLINE-order original invoices go out on the provider's\ncó-mã HSM route under HsmInvoiceSeries, signed by the HSM the merchant\nregistered with the provider; counter invoices always stay on the standard\nroute. Off by default, and only a provider whose adapter has the route\n(Info.HSMRoute) can turn it on: PutSettings refuses web_hsm_invalid.",
+        "type": "boolean"
       }
     }
   },
@@ -35311,6 +36678,92 @@ export const API_DEFINITIONS: Record<string, unknown> = {
       }
     }
   },
+  "internal_publicapi.CodeFile": {
+    "type": "object",
+    "properties": {
+      "content": {
+        "type": "string"
+      },
+      "createdAt": {
+        "type": "string"
+      },
+      "enabled": {
+        "type": "boolean"
+      },
+      "id": {
+        "type": "string"
+      },
+      "language": {
+        "type": "string"
+      },
+      "name": {
+        "type": "string"
+      },
+      "pageId": {
+        "type": "string"
+      },
+      "placement": {
+        "type": "string"
+      },
+      "position": {
+        "type": "integer"
+      },
+      "updatedAt": {
+        "type": "string"
+      }
+    }
+  },
+  "internal_publicapi.CodeFileInput": {
+    "type": "object",
+    "properties": {
+      "content": {
+        "type": "string"
+      },
+      "enabled": {
+        "type": "boolean"
+      },
+      "expectedUpdatedAt": {
+        "type": "string"
+      },
+      "language": {
+        "type": "string"
+      },
+      "name": {
+        "type": "string"
+      },
+      "pageId": {
+        "type": "string"
+      },
+      "placement": {
+        "type": "string"
+      },
+      "position": {
+        "type": "integer"
+      }
+    }
+  },
+  "internal_publicapi.CodeFileListResponse": {
+    "type": "object",
+    "properties": {
+      "codeFiles": {
+        "type": "array",
+        "items": {
+          "$ref": "#/definitions/internal_publicapi.CodeFile"
+        }
+      },
+      "total": {
+        "type": "integer"
+      }
+    }
+  },
+  "internal_publicapi.CodeFileResponse": {
+    "type": "object",
+    "properties": {
+      "codeFile": {
+        "$ref": "#/definitions/internal_publicapi.CodeFile"
+      }
+    }
+  },
   "internal_publicapi.Collection": {
     "type": "object",
     "properties": {
@@ -35378,6 +36831,9 @@ export const API_DEFINITIONS: Record<string, unknown> = {
           "type": "string"
         }
       },
+      "refCollectionId": {
+        "type": "string"
+      },
       "required": {
         "type": "boolean"
       },
@@ -35406,11 +36862,17 @@ export const API_DEFINITIONS: Record<string, unknown> = {
       "createdAt": {
         "type": "string"
       },
+      "externalId": {
+        "type": "string"
+      },
       "id": {
         "type": "string"
       },
       "published": {
         "type": "boolean"
+      },
+      "rev": {
+        "type": "integer"
       },
       "updatedAt": {
         "type": "string"
@@ -35424,8 +36886,14 @@ export const API_DEFINITIONS: Record<string, unknown> = {
   "internal_publicapi.CollectionRecordInput": {
     "type": "object",
     "properties": {
+      "externalId": {
+        "type": "string"
+      },
       "published": {
         "type": "boolean"
+      },
+      "rev": {
+        "type": "integer"
       },
       "values": {
         "type": "object",
@@ -35461,6 +36929,57 @@ export const API_DEFINITIONS: Record<string, unknown> = {
     "properties": {
       "collection": {
         "$ref": "#/definitions/internal_publicapi.CollectionDetail"
+      }
+    }
+  },
+  "internal_publicapi.CollectionUpsertInput": {
+    "type": "object",
+    "properties": {
+      "records": {
+        "type": "array",
+        "items": {
+          "$ref": "#/definitions/github_com_webbuilder_server_internal_collections.UpsertItem"
+        }
+      }
+    }
+  },
+  "internal_publicapi.CollectionUpsertResponse": {
+    "type": "object",
+    "properties": {
+      "created": {
+        "type": "integer"
+      },
+      "records": {
+        "type": "array",
+        "items": {
+          "$ref": "#/definitions/internal_publicapi.CollectionUpsertResult"
+        }
+      },
+      "unchanged": {
+        "type": "integer"
+      },
+      "updated": {
+        "type": "integer"
+      }
+    }
+  },
+  "internal_publicapi.CollectionUpsertResult": {
+    "type": "object",
+    "properties": {
+      "changed": {
+        "type": "boolean"
+      },
+      "created": {
+        "type": "boolean"
+      },
+      "externalId": {
+        "type": "string"
+      },
+      "id": {
+        "type": "string"
+      },
+      "rev": {
+        "type": "integer"
       }
     }
   },
@@ -36460,6 +37979,10 @@ export const API_DEFINITIONS: Record<string, unknown> = {
         "items": {
           "$ref": "#/definitions/github_com_webbuilder_server_internal_tickets.Session"
         }
+      },
+      "timezone": {
+        "description": "Timezone is the shop's current IANA time zone, \"\" when it set none. It is\nnot event.timezone, which is the zone stamped when the event was published.",
+        "type": "string"
       },
       "types": {
         "type": "array",
