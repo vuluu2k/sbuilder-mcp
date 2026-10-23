@@ -6,6 +6,17 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.91.0] - 2026-10-23
+
+### Added
+- `sb_bind` accepts `record.money.<fid>` for number and integer Collections fields, showing the stored whole-unit value as money in the site's base currency (1850000 renders as 1.850.000 ₫).
+- `sb_review` reports `record_filter_invalid` for filter and sort controls aimed at a record list whose axis is not an ID field, whose target is not a collection record list or is a relation list, whose behaviour is not `filter`, or whose sort value is not `<fieldId>_asc|desc`.
+- Filter controls accept `filterSource: "record"` to filter and sort record lists through the `?f.record.<fld>~<list>=…&s.<list>=<fld>_desc&p.<list>=2` URL contract.
+
+### Changed
+- `sb_set` re-derives a text record tile's binding when `recordFormat`, `recordField` or `recordFieldType` changes, so choosing `recordFormat: "money"` switches it to `record.money.<fid>`.
+- The API catalog is synced with web_builder v1.0.171, and `recordFormat` is now a base-only config key.
+
 ## [0.90.0] - 2026-10-22
 
 ### Added

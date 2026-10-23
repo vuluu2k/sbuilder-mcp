@@ -6,6 +6,17 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.91.0] - 2026-10-23
+
+### Added
+- `sb_bind` nhận `record.money.<fid>` cho field number và integer của Collections, hiển thị giá trị đã lưu (đơn vị nguyên) thành tiền theo tiền tệ gốc của site (1850000 hiện là 1.850.000 ₫).
+- `sb_review` báo `record_filter_invalid` cho control lọc và sắp xếp nhắm vào danh sách record mà axis không phải ID field, target không phải danh sách record của collection hoặc là relation list, behaviour khác `filter`, hay giá trị sort không theo `<fieldId>_asc|desc`.
+- Các control lọc nhận `filterSource: "record"` để lọc và sắp xếp danh sách record qua hợp đồng URL `?f.record.<fld>~<list>=…&s.<list>=<fld>_desc&p.<list>=2`.
+
+### Changed
+- `sb_set` suy lại binding của tile text record khi `recordFormat`, `recordField` hoặc `recordFieldType` đổi, nên chọn `recordFormat: "money"` chuyển binding sang `record.money.<fid>`.
+- Catalog API được đồng bộ với web_builder v1.0.171, và `recordFormat` nay là khoá config base-only.
+
 ## [0.90.0] - 2026-10-22
 
 ### Added
