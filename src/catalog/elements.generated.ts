@@ -36149,6 +36149,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
         "kind": "title",
         "recordField": "",
         "recordFieldType": "",
+        "recordFormat": "",
         "textValue": "",
         "descriptionDisplayType": "Full",
         "descriptionLines": 3,
@@ -37202,6 +37203,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
               "datasetSource",
               "recordField",
               "recordFieldType",
+              "recordFormat",
               "textValue",
               "descriptionDisplayType",
               "descriptionLines",
@@ -37226,6 +37228,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
               "datasetSource",
               "recordField",
               "recordFieldType",
+              "recordFormat",
               "textValue",
               "descriptionDisplayType",
               "descriptionLines",
@@ -37250,6 +37253,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
               "datasetSource",
               "recordField",
               "recordFieldType",
+              "recordFormat",
               "textValue",
               "descriptionDisplayType",
               "descriptionLines",
@@ -37273,6 +37277,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
               "datasetSource",
               "recordField",
               "recordFieldType",
+              "recordFormat",
               "textValue",
               "descriptionDisplayType",
               "descriptionLines",
@@ -37289,7 +37294,8 @@ export const ELEMENTS: Record<string, CatalogElement> = {
             "key": "record",
             "label": "Data",
             "controls": [
-              "record_field"
+              "record_field",
+              "record_format"
             ]
           },
           {
@@ -37409,6 +37415,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
       "datasetSource",
       "recordField",
       "recordFieldType",
+      "recordFormat",
       "textValue",
       "descriptionDisplayType",
       "descriptionLines",
@@ -37422,6 +37429,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
       "collection",
       "article",
       "record_field",
+      "record_format",
       "description_display",
       "width_select",
       "height_select",
@@ -37462,7 +37470,8 @@ export const ELEMENTS: Record<string, CatalogElement> = {
       "Set config.kind to \"title\", \"vendor\", or \"description\"",
       "For a description, set config.descriptionDisplayType to \"Compact\" and config.descriptionLines to clamp it; enable specials.moreButtonEnabled for the toggle",
       "Customise config.moreText / config.lessText and config.icon (the chevron) for the toggle",
-      "Style per state (default / hover / active) via the state switcher"
+      "Style per state (default / hover / active) via the state switcher",
+      "In a record list on a number/integer field, set config.recordFormat to \"money\" to print it in the site currency (record.money.<fieldId>)"
     ],
     "semantics": [
       "product",
@@ -45703,6 +45712,69 @@ export const RECORD_BINDING_PROBES: Array<{ type: string; config: Record<string,
     "config": {
       "datasetSource": "record",
       "recordField": "fld_0123456789abcdef",
+      "recordFieldType": "integer",
+      "recordFormat": "money"
+    },
+    "bindings": [
+      {
+        "id": "bind-text",
+        "source": "record.money.fld_0123456789abcdef",
+        "field": "specials.boundText",
+        "target": {
+          "type": "record",
+          "id": "",
+          "kind": "title"
+        }
+      }
+    ]
+  },
+  {
+    "type": "text-dataset",
+    "config": {
+      "datasetSource": "record",
+      "recordField": "fld_0123456789abcdef",
+      "recordFieldType": "number",
+      "recordFormat": "money"
+    },
+    "bindings": [
+      {
+        "id": "bind-text",
+        "source": "record.money.fld_0123456789abcdef",
+        "field": "specials.boundText",
+        "target": {
+          "type": "record",
+          "id": "",
+          "kind": "title"
+        }
+      }
+    ]
+  },
+  {
+    "type": "text-dataset",
+    "config": {
+      "datasetSource": "record",
+      "recordField": "fld_0123456789abcdef",
+      "recordFieldType": "text",
+      "recordFormat": "money"
+    },
+    "bindings": [
+      {
+        "id": "bind-text",
+        "source": "record.fld_0123456789abcdef",
+        "field": "specials.boundText",
+        "target": {
+          "type": "record",
+          "id": "",
+          "kind": "title"
+        }
+      }
+    ]
+  },
+  {
+    "type": "text-dataset",
+    "config": {
+      "datasetSource": "record",
+      "recordField": "fld_0123456789abcdef",
       "recordFieldType": "text",
       "kind": "description"
     },
@@ -49566,6 +49638,7 @@ export const ELEMENT_VALUES: Record<string, Record<string, ValueVocabulary>> = {
         "custom",
         "price",
         "purchase_history",
+        "record",
         "search",
         "sort",
         "tag"
@@ -49637,6 +49710,7 @@ export const ELEMENT_VALUES: Record<string, Record<string, ValueVocabulary>> = {
         "custom",
         "price",
         "purchase_history",
+        "record",
         "search",
         "sort",
         "tag"
@@ -49708,6 +49782,7 @@ export const ELEMENT_VALUES: Record<string, Record<string, ValueVocabulary>> = {
         "custom",
         "price",
         "purchase_history",
+        "record",
         "search",
         "sort",
         "tag"
@@ -49779,6 +49854,7 @@ export const ELEMENT_VALUES: Record<string, Record<string, ValueVocabulary>> = {
         "custom",
         "price",
         "purchase_history",
+        "record",
         "search",
         "sort",
         "tag"
@@ -49850,6 +49926,7 @@ export const ELEMENT_VALUES: Record<string, Record<string, ValueVocabulary>> = {
         "custom",
         "price",
         "purchase_history",
+        "record",
         "search",
         "sort",
         "tag"
@@ -50111,6 +50188,7 @@ export const BASE_ONLY_CONFIG: string[] = [
   "openItems",
   "kind",
   "datasetSource",
+  "recordFormat",
   "collectionId",
   "collectionType",
   "quantity",

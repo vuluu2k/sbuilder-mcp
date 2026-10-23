@@ -151,6 +151,11 @@ export const FIX: Record<string, string> = {
     'datasetSource is "record" — one card template, rows edited as data. Logic the platform has ' +
     'no native control for yet (visitor filters, computed totals) may stay in code, reading ' +
     'GET /_wb/collections/{slug}/records instead of its own copy.',
+  record_filter_invalid:
+    'Aim it at ONE collection\'s record list(s) and a field: sb_set id "<id>", namespace specials, keys ' +
+    '{ "filterSource": "record", "filterAxis": "fld_…", "filterTargets": ["<list id>"], "filterBehavior": "filter" } — ' +
+    'axis types text/select/reference/url/date/boolean/integer/number. A sort select takes filterValues ' +
+    '[{ "value": "fld_…_asc" | "fld_…_desc", "label": "…" }].',
   record_relation_unset:
     'Link it to its parent row: sb_set id "<id>", namespace config, keys { "recordRelationField": "fld_…" } — ' +
     'the ID of a "reference" field in THIS list\'s collection that targets the enclosing list\'s collection ' +
@@ -164,8 +169,8 @@ export const FIX: Record<string, string> = {
   record_field_unset:
     'Name the field by its ID: sb_set id "<id>", namespace config, keys { "recordField": "fld_…", ' +
     '"recordFieldType": "<the field\'s type>" } — ids and types are on GET /api/sites/{siteId}/collections/{id}/fields. ' +
-    'A text-dataset shows text/richtext/number/integer/boolean/date/select/url/reference (integer prints ' +
-    'unformatted, 3330000); a collection-media shows image. A gallery field binds nothing yet.',
+    'A text-dataset shows text/richtext/number/integer/boolean/date/select/url/reference (a number/integer ' +
+    'prints as money with "recordFormat": "money"); a collection-media shows image. A gallery field binds nothing yet.',
   unread_value:
     'Write a value the renderer reads: sb_traits_for "<type>" lists them; sb_set id "<id>" ' +
     'with one, at the same breakpoint it is stored at.',

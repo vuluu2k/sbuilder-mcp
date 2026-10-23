@@ -653,9 +653,9 @@ export function baseOnlyKeys(
  * binding is worse.
  */
 function rebindPatch(doc: PageDoc, id: string, keys: Record<string, unknown>): Patch | null {
-  // `recordField` / `recordFieldType` are a record tile's field axis
-  // (datasetBindings.ts:517-530) — the editor's `setRecordField` heals on both.
-  const touchesAxis = ['kind', 'datasetSource', 'recordField', 'recordFieldType'].some((k) => k in keys);
+  // `recordField` / `recordFieldType` / `recordFormat` are a record tile's field
+  // axis (datasetBindings.ts recordSource) — `setRecordField` / `setRecordFormat` heal on them.
+  const touchesAxis = ['kind', 'datasetSource', 'recordField', 'recordFieldType', 'recordFormat'].some((k) => k in keys);
   if (!touchesAxis) return null;
   const node = doc.node(id);
   const cfg = (node as unknown as { config?: Record<string, unknown> }).config ?? {};

@@ -721,6 +721,40 @@ export function reviewDesign(
           });
         }
       }
+      // RECORD FILTERS (web_builder PR #157, contract §7.1): a filter/sort control aimed at a
+      // record list. Every miss below renders a control that empties the list or narrows nothing.
+      {
+        const sp = (n.specials ?? {}) as Record<string, unknown>;
+        const targets = Array.isArray(sp.filterTargets) ? (sp.filterTargets as unknown[]).map(String) : [];
+        const recordTargets = targets.filter((t) => {
+          const c = (d.nodes[t] as { config?: Record<string, unknown> } | undefined)?.config;
+          return d.nodes[t]?.data.type === 'list-dataset' && c?.datasetSource === 'record';
+        });
+        const why: string[] = [];
+        if (sp.filterSource === 'record') {
+          if (!RECORD_FIELD_ID.test(String(sp.filterAxis ?? ''))) why.push(`filterAxis "${String(sp.filterAxis ?? '')}" is not a field ID`);
+          if (targets.length && recordTargets.length !== targets.length) why.push('a filterTargets entry is not a record list');
+          const cfgOf = (t: string) => (d.nodes[t] as { config?: Record<string, unknown> }).config ?? {};
+          if (recordTargets.some((t) => String(cfgOf(t).recordRelationField ?? ''))) why.push('it targets a relation list');
+          if (new Set(recordTargets.map((t) => String(cfgOf(t).recordCollectionId ?? ''))).size > 1) why.push('its targets read different collections');
+          if (sp.filterBehavior !== undefined && sp.filterBehavior !== 'filter') why.push(`filterBehavior "${String(sp.filterBehavior)}" — a record filter only narrows ("filter")`);
+        }
+        if (sp.filterSource === 'sort' && recordTargets.length) {
+          const bad = (Array.isArray(sp.filterValues) ? (sp.filterValues as Array<{ value?: unknown }>) : [])
+            .map((v) => String(v?.value ?? ''))
+            .filter((v) => !/^fld_[0-9a-f]{16}_(?:asc|desc)$/.test(v));
+          if (bad.length) why.push(`sort values ${bad.slice(0, 3).map((v) => `"${v}"`).join(', ')} are not "<fieldId>_asc|desc" — a record list ignores product sort keys`);
+        }
+        if (why.length) {
+          out.push({
+            code: 'record_filter_invalid',
+            nodeId: id,
+            type,
+            problem: `A record ${sp.filterSource === 'sort' ? 'sort' : 'filter'} control that narrows nothing or empties its list: ${why.join('; ')}.`,
+            fix: fill('record_filter_invalid', { id }),
+          });
+        }
+      }
       if (RECORD_TILES.has(type) && cfg.datasetSource === 'record') {
         const fid = cfg.recordField;
         if (typeof fid !== 'string' || !RECORD_FIELD_ID.test(fid)) {

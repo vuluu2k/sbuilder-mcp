@@ -12,10 +12,14 @@
 export const RECORD_FIELD_ID = /^fld_[0-9a-f]{16}$/;
 
 /**
- * A `record.*` source a context can supply: `record.<fid>`, `record.html.<fid>`, or
- * `record.id` — the row's own record id (recordContext.ts, web_builder 986c96a96).
+ * A `record.*` source a context can supply: `record.<fid>`, `record.html.<fid>`,
+ * `record.money.<fid>` (a number/integer field formatted in the site's currency),
+ * or `record.id` — the row's own record id (recordContext.ts).
  */
-export const RECORD_SOURCE = /^record\.(?:id|(?:html\.)?fld_[0-9a-f]{16})$/;
+export const RECORD_SOURCE = /^record\.(?:id|(?:html\.|money\.)?fld_[0-9a-f]{16})$/;
+
+/** The field types `record.money.<fid>` formats — recordContext.ts RECORD_MONEY_FIELD_TYPES. */
+export const RECORD_MONEY_TYPES = new Set(['number', 'integer']);
 
 /** The only record source `specials.boundHtml` admits — schema/src/rawSinkBindings.ts:102. */
 export const RECORD_HTML_SOURCE = /^record\.html\.fld_[0-9a-f]{16}$/;
@@ -38,13 +42,16 @@ export function recordTileBindings(type: string, config: Record<string, unknown>
   const fid = config.recordField;
   const ok = typeof fid === 'string' && RECORD_FIELD_ID.test(fid);
   const html = type === 'text-dataset' && config.recordFieldType === 'richtext';
+  // datasetBindings.ts isRecordMoney: a stale recordFormat on any other type is ignored.
+  const money =
+    type === 'text-dataset' && config.recordFormat === 'money' && RECORD_MONEY_TYPES.has(String(config.recordFieldType));
   return rows.map((row) => {
     const b = row as { id?: string };
     if (b.id === 'bind-image') return { ...b, source: ok ? `record.${fid}` : '' };
     if (b.id === 'bind-text') {
       return {
         ...b,
-        source: ok ? `record.${html ? 'html.' : ''}${fid}` : '',
+        source: ok ? `record.${html ? 'html.' : money ? 'money.' : ''}${fid}` : '',
         field: html ? 'specials.boundHtml' : 'specials.boundText',
       };
     }
@@ -96,7 +103,8 @@ export function recordFieldProblem(source: string, scope: Array<{ collectionId: 
   }
   if (source === 'record.id') return undefined;
   const html = source.startsWith('record.html.');
-  const fid = source.slice(html ? 12 : 7);
+  const money = source.startsWith('record.money.');
+  const fid = source.slice(html ? 12 : money ? 13 : 7);
   const f = scope.flatMap((s) => s.fields).find((x) => x.id === fid);
   if (!f) {
     const avail = scope
@@ -105,6 +113,7 @@ export function recordFieldProblem(source: string, scope: Array<{ collectionId: 
     return `${fid} is not a field of the collection(s) this row reads — ${avail}.`;
   }
   if (f.type === 'gallery') return `${fid} (${f.key}) is a gallery field, which the renderers do not bind yet — it emits nothing.`;
+  if (money && !RECORD_MONEY_TYPES.has(f.type)) return `${fid} (${f.key}) is ${f.type} — record.money. formats only a number or integer field.`;
   if (html && f.type !== 'richtext') return `${fid} (${f.key}) is ${f.type}, not richtext — bind it as "record.${fid}".`;
   if (!html && f.type === 'richtext') return `${fid} (${f.key}) is richtext — bind it as "record.html.${fid}" into specials.boundHtml.`;
   return undefined;

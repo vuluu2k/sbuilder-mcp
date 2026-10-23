@@ -433,3 +433,72 @@ describe('sb_bind and sb_page_state against the platform (end to end)', () => {
     await close();
   });
 });
+
+describe('money on a record tile (web_builder PR #156)', () => {
+  it('recordFormat money on a number/integer field binds record.money.<fid>; on text it is ignored', () => {
+    const at = (t: string) =>
+      first({ bindings: bindingsForConfig('text-dataset', { datasetSource: 'record', recordField: FID, recordFieldType: t, recordFormat: 'money' }) as unknown[] });
+    expect(at('integer').source).toBe(`record.money.${FID}`);
+    expect(at('number').source).toBe(`record.money.${FID}`);
+    expect(at('text').source).toBe(`record.${FID}`);
+  });
+
+  it('sb_set recordFormat re-derives the binding, and back', () => {
+    const { doc, tile } = recordList('col_1', { datasetSource: 'record', recordField: FID, recordFieldType: 'integer' });
+    doc.apply(setKeys(doc, tile, { recordFormat: 'money' }, { namespace: 'config' }));
+    expect(first(doc.node(tile) as never).source).toBe(`record.money.${FID}`);
+    doc.apply(setKeys(doc, tile, { recordFormat: '' }, { namespace: 'config' }));
+    expect(first(doc.node(tile) as never).source).toBe(`record.${FID}`);
+    expect(BASE_ONLY_CONFIG).toContain('recordFormat');
+  });
+
+  it('sb_bind takes record.money.<fid> only for a number/integer field', () => {
+    const { doc, tile } = recordList();
+    expect(() => bindNode(doc, tile, `record.money.${FID}`, 'specials.boundText')).not.toThrow();
+    const scope = [{ collectionId: 'c', fields: [{ id: FID, key: 'price', type: 'integer' }, { id: FID2, key: 'name', type: 'text' }] }];
+    expect(recordFieldProblem(`record.money.${FID}`, scope)).toBeUndefined();
+    expect(recordFieldProblem(`record.money.${FID2}`, scope)).toMatch(/number or integer/);
+  });
+});
+
+describe('sb_review on a record filter or sort control (web_builder PR #157)', () => {
+  function page(specials: Record<string, unknown>, relation = false) {
+    const doc = emptyDoc();
+    const { patches, ids } = addSubtree(doc, 'ROOT', {
+      type: 'flex-section',
+      children: [
+        { type: 'filter-checkbox' },
+        { type: 'list-dataset', config: { datasetSource: 'record', recordCollectionId: 'col_h', ...(relation ? { recordRelationField: FID_HOTEL } : {}) } },
+      ],
+    });
+    doc.apply(patches);
+    const ctl = ids.find((i) => doc.node(i).data.type === 'filter-checkbox')!;
+    const list = ids.find((i) => doc.node(i).data.type === 'list-dataset')!;
+    Object.assign((doc.node(ctl) as unknown as { specials: Record<string, unknown> }).specials, specials, {
+      filterTargets: (specials.filterTargets as string[] | undefined) ?? [list],
+    });
+    return { doc, ctl, list };
+  }
+  const flagged = (d: PageDoc, id: string) => reviewDesign(d, {}).find((f) => f.nodeId === id && f.code === 'record_filter_invalid');
+
+  it('a correct record filter is clean', () => {
+    const { doc, ctl } = page({ filterSource: 'record', filterAxis: FID, filterBehavior: 'filter' });
+    expect(flagged(doc, ctl)).toBeUndefined();
+  });
+
+  it('a key for an axis, a relation-list target, or event mode is flagged', () => {
+    const a = page({ filterSource: 'record', filterAxis: 'stars' });
+    expect(flagged(a.doc, a.ctl)?.problem).toMatch(/not a field ID/);
+    const b = page({ filterSource: 'record', filterAxis: FID }, true);
+    expect(flagged(b.doc, b.ctl)?.problem).toMatch(/relation list/);
+    const c = page({ filterSource: 'record', filterAxis: FID, filterBehavior: 'event' });
+    expect(flagged(c.doc, c.ctl)?.problem).toMatch(/only narrows/);
+  });
+
+  it('a sort aimed at a record list needs <fieldId>_asc|desc values', () => {
+    const ok = page({ filterSource: 'sort', filterValues: [{ value: `${FID}_desc`, label: 'x' }] });
+    expect(flagged(ok.doc, ok.ctl)).toBeUndefined();
+    const bad = page({ filterSource: 'sort', filterValues: [{ value: 'price_asc', label: 'x' }] });
+    expect(flagged(bad.doc, bad.ctl)?.problem).toMatch(/price_asc/);
+  });
+});

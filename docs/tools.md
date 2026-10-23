@@ -897,7 +897,7 @@ never paged, and a parent with no children takes its empty state — keep the `l
       "config": { "datasetSource": "record", "recordCollectionId": "<room-types>", "recordRelationField": "<room-types.hotel fld>" },
       "children": [{ "type": "dataset-block", "children": [
         { "type": "text-dataset", "config": { "datasetSource": "record", "recordField": "<room-types.name fld>", "recordFieldType": "text" } },
-        { "type": "text-dataset", "config": { "datasetSource": "record", "recordField": "<room-types.nightly_price_vnd fld>", "recordFieldType": "integer" } }
+        { "type": "text-dataset", "config": { "datasetSource": "record", "recordField": "<room-types.nightly_price_vnd fld>", "recordFieldType": "integer", "recordFormat": "money" } }
       ]}]}
   ]}]}
 ```
@@ -906,13 +906,28 @@ A record edit needs NO page publish: pages holding a record list are assembled l
 change shows within the storefront's ~60 s page cache and the page document never moves.
 `sb_page_state` lists the page's record lists under `data` for that reason.
 
+**Money on a record tile.** A text tile on a `number` / `integer` field with
+`config.recordFormat: "money"` (base-only) binds `record.money.<fid>` and prints the value in the
+site's currency — `1850000` → `1.850.000 ₫`. The stored integer is WHOLE units; never pre-multiply
+it. `sb_set` re-derives the binding when `recordFormat` moves; on any other field type the key is
+ignored. It is always the site's BASE currency (the storefront currency switcher does not convert it).
+
+**Visitor filter / sort / search on a record list.** The storefront filter controls drive a
+record list through the same URL contract as product shelves. A `filter-checkbox` / `-radio` /
+`-tag` / `-color` or `select` with specials `{ filterSource: "record", filterAxis: "<fld id>",
+filterTargets: ["<record list id>"], filterBehavior: "filter" }` filters on that field (text,
+select, url, date: equality; reference: the record id; boolean: `true`/`false`; integer/number:
+`4`, `4..5`, `..2000000`), server-side over the whole table — total and paging follow the filtered
+set. A `select` with `filterSource: "sort"` aimed at a record list takes `filterValues`
+`[{ value: "<fld id>_asc" | "<fld id>_desc", label }]`. A `search-input` in filter mode narrows the
+record lists on the page by their text/select fields. URL: `?f.record.<fld>~<list>=a,b&s.<list>=<fld>_desc&p.<list>=2`.
+Give such a list an empty state. Not supported: filtering a parent by its children (rooms →
+hotels), the slider (price-only), event mode.
+
 What the platform does NOT do yet (web_builder `docs/integrations/dynamic-data-contract.md` §9),
-so no tool here claims it: an integer shows unformatted (`3330000`, not `3.330.000 ₫`); a
-`gallery` binds nothing; no visitor search/filter/sort control drives a record list; no
+so no tool here claims it: a `gallery` binds nothing; no
 selected-record detail or popup; no form options from a collection; no computed price or
-capacity filter. And the editor's field picker lists no `integer` / `reference` field for a
-text tile yet, so a tile bound to one renders on every surface while its inspector row shows
-no field selected.
+capacity filter.
 
 `sb_review` reports a record list naming no collection (`record_list_unsourced`), a tile naming
 no field ID (`record_field_unset`), a `record.*` binding outside a record list
@@ -1490,9 +1505,10 @@ box. Returns `{ findings, fixes, findings_notice? }`, in document order:
 | `empty_text` / `missing_media` | An element left blank — empty space, or a broken image |
 | `static_in_dataset` | An element inside a repeater that renders only what the document authors — the same picture on every product card |
 | `unbound_dataset_element` | A dataset element with no binding at all — it waits for a bound special nothing writes |
-| `dead_binding_source` | A source the renderer never provides — shows the placeholder forever. A `record.*` source counts only as `record.fld_<16 hex>` / `record.html.fld_<16 hex>` / `record.id`, and only the html form into `specials.boundHtml` |
+| `dead_binding_source` | A source the renderer never provides — shows the placeholder forever. A `record.*` source counts only as `record.fld_<16 hex>` / `record.html.fld_<16 hex>` / `record.money.fld_<16 hex>` / `record.id`, and only the html form into `specials.boundHtml` |
 | `record_list_unsourced` | A `list-dataset` with `datasetSource: "record"` and no `config.recordCollectionId` — no rows are fetched, a visitor sees only the empty state |
 | `hardcoded_dataset` | A `custom-code` script carrying ≥4 flat records with one key set (`const DATA = {hotels:[…]}`) — a data table kept in code; move it to a Collection + record list (maintenance) |
+| `record_filter_invalid` | A filter/sort control aimed at a record list whose axis is not a field ID, whose targets are not record lists of one collection (or include a relation list), whose behaviour is not `filter`, or whose sort values are not `<fieldId>_asc|desc` — it narrows nothing or empties the list |
 | `record_relation_unset` | A record list nested in another record list's row with no `config.recordRelationField` — every parent shows the same rows |
 | `record_relation_orphan` | `config.recordRelationField` set on a list with no record-list row above it, or not a `fld_…` ID — it only ever shows its empty state |
 | `record_relation_no_empty` | A relation list with no `config.emptyStateId` — a parent with no children renders placeholder cards |
