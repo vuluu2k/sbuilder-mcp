@@ -6,6 +6,19 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.93.0] - 2026-10-26
+
+### Added
+- `sb_bind` accepts `record.agg.<key>` and `record.money.agg.<key>`, and a text-dataset tile with `recordField: "agg.<key>"` derives its binding the way the platform does.
+- `sb_review` reports `record_aggregate_invalid` for `recordAggregates` that are malformed, which would publish an empty list, or that use `whenNone: "hide"` without an empty state.
+- `sb_review` reports `estimate_invalid` for a form-estimate that does not have exactly one record term, or whose term or rule points at a node of the wrong type.
+- The element catalog gains `form-estimate` and the base-only `recordAggregates` key.
+
+### Changed
+- `sb_review` accepts `agg.<key>` and `param.<name>` axes in `record_filter_invalid` when the target list defines them, rejects a param with more than one value, and accepts sort values of `agg.<key>_asc|desc`.
+- `sb_review` reports `record_field_unset` for a tile bound to `agg.<key>` that its list does not define.
+- The API catalog is synced with web_builder v1.0.173 and now covers 124 elements and 95 binding sources.
+
 ## [0.92.0] - 2026-10-26
 
 ### Added

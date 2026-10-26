@@ -6,6 +6,19 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.93.0] - 2026-10-26
+
+### Added
+- `sb_bind` nhận `record.agg.<key>` và `record.money.agg.<key>`, và tile text-dataset có `recordField: "agg.<key>"` suy ra binding giống nền tảng.
+- `sb_review` báo `record_aggregate_invalid` cho `recordAggregates` sai định dạng (làm danh sách publish rỗng) hoặc dùng `whenNone: "hide"` mà thiếu trạng thái rỗng.
+- `sb_review` báo `estimate_invalid` khi form-estimate không có đúng một term record, hoặc term/rule trỏ vào node sai loại.
+- Catalog element thêm `form-estimate` và khoá base-only `recordAggregates`.
+
+### Changed
+- `sb_review` chấp nhận axis `agg.<key>` và `param.<name>` trong `record_filter_invalid` khi danh sách đích có định nghĩa, từ chối param có nhiều hơn một giá trị, và chấp nhận giá trị sort `agg.<key>_asc|desc`.
+- `sb_review` báo `record_field_unset` cho tile bind `agg.<key>` mà danh sách của nó không định nghĩa.
+- Catalog API được đồng bộ với web_builder v1.0.173 và nay gồm 124 element và 95 nguồn binding.
+
 ## [0.92.0] - 2026-10-26
 
 ### Added
