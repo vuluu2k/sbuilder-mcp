@@ -151,6 +151,11 @@ export const FIX: Record<string, string> = {
     'datasetSource is "record" — one card template, rows edited as data. Logic the platform has ' +
     'no native control for yet (visitor filters, computed totals) may stay in code, reading ' +
     'GET /_wb/collections/{slug}/records instead of its own copy.',
+  record_option_invalid:
+    'Point it at a collection and its label column: sb_set id "<id>", namespace config, keys ' +
+    '{ "optionSource": "record", "recordCollectionId": "col_…", "recordLabelField": "fld_…" } (base). A dependent ' +
+    'select adds "recordParentNode": "<parent form-select id>" and "recordParentField": "<reference fld_… of this ' +
+    'collection pointing at the parent\'s>". Values are record ids; prefill with specials.urlParam.',
   record_filter_invalid:
     'Aim it at ONE collection\'s record list(s) and a field: sb_set id "<id>", namespace specials, keys ' +
     '{ "filterSource": "record", "filterAxis": "fld_…", "filterTargets": ["<list id>"], "filterBehavior": "filter" } — ' +

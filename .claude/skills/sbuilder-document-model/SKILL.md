@@ -747,6 +747,15 @@ platform treats an unproven guard as indistinguishable from an absent one.
   `reference` for `text-dataset`, so such a tile renders while its inspector picker shows empty —
   an upstream gap, not something to "fix" by changing `recordFieldType`.
 
+- **RECORD DETAIL PAGES AND FORM RECORD OPTIONS (web_builder #159/#160, v1.0.172).** A `record`
+  page supplies the record OUTSIDE any list, so `no_data_context` and `record_relation_orphan` are
+  silenced only when `pageType === 'record'` and no list encloses the node; `sb_bind` reads that
+  page's scope from `GET page-links?pageId=…&linkType=recordCollection` and refuses `record.url`
+  for a collection with no attached page (`page-links/recordCollection/{cid}` 404). Form choice
+  fields read `optionSource` and every `record*` key through `nodes.ConfigString` = BASE only, and
+  the platform's ledger does not list them — `readRecordBaseOnly` now reads the form metas and
+  `formoptions/options.go`, or `sb_set` would write them per breakpoint and ship an empty select.
+
 - **AN OPT-IN SATELLITE COULD NOT BE CREATED, and the remedy named a call that did nothing.**
   `readiness`' `cartCount` fix said `sb_set {cartCountId}` "mints one"; it writes a string and
   mints nothing (pinned in `test/satellite-add.test.ts`), and `sb_add` into an icon was refused

@@ -888,21 +888,24 @@ export function registerLiveTools(
       // `force` gets past it, recorded under `forced`.
       if (RECORD_SOURCE.test(source)) {
         const scope = recordScope((x) => (d.has(x) ? (d.node(x) as never) : undefined), id);
-        // Resolved only when there is something to read: an empty scope is refused below
-        // without a fetch, and must not fail on a missing SB_SITE first.
-        const site = scope.length ? siteFor(ctx, session.page()?.siteId) : '';
+        const open = session.page();
+        const site = siteFor(ctx, open?.siteId);
+        const get = async (path: string) =>
+          request({ base: ctx.base, method: 'GET', path: `/api/sites/${encodeURIComponent(site)}${path}`, token: siteToken(ctx), fetchImpl: ctx.fetchImpl });
         let withFields: Array<{ collectionId: string; fields: RecordFieldRow[] }> | undefined;
         try {
+          // A RECORD DETAIL PAGE (web_builder #160) supplies its record outside any list:
+          // the collections attached to it are the scope.
+          if (!scope.length && open) {
+            const links = (await get(
+              `/page-links?pageId=${encodeURIComponent(open.pageId)}&linkType=recordCollection`,
+            )) as { links?: Array<{ linkId?: string }> };
+            for (const l of links.links ?? []) if (l.linkId) scope.push(l.linkId);
+          }
           withFields = await Promise.all(
             scope.map(async (cid) => {
               if (!cid) return { collectionId: '(none set)', fields: [] as RecordFieldRow[] };
-              const got = (await request({
-                base: ctx.base,
-                method: 'GET',
-                path: `/api/sites/${encodeURIComponent(site)}/collections/${encodeURIComponent(cid)}/fields`,
-                token: siteToken(ctx),
-                fetchImpl: ctx.fetchImpl,
-              })) as { fields?: RecordFieldRow[] };
+              const got = (await get(`/collections/${encodeURIComponent(cid)}/fields`)) as { fields?: RecordFieldRow[] };
               return { collectionId: cid, fields: got.fields ?? [] };
             }),
           );
@@ -918,6 +921,26 @@ export function registerLiveTools(
             const why = recordFieldProblem(source, fields);
             if (why) throw new Error(`sbuilder: ${why}`);
           });
+          // record.url resolves only for a collection with an attached record page.
+          const cid = scope[0];
+          if (source === 'record.url' && cid) {
+            let attached = true;
+            try {
+              await get(`/page-links/recordCollection/${encodeURIComponent(cid)}`);
+            } catch (e) {
+              if ((e as { status?: number }).status !== 404) throw e;
+              attached = false;
+            }
+            soft(guard, () => {
+              if (!attached) {
+                throw new Error(
+                  `sbuilder: collection ${cid} has no record detail page, so record.url is never emitted and the link ` +
+                    'stays a plain button. Create a page of type "record", attach it with PUT ' +
+                    `/api/sites/{siteId}/page-links/recordCollection/${cid} {pageId}, and publish it.`,
+                );
+              }
+            });
+          }
         }
       }
       const forced = guard.forced!.length ? { forced: guard.forced } : {};

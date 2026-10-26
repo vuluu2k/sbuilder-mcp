@@ -1637,6 +1637,11 @@ export const PAGE_TYPES: readonly {
     "routePattern": "/brands/{slug}"
   },
   {
+    "type": "record",
+    "group": "store",
+    "ownSlug": false
+  },
+  {
     "type": "search",
     "group": "main",
     "ownSlug": false,

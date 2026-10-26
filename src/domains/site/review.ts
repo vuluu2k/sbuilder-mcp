@@ -687,6 +687,9 @@ export function reviewDesign(
         const parentCfg = up && d.nodes[up] ? (d.nodes[up] as { config?: Record<string, unknown> }).config : undefined;
         const nested = parentCfg?.datasetSource === 'record';
         const rel = String(cfg.recordRelationField ?? '');
+        // A record detail page (web_builder #160) is the parent of a relation list
+        // placed on it outside any list.
+        const pageParent = opts.pageType === 'record' && !up;
         if (nested && !rel) {
           out.push({
             code: 'record_relation_unset',
@@ -698,7 +701,7 @@ export function reviewDesign(
               'Intended only if that list is meant to repeat unchanged under every parent.',
             fix: fill('record_relation_unset', { id }),
           });
-        } else if (rel && (!nested || !RECORD_FIELD_ID.test(rel))) {
+        } else if (rel && ((!nested && !pageParent) || !RECORD_FIELD_ID.test(rel))) {
           out.push({
             code: 'record_relation_orphan',
             nodeId: id,
@@ -721,6 +724,34 @@ export function reviewDesign(
           });
         }
       }
+      // FORM OPTIONS FROM A COLLECTION (web_builder #159, contract §7.2). Every miss renders
+      // a choice field with only its placeholder (no authored fallback), or a room list that
+      // never narrows — and the server refuses any other answer as not_an_option.
+      if (['form-select', 'form-radio', 'form-checkbox'].includes(type) && String(cfg.optionSource ?? '').trim() === 'record') {
+        const why: string[] = [];
+        if (!String(cfg.recordCollectionId ?? '').trim()) why.push('config.recordCollectionId names no collection');
+        if (!RECORD_FIELD_ID.test(String(cfg.recordLabelField ?? ''))) why.push('config.recordLabelField is not a field ID');
+        const pNode = String(cfg.recordParentNode ?? '');
+        const pField = String(cfg.recordParentField ?? '');
+        if (pNode || pField) {
+          const pc = (d.nodes[pNode] as { config?: Record<string, unknown> } | undefined)?.config;
+          if (type !== 'form-select') why.push('only a form-select narrows by a parent field');
+          else if (!pNode || !pField) why.push('recordParentNode and recordParentField go together');
+          else if (d.nodes[pNode]?.data.type !== 'form-select' || String(pc?.optionSource ?? '').trim() !== 'record')
+            why.push(`recordParentNode "${pNode}" is not a record-sourced form-select`);
+          else if (!RECORD_FIELD_ID.test(pField)) why.push(`recordParentField "${pField}" is not a field ID`);
+        }
+        if (why.length) {
+          out.push({
+            code: 'record_option_invalid',
+            nodeId: id,
+            type,
+            problem: `A choice field listing records that shows no options or never narrows: ${why.join('; ')}.`,
+            fix: fill('record_option_invalid', { id }),
+          });
+        }
+      }
+
       // RECORD FILTERS (web_builder PR #157, contract §7.1): a filter/sort control aimed at a
       // record list. Every miss below renders a control that empties the list or narrows nothing.
       {
@@ -777,7 +808,8 @@ export function reviewDesign(
         let list: string | null | undefined = n.data.parent;
         while (list && d.nodes[list] && d.nodes[list].data.type !== 'list-dataset') list = d.nodes[list].data.parent;
         const lcfg = list && d.nodes[list] ? (d.nodes[list] as { config?: Record<string, unknown> }).config : undefined;
-        if (lcfg?.datasetSource !== 'record') {
+        // On a record detail page the PAGE supplies the record outside any list.
+        if (lcfg?.datasetSource !== 'record' && !(opts.pageType === 'record' && !list)) {
           out.push({
             code: 'no_data_context',
             nodeId: id,

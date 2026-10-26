@@ -502,3 +502,104 @@ describe('sb_review on a record filter or sort control (web_builder PR #157)', (
     expect(flagged(bad.doc, bad.ctl)?.problem).toMatch(/price_asc/);
   });
 });
+
+describe('record detail pages (web_builder #160)', () => {
+  const codesOn = (d: PageDoc, id: string, pageType?: string) =>
+    reviewDesign(d, { pageType }).filter((f) => f.nodeId === id).map((f) => f.code);
+
+  it('record.url is a record source', () => {
+    const { doc, tile } = recordList();
+    expect(() => bindNode(doc, tile, 'record.url', 'specials.boundText')).not.toThrow();
+    expect(recordFieldProblem('record.url', [{ collectionId: 'c', fields: [] }])).toBeUndefined();
+  });
+
+  it('on a record page, a relation list and a record binding outside any list have the page record', () => {
+    const doc = emptyDoc();
+    const { patches, ids } = addSubtree(doc, 'ROOT', {
+      type: 'flex-section',
+      children: [
+        { type: 'heading' },
+        { type: 'list-dataset', config: { datasetSource: 'record', recordCollectionId: 'col_r', recordRelationField: FID_HOTEL } },
+      ],
+    });
+    doc.apply(patches);
+    const h = ids.find((i) => doc.node(i).data.type === 'heading')!;
+    doc.apply(bindNode(doc, h, `record.${FID_NAME}`, 'specials.text'));
+    const rooms = ids.find((i) => doc.node(i).data.type === 'list-dataset')!;
+    expect(codesOn(doc, rooms, 'record')).not.toContain('record_relation_orphan');
+    expect(codesOn(doc, h, 'record')).not.toContain('no_data_context');
+    // the same document on an ordinary page has no record above either
+    expect(codesOn(doc, rooms, 'page')).toContain('record_relation_orphan');
+    expect(codesOn(doc, h, 'page')).toContain('no_data_context');
+  });
+});
+
+describe('form options from a collection (web_builder #159)', () => {
+  function form(hotel: Record<string, unknown>, room: Record<string, unknown>) {
+    const doc = emptyDoc();
+    const { patches, ids } = addSubtree(doc, 'ROOT', {
+      type: 'flex-section',
+      children: [{ type: 'form-select', config: hotel }, { type: 'form-select', config: room }],
+    });
+    doc.apply(patches);
+    const [h, r] = ids.filter((i) => doc.node(i).data.type === 'form-select');
+    return { doc, h, r };
+  }
+  const flagged = (d: PageDoc, id: string) => reviewDesign(d, {}).find((f) => f.nodeId === id && f.code === 'record_option_invalid');
+  const hotel = { optionSource: 'record', recordCollectionId: 'col_h', recordLabelField: FID_NAME };
+
+  it('the option keys are base-only, where formoptions reads them', () => {
+    for (const k of ['optionSource', 'recordCollectionId', 'recordLabelField', 'recordParentField', 'recordParentNode']) {
+      expect(BASE_ONLY_CONFIG, k).toContain(k);
+    }
+  });
+
+  it('a hotel select and a room select following it are clean', () => {
+    const { doc, h, r } = form(hotel, { optionSource: 'record', recordCollectionId: 'col_r', recordLabelField: FID_ROOM });
+    (doc.node(r) as unknown as { config: Record<string, unknown> }).config.recordParentNode = h;
+    (doc.node(r) as unknown as { config: Record<string, unknown> }).config.recordParentField = FID_HOTEL;
+    expect(flagged(doc, h)).toBeUndefined();
+    expect(flagged(doc, r)).toBeUndefined();
+  });
+
+  it('no collection, a key for a label, or a parent that is not a record select is flagged', () => {
+    const a = form({ optionSource: 'record', recordLabelField: 'name' }, {});
+    expect(flagged(a.doc, a.h)?.problem).toMatch(/names no collection.*not a field ID/);
+    const b = form({ optionSource: 'manual' }, { ...hotel, recordParentField: FID_HOTEL });
+    (b.doc.node(b.r) as unknown as { config: Record<string, unknown> }).config.recordParentNode = b.h;
+    expect(flagged(b.doc, b.r)?.problem).toMatch(/not a record-sourced form-select/);
+  });
+});
+
+describe('sb_bind on a record detail page (end to end)', () => {
+  const node = (id: string, type: string, parent: string | null, nodes: string[]) => ({
+    id, data: { type, parent, nodes }, specials: {}, style: {}, config: {}, bindings: [], events: [],
+  });
+  async function open(attachedForRooms: boolean) {
+    const { fakePlatform } = await import('./helpers/platform.js');
+    const p = fakePlatform((method, path) => {
+      if (method !== 'GET') return undefined;
+      if (path === '/api/sites/s1/page-links') return { links: [{ linkType: 'recordCollection', linkId: 'col_h', pageId: 'pg_rec' }] };
+      if (path.endsWith('/collections/col_h/fields')) return { fields: [{ id: FID_NAME, key: 'name', type: 'text' }] };
+      if (path.endsWith('/page-links/recordCollection/col_h')) return attachedForRooms ? { link: { pageId: 'pg_rec' } } : undefined;
+      return undefined;
+    });
+    p.pages.set('pg_rec', {
+      document: { schema_version: 2, root_node_id: 'ROOT', nodes: { ROOT: node('ROOT', 'root', null, ['sec']), sec: node('sec', 'flex-section', 'ROOT', ['hd']), hd: node('hd', 'heading', 'sec', []) } },
+      rev: 1,
+    });
+    const { call, close } = await p.connect();
+    await call('sb_page_open', { site_id: 's1', page_id: 'pg_rec' });
+    return { call, close };
+  }
+
+  it('binds the page record outside any list, from the attached collection', async () => {
+    const { call, close } = await open(true);
+    const ok = await call('sb_bind', { id: 'hd', source: `record.${FID_NAME}`, field: 'specials.text' });
+    expect(ok.isError, ok.text).toBe(false);
+    const bad = await call('sb_bind', { id: 'hd', source: `record.${FID_ROOM}`, field: 'specials.text' });
+    expect(bad.text).toMatch(/not a field.*col_h/);
+    expect((await call('sb_bind', { id: 'hd', source: 'record.url', field: 'specials.href' })).isError).toBe(false);
+    await close();
+  });
+});

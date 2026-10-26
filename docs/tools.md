@@ -924,10 +924,30 @@ record lists on the page by their text/select fields. URL: `?f.record.<fld>~<lis
 Give such a list an empty state. Not supported: filtering a parent by its children (rooms →
 hotels), the slider (price-only), event mode.
 
+**Record detail pages.** A page of type `record` is the detail template of the collection(s)
+attached to it: `PUT /api/sites/{siteId}/page-links/recordCollection/{collectionId}` `{ pageId }`
+(session), then publish the page. Each PUBLISHED record is served at **`/records/<recordId>`**
+(always the record id — never `externalId` or a name; draft, deleted, other-site or unattached →
+404). On that page `record.*` binds OUTSIDE any list, and a relation list placed on it takes the
+page record as its parent ("rooms of THIS hotel"). Cards link to it by binding a button's
+`specials.href` to `record.url` — emitted only when the row's collection has a published detail
+page; `sb_bind` refuses it otherwise. The SEO head comes only from fields the page binds
+(first bound text field = `<title>`). A relation list whose parent has no children renders no
+cards — keep its empty state.
+
+**Form options from a collection.** A `form-select` / `-radio` / `-checkbox` with base config
+`{ optionSource: "record", recordCollectionId, recordLabelField }` lists that collection's
+published records (value = record id, text = the label column, ≤ 200). A dependent select adds
+`recordParentNode` (the parent form-select's node id) and `recordParentField` (a reference field
+of its own collection pointing at the parent's): "Hạng phòng" narrows to the chosen hotel's rooms.
+The server refuses an answer that is not a published record of that collection, or a room of
+another hotel (`400 fields.<name> = "not_an_option"`). `specials.urlParam` preselects from a link
+(`?hotel=rec_…&room=rec_…`) — only record ids, never contact data. All option keys are base-only.
+
 What the platform does NOT do yet (web_builder `docs/integrations/dynamic-data-contract.md` §9),
-so no tool here claims it: a `gallery` binds nothing; no
-selected-record detail or popup; no form options from a collection; no computed price or
-capacity filter.
+so no tool here claims it: a `gallery` binds nothing; no selected-record popup; no booking
+summary / computed estimate; no filtering a parent by its children (capacity, a per-hotel start
+price); submissions show the record id, not its name.
 
 `sb_review` reports a record list naming no collection (`record_list_unsourced`), a tile naming
 no field ID (`record_field_unset`), a `record.*` binding outside a record list
@@ -1505,9 +1525,10 @@ box. Returns `{ findings, fixes, findings_notice? }`, in document order:
 | `empty_text` / `missing_media` | An element left blank — empty space, or a broken image |
 | `static_in_dataset` | An element inside a repeater that renders only what the document authors — the same picture on every product card |
 | `unbound_dataset_element` | A dataset element with no binding at all — it waits for a bound special nothing writes |
-| `dead_binding_source` | A source the renderer never provides — shows the placeholder forever. A `record.*` source counts only as `record.fld_<16 hex>` / `record.html.fld_<16 hex>` / `record.money.fld_<16 hex>` / `record.id`, and only the html form into `specials.boundHtml` |
+| `dead_binding_source` | A source the renderer never provides — shows the placeholder forever. A `record.*` source counts only as `record.fld_<16 hex>` / `record.html.fld_<16 hex>` / `record.money.fld_<16 hex>` / `record.id` / `record.url`, and only the html form into `specials.boundHtml` |
 | `record_list_unsourced` | A `list-dataset` with `datasetSource: "record"` and no `config.recordCollectionId` — no rows are fetched, a visitor sees only the empty state |
 | `hardcoded_dataset` | A `custom-code` script carrying ≥4 flat records with one key set (`const DATA = {hotels:[…]}`) — a data table kept in code; move it to a Collection + record list (maintenance) |
+| `record_option_invalid` | A choice field with `optionSource: "record"` naming no collection, a label that is not a field ID, or a parent that is not a record-sourced `form-select` — it shows only its placeholder or never narrows |
 | `record_filter_invalid` | A filter/sort control aimed at a record list whose axis is not a field ID, whose targets are not record lists of one collection (or include a relation list), whose behaviour is not `filter`, or whose sort values are not `<fieldId>_asc|desc` — it narrows nothing or empties the list |
 | `record_relation_unset` | A record list nested in another record list's row with no `config.recordRelationField` — every parent shows the same rows |
 | `record_relation_orphan` | `config.recordRelationField` set on a list with no record-list row above it, or not a `fld_…` ID — it only ever shows its empty state |

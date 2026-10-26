@@ -274,9 +274,27 @@ function readBaseOnlyConfig(repo: string): { keys: string[]; exceptions: string[
  */
 function readRecordBaseOnly(repo: string, already: string[]): string[] {
   const keys = new Set<string>();
-  for (const el of ['list-dataset', 'text-dataset', 'collection-media']) {
-    const src = readFileSync(resolve(repo, `schema/src/elements/${el}/meta.ts`), 'utf8');
+  // The form choice fields joined in web_builder #159 (`optionSource: "record"`):
+  // their record* keys and optionSource itself are read with nodes.ConfigString,
+  // which is BASE config only (formoptions/options.go), and the platform's
+  // ledger does not list them either.
+  const FORM_CHOICE = ['form-select', 'form-radio', 'form-checkbox'];
+  for (const el of ['list-dataset', 'text-dataset', 'collection-media', ...FORM_CHOICE]) {
+    const path = resolve(repo, `schema/src/elements/${el}/meta.ts`);
+    if (FORM_CHOICE.includes(el) && !existsSync(path)) continue;
+    const src = readFileSync(path, 'utf8');
     for (const m of src.matchAll(/^\s+(record[A-Z][A-Za-z]*):\s/gm)) keys.add(m[1]);
+  }
+  const opts = resolve(repo, 'server/render/nodes/formoptions/options.go');
+  if (existsSync(opts)) {
+    const go = readFileSync(opts, 'utf8');
+    for (const m of go.matchAll(/ConfigString\(n,\s*"([A-Za-z]+)"/g)) {
+      if (m[1] === 'optionSource' || m[1].startsWith('record')) keys.add(m[1]);
+    }
+    if (/"record"/.test(go) && !keys.has('recordLabelField')) {
+      console.error('record base-only keys: formoptions reads records but no form meta seeds recordLabelField — the form record source moved');
+      process.exit(1);
+    }
   }
   // THE SERVER'S OWN READ: every record key the published feed takes off a
   // list's base config must be one the metas seed, or a renamed sort/filter key

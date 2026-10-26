@@ -8309,13 +8309,18 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "Tùy chọn 3"
         ],
         "defaultValue": "",
-        "placeholder": "Chọn một mục"
+        "placeholder": "Chọn một mục",
+        "urlParam": ""
       },
       "style": {
         "width": "100%"
       },
       "config": {
-        "optionSource": "manual"
+        "optionSource": "manual",
+        "recordCollectionId": "",
+        "recordLabelField": "",
+        "recordParentField": "",
+        "recordParentNode": ""
       }
     },
     "inspector": [
@@ -8481,7 +8486,9 @@ export const ELEMENTS: Record<string, CatalogElement> = {
       },
       "config": {
         "columns": 1,
-        "optionSource": "manual"
+        "optionSource": "manual",
+        "recordCollectionId": "",
+        "recordLabelField": ""
       },
       "style": {
         "width": "100%"
@@ -8972,7 +8979,9 @@ export const ELEMENTS: Record<string, CatalogElement> = {
       },
       "config": {
         "columns": 1,
-        "optionSource": "manual"
+        "optionSource": "manual",
+        "recordCollectionId": "",
+        "recordLabelField": ""
       },
       "style": {
         "width": "100%"
@@ -49367,6 +49376,7 @@ export const ELEMENT_VALUES: Record<string, Record<string, ValueVocabulary>> = {
         "category",
         "manual",
         "product",
+        "record",
         "tag"
       ],
       "readBy": "OPTION_SOURCES (schema/src/elements/formOptionSource.ts)"
@@ -49382,6 +49392,7 @@ export const ELEMENT_VALUES: Record<string, Record<string, ValueVocabulary>> = {
         "category",
         "manual",
         "product",
+        "record",
         "tag"
       ],
       "readBy": "OPTION_SOURCES (schema/src/elements/formOptionSource.ts)"
@@ -49408,6 +49419,7 @@ export const ELEMENT_VALUES: Record<string, Record<string, ValueVocabulary>> = {
         "category",
         "manual",
         "product",
+        "record",
         "tag"
       ],
       "readBy": "OPTION_SOURCES (schema/src/elements/formOptionSource.ts)"
@@ -50206,11 +50218,15 @@ export const BASE_ONLY_CONFIG: string[] = [
   "backgroundSceneUrl",
   "backgroundSceneModelUrl",
   "rowLimit",
+  "optionSource",
   "recordCollectionId",
   "recordField",
   "recordFieldType",
   "recordFilterField",
   "recordFilterValue",
+  "recordLabelField",
+  "recordParentField",
+  "recordParentNode",
   "recordRelationField",
   "recordSortDesc",
   "recordSortField"

@@ -901,9 +901,31 @@ danh sách record trên trang theo field text/select. URL:
 `?f.record.<fld>~<list>=a,b&s.<list>=<fld>_desc&p.<list>=2`. Hãy cho danh sách đó một trạng thái
 rỗng. Chưa hỗ trợ: lọc dòng cha theo dòng con (phòng → khách sạn), slider (chỉ giá), chế độ event.
 
+**Trang chi tiết record.** Trang loại `record` là template chi tiết của các collection gắn vào
+nó: `PUT /api/sites/{siteId}/page-links/recordCollection/{collectionId}` `{ pageId }` (session),
+rồi publish trang. Mỗi record ĐÃ PUBLISH có địa chỉ **`/records/<recordId>`** (luôn là id record —
+không phải `externalId` hay tên; nháp, đã xoá, site khác hoặc collection chưa gắn → 404). Trên
+trang đó `record.*` gắn được NGOÀI mọi danh sách, và danh sách quan hệ đặt trên trang lấy record
+của trang làm cha ("phòng của CHÍNH khách sạn này"). Card dẫn tới trang bằng cách gắn
+`specials.href` của nút với `record.url` — chỉ có khi collection của dòng có trang chi tiết đã
+publish; nếu không `sb_bind` từ chối. SEO chỉ lấy từ field trang có gắn (field text gắn đầu tiên
+= `<title>`). Danh sách quan hệ mà dòng cha chưa có con thì không render card nào — hãy giữ trạng
+thái rỗng.
+
+**Option form lấy từ collection.** `form-select` / `-radio` / `-checkbox` với config base
+`{ optionSource: "record", recordCollectionId, recordLabelField }` liệt kê record đã publish của
+collection đó (value = id record, chữ = cột nhãn, ≤ 200). Select phụ thuộc thêm `recordParentNode`
+(id node của form-select cha) và `recordParentField` (field reference trong collection của nó trỏ
+tới collection cha): "Hạng phòng" thu hẹp theo khách sạn đang chọn. Server từ chối câu trả lời
+không phải record đã publish của collection đó, hoặc phòng của khách sạn khác
+(`400 fields.<name> = "not_an_option"`). `specials.urlParam` chọn sẵn từ link
+(`?hotel=rec_…&room=rec_…`) — chỉ id record, không bao giờ thông tin liên hệ. Mọi khoá option đều
+chỉ-base.
+
 Những gì nền tảng CHƯA làm (web_builder `docs/integrations/dynamic-data-contract.md` §9), nên
-không tool nào ở đây tuyên bố có: `gallery` không gắn được; chưa có chi tiết/popup theo record đã chọn; chưa có option form lấy từ collection; chưa có giá
-tính toán hay lọc theo sức chứa.
+không tool nào ở đây tuyên bố có: `gallery` không gắn được; chưa có popup theo record đã chọn; chưa có summary / tổng dự kiến; chưa
+lọc dòng cha theo dòng con (sức chứa, giá thấp nhất mỗi khách sạn); bài gửi hiện id record chứ
+không phải tên.
 
 `sb_review` báo danh sách record không chỉ collection nào (`record_list_unsourced`), tile không
 có ID field (`record_field_unset`), binding `record.*` nằm ngoài danh sách record
@@ -1475,9 +1497,10 @@ tài liệu:
 | `empty_text` / `missing_media` | Element bỏ trống — khoảng trắng, hoặc ảnh vỡ |
 | `static_in_dataset` | Một element nằm trong repeater nhưng chỉ render nội dung do tài liệu ghi — cùng một tấm ảnh trên mọi thẻ sản phẩm |
 | `unbound_dataset_element` | Element dataset không có binding nào — nó chờ một `bound…` special mà không ai ghi |
-| `dead_binding_source` | Nguồn renderer không cung cấp — hiện placeholder mãi mãi. Nguồn `record.*` chỉ hợp lệ ở dạng `record.fld_<16 hex>` / `record.html.fld_<16 hex>` / `record.money.fld_<16 hex>` / `record.id`, và chỉ dạng html được vào `specials.boundHtml` |
+| `dead_binding_source` | Nguồn renderer không cung cấp — hiện placeholder mãi mãi. Nguồn `record.*` chỉ hợp lệ ở dạng `record.fld_<16 hex>` / `record.html.fld_<16 hex>` / `record.money.fld_<16 hex>` / `record.id` / `record.url`, và chỉ dạng html được vào `specials.boundHtml` |
 | `record_list_unsourced` | `list-dataset` có `datasetSource: "record"` mà không có `config.recordCollectionId` — không dòng nào được lấy, khách chỉ thấy trạng thái rỗng |
 | `hardcoded_dataset` | Script của `custom-code` chứa ≥4 bản ghi phẳng cùng một bộ khoá (`const DATA = {hotels:[…]}`) — bảng dữ liệu nằm trong code; chuyển sang Collection + danh sách record (maintenance) |
+| `record_option_invalid` | Trường lựa chọn có `optionSource: "record"` mà không chỉ collection, nhãn không phải ID field, hoặc cha không phải `form-select` lấy từ record — chỉ hiện placeholder hoặc không bao giờ thu hẹp |
 | `record_filter_invalid` | Control lọc/sắp xếp nhắm vào danh sách record mà axis không phải ID field, target không phải danh sách record của MỘT collection (hoặc có danh sách quan hệ), behaviour không phải `filter`, hoặc giá trị sort không theo `<fieldId>_asc|desc` — không lọc được gì hoặc làm rỗng danh sách |
 | `record_relation_unset` | Danh sách record lồng trong dòng của một danh sách record khác mà không có `config.recordRelationField` — mọi dòng cha hiện cùng một tập dòng |
 | `record_relation_orphan` | Có `config.recordRelationField` nhưng không có dòng record nào bên trên, hoặc không phải ID `fld_…` — chỉ bao giờ hiện trạng thái rỗng |

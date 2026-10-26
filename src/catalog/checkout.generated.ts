@@ -364,7 +364,11 @@ export const CHECKOUT_FORM_DOCUMENT = {
         "width": "100%"
       },
       "config": {
-        "optionSource": "manual"
+        "optionSource": "manual",
+        "recordCollectionId": "",
+        "recordLabelField": "",
+        "recordParentField": "",
+        "recordParentNode": ""
       },
       "specials": {
         "name": "shipping_method",
@@ -375,7 +379,8 @@ export const CHECKOUT_FORM_DOCUMENT = {
         "mapTo": "order.shippingMethod",
         "options": [],
         "defaultValue": "",
-        "placeholder": "Chọn phương thức vận chuyển"
+        "placeholder": "Chọn phương thức vận chuyển",
+        "urlParam": ""
       },
       "responsive": {},
       "events": [],
@@ -469,7 +474,9 @@ export const CHECKOUT_FORM_DOCUMENT = {
       },
       "config": {
         "columns": 1,
-        "optionSource": "manual"
+        "optionSource": "manual",
+        "recordCollectionId": "",
+        "recordLabelField": ""
       },
       "specials": {
         "name": "xuat_hoa_don_vat",
@@ -2277,7 +2284,11 @@ export const FORM_TEMPLATES = {
             "width": "100%"
           },
           "config": {
-            "optionSource": "manual"
+            "optionSource": "manual",
+            "recordCollectionId": "",
+            "recordLabelField": "",
+            "recordParentField": "",
+            "recordParentNode": ""
           },
           "specials": {
             "name": "shipping_method",
@@ -2288,7 +2299,8 @@ export const FORM_TEMPLATES = {
             "mapTo": "order.shippingMethod",
             "options": [],
             "defaultValue": "",
-            "placeholder": "Chọn phương thức vận chuyển"
+            "placeholder": "Chọn phương thức vận chuyển",
+            "urlParam": ""
           },
           "responsive": {},
           "events": [],
@@ -2382,7 +2394,9 @@ export const FORM_TEMPLATES = {
           },
           "config": {
             "columns": 1,
-            "optionSource": "manual"
+            "optionSource": "manual",
+            "recordCollectionId": "",
+            "recordLabelField": ""
           },
           "specials": {
             "name": "xuat_hoa_don_vat",
@@ -4205,7 +4219,11 @@ export const FORM_TEMPLATES = {
             "width": "100%"
           },
           "config": {
-            "optionSource": "manual"
+            "optionSource": "manual",
+            "recordCollectionId": "",
+            "recordLabelField": "",
+            "recordParentField": "",
+            "recordParentNode": ""
           },
           "specials": {
             "name": "loai_phong",
@@ -4220,7 +4238,8 @@ export const FORM_TEMPLATES = {
               "Phòng gia đình"
             ],
             "defaultValue": "",
-            "placeholder": "Chọn loại phòng"
+            "placeholder": "Chọn loại phòng",
+            "urlParam": ""
           },
           "responsive": {},
           "events": [],
@@ -4428,7 +4447,9 @@ export const FORM_TEMPLATES = {
           },
           "config": {
             "columns": 1,
-            "optionSource": "manual"
+            "optionSource": "manual",
+            "recordCollectionId": "",
+            "recordLabelField": ""
           },
           "specials": {
             "name": "muc_do_hai_long",

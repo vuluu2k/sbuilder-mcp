@@ -14,9 +14,10 @@ export const RECORD_FIELD_ID = /^fld_[0-9a-f]{16}$/;
 /**
  * A `record.*` source a context can supply: `record.<fid>`, `record.html.<fid>`,
  * `record.money.<fid>` (a number/integer field formatted in the site's currency),
- * or `record.id` — the row's own record id (recordContext.ts).
+ * `record.id` — the row's own record id — or `record.url` — `/records/<id>`, emitted
+ * only when the row's collection has a published record detail page (recordContext.ts).
  */
-export const RECORD_SOURCE = /^record\.(?:id|(?:html\.|money\.)?fld_[0-9a-f]{16})$/;
+export const RECORD_SOURCE = /^record\.(?:id|url|(?:html\.|money\.)?fld_[0-9a-f]{16})$/;
 
 /** The field types `record.money.<fid>` formats — recordContext.ts RECORD_MONEY_FIELD_TYPES. */
 export const RECORD_MONEY_TYPES = new Set(['number', 'integer']);
@@ -99,9 +100,9 @@ export function recordScope(nodeAt: NodeAt, id: string): string[] {
  */
 export function recordFieldProblem(source: string, scope: Array<{ collectionId: string; fields: RecordFieldRow[] }>): string | undefined {
   if (!scope.length) {
-    return `"${source}" sits in no record-list row — only a list-dataset with datasetSource "record" (or a relation list inside one) supplies a record, so it would render its placeholder.`;
+    return `"${source}" sits in no record-list row and this is no record detail page — only a list-dataset with datasetSource "record" (or a relation list inside one), or a page of type "record" attached to a collection, supplies a record, so it would render its placeholder.`;
   }
-  if (source === 'record.id') return undefined;
+  if (source === 'record.id' || source === 'record.url') return undefined;
   const html = source.startsWith('record.html.');
   const money = source.startsWith('record.money.');
   const fid = source.slice(html ? 12 : money ? 13 : 7);
