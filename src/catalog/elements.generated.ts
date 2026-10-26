@@ -3,7 +3,7 @@
 import type { CatalogElement, NodeSeed, SatelliteRule, TraitDescription, ValueVocabulary, WritePrecondition } from './element-types.js';
 
 export const ELEMENT_SOURCE = {
-  "count": 123,
+  "count": 124,
   "docSchemaVersion": 2
 } as const;
 
@@ -9849,6 +9849,154 @@ export const ELEMENTS: Record<string, CatalogElement> = {
       "register",
       "forgot-password",
       "account"
+    ]
+  },
+  "form-estimate": {
+    "type": "form-estimate",
+    "label": "Estimate",
+    "category": "form",
+    "isContainer": false,
+    "isRootOnly": false,
+    "locked": false,
+    "hideInLayer": false,
+    "childAllows": [],
+    "defaults": {
+      "specials": {
+        "name": "",
+        "label": "Tạm tính",
+        "placeholder": "Chọn phòng và ngày để xem giá dự kiến.",
+        "description": "Giá dự kiến, chưa phải giá giữ chỗ.",
+        "estimateTerms": [],
+        "estimateRules": []
+      },
+      "style": {
+        "width": "100%",
+        "height": "fit-content",
+        "fontSize": "14px",
+        "lineHeight": "150%",
+        "color": "#171717"
+      }
+    },
+    "inspector": [
+      {
+        "tab": "general",
+        "groups": [
+          {
+            "key": "content",
+            "label": "Content",
+            "controls": [
+              "form_estimate_content"
+            ]
+          },
+          {
+            "key": "estimate",
+            "label": "Estimate",
+            "controls": [
+              "form_estimate_terms"
+            ]
+          },
+          {
+            "key": "estimate_rules",
+            "label": "Stay rules",
+            "controls": [
+              "form_estimate_rules"
+            ]
+          },
+          {
+            "key": "typography",
+            "label": "Typography",
+            "controls": [
+              "text_color",
+              "font_family",
+              "font_size",
+              "text_align",
+              "line_height"
+            ]
+          },
+          {
+            "key": "size",
+            "label": "Size",
+            "controls": [
+              "width_select",
+              "height_select",
+              "size_bounds"
+            ]
+          },
+          {
+            "key": "id_field",
+            "label": "ID field",
+            "controls": [
+              "field_name"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "advanced",
+        "groups": [
+          {
+            "key": "spacing",
+            "label": "Spacing",
+            "controls": [
+              "padding_margin"
+            ]
+          },
+          {
+            "key": "display",
+            "label": "Display",
+            "controls": [
+              "display"
+            ]
+          },
+          {
+            "key": "class_css",
+            "label": "Class",
+            "controls": [
+              "class_css"
+            ]
+          }
+        ]
+      }
+    ],
+    "controls": [
+      "form_estimate_content",
+      "form_estimate_terms",
+      "form_estimate_rules",
+      "text_color",
+      "font_family",
+      "font_size",
+      "text_align",
+      "line_height",
+      "width_select",
+      "height_select",
+      "size_bounds",
+      "field_name",
+      "padding_margin",
+      "display",
+      "class_css"
+    ],
+    "description": "A live booking summary inside a form: the price of the record chosen in a data-record select, multiplied by the nights between two date fields and by a number field (\"3.330.000 ₫ × 2 đêm × 2 phòng = 13.320.000 ₫\"), plus the stay rules that go with it — check-in not in the past, check-out after check-in, a maximum number of nights, and guests within the chosen room's capacity. The server recomputes the total from the published record on submit and stores it as an estimate.",
+    "useWhen": [
+      "A booking or quote request whose price is a record (a room type, a tour, a rental) times nights and/or a quantity.",
+      "The visitor should see what their choice costs before sending, and the stay dates need checking."
+    ],
+    "avoidWhen": [
+      "The form sells cart products — the order form and its bill already price those.",
+      "The price is not stored on a data record; there is nothing authoritative for the server to recompute from."
+    ],
+    "contentTips": [
+      "Point the price at a number column holding WHOLE currency units (1850000, not cents).",
+      "Set the guests and rooms fields to whole numbers with a range, and add a capacity rule so 3 guests cannot book 1 room for 2.",
+      "Keep the note: an estimate is not a held price."
+    ],
+    "semantics": [
+      "form",
+      "booking",
+      "estimate",
+      "total",
+      "price",
+      "summary",
+      "nights"
     ]
   },
   "form-segment": {
@@ -42923,6 +43071,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
         "recordFilterField": "",
         "recordFilterValue": "",
         "recordRelationField": "",
+        "recordAggregates": [],
         "itemsPerRow": 4,
         "collectionType": "all_products",
         "collectionId": "all_products",
@@ -44030,6 +44179,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
               "recordFilterField",
               "recordFilterValue",
               "recordRelationField",
+              "recordAggregates",
               "itemsPerRow",
               "listNavIcon",
               "listNavPosition",
@@ -44072,6 +44222,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
               "recordFilterField",
               "recordFilterValue",
               "recordRelationField",
+              "recordAggregates",
               "itemsPerRow",
               "listNavIcon",
               "listNavPosition",
@@ -44122,6 +44273,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
               "recordFilterField",
               "recordFilterValue",
               "recordRelationField",
+              "recordAggregates",
               "itemsPerRow",
               "listNavIcon",
               "listNavPosition",
@@ -44174,6 +44326,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
               "recordFilterField",
               "recordFilterValue",
               "recordRelationField",
+              "recordAggregates",
               "itemsPerRow",
               "listNavIcon",
               "listNavPosition",
@@ -44216,6 +44369,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
               "recordFilterField",
               "recordFilterValue",
               "recordRelationField",
+              "recordAggregates",
               "itemsPerRow",
               "listNavIcon",
               "listNavPosition",
@@ -44404,6 +44558,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
       "recordFilterField",
       "recordFilterValue",
       "recordRelationField",
+      "recordAggregates",
       "itemsPerRow",
       "listNavIcon",
       "listNavPosition",
@@ -44516,6 +44671,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
       "Collection lists: config.collectionListType \"page_collections\" renders THE SUB-COLLECTIONS OF THE COLLECTION THE PAGE IS (the one /collections/{slug} named), so a single collection template draws every collection's browse grid — off a collection template it shows every collection instead; \"all_collections\" renders every collection; \"custom_collections\" renders specials.collectionIds, in that order",
       "config.quantity caps how many records render and, under a loadingMode, is the PAGE SIZE; it is BASE-only — one value for every breakpoint, never per-breakpoint. A Data list (datasetSource \"record\") pages at most 50 records per page. config.itemsPerRow is the row size (grid columns / slide page size) and style.gap is the space between cards — both are per-breakpoint",
       "A Data list (datasetSource \"record\") nested inside another Data list's row can show ONLY the child records pointing at that row: set config.recordRelationField to the field id (fld_<16hex>) of a \"reference\" field in the nested list's own collection (e.g. RoomType.hotel inside a Hotels list). BASE-only. Such a list is never paged (loadingMode is ignored), its card may also bind the enclosing row's fields, and outside a record-list row it shows its empty state, never all records",
+      "A Data list can carry config.recordAggregates (BASE-only, ≤4): [{key, recordCollectionId (child collection), recordRelationField (child reference field → this collection), op \"min\"|\"max\"|\"count\", recordField (child number/integer field, \"\" for count), where: [{recordField, op:\"gte\", param, per?}], whenNone \"hide\"|\"show\"}]. Each row then binds record.agg.<key> / record.money.agg.<key> (e.g. a hotel's cheapest room that fits: min nightly price where capacity × rooms ≥ guests). Visitors send params as f.record.param.<name>=<int>, filter as f.record.agg.<key>=..3000000, sort as s.<node>=agg.<key>_asc. Not availability",
       "config.layout \"grid\" for a multi-row grid, \"slide\" for row-by-row carousel behaviour",
       "Navigation and pagination only matter when layout is \"slide\". The arrows exist while config.listNavIcon names an icon (clearing it turns them off); the dots exist while paginationItemWidth and paginationItemHeight are both above 0",
       "config.loadingMode is how a GRID list offers the REST of its feed once config.quantity rows are on screen: \"none\" (the default — those rows and nothing more), \"pagination\" (a numbered pager, each page its own URL), \"load_more\" (a button that appends the next page in place) or \"scroll_more\" (the same append, triggered by reaching the end). Set it whenever the listing is a real catalogue rather than a fixed shelf of featured rows",
@@ -45586,6 +45742,7 @@ export const BINDING_SOURCES: string[] = [
   "site.supportEmail",
   "site.supportPhone",
   "site.tiktok",
+  "site.timezone",
   "site.youtube"
 ];
 
@@ -45771,6 +45928,67 @@ export const RECORD_BINDING_PROBES: Array<{ type: string; config: Record<string,
         "id": "bind-text",
         "source": "record.fld_0123456789abcdef",
         "field": "specials.boundText",
+        "target": {
+          "type": "record",
+          "id": "",
+          "kind": "title"
+        }
+      }
+    ]
+  },
+  {
+    "type": "text-dataset",
+    "config": {
+      "datasetSource": "record",
+      "recordField": "agg.startPrice",
+      "recordFieldType": "number"
+    },
+    "bindings": [
+      {
+        "id": "bind-text",
+        "source": "record.agg.startPrice",
+        "field": "specials.boundText",
+        "target": {
+          "type": "record",
+          "id": "",
+          "kind": "title"
+        }
+      }
+    ]
+  },
+  {
+    "type": "text-dataset",
+    "config": {
+      "datasetSource": "record",
+      "recordField": "agg.startPrice",
+      "recordFieldType": "number",
+      "recordFormat": "money"
+    },
+    "bindings": [
+      {
+        "id": "bind-text",
+        "source": "record.money.agg.startPrice",
+        "field": "specials.boundText",
+        "target": {
+          "type": "record",
+          "id": "",
+          "kind": "title"
+        }
+      }
+    ]
+  },
+  {
+    "type": "text-dataset",
+    "config": {
+      "datasetSource": "record",
+      "recordField": "agg.startPrice",
+      "recordFieldType": "richtext"
+    },
+    "bindings": [
+      {
+        "id": "bind-text",
+        "source": "",
+        "field": "specials.boundHtml",
         "target": {
           "type": "record",
           "id": "",
@@ -50219,6 +50437,7 @@ export const BASE_ONLY_CONFIG: string[] = [
   "backgroundSceneModelUrl",
   "rowLimit",
   "optionSource",
+  "recordAggregates",
   "recordCollectionId",
   "recordField",
   "recordFieldType",

@@ -603,3 +603,92 @@ describe('sb_bind on a record detail page (end to end)', () => {
     await close();
   });
 });
+
+describe('aggregates over a relation (web_builder #162)', () => {
+  const agg = (over: Record<string, unknown> = {}) => ({
+    key: 'startPrice', recordCollectionId: 'col_0123456789abcdef', recordRelationField: FID_HOTEL, op: 'min',
+    recordField: FID, where: [{ recordField: FID2, op: 'gte', param: 'guests', per: 'rooms' }], whenNone: 'hide', ...over,
+  });
+  function list(aggs: unknown, tileField = 'agg.startPrice') {
+    const doc = emptyDoc();
+    const { patches, ids } = addSubtree(doc, 'ROOT', {
+      type: 'flex-section',
+      children: [
+        { type: 'filter-radio' },
+        {
+          type: 'list-dataset',
+          config: { datasetSource: 'record', recordCollectionId: 'col_h', recordAggregates: aggs },
+          children: [{ type: 'dataset-block', children: [{ type: 'text-dataset', config: { datasetSource: 'record', recordField: tileField, recordFieldType: 'number', recordFormat: 'money' } }] }],
+        },
+      ],
+    });
+    doc.apply(patches);
+    const at = (t: string) => ids.find((i) => doc.node(i).data.type === t)!;
+    return { doc, list: at('list-dataset'), tile: at('text-dataset'), ctl: at('filter-radio') };
+  }
+  const codes = (d: PageDoc, id: string) => reviewDesign(d, {}).filter((f) => f.nodeId === id).map((f) => f.code);
+
+  it('an agg.<key> tile binds record.money.agg.<key>, pinned to the platform probe', () => {
+    const { doc, tile } = list([agg()]);
+    expect(first(doc.node(tile) as never).source).toBe('record.money.agg.startPrice');
+    expect(BASE_ONLY_CONFIG).toContain('recordAggregates');
+    expect(() => bindNode(doc, tile, 'record.agg.startPrice', 'specials.boundText')).not.toThrow();
+  });
+
+  it('a valid aggregate list with its empty state is clean; malformed or unknown key is flagged', () => {
+    const ok = list([agg()]);
+    expect(codes(ok.doc, ok.list)).not.toContain('record_aggregate_invalid');
+    expect(codes(ok.doc, ok.tile)).not.toContain('record_field_unset');
+    const bad = list([agg({ op: 'avg' })]);
+    expect(codes(bad.doc, bad.list)).toContain('record_aggregate_invalid');
+    const missing = list([agg()], 'agg.cheapest');
+    expect(codes(missing.doc, missing.tile)).toContain('record_field_unset');
+  });
+
+  it('filter axes agg.<key> / param.<name> must exist on the target list; a param holds one value', () => {
+    const set = (d: PageDoc, ctl: string, sp: Record<string, unknown>) => Object.assign((d.node(ctl) as unknown as { specials: Record<string, unknown> }).specials, sp);
+    const a = list([agg()]);
+    set(a.doc, a.ctl, { filterSource: 'record', filterAxis: 'param.guests', filterTargets: [a.list], filterBehavior: 'filter', filterArity: 'single' });
+    expect(codes(a.doc, a.ctl)).not.toContain('record_filter_invalid');
+    set(a.doc, a.ctl, { filterArity: 'multi' });
+    expect(reviewDesign(a.doc, {}).find((f) => f.nodeId === a.ctl)?.problem).toMatch(/ONE value/);
+    set(a.doc, a.ctl, { filterAxis: 'agg.cheapest', filterArity: 'single' });
+    expect(codes(a.doc, a.ctl)).toContain('record_filter_invalid');
+  });
+});
+
+describe('booking estimate (web_builder #161)', () => {
+  function form(terms: unknown[], rules: unknown[] = []) {
+    const doc = emptyDoc();
+    const { patches, ids } = addSubtree(doc, 'ROOT', {
+      type: 'flex-section',
+      children: [
+        { type: 'form-select', config: { optionSource: 'record', recordCollectionId: 'col_r', recordLabelField: FID_ROOM } },
+        { type: 'form-date' }, { type: 'form-date' }, { type: 'form-number' }, { type: 'form-estimate' },
+      ],
+    });
+    doc.apply(patches);
+    const of = (t: string) => ids.filter((i) => doc.node(i).data.type === t);
+    const [room] = of('form-select'); const [cin, cout] = of('form-date'); const [rooms] = of('form-number'); const [est] = of('form-estimate');
+    const n = { room, cin, cout, rooms };
+    const fill = (o: unknown) => JSON.parse(JSON.stringify(o).replace(/"\$(\w+)"/g, (_, k) => JSON.stringify((n as Record<string, string>)[k])));
+    Object.assign((doc.node(est) as unknown as { specials: Record<string, unknown> }).specials, { estimateTerms: fill(terms), estimateRules: fill(rules) });
+    return { doc, est };
+  }
+  const flagged = (d: PageDoc, id: string) => reviewDesign(d, {}).find((f) => f.nodeId === id && f.code === 'estimate_invalid');
+
+  it('price × nights × rooms with stay rules is clean', () => {
+    const { doc, est } = form(
+      [{ kind: 'record', node: '$room', field: FID }, { kind: 'nights', start: '$cin', end: '$cout', unit: 'đêm' }, { kind: 'number', node: '$rooms', unit: 'phòng' }],
+      [{ kind: 'dateRange', start: '$cin', end: '$cout', notPast: true }, { kind: 'maxNights', start: '$cin', end: '$cout', max: 30 }],
+    );
+    expect(flagged(doc, est)).toBeUndefined();
+  });
+
+  it('no record term, or operands that are not this form\'s fields, is flagged', () => {
+    const a = form([{ kind: 'nights', start: '$cin', end: '$cout' }]);
+    expect(flagged(a.doc, a.est)?.problem).toMatch(/exactly ONE "record" term/);
+    const b = form([{ kind: 'record', node: '$room', field: FID }, { kind: 'number', node: '$cin' }]);
+    expect(flagged(b.doc, b.est)?.problem).toMatch(/is not a form-number/);
+  });
+});

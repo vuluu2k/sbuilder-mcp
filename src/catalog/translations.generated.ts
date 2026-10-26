@@ -2,9 +2,9 @@
 // Source: <WB_REPO>/schema/src/elements/translatableFields.ts
 
 export const TRANSLATION_SOURCE = {
-  "elements": 67,
-  "pairs": 187,
-  "neverKeys": 180,
+  "elements": 68,
+  "pairs": 190,
+  "neverKeys": 182,
   "entityTypes": 12
 } as const;
 
@@ -277,6 +277,11 @@ export const TRANSLATABLE_SPECIALS: Record<string, string[]> = {
     "text",
     "linkText"
   ],
+  "form-estimate": [
+    "label",
+    "placeholder",
+    "description"
+  ],
   "form-step-button": [
     "text"
   ],
@@ -411,6 +416,7 @@ export const NEVER_TRANSLATED: string[] = [
   "displayType",
   "end",
   "endsAt",
+  "estimateRules",
   "field",
   "fileFormat",
   "fileLimit",
@@ -526,6 +532,7 @@ export const NEVER_TRANSLATED: string[] = [
   "showPercent",
   "showPhone",
   "showPlaceholder",
+  "siteTimezone",
   "source",
   "sourceCode",
   "sourceFlashSale",
@@ -1146,6 +1153,17 @@ export const TRANSLATABLE_FIELDS: Record<string, TranslatableFieldSpec[]> = {
     },
     {
       "key": "linkText"
+    }
+  ],
+  "form-estimate": [
+    {
+      "key": "label"
+    },
+    {
+      "key": "placeholder"
+    },
+    {
+      "key": "description"
     }
   ],
   "form-step-button": [

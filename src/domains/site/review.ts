@@ -8,7 +8,16 @@ import { HOVER_STATE, hoverHome } from './hover.js';
 import { ELEMENTS, BINDING_SOURCES, BOUND_SPECIALS , FIRST_CHILD_ONLY, SATELLITE_RULES, ELEMENT_SEEDS } from '../../catalog/elements.generated.js';
 import type { PageDoc } from './document.js';
 import { fill } from './findings.js';
-import { isRecordSource, RECORD_FIELD_ID, RECORD_HTML_SOURCE, RECORD_SOURCE, RECORD_TILES } from './record.js';
+import {
+  isRecordSource,
+  readRecordAggregates,
+  recordAggKeyOf,
+  recordAggregateParams,
+  RECORD_FIELD_ID,
+  RECORD_HTML_SOURCE,
+  RECORD_SOURCE,
+  RECORD_TILES,
+} from './record.js';
 import { formFieldFindings } from './formdoc.js';
 import { deadNavigation, liveEventTable, PAYLOAD_NEEDS, type NodeEventLike } from './navhref.js';
 import { unknownValueNote, unknownWriteNote, vocabularyFor, vocabularyForWrite } from './vocabulary.js';
@@ -752,6 +761,62 @@ export function reviewDesign(
         }
       }
 
+      // AGGREGATES OVER A RELATION (web_builder #162, contract §7.5). A malformed
+      // definition makes the server refuse the WHOLE list — it publishes empty; a
+      // "hide" aggregate drops every row nothing fits, so the list needs its empty state.
+      if (type === 'list-dataset' && cfg.datasetSource === 'record' && cfg.recordAggregates !== undefined) {
+        const aggs = readRecordAggregates(cfg.recordAggregates);
+        const empty = d.nodes[String(cfg.emptyStateId ?? '')]?.data.type === 'list-empty';
+        if (aggs === null || (aggs.some((a) => a.whenNone === 'hide') && !empty)) {
+          out.push({
+            code: 'record_aggregate_invalid',
+            nodeId: id,
+            type,
+            problem:
+              aggs === null
+                ? 'config.recordAggregates is malformed (a bad key, op, id, condition or more than 4) — the server refuses the list and it publishes EMPTY.'
+                : 'An aggregate with whenNone "hide" drops every row nothing fits, and this list has no empty state — a visitor whose search fits nothing sees a blank band.',
+            fix: fill('record_aggregate_invalid', { id }),
+          });
+        }
+      }
+
+      // BOOKING ESTIMATE (web_builder #161, contract §7.4): its operands are NODE IDS of
+      // this form document. A wrong one leaves the line on its placeholder and the
+      // server stores no total — or skips a stay rule — with no error anywhere.
+      if (type === 'form-estimate') {
+        const sp = (n.specials ?? {}) as Record<string, unknown>;
+        const terms = Array.isArray(sp.estimateTerms) ? (sp.estimateTerms as Array<Record<string, unknown>>) : [];
+        const rules = Array.isArray(sp.estimateRules) ? (sp.estimateRules as Array<Record<string, unknown>>) : [];
+        const why: string[] = [];
+        const t = (x: unknown) => d.nodes[String(x ?? '')]?.data.type;
+        const cfgSrc = (x: unknown) =>
+          String(((d.nodes[String(x ?? '')] as { config?: Record<string, unknown> } | undefined)?.config?.optionSource ?? '')).trim();
+        const isRecordSelect = (x: unknown) => t(x) === 'form-select' && cfgSrc(x) === 'record';
+        const isDate = (x: unknown) => t(x) === 'form-date' || t(x) === 'form-calendar';
+        if (terms.filter((x) => x.kind === 'record').length !== 1) why.push('it needs exactly ONE "record" term (the chosen room\'s price)');
+        for (const x of terms) {
+          if (x.kind === 'record' && (!isRecordSelect(x.node) || !RECORD_FIELD_ID.test(String(x.field ?? ''))))
+            why.push(`record term: node "${String(x.node ?? '')}" must be a record-sourced form-select and field a fld_ id`);
+          if (x.kind === 'nights' && (!isDate(x.start) || !isDate(x.end))) why.push('nights term: start and end must be date fields of this form');
+          if (x.kind === 'number' && t(x.node) !== 'form-number') why.push(`number term: "${String(x.node ?? '')}" is not a form-number`);
+        }
+        for (const r of rules) {
+          if ((r.kind === 'dateRange' || r.kind === 'maxNights') && (!isDate(r.start) || !isDate(r.end))) why.push(`${String(r.kind)} rule: start and end must be date fields of this form`);
+          if (r.kind === 'capacity' && (!isRecordSelect(r.node) || !RECORD_FIELD_ID.test(String(r.field ?? '')) || t(r.count) !== 'form-number' || (r.per && t(r.per) !== 'form-number')))
+            why.push('capacity rule: node must be a record select, field a fld_ id, count (and per) form-number fields');
+        }
+        if (why.length) {
+          out.push({
+            code: 'estimate_invalid',
+            nodeId: id,
+            type,
+            problem: `A booking estimate that shows no total or skips a stay rule: ${[...new Set(why)].join('; ')}.`,
+            fix: fill('estimate_invalid', { id }),
+          });
+        }
+      }
+
       // RECORD FILTERS (web_builder PR #157, contract §7.1): a filter/sort control aimed at a
       // record list. Every miss below renders a control that empties the list or narrows nothing.
       {
@@ -763,9 +828,21 @@ export function reviewDesign(
         });
         const why: string[] = [];
         if (sp.filterSource === 'record') {
-          if (!RECORD_FIELD_ID.test(String(sp.filterAxis ?? ''))) why.push(`filterAxis "${String(sp.filterAxis ?? '')}" is not a field ID`);
-          if (targets.length && recordTargets.length !== targets.length) why.push('a filterTargets entry is not a record list');
           const cfgOf = (t: string) => (d.nodes[t] as { config?: Record<string, unknown> }).config ?? {};
+          // web_builder #162: an axis may also be an aggregate (`agg.<key>`, a budget) or a
+          // visitor param (`param.<name>`) — both must exist on EVERY targeted list.
+          const axis = String(sp.filterAxis ?? '');
+          const aggsOf = (t: string) => readRecordAggregates(cfgOf(t).recordAggregates) ?? [];
+          if (axis.startsWith('agg.') || axis.startsWith('param.')) {
+            const key = axis.startsWith('agg.') ? recordAggKeyOf(axis) : axis.slice(6);
+            const has = (t: string) =>
+              axis.startsWith('agg.') ? aggsOf(t).some((a) => a.key === key) : recordAggregateParams(aggsOf(t)).has(key);
+            if (!key || !recordTargets.length || !recordTargets.every(has))
+              why.push(`filterAxis "${axis}" names no aggregate or param of its target list's config.recordAggregates`);
+            if (axis.startsWith('param.') && sp.filterArity !== undefined && sp.filterArity !== 'single')
+              why.push(`a param axis holds ONE value — filterArity "${String(sp.filterArity)}" lets a visitor tick two and empties the list`);
+          } else if (!RECORD_FIELD_ID.test(axis)) why.push(`filterAxis "${axis}" is not a field ID`);
+          if (targets.length && recordTargets.length !== targets.length) why.push('a filterTargets entry is not a record list');
           if (recordTargets.some((t) => String(cfgOf(t).recordRelationField ?? ''))) why.push('it targets a relation list');
           if (new Set(recordTargets.map((t) => String(cfgOf(t).recordCollectionId ?? ''))).size > 1) why.push('its targets read different collections');
           if (sp.filterBehavior !== undefined && sp.filterBehavior !== 'filter') why.push(`filterBehavior "${String(sp.filterBehavior)}" — a record filter only narrows ("filter")`);
@@ -773,8 +850,8 @@ export function reviewDesign(
         if (sp.filterSource === 'sort' && recordTargets.length) {
           const bad = (Array.isArray(sp.filterValues) ? (sp.filterValues as Array<{ value?: unknown }>) : [])
             .map((v) => String(v?.value ?? ''))
-            .filter((v) => !/^fld_[0-9a-f]{16}_(?:asc|desc)$/.test(v));
-          if (bad.length) why.push(`sort values ${bad.slice(0, 3).map((v) => `"${v}"`).join(', ')} are not "<fieldId>_asc|desc" — a record list ignores product sort keys`);
+            .filter((v) => !/^(?:fld_[0-9a-f]{16}|agg\.[a-z][a-zA-Z0-9_]{0,31})_(?:asc|desc)$/.test(v));
+          if (bad.length) why.push(`sort values ${bad.slice(0, 3).map((v) => `"${v}"`).join(', ')} are not "<fieldId>_asc|desc" or "agg.<key>_asc|desc" — a record list ignores product sort keys`);
         }
         if (why.length) {
           out.push({
@@ -788,7 +865,23 @@ export function reviewDesign(
       }
       if (RECORD_TILES.has(type) && cfg.datasetSource === 'record') {
         const fid = cfg.recordField;
-        if (typeof fid !== 'string' || !RECORD_FIELD_ID.test(fid)) {
+        const aggKey = typeof fid === 'string' ? recordAggKeyOf(fid) : '';
+        let aggOk = false;
+        if (aggKey) {
+          let up: string | null | undefined = n.data.parent;
+          while (up && d.nodes[up] && d.nodes[up].data.type !== 'list-dataset') up = d.nodes[up].data.parent;
+          const lc = up ? (d.nodes[up] as { config?: Record<string, unknown> }).config : undefined;
+          aggOk = (readRecordAggregates(lc?.recordAggregates) ?? []).some((a) => a.key === aggKey);
+        }
+        if (aggKey && !aggOk) {
+          out.push({
+            code: 'record_field_unset',
+            nodeId: id,
+            type,
+            problem: `config.recordField "${String(fid)}" names an aggregate its record list does not define in config.recordAggregates — it renders its placeholder on every row.`,
+            fix: fill('record_field_unset', { id }),
+          });
+        } else if (!aggKey && (typeof fid !== 'string' || !RECORD_FIELD_ID.test(fid))) {
           out.push({
             code: 'record_field_unset',
             nodeId: id,

@@ -430,7 +430,7 @@ emitted, so a bad id in the fourth edit refuses the whole batch. The result is t
 | `limit` | number? | Default 8, max 60 |
 | `detail` | boolean? | Add `useWhen`, `avoidWhen`, `contentTips` to every match |
 
-Searches the platform's own AI hints across all 123 elements. Each match is
+Searches the platform's own AI hints across all 124 elements. Each match is
 `{ type, label, category, description }`, plus `isContainer: true` / `isRootOnly: true`
 only when true — four fields to **choose** by. The hints themselves, written by the platform
 team for exactly this purpose, come with `sb_traits_for` for the element chosen, or on every
@@ -944,10 +944,33 @@ The server refuses an answer that is not a published record of that collection, 
 another hotel (`400 fields.<name> = "not_an_option"`). `specials.urlParam` preselects from a link
 (`?hotel=rec_…&room=rec_…`) — only record ids, never contact data. All option keys are base-only.
 
+**Aggregates over a relation (start price, capacity, budget).** A record list's base
+`config.recordAggregates` (≤ 4) folds a child collection per row: `{ key, recordCollectionId
+(child), recordRelationField (the child's reference to this list's collection), op:
+"min"|"max"|"count", recordField (child number/integer; "" for count), where: [{ recordField,
+op: "gte", param, per? }], whenNone: "hide"|"show" }`. AURA's start price is `min` of
+`nightly_price_vnd` where `capacity_per_room × rooms ≥ guests`. A tile shows it with
+`recordField: "agg.<key>"` (+ `recordFormat: "money"` → `record.money.agg.<key>`). Visitors set the
+params with a `select` / `filter-radio` of `filterSource: "record"`, `filterAxis: "param.guests"` (ONE
+value); a budget is `filterAxis: "agg.startPrice"` with values like `..3000000`; sort rows are
+`agg.startPrice_asc|_desc`. URL: `?f.record.param.guests~<list>=3&f.record.agg.startPrice~<list>=..3000000&s.<list>=agg.startPrice_asc`.
+Budget, sort and paging run server-side over the whole table. This is capacity by data, never
+availability. A malformed definition publishes the list EMPTY; with `whenNone: "hide"` keep the
+list's empty state.
+
+**Booking estimate on a form.** Element `form-estimate` shows a live line (price × nights ×
+rooms) from base specials `estimateTerms` — exactly one `{kind:"record", node:<record
+form-select>, field:<fld_ price>}`, plus `{kind:"nights", start, end, unit}` and `{kind:"number",
+node, unit}` — and `estimateRules` (`dateRange {start,end,notPast}`, `maxNights {start,end,max}`,
+`capacity {node, field, per, count}`). Node ids are the FORM document's own. The server recomputes
+the total from the published record and ignores any client total; the 200 answer carries
+`estimate: {line, unitCents, totalCents}`; refusals are `estimate_date_past`,
+`estimate_date_order`, `estimate_too_many_nights`, `estimate_over_capacity`.
+
 What the platform does NOT do yet (web_builder `docs/integrations/dynamic-data-contract.md` §9),
-so no tool here claims it: a `gallery` binds nothing; no selected-record popup; no booking
-summary / computed estimate; no filtering a parent by its children (capacity, a per-hotel start
-price); submissions show the record id, not its name.
+so no tool here claims it: a `gallery` binds nothing; no selected-record popup; a nested room
+list does not apply a parent's aggregate conditions; estimate unit words are not translated;
+submissions show the record id, not its name; no link can carry a record id into a URL parameter.
 
 `sb_review` reports a record list naming no collection (`record_list_unsourced`), a tile naming
 no field ID (`record_field_unset`), a `record.*` binding outside a record list
@@ -1525,10 +1548,12 @@ box. Returns `{ findings, fixes, findings_notice? }`, in document order:
 | `empty_text` / `missing_media` | An element left blank — empty space, or a broken image |
 | `static_in_dataset` | An element inside a repeater that renders only what the document authors — the same picture on every product card |
 | `unbound_dataset_element` | A dataset element with no binding at all — it waits for a bound special nothing writes |
-| `dead_binding_source` | A source the renderer never provides — shows the placeholder forever. A `record.*` source counts only as `record.fld_<16 hex>` / `record.html.fld_<16 hex>` / `record.money.fld_<16 hex>` / `record.id` / `record.url`, and only the html form into `specials.boundHtml` |
+| `dead_binding_source` | A source the renderer never provides — shows the placeholder forever. A `record.*` source counts only as `record.fld_<16 hex>` / `record.html.fld_<16 hex>` / `record.money.fld_<16 hex>` / `record.(money.)agg.<key>` / `record.id` / `record.url`, and only the html form into `specials.boundHtml` |
 | `record_list_unsourced` | A `list-dataset` with `datasetSource: "record"` and no `config.recordCollectionId` — no rows are fetched, a visitor sees only the empty state |
 | `hardcoded_dataset` | A `custom-code` script carrying ≥4 flat records with one key set (`const DATA = {hotels:[…]}`) — a data table kept in code; move it to a Collection + record list (maintenance) |
 | `record_option_invalid` | A choice field with `optionSource: "record"` naming no collection, a label that is not a field ID, or a parent that is not a record-sourced `form-select` — it shows only its placeholder or never narrows |
+| `record_aggregate_invalid` | `config.recordAggregates` malformed (the list publishes EMPTY), or a `whenNone: "hide"` aggregate on a list with no empty state |
+| `estimate_invalid` | A `form-estimate` with ≠ 1 record term, or a term/rule naming a node that is not a field of the right type in this form — no total, or a skipped stay rule |
 | `record_filter_invalid` | A filter/sort control aimed at a record list whose axis is not a field ID, whose targets are not record lists of one collection (or include a relation list), whose behaviour is not `filter`, or whose sort values are not `<fieldId>_asc|desc` — it narrows nothing or empties the list |
 | `record_relation_unset` | A record list nested in another record list's row with no `config.recordRelationField` — every parent shows the same rows |
 | `record_relation_orphan` | `config.recordRelationField` set on a list with no record-list row above it, or not a `fld_…` ID — it only ever shows its empty state |

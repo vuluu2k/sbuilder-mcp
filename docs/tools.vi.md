@@ -427,7 +427,7 @@ warnings? }` với `warnings` khoá theo id node.
 | `limit` | number? | Mặc định 8, tối đa 60 |
 | `detail` | boolean? | Thêm `useWhen`, `avoidWhen`, `contentTips` vào mọi kết quả |
 
-Tìm trong chính AI hints của nền tảng trên cả 123 element. Mỗi kết quả là
+Tìm trong chính AI hints của nền tảng trên cả 124 element. Mỗi kết quả là
 `{ type, label, category, description }`, kèm `isContainer: true` / `isRootOnly: true` chỉ
 khi đúng — bốn trường để **chọn**. Bản thân các hint, do đội nền tảng viết đúng cho mục đích
 này, đi kèm `sb_traits_for` của element đã chọn, hoặc kèm mọi kết quả khi `detail: true`;
@@ -922,10 +922,33 @@ không phải record đã publish của collection đó, hoặc phòng của kh�
 (`?hotel=rec_…&room=rec_…`) — chỉ id record, không bao giờ thông tin liên hệ. Mọi khoá option đều
 chỉ-base.
 
+**Aggregate qua quan hệ (giá thấp nhất, sức chứa, ngân sách).** `config.recordAggregates` (base,
+≤ 4) của danh sách record gộp collection con theo từng dòng: `{ key, recordCollectionId (con),
+recordRelationField (reference của con tới collection của danh sách), op: "min"|"max"|"count",
+recordField (number/integer của con; "" khi count), where: [{ recordField, op: "gte", param,
+per? }], whenNone: "hide"|"show" }`. Giá thấp nhất của AURA là `min` của `nightly_price_vnd` với
+`capacity_per_room × rooms ≥ guests`. Tile hiện nó bằng `recordField: "agg.<key>"` (+ `recordFormat:
+"money"` → `record.money.agg.<key>`). Khách đặt tham số bằng `select` / `filter-radio` có
+`filterSource: "record"`, `filterAxis: "param.guests"` (MỘT giá trị); ngân sách là `filterAxis:
+"agg.startPrice"` với giá trị như `..3000000`; dòng sắp xếp `agg.startPrice_asc|_desc`. URL:
+`?f.record.param.guests~<list>=3&f.record.agg.startPrice~<list>=..3000000&s.<list>=agg.startPrice_asc`.
+Ngân sách, sắp xếp và phân trang chạy ở server trên toàn bảng. Đây là sức chứa theo dữ liệu,
+không phải phòng trống. Định nghĩa sai làm danh sách publish RỖNG; với `whenNone: "hide"` hãy giữ
+trạng thái rỗng của danh sách.
+
+**Tổng dự kiến trên form.** Element `form-estimate` hiện dòng tạm tính trực tiếp (giá × số đêm ×
+số phòng) từ specials base `estimateTerms` — đúng một `{kind:"record", node:<form-select lấy từ
+record>, field:<fld_ giá>}`, cùng `{kind:"nights", start, end, unit}` và `{kind:"number", node,
+unit}` — và `estimateRules` (`dateRange {start,end,notPast}`, `maxNights {start,end,max}`,
+`capacity {node, field, per, count}`). Id node là của CHÍNH tài liệu form. Server tự tính lại tổng
+từ record đã publish và bỏ qua tổng client gửi; câu trả lời 200 có `estimate: {line, unitCents,
+totalCents}`; lý do từ chối: `estimate_date_past`, `estimate_date_order`,
+`estimate_too_many_nights`, `estimate_over_capacity`.
+
 Những gì nền tảng CHƯA làm (web_builder `docs/integrations/dynamic-data-contract.md` §9), nên
-không tool nào ở đây tuyên bố có: `gallery` không gắn được; chưa có popup theo record đã chọn; chưa có summary / tổng dự kiến; chưa
-lọc dòng cha theo dòng con (sức chứa, giá thấp nhất mỗi khách sạn); bài gửi hiện id record chứ
-không phải tên.
+không tool nào ở đây tuyên bố có: `gallery` không gắn được; chưa có popup theo record đã chọn; danh sách phòng lồng
+trong card chưa áp điều kiện aggregate của dòng cha; chữ đơn vị của estimate chưa dịch; bài gửi hiện
+id record chứ không phải tên; chưa có link nào ghép được id record vào tham số URL.
 
 `sb_review` báo danh sách record không chỉ collection nào (`record_list_unsourced`), tile không
 có ID field (`record_field_unset`), binding `record.*` nằm ngoài danh sách record
@@ -1497,10 +1520,12 @@ tài liệu:
 | `empty_text` / `missing_media` | Element bỏ trống — khoảng trắng, hoặc ảnh vỡ |
 | `static_in_dataset` | Một element nằm trong repeater nhưng chỉ render nội dung do tài liệu ghi — cùng một tấm ảnh trên mọi thẻ sản phẩm |
 | `unbound_dataset_element` | Element dataset không có binding nào — nó chờ một `bound…` special mà không ai ghi |
-| `dead_binding_source` | Nguồn renderer không cung cấp — hiện placeholder mãi mãi. Nguồn `record.*` chỉ hợp lệ ở dạng `record.fld_<16 hex>` / `record.html.fld_<16 hex>` / `record.money.fld_<16 hex>` / `record.id` / `record.url`, và chỉ dạng html được vào `specials.boundHtml` |
+| `dead_binding_source` | Nguồn renderer không cung cấp — hiện placeholder mãi mãi. Nguồn `record.*` chỉ hợp lệ ở dạng `record.fld_<16 hex>` / `record.html.fld_<16 hex>` / `record.money.fld_<16 hex>` / `record.(money.)agg.<key>` / `record.id` / `record.url`, và chỉ dạng html được vào `specials.boundHtml` |
 | `record_list_unsourced` | `list-dataset` có `datasetSource: "record"` mà không có `config.recordCollectionId` — không dòng nào được lấy, khách chỉ thấy trạng thái rỗng |
 | `hardcoded_dataset` | Script của `custom-code` chứa ≥4 bản ghi phẳng cùng một bộ khoá (`const DATA = {hotels:[…]}`) — bảng dữ liệu nằm trong code; chuyển sang Collection + danh sách record (maintenance) |
 | `record_option_invalid` | Trường lựa chọn có `optionSource: "record"` mà không chỉ collection, nhãn không phải ID field, hoặc cha không phải `form-select` lấy từ record — chỉ hiện placeholder hoặc không bao giờ thu hẹp |
+| `record_aggregate_invalid` | `config.recordAggregates` sai (danh sách publish RỖNG), hoặc aggregate `whenNone: "hide"` trên danh sách không có trạng thái rỗng |
+| `estimate_invalid` | `form-estimate` có số term record ≠ 1, hoặc term/rule trỏ vào node không phải field đúng loại trong form này — không có tổng, hoặc bỏ qua quy tắc ngày ở |
 | `record_filter_invalid` | Control lọc/sắp xếp nhắm vào danh sách record mà axis không phải ID field, target không phải danh sách record của MỘT collection (hoặc có danh sách quan hệ), behaviour không phải `filter`, hoặc giá trị sort không theo `<fieldId>_asc|desc` — không lọc được gì hoặc làm rỗng danh sách |
 | `record_relation_unset` | Danh sách record lồng trong dòng của một danh sách record khác mà không có `config.recordRelationField` — mọi dòng cha hiện cùng một tập dòng |
 | `record_relation_orphan` | Có `config.recordRelationField` nhưng không có dòng record nào bên trên, hoặc không phải ID `fld_…` — chỉ bao giờ hiện trạng thái rỗng |

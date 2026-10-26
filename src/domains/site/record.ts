@@ -17,7 +17,71 @@ export const RECORD_FIELD_ID = /^fld_[0-9a-f]{16}$/;
  * `record.id` — the row's own record id — or `record.url` — `/records/<id>`, emitted
  * only when the row's collection has a published record detail page (recordContext.ts).
  */
-export const RECORD_SOURCE = /^record\.(?:id|url|(?:html\.|money\.)?fld_[0-9a-f]{16})$/;
+export const RECORD_SOURCE =
+  /^record\.(?:id|url|(?:html\.|money\.)?fld_[0-9a-f]{16}|(?:money\.)?agg\.[a-z][a-zA-Z0-9_]{0,31})$/;
+
+/** An aggregate key — recordAggregates.ts RECORD_AGG_KEY. A tile names it as `agg.<key>`. */
+export const RECORD_AGG_KEY = /^[a-z][a-zA-Z0-9_]{0,31}$/;
+const RECORD_PARAM_NAME = /^[a-z][a-z0-9_]{0,23}$/;
+const COLLECTION_ID = /^col_[0-9a-f]{16}$/;
+export const recordAggKeyOf = (axis: string): string => {
+  const key = axis.startsWith('agg.') ? axis.slice(4) : '';
+  return RECORD_AGG_KEY.test(key) ? key : '';
+};
+
+export interface RecordAggregate {
+  key: string;
+  op: string;
+  where: Array<{ param: string; per?: string }>;
+  whenNone: string;
+}
+
+/**
+ * `config.recordAggregates` read the way the platform does
+ * (recordAggregates.ts readRecordAggregates): [] for none, null when MALFORMED —
+ * the server then refuses the list and it publishes EMPTY.
+ */
+export function readRecordAggregates(raw: unknown): RecordAggregate[] | null {
+  if (raw === undefined || raw === null) return [];
+  if (!Array.isArray(raw) || raw.length > 4) return null;
+  const s = (v: unknown) => (typeof v === 'string' ? v : '');
+  const seen = new Set<string>();
+  const out: RecordAggregate[] = [];
+  for (const a of raw as Record<string, unknown>[]) {
+    if (!a || typeof a !== 'object') return null;
+    const op = s(a.op);
+    const field = s(a.recordField);
+    const whenNone = a.whenNone == null || a.whenNone === '' ? 'hide' : s(a.whenNone);
+    if (
+      !RECORD_AGG_KEY.test(s(a.key)) ||
+      seen.has(s(a.key)) ||
+      !['min', 'max', 'count'].includes(op) ||
+      !COLLECTION_ID.test(s(a.recordCollectionId)) ||
+      !RECORD_FIELD_ID.test(s(a.recordRelationField)) ||
+      (op === 'count' ? field !== '' : !RECORD_FIELD_ID.test(field)) ||
+      !['hide', 'show'].includes(whenNone)
+    ) {
+      return null;
+    }
+    const where = a.where ?? [];
+    if (!Array.isArray(where) || where.length > 4) return null;
+    const conds: RecordAggregate['where'] = [];
+    for (const c of where as Record<string, unknown>[]) {
+      const per = s(c?.per);
+      if (!c || !RECORD_FIELD_ID.test(s(c.recordField)) || c.op !== 'gte' || !RECORD_PARAM_NAME.test(s(c.param)) || (per !== '' && !RECORD_PARAM_NAME.test(per))) {
+        return null;
+      }
+      conds.push({ param: s(c.param), ...(per ? { per } : {}) });
+    }
+    seen.add(s(a.key));
+    out.push({ key: s(a.key), op, where: conds, whenNone });
+  }
+  return out;
+}
+
+/** The visitor params a list's aggregates read (`param.<name>` axes it accepts). */
+export const recordAggregateParams = (aggs: RecordAggregate[]): Set<string> =>
+  new Set(aggs.flatMap((a) => a.where.flatMap((c) => (c.per ? [c.param, c.per] : [c.param]))));
 
 /** The field types `record.money.<fid>` formats — recordContext.ts RECORD_MONEY_FIELD_TYPES. */
 export const RECORD_MONEY_TYPES = new Set(['number', 'integer']);
@@ -41,8 +105,9 @@ export const isRecordSource = (s: string): boolean => s.startsWith('record.');
 export function recordTileBindings(type: string, config: Record<string, unknown>, rows: unknown[]): unknown[] {
   if (!RECORD_TILES.has(type)) return rows;
   const fid = config.recordField;
-  const ok = typeof fid === 'string' && RECORD_FIELD_ID.test(fid);
   const html = type === 'text-dataset' && config.recordFieldType === 'richtext';
+  // An aggregate (`agg.<key>`) is a number on the row — datasetBindings.ts recordSource.
+  const ok = typeof fid === 'string' && (RECORD_FIELD_ID.test(fid) || (!html && recordAggKeyOf(fid) !== ''));
   // datasetBindings.ts isRecordMoney: a stale recordFormat on any other type is ignored.
   const money =
     type === 'text-dataset' && config.recordFormat === 'money' && RECORD_MONEY_TYPES.has(String(config.recordFieldType));
@@ -103,6 +168,8 @@ export function recordFieldProblem(source: string, scope: Array<{ collectionId: 
     return `"${source}" sits in no record-list row and this is no record detail page — only a list-dataset with datasetSource "record" (or a relation list inside one), or a page of type "record" attached to a collection, supplies a record, so it would render its placeholder.`;
   }
   if (source === 'record.id' || source === 'record.url') return undefined;
+  // An aggregate is checked against the list's recordAggregates (sb_review), not a field.
+  if (/^record\.(?:money\.)?agg\./.test(source)) return undefined;
   const html = source.startsWith('record.html.');
   const money = source.startsWith('record.money.');
   const fid = source.slice(html ? 12 : money ? 13 : 7);

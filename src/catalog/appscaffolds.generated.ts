@@ -386,6 +386,7 @@ export const APP_SCAFFOLDS: Record<
               "recordFilterField": "",
               "recordFilterValue": "",
               "recordRelationField": "",
+              "recordAggregates": [],
               "itemsPerRow": 4,
               "collectionType": "all_products",
               "collectionId": "all_products",

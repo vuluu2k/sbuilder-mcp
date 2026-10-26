@@ -156,6 +156,15 @@ export const FIX: Record<string, string> = {
     '{ "optionSource": "record", "recordCollectionId": "col_…", "recordLabelField": "fld_…" } (base). A dependent ' +
     'select adds "recordParentNode": "<parent form-select id>" and "recordParentField": "<reference fld_… of this ' +
     'collection pointing at the parent\'s>". Values are record ids; prefill with specials.urlParam.',
+  record_aggregate_invalid:
+    'Fix config.recordAggregates on "<id>" (base): each { key, recordCollectionId (child), recordRelationField ' +
+    '(its reference to this list\'s collection), op min|max|count, recordField (child number/integer; "" for count), ' +
+    'where: [{ recordField, op: "gte", param, per? }], whenNone hide|show } — and keep the list\'s list-empty.',
+  estimate_invalid:
+    'Point its operands at THIS form\'s nodes: sb_set id "<id>", namespace specials, base, keys { "estimateTerms": ' +
+    '[{kind:"record", node:<record form-select>, field:<fld_ price>}, {kind:"nights", start:<date>, end:<date>, unit:"đêm"}, ' +
+    '{kind:"number", node:<form-number>, unit:"phòng"}], "estimateRules": [{kind:"dateRange", start, end, notPast:true}, ' +
+    '{kind:"maxNights", start, end, max:30}, {kind:"capacity", node, field:<fld_ capacity>, per:<rooms>, count:<guests>}] }.',
   record_filter_invalid:
     'Aim it at ONE collection\'s record list(s) and a field: sb_set id "<id>", namespace specials, keys ' +
     '{ "filterSource": "record", "filterAxis": "fld_…", "filterTargets": ["<list id>"], "filterBehavior": "filter" } — ' +
