@@ -6,6 +6,18 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.92.0] - 2026-10-26
+
+### Added
+- `sb_bind` accepts `record.url` and, on a page of type `record`, reads the collection linked through page-links so `record.*` bindings work outside any list, refusing `record.url` while the collection has no detail page.
+- `sb_review` reports `record_option_invalid` for form-select, radio and checkbox controls with `optionSource: "record"` that lack a collection, use a label that is not an ID field, or have a parent that is not a record-sourced form-select.
+- Form controls accept `optionSource: "record"` to take their options from a collection, and form-select supports `specials.urlParam` prefill such as `?hotel=rec_…&room=rec_…`.
+
+### Changed
+- `sb_review` no longer reports `no_data_context` or `record_relation_orphan` for nodes outside a list on a record page.
+- `sb_set` no longer writes `optionSource`, `recordLabelField`, `recordParentField` or `recordParentNode` per breakpoint, because they are now base-only config keys.
+- The API catalog is synced with web_builder v1.0.172 and gains the `record` page type, served at `/records/<id>`.
+
 ## [0.91.0] - 2026-10-23
 
 ### Added

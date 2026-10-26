@@ -6,6 +6,18 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.92.0] - 2026-10-26
+
+### Added
+- `sb_bind` nhận `record.url` và, trên trang loại `record`, đọc collection gắn qua page-links để bind `record.*` ngoài mọi danh sách, đồng thời từ chối `record.url` khi collection chưa có trang chi tiết.
+- `sb_review` báo `record_option_invalid` cho control form-select, radio và checkbox có `optionSource: "record"` thiếu collection, dùng nhãn không phải ID field, hoặc có cha không phải form-select lấy từ record.
+- Các control form nhận `optionSource: "record"` để lấy option từ collection, và form-select hỗ trợ điền sẵn qua `specials.urlParam` như `?hotel=rec_…&room=rec_…`.
+
+### Changed
+- `sb_review` không còn báo `no_data_context` hay `record_relation_orphan` cho node nằm ngoài danh sách trên trang record.
+- `sb_set` không còn ghi `optionSource`, `recordLabelField`, `recordParentField` hay `recordParentNode` theo breakpoint, vì chúng nay là khoá config base-only.
+- Catalog API được đồng bộ với web_builder v1.0.172 và thêm loại trang `record`, phục vụ tại `/records/<id>`.
+
 ## [0.91.0] - 2026-10-23
 
 ### Added
