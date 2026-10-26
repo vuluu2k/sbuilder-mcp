@@ -4,7 +4,7 @@
 export const TRANSLATION_SOURCE = {
   "elements": 68,
   "pairs": 190,
-  "neverKeys": 182,
+  "neverKeys": 183,
   "entityTypes": 12
 } as const;
 
@@ -444,6 +444,7 @@ export const NEVER_TRANSLATED: string[] = [
   "hideWhenEmpty",
   "hoverHostDepth",
   "href",
+  "hrefParams",
   "htmlTag",
   "icon",
   "iconEnabled",

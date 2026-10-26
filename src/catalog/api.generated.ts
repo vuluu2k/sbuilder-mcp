@@ -29693,7 +29693,8 @@ export const API_DEFINITIONS: Record<string, unknown> = {
       "select",
       "integer",
       "reference",
-      "gallery"
+      "gallery",
+      "tags"
     ],
     "x-enum-varnames": [
       "TypeText",
@@ -29706,7 +29707,8 @@ export const API_DEFINITIONS: Record<string, unknown> = {
       "TypeSelect",
       "TypeInteger",
       "TypeReference",
-      "TypeGallery"
+      "TypeGallery",
+      "TypeTags"
     ]
   },
   "github_com_webbuilder_server_internal_collections.UpsertItem": {

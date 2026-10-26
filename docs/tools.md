@@ -835,7 +835,8 @@ field and skips anything else.
 
 A **record** source (a merchant Collection's field) is the one no list holds, because it names
 the field by ID: `record.fld_<16 hex>`, or `record.html.fld_<16 hex>` for a richtext field, plus
-`record.id` — the row's own record id. Any other `record.*` is refused (a field KEY binds nothing),
+`record.id` — the row's own record id — and `record.ref.<reference fld_>.<target fld_>` (or
+`record.money.ref.…`), a field of the record a reference names. Any other `record.*` is refused (a field KEY binds nothing),
 and so is `record.<fid>` into `specials.boundHtml` — that sink takes only the sanitised
 `record.html.<fid>` (`schema/src/rawSinkBindings.ts`). Before writing, `sb_bind` reads the fields
 of every collection the node's row can see (`GET …/collections/{id}/fields`) and refuses a field
@@ -967,17 +968,58 @@ the total from the published record and ignores any client total; the 200 answer
 `estimate: {line, unitCents, totalCents}`; refusals are `estimate_date_past`,
 `estimate_date_order`, `estimate_too_many_nights`, `estimate_over_capacity`.
 
+**Tags fields (multi-select).** Field type `tags` needs `options` (1..100, unique, no comma); a
+value is a JSON array of options or one comma-separated string (`"Hồ bơi, Bữa sáng"`), stored in
+`options` order; a CSV cell is `", "`-joined; a tile prints it joined. A field's `type` is immutable,
+so migrating AURA's comma-joined `amenities` text means a NEW `amenity_tags` field plus an upsert of
+the old text as is. Amenities filter: a `filter-checkbox` with `filterSource: "record"`,
+`filterAxis: "<amenity_tags fld_…>"`, `filterValues` = the options, and `filterMatch: "all"` for
+"has every ticked amenity" (only a tags axis honours `all`). URL:
+`?f.record.<fld>~<list>=H%E1%BB%93%20b%C6%A1i,B%E1%BB%AFa%20s%C3%A1ng&fm.record.<fld>~<list>=all`.
+
+**A referenced record's field.** A tile shows a field of the record one of its row's `reference`
+fields names, one hop: `config.recordField: "ref.<reference fld_>.<target fld_>"` (base),
+`recordFieldType` = the TARGET's type (text select url date number integer boolean tags), optional
+`recordFormat: "money"` on a number → `record.ref.<a>.<b>` / `record.money.ref.<a>.<b>` into
+`specials.boundText`. AURA's hotel card shows its destination's name with `recordField:
+"ref.<hotels.destination fld>.<destinations.name fld>"`. `sb_bind` reads both collections and
+refuses a first id that is not a reference of the row's collection or a second that is not a field
+of its `refCollectionId`. A draft target binds nothing — the tile keeps its text.
+
+**Record link parameters.** On any element that renders `specials.href`, base `specials.hrefParams:
+[{ name, source }]` appends the row's values to a same-site path: `name` `^[a-z][a-z0-9_]{0,23}$`,
+unique, not `lang`/`s`/`t`/`lesson`; `source` exactly `record.id`, `record.url` or
+`record.fld_<16 hex>`; ≤ 8. AURA's room card button, in the hotel page's rooms relation list:
+`sb_event` `go_to_url {url:"/yeu-cau-dat-phong"}` (which writes `href`), then `sb_set` specials
+`{ "hrefParams": [{"name":"hotel","source":"record.<rooms.hotel fld>"},{"name":"room","source":"record.id"}] }`
+→ `/yeu-cau-dat-phong?hotel=rec_…&room=rec_…`, which the booking form's record selects
+(`specials.urlParam` `hotel` / `room`) preselect. Params apply only under ONE Open page / Go to URL
+click (or an href with no events) on a node with no purchase binding. Pass ids — a query is visible
+in the address bar and logs.
+
+**Visitor favorites.** Per browser and per collection, never an account feature. A heart is a
+`button` inside the record list's card (or on a record page) with click `toggle_record_favorite {}`
+and `specials.icon: "heart"` plus a short label; not an `icon`. A tab bar is two buttons with
+`show_record_favorites { targetId: "<record list id — not a relation list>", view: "favorites",
+showCount: true }` and `{ targetId, view: "all" }`; give the list an empty state. To look at it as
+a visitor: `?f.record.id~<list>=rec_a,rec_b` (≤ 50 ids) or `?f.record.id~<list>=none`.
+
 What the platform does NOT do yet (web_builder `docs/integrations/dynamic-data-contract.md` §9),
 so no tool here claims it: a `gallery` binds nothing; no selected-record popup; a nested room
 list does not apply a parent's aggregate conditions; estimate unit words are not translated;
-submissions show the record id, not its name; no link can carry a record id into a URL parameter.
+submissions show the record id, not its name.
 
 `sb_review` reports a record list naming no collection (`record_list_unsourced`), a tile naming
 no field ID (`record_field_unset`), a `record.*` binding outside a record list
 (`no_data_context`), a nested record list with no `recordRelationField` (`record_relation_unset`
 — every parent would show the same rows), a relation key with no record row above it or not a
 field id (`record_relation_orphan`), and a relation list with no empty state
-(`record_relation_no_empty`). It does NOT check that a tile's field ID exists in the collection
+(`record_relation_no_empty`); link parameters the renderer drops (`href_params_invalid` — the
+grammar, a duplicate, an href that is not a same-site path), that nothing resolves
+(`href_params_unresolved` — no record row, not a record page) or that are not applied
+(`href_params_stranded` — a chain, another action, a purchase binding); and a heart outside any
+record row or a favorites tab aimed at anything but a non-relation record list
+(`record_favorite_invalid`). It does NOT check that a tile's field ID exists in the collection
 — that needs a fetch per collection on every review; `sb_bind` does that check at write time.
 
 
@@ -1548,7 +1590,7 @@ box. Returns `{ findings, fixes, findings_notice? }`, in document order:
 | `empty_text` / `missing_media` | An element left blank — empty space, or a broken image |
 | `static_in_dataset` | An element inside a repeater that renders only what the document authors — the same picture on every product card |
 | `unbound_dataset_element` | A dataset element with no binding at all — it waits for a bound special nothing writes |
-| `dead_binding_source` | A source the renderer never provides — shows the placeholder forever. A `record.*` source counts only as `record.fld_<16 hex>` / `record.html.fld_<16 hex>` / `record.money.fld_<16 hex>` / `record.(money.)agg.<key>` / `record.id` / `record.url`, and only the html form into `specials.boundHtml` |
+| `dead_binding_source` | A source the renderer never provides — shows the placeholder forever. A `record.*` source counts only as `record.fld_<16 hex>` / `record.html.fld_<16 hex>` / `record.money.fld_<16 hex>` / `record.(money.)agg.<key>` / `record.(money.)ref.<fld>.<fld>` / `record.id` / `record.url`, and only the html form into `specials.boundHtml` |
 | `record_list_unsourced` | A `list-dataset` with `datasetSource: "record"` and no `config.recordCollectionId` — no rows are fetched, a visitor sees only the empty state |
 | `hardcoded_dataset` | A `custom-code` script carrying ≥4 flat records with one key set (`const DATA = {hotels:[…]}`) — a data table kept in code; move it to a Collection + record list (maintenance) |
 | `record_option_invalid` | A choice field with `optionSource: "record"` naming no collection, a label that is not a field ID, or a parent that is not a record-sourced `form-select` — it shows only its placeholder or never narrows |
@@ -1558,7 +1600,11 @@ box. Returns `{ findings, fixes, findings_notice? }`, in document order:
 | `record_relation_unset` | A record list nested in another record list's row with no `config.recordRelationField` — every parent shows the same rows |
 | `record_relation_orphan` | `config.recordRelationField` set on a list with no record-list row above it, or not a `fld_…` ID — it only ever shows its empty state |
 | `record_relation_no_empty` | A relation list with no `config.emptyStateId` — a parent with no children renders placeholder cards |
-| `record_field_unset` | A record tile (`text-dataset` / `collection-media` with `datasetSource: "record"`) whose `config.recordField` is empty or not a `fld_…` ID — a field KEY binds nothing; it renders its placeholder on every row |
+| `record_field_unset` | A record tile (`text-dataset` / `collection-media` with `datasetSource: "record"`) whose `config.recordField` is empty or not a `fld_…` ID (or `agg.<key>` / `ref.<fld>.<fld>`) — a field KEY binds nothing; it renders its placeholder on every row |
+| `href_params_invalid` | `specials.hrefParams` entries the renderer drops — a name outside `^[a-z][a-z0-9_]{0,23}$` or reserved (`lang` `s` `t` `lesson`), a duplicate, a source other than `record.id` / `record.url` / `record.fld_…`, more than 8 — or an `href` that is not a same-site path, which never gets params |
+| `href_params_unresolved` | `hrefParams` on a node in no record-list row and not on a record page — nothing supplies a value |
+| `href_params_stranded` | `hrefParams` the renderer does not apply: the click is not ONE Open page / Go to URL action, or the node is purchase-bound |
+| `record_favorite_invalid` | A `toggle_record_favorite` heart outside any record row / record page, or a `show_record_favorites` tab whose `targetId` is not a non-relation record list or whose `view` is not `favorites` / `all` — it does nothing |
 | `dead_binding_field` | A binding field outside `specials` — stored, published, and ignored |
 | `unknown_element` | A type the catalog does not know; run `npm run codegen` |
 | `unlinked_form` | A `form` naming no form — composes nothing and publishes an EMPTY BOX. The platform stays deliberately quiet about this one |

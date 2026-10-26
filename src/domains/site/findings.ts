@@ -180,6 +180,21 @@ export const FIX: Record<string, string> = {
   record_relation_no_empty:
     'Give it an empty state: sb_add a "list-empty" into id "<id>" (it becomes config.emptyStateId), ' +
     'e.g. a short "Chưa có dữ liệu" line.',
+  href_params_invalid:
+    'Rewrite them: sb_set id "<id>", namespace specials, keys { "href": "/<same-site path>", "hrefParams": ' +
+    '[{ "name": "hotel", "source": "record.fld_…" }, { "name": "room", "source": "record.id" }] } — name ' +
+    '^[a-z][a-z0-9_]{0,23}$, unique, not lang/s/t/lesson; source record.id | record.url | record.fld_<16 hex>; ≤ 8. ' +
+    'Pass ids, never names, emails or phones — a query is visible in the address bar and logs.',
+  href_params_unresolved:
+    'Move it inside a record list\'s card (sb_move), use it on a record detail page, or drop them: sb_set id "<id>", ' +
+    'namespace specials, keys { "hrefParams": [] }.',
+  href_params_stranded:
+    'Give it ONE click action — open_page or go_to_url (sb_event) — and no purchase binding, or drop them: ' +
+    'sb_set id "<id>", namespace specials, keys { "hrefParams": [] }.',
+  record_favorite_invalid:
+    'A heart is a button inside a record list\'s card (or on a record page) with click toggle_record_favorite {}; a tab ' +
+    'is a button with show_record_favorites { "targetId": "<record list id, not a relation list>", "view": ' +
+    '"favorites" | "all", "showCount": true } (sb_event id "<id>"). Give the list a list-empty.',
   record_field_unset:
     'Name the field by its ID: sb_set id "<id>", namespace config, keys { "recordField": "fld_…", ' +
     '"recordFieldType": "<the field\'s type>" } — ids and types are on GET /api/sites/{siteId}/collections/{id}/fields. ' +

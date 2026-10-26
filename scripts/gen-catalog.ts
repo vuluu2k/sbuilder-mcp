@@ -338,6 +338,10 @@ function recordBindingProbes(
     ['text-dataset', { datasetSource: 'record', recordField: fid, recordFieldType: 'text', kind: 'description' }],
     ['text-dataset', { datasetSource: 'record', recordField: 'title', recordFieldType: 'text' }],
     ['text-dataset', { datasetSource: 'record', recordField: 'fld_0123456789ABCDEF', recordFieldType: 'richtext' }],
+    // A referenced record's field (contract §7.8): one hop, money on a number, never rich.
+    ['text-dataset', { datasetSource: 'record', recordField: `ref.${fid}.${fid}`, recordFieldType: 'text' }],
+    ['text-dataset', { datasetSource: 'record', recordField: `ref.${fid}.${fid}`, recordFieldType: 'integer', recordFormat: 'money' }],
+    ['text-dataset', { datasetSource: 'record', recordField: `ref.${fid}.${fid}`, recordFieldType: 'richtext' }],
     ['collection-media', { datasetSource: 'record', recordField: fid }],
     ['collection-media', { datasetSource: 'record', recordField: fid, recordFieldType: 'richtext' }],
     ['collection-media', { datasetSource: 'record', recordField: '' }],

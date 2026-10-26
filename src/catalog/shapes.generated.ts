@@ -1539,7 +1539,7 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
       },
       {
         "name": "type",
-        "type": "\"text\" | \"richtext\" | \"number\" | \"boolean\" | \"image\" | \"url\" | \"date\" | \"select\" | \"integer\" | \"reference\" | \"gallery\""
+        "type": "\"text\" | \"richtext\" | \"number\" | \"boolean\" | \"image\" | \"url\" | \"date\" | \"select\" | \"integer\" | \"reference\" | \"gallery\" | \"tags\""
       },
       {
         "name": "required",
@@ -1586,7 +1586,7 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
       },
       {
         "name": "type",
-        "type": "\"text\" | \"richtext\" | \"number\" | \"boolean\" | \"image\" | \"url\" | \"date\" | \"select\" | \"integer\" | \"reference\" | \"gallery\""
+        "type": "\"text\" | \"richtext\" | \"number\" | \"boolean\" | \"image\" | \"url\" | \"date\" | \"select\" | \"integer\" | \"reference\" | \"gallery\" | \"tags\""
       },
       {
         "name": "required",

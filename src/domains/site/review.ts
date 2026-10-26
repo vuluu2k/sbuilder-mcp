@@ -9,7 +9,10 @@ import { ELEMENTS, BINDING_SOURCES, BOUND_SPECIALS , FIRST_CHILD_ONLY, SATELLITE
 import type { PageDoc } from './document.js';
 import { fill } from './findings.js';
 import {
+  hrefParamProblems,
   isRecordSource,
+  isSameSitePath,
+  parseRecordRefAxis,
   readRecordAggregates,
   recordAggKeyOf,
   recordAggregateParams,
@@ -17,9 +20,10 @@ import {
   RECORD_HTML_SOURCE,
   RECORD_SOURCE,
   RECORD_TILES,
+  recordScope,
 } from './record.js';
 import { formFieldFindings } from './formdoc.js';
-import { deadNavigation, liveEventTable, PAYLOAD_NEEDS, type NodeEventLike } from './navhref.js';
+import { deadNavigation, hasPurchaseBinding, liveEventTable, PAYLOAD_NEEDS, soleNavigationClick, type NodeEventLike } from './navhref.js';
 import { unknownValueNote, unknownWriteNote, vocabularyFor, vocabularyForWrite } from './vocabulary.js';
 import { iconNote } from './icons.js';
 
@@ -863,6 +867,61 @@ export function reviewDesign(
           });
         }
       }
+      // RECORD LINK PARAMETERS and VISITOR FAVORITES (web_builder v1.0.174, contract §7.6/§7.7).
+      // Both read the record of the row they sit in — or the page's, on a record page.
+      {
+        const sp = (n.specials ?? {}) as Record<string, unknown>;
+        const nodeAt = (x: string) => d.nodes[x] as never;
+        let list: string | null | undefined = n.data.parent;
+        while (list && d.nodes[list] && d.nodes[list].data.type !== 'list-dataset') list = d.nodes[list].data.parent;
+        const hasRecord = recordScope(nodeAt, id).length > 0 || (opts.pageType === 'record' && !list);
+        const evs = (n as unknown as { events?: NodeEventLike[] }).events ?? [];
+        const binds = (n as { bindings?: Array<{ id?: string; field?: string }> }).bindings ?? [];
+        const params = sp.hrefParams;
+        if (Array.isArray(params) ? params.length > 0 : params !== undefined) {
+          const why = hrefParamProblems(params);
+          // A bound path (record.url) is the platform's own same-site address.
+          const boundHref = binds.some((b) => b?.field === 'specials.href');
+          if (!boundHref && !isSameSitePath(String(sp.href ?? '')))
+            why.push(`specials.href "${String(sp.href ?? '')}" is not a same-site path ("/…"), so no param is ever added`);
+          if (why.length)
+            out.push({ code: 'href_params_invalid', nodeId: id, type, problem: `Link parameters the renderer drops: ${why.join('; ')}.`, fix: fill('href_params_invalid', { id }) });
+          if (!hasRecord)
+            out.push({
+              code: 'href_params_unresolved',
+              nodeId: id,
+              type,
+              problem: 'specials.hrefParams on a node in no record-list row and not on a record page — no record supplies a value, so the link carries no params.',
+              fix: fill('href_params_unresolved', { id }),
+            });
+          const purchase = hasPurchaseBinding(binds);
+          if (purchase || (evs.some((e) => e?.name === 'click') && !soleNavigationClick(evs, false)))
+            out.push({
+              code: 'href_params_stranded',
+              nodeId: id,
+              type,
+              problem: `specials.hrefParams are not applied: ${purchase ? 'the node is purchase-bound' : 'its click is not ONE Open page / Go to URL action'}, so the href never renders as the link.`,
+              fix: fill('href_params_stranded', { id }),
+            });
+        }
+        for (const ev of evs) {
+          if (ev?.name !== 'click') continue;
+          const why: string[] = [];
+          if (ev.action === 'toggle_record_favorite' && !hasRecord)
+            why.push('the heart sits in no record-list row and not on a record page, so it publishes nothing');
+          if (ev.action === 'show_record_favorites') {
+            const p = ev.payload ?? {};
+            const t = String(p.targetId ?? '');
+            const tc = (d.nodes[t] as { config?: Record<string, unknown> } | undefined)?.config;
+            if (t && (d.nodes[t]?.data.type !== 'list-dataset' || tc?.datasetSource !== 'record'))
+              why.push(`targetId "${t}" is not a record list on this page`);
+            else if (t && String(tc?.recordRelationField ?? '')) why.push(`targetId "${t}" is a relation list, which ignores favorites`);
+            if (p.view !== 'favorites' && p.view !== 'all') why.push(`view "${String(p.view)}" is neither "favorites" nor "all"`);
+          }
+          if (why.length)
+            out.push({ code: 'record_favorite_invalid', nodeId: id, type, problem: `Its "${String(ev.action)}" does nothing: ${why.join('; ')}.`, key: String(ev.action), fix: fill('record_favorite_invalid', { id }) });
+        }
+      }
       if (RECORD_TILES.has(type) && cfg.datasetSource === 'record') {
         const fid = cfg.recordField;
         const aggKey = typeof fid === 'string' ? recordAggKeyOf(fid) : '';
@@ -881,7 +940,7 @@ export function reviewDesign(
             problem: `config.recordField "${String(fid)}" names an aggregate its record list does not define in config.recordAggregates — it renders its placeholder on every row.`,
             fix: fill('record_field_unset', { id }),
           });
-        } else if (!aggKey && (typeof fid !== 'string' || !RECORD_FIELD_ID.test(fid))) {
+        } else if (!aggKey && (typeof fid !== 'string' || (!RECORD_FIELD_ID.test(fid) && !parseRecordRefAxis(fid)))) {
           out.push({
             code: 'record_field_unset',
             nodeId: id,

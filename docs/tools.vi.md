@@ -811,7 +811,8 @@ mãi mãi — `applyBindings` đọc namespace từ field rồi bỏ qua mọi t
 
 Nguồn **record** (một field trong Collection của merchant) là nguồn duy nhất không danh sách nào
 chứa được, vì nó gọi field bằng ID: `record.fld_<16 hex>`, hoặc `record.html.fld_<16 hex>` cho
-field richtext, cùng `record.id` — ID của chính record trên dòng đó. Mọi `record.*` khác đều bị
+field richtext, cùng `record.id` — ID của chính record trên dòng đó — và `record.ref.<fld_ reference>.<fld_ đích>`
+(hoặc `record.money.ref.…`), field của record mà một reference trỏ tới. Mọi `record.*` khác đều bị
 từ chối (KEY của field không gắn được gì), và `record.<fid>` vào `specials.boundHtml` cũng vậy —
 sink đó chỉ nhận `record.html.<fid>` đã được làm sạch (`schema/src/rawSinkBindings.ts`). Trước
 khi ghi, `sb_bind` đọc field của mọi collection mà dòng chứa node nhìn thấy
@@ -945,17 +946,58 @@ từ record đã publish và bỏ qua tổng client gửi; câu trả lời 200 
 totalCents}`; lý do từ chối: `estimate_date_past`, `estimate_date_order`,
 `estimate_too_many_nights`, `estimate_over_capacity`.
 
+**Field tags (chọn nhiều).** Kiểu field `tags` bắt buộc có `options` (1..100, không trùng, không
+dấu phẩy); giá trị là mảng JSON các option hoặc một chuỗi cách nhau bằng dấu phẩy (`"Hồ bơi, Bữa
+sáng"`), lưu theo thứ tự `options`; ô CSV nối bằng `", "`; tile in ra dạng nối. `type` của field
+không đổi được, nên chuyển cột text `amenities` của AURA sang tags nghĩa là tạo field MỚI
+`amenity_tags` rồi upsert nguyên văn text cũ. Bộ lọc tiện nghi: `filter-checkbox` có `filterSource:
+"record"`, `filterAxis: "<fld_… của amenity_tags>"`, `filterValues` = các option, và `filterMatch:
+"all"` cho "có đủ mọi tiện nghi đã tick" (chỉ trục tags tôn trọng `all`). URL:
+`?f.record.<fld>~<list>=H%E1%BB%93%20b%C6%A1i,B%E1%BB%AFa%20s%C3%A1ng&fm.record.<fld>~<list>=all`.
+
+**Field của record được tham chiếu.** Tile hiện một field của record mà một field `reference` của
+dòng trỏ tới, đúng một bước: `config.recordField: "ref.<fld_ reference>.<fld_ đích>"` (base),
+`recordFieldType` = kiểu của field ĐÍCH (text select url date number integer boolean tags),
+`recordFormat: "money"` tuỳ chọn với số → `record.ref.<a>.<b>` / `record.money.ref.<a>.<b>` vào
+`specials.boundText`. Card khách sạn AURA hiện tên điểm đến bằng `recordField:
+"ref.<fld hotels.destination>.<fld destinations.name>"`. `sb_bind` đọc cả hai collection và từ chối
+id thứ nhất không phải reference của collection dòng, hoặc id thứ hai không phải field của
+`refCollectionId` của nó. Record đích còn nháp thì không gắn gì — tile giữ chữ của nó.
+
+**Tham số liên kết của record.** Trên mọi element render `specials.href`, `specials.hrefParams:
+[{ name, source }]` (base) ghép giá trị của dòng vào một đường dẫn cùng site: `name`
+`^[a-z][a-z0-9_]{0,23}$`, không trùng, không phải `lang`/`s`/`t`/`lesson`; `source` đúng
+`record.id`, `record.url` hoặc `record.fld_<16 hex>`; ≤ 8. Nút card phòng AURA, trong danh sách quan
+hệ phòng của trang khách sạn: `sb_event` `go_to_url {url:"/yeu-cau-dat-phong"}` (ghi luôn `href`),
+rồi `sb_set` specials `{ "hrefParams": [{"name":"hotel","source":"record.<fld rooms.hotel>"},{"name":"room","source":"record.id"}] }`
+→ `/yeu-cau-dat-phong?hotel=rec_…&room=rec_…`, và các select record của form đặt phòng
+(`specials.urlParam` `hotel` / `room`) tự chọn sẵn. Tham số chỉ áp dụng dưới MỘT hành động click Mở
+trang / Đến URL (hoặc href không có event) trên node không gắn binding mua hàng. Chỉ truyền id — query
+hiện trên thanh địa chỉ và trong log.
+
+**Yêu thích của khách.** Theo từng trình duyệt và từng collection, không bao giờ là tính năng tài
+khoản. Trái tim là một `button` trong card của danh sách record (hoặc trên trang record) với click
+`toggle_record_favorite {}` và `specials.icon: "heart"` kèm nhãn ngắn; không dùng `icon`. Thanh tab là
+hai nút có `show_record_favorites { targetId: "<id danh sách record — không phải danh sách quan hệ>",
+view: "favorites", showCount: true }` và `{ targetId, view: "all" }`; cho danh sách một trạng thái
+rỗng. Xem như khách: `?f.record.id~<list>=rec_a,rec_b` (≤ 50 id) hoặc `?f.record.id~<list>=none`.
+
 Những gì nền tảng CHƯA làm (web_builder `docs/integrations/dynamic-data-contract.md` §9), nên
 không tool nào ở đây tuyên bố có: `gallery` không gắn được; chưa có popup theo record đã chọn; danh sách phòng lồng
 trong card chưa áp điều kiện aggregate của dòng cha; chữ đơn vị của estimate chưa dịch; bài gửi hiện
-id record chứ không phải tên; chưa có link nào ghép được id record vào tham số URL.
+id record chứ không phải tên.
 
 `sb_review` báo danh sách record không chỉ collection nào (`record_list_unsourced`), tile không
 có ID field (`record_field_unset`), binding `record.*` nằm ngoài danh sách record
 (`no_data_context`), danh sách record lồng nhau thiếu `recordRelationField`
 (`record_relation_unset` — mọi dòng cha hiện cùng một tập dòng), khoá quan hệ không có dòng record
 nào bên trên hoặc không phải ID field (`record_relation_orphan`), và danh sách quan hệ không có
-trạng thái rỗng (`record_relation_no_empty`). Nó KHÔNG kiểm ID field của tile có tồn tại trong
+trạng thái rỗng (`record_relation_no_empty`); tham số liên kết mà renderer bỏ (`href_params_invalid`
+— sai cú pháp, trùng tên, href không phải đường dẫn cùng site), không có gì để lấy giá trị
+(`href_params_unresolved` — không ở dòng record, không phải trang record) hoặc không được áp dụng
+(`href_params_stranded` — chuỗi hành động, hành động khác, binding mua hàng); và trái tim nằm ngoài mọi
+dòng record hoặc tab yêu thích trỏ vào thứ không phải danh sách record không-quan-hệ
+(`record_favorite_invalid`). Nó KHÔNG kiểm ID field của tile có tồn tại trong
 collection hay không — việc đó cần một lần fetch mỗi collection ở mỗi lần review; `sb_bind` làm
 việc kiểm đó lúc ghi.
 
@@ -1520,7 +1562,7 @@ tài liệu:
 | `empty_text` / `missing_media` | Element bỏ trống — khoảng trắng, hoặc ảnh vỡ |
 | `static_in_dataset` | Một element nằm trong repeater nhưng chỉ render nội dung do tài liệu ghi — cùng một tấm ảnh trên mọi thẻ sản phẩm |
 | `unbound_dataset_element` | Element dataset không có binding nào — nó chờ một `bound…` special mà không ai ghi |
-| `dead_binding_source` | Nguồn renderer không cung cấp — hiện placeholder mãi mãi. Nguồn `record.*` chỉ hợp lệ ở dạng `record.fld_<16 hex>` / `record.html.fld_<16 hex>` / `record.money.fld_<16 hex>` / `record.(money.)agg.<key>` / `record.id` / `record.url`, và chỉ dạng html được vào `specials.boundHtml` |
+| `dead_binding_source` | Nguồn renderer không cung cấp — hiện placeholder mãi mãi. Nguồn `record.*` chỉ hợp lệ ở dạng `record.fld_<16 hex>` / `record.html.fld_<16 hex>` / `record.money.fld_<16 hex>` / `record.(money.)agg.<key>` / `record.(money.)ref.<fld>.<fld>` / `record.id` / `record.url`, và chỉ dạng html được vào `specials.boundHtml` |
 | `record_list_unsourced` | `list-dataset` có `datasetSource: "record"` mà không có `config.recordCollectionId` — không dòng nào được lấy, khách chỉ thấy trạng thái rỗng |
 | `hardcoded_dataset` | Script của `custom-code` chứa ≥4 bản ghi phẳng cùng một bộ khoá (`const DATA = {hotels:[…]}`) — bảng dữ liệu nằm trong code; chuyển sang Collection + danh sách record (maintenance) |
 | `record_option_invalid` | Trường lựa chọn có `optionSource: "record"` mà không chỉ collection, nhãn không phải ID field, hoặc cha không phải `form-select` lấy từ record — chỉ hiện placeholder hoặc không bao giờ thu hẹp |
@@ -1530,7 +1572,11 @@ tài liệu:
 | `record_relation_unset` | Danh sách record lồng trong dòng của một danh sách record khác mà không có `config.recordRelationField` — mọi dòng cha hiện cùng một tập dòng |
 | `record_relation_orphan` | Có `config.recordRelationField` nhưng không có dòng record nào bên trên, hoặc không phải ID `fld_…` — chỉ bao giờ hiện trạng thái rỗng |
 | `record_relation_no_empty` | Danh sách quan hệ không có `config.emptyStateId` — dòng cha chưa có con thì render thẻ placeholder |
-| `record_field_unset` | Tile record (`text-dataset` / `collection-media` có `datasetSource: "record"`) mà `config.recordField` rỗng hoặc không phải ID `fld_…` — KEY của field không gắn được gì; mọi dòng đều hiện placeholder |
+| `record_field_unset` | Tile record (`text-dataset` / `collection-media` có `datasetSource: "record"`) mà `config.recordField` rỗng hoặc không phải ID `fld_…` (hoặc `agg.<key>` / `ref.<fld>.<fld>`) — KEY của field không gắn được gì; mọi dòng đều hiện placeholder |
+| `href_params_invalid` | Mục `specials.hrefParams` mà renderer bỏ — tên ngoài `^[a-z][a-z0-9_]{0,23}$` hoặc tên dành riêng (`lang` `s` `t` `lesson`), tên trùng, source khác `record.id` / `record.url` / `record.fld_…`, quá 8 mục — hoặc `href` không phải đường dẫn cùng site, nên không bao giờ được ghép tham số |
+| `href_params_unresolved` | `hrefParams` trên node không nằm trong dòng record nào và không ở trang record — không có gì cấp giá trị |
+| `href_params_stranded` | `hrefParams` renderer không áp dụng: click không phải MỘT hành động Mở trang / Đến URL, hoặc node gắn binding mua hàng |
+| `record_favorite_invalid` | Trái tim `toggle_record_favorite` nằm ngoài dòng record / trang record, hoặc tab `show_record_favorites` có `targetId` không phải danh sách record không-quan-hệ hay `view` không phải `favorites` / `all` — không làm gì |
 | `dead_binding_field` | Field binding ngoài `specials` — được lưu, được publish, và bị bỏ qua |
 | `unknown_element` | Type catalog không biết; chạy `npm run codegen` |
 | `unlinked_form` | `form` không trỏ tới form nào — compose ra rỗng và publish thành MỘT HỘP TRỐNG. Platform cố tình im lặng về lỗi này |

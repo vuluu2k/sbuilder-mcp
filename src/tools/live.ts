@@ -6,6 +6,7 @@ import { BINDING_SOURCES, ELEMENTS } from '../catalog/elements.generated.js';
 import { bindableFields } from '../domains/site/writecheck.js';
 import {
   isRecordSource,
+  parseRecordRefAxis,
   RECORD_HTML_SOURCE,
   RECORD_SOURCE,
   recordFieldProblem,
@@ -100,7 +101,8 @@ export function bindNode(
       throw new Error(
         `sbuilder: "${source}" names no record field. A record source is "record.fld_<16 hex>" ` +
           '(or "record.html.fld_<16 hex>" for a richtext field) — the field ID from ' +
-          'GET …/collections/{id}/fields, never its key — or "record.id", the row\'s own record id; ' +
+          'GET …/collections/{id}/fields, never its key — or "record.id", the row\'s own record id, or ' +
+          '"record.ref.<reference fld_>.<target fld_>" (and its record.money.ref. form), a field of the record a reference names; ' +
           'anything else binds nothing.',
       );
     }
@@ -915,10 +917,26 @@ export function registerLiveTools(
             throw new Error(`sbuilder: could not read the fields to check "${source}" against: ${msg}`);
           });
         }
+        // A REFERENCED record's field (contract §7.8): its target is a field of the
+        // reference's refCollectionId, so that collection's fields are read too.
+        const refFields: Record<string, RecordFieldRow[]> = {};
+        const ref = parseRecordRefAxis(source.replace(/^record\.(?:money\.)?/, ''));
+        const target = ref && withFields?.flatMap((s) => s.fields).find((f) => f.id === ref.ref)?.refCollectionId;
+        if (target) {
+          try {
+            const got = (await get(`/collections/${encodeURIComponent(target)}/fields`)) as { fields?: RecordFieldRow[] };
+            refFields[target] = got.fields ?? [];
+          } catch (e) {
+            const msg = e instanceof Error ? e.message : String(e);
+            soft(guard, () => {
+              throw new Error(`sbuilder: could not read ${target}'s fields to check "${source}" against: ${msg}`);
+            });
+          }
+        }
         if (withFields) {
           const fields = withFields;
           soft(guard, () => {
-            const why = recordFieldProblem(source, fields);
+            const why = recordFieldProblem(source, fields, refFields);
             if (why) throw new Error(`sbuilder: ${why}`);
           });
           // record.url resolves only for a collection with an attached record page.

@@ -838,7 +838,9 @@ export const ELEMENTS: Record<string, CatalogElement> = {
         "logout_customer",
         "toggle_wishlist",
         "quick_view",
-        "close_quick_view"
+        "close_quick_view",
+        "toggle_record_favorite",
+        "show_record_favorites"
       ]
     },
     "bindingEvents": {
@@ -46059,6 +46061,67 @@ export const RECORD_BINDING_PROBES: Array<{ type: string; config: Record<string,
     ]
   },
   {
+    "type": "text-dataset",
+    "config": {
+      "datasetSource": "record",
+      "recordField": "ref.fld_0123456789abcdef.fld_0123456789abcdef",
+      "recordFieldType": "text"
+    },
+    "bindings": [
+      {
+        "id": "bind-text",
+        "source": "record.ref.fld_0123456789abcdef.fld_0123456789abcdef",
+        "field": "specials.boundText",
+        "target": {
+          "type": "record",
+          "id": "",
+          "kind": "title"
+        }
+      }
+    ]
+  },
+  {
+    "type": "text-dataset",
+    "config": {
+      "datasetSource": "record",
+      "recordField": "ref.fld_0123456789abcdef.fld_0123456789abcdef",
+      "recordFieldType": "integer",
+      "recordFormat": "money"
+    },
+    "bindings": [
+      {
+        "id": "bind-text",
+        "source": "record.money.ref.fld_0123456789abcdef.fld_0123456789abcdef",
+        "field": "specials.boundText",
+        "target": {
+          "type": "record",
+          "id": "",
+          "kind": "title"
+        }
+      }
+    ]
+  },
+  {
+    "type": "text-dataset",
+    "config": {
+      "datasetSource": "record",
+      "recordField": "ref.fld_0123456789abcdef.fld_0123456789abcdef",
+      "recordFieldType": "richtext"
+    },
+    "bindings": [
+      {
+        "id": "bind-text",
+        "source": "",
+        "field": "specials.boundHtml",
+        "target": {
+          "type": "record",
+          "id": "",
+          "kind": "title"
+        }
+      }
+    ]
+  },
+  {
     "type": "collection-media",
     "config": {
       "datasetSource": "record",
@@ -49177,7 +49240,8 @@ export const WRITE_PRECONDITIONS: WritePrecondition[] = [
           "tag",
           "blog_category",
           "blog_tag",
-          "course_tag"
+          "course_tag",
+          "record"
         ]
       },
       {
@@ -49190,7 +49254,7 @@ export const WRITE_PRECONDITIONS: WritePrecondition[] = [
         ]
       }
     ],
-    "otherwise": "the filter combines ticked values with OR, as it always did. Both predicates IGNORE the mode outside these cases rather than honouring it — a product holds ONE brand, one price and one stock state, so \"match all\" on two ticked values could only return an empty shelf, and a stale URL degrades to the ordinary OR instead of to a blank page."
+    "otherwise": "the filter combines ticked values with OR, as it always did. Both predicates IGNORE the mode outside these cases rather than honouring it — a product holds ONE brand, one price and one stock state, so \"match all\" on two ticked values could only return an empty shelf, and a stale URL degrades to the ordinary OR instead of to a blank page. On a `record` source only a `tags` field honours it."
   }
 ];
 

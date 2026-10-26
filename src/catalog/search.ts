@@ -380,6 +380,12 @@ export function describeOperation(op: ApiOperation): Record<string, unknown> {
         'product priceCents). reference = "rec_…" of a record in the field\'s refCollectionId, ' +
         'same site; gallery = 1..30 image URLs; date = YYYY-MM-DD. A field\'s type and ' +
         'refCollectionId cannot change after creation.',
+      tags:
+        'tags = a multi-select: options REQUIRED (1..100, unique, no comma); a value is a JSON array of ' +
+        'options or one comma-separated string, stored in options order; CSV cell ", "-joined. A page ' +
+        'prints it joined. Filter: filterSource "record", filterAxis = its fld_…, filterValues = its options; ' +
+        'f.record.<fid> matches ANY, fm.record.<fid>=all (specials.filterMatch "all") ALL — only a tags axis ' +
+        'honours all. type is immutable: migrate a text column to a NEW tags field and upsert.',
       revision:
         'PUT a record with the rev you read: a different stored rev is 409 stale_record and ' +
         'nothing is written — re-read and reapply, never retry blind. PUT always needs published.',

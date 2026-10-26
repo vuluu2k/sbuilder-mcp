@@ -756,6 +756,15 @@ platform treats an unproven guard as indistinguishable from an absent one.
   the platform's ledger does not list them — `readRecordBaseOnly` now reads the form metas and
   `formoptions/options.go`, or `sb_set` would write them per breakpoint and ship an empty select.
 
+- **LINK PARAMS, FAVORITES, TAGS, REF FIELDS (web_builder v1.0.174, contract §7.6–§7.8).**
+  `specials.hrefParams` is SPECIALS, so already base — no routing needed; the renderer DROPS a bad
+  entry silently and applies none under a chained click / purchase binding, hence the three
+  `href_params_*` findings (pure rules in `record.ts`, mirroring `schema/src/elements/hrefParams.ts`).
+  `show_record_favorites` needs `targetId` (in `PAYLOAD_NEEDS`). A `ref.<a>.<b>` tile is one hop and
+  never rich; `sb_bind` reads the reference's `refCollectionId` fields as a second fetch. Review
+  still fetches nothing, so it cannot check a hrefParams field's collection, a target page's
+  `urlParam`, or that `filterMatch: "all"` sits on a tags axis.
+
 - **AN OPT-IN SATELLITE COULD NOT BE CREATED, and the remedy named a call that did nothing.**
   `readiness`' `cartCount` fix said `sb_set {cartCountId}` "mints one"; it writes a string and
   mints nothing (pinned in `test/satellite-add.test.ts`), and `sb_add` into an icon was refused

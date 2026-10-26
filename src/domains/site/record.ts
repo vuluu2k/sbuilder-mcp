@@ -15,10 +15,57 @@ export const RECORD_FIELD_ID = /^fld_[0-9a-f]{16}$/;
  * A `record.*` source a context can supply: `record.<fid>`, `record.html.<fid>`,
  * `record.money.<fid>` (a number/integer field formatted in the site's currency),
  * `record.id` — the row's own record id — or `record.url` — `/records/<id>`, emitted
- * only when the row's collection has a published record detail page (recordContext.ts).
+ * only when the row's collection has a published record detail page (recordContext.ts),
+ * or `record.ref.<refFid>.<fid>` / `record.money.ref.…` — a field of the record a
+ * `reference` field names, one hop, never rich (contract §7.8).
  */
 export const RECORD_SOURCE =
-  /^record\.(?:id|url|(?:html\.|money\.)?fld_[0-9a-f]{16}|(?:money\.)?agg\.[a-z][a-zA-Z0-9_]{0,31})$/;
+  /^record\.(?:id|url|(?:html\.|money\.)?fld_[0-9a-f]{16}|(?:money\.)?agg\.[a-z][a-zA-Z0-9_]{0,31}|(?:money\.)?ref\.fld_[0-9a-f]{16}\.fld_[0-9a-f]{16})$/;
+
+/** recordContext.ts parseRecordRefAxis — `ref.<referenceFid>.<targetFid>`, else null. */
+export function parseRecordRefAxis(axis: string): { ref: string; field: string } | null {
+  const m = /^ref\.(fld_[0-9a-f]{16})\.(fld_[0-9a-f]{16})$/.exec(axis);
+  return m ? { ref: m[1], field: m[2] } : null;
+}
+
+/** recordContext.ts RECORD_REF_TARGET_TYPES — what a `ref.<a>.<b>` tile may show. */
+export const RECORD_REF_TARGET_TYPES = new Set(['text', 'select', 'url', 'date', 'number', 'integer', 'boolean', 'tags']);
+
+/**
+ * RECORD LINK PARAMETERS (contract §7.6, schema/src/elements/hrefParams.ts).
+ * `specials.hrefParams: [{name, source}]` appends row values to a same-site
+ * `specials.href`; every malformed entry is DROPPED at render, never repaired.
+ */
+export const HREF_PARAM_NAME = /^[a-z][a-z0-9_]{0,23}$/;
+export const HREF_PARAM_SOURCE = /^record\.(?:id|url|fld_[0-9a-f]{16})$/;
+export const HREF_PARAM_RESERVED = new Set(['lang', 's', 't', 'lesson']);
+export const MAX_HREF_PARAMS = 8;
+
+/** hrefParams.ts isSameSitePath — the only hrefs params are appended to. */
+export function isSameSitePath(p: string): boolean {
+  if (!p.startsWith('/') || p[1] === '/' || p[1] === '\\') return false;
+  return ![...p].some((c) => c.charCodeAt(0) <= 0x20 || c.charCodeAt(0) === 0x7f || c === '\\');
+}
+
+/** Why entries of `hrefParams` would be dropped at render (hrefWithParams), in the renderer's own order. */
+export function hrefParamProblems(raw: unknown): string[] {
+  if (raw === undefined || (Array.isArray(raw) && !raw.length)) return [];
+  if (!Array.isArray(raw)) return ['specials.hrefParams is not an array of { name, source }'];
+  const out: string[] = [];
+  if (raw.length > MAX_HREF_PARAMS) out.push(`only the first ${MAX_HREF_PARAMS} entries are read — ${raw.length - MAX_HREF_PARAMS} more are ignored`);
+  const seen = new Set<string>();
+  for (const item of raw.slice(0, MAX_HREF_PARAMS)) {
+    const { name, source } = (item ?? {}) as Record<string, unknown>;
+    if (typeof name !== 'string') { out.push('an entry has no string name'); continue; }
+    if (seen.has(name)) { out.push(`"${name}" is named twice — only the first entry is read`); continue; }
+    seen.add(name);
+    if (!HREF_PARAM_NAME.test(name)) out.push(`name "${name}" is not ^[a-z][a-z0-9_]{0,23}$`);
+    else if (HREF_PARAM_RESERVED.has(name)) out.push(`name "${name}" is reserved (lang, s, t, lesson are read by the platform)`);
+    else if (typeof source !== 'string' || !HREF_PARAM_SOURCE.test(source))
+      out.push(`"${name}"'s source "${String(source)}" is not record.id, record.url or record.fld_<16 hex>`);
+  }
+  return out;
+}
 
 /** An aggregate key — recordAggregates.ts RECORD_AGG_KEY. A tile names it as `agg.<key>`. */
 export const RECORD_AGG_KEY = /^[a-z][a-zA-Z0-9_]{0,31}$/;
@@ -107,7 +154,10 @@ export function recordTileBindings(type: string, config: Record<string, unknown>
   const fid = config.recordField;
   const html = type === 'text-dataset' && config.recordFieldType === 'richtext';
   // An aggregate (`agg.<key>`) is a number on the row — datasetBindings.ts recordSource.
-  const ok = typeof fid === 'string' && (RECORD_FIELD_ID.test(fid) || (!html && recordAggKeyOf(fid) !== ''));
+  // A referenced record's field (`ref.<a>.<b>`) — one hop, never rich.
+  const ok =
+    typeof fid === 'string' &&
+    (RECORD_FIELD_ID.test(fid) || (!html && (recordAggKeyOf(fid) !== '' || parseRecordRefAxis(fid) !== null)));
   // datasetBindings.ts isRecordMoney: a stale recordFormat on any other type is ignored.
   const money =
     type === 'text-dataset' && config.recordFormat === 'money' && RECORD_MONEY_TYPES.has(String(config.recordFieldType));
@@ -130,6 +180,8 @@ export interface RecordFieldRow {
   id: string;
   key: string;
   type: string;
+  /** The collection a `reference` field points at. */
+  refCollectionId?: string;
 }
 
 type NodeAt = (id: string) => { data: { type: string; parent: string | null }; config?: Record<string, unknown> } | undefined;
@@ -163,7 +215,12 @@ export function recordScope(nodeAt: NodeAt, id: string): string[] {
  * stringification is recordContext.ts: gallery emits nothing yet, richtext only
  * under `record.html.`, every other type only under `record.`.
  */
-export function recordFieldProblem(source: string, scope: Array<{ collectionId: string; fields: RecordFieldRow[] }>): string | undefined {
+export function recordFieldProblem(
+  source: string,
+  scope: Array<{ collectionId: string; fields: RecordFieldRow[] }>,
+  /** The fields of each collection a scope `reference` field targets, by collection id (§7.8). */
+  refFields: Record<string, RecordFieldRow[]> = {},
+): string | undefined {
   if (!scope.length) {
     return `"${source}" sits in no record-list row and this is no record detail page — only a list-dataset with datasetSource "record" (or a relation list inside one), or a page of type "record" attached to a collection, supplies a record, so it would render its placeholder.`;
   }
@@ -173,6 +230,17 @@ export function recordFieldProblem(source: string, scope: Array<{ collectionId: 
   const html = source.startsWith('record.html.');
   const money = source.startsWith('record.money.');
   const fid = source.slice(html ? 12 : money ? 13 : 7);
+  const ref = parseRecordRefAxis(fid);
+  if (ref) {
+    const r = scope.flatMap((s) => s.fields).find((x) => x.id === ref.ref);
+    if (!r || r.type !== 'reference') return `${ref.ref} is not a reference field of the collection(s) this row reads.`;
+    const target = r.refCollectionId ?? '';
+    const t = (refFields[target] ?? []).find((x) => x.id === ref.field);
+    if (!t) return `${ref.field} is not a field of ${target || 'the referenced collection'} (what ${r.key} points at).`;
+    if (!RECORD_REF_TARGET_TYPES.has(t.type)) return `${ref.field} (${t.key}) is ${t.type} — a referenced field shows only ${[...RECORD_REF_TARGET_TYPES].join(', ')}.`;
+    if (money && !RECORD_MONEY_TYPES.has(t.type)) return `${ref.field} (${t.key}) is ${t.type} — record.money. formats only a number or integer field.`;
+    return undefined;
+  }
   const f = scope.flatMap((s) => s.fields).find((x) => x.id === fid);
   if (!f) {
     const avail = scope

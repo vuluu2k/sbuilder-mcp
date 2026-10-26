@@ -201,6 +201,11 @@ export const PAYLOAD_NEEDS: Record<string, { key: string; why: string; shape: st
     why: 'publishes a PopupControl call with no target, which opens nothing',
     shape: '{ "id": "<the pop-up\'s overlay id, from sb_store popup>", "label": "<name>" }',
   },
+  show_record_favorites: {
+    key: 'targetId',
+    why: 'publishes a favorites tab aimed at no list, which narrows nothing',
+    shape: '{ "targetId": "<record list-dataset id>", "view": "favorites" | "all", "showCount": true }',
+  },
   scroll_to: {
     key: 'targetId',
     why: 'publishes a ScrollControl call with no target, which scrolls nowhere',

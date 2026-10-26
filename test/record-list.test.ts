@@ -4,10 +4,10 @@ import { addSubtree, setKeys } from '../src/domains/site/builder.js';
 import { reviewDesign } from '../src/domains/site/review.js';
 import { bindNode } from '../src/tools/live.js';
 import { traitsFor } from '../src/catalog/element-search.js';
-import { BASE_ONLY_CONFIG, RECORD_BINDING_PROBES } from '../src/catalog/elements.generated.js';
+import { BASE_ONLY_CONFIG, ELEMENTS, RECORD_BINDING_PROBES } from '../src/catalog/elements.generated.js';
 import { PageDoc } from '../src/domains/site/document.js';
 import { emptyDoc } from './helpers/doc.js';
-import { recordFieldProblem, recordScope } from '../src/domains/site/record.js';
+import { RECORD_SOURCE, recordFieldProblem, recordScope } from '../src/domains/site/record.js';
 import { describeOperation, findOperation } from '../src/catalog/search.js';
 import { REQUEST_SHAPES } from '../src/catalog/shapes.generated.js';
 
@@ -394,7 +394,7 @@ describe('sb_bind and sb_page_state against the platform (end to end)', () => {
       return {
         fields:
           m[1] === 'col_r'
-            ? [{ id: FID_ROOM, key: 'name', type: 'text' }, { id: FID, key: 'photos', type: 'gallery' }]
+            ? [{ id: FID_ROOM, key: 'name', type: 'text' }, { id: FID, key: 'photos', type: 'gallery' }, { id: FID_HOTEL, key: 'hotel', type: 'reference', refCollectionId: 'col_h' }]
             : [{ id: FID_NAME, key: 'name', type: 'text' }],
       };
     });
@@ -417,6 +417,19 @@ describe('sb_bind and sb_page_state against the platform (end to end)', () => {
     const forced = await call('sb_bind', { id: 'hd', source: `record.${FID2}`, field: 'specials.text', force: true });
     expect(forced.isError).toBe(false);
     expect(JSON.stringify(forced.json.forced)).toMatch(/not a field/);
+    await close();
+  });
+
+  it('a referenced field is checked against the reference\'s own collection (§7.8)', async () => {
+    const { call, close, reads } = await open();
+    const ok = await call('sb_bind', { id: 'hd', source: `record.ref.${FID_HOTEL}.${FID_NAME}`, field: 'specials.text' });
+    expect(ok.isError, ok.text).toBe(false);
+    expect(reads.filter((r) => r === 'col_h').length).toBe(2);
+    const wrong = await call('sb_bind', { id: 'hd', source: `record.ref.${FID_HOTEL}.${FID_ROOM}`, field: 'specials.text' });
+    expect(wrong.isError).toBe(true);
+    expect(wrong.text).toMatch(/not a field of col_h/);
+    const notRef = await call('sb_bind', { id: 'hd', source: `record.ref.${FID_ROOM}.${FID_NAME}`, field: 'specials.text' });
+    expect(notRef.text).toMatch(/not a reference/);
     await close();
   });
 
@@ -690,5 +703,215 @@ describe('booking estimate (web_builder #161)', () => {
     expect(flagged(a.doc, a.est)?.problem).toMatch(/exactly ONE "record" term/);
     const b = form([{ kind: 'record', node: '$room', field: FID }, { kind: 'number', node: '$cin' }]);
     expect(flagged(b.doc, b.est)?.problem).toMatch(/is not a form-number/);
+  });
+});
+
+describe('record link parameters — specials.hrefParams (web_builder v1.0.174, contract §7.6)', () => {
+  // AURA: a hotel's rooms relation list; the room card's button passes the hotel and the room.
+  function page(btn: Record<string, unknown> = {}, opts: { outside?: boolean; events?: unknown[]; bindings?: unknown[] } = {}) {
+    const doc = emptyDoc();
+    const { patches, ids } = addSubtree(doc, 'ROOT', {
+      type: 'flex-section',
+      children: [
+        { type: 'button' },
+        {
+          type: 'list-dataset',
+          config: { datasetSource: 'record', recordCollectionId: 'col_h' },
+          children: [{ type: 'dataset-block', children: [{
+            type: 'list-dataset',
+            config: { datasetSource: 'record', recordCollectionId: 'col_r', recordRelationField: FID_HOTEL },
+            children: [{ type: 'dataset-block', children: [{ type: 'button' }] }],
+          }] }],
+        },
+      ],
+    });
+    doc.apply(patches);
+    const buttons = ids.filter((i) => doc.node(i).data.type === 'button');
+    const id = opts.outside ? buttons[0] : buttons[1];
+    const n = doc.node(id) as unknown as { specials: Record<string, unknown>; events: unknown[]; bindings: unknown[] };
+    Object.assign(n.specials, {
+      href: '/yeu-cau-dat-phong',
+      hrefParams: [{ name: 'hotel', source: `record.${FID_HOTEL}` }, { name: 'room', source: 'record.id' }],
+      ...btn,
+    });
+    n.events = (opts.events as unknown[]) ?? [{ id: 'e1', name: 'click', action: 'go_to_url', payload: { url: '/yeu-cau-dat-phong' } }];
+    if (opts.bindings) n.bindings = opts.bindings;
+    return { doc, id };
+  }
+  const found = (d: PageDoc, id: string, pageType?: string) =>
+    reviewDesign(d, { pageType }).filter((f) => f.nodeId === id && f.code.startsWith('href_params'));
+
+  it('the AURA room card is clean, and so is an href with no events', () => {
+    expect(found(page().doc, page().id)).toEqual([]);
+    const bare = page({}, { events: [] });
+    expect(found(bare.doc, bare.id)).toEqual([]);
+  });
+
+  it('a bad name, a reserved one, a duplicate, a source outside the grammar, or too many entries is invalid', () => {
+    const cases: Array<[unknown[], RegExp]> = [
+      [[{ name: 'Hotel', source: 'record.id' }], /"Hotel"/],
+      [[{ name: 'lang', source: 'record.id' }], /reserved/],
+      [[{ name: 'room', source: 'record.id' }, { name: 'room', source: 'record.url' }], /twice/],
+      [[{ name: 'room', source: `record.html.${FID}` }], /record\.html/],
+      [[{ name: 'room', source: `record.money.${FID}` }], /record\.money/],
+      [[{ name: 'room', source: 'product.title' }], /product\.title/],
+      [Array.from({ length: 9 }, (_, i) => ({ name: `p${i}`, source: 'record.id' })), /8/],
+    ];
+    for (const [hrefParams, re] of cases) {
+      const { doc, id } = page({ hrefParams });
+      const f = found(doc, id).find((x) => x.code === 'href_params_invalid');
+      expect(f?.problem, re.source).toMatch(re);
+    }
+  });
+
+  it('an href that is not a same-site path gets no params', () => {
+    for (const href of ['https://x.vn/a', '//x.vn', '#rooms', '', 'yeu-cau']) {
+      const { doc, id } = page({ href }, { events: [] });
+      expect(found(doc, id).map((f) => f.code), href).toContain('href_params_invalid');
+    }
+    // a bound path (record.url) is the platform's own same-site address
+    const { doc, id } = page({ href: '' }, { events: [], bindings: [{ id: 'b', source: 'record.url', field: 'specials.href' }] });
+    expect(found(doc, id)).toEqual([]);
+  });
+
+  it('outside any record row there is nothing to resolve — unless the page is a record page', () => {
+    const { doc, id } = page({}, { outside: true });
+    expect(found(doc, id).map((f) => f.code)).toContain('href_params_unresolved');
+    expect(found(doc, id, 'record').map((f) => f.code)).not.toContain('href_params_unresolved');
+  });
+
+  it('a chained click, another action, or a purchase binding strands them', () => {
+    const go = { id: 'e1', name: 'click', action: 'go_to_url', payload: { url: '/a' } };
+    for (const events of [[go, { ...go, id: 'e2' }], [{ id: 'e1', name: 'click', action: 'open_cart', payload: {} }]]) {
+      const { doc, id } = page({}, { events });
+      expect(found(doc, id).map((f) => f.code), JSON.stringify(events)).toContain('href_params_stranded');
+    }
+    const bought = page({}, { bindings: [{ id: 'bind-product-action', source: 'product.id', field: 'specials.x' }] });
+    expect(found(bought.doc, bought.id).map((f) => f.code)).toContain('href_params_stranded');
+  });
+
+  it('hrefParams is base specials and never translated', () => {
+    const { doc, id } = page();
+    const p = setKeys(doc, id, 'specials', { hrefParams: [{ name: 'room', source: 'record.id' }] }, { breakpoint: 'mobile' });
+    expect(JSON.stringify(p)).not.toContain('mobile');
+  });
+});
+
+describe('visitor favorites on a record list (web_builder v1.0.174, contract §7.7)', () => {
+  function page(heart: { outside?: boolean; type?: string } = {}, tab: Record<string, unknown> = { view: 'favorites', showCount: true }, target?: 'product' | 'relation' | 'missing') {
+    const doc = emptyDoc();
+    const { patches, ids } = addSubtree(doc, 'ROOT', {
+      type: 'flex-section',
+      children: [
+        { type: heart.type ?? 'button' },
+        { type: 'button' },
+        { type: 'list-dataset' },
+        {
+          type: 'list-dataset',
+          config: { datasetSource: 'record', recordCollectionId: 'col_h' },
+          children: [{ type: 'dataset-block', children: [
+            { type: heart.type ?? 'button' },
+            { type: 'list-dataset', config: { datasetSource: 'record', recordCollectionId: 'col_r', recordRelationField: FID_HOTEL } },
+          ] }],
+        },
+      ],
+    });
+    doc.apply(patches);
+    const of = (t: string) => ids.filter((i) => doc.node(i).data.type === t);
+    const btns = of(heart.type ?? 'button');
+    const lists = of('list-dataset');
+    const heartId = heart.outside ? btns[0] : btns[btns.length - 1];
+    const tabId = of('button').find((b) => b !== heartId && b !== btns[0] && b !== btns[btns.length - 1]) ?? of('button')[1];
+    const targetId = target === 'product' ? lists[0] : target === 'relation' ? lists[2] : target === 'missing' ? 'nope' : lists[1];
+    (doc.node(heartId) as unknown as { events: unknown[] }).events = [{ id: 'h', name: 'click', action: 'toggle_record_favorite', payload: {} }];
+    (doc.node(tabId) as unknown as { events: unknown[] }).events = [{ id: 't', name: 'click', action: 'show_record_favorites', payload: { targetId, ...tab } }];
+    return { doc, heartId, tabId };
+  }
+  const codes = (d: PageDoc, id: string, pageType?: string) =>
+    reviewDesign(d, { pageType }).filter((f) => f.nodeId === id).map((f) => f.code);
+
+  it('the catalog offers both actions on a button and not on an icon', () => {
+    expect(ELEMENTS.button.events?.click).toEqual(expect.arrayContaining(['toggle_record_favorite', 'show_record_favorites']));
+    expect(ELEMENTS.icon.events?.click ?? []).not.toContain('toggle_record_favorite');
+  });
+
+  it('a heart in a record row and a tab over the record list are clean', () => {
+    const { doc, heartId, tabId } = page();
+    expect(codes(doc, heartId)).not.toContain('record_favorite_invalid');
+    expect(codes(doc, tabId)).not.toContain('record_favorite_invalid');
+    expect(codes(doc, tabId)).not.toContain('action_missing_target');
+  });
+
+  it('a heart outside any record row publishes nothing — unless the page is a record page', () => {
+    const { doc, heartId } = page({ outside: true });
+    expect(codes(doc, heartId)).toContain('record_favorite_invalid');
+    expect(codes(doc, heartId, 'record')).not.toContain('record_favorite_invalid');
+  });
+
+  it('a heart on an icon is an action the icon does not offer', () => {
+    const { doc, heartId } = page({ type: 'icon' });
+    expect(codes(doc, heartId)).toContain('invalid_action');
+  });
+
+  it('a tab aimed at a product list, a relation list or nothing, or with an unknown view, is flagged', () => {
+    for (const t of ['product', 'relation', 'missing'] as const) {
+      const { doc, tabId } = page({}, { view: 'favorites' }, t);
+      expect(codes(doc, tabId), t).toContain('record_favorite_invalid');
+    }
+    const v = page({}, { view: 'saved' });
+    expect(codes(v.doc, v.tabId)).toContain('record_favorite_invalid');
+    const none = page({}, { view: 'all', targetId: '' });
+    expect(codes(none.doc, none.tabId)).toContain('action_missing_target');
+  });
+});
+
+describe('a referenced record\'s field on a row (web_builder v1.0.174, contract §7.8)', () => {
+  const REF = `ref.${FID_HOTEL}.${FID_NAME}`;
+
+  it('RECORD_SOURCE takes record.ref.<a>.<b> and its money form, never an html one', () => {
+    expect(RECORD_SOURCE.test(`record.${REF}`)).toBe(true);
+    expect(RECORD_SOURCE.test(`record.money.${REF}`)).toBe(true);
+    expect(RECORD_SOURCE.test(`record.html.${REF}`)).toBe(false);
+    expect(RECORD_SOURCE.test(`record.ref.${FID_HOTEL}`)).toBe(false);
+  });
+
+  it('a ref tile binds record.ref.… / record.money.ref.…, a richtext one nothing — pinned to the platform probes', () => {
+    const at_ = (config: Record<string, unknown>) => first(createNode('text-dataset', { config: { datasetSource: 'record', ...config } }));
+    expect(at_({ recordField: REF, recordFieldType: 'text' }).source).toBe(`record.${REF}`);
+    expect(at_({ recordField: REF, recordFieldType: 'integer', recordFormat: 'money' }).source).toBe(`record.money.${REF}`);
+    expect(at_({ recordField: REF, recordFieldType: 'richtext' }).source).toBe('');
+    const probes = RECORD_BINDING_PROBES.filter((p) => String(p.config.recordField).startsWith('ref.'));
+    expect(probes.length).toBeGreaterThanOrEqual(3);
+  });
+
+  it('sb_review takes a ref recordField as a field', () => {
+    const { doc, tile } = recordList('col_1', { datasetSource: 'record', recordField: REF, recordFieldType: 'text' });
+    expect(reviewDesign(doc, {}).filter((f) => f.nodeId === tile).map((f) => f.code)).not.toContain('record_field_unset');
+    const bad = recordList('col_1', { datasetSource: 'record', recordField: `ref.${FID_HOTEL}.name`, recordFieldType: 'text' });
+    expect(reviewDesign(bad.doc, {}).filter((f) => f.nodeId === bad.tile).map((f) => f.code)).toContain('record_field_unset');
+  });
+
+  it('recordFieldProblem checks the reference and the target field', () => {
+    const rooms = { collectionId: 'col_r', fields: [{ id: FID_HOTEL, key: 'hotel', type: 'reference', refCollectionId: 'col_h' }, { id: FID_ROOM, key: 'name', type: 'text' }] };
+    const refs = { col_h: [{ id: FID_NAME, key: 'name', type: 'text' }, { id: FID, key: 'stars', type: 'integer' }, { id: FID2, key: 'body', type: 'richtext' }] };
+    expect(recordFieldProblem(`record.${REF}`, [rooms], refs)).toBeUndefined();
+    expect(recordFieldProblem(`record.money.ref.${FID_HOTEL}.${FID}`, [rooms], refs)).toBeUndefined();
+    expect(recordFieldProblem(`record.ref.${FID_ROOM}.${FID_NAME}`, [rooms], refs)).toMatch(/not a reference/);
+    expect(recordFieldProblem(`record.ref.${FID_HOTEL}.${FID_ROOM}`, [rooms], refs)).toMatch(/not a field of col_h/);
+    expect(recordFieldProblem(`record.ref.${FID_HOTEL}.${FID2}`, [rooms], refs)).toMatch(/richtext/);
+    expect(recordFieldProblem(`record.money.${REF}`, [rooms], refs)).toMatch(/number or integer/);
+  });
+});
+
+describe('tags fields (web_builder v1.0.174, contract §2 / §7.1)', () => {
+  it('the field-type vocabulary and the call sheet carry tags', () => {
+    const t = REQUEST_SHAPES['post:/api/sites/{siteId}/collections/{id}/fields'].fields.find((f) => f.name === 'type')!.type;
+    expect(t).toContain('"tags"');
+    const sheet = JSON.stringify(describeOperation(findOperation('post:/api/sites/{siteId}/collections/{id}/fields')!));
+    for (const s of ['tags', 'no comma', 'fm.record.', 'filterMatch']) expect(sheet).toContain(s);
+  });
+
+  it('a tags field binds like any text field', () => {
+    expect(recordFieldProblem(`record.${FID}`, [{ collectionId: 'c', fields: [{ id: FID, key: 'amenities', type: 'tags' }] }])).toBeUndefined();
   });
 });
