@@ -1055,6 +1055,16 @@ export const API_DEFINITIONS: Record<string, unknown> = ${JSON.stringify(
   const bindMod = (await import(resolve(repo, 'schema/src/elements/datasetBindings.ts'))) as {
     datasetBindings: (type: string, config: Record<string, unknown>) => unknown[];
   };
+  // Every entity a repeater can name, read off the platform rather than typed
+  // here: a hand list missed `brand` and `review`, so a brand list built by
+  // sb_add repeated PRODUCTS and a review card bound product.url.
+  const entityMod = (await import(resolve(repo, 'schema/src/elements/datasetEntities.ts'))) as {
+    DATASET_ENTITIES: ReadonlyArray<{ id: string }>;
+  };
+  bindSources = entityMod.DATASET_ENTITIES.map((e) => e.id);
+  if (!bindSources.includes('brand') || !bindSources.includes('record')) {
+    throw new Error('gen-catalog: DATASET_ENTITIES no longer lists brand/record — re-read datasetEntities.ts');
+  }
 
   const types = registry.allElementTypes();
   if (types.length < 80) {
@@ -5121,6 +5131,8 @@ function assertPageRoot(what: string, doc: { root_node_id?: string; nodes: Recor
   }
 }
 
+// Filled from DATASET_ENTITIES inside main(); declared above the call (TDZ).
+let bindSources: string[] = [];
 await main();
 reportDrift();
 
@@ -5195,7 +5207,6 @@ function bindingTable(
   // that need no field — the list's `record_list` target, a tile's `target`.
   // A tile's SOURCE names `config.recordField`, which no enumeration can hold;
   // `bindingsForConfig` substitutes it, pinned by RECORD_BINDING_PROBES.
-  const BIND_SOURCES = ['product', 'category', 'article', 'course', 'instructor', 'blogCategory', 'record'];
   const BIND_KINDS = [
     'title', 'vendor', 'description', 'summary', 'content', 'author', 'date',
     'image', 'price', 'prices', 'url', 'name',
@@ -5203,7 +5214,7 @@ function bindingTable(
   const base = (defaults.config ?? {}) as Record<string, unknown>;
   const table: Record<string, unknown[]> = {};
   const seen = new Set<string>();
-  for (const datasetSource of BIND_SOURCES) {
+  for (const datasetSource of bindSources) {
     for (const kind of BIND_KINDS) {
       let got: unknown[] = [];
       try {

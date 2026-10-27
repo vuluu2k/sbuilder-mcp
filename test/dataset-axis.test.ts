@@ -150,3 +150,13 @@ describe("a repeater's card inherits its entity (editor migrateDatasetSource)", 
     expect(sourceOf(p, prod.ids, 'dataset-block')).toBeUndefined();
   });
 });
+
+describe('every repeater entity has its binding rows (DATASET_ENTITIES, not a hand list)', () => {
+  it('a brand list repeats brands and its card links to the brand; a review card binds no product', () => {
+    expect(JSON.stringify(bindingsForConfig('list-dataset', { datasetSource: 'brand' }))).toContain('brand_list');
+    const card = JSON.stringify(bindingsForConfig('dataset-block', { datasetSource: 'brand' }));
+    expect(card).toContain('brand.url');
+    expect(card).not.toContain('product');
+    expect(JSON.stringify(bindingsForConfig('dataset-block', { datasetSource: 'review' }))).not.toContain('product');
+  });
+});

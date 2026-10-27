@@ -1335,6 +1335,90 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "field": "specials.boundBundleItems"
         }
       ],
+      "blogCategory|title": [
+        {
+          "id": "bind-bundle-items",
+          "source": "product.bundleItems",
+          "field": "specials.boundBundleItems"
+        }
+      ],
+      "blogCategory|vendor": [
+        {
+          "id": "bind-bundle-items",
+          "source": "product.bundleItems",
+          "field": "specials.boundBundleItems"
+        }
+      ],
+      "blogCategory|description": [
+        {
+          "id": "bind-bundle-items",
+          "source": "product.bundleItems",
+          "field": "specials.boundBundleItems"
+        }
+      ],
+      "blogCategory|summary": [
+        {
+          "id": "bind-bundle-items",
+          "source": "product.bundleItems",
+          "field": "specials.boundBundleItems"
+        }
+      ],
+      "blogCategory|content": [
+        {
+          "id": "bind-bundle-items",
+          "source": "product.bundleItems",
+          "field": "specials.boundBundleItems"
+        }
+      ],
+      "blogCategory|author": [
+        {
+          "id": "bind-bundle-items",
+          "source": "product.bundleItems",
+          "field": "specials.boundBundleItems"
+        }
+      ],
+      "blogCategory|date": [
+        {
+          "id": "bind-bundle-items",
+          "source": "product.bundleItems",
+          "field": "specials.boundBundleItems"
+        }
+      ],
+      "blogCategory|image": [
+        {
+          "id": "bind-bundle-items",
+          "source": "product.bundleItems",
+          "field": "specials.boundBundleItems"
+        }
+      ],
+      "blogCategory|price": [
+        {
+          "id": "bind-bundle-items",
+          "source": "product.bundleItems",
+          "field": "specials.boundBundleItems"
+        }
+      ],
+      "blogCategory|prices": [
+        {
+          "id": "bind-bundle-items",
+          "source": "product.bundleItems",
+          "field": "specials.boundBundleItems"
+        }
+      ],
+      "blogCategory|url": [
+        {
+          "id": "bind-bundle-items",
+          "source": "product.bundleItems",
+          "field": "specials.boundBundleItems"
+        }
+      ],
+      "blogCategory|name": [
+        {
+          "id": "bind-bundle-items",
+          "source": "product.bundleItems",
+          "field": "specials.boundBundleItems"
+        }
+      ],
       "course|title": [
         {
           "id": "bind-bundle-items",
@@ -1419,168 +1503,168 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "field": "specials.boundBundleItems"
         }
       ],
-      "instructor|title": [
+      "review|title": [
         {
           "id": "bind-bundle-items",
           "source": "product.bundleItems",
           "field": "specials.boundBundleItems"
         }
       ],
-      "instructor|vendor": [
+      "review|vendor": [
         {
           "id": "bind-bundle-items",
           "source": "product.bundleItems",
           "field": "specials.boundBundleItems"
         }
       ],
-      "instructor|description": [
+      "review|description": [
         {
           "id": "bind-bundle-items",
           "source": "product.bundleItems",
           "field": "specials.boundBundleItems"
         }
       ],
-      "instructor|summary": [
+      "review|summary": [
         {
           "id": "bind-bundle-items",
           "source": "product.bundleItems",
           "field": "specials.boundBundleItems"
         }
       ],
-      "instructor|content": [
+      "review|content": [
         {
           "id": "bind-bundle-items",
           "source": "product.bundleItems",
           "field": "specials.boundBundleItems"
         }
       ],
-      "instructor|author": [
+      "review|author": [
         {
           "id": "bind-bundle-items",
           "source": "product.bundleItems",
           "field": "specials.boundBundleItems"
         }
       ],
-      "instructor|date": [
+      "review|date": [
         {
           "id": "bind-bundle-items",
           "source": "product.bundleItems",
           "field": "specials.boundBundleItems"
         }
       ],
-      "instructor|image": [
+      "review|image": [
         {
           "id": "bind-bundle-items",
           "source": "product.bundleItems",
           "field": "specials.boundBundleItems"
         }
       ],
-      "instructor|price": [
+      "review|price": [
         {
           "id": "bind-bundle-items",
           "source": "product.bundleItems",
           "field": "specials.boundBundleItems"
         }
       ],
-      "instructor|prices": [
+      "review|prices": [
         {
           "id": "bind-bundle-items",
           "source": "product.bundleItems",
           "field": "specials.boundBundleItems"
         }
       ],
-      "instructor|url": [
+      "review|url": [
         {
           "id": "bind-bundle-items",
           "source": "product.bundleItems",
           "field": "specials.boundBundleItems"
         }
       ],
-      "instructor|name": [
+      "review|name": [
         {
           "id": "bind-bundle-items",
           "source": "product.bundleItems",
           "field": "specials.boundBundleItems"
         }
       ],
-      "blogCategory|title": [
+      "brand|title": [
         {
           "id": "bind-bundle-items",
           "source": "product.bundleItems",
           "field": "specials.boundBundleItems"
         }
       ],
-      "blogCategory|vendor": [
+      "brand|vendor": [
         {
           "id": "bind-bundle-items",
           "source": "product.bundleItems",
           "field": "specials.boundBundleItems"
         }
       ],
-      "blogCategory|description": [
+      "brand|description": [
         {
           "id": "bind-bundle-items",
           "source": "product.bundleItems",
           "field": "specials.boundBundleItems"
         }
       ],
-      "blogCategory|summary": [
+      "brand|summary": [
         {
           "id": "bind-bundle-items",
           "source": "product.bundleItems",
           "field": "specials.boundBundleItems"
         }
       ],
-      "blogCategory|content": [
+      "brand|content": [
         {
           "id": "bind-bundle-items",
           "source": "product.bundleItems",
           "field": "specials.boundBundleItems"
         }
       ],
-      "blogCategory|author": [
+      "brand|author": [
         {
           "id": "bind-bundle-items",
           "source": "product.bundleItems",
           "field": "specials.boundBundleItems"
         }
       ],
-      "blogCategory|date": [
+      "brand|date": [
         {
           "id": "bind-bundle-items",
           "source": "product.bundleItems",
           "field": "specials.boundBundleItems"
         }
       ],
-      "blogCategory|image": [
+      "brand|image": [
         {
           "id": "bind-bundle-items",
           "source": "product.bundleItems",
           "field": "specials.boundBundleItems"
         }
       ],
-      "blogCategory|price": [
+      "brand|price": [
         {
           "id": "bind-bundle-items",
           "source": "product.bundleItems",
           "field": "specials.boundBundleItems"
         }
       ],
-      "blogCategory|prices": [
+      "brand|prices": [
         {
           "id": "bind-bundle-items",
           "source": "product.bundleItems",
           "field": "specials.boundBundleItems"
         }
       ],
-      "blogCategory|url": [
+      "brand|url": [
         {
           "id": "bind-bundle-items",
           "source": "product.bundleItems",
           "field": "specials.boundBundleItems"
         }
       ],
-      "blogCategory|name": [
+      "brand|name": [
         {
           "id": "bind-bundle-items",
           "source": "product.bundleItems",
@@ -11085,6 +11169,90 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "field": "specials.payload"
         }
       ],
+      "blogCategory|title": [
+        {
+          "id": "bind-payload",
+          "source": "site.moneySwitch",
+          "field": "specials.payload"
+        }
+      ],
+      "blogCategory|vendor": [
+        {
+          "id": "bind-payload",
+          "source": "site.moneySwitch",
+          "field": "specials.payload"
+        }
+      ],
+      "blogCategory|description": [
+        {
+          "id": "bind-payload",
+          "source": "site.moneySwitch",
+          "field": "specials.payload"
+        }
+      ],
+      "blogCategory|summary": [
+        {
+          "id": "bind-payload",
+          "source": "site.moneySwitch",
+          "field": "specials.payload"
+        }
+      ],
+      "blogCategory|content": [
+        {
+          "id": "bind-payload",
+          "source": "site.moneySwitch",
+          "field": "specials.payload"
+        }
+      ],
+      "blogCategory|author": [
+        {
+          "id": "bind-payload",
+          "source": "site.moneySwitch",
+          "field": "specials.payload"
+        }
+      ],
+      "blogCategory|date": [
+        {
+          "id": "bind-payload",
+          "source": "site.moneySwitch",
+          "field": "specials.payload"
+        }
+      ],
+      "blogCategory|image": [
+        {
+          "id": "bind-payload",
+          "source": "site.moneySwitch",
+          "field": "specials.payload"
+        }
+      ],
+      "blogCategory|price": [
+        {
+          "id": "bind-payload",
+          "source": "site.moneySwitch",
+          "field": "specials.payload"
+        }
+      ],
+      "blogCategory|prices": [
+        {
+          "id": "bind-payload",
+          "source": "site.moneySwitch",
+          "field": "specials.payload"
+        }
+      ],
+      "blogCategory|url": [
+        {
+          "id": "bind-payload",
+          "source": "site.moneySwitch",
+          "field": "specials.payload"
+        }
+      ],
+      "blogCategory|name": [
+        {
+          "id": "bind-payload",
+          "source": "site.moneySwitch",
+          "field": "specials.payload"
+        }
+      ],
       "course|title": [
         {
           "id": "bind-payload",
@@ -11169,168 +11337,168 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "field": "specials.payload"
         }
       ],
-      "instructor|title": [
+      "review|title": [
         {
           "id": "bind-payload",
           "source": "site.moneySwitch",
           "field": "specials.payload"
         }
       ],
-      "instructor|vendor": [
+      "review|vendor": [
         {
           "id": "bind-payload",
           "source": "site.moneySwitch",
           "field": "specials.payload"
         }
       ],
-      "instructor|description": [
+      "review|description": [
         {
           "id": "bind-payload",
           "source": "site.moneySwitch",
           "field": "specials.payload"
         }
       ],
-      "instructor|summary": [
+      "review|summary": [
         {
           "id": "bind-payload",
           "source": "site.moneySwitch",
           "field": "specials.payload"
         }
       ],
-      "instructor|content": [
+      "review|content": [
         {
           "id": "bind-payload",
           "source": "site.moneySwitch",
           "field": "specials.payload"
         }
       ],
-      "instructor|author": [
+      "review|author": [
         {
           "id": "bind-payload",
           "source": "site.moneySwitch",
           "field": "specials.payload"
         }
       ],
-      "instructor|date": [
+      "review|date": [
         {
           "id": "bind-payload",
           "source": "site.moneySwitch",
           "field": "specials.payload"
         }
       ],
-      "instructor|image": [
+      "review|image": [
         {
           "id": "bind-payload",
           "source": "site.moneySwitch",
           "field": "specials.payload"
         }
       ],
-      "instructor|price": [
+      "review|price": [
         {
           "id": "bind-payload",
           "source": "site.moneySwitch",
           "field": "specials.payload"
         }
       ],
-      "instructor|prices": [
+      "review|prices": [
         {
           "id": "bind-payload",
           "source": "site.moneySwitch",
           "field": "specials.payload"
         }
       ],
-      "instructor|url": [
+      "review|url": [
         {
           "id": "bind-payload",
           "source": "site.moneySwitch",
           "field": "specials.payload"
         }
       ],
-      "instructor|name": [
+      "review|name": [
         {
           "id": "bind-payload",
           "source": "site.moneySwitch",
           "field": "specials.payload"
         }
       ],
-      "blogCategory|title": [
+      "brand|title": [
         {
           "id": "bind-payload",
           "source": "site.moneySwitch",
           "field": "specials.payload"
         }
       ],
-      "blogCategory|vendor": [
+      "brand|vendor": [
         {
           "id": "bind-payload",
           "source": "site.moneySwitch",
           "field": "specials.payload"
         }
       ],
-      "blogCategory|description": [
+      "brand|description": [
         {
           "id": "bind-payload",
           "source": "site.moneySwitch",
           "field": "specials.payload"
         }
       ],
-      "blogCategory|summary": [
+      "brand|summary": [
         {
           "id": "bind-payload",
           "source": "site.moneySwitch",
           "field": "specials.payload"
         }
       ],
-      "blogCategory|content": [
+      "brand|content": [
         {
           "id": "bind-payload",
           "source": "site.moneySwitch",
           "field": "specials.payload"
         }
       ],
-      "blogCategory|author": [
+      "brand|author": [
         {
           "id": "bind-payload",
           "source": "site.moneySwitch",
           "field": "specials.payload"
         }
       ],
-      "blogCategory|date": [
+      "brand|date": [
         {
           "id": "bind-payload",
           "source": "site.moneySwitch",
           "field": "specials.payload"
         }
       ],
-      "blogCategory|image": [
+      "brand|image": [
         {
           "id": "bind-payload",
           "source": "site.moneySwitch",
           "field": "specials.payload"
         }
       ],
-      "blogCategory|price": [
+      "brand|price": [
         {
           "id": "bind-payload",
           "source": "site.moneySwitch",
           "field": "specials.payload"
         }
       ],
-      "blogCategory|prices": [
+      "brand|prices": [
         {
           "id": "bind-payload",
           "source": "site.moneySwitch",
           "field": "specials.payload"
         }
       ],
-      "blogCategory|url": [
+      "brand|url": [
         {
           "id": "bind-payload",
           "source": "site.moneySwitch",
           "field": "specials.payload"
         }
       ],
-      "blogCategory|name": [
+      "brand|name": [
         {
           "id": "bind-payload",
           "source": "site.moneySwitch",
@@ -11803,6 +11971,90 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "field": "specials.payload"
         }
       ],
+      "blogCategory|title": [
+        {
+          "id": "bind-payload",
+          "source": "site.localeSwitch",
+          "field": "specials.payload"
+        }
+      ],
+      "blogCategory|vendor": [
+        {
+          "id": "bind-payload",
+          "source": "site.localeSwitch",
+          "field": "specials.payload"
+        }
+      ],
+      "blogCategory|description": [
+        {
+          "id": "bind-payload",
+          "source": "site.localeSwitch",
+          "field": "specials.payload"
+        }
+      ],
+      "blogCategory|summary": [
+        {
+          "id": "bind-payload",
+          "source": "site.localeSwitch",
+          "field": "specials.payload"
+        }
+      ],
+      "blogCategory|content": [
+        {
+          "id": "bind-payload",
+          "source": "site.localeSwitch",
+          "field": "specials.payload"
+        }
+      ],
+      "blogCategory|author": [
+        {
+          "id": "bind-payload",
+          "source": "site.localeSwitch",
+          "field": "specials.payload"
+        }
+      ],
+      "blogCategory|date": [
+        {
+          "id": "bind-payload",
+          "source": "site.localeSwitch",
+          "field": "specials.payload"
+        }
+      ],
+      "blogCategory|image": [
+        {
+          "id": "bind-payload",
+          "source": "site.localeSwitch",
+          "field": "specials.payload"
+        }
+      ],
+      "blogCategory|price": [
+        {
+          "id": "bind-payload",
+          "source": "site.localeSwitch",
+          "field": "specials.payload"
+        }
+      ],
+      "blogCategory|prices": [
+        {
+          "id": "bind-payload",
+          "source": "site.localeSwitch",
+          "field": "specials.payload"
+        }
+      ],
+      "blogCategory|url": [
+        {
+          "id": "bind-payload",
+          "source": "site.localeSwitch",
+          "field": "specials.payload"
+        }
+      ],
+      "blogCategory|name": [
+        {
+          "id": "bind-payload",
+          "source": "site.localeSwitch",
+          "field": "specials.payload"
+        }
+      ],
       "course|title": [
         {
           "id": "bind-payload",
@@ -11887,168 +12139,168 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "field": "specials.payload"
         }
       ],
-      "instructor|title": [
+      "review|title": [
         {
           "id": "bind-payload",
           "source": "site.localeSwitch",
           "field": "specials.payload"
         }
       ],
-      "instructor|vendor": [
+      "review|vendor": [
         {
           "id": "bind-payload",
           "source": "site.localeSwitch",
           "field": "specials.payload"
         }
       ],
-      "instructor|description": [
+      "review|description": [
         {
           "id": "bind-payload",
           "source": "site.localeSwitch",
           "field": "specials.payload"
         }
       ],
-      "instructor|summary": [
+      "review|summary": [
         {
           "id": "bind-payload",
           "source": "site.localeSwitch",
           "field": "specials.payload"
         }
       ],
-      "instructor|content": [
+      "review|content": [
         {
           "id": "bind-payload",
           "source": "site.localeSwitch",
           "field": "specials.payload"
         }
       ],
-      "instructor|author": [
+      "review|author": [
         {
           "id": "bind-payload",
           "source": "site.localeSwitch",
           "field": "specials.payload"
         }
       ],
-      "instructor|date": [
+      "review|date": [
         {
           "id": "bind-payload",
           "source": "site.localeSwitch",
           "field": "specials.payload"
         }
       ],
-      "instructor|image": [
+      "review|image": [
         {
           "id": "bind-payload",
           "source": "site.localeSwitch",
           "field": "specials.payload"
         }
       ],
-      "instructor|price": [
+      "review|price": [
         {
           "id": "bind-payload",
           "source": "site.localeSwitch",
           "field": "specials.payload"
         }
       ],
-      "instructor|prices": [
+      "review|prices": [
         {
           "id": "bind-payload",
           "source": "site.localeSwitch",
           "field": "specials.payload"
         }
       ],
-      "instructor|url": [
+      "review|url": [
         {
           "id": "bind-payload",
           "source": "site.localeSwitch",
           "field": "specials.payload"
         }
       ],
-      "instructor|name": [
+      "review|name": [
         {
           "id": "bind-payload",
           "source": "site.localeSwitch",
           "field": "specials.payload"
         }
       ],
-      "blogCategory|title": [
+      "brand|title": [
         {
           "id": "bind-payload",
           "source": "site.localeSwitch",
           "field": "specials.payload"
         }
       ],
-      "blogCategory|vendor": [
+      "brand|vendor": [
         {
           "id": "bind-payload",
           "source": "site.localeSwitch",
           "field": "specials.payload"
         }
       ],
-      "blogCategory|description": [
+      "brand|description": [
         {
           "id": "bind-payload",
           "source": "site.localeSwitch",
           "field": "specials.payload"
         }
       ],
-      "blogCategory|summary": [
+      "brand|summary": [
         {
           "id": "bind-payload",
           "source": "site.localeSwitch",
           "field": "specials.payload"
         }
       ],
-      "blogCategory|content": [
+      "brand|content": [
         {
           "id": "bind-payload",
           "source": "site.localeSwitch",
           "field": "specials.payload"
         }
       ],
-      "blogCategory|author": [
+      "brand|author": [
         {
           "id": "bind-payload",
           "source": "site.localeSwitch",
           "field": "specials.payload"
         }
       ],
-      "blogCategory|date": [
+      "brand|date": [
         {
           "id": "bind-payload",
           "source": "site.localeSwitch",
           "field": "specials.payload"
         }
       ],
-      "blogCategory|image": [
+      "brand|image": [
         {
           "id": "bind-payload",
           "source": "site.localeSwitch",
           "field": "specials.payload"
         }
       ],
-      "blogCategory|price": [
+      "brand|price": [
         {
           "id": "bind-payload",
           "source": "site.localeSwitch",
           "field": "specials.payload"
         }
       ],
-      "blogCategory|prices": [
+      "brand|prices": [
         {
           "id": "bind-payload",
           "source": "site.localeSwitch",
           "field": "specials.payload"
         }
       ],
-      "blogCategory|url": [
+      "brand|url": [
         {
           "id": "bind-payload",
           "source": "site.localeSwitch",
           "field": "specials.payload"
         }
       ],
-      "blogCategory|name": [
+      "brand|name": [
         {
           "id": "bind-payload",
           "source": "site.localeSwitch",
@@ -17944,6 +18196,330 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "field": "specials.boundProductURL"
         }
       ],
+      "blogCategory|title": [
+        {
+          "id": "bind-image",
+          "source": "product.image",
+          "field": "specials.boundImage",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "media"
+          }
+        },
+        {
+          "id": "bind-images",
+          "source": "product.images",
+          "field": "specials.boundImages"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        },
+        {
+          "id": "bind-product-url",
+          "source": "product.url",
+          "field": "specials.boundProductURL"
+        }
+      ],
+      "blogCategory|vendor": [
+        {
+          "id": "bind-image",
+          "source": "product.image",
+          "field": "specials.boundImage",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "media"
+          }
+        },
+        {
+          "id": "bind-images",
+          "source": "product.images",
+          "field": "specials.boundImages"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        },
+        {
+          "id": "bind-product-url",
+          "source": "product.url",
+          "field": "specials.boundProductURL"
+        }
+      ],
+      "blogCategory|description": [
+        {
+          "id": "bind-image",
+          "source": "product.image",
+          "field": "specials.boundImage",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "media"
+          }
+        },
+        {
+          "id": "bind-images",
+          "source": "product.images",
+          "field": "specials.boundImages"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        },
+        {
+          "id": "bind-product-url",
+          "source": "product.url",
+          "field": "specials.boundProductURL"
+        }
+      ],
+      "blogCategory|summary": [
+        {
+          "id": "bind-image",
+          "source": "product.image",
+          "field": "specials.boundImage",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "media"
+          }
+        },
+        {
+          "id": "bind-images",
+          "source": "product.images",
+          "field": "specials.boundImages"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        },
+        {
+          "id": "bind-product-url",
+          "source": "product.url",
+          "field": "specials.boundProductURL"
+        }
+      ],
+      "blogCategory|content": [
+        {
+          "id": "bind-image",
+          "source": "product.image",
+          "field": "specials.boundImage",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "media"
+          }
+        },
+        {
+          "id": "bind-images",
+          "source": "product.images",
+          "field": "specials.boundImages"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        },
+        {
+          "id": "bind-product-url",
+          "source": "product.url",
+          "field": "specials.boundProductURL"
+        }
+      ],
+      "blogCategory|author": [
+        {
+          "id": "bind-image",
+          "source": "product.image",
+          "field": "specials.boundImage",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "media"
+          }
+        },
+        {
+          "id": "bind-images",
+          "source": "product.images",
+          "field": "specials.boundImages"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        },
+        {
+          "id": "bind-product-url",
+          "source": "product.url",
+          "field": "specials.boundProductURL"
+        }
+      ],
+      "blogCategory|date": [
+        {
+          "id": "bind-image",
+          "source": "product.image",
+          "field": "specials.boundImage",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "media"
+          }
+        },
+        {
+          "id": "bind-images",
+          "source": "product.images",
+          "field": "specials.boundImages"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        },
+        {
+          "id": "bind-product-url",
+          "source": "product.url",
+          "field": "specials.boundProductURL"
+        }
+      ],
+      "blogCategory|image": [
+        {
+          "id": "bind-image",
+          "source": "product.image",
+          "field": "specials.boundImage",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "media"
+          }
+        },
+        {
+          "id": "bind-images",
+          "source": "product.images",
+          "field": "specials.boundImages"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        },
+        {
+          "id": "bind-product-url",
+          "source": "product.url",
+          "field": "specials.boundProductURL"
+        }
+      ],
+      "blogCategory|price": [
+        {
+          "id": "bind-image",
+          "source": "product.image",
+          "field": "specials.boundImage",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "media"
+          }
+        },
+        {
+          "id": "bind-images",
+          "source": "product.images",
+          "field": "specials.boundImages"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        },
+        {
+          "id": "bind-product-url",
+          "source": "product.url",
+          "field": "specials.boundProductURL"
+        }
+      ],
+      "blogCategory|prices": [
+        {
+          "id": "bind-image",
+          "source": "product.image",
+          "field": "specials.boundImage",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "media"
+          }
+        },
+        {
+          "id": "bind-images",
+          "source": "product.images",
+          "field": "specials.boundImages"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        },
+        {
+          "id": "bind-product-url",
+          "source": "product.url",
+          "field": "specials.boundProductURL"
+        }
+      ],
+      "blogCategory|url": [
+        {
+          "id": "bind-image",
+          "source": "product.image",
+          "field": "specials.boundImage",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "media"
+          }
+        },
+        {
+          "id": "bind-images",
+          "source": "product.images",
+          "field": "specials.boundImages"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        },
+        {
+          "id": "bind-product-url",
+          "source": "product.url",
+          "field": "specials.boundProductURL"
+        }
+      ],
+      "blogCategory|name": [
+        {
+          "id": "bind-image",
+          "source": "product.image",
+          "field": "specials.boundImage",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "media"
+          }
+        },
+        {
+          "id": "bind-images",
+          "source": "product.images",
+          "field": "specials.boundImages"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        },
+        {
+          "id": "bind-product-url",
+          "source": "product.url",
+          "field": "specials.boundProductURL"
+        }
+      ],
       "course|title": [
         {
           "id": "bind-image",
@@ -18268,7 +18844,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "field": "specials.boundProductURL"
         }
       ],
-      "instructor|title": [
+      "review|title": [
         {
           "id": "bind-image",
           "source": "product.image",
@@ -18295,7 +18871,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "field": "specials.boundProductURL"
         }
       ],
-      "instructor|vendor": [
+      "review|vendor": [
         {
           "id": "bind-image",
           "source": "product.image",
@@ -18322,7 +18898,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "field": "specials.boundProductURL"
         }
       ],
-      "instructor|description": [
+      "review|description": [
         {
           "id": "bind-image",
           "source": "product.image",
@@ -18349,7 +18925,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "field": "specials.boundProductURL"
         }
       ],
-      "instructor|summary": [
+      "review|summary": [
         {
           "id": "bind-image",
           "source": "product.image",
@@ -18376,7 +18952,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "field": "specials.boundProductURL"
         }
       ],
-      "instructor|content": [
+      "review|content": [
         {
           "id": "bind-image",
           "source": "product.image",
@@ -18403,7 +18979,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "field": "specials.boundProductURL"
         }
       ],
-      "instructor|author": [
+      "review|author": [
         {
           "id": "bind-image",
           "source": "product.image",
@@ -18430,7 +19006,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "field": "specials.boundProductURL"
         }
       ],
-      "instructor|date": [
+      "review|date": [
         {
           "id": "bind-image",
           "source": "product.image",
@@ -18457,7 +19033,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "field": "specials.boundProductURL"
         }
       ],
-      "instructor|image": [
+      "review|image": [
         {
           "id": "bind-image",
           "source": "product.image",
@@ -18484,7 +19060,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "field": "specials.boundProductURL"
         }
       ],
-      "instructor|price": [
+      "review|price": [
         {
           "id": "bind-image",
           "source": "product.image",
@@ -18511,7 +19087,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "field": "specials.boundProductURL"
         }
       ],
-      "instructor|prices": [
+      "review|prices": [
         {
           "id": "bind-image",
           "source": "product.image",
@@ -18538,7 +19114,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "field": "specials.boundProductURL"
         }
       ],
-      "instructor|url": [
+      "review|url": [
         {
           "id": "bind-image",
           "source": "product.image",
@@ -18565,7 +19141,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "field": "specials.boundProductURL"
         }
       ],
-      "instructor|name": [
+      "review|name": [
         {
           "id": "bind-image",
           "source": "product.image",
@@ -18592,7 +19168,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "field": "specials.boundProductURL"
         }
       ],
-      "blogCategory|title": [
+      "brand|title": [
         {
           "id": "bind-image",
           "source": "product.image",
@@ -18619,7 +19195,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "field": "specials.boundProductURL"
         }
       ],
-      "blogCategory|vendor": [
+      "brand|vendor": [
         {
           "id": "bind-image",
           "source": "product.image",
@@ -18646,7 +19222,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "field": "specials.boundProductURL"
         }
       ],
-      "blogCategory|description": [
+      "brand|description": [
         {
           "id": "bind-image",
           "source": "product.image",
@@ -18673,7 +19249,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "field": "specials.boundProductURL"
         }
       ],
-      "blogCategory|summary": [
+      "brand|summary": [
         {
           "id": "bind-image",
           "source": "product.image",
@@ -18700,7 +19276,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "field": "specials.boundProductURL"
         }
       ],
-      "blogCategory|content": [
+      "brand|content": [
         {
           "id": "bind-image",
           "source": "product.image",
@@ -18727,7 +19303,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "field": "specials.boundProductURL"
         }
       ],
-      "blogCategory|author": [
+      "brand|author": [
         {
           "id": "bind-image",
           "source": "product.image",
@@ -18754,7 +19330,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "field": "specials.boundProductURL"
         }
       ],
-      "blogCategory|date": [
+      "brand|date": [
         {
           "id": "bind-image",
           "source": "product.image",
@@ -18781,7 +19357,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "field": "specials.boundProductURL"
         }
       ],
-      "blogCategory|image": [
+      "brand|image": [
         {
           "id": "bind-image",
           "source": "product.image",
@@ -18808,7 +19384,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "field": "specials.boundProductURL"
         }
       ],
-      "blogCategory|price": [
+      "brand|price": [
         {
           "id": "bind-image",
           "source": "product.image",
@@ -18835,7 +19411,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "field": "specials.boundProductURL"
         }
       ],
-      "blogCategory|prices": [
+      "brand|prices": [
         {
           "id": "bind-image",
           "source": "product.image",
@@ -18862,7 +19438,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "field": "specials.boundProductURL"
         }
       ],
-      "blogCategory|url": [
+      "brand|url": [
         {
           "id": "bind-image",
           "source": "product.image",
@@ -18889,7 +19465,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "field": "specials.boundProductURL"
         }
       ],
-      "blogCategory|name": [
+      "brand|name": [
         {
           "id": "bind-image",
           "source": "product.image",
@@ -20125,6 +20701,210 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "field": "specials.boundProductId"
         }
       ],
+      "blogCategory|title": [
+        {
+          "id": "bind-images",
+          "source": "product.images",
+          "field": "specials.boundImages",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "media"
+          }
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "blogCategory|vendor": [
+        {
+          "id": "bind-images",
+          "source": "product.images",
+          "field": "specials.boundImages",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "media"
+          }
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "blogCategory|description": [
+        {
+          "id": "bind-images",
+          "source": "product.images",
+          "field": "specials.boundImages",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "media"
+          }
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "blogCategory|summary": [
+        {
+          "id": "bind-images",
+          "source": "product.images",
+          "field": "specials.boundImages",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "media"
+          }
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "blogCategory|content": [
+        {
+          "id": "bind-images",
+          "source": "product.images",
+          "field": "specials.boundImages",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "media"
+          }
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "blogCategory|author": [
+        {
+          "id": "bind-images",
+          "source": "product.images",
+          "field": "specials.boundImages",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "media"
+          }
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "blogCategory|date": [
+        {
+          "id": "bind-images",
+          "source": "product.images",
+          "field": "specials.boundImages",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "media"
+          }
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "blogCategory|image": [
+        {
+          "id": "bind-images",
+          "source": "product.images",
+          "field": "specials.boundImages",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "media"
+          }
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "blogCategory|price": [
+        {
+          "id": "bind-images",
+          "source": "product.images",
+          "field": "specials.boundImages",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "media"
+          }
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "blogCategory|prices": [
+        {
+          "id": "bind-images",
+          "source": "product.images",
+          "field": "specials.boundImages",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "media"
+          }
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "blogCategory|url": [
+        {
+          "id": "bind-images",
+          "source": "product.images",
+          "field": "specials.boundImages",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "media"
+          }
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "blogCategory|name": [
+        {
+          "id": "bind-images",
+          "source": "product.images",
+          "field": "specials.boundImages",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "media"
+          }
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
       "course|title": [
         {
           "id": "bind-images",
@@ -20329,7 +21109,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "field": "specials.boundProductId"
         }
       ],
-      "instructor|title": [
+      "review|title": [
         {
           "id": "bind-images",
           "source": "product.images",
@@ -20346,7 +21126,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "field": "specials.boundProductId"
         }
       ],
-      "instructor|vendor": [
+      "review|vendor": [
         {
           "id": "bind-images",
           "source": "product.images",
@@ -20363,7 +21143,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "field": "specials.boundProductId"
         }
       ],
-      "instructor|description": [
+      "review|description": [
         {
           "id": "bind-images",
           "source": "product.images",
@@ -20380,7 +21160,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "field": "specials.boundProductId"
         }
       ],
-      "instructor|summary": [
+      "review|summary": [
         {
           "id": "bind-images",
           "source": "product.images",
@@ -20397,7 +21177,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "field": "specials.boundProductId"
         }
       ],
-      "instructor|content": [
+      "review|content": [
         {
           "id": "bind-images",
           "source": "product.images",
@@ -20414,7 +21194,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "field": "specials.boundProductId"
         }
       ],
-      "instructor|author": [
+      "review|author": [
         {
           "id": "bind-images",
           "source": "product.images",
@@ -20431,7 +21211,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "field": "specials.boundProductId"
         }
       ],
-      "instructor|date": [
+      "review|date": [
         {
           "id": "bind-images",
           "source": "product.images",
@@ -20448,7 +21228,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "field": "specials.boundProductId"
         }
       ],
-      "instructor|image": [
+      "review|image": [
         {
           "id": "bind-images",
           "source": "product.images",
@@ -20465,7 +21245,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "field": "specials.boundProductId"
         }
       ],
-      "instructor|price": [
+      "review|price": [
         {
           "id": "bind-images",
           "source": "product.images",
@@ -20482,7 +21262,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "field": "specials.boundProductId"
         }
       ],
-      "instructor|prices": [
+      "review|prices": [
         {
           "id": "bind-images",
           "source": "product.images",
@@ -20499,7 +21279,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "field": "specials.boundProductId"
         }
       ],
-      "instructor|url": [
+      "review|url": [
         {
           "id": "bind-images",
           "source": "product.images",
@@ -20516,7 +21296,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "field": "specials.boundProductId"
         }
       ],
-      "instructor|name": [
+      "review|name": [
         {
           "id": "bind-images",
           "source": "product.images",
@@ -20533,7 +21313,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "field": "specials.boundProductId"
         }
       ],
-      "blogCategory|title": [
+      "brand|title": [
         {
           "id": "bind-images",
           "source": "product.images",
@@ -20550,7 +21330,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "field": "specials.boundProductId"
         }
       ],
-      "blogCategory|vendor": [
+      "brand|vendor": [
         {
           "id": "bind-images",
           "source": "product.images",
@@ -20567,7 +21347,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "field": "specials.boundProductId"
         }
       ],
-      "blogCategory|description": [
+      "brand|description": [
         {
           "id": "bind-images",
           "source": "product.images",
@@ -20584,7 +21364,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "field": "specials.boundProductId"
         }
       ],
-      "blogCategory|summary": [
+      "brand|summary": [
         {
           "id": "bind-images",
           "source": "product.images",
@@ -20601,7 +21381,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "field": "specials.boundProductId"
         }
       ],
-      "blogCategory|content": [
+      "brand|content": [
         {
           "id": "bind-images",
           "source": "product.images",
@@ -20618,7 +21398,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "field": "specials.boundProductId"
         }
       ],
-      "blogCategory|author": [
+      "brand|author": [
         {
           "id": "bind-images",
           "source": "product.images",
@@ -20635,7 +21415,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "field": "specials.boundProductId"
         }
       ],
-      "blogCategory|date": [
+      "brand|date": [
         {
           "id": "bind-images",
           "source": "product.images",
@@ -20652,7 +21432,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "field": "specials.boundProductId"
         }
       ],
-      "blogCategory|image": [
+      "brand|image": [
         {
           "id": "bind-images",
           "source": "product.images",
@@ -20669,7 +21449,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "field": "specials.boundProductId"
         }
       ],
-      "blogCategory|price": [
+      "brand|price": [
         {
           "id": "bind-images",
           "source": "product.images",
@@ -20686,7 +21466,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "field": "specials.boundProductId"
         }
       ],
-      "blogCategory|prices": [
+      "brand|prices": [
         {
           "id": "bind-images",
           "source": "product.images",
@@ -20703,7 +21483,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "field": "specials.boundProductId"
         }
       ],
-      "blogCategory|url": [
+      "brand|url": [
         {
           "id": "bind-images",
           "source": "product.images",
@@ -20720,7 +21500,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "field": "specials.boundProductId"
         }
       ],
-      "blogCategory|name": [
+      "brand|name": [
         {
           "id": "bind-images",
           "source": "product.images",
@@ -21586,6 +22366,150 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           }
         }
       ],
+      "blogCategory|title": [
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "quantity"
+          }
+        }
+      ],
+      "blogCategory|vendor": [
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "quantity"
+          }
+        }
+      ],
+      "blogCategory|description": [
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "quantity"
+          }
+        }
+      ],
+      "blogCategory|summary": [
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "quantity"
+          }
+        }
+      ],
+      "blogCategory|content": [
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "quantity"
+          }
+        }
+      ],
+      "blogCategory|author": [
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "quantity"
+          }
+        }
+      ],
+      "blogCategory|date": [
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "quantity"
+          }
+        }
+      ],
+      "blogCategory|image": [
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "quantity"
+          }
+        }
+      ],
+      "blogCategory|price": [
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "quantity"
+          }
+        }
+      ],
+      "blogCategory|prices": [
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "quantity"
+          }
+        }
+      ],
+      "blogCategory|url": [
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "quantity"
+          }
+        }
+      ],
+      "blogCategory|name": [
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "quantity"
+          }
+        }
+      ],
       "course|title": [
         {
           "id": "bind-product-id",
@@ -21730,7 +22654,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           }
         }
       ],
-      "instructor|title": [
+      "review|title": [
         {
           "id": "bind-product-id",
           "source": "product.id",
@@ -21742,7 +22666,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           }
         }
       ],
-      "instructor|vendor": [
+      "review|vendor": [
         {
           "id": "bind-product-id",
           "source": "product.id",
@@ -21754,7 +22678,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           }
         }
       ],
-      "instructor|description": [
+      "review|description": [
         {
           "id": "bind-product-id",
           "source": "product.id",
@@ -21766,7 +22690,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           }
         }
       ],
-      "instructor|summary": [
+      "review|summary": [
         {
           "id": "bind-product-id",
           "source": "product.id",
@@ -21778,7 +22702,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           }
         }
       ],
-      "instructor|content": [
+      "review|content": [
         {
           "id": "bind-product-id",
           "source": "product.id",
@@ -21790,7 +22714,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           }
         }
       ],
-      "instructor|author": [
+      "review|author": [
         {
           "id": "bind-product-id",
           "source": "product.id",
@@ -21802,7 +22726,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           }
         }
       ],
-      "instructor|date": [
+      "review|date": [
         {
           "id": "bind-product-id",
           "source": "product.id",
@@ -21814,7 +22738,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           }
         }
       ],
-      "instructor|image": [
+      "review|image": [
         {
           "id": "bind-product-id",
           "source": "product.id",
@@ -21826,7 +22750,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           }
         }
       ],
-      "instructor|price": [
+      "review|price": [
         {
           "id": "bind-product-id",
           "source": "product.id",
@@ -21838,7 +22762,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           }
         }
       ],
-      "instructor|prices": [
+      "review|prices": [
         {
           "id": "bind-product-id",
           "source": "product.id",
@@ -21850,7 +22774,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           }
         }
       ],
-      "instructor|url": [
+      "review|url": [
         {
           "id": "bind-product-id",
           "source": "product.id",
@@ -21862,7 +22786,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           }
         }
       ],
-      "instructor|name": [
+      "review|name": [
         {
           "id": "bind-product-id",
           "source": "product.id",
@@ -21874,7 +22798,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           }
         }
       ],
-      "blogCategory|title": [
+      "brand|title": [
         {
           "id": "bind-product-id",
           "source": "product.id",
@@ -21886,7 +22810,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           }
         }
       ],
-      "blogCategory|vendor": [
+      "brand|vendor": [
         {
           "id": "bind-product-id",
           "source": "product.id",
@@ -21898,7 +22822,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           }
         }
       ],
-      "blogCategory|description": [
+      "brand|description": [
         {
           "id": "bind-product-id",
           "source": "product.id",
@@ -21910,7 +22834,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           }
         }
       ],
-      "blogCategory|summary": [
+      "brand|summary": [
         {
           "id": "bind-product-id",
           "source": "product.id",
@@ -21922,7 +22846,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           }
         }
       ],
-      "blogCategory|content": [
+      "brand|content": [
         {
           "id": "bind-product-id",
           "source": "product.id",
@@ -21934,7 +22858,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           }
         }
       ],
-      "blogCategory|author": [
+      "brand|author": [
         {
           "id": "bind-product-id",
           "source": "product.id",
@@ -21946,7 +22870,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           }
         }
       ],
-      "blogCategory|date": [
+      "brand|date": [
         {
           "id": "bind-product-id",
           "source": "product.id",
@@ -21958,7 +22882,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           }
         }
       ],
-      "blogCategory|image": [
+      "brand|image": [
         {
           "id": "bind-product-id",
           "source": "product.id",
@@ -21970,7 +22894,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           }
         }
       ],
-      "blogCategory|price": [
+      "brand|price": [
         {
           "id": "bind-product-id",
           "source": "product.id",
@@ -21982,7 +22906,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           }
         }
       ],
-      "blogCategory|prices": [
+      "brand|prices": [
         {
           "id": "bind-product-id",
           "source": "product.id",
@@ -21994,7 +22918,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           }
         }
       ],
-      "blogCategory|url": [
+      "brand|url": [
         {
           "id": "bind-product-id",
           "source": "product.id",
@@ -22006,7 +22930,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           }
         }
       ],
-      "blogCategory|name": [
+      "brand|name": [
         {
           "id": "bind-product-id",
           "source": "product.id",
@@ -23562,6 +24486,270 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "field": "specials.boundProductId"
         }
       ],
+      "blogCategory|title": [
+        {
+          "id": "bind-attributes",
+          "source": "product.attributes",
+          "field": "specials.boundAttributes",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "variants"
+          }
+        },
+        {
+          "id": "bind-variations",
+          "source": "product.variations",
+          "field": "specials.boundVariations"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "blogCategory|vendor": [
+        {
+          "id": "bind-attributes",
+          "source": "product.attributes",
+          "field": "specials.boundAttributes",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "variants"
+          }
+        },
+        {
+          "id": "bind-variations",
+          "source": "product.variations",
+          "field": "specials.boundVariations"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "blogCategory|description": [
+        {
+          "id": "bind-attributes",
+          "source": "product.attributes",
+          "field": "specials.boundAttributes",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "variants"
+          }
+        },
+        {
+          "id": "bind-variations",
+          "source": "product.variations",
+          "field": "specials.boundVariations"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "blogCategory|summary": [
+        {
+          "id": "bind-attributes",
+          "source": "product.attributes",
+          "field": "specials.boundAttributes",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "variants"
+          }
+        },
+        {
+          "id": "bind-variations",
+          "source": "product.variations",
+          "field": "specials.boundVariations"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "blogCategory|content": [
+        {
+          "id": "bind-attributes",
+          "source": "product.attributes",
+          "field": "specials.boundAttributes",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "variants"
+          }
+        },
+        {
+          "id": "bind-variations",
+          "source": "product.variations",
+          "field": "specials.boundVariations"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "blogCategory|author": [
+        {
+          "id": "bind-attributes",
+          "source": "product.attributes",
+          "field": "specials.boundAttributes",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "variants"
+          }
+        },
+        {
+          "id": "bind-variations",
+          "source": "product.variations",
+          "field": "specials.boundVariations"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "blogCategory|date": [
+        {
+          "id": "bind-attributes",
+          "source": "product.attributes",
+          "field": "specials.boundAttributes",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "variants"
+          }
+        },
+        {
+          "id": "bind-variations",
+          "source": "product.variations",
+          "field": "specials.boundVariations"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "blogCategory|image": [
+        {
+          "id": "bind-attributes",
+          "source": "product.attributes",
+          "field": "specials.boundAttributes",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "variants"
+          }
+        },
+        {
+          "id": "bind-variations",
+          "source": "product.variations",
+          "field": "specials.boundVariations"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "blogCategory|price": [
+        {
+          "id": "bind-attributes",
+          "source": "product.attributes",
+          "field": "specials.boundAttributes",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "variants"
+          }
+        },
+        {
+          "id": "bind-variations",
+          "source": "product.variations",
+          "field": "specials.boundVariations"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "blogCategory|prices": [
+        {
+          "id": "bind-attributes",
+          "source": "product.attributes",
+          "field": "specials.boundAttributes",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "variants"
+          }
+        },
+        {
+          "id": "bind-variations",
+          "source": "product.variations",
+          "field": "specials.boundVariations"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "blogCategory|url": [
+        {
+          "id": "bind-attributes",
+          "source": "product.attributes",
+          "field": "specials.boundAttributes",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "variants"
+          }
+        },
+        {
+          "id": "bind-variations",
+          "source": "product.variations",
+          "field": "specials.boundVariations"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "blogCategory|name": [
+        {
+          "id": "bind-attributes",
+          "source": "product.attributes",
+          "field": "specials.boundAttributes",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "variants"
+          }
+        },
+        {
+          "id": "bind-variations",
+          "source": "product.variations",
+          "field": "specials.boundVariations"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
       "course|title": [
         {
           "id": "bind-attributes",
@@ -23826,7 +25014,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "field": "specials.boundProductId"
         }
       ],
-      "instructor|title": [
+      "review|title": [
         {
           "id": "bind-attributes",
           "source": "product.attributes",
@@ -23848,7 +25036,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "field": "specials.boundProductId"
         }
       ],
-      "instructor|vendor": [
+      "review|vendor": [
         {
           "id": "bind-attributes",
           "source": "product.attributes",
@@ -23870,7 +25058,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "field": "specials.boundProductId"
         }
       ],
-      "instructor|description": [
+      "review|description": [
         {
           "id": "bind-attributes",
           "source": "product.attributes",
@@ -23892,7 +25080,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "field": "specials.boundProductId"
         }
       ],
-      "instructor|summary": [
+      "review|summary": [
         {
           "id": "bind-attributes",
           "source": "product.attributes",
@@ -23914,7 +25102,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "field": "specials.boundProductId"
         }
       ],
-      "instructor|content": [
+      "review|content": [
         {
           "id": "bind-attributes",
           "source": "product.attributes",
@@ -23936,7 +25124,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "field": "specials.boundProductId"
         }
       ],
-      "instructor|author": [
+      "review|author": [
         {
           "id": "bind-attributes",
           "source": "product.attributes",
@@ -23958,7 +25146,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "field": "specials.boundProductId"
         }
       ],
-      "instructor|date": [
+      "review|date": [
         {
           "id": "bind-attributes",
           "source": "product.attributes",
@@ -23980,7 +25168,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "field": "specials.boundProductId"
         }
       ],
-      "instructor|image": [
+      "review|image": [
         {
           "id": "bind-attributes",
           "source": "product.attributes",
@@ -24002,7 +25190,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "field": "specials.boundProductId"
         }
       ],
-      "instructor|price": [
+      "review|price": [
         {
           "id": "bind-attributes",
           "source": "product.attributes",
@@ -24024,7 +25212,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "field": "specials.boundProductId"
         }
       ],
-      "instructor|prices": [
+      "review|prices": [
         {
           "id": "bind-attributes",
           "source": "product.attributes",
@@ -24046,7 +25234,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "field": "specials.boundProductId"
         }
       ],
-      "instructor|url": [
+      "review|url": [
         {
           "id": "bind-attributes",
           "source": "product.attributes",
@@ -24068,7 +25256,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "field": "specials.boundProductId"
         }
       ],
-      "instructor|name": [
+      "review|name": [
         {
           "id": "bind-attributes",
           "source": "product.attributes",
@@ -24090,7 +25278,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "field": "specials.boundProductId"
         }
       ],
-      "blogCategory|title": [
+      "brand|title": [
         {
           "id": "bind-attributes",
           "source": "product.attributes",
@@ -24112,7 +25300,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "field": "specials.boundProductId"
         }
       ],
-      "blogCategory|vendor": [
+      "brand|vendor": [
         {
           "id": "bind-attributes",
           "source": "product.attributes",
@@ -24134,7 +25322,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "field": "specials.boundProductId"
         }
       ],
-      "blogCategory|description": [
+      "brand|description": [
         {
           "id": "bind-attributes",
           "source": "product.attributes",
@@ -24156,7 +25344,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "field": "specials.boundProductId"
         }
       ],
-      "blogCategory|summary": [
+      "brand|summary": [
         {
           "id": "bind-attributes",
           "source": "product.attributes",
@@ -24178,7 +25366,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "field": "specials.boundProductId"
         }
       ],
-      "blogCategory|content": [
+      "brand|content": [
         {
           "id": "bind-attributes",
           "source": "product.attributes",
@@ -24200,7 +25388,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "field": "specials.boundProductId"
         }
       ],
-      "blogCategory|author": [
+      "brand|author": [
         {
           "id": "bind-attributes",
           "source": "product.attributes",
@@ -24222,7 +25410,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "field": "specials.boundProductId"
         }
       ],
-      "blogCategory|date": [
+      "brand|date": [
         {
           "id": "bind-attributes",
           "source": "product.attributes",
@@ -24244,7 +25432,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "field": "specials.boundProductId"
         }
       ],
-      "blogCategory|image": [
+      "brand|image": [
         {
           "id": "bind-attributes",
           "source": "product.attributes",
@@ -24266,7 +25454,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "field": "specials.boundProductId"
         }
       ],
-      "blogCategory|price": [
+      "brand|price": [
         {
           "id": "bind-attributes",
           "source": "product.attributes",
@@ -24288,7 +25476,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "field": "specials.boundProductId"
         }
       ],
-      "blogCategory|prices": [
+      "brand|prices": [
         {
           "id": "bind-attributes",
           "source": "product.attributes",
@@ -24310,7 +25498,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "field": "specials.boundProductId"
         }
       ],
-      "blogCategory|url": [
+      "brand|url": [
         {
           "id": "bind-attributes",
           "source": "product.attributes",
@@ -24332,7 +25520,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "field": "specials.boundProductId"
         }
       ],
-      "blogCategory|name": [
+      "brand|name": [
         {
           "id": "bind-attributes",
           "source": "product.attributes",
@@ -26496,6 +27684,450 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "field": "specials.boundProductId"
         }
       ],
+      "blogCategory|title": [
+        {
+          "id": "bind-price",
+          "source": "product.price",
+          "field": "specials.boundPrice",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "title"
+          }
+        },
+        {
+          "id": "bind-compare",
+          "source": "product.compareAtPrice",
+          "field": "specials.boundCompare"
+        },
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents"
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-price-mo",
+          "source": "product.moneyOverride",
+          "field": "specials.boundMoneyOverride"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "blogCategory|vendor": [
+        {
+          "id": "bind-price",
+          "source": "product.price",
+          "field": "specials.boundPrice",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "vendor"
+          }
+        },
+        {
+          "id": "bind-compare",
+          "source": "product.compareAtPrice",
+          "field": "specials.boundCompare"
+        },
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents"
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-price-mo",
+          "source": "product.moneyOverride",
+          "field": "specials.boundMoneyOverride"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "blogCategory|description": [
+        {
+          "id": "bind-price",
+          "source": "product.price",
+          "field": "specials.boundPrice",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "description"
+          }
+        },
+        {
+          "id": "bind-compare",
+          "source": "product.compareAtPrice",
+          "field": "specials.boundCompare"
+        },
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents"
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-price-mo",
+          "source": "product.moneyOverride",
+          "field": "specials.boundMoneyOverride"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "blogCategory|summary": [
+        {
+          "id": "bind-price",
+          "source": "product.price",
+          "field": "specials.boundPrice",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "summary"
+          }
+        },
+        {
+          "id": "bind-compare",
+          "source": "product.compareAtPrice",
+          "field": "specials.boundCompare"
+        },
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents"
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-price-mo",
+          "source": "product.moneyOverride",
+          "field": "specials.boundMoneyOverride"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "blogCategory|content": [
+        {
+          "id": "bind-price",
+          "source": "product.price",
+          "field": "specials.boundPrice",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "content"
+          }
+        },
+        {
+          "id": "bind-compare",
+          "source": "product.compareAtPrice",
+          "field": "specials.boundCompare"
+        },
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents"
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-price-mo",
+          "source": "product.moneyOverride",
+          "field": "specials.boundMoneyOverride"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "blogCategory|author": [
+        {
+          "id": "bind-price",
+          "source": "product.price",
+          "field": "specials.boundPrice",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "author"
+          }
+        },
+        {
+          "id": "bind-compare",
+          "source": "product.compareAtPrice",
+          "field": "specials.boundCompare"
+        },
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents"
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-price-mo",
+          "source": "product.moneyOverride",
+          "field": "specials.boundMoneyOverride"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "blogCategory|date": [
+        {
+          "id": "bind-price",
+          "source": "product.price",
+          "field": "specials.boundPrice",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "date"
+          }
+        },
+        {
+          "id": "bind-compare",
+          "source": "product.compareAtPrice",
+          "field": "specials.boundCompare"
+        },
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents"
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-price-mo",
+          "source": "product.moneyOverride",
+          "field": "specials.boundMoneyOverride"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "blogCategory|image": [
+        {
+          "id": "bind-price",
+          "source": "product.price",
+          "field": "specials.boundPrice",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "image"
+          }
+        },
+        {
+          "id": "bind-compare",
+          "source": "product.compareAtPrice",
+          "field": "specials.boundCompare"
+        },
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents"
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-price-mo",
+          "source": "product.moneyOverride",
+          "field": "specials.boundMoneyOverride"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "blogCategory|price": [
+        {
+          "id": "bind-price",
+          "source": "product.price",
+          "field": "specials.boundPrice",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "price"
+          }
+        },
+        {
+          "id": "bind-compare",
+          "source": "product.compareAtPrice",
+          "field": "specials.boundCompare"
+        },
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents"
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-price-mo",
+          "source": "product.moneyOverride",
+          "field": "specials.boundMoneyOverride"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "blogCategory|prices": [
+        {
+          "id": "bind-price",
+          "source": "product.price",
+          "field": "specials.boundPrice",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare",
+          "source": "product.compareAtPrice",
+          "field": "specials.boundCompare"
+        },
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents"
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-price-mo",
+          "source": "product.moneyOverride",
+          "field": "specials.boundMoneyOverride"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "blogCategory|url": [
+        {
+          "id": "bind-price",
+          "source": "product.price",
+          "field": "specials.boundPrice",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "url"
+          }
+        },
+        {
+          "id": "bind-compare",
+          "source": "product.compareAtPrice",
+          "field": "specials.boundCompare"
+        },
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents"
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-price-mo",
+          "source": "product.moneyOverride",
+          "field": "specials.boundMoneyOverride"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "blogCategory|name": [
+        {
+          "id": "bind-price",
+          "source": "product.price",
+          "field": "specials.boundPrice",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "name"
+          }
+        },
+        {
+          "id": "bind-compare",
+          "source": "product.compareAtPrice",
+          "field": "specials.boundCompare"
+        },
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents"
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-price-mo",
+          "source": "product.moneyOverride",
+          "field": "specials.boundMoneyOverride"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
       "course|title": [
         {
           "id": "bind-price",
@@ -26940,7 +28572,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "field": "specials.boundProductId"
         }
       ],
-      "instructor|title": [
+      "review|title": [
         {
           "id": "bind-price",
           "source": "product.price",
@@ -26977,7 +28609,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "field": "specials.boundProductId"
         }
       ],
-      "instructor|vendor": [
+      "review|vendor": [
         {
           "id": "bind-price",
           "source": "product.price",
@@ -27014,7 +28646,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "field": "specials.boundProductId"
         }
       ],
-      "instructor|description": [
+      "review|description": [
         {
           "id": "bind-price",
           "source": "product.price",
@@ -27051,7 +28683,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "field": "specials.boundProductId"
         }
       ],
-      "instructor|summary": [
+      "review|summary": [
         {
           "id": "bind-price",
           "source": "product.price",
@@ -27088,7 +28720,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "field": "specials.boundProductId"
         }
       ],
-      "instructor|content": [
+      "review|content": [
         {
           "id": "bind-price",
           "source": "product.price",
@@ -27125,7 +28757,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "field": "specials.boundProductId"
         }
       ],
-      "instructor|author": [
+      "review|author": [
         {
           "id": "bind-price",
           "source": "product.price",
@@ -27162,7 +28794,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "field": "specials.boundProductId"
         }
       ],
-      "instructor|date": [
+      "review|date": [
         {
           "id": "bind-price",
           "source": "product.price",
@@ -27199,7 +28831,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "field": "specials.boundProductId"
         }
       ],
-      "instructor|image": [
+      "review|image": [
         {
           "id": "bind-price",
           "source": "product.price",
@@ -27236,7 +28868,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "field": "specials.boundProductId"
         }
       ],
-      "instructor|price": [
+      "review|price": [
         {
           "id": "bind-price",
           "source": "product.price",
@@ -27273,7 +28905,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "field": "specials.boundProductId"
         }
       ],
-      "instructor|prices": [
+      "review|prices": [
         {
           "id": "bind-price",
           "source": "product.price",
@@ -27310,7 +28942,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "field": "specials.boundProductId"
         }
       ],
-      "instructor|url": [
+      "review|url": [
         {
           "id": "bind-price",
           "source": "product.price",
@@ -27347,7 +28979,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "field": "specials.boundProductId"
         }
       ],
-      "instructor|name": [
+      "review|name": [
         {
           "id": "bind-price",
           "source": "product.price",
@@ -27384,7 +29016,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "field": "specials.boundProductId"
         }
       ],
-      "blogCategory|title": [
+      "brand|title": [
         {
           "id": "bind-price",
           "source": "product.price",
@@ -27421,7 +29053,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "field": "specials.boundProductId"
         }
       ],
-      "blogCategory|vendor": [
+      "brand|vendor": [
         {
           "id": "bind-price",
           "source": "product.price",
@@ -27458,7 +29090,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "field": "specials.boundProductId"
         }
       ],
-      "blogCategory|description": [
+      "brand|description": [
         {
           "id": "bind-price",
           "source": "product.price",
@@ -27495,7 +29127,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "field": "specials.boundProductId"
         }
       ],
-      "blogCategory|summary": [
+      "brand|summary": [
         {
           "id": "bind-price",
           "source": "product.price",
@@ -27532,7 +29164,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "field": "specials.boundProductId"
         }
       ],
-      "blogCategory|content": [
+      "brand|content": [
         {
           "id": "bind-price",
           "source": "product.price",
@@ -27569,7 +29201,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "field": "specials.boundProductId"
         }
       ],
-      "blogCategory|author": [
+      "brand|author": [
         {
           "id": "bind-price",
           "source": "product.price",
@@ -27606,7 +29238,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "field": "specials.boundProductId"
         }
       ],
-      "blogCategory|date": [
+      "brand|date": [
         {
           "id": "bind-price",
           "source": "product.price",
@@ -27643,7 +29275,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "field": "specials.boundProductId"
         }
       ],
-      "blogCategory|image": [
+      "brand|image": [
         {
           "id": "bind-price",
           "source": "product.price",
@@ -27680,7 +29312,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "field": "specials.boundProductId"
         }
       ],
-      "blogCategory|price": [
+      "brand|price": [
         {
           "id": "bind-price",
           "source": "product.price",
@@ -27717,7 +29349,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "field": "specials.boundProductId"
         }
       ],
-      "blogCategory|prices": [
+      "brand|prices": [
         {
           "id": "bind-price",
           "source": "product.price",
@@ -27754,7 +29386,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "field": "specials.boundProductId"
         }
       ],
-      "blogCategory|url": [
+      "brand|url": [
         {
           "id": "bind-price",
           "source": "product.price",
@@ -27791,7 +29423,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "field": "specials.boundProductId"
         }
       ],
-      "blogCategory|name": [
+      "brand|name": [
         {
           "id": "bind-price",
           "source": "product.price",
@@ -29313,6 +30945,270 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "field": "specials.boundProductId"
         }
       ],
+      "blogCategory|title": [
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "blogCategory|vendor": [
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "blogCategory|description": [
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "blogCategory|summary": [
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "blogCategory|content": [
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "blogCategory|author": [
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "blogCategory|date": [
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "blogCategory|image": [
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "blogCategory|price": [
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "blogCategory|prices": [
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "blogCategory|url": [
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "blogCategory|name": [
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
       "course|title": [
         {
           "id": "bind-price-cents",
@@ -29577,7 +31473,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "field": "specials.boundProductId"
         }
       ],
-      "instructor|title": [
+      "review|title": [
         {
           "id": "bind-price-cents",
           "source": "product.priceCents",
@@ -29599,7 +31495,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "field": "specials.boundProductId"
         }
       ],
-      "instructor|vendor": [
+      "review|vendor": [
         {
           "id": "bind-price-cents",
           "source": "product.priceCents",
@@ -29621,7 +31517,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "field": "specials.boundProductId"
         }
       ],
-      "instructor|description": [
+      "review|description": [
         {
           "id": "bind-price-cents",
           "source": "product.priceCents",
@@ -29643,7 +31539,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "field": "specials.boundProductId"
         }
       ],
-      "instructor|summary": [
+      "review|summary": [
         {
           "id": "bind-price-cents",
           "source": "product.priceCents",
@@ -29665,7 +31561,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "field": "specials.boundProductId"
         }
       ],
-      "instructor|content": [
+      "review|content": [
         {
           "id": "bind-price-cents",
           "source": "product.priceCents",
@@ -29687,7 +31583,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "field": "specials.boundProductId"
         }
       ],
-      "instructor|author": [
+      "review|author": [
         {
           "id": "bind-price-cents",
           "source": "product.priceCents",
@@ -29709,7 +31605,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "field": "specials.boundProductId"
         }
       ],
-      "instructor|date": [
+      "review|date": [
         {
           "id": "bind-price-cents",
           "source": "product.priceCents",
@@ -29731,7 +31627,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "field": "specials.boundProductId"
         }
       ],
-      "instructor|image": [
+      "review|image": [
         {
           "id": "bind-price-cents",
           "source": "product.priceCents",
@@ -29753,7 +31649,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "field": "specials.boundProductId"
         }
       ],
-      "instructor|price": [
+      "review|price": [
         {
           "id": "bind-price-cents",
           "source": "product.priceCents",
@@ -29775,7 +31671,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "field": "specials.boundProductId"
         }
       ],
-      "instructor|prices": [
+      "review|prices": [
         {
           "id": "bind-price-cents",
           "source": "product.priceCents",
@@ -29797,7 +31693,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "field": "specials.boundProductId"
         }
       ],
-      "instructor|url": [
+      "review|url": [
         {
           "id": "bind-price-cents",
           "source": "product.priceCents",
@@ -29819,7 +31715,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "field": "specials.boundProductId"
         }
       ],
-      "instructor|name": [
+      "review|name": [
         {
           "id": "bind-price-cents",
           "source": "product.priceCents",
@@ -29841,7 +31737,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "field": "specials.boundProductId"
         }
       ],
-      "blogCategory|title": [
+      "brand|title": [
         {
           "id": "bind-price-cents",
           "source": "product.priceCents",
@@ -29863,7 +31759,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "field": "specials.boundProductId"
         }
       ],
-      "blogCategory|vendor": [
+      "brand|vendor": [
         {
           "id": "bind-price-cents",
           "source": "product.priceCents",
@@ -29885,7 +31781,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "field": "specials.boundProductId"
         }
       ],
-      "blogCategory|description": [
+      "brand|description": [
         {
           "id": "bind-price-cents",
           "source": "product.priceCents",
@@ -29907,7 +31803,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "field": "specials.boundProductId"
         }
       ],
-      "blogCategory|summary": [
+      "brand|summary": [
         {
           "id": "bind-price-cents",
           "source": "product.priceCents",
@@ -29929,7 +31825,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "field": "specials.boundProductId"
         }
       ],
-      "blogCategory|content": [
+      "brand|content": [
         {
           "id": "bind-price-cents",
           "source": "product.priceCents",
@@ -29951,7 +31847,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "field": "specials.boundProductId"
         }
       ],
-      "blogCategory|author": [
+      "brand|author": [
         {
           "id": "bind-price-cents",
           "source": "product.priceCents",
@@ -29973,7 +31869,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "field": "specials.boundProductId"
         }
       ],
-      "blogCategory|date": [
+      "brand|date": [
         {
           "id": "bind-price-cents",
           "source": "product.priceCents",
@@ -29995,7 +31891,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "field": "specials.boundProductId"
         }
       ],
-      "blogCategory|image": [
+      "brand|image": [
         {
           "id": "bind-price-cents",
           "source": "product.priceCents",
@@ -30017,7 +31913,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "field": "specials.boundProductId"
         }
       ],
-      "blogCategory|price": [
+      "brand|price": [
         {
           "id": "bind-price-cents",
           "source": "product.priceCents",
@@ -30039,7 +31935,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "field": "specials.boundProductId"
         }
       ],
-      "blogCategory|prices": [
+      "brand|prices": [
         {
           "id": "bind-price-cents",
           "source": "product.priceCents",
@@ -30061,7 +31957,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "field": "specials.boundProductId"
         }
       ],
-      "blogCategory|url": [
+      "brand|url": [
         {
           "id": "bind-price-cents",
           "source": "product.priceCents",
@@ -30083,7 +31979,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "field": "specials.boundProductId"
         }
       ],
-      "blogCategory|name": [
+      "brand|name": [
         {
           "id": "bind-price-cents",
           "source": "product.priceCents",
@@ -31919,6 +33815,450 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "field": "specials.boundProductId"
         }
       ],
+      "blogCategory|title": [
+        {
+          "id": "bind-price",
+          "source": "product.price",
+          "field": "specials.boundPrice",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare",
+          "source": "product.compareAtPrice",
+          "field": "specials.boundCompare"
+        },
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents"
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-price-mo",
+          "source": "product.moneyOverride",
+          "field": "specials.boundMoneyOverride"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "blogCategory|vendor": [
+        {
+          "id": "bind-price",
+          "source": "product.price",
+          "field": "specials.boundPrice",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare",
+          "source": "product.compareAtPrice",
+          "field": "specials.boundCompare"
+        },
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents"
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-price-mo",
+          "source": "product.moneyOverride",
+          "field": "specials.boundMoneyOverride"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "blogCategory|description": [
+        {
+          "id": "bind-price",
+          "source": "product.price",
+          "field": "specials.boundPrice",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare",
+          "source": "product.compareAtPrice",
+          "field": "specials.boundCompare"
+        },
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents"
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-price-mo",
+          "source": "product.moneyOverride",
+          "field": "specials.boundMoneyOverride"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "blogCategory|summary": [
+        {
+          "id": "bind-price",
+          "source": "product.price",
+          "field": "specials.boundPrice",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare",
+          "source": "product.compareAtPrice",
+          "field": "specials.boundCompare"
+        },
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents"
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-price-mo",
+          "source": "product.moneyOverride",
+          "field": "specials.boundMoneyOverride"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "blogCategory|content": [
+        {
+          "id": "bind-price",
+          "source": "product.price",
+          "field": "specials.boundPrice",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare",
+          "source": "product.compareAtPrice",
+          "field": "specials.boundCompare"
+        },
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents"
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-price-mo",
+          "source": "product.moneyOverride",
+          "field": "specials.boundMoneyOverride"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "blogCategory|author": [
+        {
+          "id": "bind-price",
+          "source": "product.price",
+          "field": "specials.boundPrice",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare",
+          "source": "product.compareAtPrice",
+          "field": "specials.boundCompare"
+        },
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents"
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-price-mo",
+          "source": "product.moneyOverride",
+          "field": "specials.boundMoneyOverride"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "blogCategory|date": [
+        {
+          "id": "bind-price",
+          "source": "product.price",
+          "field": "specials.boundPrice",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare",
+          "source": "product.compareAtPrice",
+          "field": "specials.boundCompare"
+        },
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents"
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-price-mo",
+          "source": "product.moneyOverride",
+          "field": "specials.boundMoneyOverride"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "blogCategory|image": [
+        {
+          "id": "bind-price",
+          "source": "product.price",
+          "field": "specials.boundPrice",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare",
+          "source": "product.compareAtPrice",
+          "field": "specials.boundCompare"
+        },
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents"
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-price-mo",
+          "source": "product.moneyOverride",
+          "field": "specials.boundMoneyOverride"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "blogCategory|price": [
+        {
+          "id": "bind-price",
+          "source": "product.price",
+          "field": "specials.boundPrice",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare",
+          "source": "product.compareAtPrice",
+          "field": "specials.boundCompare"
+        },
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents"
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-price-mo",
+          "source": "product.moneyOverride",
+          "field": "specials.boundMoneyOverride"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "blogCategory|prices": [
+        {
+          "id": "bind-price",
+          "source": "product.price",
+          "field": "specials.boundPrice",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare",
+          "source": "product.compareAtPrice",
+          "field": "specials.boundCompare"
+        },
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents"
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-price-mo",
+          "source": "product.moneyOverride",
+          "field": "specials.boundMoneyOverride"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "blogCategory|url": [
+        {
+          "id": "bind-price",
+          "source": "product.price",
+          "field": "specials.boundPrice",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare",
+          "source": "product.compareAtPrice",
+          "field": "specials.boundCompare"
+        },
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents"
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-price-mo",
+          "source": "product.moneyOverride",
+          "field": "specials.boundMoneyOverride"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "blogCategory|name": [
+        {
+          "id": "bind-price",
+          "source": "product.price",
+          "field": "specials.boundPrice",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "prices"
+          }
+        },
+        {
+          "id": "bind-compare",
+          "source": "product.compareAtPrice",
+          "field": "specials.boundCompare"
+        },
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents"
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-price-mo",
+          "source": "product.moneyOverride",
+          "field": "specials.boundMoneyOverride"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
       "course|title": [
         {
           "id": "bind-price",
@@ -32363,7 +34703,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "field": "specials.boundProductId"
         }
       ],
-      "instructor|title": [
+      "review|title": [
         {
           "id": "bind-price",
           "source": "product.price",
@@ -32400,7 +34740,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "field": "specials.boundProductId"
         }
       ],
-      "instructor|vendor": [
+      "review|vendor": [
         {
           "id": "bind-price",
           "source": "product.price",
@@ -32437,7 +34777,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "field": "specials.boundProductId"
         }
       ],
-      "instructor|description": [
+      "review|description": [
         {
           "id": "bind-price",
           "source": "product.price",
@@ -32474,7 +34814,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "field": "specials.boundProductId"
         }
       ],
-      "instructor|summary": [
+      "review|summary": [
         {
           "id": "bind-price",
           "source": "product.price",
@@ -32511,7 +34851,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "field": "specials.boundProductId"
         }
       ],
-      "instructor|content": [
+      "review|content": [
         {
           "id": "bind-price",
           "source": "product.price",
@@ -32548,7 +34888,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "field": "specials.boundProductId"
         }
       ],
-      "instructor|author": [
+      "review|author": [
         {
           "id": "bind-price",
           "source": "product.price",
@@ -32585,7 +34925,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "field": "specials.boundProductId"
         }
       ],
-      "instructor|date": [
+      "review|date": [
         {
           "id": "bind-price",
           "source": "product.price",
@@ -32622,7 +34962,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "field": "specials.boundProductId"
         }
       ],
-      "instructor|image": [
+      "review|image": [
         {
           "id": "bind-price",
           "source": "product.price",
@@ -32659,7 +34999,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "field": "specials.boundProductId"
         }
       ],
-      "instructor|price": [
+      "review|price": [
         {
           "id": "bind-price",
           "source": "product.price",
@@ -32696,7 +35036,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "field": "specials.boundProductId"
         }
       ],
-      "instructor|prices": [
+      "review|prices": [
         {
           "id": "bind-price",
           "source": "product.price",
@@ -32733,7 +35073,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "field": "specials.boundProductId"
         }
       ],
-      "instructor|url": [
+      "review|url": [
         {
           "id": "bind-price",
           "source": "product.price",
@@ -32770,7 +35110,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "field": "specials.boundProductId"
         }
       ],
-      "instructor|name": [
+      "review|name": [
         {
           "id": "bind-price",
           "source": "product.price",
@@ -32807,7 +35147,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "field": "specials.boundProductId"
         }
       ],
-      "blogCategory|title": [
+      "brand|title": [
         {
           "id": "bind-price",
           "source": "product.price",
@@ -32844,7 +35184,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "field": "specials.boundProductId"
         }
       ],
-      "blogCategory|vendor": [
+      "brand|vendor": [
         {
           "id": "bind-price",
           "source": "product.price",
@@ -32881,7 +35221,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "field": "specials.boundProductId"
         }
       ],
-      "blogCategory|description": [
+      "brand|description": [
         {
           "id": "bind-price",
           "source": "product.price",
@@ -32918,7 +35258,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "field": "specials.boundProductId"
         }
       ],
-      "blogCategory|summary": [
+      "brand|summary": [
         {
           "id": "bind-price",
           "source": "product.price",
@@ -32955,7 +35295,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "field": "specials.boundProductId"
         }
       ],
-      "blogCategory|content": [
+      "brand|content": [
         {
           "id": "bind-price",
           "source": "product.price",
@@ -32992,7 +35332,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "field": "specials.boundProductId"
         }
       ],
-      "blogCategory|author": [
+      "brand|author": [
         {
           "id": "bind-price",
           "source": "product.price",
@@ -33029,7 +35369,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "field": "specials.boundProductId"
         }
       ],
-      "blogCategory|date": [
+      "brand|date": [
         {
           "id": "bind-price",
           "source": "product.price",
@@ -33066,7 +35406,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "field": "specials.boundProductId"
         }
       ],
-      "blogCategory|image": [
+      "brand|image": [
         {
           "id": "bind-price",
           "source": "product.price",
@@ -33103,7 +35443,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "field": "specials.boundProductId"
         }
       ],
-      "blogCategory|price": [
+      "brand|price": [
         {
           "id": "bind-price",
           "source": "product.price",
@@ -33140,7 +35480,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "field": "specials.boundProductId"
         }
       ],
-      "blogCategory|prices": [
+      "brand|prices": [
         {
           "id": "bind-price",
           "source": "product.price",
@@ -33177,7 +35517,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "field": "specials.boundProductId"
         }
       ],
-      "blogCategory|url": [
+      "brand|url": [
         {
           "id": "bind-price",
           "source": "product.price",
@@ -33214,7 +35554,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "field": "specials.boundProductId"
         }
       ],
-      "blogCategory|name": [
+      "brand|name": [
         {
           "id": "bind-price",
           "source": "product.price",
@@ -34323,6 +36663,150 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           }
         }
       ],
+      "blogCategory|title": [
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "product_general"
+          }
+        }
+      ],
+      "blogCategory|vendor": [
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "product_general"
+          }
+        }
+      ],
+      "blogCategory|description": [
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "product_general"
+          }
+        }
+      ],
+      "blogCategory|summary": [
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "product_general"
+          }
+        }
+      ],
+      "blogCategory|content": [
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "product_general"
+          }
+        }
+      ],
+      "blogCategory|author": [
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "product_general"
+          }
+        }
+      ],
+      "blogCategory|date": [
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "product_general"
+          }
+        }
+      ],
+      "blogCategory|image": [
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "product_general"
+          }
+        }
+      ],
+      "blogCategory|price": [
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "product_general"
+          }
+        }
+      ],
+      "blogCategory|prices": [
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "product_general"
+          }
+        }
+      ],
+      "blogCategory|url": [
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "product_general"
+          }
+        }
+      ],
+      "blogCategory|name": [
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "product_general"
+          }
+        }
+      ],
       "course|title": [
         {
           "id": "bind-product-id",
@@ -34467,7 +36951,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           }
         }
       ],
-      "instructor|title": [
+      "review|title": [
         {
           "id": "bind-product-id",
           "source": "product.id",
@@ -34479,7 +36963,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           }
         }
       ],
-      "instructor|vendor": [
+      "review|vendor": [
         {
           "id": "bind-product-id",
           "source": "product.id",
@@ -34491,7 +36975,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           }
         }
       ],
-      "instructor|description": [
+      "review|description": [
         {
           "id": "bind-product-id",
           "source": "product.id",
@@ -34503,7 +36987,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           }
         }
       ],
-      "instructor|summary": [
+      "review|summary": [
         {
           "id": "bind-product-id",
           "source": "product.id",
@@ -34515,7 +36999,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           }
         }
       ],
-      "instructor|content": [
+      "review|content": [
         {
           "id": "bind-product-id",
           "source": "product.id",
@@ -34527,7 +37011,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           }
         }
       ],
-      "instructor|author": [
+      "review|author": [
         {
           "id": "bind-product-id",
           "source": "product.id",
@@ -34539,7 +37023,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           }
         }
       ],
-      "instructor|date": [
+      "review|date": [
         {
           "id": "bind-product-id",
           "source": "product.id",
@@ -34551,7 +37035,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           }
         }
       ],
-      "instructor|image": [
+      "review|image": [
         {
           "id": "bind-product-id",
           "source": "product.id",
@@ -34563,7 +37047,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           }
         }
       ],
-      "instructor|price": [
+      "review|price": [
         {
           "id": "bind-product-id",
           "source": "product.id",
@@ -34575,7 +37059,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           }
         }
       ],
-      "instructor|prices": [
+      "review|prices": [
         {
           "id": "bind-product-id",
           "source": "product.id",
@@ -34587,7 +37071,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           }
         }
       ],
-      "instructor|url": [
+      "review|url": [
         {
           "id": "bind-product-id",
           "source": "product.id",
@@ -34599,7 +37083,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           }
         }
       ],
-      "instructor|name": [
+      "review|name": [
         {
           "id": "bind-product-id",
           "source": "product.id",
@@ -34611,7 +37095,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           }
         }
       ],
-      "blogCategory|title": [
+      "brand|title": [
         {
           "id": "bind-product-id",
           "source": "product.id",
@@ -34623,7 +37107,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           }
         }
       ],
-      "blogCategory|vendor": [
+      "brand|vendor": [
         {
           "id": "bind-product-id",
           "source": "product.id",
@@ -34635,7 +37119,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           }
         }
       ],
-      "blogCategory|description": [
+      "brand|description": [
         {
           "id": "bind-product-id",
           "source": "product.id",
@@ -34647,7 +37131,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           }
         }
       ],
-      "blogCategory|summary": [
+      "brand|summary": [
         {
           "id": "bind-product-id",
           "source": "product.id",
@@ -34659,7 +37143,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           }
         }
       ],
-      "blogCategory|content": [
+      "brand|content": [
         {
           "id": "bind-product-id",
           "source": "product.id",
@@ -34671,7 +37155,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           }
         }
       ],
-      "blogCategory|author": [
+      "brand|author": [
         {
           "id": "bind-product-id",
           "source": "product.id",
@@ -34683,7 +37167,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           }
         }
       ],
-      "blogCategory|date": [
+      "brand|date": [
         {
           "id": "bind-product-id",
           "source": "product.id",
@@ -34695,7 +37179,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           }
         }
       ],
-      "blogCategory|image": [
+      "brand|image": [
         {
           "id": "bind-product-id",
           "source": "product.id",
@@ -34707,7 +37191,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           }
         }
       ],
-      "blogCategory|price": [
+      "brand|price": [
         {
           "id": "bind-product-id",
           "source": "product.id",
@@ -34719,7 +37203,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           }
         }
       ],
-      "blogCategory|prices": [
+      "brand|prices": [
         {
           "id": "bind-product-id",
           "source": "product.id",
@@ -34731,7 +37215,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           }
         }
       ],
-      "blogCategory|url": [
+      "brand|url": [
         {
           "id": "bind-product-id",
           "source": "product.id",
@@ -34743,7 +37227,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           }
         }
       ],
-      "blogCategory|name": [
+      "brand|name": [
         {
           "id": "bind-product-id",
           "source": "product.id",
@@ -35554,6 +38038,150 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           }
         }
       ],
+      "blogCategory|title": [
+        {
+          "id": "bind-image",
+          "source": "blogCategory.image",
+          "field": "specials.boundImage",
+          "target": {
+            "type": "blogCategory",
+            "id": "",
+            "kind": "media"
+          }
+        }
+      ],
+      "blogCategory|vendor": [
+        {
+          "id": "bind-image",
+          "source": "blogCategory.image",
+          "field": "specials.boundImage",
+          "target": {
+            "type": "blogCategory",
+            "id": "",
+            "kind": "media"
+          }
+        }
+      ],
+      "blogCategory|description": [
+        {
+          "id": "bind-image",
+          "source": "blogCategory.image",
+          "field": "specials.boundImage",
+          "target": {
+            "type": "blogCategory",
+            "id": "",
+            "kind": "media"
+          }
+        }
+      ],
+      "blogCategory|summary": [
+        {
+          "id": "bind-image",
+          "source": "blogCategory.image",
+          "field": "specials.boundImage",
+          "target": {
+            "type": "blogCategory",
+            "id": "",
+            "kind": "media"
+          }
+        }
+      ],
+      "blogCategory|content": [
+        {
+          "id": "bind-image",
+          "source": "blogCategory.image",
+          "field": "specials.boundImage",
+          "target": {
+            "type": "blogCategory",
+            "id": "",
+            "kind": "media"
+          }
+        }
+      ],
+      "blogCategory|author": [
+        {
+          "id": "bind-image",
+          "source": "blogCategory.image",
+          "field": "specials.boundImage",
+          "target": {
+            "type": "blogCategory",
+            "id": "",
+            "kind": "media"
+          }
+        }
+      ],
+      "blogCategory|date": [
+        {
+          "id": "bind-image",
+          "source": "blogCategory.image",
+          "field": "specials.boundImage",
+          "target": {
+            "type": "blogCategory",
+            "id": "",
+            "kind": "media"
+          }
+        }
+      ],
+      "blogCategory|image": [
+        {
+          "id": "bind-image",
+          "source": "blogCategory.image",
+          "field": "specials.boundImage",
+          "target": {
+            "type": "blogCategory",
+            "id": "",
+            "kind": "media"
+          }
+        }
+      ],
+      "blogCategory|price": [
+        {
+          "id": "bind-image",
+          "source": "blogCategory.image",
+          "field": "specials.boundImage",
+          "target": {
+            "type": "blogCategory",
+            "id": "",
+            "kind": "media"
+          }
+        }
+      ],
+      "blogCategory|prices": [
+        {
+          "id": "bind-image",
+          "source": "blogCategory.image",
+          "field": "specials.boundImage",
+          "target": {
+            "type": "blogCategory",
+            "id": "",
+            "kind": "media"
+          }
+        }
+      ],
+      "blogCategory|url": [
+        {
+          "id": "bind-image",
+          "source": "blogCategory.image",
+          "field": "specials.boundImage",
+          "target": {
+            "type": "blogCategory",
+            "id": "",
+            "kind": "media"
+          }
+        }
+      ],
+      "blogCategory|name": [
+        {
+          "id": "bind-image",
+          "source": "blogCategory.image",
+          "field": "specials.boundImage",
+          "target": {
+            "type": "blogCategory",
+            "id": "",
+            "kind": "media"
+          }
+        }
+      ],
       "course|title": [
         {
           "id": "bind-image",
@@ -35698,289 +38326,289 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           }
         }
       ],
-      "instructor|title": [
+      "review|title": [
         {
           "id": "bind-image",
-          "source": "category.image",
+          "source": "review.image",
           "field": "specials.boundImage",
           "target": {
-            "type": "category",
+            "type": "review",
             "id": "",
             "kind": "media"
           }
         }
       ],
-      "instructor|vendor": [
+      "review|vendor": [
         {
           "id": "bind-image",
-          "source": "category.image",
+          "source": "review.image",
           "field": "specials.boundImage",
           "target": {
-            "type": "category",
+            "type": "review",
             "id": "",
             "kind": "media"
           }
         }
       ],
-      "instructor|description": [
+      "review|description": [
         {
           "id": "bind-image",
-          "source": "category.image",
+          "source": "review.image",
           "field": "specials.boundImage",
           "target": {
-            "type": "category",
+            "type": "review",
             "id": "",
             "kind": "media"
           }
         }
       ],
-      "instructor|summary": [
+      "review|summary": [
         {
           "id": "bind-image",
-          "source": "category.image",
+          "source": "review.image",
           "field": "specials.boundImage",
           "target": {
-            "type": "category",
+            "type": "review",
             "id": "",
             "kind": "media"
           }
         }
       ],
-      "instructor|content": [
+      "review|content": [
         {
           "id": "bind-image",
-          "source": "category.image",
+          "source": "review.image",
           "field": "specials.boundImage",
           "target": {
-            "type": "category",
+            "type": "review",
             "id": "",
             "kind": "media"
           }
         }
       ],
-      "instructor|author": [
+      "review|author": [
         {
           "id": "bind-image",
-          "source": "category.image",
+          "source": "review.image",
           "field": "specials.boundImage",
           "target": {
-            "type": "category",
+            "type": "review",
             "id": "",
             "kind": "media"
           }
         }
       ],
-      "instructor|date": [
+      "review|date": [
         {
           "id": "bind-image",
-          "source": "category.image",
+          "source": "review.image",
           "field": "specials.boundImage",
           "target": {
-            "type": "category",
+            "type": "review",
             "id": "",
             "kind": "media"
           }
         }
       ],
-      "instructor|image": [
+      "review|image": [
         {
           "id": "bind-image",
-          "source": "category.image",
+          "source": "review.image",
           "field": "specials.boundImage",
           "target": {
-            "type": "category",
+            "type": "review",
             "id": "",
             "kind": "media"
           }
         }
       ],
-      "instructor|price": [
+      "review|price": [
         {
           "id": "bind-image",
-          "source": "category.image",
+          "source": "review.image",
           "field": "specials.boundImage",
           "target": {
-            "type": "category",
+            "type": "review",
             "id": "",
             "kind": "media"
           }
         }
       ],
-      "instructor|prices": [
+      "review|prices": [
         {
           "id": "bind-image",
-          "source": "category.image",
+          "source": "review.image",
           "field": "specials.boundImage",
           "target": {
-            "type": "category",
+            "type": "review",
             "id": "",
             "kind": "media"
           }
         }
       ],
-      "instructor|url": [
+      "review|url": [
         {
           "id": "bind-image",
-          "source": "category.image",
+          "source": "review.image",
           "field": "specials.boundImage",
           "target": {
-            "type": "category",
+            "type": "review",
             "id": "",
             "kind": "media"
           }
         }
       ],
-      "instructor|name": [
+      "review|name": [
         {
           "id": "bind-image",
-          "source": "category.image",
+          "source": "review.image",
           "field": "specials.boundImage",
           "target": {
-            "type": "category",
+            "type": "review",
             "id": "",
             "kind": "media"
           }
         }
       ],
-      "blogCategory|title": [
+      "brand|title": [
         {
           "id": "bind-image",
-          "source": "blogCategory.image",
+          "source": "brand.image",
           "field": "specials.boundImage",
           "target": {
-            "type": "blogCategory",
+            "type": "brand",
             "id": "",
             "kind": "media"
           }
         }
       ],
-      "blogCategory|vendor": [
+      "brand|vendor": [
         {
           "id": "bind-image",
-          "source": "blogCategory.image",
+          "source": "brand.image",
           "field": "specials.boundImage",
           "target": {
-            "type": "blogCategory",
+            "type": "brand",
             "id": "",
             "kind": "media"
           }
         }
       ],
-      "blogCategory|description": [
+      "brand|description": [
         {
           "id": "bind-image",
-          "source": "blogCategory.image",
+          "source": "brand.image",
           "field": "specials.boundImage",
           "target": {
-            "type": "blogCategory",
+            "type": "brand",
             "id": "",
             "kind": "media"
           }
         }
       ],
-      "blogCategory|summary": [
+      "brand|summary": [
         {
           "id": "bind-image",
-          "source": "blogCategory.image",
+          "source": "brand.image",
           "field": "specials.boundImage",
           "target": {
-            "type": "blogCategory",
+            "type": "brand",
             "id": "",
             "kind": "media"
           }
         }
       ],
-      "blogCategory|content": [
+      "brand|content": [
         {
           "id": "bind-image",
-          "source": "blogCategory.image",
+          "source": "brand.image",
           "field": "specials.boundImage",
           "target": {
-            "type": "blogCategory",
+            "type": "brand",
             "id": "",
             "kind": "media"
           }
         }
       ],
-      "blogCategory|author": [
+      "brand|author": [
         {
           "id": "bind-image",
-          "source": "blogCategory.image",
+          "source": "brand.image",
           "field": "specials.boundImage",
           "target": {
-            "type": "blogCategory",
+            "type": "brand",
             "id": "",
             "kind": "media"
           }
         }
       ],
-      "blogCategory|date": [
+      "brand|date": [
         {
           "id": "bind-image",
-          "source": "blogCategory.image",
+          "source": "brand.image",
           "field": "specials.boundImage",
           "target": {
-            "type": "blogCategory",
+            "type": "brand",
             "id": "",
             "kind": "media"
           }
         }
       ],
-      "blogCategory|image": [
+      "brand|image": [
         {
           "id": "bind-image",
-          "source": "blogCategory.image",
+          "source": "brand.image",
           "field": "specials.boundImage",
           "target": {
-            "type": "blogCategory",
+            "type": "brand",
             "id": "",
             "kind": "media"
           }
         }
       ],
-      "blogCategory|price": [
+      "brand|price": [
         {
           "id": "bind-image",
-          "source": "blogCategory.image",
+          "source": "brand.image",
           "field": "specials.boundImage",
           "target": {
-            "type": "blogCategory",
+            "type": "brand",
             "id": "",
             "kind": "media"
           }
         }
       ],
-      "blogCategory|prices": [
+      "brand|prices": [
         {
           "id": "bind-image",
-          "source": "blogCategory.image",
+          "source": "brand.image",
           "field": "specials.boundImage",
           "target": {
-            "type": "blogCategory",
+            "type": "brand",
             "id": "",
             "kind": "media"
           }
         }
       ],
-      "blogCategory|url": [
+      "brand|url": [
         {
           "id": "bind-image",
-          "source": "blogCategory.image",
+          "source": "brand.image",
           "field": "specials.boundImage",
           "target": {
-            "type": "blogCategory",
+            "type": "brand",
             "id": "",
             "kind": "media"
           }
         }
       ],
-      "blogCategory|name": [
+      "brand|name": [
         {
           "id": "bind-image",
-          "source": "blogCategory.image",
+          "source": "brand.image",
           "field": "specials.boundImage",
           "target": {
-            "type": "blogCategory",
+            "type": "brand",
             "id": "",
             "kind": "media"
           }
@@ -36769,6 +39397,150 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           }
         }
       ],
+      "blogCategory|title": [
+        {
+          "id": "bind-text",
+          "source": "blogCategory.title",
+          "field": "specials.boundText",
+          "target": {
+            "type": "blogCategory",
+            "id": "",
+            "kind": "title"
+          }
+        }
+      ],
+      "blogCategory|vendor": [
+        {
+          "id": "bind-text",
+          "source": "blogCategory.title",
+          "field": "specials.boundText",
+          "target": {
+            "type": "blogCategory",
+            "id": "",
+            "kind": "title"
+          }
+        }
+      ],
+      "blogCategory|description": [
+        {
+          "id": "bind-text",
+          "source": "blogCategory.description",
+          "field": "specials.boundText",
+          "target": {
+            "type": "blogCategory",
+            "id": "",
+            "kind": "description"
+          }
+        }
+      ],
+      "blogCategory|summary": [
+        {
+          "id": "bind-text",
+          "source": "blogCategory.title",
+          "field": "specials.boundText",
+          "target": {
+            "type": "blogCategory",
+            "id": "",
+            "kind": "summary"
+          }
+        }
+      ],
+      "blogCategory|content": [
+        {
+          "id": "bind-text",
+          "source": "blogCategory.title",
+          "field": "specials.boundText",
+          "target": {
+            "type": "blogCategory",
+            "id": "",
+            "kind": "content"
+          }
+        }
+      ],
+      "blogCategory|author": [
+        {
+          "id": "bind-text",
+          "source": "blogCategory.title",
+          "field": "specials.boundText",
+          "target": {
+            "type": "blogCategory",
+            "id": "",
+            "kind": "author"
+          }
+        }
+      ],
+      "blogCategory|date": [
+        {
+          "id": "bind-text",
+          "source": "blogCategory.title",
+          "field": "specials.boundText",
+          "target": {
+            "type": "blogCategory",
+            "id": "",
+            "kind": "date"
+          }
+        }
+      ],
+      "blogCategory|image": [
+        {
+          "id": "bind-text",
+          "source": "blogCategory.title",
+          "field": "specials.boundText",
+          "target": {
+            "type": "blogCategory",
+            "id": "",
+            "kind": "image"
+          }
+        }
+      ],
+      "blogCategory|price": [
+        {
+          "id": "bind-text",
+          "source": "blogCategory.title",
+          "field": "specials.boundText",
+          "target": {
+            "type": "blogCategory",
+            "id": "",
+            "kind": "price"
+          }
+        }
+      ],
+      "blogCategory|prices": [
+        {
+          "id": "bind-text",
+          "source": "blogCategory.title",
+          "field": "specials.boundText",
+          "target": {
+            "type": "blogCategory",
+            "id": "",
+            "kind": "prices"
+          }
+        }
+      ],
+      "blogCategory|url": [
+        {
+          "id": "bind-text",
+          "source": "blogCategory.title",
+          "field": "specials.boundText",
+          "target": {
+            "type": "blogCategory",
+            "id": "",
+            "kind": "url"
+          }
+        }
+      ],
+      "blogCategory|name": [
+        {
+          "id": "bind-text",
+          "source": "blogCategory.title",
+          "field": "specials.boundText",
+          "target": {
+            "type": "blogCategory",
+            "id": "",
+            "kind": "name"
+          }
+        }
+      ],
       "course|title": [
         {
           "id": "bind-text",
@@ -36913,289 +39685,289 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           }
         }
       ],
-      "instructor|title": [
+      "review|title": [
         {
           "id": "bind-text",
-          "source": "product.title",
+          "source": "review.title",
           "field": "specials.boundText",
           "target": {
-            "type": "product",
+            "type": "review",
             "id": "",
             "kind": "title"
           }
         }
       ],
-      "instructor|vendor": [
+      "review|vendor": [
         {
           "id": "bind-text",
-          "source": "product.vendor",
+          "source": "review.title",
           "field": "specials.boundText",
           "target": {
-            "type": "product",
+            "type": "review",
             "id": "",
-            "kind": "vendor"
+            "kind": "title"
           }
         }
       ],
-      "instructor|description": [
+      "review|description": [
         {
           "id": "bind-text",
-          "source": "product.description",
+          "source": "review.body",
           "field": "specials.boundText",
           "target": {
-            "type": "product",
+            "type": "review",
             "id": "",
             "kind": "description"
           }
         }
       ],
-      "instructor|summary": [
+      "review|summary": [
         {
           "id": "bind-text",
-          "source": "product.title",
+          "source": "review.title",
           "field": "specials.boundText",
           "target": {
-            "type": "product",
+            "type": "review",
             "id": "",
             "kind": "summary"
           }
         }
       ],
-      "instructor|content": [
+      "review|content": [
         {
           "id": "bind-text",
-          "source": "product.title",
+          "source": "review.title",
           "field": "specials.boundText",
           "target": {
-            "type": "product",
+            "type": "review",
             "id": "",
             "kind": "content"
           }
         }
       ],
-      "instructor|author": [
+      "review|author": [
         {
           "id": "bind-text",
-          "source": "product.title",
+          "source": "review.author",
           "field": "specials.boundText",
           "target": {
-            "type": "product",
+            "type": "review",
             "id": "",
             "kind": "author"
           }
         }
       ],
-      "instructor|date": [
+      "review|date": [
         {
           "id": "bind-text",
-          "source": "product.title",
+          "source": "review.date",
           "field": "specials.boundText",
           "target": {
-            "type": "product",
+            "type": "review",
             "id": "",
             "kind": "date"
           }
         }
       ],
-      "instructor|image": [
+      "review|image": [
         {
           "id": "bind-text",
-          "source": "product.title",
+          "source": "review.title",
           "field": "specials.boundText",
           "target": {
-            "type": "product",
+            "type": "review",
             "id": "",
             "kind": "image"
           }
         }
       ],
-      "instructor|price": [
+      "review|price": [
         {
           "id": "bind-text",
-          "source": "product.title",
+          "source": "review.title",
           "field": "specials.boundText",
           "target": {
-            "type": "product",
+            "type": "review",
             "id": "",
             "kind": "price"
           }
         }
       ],
-      "instructor|prices": [
+      "review|prices": [
         {
           "id": "bind-text",
-          "source": "product.title",
+          "source": "review.title",
           "field": "specials.boundText",
           "target": {
-            "type": "product",
+            "type": "review",
             "id": "",
             "kind": "prices"
           }
         }
       ],
-      "instructor|url": [
+      "review|url": [
         {
           "id": "bind-text",
-          "source": "product.title",
+          "source": "review.title",
           "field": "specials.boundText",
           "target": {
-            "type": "product",
+            "type": "review",
             "id": "",
             "kind": "url"
           }
         }
       ],
-      "instructor|name": [
+      "review|name": [
         {
           "id": "bind-text",
-          "source": "product.title",
+          "source": "review.title",
           "field": "specials.boundText",
           "target": {
-            "type": "product",
+            "type": "review",
             "id": "",
             "kind": "name"
           }
         }
       ],
-      "blogCategory|title": [
+      "brand|title": [
         {
           "id": "bind-text",
-          "source": "blogCategory.title",
+          "source": "brand.title",
           "field": "specials.boundText",
           "target": {
-            "type": "blogCategory",
+            "type": "brand",
             "id": "",
             "kind": "title"
           }
         }
       ],
-      "blogCategory|vendor": [
+      "brand|vendor": [
         {
           "id": "bind-text",
-          "source": "blogCategory.title",
+          "source": "brand.title",
           "field": "specials.boundText",
           "target": {
-            "type": "blogCategory",
+            "type": "brand",
             "id": "",
             "kind": "title"
           }
         }
       ],
-      "blogCategory|description": [
+      "brand|description": [
         {
           "id": "bind-text",
-          "source": "blogCategory.description",
+          "source": "brand.description",
           "field": "specials.boundText",
           "target": {
-            "type": "blogCategory",
+            "type": "brand",
             "id": "",
             "kind": "description"
           }
         }
       ],
-      "blogCategory|summary": [
+      "brand|summary": [
         {
           "id": "bind-text",
-          "source": "blogCategory.title",
+          "source": "brand.title",
           "field": "specials.boundText",
           "target": {
-            "type": "blogCategory",
+            "type": "brand",
             "id": "",
             "kind": "summary"
           }
         }
       ],
-      "blogCategory|content": [
+      "brand|content": [
         {
           "id": "bind-text",
-          "source": "blogCategory.title",
+          "source": "brand.title",
           "field": "specials.boundText",
           "target": {
-            "type": "blogCategory",
+            "type": "brand",
             "id": "",
             "kind": "content"
           }
         }
       ],
-      "blogCategory|author": [
+      "brand|author": [
         {
           "id": "bind-text",
-          "source": "blogCategory.title",
+          "source": "brand.title",
           "field": "specials.boundText",
           "target": {
-            "type": "blogCategory",
+            "type": "brand",
             "id": "",
             "kind": "author"
           }
         }
       ],
-      "blogCategory|date": [
+      "brand|date": [
         {
           "id": "bind-text",
-          "source": "blogCategory.title",
+          "source": "brand.title",
           "field": "specials.boundText",
           "target": {
-            "type": "blogCategory",
+            "type": "brand",
             "id": "",
             "kind": "date"
           }
         }
       ],
-      "blogCategory|image": [
+      "brand|image": [
         {
           "id": "bind-text",
-          "source": "blogCategory.title",
+          "source": "brand.title",
           "field": "specials.boundText",
           "target": {
-            "type": "blogCategory",
+            "type": "brand",
             "id": "",
             "kind": "image"
           }
         }
       ],
-      "blogCategory|price": [
+      "brand|price": [
         {
           "id": "bind-text",
-          "source": "blogCategory.title",
+          "source": "brand.title",
           "field": "specials.boundText",
           "target": {
-            "type": "blogCategory",
+            "type": "brand",
             "id": "",
             "kind": "price"
           }
         }
       ],
-      "blogCategory|prices": [
+      "brand|prices": [
         {
           "id": "bind-text",
-          "source": "blogCategory.title",
+          "source": "brand.title",
           "field": "specials.boundText",
           "target": {
-            "type": "blogCategory",
+            "type": "brand",
             "id": "",
             "kind": "prices"
           }
         }
       ],
-      "blogCategory|url": [
+      "brand|url": [
         {
           "id": "bind-text",
-          "source": "blogCategory.title",
+          "source": "brand.title",
           "field": "specials.boundText",
           "target": {
-            "type": "blogCategory",
+            "type": "brand",
             "id": "",
             "kind": "url"
           }
         }
       ],
-      "blogCategory|name": [
+      "brand|name": [
         {
           "id": "bind-text",
-          "source": "blogCategory.title",
+          "source": "brand.title",
           "field": "specials.boundText",
           "target": {
-            "type": "blogCategory",
+            "type": "brand",
             "id": "",
             "kind": "name"
           }
@@ -38112,6 +40884,150 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           }
         }
       ],
+      "blogCategory|title": [
+        {
+          "id": "bind-rating",
+          "source": "product.ratingAverage",
+          "field": "specials.boundRating",
+          "target": {
+            "type": "blogCategory",
+            "id": "",
+            "kind": "blog_category_general"
+          }
+        }
+      ],
+      "blogCategory|vendor": [
+        {
+          "id": "bind-rating",
+          "source": "product.ratingAverage",
+          "field": "specials.boundRating",
+          "target": {
+            "type": "blogCategory",
+            "id": "",
+            "kind": "blog_category_general"
+          }
+        }
+      ],
+      "blogCategory|description": [
+        {
+          "id": "bind-rating",
+          "source": "product.ratingAverage",
+          "field": "specials.boundRating",
+          "target": {
+            "type": "blogCategory",
+            "id": "",
+            "kind": "blog_category_general"
+          }
+        }
+      ],
+      "blogCategory|summary": [
+        {
+          "id": "bind-rating",
+          "source": "product.ratingAverage",
+          "field": "specials.boundRating",
+          "target": {
+            "type": "blogCategory",
+            "id": "",
+            "kind": "blog_category_general"
+          }
+        }
+      ],
+      "blogCategory|content": [
+        {
+          "id": "bind-rating",
+          "source": "product.ratingAverage",
+          "field": "specials.boundRating",
+          "target": {
+            "type": "blogCategory",
+            "id": "",
+            "kind": "blog_category_general"
+          }
+        }
+      ],
+      "blogCategory|author": [
+        {
+          "id": "bind-rating",
+          "source": "product.ratingAverage",
+          "field": "specials.boundRating",
+          "target": {
+            "type": "blogCategory",
+            "id": "",
+            "kind": "blog_category_general"
+          }
+        }
+      ],
+      "blogCategory|date": [
+        {
+          "id": "bind-rating",
+          "source": "product.ratingAverage",
+          "field": "specials.boundRating",
+          "target": {
+            "type": "blogCategory",
+            "id": "",
+            "kind": "blog_category_general"
+          }
+        }
+      ],
+      "blogCategory|image": [
+        {
+          "id": "bind-rating",
+          "source": "product.ratingAverage",
+          "field": "specials.boundRating",
+          "target": {
+            "type": "blogCategory",
+            "id": "",
+            "kind": "blog_category_general"
+          }
+        }
+      ],
+      "blogCategory|price": [
+        {
+          "id": "bind-rating",
+          "source": "product.ratingAverage",
+          "field": "specials.boundRating",
+          "target": {
+            "type": "blogCategory",
+            "id": "",
+            "kind": "blog_category_general"
+          }
+        }
+      ],
+      "blogCategory|prices": [
+        {
+          "id": "bind-rating",
+          "source": "product.ratingAverage",
+          "field": "specials.boundRating",
+          "target": {
+            "type": "blogCategory",
+            "id": "",
+            "kind": "blog_category_general"
+          }
+        }
+      ],
+      "blogCategory|url": [
+        {
+          "id": "bind-rating",
+          "source": "product.ratingAverage",
+          "field": "specials.boundRating",
+          "target": {
+            "type": "blogCategory",
+            "id": "",
+            "kind": "blog_category_general"
+          }
+        }
+      ],
+      "blogCategory|name": [
+        {
+          "id": "bind-rating",
+          "source": "product.ratingAverage",
+          "field": "specials.boundRating",
+          "target": {
+            "type": "blogCategory",
+            "id": "",
+            "kind": "blog_category_general"
+          }
+        }
+      ],
       "course|title": [
         {
           "id": "bind-rating",
@@ -38256,291 +41172,291 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           }
         }
       ],
-      "instructor|title": [
+      "review|title": [
         {
           "id": "bind-rating",
-          "source": "product.ratingAverage",
+          "source": "review.rating",
           "field": "specials.boundRating",
           "target": {
-            "type": "product",
+            "type": "review",
             "id": "",
-            "kind": "product_general"
+            "kind": "review_general"
           }
         }
       ],
-      "instructor|vendor": [
+      "review|vendor": [
         {
           "id": "bind-rating",
-          "source": "product.ratingAverage",
+          "source": "review.rating",
           "field": "specials.boundRating",
           "target": {
-            "type": "product",
+            "type": "review",
             "id": "",
-            "kind": "product_general"
+            "kind": "review_general"
           }
         }
       ],
-      "instructor|description": [
+      "review|description": [
         {
           "id": "bind-rating",
-          "source": "product.ratingAverage",
+          "source": "review.rating",
           "field": "specials.boundRating",
           "target": {
-            "type": "product",
+            "type": "review",
             "id": "",
-            "kind": "product_general"
+            "kind": "review_general"
           }
         }
       ],
-      "instructor|summary": [
+      "review|summary": [
         {
           "id": "bind-rating",
-          "source": "product.ratingAverage",
+          "source": "review.rating",
           "field": "specials.boundRating",
           "target": {
-            "type": "product",
+            "type": "review",
             "id": "",
-            "kind": "product_general"
+            "kind": "review_general"
           }
         }
       ],
-      "instructor|content": [
+      "review|content": [
         {
           "id": "bind-rating",
-          "source": "product.ratingAverage",
+          "source": "review.rating",
           "field": "specials.boundRating",
           "target": {
-            "type": "product",
+            "type": "review",
             "id": "",
-            "kind": "product_general"
+            "kind": "review_general"
           }
         }
       ],
-      "instructor|author": [
+      "review|author": [
         {
           "id": "bind-rating",
-          "source": "product.ratingAverage",
+          "source": "review.rating",
           "field": "specials.boundRating",
           "target": {
-            "type": "product",
+            "type": "review",
             "id": "",
-            "kind": "product_general"
+            "kind": "review_general"
           }
         }
       ],
-      "instructor|date": [
+      "review|date": [
         {
           "id": "bind-rating",
-          "source": "product.ratingAverage",
+          "source": "review.rating",
           "field": "specials.boundRating",
           "target": {
-            "type": "product",
+            "type": "review",
             "id": "",
-            "kind": "product_general"
+            "kind": "review_general"
           }
         }
       ],
-      "instructor|image": [
+      "review|image": [
         {
           "id": "bind-rating",
-          "source": "product.ratingAverage",
+          "source": "review.rating",
           "field": "specials.boundRating",
           "target": {
-            "type": "product",
+            "type": "review",
             "id": "",
-            "kind": "product_general"
+            "kind": "review_general"
           }
         }
       ],
-      "instructor|price": [
+      "review|price": [
         {
           "id": "bind-rating",
-          "source": "product.ratingAverage",
+          "source": "review.rating",
           "field": "specials.boundRating",
           "target": {
-            "type": "product",
+            "type": "review",
             "id": "",
-            "kind": "product_general"
+            "kind": "review_general"
           }
         }
       ],
-      "instructor|prices": [
+      "review|prices": [
         {
           "id": "bind-rating",
-          "source": "product.ratingAverage",
+          "source": "review.rating",
           "field": "specials.boundRating",
           "target": {
-            "type": "product",
+            "type": "review",
             "id": "",
-            "kind": "product_general"
+            "kind": "review_general"
           }
         }
       ],
-      "instructor|url": [
+      "review|url": [
         {
           "id": "bind-rating",
-          "source": "product.ratingAverage",
+          "source": "review.rating",
           "field": "specials.boundRating",
           "target": {
-            "type": "product",
+            "type": "review",
             "id": "",
-            "kind": "product_general"
+            "kind": "review_general"
           }
         }
       ],
-      "instructor|name": [
+      "review|name": [
         {
           "id": "bind-rating",
-          "source": "product.ratingAverage",
+          "source": "review.rating",
           "field": "specials.boundRating",
           "target": {
-            "type": "product",
+            "type": "review",
             "id": "",
-            "kind": "product_general"
+            "kind": "review_general"
           }
         }
       ],
-      "blogCategory|title": [
+      "brand|title": [
         {
           "id": "bind-rating",
           "source": "product.ratingAverage",
           "field": "specials.boundRating",
           "target": {
-            "type": "blogCategory",
+            "type": "brand",
             "id": "",
-            "kind": "blog_category_general"
+            "kind": "brand_general"
           }
         }
       ],
-      "blogCategory|vendor": [
+      "brand|vendor": [
         {
           "id": "bind-rating",
           "source": "product.ratingAverage",
           "field": "specials.boundRating",
           "target": {
-            "type": "blogCategory",
+            "type": "brand",
             "id": "",
-            "kind": "blog_category_general"
+            "kind": "brand_general"
           }
         }
       ],
-      "blogCategory|description": [
+      "brand|description": [
         {
           "id": "bind-rating",
           "source": "product.ratingAverage",
           "field": "specials.boundRating",
           "target": {
-            "type": "blogCategory",
+            "type": "brand",
             "id": "",
-            "kind": "blog_category_general"
+            "kind": "brand_general"
           }
         }
       ],
-      "blogCategory|summary": [
+      "brand|summary": [
         {
           "id": "bind-rating",
           "source": "product.ratingAverage",
           "field": "specials.boundRating",
           "target": {
-            "type": "blogCategory",
+            "type": "brand",
             "id": "",
-            "kind": "blog_category_general"
+            "kind": "brand_general"
           }
         }
       ],
-      "blogCategory|content": [
+      "brand|content": [
         {
           "id": "bind-rating",
           "source": "product.ratingAverage",
           "field": "specials.boundRating",
           "target": {
-            "type": "blogCategory",
+            "type": "brand",
             "id": "",
-            "kind": "blog_category_general"
+            "kind": "brand_general"
           }
         }
       ],
-      "blogCategory|author": [
+      "brand|author": [
         {
           "id": "bind-rating",
           "source": "product.ratingAverage",
           "field": "specials.boundRating",
           "target": {
-            "type": "blogCategory",
+            "type": "brand",
             "id": "",
-            "kind": "blog_category_general"
+            "kind": "brand_general"
           }
         }
       ],
-      "blogCategory|date": [
+      "brand|date": [
         {
           "id": "bind-rating",
           "source": "product.ratingAverage",
           "field": "specials.boundRating",
           "target": {
-            "type": "blogCategory",
+            "type": "brand",
             "id": "",
-            "kind": "blog_category_general"
+            "kind": "brand_general"
           }
         }
       ],
-      "blogCategory|image": [
+      "brand|image": [
         {
           "id": "bind-rating",
           "source": "product.ratingAverage",
           "field": "specials.boundRating",
           "target": {
-            "type": "blogCategory",
+            "type": "brand",
             "id": "",
-            "kind": "blog_category_general"
+            "kind": "brand_general"
           }
         }
       ],
-      "blogCategory|price": [
+      "brand|price": [
         {
           "id": "bind-rating",
           "source": "product.ratingAverage",
           "field": "specials.boundRating",
           "target": {
-            "type": "blogCategory",
+            "type": "brand",
             "id": "",
-            "kind": "blog_category_general"
+            "kind": "brand_general"
           }
         }
       ],
-      "blogCategory|prices": [
+      "brand|prices": [
         {
           "id": "bind-rating",
           "source": "product.ratingAverage",
           "field": "specials.boundRating",
           "target": {
-            "type": "blogCategory",
+            "type": "brand",
             "id": "",
-            "kind": "blog_category_general"
+            "kind": "brand_general"
           }
         }
       ],
-      "blogCategory|url": [
+      "brand|url": [
         {
           "id": "bind-rating",
           "source": "product.ratingAverage",
           "field": "specials.boundRating",
           "target": {
-            "type": "blogCategory",
+            "type": "brand",
             "id": "",
-            "kind": "blog_category_general"
+            "kind": "brand_general"
           }
         }
       ],
-      "blogCategory|name": [
+      "brand|name": [
         {
           "id": "bind-rating",
           "source": "product.ratingAverage",
           "field": "specials.boundRating",
           "target": {
-            "type": "blogCategory",
+            "type": "brand",
             "id": "",
-            "kind": "blog_category_general"
+            "kind": "brand_general"
           }
         }
       ],
@@ -39504,6 +42420,210 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "field": "specials.boundImages"
         }
       ],
+      "blogCategory|title": [
+        {
+          "id": "bind-image",
+          "source": "product.image",
+          "field": "specials.boundImage",
+          "target": {
+            "type": "blogCategory",
+            "id": "",
+            "kind": "media"
+          }
+        },
+        {
+          "id": "bind-images",
+          "source": "product.images",
+          "field": "specials.boundImages"
+        }
+      ],
+      "blogCategory|vendor": [
+        {
+          "id": "bind-image",
+          "source": "product.image",
+          "field": "specials.boundImage",
+          "target": {
+            "type": "blogCategory",
+            "id": "",
+            "kind": "media"
+          }
+        },
+        {
+          "id": "bind-images",
+          "source": "product.images",
+          "field": "specials.boundImages"
+        }
+      ],
+      "blogCategory|description": [
+        {
+          "id": "bind-image",
+          "source": "product.image",
+          "field": "specials.boundImage",
+          "target": {
+            "type": "blogCategory",
+            "id": "",
+            "kind": "media"
+          }
+        },
+        {
+          "id": "bind-images",
+          "source": "product.images",
+          "field": "specials.boundImages"
+        }
+      ],
+      "blogCategory|summary": [
+        {
+          "id": "bind-image",
+          "source": "product.image",
+          "field": "specials.boundImage",
+          "target": {
+            "type": "blogCategory",
+            "id": "",
+            "kind": "media"
+          }
+        },
+        {
+          "id": "bind-images",
+          "source": "product.images",
+          "field": "specials.boundImages"
+        }
+      ],
+      "blogCategory|content": [
+        {
+          "id": "bind-image",
+          "source": "product.image",
+          "field": "specials.boundImage",
+          "target": {
+            "type": "blogCategory",
+            "id": "",
+            "kind": "media"
+          }
+        },
+        {
+          "id": "bind-images",
+          "source": "product.images",
+          "field": "specials.boundImages"
+        }
+      ],
+      "blogCategory|author": [
+        {
+          "id": "bind-image",
+          "source": "product.image",
+          "field": "specials.boundImage",
+          "target": {
+            "type": "blogCategory",
+            "id": "",
+            "kind": "media"
+          }
+        },
+        {
+          "id": "bind-images",
+          "source": "product.images",
+          "field": "specials.boundImages"
+        }
+      ],
+      "blogCategory|date": [
+        {
+          "id": "bind-image",
+          "source": "product.image",
+          "field": "specials.boundImage",
+          "target": {
+            "type": "blogCategory",
+            "id": "",
+            "kind": "media"
+          }
+        },
+        {
+          "id": "bind-images",
+          "source": "product.images",
+          "field": "specials.boundImages"
+        }
+      ],
+      "blogCategory|image": [
+        {
+          "id": "bind-image",
+          "source": "product.image",
+          "field": "specials.boundImage",
+          "target": {
+            "type": "blogCategory",
+            "id": "",
+            "kind": "media"
+          }
+        },
+        {
+          "id": "bind-images",
+          "source": "product.images",
+          "field": "specials.boundImages"
+        }
+      ],
+      "blogCategory|price": [
+        {
+          "id": "bind-image",
+          "source": "product.image",
+          "field": "specials.boundImage",
+          "target": {
+            "type": "blogCategory",
+            "id": "",
+            "kind": "media"
+          }
+        },
+        {
+          "id": "bind-images",
+          "source": "product.images",
+          "field": "specials.boundImages"
+        }
+      ],
+      "blogCategory|prices": [
+        {
+          "id": "bind-image",
+          "source": "product.image",
+          "field": "specials.boundImage",
+          "target": {
+            "type": "blogCategory",
+            "id": "",
+            "kind": "media"
+          }
+        },
+        {
+          "id": "bind-images",
+          "source": "product.images",
+          "field": "specials.boundImages"
+        }
+      ],
+      "blogCategory|url": [
+        {
+          "id": "bind-image",
+          "source": "product.image",
+          "field": "specials.boundImage",
+          "target": {
+            "type": "blogCategory",
+            "id": "",
+            "kind": "media"
+          }
+        },
+        {
+          "id": "bind-images",
+          "source": "product.images",
+          "field": "specials.boundImages"
+        }
+      ],
+      "blogCategory|name": [
+        {
+          "id": "bind-image",
+          "source": "product.image",
+          "field": "specials.boundImage",
+          "target": {
+            "type": "blogCategory",
+            "id": "",
+            "kind": "media"
+          }
+        },
+        {
+          "id": "bind-images",
+          "source": "product.images",
+          "field": "specials.boundImages"
+        }
+      ],
       "course|title": [
         {
           "id": "bind-image",
@@ -39708,13 +42828,13 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "field": "specials.boundImages"
         }
       ],
-      "instructor|title": [
+      "review|title": [
         {
           "id": "bind-image",
           "source": "product.image",
           "field": "specials.boundImage",
           "target": {
-            "type": "product",
+            "type": "review",
             "id": "",
             "kind": "media"
           }
@@ -39725,13 +42845,13 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "field": "specials.boundImages"
         }
       ],
-      "instructor|vendor": [
+      "review|vendor": [
         {
           "id": "bind-image",
           "source": "product.image",
           "field": "specials.boundImage",
           "target": {
-            "type": "product",
+            "type": "review",
             "id": "",
             "kind": "media"
           }
@@ -39742,13 +42862,13 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "field": "specials.boundImages"
         }
       ],
-      "instructor|description": [
+      "review|description": [
         {
           "id": "bind-image",
           "source": "product.image",
           "field": "specials.boundImage",
           "target": {
-            "type": "product",
+            "type": "review",
             "id": "",
             "kind": "media"
           }
@@ -39759,13 +42879,13 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "field": "specials.boundImages"
         }
       ],
-      "instructor|summary": [
+      "review|summary": [
         {
           "id": "bind-image",
           "source": "product.image",
           "field": "specials.boundImage",
           "target": {
-            "type": "product",
+            "type": "review",
             "id": "",
             "kind": "media"
           }
@@ -39776,13 +42896,13 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "field": "specials.boundImages"
         }
       ],
-      "instructor|content": [
+      "review|content": [
         {
           "id": "bind-image",
           "source": "product.image",
           "field": "specials.boundImage",
           "target": {
-            "type": "product",
+            "type": "review",
             "id": "",
             "kind": "media"
           }
@@ -39793,13 +42913,13 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "field": "specials.boundImages"
         }
       ],
-      "instructor|author": [
+      "review|author": [
         {
           "id": "bind-image",
           "source": "product.image",
           "field": "specials.boundImage",
           "target": {
-            "type": "product",
+            "type": "review",
             "id": "",
             "kind": "media"
           }
@@ -39810,13 +42930,13 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "field": "specials.boundImages"
         }
       ],
-      "instructor|date": [
+      "review|date": [
         {
           "id": "bind-image",
           "source": "product.image",
           "field": "specials.boundImage",
           "target": {
-            "type": "product",
+            "type": "review",
             "id": "",
             "kind": "media"
           }
@@ -39827,13 +42947,13 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "field": "specials.boundImages"
         }
       ],
-      "instructor|image": [
+      "review|image": [
         {
           "id": "bind-image",
           "source": "product.image",
           "field": "specials.boundImage",
           "target": {
-            "type": "product",
+            "type": "review",
             "id": "",
             "kind": "media"
           }
@@ -39844,13 +42964,13 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "field": "specials.boundImages"
         }
       ],
-      "instructor|price": [
+      "review|price": [
         {
           "id": "bind-image",
           "source": "product.image",
           "field": "specials.boundImage",
           "target": {
-            "type": "product",
+            "type": "review",
             "id": "",
             "kind": "media"
           }
@@ -39861,13 +42981,13 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "field": "specials.boundImages"
         }
       ],
-      "instructor|prices": [
+      "review|prices": [
         {
           "id": "bind-image",
           "source": "product.image",
           "field": "specials.boundImage",
           "target": {
-            "type": "product",
+            "type": "review",
             "id": "",
             "kind": "media"
           }
@@ -39878,13 +42998,13 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "field": "specials.boundImages"
         }
       ],
-      "instructor|url": [
+      "review|url": [
         {
           "id": "bind-image",
           "source": "product.image",
           "field": "specials.boundImage",
           "target": {
-            "type": "product",
+            "type": "review",
             "id": "",
             "kind": "media"
           }
@@ -39895,13 +43015,13 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "field": "specials.boundImages"
         }
       ],
-      "instructor|name": [
+      "review|name": [
         {
           "id": "bind-image",
           "source": "product.image",
           "field": "specials.boundImage",
           "target": {
-            "type": "product",
+            "type": "review",
             "id": "",
             "kind": "media"
           }
@@ -39912,13 +43032,13 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "field": "specials.boundImages"
         }
       ],
-      "blogCategory|title": [
+      "brand|title": [
         {
           "id": "bind-image",
           "source": "product.image",
           "field": "specials.boundImage",
           "target": {
-            "type": "blogCategory",
+            "type": "brand",
             "id": "",
             "kind": "media"
           }
@@ -39929,13 +43049,13 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "field": "specials.boundImages"
         }
       ],
-      "blogCategory|vendor": [
+      "brand|vendor": [
         {
           "id": "bind-image",
           "source": "product.image",
           "field": "specials.boundImage",
           "target": {
-            "type": "blogCategory",
+            "type": "brand",
             "id": "",
             "kind": "media"
           }
@@ -39946,13 +43066,13 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "field": "specials.boundImages"
         }
       ],
-      "blogCategory|description": [
+      "brand|description": [
         {
           "id": "bind-image",
           "source": "product.image",
           "field": "specials.boundImage",
           "target": {
-            "type": "blogCategory",
+            "type": "brand",
             "id": "",
             "kind": "media"
           }
@@ -39963,13 +43083,13 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "field": "specials.boundImages"
         }
       ],
-      "blogCategory|summary": [
+      "brand|summary": [
         {
           "id": "bind-image",
           "source": "product.image",
           "field": "specials.boundImage",
           "target": {
-            "type": "blogCategory",
+            "type": "brand",
             "id": "",
             "kind": "media"
           }
@@ -39980,13 +43100,13 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "field": "specials.boundImages"
         }
       ],
-      "blogCategory|content": [
+      "brand|content": [
         {
           "id": "bind-image",
           "source": "product.image",
           "field": "specials.boundImage",
           "target": {
-            "type": "blogCategory",
+            "type": "brand",
             "id": "",
             "kind": "media"
           }
@@ -39997,13 +43117,13 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "field": "specials.boundImages"
         }
       ],
-      "blogCategory|author": [
+      "brand|author": [
         {
           "id": "bind-image",
           "source": "product.image",
           "field": "specials.boundImage",
           "target": {
-            "type": "blogCategory",
+            "type": "brand",
             "id": "",
             "kind": "media"
           }
@@ -40014,13 +43134,13 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "field": "specials.boundImages"
         }
       ],
-      "blogCategory|date": [
+      "brand|date": [
         {
           "id": "bind-image",
           "source": "product.image",
           "field": "specials.boundImage",
           "target": {
-            "type": "blogCategory",
+            "type": "brand",
             "id": "",
             "kind": "media"
           }
@@ -40031,13 +43151,13 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "field": "specials.boundImages"
         }
       ],
-      "blogCategory|image": [
+      "brand|image": [
         {
           "id": "bind-image",
           "source": "product.image",
           "field": "specials.boundImage",
           "target": {
-            "type": "blogCategory",
+            "type": "brand",
             "id": "",
             "kind": "media"
           }
@@ -40048,13 +43168,13 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "field": "specials.boundImages"
         }
       ],
-      "blogCategory|price": [
+      "brand|price": [
         {
           "id": "bind-image",
           "source": "product.image",
           "field": "specials.boundImage",
           "target": {
-            "type": "blogCategory",
+            "type": "brand",
             "id": "",
             "kind": "media"
           }
@@ -40065,13 +43185,13 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "field": "specials.boundImages"
         }
       ],
-      "blogCategory|prices": [
+      "brand|prices": [
         {
           "id": "bind-image",
           "source": "product.image",
           "field": "specials.boundImage",
           "target": {
-            "type": "blogCategory",
+            "type": "brand",
             "id": "",
             "kind": "media"
           }
@@ -40082,13 +43202,13 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "field": "specials.boundImages"
         }
       ],
-      "blogCategory|url": [
+      "brand|url": [
         {
           "id": "bind-image",
           "source": "product.image",
           "field": "specials.boundImage",
           "target": {
-            "type": "blogCategory",
+            "type": "brand",
             "id": "",
             "kind": "media"
           }
@@ -40099,13 +43219,13 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "field": "specials.boundImages"
         }
       ],
-      "blogCategory|name": [
+      "brand|name": [
         {
           "id": "bind-image",
           "source": "product.image",
           "field": "specials.boundImage",
           "target": {
-            "type": "blogCategory",
+            "type": "brand",
             "id": "",
             "kind": "media"
           }
@@ -42060,6 +45180,210 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "field": "specials.boundHrefLabel"
         }
       ],
+      "blogCategory|title": [
+        {
+          "id": "bind-href",
+          "source": "blogCategory.url",
+          "field": "specials.boundHref",
+          "target": {
+            "type": "blogCategory",
+            "id": "",
+            "kind": "blog_category_general"
+          }
+        },
+        {
+          "id": "bind-href-label",
+          "source": "blogCategory.title",
+          "field": "specials.boundHrefLabel"
+        }
+      ],
+      "blogCategory|vendor": [
+        {
+          "id": "bind-href",
+          "source": "blogCategory.url",
+          "field": "specials.boundHref",
+          "target": {
+            "type": "blogCategory",
+            "id": "",
+            "kind": "blog_category_general"
+          }
+        },
+        {
+          "id": "bind-href-label",
+          "source": "blogCategory.title",
+          "field": "specials.boundHrefLabel"
+        }
+      ],
+      "blogCategory|description": [
+        {
+          "id": "bind-href",
+          "source": "blogCategory.url",
+          "field": "specials.boundHref",
+          "target": {
+            "type": "blogCategory",
+            "id": "",
+            "kind": "blog_category_general"
+          }
+        },
+        {
+          "id": "bind-href-label",
+          "source": "blogCategory.title",
+          "field": "specials.boundHrefLabel"
+        }
+      ],
+      "blogCategory|summary": [
+        {
+          "id": "bind-href",
+          "source": "blogCategory.url",
+          "field": "specials.boundHref",
+          "target": {
+            "type": "blogCategory",
+            "id": "",
+            "kind": "blog_category_general"
+          }
+        },
+        {
+          "id": "bind-href-label",
+          "source": "blogCategory.title",
+          "field": "specials.boundHrefLabel"
+        }
+      ],
+      "blogCategory|content": [
+        {
+          "id": "bind-href",
+          "source": "blogCategory.url",
+          "field": "specials.boundHref",
+          "target": {
+            "type": "blogCategory",
+            "id": "",
+            "kind": "blog_category_general"
+          }
+        },
+        {
+          "id": "bind-href-label",
+          "source": "blogCategory.title",
+          "field": "specials.boundHrefLabel"
+        }
+      ],
+      "blogCategory|author": [
+        {
+          "id": "bind-href",
+          "source": "blogCategory.url",
+          "field": "specials.boundHref",
+          "target": {
+            "type": "blogCategory",
+            "id": "",
+            "kind": "blog_category_general"
+          }
+        },
+        {
+          "id": "bind-href-label",
+          "source": "blogCategory.title",
+          "field": "specials.boundHrefLabel"
+        }
+      ],
+      "blogCategory|date": [
+        {
+          "id": "bind-href",
+          "source": "blogCategory.url",
+          "field": "specials.boundHref",
+          "target": {
+            "type": "blogCategory",
+            "id": "",
+            "kind": "blog_category_general"
+          }
+        },
+        {
+          "id": "bind-href-label",
+          "source": "blogCategory.title",
+          "field": "specials.boundHrefLabel"
+        }
+      ],
+      "blogCategory|image": [
+        {
+          "id": "bind-href",
+          "source": "blogCategory.url",
+          "field": "specials.boundHref",
+          "target": {
+            "type": "blogCategory",
+            "id": "",
+            "kind": "blog_category_general"
+          }
+        },
+        {
+          "id": "bind-href-label",
+          "source": "blogCategory.title",
+          "field": "specials.boundHrefLabel"
+        }
+      ],
+      "blogCategory|price": [
+        {
+          "id": "bind-href",
+          "source": "blogCategory.url",
+          "field": "specials.boundHref",
+          "target": {
+            "type": "blogCategory",
+            "id": "",
+            "kind": "blog_category_general"
+          }
+        },
+        {
+          "id": "bind-href-label",
+          "source": "blogCategory.title",
+          "field": "specials.boundHrefLabel"
+        }
+      ],
+      "blogCategory|prices": [
+        {
+          "id": "bind-href",
+          "source": "blogCategory.url",
+          "field": "specials.boundHref",
+          "target": {
+            "type": "blogCategory",
+            "id": "",
+            "kind": "blog_category_general"
+          }
+        },
+        {
+          "id": "bind-href-label",
+          "source": "blogCategory.title",
+          "field": "specials.boundHrefLabel"
+        }
+      ],
+      "blogCategory|url": [
+        {
+          "id": "bind-href",
+          "source": "blogCategory.url",
+          "field": "specials.boundHref",
+          "target": {
+            "type": "blogCategory",
+            "id": "",
+            "kind": "blog_category_general"
+          }
+        },
+        {
+          "id": "bind-href-label",
+          "source": "blogCategory.title",
+          "field": "specials.boundHrefLabel"
+        }
+      ],
+      "blogCategory|name": [
+        {
+          "id": "bind-href",
+          "source": "blogCategory.url",
+          "field": "specials.boundHref",
+          "target": {
+            "type": "blogCategory",
+            "id": "",
+            "kind": "blog_category_general"
+          }
+        },
+        {
+          "id": "bind-href-label",
+          "source": "blogCategory.title",
+          "field": "specials.boundHrefLabel"
+        }
+      ],
       "course|title": [
         {
           "id": "bind-href",
@@ -42264,411 +45588,351 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "field": "specials.boundHrefLabel"
         }
       ],
-      "instructor|title": [
+      "review|title": [
+        {
+          "id": "bind-target",
+          "source": "",
+          "field": "",
+          "target": {
+            "type": "review",
+            "id": "",
+            "kind": "review_general"
+          }
+        }
+      ],
+      "review|vendor": [
+        {
+          "id": "bind-target",
+          "source": "",
+          "field": "",
+          "target": {
+            "type": "review",
+            "id": "",
+            "kind": "review_general"
+          }
+        }
+      ],
+      "review|description": [
+        {
+          "id": "bind-target",
+          "source": "",
+          "field": "",
+          "target": {
+            "type": "review",
+            "id": "",
+            "kind": "review_general"
+          }
+        }
+      ],
+      "review|summary": [
+        {
+          "id": "bind-target",
+          "source": "",
+          "field": "",
+          "target": {
+            "type": "review",
+            "id": "",
+            "kind": "review_general"
+          }
+        }
+      ],
+      "review|content": [
+        {
+          "id": "bind-target",
+          "source": "",
+          "field": "",
+          "target": {
+            "type": "review",
+            "id": "",
+            "kind": "review_general"
+          }
+        }
+      ],
+      "review|author": [
+        {
+          "id": "bind-target",
+          "source": "",
+          "field": "",
+          "target": {
+            "type": "review",
+            "id": "",
+            "kind": "review_general"
+          }
+        }
+      ],
+      "review|date": [
+        {
+          "id": "bind-target",
+          "source": "",
+          "field": "",
+          "target": {
+            "type": "review",
+            "id": "",
+            "kind": "review_general"
+          }
+        }
+      ],
+      "review|image": [
+        {
+          "id": "bind-target",
+          "source": "",
+          "field": "",
+          "target": {
+            "type": "review",
+            "id": "",
+            "kind": "review_general"
+          }
+        }
+      ],
+      "review|price": [
+        {
+          "id": "bind-target",
+          "source": "",
+          "field": "",
+          "target": {
+            "type": "review",
+            "id": "",
+            "kind": "review_general"
+          }
+        }
+      ],
+      "review|prices": [
+        {
+          "id": "bind-target",
+          "source": "",
+          "field": "",
+          "target": {
+            "type": "review",
+            "id": "",
+            "kind": "review_general"
+          }
+        }
+      ],
+      "review|url": [
+        {
+          "id": "bind-target",
+          "source": "",
+          "field": "",
+          "target": {
+            "type": "review",
+            "id": "",
+            "kind": "review_general"
+          }
+        }
+      ],
+      "review|name": [
+        {
+          "id": "bind-target",
+          "source": "",
+          "field": "",
+          "target": {
+            "type": "review",
+            "id": "",
+            "kind": "review_general"
+          }
+        }
+      ],
+      "brand|title": [
         {
           "id": "bind-href",
-          "source": "product.url",
+          "source": "brand.url",
           "field": "specials.boundHref",
           "target": {
-            "type": "product",
+            "type": "brand",
             "id": "",
-            "kind": "product_general"
+            "kind": "brand_general"
           }
         },
         {
           "id": "bind-href-label",
-          "source": "product.title",
+          "source": "brand.title",
           "field": "specials.boundHrefLabel"
         }
       ],
-      "instructor|vendor": [
+      "brand|vendor": [
         {
           "id": "bind-href",
-          "source": "product.url",
+          "source": "brand.url",
           "field": "specials.boundHref",
           "target": {
-            "type": "product",
+            "type": "brand",
             "id": "",
-            "kind": "product_general"
+            "kind": "brand_general"
           }
         },
         {
           "id": "bind-href-label",
-          "source": "product.title",
+          "source": "brand.title",
           "field": "specials.boundHrefLabel"
         }
       ],
-      "instructor|description": [
+      "brand|description": [
         {
           "id": "bind-href",
-          "source": "product.url",
+          "source": "brand.url",
           "field": "specials.boundHref",
           "target": {
-            "type": "product",
+            "type": "brand",
             "id": "",
-            "kind": "product_general"
+            "kind": "brand_general"
           }
         },
         {
           "id": "bind-href-label",
-          "source": "product.title",
+          "source": "brand.title",
           "field": "specials.boundHrefLabel"
         }
       ],
-      "instructor|summary": [
+      "brand|summary": [
         {
           "id": "bind-href",
-          "source": "product.url",
+          "source": "brand.url",
           "field": "specials.boundHref",
           "target": {
-            "type": "product",
+            "type": "brand",
             "id": "",
-            "kind": "product_general"
+            "kind": "brand_general"
           }
         },
         {
           "id": "bind-href-label",
-          "source": "product.title",
+          "source": "brand.title",
           "field": "specials.boundHrefLabel"
         }
       ],
-      "instructor|content": [
+      "brand|content": [
         {
           "id": "bind-href",
-          "source": "product.url",
+          "source": "brand.url",
           "field": "specials.boundHref",
           "target": {
-            "type": "product",
+            "type": "brand",
             "id": "",
-            "kind": "product_general"
+            "kind": "brand_general"
           }
         },
         {
           "id": "bind-href-label",
-          "source": "product.title",
+          "source": "brand.title",
           "field": "specials.boundHrefLabel"
         }
       ],
-      "instructor|author": [
+      "brand|author": [
         {
           "id": "bind-href",
-          "source": "product.url",
+          "source": "brand.url",
           "field": "specials.boundHref",
           "target": {
-            "type": "product",
+            "type": "brand",
             "id": "",
-            "kind": "product_general"
+            "kind": "brand_general"
           }
         },
         {
           "id": "bind-href-label",
-          "source": "product.title",
+          "source": "brand.title",
           "field": "specials.boundHrefLabel"
         }
       ],
-      "instructor|date": [
+      "brand|date": [
         {
           "id": "bind-href",
-          "source": "product.url",
+          "source": "brand.url",
           "field": "specials.boundHref",
           "target": {
-            "type": "product",
+            "type": "brand",
             "id": "",
-            "kind": "product_general"
+            "kind": "brand_general"
           }
         },
         {
           "id": "bind-href-label",
-          "source": "product.title",
+          "source": "brand.title",
           "field": "specials.boundHrefLabel"
         }
       ],
-      "instructor|image": [
+      "brand|image": [
         {
           "id": "bind-href",
-          "source": "product.url",
+          "source": "brand.url",
           "field": "specials.boundHref",
           "target": {
-            "type": "product",
+            "type": "brand",
             "id": "",
-            "kind": "product_general"
+            "kind": "brand_general"
           }
         },
         {
           "id": "bind-href-label",
-          "source": "product.title",
+          "source": "brand.title",
           "field": "specials.boundHrefLabel"
         }
       ],
-      "instructor|price": [
+      "brand|price": [
         {
           "id": "bind-href",
-          "source": "product.url",
+          "source": "brand.url",
           "field": "specials.boundHref",
           "target": {
-            "type": "product",
+            "type": "brand",
             "id": "",
-            "kind": "product_general"
+            "kind": "brand_general"
           }
         },
         {
           "id": "bind-href-label",
-          "source": "product.title",
+          "source": "brand.title",
           "field": "specials.boundHrefLabel"
         }
       ],
-      "instructor|prices": [
+      "brand|prices": [
         {
           "id": "bind-href",
-          "source": "product.url",
+          "source": "brand.url",
           "field": "specials.boundHref",
           "target": {
-            "type": "product",
+            "type": "brand",
             "id": "",
-            "kind": "product_general"
+            "kind": "brand_general"
           }
         },
         {
           "id": "bind-href-label",
-          "source": "product.title",
+          "source": "brand.title",
           "field": "specials.boundHrefLabel"
         }
       ],
-      "instructor|url": [
+      "brand|url": [
         {
           "id": "bind-href",
-          "source": "product.url",
+          "source": "brand.url",
           "field": "specials.boundHref",
           "target": {
-            "type": "product",
+            "type": "brand",
             "id": "",
-            "kind": "product_general"
+            "kind": "brand_general"
           }
         },
         {
           "id": "bind-href-label",
-          "source": "product.title",
+          "source": "brand.title",
           "field": "specials.boundHrefLabel"
         }
       ],
-      "instructor|name": [
+      "brand|name": [
         {
           "id": "bind-href",
-          "source": "product.url",
+          "source": "brand.url",
           "field": "specials.boundHref",
           "target": {
-            "type": "product",
+            "type": "brand",
             "id": "",
-            "kind": "product_general"
+            "kind": "brand_general"
           }
         },
         {
           "id": "bind-href-label",
-          "source": "product.title",
-          "field": "specials.boundHrefLabel"
-        }
-      ],
-      "blogCategory|title": [
-        {
-          "id": "bind-href",
-          "source": "blogCategory.url",
-          "field": "specials.boundHref",
-          "target": {
-            "type": "blogCategory",
-            "id": "",
-            "kind": "blog_category_general"
-          }
-        },
-        {
-          "id": "bind-href-label",
-          "source": "blogCategory.title",
-          "field": "specials.boundHrefLabel"
-        }
-      ],
-      "blogCategory|vendor": [
-        {
-          "id": "bind-href",
-          "source": "blogCategory.url",
-          "field": "specials.boundHref",
-          "target": {
-            "type": "blogCategory",
-            "id": "",
-            "kind": "blog_category_general"
-          }
-        },
-        {
-          "id": "bind-href-label",
-          "source": "blogCategory.title",
-          "field": "specials.boundHrefLabel"
-        }
-      ],
-      "blogCategory|description": [
-        {
-          "id": "bind-href",
-          "source": "blogCategory.url",
-          "field": "specials.boundHref",
-          "target": {
-            "type": "blogCategory",
-            "id": "",
-            "kind": "blog_category_general"
-          }
-        },
-        {
-          "id": "bind-href-label",
-          "source": "blogCategory.title",
-          "field": "specials.boundHrefLabel"
-        }
-      ],
-      "blogCategory|summary": [
-        {
-          "id": "bind-href",
-          "source": "blogCategory.url",
-          "field": "specials.boundHref",
-          "target": {
-            "type": "blogCategory",
-            "id": "",
-            "kind": "blog_category_general"
-          }
-        },
-        {
-          "id": "bind-href-label",
-          "source": "blogCategory.title",
-          "field": "specials.boundHrefLabel"
-        }
-      ],
-      "blogCategory|content": [
-        {
-          "id": "bind-href",
-          "source": "blogCategory.url",
-          "field": "specials.boundHref",
-          "target": {
-            "type": "blogCategory",
-            "id": "",
-            "kind": "blog_category_general"
-          }
-        },
-        {
-          "id": "bind-href-label",
-          "source": "blogCategory.title",
-          "field": "specials.boundHrefLabel"
-        }
-      ],
-      "blogCategory|author": [
-        {
-          "id": "bind-href",
-          "source": "blogCategory.url",
-          "field": "specials.boundHref",
-          "target": {
-            "type": "blogCategory",
-            "id": "",
-            "kind": "blog_category_general"
-          }
-        },
-        {
-          "id": "bind-href-label",
-          "source": "blogCategory.title",
-          "field": "specials.boundHrefLabel"
-        }
-      ],
-      "blogCategory|date": [
-        {
-          "id": "bind-href",
-          "source": "blogCategory.url",
-          "field": "specials.boundHref",
-          "target": {
-            "type": "blogCategory",
-            "id": "",
-            "kind": "blog_category_general"
-          }
-        },
-        {
-          "id": "bind-href-label",
-          "source": "blogCategory.title",
-          "field": "specials.boundHrefLabel"
-        }
-      ],
-      "blogCategory|image": [
-        {
-          "id": "bind-href",
-          "source": "blogCategory.url",
-          "field": "specials.boundHref",
-          "target": {
-            "type": "blogCategory",
-            "id": "",
-            "kind": "blog_category_general"
-          }
-        },
-        {
-          "id": "bind-href-label",
-          "source": "blogCategory.title",
-          "field": "specials.boundHrefLabel"
-        }
-      ],
-      "blogCategory|price": [
-        {
-          "id": "bind-href",
-          "source": "blogCategory.url",
-          "field": "specials.boundHref",
-          "target": {
-            "type": "blogCategory",
-            "id": "",
-            "kind": "blog_category_general"
-          }
-        },
-        {
-          "id": "bind-href-label",
-          "source": "blogCategory.title",
-          "field": "specials.boundHrefLabel"
-        }
-      ],
-      "blogCategory|prices": [
-        {
-          "id": "bind-href",
-          "source": "blogCategory.url",
-          "field": "specials.boundHref",
-          "target": {
-            "type": "blogCategory",
-            "id": "",
-            "kind": "blog_category_general"
-          }
-        },
-        {
-          "id": "bind-href-label",
-          "source": "blogCategory.title",
-          "field": "specials.boundHrefLabel"
-        }
-      ],
-      "blogCategory|url": [
-        {
-          "id": "bind-href",
-          "source": "blogCategory.url",
-          "field": "specials.boundHref",
-          "target": {
-            "type": "blogCategory",
-            "id": "",
-            "kind": "blog_category_general"
-          }
-        },
-        {
-          "id": "bind-href-label",
-          "source": "blogCategory.title",
-          "field": "specials.boundHrefLabel"
-        }
-      ],
-      "blogCategory|name": [
-        {
-          "id": "bind-href",
-          "source": "blogCategory.url",
-          "field": "specials.boundHref",
-          "target": {
-            "type": "blogCategory",
-            "id": "",
-            "kind": "blog_category_general"
-          }
-        },
-        {
-          "id": "bind-href-label",
-          "source": "blogCategory.title",
+          "source": "brand.title",
           "field": "specials.boundHrefLabel"
         }
       ],
@@ -43556,6 +46820,150 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           }
         }
       ],
+      "blogCategory|title": [
+        {
+          "id": "bind-target",
+          "source": "",
+          "field": "",
+          "target": {
+            "type": "blogCategory",
+            "id": "",
+            "kind": "blog_category_list"
+          }
+        }
+      ],
+      "blogCategory|vendor": [
+        {
+          "id": "bind-target",
+          "source": "",
+          "field": "",
+          "target": {
+            "type": "blogCategory",
+            "id": "",
+            "kind": "blog_category_list"
+          }
+        }
+      ],
+      "blogCategory|description": [
+        {
+          "id": "bind-target",
+          "source": "",
+          "field": "",
+          "target": {
+            "type": "blogCategory",
+            "id": "",
+            "kind": "blog_category_list"
+          }
+        }
+      ],
+      "blogCategory|summary": [
+        {
+          "id": "bind-target",
+          "source": "",
+          "field": "",
+          "target": {
+            "type": "blogCategory",
+            "id": "",
+            "kind": "blog_category_list"
+          }
+        }
+      ],
+      "blogCategory|content": [
+        {
+          "id": "bind-target",
+          "source": "",
+          "field": "",
+          "target": {
+            "type": "blogCategory",
+            "id": "",
+            "kind": "blog_category_list"
+          }
+        }
+      ],
+      "blogCategory|author": [
+        {
+          "id": "bind-target",
+          "source": "",
+          "field": "",
+          "target": {
+            "type": "blogCategory",
+            "id": "",
+            "kind": "blog_category_list"
+          }
+        }
+      ],
+      "blogCategory|date": [
+        {
+          "id": "bind-target",
+          "source": "",
+          "field": "",
+          "target": {
+            "type": "blogCategory",
+            "id": "",
+            "kind": "blog_category_list"
+          }
+        }
+      ],
+      "blogCategory|image": [
+        {
+          "id": "bind-target",
+          "source": "",
+          "field": "",
+          "target": {
+            "type": "blogCategory",
+            "id": "",
+            "kind": "blog_category_list"
+          }
+        }
+      ],
+      "blogCategory|price": [
+        {
+          "id": "bind-target",
+          "source": "",
+          "field": "",
+          "target": {
+            "type": "blogCategory",
+            "id": "",
+            "kind": "blog_category_list"
+          }
+        }
+      ],
+      "blogCategory|prices": [
+        {
+          "id": "bind-target",
+          "source": "",
+          "field": "",
+          "target": {
+            "type": "blogCategory",
+            "id": "",
+            "kind": "blog_category_list"
+          }
+        }
+      ],
+      "blogCategory|url": [
+        {
+          "id": "bind-target",
+          "source": "",
+          "field": "",
+          "target": {
+            "type": "blogCategory",
+            "id": "",
+            "kind": "blog_category_list"
+          }
+        }
+      ],
+      "blogCategory|name": [
+        {
+          "id": "bind-target",
+          "source": "",
+          "field": "",
+          "target": {
+            "type": "blogCategory",
+            "id": "",
+            "kind": "blog_category_list"
+          }
+        }
+      ],
       "course|title": [
         {
           "id": "bind-target",
@@ -43700,291 +47108,291 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           }
         }
       ],
-      "instructor|title": [
+      "review|title": [
         {
           "id": "bind-target",
           "source": "",
           "field": "",
           "target": {
-            "type": "product",
+            "type": "review",
             "id": "",
-            "kind": "product_list"
+            "kind": "review_list"
           }
         }
       ],
-      "instructor|vendor": [
+      "review|vendor": [
         {
           "id": "bind-target",
           "source": "",
           "field": "",
           "target": {
-            "type": "product",
+            "type": "review",
             "id": "",
-            "kind": "product_list"
+            "kind": "review_list"
           }
         }
       ],
-      "instructor|description": [
+      "review|description": [
         {
           "id": "bind-target",
           "source": "",
           "field": "",
           "target": {
-            "type": "product",
+            "type": "review",
             "id": "",
-            "kind": "product_list"
+            "kind": "review_list"
           }
         }
       ],
-      "instructor|summary": [
+      "review|summary": [
         {
           "id": "bind-target",
           "source": "",
           "field": "",
           "target": {
-            "type": "product",
+            "type": "review",
             "id": "",
-            "kind": "product_list"
+            "kind": "review_list"
           }
         }
       ],
-      "instructor|content": [
+      "review|content": [
         {
           "id": "bind-target",
           "source": "",
           "field": "",
           "target": {
-            "type": "product",
+            "type": "review",
             "id": "",
-            "kind": "product_list"
+            "kind": "review_list"
           }
         }
       ],
-      "instructor|author": [
+      "review|author": [
         {
           "id": "bind-target",
           "source": "",
           "field": "",
           "target": {
-            "type": "product",
+            "type": "review",
             "id": "",
-            "kind": "product_list"
+            "kind": "review_list"
           }
         }
       ],
-      "instructor|date": [
+      "review|date": [
         {
           "id": "bind-target",
           "source": "",
           "field": "",
           "target": {
-            "type": "product",
+            "type": "review",
             "id": "",
-            "kind": "product_list"
+            "kind": "review_list"
           }
         }
       ],
-      "instructor|image": [
+      "review|image": [
         {
           "id": "bind-target",
           "source": "",
           "field": "",
           "target": {
-            "type": "product",
+            "type": "review",
             "id": "",
-            "kind": "product_list"
+            "kind": "review_list"
           }
         }
       ],
-      "instructor|price": [
+      "review|price": [
         {
           "id": "bind-target",
           "source": "",
           "field": "",
           "target": {
-            "type": "product",
+            "type": "review",
             "id": "",
-            "kind": "product_list"
+            "kind": "review_list"
           }
         }
       ],
-      "instructor|prices": [
+      "review|prices": [
         {
           "id": "bind-target",
           "source": "",
           "field": "",
           "target": {
-            "type": "product",
+            "type": "review",
             "id": "",
-            "kind": "product_list"
+            "kind": "review_list"
           }
         }
       ],
-      "instructor|url": [
+      "review|url": [
         {
           "id": "bind-target",
           "source": "",
           "field": "",
           "target": {
-            "type": "product",
+            "type": "review",
             "id": "",
-            "kind": "product_list"
+            "kind": "review_list"
           }
         }
       ],
-      "instructor|name": [
+      "review|name": [
         {
           "id": "bind-target",
           "source": "",
           "field": "",
           "target": {
-            "type": "product",
+            "type": "review",
             "id": "",
-            "kind": "product_list"
+            "kind": "review_list"
           }
         }
       ],
-      "blogCategory|title": [
+      "brand|title": [
         {
           "id": "bind-target",
           "source": "",
           "field": "",
           "target": {
-            "type": "blogCategory",
+            "type": "brand",
             "id": "",
-            "kind": "blog_category_list"
+            "kind": "brand_list"
           }
         }
       ],
-      "blogCategory|vendor": [
+      "brand|vendor": [
         {
           "id": "bind-target",
           "source": "",
           "field": "",
           "target": {
-            "type": "blogCategory",
+            "type": "brand",
             "id": "",
-            "kind": "blog_category_list"
+            "kind": "brand_list"
           }
         }
       ],
-      "blogCategory|description": [
+      "brand|description": [
         {
           "id": "bind-target",
           "source": "",
           "field": "",
           "target": {
-            "type": "blogCategory",
+            "type": "brand",
             "id": "",
-            "kind": "blog_category_list"
+            "kind": "brand_list"
           }
         }
       ],
-      "blogCategory|summary": [
+      "brand|summary": [
         {
           "id": "bind-target",
           "source": "",
           "field": "",
           "target": {
-            "type": "blogCategory",
+            "type": "brand",
             "id": "",
-            "kind": "blog_category_list"
+            "kind": "brand_list"
           }
         }
       ],
-      "blogCategory|content": [
+      "brand|content": [
         {
           "id": "bind-target",
           "source": "",
           "field": "",
           "target": {
-            "type": "blogCategory",
+            "type": "brand",
             "id": "",
-            "kind": "blog_category_list"
+            "kind": "brand_list"
           }
         }
       ],
-      "blogCategory|author": [
+      "brand|author": [
         {
           "id": "bind-target",
           "source": "",
           "field": "",
           "target": {
-            "type": "blogCategory",
+            "type": "brand",
             "id": "",
-            "kind": "blog_category_list"
+            "kind": "brand_list"
           }
         }
       ],
-      "blogCategory|date": [
+      "brand|date": [
         {
           "id": "bind-target",
           "source": "",
           "field": "",
           "target": {
-            "type": "blogCategory",
+            "type": "brand",
             "id": "",
-            "kind": "blog_category_list"
+            "kind": "brand_list"
           }
         }
       ],
-      "blogCategory|image": [
+      "brand|image": [
         {
           "id": "bind-target",
           "source": "",
           "field": "",
           "target": {
-            "type": "blogCategory",
+            "type": "brand",
             "id": "",
-            "kind": "blog_category_list"
+            "kind": "brand_list"
           }
         }
       ],
-      "blogCategory|price": [
+      "brand|price": [
         {
           "id": "bind-target",
           "source": "",
           "field": "",
           "target": {
-            "type": "blogCategory",
+            "type": "brand",
             "id": "",
-            "kind": "blog_category_list"
+            "kind": "brand_list"
           }
         }
       ],
-      "blogCategory|prices": [
+      "brand|prices": [
         {
           "id": "bind-target",
           "source": "",
           "field": "",
           "target": {
-            "type": "blogCategory",
+            "type": "brand",
             "id": "",
-            "kind": "blog_category_list"
+            "kind": "brand_list"
           }
         }
       ],
-      "blogCategory|url": [
+      "brand|url": [
         {
           "id": "bind-target",
           "source": "",
           "field": "",
           "target": {
-            "type": "blogCategory",
+            "type": "brand",
             "id": "",
-            "kind": "blog_category_list"
+            "kind": "brand_list"
           }
         }
       ],
-      "blogCategory|name": [
+      "brand|name": [
         {
           "id": "bind-target",
           "source": "",
           "field": "",
           "target": {
-            "type": "blogCategory",
+            "type": "brand",
             "id": "",
-            "kind": "blog_category_list"
+            "kind": "brand_list"
           }
         }
       ],
