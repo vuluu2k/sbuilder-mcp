@@ -6,6 +6,11 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.95.3] - 2026-10-27
+
+### Fixed
+- `sb_add` giữ lại style và config `responsive` theo từng breakpoint (desktop, laptop, tablet, mobile) thay vì âm thầm bỏ đi, chuyển key config chỉ áp dụng ở base về base và báo `base_only`, và từ chối các key không áp dụng được như `events` và `states` kèm thông báo chỉ tới `sb_event`, `sb_bind` hoặc `sb_set`.
+
 ## [0.95.2] - 2026-10-27
 
 ### Fixed

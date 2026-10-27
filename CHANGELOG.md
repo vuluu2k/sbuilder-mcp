@@ -6,6 +6,11 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.95.3] - 2026-10-27
+
+### Fixed
+- `sb_add` keeps per-breakpoint `responsive` styles and config (desktop, laptop, tablet, mobile) instead of silently dropping them, routes a base-only config key to base and reports it as `base_only`, and refuses keys it cannot apply, such as `events` and `states`, with a message pointing to `sb_event`, `sb_bind` or `sb_set`.
+
 ## [0.95.2] - 2026-10-27
 
 ### Fixed
