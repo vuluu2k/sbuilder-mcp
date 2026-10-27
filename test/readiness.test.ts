@@ -18,6 +18,34 @@ describe('readinessGaps()', () => {
     expect(readinessGaps(base)).toEqual([]);
   });
 
+  it('a Collections list is a directory, not a shop — AURA drew eight store gaps from its hotel list', () => {
+    const record = { config: { datasetSource: 'record' } };
+    const directory = readinessGaps({
+      ...base,
+      liveGateways: 0,
+      shippingMethods: 0,
+      products: { active: 0, purchasable: 0 },
+      pageNodes: [node('list-dataset', record), node('dataset-block', record), node('media-dataset', record)],
+    });
+    expect(directory.map((g) => g.id)).not.toContain('checkoutPage');
+    expect(directory.map((g) => g.id)).not.toContain('catalogue');
+    // a card naming no source of its own inherits its list's
+    const inherited = readinessGaps({
+      ...base,
+      liveGateways: 0,
+      pageNodes: [
+        node('list-dataset', { id: 'li', config: { datasetSource: 'record' } }),
+        { id: 'da', data: { type: 'dataset-block', parent: 'li' }, events: [], bindings: [] } as never,
+      ],
+    });
+    expect(inherited.map((g) => g.id)).not.toContain('checkoutPage');
+    // a product list (explicit, or the default with no datasetSource) still makes it a store
+    for (const cfg of [{ config: { datasetSource: 'product' } }, { config: { datasetSource: 'brand' } }, {}]) {
+      const ids = readinessGaps({ ...base, liveGateways: 0, pageNodes: [node('list-dataset', cfg)] }).map((g) => g.id);
+      expect(ids, JSON.stringify(cfg)).toContain('checkoutPage');
+    }
+  });
+
   it('reports every gap a store can ship with, most-blocking first', () => {
     const gaps = readinessGaps({
       ...base,

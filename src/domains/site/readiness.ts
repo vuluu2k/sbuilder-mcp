@@ -99,7 +99,9 @@ export interface ReadinessPage {
 const INDEXED_PAGE_TYPES = new Set(['page', 'about', 'contact', 'policy', 'faq', 'blog']);
 
 interface NodeLike {
-  data: { type: string };
+  /** Only to walk a card up to its list — see sellsThrough. */
+  id?: string;
+  data: { type: string; parent?: string | null };
   /** Only `formId` is read — which FORM a node shows. See ReadinessInput.forms. */
   specials?: Record<string, unknown>;
   events?: Array<{ action?: string }>;
@@ -214,9 +216,34 @@ function isStore(input: ReadinessInput): boolean {
     return true;
   }
   if (input.pageNodes.some(boundProductAction)) return true;
-  const types = new Set(input.pageNodes.map((n) => n.data.type));
-  return COMMERCE_TYPES.some((t) => types.has(t));
+  const byId = new Map<string, NodeLike>();
+  for (const n of input.pageNodes) if (n.id) byId.set(n.id, n);
+  return input.pageNodes.some((n) => COMMERCE_TYPES.includes(n.data.type) && sellsThrough(n, byId));
 }
+
+/**
+ * A dataset node is commerce only over the CATALOGUE. Each one reads its own
+ * `config.datasetSource` (absent = the product default); a Collections list
+ * (`record`) is a hotel directory, not a shop — AURA, a booking-request site
+ * with no product anywhere, drew eight checkout/payment/shipping gaps from its
+ * hotel list alone.
+ */
+function sellsThrough(n: NodeLike, byId: Map<string, NodeLike>): boolean {
+  if (!DATASET_TYPES.has(n.data.type)) return true;
+  // A card that does not name its own source sits in the list that does —
+  // AURA's hotel cards carry none inside a `record` list. Bounded: a document
+  // is a tree, but a malformed parent loop must not hang a review.
+  let src: unknown;
+  let x: NodeLike | undefined = n;
+  for (let hops = 0; x && src === undefined && hops < 64; hops++) {
+    src = x.config?.datasetSource;
+    if (src === undefined && x !== n && x.data.type === 'list-dataset') break;
+    x = x.data.parent ? byId.get(x.data.parent) : undefined;
+  }
+  // brand: the product catalogue's brands (datasetEntities.ts) — a brand grid is a shop.
+  return src === undefined || src === '' || src === 'product' || src === 'category' || src === 'brand';
+}
+const DATASET_TYPES = new Set(['list-dataset', 'dataset-block', 'media-dataset', 'pricing-dataset', 'quantity-dataset']);
 
 const published = (pages: ReadinessPage[], type: string) =>
   pages.some((p) => p.type === type && p.status === 'published');
