@@ -6,6 +6,11 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.95.2] - 2026-10-27
+
+### Fixed
+- `sb_page_open` review trang chi tiết record theo đúng loại trang, nên các tile gắn record và danh sách quan hệ của chính trang không còn bị báo `no_data_context` hay `record_relation_orphan`.
+
 ## [0.95.1] - 2026-10-27
 
 ### Fixed

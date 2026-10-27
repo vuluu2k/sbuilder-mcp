@@ -6,6 +6,11 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.95.2] - 2026-10-27
+
+### Fixed
+- `sb_page_open` reviews a record detail page with its page type, so record-bound tiles and the page's own relation list are no longer reported as `no_data_context` or `record_relation_orphan`.
+
 ## [0.95.1] - 2026-10-27
 
 ### Fixed
