@@ -6,6 +6,18 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.94.0] - 2026-10-27
+
+### Added
+- `sb_bind` nhận `record.ref.<a>.<b>` và `record.money.ref.<a>.<b>` để bind field của record mà một reference trỏ tới, đọc field của collection được tham chiếu để kiểm tra đích, và tile text-dataset có `recordField: "ref.<a>.<b>"` suy ra binding giống nền tảng.
+- `sb_review` báo `href_params_invalid`, `href_params_unresolved` và `href_params_stranded` cho tham số liên kết (`hrefParams`) sai định dạng, không có record để đọc, hoặc nằm trên button không có đúng một hành động click.
+- `sb_review` báo `record_favorite_invalid` cho nút tim hoặc tab yêu thích nối sai, và `show_record_favorites` yêu cầu `targetId`.
+- Button thêm hai hành động `toggle_record_favorite` và `show_record_favorites`, và catalog element thêm loại field `tags`.
+
+### Changed
+- `hrefParams` được coi là khoá không dịch, và `filterMatch: "all"` hợp lệ trên nguồn record.
+- Catalog API được đồng bộ với web_builder v1.0.174.
+
 ## [0.93.0] - 2026-10-26
 
 ### Added

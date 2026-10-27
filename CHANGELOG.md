@@ -6,6 +6,18 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.94.0] - 2026-10-27
+
+### Added
+- `sb_bind` accepts `record.ref.<a>.<b>` and `record.money.ref.<a>.<b>` to bind a field of the record a reference names, reading the referenced collection's fields to check the target, and a text-dataset tile with `recordField: "ref.<a>.<b>"` derives its binding the way the platform does.
+- `sb_review` reports `href_params_invalid`, `href_params_unresolved` and `href_params_stranded` for link parameters (`hrefParams`) that are malformed, have no record to read from, or sit on a button without exactly one click action.
+- `sb_review` reports `record_favorite_invalid` for a favorites heart or tab that is wired wrongly, and `show_record_favorites` requires a `targetId`.
+- Buttons gain the `toggle_record_favorite` and `show_record_favorites` actions, and the element catalog gains the `tags` field type.
+
+### Changed
+- `hrefParams` is treated as an untranslated key, and `filterMatch: "all"` is valid on record sources.
+- The API catalog is synced with web_builder v1.0.174.
+
 ## [0.93.0] - 2026-10-26
 
 ### Added
