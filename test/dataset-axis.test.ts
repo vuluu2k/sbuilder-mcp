@@ -108,3 +108,45 @@ describe('setKeys() re-derives for an element with no kind axis', () => {
     expect(JSON.stringify(bindings(doc.node(ids[0]) as never))).toBe(before);
   });
 });
+
+describe("a repeater's card inherits its entity (editor migrateDatasetSource)", () => {
+  const sourceOf = (doc: ReturnType<typeof emptyDoc>, ids: string[], type: string) =>
+    (doc.node(ids.find((i) => doc.node(i).data.type === type)!) as unknown as { config: Record<string, unknown> }).config.datasetSource;
+
+  it('stamps a record list onto a card that names no source, nested in one spec', () => {
+    const doc = emptyDoc();
+    const { patches, ids } = addSubtree(doc, 'ROOT', {
+      type: 'flex-section',
+      children: [{ type: 'list-dataset', config: { datasetSource: 'record' }, children: [{ type: 'dataset-block', children: [{ type: 'text-dataset' }] }] }],
+    });
+    doc.apply(patches);
+    expect(sourceOf(doc, ids, 'dataset-block')).toBe('record');
+    const card = doc.node(ids.find((i) => doc.node(i).data.type === 'dataset-block')!) as unknown as { bindings: Bound[] };
+    expect(JSON.stringify(card.bindings)).not.toContain('product.url');
+  });
+
+  it('stamps when the card is added under an existing list, keeps an explicit source, and leaves a product list alone', () => {
+    const emptyList = (doc: ReturnType<typeof emptyDoc>, datasetSource: string) => {
+      const made = addSubtree(doc, 'ROOT', { type: 'list-dataset', config: { datasetSource } });
+      doc.apply(made.patches);
+      const list = made.ids[0];
+      const tpl = doc.node(list).data.nodes[0];
+      if (tpl) doc.apply([{ op: 'unset', path: ['nodes', tpl] }, { op: 'set', path: ['nodes', list, 'data', 'nodes'], value: [] }] as never);
+      return list;
+    };
+    const doc = emptyDoc();
+    const card = addSubtree(doc, emptyList(doc, 'category'), { type: 'dataset-block' });
+    doc.apply(card.patches);
+    expect(sourceOf(doc, card.ids, 'dataset-block')).toBe('category');
+
+    const d2 = emptyDoc();
+    const own = addSubtree(d2, emptyList(d2, 'category'), { type: 'dataset-block', config: { datasetSource: 'record' } });
+    d2.apply(own.patches);
+    expect(sourceOf(d2, own.ids, 'dataset-block')).toBe('record');
+
+    const p = emptyDoc();
+    const prod = addSubtree(p, 'ROOT', { type: 'list-dataset', config: { datasetSource: 'product' }, children: [{ type: 'dataset-block' }] });
+    p.apply(prod.patches);
+    expect(sourceOf(p, prod.ids, 'dataset-block')).toBeUndefined();
+  });
+});

@@ -209,6 +209,7 @@ export function addSubtree(
   const patches: Patch[] = [];
   const ids: string[] = [];
 
+  const pending = new Map<string, unknown>();
   const build = (s: NodeSpec, parentNodeId: string): string => {
     refuseComposedStamp(s.specials);
     // A base-only config key in a breakpoint slot is read from BASE alone, so
@@ -223,6 +224,18 @@ export function addSubtree(
         responsive[bp] = { ...slot, ...(slot.config ? { config: split.responsive } : {}) };
       }
     }
+    // A REPEATER'S CARD INHERITS ITS ENTITY (editor migrateDatasetSource.ts). A
+    // `dataset-block` reads its OWN datasetSource, unset reads as product, so in a
+    // record/category list it derives bind-href ← product.url and publishes no
+    // card link — the editor heals that on open, the Go renderer never does, and
+    // the platform names the sb_* authoring API as where such cards come from.
+    if (s.type === 'dataset-block' && !config?.datasetSource) {
+      const listCfg = (pending.get(parentNodeId) ?? doc.doc.nodes[parentNodeId]) as
+        | { data?: { type?: string }; config?: Record<string, unknown> }
+        | undefined;
+      const src = listCfg?.data?.type === 'list-dataset' ? listCfg.config?.datasetSource : undefined;
+      if (typeof src === 'string' && src !== '' && src !== 'product') config = { ...config, datasetSource: src };
+    }
     const n = createNode(s.type, {
       name: s.name,
       parent: parentNodeId,
@@ -232,6 +245,7 @@ export function addSubtree(
       responsive,
       states: s.states,
     });
+    pending.set(n.id, n);
     // A child the element declares as a SATELLITE (an icon's cart-count, a
     // list's empty state) hangs off `config[key]`, exactly as a top-level
     // `sb_add` of one does. The caller's nested spec takes the place of the
