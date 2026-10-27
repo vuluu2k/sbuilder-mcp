@@ -46,6 +46,13 @@ One group per file under `src/tools/*.ts`, exporting `registerXTools(server, ctx
    a dry-run preview: `redact()` only knows secret-looking KEY names. Found by a security
    review on 2026-10-10, after v0.82.0 shipped the hole.
 
+9. **An object in an input schema that the tool hands on WHOLE is `.strict()`, and names
+   every key the code behind it reads.** A plain `z.object` strips unknown keys in silence:
+   `sb_add`'s spec lost `responsive` (which `addSubtree` applies) and an `events` list for
+   months — the node saved, looked right on desktop and was wrong everywhere else. A key the
+   code cannot apply is refused with a message naming the tool that does apply it, and a
+   key routed elsewhere (base-only config) is routed AND said. Found on AURA, 2026-10-27.
+
 ## Credentials
 
 `credentialFor(path)` in `src/transport/credential.ts` decides, by path prefix:
