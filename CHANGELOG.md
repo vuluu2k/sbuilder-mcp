@@ -6,6 +6,11 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.95.1] - 2026-10-27
+
+### Fixed
+- `sb_review` no longer reports `empty_container` for the empty `dropdown-trigger` and `dropdown-panel` of a `select` or a `selectMode: "select"` dropdown, because the host fills them, while empty zones of a panel-mode dropdown are still reported.
+
 ## [0.95.0] - 2026-10-27
 
 ### Changed

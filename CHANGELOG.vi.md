@@ -6,6 +6,11 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.95.1] - 2026-10-27
+
+### Fixed
+- `sb_review` không còn báo `empty_container` cho `dropdown-trigger` và `dropdown-panel` rỗng của `select` hoặc dropdown `selectMode: "select"`, vì host tự điền các vùng này, còn vùng rỗng của dropdown ở chế độ panel vẫn được báo.
+
 ## [0.95.0] - 2026-10-27
 
 ### Changed
