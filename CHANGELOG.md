@@ -6,6 +6,17 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.96.0] - 2026-10-27
+
+### Added
+- `sb_bind` accepts `record.gallery.<fid>` to bind a record's gallery field into `specials.boundImages` of a childless media-dataset, and refuses it in any other sink.
+- `sb_review` reports `card_source_unset` for a repeater card that names no `datasetSource` inside a non-product list, with the `sb_set` fix.
+- `sb_review` reports `record_field_unset` for a record media-dataset that has children, a non-plain field or a `recordFieldType` other than gallery or image.
+
+### Changed
+- `sb_add` derives the image binding of a record media-dataset from `recordFieldType`, using `record.gallery.<fid>` for a gallery and `record.<fid>` for an image.
+- The API catalog is synced with web_builder v1.0.177, including the favorites `saved` link value that opens the saved list.
+
 ## [0.95.4] - 2026-10-27
 
 ### Fixed

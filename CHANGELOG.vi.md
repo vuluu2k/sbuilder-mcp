@@ -6,6 +6,17 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.96.0] - 2026-10-27
+
+### Added
+- `sb_bind` nhận `record.gallery.<fid>` để bind field gallery của record vào `specials.boundImages` của media-dataset không có con, và từ chối nó ở mọi đích khác.
+- `sb_review` báo `card_source_unset` cho thẻ của repeater không khai `datasetSource` trong danh sách không phải sản phẩm, kèm cách sửa bằng `sb_set`.
+- `sb_review` báo `record_field_unset` cho media-dataset của record có phần tử con, field không phải field thường hoặc `recordFieldType` không phải gallery hay image.
+
+### Changed
+- `sb_add` suy ra binding ảnh của media-dataset record từ `recordFieldType`, dùng `record.gallery.<fid>` cho gallery và `record.<fid>` cho image.
+- Catalog API được đồng bộ với web_builder v1.0.177, gồm giá trị liên kết `saved` của favorites để mở danh sách đã lưu.
+
 ## [0.95.4] - 2026-10-27
 
 ### Fixed
