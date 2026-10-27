@@ -6,6 +6,13 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.95.4] - 2026-10-27
+
+### Fixed
+- `sb_add` makes a card built inside a record or category list inherit the list's non-product `datasetSource`, so the card binds its own entity and publishes its card link instead of binding `product.url`.
+- `sb_add` binds brand and review lists and cards to their own entity instead of repeating products, because the default bindings catalog now reads its sources from the platform's dataset entities.
+- `sb_review` no longer reports checkout, payment, shipping and catalogue gaps for a site whose lists run over `record` and which has no products.
+
 ## [0.95.3] - 2026-10-27
 
 ### Fixed

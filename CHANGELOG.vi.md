@@ -6,6 +6,13 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.95.4] - 2026-10-27
+
+### Fixed
+- `sb_add` cho thẻ được tạo trong danh sách record hoặc category kế thừa `datasetSource` không phải product của danh sách, nên thẻ gắn đúng thực thể của nó và xuất bản liên kết thẻ thay vì gắn `product.url`.
+- `sb_add` gắn danh sách và thẻ brand, review với đúng thực thể của chúng thay vì lặp lại sản phẩm, vì catalog binding mặc định nay đọc nguồn từ các dataset entity của nền tảng.
+- `sb_review` không còn báo thiếu checkout, thanh toán, vận chuyển và danh mục sản phẩm cho site có danh sách trên `record` và không có sản phẩm nào.
+
 ## [0.95.3] - 2026-10-27
 
 ### Fixed
