@@ -1333,7 +1333,20 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
         );
         return text({ form: form_id, outline, ...(note ? { note } : {}), ...reviewField(ctx, session.current(), undefined, undefined, session.formType()) });
       }
-      const outline = await session.open(siteFor(ctx, given), page_id!);
+      const siteId = siteFor(ctx, given);
+      // The page TYPE says which record the page itself supplies — a `record`
+      // detail page binds its tiles outside any list. The source read does not
+      // carry it, and without it the open-time review flagged every tile of a
+      // correctly rendering detail page. A failed read reviews as before.
+      const typeRead = request({
+        base: ctx.base,
+        method: 'GET',
+        path: `/api/sites/${encodeURIComponent(siteId)}/pages/${encodeURIComponent(page_id!)}`,
+        token: siteToken(ctx),
+        fetchImpl: ctx.fetchImpl,
+      }).then((r) => (r as { page?: { type?: unknown } } | null | undefined)?.page?.type, () => undefined);
+      const outline = await session.open(siteId, page_id!);
+      const pageType = await typeRead;
       // `open` joined the room on the way through — this only reports what it did.
       const live = session.liveStatus();
       const doc = session.current();
@@ -1373,7 +1386,7 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
         ...(blank_page_repair ? { blank_page_repair } : {}),
         ...(seeded_empty ? { seeded_empty } : {}),
         ...(warnings.length ? { compose_warnings: warnings } : {}),
-        ...reviewField(ctx, doc),
+        ...reviewField(ctx, doc, undefined, typeof pageType === 'string' ? pageType : undefined),
       });
     },
   );
