@@ -689,6 +689,26 @@ export function reviewDesign(
           fix: fill('record_list_unsourced', { id }),
         });
       }
+      // A REPEATER'S CARD reads its OWN datasetSource, unset = product
+      // (editor migrateDatasetSource.ts). Under a record/category/… list it binds
+      // product.url, so the published card carries no link — the editor heals it on
+      // open, the Go renderer never does. AURA's hotel, destination and room cards
+      // all shipped this way from an sb_add predating the stamp in addSubtree.
+      if (type === 'dataset-block') {
+        const list = d.nodes[n.data.parent ?? ''];
+        const listSrc = list?.data.type === 'list-dataset' ? (list as { config?: Record<string, unknown> }).config?.datasetSource : undefined;
+        if (typeof listSrc === 'string' && listSrc !== '' && listSrc !== 'product' && !cfg.datasetSource) {
+          out.push({
+            code: 'card_source_unset',
+            nodeId: id,
+            type,
+            problem:
+              `This card names no datasetSource inside a "${listSrc}" list, so it binds a PRODUCT link ` +
+              'that never resolves — the published card is not clickable.',
+            fix: fill('card_source_unset', { id, key: listSrc }),
+          });
+        }
+      }
       // RELATION LISTS (web_builder 1b6c07a91): a record list inside another record
       // list's row. Without recordRelationField it repeats the WHOLE collection under
       // every parent; with one but no record row above it has no parent id and shows

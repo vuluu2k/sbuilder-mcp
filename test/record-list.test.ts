@@ -169,6 +169,21 @@ describe('sb_review on a record list', () => {
     expect(codes(doc, list)).not.toContain('record_list_unsourced');
   });
 
+  it('a card naming no source in a record list is reported; stamped or in a product list, it is not', () => {
+    const card = (listSrc: string, cardSrc?: string) => {
+      const d = emptyDoc();
+      d.apply([
+        { op: 'set', path: ['nodes', 'li'], value: { id: 'li', data: { type: 'list-dataset', parent: 'ROOT', nodes: ['da'] }, config: { datasetSource: listSrc, recordCollectionId: 'col_x' }, specials: {} } },
+        { op: 'set', path: ['nodes', 'da'], value: { id: 'da', data: { type: 'dataset-block', parent: 'li', nodes: [] }, config: cardSrc ? { datasetSource: cardSrc } : {}, specials: {} } },
+        { op: 'set', path: ['nodes', 'ROOT', 'data', 'nodes'], value: ['li'] },
+      ] as never);
+      return codes(d, 'da');
+    };
+    expect(card('record')).toContain('card_source_unset');
+    expect(card('record', 'record')).not.toContain('card_source_unset');
+    expect(card('product')).not.toContain('card_source_unset');
+  });
+
   it('a record list with no collection renders nothing', () => {
     const { doc, list } = recordList('');
     expect(codes(doc, list)).toContain('record_list_unsourced');

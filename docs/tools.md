@@ -1597,6 +1597,7 @@ box. Returns `{ findings, fixes, findings_notice? }`, in document order:
 | `static_in_dataset` | An element inside a repeater that renders only what the document authors — the same picture on every product card |
 | `unbound_dataset_element` | A dataset element with no binding at all — it waits for a bound special nothing writes |
 | `dead_binding_source` | A source the renderer never provides — shows the placeholder forever. A `record.*` source counts only as `record.fld_<16 hex>` / `record.html.fld_<16 hex>` / `record.money.fld_<16 hex>` / `record.(money.)agg.<key>` / `record.(money.)ref.<fld>.<fld>` / `record.id` / `record.url`, and only the html form into `specials.boundHtml` |
+| `card_source_unset` | A `dataset-block` naming no `config.datasetSource` inside a non-product list — it binds `product.url`, which never resolves there, so the published card is not clickable. Fix: set the list's source on the card (`sb_add` now does this itself) |
 | `record_list_unsourced` | A `list-dataset` with `datasetSource: "record"` and no `config.recordCollectionId` — no rows are fetched, a visitor sees only the empty state |
 | `hardcoded_dataset` | A `custom-code` script carrying ≥4 flat records with one key set (`const DATA = {hotels:[…]}`) — a data table kept in code; move it to a Collection + record list (maintenance) |
 | `record_option_invalid` | A choice field with `optionSource: "record"` naming no collection, a label that is not a field ID, or a parent that is not a record-sourced `form-select` — it shows only its placeholder or never narrows |

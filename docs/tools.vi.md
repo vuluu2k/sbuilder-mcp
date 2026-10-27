@@ -1568,6 +1568,7 @@ tài liệu:
 | `static_in_dataset` | Một element nằm trong repeater nhưng chỉ render nội dung do tài liệu ghi — cùng một tấm ảnh trên mọi thẻ sản phẩm |
 | `unbound_dataset_element` | Element dataset không có binding nào — nó chờ một `bound…` special mà không ai ghi |
 | `dead_binding_source` | Nguồn renderer không cung cấp — hiện placeholder mãi mãi. Nguồn `record.*` chỉ hợp lệ ở dạng `record.fld_<16 hex>` / `record.html.fld_<16 hex>` / `record.money.fld_<16 hex>` / `record.(money.)agg.<key>` / `record.(money.)ref.<fld>.<fld>` / `record.id` / `record.url`, và chỉ dạng html được vào `specials.boundHtml` |
+| `card_source_unset` | `dataset-block` không khai `config.datasetSource` bên trong một danh sách không phải sản phẩm — nó bind `product.url`, không bao giờ có giá trị ở đó, nên card publish ra không bấm được. Sửa: gán nguồn của danh sách cho card (`sb_add` giờ tự làm) |
 | `record_list_unsourced` | `list-dataset` có `datasetSource: "record"` mà không có `config.recordCollectionId` — không dòng nào được lấy, khách chỉ thấy trạng thái rỗng |
 | `hardcoded_dataset` | Script của `custom-code` chứa ≥4 bản ghi phẳng cùng một bộ khoá (`const DATA = {hotels:[…]}`) — bảng dữ liệu nằm trong code; chuyển sang Collection + danh sách record (maintenance) |
 | `record_option_invalid` | Trường lựa chọn có `optionSource: "record"` mà không chỉ collection, nhãn không phải ID field, hoặc cha không phải `form-select` lấy từ record — chỉ hiện placeholder hoặc không bao giờ thu hẹp |

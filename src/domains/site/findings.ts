@@ -142,6 +142,8 @@ export const FIX: Record<string, string> = {
     'post, blog). A cartLine field goes inside a cart-order instead; a record field inside a ' +
     'list-dataset with datasetSource "record". Off those it renders its ' +
     'placeholder for ever.',
+  card_source_unset:
+    'sb_set id "<id>", namespace config, keys { "datasetSource": "<key>" } — the card re-derives its bindings from the list\'s entity.',
   record_list_unsourced:
     'Point it at a collection: sb_set id "<id>", namespace config, keys { "recordCollectionId": "<collection id>" } ' +
     '(the ids are on GET /api/sites/{siteId}/collections). Only PUBLISHED records render.',
