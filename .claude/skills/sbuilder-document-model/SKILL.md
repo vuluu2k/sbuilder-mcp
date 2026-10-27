@@ -760,6 +760,8 @@ platform treats an unproven guard as indistinguishable from an absent one.
   `specials.hrefParams` is SPECIALS, so already base — no routing needed; the renderer DROPS a bad
   entry silently and applies none under a chained click / purchase binding, hence the three
   `href_params_*` findings (pure rules in `record.ts`, mirroring `schema/src/elements/hrefParams.ts`).
+  Since v1.0.175 a name may also be a filter key `f.record.fld_…[~<node>]` (HREF_PARAM_FILTER_KEY,
+  checked BEFORE the plain grammar and exempt from the reserved list).
   `show_record_favorites` needs `targetId` (in `PAYLOAD_NEEDS`). A `ref.<a>.<b>` tile is one hop and
   never rich; `sb_bind` reads the reference's `refCollectionId` fields as a second fetch. Review
   still fetches nothing, so it cannot check a hrefParams field's collection, a target page's

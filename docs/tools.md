@@ -996,6 +996,12 @@ unique, not `lang`/`s`/`t`/`lesson`; `source` exactly `record.id`, `record.url` 
 (`specials.urlParam` `hotel` / `room`) preselect. Params apply only under ONE Open page / Go to URL
 click (or an href with no events) on a node with no purchase binding. Pass ids — a query is visible
 in the address bar and logs.
+A `name` may instead be a record-list FILTER KEY (web_builder v1.0.175) `f.record.fld_<16 hex>`,
+optionally `~<list node id>` — what that list's filter control writes. AURA's destination card:
+`href:"/"`, `{"name":"f.record.<hotels.destination fld>~<hotel list node>","source":"record.id"}` →
+`/?f.record.fld_…~li_…=rec_…`, the home hotel list server-rendered narrowed to that city; aim it
+(`~<node>`) or the filter select does not show the value selected. A node id inside the name is
+never rewritten on page duplicate.
 
 **Visitor favorites.** Per browser and per collection, never an account feature. A heart is a
 `button` inside the record list's card (or on a record page) with click `toggle_record_favorite {}`
@@ -1601,7 +1607,7 @@ box. Returns `{ findings, fixes, findings_notice? }`, in document order:
 | `record_relation_orphan` | `config.recordRelationField` set on a list with no record-list row above it, or not a `fld_…` ID — it only ever shows its empty state |
 | `record_relation_no_empty` | A relation list with no `config.emptyStateId` — a parent with no children renders placeholder cards |
 | `record_field_unset` | A record tile (`text-dataset` / `collection-media` with `datasetSource: "record"`) whose `config.recordField` is empty or not a `fld_…` ID (or `agg.<key>` / `ref.<fld>.<fld>`) — a field KEY binds nothing; it renders its placeholder on every row |
-| `href_params_invalid` | `specials.hrefParams` entries the renderer drops — a name outside `^[a-z][a-z0-9_]{0,23}$` or reserved (`lang` `s` `t` `lesson`), a duplicate, a source other than `record.id` / `record.url` / `record.fld_…`, more than 8 — or an `href` that is not a same-site path, which never gets params |
+| `href_params_invalid` | `specials.hrefParams` entries the renderer drops — a name outside `^[a-z][a-z0-9_]{0,23}$` (and not a filter key `f.record.fld_…[~<node>]`) or reserved (`lang` `s` `t` `lesson`), a duplicate, a source other than `record.id` / `record.url` / `record.fld_…`, more than 8 — or an `href` that is not a same-site path, which never gets params |
 | `href_params_unresolved` | `hrefParams` on a node in no record-list row and not on a record page — nothing supplies a value |
 | `href_params_stranded` | `hrefParams` the renderer does not apply: the click is not ONE Open page / Go to URL action, or the node is purchase-bound |
 | `record_favorite_invalid` | A `toggle_record_favorite` heart outside any record row / record page, or a `show_record_favorites` tab whose `targetId` is not a non-relation record list or whose `view` is not `favorites` / `all` — it does nothing |

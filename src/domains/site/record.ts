@@ -37,6 +37,8 @@ export const RECORD_REF_TARGET_TYPES = new Set(['text', 'select', 'url', 'date',
  * `specials.href`; every malformed entry is DROPPED at render, never repaired.
  */
 export const HREF_PARAM_NAME = /^[a-z][a-z0-9_]{0,23}$/;
+/** A record-list filter key as a name (v1.0.175): `/?f.record.<fld>~<list node>=<record.id>` narrows that list. */
+export const HREF_PARAM_FILTER_KEY = /^f\.record\.fld_[0-9a-f]{16}(?:~[A-Za-z0-9_-]{1,64})?$/;
 export const HREF_PARAM_SOURCE = /^record\.(?:id|url|fld_[0-9a-f]{16})$/;
 export const HREF_PARAM_RESERVED = new Set(['lang', 's', 't', 'lesson']);
 export const MAX_HREF_PARAMS = 8;
@@ -59,8 +61,9 @@ export function hrefParamProblems(raw: unknown): string[] {
     if (typeof name !== 'string') { out.push('an entry has no string name'); continue; }
     if (seen.has(name)) { out.push(`"${name}" is named twice — only the first entry is read`); continue; }
     seen.add(name);
-    if (!HREF_PARAM_NAME.test(name)) out.push(`name "${name}" is not ^[a-z][a-z0-9_]{0,23}$`);
-    else if (HREF_PARAM_RESERVED.has(name)) out.push(`name "${name}" is reserved (lang, s, t, lesson are read by the platform)`);
+    const filterKey = HREF_PARAM_FILTER_KEY.test(name);
+    if (!filterKey && !HREF_PARAM_NAME.test(name)) out.push(`name "${name}" is neither ^[a-z][a-z0-9_]{0,23}$ nor a filter key f.record.fld_<16 hex>[~<node>]`);
+    else if (!filterKey && HREF_PARAM_RESERVED.has(name)) out.push(`name "${name}" is reserved (lang, s, t, lesson are read by the platform)`);
     else if (typeof source !== 'string' || !HREF_PARAM_SOURCE.test(source))
       out.push(`"${name}"'s source "${String(source)}" is not record.id, record.url or record.fld_<16 hex>`);
   }

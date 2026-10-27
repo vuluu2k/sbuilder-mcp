@@ -974,6 +974,11 @@ rồi `sb_set` specials `{ "hrefParams": [{"name":"hotel","source":"record.<fld 
 (`specials.urlParam` `hotel` / `room`) tự chọn sẵn. Tham số chỉ áp dụng dưới MỘT hành động click Mở
 trang / Đến URL (hoặc href không có event) trên node không gắn binding mua hàng. Chỉ truyền id — query
 hiện trên thanh địa chỉ và trong log.
+`name` cũng có thể là KHOÁ LỌC của danh sách record (web_builder v1.0.175) `f.record.fld_<16 hex>`,
+tuỳ chọn `~<id node danh sách>` — đúng khoá mà control lọc của danh sách đó ghi. Card điểm đến AURA:
+`href:"/"`, `{"name":"f.record.<fld hotels.destination>~<node danh sách khách sạn>","source":"record.id"}`
+→ `/?f.record.fld_…~li_…=rec_…`, danh sách khách sạn trang chủ render sẵn đã lọc theo thành phố; nhắm
+`~<node>` thì select lọc mới hiện giá trị đã chọn. Id node trong tên không được viết lại khi nhân bản trang.
 
 **Yêu thích của khách.** Theo từng trình duyệt và từng collection, không bao giờ là tính năng tài
 khoản. Trái tim là một `button` trong card của danh sách record (hoặc trên trang record) với click
@@ -1573,7 +1578,7 @@ tài liệu:
 | `record_relation_orphan` | Có `config.recordRelationField` nhưng không có dòng record nào bên trên, hoặc không phải ID `fld_…` — chỉ bao giờ hiện trạng thái rỗng |
 | `record_relation_no_empty` | Danh sách quan hệ không có `config.emptyStateId` — dòng cha chưa có con thì render thẻ placeholder |
 | `record_field_unset` | Tile record (`text-dataset` / `collection-media` có `datasetSource: "record"`) mà `config.recordField` rỗng hoặc không phải ID `fld_…` (hoặc `agg.<key>` / `ref.<fld>.<fld>`) — KEY của field không gắn được gì; mọi dòng đều hiện placeholder |
-| `href_params_invalid` | Mục `specials.hrefParams` mà renderer bỏ — tên ngoài `^[a-z][a-z0-9_]{0,23}$` hoặc tên dành riêng (`lang` `s` `t` `lesson`), tên trùng, source khác `record.id` / `record.url` / `record.fld_…`, quá 8 mục — hoặc `href` không phải đường dẫn cùng site, nên không bao giờ được ghép tham số |
+| `href_params_invalid` | Mục `specials.hrefParams` mà renderer bỏ — tên ngoài `^[a-z][a-z0-9_]{0,23}$` (và không phải khoá lọc `f.record.fld_…[~<node>]`) hoặc tên dành riêng (`lang` `s` `t` `lesson`), tên trùng, source khác `record.id` / `record.url` / `record.fld_…`, quá 8 mục — hoặc `href` không phải đường dẫn cùng site, nên không bao giờ được ghép tham số |
 | `href_params_unresolved` | `hrefParams` trên node không nằm trong dòng record nào và không ở trang record — không có gì cấp giá trị |
 | `href_params_stranded` | `hrefParams` renderer không áp dụng: click không phải MỘT hành động Mở trang / Đến URL, hoặc node gắn binding mua hàng |
 | `record_favorite_invalid` | Trái tim `toggle_record_favorite` nằm ngoài dòng record / trang record, hoặc tab `show_record_favorites` có `targetId` không phải danh sách record không-quan-hệ hay `view` không phải `favorites` / `all` — không làm gì |

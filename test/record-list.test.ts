@@ -764,6 +764,15 @@ describe('record link parameters — specials.hrefParams (web_builder v1.0.174, 
     }
   });
 
+  it('a record-list filter key is a name (v1.0.175) — the destination card links to its filtered hotel list', () => {
+    const ok = page({ href: '/', hrefParams: [{ name: `f.record.${FID_HOTEL}~li_875d61c3`, source: 'record.id' }, { name: `f.record.${FID}`, source: 'record.id' }] });
+    expect(found(ok.doc, ok.id)).toEqual([]);
+    for (const name of ['f.record.fld_xyz', `f.record.${FID}~`, `f.record.${FID}~a.b`, 'f.record.id~li_1', 'f.record.param.guests', `fm.record.${FID}`, 'f.search']) {
+      const { doc, id } = page({ hrefParams: [{ name, source: 'record.id' }] });
+      expect(found(doc, id).find((x) => x.code === 'href_params_invalid')?.problem, name).toMatch(/filter key/);
+    }
+  });
+
   it('an href that is not a same-site path gets no params', () => {
     for (const href of ['https://x.vn/a', '//x.vn', '#rooms', '', 'yeu-cau']) {
       const { doc, id } = page({ href }, { events: [] });
