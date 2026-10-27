@@ -6,6 +6,12 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.95.0] - 2026-10-27
+
+### Changed
+- `sb_review` accepts a record-list filter key of the form `f.record.fld_<16 hex>[~<node>]` as an `hrefParams` name, so a card in one record list can link to another list narrowed to its record, and reserved names apply only to plain names.
+- The API catalog is synced with web_builder v1.0.175.
+
 ## [0.94.0] - 2026-10-27
 
 ### Added

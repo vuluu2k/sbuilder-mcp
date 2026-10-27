@@ -6,6 +6,12 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.95.0] - 2026-10-27
+
+### Changed
+- `sb_review` chấp nhận khoá lọc danh sách record dạng `f.record.fld_<16 hex>[~<node>]` làm tên `hrefParams`, để thẻ trong một danh sách record liên kết tới danh sách khác đã lọc theo record của nó, và tên dành riêng chỉ áp dụng cho tên thường.
+- Catalog API được đồng bộ với web_builder v1.0.175.
+
 ## [0.94.0] - 2026-10-27
 
 ### Added
