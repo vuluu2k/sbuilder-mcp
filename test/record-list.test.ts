@@ -7,7 +7,7 @@ import { traitsFor } from '../src/catalog/element-search.js';
 import { BASE_ONLY_CONFIG, ELEMENTS, RECORD_BINDING_PROBES } from '../src/catalog/elements.generated.js';
 import { PageDoc } from '../src/domains/site/document.js';
 import { emptyDoc } from './helpers/doc.js';
-import { RECORD_SOURCE, recordFieldProblem, recordScope } from '../src/domains/site/record.js';
+import { RECORD_SOURCE, recordFieldProblem, recordScope, recordTileBindings } from '../src/domains/site/record.js';
 import { describeOperation, findOperation } from '../src/catalog/search.js';
 import { REQUEST_SHAPES } from '../src/catalog/shapes.generated.js';
 
@@ -137,6 +137,11 @@ describe('sb_bind and record sources', () => {
     const { doc, tile } = recordList();
     expect(() => bindNode(doc, tile, 'record.id', 'specials.boundText')).not.toThrow();
     expect(() => bindNode(doc, tile, 'record.id', 'specials.boundHtml')).toThrow(/record\.html\./);
+  });
+
+  it('a gallery source binds only into specials.boundImages (§7.9)', () => {
+    const { doc, tile } = recordList();
+    expect(() => bindNode(doc, tile, `record.gallery.${FID}`, 'specials.boundText')).toThrow(/boundImages/);
   });
 
   it('refuses a record source that is not a field id', () => {
@@ -323,8 +328,40 @@ describe('sb_bind checks a record field against the collections in scope', () =>
     expect(recordFieldProblem(`record.${FID_NAME}`, [rooms])).toMatch(/not a field.*fld_000000000000cccc \(name, text\)/);
   });
 
-  it('refuses gallery, and the wrong richtext spelling either way', () => {
-    expect(recordFieldProblem(`record.${FID}`, [rooms])).toMatch(/gallery/);
+  it('a gallery binds only as record.gallery.<id> (web_builder v1.0.177)', () => {
+    expect(RECORD_SOURCE.test(`record.gallery.${FID}`)).toBe(true);
+    expect(recordFieldProblem(`record.gallery.${FID}`, [rooms])).toBeUndefined();
+    expect(recordFieldProblem(`record.gallery.${FID_ROOM}`, [rooms])).toMatch(/not gallery/);
+    expect(recordFieldProblem(`record.${FID}`, [rooms])).toMatch(/record\.gallery\./);
+    const rows = [{ id: 'bind-images', source: '', field: 'specials.boundImages' }];
+    const src = (recordFieldType: string, recordField = FID) =>
+      (recordTileBindings('media-dataset', { datasetSource: 'record', recordField, recordFieldType }, rows)[0] as { source: string }).source;
+    expect(src('gallery')).toBe(`record.gallery.${FID}`);
+    expect(src('image')).toBe(`record.${FID}`);
+    expect(src('text')).toBe('');
+    expect(src('gallery', 'photos')).toBe('');
+  });
+
+  it('sb_review: a record media-dataset needs a plain gallery/image field, typed, and no children', () => {
+    const md = (config: Record<string, unknown>, child = false) => {
+      const doc = emptyDoc();
+      const { patches, ids } = addSubtree(doc, 'ROOT', {
+        type: 'flex-section',
+        children: [{ type: 'media-dataset', config: { datasetSource: 'record', ...config }, ...(child ? { children: [{ type: 'product-image-list' }] } : {}) }],
+      });
+      doc.apply(patches);
+      const id = ids.find((i) => doc.node(i).data.type === 'media-dataset')!;
+      return reviewDesign(doc, { pageType: 'record' }).filter((f) => f.nodeId === id && f.code === 'record_field_unset').map((f) => f.problem);
+    };
+    expect(md({ recordField: FID, recordFieldType: 'gallery' })).toEqual([]);
+    expect(md({ recordField: FID, recordFieldType: 'image' })).toEqual([]);
+    expect(md({ recordField: FID })[0]).toMatch(/recordFieldType/);
+    expect(md({ recordField: FID, recordFieldType: 'text' })[0]).toMatch(/recordFieldType/);
+    expect(md({ recordField: `ref.${FID}.${FID2}`, recordFieldType: 'gallery' })[0]).toMatch(/plain field ID/);
+    expect(md({ recordField: FID, recordFieldType: 'gallery' }, true)[0]).toMatch(/children/);
+  });
+
+  it('refuses the wrong richtext spelling either way', () => {
     expect(recordFieldProblem(`record.${FID2}`, [rooms])).toMatch(/record\.html\./);
     expect(recordFieldProblem(`record.html.${FID_ROOM}`, [rooms])).toMatch(/not richtext/);
   });

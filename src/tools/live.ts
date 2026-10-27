@@ -102,8 +102,17 @@ export function bindNode(
         `sbuilder: "${source}" names no record field. A record source is "record.fld_<16 hex>" ` +
           '(or "record.html.fld_<16 hex>" for a richtext field) — the field ID from ' +
           'GET …/collections/{id}/fields, never its key — or "record.id", the row\'s own record id, or ' +
-          '"record.ref.<reference fld_>.<target fld_>" (and its record.money.ref. form), a field of the record a reference names; ' +
+          '"record.ref.<reference fld_>.<target fld_>" (and its record.money.ref. form), a field of the record a reference names, or ' +
+          '"record.gallery.fld_<16 hex>" (a gallery, into a media-dataset\'s specials.boundImages); ' +
           'anything else binds nothing.',
+      );
+    }
+    // record.gallery.<fid> is a "\n"-joined URL list: anywhere but boundImages it
+    // prints as a wall of URLs or a broken src (contract §7.9).
+    if (source.startsWith('record.gallery.') && field !== 'specials.boundImages') {
+      throw new Error(
+        `sbuilder: "${source}" is a gallery's URL list — bind it only into specials.boundImages on a ` +
+          'childless media-dataset (config.recordFieldType "gallery"); elsewhere it renders as raw URLs.',
       );
     }
     // record.html.<fid> is HTML: in a text sink its tags print as text.

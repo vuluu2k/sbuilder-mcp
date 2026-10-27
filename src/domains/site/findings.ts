@@ -201,7 +201,7 @@ export const FIX: Record<string, string> = {
     'Name the field by its ID: sb_set id "<id>", namespace config, keys { "recordField": "fld_…", ' +
     '"recordFieldType": "<the field\'s type>" } — ids and types are on GET /api/sites/{siteId}/collections/{id}/fields. ' +
     'A text-dataset shows text/richtext/number/integer/boolean/date/select/url/reference (a number/integer ' +
-    'prints as money with "recordFormat": "money"); a collection-media shows image. A gallery field binds nothing yet.',
+    'prints as money with "recordFormat": "money"); a collection-media shows image; a CHILDLESS media-dataset shows gallery or image (recordFieldType "gallery" / "image").',
   unread_value:
     'Write a value the renderer reads: sb_traits_for "<type>" lists them; sb_set id "<id>" ' +
     'with one, at the same breakpoint it is stored at.',

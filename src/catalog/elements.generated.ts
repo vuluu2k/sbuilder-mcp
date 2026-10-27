@@ -43238,206 +43238,146 @@ export const ELEMENTS: Record<string, CatalogElement> = {
       ],
       "record|title": [
         {
-          "id": "bind-image",
-          "source": "product.image",
-          "field": "specials.boundImage",
+          "id": "bind-images",
+          "source": "",
+          "field": "specials.boundImages",
           "target": {
             "type": "record",
             "id": "",
             "kind": "media"
           }
-        },
-        {
-          "id": "bind-images",
-          "source": "product.images",
-          "field": "specials.boundImages"
         }
       ],
       "record|vendor": [
         {
-          "id": "bind-image",
-          "source": "product.image",
-          "field": "specials.boundImage",
+          "id": "bind-images",
+          "source": "",
+          "field": "specials.boundImages",
           "target": {
             "type": "record",
             "id": "",
             "kind": "media"
           }
-        },
-        {
-          "id": "bind-images",
-          "source": "product.images",
-          "field": "specials.boundImages"
         }
       ],
       "record|description": [
         {
-          "id": "bind-image",
-          "source": "product.image",
-          "field": "specials.boundImage",
+          "id": "bind-images",
+          "source": "",
+          "field": "specials.boundImages",
           "target": {
             "type": "record",
             "id": "",
             "kind": "media"
           }
-        },
-        {
-          "id": "bind-images",
-          "source": "product.images",
-          "field": "specials.boundImages"
         }
       ],
       "record|summary": [
         {
-          "id": "bind-image",
-          "source": "product.image",
-          "field": "specials.boundImage",
+          "id": "bind-images",
+          "source": "",
+          "field": "specials.boundImages",
           "target": {
             "type": "record",
             "id": "",
             "kind": "media"
           }
-        },
-        {
-          "id": "bind-images",
-          "source": "product.images",
-          "field": "specials.boundImages"
         }
       ],
       "record|content": [
         {
-          "id": "bind-image",
-          "source": "product.image",
-          "field": "specials.boundImage",
+          "id": "bind-images",
+          "source": "",
+          "field": "specials.boundImages",
           "target": {
             "type": "record",
             "id": "",
             "kind": "media"
           }
-        },
-        {
-          "id": "bind-images",
-          "source": "product.images",
-          "field": "specials.boundImages"
         }
       ],
       "record|author": [
         {
-          "id": "bind-image",
-          "source": "product.image",
-          "field": "specials.boundImage",
+          "id": "bind-images",
+          "source": "",
+          "field": "specials.boundImages",
           "target": {
             "type": "record",
             "id": "",
             "kind": "media"
           }
-        },
-        {
-          "id": "bind-images",
-          "source": "product.images",
-          "field": "specials.boundImages"
         }
       ],
       "record|date": [
         {
-          "id": "bind-image",
-          "source": "product.image",
-          "field": "specials.boundImage",
+          "id": "bind-images",
+          "source": "",
+          "field": "specials.boundImages",
           "target": {
             "type": "record",
             "id": "",
             "kind": "media"
           }
-        },
-        {
-          "id": "bind-images",
-          "source": "product.images",
-          "field": "specials.boundImages"
         }
       ],
       "record|image": [
         {
-          "id": "bind-image",
-          "source": "product.image",
-          "field": "specials.boundImage",
+          "id": "bind-images",
+          "source": "",
+          "field": "specials.boundImages",
           "target": {
             "type": "record",
             "id": "",
             "kind": "media"
           }
-        },
-        {
-          "id": "bind-images",
-          "source": "product.images",
-          "field": "specials.boundImages"
         }
       ],
       "record|price": [
         {
-          "id": "bind-image",
-          "source": "product.image",
-          "field": "specials.boundImage",
+          "id": "bind-images",
+          "source": "",
+          "field": "specials.boundImages",
           "target": {
             "type": "record",
             "id": "",
             "kind": "media"
           }
-        },
-        {
-          "id": "bind-images",
-          "source": "product.images",
-          "field": "specials.boundImages"
         }
       ],
       "record|prices": [
         {
-          "id": "bind-image",
-          "source": "product.image",
-          "field": "specials.boundImage",
+          "id": "bind-images",
+          "source": "",
+          "field": "specials.boundImages",
           "target": {
             "type": "record",
             "id": "",
             "kind": "media"
           }
-        },
-        {
-          "id": "bind-images",
-          "source": "product.images",
-          "field": "specials.boundImages"
         }
       ],
       "record|url": [
         {
-          "id": "bind-image",
-          "source": "product.image",
-          "field": "specials.boundImage",
+          "id": "bind-images",
+          "source": "",
+          "field": "specials.boundImages",
           "target": {
             "type": "record",
             "id": "",
             "kind": "media"
           }
-        },
-        {
-          "id": "bind-images",
-          "source": "product.images",
-          "field": "specials.boundImages"
         }
       ],
       "record|name": [
         {
-          "id": "bind-image",
-          "source": "product.image",
-          "field": "specials.boundImage",
+          "id": "bind-images",
+          "source": "",
+          "field": "specials.boundImages",
           "target": {
             "type": "record",
             "id": "",
             "kind": "media"
           }
-        },
-        {
-          "id": "bind-images",
-          "source": "product.images",
-          "field": "specials.boundImages"
         }
       ]
     },
@@ -43462,6 +43402,16 @@ export const ELEMENTS: Record<string, CatalogElement> = {
               "mediaImagePosition",
               "backgroundVideoUrl",
               "backgroundVideoSize"
+            ]
+          },
+          {
+            "key": "record",
+            "label": "Data",
+            "controls": [
+              "record_field",
+              "datasetSource",
+              "recordField",
+              "recordFieldType"
             ]
           },
           {
@@ -43560,6 +43510,10 @@ export const ELEMENTS: Record<string, CatalogElement> = {
       "mediaImagePosition",
       "backgroundVideoUrl",
       "backgroundVideoSize",
+      "record_field",
+      "datasetSource",
+      "recordField",
+      "recordFieldType",
       "product_image_layout",
       "media_image",
       "width_select",

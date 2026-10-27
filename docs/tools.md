@@ -840,8 +840,7 @@ the field by ID: `record.fld_<16 hex>`, or `record.html.fld_<16 hex>` for a rich
 and so is `record.<fid>` into `specials.boundHtml` — that sink takes only the sanitised
 `record.html.<fid>` (`schema/src/rawSinkBindings.ts`). Before writing, `sb_bind` reads the fields
 of every collection the node's row can see (`GET …/collections/{id}/fields`) and refuses a field
-id that is not one of them (naming the ones that are), a `gallery` field (no renderer binds one
-yet), the wrong spelling for a richtext field, and a node in no record-list row. `force: true`
+id that is not one of them (naming the ones that are), a `gallery` field spelled `record.<fid>` (it binds only as `record.gallery.<fid>`), the wrong spelling for a richtext field, and a node in no record-list row. `force: true`
 overrides; a 401/403/404 from that read is reported as the platform said it. You rarely need
 `sb_bind` for one: a record tile derives its binding from its config, below.
 
@@ -1008,10 +1007,20 @@ never rewritten on page duplicate.
 and `specials.icon: "heart"` plus a short label; not an `icon`. A tab bar is two buttons with
 `show_record_favorites { targetId: "<record list id — not a relation list>", view: "favorites",
 showCount: true }` and `{ targetId, view: "all" }`; give the list an empty state. To look at it as
-a visitor: `?f.record.id~<list>=rec_a,rec_b` (≤ 50 ids) or `?f.record.id~<list>=none`.
+a visitor: `?f.record.id~<list>=rec_a,rec_b` (≤ 50 ids) or `?f.record.id~<list>=none`. A LINK from any
+page (a header menu row) opens the visitor's own saved records with `?f.record.id~<list>=saved`
+(web_builder v1.0.177): the server renders the empty state and the runtime swaps in the stored ids
+(one replace, `#hash` kept) — e.g. `/?f.record.id~li_875d61c3=saved#aura-results`. Without JS it
+stays the empty state.
+
+**A record gallery** (web_builder v1.0.177, contract §7.9): a CHILDLESS `media-dataset` with config
+`{ datasetSource: "record", recordField: "<gallery fld>", recordFieldType: "gallery", layout: "bottom" }`
+shows the record's photos as the product gallery does (big image + thumbnail strip). Its binding
+`record.gallery.<fid>` → `specials.boundImages` derives from that config (`recordFieldType: "image"`
+binds `record.<fid>`, one photo). A gallery never binds as `record.<fid>` or through `ref.`.
 
 What the platform does NOT do yet (web_builder `docs/integrations/dynamic-data-contract.md` §9),
-so no tool here claims it: a `gallery` binds nothing; no selected-record popup; a nested room
+so no tool here claims it: no selected-record popup; a nested room
 list does not apply a parent's aggregate conditions; estimate unit words are not translated;
 submissions show the record id, not its name.
 

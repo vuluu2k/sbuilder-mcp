@@ -817,7 +817,7 @@ từ chối (KEY của field không gắn được gì), và `record.<fid>` vào
 sink đó chỉ nhận `record.html.<fid>` đã được làm sạch (`schema/src/rawSinkBindings.ts`). Trước
 khi ghi, `sb_bind` đọc field của mọi collection mà dòng chứa node nhìn thấy
 (`GET …/collections/{id}/fields`) và từ chối ID field không thuộc số đó (kèm danh sách field
-hợp lệ), field `gallery` (chưa renderer nào gắn được), sai dạng cho field richtext, và node không
+hợp lệ), field `gallery` viết thành `record.<fid>` (chỉ gắn được dưới dạng `record.gallery.<fid>`), sai dạng cho field richtext, và node không
 nằm trong dòng của danh sách record nào. `force: true` để ghi đè; lỗi 401/403/404 của lần đọc
 đó được báo nguyên văn như nền tảng trả. Hiếm khi cần `sb_bind` cho nó: tile record tự suy
 binding từ config, xem dưới.
@@ -985,10 +985,20 @@ khoản. Trái tim là một `button` trong card của danh sách record (hoặc
 `toggle_record_favorite {}` và `specials.icon: "heart"` kèm nhãn ngắn; không dùng `icon`. Thanh tab là
 hai nút có `show_record_favorites { targetId: "<id danh sách record — không phải danh sách quan hệ>",
 view: "favorites", showCount: true }` và `{ targetId, view: "all" }`; cho danh sách một trạng thái
-rỗng. Xem như khách: `?f.record.id~<list>=rec_a,rec_b` (≤ 50 id) hoặc `?f.record.id~<list>=none`.
+rỗng. Xem như khách: `?f.record.id~<list>=rec_a,rec_b` (≤ 50 id) hoặc `?f.record.id~<list>=none`. Một
+LINK từ bất kỳ trang nào (dòng menu header) mở danh sách đã lưu của chính khách bằng
+`?f.record.id~<list>=saved` (web_builder v1.0.177): server render trạng thái rỗng, runtime thay bằng
+các id đã lưu (một lần replace, giữ `#hash`) — vd `/?f.record.id~li_875d61c3=saved#aura-results`.
+Không có JS thì giữ trạng thái rỗng.
+
+**Gallery của record** (web_builder v1.0.177, contract §7.9): một `media-dataset` KHÔNG có con với config
+`{ datasetSource: "record", recordField: "<fld gallery>", recordFieldType: "gallery", layout: "bottom" }`
+hiện ảnh của record như gallery sản phẩm (ảnh lớn + dải thumbnail). Binding
+`record.gallery.<fid>` → `specials.boundImages` tự suy từ config đó (`recordFieldType: "image"`
+gắn `record.<fid>`, một ảnh). Gallery không bao giờ gắn dạng `record.<fid>` hay qua `ref.`.
 
 Những gì nền tảng CHƯA làm (web_builder `docs/integrations/dynamic-data-contract.md` §9), nên
-không tool nào ở đây tuyên bố có: `gallery` không gắn được; chưa có popup theo record đã chọn; danh sách phòng lồng
+không tool nào ở đây tuyên bố có: chưa có popup theo record đã chọn; danh sách phòng lồng
 trong card chưa áp điều kiện aggregate của dòng cha; chữ đơn vị của estimate chưa dịch; bài gửi hiện
 id record chứ không phải tên.
 

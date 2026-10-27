@@ -742,7 +742,7 @@ platform treats an unproven guard as indistinguishable from an absent one.
   parent row is MERGED under each child (`relationRows`), so parent field ids resolve inside it —
   a PLAIN nested list gets no such merge. `recordScope` (`domains/site/record.ts`) encodes exactly
   that; `sb_bind` fetches `…/collections/{id}/fields` for that scope and refuses an id outside it,
-  a `gallery` field (emits nothing yet) and the wrong richtext spelling — the one place this
+  a `gallery` field spelled `record.<fid>` (since v1.0.177 it binds only as `record.gallery.<fid>`, into a childless media-dataset's `specials.boundImages`; `recordTileBindings` derives it from `recordFieldType`) and the wrong richtext spelling — the one place this
   repo reads Collections at write time; review still does not (a fetch per review).
   `sb_review`: `record_relation_unset` (nested, unlinked → same rows under every parent),
   `record_relation_orphan`, `record_relation_no_empty` (`sb_add` seeds a list-empty, so this

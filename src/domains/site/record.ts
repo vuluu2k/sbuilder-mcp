@@ -17,10 +17,11 @@ export const RECORD_FIELD_ID = /^fld_[0-9a-f]{16}$/;
  * `record.id` — the row's own record id — or `record.url` — `/records/<id>`, emitted
  * only when the row's collection has a published record detail page (recordContext.ts),
  * or `record.ref.<refFid>.<fid>` / `record.money.ref.…` — a field of the record a
- * `reference` field names, one hop, never rich (contract §7.8).
+ * `reference` field names, one hop, never rich (contract §7.8), or `record.gallery.<fid>` —
+ * a gallery's URLs joined by "\n", for a media-dataset's specials.boundImages only (§7.9).
  */
 export const RECORD_SOURCE =
-  /^record\.(?:id|url|(?:html\.|money\.)?fld_[0-9a-f]{16}|(?:money\.)?agg\.[a-z][a-zA-Z0-9_]{0,31}|(?:money\.)?ref\.fld_[0-9a-f]{16}\.fld_[0-9a-f]{16})$/;
+  /^record\.(?:id|url|(?:html\.|money\.|gallery\.)?fld_[0-9a-f]{16}|(?:money\.)?agg\.[a-z][a-zA-Z0-9_]{0,31}|(?:money\.)?ref\.fld_[0-9a-f]{16}\.fld_[0-9a-f]{16})$/;
 
 /** recordContext.ts parseRecordRefAxis — `ref.<referenceFid>.<targetFid>`, else null. */
 export function parseRecordRefAxis(axis: string): { ref: string; field: string } | null {
@@ -140,7 +141,7 @@ export const RECORD_MONEY_TYPES = new Set(['number', 'integer']);
 export const RECORD_HTML_SOURCE = /^record\.html\.fld_[0-9a-f]{16}$/;
 
 /** The tile elements whose binding the record field drives (editor/src/element/recordList.ts TILE_FIELD_TYPES). */
-export const RECORD_TILES = new Set(['text-dataset', 'collection-media']);
+export const RECORD_TILES = new Set(['text-dataset', 'collection-media', 'media-dataset']);
 
 export const isRecordSource = (s: string): boolean => s.startsWith('record.');
 
@@ -167,6 +168,13 @@ export function recordTileBindings(type: string, config: Record<string, unknown>
   return rows.map((row) => {
     const b = row as { id?: string };
     if (b.id === 'bind-image') return { ...b, source: ok ? `record.${fid}` : '' };
+    // media-dataset (web_builder v1.0.177, §7.9): a GALLERY binds its own key,
+    // `record.gallery.<id>` (URLs joined by "\n"), an image field the plain one.
+    if (b.id === 'bind-images') {
+      const t = config.recordFieldType;
+      const plain = typeof fid === 'string' && RECORD_FIELD_ID.test(fid);
+      return { ...b, source: plain && t === 'gallery' ? `record.gallery.${fid}` : plain && t === 'image' ? `record.${fid}` : '' };
+    }
     if (b.id === 'bind-text') {
       return {
         ...b,
@@ -215,7 +223,7 @@ export function recordScope(nodeAt: NodeAt, id: string): string[] {
 /**
  * Why a `record.<fid>` / `record.html.<fid>` binding would render nothing, given
  * the fields of each collection in scope — or undefined when it resolves. The
- * stringification is recordContext.ts: gallery emits nothing yet, richtext only
+ * stringification is recordContext.ts: gallery only under `record.gallery.`, richtext only
  * under `record.html.`, every other type only under `record.`.
  */
 export function recordFieldProblem(
@@ -232,7 +240,8 @@ export function recordFieldProblem(
   if (/^record\.(?:money\.)?agg\./.test(source)) return undefined;
   const html = source.startsWith('record.html.');
   const money = source.startsWith('record.money.');
-  const fid = source.slice(html ? 12 : money ? 13 : 7);
+  const gallery = source.startsWith('record.gallery.');
+  const fid = source.slice(html ? 12 : money ? 13 : gallery ? 15 : 7);
   const ref = parseRecordRefAxis(fid);
   if (ref) {
     const r = scope.flatMap((s) => s.fields).find((x) => x.id === ref.ref);
@@ -251,7 +260,10 @@ export function recordFieldProblem(
       .join('; ');
     return `${fid} is not a field of the collection(s) this row reads — ${avail}.`;
   }
-  if (f.type === 'gallery') return `${fid} (${f.key}) is a gallery field, which the renderers do not bind yet — it emits nothing.`;
+  if (gallery && f.type !== 'gallery') return `${fid} (${f.key}) is ${f.type}, not gallery — record.gallery. names only a gallery field.`;
+  if (!gallery && f.type === 'gallery')
+    return `${fid} (${f.key}) is a gallery — bind it as "record.gallery.${fid}" into specials.boundImages on a CHILDLESS media-dataset (config.recordFieldType "gallery"); "record.${fid}" emits nothing.`;
+  if (gallery) return undefined;
   if (money && !RECORD_MONEY_TYPES.has(f.type)) return `${fid} (${f.key}) is ${f.type} — record.money. formats only a number or integer field.`;
   if (html && f.type !== 'richtext') return `${fid} (${f.key}) is ${f.type}, not richtext — bind it as "record.${fid}".`;
   if (!html && f.type === 'richtext') return `${fid} (${f.key}) is richtext — bind it as "record.html.${fid}" into specials.boundHtml.`;

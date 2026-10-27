@@ -942,7 +942,21 @@ export function reviewDesign(
             out.push({ code: 'record_favorite_invalid', nodeId: id, type, problem: `Its "${String(ev.action)}" does nothing: ${why.join('; ')}.`, key: String(ev.action), fix: fill('record_favorite_invalid', { id }) });
         }
       }
-      if (RECORD_TILES.has(type) && cfg.datasetSource === 'record') {
+      // A record media-dataset (§7.9) binds ONE plain field id typed gallery/image, and
+      // only in its childless leaf form — the container's children bind products.
+      if (type === 'media-dataset' && cfg.datasetSource === 'record') {
+        const fid = cfg.recordField;
+        const why =
+          childrenOf(d, id).length > 0
+            ? 'it has children — only the CHILDLESS media-dataset renders a record gallery; the container form\'s children bind products'
+            : typeof fid !== 'string' || !RECORD_FIELD_ID.test(fid)
+              ? `config.recordField ${fid ? `"${String(fid)}" is not a plain field ID` : 'is unset'} — a media tile names one gallery/image field by its fld_ id (no agg., no ref.)`
+              : cfg.recordFieldType !== 'gallery' && cfg.recordFieldType !== 'image'
+                ? `config.recordFieldType is ${cfg.recordFieldType ? `"${String(cfg.recordFieldType)}"` : 'unset'}, not "gallery" or "image", so it binds nothing`
+                : '';
+        if (why) out.push({ code: 'record_field_unset', nodeId: id, type, problem: `This record media-dataset shows its authored placeholder images: ${why}.`, fix: fill('record_field_unset', { id }) });
+      }
+      if (RECORD_TILES.has(type) && type !== 'media-dataset' && cfg.datasetSource === 'record') {
         const fid = cfg.recordField;
         const aggKey = typeof fid === 'string' ? recordAggKeyOf(fid) : '';
         let aggOk = false;
