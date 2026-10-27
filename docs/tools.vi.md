@@ -467,7 +467,7 @@ specials mà `sb_bind` chấp nhận, kể cả field binding được sinh như
 | Tham số | Kiểu | Ghi chú |
 | --- | --- | --- |
 | `parent_id` | string | |
-| `spec` | object | `{ type, name?, style?, config?, specials?, children? }` — **lồng nhau** |
+| `spec` | object | `{ type, name?, style?, config?, specials?, responsive?, children? }` — **lồng nhau**; `responsive` là `{ desktop|laptop|tablet|mobile: { style?, config? } }` (key config chỉ-base được chuyển về base, như `sb_set`). Key khác bị từ chối — click dùng `sb_event`, dữ liệu `sb_bind`, hover `sb_set` với `state` |
 | `index` | number? | Mặc định nối vào cuối — trừ khi thêm vào ROOT của trang có footer dùng chung: khi đó mặc định là cuối band GIỮA (nối sau footer thì bước kiểm tra thứ tự band chặn lần lưu) |
 | `dry_run` | boolean? | Mặc định true |
 | `force` | boolean? | Bỏ qua một guard mềm; thông điệp được trả về trong `forced[]` thay vì ném lỗi. Guard cứng bỏ qua tham số này — xem "Mỗi lần ghi kiểm tra gì" |

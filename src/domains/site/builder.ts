@@ -211,13 +211,25 @@ export function addSubtree(
 
   const build = (s: NodeSpec, parentNodeId: string): string => {
     refuseComposedStamp(s.specials);
+    // A base-only config key in a breakpoint slot is read from BASE alone, so
+    // it is routed there exactly as sb_set routes it (trap 4).
+    let config = s.config;
+    let responsive = s.responsive;
+    if (responsive) {
+      responsive = {};
+      for (const [bp, slot] of Object.entries(s.responsive!)) {
+        const split = splitBaseOnly(s.type, slot.config ?? {});
+        if (Object.keys(split.base).length) config = { ...config, ...split.base };
+        responsive[bp] = { ...slot, ...(slot.config ? { config: split.responsive } : {}) };
+      }
+    }
     const n = createNode(s.type, {
       name: s.name,
       parent: parentNodeId,
       style: s.style,
-      config: s.config,
+      config,
       specials: s.specials,
-      responsive: s.responsive,
+      responsive,
       states: s.states,
     });
     // A child the element declares as a SATELLITE (an icon's cart-count, a

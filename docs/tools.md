@@ -471,7 +471,7 @@ specials `sb_bind` accepts, including generated binding fields such as `boundPro
 | Arg | Type | Notes |
 | --- | --- | --- |
 | `parent_id` | string | |
-| `spec` | object | `{ type, name?, style?, config?, specials?, children? }` — **nested** |
+| `spec` | object | `{ type, name?, style?, config?, specials?, responsive?, children? }` — **nested**; `responsive` is `{ desktop|laptop|tablet|mobile: { style?, config? } }` (a base-only config key is moved to base, as `sb_set` does). Any other key is refused — a click is `sb_event`, data `sb_bind`, a hover `sb_set` with `state` |
 | `index` | number? | Defaults to append — except onto ROOT of a page wearing a shared footer, where it defaults to the end of the MIDDLE band (appended after the footer, the band-order check refused the save) |
 | `dry_run` | boolean? | Defaults to true |
 | `force` | boolean? | Override a soft guard; the message is returned as `forced[]` instead of thrown. Hard guards ignore it — see "What every write checks" |

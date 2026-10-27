@@ -23,7 +23,7 @@ import {
   type Breakpoint,
   type SetEdit,
 } from '../domains/site/builder.js';
-import { baseOnlyNote } from '../domains/site/baseonly.js';
+import { baseOnlyNote, splitBaseOnly } from '../domains/site/baseonly.js';
 import { detachNote, presetIdOf, presetLayer } from '../domains/site/theme.js';
 import { inertHintsFor } from '../domains/site/inert.js';
 import {
@@ -1128,15 +1128,25 @@ function formDocPath(siteId: string, formId: string): string {
   return `/api/sites/${encodeURIComponent(siteId)}/forms/${encodeURIComponent(formId)}/document`;
 }
 
+// STRICT. A plain z.object strips what it does not name, so `responsive` (a
+// nav hidden on phones) was dropped in silence, and so was an `events` list
+// the builder never reads: the node saved, looked right on desktop, and was
+// wrong everywhere else. An unknown key is now a refusal. `states` stays out:
+// a hover's home differs per element (config.stateHover on a button), which
+// sb_set routes and a raw spec slot would not.
+const slotSchema = z.object({ style: z.record(z.unknown()).optional(), config: z.record(z.unknown()).optional() }).strict();
 const specSchema: z.ZodType<NodeSpec> = z.lazy(() =>
-  z.object({
-    type: z.string(),
-    name: z.string().optional(),
-    style: z.record(z.unknown()).optional(),
-    config: z.record(z.unknown()).optional(),
-    specials: z.record(z.unknown()).optional(),
-    children: z.array(specSchema).optional(),
-  }),
+  z
+    .object({
+      type: z.string(),
+      name: z.string().optional(),
+      style: z.record(z.unknown()).optional(),
+      config: z.record(z.unknown()).optional(),
+      specials: z.record(z.unknown()).optional(),
+      responsive: z.record(z.enum(['desktop', 'laptop', 'tablet', 'mobile']), slotSchema).optional(),
+      children: z.array(specSchema).optional(),
+    })
+    .strict('spec keys are type, name, style, config, specials, responsive, children — a click is sb_event, data sb_bind, a hover sb_set with state'),
 );
 
 /**
@@ -1614,6 +1624,18 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
       // node of the nested spec, as each will be born. Warned, still written.
       const found = sayChecks([...specCheck(spec), ...session.formChecks(patches)], say);
       const checks = found.length ? { checks: found } : {};
+      // A base-only key in a breakpoint slot lands at BASE (addSubtree routes it,
+      // as sb_set does) and so reaches every width — routed AND said.
+      const movedKeys = new Map<string, string>();
+      const walkMoved = (n: NodeSpec) => {
+        for (const [bp, slot] of Object.entries(n.responsive ?? {})) {
+          for (const k of Object.keys(splitBaseOnly(n.type, slot.config ?? {}).base)) if (!movedKeys.has(k)) movedKeys.set(k, bp);
+        }
+        for (const c of n.children ?? []) walkMoved(c);
+      };
+      walkMoved(spec);
+      const moved = [...movedKeys].map(([k, bp]) => say(`base-only:${k}`, baseOnlyNote([k], bp))).filter((n): n is string => !!n);
+      const base_only = moved.length ? { base_only: moved.join(' ') } : {};
 
       if (dry_run !== false) {
         const refuse = session.wouldRefuse(patches);
@@ -1624,11 +1646,12 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
           ...(refuse ? { would_refuse: refuse } : {}),
           ...(inert ? { inert } : {}),
           ...checks,
+          ...base_only,
           ...forced,
         });
       }
       await session.applyAndSave(patches);
-      return text({ added: ids, rev: d.rev, ...(inert ? { inert } : {}), ...checks, ...forced });
+      return text({ added: ids, rev: d.rev, ...(inert ? { inert } : {}), ...checks, ...base_only, ...forced });
     },
   );
 

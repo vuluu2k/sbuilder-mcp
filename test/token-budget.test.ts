@@ -158,7 +158,12 @@ describe('token budget — a diet without a scale comes back', () => {
     // `if_match` (the shipping rules engine refuses every write without one, 428), `merge`
     // (seven PUTs replace wholesale — an omitted `enabled` switches a gateway off), and
     // `file` (the product import is multipart xlsx; JSON could not reach it).
-    expect(JSON.stringify(tools).length).toBeLessThan(37_350);
+    //
+    // 37,350 -> 37,600 buys sb_add's spec carrying `responsive` (breakpoint-keyed, strict slots) and refusing
+    // unknown keys (measured 37,513). The builder always applied it, but the zod schema
+    // stripped `responsive` in silence: a header nav meant to hide on phones saved visible there,
+    // and an `events` list vanished with no word.
+    expect(JSON.stringify(tools).length).toBeLessThan(37_600);
     for (const t of tools) expect(t.description, t.name).not.toMatch(/vanishes on publish/);
     const instructions = client.getInstructions() ?? '';
     expect(instructions.length).toBeGreaterThan(200);

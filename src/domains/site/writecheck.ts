@@ -370,6 +370,7 @@ export function specCheck(spec: NodeSpec): CheckedNote[] {
   const walk = (s: NodeSpec) => {
     const born = ELEMENTS[s.type]?.defaults.specials ?? {};
     if (s.config) out.push(...writeCheck(s.type, 'config', s.config));
+    for (const slot of Object.values(s.responsive ?? {})) if (slot.config) out.push(...writeCheck(s.type, 'config', slot.config));
     if (s.specials) out.push(...writeCheck(s.type, 'specials', s.specials, { specials: { ...born, ...s.specials } }));
     for (const c of s.children ?? []) walk(c);
   };
