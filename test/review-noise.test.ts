@@ -58,6 +58,25 @@ describe('reviewDesign() and the self-drawing container', () => {
   it('still reports a childless select — its face lives in its zones', () => {
     expect(codes(page('select', []))).toContain('empty_container');
   });
+
+  it("does not call a select's empty trigger/panel empty — the host prints its rows from filterValues", () => {
+    const zones = (hostType: string, hostSpecials: Record<string, unknown>) => ({
+      schema_version: 2,
+      root_node_id: 'ROOT',
+      nodes: {
+        ROOT: { id: 'ROOT', data: { type: 'root', parent: null, nodes: ['h'] }, specials: {} },
+        h: { id: 'h', data: { type: hostType, parent: 'ROOT', nodes: ['t', 'p'] }, specials: hostSpecials },
+        t: { id: 't', data: { type: 'dropdown-trigger', parent: 'h', nodes: [] }, specials: {} },
+        p: { id: 'p', data: { type: 'dropdown-panel', parent: 'h', nodes: [] }, specials: {} },
+      },
+    });
+    const empties = (doc: unknown) =>
+      reviewDesign(PageDoc.from(doc as never)).filter((f: { code: string }) => f.code === 'empty_container').length;
+    expect(empties(zones('select', {}))).toBe(0);
+    expect(empties(zones('dropdown', { selectMode: 'select' }))).toBe(0);
+    // a PANEL dropdown's zones hold the author's own content — empty is a real blank
+    expect(empties(zones('dropdown', {}))).toBe(2);
+  });
 });
 
 /**

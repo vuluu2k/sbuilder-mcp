@@ -1218,8 +1218,15 @@ export function reviewDesign(
     // dropdown an author MAY compose under it; with no children it still renders
     // its `<input>` (render/nodes/search-input/html.go). The platform's own
     // search seed ships it childless, so every seeded search page was flagged.
-    // Not `select`: its face lives in its trigger/panel children.
-    const drawsOwnControl = type === 'search-input';
+    // Not `select`: its face lives in its trigger/panel children — and THOSE
+    // zones are filled by the host (render/nodes/dropdown WriteSelect: the
+    // panel prints one row per filterValues, the trigger the chosen one), so a
+    // select's or a selectMode:"select" dropdown's empty zone is correct.
+    const host = d.nodes[n.data.parent ?? '']?.data;
+    const filledByHost =
+      (type === 'dropdown-trigger' || type === 'dropdown-panel') &&
+      (host?.type === 'select' || (host?.type === 'dropdown' && d.nodes[n.data.parent!]?.specials?.selectMode === 'select'));
+    const drawsOwnControl = type === 'search-input' || filledByHost;
     const isReference =
       (n.specials ?? {})[SPEC_GLOBAL_REF] !== undefined ||
       (n.specials ?? {})[SPEC_APP_BLOCK_REF] !== undefined;

@@ -154,6 +154,9 @@ repo over a number here, and fix the line when you catch one stale.
   not "is it bound" — `dataset-block` binds too, and only the LINK (`boundHref`), so an
   empty card really is empty. It is whether `BOUND_SPECIALS` holds a key outside the link
   set.
+  Same class: a `select`'s (or `selectMode:"select"` dropdown's) EMPTY `dropdown-trigger` /
+  `dropdown-panel` — the host prints the rows from `filterValues` and the chosen value
+  (render/nodes/dropdown WriteSelect), so 4 working AURA filter selects drew 8 findings.
 
 - **A SATELLITE CARRIES THE ELEMENT'S WHOLE LOOK, and the outline used to hide it.** The
   variant option's box, its label, the quantity stepper's two buttons and its input, a
