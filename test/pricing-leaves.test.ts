@@ -29,6 +29,12 @@ describe('bindingsForConfig: every factory kind, and no sibling fallback', () =>
     expect(() => addSubtree(emptyDoc(), 'ROOT', { type: 'text-dataset', config: { kind: 'spec_tags' } })).toThrow(/spec_tags/);
   });
 
+  it('an empty kind is the default kind, not an unknown one', () => {
+    expect(bindingsForConfig('text-dataset', { datasetSource: 'product', kind: '' })).toEqual(
+      bindingsForConfig('text-dataset', { datasetSource: 'product' }),
+    );
+  });
+
   it('an element with no kind axis still falls back by source', () => {
     expect(JSON.stringify(bindingsForConfig('list-dataset', { datasetSource: 'category', kind: 'whatever' }))).toContain('collection_list');
   });

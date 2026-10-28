@@ -111,7 +111,8 @@ export function bindingsForConfig(
   if (!table) return null;
   // An absent kind is the element's default kind — the factory's own reading.
   const defaults = ELEMENTS[type]?.defaults.config ?? {};
-  const kind = String(config?.kind ?? defaults.kind ?? '');
+  // An EMPTY kind is no choice either, so a stored `kind: ""` can still be re-sourced.
+  const kind = String(config?.kind || defaults.kind || '');
   const source = String(
     config?.datasetSource ?? (kind && kind !== String(defaults.kind ?? '') ? (defaults.datasetSource ?? 'product') : ''),
   );
