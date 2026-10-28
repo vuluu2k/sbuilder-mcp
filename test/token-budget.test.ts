@@ -168,7 +168,10 @@ describe('token budget — a diet without a scale comes back', () => {
     // literal fontFamily outranked every text-style change; a base-only size left phones larger
     // than desktop), sb_publish's first_publish, and sb_api_call's dotted `pick` (measured
     // 37,513 -> 38,091).
-    expect(JSON.stringify(tools).length).toBeLessThan(38_150);
+    //
+    // 38,150 -> 38,300 buys sb_media_upload `paths` (measured 38,208): a catalogue's photos
+    // were 31 calls of one `path` each.
+    expect(JSON.stringify(tools).length).toBeLessThan(38_300);
     for (const t of tools) expect(t.description, t.name).not.toMatch(/vanishes on publish/);
     const instructions = client.getInstructions() ?? '';
     expect(instructions.length).toBeGreaterThan(200);

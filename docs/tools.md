@@ -1733,6 +1733,12 @@ reader learns to ignore.
 
 ## `sb_media_list` / `sb_media_upload`
 
+**`paths: string[]` uploads several local files in one call** — stocking a catalogue was 31
+calls of one `path` each. Each file is its own upload through the same local-file guard as
+`path`, so a refused or failed file lands in `failed: [{ path, why }]` beside the ones that
+went in, and the batch carries on. The answer is compact — `uploaded: [{ name, url, width,
+height }]` — and `dry_run` still defaults to `true` (`would_upload` lists the paths).
+
 **It can also SEARCH for one.** `query` returns real photographs, each with the description its
 photographer wrote — "Cute child wearing a black t-shirt and hat standing near a doorway" — and
 `pick: <id>` uploads the one you chose into this site's library. It never uploads an unread

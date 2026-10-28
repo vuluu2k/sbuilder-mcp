@@ -106,7 +106,7 @@ in this client: one would put the very key the platform exists to hold back into
 | `sb_page_repair` | Rename a page root that is not `ROOT` (left by older seeds) so every editor build draws it — one page or the whole site |
 | `sb_review` | Every defect a visitor would see, each with its fix, plus the five gaps between this store and a paid order |
 | `sb_media_list` | The site's media library |
-| `sb_media_upload` | Add an image and get its URL — a local path, a URL the platform fetches, or a SEARCH for real photographs you read and pick from, one or several at a time |
+| `sb_media_upload` | Add an image and get its URL — a local path, a URL the platform fetches, or a SEARCH for real photographs you read and pick from, one or several at a time; `paths` uploads many local files in one call |
 | `sb_live_join` | Join the editor's live-edit room as a visible peer — edits then appear live |
 | `sb_look` | Save, render, and return screenshots plus measured node boxes and layout defects measured on the render |
 | `sb_event` | Give a node a click action — open the cart, go to a page, open a pop-up |

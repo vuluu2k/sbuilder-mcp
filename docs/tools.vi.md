@@ -1703,6 +1703,12 @@ lặng** thay vì báo một khoảng trống cửa hàng có thể không có. 
 
 ## `sb_media_list` / `sb_media_upload`
 
+**`paths: string[]` upload nhiều file trên máy trong một lần gọi** — nhập ảnh cho một danh mục
+từng tốn 31 lượt gọi, mỗi lượt một `path`. Mỗi file là một lần upload riêng, đi qua đúng lớp
+chặn file cục bộ của `path`, nên file bị từ chối hay lỗi nằm trong `failed: [{ path, why }]` cạnh
+những file đã vào, và cả lô vẫn chạy tiếp. Kết quả gọn — `uploaded: [{ name, url, width,
+height }]` — và `dry_run` vẫn mặc định `true` (`would_upload` liệt kê các path).
+
 **Nó còn TÌM được ảnh.** `query` trả về ảnh chụp thật, mỗi tấm kèm mô tả do chính người chụp
 viết — "Cute child wearing a black t-shirt and hat standing near a doorway" — và `pick: <id>`
 upload đúng tấm bạn chọn vào thư viện của site. Nó không bao giờ upload một kết quả chưa ai đọc:

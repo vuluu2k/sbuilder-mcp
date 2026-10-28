@@ -658,6 +658,7 @@ export function registerLiveTools(
       inputSchema: {
       site_id: z.string().optional(),
       path: z.string().optional().describe('A file on this machine'),
+      paths: z.array(z.string()).optional().describe('Several files; one failing does not stop the rest'),
       url: z.string().optional().describe('Fetched, then uploaded'),
       query: z.string().optional().describe('Search real photographs; read the descriptions, then pick'),
       orientation: z.enum(['landscape', 'portrait', 'square']).optional(),
@@ -671,7 +672,7 @@ export function registerLiveTools(
     },
       annotations: { readOnlyHint: false, destructiveHint: false },
     },
-    async ({ site_id: given, path, url, name, folder_id, query, orientation, pick, dry_run }) => {
+    async ({ site_id: given, path, paths, url, name, folder_id, query, orientation, pick, dry_run }) => {
       const site_id = siteFor(ctx, given);
 
       // A SEARCH IS NOT A GUESS, and the difference is the whole reason this is
@@ -805,8 +806,27 @@ export function registerLiveTools(
         });
       }
 
+      // A CATALOGUE IS STOCKED IN ONE CALL, not thirty-one. Each file is its own
+      // upload — and its own guardLocal — so one refused file is reported beside
+      // the ones that landed rather than throwing away which did.
+      if (paths?.length) {
+        if (dry_run !== false) {
+          return text({ dry_run: true, would_upload: paths, into: site_id, note: 'Nothing was sent. Re-call with dry_run:false to upload.' });
+        }
+        const uploaded: Array<Record<string, unknown>> = [];
+        const failed: Array<{ path: string; why: string }> = [];
+        for (const p of paths) {
+          try {
+            const a = (await uploadMedia(ctx, site_id, { path: p, folderId: folder_id })) as Record<string, unknown>;
+            uploaded.push({ name: a.name, url: a.url, width: a.width, height: a.height });
+          } catch (e) {
+            failed.push({ path: p, why: (e as Error).message });
+          }
+        }
+        return text({ uploaded, ...(failed.length ? { failed } : {}) });
+      }
       if (!path && !url) {
-        throw new Error('sbuilder: give sb_media_upload a path, a url, or a query to search');
+        throw new Error('sbuilder: give sb_media_upload a path, paths, a url, or a query to search');
       }
       if (dry_run !== false) {
         return text({
