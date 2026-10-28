@@ -98,7 +98,7 @@ nhét ngược lại vào mọi bản cài.
 | `sb_page_update` | Sửa tên, slug, cờ trang chủ, thứ tự, SEO (title, description, Open Graph, robots, meta tag, JSON-LD) và cờ chỉ-thành-viên của một trang — merge vào `settings`, nên các khoá không nhắc tới vẫn còn nguyên. Với trang template: đặt làm mặc định của loại, hoặc chọn sản phẩm/danh mục/bài viết nào hiển thị qua nó |
 | `sb_page_version` | Các điểm khôi phục của trang trên platform — liệt kê phiên bản có tên và lịch sử autosave, chụp draft, khôi phục |
 | `sb_code` | Các file mã tuỳ chỉnh của site (pixel theo dõi, analytics, widget chat, CSS toàn site) chèn vào mọi trang hoặc một trang — liệt kê, tạo, cập nhật gộp, xoá |
-| `sb_publish` | Biên dịch bản nháp thành trang live (lan sang global dùng chung), báo bản nào đã lên live, và với `verify` kiểm origin đã phục vụ đúng bản đó chưa; liệt kê các trang khác còn nháp chưa publish (`publish_drafts` publish luôn) |
+| `sb_publish` | Biên dịch bản nháp thành trang live (lan sang global dùng chung), báo bản nào đã lên live, và với `verify` kiểm origin đã phục vụ đúng bản đó chưa; liệt kê các trang khác còn nháp chưa publish và các trang chưa từng publish (`publish_drafts` publish luôn cả hai) |
 | `sb_page_state` | Ba bản sao của một trang, bản nào là bản nào — bản NHÁP canvas editor hiển thị, dòng PUBLISHED storefront phục vụ, và bản phiên này giữ — kèm dự báo editor có render canvas TRẮNG không, và các điểm phục hồi nằm ở đâu |
 | `sb_page_repair` | Đổi gốc trang khác `ROOT` (do seed cũ để lại) về `ROOT` để mọi bản editor vẽ được — một trang hoặc cả site |
 | `sb_review` | Mọi khiếm khuyết người xem sẽ thấy, kèm lệnh sửa từng cái, và năm khoảng trống chắn giữa cửa hàng với một đơn đã thanh toán |

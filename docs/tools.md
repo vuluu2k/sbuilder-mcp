@@ -1309,7 +1309,9 @@ pours every republished page's markup into the reader.
 (`pageId`, `name`, `slug`) — dry run and real run alike — and `publish_drafts: true` puts them
 in the same publish. The platform has no "draft differs from published" field: this is
 `updatedAt` (bumped by every draft save) past `publishedAt`, the comparison `sb_page_state`
-makes, so a metadata-only edit counts too. A never-published page is not listed.
+makes, so a metadata-only edit counts too. A page that was NEVER published (no `publishedAt` —
+the product, category, search or account page `sb_page_create` just made) has no live copy to be
+ahead of, so it is listed apart as `first_publish`, and `publish_drafts: true` publishes it too.
 
 **`verify: true` then fetches the live page and says whether the origin is serving it.** A
 200 proves the platform stored a row, not that a visitor is being served it: the storefront

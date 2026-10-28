@@ -2776,7 +2776,10 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
         publish_drafts: z
           .boolean()
           .optional()
-          .describe('Also publish every other page whose draft is ahead of its live copy (listed as unpublished_drafts)'),
+          .describe(
+            'Also publish every other page whose draft is ahead of its live copy (unpublished_drafts) ' +
+              'or that was never published (first_publish)',
+          ),
       },
       annotations: { readOnlyHint: false, destructiveHint: true, idempotentHint: true },
     },
@@ -2793,9 +2796,14 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
       // "draft differs from published" flag; `updatedAt` is bumped by every
       // draft save (touchPage) and `publishedAt` by publish, so this is the
       // same timestamp comparison sb_page_state makes — a metadata edit counts
-      // too. A never-published page is not listed: publishing it is a choice,
-      // not a forgotten step. A failed read never fails the publish.
-      let drafts: Array<{ pageId: string; name: string; slug: string }> = [];
+      // too. A NEVER-published page (no `publishedAt`) has no live copy to be
+      // ahead of, and it is exactly what an agent just built with
+      // sb_page_create — product, category, search, account — so it is listed
+      // apart as `first_publish` and publish_drafts includes it. A failed read
+      // never fails the publish.
+      type Row = { pageId: string; name: string; slug: string };
+      let drafts: Row[] = [];
+      let fresh: Row[] = [];
       try {
         const got = (await request({
           base: ctx.base,
@@ -2804,23 +2812,33 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
           token: siteToken(ctx),
           fetchImpl: ctx.fetchImpl,
         })) as { pages?: Array<Record<string, unknown>> };
-        drafts = (got.pages ?? [])
-          .filter((p) => p.id !== page_id)
-          .filter((p) => driftOf(p.updatedAt as string | undefined, p.publishedAt as string | undefined).state === 'draft_ahead')
-          .map((p) => ({ pageId: String(p.id), name: String(p.name ?? ''), slug: String(p.slug ?? '') }));
+        const others = (got.pages ?? []).filter((p) => p.id !== page_id);
+        const row = (p: Record<string, unknown>): Row => ({ pageId: String(p.id), name: String(p.name ?? ''), slug: String(p.slug ?? '') });
+        const state = (p: Record<string, unknown>) =>
+          driftOf(p.updatedAt as string | undefined, p.publishedAt as string | undefined).state;
+        drafts = others.filter((p) => state(p) === 'draft_ahead').map(row);
+        fresh = others.filter((p) => state(p) === 'never_published').map(row);
       } catch {
         drafts = [];
+        fresh = [];
       }
-      const body = { pageIds: [page_id, ...(publish_drafts ? drafts.map((d) => d.pageId) : [])] };
-      const draftNote = (left: typeof drafts) =>
-        left.length
+      const body = { pageIds: [page_id, ...(publish_drafts ? [...drafts, ...fresh].map((d) => d.pageId) : [])] };
+      const draftNote = (left: Row[], unborn: Row[]) => ({
+        ...(left.length
           ? {
               unpublished_drafts: left,
               drafts_note: 'Draft saved after its last publish (updatedAt past publishedAt — no platform flag says so). publish_drafts:true publishes them too.',
             }
-          : {};
+          : {}),
+        ...(unborn.length
+          ? {
+              first_publish: unborn,
+              first_publish_note: 'Never published, so its URL 404s. publish_drafts:true publishes these too.',
+            }
+          : {}),
+      });
       if (dry_run !== false) {
-        return text({ dry_run: true, would_post: path, body, ...draftNote(drafts) });
+        return text({ dry_run: true, would_post: path, body, ...draftNote(drafts, fresh) });
       }
       const res = (await request({
         base: ctx.base,
@@ -2890,7 +2908,10 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
       }
       return text({
         published,
-        ...draftNote(drafts.filter((d) => !published.some((p) => p.pageId === d.pageId))),
+        ...draftNote(
+          drafts.filter((d) => !published.some((p) => p.pageId === d.pageId)),
+          fresh.filter((d) => !published.some((p) => p.pageId === d.pageId)),
+        ),
         ...(live ? { live } : {}),
         ...(published.length !== (res.total ?? published.length) ? { total: res.total } : {}),
         ...(landed

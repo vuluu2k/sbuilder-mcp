@@ -1281,7 +1281,9 @@ bỏ, vì publish lan và trả chúng về là đổ markup của mọi trang �
 (`pageId`, `name`, `slug`) — cả dry run lẫn chạy thật — và `publish_drafts: true` đưa chúng vào
 cùng lần publish. Nền tảng không có trường "nháp khác bản đã publish": đây là `updatedAt`
 (tăng mỗi lần lưu nháp) sau `publishedAt`, đúng phép so của `sb_page_state`, nên một lần sửa
-chỉ metadata cũng tính. Trang chưa từng publish không được liệt kê.
+chỉ metadata cũng tính. Trang CHƯA TỪNG publish (không có `publishedAt` — trang sản phẩm, danh
+mục, tìm kiếm hay tài khoản mà `sb_page_create` vừa tạo) không có bản live để so, nên được liệt kê
+riêng ở `first_publish`, và `publish_drafts: true` cũng publish luôn chúng.
 
 **`verify: true` rồi tải trang live và nói origin đã phục vụ bản đó chưa.** Một mã 200 chứng
 minh nền tảng đã lưu một dòng, không chứng minh một người xem đang được phục vụ nó:

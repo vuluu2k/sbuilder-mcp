@@ -101,7 +101,7 @@ in this client: one would put the very key the platform exists to hold back into
 | `sb_page_update` | Edit a page's name, slug, home flag, order, SEO (title, description, Open Graph, robots, meta tags, JSON-LD) and members-only flag — merged into `settings`, so the keys it does not name survive. On a template page: make it the type's default, or choose which products/categories/posts render through it |
 | `sb_page_version` | A page's platform recovery points — list named versions and autosave history, snapshot the draft, restore one |
 | `sb_code` | The site's custom code files (tracking pixels, analytics, chat widgets, site CSS) injected into every page or one — list, create, merge-update, remove |
-| `sb_publish` | Compile the draft into the live page (cascades to shared globals), report which revision went live, and with `verify` check the origin is serving it; lists other pages with unpublished drafts (`publish_drafts` publishes them too) |
+| `sb_publish` | Compile the draft into the live page (cascades to shared globals), report which revision went live, and with `verify` check the origin is serving it; lists other pages with unpublished drafts and never-published pages (`publish_drafts` publishes both) |
 | `sb_page_state` | Which of a page's three copies is which — the DRAFT the editor canvas shows, the PUBLISHED row the storefront serves, and this session's — plus whether the editor will render the canvas BLANK, and where the recovery points are |
 | `sb_page_repair` | Rename a page root that is not `ROOT` (left by older seeds) so every editor build draws it — one page or the whole site |
 | `sb_review` | Every defect a visitor would see, each with its fix, plus the five gaps between this store and a paid order |
