@@ -492,6 +492,21 @@ kéo thả và defaults của element không mang, nên trước đây mọi ph�
 ra đều lưu được, publish được và render mãi placeholder. Binding của tile record lấy từ
 `recordField` — xem "Danh sách record" bên dưới.
 
+**Các kind lấy từ chính factory, và kind lạ thì BỊ TỪ CHỐI.** Mọi `case '<kind>':` trong
+`datasetBindings.ts` của nền tảng (cộng `BINDING_KIND`) được liệt kê lúc codegen, nên `tags`,
+`rating`, `rating_count` và các kind khoá học (`level`, `lessons`, `students`, `duration`,
+`instructorTitle`, `instructorBio`) đều bind đúng trường của nó. Danh sách viết tay từng thiếu
+`tags`, và `{datasetSource:"product", kind:"tags"}` rơi về dòng product đầu tiên — `product.title`
+— nên dòng "tag thông số" hiện tên sản phẩm. Với element có các dòng khác nhau theo kind
+(`text-dataset`, `pricing-dataset`), kind mà catalog không biết giờ bị từ chối kèm danh sách kind
+hợp lệ; element không có trục kind vẫn rơi về theo nguồn.
+
+**Khối giá là một cha `prices` chứa hai lá**, đúng hình picker của editor thả ra và seed trang
+product dùng: một `pricing-dataset` trần sinh ra kèm lá `kind:"price"` và lá `kind:"compare_price"`,
+mỗi lá giữ typography riêng — nên giá gạch ngang được style trên lá của nó. Meta của element ghi
+`isContainer:false` (người dùng không THẢ vào được), và `sb_add` / `sb_move` chỉ có đúng một ngoại
+lệ: lá `price` / `compare_price` dưới cha `prices`. Node thêm với kind khác sinh ra trần.
+
 ## `sb_set`
 
 | Tham số | Kiểu | Ghi chú |
@@ -1232,8 +1247,9 @@ sách, nên tên trường được đọc từ json tag của các struct Go; m
 trả về nguyên vẹn, nên nền tảng đổi hình dạng sẽ lùi về hành vi hôm qua chứ không thành một
 danh sách rỗng.
 
-**TRANG CỬA HÀNG SINH RA ĐÃ CÓ SẴN NỘI DUNG.** `product`, `category`, `search`, `blog`, `post`
-và `complete` mở ra với đúng tài liệu mà editor đưa cho người bán — sinh bằng cách GỌI các card
+**TRANG CỬA HÀNG SINH RA ĐÃ CÓ SẴN NỘI DUNG.** `product`, `category`, `search`, `blog`, `post`,
+`complete` và `account` mở ra với đúng tài liệu mà editor đưa cho người bán (`account`: một heading
+cùng `account-info`, `order-history` và `address-book`, từ `accountPageSeed.ts` của editor) — sinh bằng cách GỌI các card
 của palette chứ không chép lại, nên hôm nào card thêm mảnh thì cả hai cửa cùng có. Trang product
 mang nguyên buy box (gallery, tiêu đề, giá, chọn biến thể, mô tả, bộ tăng giảm số lượng, Thêm vào
 giỏ, Mua ngay) đã bind sẵn, kèm BINDING `add_to_cart` — thứ khó đoán nhất.
@@ -1569,7 +1585,7 @@ tài liệu:
 
 | Mã | Khiếm khuyết |
 | --- | --- |
-| `empty_page` | Không có gì — publish ra trang trắng. Cả trang CHỈ có header và footer dùng chung: phần thân ở giữa trống (trang `account`, `contact`, `error` không được seed) |
+| `empty_page` | Không có gì — publish ra trang trắng. Cả trang CHỈ có header và footer dùng chung: phần thân ở giữa trống (trang `contact`, `error` không được seed) |
 | `missing_node` | Một node cha gọi tên đứa con tài liệu không có. Renderer đi vào một lỗ trống, và nền tảng từ chối mọi lần lưu cho tới khi nó biến mất — báo ở đây chứ không ném lỗi, vì một lần review chạy trên tài liệu đã hỏng, và đó đúng là lúc người gọi cần nó nhất |
 | `dead_nav` | Một click điều hướng duy nhất mà không có `specials.href`. Renderer KHÔNG BAO GIỜ đọc `node.events`: `EventAttrs` không phát `on:click` cho nó, vì cho rằng href đã biến nó thành anchor. Nên control đó render, publish, và bấm vào không làm gì |
 | `empty_container` | Section không chứa gì — một dải trống |
@@ -2283,7 +2299,7 @@ Chạy một luồng cửa hàng bắt buộc **đúng thứ tự**.
 | `page_name` | string? | `checkout` — ghi đè tên trang mặc định của editor. `form` — tạo một trang và đặt form lên đó |
 | `headline` | string? | `checkout` — ghi đè tiêu đề trang. `form` — tiêu đề phía trên form được đặt |
 | `template` | enum? | `form` — chọn một trong 17 template của nền tảng |
-| `name` | string? | `form` — tên form trong danh sách của chủ shop. `overlay_attach` không có `overlay_id` — tên overlay mới |
+| `name` | string? | `form` — tên form trong danh sách của chủ shop. `overlay_attach` không có `overlay_id` — tên overlay mới. `chrome` — tên site hiện trên header (mặc định: tên trong bản ghi site, mà API key không đọc được) |
 | `footer` | boolean? | `chrome` — dựng **footer** dùng chung thay vì header |
 | `node_id` | string? | `menu` — node menu trên trang đang mở |
 | `menu_id` | string? | `menu` — một menu đã có; bỏ trống để dùng menu đầu tiên của site, hoặc tạo mới |
@@ -2411,6 +2427,13 @@ sản phẩm bằng id, không bằng địa chỉ, nên đổi slug trang vẫn
 chiều rộng khác, chứa `menu-drawer` có ✕ mang `close_menu` phía trên một `menu` dọc
 (`submenuStyle:"collapse"`). `config.hidden` không cascade, nên mỗi chiều rộng tự nói. Giỏ hàng là
 chính icon mang `open_cart`, gắn badge bằng satellite `cart-count`; icon tài khoản tới `/account`.
+Thanh header MỞ ĐẦU BẰNG TÊN SITE — một heading trong một khối có click duy nhất về `/`, vì heading
+không khai báo click action — lặp lại ở đầu drawer, và nhóm icon bắt đầu bằng một `search-input`
+(`searchBehavior:"navigate"`, `searchDisplay:"expand"`, placeholder theo `language`). Tên lấy từ
+`name`, nếu không thì từ bản ghi site; API key không đọc được bản ghi (`api_key_scope`), nên header
+dựng bằng key mà thiếu tên sẽ trả `brand_missing`. Danh mục theo thứ tự `position` của người bán,
+rồi theo tên, và dòng menu của danh mục hay sản phẩm giữ NGUYÊN tên — chỉ TIÊU ĐỀ trang mới bị rút
+gọn ("About | Brand" → "About").
 Dải mặc `section-wide`, vì `container-section` mặc định chặn ở 1440px. Các cột link của footer mỗi
 cột là một `menu` dọc trên menu site riêng.
 
