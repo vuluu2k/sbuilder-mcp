@@ -70,8 +70,30 @@ function refuseBesideSegments(doc: PageDoc, parentId: string, type: string): voi
   );
 }
 
-function requireContainer(parentType: string, parentId: string): void {
-  if (!ELEMENTS[parentType]?.isContainer) {
+/**
+ * THE ONE LEAF THAT HOLDS CHILDREN: a `prices` pricing-dataset over its `price`
+ * and `compare_price` leaves. The meta says isContainer:false so an author cannot
+ * DROP into it, but the editor's picker preset (pickerPresets.ts pricingDataset)
+ * and the product page seed build exactly this pair, each leaf owning its own
+ * typography — the struck compare price is styled on its leaf or nowhere.
+ */
+const PRICE_LEAF_KINDS = new Set(['price', 'compare_price']);
+function isPriceLeaf(parentType: string, parentKind: unknown, child?: { type: string; config?: Record<string, unknown> }): boolean {
+  return (
+    parentType === 'pricing-dataset' &&
+    parentKind === 'prices' &&
+    child?.type === 'pricing-dataset' &&
+    PRICE_LEAF_KINDS.has(String(child.config?.kind))
+  );
+}
+
+function requireContainer(
+  parentType: string,
+  parentId: string,
+  parentKind?: unknown,
+  child?: { type: string; config?: Record<string, unknown> },
+): void {
+  if (!ELEMENTS[parentType]?.isContainer && !isPriceLeaf(parentType, parentKind, child)) {
     throw new Error(
       `sbuilder: ${parentId} is a ${parentType}, which is not a container — it cannot hold children.`,
     );
@@ -200,7 +222,7 @@ export function addSubtree(
     // A DOCUMENT'S OWN ROOT always holds children — including a FORM document's,
     // whose root is a `form`: a leaf on a page (its meta says isContainer:false,
     // because the fields live elsewhere) and the field list in its own document.
-    if (parentId !== doc.doc.root_node_id) requireContainer(parent.data.type, parentId);
+    if (parentId !== doc.doc.root_node_id) requireContainer(parent.data.type, parentId, parent.config?.kind, spec);
     requireAllowed(parent.data.type, spec.type, guard);
     soft(guard, () => refuseBesideSegments(doc, parentId, spec.type));
   }
@@ -250,7 +272,10 @@ export function addSubtree(
     // list's empty state) hangs off `config[key]`, exactly as a top-level
     // `sb_add` of one does. The caller's nested spec takes the place of the
     // one `mintSatellites` would mint, so its key is reserved before minting.
-    const children = s.children?.length ? s.children : (ELEMENT_SEEDS[s.type] ?? []);
+    // A seed is the element's DEFAULT shape: a node moved off its default kind
+    // (a pricing-dataset `price` leaf) is another role and arrives bare.
+    const onDefaultKind = n.config.kind === ELEMENTS[s.type]?.defaults.config?.kind;
+    const children = s.children?.length ? s.children : onDefaultKind ? (ELEMENT_SEEDS[s.type] ?? []) : [];
     const nested = new Map<NodeSpec, SatelliteRule>();
     for (const child of children) {
       const rule = (SATELLITE_RULES[s.type] ?? []).find((r) => r.type === child.type);
@@ -280,7 +305,7 @@ export function addSubtree(
         patches.push({ op: 'set', path: ['nodes', n.id, 'config', sat.configKey], value: satId });
         continue;
       }
-      requireContainer(s.type, n.id);
+      requireContainer(s.type, n.id, n.config.kind, child);
       requireAllowed(s.type, child.type, guard);
       const childId = build(child, n.id);
       patches.push({ op: 'insert', path: ['nodes', n.id, 'data', 'nodes'], index: APPEND, value: childId });
@@ -750,7 +775,9 @@ export function copyNodeInto(
   if (src !== target) {
     // Onto ANOTHER document the parent is the caller's choice, so it gets the
     // checks sb_add gives one.
-    if (parentId !== target.doc.root_node_id) requireContainer(target.node(parentId).data.type, parentId);
+    if (parentId !== target.doc.root_node_id) {
+      requireContainer(target.node(parentId).data.type, parentId, target.node(parentId).config?.kind, { type: n.data.type, config: n.config });
+    }
     requireAllowed(target.node(parentId).data.type, n.data.type, guard);
     soft(guard, () => refuseAppBlockParent(target, parentId, 'pasting into'));
   }
@@ -837,7 +864,9 @@ export function moveNode(doc: PageDoc, id: string, newParentId: string, index: n
     throw new Error(`sbuilder: cannot move ${id} into its own descendant ${newParentId}`);
   }
 
-  if (newParentId !== doc.doc.root_node_id) requireContainer(newParent.data.type, newParentId);
+  if (newParentId !== doc.doc.root_node_id) {
+    requireContainer(newParent.data.type, newParentId, newParent.config?.kind, { type: n.data.type, config: n.config });
+  }
   requireAllowed(newParent.data.type, n.data.type, guard);
   if (n.data.parent !== newParentId) soft(guard, () => refuseBesideSegments(doc, newParentId, n.data.type));
   // Not for a REORDER: a node already in this parent is not a second template,

@@ -15,9 +15,9 @@ import { PageDoc } from '../src/domains/site/document.js';
  * arrives empty" as though that were the platform's behaviour.
  */
 describe('a store page opens with what the editor gives a merchant', () => {
-  it('seeds the six store types and leaves an ordinary page blank', () => {
+  it('seeds the seven store types and leaves an ordinary page blank', () => {
     expect(seededTypes().sort()).toEqual(
-      ['blog', 'category', 'complete', 'post', 'product', 'search'].sort(),
+      ['account', 'blog', 'category', 'complete', 'post', 'product', 'search'].sort(),
     );
     expect(hasSeed('page')).toBe(false);
     expect(hasSeed(undefined)).toBe(false);
@@ -33,6 +33,20 @@ describe('a store page opens with what the editor gives a merchant', () => {
     expect(raw).toContain('add_to_cart');
     expect(raw).toContain('bind-product-action');
     expect(Object.keys(doc.nodes).length).toBeGreaterThan(20);
+  });
+
+  // /account WAS CREATED EMPTY: the editor seeds it from accountPageSeed.ts
+  // (heading + account-info + order-history + address-book), which
+  // storePageSeeds.ts does not cover. Captured at codegen, rooted at ROOT.
+  it('gives an account page the editor\'s heading and three account cards, under ROOT', () => {
+    const doc = seedDocument('account')!;
+    expect(doc.root_node_id).toBe('ROOT');
+    const types = Object.values(doc.nodes).map((n) => (n as { data: { type: string } }).data.type);
+    for (const t of ['flex-section', 'heading', 'account-info', 'order-history', 'address-book']) expect(types).toContain(t);
+    expect(JSON.stringify(doc)).toContain('Tài khoản của tôi');
+    // Fresh ids per create: two account pages share nothing but ROOT.
+    const again = seedDocument('account')!;
+    expect(Object.keys(again.nodes).filter((id) => id in doc.nodes)).toEqual(['ROOT']);
   });
 
   // THE ROOT CAUSE OF A DEFECT THIS REPO ONLY HAD THE SYMPTOM OF.

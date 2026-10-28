@@ -1039,6 +1039,13 @@ above today's measurement gets raised again without anybody looking.
   for when a grep for `node.States` "found only four files" and produced a conclusion a probe
   then disproved.
 
+- **`bindingsFor`'s KINDS ARE READ OFF THE FACTORY** — every `case '<kind>':` in
+  `datasetBindings.ts` that is not an element type, plus `BINDING_KIND`, unioned with the old
+  twelve. The hand list lacked `tags`, `rating*` and the course kinds, so those bound
+  `product.title` (see document-model). Codegen exits 1 when `text-dataset` has no `product|tags`
+  row binding `product.tags`. An element whose rows never vary by kind keeps ONE row per source
+  (the runtime falls back by source), which is why the table SHRANK when it gained 21 kinds.
+
 - **The form field-skin rule is generated (`FIELD_SKIN_BY_NODE`).**
   **THAT RULE IS GENERATED NOW, NOT PROSE.** It summarised a 55-key table across 11 form nodes
   by hand, which is what this repo's codegen exists to replace. `FIELD_SKIN_BY_NODE` records

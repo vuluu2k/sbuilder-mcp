@@ -8,7 +8,8 @@ export const STORE_SEED_SOURCE = {
     "search",
     "blog",
     "post",
-    "complete"
+    "complete",
+    "account"
   ],
   "nodes": {
     "product": 24,
@@ -16,7 +17,8 @@ export const STORE_SEED_SOURCE = {
     "search": 14,
     "blog": 13,
     "post": 6,
-    "complete": 5
+    "complete": 5,
+    "account": 6
   }
 } as const;
 
@@ -5320,6 +5322,177 @@ export const STORE_PAGE_SEEDS: Record<string, { schema_version: number; root_nod
           "totalLabel": "Tổng cộng",
           "dueLabel": "Còn phải trả",
           "unavailableText": "Không tải được chi tiết đơn hàng. Bạn có thể tra cứu bằng mã đơn hàng trong trang tài khoản."
+        },
+        "responsive": {},
+        "events": [],
+        "bindings": []
+      }
+    }
+  },
+  "account": {
+    "schema_version": 2,
+    "root_node_id": "ROOT",
+    "nodes": {
+      "ROOT": {
+        "id": "ROOT",
+        "data": {
+          "type": "root",
+          "parent": null,
+          "nodes": [
+            "spacc_2"
+          ],
+          "isCanvas": true,
+          "hidden": false,
+          "custom": {}
+        },
+        "style": {},
+        "config": {},
+        "specials": {},
+        "responsive": {},
+        "events": [],
+        "bindings": []
+      },
+      "spacc_2": {
+        "id": "spacc_2",
+        "data": {
+          "type": "flex-section",
+          "parent": "ROOT",
+          "nodes": [
+            "spacc_3",
+            "spacc_4",
+            "spacc_5",
+            "spacc_6"
+          ],
+          "isCanvas": true,
+          "hidden": false,
+          "custom": {}
+        },
+        "style": {
+          "display": "flex",
+          "flexDirection": "column",
+          "width": "100%",
+          "height": "fit-content"
+        },
+        "config": {
+          "backgroundSceneSource": "",
+          "backgroundSceneEffect": "gradient-mesh",
+          "backgroundSceneGallery": "podium",
+          "backgroundSceneSpeed": "normal",
+          "backgroundSceneIntensity": "normal",
+          "backgroundSceneColors": "theme",
+          "backgroundSceneColor1": "#171717",
+          "backgroundSceneColor2": "#ffffff",
+          "backgroundSceneColor3": "#6b7280",
+          "backgroundSceneUrl": "",
+          "backgroundSceneModelUrl": "",
+          "backgroundSceneVeil": 0,
+          "backgroundSceneVeilColor": "#000000"
+        },
+        "specials": {
+          "stylePreset": "container-section"
+        },
+        "responsive": {},
+        "events": [],
+        "bindings": []
+      },
+      "spacc_3": {
+        "id": "spacc_3",
+        "data": {
+          "type": "heading",
+          "parent": "spacc_2",
+          "nodes": [],
+          "isCanvas": false,
+          "hidden": false,
+          "custom": {}
+        },
+        "style": {
+          "width": "100%",
+          "height": "fit-content"
+        },
+        "config": {
+          "textGlobalStyle": "heading-1"
+        },
+        "specials": {
+          "htmlTag": "h1",
+          "text": "Tài khoản của tôi",
+          "stylePreset": "heading-default"
+        },
+        "responsive": {},
+        "events": [],
+        "bindings": []
+      },
+      "spacc_4": {
+        "id": "spacc_4",
+        "data": {
+          "type": "account-info",
+          "parent": "spacc_2",
+          "nodes": [],
+          "isCanvas": false,
+          "hidden": false,
+          "custom": {}
+        },
+        "style": {
+          "width": "100%"
+        },
+        "config": {},
+        "specials": {
+          "promptText": "Đăng nhập để xem thông tin tài khoản",
+          "loginLabel": "Đăng nhập",
+          "loginHref": "",
+          "showPhone": true
+        },
+        "responsive": {},
+        "events": [],
+        "bindings": []
+      },
+      "spacc_5": {
+        "id": "spacc_5",
+        "data": {
+          "type": "order-history",
+          "parent": "spacc_2",
+          "nodes": [],
+          "isCanvas": false,
+          "hidden": false,
+          "custom": {}
+        },
+        "style": {
+          "width": "100%"
+        },
+        "config": {
+          "rowLimit": 5
+        },
+        "specials": {
+          "title": "Đơn hàng của bạn",
+          "emptyText": "Chưa có đơn hàng nào.",
+          "signedOutText": "Đăng nhập để xem đơn hàng của bạn",
+          "lookupEnabled": true,
+          "lookupNumberPlaceholder": "Mã đơn hàng (VD: #1001)",
+          "lookupContactPlaceholder": "Số điện thoại hoặc email",
+          "lookupButtonText": "Tra cứu"
+        },
+        "responsive": {},
+        "events": [],
+        "bindings": []
+      },
+      "spacc_6": {
+        "id": "spacc_6",
+        "data": {
+          "type": "address-book",
+          "parent": "spacc_2",
+          "nodes": [],
+          "isCanvas": false,
+          "hidden": false,
+          "custom": {}
+        },
+        "style": {
+          "width": "100%"
+        },
+        "config": {},
+        "specials": {
+          "title": "Sổ địa chỉ",
+          "emptyText": "Chưa có địa chỉ nào.",
+          "signedOutText": "Đăng nhập để quản lý địa chỉ của bạn",
+          "addLabel": "Thêm địa chỉ"
         },
         "responsive": {},
         "events": [],
