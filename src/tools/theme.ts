@@ -200,6 +200,49 @@ function refusal(siteId: string, what: string, refused: string[], ctx: ToolConte
   );
 }
 
+/** The narrower breakpoints a theme layer may override; base is desktop. */
+const RESPONSIVE_BPS = ['laptop', 'tablet', 'mobile'];
+
+type LayerPatch = Record<string, string | Record<string, string>>;
+type Change = { what: string; from: string; to: string };
+
+/**
+ * Patch a text style or a preset IN PLACE: a string value lands on `base`, an
+ * object under a breakpoint name lands on `responsive[bp]`. The starter keeps
+ * responsive overrides (heading-3 mobile 24px), so a base-only patch can leave a
+ * phone heading LARGER than the desktop one — the breakpoint keys are the fix.
+ */
+function patchLayers(
+  target: { base?: Record<string, string>; responsive?: Record<string, Record<string, string>> },
+  patch: LayerPatch,
+  label: string,
+  changes: Change[],
+): void {
+  const put = (slot: Record<string, string>, prop: string, value: string, what: string) => {
+    const before = slot[prop] ?? '(unset)';
+    if (before === value) return;
+    changes.push({ what, from: before, to: value });
+    slot[prop] = value;
+  };
+  for (const [key, value] of Object.entries(patch)) {
+    if (typeof value === 'string' && !RESPONSIVE_BPS.includes(key)) {
+      put((target.base ??= {}), key, value, `${label}.${key}`);
+      continue;
+    }
+    if (typeof value === 'string' || !RESPONSIVE_BPS.includes(key)) {
+      throw new Error(
+        `sbuilder: ${label}.${key} — a breakpoint override is an object under one of ` +
+          `${RESPONSIVE_BPS.slice().reverse().join(', ')}, e.g. { "mobile": { "fontSize": "18px" } }; ` +
+          'every other key is a CSS declaration with a string value.',
+      );
+    }
+    const slot = ((target.responsive ??= {})[key] ??= {});
+    for (const [prop, v] of Object.entries(value)) put(slot, prop, v, `${label}.${key}.${prop}`);
+  }
+}
+
+const px = (v: string | undefined): number | null => (v && /^\d+(\.\d+)?px$/.test(v) ? parseFloat(v) : null);
+
 export function registerThemeTools(server: McpServer, ctx: ToolContext): void {
   server.registerTool(
     'sb_theme',
@@ -208,7 +251,8 @@ export function registerThemeTools(server: McpServer, ctx: ToolContext): void {
         "The site's palette and type scale — the layer every element's style preset resolves " +
         'from, so one token repaints every page at once. Call it with nothing to read what the ' +
         'site actually has. `colors` and `text_styles` PATCH the saved document: what you do not ' +
-        'name is kept. `locale` sets the site\'s language (settings.locale, what <html lang> is ' +
+        'name is kept, and so does `presets` (a preset\'s own literal outranks the text style). ' +
+        'A mobile/tablet/laptop object writes that breakpoint. `locale` sets the site\'s language (settings.locale, what <html lang> is ' +
         'served from) — site-wide, every other setting kept.',
       inputSchema: {
         site_id: z.string().optional(),
@@ -217,18 +261,22 @@ export function registerThemeTools(server: McpServer, ctx: ToolContext): void {
           .optional()
           .describe('Token id -> CSS colour, e.g. { "heading": "#2E2A3B", "primary": "#E8557A" }'),
         text_styles: z
-          .record(z.record(z.string()))
+          .record(z.record(z.union([z.string(), z.record(z.string())])))
           .optional()
-          .describe('Text style slug -> base declarations, e.g. { "h1": { "fontSize": "48px" } }'),
+          .describe('Slug -> declarations, e.g. { "heading-3": { "fontSize": "20px", "mobile": { "fontSize": "18px" } } }'),
+        presets: z
+          .record(z.record(z.union([z.string(), z.record(z.string())])))
+          .optional()
+          .describe('Preset id -> declarations, e.g. { "heading-default": { "fontFamily": "Inter" } }'),
         locale: z.string().optional().describe('Site language tag, e.g. "vi" or "en"'),
         dry_run: z.boolean().optional(),
       },
       annotations: { readOnlyHint: false, destructiveHint: false },
     },
-    async ({ site_id: given, colors, text_styles, locale, dry_run }) => {
+    async ({ site_id: given, colors, text_styles, presets, locale, dry_run }) => {
       const site_id = siteFor(ctx, given);
       const report = ({ from, to, unchanged }: LocaleChange) => ({ locale: { from, to, ...(unchanged ? { unchanged } : {}) } });
-      if (locale && !colors && !text_styles) {
+      if (locale && !colors && !text_styles && !presets) {
         const plan = await planLocale(ctx, site_id, locale);
         if (dry_run === false) await plan.write();
         return text({
@@ -241,7 +289,7 @@ export function registerThemeTools(server: McpServer, ctx: ToolContext): void {
 
       // READ. What the site actually paints from, which is what rule 0 wants
       // before anything is decided.
-      if (!colors && !text_styles) {
+      if (!colors && !text_styles && !presets) {
         return text({
           origin:
             origin === 'site'
@@ -269,7 +317,7 @@ export function registerThemeTools(server: McpServer, ctx: ToolContext): void {
       // resolves from is a value the platform stores and no renderer reads,
       // which is the silent-failure family this server exists to close — and a
       // typo would land there rather than on the colour the caller meant.
-      const changes: Array<{ what: string; from: string; to: string }> = [];
+      const changes: Change[] = [];
       const known = new Set((theme.colors ?? []).map((c) => c.id));
       const unknown = Object.keys(colors ?? {}).filter((id) => !known.has(id));
       if (unknown.length) {
@@ -295,16 +343,67 @@ export function registerThemeTools(server: McpServer, ctx: ToolContext): void {
             'and the compiled --wb-ts-<slug>-<prop> variables are built from it.',
         );
       }
+      // An untouched responsive fontSize larger than the new base is a phone
+      // heading bigger than the desktop one — the starter ships those overrides.
+      const larger: Array<{ style: string; breakpoint: string; fontSize: string; base: string }> = [];
       for (const [slug, decls] of Object.entries(text_styles ?? {})) {
         const style = theme.textStyles.find((t) => t.slug === slug)!;
-        style.base = style.base ?? {};
-        for (const [prop, value] of Object.entries(decls)) {
-          const before = style.base[prop] ?? '(unset)';
-          if (before === value) continue;
-          changes.push({ what: `textStyles.${slug}.${prop}`, from: before, to: value });
-          style.base[prop] = value;
+        patchLayers(style, decls, `textStyles.${slug}`, changes);
+        const base = typeof decls.fontSize === 'string' ? decls.fontSize : undefined;
+        if (px(base) === null) continue;
+        for (const [bp, slot] of Object.entries(style.responsive ?? {})) {
+          const own = decls[bp];
+          if (typeof own === 'object' && 'fontSize' in own) continue;
+          const r = px(slot.fontSize);
+          if (r !== null && r > px(base)!) larger.push({ style: slug, breakpoint: bp, fontSize: slot.fontSize, base: base! });
         }
       }
+
+      const presetIds = new Set((theme.presets ?? []).map((p) => p.id));
+      const badPresets = Object.keys(presets ?? {}).filter((id) => !presetIds.has(id));
+      if (badPresets.length) {
+        throw new Error(
+          `sbuilder: no style preset named ${badPresets.map((b) => JSON.stringify(b)).join(', ')} on ` +
+            `this site. Its presets are: ${[...presetIds].join(', ')}.`,
+        );
+      }
+      for (const [id, decls] of Object.entries(presets ?? {})) {
+        patchLayers(theme.presets.find((p) => p.id === id)!, decls, `presets.${id}`, changes);
+      }
+
+      // A FAMILY ON A TEXT STYLE REACHES NOTHING A PRESET PINS. heading-default,
+      // text-default, text-dataset-default and button-default carry a literal
+      // `fontFamily: "Inter"`, so changing the style's family changed nothing on
+      // headings or buttons — measured on a live storefront. Named, not fixed:
+      // which presets should follow is the caller's design decision.
+      const families = new Set(
+        Object.values(text_styles ?? {})
+          .map((d) => d.fontFamily)
+          .filter((f): f is string => typeof f === 'string'),
+      );
+      const pinned = families.size
+        ? (theme.presets ?? []).flatMap((p) => {
+            const fam = [p.base?.fontFamily, ...Object.values(p.responsive ?? {}).map((r) => r.fontFamily)].find(
+              (f) => f && !f.startsWith('var(') && !families.has(f),
+            );
+            return fam ? [{ preset: p.id, fontFamily: fam }] : [];
+          })
+        : [];
+      const findings = {
+        ...(pinned.length ? { presets_pin_font: pinned } : {}),
+        ...(larger.length ? { responsive_larger: larger } : {}),
+        ...(pinned.length || larger.length
+          ? {
+              theme_note: ctx.notices.once(
+                'theme_layers',
+                'presets_pin_font: these presets carry their own literal fontFamily, which outranks ' +
+                  'the text style — patch them with `presets` to follow it. responsive_larger: a ' +
+                  'breakpoint override kept from before now sets a LARGER size than the new base; ' +
+                  'set it with a mobile/tablet/laptop object in the same text style.',
+              ),
+            }
+          : {}),
+      };
 
       // THE LOCALE IS WRITTEN LAST — after every check and after the theme PUT —
       // so a refused token, an empty theme or a failed theme write leaves the
@@ -315,7 +414,7 @@ export function registerThemeTools(server: McpServer, ctx: ToolContext): void {
       const lang = plan ? report(plan) : {};
       if (!changes.length) {
         if (plan && dry_run === false) await plan.write();
-        return text({ unchanged: true, ...lang, note: 'Every value named already holds that value.' });
+        return text({ unchanged: true, ...lang, ...findings, note: 'Every value named already holds that value.' });
       }
       // The document goes back WHOLE, so this can only ever be true — asserted
       // anyway, because the one failure this endpoint cannot take back is a
@@ -329,6 +428,7 @@ export function registerThemeTools(server: McpServer, ctx: ToolContext): void {
           dry_run: true,
           would_change: changes,
           ...lang,
+          ...findings,
           on: site_id,
           built_from: origin === 'site' ? "this site's saved theme" : 'the starter theme',
           note:
@@ -357,6 +457,7 @@ export function registerThemeTools(server: McpServer, ctx: ToolContext): void {
       return text({
         changed: changes,
         ...lang,
+        ...findings,
         on: site_id,
         next:
           'Republish the pages that should show it — a theme is compiled into each page\'s ' +

@@ -402,7 +402,7 @@ export function cascadeTail(node: Slots, written: Record<string, Record<string, 
     for (const k of Object.keys(written[bp] ?? {})) {
       if (node.style?.[k] !== undefined || node.responsive?.desktop?.style?.[k] !== undefined) continue;
       out.push({
-        once: `cascade-tail:${k}`,
+        once: `cascade-tail:${id ?? ""}:${k}`,
         note: {
           code: 'cascade_tail',
           ...(id ? { id } : {}),

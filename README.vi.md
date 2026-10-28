@@ -80,13 +80,13 @@ nhét ngược lại vào mọi bản cài.
 | `sb_connect` | Đăng nhập, liệt kê site tài khoản vận hành được, báo đang có credential nào |
 | `sb_site_list` | Liệt kê site tài khoản vận hành được |
 | `sb_api_find` | Tìm operation theo ý định — mỗi kết quả một dòng — rồi đọc call sheet của một operation theo id: schema tham số thật, credential cần dùng, và các trường body đọc thẳng từ handler decode chúng, mỗi trường mang theo cái bẫy doc comment của chính nó ghi lại |
-| `sb_api_call` | Chạy operation, hoặc bất kỳ route nào bằng method+path; mặc định chạy khô. Chọn field và phân trang kết quả phía MCP; `merge` cho PUT thay cả bản ghi, `If-Match`, `file` multipart |
+| `sb_api_call` | Chạy operation, hoặc bất kỳ route nào bằng method+path; mặc định chạy khô. Chọn field (đường dẫn có dấu chấm, trên danh sách lẫn câu trả lời ghi một object) và phân trang kết quả phía MCP; `merge` cho PUT thay cả bản ghi, `If-Match`, `file` multipart |
 | `sb_page_open` | Mở một trang để sửa và trả về outline — hoặc, với `form_id`, tài liệu trường của biểu mẫu (trường, giá trị mặc định, quy tắc trường phụ thuộc) |
 | `sb_outline` | Trang đang mở dạng cây nén — không bao giờ dump tài liệu thô |
 | `sb_node_read` | Một node đầy đủ, kèm cảnh báo nếu nó là global dùng chung |
 | `sb_catalog_search` | Tìm element theo việc nó cần làm, dùng chính AI hints của nền tảng |
 | `sb_traits_for` | Inspector của element — tab, nhóm, control và mỗi control khai báo sẵn ghi vào đâu — kèm AI hints, default và luật chứa con |
-| `sb_add` | Thêm một element — hoặc cả cây con lồng nhau — trong một lần gọi |
+| `sb_add` | Thêm một element — hoặc cả cây con lồng nhau — trong một lần gọi; filter được tạo kèm sẵn các dòng lấy từ catalogue |
 | `sb_set` | Ghi style/config/specials. Mặc định theo breakpoint |
 | `sb_move` | Chuyển node sang cha khác |
 | `sb_remove` | Xoá node và cả cây con |
@@ -98,19 +98,19 @@ nhét ngược lại vào mọi bản cài.
 | `sb_page_update` | Sửa tên, slug, cờ trang chủ, thứ tự, SEO (title, description, Open Graph, robots, meta tag, JSON-LD) và cờ chỉ-thành-viên của một trang — merge vào `settings`, nên các khoá không nhắc tới vẫn còn nguyên. Với trang template: đặt làm mặc định của loại, hoặc chọn sản phẩm/danh mục/bài viết nào hiển thị qua nó |
 | `sb_page_version` | Các điểm khôi phục của trang trên platform — liệt kê phiên bản có tên và lịch sử autosave, chụp draft, khôi phục |
 | `sb_code` | Các file mã tuỳ chỉnh của site (pixel theo dõi, analytics, widget chat, CSS toàn site) chèn vào mọi trang hoặc một trang — liệt kê, tạo, cập nhật gộp, xoá |
-| `sb_publish` | Biên dịch bản nháp thành trang live (lan sang global dùng chung), báo bản nào đã lên live, và với `verify` kiểm origin đã phục vụ đúng bản đó chưa; liệt kê các trang khác còn nháp chưa publish (`publish_drafts` publish luôn) |
+| `sb_publish` | Biên dịch bản nháp thành trang live (lan sang global dùng chung), báo bản nào đã lên live, và với `verify` kiểm origin đã phục vụ đúng bản đó chưa; liệt kê các trang khác còn nháp chưa publish và các trang chưa từng publish (`publish_drafts` publish luôn cả hai) |
 | `sb_page_state` | Ba bản sao của một trang, bản nào là bản nào — bản NHÁP canvas editor hiển thị, dòng PUBLISHED storefront phục vụ, và bản phiên này giữ — kèm dự báo editor có render canvas TRẮNG không, và các điểm phục hồi nằm ở đâu |
 | `sb_page_repair` | Đổi gốc trang khác `ROOT` (do seed cũ để lại) về `ROOT` để mọi bản editor vẽ được — một trang hoặc cả site |
 | `sb_review` | Mọi khiếm khuyết người xem sẽ thấy, kèm lệnh sửa từng cái, và năm khoảng trống chắn giữa cửa hàng với một đơn đã thanh toán |
 | `sb_media_list` | Thư viện ảnh của site |
-| `sb_media_upload` | Thêm ảnh và lấy URL — file trên máy, một URL để nền tảng tự tải, hoặc TÌM ảnh chụp thật để đọc mô tả rồi chọn, một hoặc nhiều tấm một lượt |
+| `sb_media_upload` | Thêm ảnh và lấy URL — file trên máy, một URL để nền tảng tự tải, hoặc TÌM ảnh chụp thật để đọc mô tả rồi chọn, một hoặc nhiều tấm một lượt; `paths` upload nhiều file trên máy trong một lần gọi |
 | `sb_live_join` | Vào phòng live-edit của editor như một peer nhìn thấy được — sửa gì hiện ngay |
 | `sb_look` | Lưu, render, trả về ảnh chụp kèm box đo được của node và lỗi bố cục đo trên bản render |
 | `sb_event` | Gắn click action cho một node — mở giỏ, sang trang, mở pop-up |
 | `sb_bind` | Gắn nội dung một node vào dữ liệu cửa hàng thật, hoặc biến một nút thành nút thêm vào giỏ |
 | `sb_import` | Đọc một trang từ URL công khai bất kỳ và thêm cấu trúc + nội dung của nó vào trang đang mở dưới dạng element thật, mang token của CHÍNH trang này — là dịch lại, không phải sao chép |
 | `sb_import_site` | Đọc CẢ website từ một URL — sitemap của nó, hoặc các link trên trang đó — và tạo cho mỗi trang tìm được một trang nháp riêng ở đây, dựng bằng token của site này; màu và thang chữ của trang gốc cũng được vá vào THEME của site này, nên đây không còn thuần là đọc |
-| `sb_theme` | Đọc hoặc vá bảng màu và thang chữ của site — tầng mà mọi style preset phân giải từ đó, nên một token thay áo cho mọi trang; `locale` đặt ngôn ngữ của site |
+| `sb_theme` | Đọc hoặc vá bảng màu và thang chữ của site — tầng mà mọi style preset phân giải từ đó, nên một token thay áo cho mọi trang; ghi đè text style theo breakpoint và vá `presets` của element; `locale` đặt ngôn ngữ của site |
 | `sb_translate` | Dịch site như bảng Đa ngôn ngữ của editor — bật ngôn ngữ, liệt kê chuỗi của một trang theo missing / done / outdated, ghi hoặc dịch máy, duyệt dòng do máy dịch |
 | `sb_store` | Chạy một luồng cửa hàng bắt buộc đúng thứ tự — `checkout` (bốn lệnh ghi tạo nên trang thanh toán), `checkout_sync` (đưa phương thức thanh toán và giao hàng hiện tại vào mọi form đặt hàng đã có, publish lại trang thanh toán), `form` (một trong 17 template của nền tảng kèm field document của nó), `chrome` (một header hoặc footer dùng chung trên menu thật của site — tên site dẫn về trang chủ, menu desktop, drawer mobile, ô tìm kiếm, icon giỏ hàng và tài khoản), `menu` (một node menu bind vào menu của site, link đã phân giải), `overlay_attach` (một pop-up hay quick view trên trang đang mở), `cart` (ngăn giỏ hàng của site, khi chưa có; `relocalize` đưa ngăn giỏ đã có về ngôn ngữ của site), `app` (một app dựng sẵn kèm những trang nó cần), và `global_attach` / `global_detach` (đặt một section dùng chung ĐÃ CÓ lên trang đang mở, hoặc gỡ ra), `global_promote` (biến một section trên trang thành section dùng chung MỚI) và `template_save` (lưu một section làm mẫu dùng lại) |
 | `sb_undo` | Hoàn tác / làm lại các thao tác ghi trong phiên — chỉnh sửa trang, form và PUT qua `sb_api_call`; trang bị từ chối nếu người khác đã lưu sau đó. Version và history của nền tảng (`sb_page_version`) sống lâu hơn process này |

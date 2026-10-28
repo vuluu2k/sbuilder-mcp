@@ -808,3 +808,9 @@ platform treats an unproven guard as indistinguishable from an absent one.
   replaces in place), the shared-master warning repeated per node (now once per master per
   process, `shared`), `no_h1` / form-link seed noise inside a FORM document, and no word when
   a narrower-only style key rides the cascade tail to desktop (`cascade_tail`).
+- **A FILTER RENDERS ONLY `specials.filterValues`, and the EDITOR writes them on save.**
+  `filtershared.optionsOf` reads nothing else; FilterConfigDialog's `onSave` materializes the
+  rows from `GET /filter-facets` (`withDepths`: category depth + slug). So every filter `sb_add`
+  minted rendered an empty box. `src/domains/site/filtervalues.ts` is that save for mode `all`;
+  `sb_set` re-derives on `filterSource`/`filterAxis`/`filterRanges`. Price rows are
+  `<fromCents>-<toCents>` (open end `<from>-`, `predicate.ts matchesRange`); `..` matches nothing.

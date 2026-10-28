@@ -118,4 +118,80 @@ describe('sb_theme', () => {
     expect(out.unchanged).toBe(true);
     expect(sent.every((s) => s.method !== 'PUT')).toBe(true);
   });
+
+  // THE STARTER IS THE FIXTURE: its presets carry the literal `fontFamily:
+  // "Inter"` a real site was measured carrying, and heading-3 its mobile 24px.
+  const starter = () => structuredClone(STARTER_THEME);
+  const putTheme = (sent: Array<{ method?: string; body?: unknown }>) =>
+    (sent.find((s) => s.method === 'PUT')!.body as { theme: typeof STARTER_THEME }).theme;
+
+  it('presets: patches a preset base and its responsive layer, keeping everything else', async () => {
+    const { out, sent } = await call(
+      {
+        presets: { 'heading-default': { fontFamily: 'Space Grotesk', mobile: { fontSize: '28px' } } },
+        dry_run: false,
+      },
+      starter(),
+    );
+    const p = putTheme(sent).presets.find((x) => x.id === 'heading-default')!;
+    expect(p.base.fontFamily).toBe('Space Grotesk');
+    expect(p.base.color).toBe(STARTER_THEME.presets.find((x) => x.id === 'heading-default')!.base.color);
+    expect(p.responsive!.mobile.fontSize).toBe('28px');
+    expect(p.responsive!.tablet.fontSize).toBe('40px');
+    expect(putTheme(sent).presets).toHaveLength(STARTER_THEME.presets.length);
+    expect(out.changed).toEqual([
+      { what: 'presets.heading-default.fontFamily', from: 'Inter', to: 'Space Grotesk' },
+      { what: 'presets.heading-default.mobile.fontSize', from: '30px', to: '28px' },
+    ]);
+  });
+
+  it('presets: refuses an id the site does not have', async () => {
+    const { out, isError } = await call({ presets: { 'heading-defualt': { fontSize: '1px' } } }, starter());
+    expect(isError).toBe(true);
+    expect(out.error).toMatch(/heading-default/);
+  });
+
+  it('text_styles fontFamily: names the presets still pinning another family', async () => {
+    const { out } = await call({ text_styles: { 'heading-3': { fontFamily: 'Be Vietnam Pro' } } }, starter());
+    const ids = out.presets_pin_font.map((p: { preset: string }) => p.preset);
+    expect(ids).toEqual(expect.arrayContaining(['heading-default', 'text-default', 'text-dataset-default', 'button-default']));
+    expect(out.presets_pin_font.find((p: { preset: string }) => p.preset === 'heading-default').fontFamily).toBe('Inter');
+  });
+
+  it('text_styles fontFamily: a preset patched in the same call is not reported', async () => {
+    const { out } = await call(
+      {
+        text_styles: { 'heading-3': { fontFamily: 'Be Vietnam Pro' } },
+        presets: { 'heading-default': { fontFamily: 'Be Vietnam Pro' } },
+      },
+      starter(),
+    );
+    const ids = out.presets_pin_font.map((p: { preset: string }) => p.preset);
+    expect(ids).not.toContain('heading-default');
+  });
+
+  it('text_styles: writes mobile/tablet/laptop overrides into responsive', async () => {
+    const { out, sent } = await call(
+      { text_styles: { 'heading-3': { fontSize: '20px', mobile: { fontSize: '18px' } } }, dry_run: false },
+      starter(),
+    );
+    const s = putTheme(sent).textStyles.find((t) => t.slug === 'heading-3')!;
+    expect(s.base!.fontSize).toBe('20px');
+    expect(s.responsive!.mobile.fontSize).toBe('18px');
+    expect(out.changed).toContainEqual({ what: 'textStyles.heading-3.mobile.fontSize', from: '24px', to: '18px' });
+    expect(out.responsive_larger).toBeUndefined();
+  });
+
+  it('text_styles: warns when an untouched responsive fontSize now exceeds the new base', async () => {
+    // Measured: heading-3 base set to 20px left the starter's mobile 24px in
+    // place, so the phone heading was LARGER than the desktop one.
+    const { out } = await call({ text_styles: { 'heading-3': { fontSize: '20px' } } }, starter());
+    expect(out.responsive_larger).toEqual([{ style: 'heading-3', breakpoint: 'mobile', fontSize: '24px', base: '20px' }]);
+  });
+
+  it('text_styles: refuses a breakpoint override that is not an object, or an unknown breakpoint', async () => {
+    const bad = await call({ text_styles: { 'heading-3': { phone: { fontSize: '1px' } } } }, starter());
+    expect(bad.isError).toBe(true);
+    expect(bad.out.error).toMatch(/mobile, tablet, laptop/);
+  });
 });

@@ -180,6 +180,65 @@ describe('shapeResponse()', () => {
     expect(out.truncated.hint).toMatch(/pick/);
   });
 
+  // Shaped off products.Product's json tags: a write answers WriteItem
+  // `{product:{…}}` (3–5 KB with the description HTML), and POST
+  // …/product-categories/{id}/products answers WriteList `{products:[…],total}`
+  // — the whole category, on every link.
+  const product = (id: string) => ({
+    id,
+    siteId: 's1',
+    name: `Laptop ${id}`,
+    slug: `laptop-${id}`,
+    sku: '',
+    description: '<p>' + 'spec '.repeat(400) + '</p>',
+    images: ['https://cdn/x.png'],
+    status: 'active',
+    tags: [],
+    attributes: [{ name: 'RAM', values: ['16GB', '32GB'] }],
+    variants: [
+      { id: `${id}_v1`, sku: 'A', options: { RAM: '16GB' }, priceCents: 2_500_000_000, stock: 3 },
+      { id: `${id}_v2`, sku: 'B', options: { RAM: '32GB' }, priceCents: 3_000_000_000, stock: 1 },
+    ],
+  });
+
+  it('pick takes dotted paths inside a single-object write answer', () => {
+    expect(shapeResponse({ product: product('p1') }, { pick: ['id', 'slug', 'variants.id'] })).toEqual({
+      product: { id: 'p1', slug: 'laptop-p1', variants: [{ id: 'p1_v1' }, { id: 'p1_v2' }] },
+    });
+  });
+
+  it('pick takes the envelope key itself as a dotted head', () => {
+    expect(shapeResponse({ product: product('p1') }, { pick: ['product.id', 'product.variants.priceCents'] })).toEqual({
+      product: { id: 'p1', variants: [{ priceCents: 2_500_000_000 }, { priceCents: 3_000_000_000 }] },
+    });
+  });
+
+  it('pick with dotted paths on a list under an envelope key keeps total', () => {
+    const raw = { products: [product('p1'), product('p2')], total: 2 };
+    expect(shapeResponse(raw, { pick: ['id', 'variants.id'] })).toEqual({
+      products: [
+        { id: 'p1', variants: [{ id: 'p1_v1' }, { id: 'p1_v2' }] },
+        { id: 'p2', variants: [{ id: 'p2_v1' }, { id: 'p2_v2' }] },
+      ],
+      total: 2,
+    });
+  });
+
+  it('a real POST through callOperation answers the picked shape, not the 5 KB record', async () => {
+    const f = vi.fn(
+      async () =>
+        new Response(JSON.stringify({ product: product('p9') }), {
+          status: 201,
+          headers: { 'content-type': 'application/json' },
+        }),
+    ) as unknown as typeof fetch;
+    const out = await callOperation(
+      { ...(await ctxWith(f, 'wbk_k')), notices: new Notices() } as ToolContext,
+      { method: 'POST', path: '/api/sites/s1/products', body: { name: 'Laptop p9' }, pick: ['id', 'variants.id'], dry_run: false },
+    );
+    expect(out).toEqual({ product: { id: 'p9', variants: [{ id: 'p9_v1' }, { id: 'p9_v2' }] } });
+  });
+
   it('pick reaches inside a single-item answer', () => {
     expect(shapeResponse({ page: { id: 'p1', name: 'Home', settings: {} } }, { pick: ['id'] })).toEqual({ page: { id: 'p1' } });
   });

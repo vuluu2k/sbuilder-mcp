@@ -83,13 +83,13 @@ in this client: one would put the very key the platform exists to hold back into
 | `sb_connect` | Log in, list the sites this account can operate, report which credentials are present |
 | `sb_site_list` | List the sites this account can operate |
 | `sb_api_find` | Find API operations by intent — one line per match — then read one operation's call sheet by id: real parameter schemas, the credential it needs, and the body's fields read off the handler that decodes them, each carrying the trap its own doc comment records |
-| `sb_api_call` | Execute an operation, or any route by method+path; dry run by default. Field selection and local result pagination; `merge` for whole-record PUTs, `If-Match`, multipart `file` |
+| `sb_api_call` | Execute an operation, or any route by method+path; dry run by default. Field selection (dotted paths, on lists and single-object write answers) and local result pagination; `merge` for whole-record PUTs, `If-Match`, multipart `file` |
 | `sb_page_open` | Open a page for editing and return its outline — or, with `form_id`, a form's field document (fields, defaults, dependent-field rules) |
 | `sb_outline` | The open page as a compressed tree — never a raw document dump |
 | `sb_node_read` | One node in full, with a warning if it is a shared global |
 | `sb_catalog_search` | Find an element by what it should do, using the platform's own AI hints |
 | `sb_traits_for` | An element's inspector — tabs, groups, controls and what each declared one writes — plus its AI hints, defaults and containment rules |
-| `sb_add` | Add an element — or a whole nested subtree — in one call |
+| `sb_add` | Add an element — or a whole nested subtree — in one call; a filter arrives with its option rows read from the catalogue |
 | `sb_set` | Write style/config/specials. Per breakpoint by default |
 | `sb_move` | Move a node to another parent |
 | `sb_remove` | Remove a node and its subtree |
@@ -101,19 +101,19 @@ in this client: one would put the very key the platform exists to hold back into
 | `sb_page_update` | Edit a page's name, slug, home flag, order, SEO (title, description, Open Graph, robots, meta tags, JSON-LD) and members-only flag — merged into `settings`, so the keys it does not name survive. On a template page: make it the type's default, or choose which products/categories/posts render through it |
 | `sb_page_version` | A page's platform recovery points — list named versions and autosave history, snapshot the draft, restore one |
 | `sb_code` | The site's custom code files (tracking pixels, analytics, chat widgets, site CSS) injected into every page or one — list, create, merge-update, remove |
-| `sb_publish` | Compile the draft into the live page (cascades to shared globals), report which revision went live, and with `verify` check the origin is serving it; lists other pages with unpublished drafts (`publish_drafts` publishes them too) |
+| `sb_publish` | Compile the draft into the live page (cascades to shared globals), report which revision went live, and with `verify` check the origin is serving it; lists other pages with unpublished drafts and never-published pages (`publish_drafts` publishes both) |
 | `sb_page_state` | Which of a page's three copies is which — the DRAFT the editor canvas shows, the PUBLISHED row the storefront serves, and this session's — plus whether the editor will render the canvas BLANK, and where the recovery points are |
 | `sb_page_repair` | Rename a page root that is not `ROOT` (left by older seeds) so every editor build draws it — one page or the whole site |
 | `sb_review` | Every defect a visitor would see, each with its fix, plus the five gaps between this store and a paid order |
 | `sb_media_list` | The site's media library |
-| `sb_media_upload` | Add an image and get its URL — a local path, a URL the platform fetches, or a SEARCH for real photographs you read and pick from, one or several at a time |
+| `sb_media_upload` | Add an image and get its URL — a local path, a URL the platform fetches, or a SEARCH for real photographs you read and pick from, one or several at a time; `paths` uploads many local files in one call |
 | `sb_live_join` | Join the editor's live-edit room as a visible peer — edits then appear live |
 | `sb_look` | Save, render, and return screenshots plus measured node boxes and layout defects measured on the render |
 | `sb_event` | Give a node a click action — open the cart, go to a page, open a pop-up |
 | `sb_bind` | Bind a node's content to real store data, or make a button add to the cart |
 | `sb_import` | Read a page from any public URL and add its structure and content to the open page as real elements, styled with THIS page's own tokens — a translation, not a clone |
 | `sb_import_site` | Read a WHOLE site from one URL — its sitemap, or the links on that page — and give each page found its own draft page here, built from this site's tokens; the entry page's own colours and type scale also patch into this SITE'S theme, so it stops being purely a read |
-| `sb_theme` | Read or patch the site's palette and type scale — the layer every style preset resolves from, so one token repaints every page; `locale` sets the site's language |
+| `sb_theme` | Read or patch the site's palette and type scale — the layer every style preset resolves from, so one token repaints every page; per-breakpoint text-style overrides and element style `presets`; `locale` sets the site's language |
 | `sb_translate` | Translate a site the way the editor's Multilingual panel does — enable languages, list a page's strings as missing / done / outdated, write or machine-fill them, approve machine rows |
 | `sb_store` | Run a store flow that must happen in a fixed order — `checkout` (the four writes that make a working one), `checkout_sync` (the store's current payment and delivery methods into every existing order form, checkout page republished), `form` (any of the platform's 17 templates with its own field document), `chrome` (one shared header or footer on a real site menu — site name linked home, desktop menu, mobile drawer, search, cart and account icons), `menu` (a menu node bound to the site's menu, its links resolved), `overlay_attach` (a pop-up or quick view on the open page), `cart` (the site's cart drawer, when it has none; `relocalize` puts an existing one in the site's language) and `app` (a built-in app plus the pages it needs), `global_attach` / `global_detach` (put an EXISTING shared section on the open page, or take it off), `global_promote` (make a section on the page a NEW shared section) and `template_save` (save a section as a reusable template) |
 | `sb_undo` | Undo / redo this session's writes — page and form edits and `sb_api_call` PUTs; a page is refused if someone else saved it since. The platform's versions and history (`sb_page_version`) outlive this process |

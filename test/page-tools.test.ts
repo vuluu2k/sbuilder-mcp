@@ -151,13 +151,26 @@ describe('sb_publish: other pages with unpublished drafts', () => {
     const { f, posts } = site();
     const dry = JSON.parse(await callTool(f, 'sb_publish', { site_id: 's1', page_id: 'pg_1', publish_drafts: true }));
     expect(dry.dry_run).toBe(true);
-    expect(dry.body.pageIds).toEqual(['pg_1', 'pg_a']);
+    expect(dry.body.pageIds).toEqual(['pg_1', 'pg_a', 'pg_c']);
     expect(posts).toEqual([]);
     const out = JSON.parse(
       await callTool(f, 'sb_publish', { site_id: 's1', page_id: 'pg_1', publish_drafts: true, dry_run: false }),
     );
-    expect(posts[0].pageIds).toEqual(['pg_1', 'pg_a']);
+    expect(posts[0].pageIds).toEqual(['pg_1', 'pg_a', 'pg_c']);
     expect(out.unpublished_drafts).toBeUndefined();
+    expect(out.first_publish).toBeUndefined();
+  });
+
+  it('a NEVER-published page is listed as first_publish and publish_drafts includes it', async () => {
+    // A fresh product/category/search page from sb_page_create has no live copy
+    // at all — exactly the pages an agent just built.
+    const { f, posts } = site();
+    const dry = JSON.parse(await callTool(f, 'sb_publish', { site_id: 's1', page_id: 'pg_1' }));
+    expect(dry.first_publish.map((p: any) => p.pageId)).toEqual(['pg_c']);
+    expect(dry.unpublished_drafts.map((p: any) => p.pageId)).toEqual(['pg_a']);
+    const out = JSON.parse(await callTool(f, 'sb_publish', { site_id: 's1', page_id: 'pg_1', dry_run: false }));
+    expect(posts[0].pageIds).toEqual(['pg_1']);
+    expect(out.first_publish.map((p: any) => p.pageId)).toEqual(['pg_c']);
   });
 });
 

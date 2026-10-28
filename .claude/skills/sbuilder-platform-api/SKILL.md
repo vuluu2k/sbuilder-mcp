@@ -445,3 +445,9 @@ a measured need) and `sb_bind`, which belongs with Phase 3's binding work.
   order" with no `band_order` to match on, and no status to tell a 409 from a 500. The code and
   the status now ride in the message as a SUFFIX — `… [code: band_order, http 409]` — so the
   platform's own sentence still leads and every existing assertion on it still holds.
+
+- **A THEME PRESET PINS ITS OWN LITERALS, so a text-style change can reach nothing.** The
+  starter's `heading-default`, `text-default`, `text-dataset-default` and `button-default` carry
+  `fontFamily: "Inter"`, which outranks the text style; measured live, a `text_styles` font change
+  left headings and buttons in Inter. `sb_theme presets` patches them and `presets_pin_font` names
+  them. Text styles also keep responsive overrides (heading-3 mobile 24px) a base-only patch leaves.

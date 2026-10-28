@@ -68,6 +68,7 @@ import type { LiveSession } from '../live/session.js';
 import type { Box } from '../vision/shoot.js';
 import { siteFor, type ToolContext } from './context.js';
 import { projectList, PAGE_FIELDS, TEMPLATE_FIELDS } from './project.js';
+import { FILTER_VALUE_TYPES, RESOURCE_KEYS, filterPatches, wantsRows } from '../domains/site/filtervalues.js';
 
 /**
  * Findings, in the shape every surface returns them.
@@ -1636,6 +1637,24 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
       walkMoved(spec);
       const moved = [...movedKeys].map(([k, bp]) => say(`base-only:${k}`, baseOnlyNote([k], bp))).filter((n): n is string => !!n);
       const base_only = moved.length ? { base_only: moved.join(' ') } : {};
+      // A FILTER'S ROWS ARE WHAT IT RENDERS, and the editor writes them on save
+      // from the facet read — so a filter added here was an empty box. Gated on
+      // the spec naming a filter type, so no other add pays for the preview or
+      // the read (and no offline path reaches the network).
+      let filters: Awaited<ReturnType<typeof filterPatches>>['report'] = [];
+      if (types.some((t) => FILTER_VALUE_TYPES.has(t))) {
+        const after = d.preview(patches).doc.nodes;
+        const targets = ids
+          .map((id) => ({ id, node: after[id] }))
+          .filter(({ node }) => node && wantsRows(node.data.type, (node.specials ?? {}) as Record<string, unknown>))
+          .map(({ id, node }) => ({ id, specials: (node.specials ?? {}) as Record<string, unknown> }));
+        if (targets.length) {
+          const got = await filterPatches(ctx, session.site(), targets);
+          patches.push(...got.patches);
+          filters = got.report;
+        }
+      }
+      const filterOut = filters.length ? { filters } : {};
 
       if (dry_run !== false) {
         const refuse = session.wouldRefuse(patches);
@@ -1647,11 +1666,12 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
           ...(inert ? { inert } : {}),
           ...checks,
           ...base_only,
+          ...filterOut,
           ...forced,
         });
       }
       await session.applyAndSave(patches);
-      return text({ added: ids, rev: d.rev, ...(inert ? { inert } : {}), ...checks, ...base_only, ...forced });
+      return text({ added: ids, rev: d.rev, ...(inert ? { inert } : {}), ...checks, ...base_only, ...filterOut, ...forced });
     },
   );
 
@@ -1718,6 +1738,16 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
       const guard: GuardOpts = { force, forced: [] };
       const { patches, touched } = setMany(d, batch, guard);
       const forced = guard.forced!.length ? { forced: guard.forced } : {};
+      // A FILTER RE-SOURCED KEEPS THE OLD SOURCE'S ROWS unless they are
+      // re-derived — a brand filter listing categories. Same post-step as sb_add.
+      const resourced = batch
+        .filter((e) => e.namespace === 'specials' && !('filterValues' in e.keys) && RESOURCE_KEYS.some((k) => k in e.keys))
+        .map((e) => ({ id: e.id, specials: { ...(d.doc.nodes[e.id]?.specials ?? {}), ...e.keys } as Record<string, unknown> }))
+        .filter((t) => wantsRows(d.doc.nodes[t.id]?.data.type ?? '', t.specials, true));
+      // Its patches join the batch only on the real write: a dry run's `patches`
+      // never echoes what a GET read (rule 8) — `filters` says the row counts.
+      const refiltered = resourced.length ? await filterPatches(ctx, session.site(), resourced) : null;
+      const filterOut = refiltered?.report.length ? { filters: refiltered.report } : {};
       // WHERE A HOVER ACTUALLY WENT. Routing it silently would leave a caller
       // who reads the node back looking for keys in a slot they never wrote to.
       //
@@ -1876,12 +1906,14 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
           ...(presetNote ? { preset: presetNote } : {}),
           ...checks,
           ...(skinNote ? { field_skin: skinNote } : {}),
+          ...filterOut,
           ...(Object.keys(hostNotes).length ? { hover_host: hostNotes } : {}),
           ...(note ? { note } : {}),
           ...forced,
         });
       }
       const warnings: Record<string, string> = stuck();
+      if (refiltered) patches.push(...refiltered.patches);
       await session.applyAndSave(patches);
       // ONCE PER SHARED MASTER PER PROCESS, not once per node: the fact is about
       // the header or the drawer, and a batch touching one button twice used to
@@ -1903,6 +1935,7 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
           ...(presetNote ? { preset: presetNote } : {}),
           ...checks,
           ...(skinNote ? { field_skin: skinNote } : {}),
+          ...filterOut,
           ...(hostNotes[batch[0].id] ? { hover_host: hostNotes[batch[0].id] } : {}),
           ...forced,
         });
@@ -1917,6 +1950,7 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
         ...(presetNote ? { preset: presetNote } : {}),
         ...checks,
         ...(skinNote ? { field_skin: skinNote } : {}),
+        ...filterOut,
         ...(Object.keys(hostNotes).length ? { hover_host: hostNotes } : {}),
         ...forced,
       });
@@ -2791,7 +2825,7 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
         publish_drafts: z
           .boolean()
           .optional()
-          .describe('Also publish every other page whose draft is ahead of its live copy (listed as unpublished_drafts)'),
+          .describe('Also publish the pages listed as unpublished_drafts and first_publish'),
       },
       annotations: { readOnlyHint: false, destructiveHint: true, idempotentHint: true },
     },
@@ -2808,9 +2842,14 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
       // "draft differs from published" flag; `updatedAt` is bumped by every
       // draft save (touchPage) and `publishedAt` by publish, so this is the
       // same timestamp comparison sb_page_state makes — a metadata edit counts
-      // too. A never-published page is not listed: publishing it is a choice,
-      // not a forgotten step. A failed read never fails the publish.
-      let drafts: Array<{ pageId: string; name: string; slug: string }> = [];
+      // too. A NEVER-published page (no `publishedAt`) has no live copy to be
+      // ahead of, and it is exactly what an agent just built with
+      // sb_page_create — product, category, search, account — so it is listed
+      // apart as `first_publish` and publish_drafts includes it. A failed read
+      // never fails the publish.
+      type Row = { pageId: string; name: string; slug: string };
+      let drafts: Row[] = [];
+      let fresh: Row[] = [];
       try {
         const got = (await request({
           base: ctx.base,
@@ -2819,23 +2858,33 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
           token: siteToken(ctx),
           fetchImpl: ctx.fetchImpl,
         })) as { pages?: Array<Record<string, unknown>> };
-        drafts = (got.pages ?? [])
-          .filter((p) => p.id !== page_id)
-          .filter((p) => driftOf(p.updatedAt as string | undefined, p.publishedAt as string | undefined).state === 'draft_ahead')
-          .map((p) => ({ pageId: String(p.id), name: String(p.name ?? ''), slug: String(p.slug ?? '') }));
+        const others = (got.pages ?? []).filter((p) => p.id !== page_id);
+        const row = (p: Record<string, unknown>): Row => ({ pageId: String(p.id), name: String(p.name ?? ''), slug: String(p.slug ?? '') });
+        const state = (p: Record<string, unknown>) =>
+          driftOf(p.updatedAt as string | undefined, p.publishedAt as string | undefined).state;
+        drafts = others.filter((p) => state(p) === 'draft_ahead').map(row);
+        fresh = others.filter((p) => state(p) === 'never_published').map(row);
       } catch {
         drafts = [];
+        fresh = [];
       }
-      const body = { pageIds: [page_id, ...(publish_drafts ? drafts.map((d) => d.pageId) : [])] };
-      const draftNote = (left: typeof drafts) =>
-        left.length
+      const body = { pageIds: [page_id, ...(publish_drafts ? [...drafts, ...fresh].map((d) => d.pageId) : [])] };
+      const draftNote = (left: Row[], unborn: Row[]) => ({
+        ...(left.length
           ? {
               unpublished_drafts: left,
               drafts_note: 'Draft saved after its last publish (updatedAt past publishedAt — no platform flag says so). publish_drafts:true publishes them too.',
             }
-          : {};
+          : {}),
+        ...(unborn.length
+          ? {
+              first_publish: unborn,
+              first_publish_note: 'Never published, so its URL 404s. publish_drafts:true publishes these too.',
+            }
+          : {}),
+      });
       if (dry_run !== false) {
-        return text({ dry_run: true, would_post: path, body, ...draftNote(drafts) });
+        return text({ dry_run: true, would_post: path, body, ...draftNote(drafts, fresh) });
       }
       const res = (await request({
         base: ctx.base,
@@ -2905,7 +2954,10 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
       }
       return text({
         published,
-        ...draftNote(drafts.filter((d) => !published.some((p) => p.pageId === d.pageId))),
+        ...draftNote(
+          drafts.filter((d) => !published.some((p) => p.pageId === d.pageId)),
+          fresh.filter((d) => !published.some((p) => p.pageId === d.pageId)),
+        ),
         ...(live ? { live } : {}),
         ...(published.length !== (res.total ?? published.length) ? { total: res.total } : {}),
         ...(landed

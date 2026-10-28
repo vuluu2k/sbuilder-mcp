@@ -212,7 +212,7 @@ Chạy một operation tìm được bằng `sb_api_find`.
 | `query` | object? | Query string; giá trị `undefined` bị bỏ |
 | `body` | any? | Thân yêu cầu |
 | `dry_run` | boolean? | **Mặc định `true`** — không gửi gì, trả về bản xem trước đã che bí mật |
-| `pick` | string[]? | Các field giữ lại trên mỗi item của một câu trả lời dạng danh sách (hoặc trên item duy nhất của câu trả lời `{ page: {…} }`) |
+| `pick` | string[]? | Các field giữ lại trên mỗi item của câu trả lời dạng danh sách — trần hoặc nằm dưới key bao (`{ products: […], total }`) — hoặc trên object duy nhất của câu trả lời ghi (`{ product: {…} }`). Đường dẫn có dấu chấm giữ một phần object lồng hoặc mọi phần tử của danh sách lồng: `variants.id`, `product.id` |
 | `max_items` | number? | Trần số item của một danh sách, áp sau phân trang của chính nền tảng |
 | `item_offset` | integer? | Bỏ qua số item này trong danh sách trả về (mặc định 0); giá trị dương chỉ dùng với GET/HEAD |
 | `site_id` | string? | Điền `{siteId}` giống `site_id` của mọi tool khác (mặc định lấy `SB_SITE`); `path_params.siteId` truyền rõ thì được ưu tiên |
@@ -506,6 +506,23 @@ product dùng: một `pricing-dataset` trần sinh ra kèm lá `kind:"price"` v�
 mỗi lá giữ typography riêng — nên giá gạch ngang được style trên lá của nó. Meta của element ghi
 `isContainer:false` (người dùng không THẢ vào được), và `sb_add` / `sb_move` chỉ có đúng một ngoại
 lệ: lá `price` / `compare_price` dưới cha `prices`. Node thêm với kind khác sinh ra trần.
+
+**Một FILTER được tạo ra kèm sẵn các DÒNG mà nó render.** Renderer Go chỉ đọc
+`specials.filterValues`; hộp thoại filter của editor ghi các dòng đó lúc lưu, lấy từ
+`GET /api/sites/{siteId}/filter-facets`, nên `filter-checkbox` / `filter-radio` / `filter-tag` /
+`filter-color` / `select` thêm từ đây trước kia không render gì. Khi thêm một filter với
+`filterValueMode` `all` (mặc định) và chưa có `filterValues`, các dòng được dựng như hộp thoại:
+`category` theo thứ tự cây kèm `depth` và `slug`, `brand`, `tag`, và `attribute` (cần
+`specials.filterAxis` = tên trục tuỳ chọn); `availability` là cặp cố định `in_stock` /
+`out_of_stock`, nhãn theo ngôn ngữ của site (vi "Còn hàng"/"Hết hàng", en "In stock"/"Out of
+stock"); `price` dựng một dòng cho mỗi mục `specials.filterRanges` (`[{ fromCents, toCents|null }]`,
+đơn vị nhỏ nhất) với giá trị `<fromCents>-<toCents>` (đầu mở `<fromCents>-`, đúng ngữ pháp
+storefront lọc theo) và nhãn theo tiền tệ của site. Dòng trong `filterExcluded` được ghi ở trạng
+thái tắt, `filterColors` được tô vào. Kết quả liệt kê `filters: [{ id, source, rows }]`, hoặc
+`{ id, source, note }` khi không dựng được — filter giá thiếu khoảng, filter thuộc tính thiếu trục,
+đọc facets lỗi (không bao giờ làm hỏng lệnh thêm). `sort` và các nguồn blog/khoá học không được
+dựng. `sb_set` dựng lại các dòng khi `filterSource`, `filterAxis` hay `filterRanges` đổi (trừ khi
+cùng lần gọi đó ghi `filterValues`); dry run của nó báo số dòng, không in các dòng.
 
 ## `sb_set`
 
@@ -1304,7 +1321,9 @@ bỏ, vì publish lan và trả chúng về là đổ markup của mọi trang �
 (`pageId`, `name`, `slug`) — cả dry run lẫn chạy thật — và `publish_drafts: true` đưa chúng vào
 cùng lần publish. Nền tảng không có trường "nháp khác bản đã publish": đây là `updatedAt`
 (tăng mỗi lần lưu nháp) sau `publishedAt`, đúng phép so của `sb_page_state`, nên một lần sửa
-chỉ metadata cũng tính. Trang chưa từng publish không được liệt kê.
+chỉ metadata cũng tính. Trang CHƯA TỪNG publish (không có `publishedAt` — trang sản phẩm, danh
+mục, tìm kiếm hay tài khoản mà `sb_page_create` vừa tạo) không có bản live để so, nên được liệt kê
+riêng ở `first_publish`, và `publish_drafts: true` cũng publish luôn chúng.
 
 **`verify: true` rồi tải trang live và nói origin đã phục vụ bản đó chưa.** Một mã 200 chứng
 minh nền tảng đã lưu một dòng, không chứng minh một người xem đang được phục vụ nó:
@@ -1723,6 +1742,12 @@ lặng** thay vì báo một khoảng trống cửa hàng có thể không có. 
 đúng là cảnh báo người ta học cách bỏ qua.
 
 ## `sb_media_list` / `sb_media_upload`
+
+**`paths: string[]` upload nhiều file trên máy trong một lần gọi** — nhập ảnh cho một danh mục
+từng tốn 31 lượt gọi, mỗi lượt một `path`. Mỗi file là một lần upload riêng, đi qua đúng lớp
+chặn file cục bộ của `path`, nên file bị từ chối hay lỗi nằm trong `failed: [{ path, why }]` cạnh
+những file đã vào, và cả lô vẫn chạy tiếp. Kết quả gọn — `uploaded: [{ name, url, width,
+height }]` — và `dry_run` vẫn mặc định `true` (`would_upload` liệt kê các path).
 
 **Nó còn TÌM được ảnh.** `query` trả về ảnh chụp thật, mỗi tấm kèm mô tả do chính người chụp
 viết — "Cute child wearing a black t-shirt and hat standing near a doorway" — và `pick: <id>`
@@ -2281,6 +2306,22 @@ không có tham số nào diễn đạt được ý "bỏ hết phần còn lạ
 
 Id token hoặc slug mà site không có sẽ bị **từ chối**, kèm danh sách những cái có thật: mọi preset
 phân giải qua các id đó, nên một id bịa ra sẽ được lưu và không gì đọc.
+
+**Breakpoint.** Trong một text style (hoặc preset), key tên `mobile`, `tablet` hay `laptop` chứa
+một object sẽ ghi phần ghi đè của breakpoint đó — `{ "heading-3": { "fontSize": "20px",
+"mobile": { "fontSize": "18px" } } }`. Giá trị chuỗi thường ghi vào `base`. Theme khởi đầu giữ
+sẵn ghi đè responsive (heading-3 mobile `24px`), nên chỉ đổi base có thể khiến cỡ chữ trên điện
+thoại LỚN hơn trên desktop; kết quả liệt kê từng trường hợp đó trong `responsive_larger`
+(`{ style, breakpoint, fontSize, base }`).
+
+**`presets`** vá một style preset của element — `{ "<presetId>": { <khai báo>, mobile?: {…} } }`
+— gộp vào tài liệu đã đọc như mọi thứ khác, id lạ bị từ chối kèm danh sách id thật, mỗi thay đổi
+báo `from`→`to` dưới dạng `presets.<id>[.<bp>].<prop>`. Nó tồn tại vì preset có thể ghim literal
+riêng: `heading-default`, `text-default`, `text-dataset-default` và `button-default` của theme
+khởi đầu mang `fontFamily: "Inter"` (và `heading-default` có `fontSize` riêng), thứ ĐÈ lên text
+style. Nên khi `text_styles` đổi `fontFamily`, kết quả nêu mọi preset còn mang literal family
+khác trong `presets_pin_font` (`{ preset, fontFamily }`) — vá chúng trong cùng lần gọi để chúng
+đi theo.
 
 Publish lại sau khi đổi. Theme được biên dịch vào stylesheet của từng trang, nên trang đã lưu vẫn
 giữ bảng màu cũ cho tới khi được publish lần nữa.

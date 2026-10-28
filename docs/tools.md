@@ -209,7 +209,7 @@ Execute one operation found by `sb_api_find`.
 | `query` | object? | Query string; `undefined` values are dropped |
 | `body` | any? | Request body |
 | `dry_run` | boolean? | **Defaults to `true`** — sends nothing, returns a redacted preview |
-| `pick` | string[]? | Fields to keep on each item of a list answer (or on the one item of a `{ page: {…} }` answer) |
+| `pick` | string[]? | Fields to keep on each item of a list answer — bare or under its envelope key (`{ products: […], total }`) — or on the one object of a write answer (`{ product: {…} }`). A dotted path keeps part of a nested object or of every element of a nested list: `variants.id`, `product.id` |
 | `max_items` | number? | Cap on a list answer's items, applied after the platform's own paging |
 | `item_offset` | integer? | Skip this many items within the returned list (default 0); positive offsets require GET/HEAD |
 | `if_match` | string \| number? | Sent as `If-Match: "<version>"`. Omitted on the shipping-config PATCH or a shipping-config version restore, it is read from `GET …/shipping-config` first |
@@ -510,6 +510,24 @@ the product page seed uses: a bare `pricing-dataset` arrives holding a `kind:"pr
 on its own leaf. The element's meta says `isContainer:false` (an author cannot DROP into it), and
 `sb_add` / `sb_move` make exactly one exception: a `price` / `compare_price` leaf under a `prices`
 parent. A node added at another kind arrives bare.
+
+**A FILTER arrives with the ROWS it renders.** The Go renderer reads only
+`specials.filterValues`; the editor's filter dialog writes those rows on save from
+`GET /api/sites/{siteId}/filter-facets`, so a `filter-checkbox` / `filter-radio` / `filter-tag` /
+`filter-color` / `select` added here used to render nothing. When one is added with
+`filterValueMode` `all` (the default) and no `filterValues`, they are materialized the way the
+dialog does: `category` in tree order with `depth` and `slug`, `brand`, `tag`, and `attribute`
+(needs `specials.filterAxis` = the option axis name); `availability` is the fixed pair
+`in_stock` / `out_of_stock` labelled in the site's language (vi "Còn hàng"/"Hết hàng", en "In
+stock"/"Out of stock"); `price` derives a row per `specials.filterRanges` entry
+(`[{ fromCents, toCents|null }]`, minor units) with the value `<fromCents>-<toCents>` (open end
+`<fromCents>-`, the grammar the storefront filters on) and a label in the site's currency.
+`filterExcluded` rows are written disabled, `filterColors` painted on. The answer lists
+`filters: [{ id, source, rows }]`, or `{ id, source, note }` when nothing could be derived — a
+price filter without ranges, an attribute filter without an axis, a failed facets read (which
+never fails the add). `sort` and the blog/course sources are not derived. `sb_set` re-derives
+the rows when `filterSource`, `filterAxis` or `filterRanges` changes (unless the same call
+writes `filterValues`); its dry run reports the counts, not the rows.
 
 ## `sb_set`
 
@@ -1333,7 +1351,9 @@ pours every republished page's markup into the reader.
 (`pageId`, `name`, `slug`) — dry run and real run alike — and `publish_drafts: true` puts them
 in the same publish. The platform has no "draft differs from published" field: this is
 `updatedAt` (bumped by every draft save) past `publishedAt`, the comparison `sb_page_state`
-makes, so a metadata-only edit counts too. A never-published page is not listed.
+makes, so a metadata-only edit counts too. A page that was NEVER published (no `publishedAt` —
+the product, category, search or account page `sb_page_create` just made) has no live copy to be
+ahead of, so it is listed apart as `first_publish`, and `publish_drafts: true` publishes it too.
 
 **`verify: true` then fetches the live page and says whether the origin is serving it.** A
 200 proves the platform stored a row, not that a visitor is being served it: the storefront
@@ -1754,6 +1774,12 @@ reporting a gap the store may not have. A warning that fires on a correct store 
 reader learns to ignore.
 
 ## `sb_media_list` / `sb_media_upload`
+
+**`paths: string[]` uploads several local files in one call** — stocking a catalogue was 31
+calls of one `path` each. Each file is its own upload through the same local-file guard as
+`path`, so a refused or failed file lands in `failed: [{ path, why }]` beside the ones that
+went in, and the batch carries on. The answer is compact — `uploaded: [{ name, url, width,
+height }]` — and `dry_run` still defaults to `true` (`would_upload` lists the paths).
 
 **It can also SEARCH for one.** `query` returns real photographs, each with the description its
 photographer wrote — "Cute child wearing a black t-shirt and hat standing near a doorway" — and
@@ -2332,6 +2358,22 @@ safe.) There is deliberately no argument here that can express "drop everything 
 
 A token id or style slug the site does not have is **refused**, with the real ones named: every
 preset resolves through those ids, so an invented one would be stored and read by nothing.
+
+**Breakpoints.** Inside a text style (or a preset) a key named `mobile`, `tablet` or `laptop`
+holding an object writes that breakpoint's override — `{ "heading-3": { "fontSize": "20px",
+"mobile": { "fontSize": "18px" } } }`. A plain string value writes `base`. The starter keeps
+responsive overrides (heading-3 mobile `24px`), so a base-only change can leave the phone size
+LARGER than the desktop one; the answer lists each such case under `responsive_larger`
+(`{ style, breakpoint, fontSize, base }`).
+
+**`presets`** patches an element style preset — `{ "<presetId>": { <declarations>, mobile?: {…} } }`
+— merged into the read document like everything else, an unknown id refused with the real ones
+named, every change reported `from`→`to` as `presets.<id>[.<bp>].<prop>`. It exists because a
+preset can pin its own literal: the starter's `heading-default`, `text-default`,
+`text-dataset-default` and `button-default` carry `fontFamily: "Inter"` (and `heading-default`
+its own `fontSize`), which OUTRANK the text style. So when `text_styles` changes a `fontFamily`,
+the answer names every preset still carrying a different literal family under
+`presets_pin_font` (`{ preset, fontFamily }`) — patch them in the same call to make them follow.
 
 `locale` sets the site's LANGUAGE — `settings.locale`, what `<html lang>` is served from, so
 the voice a screen reader picks and the language a search engine indexes. It keeps every other
