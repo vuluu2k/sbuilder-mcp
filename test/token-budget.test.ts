@@ -163,7 +163,12 @@ describe('token budget — a diet without a scale comes back', () => {
     // unknown keys (measured 37,513). The builder always applied it, but the zod schema
     // stripped `responsive` in silence: a header nav meant to hide on phones saved visible there,
     // and an `events` list vanished with no word.
-    expect(JSON.stringify(tools).length).toBeLessThan(37_600);
+    //
+    // 37,600 -> 38,150 buys sb_theme `presets` + breakpoint keys in `text_styles` (a preset's
+    // literal fontFamily outranked every text-style change; a base-only size left phones larger
+    // than desktop), sb_publish's first_publish, and sb_api_call's dotted `pick` (measured
+    // 37,513 -> 38,091).
+    expect(JSON.stringify(tools).length).toBeLessThan(38_150);
     for (const t of tools) expect(t.description, t.name).not.toMatch(/vanishes on publish/);
     const instructions = client.getInstructions() ?? '';
     expect(instructions.length).toBeGreaterThan(200);

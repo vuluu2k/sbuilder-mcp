@@ -251,9 +251,8 @@ export function registerThemeTools(server: McpServer, ctx: ToolContext): void {
         "The site's palette and type scale — the layer every element's style preset resolves " +
         'from, so one token repaints every page at once. Call it with nothing to read what the ' +
         'site actually has. `colors` and `text_styles` PATCH the saved document: what you do not ' +
-        'name is kept; a key named mobile/tablet/laptop holding an object writes that breakpoint. ' +
-        '`presets` patches an element style preset the same way — a preset carrying its own ' +
-        'literal (heading-default pins fontFamily "Inter") outranks the text style. `locale` sets the site\'s language (settings.locale, what <html lang> is ' +
+        'name is kept, and so does `presets` (a preset\'s own literal outranks the text style). ' +
+        'A mobile/tablet/laptop object writes that breakpoint. `locale` sets the site\'s language (settings.locale, what <html lang> is ' +
         'served from) — site-wide, every other setting kept.',
       inputSchema: {
         site_id: z.string().optional(),
@@ -264,17 +263,11 @@ export function registerThemeTools(server: McpServer, ctx: ToolContext): void {
         text_styles: z
           .record(z.record(z.union([z.string(), z.record(z.string())])))
           .optional()
-          .describe(
-            'Text style slug -> base declarations, plus mobile/tablet/laptop objects for overrides, ' +
-              'e.g. { "heading-3": { "fontSize": "20px", "mobile": { "fontSize": "18px" } } }',
-          ),
+          .describe('Slug -> declarations, e.g. { "heading-3": { "fontSize": "20px", "mobile": { "fontSize": "18px" } } }'),
         presets: z
           .record(z.record(z.union([z.string(), z.record(z.string())])))
           .optional()
-          .describe(
-            'Preset id -> base declarations (+ mobile/tablet/laptop objects), e.g. ' +
-              '{ "heading-default": { "fontFamily": "Space Grotesk" } }',
-          ),
+          .describe('Preset id -> declarations, e.g. { "heading-default": { "fontFamily": "Inter" } }'),
         locale: z.string().optional().describe('Site language tag, e.g. "vi" or "en"'),
         dry_run: z.boolean().optional(),
       },

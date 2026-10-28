@@ -212,7 +212,7 @@ Chạy một operation tìm được bằng `sb_api_find`.
 | `query` | object? | Query string; giá trị `undefined` bị bỏ |
 | `body` | any? | Thân yêu cầu |
 | `dry_run` | boolean? | **Mặc định `true`** — không gửi gì, trả về bản xem trước đã che bí mật |
-| `pick` | string[]? | Các field giữ lại trên mỗi item của một câu trả lời dạng danh sách (hoặc trên item duy nhất của câu trả lời `{ page: {…} }`) |
+| `pick` | string[]? | Các field giữ lại trên mỗi item của câu trả lời dạng danh sách — trần hoặc nằm dưới key bao (`{ products: […], total }`) — hoặc trên object duy nhất của câu trả lời ghi (`{ product: {…} }`). Đường dẫn có dấu chấm giữ một phần object lồng hoặc mọi phần tử của danh sách lồng: `variants.id`, `product.id` |
 | `max_items` | number? | Trần số item của một danh sách, áp sau phân trang của chính nền tảng |
 | `item_offset` | integer? | Bỏ qua số item này trong danh sách trả về (mặc định 0); giá trị dương chỉ dùng với GET/HEAD |
 | `site_id` | string? | Điền `{siteId}` giống `site_id` của mọi tool khác (mặc định lấy `SB_SITE`); `path_params.siteId` truyền rõ thì được ưu tiên |

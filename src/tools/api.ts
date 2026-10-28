@@ -167,12 +167,30 @@ function listOf(raw: unknown): { key: string | null; items: unknown[] } | null {
   return { key: arrays[0][0], items: arrays[0][1] as unknown[] };
 }
 
+/**
+ * Keep the named fields. A DOTTED path (`variants.id`) keeps that much of a
+ * nested object, or of every element of a nested list — a product write answer
+ * is 3–5 KB of description HTML around the two ids the caller wanted. A key
+ * that literally contains the dot wins over the path.
+ */
 function pickFields(item: unknown, fields: string[]): unknown {
   if (!item || typeof item !== 'object' || Array.isArray(item)) return item;
+  const src = item as Record<string, unknown>;
   const o: Record<string, unknown> = {};
+  const nested = new Map<string, string[]>();
   for (const f of fields) {
-    const v = (item as Record<string, unknown>)[f];
-    if (v !== undefined) o[f] = v;
+    const dot = f.indexOf('.');
+    if (dot < 0 || f in src) {
+      if (src[f] !== undefined) o[f] = src[f];
+      continue;
+    }
+    const head = f.slice(0, dot);
+    nested.set(head, [...(nested.get(head) ?? []), f.slice(dot + 1)]);
+  }
+  for (const [head, rest] of nested) {
+    const v = src[head];
+    if (head in o || v === undefined) continue;
+    o[head] = Array.isArray(v) ? v.map((x) => pickFields(x, rest)) : pickFields(v, rest);
   }
   return o;
 }
@@ -928,7 +946,10 @@ export function registerApiTools(server: McpServer, ctx: ToolContext): void {
       query: z.record(z.string()).optional(),
       body: z.unknown().optional(),
       dry_run: z.boolean().optional().describe('Defaults to true. Pass false to actually send.'),
-      pick: z.array(z.string()).optional(),
+      pick: z
+        .array(z.string())
+        .optional()
+        .describe('Fields per list item or in a {"product":{…}} answer; dotted: "variants.id"'),
       max_items: z.number().int().min(1).optional(),
       item_offset: z.number().int().min(0).optional().describe('Offset within this response, after API paging. Reads only.'),
       if_match: z.union([z.string(), z.number()]).optional().describe('If-Match version; shipping-config reads it itself'),

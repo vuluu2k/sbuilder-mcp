@@ -2776,10 +2776,7 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
         publish_drafts: z
           .boolean()
           .optional()
-          .describe(
-            'Also publish every other page whose draft is ahead of its live copy (unpublished_drafts) ' +
-              'or that was never published (first_publish)',
-          ),
+          .describe('Also publish the pages listed as unpublished_drafts and first_publish'),
       },
       annotations: { readOnlyHint: false, destructiveHint: true, idempotentHint: true },
     },

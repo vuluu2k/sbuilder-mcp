@@ -209,7 +209,7 @@ Execute one operation found by `sb_api_find`.
 | `query` | object? | Query string; `undefined` values are dropped |
 | `body` | any? | Request body |
 | `dry_run` | boolean? | **Defaults to `true`** — sends nothing, returns a redacted preview |
-| `pick` | string[]? | Fields to keep on each item of a list answer (or on the one item of a `{ page: {…} }` answer) |
+| `pick` | string[]? | Fields to keep on each item of a list answer — bare or under its envelope key (`{ products: […], total }`) — or on the one object of a write answer (`{ product: {…} }`). A dotted path keeps part of a nested object or of every element of a nested list: `variants.id`, `product.id` |
 | `max_items` | number? | Cap on a list answer's items, applied after the platform's own paging |
 | `item_offset` | integer? | Skip this many items within the returned list (default 0); positive offsets require GET/HEAD |
 | `if_match` | string \| number? | Sent as `If-Match: "<version>"`. Omitted on the shipping-config PATCH or a shipping-config version restore, it is read from `GET …/shipping-config` first |
