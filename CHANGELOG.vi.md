@@ -6,6 +6,11 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.98.1] - 2026-10-28
+
+### Fixed
+- `sb_set` đổi được nguồn của element có `kind` lưu là chuỗi rỗng, vì `kind` rỗng giờ được đọc như kind mặc định của element thay vì kind lạ.
+
 ## [0.98.0] - 2026-10-28
 
 ### Added

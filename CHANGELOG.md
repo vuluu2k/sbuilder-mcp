@@ -6,6 +6,11 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.98.1] - 2026-10-28
+
+### Fixed
+- `sb_set` can re-source an element whose stored `kind` is an empty string, because an empty `kind` now reads as the element's default kind instead of an unknown one.
+
 ## [0.98.0] - 2026-10-28
 
 ### Added
