@@ -419,9 +419,11 @@ export function cascadeTail(node: Slots, written: Record<string, Record<string, 
 }
 
 /** The same, for every node of a nested `sb_add` spec, as each will be born. */
-export function specCheck(spec: NodeSpec): CheckedNote[] {
+export function specCheck(spec: NodeSpec, idOf?: ReadonlyMap<NodeSpec, string>): CheckedNote[] {
   const out: CheckedNote[] = [];
   const walk = (s: NodeSpec) => {
+    // addSubtree's minted id, so a per-node note names (and dedupes on) its node.
+    const id = idOf?.get(s);
     const d = ELEMENTS[s.type]?.defaults;
     const born = d?.specials ?? {};
     if (s.config) out.push(...writeCheck(s.type, 'config', s.config));
@@ -432,7 +434,7 @@ export function specCheck(spec: NodeSpec): CheckedNote[] {
         style: { ...((d?.style ?? {}) as Record<string, unknown>), ...s.style },
         responsive: { desktop: { style: { ...seeded?.desktop?.style, ...s.responsive.desktop?.style } } },
       };
-      out.push(...cascadeTail(node, Object.fromEntries(Object.entries(s.responsive).map(([bp, slot]) => [bp, slot.style]))));
+      out.push(...cascadeTail(node, Object.fromEntries(Object.entries(s.responsive).map(([bp, slot]) => [bp, slot.style])), id));
     }
     if (s.specials) out.push(...writeCheck(s.type, 'specials', s.specials, { specials: { ...born, ...s.specials } }));
     for (const c of s.children ?? []) walk(c);

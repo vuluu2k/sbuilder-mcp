@@ -1353,7 +1353,10 @@ in the same publish. The platform has no "draft differs from published" field: t
 `updatedAt` (bumped by every draft save) past `publishedAt`, the comparison `sb_page_state`
 makes, so a metadata-only edit counts too. A page that was NEVER published (no `publishedAt` —
 the product, category, search or account page `sb_page_create` just made) has no live copy to be
-ahead of, so it is listed apart as `first_publish`, and `publish_drafts: true` publishes it too.
+ahead of, so it is listed apart as `first_publish`, and `publish_drafts: true` publishes it too. Except where going live unbuilt does harm: a never-published ENTITY TEMPLATE (a `{slug}` route —
+product, category, brand …) answers 500 at every URL of its type while empty, and an `error` /
+`maintain` page replaces what the whole site serves, so those are listed as `first_publish_held`
+(with their `type`) and published only by naming their own `page_id`.
 
 **`verify: true` then fetches the live page and says whether the origin is serving it.** A
 200 proves the platform stored a row, not that a visitor is being served it: the storefront

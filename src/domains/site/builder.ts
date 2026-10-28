@@ -202,7 +202,7 @@ export function addSubtree(
   spec: NodeSpec,
   index?: number,
   guard?: GuardOpts,
-): { patches: Patch[]; ids: string[] } {
+): { patches: Patch[]; ids: string[]; idOf: Map<NodeSpec, string> } {
   const parent = doc.node(parentId);
   soft(guard, () => refuseAppBlockParent(doc, parentId, 'adding'));
   // A SATELLITE the parent declares (`icon` → `cart-count` as `cartCountId`) is
@@ -230,6 +230,8 @@ export function addSubtree(
 
   const patches: Patch[] = [];
   const ids: string[] = [];
+  // Which minted id each spec node became, so a note about a spec node names it.
+  const idOf = new Map<NodeSpec, string>();
 
   const pending = new Map<string, unknown>();
   const build = (s: NodeSpec, parentNodeId: string): string => {
@@ -268,6 +270,7 @@ export function addSubtree(
       states: s.states,
     });
     pending.set(n.id, n);
+    idOf.set(s, n.id);
     // A child the element declares as a SATELLITE (an icon's cart-count, a
     // list's empty state) hangs off `config[key]`, exactly as a top-level
     // `sb_add` of one does. The caller's nested spec takes the place of the
@@ -316,11 +319,11 @@ export function addSubtree(
   const rootId = build(satellite ? seeded(spec, satellite, parent) : spec, parentId);
   if (satellite) {
     patches.push({ op: 'set', path: ['nodes', parentId, 'config', satellite.configKey], value: rootId });
-    return { patches, ids };
+    return { patches, ids, idOf };
   }
   const at = index ?? indexBeforeFormBar(doc, parentId, spec.type);
   patches.push({ op: 'insert', path: ['nodes', parentId, 'data', 'nodes'], index: at, value: rootId });
-  return { patches, ids };
+  return { patches, ids, idOf };
 }
 
 /**

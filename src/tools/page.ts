@@ -29,6 +29,7 @@ import { inertHintsFor } from '../domains/site/inert.js';
 import {
   emptyEntityTemplateNote,
   hasSeed,
+  heldFromFirstPublish,
   layoutDocument,
   seedDocument,
   seedSummary,
@@ -1601,7 +1602,7 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
       const rootKids = d.doc.nodes[d.doc.root_node_id]?.data.nodes.length ?? 0;
       const mid = parent_id === d.doc.root_node_id ? middleEnd(d.doc) : rootKids;
       const at = index ?? (mid < rootKids ? mid : undefined);
-      const { patches, ids } = addSubtree(d, parent_id, spec, at, guard);
+      const { patches, ids, idOf } = addSubtree(d, parent_id, spec, at, guard);
       const forced = guard.forced!.length ? { forced: guard.forced } : {};
       // ELEMENTS THAT RENDER CONVINCINGLY WHILE WIRED TO NOTHING. The add
       // succeeds completely, the tree is correct and the page photographs
@@ -1623,7 +1624,7 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
         .join(' ');
       // Keys an element does not read, and values it does not know — on EVERY
       // node of the nested spec, as each will be born. Warned, still written.
-      const found = sayChecks([...specCheck(spec), ...session.formChecks(patches)], say);
+      const found = sayChecks([...specCheck(spec, idOf), ...session.formChecks(patches)], say);
       const checks = found.length ? { checks: found } : {};
       // A base-only key in a breakpoint slot lands at BASE (addSubtree routes it,
       // as sb_set does) and so reaches every width — routed AND said.
@@ -2847,9 +2848,10 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
       // sb_page_create — product, category, search, account — so it is listed
       // apart as `first_publish` and publish_drafts includes it. A failed read
       // never fails the publish.
-      type Row = { pageId: string; name: string; slug: string };
+      type Row = { pageId: string; name: string; slug: string; type: string };
       let drafts: Row[] = [];
       let fresh: Row[] = [];
+      let held: Row[] = [];
       try {
         const got = (await request({
           base: ctx.base,
@@ -2859,14 +2861,22 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
           fetchImpl: ctx.fetchImpl,
         })) as { pages?: Array<Record<string, unknown>> };
         const others = (got.pages ?? []).filter((p) => p.id !== page_id);
-        const row = (p: Record<string, unknown>): Row => ({ pageId: String(p.id), name: String(p.name ?? ''), slug: String(p.slug ?? '') });
+        const row = (p: Record<string, unknown>): Row => ({
+          pageId: String(p.id),
+          name: String(p.name ?? ''),
+          slug: String(p.slug ?? ''),
+          type: String(p.type ?? 'page'),
+        });
         const state = (p: Record<string, unknown>) =>
           driftOf(p.updatedAt as string | undefined, p.publishedAt as string | undefined).state;
         drafts = others.filter((p) => state(p) === 'draft_ahead').map(row);
-        fresh = others.filter((p) => state(p) === 'never_published').map(row);
+        const unborn = others.filter((p) => state(p) === 'never_published').map(row);
+        fresh = unborn.filter((r) => !heldFromFirstPublish(r.type));
+        held = unborn.filter((r) => heldFromFirstPublish(r.type));
       } catch {
         drafts = [];
         fresh = [];
+        held = [];
       }
       const body = { pageIds: [page_id, ...(publish_drafts ? [...drafts, ...fresh].map((d) => d.pageId) : [])] };
       const draftNote = (left: Row[], unborn: Row[]) => ({
@@ -2880,6 +2890,13 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
           ? {
               first_publish: unborn,
               first_publish_note: 'Never published, so its URL 404s. publish_drafts:true publishes these too.',
+            }
+          : {}),
+        ...(held.length
+          ? {
+              first_publish_held: held,
+              held_note:
+                'Never published and NOT included by publish_drafts: an entity template answers 500 at every URL while empty, and error/maintain replace what the whole site serves. Publish each by its own page_id once built.',
             }
           : {}),
       });

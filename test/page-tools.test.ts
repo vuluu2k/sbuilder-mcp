@@ -172,6 +172,28 @@ describe('sb_publish: other pages with unpublished drafts', () => {
     expect(posts[0].pageIds).toEqual(['pg_1']);
     expect(out.first_publish.map((p: any) => p.pageId)).toEqual(['pg_c']);
   });
+
+  it('holds back a never-published entity template and the error page: publish_drafts never publishes them', async () => {
+    // An empty product template answers 500 at every /products/{slug}; an error
+    // page replaces the site's 404. Each goes live only when named.
+    pages.push(
+      { id: 'pg_p', name: 'Product', slug: 'product', type: 'product', updatedAt: '2026-09-25T10:00:00Z' } as any,
+      { id: 'pg_e', name: '404', slug: 'not-found', type: 'error', updatedAt: '2026-09-25T10:00:00Z' } as any,
+    );
+    try {
+      const { f, posts } = site();
+      const out = JSON.parse(
+        await callTool(f, 'sb_publish', { site_id: 's1', page_id: 'pg_1', publish_drafts: true, dry_run: false }),
+      );
+      expect(posts[0].pageIds).toEqual(['pg_1', 'pg_a', 'pg_c']);
+      expect(out.first_publish_held.map((p: any) => [p.pageId, p.type])).toEqual([
+        ['pg_p', 'product'],
+        ['pg_e', 'error'],
+      ]);
+    } finally {
+      pages.splice(-2);
+    }
+  });
 });
 
 describe('sb_page_create', () => {

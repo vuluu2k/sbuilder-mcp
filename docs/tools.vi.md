@@ -1323,7 +1323,10 @@ cùng lần publish. Nền tảng không có trường "nháp khác bản đã p
 (tăng mỗi lần lưu nháp) sau `publishedAt`, đúng phép so của `sb_page_state`, nên một lần sửa
 chỉ metadata cũng tính. Trang CHƯA TỪNG publish (không có `publishedAt` — trang sản phẩm, danh
 mục, tìm kiếm hay tài khoản mà `sb_page_create` vừa tạo) không có bản live để so, nên được liệt kê
-riêng ở `first_publish`, và `publish_drafts: true` cũng publish luôn chúng.
+riêng ở `first_publish`, và `publish_drafts: true` cũng publish luôn chúng. Trừ chỗ lên sóng khi chưa dựng sẽ gây hại: một ENTITY TEMPLATE chưa từng publish (route có
+`{slug}` — product, category, brand …) trả 500 ở mọi URL của loại đó khi còn trống, và trang
+`error` / `maintain` thay thứ cả site đang phục vụ, nên chúng nằm ở `first_publish_held` (kèm
+`type`) và chỉ publish khi gọi đích danh `page_id` của nó.
 
 **`verify: true` rồi tải trang live và nói origin đã phục vụ bản đó chưa.** Một mã 200 chứng
 minh nền tảng đã lưu một dòng, không chứng minh một người xem đang được phục vụ nó:

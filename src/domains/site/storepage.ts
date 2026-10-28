@@ -125,6 +125,17 @@ export function emptyEntityTemplateNote(type: string | undefined): string | null
   );
 }
 
+/**
+ * Never-published pages `publish_drafts` must NOT go live on its own: an entity
+ * template (a `{slug}` route) answers 500 at every URL of its type while empty,
+ * and `error` / `maintain` replace what the whole site serves. Each is published
+ * by naming it, once it has been built and looked at.
+ */
+export function heldFromFirstPublish(type: string | undefined): boolean {
+  if (type === 'error' || type === 'maintain') return true;
+  return !!PAGE_TYPES.find((t) => t.type === type)?.routePattern?.includes('{slug}');
+}
+
 /** A one-line summary of what a seed puts on the page, for the tool result. */
 export function seedSummary(type: string): { nodes: number } | null {
   const seed = STORE_PAGE_SEEDS[type];

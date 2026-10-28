@@ -214,4 +214,18 @@ describe('a narrower-only style key reaches desktop through the cascade tail', (
       await close();
     }
   });
+
+  it('sb_add names each node, so a second node with the same narrower-only key is still told', async () => {
+    const { call, close } = await openClient();
+    try {
+      const block = { type: 'flex-block', responsive: { mobile: { style: { order: '2' } } } };
+      const r = await call('sb_add', { parent_id: 'sec', spec: { type: 'flex-block', children: [block, block] } });
+      const tails = (r.json.checks as Array<{ code: string; id?: string }>).filter((c) => c.code === 'cascade_tail');
+      expect(tails).toHaveLength(2);
+      expect(new Set(tails.map((c) => c.id)).size).toBe(2);
+      expect(tails.every((c) => typeof c.id === 'string')).toBe(true);
+    } finally {
+      await close();
+    }
+  });
 });
