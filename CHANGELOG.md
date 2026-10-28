@@ -6,6 +6,13 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.98.3] - 2026-10-28
+
+### Fixed
+- `sb_review` reports `no_data_context` for a cart-item only when it sits outside a cart-order or binds keys a cart line does not fill, because a cart line supplies just `product.title`, `product.image`, `product.price` and `product.priceCents`.
+- `sb_review` no longer reports `no_data_context` for pricing or media seed keys inside a cart line that also binds a key the line fills.
+- `sb_review` and `sb_add` report `rich_dropped` for `specials.textHtml` containing `javascript:` or non-image `data:` URLs, entity-encoded colons, comments and doctypes, and tags hidden behind `>` inside quoted attribute values.
+
 ## [0.98.2] - 2026-10-28
 
 ### Added

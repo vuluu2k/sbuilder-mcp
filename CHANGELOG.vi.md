@@ -6,6 +6,13 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.98.3] - 2026-10-28
+
+### Fixed
+- `sb_review` chỉ báo `no_data_context` cho cart-item khi nó nằm ngoài cart-order hoặc gắn các key mà dòng giỏ hàng không điền, vì dòng giỏ hàng chỉ cung cấp `product.title`, `product.image`, `product.price` và `product.priceCents`.
+- `sb_review` không còn báo `no_data_context` cho các key seed của pricing hoặc media trong dòng giỏ hàng có gắn thêm một key mà dòng đó điền.
+- `sb_review` và `sb_add` báo `rich_dropped` cho `specials.textHtml` chứa URL `javascript:` hoặc `data:` không phải ảnh, dấu `:` mã hóa thực thể, comment và doctype, cùng thẻ ẩn sau `>` trong giá trị thuộc tính có ngoặc.
+
 ## [0.98.2] - 2026-10-28
 
 ### Added
