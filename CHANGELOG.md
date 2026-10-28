@@ -6,6 +6,31 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.98.0] - 2026-10-28
+
+### Added
+- `sb_theme` patches style `presets` and per-breakpoint `text_styles` (mobile, tablet, laptop), and reports `presets_pin_font` and `responsive_larger` when a change leaves presets or breakpoint overrides inconsistent.
+- `sb_media_upload` accepts `paths` to upload many local files in one call, reporting failures per path while the batch continues.
+- `sb_api_call` `pick` accepts dotted paths such as `variants.id` and `product.id`, and works on lists and single-object write answers alike.
+- `sb_add` materializes a filter's option rows into `specials.filterValues`, and `sb_set` re-derives them when the filter is re-sourced.
+- `sb_page_create` with `type` `account` opens with a heading, account-info, order-history and address-book.
+- `sb_review` and `sb_add` report `text_markup` when HTML tags sit in plain `specials.text`, and `cascade_tail` per node when a narrow-breakpoint style key reaches desktop.
+
+### Changed
+- `sb_publish` with `publish_drafts` includes never-published pages, listed as `first_publish`.
+- `sb_bind` replaces an existing binding on the same field and keeps its id instead of adding a second one.
+- `sb_set` reports a global section or overlay once per master per process, with the node count, instead of once per node.
+- `sb_store` site chrome gives the header the site name linked to `/` and a search box, and answers `brand_missing` when an API key cannot read the site name.
+- Category and product menu rows keep their whole names, and categories are ordered by position, then name.
+- `sb_product_shelf` builds a pricing-dataset parent with price and compare-price leaves.
+- Default bindings use every binding kind the platform factory defines, such as `tags`, and an unknown kind is refused with the list of known kinds.
+- The API catalog is regenerated against the latest web_builder.
+
+### Fixed
+- `sb_add` of a filter no longer renders empty, because its option rows are now written.
+- `sb_set` no longer reports `textHtml` as `unknown_key`.
+- `sb_review` no longer reports `empty_text` for text held in `<key>Html` or a form-link's `linkText`, no longer treats a form-link seed as `placeholder_content`, and no longer reports `no_h1` inside a form document.
+
 ## [0.97.0] - 2026-10-28
 
 ### Added

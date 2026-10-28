@@ -6,6 +6,31 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.98.0] - 2026-10-28
+
+### Added
+- `sb_theme` vá được `presets` kiểu dáng và `text_styles` theo từng breakpoint (mobile, tablet, laptop), và báo `presets_pin_font` cùng `responsive_larger` khi thay đổi làm preset hoặc override breakpoint lệch nhau.
+- `sb_media_upload` nhận `paths` để tải nhiều file cục bộ trong một lần gọi, báo lỗi theo từng đường dẫn và vẫn chạy tiếp cả lô.
+- `pick` của `sb_api_call` nhận đường dẫn có dấu chấm như `variants.id` và `product.id`, dùng được cho cả danh sách lẫn câu trả lời ghi một đối tượng.
+- `sb_add` tạo sẵn các dòng tuỳ chọn của filter vào `specials.filterValues`, và `sb_set` suy ra lại chúng khi filter đổi nguồn.
+- `sb_page_create` với `type` là `account` mở trang với heading, account-info, order-history và address-book.
+- `sb_review` và `sb_add` báo `text_markup` khi thẻ HTML nằm trong `specials.text` thường, và `cascade_tail` theo từng node khi key style ở breakpoint hẹp lên tới desktop.
+
+### Changed
+- `sb_publish` với `publish_drafts` gồm cả trang chưa từng publish, được liệt kê ở `first_publish`.
+- `sb_bind` thay binding sẵn có trên cùng field và giữ nguyên id thay vì thêm binding thứ hai.
+- `sb_set` nói về global section hoặc overlay một lần cho mỗi master trong mỗi process, kèm số node, thay vì một lần cho mỗi node.
+- Phần chrome của `sb_store` cho header tên site liên kết tới `/` cùng ô tìm kiếm, và trả `brand_missing` khi API key không đọc được tên site.
+- Hàng menu danh mục và sản phẩm giữ nguyên tên đầy đủ, và danh mục được sắp theo vị trí rồi đến tên.
+- `sb_product_shelf` dựng pricing-dataset cha cùng hai lá giá và giá so sánh.
+- Binding mặc định dùng mọi kind mà factory của nền tảng định nghĩa, như `tags`, và kind lạ bị từ chối kèm danh sách kind đã biết.
+- Catalog API được tạo lại theo web_builder mới nhất.
+
+### Fixed
+- `sb_add` filter không còn render rỗng vì các dòng tuỳ chọn nay đã được ghi.
+- `sb_set` không còn báo `textHtml` là `unknown_key`.
+- `sb_review` không còn báo `empty_text` cho chữ nằm trong `<key>Html` hay `linkText` của form-link, không còn coi seed của form-link là `placeholder_content`, và không còn báo `no_h1` trong form document.
+
 ## [0.97.0] - 2026-10-28
 
 ### Added
