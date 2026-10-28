@@ -787,3 +787,10 @@ platform treats an unproven guard as indistinguishable from an absent one.
   English product and brand names or unaccented Vietnamese. Only letters no other language
   writes count (ă ơ ư đ, dot-below / hook-above tones, circumflex+tone), and the reverse is
   never warned — a false "switch your whole site's language" costs more than a missed one.
+
+- **A FILTER RENDERS ONLY `specials.filterValues`, and the EDITOR writes them on save.**
+  `filtershared.optionsOf` reads nothing else; FilterConfigDialog's `onSave` materializes the
+  rows from `GET /filter-facets` (`withDepths`: category depth + slug). So every filter `sb_add`
+  minted rendered an empty box. `src/domains/site/filtervalues.ts` is that save for mode `all`;
+  `sb_set` re-derives on `filterSource`/`filterAxis`/`filterRanges`. Price rows are
+  `<fromCents>-<toCents>` (open end `<from>-`, `predicate.ts matchesRange`); `..` matches nothing.

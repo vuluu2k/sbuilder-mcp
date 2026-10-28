@@ -495,6 +495,24 @@ The editor derives them at drop time and nothing in the element's defaults carri
 every dataset element this server minted used to save, publish and render its placeholder
 forever. A record tile's binding comes from its `recordField` — see "Record lists" below.
 
+**A FILTER arrives with the ROWS it renders.** The Go renderer reads only
+`specials.filterValues`; the editor's filter dialog writes those rows on save from
+`GET /api/sites/{siteId}/filter-facets`, so a `filter-checkbox` / `filter-radio` / `filter-tag` /
+`filter-color` / `select` added here used to render nothing. When one is added with
+`filterValueMode` `all` (the default) and no `filterValues`, they are materialized the way the
+dialog does: `category` in tree order with `depth` and `slug`, `brand`, `tag`, and `attribute`
+(needs `specials.filterAxis` = the option axis name); `availability` is the fixed pair
+`in_stock` / `out_of_stock` labelled in the site's language (vi "Còn hàng"/"Hết hàng", en "In
+stock"/"Out of stock"); `price` derives a row per `specials.filterRanges` entry
+(`[{ fromCents, toCents|null }]`, minor units) with the value `<fromCents>-<toCents>` (open end
+`<fromCents>-`, the grammar the storefront filters on) and a label in the site's currency.
+`filterExcluded` rows are written disabled, `filterColors` painted on. The answer lists
+`filters: [{ id, source, rows }]`, or `{ id, source, note }` when nothing could be derived — a
+price filter without ranges, an attribute filter without an axis, a failed facets read (which
+never fails the add). `sort` and the blog/course sources are not derived. `sb_set` re-derives
+the rows when `filterSource`, `filterAxis` or `filterRanges` changes (unless the same call
+writes `filterValues`); its dry run reports the counts, not the rows.
+
 ## `sb_set`
 
 | Arg | Type | Notes |

@@ -492,6 +492,23 @@ kéo thả và defaults của element không mang, nên trước đây mọi ph�
 ra đều lưu được, publish được và render mãi placeholder. Binding của tile record lấy từ
 `recordField` — xem "Danh sách record" bên dưới.
 
+**Một FILTER được tạo ra kèm sẵn các DÒNG mà nó render.** Renderer Go chỉ đọc
+`specials.filterValues`; hộp thoại filter của editor ghi các dòng đó lúc lưu, lấy từ
+`GET /api/sites/{siteId}/filter-facets`, nên `filter-checkbox` / `filter-radio` / `filter-tag` /
+`filter-color` / `select` thêm từ đây trước kia không render gì. Khi thêm một filter với
+`filterValueMode` `all` (mặc định) và chưa có `filterValues`, các dòng được dựng như hộp thoại:
+`category` theo thứ tự cây kèm `depth` và `slug`, `brand`, `tag`, và `attribute` (cần
+`specials.filterAxis` = tên trục tuỳ chọn); `availability` là cặp cố định `in_stock` /
+`out_of_stock`, nhãn theo ngôn ngữ của site (vi "Còn hàng"/"Hết hàng", en "In stock"/"Out of
+stock"); `price` dựng một dòng cho mỗi mục `specials.filterRanges` (`[{ fromCents, toCents|null }]`,
+đơn vị nhỏ nhất) với giá trị `<fromCents>-<toCents>` (đầu mở `<fromCents>-`, đúng ngữ pháp
+storefront lọc theo) và nhãn theo tiền tệ của site. Dòng trong `filterExcluded` được ghi ở trạng
+thái tắt, `filterColors` được tô vào. Kết quả liệt kê `filters: [{ id, source, rows }]`, hoặc
+`{ id, source, note }` khi không dựng được — filter giá thiếu khoảng, filter thuộc tính thiếu trục,
+đọc facets lỗi (không bao giờ làm hỏng lệnh thêm). `sort` và các nguồn blog/khoá học không được
+dựng. `sb_set` dựng lại các dòng khi `filterSource`, `filterAxis` hay `filterRanges` đổi (trừ khi
+cùng lần gọi đó ghi `filterValues`); dry run của nó báo số dòng, không in các dòng.
+
 ## `sb_set`
 
 | Tham số | Kiểu | Ghi chú |

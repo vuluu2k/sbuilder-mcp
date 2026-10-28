@@ -86,7 +86,7 @@ nhét ngược lại vào mọi bản cài.
 | `sb_node_read` | Một node đầy đủ, kèm cảnh báo nếu nó là global dùng chung |
 | `sb_catalog_search` | Tìm element theo việc nó cần làm, dùng chính AI hints của nền tảng |
 | `sb_traits_for` | Inspector của element — tab, nhóm, control và mỗi control khai báo sẵn ghi vào đâu — kèm AI hints, default và luật chứa con |
-| `sb_add` | Thêm một element — hoặc cả cây con lồng nhau — trong một lần gọi |
+| `sb_add` | Thêm một element — hoặc cả cây con lồng nhau — trong một lần gọi; filter được tạo kèm sẵn các dòng lấy từ catalogue |
 | `sb_set` | Ghi style/config/specials. Mặc định theo breakpoint |
 | `sb_move` | Chuyển node sang cha khác |
 | `sb_remove` | Xoá node và cả cây con |

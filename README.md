@@ -89,7 +89,7 @@ in this client: one would put the very key the platform exists to hold back into
 | `sb_node_read` | One node in full, with a warning if it is a shared global |
 | `sb_catalog_search` | Find an element by what it should do, using the platform's own AI hints |
 | `sb_traits_for` | An element's inspector — tabs, groups, controls and what each declared one writes — plus its AI hints, defaults and containment rules |
-| `sb_add` | Add an element — or a whole nested subtree — in one call |
+| `sb_add` | Add an element — or a whole nested subtree — in one call; a filter arrives with its option rows read from the catalogue |
 | `sb_set` | Write style/config/specials. Per breakpoint by default |
 | `sb_move` | Move a node to another parent |
 | `sb_remove` | Remove a node and its subtree |
