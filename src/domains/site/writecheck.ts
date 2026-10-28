@@ -17,6 +17,7 @@ import { fill } from './findings.js';
 import { collectsValue, formFieldFindings, formFields, nameFromLabel } from './formdoc.js';
 import { ICON_KEYS } from '../../catalog/icons.generated.js';
 import { TRANSLATABLE_SPECIALS } from '../../catalog/translations.generated.js';
+import { INLINE_RICH } from '../../catalog/richtext.generated.js';
 import { iconNote } from './icons.js';
 import {
   animationNote,
@@ -56,6 +57,7 @@ export interface WriteNote {
     | 'form_rule'
     | 'form_field'
     | 'text_markup'
+    | 'rich_dropped'
     | 'cascade_tail';
   id?: string;
   /** `<namespace>.<key>` */
@@ -175,6 +177,32 @@ export function bindableFields(type: string): string[] {
 const MARKUP = /<\/?(?:b|strong|i|em|u|s|span|br|a|p|div|small|mark|sup|sub|h[1-6])(?:\s[^>]*)?\/?>/i;
 
 /**
+ * What in a gated rich special `sanitize.IsInlineRepresentable` refuses: a tag
+ * outside the editor schema's inline vocabulary, or an attribute outside the
+ * global/per-tag allowlists. Any one and `GateInlineRichSpecials` deletes the
+ * WHOLE value. ponytail: tags and attribute names only — an unsafe href scheme
+ * or an HTML comment is refused too and not named here.
+ */
+function richOffenders(v: string): string[] {
+  const out = new Set<string>();
+  const tags: readonly string[] = INLINE_RICH.tags;
+  const globalAttrs: readonly string[] = INLINE_RICH.globalAttrs;
+  const tagAttrs = INLINE_RICH.tagAttrs as Record<string, readonly string[]>;
+  for (const m of v.matchAll(/<\/?([a-zA-Z][\w-]*)([^>]*)>/g)) {
+    const tag = m[1].toLowerCase();
+    if (!tags.includes(tag)) {
+      out.add(`<${tag}>`);
+      continue;
+    }
+    for (const a of m[2].matchAll(/([^\s=/>"']+)(?:\s*=\s*(?:"[^"]*"|'[^']*'|[^\s>]+))?/g)) {
+      const name = a[1].toLowerCase();
+      if (!globalAttrs.includes(name) && !tagAttrs[tag]?.includes(name)) out.add(`<${tag} ${name}>`);
+    }
+  }
+  return [...out];
+}
+
+/**
  * Check one write. `specials` is the node's specials AS THEY WILL BE after the
  * write, for the precondition question (a pair is legal or not together).
  */
@@ -250,6 +278,22 @@ export function writeCheck(
         k,
         `specials.${k} holds HTML tags, and ${type} renders it ESCAPED — the tags show as literal text on the page.`,
         `Write the markup to specials.${k}Html (the renderer prefers it) and keep a plain specials.${k} without tags beside it.`,
+      );
+    }
+    // A RICH SPECIAL THE RENDER GATE DROPS WHOLE (scope.GateInlineRichSpecials):
+    // one block tag and the node shows its escaped plain text — measured live
+    // with <p> in textHtml, every bit of formatting gone and no error anywhere.
+    const rich: readonly string[] = INLINE_RICH.specials;
+    const bad = namespace === 'specials' && typeof v === 'string' && rich.includes(k) ? richOffenders(v) : [];
+    if (bad.length) {
+      push(
+        `rich-dropped:${type}.${k}:${bad.join(',')}`,
+        'rich_dropped',
+        k,
+        `specials.${k} holds ${bad.join(', ')}, which the editor's inline rich-text schema cannot produce — so the ` +
+          `platform DROPS the whole value at render and shows the escaped plain specials.${k.replace(/Html$/, '')} instead, with no error.`,
+        `Keep to ${INLINE_RICH.tags.map((t) => `<${t}>`).join(' ')}; break a paragraph with <br> (or <br><br>), ` +
+          'never <p>/<div>, and put a separate block in its own node.',
       );
     }
     if (namespace === 'specials') {

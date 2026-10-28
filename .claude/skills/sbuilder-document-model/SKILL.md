@@ -814,3 +814,14 @@ platform treats an unproven guard as indistinguishable from an absent one.
   minted rendered an empty box. `src/domains/site/filtervalues.ts` is that save for mode `all`;
   `sb_set` re-derives on `filterSource`/`filterAxis`/`filterRanges`. Price rows are
   `<fromCents>-<toCents>` (open end `<from>-`, `predicate.ts matchesRange`); `..` matches nothing.
+- **A `textHtml` with ONE non-inline tag is DROPPED WHOLE at render** (`scope.GateInlineRichSpecials`
+  → `sanitize.IsInlineRepresentable`): `<p>…</p>` published the escaped plain `text`, measured live
+  2026-10-28. `writecheck` warns `rich_dropped` naming each tag/attribute outside `INLINE_RICH`; a
+  paragraph break is `<br>`.
+- **A cart line SUPPLIES `product.*`** (`scope.CartLineContext` fills the existing product keys), so
+  `no_data_context` treats a `cart-item` ancestor as a data context for product bindings.
+- **A placement hint in `INERT_ON_ADD` is silent under its host** (`host`, plus any SATELLITE_RULES
+  owner): `sb_add` passes each spec node's parent type — warning `accordion-content` under an
+  `accordion` told a correct caller it would not render.
+- **`base_only` is spent per key but said ONCE**, listing the new keys — three keys used to carry the
+  ~400-char paragraph three times in one result.

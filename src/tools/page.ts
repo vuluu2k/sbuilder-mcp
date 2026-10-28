@@ -1609,16 +1609,19 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
       // right, so neither sb_review nor sb_look can see the gap — the moment
       // the element is added is the only cheap place to say it. In the dry run
       // too, so the caller is not told after committing.
-      const types: string[] = [];
-      const walkSpec = (n: { type: string; children?: unknown[] }): void => {
-        types.push(n.type);
-        for (const c of n.children ?? []) walkSpec(c as { type: string; children?: unknown[] });
+      // Each node with its PARENT's type, so a hint about placement stays silent
+      // when the placement is right (accordion-content under an accordion).
+      const placed: Array<{ type: string; parent?: string }> = [];
+      const walkSpec = (n: NodeSpec, parent?: string): void => {
+        placed.push({ type: n.type, parent });
+        for (const c of n.children ?? []) walkSpec(c, n.type);
       };
-      walkSpec(spec as { type: string; children?: unknown[] });
+      walkSpec(spec as NodeSpec, d.doc.nodes[parent_id]?.data.type);
+      const types = placed.map((p) => p.type);
       // A DRY RUN PEEKS: it must show what the real write will show, and the
       // real write must still have it to show.
       const say = noticeFor(ctx, dry_run);
-      const inert = inertHintsFor(types)
+      const inert = inertHintsFor(placed)
         .map((h) => say(`inert:${h.type}`, h.note))
         .filter((n): n is string => !!n)
         .join(' ');
@@ -1636,8 +1639,11 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
         for (const c of n.children ?? []) walkMoved(c);
       };
       walkMoved(spec);
-      const moved = [...movedKeys].map(([k, bp]) => say(`base-only:${k}`, baseOnlyNote([k], bp))).filter((n): n is string => !!n);
-      const base_only = moved.length ? { base_only: moved.join(' ') } : {};
+      // Still once per KEY per process, but ONE explanation listing the new keys.
+      const fresh = [...movedKeys].filter(([k]) => say(`base-only:${k}`, k));
+      const base_only = fresh.length
+        ? { base_only: baseOnlyNote(fresh.map(([k]) => k), [...new Set(fresh.map(([, bp]) => bp))].join('", "')) }
+        : {};
       // A FILTER'S ROWS ARE WHAT IT RENDERS, and the editor writes them on save
       // from the facet read — so a filter added here was an empty box. Gated on
       // the spec naming a filter type, so no other add pays for the preview or
@@ -1786,12 +1792,9 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
       for (const e of batch) {
         for (const k of baseOnlyKeys(d, e.id, e.keys, e)) movedToBase.add(k);
       }
-      const baseNote = [...movedToBase]
-        .map((k) =>
-          say(`base-only:${k}`, baseOnlyNote([k], batch[0].breakpoint ?? 'desktop')),
-        )
-        .filter((n): n is string => !!n)
-        .join(' ');
+      // Spent per key, said ONCE: three keys used to carry the paragraph three times.
+      const freshBase = [...movedToBase].filter((k) => say(`base-only:${k}`, k));
+      const baseNote = freshBase.length ? baseOnlyNote(freshBase, batch[0].breakpoint ?? 'desktop') : '';
       // A LITERAL OVER A PRESET DETACHES THE NODE FROM THE THEME, permanently.
       // The node's own slot outranks its preset, so this is how one button
       // differs from the rest — an ordinary, correct thing to do. What is not

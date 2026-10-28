@@ -479,6 +479,11 @@ specials `sb_bind` accepts, including generated binding fields such as `boundPro
 Pass `children` to build a whole section in one call. Refuses a root-only element inside a
 section, a child a parent's whitelist excludes, and any add into a non-container.
 
+`inert` names an element that renders while wired to nothing; a placement hint
+(`accordion-content`, `menu-drawer`, a satellite) is silent when its parent — `parent_id` for the
+spec root, the enclosing spec node for a child — is the host it renders under. `base_only`
+(here and on `sb_set`) explains once and lists every config key it moved to base.
+
 **A SATELLITE is added the same way.** When `spec.type` is a satellite the parent declares —
 `icon` → `cart-count` (the basket badge), `tab` → `tab-item`, … — it is attached as the editor's
 `addDetachedNode` does: `data.parent` is the host, it is NOT in the host's children, and the
@@ -641,7 +646,10 @@ target and a refusal would block real keys), `unknown_value`, `unknown_icon` (a 
 the icon manifest written to a key an icon picker writes — it publishes the default star or no
 icon; the fix lists up to five nearest names), `animation`, `dead_key`,
 `precondition`, `unsupported_setting`, `text_markup` (HTML tags in a plain `specials.text`
-on an element with a `textHtml` twin — it renders escaped, tags showing), `cascade_tail` (a
+on an element with a `textHtml` twin — it renders escaped, tags showing), `rich_dropped` (a
+tag or attribute in `specials.textHtml` the editor's inline rich-text schema cannot produce —
+`<p>`, `<div>`, `<h2>`, a `class` — names each one: the platform's render gate drops the WHOLE
+value and shows the escaped plain `text`; break lines with `<br>`), `cascade_tail` (a
 style key written only at `laptop`/`tablet`/`mobile` that neither base nor desktop declares,
 judged with the element's defaults — the cascade carries it to desktop). Each note is said once per process; a dry run shows it
 without spending it, so the real write shows it again.
@@ -1685,7 +1693,7 @@ box. Returns `{ findings, fixes, findings_notice? }`, in document order:
 | `no_h1` | The page has headings and none is an `h1`. Every `heading` ships as h2 (`specials.htmlTag`), and `text` / `text-dataset` take the same key, so a page built here — and every page the platform seeds — has no main title for a search engine or a screen reader. Nothing on the canvas shows the tag. Named on the page's OWN first heading — a shared header's brand line is skipped, by either stamp (`globalRef`/`globalId`); put the h1 on the one the page is about, once. Never in a form document — the page embedding the form owns the h1 |
 | `invalid_action` | A stored event whose action the element does not offer on that trigger (a purchase-bound button offers only `bindingEvents`). Stored, never fires |
 | `action_missing_target` | `go_to_url` / `open_page` with no `payload.url` (no renderer resolves a page id), or `popup` with no `payload.id`. The click does nothing |
-| `no_data_context` | A record-bound element (`product.*`, `category.*`, `article.*`, `course.*`) outside any repeater and any pin, on a page type that supplies no such record. It renders its placeholder for ever. A `record.*` binding is supplied only when its NEAREST `list-dataset` has `datasetSource: "record"`, on any page type (`key: "record"`) |
+| `no_data_context` | A record-bound element (`product.*`, `category.*`, `article.*`, `course.*`) outside any repeater and any pin, on a page type that supplies no such record. It renders its placeholder for ever. A `product.*` binding inside a `cart-item` is supplied — each cart line fills the product keys. A `record.*` binding is supplied only when its NEAREST `list-dataset` has `datasetSource: "record"`, on any page type (`key: "record"`) |
 | `unread_value` | A stored config/specials value outside the renderer's vocabulary, at base or any breakpoint. It publishes as the fallback with no error |
 | `unknown_icon` | A stored icon key (`icon` `specials.name`, `button` `specials.icon`, `list-dataset` `config.listNavIcon`, …) holding a name the icon manifest lacks. It publishes the default star or no icon; the problem names the nearest real ones |
 | `custom_code_native` | **`severity: "maintenance"`** — a `custom-code` block that is mostly markup a native element covers (form, heading, image, button, link list, YouTube/Vimeo/Maps iframe). Advice only: it works, but cannot be edited in the inspector, ignores the theme and is invisible to `sb_review`. Third-party scripts and unknown embeds are never flagged |

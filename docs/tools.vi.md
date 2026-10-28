@@ -476,6 +476,11 @@ Truyền `children` để dựng nguyên một section trong một lần gọi. 
 đặt trong section, con nằm ngoài whitelist của cha, và mọi lần thêm vào node không phải
 container.
 
+`inert` nêu element render được nhưng không nối vào đâu; gợi ý về vị trí (`accordion-content`,
+`menu-drawer`, một satellite) im lặng khi cha của nó — `parent_id` với gốc spec, node spec bao
+ngoài với con — là đúng node chủ mà nó render dưới. `base_only` (ở đây và ở `sb_set`) giải thích
+một lần và liệt kê mọi key config đã chuyển về base.
+
 **SATELLITE cũng thêm theo cách đó.** Khi `spec.type` là một satellite mà cha khai báo —
 `icon` → `cart-count` (huy hiệu giỏ hàng), `tab` → `tab-item`, … — nó được gắn đúng như
 `addDetachedNode` của editor: `data.parent` là node chủ, KHÔNG nằm trong danh sách con của chủ,
@@ -632,7 +637,10 @@ lệnh từ chối sẽ chặn cả key thật), `unknown_value`, `unknown_icon`
 ghi vào key mà một icon picker ghi — publish ra ngôi sao mặc định hoặc không có icon; phần fix
 liệt kê tối đa năm tên gần nhất), `animation`, `dead_key`, `precondition`,
 `unsupported_setting`, `text_markup` (thẻ HTML trong `specials.text` thường của element có
-cặp `textHtml` — nó render bị escape, lộ nguyên thẻ), `cascade_tail` (key style chỉ ghi ở
+cặp `textHtml` — nó render bị escape, lộ nguyên thẻ), `rich_dropped` (thẻ hoặc thuộc tính
+trong `specials.textHtml` mà schema rich-text inline của editor không tạo ra được — `<p>`,
+`<div>`, `<h2>`, một `class` — nêu tên từng cái: cổng render của nền tảng bỏ CẢ giá trị và hiện
+`text` thường đã escape; xuống dòng bằng `<br>`), `cascade_tail` (key style chỉ ghi ở
 `laptop`/`tablet`/`mobile` mà cả base lẫn desktop đều không khai, xét cùng giá trị mặc định
 của element — cascade mang nó lên desktop). Mỗi cảnh báo nói một lần mỗi process; dry run hiện nó mà không tiêu, nên
 lần ghi thật vẫn hiện lại.
@@ -1655,7 +1663,7 @@ tài liệu:
 | `no_h1` | Trang có heading mà không cái nào là `h1`. Mọi `heading` sinh ra là h2 (`specials.htmlTag`), `text` / `text-dataset` cũng đọc key đó, nên trang dựng ở đây — và mọi trang platform seed — không có tiêu đề chính cho máy tìm kiếm hay trình đọc màn hình. Canvas không hiện tag. Báo trên heading đầu tiên CỦA TRANG — dòng thương hiệu trong header dùng chung được bỏ qua, theo cả hai stamp (`globalRef`/`globalId`); đặt h1 lên đúng heading nói về trang, một cái thôi. Không bao giờ báo trong form document — trang nhúng form mới giữ h1 |
 | `invalid_action` | Sự kiện đã lưu có action mà element không hỗ trợ trên trigger đó (nút đã gắn mua hàng chỉ nhận `bindingEvents`). Được lưu nhưng không bao giờ chạy |
 | `action_missing_target` | `go_to_url` / `open_page` thiếu `payload.url` (renderer không tự phân giải id trang), hoặc `popup` thiếu `payload.id`. Bấm vào không có tác dụng |
-| `no_data_context` | Element gắn dữ liệu (`product.*`, `category.*`, `article.*`, `course.*`) nằm ngoài mọi repeater và mọi pin, trên loại trang không cung cấp bản ghi đó. Nó hiện placeholder mãi mãi. Binding `record.*` chỉ có dữ liệu khi `list-dataset` GẦN NHẤT bao nó có `datasetSource: "record"`, trên mọi loại trang (`key: "record"`) |
+| `no_data_context` | Element gắn dữ liệu (`product.*`, `category.*`, `article.*`, `course.*`) nằm ngoài mọi repeater và mọi pin, trên loại trang không cung cấp bản ghi đó. Nó hiện placeholder mãi mãi. Binding `product.*` nằm trong `cart-item` thì có dữ liệu — mỗi dòng giỏ hàng điền các key product. Binding `record.*` chỉ có dữ liệu khi `list-dataset` GẦN NHẤT bao nó có `datasetSource: "record"`, trên mọi loại trang (`key: "record"`) |
 | `unread_value` | Giá trị config/specials đã lưu nằm ngoài từ vựng của renderer, ở base hoặc bất kỳ breakpoint nào. Publish ra giá trị mặc định mà không báo lỗi |
 | `unknown_icon` | Key icon đã lưu (`icon` `specials.name`, `button` `specials.icon`, `list-dataset` `config.listNavIcon`, …) chứa tên mà manifest icon không có. Publish ra ngôi sao mặc định hoặc không có icon; phần problem nêu các tên thật gần nhất |
 | `custom_code_native` | **`severity: "maintenance"`** — khối `custom-code` chủ yếu là markup mà element native đã có (form, heading, ảnh, nút, danh sách link, iframe YouTube/Vimeo/Maps). Chỉ là gợi ý: vẫn chạy, nhưng không sửa được trong inspector, bỏ qua theme và `sb_review` không nhìn vào được. Script bên thứ ba và embed lạ không bao giờ bị báo |

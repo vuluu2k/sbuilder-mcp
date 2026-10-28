@@ -47,9 +47,18 @@
  * and it would have caught `quickview`. An element REJECTED after being read
  * against the criterion above belongs in that ledger with its reason, not here.
  */
+import { SATELLITE_RULES } from '../../catalog/elements.generated.js';
+
 export interface InertHint {
   /** Said once per process per element type. */
   note: string;
+  /**
+   * The parent type it DOES render under. A placement-dependent hint is silent
+   * there — telling a caller who placed it correctly that it will not render is
+   * a false warning. A satellite's owners (SATELLITE_RULES) count too: sb_add
+   * under the owner attaches it as that owner's satellite.
+   */
+  host?: string;
 }
 
 export const INERT_ON_ADD: Record<string, InertHint> = {
@@ -270,6 +279,7 @@ export const INERT_ON_ADD: Record<string, InertHint> = {
       'other container it is accepted (nothing refuses it) and, per its own AVOID, does not ' +
       'render there. Add it only as a child of an accordion; for a standalone section use ' +
       'flex-section instead.',
+    host: 'accordion',
   },
 
   // hamburger-menu is a container with NO childAllows restriction, so it
@@ -282,6 +292,7 @@ export const INERT_ON_ADD: Record<string, InertHint> = {
       'drawer placed elsewhere on the page, and per its own AVOID it then "only renders as that ' +
       "element's panel,\" i.e. never. Add it under the hamburger-menu it should belong to, not " +
       'beside it.',
+    host: 'hamburger-menu',
   },
 
   // `menu` itself cannot hold children at all (isContainer: false), so a
@@ -302,12 +313,25 @@ export function inertHint(type: string): string | null {
   return INERT_ON_ADD[type]?.note ?? null;
 }
 
-/** Every distinct hint for the types in a subtree spec, deduped, in add order. */
-export function inertHintsFor(types: readonly string[]): Array<{ type: string; note: string }> {
+/** Does `type` render under a parent of `parent`'s type (its host, or a satellite owner)? */
+function hosted(type: string, parent: string | undefined): boolean {
+  if (!parent) return false;
+  return INERT_ON_ADD[type]?.host === parent || !!SATELLITE_RULES[parent]?.some((r) => r.type === type);
+}
+
+/**
+ * Every distinct hint for the nodes of a subtree spec, deduped, in add order.
+ * A node may carry its parent's TYPE, which silences a hint about placement
+ * when the placement is the right one.
+ */
+export function inertHintsFor(
+  placed: ReadonlyArray<string | { type: string; parent?: string }>,
+): Array<{ type: string; note: string }> {
   const seen = new Set<string>();
   const out: Array<{ type: string; note: string }> = [];
-  for (const t of types) {
-    if (seen.has(t)) continue;
+  for (const p of placed) {
+    const { type: t, parent } = typeof p === 'string' ? { type: p, parent: undefined } : p;
+    if (seen.has(t) || hosted(t, parent)) continue;
     const note = inertHint(t);
     if (!note) continue;
     seen.add(t);

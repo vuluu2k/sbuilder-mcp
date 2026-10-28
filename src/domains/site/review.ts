@@ -672,7 +672,12 @@ export function reviewDesign(
       const missing = ((n as { bindings?: Array<{ source?: string }> }).bindings ?? [])
         .map((b) => String(b?.source ?? '').split('.')[0])
         .find((e) => RECORD_ENTITIES.has(e) && !entities.includes(e));
-      const supplied = missing && ROW_SUPPLIER[missing] ? insideType(d, id, ROW_SUPPLIER[missing]) : false;
+      // A CART LINE FILLS THE PRODUCT KEYS: `scope.CartLineContext` writes
+      // product.title/image/price per line rather than a cartLine.* twin, so a
+      // product-bound element in a cart row is supplied on any page type.
+      const supplied = missing && ROW_SUPPLIER[missing]
+        ? insideType(d, id, ROW_SUPPLIER[missing])
+        : missing === 'product' && insideType(d, id, 'cart-item');
       if (missing && !supplied && !pinnedAbove(d, id)) {
         out.push({
           code: 'no_data_context',

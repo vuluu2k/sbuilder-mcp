@@ -1074,3 +1074,9 @@ above today's measurement gets raised again without anybody looking.
   NOT an empty box: `RenderIconSVG` falls back to `StarFill`, and `button` guards with
   `HasIcon` and draws nothing — wrong either way, silent either way. `''` is never flagged:
   the "None" cell writes it and `form-text` seeds it.
+
+- **`INLINE_RICH` (`richtext.generated.ts`) is read off `server/pkg/sanitize`** —
+  `InlineRichSpecials` (inline.go) and `inlineTags` / `globalAttrs` / `tagAttrs` (sanitize.go),
+  the allowlists `scope.GateInlineRichSpecials` checks; it exits 1 if `textHtml`, `<strong>`/`<br>`/`<a>`
+  or the gate's call shape go missing, or `<p>` appears. `server/pkg/sanitize` is in the
+  dirty/unpublished check list for that reason.
