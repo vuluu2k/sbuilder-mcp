@@ -6,6 +6,18 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.98.2] - 2026-10-28
+
+### Added
+- `sb_review` và `sb_add` báo `rich_dropped` khi `specials.textHtml` chứa thẻ hoặc thuộc tính ngoài allowlist inline của nền tảng, vì nền tảng bỏ nguyên giá trị và hiển thị `text` thường đã escape.
+
+### Changed
+- `sb_add` và `sb_set` giải thích `base_only` một lần và liệt kê các key bị ảnh hưởng thay vì lặp lại lời giải thích cho từng key.
+
+### Fixed
+- `sb_review` không còn báo `no_data_context` cho binding `product.*` trong cart-item, vì mỗi dòng giỏ hàng tự cung cấp các key product.
+- `sb_add` không còn hiện gợi ý inert phụ thuộc vị trí (accordion-content, menu-drawer, satellite) khi cha đã là node chủ.
+
 ## [0.98.1] - 2026-10-28
 
 ### Fixed

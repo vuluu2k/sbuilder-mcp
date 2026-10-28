@@ -6,6 +6,18 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.98.2] - 2026-10-28
+
+### Added
+- `sb_review` and `sb_add` report `rich_dropped` when `specials.textHtml` contains tags or attributes outside the platform's inline allowlist, because the platform drops the whole value and renders plain escaped `text`.
+
+### Changed
+- `sb_add` and `sb_set` explain `base_only` once and list the affected keys instead of repeating the explanation per key.
+
+### Fixed
+- `sb_review` no longer reports `no_data_context` for `product.*` bindings inside a cart-item, because each cart line supplies its own product keys.
+- `sb_add` no longer shows position-dependent inert hints (accordion-content, menu-drawer, satellite) when the parent is already the owning node.
+
 ## [0.98.1] - 2026-10-28
 
 ### Fixed
