@@ -2259,6 +2259,22 @@ không có tham số nào diễn đạt được ý "bỏ hết phần còn lạ
 Id token hoặc slug mà site không có sẽ bị **từ chối**, kèm danh sách những cái có thật: mọi preset
 phân giải qua các id đó, nên một id bịa ra sẽ được lưu và không gì đọc.
 
+**Breakpoint.** Trong một text style (hoặc preset), key tên `mobile`, `tablet` hay `laptop` chứa
+một object sẽ ghi phần ghi đè của breakpoint đó — `{ "heading-3": { "fontSize": "20px",
+"mobile": { "fontSize": "18px" } } }`. Giá trị chuỗi thường ghi vào `base`. Theme khởi đầu giữ
+sẵn ghi đè responsive (heading-3 mobile `24px`), nên chỉ đổi base có thể khiến cỡ chữ trên điện
+thoại LỚN hơn trên desktop; kết quả liệt kê từng trường hợp đó trong `responsive_larger`
+(`{ style, breakpoint, fontSize, base }`).
+
+**`presets`** vá một style preset của element — `{ "<presetId>": { <khai báo>, mobile?: {…} } }`
+— gộp vào tài liệu đã đọc như mọi thứ khác, id lạ bị từ chối kèm danh sách id thật, mỗi thay đổi
+báo `from`→`to` dưới dạng `presets.<id>[.<bp>].<prop>`. Nó tồn tại vì preset có thể ghim literal
+riêng: `heading-default`, `text-default`, `text-dataset-default` và `button-default` của theme
+khởi đầu mang `fontFamily: "Inter"` (và `heading-default` có `fontSize` riêng), thứ ĐÈ lên text
+style. Nên khi `text_styles` đổi `fontFamily`, kết quả nêu mọi preset còn mang literal family
+khác trong `presets_pin_font` (`{ preset, fontFamily }`) — vá chúng trong cùng lần gọi để chúng
+đi theo.
+
 Publish lại sau khi đổi. Theme được biên dịch vào stylesheet của từng trang, nên trang đã lưu vẫn
 giữ bảng màu cũ cho tới khi được publish lần nữa.
 

@@ -2309,6 +2309,22 @@ safe.) There is deliberately no argument here that can express "drop everything 
 A token id or style slug the site does not have is **refused**, with the real ones named: every
 preset resolves through those ids, so an invented one would be stored and read by nothing.
 
+**Breakpoints.** Inside a text style (or a preset) a key named `mobile`, `tablet` or `laptop`
+holding an object writes that breakpoint's override — `{ "heading-3": { "fontSize": "20px",
+"mobile": { "fontSize": "18px" } } }`. A plain string value writes `base`. The starter keeps
+responsive overrides (heading-3 mobile `24px`), so a base-only change can leave the phone size
+LARGER than the desktop one; the answer lists each such case under `responsive_larger`
+(`{ style, breakpoint, fontSize, base }`).
+
+**`presets`** patches an element style preset — `{ "<presetId>": { <declarations>, mobile?: {…} } }`
+— merged into the read document like everything else, an unknown id refused with the real ones
+named, every change reported `from`→`to` as `presets.<id>[.<bp>].<prop>`. It exists because a
+preset can pin its own literal: the starter's `heading-default`, `text-default`,
+`text-dataset-default` and `button-default` carry `fontFamily: "Inter"` (and `heading-default`
+its own `fontSize`), which OUTRANK the text style. So when `text_styles` changes a `fontFamily`,
+the answer names every preset still carrying a different literal family under
+`presets_pin_font` (`{ preset, fontFamily }`) — patch them in the same call to make them follow.
+
 `locale` sets the site's LANGUAGE — `settings.locale`, what `<html lang>` is served from, so
 the voice a screen reader picks and the language a search engine indexes. It keeps every other
 setting (read, change, send the whole document back) and tries that whole body with every
