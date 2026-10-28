@@ -816,10 +816,18 @@ platform treats an unproven guard as indistinguishable from an absent one.
   `<fromCents>-<toCents>` (open end `<from>-`, `predicate.ts matchesRange`); `..` matches nothing.
 - **A `textHtml` with ONE non-inline tag is DROPPED WHOLE at render** (`scope.GateInlineRichSpecials`
   → `sanitize.IsInlineRepresentable`): `<p>…</p>` published the escaped plain `text`, measured live
-  2026-10-28. `writecheck` warns `rich_dropped` naming each tag/attribute outside `INLINE_RICH`; a
-  paragraph break is `<br>`.
-- **A cart line SUPPLIES `product.*`** (`scope.CartLineContext` fills the existing product keys), so
-  `no_data_context` treats a `cart-item` ancestor as a data context for product bindings.
+  2026-10-28. `writecheck` warns `rich_dropped` naming each tag/attribute outside `INLINE_RICH`, an
+  `href` failing `sanitize.safeURL` (`javascript:` any case, `data:` except `data:image/`) and any
+  `<!`/`<?`; a paragraph break is `<br>`. Codegen copies the platform's shared fixture
+  (`schema/test/inline-representable-cases.json`) to `test/inline-representable-cases.generated.json`
+  and the suite holds `rich_dropped` to every verdict in it.
+- **A cart line SUPPLIES FOUR `product.*` KEYS, and only under `cart-order`.** `scope.CartLineContext`
+  fills `product.title/image/price/priceCents`; only `cart-order` renders its first child with
+  `PlaceholderCartLine` (`cart-order/html.go`), and `rowDirectiveFor` drives just those plus the stepper.
+  So `no_data_context` is silent for a node in `cart-order` > `cart-item` bound to one of the four (its
+  seeded extras — `compareAtPrice`, `product.id` — render empty in a line, as the platform's own drawer
+  seed ships) or a `quantity-dataset`; `product.description` there, a bare `cart-item`, or a second
+  entity (`category.*`) on the same node still fires.
 - **A placement hint in `INERT_ON_ADD` is silent under its host** (`host`, plus any SATELLITE_RULES
   owner): `sb_add` passes each spec node's parent type — warning `accordion-content` under an
   `accordion` told a correct caller it would not render.

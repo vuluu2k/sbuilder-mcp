@@ -1,0 +1,130 @@
+{
+  "_generated": "by scripts/gen-catalog.ts from <WB_REPO>/schema/test/inline-representable-cases.json — do not edit",
+  "cases": [
+    {
+      "name": "empty",
+      "html": "",
+      "ok": true
+    },
+    {
+      "name": "plain words",
+      "html": "plain words",
+      "ok": true
+    },
+    {
+      "name": "escaped entities, no markup",
+      "html": "5 &lt; 6 &amp; 7 &gt; 2",
+      "ok": true
+    },
+    {
+      "name": "every mark the toolbar writes",
+      "html": "a <strong>b</strong> <em>c</em> <u>d</u> <s>e</s> x<sup>2</sup> y<sub>1</sub>",
+      "ok": true
+    },
+    {
+      "name": "a coloured span and a highlight",
+      "html": "<span style=\"color: rgb(255, 0, 0)\">f</span><mark style=\"background-color: rgb(255, 255, 0)\">g</mark>",
+      "ok": true
+    },
+    {
+      "name": "a mailto link",
+      "html": "<a href=\"mailto:a@b.c\">h</a>",
+      "ok": true
+    },
+    {
+      "name": "a tel link",
+      "html": "<a href=\"tel:+8490\">h</a>",
+      "ok": true
+    },
+    {
+      "name": "an http link with target and rel",
+      "html": "<a href=\"https://example.com\" target=\"_blank\" rel=\"noopener\">h</a>",
+      "ok": true
+    },
+    {
+      "name": "a hard break",
+      "html": "a<br>b",
+      "ok": true
+    },
+    {
+      "name": "a title attribute",
+      "html": "<span title=\"t\">x</span>",
+      "ok": true
+    },
+    {
+      "name": "nested marks",
+      "html": "<strong><em>x</em></strong>",
+      "ok": true
+    },
+    {
+      "name": "an image",
+      "html": "<img src=\"x\" onerror=\"alert(1)\">",
+      "ok": false
+    },
+    {
+      "name": "a script",
+      "html": "<script>alert(1)</script>",
+      "ok": false
+    },
+    {
+      "name": "an inline handler",
+      "html": "<strong onclick=\"x()\">a</strong>",
+      "ok": false
+    },
+    {
+      "name": "a javascript: destination",
+      "html": "<a href=\"javascript:alert(1)\">t</a>",
+      "ok": false
+    },
+    {
+      "name": "a javascript: destination, mixed case",
+      "html": "<a href=\"JavaScript:alert(1)\">t</a>",
+      "ok": false
+    },
+    {
+      "name": "a data: destination",
+      "html": "<a href=\"data:text/html,x\">t</a>",
+      "ok": false
+    },
+    {
+      "name": "a block div",
+      "html": "<div>a</div>",
+      "ok": false
+    },
+    {
+      "name": "a paragraph",
+      "html": "<p>a</p>",
+      "ok": false
+    },
+    {
+      "name": "a heading — the node IS the heading",
+      "html": "<h2>a</h2>",
+      "ok": false
+    },
+    {
+      "name": "a list",
+      "html": "<ul><li>a</li></ul>",
+      "ok": false
+    },
+    {
+      "name": "an unknown data attribute",
+      "html": "<span data-x=\"1\">a</span>",
+      "ok": false
+    },
+    {
+      "name": "a payload nested under legitimate marks",
+      "html": "<strong><em><img src=x onerror=1></em></strong>",
+      "ok": false
+    },
+    {
+      "name": "a comment — the schema emits none",
+      "html": "a<!-- anything -->b",
+      "ok": false
+    },
+    {
+      "name": "a del the schema parses but never emits",
+      "html": "<del>x</del>",
+      "ok": false
+    }
+  ]
+}

@@ -791,7 +791,7 @@ function assertCommitted(repo: string): void {
     .filter(([, real]) => !real.startsWith(root + sep))
     .map(([link, real]) => `${link} -> ${real}`);
   if (escaped.length) refuse('resolves @webbuilder/* to ANOTHER checkout from', escaped);
-  const read = ['schema/src', 'editor/src', 'server/render', 'server/docs', 'runtime/src', 'server/pkg/sanitize'];
+  const read = ['schema/src', 'editor/src', 'server/render', 'server/docs', 'runtime/src', 'server/pkg/sanitize', 'schema/test/inline-representable-cases.json'];
   let out = '';
   try {
     out = execFileSync('git', ['-C', repo, 'status', '--porcelain', '--', ...read], {
@@ -4597,6 +4597,21 @@ export const INLINE_RICH = ${JSON.stringify({ specials: richSpecials, tags: inli
 `;
   emit(resolve(process.cwd(), 'src/catalog/richtext.generated.ts'), richOut);
   console.error(`${VERB} richtext.generated.ts: ${richSpecials.length} gated specials, ${inlineTags.length} inline tags`);
+  // The platform's SHARED fixture for that gate (the Go gate and the editor's
+  // mirror both run it), copied so test/storefront-defects-1028 holds
+  // `rich_dropped` to the same verdicts with no web_builder checkout.
+  const richCases = (JSON.parse(readFileSync(resolve(repo, 'schema/test/inline-representable-cases.json'), 'utf8')) as {
+    cases?: Array<{ name: string; html: string; ok: boolean }>;
+  }).cases;
+  if (!richCases?.length || !richCases.every((c) => typeof c.html === 'string' && typeof c.ok === 'boolean')) {
+    console.error('rich text: schema/test/inline-representable-cases.json no longer reads as {cases:[{name,html,ok}]}');
+    process.exit(1);
+  }
+  emit(
+    resolve(process.cwd(), 'test/inline-representable-cases.generated.json'),
+    JSON.stringify({ _generated: 'by scripts/gen-catalog.ts from <WB_REPO>/schema/test/inline-representable-cases.json — do not edit', cases: richCases }, null, 2) + '\n',
+  );
+  console.error(`${VERB} inline-representable-cases.generated.json: ${richCases.length} cases`);
 
   // ---- What a translation may rewrite ----------------------------------
   //

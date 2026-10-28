@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest';
+import { readFileSync } from 'node:fs';
 import { connectedClient } from './harness.js';
 import { Session } from '../src/transport/auth.js';
 import { PageDoc } from '../src/domains/site/document.js';
@@ -40,6 +41,22 @@ describe('textHtml holding markup the rich-text schema cannot produce', () => {
       expect(writeCheck('text', 'specials', { textHtml: v }).map((c) => c.note.code), v).not.toContain('rich_dropped');
     }
   });
+
+  // web_builder's SHARED fixture (schema/test/inline-representable-cases.json),
+  // which pins the Go gate and the editor's mirror case for case — copied here
+  // by codegen so this suite needs no checkout.
+  const { cases } = JSON.parse(readFileSync(new URL('./inline-representable-cases.generated.json', import.meta.url), 'utf8')) as {
+    cases: Array<{ name: string; html: string; ok: boolean }>;
+  };
+  it.each(cases)('agrees with the platform gate: $name', ({ html, ok }) => {
+    const dropped = writeCheck('text', 'specials', { textHtml: html }).some((c) => c.note.code === 'rich_dropped');
+    expect(dropped).toBe(!ok);
+  });
+
+  it('reads past a ">" inside a quoted attribute value', () => {
+    const n = writeCheck('text', 'specials', { textHtml: '<a title="a>b" class="x">t</a>' }).find((c) => c.note.code === 'rich_dropped');
+    expect(n?.note.problem).toMatch(/a class/);
+  });
 });
 
 /* 2 ---------------------------------------------------------------------- */
@@ -64,6 +81,51 @@ describe('no_data_context inside a cart line', () => {
     const flagged = reviewDesign(d, { pageType: 'checkout' }).filter((f) => f.code === 'no_data_context').map((f) => f.nodeId);
     expect(flagged).not.toContain(row);
     expect(flagged).toContain(out);
+  });
+
+  // Only cart-order renders its first child with PlaceholderCartLine
+  // (render/nodes/cart-order/html.go), and CartLineContext fills exactly
+  // product.title/image/price/priceCents — nothing else of a product.
+  const review = (wrap: string[], leaf: string, sources?: string[]) => {
+    const d = PageDoc.from({ schema_version: 2, root_node_id: '', nodes: {} });
+    let spec: Record<string, unknown> = { type: leaf };
+    for (const t of [...wrap].reverse()) spec = { type: t, children: [spec] };
+    d.apply(addSubtree(d, 'ROOT', { type: 'flex-section', children: [spec] } as never).patches);
+    // Under the LAST wrapper — cart-order mints an empty state holding a heading too.
+    const id = Object.values(d.doc.nodes).find(
+      (n) => n.data.type === leaf && d.doc.nodes[n.data.parent!]?.data.type === wrap[wrap.length - 1],
+    )!.id;
+    if (sources) {
+      (d.doc.nodes[id] as { bindings?: unknown[] }).bindings = sources.map((s, i) => ({ id: `b${i}`, source: s, field: `specials.f${i}` }));
+    }
+    return { id, found: reviewDesign(d, { pageType: 'checkout' }).filter((f) => f.code === 'no_data_context' && f.nodeId === id) };
+  };
+
+  it('a cart-item with no cart-order around it supplies nothing', () => {
+    expect(review(['cart-item'], 'heading', ['product.title']).found).toHaveLength(1);
+  });
+
+  it('cart-order > cart-item > heading bound to product.title is supplied', () => {
+    expect(review(['cart-order', 'cart-item'], 'heading', ['product.title']).found).toEqual([]);
+  });
+
+  it('a product key the line does not fill still fires there', () => {
+    const { found } = review(['cart-order', 'cart-item'], 'text', ['product.description']);
+    expect(found).toHaveLength(1);
+    expect(found[0].problem).toMatch(/cart line/);
+  });
+
+  it('a supplied product binding does not hide an unsupplied category one', () => {
+    const { found } = review(['cart-order', 'cart-item'], 'heading', ['product.title', 'category.title']);
+    expect(found.map((f) => f.key)).toEqual(['category']);
+  });
+
+  it('the platform cart seed shape is silent: seeded pricing and quantity in a line', () => {
+    // pricing-dataset seeds compareAtPrice/moneyOverride/product.id beside
+    // product.price; the line drives price and leaves the rest empty. The
+    // stepper is driven by the row (CartOrder#inc, line.quantity) whatever it binds.
+    expect(review(['cart-order', 'cart-item'], 'pricing-dataset').found).toEqual([]);
+    expect(review(['cart-order', 'cart-item'], 'quantity-dataset').found).toEqual([]);
   });
 });
 

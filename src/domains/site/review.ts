@@ -240,6 +240,13 @@ function contrast(a: number[], b: number[]): number {
 const RECORD_ENTITIES = new Set(['product', 'category', 'course', 'article', 'blogCategory', 'brand', 'cartLine']);
 /** A record only one element type's rows supply, which is not a dataset repeater. */
 const ROW_SUPPLIER: Record<string, string> = { cartLine: 'cart-order' };
+/**
+ * The product keys a cart line fills (scope.CartLineContext). Only cart-order
+ * paints its row with one (cart-order/html.go: kids[0] + PlaceholderCartLine),
+ * and the row drives just these plus the stepper (rowDirectiveFor) — any other
+ * product.* there renders the same empty value on every line.
+ */
+const CART_LINE_KEYS = new Set(['product.title', 'product.image', 'product.price', 'product.priceCents']);
 
 /** Does this node sit inside an element of `type`? */
 function insideType(d: DocLike, id: string, type: string): boolean {
@@ -669,16 +676,24 @@ export function reviewDesign(
     // Overlays are skipped: one drawer serves every page type.
     if (opts.pageType !== undefined && !inRepeater.get(id) && !inOverlay.has(id)) {
       const entities = PAGE_ENTITIES[opts.pageType] ?? [];
-      const missing = ((n as { bindings?: Array<{ source?: string }> }).bindings ?? [])
-        .map((b) => String(b?.source ?? '').split('.')[0])
-        .find((e) => RECORD_ENTITIES.has(e) && !entities.includes(e));
-      // A CART LINE FILLS THE PRODUCT KEYS: `scope.CartLineContext` writes
-      // product.title/image/price per line rather than a cartLine.* twin, so a
-      // product-bound element in a cart row is supplied on any page type.
-      const supplied = missing && ROW_SUPPLIER[missing]
-        ? insideType(d, id, ROW_SUPPLIER[missing])
-        : missing === 'product' && insideType(d, id, 'cart-item');
-      if (missing && !supplied && !pinnedAbove(d, id)) {
+      const sources = ((n as { bindings?: Array<{ source?: string }> }).bindings ?? []).map((b) => String(b?.source ?? ''));
+      // A CART LINE FILLS SOME PRODUCT KEYS: `scope.CartLineContext` writes
+      // product.title/image/price/priceCents per line rather than a cartLine.*
+      // twin. A node the line drives (one of those, or the row's own stepper)
+      // is supplied; its seeded extras (compareAtPrice, product.id) render
+      // empty in a line, which is what the platform's own drawer seed ships.
+      const inLine = insideType(d, id, 'cart-item') && insideType(d, id, 'cart-order');
+      const lineDriven = inLine && (type === 'quantity-dataset' || sources.some((s) => CART_LINE_KEYS.has(s)));
+      const missing = sources
+        .map((s) => s.split('.')[0])
+        .find(
+          (e) =>
+            RECORD_ENTITIES.has(e) &&
+            !entities.includes(e) &&
+            !(e === 'product' && lineDriven) &&
+            !(ROW_SUPPLIER[e] && insideType(d, id, ROW_SUPPLIER[e])),
+        );
+      if (missing && !pinnedAbove(d, id)) {
         out.push({
           code: 'no_data_context',
           nodeId: id,
@@ -686,8 +701,11 @@ export function reviewDesign(
           problem:
             (ROW_SUPPLIER[missing]
               ? `Bound to a ${missing} field, but it sits outside any ${ROW_SUPPLIER[missing]} — only its line rows supply one, so it renders its placeholder on the published page.`
-              : `Bound to a ${missing} record, but it sits in no repeater and a "${opts.pageType}" ` +
-                'page supplies none — it renders its placeholder on the published page.'),
+              : missing === 'product' && inLine
+                ? 'Bound to a product field a cart line does not fill — a line supplies only ' +
+                  `${[...CART_LINE_KEYS].join(', ')}, so it renders the same empty value on every line.`
+                : `Bound to a ${missing} record, but it sits in no repeater and a "${opts.pageType}" ` +
+                  'page supplies none — it renders its placeholder on the published page.'),
           key: missing,
           fix: fill('no_data_context', { id, key: missing }),
         });

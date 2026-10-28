@@ -179,27 +179,44 @@ const MARKUP = /<\/?(?:b|strong|i|em|u|s|span|br|a|p|div|small|mark|sup|sub|h[1-
 /**
  * What in a gated rich special `sanitize.IsInlineRepresentable` refuses: a tag
  * outside the editor schema's inline vocabulary, or an attribute outside the
- * global/per-tag allowlists. Any one and `GateInlineRichSpecials` deletes the
- * WHOLE value. ponytail: tags and attribute names only — an unsafe href scheme
- * or an HTML comment is refused too and not named here.
+ * global/per-tag allowlists, an href whose scheme can run script, or a
+ * comment/doctype. Any one and `GateInlineRichSpecials` deletes the WHOLE value.
+ * Held to the platform's shared fixture by test/storefront-defects-1028.
  */
 function richOffenders(v: string): string[] {
   const out = new Set<string>();
   const tags: readonly string[] = INLINE_RICH.tags;
   const globalAttrs: readonly string[] = INLINE_RICH.globalAttrs;
   const tagAttrs = INLINE_RICH.tagAttrs as Record<string, readonly string[]>;
-  for (const m of v.matchAll(/<\/?([a-zA-Z][\w-]*)([^>]*)>/g)) {
+  if (/<[!?]/.test(v)) out.add('<!-- -->');
+  for (const m of v.matchAll(/<\/?([a-zA-Z][\w-]*)((?:"[^"]*"|'[^']*'|[^"'>])*)>/g)) {
     const tag = m[1].toLowerCase();
     if (!tags.includes(tag)) {
       out.add(`<${tag}>`);
       continue;
     }
-    for (const a of m[2].matchAll(/([^\s=/>"']+)(?:\s*=\s*(?:"[^"]*"|'[^']*'|[^\s>]+))?/g)) {
+    for (const a of m[2].matchAll(/([^\s=/>"']+)(?:\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>]+)))?/g)) {
       const name = a[1].toLowerCase();
+      const val = a[2] ?? a[3] ?? a[4] ?? '';
       if (!globalAttrs.includes(name) && !tagAttrs[tag]?.includes(name)) out.add(`<${tag} ${name}>`);
+      else if (name === 'href' && !safeURL(val)) out.add(`<${tag} href="${val.split(':')[0].trim()}:…">`);
     }
   }
   return [...out];
+}
+
+/** server/pkg/sanitize safeURL: relative, http(s), mailto, tel, or data:image/. */
+function safeURL(raw: string): boolean {
+  // The Go tokenizer unescapes attribute values first; an encoded colon is the
+  // one entity that changes the verdict.
+  const t = raw.replace(/&(?:colon|#0*58|#x0*3a);?/gi, ':').trim();
+  const colon = t.indexOf(':');
+  if (colon < 0) return true;
+  const i = t.search(/[/?#]/);
+  if (i >= 0 && i < colon) return true;
+  const scheme = t.slice(0, colon).toLowerCase();
+  if (['http', 'https', 'mailto', 'tel'].includes(scheme)) return true;
+  return scheme === 'data' && t.toLowerCase().startsWith('data:image/');
 }
 
 /**
@@ -293,7 +310,8 @@ export function writeCheck(
         `specials.${k} holds ${bad.join(', ')}, which the editor's inline rich-text schema cannot produce — so the ` +
           `platform DROPS the whole value at render and shows the escaped plain specials.${k.replace(/Html$/, '')} instead, with no error.`,
         `Keep to ${INLINE_RICH.tags.map((t) => `<${t}>`).join(' ')}; break a paragraph with <br> (or <br><br>), ` +
-          'never <p>/<div>, and put a separate block in its own node.',
+          'never <p>/<div>, and put a separate block in its own node. A link goes to http(s), mailto, tel or a ' +
+          'relative path; no comments.',
       );
     }
     if (namespace === 'specials') {

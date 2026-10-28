@@ -1079,4 +1079,7 @@ above today's measurement gets raised again without anybody looking.
   `InlineRichSpecials` (inline.go) and `inlineTags` / `globalAttrs` / `tagAttrs` (sanitize.go),
   the allowlists `scope.GateInlineRichSpecials` checks; it exits 1 if `textHtml`, `<strong>`/`<br>`/`<a>`
   or the gate's call shape go missing, or `<p>` appears. `server/pkg/sanitize` is in the
-  dirty/unpublished check list for that reason.
+  dirty/unpublished check list for that reason. Beside it, `schema/test/inline-representable-cases.json`
+  (the fixture the Go gate and the editor mirror both run) is copied to
+  `test/inline-representable-cases.generated.json`, so `rich_dropped` is held to the same verdicts
+  with no checkout; it exits 1 if the file stops reading as `{cases:[{name,html,ok}]}`.
