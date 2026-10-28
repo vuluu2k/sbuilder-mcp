@@ -6,6 +6,14 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.97.0] - 2026-10-28
+
+### Added
+- `sb_event` can give a non-product list card a real click through the new `open_page` and `go_to_url` events and an Action group declared on dataset-block.
+
+### Changed
+- The API catalog is synced with web_builder v1.0.178, including the editor's "convert to action" prompt for a card that holds only `specials.href`.
+
 ## [0.96.0] - 2026-10-27
 
 ### Added
