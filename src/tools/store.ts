@@ -624,7 +624,7 @@ export function registerStoreTools(server: McpServer, ctx: ToolContext, session:
         'contact, booking, stay and more — settings merge into the record) with ' +
         'its own field document, which is the part that cannot be guessed. action:"chrome" ' +
         'gives every page ONE shared header (footer:true — footer) built on a real site menu of ' +
-        'page/category/product references: a desktop menu, a mobile drawer, cart and account ' +
+        'page/category/product references: site name, desktop menu, mobile drawer, search, cart and account ' +
         'icons — the gap sb_review reports as siteChrome. action:"menu" binds a menu node on the open page ' +
         'to the site\'s menu and resolves its links, the way the editor does. ' +
         'action:"overlay_attach" puts a pop-up on the open page (kind:"popup") or points a ' +
@@ -674,7 +674,7 @@ export function registerStoreTools(server: McpServer, ctx: ToolContext, session:
           .optional()
           .describe(
             'action:"form" — the form\'s name in the merchant\'s list. action:"overlay_attach" ' +
-              'with no overlay_id — the new pop-up/quick-view\'s name.',
+              'with no overlay_id — the new pop-up/quick-view\'s name. "chrome" — the header\'s site name.',
           ),
         footer: z
           .boolean()
@@ -830,6 +830,7 @@ export function registerStoreTools(server: McpServer, ctx: ToolContext, session:
           await buildChrome(ctx, session, siteId, footer === true ? 'footer' : 'header', {
             dryRun: dry_run !== false,
             language: (language ?? 'vi') as 'vi' | 'en',
+            brand: name,
           }),
         );
       }
