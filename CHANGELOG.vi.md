@@ -6,6 +6,14 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.97.0] - 2026-10-28
+
+### Added
+- `sb_event` cho thẻ của danh sách không phải sản phẩm một cú click thật nhờ các sự kiện `open_page` và `go_to_url` mới cùng nhóm Action được khai báo trên dataset-block.
+
+### Changed
+- Catalog API được đồng bộ với web_builder v1.0.178, gồm gợi ý "convert to action" trong editor cho thẻ chỉ có `specials.href`.
+
 ## [0.96.0] - 2026-10-27
 
 ### Added
