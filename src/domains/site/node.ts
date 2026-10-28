@@ -94,6 +94,14 @@ function copy<T>(v: T): T {
  * collections. Every `<source>|*` row of such an element is identical (they have
  * no kind axis to vary on), so the first row for the source IS the answer, and
  * falling back to it is what makes the axis reachable at all.
+ *
+ * AND ONLY THERE. Where the rows for the source DIFFER (text-dataset,
+ * pricing-dataset), a missing `source|kind` row is a kind this catalog does not
+ * know, and the first row is a SIBLING's answer: `kind:'tags'` once bound
+ * `product.title` and a spec-tags line showed the product name. That refuses.
+ * An absent `datasetSource` reads as the element's default (the factory's own
+ * rule) once `kind` has moved off its default — a `price` leaf with no source
+ * must still get its own target, not the `prices` parent's.
  */
 export function bindingsForConfig(
   type: string,
@@ -101,21 +109,30 @@ export function bindingsForConfig(
 ): unknown[] | null {
   const table = ELEMENTS[type]?.bindingsFor as Record<string, unknown[]> | undefined;
   if (!table) return null;
-  const source = String(config?.datasetSource ?? '');
+  // An absent kind is the element's default kind — the factory's own reading.
+  const defaults = ELEMENTS[type]?.defaults.config ?? {};
+  const kind = String(config?.kind ?? defaults.kind ?? '');
+  const source = String(
+    config?.datasetSource ?? (kind && kind !== String(defaults.kind ?? '') ? (defaults.datasetSource ?? 'product') : ''),
+  );
   if (!source) return null;
-  const kind = String(config?.kind ?? '');
   // A RECORD tile's source is its `config.recordField`, which no enumerated row
   // can hold — the row supplies the target, `recordTileBindings` the field.
   const done = (rows: unknown[]) =>
     source === 'record' ? recordTileBindings(type, config ?? {}, copy(rows)) : (copy(rows) as unknown[]);
   const exact = table[`${source}|${kind}`];
   if (exact) return done(exact);
-  // No kind axis on this element: any row for the source carries the same answer.
-  const prefix = `${source}|`;
-  for (const [key, value] of Object.entries(table)) {
-    if (key.startsWith(prefix)) return done(value);
+  // No kind axis for this source: any row carries the same answer.
+  const rows = Object.entries(table).filter(([key]) => key.startsWith(`${source}|`));
+  if (rows.length === 0) return null;
+  if (new Set(rows.map(([, v]) => JSON.stringify(v))).size > 1) {
+    const kinds = rows.map(([key]) => key.slice(source.length + 1));
+    throw new Error(
+      `sbuilder: ${type} has no "${kind}" kind for datasetSource "${source}" — binding it would ` +
+        `silently show another field. Known kinds: ${kinds.join(', ')}.`,
+    );
   }
-  return null;
+  return done(rows[0][1]);
 }
 
 /**

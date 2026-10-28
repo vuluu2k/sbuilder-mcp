@@ -180,6 +180,11 @@ export async function stockedCategories(ctx: ToolContext, siteId: string): Promi
   };
   const cats =
     (await get<{ categories?: Array<Record<string, unknown>> }>(`/api/sites/${site}/product-categories`))?.categories ?? [];
+  // The merchant's order (`position`, sibling order within a parent), then the
+  // name — the listing comes back by id, which is creation order, not a choice.
+  cats.sort(
+    (a, b) => (Number(a.position) || 0) - (Number(b.position) || 0) || String(a.name ?? '').localeCompare(String(b.name ?? '')),
+  );
   const out: NavCategory[] = [];
   for (const c of cats.slice(0, MAX_CATEGORIES)) {
     const id = String(c.id ?? '');
@@ -193,9 +198,12 @@ export async function stockedCategories(ctx: ToolContext, siteId: string): Promi
   return out;
 }
 
+// `menuLabel` trims a PAGE TITLE ("About | Brand"). A category or product name
+// is the record's own name and is never cut: a truncated "PC TTG AMD Gaming
+// Luxury Ry…" is STORED as the menu row and survives every re-render.
 const pageRow = (p: NavPage): MenuItemInput => ({ label: menuLabel(p.name), link: { type: 'page', pageId: p.id } });
 const categoryRow = (c: NavCategory, items?: MenuItemInput[]): MenuItemInput => ({
-  label: menuLabel(c.name),
+  label: c.name.trim(),
   link: { type: 'productCategory', entityId: c.id },
   ...(items?.length ? { items } : {}),
 });
@@ -218,7 +226,7 @@ export function headerMenuItems(pages: NavPage[], cats: NavCategory[]): MenuItem
         c,
         subs.length
           ? subs.map((x) => categoryRow(x))
-          : c.products.slice(0, 6).map((p) => ({ label: menuLabel(p.name), link: { type: 'product', entityId: p.id } })),
+          : c.products.slice(0, 6).map((p) => ({ label: p.name.trim(), link: { type: 'product', entityId: p.id } })),
       );
     }),
     ...content.filter((p) => !p.isHome && p.type !== 'policy').map(pageRow),
@@ -337,14 +345,35 @@ const ROW = { flexDirection: 'row', alignItems: 'center' };
  * SATELLITE — not a box wrapping two nodes with the click on one of them.
  * The section wears `section-wide` (`--wb-content-max: none`): the default
  * `container-section` caps the band at 1440px, which squeezes a top bar.
+ * The bar opens with the SITE NAME, a heading linked home (a shopper otherwise
+ * sees no brand at all), and the icon group starts with a `search-input` that
+ * navigates to /search, collapsed to an icon (`expand`) so it fits a phone too.
  * No colour is written: every node wears its element's theme preset.
  */
-export function headerSpec(bound: { menuId?: string; menuItems?: unknown }, brand: string): NodeSpec {
+const SEARCH_COPY = {
+  vi: { searchPlaceholder: 'Tìm kiếm sản phẩm…', searchToggleLabel: 'Tìm kiếm', searchClearLabel: 'Xoá tìm kiếm' },
+  en: { searchPlaceholder: 'Search products…', searchToggleLabel: 'Search', searchClearLabel: 'Clear search' },
+};
+
+export function headerSpec(
+  bound: { menuId?: string; menuItems?: unknown },
+  brand: string,
+  lang: 'vi' | 'en' = 'vi',
+): NodeSpec {
+  // A heading declares no click actions, so the home link rides on a box
+  // around it — a sole go_to_url click renders as the box's own <a href="/">.
   const heading = (text: string): NodeSpec => ({
-    type: 'heading',
-    specials: { text, htmlTag: 'h4' },
-    config: { textGlobalStyle: 'heading-5' },
-    style: { fontSize: 'var(--wb-ts-heading-5-size)', width: 'fit-content' },
+    type: 'flex-block',
+    name: 'Brand',
+    style: { width: 'fit-content', height: 'fit-content' },
+    children: [
+      {
+        type: 'heading',
+        specials: { text, htmlTag: 'h4' },
+        config: { textGlobalStyle: 'heading-5' },
+        style: { fontSize: 'var(--wb-ts-heading-5-size)', width: 'fit-content' },
+      },
+    ],
   });
   return {
     type: 'flex-section',
@@ -367,6 +396,12 @@ export function headerSpec(bound: { menuId?: string; menuItems?: unknown }, bran
             style: { ...ROW, width: 'fit-content', gap: '16px' },
             responsive: { mobile: { style: ROW } },
             children: [
+              {
+                type: 'search-input',
+                name: 'Search',
+                specials: { searchBehavior: 'navigate', searchDisplay: 'expand', ...SEARCH_COPY[lang] },
+                style: { width: 'fit-content' },
+              },
               { type: 'icon', name: 'Account', specials: { name: 'UserLine' } },
               { type: 'icon', name: 'Cart', specials: { name: 'ShoppingCartLine' }, children: [{ type: 'cart-count' }] },
               {
@@ -438,6 +473,7 @@ export function footerSpec(
 
 /** The clicks the header's named controls carry, written through `setEvent` so each sole navigation gets its `<a href>`. */
 const CHROME_EVENTS: Record<string, { action: string; payload?: Record<string, unknown> }> = {
+  Brand: { action: 'go_to_url', payload: { url: '/' } },
   Account: { action: 'go_to_url', payload: { url: '/account' } },
   Cart: { action: 'open_cart' },
   'Close menu': { action: 'close_menu' },
@@ -489,7 +525,7 @@ export async function buildChrome(
   session: PageSession,
   siteId: string,
   kind: 'header' | 'footer',
-  opts: { dryRun: boolean; language: 'vi' | 'en' },
+  opts: { dryRun: boolean; language: 'vi' | 'en'; brand?: string },
 ): Promise<unknown> {
   if (await hasGlobal(ctx, siteId, kind)) {
     return { skipped: `this site already shares a ${kind} — a second one is two of them, not a menu` };
@@ -517,14 +553,21 @@ export async function buildChrome(
       p.id && !opts.dryRun ? { menuId: p.id, menuItems: (await menuSnapshot(ctx, siteId, p.id)).snapshot } : {},
     ),
   );
-  // The brand line is the site's own name; a site that will not say leaves the header without one.
+  // The brand line is the caller's `brand`, else the site record's name. An API
+  // key cannot read the record (`GET /api/sites/{id}` answers api_key_scope), so
+  // a key-only install must pass it — a header with no name says so in `brand_missing`.
   const brand =
     kind === 'header'
-      ? String((await get<{ site?: { name?: unknown } }>(`/api/sites/${site}`).catch(() => undefined))?.site?.name ?? '')
+      ? (opts.brand?.trim() ||
+        String((await get<{ site?: { name?: unknown } }>(`/api/sites/${site}`).catch(() => undefined))?.site?.name ?? '').trim())
       : '';
+  const brandMissing =
+    kind === 'header' && !brand
+      ? 'The site name could not be read (an API key cannot read the site record), so the header carries no brand. Re-run with name:"<site name>".'
+      : undefined;
   const spec =
     kind === 'header'
-      ? headerSpec(bound[0], brand)
+      ? headerSpec(bound[0], brand, opts.language)
       : footerSpec(wanted.map((m, i) => ({ title: m.title, bound: bound[i] })));
   // Every page wears it, templates included: a product page is still this site.
   const onto = pages;
@@ -548,6 +591,7 @@ export async function buildChrome(
       tree: specTree(spec),
       ...(await cartPreview()),
       onto: onto.map((p) => p.slug || '/'),
+      ...(brandMissing ? { brand_missing: brandMissing } : {}),
       note:
         'Nothing was sent. The menus are site records every menu node binds by id, so the ' +
         'header and its mobile drawer are edited once; the header is ONE shared master every ' +
@@ -559,6 +603,7 @@ export async function buildChrome(
   return {
     ...out,
     ...cart,
+    ...(brandMissing ? { brand_missing: brandMissing } : {}),
     menus: plans.map((p) => ({
       name: p.name,
       id: p.id,

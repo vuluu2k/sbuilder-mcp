@@ -22,7 +22,7 @@ const blank = (): Doc => ({
  * A fresh store: a home page, an about page, a policy page, the product
  * template, one category holding a product and one empty. No menu, no chrome.
  */
-function store(opts: { noPolicy?: boolean; menus?: Array<{ id: string; name: string; items: unknown[] }>; overlays?: Array<{ id: string; kind: string }>; fail?: RegExp } = {}) {
+function store(opts: { noPolicy?: boolean; menus?: Array<{ id: string; name: string; items: unknown[] }>; overlays?: Array<{ id: string; kind: string }>; fail?: RegExp; siteName?: string; categories?: Array<Record<string, unknown>>; products?: Array<{ id: string; name: string }> } = {}) {
   const calls: Array<{ method: string; path: string; body?: any }> = [];
   const overlays = [...(opts.overlays ?? [])];
   const menus = [...(opts.menus ?? [])];
@@ -75,15 +75,19 @@ function store(opts: { noPolicy?: boolean; menus?: Array<{ id: string; name: str
       return json({ menu: m });
     }
     if (one) return json({ menu: menus.find((m) => m.id === one[1]) });
+    if (path === '/api/sites/s1' && opts.siteName) return json({ site: { id: 's1', name: opts.siteName } });
     if (path.endsWith('/product-categories')) {
       return json({
-        categories: [
+        categories: opts.categories ?? [
           { id: 'c1', name: 'Áo', slug: 'ao', parentId: '' },
           { id: 'c2', name: 'Trống', slug: 'trong', parentId: '' },
         ],
       });
     }
-    if (path.endsWith('/product-categories/c1/products')) return json({ products: [{ id: 'p1', name: 'Áo thun', slug: 'ao-thun' }] });
+    if (opts.categories && /\/product-categories\/[^/]+\/products$/.test(path)) {
+      return json({ products: opts.products ?? [{ id: 'p1', name: 'Áo thun', slug: 'ao-thun' }] });
+    }
+    if (path.endsWith('/product-categories/c1/products')) return json({ products: opts.products ?? [{ id: 'p1', name: 'Áo thun', slug: 'ao-thun' }] });
     if (/\/product-categories\/[^/]+\/products$/.test(path)) return json({ products: [] });
     if (path.endsWith('/products')) return json({ products: [{ id: 'p1', slug: 'ao-thun' }] });
     return json({});
@@ -150,6 +154,61 @@ describe('sb_store action:"chrome" builds a real header', () => {
     nodes.rt = { id: 'rt', data: { type: 'root', parent: null, nodes: [header.root_node_id] } };
     const composed = PageDoc.from({ schema_version: 2, root_node_id: 'rt', nodes } as never);
     expect(reviewDesign(composed).filter((f) => f.code === 'handbuilt_menu')).toEqual([]);
+    await close();
+  });
+
+  it('opens with the site name linked home and a search box that goes to /search', async () => {
+    const { globals, ctx } = store({ siteName: 'Cửa hàng ABC' });
+    const { client, close } = await connectedClient(ctx);
+    await client.callTool({ name: 'sb_store', arguments: { action: 'chrome', dry_run: false } });
+    const header = globals[0].document;
+    const brands = ofType(header, 'heading')
+      .filter((h) => h.specials.text === 'Cửa hàng ABC')
+      .map((h) => header.nodes[h.data.parent!]);
+    expect(brands.length).toBe(2); // the bar, and the mobile drawer's top
+    for (const b of brands) expect(b.specials.href).toBe('/');
+    // FIRST in the bar: a brand after the menu is not a brand.
+    const bar = header.nodes[brands[0].data.parent!];
+    expect(bar.data.nodes[0]).toBe(brands[0].id);
+    const [search] = ofType(header, 'search-input');
+    expect(search.specials).toMatchObject({ searchBehavior: 'navigate', searchPlaceholder: 'Tìm kiếm sản phẩm…' });
+    // Tokens only: the menu skins' platform defaults are the platform's, these are ours.
+    expect(JSON.stringify([search, ...brands, ...ofType(header, 'heading')].map((n) => n.style))).not.toMatch(/#[0-9a-f]{3,8}\b/i);
+    await close();
+  });
+
+  it('takes the brand from name: when the site record is unreadable (an API key), and says when it has none', async () => {
+    const named = store();
+    const a = await connectedClient(named.ctx);
+    await a.client.callTool({ name: 'sb_store', arguments: { action: 'chrome', name: 'Shop X', language: 'en', dry_run: false } });
+    const header = named.globals[0].document;
+    expect(ofType(header, 'heading').some((h) => h.specials.text === 'Shop X')).toBe(true);
+    expect(ofType(header, 'search-input')[0].specials.searchPlaceholder).toBe('Search products…');
+    await a.close();
+
+    const anon = store();
+    const b = await connectedClient(anon.ctx);
+    const out = parse(await b.client.callTool({ name: 'sb_store', arguments: { action: 'chrome', dry_run: true } }));
+    expect(out.brand_missing).toMatch(/name:/);
+    await b.close();
+  });
+
+  it('orders categories by their position, then name, and never cuts a product name', async () => {
+    const long = 'PC TTG AMD Gaming Luxury Ryzen 7 7800X3D RTX 4070 Super';
+    const { calls, ctx } = store({
+      categories: [
+        { id: 'c1', name: 'Zeta', parentId: '', position: 2 },
+        { id: 'c2', name: 'Beta', parentId: '', position: 1 },
+        { id: 'c3', name: 'Alpha', parentId: '', position: 2 },
+      ],
+      products: [{ id: 'p9', name: long }],
+    });
+    const { client, close } = await connectedClient(ctx);
+    await client.callTool({ name: 'sb_store', arguments: { action: 'chrome', dry_run: false } });
+    const items = calls.find((c) => c.method === 'POST' && c.path === '/api/sites/s1/menus')!.body.items as any[];
+    const cats = items.filter((i) => i.link?.type === 'productCategory');
+    expect(cats.map((c) => c.label)).toEqual(['Beta', 'Alpha', 'Zeta']);
+    expect(cats[0].items[0].label).toBe(long);
     await close();
   });
 

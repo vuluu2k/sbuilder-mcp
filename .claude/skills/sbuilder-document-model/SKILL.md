@@ -137,7 +137,17 @@ repo over a number here, and fix the line when you catch one stale.
   save, publish and render, with no warning at any step. Both paths now share
   `bindingsForConfig()` (`domains/site/node.ts`), which falls back to the first row for the
   source when the element has no kind axis — every `<source>|*` row of such an element is
-  identical, because there is nothing for it to vary on.
+  identical, because there is nothing for it to vary on. WHERE THE ROWS DIFFER (`text-dataset`,
+  `pricing-dataset`) a missing `source|kind` REFUSES: the fallback once bound `kind:"tags"` to
+  `product.title`, because the kind list was hand-kept and lacked `tags`. The kinds are now
+  read off the factory at codegen. An absent kind reads as the element's default, and an absent
+  `datasetSource` as the default source once the kind moved off its default (a `price` leaf).
+
+- **A `pricing-dataset` IS A `prices` PARENT OVER `price` + `compare_price` LEAVES** (the picker's
+  `pricingDataset`, the product seed). Its meta says `isContainer:false` — about DROPPING — so
+  `requireContainer` has one named exception (`isPriceLeaf`, builder.ts), and the two leaves are
+  `ELEMENT_SEEDS['pricing-dataset']`, captured from the preset at codegen. A seed applies only to
+  a node on its element's DEFAULT kind, so an added leaf arrives bare.
 
 - **A PURCHASE BUTTON COULD NOT BE AUTHORED AT ALL.** The renderer decides what a button IS
   by reading `target.action` and nothing else (`server/render/nodes/helpers.go:1166`);
