@@ -44462,6 +44462,12 @@ export const ELEMENTS: Record<string, CatalogElement> = {
     "locked": false,
     "hideInLayer": false,
     "childAllows": [],
+    "events": {
+      "click": [
+        "open_page",
+        "go_to_url"
+      ]
+    },
     "defaults": {
       "responsive": {
         "tablet": {
@@ -46058,6 +46064,14 @@ export const ELEMENTS: Record<string, CatalogElement> = {
             ]
           },
           {
+            "key": "action",
+            "label": "Action",
+            "controls": [
+              "action",
+              "href"
+            ]
+          },
+          {
             "key": "size",
             "label": "Size",
             "controls": [
@@ -46187,6 +46201,8 @@ export const ELEMENTS: Record<string, CatalogElement> = {
       "dataset_default_variant",
       "productId",
       "defaultVariantValue",
+      "action",
+      "href",
       "width_select",
       "height_select",
       "size_bounds",
