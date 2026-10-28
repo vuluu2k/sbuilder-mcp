@@ -787,3 +787,14 @@ platform treats an unproven guard as indistinguishable from an absent one.
   English product and brand names or unaccented Vietnamese. Only letters no other language
   writes count (ă ơ ư đ, dot-below / hook-above tones, circumflex+tone), and the reverse is
   never warned — a false "switch your whole site's language" costs more than a missed one.
+
+- **RICH TEXT IS `specials.<key>Html`, AND PLAIN `text` IS ESCAPED.** `nodes.RichText(n, "text")`
+  (`render/nodes/helpers.go:1693`) returns `specials.textHtml` when set, else HTML-escapes
+  `specials.text` — so `"Hà Nội: <b>83 Thái Hà</b>"` in `text` shows its tags to the shopper.
+  `writecheck` knows every `TRANSLATABLE_SPECIALS` key (textHtml was a false `unknown_key`),
+  warns `text_markup` on tags in a plain key with an Html twin, and review counts `<key>Html`
+  (and a `form-link`'s `linkText`) as content. Found building a live storefront, 2026-10-28,
+  with four sibling defects: `sb_bind` appending a second binding on a bound field (it now
+  replaces in place), the shared-master warning repeated per node (now once per master per
+  process, `shared`), `no_h1` / form-link seed noise inside a FORM document, and no word when
+  a narrower-only style key rides the cascade tail to desktop (`cascade_tail`).

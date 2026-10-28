@@ -16,6 +16,7 @@ import type { NodeSpec } from './builder.js';
 import { fill } from './findings.js';
 import { collectsValue, formFieldFindings, formFields, nameFromLabel } from './formdoc.js';
 import { ICON_KEYS } from '../../catalog/icons.generated.js';
+import { TRANSLATABLE_SPECIALS } from '../../catalog/translations.generated.js';
 import { iconNote } from './icons.js';
 import {
   animationNote,
@@ -53,7 +54,9 @@ export interface WriteNote {
     | 'precondition'
     | 'unsupported_setting'
     | 'form_rule'
-    | 'form_field';
+    | 'form_field'
+    | 'text_markup'
+    | 'cascade_tail';
   id?: string;
   /** `<namespace>.<key>` */
   key: string;
@@ -120,6 +123,10 @@ function keysOf(type: string): Record<'config' | 'specials', Set<string>> | null
   for (const c of el.controls) for (const w of TRAIT_WRITES[c]?.writes ?? []) add(w.target, [w.writeKey]);
   for (const c of el.controls) if (WIDGET_WRITES[c]) add(WIDGET_WRITES[c][0], [WIDGET_WRITES[c][1]]);
   for (const k of ICON_KEYS[type] ?? []) add(k.ns, [k.key]);
+  // What a translation may rewrite is what the renderer reads: `textHtml` is
+  // the rich half of `nodes.RichText(n, "text")` (render/nodes/helpers.go:1693),
+  // seeded by nothing and offered by no trait row, so it was `unknown_key`.
+  add('specials', TRANSLATABLE_SPECIALS[type]);
   // A control the trait registry does not describe is often an inspector row
   // named after the key it writes (`{ key: 'quickviewId', visible: false }` on
   // list-dataset), so its NAME counts as a key in either namespace.
@@ -163,6 +170,9 @@ export function bindableFields(type: string): string[] {
   const painted = BOUND_SPECIALS[type] ?? [];
   return painted.length ? [...new Set([...painted, ...bindingFields(type)])] : [];
 }
+
+/** A tag a writer means as formatting, not a stray `<` in copy ("Giá < 100k"). */
+const MARKUP = /<\/?(?:b|strong|i|em|u|s|span|br|a|p|div|small|mark|sup|sub|h[1-6])(?:\s[^>]*)?\/?>/i;
 
 /**
  * Check one write. `specials` is the node's specials AS THEY WILL BE after the
@@ -229,6 +239,18 @@ export function writeCheck(
             : 'Write one of the listed values.',
         );
       }
+    }
+    // MARKUP IN PLAIN TEXT RENDERS ESCAPED: `RichText` prefers `<key>Html` and
+    // otherwise HTML-escapes `<key>`, so "<b>83 Thái Hà</b>" reaches the shopper
+    // with its tags showing. Only where the element HAS a rich twin to point at.
+    if (namespace === 'specials' && typeof v === 'string' && MARKUP.test(v) && TRANSLATABLE_SPECIALS[type]?.includes(`${k}Html`)) {
+      push(
+        `text-markup:${type}.${k}`,
+        'text_markup',
+        k,
+        `specials.${k} holds HTML tags, and ${type} renders it ESCAPED — the tags show as literal text on the page.`,
+        `Write the markup to specials.${k}Html (the renderer prefers it) and keep a plain specials.${k} without tags beside it.`,
+      );
     }
     if (namespace === 'specials') {
       const un = unsupportedSettingNote(type, k, v);
@@ -364,13 +386,54 @@ export function formDocChecks(before: DocLike, after: DocLike, formType?: string
   return out;
 }
 
+type Slots = { style?: Record<string, unknown>; responsive?: Record<string, { style?: Record<string, unknown> } | undefined> };
+
+/**
+ * THE CASCADE'S TAIL (trap 4). A key resolves current → wider → BASE →
+ * narrower, so a style key written only at a narrower slot reaches DESKTOP
+ * whenever neither base nor desktop declares it — a tablet `flexWrap: wrap`
+ * broke a desktop header into two rows. `node` is the node AS IT WILL BE, with
+ * its element defaults, so flex-block's seeded base `flexDirection: row` keeps
+ * its own mobile column silent; `written` is what this write put at each slot.
+ */
+export function cascadeTail(node: Slots, written: Record<string, Record<string, unknown> | undefined>, id?: string): CheckedNote[] {
+  const out: CheckedNote[] = [];
+  for (const bp of ['laptop', 'tablet', 'mobile']) {
+    for (const k of Object.keys(written[bp] ?? {})) {
+      if (node.style?.[k] !== undefined || node.responsive?.desktop?.style?.[k] !== undefined) continue;
+      out.push({
+        once: `cascade-tail:${k}`,
+        note: {
+          code: 'cascade_tail',
+          ...(id ? { id } : {}),
+          key: `style.${k}`,
+          problem:
+            `style.${k} is set at ${bp} and neither base nor desktop declares it. The cascade reads current → ` +
+            `wider → BASE → narrower, so desktop renders the ${bp} value too.`,
+          fix: `Say the wide-screen answer at base: sb_set id "${id ?? '<id>'}", namespace style, base:true, keys { "${k}": <desktop value> }.`,
+        },
+      });
+    }
+  }
+  return out;
+}
+
 /** The same, for every node of a nested `sb_add` spec, as each will be born. */
 export function specCheck(spec: NodeSpec): CheckedNote[] {
   const out: CheckedNote[] = [];
   const walk = (s: NodeSpec) => {
-    const born = ELEMENTS[s.type]?.defaults.specials ?? {};
+    const d = ELEMENTS[s.type]?.defaults;
+    const born = d?.specials ?? {};
     if (s.config) out.push(...writeCheck(s.type, 'config', s.config));
     for (const slot of Object.values(s.responsive ?? {})) if (slot.config) out.push(...writeCheck(s.type, 'config', slot.config));
+    if (s.responsive) {
+      const seeded = (d?.responsive ?? {}) as Slots['responsive'];
+      const node: Slots = {
+        style: { ...((d?.style ?? {}) as Record<string, unknown>), ...s.style },
+        responsive: { desktop: { style: { ...seeded?.desktop?.style, ...s.responsive.desktop?.style } } },
+      };
+      out.push(...cascadeTail(node, Object.fromEntries(Object.entries(s.responsive).map(([bp, slot]) => [bp, slot.style]))));
+    }
     if (s.specials) out.push(...writeCheck(s.type, 'specials', s.specials, { specials: { ...born, ...s.specials } }));
     for (const c of s.children ?? []) walk(c);
   };

@@ -511,8 +511,9 @@ ra đều lưu được, publish được và render mãi placeholder. Binding c
 `specials` luôn ở base: nội dung không phải đại lượng.
 
 Chạy khô trả về `patches` và, lần đầu trong một process, một `note` nhắc lại luật base và
-breakpoint ở trên. Ghi thật trả về các khoá đã set và `rev` mới, kèm `warning` nếu node là
-global dùng chung.
+breakpoint ở trên. Ghi thật trả về các khoá đã set và `rev` mới, kèm `shared` ở lần đầu trong
+một process lệnh sửa node bên trong một global section hay overlay dùng chung — một câu cho mỗi
+master, nêu tên nó và số node của nó mà lệnh đã sửa.
 
 
 **Phần tử dữ liệu đi theo dữ liệu của nó.** Ghi `config.kind` hoặc `config.datasetSource` sẽ
@@ -547,8 +548,8 @@ Năm luật của nền tảng, được viết thành code có test chứ khôn
 1. **Thứ tự băng** — con của ROOT phải đọc `[header][middle][footer]`. Sai là nền tảng từ
    chối *mọi* lần lưu (`ErrBandOrder`).
 2. **Overlay** bị loại khỏi mọi luật cấp ROOT, đúng như nền tảng loại nó trước khi tự kiểm.
-3. **Global** là master dùng chung; mọi kết quả đụng tới nó đều kèm cảnh báo rằng sửa nó là
-   sửa mọi trang, và publish thì lan.
+3. **Global** là master dùng chung (overlay cũng vậy); `sb_set` nói một lần cho mỗi master mỗi
+   process rằng sửa nó là sửa mọi trang, và publish thì lan.
 4. **Luật responsive** — xem `sb_set` ở trên.
 5. **App block** — xem ngay dưới.
 
@@ -598,7 +599,10 @@ biết là có đọc — vẫn được ghi, vì 412/577 control của inspecto
 lệnh từ chối sẽ chặn cả key thật), `unknown_value`, `unknown_icon` (tên nằm ngoài manifest icon
 ghi vào key mà một icon picker ghi — publish ra ngôi sao mặc định hoặc không có icon; phần fix
 liệt kê tối đa năm tên gần nhất), `animation`, `dead_key`, `precondition`,
-`unsupported_setting`. Mỗi cảnh báo nói một lần mỗi process; dry run hiện nó mà không tiêu, nên
+`unsupported_setting`, `text_markup` (thẻ HTML trong `specials.text` thường của element có
+cặp `textHtml` — nó render bị escape, lộ nguyên thẻ), `cascade_tail` (key style chỉ ghi ở
+`laptop`/`tablet`/`mobile` mà cả base lẫn desktop đều không khai, xét cùng giá trị mặc định
+của element — cascade mang nó lên desktop). Mỗi cảnh báo nói một lần mỗi process; dry run hiện nó mà không tiêu, nên
 lần ghi thật vẫn hiện lại.
 
 Dry run của `sb_add`, `sb_set`, `sb_move`, `sb_remove`, `sb_duplicate`, `sb_bind`, `sb_event` và `sb_template_use` chạy
@@ -808,6 +812,9 @@ Cả hai tham số đều được kiểm với từ vựng sinh tự động, v
 `source` lạ sẽ giải ra rỗng và hiện placeholder của chính element (không phân biệt được với
 "đang tải"), còn `field` ngoài `specials` thì được lưu, được ghi, được publish, và bị bỏ qua
 mãi mãi — `applyBindings` đọc namespace từ field rồi bỏ qua mọi thứ khác.
+
+Mỗi field chỉ có một nguồn: bind vào field mà node đã bind sẽ **thay** binding đó tại chỗ, giữ
+nguyên id, thay vì thêm binding thứ hai để runtime phải chọn.
 
 Nguồn **record** (một field trong Collection của merchant) là nguồn duy nhất không danh sách nào
 chứa được, vì nó gọi field bằng ID: `record.fld_<16 hex>`, hoặc `record.html.fld_<16 hex>` cho
@@ -1573,8 +1580,8 @@ tài liệu:
 | `missing_node` | Một node cha gọi tên đứa con tài liệu không có. Renderer đi vào một lỗ trống, và nền tảng từ chối mọi lần lưu cho tới khi nó biến mất — báo ở đây chứ không ném lỗi, vì một lần review chạy trên tài liệu đã hỏng, và đó đúng là lúc người gọi cần nó nhất |
 | `dead_nav` | Một click điều hướng duy nhất mà không có `specials.href`. Renderer KHÔNG BAO GIỜ đọc `node.events`: `EventAttrs` không phát `on:click` cho nó, vì cho rằng href đã biến nó thành anchor. Nên control đó render, publish, và bấm vào không làm gì |
 | `empty_container` | Section không chứa gì — một dải trống |
-| `placeholder_content` | Vẫn là chữ mặc định của element ("Enter your text here") |
-| `empty_text` / `missing_media` | Element bỏ trống — khoảng trắng, hoặc ảnh vỡ |
+| `placeholder_content` | Vẫn là chữ mặc định của element ("Enter your text here"). Trừ `form-link`, chữ seed của nó là copy thật |
+| `empty_text` / `missing_media` | Element bỏ trống — khoảng trắng, hoặc ảnh vỡ. Chữ trong `textHtml` được tính (renderer ưu tiên nó), `linkText` của `form-link` cũng vậy |
 | `static_in_dataset` | Một element nằm trong repeater nhưng chỉ render nội dung do tài liệu ghi — cùng một tấm ảnh trên mọi thẻ sản phẩm |
 | `unbound_dataset_element` | Element dataset không có binding nào — nó chờ một `bound…` special mà không ai ghi |
 | `dead_binding_source` | Nguồn renderer không cung cấp — hiện placeholder mãi mãi. Nguồn `record.*` chỉ hợp lệ ở dạng `record.fld_<16 hex>` / `record.html.fld_<16 hex>` / `record.money.fld_<16 hex>` / `record.(money.)agg.<key>` / `record.(money.)ref.<fld>.<fld>` / `record.id` / `record.url`, và chỉ dạng html được vào `specials.boundHtml` |
@@ -1607,7 +1614,7 @@ tài liệu:
 | `order_goes_nowhere` | Trang vừa cộng tổng giỏ vừa có form, mà không có gì trên `form:success` đưa khách đi đâu. Đơn được tạo còn trang đứng yên, mọi dòng tổng giờ là 0 vì giỏ vừa bị dọn — một đơn thành công trông y như đơn hỏng. `afterSubmit: { action: "redirect", pageId | url }` của form record giờ CÓ điều hướng (platform đóng dấu nó thành `sentRedirect` và đi theo sau chuỗi `form:success`), nhưng một `pageId` trỏ tới trang chưa publish sẽ lặng lẽ quay về thông báo, và kiểm tra này chỉ đọc event trên node — nên event `form:success` là cách sửa nó công nhận. Khi danh sách form của site cho biết form là loại gì thì chỉ form `order` mới tính, và tổng tiền của ngăn giỏ (overlay có trên mọi trang) không bao giờ tính — nên trang đăng nhập không phải trang thanh toán |
 | `hover_dead` | Hover được lưu ở `states.hover` trên element giữ hover ở chỗ khác — `button` giữ nó trong map phẳng `config.stateHover` mà renderer của chính nó compile. Được lưu, được publish, không ai vẽ. Mọi site server này dựng trước khi biết khác biệt đó đều dính |
 | `stuck_no_host` | Override `stuck` trên node không có gì được ghim ở trên. `render/css.go` chỉ sinh CSS stuck khi có stuck host, nên phần tạo dáng được lưu, save, publish và không bao giờ vẽ. Thường do host bị bỏ ghim về sau, hoặc do import |
-| `no_h1` | Trang có heading mà không cái nào là `h1`. Mọi `heading` sinh ra là h2 (`specials.htmlTag`), `text` / `text-dataset` cũng đọc key đó, nên trang dựng ở đây — và mọi trang platform seed — không có tiêu đề chính cho máy tìm kiếm hay trình đọc màn hình. Canvas không hiện tag. Báo trên heading đầu tiên CỦA TRANG — dòng thương hiệu trong header dùng chung được bỏ qua, theo cả hai stamp (`globalRef`/`globalId`); đặt h1 lên đúng heading nói về trang, một cái thôi |
+| `no_h1` | Trang có heading mà không cái nào là `h1`. Mọi `heading` sinh ra là h2 (`specials.htmlTag`), `text` / `text-dataset` cũng đọc key đó, nên trang dựng ở đây — và mọi trang platform seed — không có tiêu đề chính cho máy tìm kiếm hay trình đọc màn hình. Canvas không hiện tag. Báo trên heading đầu tiên CỦA TRANG — dòng thương hiệu trong header dùng chung được bỏ qua, theo cả hai stamp (`globalRef`/`globalId`); đặt h1 lên đúng heading nói về trang, một cái thôi. Không bao giờ báo trong form document — trang nhúng form mới giữ h1 |
 | `invalid_action` | Sự kiện đã lưu có action mà element không hỗ trợ trên trigger đó (nút đã gắn mua hàng chỉ nhận `bindingEvents`). Được lưu nhưng không bao giờ chạy |
 | `action_missing_target` | `go_to_url` / `open_page` thiếu `payload.url` (renderer không tự phân giải id trang), hoặc `popup` thiếu `payload.id`. Bấm vào không có tác dụng |
 | `no_data_context` | Element gắn dữ liệu (`product.*`, `category.*`, `article.*`, `course.*`) nằm ngoài mọi repeater và mọi pin, trên loại trang không cung cấp bản ghi đó. Nó hiện placeholder mãi mãi. Binding `record.*` chỉ có dữ liệu khi `list-dataset` GẦN NHẤT bao nó có `datasetSource: "record"`, trên mọi loại trang (`key: "record"`) |

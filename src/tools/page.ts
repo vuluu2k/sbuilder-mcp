@@ -42,13 +42,13 @@ import { request, redact, watchPageWrites, onPageSourceWrite, onGlobalWrite, onF
 import { SPEC_GLOBAL_ID, SPEC_GLOBAL_REV, SPEC_OVERLAY_ID, SPEC_OVERLAY_REV, subtreeIds, type NodeLike } from '../core/tree.js';
 import { siteToken } from './credentialpick.js';
 import { validateForSave } from '../domains/site/validate.js';
-import { formDocChecks, sayChecks, specCheck, writeCheck, type CheckedNote } from '../domains/site/writecheck.js';
+import { cascadeTail, formDocChecks, sayChecks, specCheck, writeCheck, type CheckedNote } from '../domains/site/writecheck.js';
 import { reviewDesign, REVIEW_NOTICE } from '../domains/site/review.js';
 import { exampleCopy } from '../domains/site/examplecopy.js';
 import { compactFindings } from '../domains/site/findings.js';
 import { readinessGaps, READINESS_NOTICE, siteLanguage } from '../domains/site/readiness.js';
 import { gatherReadiness } from '../domains/site/readiness-fetch.js';
-import { globalWarning, restampPatches, RESPONSIVE_NOTICE } from '../domains/site/traps.js';
+import { globalWarning, restampPatches, RESPONSIVE_NOTICE, sharedWriteNotes } from '../domains/site/traps.js';
 import { catalogBrowse, catalogMatches, searchWithTemplates, traitsFor } from '../catalog/element-search.js';
 import { searchIcons } from '../domains/site/icons.js';
 import { layoutForPageName, missingUsualPages, purposeTypeForName, type InventoryPage } from '../domains/site/inventory.js';
@@ -1809,7 +1809,16 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
           ...(e.namespace === 'specials' ? { specials: { ...(n?.specials ?? {}), ...e.keys } } : {}),
         });
       });
-      const found = sayChecks([...checked, ...session.formChecks(patches)], say);
+      // A narrower-only style key reaches desktop (trap 4's tail), judged on
+      // the node AS IT WILL BE — only that node's patches, on a copy of it.
+      const tail = batch.flatMap((e) => {
+        const bp = e.breakpoint ?? 'desktop';
+        if (e.namespace !== 'style' || e.base || e.state || bp === 'desktop' || !d.doc.nodes[e.id]) return [];
+        const probe = { nodes: { [e.id]: JSON.parse(JSON.stringify(d.doc.nodes[e.id])) } };
+        applyPatches(probe, patches.filter((p) => p.path[0] === 'nodes' && p.path[1] === e.id));
+        return cascadeTail(probe.nodes[e.id], { [bp]: e.keys }, e.id);
+      });
+      const found = sayChecks([...checked, ...tail, ...session.formChecks(patches)], say);
       const checks = found.length ? { checks: found } : {};
       // A FIELD-SKIN KNOB ON THE WRONG NODE renders nowhere. The FORM dresses
       // every field it holds with the input vocabulary; a payment card, choice
@@ -1874,16 +1883,21 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
       }
       const warnings: Record<string, string> = stuck();
       await session.applyAndSave(patches);
-      for (const t of touched) {
-        const w = globalWarning(d.doc, t.id);
-        if (w) warnings[t.id] = warnings[t.id] ? `${warnings[t.id]} ${w}` : w;
-      }
+      // ONCE PER SHARED MASTER PER PROCESS, not once per node: the fact is about
+      // the header or the drawer, and a batch touching one button twice used to
+      // carry the same paragraph twice.
+      const sharedNote = sharedWriteNotes(d.doc, touched.map((t) => t.id))
+        .map((s) => ctx.notices.once(s.once, s.note))
+        .filter((n): n is string => !!n)
+        .join(' ');
+      const shared = sharedNote ? { shared: sharedNote } : {};
       if (!edits) {
         const warn = warnings[batch[0].id];
         return text({
           set: touched[0].keys,
           rev: d.rev,
           ...(warn ? { warning: warn } : {}),
+          ...shared,
           ...(hoverNote ? { hover: hoverNote } : {}),
           ...(baseNote ? { base_only: baseNote } : {}),
           ...(presetNote ? { preset: presetNote } : {}),
@@ -1897,6 +1911,7 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
         set: touched,
         rev: d.rev,
         ...(Object.keys(warnings).length ? { warnings } : {}),
+        ...shared,
         ...(hoverNote ? { hover: hoverNote } : {}),
         ...(baseNote ? { base_only: baseNote } : {}),
         ...(presetNote ? { preset: presetNote } : {}),

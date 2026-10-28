@@ -195,6 +195,24 @@ export function bindNode(
     ];
   }
 
+  // A FIELD HAS ONE SOURCE. Appending left a text-dataset's seeded `bind-text`
+  // (product.title) beside the new product.tags on the same boundText, for the
+  // runtime to choose between. Replace it in place and keep its id, written as
+  // this path writes a new one: the old `target` names the old source's kind.
+  // The purchase binding is not a field binding and is left alone.
+  const at = (node.bindings as Array<{ id?: string; field?: string }>).findIndex(
+    (b) => b?.field === field && b.id !== PRODUCT_ACTION_BINDING_ID,
+  );
+  if (at >= 0) {
+    const prev = node.bindings[at] as { id?: string };
+    return [
+      {
+        op: 'set',
+        path: ['nodes', id, 'bindings', String(at)],
+        value: { id: prev.id ?? randomBytes(6).toString('hex'), source, field },
+      },
+    ];
+  }
   return [
     {
       op: 'insert',

@@ -22,7 +22,7 @@ import {
   RECORD_TILES,
   recordScope,
 } from './record.js';
-import { formFieldFindings } from './formdoc.js';
+import { formFieldFindings, isFormDocument } from './formdoc.js';
 import { deadNavigation, hasPurchaseBinding, liveEventTable, PAYLOAD_NEEDS, soleNavigationClick, type NodeEventLike } from './navhref.js';
 import { unknownValueNote, unknownWriteNote, vocabularyFor, vocabularyForWrite } from './vocabulary.js';
 import { iconNote } from './icons.js';
@@ -97,6 +97,27 @@ function contentKeys(type: string): string[] {
 function seededValue(type: string, key: string): unknown {
   return (ELEMENTS[type]?.defaults.specials ?? {})[key];
 }
+
+/**
+ * Where else an element's visible copy for `key` can live. `nodes.RichText`
+ * (render/nodes/helpers.go:1693) prints `<key>Html` before `<key>`, so a text
+ * whose copy is all in `textHtml` is finished; a `form-link` prints `text` as
+ * an optional prefix and `linkText` as the link itself (a login form's
+ * "Quên mật khẩu?" seeds text "").
+ */
+function alsoCarries(type: string, key: string): string[] {
+  return [`${key}Html`, ...(type === 'form-link' && key === 'text' ? ['linkText'] : [])];
+}
+
+/**
+ * Elements whose seeded copy is a real sentence in the shopper's language, not
+ * a placeholder — `form-link`'s "Chưa có tài khoản?", which its own AI hint
+ * tells an author to keep.
+ *
+ * ponytail: hand-kept, one entry. Upgrade when a second seed reads as copy:
+ * have codegen mark it on the meta.
+ */
+const SEED_IS_COPY: ReadonlySet<string> = new Set(['form-link']);
 
 /**
  * Every line of copy the PLATFORM writes into a seeded subtree.
@@ -1297,7 +1318,8 @@ export function reviewDesign(
     for (const key of contentKeys(type)) {
       const value = (n.specials ?? {})[key];
       const seed = seededValue(type, key);
-      const isBlank = value === undefined || value === null || String(value).trim() === '';
+      const blank = (v: unknown) => v === undefined || v === null || String(v).trim() === '';
+      const isBlank = blank(value) && alsoCarries(type, key).every((k) => blank((n.specials ?? {})[k]));
       if (supplied(key)) continue;
 
       // INSIDE A REPEATER the generic advice is actively wrong: setting a static
@@ -1339,7 +1361,7 @@ export function reviewDesign(
       // placeholder, published. "Enter your text here" on a live page is the
       // single most visible way this goes wrong, and it is invisible to every
       // structural check because the document is perfectly well-formed.
-      if (seed !== undefined && String(seed).trim() !== '' && value === seed) {
+      if (seed !== undefined && String(seed).trim() !== '' && value === seed && !SEED_IS_COPY.has(type)) {
         out.push({
           code: 'placeholder_content',
           nodeId: id,
@@ -1604,7 +1626,8 @@ export function reviewDesign(
     };
     const headings = walkOrder.filter((id) => band.has(id) && level(id) !== null);
     const own = headings.filter((id) => !shared.has(id));
-    if (own.length > 0 && !headings.some((id) => level(id) === 'h1')) {
+    // A FORM DOCUMENT is embedded in a page, and that page owns the h1.
+    if (own.length > 0 && !headings.some((id) => level(id) === 'h1') && !isFormDocument(d)) {
       const first = own[0];
       out.push({
         code: 'no_h1',

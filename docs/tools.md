@@ -515,7 +515,8 @@ forever. A record tile's binding comes from its `recordField` — see "Record li
 
 A dry run returns the `patches` and, the first time in a process, a `note` restating the
 base-and-breakpoint rule above. A real write returns the keys set and the new `rev`, with
-a `warning` when the node is a shared global.
+`shared` the first time in a process it edits nodes inside a given shared global section or
+site overlay — one sentence per master, naming it and how many of its nodes the call edited.
 
 
 **A dataset element follows its data.** Writing `config.kind` or `config.datasetSource` also
@@ -551,8 +552,8 @@ Five platform rules, encoded and tested rather than documented:
    refuses *every* save otherwise (`ErrBandOrder`).
 2. **Overlays** are excluded from every ROOT-level rule, exactly as the platform excludes
    them before its own check.
-3. **Globals** are shared masters; any result touching one carries a warning that edits
-   change every page and publishing cascades.
+3. **Globals** are shared masters (overlays too); `sb_set` says once per master per process
+   that edits change every page and publishing cascades.
 4. **The responsive mandate** — see `sb_set` above.
 5. **App blocks** — see next.
 
@@ -605,7 +606,10 @@ is not known to read — still written, because 412 of 577 inspector controls de
 target and a refusal would block real keys), `unknown_value`, `unknown_icon` (a name outside
 the icon manifest written to a key an icon picker writes — it publishes the default star or no
 icon; the fix lists up to five nearest names), `animation`, `dead_key`,
-`precondition`, `unsupported_setting`. Each note is said once per process; a dry run shows it
+`precondition`, `unsupported_setting`, `text_markup` (HTML tags in a plain `specials.text`
+on an element with a `textHtml` twin — it renders escaped, tags showing), `cascade_tail` (a
+style key written only at `laptop`/`tablet`/`mobile` that neither base nor desktop declares,
+judged with the element's defaults — the cascade carries it to desktop). Each note is said once per process; a dry run shows it
 without spending it, so the real write shows it again.
 
 Dry runs of `sb_add`, `sb_set`, `sb_move`, `sb_remove`, `sb_duplicate`, `sb_bind`, `sb_event` and `sb_template_use` run the
@@ -832,6 +836,9 @@ Both arguments are validated against generated vocabulary, because both failures
 placeholder (indistinguishable from "still loading"), and a `field` outside `specials` is
 stored, saved, published, and ignored forever — `applyBindings` reads the namespace off the
 field and skips anything else.
+
+A field has one source: binding a field the node already binds **replaces** that binding in
+place, keeping its id, instead of adding a second one for the runtime to choose between.
 
 A **record** source (a merchant Collection's field) is the one no list holds, because it names
 the field by ID: `record.fld_<16 hex>`, or `record.html.fld_<16 hex>` for a richtext field, plus
@@ -1601,8 +1608,8 @@ box. Returns `{ findings, fixes, findings_notice? }`, in document order:
 | `missing_node` | A parent naming a child the document does not hold. The renderer walks to a hole, and the platform refuses every save until it is gone — reported here rather than thrown, because a review runs on a document that is already damaged and that is exactly when a caller needs one |
 | `dead_nav` | A sole navigation click with no `specials.href`. A renderer reads `node.events` NEVER: `EventAttrs` emits no `on:click` for one, assuming the href made it an anchor. So the control renders, publishes, and does nothing when a shopper clicks it |
 | `empty_container` | A section holding nothing — an empty band |
-| `placeholder_content` | Still the copy the element ships with ("Enter your text here") |
-| `empty_text` / `missing_media` | An element left blank — empty space, or a broken image |
+| `placeholder_content` | Still the copy the element ships with ("Enter your text here"). Not `form-link`, whose seed is real copy |
+| `empty_text` / `missing_media` | An element left blank — empty space, or a broken image. Copy in `textHtml` counts (the renderer prefers it), and so does a `form-link`'s `linkText` |
 | `static_in_dataset` | An element inside a repeater that renders only what the document authors — the same picture on every product card |
 | `unbound_dataset_element` | A dataset element with no binding at all — it waits for a bound special nothing writes |
 | `dead_binding_source` | A source the renderer never provides — shows the placeholder forever. A `record.*` source counts only as `record.fld_<16 hex>` / `record.html.fld_<16 hex>` / `record.money.fld_<16 hex>` / `record.(money.)agg.<key>` / `record.(money.)ref.<fld>.<fld>` / `record.id` / `record.url`, and only the html form into `specials.boundHtml` |
@@ -1635,7 +1642,7 @@ box. Returns `{ findings, fixes, findings_notice? }`, in document order:
 | `order_goes_nowhere` | A page that totals a cart and carries a form, with nothing on `form:success` to send the shopper anywhere. The order is created and the page stays put, every total now reading 0 because the cart was just emptied — a completed order that looks like a failed one. The form record's own `afterSubmit: { action: "redirect", pageId | url }` does navigate (the platform stamps it as `sentRedirect` and follows it after the `form:success` chain), but a `pageId` whose page is unpublished silently falls back to the message, and this check reads only the node's events — so the `form:success` event is the fix it recognises. Only an `order` form counts when the site's form list says what the form is, and the cart drawer's own total (an overlay on every page) never does — so a login page is not a checkout |
 | `hover_dead` | A hover stored in `states.hover` on an element that keeps its hover somewhere else — a `button` keeps it in the flat `config.stateHover` map its own renderer compiles. Stored, published, painted by nobody. Every site this server built before it learned the difference carries these |
 | `stuck_no_host` | A `stuck` override on a node with nothing pinned above it. `render/css.go` emits stuck CSS only under a stuck host, so the styling is stored, saved, published and never painted. Usually a host that was un-pinned later, or an import |
-| `no_h1` | The page has headings and none is an `h1`. Every `heading` ships as h2 (`specials.htmlTag`), and `text` / `text-dataset` take the same key, so a page built here — and every page the platform seeds — has no main title for a search engine or a screen reader. Nothing on the canvas shows the tag. Named on the page's OWN first heading — a shared header's brand line is skipped, by either stamp (`globalRef`/`globalId`); put the h1 on the one the page is about, once |
+| `no_h1` | The page has headings and none is an `h1`. Every `heading` ships as h2 (`specials.htmlTag`), and `text` / `text-dataset` take the same key, so a page built here — and every page the platform seeds — has no main title for a search engine or a screen reader. Nothing on the canvas shows the tag. Named on the page's OWN first heading — a shared header's brand line is skipped, by either stamp (`globalRef`/`globalId`); put the h1 on the one the page is about, once. Never in a form document — the page embedding the form owns the h1 |
 | `invalid_action` | A stored event whose action the element does not offer on that trigger (a purchase-bound button offers only `bindingEvents`). Stored, never fires |
 | `action_missing_target` | `go_to_url` / `open_page` with no `payload.url` (no renderer resolves a page id), or `popup` with no `payload.id`. The click does nothing |
 | `no_data_context` | A record-bound element (`product.*`, `category.*`, `article.*`, `course.*`) outside any repeater and any pin, on a page type that supplies no such record. It renders its placeholder for ever. A `record.*` binding is supplied only when its NEAREST `list-dataset` has `datasetSource: "record"`, on any page type (`key: "record"`) |

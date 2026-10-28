@@ -154,6 +154,32 @@ export function globalWarning(doc: DocLike, id: string): string | null {
 }
 
 /**
+ * The same fact for a WRITE, said once per MASTER rather than once per node.
+ *
+ * `sb_set` used to attach `globalWarning` to every touched node: a batch
+ * restyling a header's nav carried the paragraph once per button, and twice
+ * for a button the batch touched twice. The fact is about the master, so it is
+ * keyed on the master and counted — the caller passes it to `ctx.notices`.
+ */
+export function sharedWriteNotes(doc: DocLike, ids: string[]): Array<{ once: string; note: string }> {
+  const by = new Map<string, Set<string>>();
+  for (const id of ids) {
+    const m = globalRoot(doc, id) ?? overlayRoot(doc, id);
+    if (m !== null) by.set(m, (by.get(m) ?? new Set()).add(id));
+  }
+  return [...by].map(([m, nodes]) => {
+    const sp = doc.nodes[m].specials ?? {};
+    const n = `${nodes.size} node${nodes.size === 1 ? '' : 's'}`;
+    const note = sp[SPEC_GLOBAL_ID] !== undefined
+      ? `${n} edited inside the shared global section ${JSON.stringify(sp[SPEC_GLOBAL_ID])}${
+          sp[SPEC_GLOBAL_KIND] ? ` (${sp[SPEC_GLOBAL_KIND]})` : ''
+        }, root ${m}. Editing it changes EVERY page that carries it, and publishing cascades to all of them. Say so when reporting this change.`
+      : `${n} edited inside the site overlay ${JSON.stringify(sp[SPEC_OVERLAY_ID])} (root ${m}) — the cart drawer or a pop-up. It is ONE master composed onto every page, so this change is site-wide, not page-local. Say so when reporting it.`;
+    return { once: `shared-write:${m}`, note };
+  });
+}
+
+/**
  * Keys that are identity or content rather than a visual quantity.
  *
  * Kept as a hint for callers deciding where a value belongs — NOT as a gate. An
