@@ -820,11 +820,17 @@ platform treats an unproven guard as indistinguishable from an absent one.
   `href` failing `sanitize.safeURL` (`javascript:` any case, `data:` except `data:image/`) and any
   `<!`/`<?`; a paragraph break is `<br>`. Codegen copies the platform's shared fixture
   (`schema/test/inline-representable-cases.json`) to `test/inline-representable-cases.generated.json`
-  and the suite holds `rich_dropped` to every verdict in it.
-- **A cart line SUPPLIES FOUR `product.*` KEYS, and only under `cart-order`.** `scope.CartLineContext`
-  fills `product.title/image/price/priceCents`; only `cart-order` renders its first child with
-  `PlaceholderCartLine` (`cart-order/html.go`), and `rowDirectiveFor` drives just those plus the stepper.
-  So `no_data_context` is silent for a node in `cart-order` > `cart-item` bound to one of the four (its
+  and the suite holds `rich_dropped` to every verdict in it. The href is judged AFTER the Go
+  tokenizer's attribute unescape (every numeric reference, `;` optional; a named one only as
+  spelled, so `&colon` without `;` stays literal), trimmed by `strings.TrimSpace` (keeps U+FEFF,
+  strips U+0085); end-tag attributes are never read; `</` + a non-letter is a comment. 48 probes
+  beyond the fixture are pinned with verdicts from RUNNING the Go gate, not reasoning about it.
+- **A cart line DRIVES THREE `product.*` KEYS, and only under `cart-order`.** `scope.CartLineContext`
+  fills `product.title/image/price/priceCents` for the placeholder line, but only `cart-order` renders
+  its first child with it (`cart-order/html.go`), and `rowDirectiveFor` (render/html.go) has arms for
+  title, price (text + data-cents), image and the stepper — NONE for `priceCents`, so a node bound to it
+  alone ships the placeholder's value on every line. So `no_data_context` is silent for a node in
+  `cart-order` > `cart-item` bound to one of the three (its
   seeded extras — `compareAtPrice`, `product.id` — render empty in a line, as the platform's own drawer
   seed ships) or a `quantity-dataset`; `product.description` there, a bare `cart-item`, or a second
   entity (`category.*`) on the same node still fires.

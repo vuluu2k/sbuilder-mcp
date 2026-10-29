@@ -8,6 +8,7 @@ import { reviewDesign } from '../src/domains/site/review.js';
 import { writeCheck } from '../src/domains/site/writecheck.js';
 import { inertHintsFor } from '../src/domains/site/inert.js';
 import { bindNode } from '../src/tools/live.js';
+import { OVERLAY_SEEDS, CART_SEEDS } from '../src/catalog/overlays.generated.js';
 
 /**
  * FOUR DEFECTS FOUND BUILDING A LIVE STOREFRONT, 2026-10-28: a rich special the
@@ -53,6 +54,74 @@ describe('textHtml holding markup the rich-text schema cannot produce', () => {
     expect(dropped).toBe(!ok);
   });
 
+  // Probes the shared fixture does not reach, each verdict produced by RUNNING
+  // sanitize.IsInlineRepresentable (web_builder ffe952be6, x/net v0.56.0) — not
+  // reasoned from its source. The tokenizer unescapes EVERY entity in an
+  // attribute value (numeric with or without `;`; a named one without `;` only
+  // if the table holds that spelling and no `=` follows) before safeURL reads
+  // it, ignores attributes on an END tag, and reads `</` + a non-letter as a
+  // bogus comment. safeURL trims with strings.TrimSpace, which keeps U+FEFF.
+  const GO_VERIFIED: Array<[string, boolean]> = [
+    ['<a href="&#106;avascript:alert(1)">x</a>', false],
+    ['<a href="jav&#x61;script:x">x</a>', false],
+    ['<a href="&#32;javascript:x">x</a>', false],
+    ['<a href="&#x64;ata:text/html,x">x</a>', false],
+    ['<a href="javascript&colonalert(1)">x</a>', true],
+    ['<a href="javascript&colon">x</a>', true],
+    ['<a href="javascript&colon;x">x</a>', false],
+    ['<a href="javascript&#580;x">x</a>', true],
+    ['<a href="javascript&#58x">x</a>', false],
+    ['<a href="javascript&#x3a">x</a>', false],
+    ['<a href="&#106avascript:x">x</a>', false],
+    ['<a href="&#0000106;avascript:x">x</a>', false],
+    ['<a href="&Tab;javascript:x">x</a>', false],
+    ['<a href="&NewLine;javascript:x">x</a>', false],
+    ['<a href="&nbsp;https://x">x</a>', true],
+    ['<a href="&nbsphttps://x">x</a>', false],
+    ['<a href="&nbsp https://x">x</a>', true],
+    ['<a href="https&colon;//x">x</a>', true],
+    ['<a href="x&sol;y:z">x</a>', true],
+    ['<a href="a&quest;b:c">x</a>', true],
+    ['<a href="a&num;b:c">x</a>', true],
+    ['<a href="&amp;#58;x">x</a>', true],
+    ['<a href="data&colon;image/png,x">x</a>', true],
+    ['<a href="&#x2F;x:y">x</a>', true],
+    ['<a href="x&#47y:z">x</a>', true],
+    ['<a href="&ThinSpace;https://x">x</a>', true],
+    ['<a href="\ufeffhttps://x">x</a>', false],
+    ['<a href="\u0085https://x">x</a>', true],
+    ['<a href="\u00a0https://x">x</a>', true],
+    ['<a href="\u3000https://x">x</a>', true],
+    ['<a href=" \t\nhttps://x ">x</a>', true],
+    ['<b>x</ b>', false],
+    ['<b>x</1>', false],
+    ['<b>x</>', false],
+    ['<b>x</', true],
+    ['x</b', true],
+    ['<a title="<!x">t</a>', true],
+    ["<a title='<?x'>t</a>", true],
+    ['<a title=<!x>t</a>', true],
+    ['a <!-- c --> b', false],
+    ['<b>x</b class="y">', true],
+    ['<a>x</a href="javascript:x">', true],
+    ['<a href="javascript:x"', true],
+    ['<a/href="javascript:x">x</a>', false],
+    ['x < y', true],
+    ['<a href="JaVaScRiPt:x">x</a>', false],
+    ['<a href="mailto&#x3A;a@b">x</a>', true],
+    ['<a href="&#0;javascript:x">x</a>', false],
+  ];
+  it.each(GO_VERIFIED)('agrees with the Go gate as run: %j → ok=%s', (html, ok) => {
+    const dropped = writeCheck('text', 'specials', { textHtml: html }).some((c) => c.note.code === 'rich_dropped');
+    expect(dropped).toBe(!ok);
+  });
+
+  it('names the DECODED scheme, not the raw href', () => {
+    const n = writeCheck('text', 'specials', { textHtml: '<a href="javascript&colon;alert(1)">x</a>' }).find((c) => c.note.code === 'rich_dropped');
+    expect(n?.note.problem).toMatch(/javascript:…/);
+    expect(n?.note.problem).not.toMatch(/&colon|alert/);
+  });
+
   it('reads past a ">" inside a quoted attribute value', () => {
     const n = writeCheck('text', 'specials', { textHtml: '<a title="a>b" class="x">t</a>' }).find((c) => c.note.code === 'rich_dropped');
     expect(n?.note.problem).toMatch(/a class/);
@@ -84,8 +153,8 @@ describe('no_data_context inside a cart line', () => {
   });
 
   // Only cart-order renders its first child with PlaceholderCartLine
-  // (render/nodes/cart-order/html.go), and CartLineContext fills exactly
-  // product.title/image/price/priceCents — nothing else of a product.
+  // (render/nodes/cart-order/html.go), and rowDirectiveFor drives exactly
+  // product.title/image/price — nothing else of a product.
   const review = (wrap: string[], leaf: string, sources?: string[]) => {
     const d = PageDoc.from({ schema_version: 2, root_node_id: '', nodes: {} });
     let spec: Record<string, unknown> = { type: leaf };
@@ -126,6 +195,23 @@ describe('no_data_context inside a cart line', () => {
     // stepper is driven by the row (CartOrder#inc, line.quantity) whatever it binds.
     expect(review(['cart-order', 'cart-item'], 'pricing-dataset').found).toEqual([]);
     expect(review(['cart-order', 'cart-item'], 'quantity-dataset').found).toEqual([]);
+  });
+
+  // render/html.go rowDirectiveFor has arms for title, price (text AND
+  // data-cents), image and cartLine.quantity — none for product.priceCents, so
+  // an element bound to it alone keeps the placeholder line's value on every line.
+  it('product.priceCents alone is not driven per line', () => {
+    expect(review(['cart-order', 'cart-item'], 'text', ['product.priceCents']).found).toHaveLength(1);
+  });
+
+  it.each(['cart', ...Object.keys(CART_SEEDS)])('the platform cart drawer seed (%s) reviews silent as checkout content', (k) => {
+    const seed = k === 'cart' ? OVERLAY_SEEDS.cart : CART_SEEDS[k];
+    const d = PageDoc.from({ schema_version: 2, root_node_id: '', nodes: {} });
+    const nodes = structuredClone(seed.nodes) as Record<string, { data: { parent?: string } }>;
+    nodes[seed.root_node_id].data.parent = d.doc.root_node_id;
+    Object.assign(d.doc.nodes, nodes);
+    d.doc.nodes[d.doc.root_node_id].data.nodes!.push(seed.root_node_id);
+    expect(reviewDesign(d, { pageType: 'checkout' }).filter((f) => f.code === 'no_data_context')).toEqual([]);
   });
 });
 

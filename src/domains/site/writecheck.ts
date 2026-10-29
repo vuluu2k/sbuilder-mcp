@@ -188,35 +188,80 @@ function richOffenders(v: string): string[] {
   const tags: readonly string[] = INLINE_RICH.tags;
   const globalAttrs: readonly string[] = INLINE_RICH.globalAttrs;
   const tagAttrs = INLINE_RICH.tagAttrs as Record<string, readonly string[]>;
-  if (/<[!?]/.test(v)) out.add('<!-- -->');
-  for (const m of v.matchAll(/<\/?([a-zA-Z][\w-]*)((?:"[^"]*"|'[^']*'|[^"'>])*)>/g)) {
-    const tag = m[1].toLowerCase();
+  const TAG = /<(\/?)([a-zA-Z][\w-]*)((?:"[^"]*"|'[^']*'|[^"'>])*)>/g;
+  // Go reads `<!`, `<?` and `</` + a non-letter as a comment — but only in
+  // TEXT, so tags (and the quoted values inside them) are blanked first.
+  if (/<[!?]|<\/[^a-zA-Z]/.test(v.replace(TAG, ' '))) out.add('<!-- -->');
+  for (const m of v.matchAll(TAG)) {
+    const tag = m[2].toLowerCase();
     if (!tags.includes(tag)) {
       out.add(`<${tag}>`);
       continue;
     }
-    for (const a of m[2].matchAll(/([^\s=/>"']+)(?:\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>]+)))?/g)) {
+    // The tokenizer returns no attributes for an END tag (TagAttr).
+    if (m[1]) continue;
+    for (const a of m[3].matchAll(/([^\s=/>"']+)(?:\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>]+)))?/g)) {
       const name = a[1].toLowerCase();
-      const val = a[2] ?? a[3] ?? a[4] ?? '';
-      if (!globalAttrs.includes(name) && !tagAttrs[tag]?.includes(name)) out.add(`<${tag} ${name}>`);
-      else if (name === 'href' && !safeURL(val)) out.add(`<${tag} href="${val.split(':')[0].trim()}:…">`);
+      if (!globalAttrs.includes(name) && !tagAttrs[tag]?.includes(name)) {
+        out.add(`<${tag} ${name}>`);
+        continue;
+      }
+      const scheme = name === 'href' ? unsafeScheme(a[2] ?? a[3] ?? a[4] ?? '') : null;
+      if (scheme !== null) out.add(`<${tag} href="${scheme}:…">`);
     }
   }
   return [...out];
 }
 
-/** server/pkg/sanitize safeURL: relative, http(s), mailto, tel, or data:image/. */
-function safeURL(raw: string): boolean {
-  // The Go tokenizer unescapes attribute values first; an encoded colon is the
-  // one entity that changes the verdict.
-  const t = raw.replace(/&(?:colon|#0*58|#x0*3a);?/gi, ':').trim();
+/**
+ * The named references whose decoding can move safeURL's verdict — every entry
+ * of x/net/html's table (v0.56.0) that yields `:` `/` `?` `#` or a character
+ * strings.TrimSpace strips. Any other reference changes no verdict: undecoded
+ * or decoded, it is not a scheme letter, so leaving it verbatim is exact.
+ */
+const VERDICT_ENTITIES: Record<string, string> = {
+  'colon;': ':', 'sol;': '/', 'quest;': '?', 'num;': '#', 'Tab;': '\t', 'NewLine;': '\n',
+  'nbsp;': '\u00a0', nbsp: '\u00a0', 'NonBreakingSpace;': '\u00a0', 'ensp;': '\u2002', 'emsp;': '\u2003',
+  'emsp13;': '\u2004', 'emsp14;': '\u2005', 'numsp;': '\u2007', 'puncsp;': '\u2008', 'thinsp;': '\u2009',
+  'ThinSpace;': '\u2009', 'hairsp;': '\u200a', 'VeryThinSpace;': '\u200a', 'MediumSpace;': '\u205f',
+  'ThickSpace;': '\u205f\u200a',
+};
+
+/**
+ * html.unescape(val, attribute=true), one pass: a numeric reference with or
+ * without `;`; a named one only as spelled in the table, and one with no `;`
+ * left alone when `=` follows (unescapeEntity's attribute rule).
+ */
+function unescapeAttr(s: string): string {
+  return s.replace(/&(?:#[xX]([0-9a-fA-F]+);?|#(\d+);?|([a-zA-Z0-9]+;?))/g, (all, hex?: string, dec?: string, name?: string, at?: number) => {
+    if (name !== undefined) {
+      const ch = VERDICT_ENTITIES[name];
+      return ch === undefined || (!name.endsWith(';') && s[at! + all.length] === '=') ? all : ch;
+    }
+    const x = parseInt(hex ?? dec!, hex ? 16 : 10);
+    // 0x80–0x9F is remapped through Windows-1252 in Go; no target is a verdict
+    // character, so the replacement character stands in for all of them.
+    const bad = x === 0 || (x >= 0x80 && x <= 0x9f) || (x >= 0xd800 && x <= 0xdfff) || x > 0x10ffff;
+    return String.fromCodePoint(bad ? 0xfffd : x);
+  });
+}
+
+/** strings.TrimSpace's set (unicode.IsSpace) — U+0085 in, U+FEFF out, unlike String#trim. */
+const GO_TRIM = /^[\t\n\v\f\r \u0085\u00a0\u1680\u2000-\u200a\u2028\u2029\u202f\u205f\u3000]+|[\t\n\v\f\r \u0085\u00a0\u1680\u2000-\u200a\u2028\u2029\u202f\u205f\u3000]+$/g;
+
+/**
+ * server/pkg/sanitize safeURL on the value the tokenizer hands it: null when
+ * relative, http(s), mailto, tel or data:image/; else the decoded scheme.
+ */
+function unsafeScheme(raw: string): string | null {
+  const t = unescapeAttr(raw).replace(GO_TRIM, '');
   const colon = t.indexOf(':');
-  if (colon < 0) return true;
+  if (colon < 0) return null;
   const i = t.search(/[/?#]/);
-  if (i >= 0 && i < colon) return true;
+  if (i >= 0 && i < colon) return null;
   const scheme = t.slice(0, colon).toLowerCase();
-  if (['http', 'https', 'mailto', 'tel'].includes(scheme)) return true;
-  return scheme === 'data' && t.toLowerCase().startsWith('data:image/');
+  if (['http', 'https', 'mailto', 'tel'].includes(scheme)) return null;
+  return scheme === 'data' && t.toLowerCase().startsWith('data:image/') ? null : t.slice(0, colon);
 }
 
 /**

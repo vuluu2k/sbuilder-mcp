@@ -241,12 +241,13 @@ const RECORD_ENTITIES = new Set(['product', 'category', 'course', 'article', 'bl
 /** A record only one element type's rows supply, which is not a dataset repeater. */
 const ROW_SUPPLIER: Record<string, string> = { cartLine: 'cart-order' };
 /**
- * The product keys a cart line fills (scope.CartLineContext). Only cart-order
- * paints its row with one (cart-order/html.go: kids[0] + PlaceholderCartLine),
- * and the row drives just these plus the stepper (rowDirectiveFor) — any other
- * product.* there renders the same empty value on every line.
+ * The product keys a cart line drives per line. Only cart-order paints its row
+ * (cart-order/html.go: kids[0] + PlaceholderCartLine), and only these plus the
+ * stepper get a row directive (render/html.go rowDirectiveFor). CartLineContext
+ * fills product.priceCents too, but no directive carries it, so an element bound
+ * to it alone keeps the placeholder line's value on every line.
  */
-const CART_LINE_KEYS = new Set(['product.title', 'product.image', 'product.price', 'product.priceCents']);
+const CART_LINE_KEYS = new Set(['product.title', 'product.image', 'product.price']);
 
 /** Does this node sit inside an element of `type`? */
 function insideType(d: DocLike, id: string, type: string): boolean {
@@ -677,8 +678,8 @@ export function reviewDesign(
     if (opts.pageType !== undefined && !inRepeater.get(id) && !inOverlay.has(id)) {
       const entities = PAGE_ENTITIES[opts.pageType] ?? [];
       const sources = ((n as { bindings?: Array<{ source?: string }> }).bindings ?? []).map((b) => String(b?.source ?? ''));
-      // A CART LINE FILLS SOME PRODUCT KEYS: `scope.CartLineContext` writes
-      // product.title/image/price/priceCents per line rather than a cartLine.*
+      // A CART LINE DRIVES SOME PRODUCT KEYS: `rowDirectiveFor` carries
+      // product.title/image/price per line rather than a cartLine.*
       // twin. A node the line drives (one of those, or the row's own stepper)
       // is supplied; its seeded extras (compareAtPrice, product.id) render
       // empty in a line, which is what the platform's own drawer seed ships.
