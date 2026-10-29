@@ -6,6 +6,32 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.99.0] - 2026-10-29
+
+### Added
+- `sb_outline` thu header, footer dùng chung và overlay về một dòng mỗi mục, và `chrome: true` để mở ra.
+- `sb_add` trả `added` và `satellites` dạng `{id: type}`, còn `sb_duplicate` trả `copies` dạng `{old: [new, type]}`.
+- `sb_outline` hiện label của accordion và tab.
+- `sb_store` với `action: "form"` và `node_id` đặt form vào node của trang đang mở.
+- `sb_set` báo lại các key đã xoá (`unset`) và các key không có (`absent`), và `edits[].keys` không còn bắt buộc khi có `unset`.
+- `sb_review` và `sb_set` cảnh báo `link_colour` khi thẻ `<a>` trong `textHtml` không có `color`, vì trình duyệt tô màu xanh.
+- `sb_review` báo `default_font` khi node vẫn giữ font cứng của element trên site có theme dùng font text khác.
+- Mục của `sb_undo` mang tên tool và phần tóm tắt, mặc định chỉ liệt kê trang đang mở, và dùng `all: true` để liệt kê mọi trang.
+- `sb_traits_for` với `control: "layout"` nêu key, các giá trị và fallback thay vì trả `writes: null`.
+
+### Changed
+- `sb_add` dịch nội dung seed của element mới, như empty state "No products yet", khi locale của site là `vi` hoặc chưa đọc được, giống `sb_page_create`.
+- Media dataset không có con trong dataset block hoặc cart item được gieo `layout: "single"`, khớp với preset card của editor.
+- `sb_review` xét `pageSeo` và `unreachablePage` cả trên trang đang mở khi trang còn là bản nháp.
+- `sb_traits_for` nói hints, animation và notes một lần mỗi process, và `sb_node_read` bỏ `backgroundScene*` khi không có scene.
+- `sb_api_find` khớp đầu từ, nên "list" không còn trả về "wishlist".
+- Dry run của `sb_publish` nêu quy tắc cascade, vì nền tảng không có preview.
+- Ghi chú recovery của `sb_page_state` nói rằng autosave gộp mỗi 5 phút mỗi tác giả.
+
+### Fixed
+- Trang có `settings.noIndex` không còn bị báo `unreachablePage`, và finding chỉ cách gỡ bằng `seo.noIndex`.
+- Trang đã xoá giờ báo "page … no longer exists — sb_page_open another" thay vì 404 trơn.
+
 ## [0.98.9] - 2026-10-29
 
 ### Fixed

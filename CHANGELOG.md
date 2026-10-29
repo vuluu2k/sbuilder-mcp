@@ -6,6 +6,32 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.99.0] - 2026-10-29
+
+### Added
+- `sb_outline` collapses shared headers, footers and overlays into one line each, and `chrome: true` expands them.
+- `sb_add` returns `added` and `satellites` as `{id: type}`, and `sb_duplicate` returns `copies` as `{old: [new, type]}`.
+- `sb_outline` shows the label of accordion and tab items.
+- `sb_store` with `action: "form"` and `node_id` places the form into that node on the open page.
+- `sb_set` reports the keys it removed (`unset`) and the keys that were not present (`absent`), and `edits[].keys` is optional when `unset` is given.
+- `sb_review` and `sb_set` warn about `link_colour` when an `<a>` in `textHtml` has no `color`, because the browser paints it blue.
+- `sb_review` reports `default_font` when a node keeps an element's hard-coded font on a site whose theme sets a different text font.
+- `sb_undo` entries carry the tool name and a summary, and by default list only the open page, with `all: true` to list every page.
+- `sb_traits_for` with `control: "layout"` names the key, its values and the fallback instead of returning `writes: null`.
+
+### Changed
+- `sb_add` translates the seed copy of new elements, such as the "No products yet" empty state, when the site locale is `vi` or unknown, as `sb_page_create` does.
+- A media dataset without children inside a dataset block or cart item is seeded with `layout: "single"`, matching the editor's card preset.
+- `sb_review` checks `pageSeo` and `unreachablePage` on the open page while it is still a draft.
+- `sb_traits_for` states hints, animation and notes once per process, and `sb_node_read` omits `backgroundScene*` when there is no scene.
+- `sb_api_find` matches on word starts, so "list" no longer returns "wishlist".
+- The `sb_publish` dry run states the cascade rule, since the platform has no preview.
+- The `sb_page_state` recovery note says that autosave merges once every 5 minutes per author.
+
+### Fixed
+- A page with `settings.noIndex` is no longer reported as `unreachablePage`, and the finding explains how to remove it with `seo.noIndex`.
+- A deleted page now fails with "page … no longer exists — sb_page_open another" instead of a bare 404.
+
 ## [0.98.9] - 2026-10-29
 
 ### Fixed
