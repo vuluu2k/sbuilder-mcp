@@ -43,7 +43,7 @@ import { request, redact, watchPageWrites, onPageSourceWrite, onGlobalWrite, onF
 import { SPEC_GLOBAL_ID, SPEC_GLOBAL_REV, SPEC_OVERLAY_ID, SPEC_OVERLAY_REV, subtreeIds, type NodeLike } from '../core/tree.js';
 import { siteToken } from './credentialpick.js';
 import { validateForSave } from '../domains/site/validate.js';
-import { cascadeTail, formDocChecks, sayChecks, specCheck, writeCheck, type CheckedNote } from '../domains/site/writecheck.js';
+import { cascadeTail, formDocChecks, hiddenBand, sayChecks, specCheck, writeCheck, type CheckedNote } from '../domains/site/writecheck.js';
 import { reviewDesign, REVIEW_NOTICE } from '../domains/site/review.js';
 import { exampleCopy } from '../domains/site/examplecopy.js';
 import { compactFindings } from '../domains/site/findings.js';
@@ -1852,7 +1852,16 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
         applyPatches(probe, patches.filter((p) => p.path[0] === 'nodes' && p.path[1] === e.id));
         return cascadeTail(probe.nodes[e.id], { [bp]: e.keys }, e.id);
       });
-      const found = sayChecks([...checked, ...tail, ...session.formChecks(patches)], say);
+      // config.hidden at base/desktop hides ≥1440px only — judged on the node
+      // AS IT WILL BE, so a batch that hides every band says nothing.
+      const hidden = batch.flatMap((e) => {
+        const bp = e.breakpoint ?? 'desktop';
+        if (e.namespace !== 'config' || e.state || e.keys.hidden !== true || (!e.base && bp !== 'desktop') || !d.doc.nodes[e.id]) return [];
+        const probe = { nodes: { [e.id]: JSON.parse(JSON.stringify(d.doc.nodes[e.id])) } };
+        applyPatches(probe, patches.filter((p) => p.path[0] === 'nodes' && p.path[1] === e.id));
+        return hiddenBand(probe.nodes[e.id], e.id);
+      });
+      const found = sayChecks([...checked, ...tail, ...hidden, ...session.formChecks(patches)], say);
       const checks = found.length ? { checks: found } : {};
       // A FIELD-SKIN KNOB ON THE WRONG NODE renders nowhere. The FORM dresses
       // every field it holds with the input vocabulary; a payment card, choice

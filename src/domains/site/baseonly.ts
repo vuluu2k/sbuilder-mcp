@@ -49,6 +49,16 @@ export function isBaseOnlyConfig(type: string, key: string): boolean {
 }
 
 /**
+ * `config.hidden` AT DESKTOP IS THE BASE KEY. It does not cascade: desktop reads
+ * `node.config.hidden` and every narrower band only its own slot
+ * (render/css.go hiddenAt, editor trait/display.ts isHiddenAt), so
+ * `responsive.desktop.config.hidden` — where a default sb_set landed — is read by
+ * nothing. Not reported as base-only: it is not, at any other breakpoint.
+ */
+const atBase = (type: string, key: string, bp?: string): boolean =>
+  isBaseOnlyConfig(type, key) || (key === 'hidden' && bp === 'desktop');
+
+/**
  * Split a config write into the keys that must land at base and the rest.
  *
  * Both halves are returned even when one is empty, so the caller writes the same
@@ -57,11 +67,12 @@ export function isBaseOnlyConfig(type: string, key: string): boolean {
 export function splitBaseOnly(
   type: string,
   keys: Record<string, unknown>,
+  bp?: string,
 ): { base: Record<string, unknown>; responsive: Record<string, unknown> } {
   const base: Record<string, unknown> = {};
   const responsive: Record<string, unknown> = {};
   for (const [k, v] of Object.entries(keys)) {
-    if (isBaseOnlyConfig(type, k)) base[k] = v;
+    if (atBase(type, k, bp)) base[k] = v;
     else responsive[k] = v;
   }
   return { base, responsive };
@@ -71,11 +82,12 @@ export function splitBaseOnly(
 export function splitBaseOnlyKeys(
   type: string,
   keys: readonly string[],
+  bp?: string,
 ): { base: string[]; responsive: string[] } {
   const base: string[] = [];
   const responsive: string[] = [];
   for (const k of keys) {
-    if (isBaseOnlyConfig(type, k)) base.push(k);
+    if (atBase(type, k, bp)) base.push(k);
     else responsive.push(k);
   }
   return { base, responsive };

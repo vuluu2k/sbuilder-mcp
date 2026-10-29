@@ -230,6 +230,9 @@ export const FIX: Record<string, string> = {
     'Keep one date (an appointment) or two (a stay: check-in then check-out) — sb_remove id ' +
     '"<id>", or ask for it as text. Booking rules (closedDates, min/maxStayNights, capacity) ' +
     'read only the first two date fields.',
+  form_register_phone:
+    'sb_set id "<id>", namespace specials, keys { "name": "phone", "mapTo": "customer.phone", "inputType": "tel" } ' +
+    '— the palette\'s contact-phone row, the one name the sign-up reads.',
 };
 
 /** The template for `code`, with every `<name>` in `vars` substituted. */

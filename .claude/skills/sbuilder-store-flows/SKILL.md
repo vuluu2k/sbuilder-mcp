@@ -555,3 +555,13 @@ repo over a number here, and fix the line when you catch one stale.
   product grid at `collectionType: "page_brand"` — `sb_product_shelf` then `sb_set` its list;
   a bare `list-dataset` has no card and renders empty (measured: filtering per brand works). A note, not a hand-made seed: the platform
   ships none, and one authored here would drift with nothing upstream keeping it current.
+
+- **A REGISTER FORM STORES THE PHONE ONLY FROM THE CONTROL NAMED `phone`** (web_builder
+  `6427c495b`): the island's `authValues` names the keys it sends — email, password, name, code,
+  and `phone` on register only — so a phone field posting as `sdt` answers 200 and saves `""`.
+  `phone` is the palette's contact-phone row (`contactFields.ts`: `form-text`, `mapTo:
+  customer.phone`, `inputType: tel`); there is no `form-phone` element. The `register` template
+  ships no phone; `sb_store` adds none. `formFieldFindings` reports `form_register_phone` (via
+  `sb_add`/`sb_set` checks and `sb_review`) when a register form's phone-ish field — `mapTo
+  customer.phone`, or a `tel` input that is not the `confirmPhone` re-entry — is the only one and
+  is not named `phone`; `test/register-phone.test.ts` also holds every template's phone to the name.

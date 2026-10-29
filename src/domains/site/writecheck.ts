@@ -59,7 +59,8 @@ export interface WriteNote {
     | 'text_markup'
     | 'rich_dropped'
     | 'cascade_tail'
-    | 'seed_override';
+    | 'seed_override'
+    | 'hidden_band';
   id?: string;
   /** `<namespace>.<key>` */
   key: string;
@@ -532,6 +533,37 @@ export function cascadeTail(node: Slots, written: Record<string, Record<string, 
   return out;
 }
 
+type HiddenSlots = { config?: Record<string, unknown>; responsive?: Record<string, { config?: Record<string, unknown> } | undefined> };
+
+/**
+ * `config.hidden` IS PER BAND AND NEVER CASCADES (render/css.go hiddenAt,
+ * editor trait/display.ts isHiddenAt): base hides the node at ≥1440px ONLY, and
+ * laptop / tablet / mobile each read their own slot alone. An agent hiding at
+ * base expects it gone everywhere, so say which bands still show it — once per
+ * process, since the fact is the same for every node. `node` is AS IT WILL BE.
+ */
+export function hiddenBand(node: HiddenSlots, id?: string): CheckedNote[] {
+  if (node.config?.hidden !== true) return [];
+  const shown = ['laptop', 'tablet', 'mobile'].filter((bp) => node.responsive?.[bp]?.config?.hidden !== true);
+  if (!shown.length) return [];
+  return [
+    {
+      once: 'hidden-band',
+      note: {
+        code: 'hidden_band',
+        ...(id ? { id } : {}),
+        key: 'config.hidden',
+        problem:
+          'config.hidden does not cascade: at base it hides the node at ≥1440px only; laptop (1025–1439), ' +
+          `tablet (768–1024) and mobile (≤767) each read their own slot, so ${shown.join(', ')} still show it.`,
+        fix:
+          `To hide it at every width, also write hidden:true at breakpoint ${shown.map((b) => `"${b}"`).join(', ')} — ` +
+          'one sb_set with edits[] (sb_add: responsive.<bp>.config). To drop it from the page instead, sb_remove it.',
+      },
+    },
+  ];
+}
+
 /** The same, for every node of a nested `sb_add` spec, as each will be born. */
 export function specCheck(spec: NodeSpec, idOf?: ReadonlyMap<NodeSpec, string>): CheckedNote[] {
   const out: CheckedNote[] = [];
@@ -541,6 +573,8 @@ export function specCheck(spec: NodeSpec, idOf?: ReadonlyMap<NodeSpec, string>):
     const d = ELEMENTS[s.type]?.defaults;
     const born = d?.specials ?? {};
     if (s.config) out.push(...writeCheck(s.type, 'config', s.config));
+    // Born as addSubtree stores it: a desktop-slot `hidden` lands at base.
+    out.push(...hiddenBand({ config: { hidden: s.responsive?.desktop?.config?.hidden ?? s.config?.hidden }, responsive: s.responsive }, id));
     for (const slot of Object.values(s.responsive ?? {})) if (slot.config) out.push(...writeCheck(s.type, 'config', slot.config));
     if (s.responsive) {
       const seeded = (d?.responsive ?? {}) as Slots['responsive'];

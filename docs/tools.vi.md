@@ -384,8 +384,10 @@ chuyển) lên node gốc bên cạnh chúng bị từ chối, kèm tên segment
 phân biệt hoa thường; rỗng thì dùng id node) hoặc trùng `mapTo` bị từ chối trước khi gửi lên nền
 tảng (nền tảng cũng sẽ từ chối với 409); dry run báo `would_refuse`. `sb_add`/`sb_set` cảnh báo
 (`form_field`) khi trường lựa chọn không có options, khung giờ không tạo ra slot nào, có ngày thứ
-ba trên form loại booking, hoặc trường mới không có `specials.name`; `sb_review` báo ba trường hợp
-đầu là `form_options_empty`, `form_timeslot_dead`, `form_booking_dates`.
+ba trên form loại booking, trường số điện thoại trên form loại register không tên `phone` (lúc
+đăng ký nền tảng chỉ lưu số điện thoại từ control tên đúng `phone` — dòng contact-phone của
+palette), hoặc trường mới không có `specials.name`; `sb_review` báo bốn trường hợp đầu là
+`form_options_empty`, `form_timeslot_dead`, `form_booking_dates`, `form_register_phone`.
 
 **SATELLITE CÓ TRÊN BẢN ĐỒ.** Tám kiểu element sở hữu node treo ở `config[<key>]` chứ không
 ở `data.nodes` — ô chọn biến thể, hai nút của bộ đếm số lượng, trạng thái rỗng của repeater —
@@ -651,7 +653,12 @@ trong `specials.textHtml` mà schema rich-text inline của editor không tạo 
 của element — cascade mang nó lên desktop), `seed_override` (`flexDirection` ghi ở base mà
 chính seed của element lật lại ở một độ rộng hẹp hơn spec không nói tới — `flex-block` seed
 `mobile.flexDirection: "column"`, giống editor, nên một hàng xếp dọc ở 390; ghi
-`responsive.mobile.style.flexDirection` để giữ hàng). `unknown_key` cũng báo khi tên control
+`responsive.mobile.style.flexDirection` để giữ hàng), `hidden_band` (`config.hidden: true`
+ở base hoặc desktop trong khi `laptop`/`tablet`/`mobile` không ẩn — `hidden` không bao giờ
+cascade, nên ở base nó chỉ ẩn node ở ≥1440px; muốn ẩn mọi độ rộng thì ghi `hidden: true` ở base
+VÀ từng breakpoint hẹp hơn, một lệnh `sb_set` với `edits[]`). `config.hidden` ghi ở desktop được
+ghi vào BASE, chỗ duy nhất desktop đọc — `responsive.desktop.config.hidden` không ai đọc.
+`unknown_key` cũng báo khi tên control
 của một bộ CHỌN ICON bị ghi như key — `config.icon` trên `icon` render ngôi sao mặc định; phần
 sửa chỉ ra `specials.name`. Mỗi cảnh báo nói một lần mỗi process; dry run hiện nó mà không tiêu, nên
 lần ghi thật vẫn hiện lại.

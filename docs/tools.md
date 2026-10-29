@@ -384,9 +384,11 @@ field added (or moved) onto the form root beside them is refused, naming the seg
 (trimmed, case-sensitive; empty means the node id) or the same `mapTo` is refused before it
 reaches the platform, which would refuse it with 409 anyway; a dry run reports `would_refuse`.
 `sb_add`/`sb_set` warn (`form_field`) about a choice field with no options, a time slot whose
-hours make no slot, a third date field on a booking-type form, and a new field with no
-`specials.name`; `sb_review` reports the first three as `form_options_empty`,
-`form_timeslot_dead` and `form_booking_dates`.
+hours make no slot, a third date field on a booking-type form, a phone field on a
+register-type form not named `phone` (the sign-up stores the phone only from the control
+named exactly `phone` — the palette's contact-phone row), and a new field with no
+`specials.name`; `sb_review` reports the first four as `form_options_empty`,
+`form_timeslot_dead`, `form_booking_dates` and `form_register_phone`.
 
 **SATELLITES ARE ON THE MAP.** Eight element types own nodes that hang off `config[<key>]`
 instead of `data.nodes` — a variant option's box, the quantity stepper's buttons, a
@@ -660,7 +662,12 @@ style key written only at `laptop`/`tablet`/`mobile` that neither base nor deskt
 judged with the element's defaults — the cascade carries it to desktop), `seed_override` (a
 base `flexDirection` that the element's OWN seed flips at a narrower width the spec leaves
 unsaid — `flex-block` seeds `mobile.flexDirection: "column"`, as the editor does, so a row
-stacks at 390; say `responsive.mobile.style.flexDirection` to keep it). `unknown_key` also
+stacks at 390; say `responsive.mobile.style.flexDirection` to keep it), `hidden_band`
+(`config.hidden: true` at base or desktop while `laptop`/`tablet`/`mobile` do not hide it —
+`hidden` never cascades, so base hides the node at ≥1440px only; to hide it everywhere write
+`hidden: true` at base AND each narrower breakpoint, one `sb_set` with `edits[]`). A desktop
+`config.hidden` is written at BASE, the only place desktop reads it —
+`responsive.desktop.config.hidden` is read by nothing. `unknown_key` also
 fires on an icon PICKER's control name written as a key — `config.icon` on an `icon` renders
 the default star; the fix names `specials.name`. Each note is said once per process; a dry run shows it
 without spending it, so the real write shows it again.

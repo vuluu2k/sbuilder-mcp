@@ -112,7 +112,7 @@ function clock(v: unknown): number {
 }
 
 export interface FormFieldFinding {
-  code: 'form_options_empty' | 'form_timeslot_dead' | 'form_booking_dates';
+  code: 'form_options_empty' | 'form_timeslot_dead' | 'form_booking_dates' | 'form_register_phone';
   nodeId: string;
   type: string;
   key: string;
@@ -175,6 +175,28 @@ export function formFieldFindings(d: DocLike, formType?: string): FormFieldFindi
           'A booking form reads its FIRST TWO date fields, in document order, as check-in and ' +
           'check-out; this is a third, so it is ignored by every booking rule — and moving it ' +
           'above the others silently changes which dates the stay is.',
+      });
+    }
+  }
+  // A REGISTER form stores a phone only from the control named exactly `phone`
+  // (web_builder 6427c495b, runtime form.ts authValues — the palette's
+  // contact-phone row): any other name answers 200 and saves phone "". Silent
+  // when some field already posts as `phone`; the re-entry box is not a phone.
+  if (formType === 'register') {
+    const fields = formFields(d).filter((n) => collectsValue(n.data.type));
+    const phoneish = fields.find((n) => {
+      const s = n.specials ?? {};
+      return s.mapTo === 'customer.phone' || (s.inputType === 'tel' && s.mapTo !== 'customer.confirmPhone');
+    });
+    if (phoneish && !fields.some((n) => postedName(n) === 'phone')) {
+      out.push({
+        code: 'form_register_phone',
+        nodeId: phoneish.id,
+        type: phoneish.data.type,
+        key: 'name',
+        problem:
+          `A register form saves the customer's phone only from the field named "phone"; this one posts as ` +
+          `"${postedName(phoneish)}", so every sign-up stores an empty phone.`,
       });
     }
   }

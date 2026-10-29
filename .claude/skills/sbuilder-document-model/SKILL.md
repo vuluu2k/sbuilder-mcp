@@ -854,3 +854,11 @@ platform treats an unproven guard as indistinguishable from an absent one.
 - **`mergedAuthPage` IS SILENT ON THE `account` PAGE** (TTG gap #28). The platform sends sign-in
   and sign-up there (`membersonly.go` redirect, `pagetyperoute.go` fallback), so the design
   skill's rule 6a is right; `openType` (the open page's type, template or not) carries it.
+- **`config.hidden` IS PER BAND AND NEVER CASCADES** (`render/css.go` hiddenAt, editor
+  `trait/display.ts` isHiddenAt, `style/cascade.go` NON_CASCADING). Desktop reads BASE
+  `config.hidden`; laptop/tablet/mobile read ONLY their own slot; `responsive.desktop.config.hidden`
+  is read by NOTHING — and that is where `sb_set`'s default desktop write used to land. So base
+  `hidden:true` hides ≥1440px alone. `splitBaseOnly(…, bp)` routes a desktop `hidden` to base (not
+  reported as base-only — it is not, elsewhere), and `hidden_band` (`writecheck.ts`, once per
+  process) says which bands still show it and to write each. Warned, not auto-spread: hiding on
+  desktop only is a real design (the chrome's desktop menu).

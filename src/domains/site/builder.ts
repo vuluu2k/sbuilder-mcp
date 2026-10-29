@@ -243,7 +243,7 @@ export function addSubtree(
     if (responsive) {
       responsive = {};
       for (const [bp, slot] of Object.entries(s.responsive!)) {
-        const split = splitBaseOnly(s.type, slot.config ?? {});
+        const split = splitBaseOnly(s.type, slot.config ?? {}, bp);
         if (Object.keys(split.base).length) config = { ...config, ...split.base };
         responsive[bp] = { ...slot, ...(slot.config ? { config: split.responsive } : {}) };
       }
@@ -650,10 +650,10 @@ export function setKeys(
   // reads the node back must not have to hunt for the keys.
   const type = doc.node(id).data.type;
   const split =
-    namespace === 'config' ? splitBaseOnly(type, keys) : { base: {}, responsive: keys };
+    namespace === 'config' ? splitBaseOnly(type, keys, bp) : { base: {}, responsive: keys };
   const unsetSplit =
     namespace === 'config'
-      ? splitBaseOnlyKeys(type, opts.unset ?? [])
+      ? splitBaseOnlyKeys(type, opts.unset ?? [], bp)
       : { base: [], responsive: opts.unset ?? [] };
 
   return [
