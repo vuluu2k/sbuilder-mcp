@@ -483,10 +483,14 @@ a measured need) and `sb_bind`, which belongs with Phase 3's binding work.
   site**, so `loadSource` / `saveSource` say "page <id> not found on site <site> (deleted, or not
   this site/key) … sb_page_open another" (status and code kept) instead of a bare
   `source not found` (TTG gap #57).
-- **There is no publish-cascade preview** — `cascadeTargets` (`page/globalservice.go`) runs only
-  inside `Publish`; `sb_publish`'s dry run states the rule (`cascade_note`, SPENT on first show — a peek
-  repeated it on every dry run) and the real
-  answer names `cascaded` (TTG gap #59).
+- **There is no publish-cascade preview API, so `sb_publish`'s dry run COMPUTES it** (TTG gap #66,
+  `cascadePreview` in `pagestate.ts`): the globals the page shows (source `globalRef`/`globalId`),
+  each master's `rev` (`GET /global-sections`, `/overlays`) against every live document's stamped
+  `globalRev`/`overlayRev` (`GET /published`) — `globalCascadeTargets` + `sitewideCascadeTargets`
+  exactly, app blocks not modelled. `shared_warning` LEADS the dry run: a global section has NO
+  draft/published split (web_builder design note 2026-10-29-global-section-published-snapshot), so
+  any page's publish ships every saved master edit, someone else's included — the measured case
+  shipped a footer saved by another session onto 19 live pages. The real answer names `cascaded`.
 - **`sb_undo` entries carry `tool` + `summary`**, read from `currentCall` (an AsyncLocalStorage
   set per `tools/call` in `src/mcp/serial.ts`), and the listing is the open page's saves plus
   non-page writes; `other_pages` counts the rest, `all:true` lists them (TTG gap #54).

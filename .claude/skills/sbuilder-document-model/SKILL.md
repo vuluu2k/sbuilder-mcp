@@ -920,3 +920,14 @@ platform treats an unproven guard as indistinguishable from an absent one.
   stays SILENT on a slug with no family: the inherited family is not known here (a known miss,
   not a false positive). ROOT gained `font_family`, `bg_color`, `bg_image`, `padding`,
   `class_css` in the same regen — all style/universal keys, so `sb_set` on ROOT takes them.
+- **CONTRAST RESOLVES THE THEME, AND A PICTURE IS NEVER A COLOUR** (TTG gaps #64/#65/#69/#70/#74/#78,
+  2026-10-29). `groundOf` (`theme.ts`) is the one answer to "what does this node paint behind its
+  children": a `backgroundImage`/gradient/`background` with `url(`, a scene or a video is a PICTURE
+  (no colour, never judged, never read for tokens); else its own `backgroundColor`; else — with a
+  theme — its PRESET's (`container-section` paints every band, so "no literal" is not "unknown").
+  `invisible_text` (< 1.5) / `low_contrast` (< 3) take the site theme from `sb_review` only (a SITE
+  theme; a starter answer is a guess) and need ONE side authored on a node. A finding in a global
+  section carries `global: true` and `reviewField` says it once per process (`global-finding:` key);
+  `hidden_desktop_dead` whose dead value matches base is `maintenance`. `{active:false}` is a
+  complete animation value. `var(--wb-…)` is not a preset detachment. A pop-up master shows only on
+  its attached pages (`overlayReach`), the cart on all of them.

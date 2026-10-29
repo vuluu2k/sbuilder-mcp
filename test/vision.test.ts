@@ -14,6 +14,7 @@ import {
 } from '../src/vision/shoot.js';
 import { Session } from '../src/transport/auth.js';
 import { diffImages, closeDiffBrowser } from '../src/vision/imagediff.js';
+import { measure } from '../src/vision/measure.js';
 
 function ctxWith(f: typeof fetch) {
   const s = new Session('http://x', f);
@@ -176,6 +177,28 @@ describe.runIf(process.env.SB_BROWSER_TEST === '1')('shoot()', () => {
    * resulting image", naming neither the node nor the reason — on a 4,051px
    * page that is most of the page.
    */
+  /**
+   * TTG GAP #65: the render-side contrast check. White type on the preset's
+   * #f7f9fb ground is reported; the same white over a photo is not judged; dark
+   * ink through a translucent veil over a light band reads fine.
+   */
+  it('measures contrast on the render, and skips text over a picture', async () => {
+    const html =
+      '<div id="fs_00000001" class="wb-flex-section" style="background:#f7f9fb;padding:20px">' +
+      '<h2 id="he_00000001" class="wb-heading" style="color:#ffffff">Câu hỏi thường gặp</h2>' +
+      '<p id="tx_00000001" class="wb-text" style="color:#191c1e">Đọc được</p></div>' +
+      '<div id="fs_00000002" class="wb-flex-section" style="background:linear-gradient(#0008,#0008),#123;padding:20px">' +
+      '<h1 id="he_00000002" class="wb-heading" style="color:#ffffff">Trên ảnh</h1></div>' +
+      '<div id="fs_00000003" class="wb-flex-section" style="background:#ffffff;padding:20px">' +
+      '<div style="background:rgba(0,0,0,0.05)"><p id="tx_00000003" class="wb-text" style="color:#222">Qua lớp phủ</p></div></div>';
+    const shots = await shoot(`data:text/html,${encodeURIComponent(html)}`, { widths: [800] });
+    const box = (id: string) => shots[0].boxes.find((b) => b.id === id)!;
+    expect(box('he_00000001').bg).toBe('rgb(247, 249, 251)');
+    expect(box('he_00000002').overImage).toBe(true);
+    const low = measure(shots).filter((f) => f.code === 'low_contrast').map((f) => f.nodeId);
+    expect(low).toEqual(['he_00000001']);
+  }, 60_000);
+
   it('frames a node that sits below the first viewport', async () => {
     const html =
       '<div style="height:1600px"></div>' +

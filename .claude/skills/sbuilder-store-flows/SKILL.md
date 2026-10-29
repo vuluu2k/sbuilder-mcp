@@ -593,3 +593,17 @@ repo over a number here, and fix the line when you catch one stale.
   site name as `<title>`. **A `settings.noIndex` page is never `unreachablePage`** (#49): the
   platform's sitemap excludes it (`page/sitemap/sitemap.go`, read on web_builder ed66eb196), so an
   unlinked noIndex page is a deliberate landing page and `seo {noIndex:true}` is how to clear it.
+- **`blog` IS THE `/blog-categories/{slug}` TEMPLATE** (`page/entitylinks.go` linkTypeForPageType;
+  TTG gap #68), so it is not in `INDEXED_PAGE_TYPES`. `entityRoute(type)` (`storepage.ts`) is the
+  `{slug}` route; `sb_page_create` answers it as `route`, and `sb_publish verify` fetches the first
+  published/active record's address through `ENTITY_LISTS` — the template's own slug answers an
+  unbound 200. The page's OWN title in the product/category/blog/post seeds is `clampTitle:false`
+  (web_builder d297788bc `unclampPageTitles`, captured by codegen); a card title in a list keeps the
+  clamp. KNOWN GAP: `clampTitle` is read raw (`nodes.ConfigBool`) but not in the platform's
+  `BASE_ONLY_CONFIG` ledger, so `sb_set` would write it per breakpoint — write it with `base:true`.
+- **PATTERNS AND THE POP-UP SEED ARE LOCALIZED** (TTG gap #71): `localizeMinted` (page.ts) runs
+  `SEED_COPY_VI` over what `sb_add` and `sb_template_use` mint, and `attachOverlay` over the pop-up
+  seed (`closeLabel` is a seed key too). `sb_product_shelf`'s "Xem tất cả" goes to `/search` — an
+  empty search criteria serves the plain catalogue scan (pagerender `searchfeed.go`). `sb_review`
+  reports any `href:"#"` as `placeholder_link`. `sb_template_use` answers `ids`/`satellites` like
+  `sb_add`.

@@ -200,6 +200,18 @@ hoặc thao tác sai trạng thái), `timezone_required` (409, thiếu bước 2
 Form template `event` (`sb_store action:"form"`) là một form `contact`. Nó thu tên và không
 bán gì: không chỗ ngồi, không thanh toán, không QR.
 
+**Xếp hạng (TTG gap #81).** Một động từ trong truy vấn chỉ phương thức (`list`/`get` → GET,
+`create`/`add` → POST, `update` → PUT/PATCH, `delete`/`remove` → DELETE), và tài nguyên mà đường
+dẫn CHÍNH LÀ (đoạn đầu sau `/api/sites/{siteId}` hoặc `/api/v1`) đứng trên một route chỉ kết thúc
+bằng cùng từ — nên "list products" trả `GET …/products` trước `…/product-categories/{id}/products`.
+
+**Kiểu chuỗi có tên (TTG gap #72).** Trường mang kiểu chuỗi Go mà gói của nó suy xét từng thành
+viên (một vị từ bool như `StorefrontVisible`) in các hằng đã khai báo thành union, kèm vị từ trong
+`note`: `status` của bài viết là `"draft" | "published" | "archived"` với `StorefrontVisible() is
+true only for "published"`, `bodyType` là `"richtext" | "page"` với `BodyTypeRenders() is true only
+for "richtext"` — thân `page` được lưu nhưng không bao giờ được render. Kiểu có hằng mà không có vị
+từ (`site.Role`, `Permission`) vẫn chỉ là tên: hằng của nó là một tập con.
+
 ## `sb_api_call`
 
 Chạy một operation tìm được bằng `sb_api_find`.
@@ -345,6 +357,9 @@ dùng loopback, dải mạng riêng, link-local hay metadata của cloud. Mọi 
 
 Chín tool nữa để thiết kế chính trang đó. `sb_page_open` phải gọi trước; các tool còn lại
 thao tác trên đúng một tài liệu đang mở.
+
+Một `pick` nêu trường mà không bản ghi nào mang sẽ được nói ra: `shaping_note: "not on these
+records: categoryIds"` (TTG gap #81), thay vì bản ghi lặng lẽ thiếu nó.
 
 ## `sb_page_open`
 
@@ -496,6 +511,19 @@ gieo sẵn hoặc có từ vựng sẽ trả về key đó: `media-dataset` `lay
 `writes: [{ target: "config", writeKey: "layout" }]`, `values`, `fallback` và
 `responsive: false`. Trước đây nó trả `writes: null`.
 
+**Thu hẹp còn một control, câu trả lời vẫn giữ những gì bản đầy đủ biết (TTG gap #73).** `values`
+cho phép đi cùng control (`control:"articleSourceType"` → `category | page_category | slot`). Một
+control KHÔNG khai báo không bị coi là CSS: `likely_keys` liệt kê khóa đã seed của chính element có
+chung từ — `popup_trigger` → `config.triggerType`, `config.triggerDelay`, `config.triggerFreq`. Hai
+câu trả lời nên biết sẵn:
+
+- **Kích hoạt pop-up** là `config.triggerType` — `delay` (sau `triggerDelay` giây), `scroll`, hoặc
+  `guest` — và `config.triggerFreq` `once` | `always`. `triggerType` rỗng thì không bao giờ mở.
+- **Ảnh nền của section** là CSS mở trên section: `style.backgroundImage` (`url(…)`, gradient,
+  hoặc cả hai cách nhau dấu phẩy — gradient đứng trước là lớp phủ giữ chữ đọc được), cùng
+  `backgroundSize: "cover"` và `backgroundPosition`. Nền ảnh khiến `sb_template_use` không đọc gì từ
+  band đó và `sb_review` không chấm tương phản trên nó; `sb_look` nói chữ trên ảnh không được kiểm.
+
 ## `sb_add`
 
 | Tham số | Kiểu | Ghi chú |
@@ -617,6 +645,14 @@ một cây con dùng chung lên trang; tài liệu THAM CHIẾU tới nó bằng
 Tự viết dấu đã-ghép thì lần lưu kế tiếp sẽ rã node của bạn đè lên master, làm trống nó cho
 mọi trang mang nó. Không phải giả định: một lần chạy đã làm trắng bốn trang. Cả `sb_add` lẫn
 `sb_set` đều từ chối và nêu đúng khoá cần dùng.
+
+- **Biến theme không phải là tách khỏi theme (TTG gap #78).** `color: "var(--wb-color-primary)"`
+  theo mọi lần đổi palette, nên ghi chú tách preset chỉ báo cho giá trị literal.
+- **`config.animation: {active:false}` là đủ (TTG gap #70)** — cách tắt hiệu ứng ở một breakpoint.
+  Không còn cảnh báo "active:true is missing".
+- **Pop-up không phải toàn site (TTG gap #74).** Ghi chú master dùng chung nói sửa cart drawer rơi
+  xuống mọi trang; sửa pop-up rơi xuống các trang pop-up được gắn
+  (`GET /api/sites/{siteId}/overlays/{id}/pages`, hoặc tất cả khi `allPages`).
 
 ## `sb_move` / `sb_remove`
 
@@ -851,6 +887,14 @@ storefront giữ kết nối mở (island giỏ hàng poll, endpoint phiên khá
 một khoảnh khắc yên tĩnh không bao giờ tới khiến đúng trang duy nhất có dữ liệu thật lại
 không chụp được.
 
+**Tương phản, đo được (TTG gap #65).** Với box heading, text, button và text-dataset, ảnh chụp ghi
+màu chữ đã tính và nền nó nằm trên — mọi nền trong suốt tới nền đục đầu tiên, hòa trên nền trắng —
+và `layout` báo `low_contrast` dưới 3:1 (mức sàn WCAG kể cả chữ lớn). Chữ trên ảnh nền, video,
+canvas hay picture không được chấm, và `contrast_note` nói điều đó một lần.
+
+**`url` của trang khác (TTG gap #80).** Khi không section riêng nào của trang đang mở được render ở
+`url`, findings review của trang đang mở bị bỏ ra (`findings_note` giải thích) và chỉ trả bố cục đo.
+
 ## `sb_event`
 
 | Tham số | Kiểu | Ghi chú |
@@ -916,6 +960,10 @@ cái, vì cả hai renderer đều không phân giải được page id. `sb_rev
 đường khác là `dead_nav`.
 
 ---
+
+**`open_page` nhận id trang trần (TTG gap #76):** `payload: {pageId: "pg_…"}` được giải từ danh
+sách trang thành `{linkType: "page", id, label, url}` như editor, và href được chiếu như mọi điều
+hướng khác.
 
 ## `sb_bind`
 
@@ -1282,6 +1330,8 @@ gọi reconcile và trước khi đổi trang, nên một lần paste bị từ 
 session vẫn ở trang cũ. Paste khác site cần đăng nhập bằng session: API key chỉ mở được một
 site, nên bị từ chối ngay từ đầu.
 
+`to_page_id` trả cùng bản đồ `copies` (cũ → [mới, type]) như duplicate cùng trang (TTG gap #77).
+
 ## `sb_templates` / `sb_template_use`
 
 `sb_templates` liệt kê section template đã lưu dưới dạng
@@ -1341,6 +1391,15 @@ là ba lần ghi có thứ tự mà `sb_store action:"form"` đã sở hữu (t�
 liệu field), không phải một `NodeSpec` mà một mẫu có thể soạn offline. Xuất bản một node `form`
 không có `formId`, hay một ô nhập với nút bấm không gửi đi đâu, chính là loại element trông xong
 mà chết mà bảng `INERT_ON_ADD` của repo này sinh ra để chặn.
+
+**Một layout dựng sẵn đọc gì, và trả gì (TTG gap #64, #71, #77).** Token của trang bỏ qua mọi band
+trên nền đảo ngược — màu tối, biến theme, và giờ là ẢNH (`backgroundImage`, gradient, scene hay
+video): h1 trắng của hero trên ảnh không phải màu chữ của trang. Màu PRESET của band cũng được tính
+(theme site giải `container-section`). Độ rộng nội dung là flex-block TRỰC TIẾP của một section cấp
+trang trên nền sáng — cái rộng nhất — không bao giờ là một cột lồng. Trên site `vi` (hoặc chưa đọc
+được locale) các trạng thái rỗng nó tạo ra là tiếng Việt (`SEED_COPY_VI`). Câu trả lời mang `ids`
+(`{id: type}`) và `satellites` như `sb_add`, và `links` đếm nút còn trỏ `"#"`. "Xem tất cả" của
+`sb_product_shelf` dẫn tới `/search` — truy vấn rỗng là toàn bộ danh mục.
 
 ## `sb_page_repair`
 
@@ -1427,10 +1486,9 @@ gửi đi: chỉ một id lạ là nền tảng từ chối cả lần publish. 
 đã ghi và chỉ còn hiệu lực khi trang vẫn mang đúng giá trị đó — trang được publish qua editor hay
 `sb_api_call`, hoặc bị gỡ publish, thì bị quên và mốc thời gian trả lời lại.
 
-Nền tảng **không có bản xem trước cascade** — `cascadeTargets` chỉ chạy bên trong publish — nên
-dry run không liệt kê được các trang đó; nó nói quy tắc MỘT lần mỗi process dưới `cascade_note` —
-tiêu ngay ở lần dry run đầu tiên hiện nó, không lặp lại mỗi lần xem trước — và lần publish thật gọi
-tên chúng ở `cascaded`.
+Nền tảng không có API xem trước cascade — `cascadeTargets` chỉ chạy bên trong publish — nên dry
+run TỰ TÍNH danh sách từ cùng các đầu vào (`would_cascade`, xem bên dưới); quy tắc được nói MỘT lần
+mỗi process dưới `cascade_note`, và lần publish thật gọi tên các trang ở `cascaded`.
 
 **Nó báo BẢN NÀO đã lên live** — `id` (dòng published), `publishedAt`, và `fromVersionId`
 (bản nháp mà nó được biên dịch từ đó). Ba trường này trả lời đúng câu người gọi hỏi ngay sau
@@ -1459,6 +1517,21 @@ mang `id="<node id>"`, nên id của các band cấp cao nhất là dấu vân t
 cần so từng byte. Nó trả về `serving`, các band `missing` nếu có, `etag`, và `max_age` — tức
 bản sao của người khác còn có thể khác trong bao lâu. Một phép kiểm KHÔNG CHẠY ĐƯỢC được báo
 tách khỏi một trang không phục vụ đúng: lúc đó publish đã thành công rồi.
+
+**Lan truyền, trước khi xảy ra (TTG gap #66).** Dry run tính đúng cái `cascadeTargets` của nền
+tảng sẽ thêm: các global mà trang được publish hiện, `rev` của từng master, và `globalRev` /
+`overlayRev` đóng trên mỗi trang live. `would_cascade` liệt kê `{pageId, name, because}`;
+`shared_unpublished` liệt kê master được lưu sau khi các trang live hiện nó được publish; và
+`shared_warning` ĐỨNG ĐẦU câu trả lời. Nó quan trọng vì global section KHÔNG có publish riêng —
+trạng thái đã lưu của nó lên sóng cùng bất kỳ trang nào mang nó, kể cả bản sửa chưa ai duyệt của
+người khác. App block đi theo bản cài không được mô hình hóa.
+
+**Template thực thể (TTG gap #68).** `blog` là template `/blog-categories/{slug}`, không phải trang
+danh sách, nên không bị chấm `pageSeo` hay `unreachablePage`. `sb_page_create` trả `route` cho mọi
+kiểu `{slug}`, và `verify` tải địa chỉ của MỘT bản ghi thật (bài viết, danh mục, sản phẩm …
+published/active đầu tiên), không bao giờ slug riêng của template — slug đó trả 200 chưa gắn gì.
+Tiêu đề của chính trang trên seed product, category, blog, post mang `clampTitle: false`
+(web_builder `d297788bc`); tiêu đề thẻ trong danh sách vẫn kẹp hai dòng.
 
 ## `sb_page_update`
 
@@ -1868,6 +1941,17 @@ Năm lệnh GET phụ trả giá cho việc này (pages, payment-gateways, shipp
 global-sections, menus) và không cái nào làm hỏng được review: một lệnh thất bại thì luật đó **im
 lặng** thay vì báo một khoảng trống cửa hàng có thể không có. Một cảnh báo nổ trên cửa hàng
 đúng là cảnh báo người ta học cách bỏ qua.
+
+**Tương phản theo theme (TTG gap #65).** Khi đọc được theme của SITE, `invisible_text` (< 1.5:1) và
+`low_contrast` (< 3:1) giải nền PRESET của band và màu chữ preset của node, kế thừa lên cây, nên
+chữ trắng trên nền `container-section` được báo. Một phía phải được viết trên node — theme với theme
+là thiết kế của theme — và nền ảnh để `sb_look` lo.
+
+**`placeholder_link` (TTG gap #71):** `specials.href` là `"#"` thì không đi đâu cả.
+
+**Master dùng chung (TTG gap #69).** Finding bên trong global section mang `global: true` và chỉ
+được nói MỘT lần mỗi tiến trình, không lặp trên mọi trang mọi lần gọi. `hidden_desktop_dead` là
+`maintenance` khi giá trị chết đã khớp với cái được render.
 
 ## `sb_media_list` / `sb_media_upload`
 
@@ -2921,8 +3005,10 @@ có thể tự lưu trang thành rỗng. `canvas.minted_root` nêu tên nó và 
 - **không có node nào** — bình thường với một trang vừa tạo.
 
 `drift` so `updatedAt` của bản nháp với `publishedAt` của dòng live, chừa một giây dung sai vì
-publish ghi dòng của nó sau khi đọc bản nháp. `published_ahead` được báo đúng như cái nó là —
-LAN từ một header dùng chung sửa ở nơi khác — chứ không phải một lỗi.
+publish ghi dòng của nó sau khi đọc bản nháp. Dòng live MUỘN hơn bản nháp là `in_step` — mọi lần
+publish bình thường để lại đúng như vậy; trước đây nó đọc thành `published_ahead` và đổ cho lan truyền
+(TTG gap #75). Một lần lan truyền bỏ lại bản nháp được báo từ bộ nhớ của `sb_publish` là `draft_ahead`,
+không bao giờ suy từ dấu thời gian.
 
 `recovery` LIỆT KÊ các điểm phục hồi thật thay vì mô tả chúng, rút gọn còn id / nhãn / thời
 điểm vì một version của trang hai node đo được 1.690 byte và danh sách hai mươi bản thật là
@@ -3009,3 +3095,7 @@ giữa hai trạng thái.
 và ảnh chụp; một thư mục snapshot là một loại tài sản mới phải sở hữu, kèm câu hỏi về thời
 hạn lưu và câu hỏi về riêng tư. Khoảng thời gian thật sự quan trọng là lúc người ta với tay
 tới undo — agent phát hiện hỏng hóc ngay trong phiên đã gây ra nó.
+
+Danh sách nói đường dẫn source của trang đang mở một lần (`page_saves`); các dòng của nó chỉ mang
+`index`, `at`, `tool` và `summary` (TTG gap #77). Dòng `sb_template_use` nêu template, `sb_duplicate`
+sang trang khác nêu trang đích.

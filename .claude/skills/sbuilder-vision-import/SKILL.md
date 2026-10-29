@@ -1119,3 +1119,17 @@ how the committed baseline above is kept current.
   position, not mid-slide (cart drawer `transform .25s`). Known gap, custom-code only: a
   reveal chained to ANOTHER element's `transitionend` stays at its start (the browser fires
   `transitioncancel` instead); web_builder's runtime never listens for `transitionend`.
+- **`tokensFromPage` READ A HERO'S PHOTO AS A LIGHT GROUND** (TTG gap #64, 2026-10-29): its white h1
+  and 620px copy column became every later pattern's ink and width — white on #f7f9fb, a 4-card shelf
+  at 137px. A band whose `groundOf` is a picture is inverted like a dark colour; with the site theme a
+  preset ground counts. `sectionMaxWidth` is the WIDEST maxWidth of a page-level section's DIRECT
+  flex-block on a light ground — never the first flex-block anywhere.
+- **`sb_look` MEASURES CONTRAST** (TTG gap #65): `shoot`'s evaluate records, for heading/text/button/
+  text-dataset boxes, `fg` (computed `color`) and `bg` (translucent backgrounds composited up to the
+  first opaque one, over white), or `overImage` when a background image or a `video`/`canvas`/
+  `picture`/`iframe` child sits in that chain. `measure` reports `low_contrast` < 3:1; over a picture
+  nothing is judged and `contrast_note` says so once. Known miss: an absolutely positioned `<img>`
+  behind text that is not a direct child of the chain is not seen — the text is judged on the band
+  colour beneath it.
+- **`sb_look url:` OF ANOTHER PAGE** (TTG gap #80) drops the open page's review findings and measures
+  without the doc — "another page" = none of the open page's own (non-shared) ROOT bands rendered.

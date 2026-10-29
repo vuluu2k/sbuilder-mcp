@@ -198,6 +198,18 @@ out of range or an action on the wrong status), `timezone_required` (409, step 2
 The `event` form template (`sb_store action:"form"`) is a `contact` form. It collects names and
 sells nothing: no seats, no payment, no QR.
 
+**Ranking (TTG gap #81).** A verb in the query names a method (`list`/`get` → GET, `create`/`add` →
+POST, `update` → PUT/PATCH, `delete`/`remove` → DELETE), and the resource the path IS (its first
+segment past `/api/sites/{siteId}` or `/api/v1`) outranks a route that merely ends in the same
+word — so "list products" answers `GET …/products` before `…/product-categories/{id}/products`.
+
+**Named string types (TTG gap #72).** A field typed by a Go string type whose package reasons about
+its members (a bool predicate such as `StorefrontVisible`) prints its declared constants as a union
+and the predicate in `note`: an article's `status` is `"draft" | "published" | "archived"` with
+`StorefrontVisible() is true only for "published"`, and `bodyType` is `"richtext" | "page"` with
+`BodyTypeRenders() is true only for "richtext"` — a `page` body is stored and never rendered. A type
+with constants and no predicate (`site.Role`, `Permission`) stays a name: its constants are a subset.
+
 ## `sb_api_call`
 
 Execute one operation found by `sb_api_find`.
@@ -345,6 +357,9 @@ anything else is refused before sending.
 
 Nine more tools that design the page itself. `sb_page_open` must come first — the rest act
 on the one open document.
+
+A `pick` naming a field no returned record carries is said: `shaping_note: "not on these records:
+categoryIds"` (TTG gap #81), instead of records that quietly lack it.
 
 ## `sb_page_open`
 
@@ -501,6 +516,20 @@ the element seeds or has a vocabulary for answers that key: `media-dataset` `lay
 `writes: [{ target: "config", writeKey: "layout" }]`, its `values`, `fallback`, and
 `responsive: false`. It used to answer `writes: null`.
 
+**Narrowed to one control, the answer keeps what the full one knows (TTG gap #73).** A control's
+allowed `values` ride with it (`control:"articleSourceType"` → `category | page_category | slot`).
+An UNDECLARED control is not assumed to be CSS: `likely_keys` lists the element's own seeded keys
+sharing its words — `popup_trigger` → `config.triggerType`, `config.triggerDelay`,
+`config.triggerFreq`. Two such answers worth knowing outright:
+
+- **A pop-up's trigger** is `config.triggerType` — `delay` (after `triggerDelay` seconds), `scroll`,
+  or `guest` — and `config.triggerFreq` `once` | `always`. An empty `triggerType` never opens it.
+- **A section's background picture** is open CSS on the section: `style.backgroundImage`
+  (`url(…)`, a gradient, or both comma-separated — a gradient first is the overlay that keeps
+  type readable), with `backgroundSize: "cover"` and `backgroundPosition`. A picture ground makes
+  `sb_template_use` read nothing off that band and `sb_review` judge no contrast on it; `sb_look`
+  says text over it is not contrast-checked.
+
 ## `sb_add`
 
 | Arg | Type | Notes |
@@ -623,6 +652,14 @@ writes when it composes a shared subtree onto a page; a document REFERENCES one 
 `globalRef` / `appBlockRef`. Author the composed stamp and the next save decomposes your node
 over the master, emptying it for every page that carries it. That is not hypothetical: it
 took four pages blank in one run. Both `sb_add` and `sb_set` refuse it and name the right key.
+
+- **A theme variable is not a detachment (TTG gap #78).** `color: "var(--wb-color-primary)"` follows
+  every palette change, so the preset-detach note fires only for a literal.
+- **`config.animation: {active:false}` is complete (TTG gap #70)** — how an animation is switched
+  off at one breakpoint. No "active:true is missing" warning.
+- **A pop-up is not site-wide (TTG gap #74).** The shared-master note says a cart drawer edit lands on
+  every page; a pop-up edit lands on the pages the pop-up is attached to
+  (`GET /api/sites/{siteId}/overlays/{id}/pages`, or all of them when `allPages`).
 
 ## `sb_move` / `sb_remove`
 
@@ -873,6 +910,16 @@ storefront keeps connections open (the cart island polls, a visitor's session en
 401 forever), so waiting for a quiet moment that never comes made the only page where store
 data renders impossible to photograph.
 
+**Contrast, measured (TTG gap #65).** For heading, text, button and text-dataset boxes the shot
+records the computed ink and the ground it reads on — every translucent background up to the first
+opaque one, composited over white — and `layout` reports `low_contrast` under 3:1 (the WCAG floor
+even for large text). Text over a background image, video, canvas or picture is not judged, and
+`contrast_note` says so once.
+
+**`url` of another page (TTG gap #80).** When none of the open page's own sections rendered at
+`url`, the open page's review findings are left out (`findings_note` says why) and only the
+measured layout is returned.
+
 ## `sb_event`
 
 | Arg | Type | Notes |
@@ -939,6 +986,10 @@ one, since neither renderer can resolve a page id. `sb_review` reports a node th
 by another road as `dead_nav`.
 
 ---
+
+**`open_page` takes a bare page id (TTG gap #76):** `payload: {pageId: "pg_…"}` is resolved from
+the page list into the editor's `{linkType: "page", id, label, url}`, and the href is projected as
+for any navigation.
 
 ## `sb_bind`
 
@@ -1303,6 +1354,8 @@ every check against a read of the target BEFORE the reconcile and before switchi
 refused paste leaves no orphaned images and keeps the session on its page. A cross-site paste
 needs a session login: an API key opens one site only, so it is refused up front.
 
+`to_page_id` answers the same `copies` map (old → [new, type]) as a same-page duplicate (TTG gap #77).
+
 ## `sb_templates` / `sb_template_use`
 
 `sb_templates` lists the store's saved section templates as
@@ -1363,6 +1416,16 @@ one honestly means the multi-step write `sb_store action:"form"` already owns (c
 whole → save the field document), not a `NodeSpec` a pattern can compose offline. Shipping a
 `form` node with no `formId`, or an input with a button that submits nowhere, is exactly the
 class of convincing-but-inert element this repo's `INERT_ON_ADD` table exists to stop adding.
+
+**What a built-in reads, and what it answers (TTG gaps #64, #71, #77).** The page's tokens skip any
+band on an inverted ground — a dark colour, a theme var, and now a PICTURE (`backgroundImage`, a
+gradient, a scene or a video): a hero's white h1 on a photo is not the page's ink. A band's PRESET
+paint counts too (the site theme resolves `container-section`). The content width is a page-level
+section's DIRECT flex-block on a light ground — the widest one — never a nested column. On a `vi`
+site (or an unread locale) the empty states it mints are Vietnamese (`SEED_COPY_VI`). The answer
+carries `ids` (`{id: type}`) and `satellites`, like `sb_add`, and `links` counts buttons still
+pointing at `"#"`. `sb_product_shelf`'s "Xem tất cả" goes to `/search` — an empty query is the
+whole catalogue.
 
 ## `sb_page_repair`
 
@@ -1455,10 +1518,9 @@ than sent: one unknown id makes the platform refuse the whole publish. The memor
 through the editor or `sb_api_call`, or unpublished, the page is forgotten and the timestamps
 answer again.
 
-The platform has **no cascade preview** — `cascadeTargets` runs inside publish only — so the dry
-run cannot list those pages; it states the rule ONCE per process as `cascade_note` — spent on the
-first dry run that shows it, not repeated on every preview — and the real publish names them under
-`cascaded`.
+The platform has no cascade-preview API — `cascadeTargets` runs inside publish only — so the dry
+run COMPUTES the list from the same inputs (`would_cascade`, below); the rule is said ONCE per
+process as `cascade_note`, and the real publish names the pages under `cascaded`.
 
 **It reports WHICH REVISION went live** — `id` (the published row), `publishedAt`, and
 `fromVersionId` (the draft version it was compiled from). Those three answer the question a
@@ -1489,6 +1551,21 @@ top-level band ids fingerprint the document without diffing bytes the served pag
 contain anyway. It reports `serving`, any `missing` bands, the `etag`, and `max_age`, which
 is how long somebody else's copy may still differ. A check that could not RUN is reported
 apart from a page that is not serving: the publish already succeeded by then.
+
+**The cascade, before it happens (TTG gap #66).** The dry run computes what the platform's
+`cascadeTargets` would add: the globals the published page shows, each master's `rev`, and every
+live page's stamped `globalRev` / `overlayRev`. `would_cascade` lists `{pageId, name, because}`;
+`shared_unpublished` lists the masters saved after the live pages showing them; and
+`shared_warning` LEADS the answer. It matters because a global section has NO publish of its own —
+its saved state goes live with any page carrying it, someone else's unreviewed edit included. App
+blocks moving with an install are not modelled.
+
+**Entity templates (TTG gap #68).** `blog` is the `/blog-categories/{slug}` template, not a listing,
+so it is judged for neither `pageSeo` nor `unreachablePage`. `sb_page_create` answers `route` for
+every `{slug}` type, and `verify` fetches one REAL record's address (the first published/active
+article, category, product …), never the template's own slug, which answers an unbound 200. The
+page's own title on a product, category, blog or post seed carries `clampTitle: false` (web_builder
+`d297788bc`); a card title inside a list keeps the two-line clamp.
 
 ## `sb_page_update`
 
@@ -1899,6 +1976,17 @@ Five extra GETs pay for this (pages, payment-gateways, shipping-methods, global-
 none of them can fail the review: a fetch that fails leaves that rule **silent** rather than
 reporting a gap the store may not have. A warning that fires on a correct store is one the
 reader learns to ignore.
+
+**Contrast against the theme (TTG gap #65).** With the SITE theme read, `invisible_text` (< 1.5:1)
+and `low_contrast` (< 3:1) resolve a band's PRESET ground and a node's preset ink, inheriting up
+the tree, so white type on `container-section`'s ground is reported. One side must be authored on
+a node — theme against theme is the theme's design — and a picture ground is left to `sb_look`.
+
+**`placeholder_link` (TTG gap #71):** a `specials.href` of `"#"` goes nowhere.
+
+**Shared masters (TTG gap #69).** A finding inside a global section carries `global: true` and is
+said ONCE per process, not on every page and every call. `hidden_desktop_dead` is `maintenance`
+when the dead value already matches what renders.
 
 ## `sb_media_list` / `sb_media_upload`
 
@@ -2967,9 +3055,10 @@ Three verdicts, and the fixes differ:
 - **no nodes at all** — normal for a page just created.
 
 `drift` compares the draft's `updatedAt` against the live row's `publishedAt`, with a second
-of slack because publish writes its row after reading the draft. `published_ahead` is
-reported as the CASCADE it is — a shared header edited elsewhere republishes every page
-carrying it — rather than as a defect.
+of slack because publish writes its row after reading the draft. A live row LATER than the draft
+is `in_step` — every ordinary publish leaves exactly that, and this used to read `published_ahead`
+and blame a cascade (TTG gap #75). A cascade that left a draft behind is reported from
+`sb_publish`'s memory as `draft_ahead`, never inferred from the timestamps.
 
 `recovery` LISTS the real recovery points rather than describing them, projected to
 id / label / when because one version of a two-node page measured 1,690 bytes and a listing
@@ -3078,3 +3167,7 @@ between two states.
 the screenshots; a snapshot directory is a new kind of thing to own, with a retention
 question and a privacy question attached. The window that matters is the one where undo is
 reached for — the agent discovers the damage in the session that caused it.
+
+The listing says the open page's source path once (`page_saves`); its rows carry `index`, `at`,
+`tool` and `summary` only (TTG gap #77). A `sb_template_use` row names the template, a cross-page
+`sb_duplicate` the target page.

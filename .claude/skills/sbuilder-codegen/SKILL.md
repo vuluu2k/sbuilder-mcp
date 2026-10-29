@@ -1100,3 +1100,11 @@ above today's measurement gets raised again without anybody looking.
   `pagerender.go` is NOT read — it re-stamps always-present `product.price`. Exits 1 if
   `product.id/tags/summary/ratingCount` stop reading as statements, or a key falls outside
   `BINDING_SOURCES`. `record.*` is dynamic and handled in `review.ts`.
+- **A NAMED STRING TYPE WITH A PREDICATE PRINTS ITS CONSTANTS** (TTG gap #72, 2026-10-29). The
+  validator rule above still wins; with NO validator, a type its package reasons about member by
+  member — a bool predicate answering `return x == A || x == B` (`StorefrontVisible`,
+  `BodyTypeRenders`, `IsAuth`) — prints its declared consts as the union and each predicate in the
+  field's `note` ("BodyTypeRenders() is true only for "richtext""). The predicate is the evidence the
+  set is closed: `site.Role` and `Permission` have consts and none, and their consts are a SUBSET
+  (custom `role_…` ids, runtime `<domain>.read|write`), so they stay a bare name. Measured at
+  8243d5180: article status/bodyType, product status, form type, returns, reviews, submissions.

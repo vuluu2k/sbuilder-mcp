@@ -3140,7 +3140,9 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
         // page shows, each master's rev, and every live document's stamps. A
         // failed read falls back to saying the rule (gap #59).
         const preview = await (async () => {
-          const get = (p: string) =>
+          // async: a credential refusal must reject, not throw while Promise.all's
+          // array is half built (that left loadSource's rejection unhandled).
+          const get = async (p: string) =>
             request({ base: ctx.base, method: 'GET', path: `/api/sites/${encodeURIComponent(site_id)}${p}`, token: siteToken(ctx), fetchImpl: ctx.fetchImpl }) as Promise<Record<string, unknown>>;
           const [src, gl, ov, live] = await Promise.all([
             loadSource(ctx, site_id, page_id),
