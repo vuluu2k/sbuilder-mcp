@@ -6,6 +6,12 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.100.4] - 2026-10-29
+
+### Fixed
+- `sb_look` và `sb_import` không còn chờ vô hạn một Chrome bị treo: mở trình duyệt hoặc mở tab có hạn 15 giây, Chrome kẹt được thay mới và thử lại một lần trước khi báo lỗi.
+- Việc đóng trình duyệt sau `sb_look` hoặc `sb_import` chỉ chờ tối đa 3 giây rồi kết thúc cưỡng bức process group của Chrome, nên máy bận không còn bị chậm thêm 10–24 giây sau khi đã có kết quả.
+
 ## [0.100.3] - 2026-10-29
 
 ### Changed

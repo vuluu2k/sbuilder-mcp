@@ -6,6 +6,12 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.100.4] - 2026-10-29
+
+### Fixed
+- `sb_look` and `sb_import` no longer wait indefinitely on a hung Chrome: launching a browser or opening a tab times out after 15 seconds, and the stalled Chrome is replaced and retried once before an error is reported.
+- Closing the browser after `sb_look` or `sb_import` waits at most 3 seconds and then kills the Chrome process group, so a busy machine no longer adds 10–24 seconds after the result is ready.
+
 ## [0.100.3] - 2026-10-29
 
 ### Changed
