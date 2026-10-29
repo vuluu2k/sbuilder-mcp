@@ -3028,9 +3028,9 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
     {
       description:
         'Compile the draft into the live page, and report which revision went live (id, ' +
-          'publishedAt, fromVersionId). PUBLISH CASCADES: a page sharing a global section with ' +
-          'others republishes them too, because a header edited once must not go live on one ' +
-          'page and stay stale on the rest. verify:true then fetches the live page and says ' +
+          'publishedAt, fromVersionId). PUBLISH CASCADES to every page sharing a changed global ' +
+          'section or overlay; the dry run lists them (would_cascade) and warns FIRST when it ' +
+          'would ship shared edits nobody published. verify:true then fetches the live page and says ' +
           'whether the origin is serving that revision yet — the storefront caches for 60s, so ' +
           'a reload showing the old page is that, not a failed publish.',
       inputSchema: {
@@ -3170,22 +3170,28 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
               ? 'would_cascade is that list, computed from the masters\' revs and each live page\'s stamps (app blocks not modelled).'
               : 'The cascade could not be read here; the real publish names them under cascaded.'),
         );
+        // FIRST IN THE ANSWER, because nothing else protects it: the platform keeps
+        // no draft/published split for a shared master (web_builder design note
+        // 2026-10-29-global-section-published-snapshot), so ANY page's publish
+        // ships every edit saved to a master it shows — someone else's included.
         return text({
+          ...(shared.length
+            ? {
+                shared_warning:
+                  `STOP AND CHECK: publishing ships ${shared.length} shared edit(s) LIVE — ${shared.map((m) => `${m.kind ?? ''} "${m.name ?? m.id}"`.trim()).join(', ')} — ` +
+                  'saved after the live pages showing them were published' +
+                  (preview!.would_cascade.length ? `, onto ${preview!.would_cascade.length} page(s) you did not name (would_cascade)` : '') +
+                  '. A global section has NO separate publish: its saved state goes live with any page carrying it. ' +
+                  'Nobody may have reviewed these edits — open a page carrying each and sb_look it, and tell the ' +
+                  'user, before publishing.',
+                shared_unpublished: shared,
+              }
+            : {}),
           dry_run: true,
           would_post: path,
           body,
-          ...draftNote(drafts, fresh),
           ...(preview ? { would_cascade: preview.would_cascade } : {}),
-          ...(shared.length
-            ? {
-                shared_unpublished: shared,
-                shared_warning:
-                  `Publishing ships ${shared.length} shared edit(s) LIVE — ${shared.map((m) => `${m.kind ?? ''} "${m.name ?? m.id}"`.trim()).join(', ')} — ` +
-                  'saved after the live pages showing them were published' +
-                  (preview!.would_cascade.length ? `, onto ${preview!.would_cascade.length} page(s) you did not name (would_cascade)` : '') +
-                  '. Nobody may have reviewed them: open a page carrying each and sb_look it before publishing.',
-              }
-            : {}),
+          ...draftNote(drafts, fresh),
           ...(cascade ? { cascade_note: cascade } : {}),
         });
       }

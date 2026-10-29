@@ -599,7 +599,11 @@ export const LAYOUT_PATTERNS: LayoutPattern[] = [
     use: 'Tiêu đề, link "xem tất cả", và một dải sản phẩm THẬT lấy tự động từ danh mục — không phải ô tĩnh',
     build: (t) =>
       withRepeater(
-        section([row([h('Sản phẩm nổi bật', 2), linkTo('Xem tất cả')])], t),
+        // "Xem tất cả" GOES SOMEWHERE (TTG gap #71): the shelf is the whole
+        // catalogue, and /search with no query is the catalogue — an empty
+        // search criteria serves the plain capped scan (pagerender
+        // searchfeed.go). sb_review's searchPage gap names a missing search page.
+        section([row([h('Sản phẩm nổi bật', 2), linkTo('Xem tất cả', '/search')])], t),
         datasetShelf('product'),
       ),
   },

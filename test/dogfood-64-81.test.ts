@@ -16,6 +16,7 @@ import { describeOperation, findOperation, searchOperations } from '../src/catal
 import { REQUEST_SHAPES } from '../src/catalog/shapes.generated.js';
 import { shapeResponse } from '../src/tools/api.js';
 import { traitsFor } from '../src/catalog/element-search.js';
+import { seedDocument } from '../src/domains/site/storepage.js';
 
 /**
  * TTG GAPS #64–#81, found building a blog and a landing page on a Vietnamese
@@ -188,6 +189,41 @@ describe('#66 sb_publish dry run names the cascade and the unreviewed shared edi
   });
 });
 
+/* #67 (MCP side) ----------------------------------------------------------- */
+
+describe('#67 a store page\'s own title is seeded unclamped; card titles keep the clamp', () => {
+  type N = { data: { type: string; parent: string | null }; config?: Record<string, unknown> };
+  const titles = (nodes: Record<string, N>) =>
+    Object.values(nodes).filter((n) => n.data.type === 'text-dataset' && ((n.config?.kind as string | undefined) ?? 'title') === 'title');
+  const inList = (nodes: Record<string, N>, n: N) => {
+    for (let p = n.data.parent; p; p = nodes[p]?.data.parent) if (nodes[p]?.data.type === 'list-dataset') return true;
+    return false;
+  };
+
+  it.each(['product', 'category', 'blog', 'post'])('%s: clampTitle:false on the page title, untouched in a card', (type) => {
+    const doc = seedDocument(type, { locale: 'vi' }) as { nodes: Record<string, N> };
+    const own = titles(doc.nodes).filter((n) => !inList(doc.nodes, n));
+    expect(own.length).toBeGreaterThan(0);
+    for (const n of own) expect(n.config?.clampTitle).toBe(false);
+    for (const n of titles(doc.nodes).filter((x) => inList(doc.nodes, x))) expect(n.config?.clampTitle).toBeUndefined();
+  });
+
+  it('sb_page_create stores it', async () => {
+    const p = fakePlatform((method, path) =>
+      method === 'POST' && path === '/api/sites/s1/pages' ? { page: { id: 'pg_post', slug: 'bai-viet', type: 'post' } } : undefined,
+    );
+    const { call, close } = await p.connect();
+    try {
+      const r = await call('sb_page_create', { site_id: 's1', name: 'Bài viết', type: 'post', dry_run: false, chrome: false });
+      expect(r.isError, r.text).toBe(false);
+      const doc = p.pages.get('pg_post')!.document as { nodes: Record<string, N> };
+      expect(titles(doc.nodes).some((n) => n.config?.clampTitle === false)).toBe(true);
+    } finally {
+      await close();
+    }
+  });
+});
+
 /* #68 ---------------------------------------------------------------------- */
 
 describe('#68 the blog type is the /blog-categories/{slug} entity template', () => {
@@ -331,8 +367,15 @@ describe('#71 #77 patterns and the pop-up seed speak the site\'s language; templ
       expect(texts(doc)).not.toContain('No products yet');
       expect(texts(doc)).not.toContain('This item is unavailable');
       expect(Object.values(r.json.ids as Record<string, string>)).toContain('list-dataset');
+      // "Xem tất cả" leads to the catalogue, not "#".
+      const hrefs = Object.values((doc as { nodes: Record<string, { specials?: Record<string, unknown> }> }).nodes).map((n) => n.specials?.href).filter(Boolean);
+      expect(hrefs).toEqual(['/search']);
       const review = await call('sb_review', {});
-      expect(JSON.stringify(review.json.findings)).toMatch(/placeholder_link/);
+      expect(JSON.stringify(review.json.findings ?? [])).not.toMatch(/placeholder_link/);
+      // …and a link to "#" anywhere else is named.
+      const btn = Object.entries(r.json.ids as Record<string, string>).find(([, t]) => t === 'button')![0];
+      await call('sb_set', { edits: [{ id: btn, namespace: 'specials', keys: { href: '#' } }], dry_run: false });
+      expect(JSON.stringify((await call('sb_review', {})).json.findings)).toMatch(/placeholder_link/);
     } finally {
       await close();
     }

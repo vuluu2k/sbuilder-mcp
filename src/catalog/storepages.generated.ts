@@ -2089,7 +2089,8 @@ export const STORE_PAGE_SEEDS: Record<string, { schema_version: number; root_nod
           "lessText": "Show less",
           "icon": true,
           "moreButtonColor": "#000000",
-          "textGlobalStyle": "heading-3"
+          "textGlobalStyle": "heading-3",
+          "clampTitle": false
         },
         "specials": {
           "htmlTag": "h3",
@@ -2933,7 +2934,8 @@ export const STORE_PAGE_SEEDS: Record<string, { schema_version: number; root_nod
           "lessText": "Show less",
           "icon": true,
           "moreButtonColor": "#000000",
-          "textGlobalStyle": "heading-3"
+          "textGlobalStyle": "heading-3",
+          "clampTitle": false
         },
         "specials": {
           "htmlTag": "h3",
@@ -4386,7 +4388,8 @@ export const STORE_PAGE_SEEDS: Record<string, { schema_version: number; root_nod
           "lessText": "Show less",
           "icon": true,
           "moreButtonColor": "#000000",
-          "textGlobalStyle": "heading-3"
+          "textGlobalStyle": "heading-3",
+          "clampTitle": false
         },
         "specials": {
           "htmlTag": "h3",
@@ -5011,7 +5014,8 @@ export const STORE_PAGE_SEEDS: Record<string, { schema_version: number; root_nod
           "lessText": "Show less",
           "icon": true,
           "moreButtonColor": "#000000",
-          "textGlobalStyle": "heading-3"
+          "textGlobalStyle": "heading-3",
+          "clampTitle": false
         },
         "specials": {
           "htmlTag": "h3",
