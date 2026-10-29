@@ -9,6 +9,7 @@ import { measureShot } from '../src/vision/measure.js';
 import type { Box, Shot } from '../src/vision/shoot.js';
 import { fakePlatform } from './helpers/platform.js';
 import { readinessGaps } from '../src/domains/site/readiness.js';
+import { animationNote } from '../src/domains/site/vocabulary.js';
 
 /**
  * TTG GAPS #64–#81, found building a blog and a landing page on a Vietnamese
@@ -286,6 +287,66 @@ describe('#69 a dead desktop slot inside the shared header', () => {
       expect(codes(second)).not.toMatch(/hidden_desktop_dead/);
       // The page's own findings still come back every time.
       expect(codes(second)).toMatch(/no_h1/);
+    } finally {
+      await close();
+    }
+  });
+});
+
+/* #70 ---------------------------------------------------------------------- */
+
+describe('#70 {active:false} switches an animation off and is a complete value', () => {
+  it('raises no "active:true is missing" warning', () => {
+    expect(animationNote({ active: false })).toBeNull();
+    // A value meant to run still says what is missing.
+    expect(animationNote({ type: 'fade_in' })).toMatch(/active:true is missing/);
+  });
+});
+
+/* #71 + #77 ---------------------------------------------------------------- */
+
+describe('#71 #77 patterns and the pop-up seed speak the site\'s language; template_use names its nodes', () => {
+  const vi = (method: string, path: string) =>
+    method === 'GET' && path === '/api/sites/s1/settings' ? { settings: { locale: 'vi' } } : undefined;
+  const texts = (d: unknown) =>
+    Object.values((d as { nodes: Record<string, { specials?: Record<string, unknown> }> }).nodes).flatMap((n) =>
+      ['text', 'label', 'closeLabel'].map((k) => n.specials?.[k]).filter(Boolean),
+    );
+
+  it('sb_template_use sb_product_shelf on a vi site: Vietnamese empty states, an id → type map, and "#" is flagged', async () => {
+    const p = fakePlatform(vi);
+    const { call, close } = await p.connect();
+    try {
+      await call('sb_page_open', { site_id: 's1', page_id: 'pg_1' });
+      const r = await call('sb_template_use', { site_id: 's1', page_id: 'pg_1', template_id: 'sb_product_shelf', dry_run: false });
+      expect(r.isError, r.text).toBe(false);
+      const doc = p.pages.get('pg_1')!.document;
+      expect(texts(doc)).toContain('Chưa có sản phẩm');
+      expect(texts(doc)).not.toContain('No products yet');
+      expect(texts(doc)).not.toContain('This item is unavailable');
+      expect(Object.values(r.json.ids as Record<string, string>)).toContain('list-dataset');
+      const review = await call('sb_review', {});
+      expect(JSON.stringify(review.json.findings)).toMatch(/placeholder_link/);
+    } finally {
+      await close();
+    }
+  });
+
+  it('the pop-up seed is created in Vietnamese on a vi site', async () => {
+    let created: unknown;
+    const p = fakePlatform((method, path, body) => {
+      if (method === 'POST' && path === '/api/sites/s1/overlays') {
+        created = (body as { document: unknown }).document;
+        return { overlay: { id: 'ov_1' } };
+      }
+      return vi(method, path);
+    });
+    const { call, close } = await p.connect();
+    try {
+      await call('sb_page_open', { site_id: 's1', page_id: 'pg_1' });
+      await call('sb_store', { site_id: 's1', action: 'overlay_attach', kind: 'popup', dry_run: false });
+      expect(texts(created)).toEqual(expect.arrayContaining(['Đóng', 'Đã hiểu']));
+      expect(texts(created)).not.toContain('Got it');
     } finally {
       await close();
     }

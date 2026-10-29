@@ -34,6 +34,7 @@ import {
   heldFromFirstPublish,
   layoutDocument,
   localizeNodes,
+  SEED_COPY_KEYS,
   seedDocument,
   seedSummary,
   seededTypes,
@@ -191,6 +192,29 @@ async function firstEntitySlug(ctx: ToolContext, siteId: string, type: string | 
   const rows = (list.keys.map((k) => got[k]).find(Array.isArray) ?? []) as Array<Record<string, unknown>>;
   const live = rows.find((r) => r.status === undefined || r.status === 'published' || r.status === 'active') ?? rows[0];
   return typeof live?.slug === 'string' && live.slug ? live.slug : undefined;
+}
+
+/**
+ * Rewrite minted seed copy (an empty state's "No products yet") through
+ * SEED_COPY_VI when the site is `vi` — or unread, sb_page_create's default. The
+ * settings are read only when there is such copy. Mutates the patch values.
+ */
+async function localizeMinted(ctx: ToolContext, siteId: string, patches: Patch[]): Promise<void> {
+  const minted = patches.filter((p) => p.op === 'set' && p.path.length === 2).map((p) => (p as { value: unknown }).value);
+  const seeded = minted.some((n) =>
+    SEED_COPY_KEYS.some((k) => {
+      const v = (n as { specials?: Record<string, unknown> }).specials?.[k];
+      return typeof v === 'string' && !!SEED_COPY_VI[v];
+    }),
+  );
+  if (seeded && langOf((await siteLocaleOf(ctx, siteId)) ?? 'vi') === 'vi') localizeNodes(minted);
+}
+
+/** `mintedIds` as a result field, capped like sb_duplicate's `copies`: past the cap, a count. */
+function idMap(m: { added: Record<string, string>; satellites: Record<string, string> }): Record<string, unknown> {
+  const n = Object.keys(m.added).length;
+  if (n > DUPLICATE_COPIES_CAP) return { ids_count: n, ids_note: `${n} nodes — sb_outline from the section reads them.` };
+  return { ids: m.added, ...(Object.keys(m.satellites).length ? { satellites: m.satellites } : {}) };
 }
 
 /** The site's `settings.locale`, or undefined when unset or unreadable — never a reason to fail. */
@@ -1712,14 +1736,7 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
       // here said "No products yet" on a Vietnamese store, while sb_page_create
       // already seeds through SEED_COPY_VI. Same default as there — vi when the
       // locale is unread — and the settings read only when there is copy to move.
-      const minted = patches.filter((p) => p.op === 'set' && p.path.length === 2).map((p) => (p as { value: unknown }).value);
-      const seeded = minted.some((n) =>
-        ['text', 'label'].some((k) => {
-          const v = (n as { specials?: Record<string, unknown> }).specials?.[k];
-          return typeof v === 'string' && !!SEED_COPY_VI[v];
-        }),
-      );
-      if (seeded && langOf((await siteLocaleOf(ctx, session.site())) ?? 'vi') === 'vi') localizeNodes(minted);
+      await localizeMinted(ctx, session.site(), patches);
       // ELEMENTS THAT RENDER CONVINCINGLY WHILE WIRED TO NOTHING. The add
       // succeeds completely, the tree is correct and the page photographs
       // right, so neither sb_review nor sb_look can see the gap — the moment
@@ -2501,6 +2518,9 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
           throw new Error(`sbuilder: the built-in "${template_id}" produced nothing to add.`);
         }
         const { patches, ids } = addSubtree(doc, doc.doc.root_node_id, spec, middleEnd(doc.doc));
+        // THE SEED COPY IN THE SITE'S LANGUAGE (TTG gap #71) — the shelf's empty
+        // states said "No products yet" on a Vietnamese store. sb_add's rule.
+        await localizeMinted(ctx, site_id, patches);
         if (dry_run !== false) {
           const refuse = saveRefusal(doc, patches).refusal;
           return text({
@@ -2524,9 +2544,16 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
           const sp = (doc.doc.nodes[id] as { specials?: Record<string, unknown> } | undefined)?.specials ?? {};
           return ['text', 'label', 'alt'].some((k) => typeof sp[k] === 'string' && exampleCopy().has(sp[k] as string));
         }).length;
+        const deadLinks = ids.filter((id) => (doc.doc.nodes[id] as { specials?: Record<string, unknown> } | undefined)?.specials?.href === '#').length;
         return text({
           added: pattern.name,
           section: ids[0],
+          // EVERY NODE'S ID AND TYPE (TTG gap #77), as sb_add answers — the
+          // pattern nests unnamed flex-blocks, and editing one took sb_outline depth:6.
+          ...idMap(mintedIds(doc, ids)),
+          ...(deadLinks
+            ? { links: `${deadLinks} button(s) link to "#" and go nowhere — point each at a real page (sb_event open_page / go_to_url).` }
+            : {}),
           ...(examples
             ? {
                 copy:
@@ -2624,6 +2651,7 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
       return text({
         added: row.name ?? template_id,
         section: placed.ids[0],
+        ...idMap(mintedIds(doc, placed.ids)),
         nodes: placed.ids.length,
         into: page_id,
         rev: doc.rev,

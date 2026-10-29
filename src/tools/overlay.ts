@@ -59,6 +59,8 @@ import type { PageSession } from './page.js';
 import { setKeys } from '../domains/site/builder.js';
 import { CART_SEEDS, OVERLAY_SEEDS } from '../catalog/overlays.generated.js';
 import { withFreshIds } from '../domains/site/ids.js';
+import { localizeNodes } from '../domains/site/storepage.js';
+import { langOf } from '../domains/site/seedcopy.js';
 import { cartGalleryThumbs, cartRelocalize, cartSeedLocale } from '../domains/site/cartlang.js';
 
 interface Step {
@@ -275,7 +277,21 @@ export async function attachOverlay(
   let overlayId = opts.overlayId;
   let created = false;
   if (!overlayId) {
-    const createBody = { kind: 'popup', name, document: withFreshIds(OVERLAY_SEEDS.popup) };
+    // THE SEED'S WORDS IN THE SITE'S LANGUAGE (TTG gap #71): "Pop-up", "Got it",
+    // "Close" shipped onto a Vietnamese store. vi when the locale is unread, as
+    // sb_page_create and sb_add do. On the real run only: a dry run reads nothing.
+    const document = withFreshIds(OVERLAY_SEEDS.popup);
+    const locale = opts.dryRun ? null : ((await request({
+      base: ctx.base,
+      method: 'GET',
+      path: `/api/sites/${site}/settings`,
+      token: siteToken(ctx),
+      fetchImpl: ctx.fetchImpl,
+    }).catch(() => null)) as { settings?: { locale?: unknown } | null } | null);
+    if (!opts.dryRun && langOf(typeof locale?.settings?.locale === 'string' ? locale.settings.locale : 'vi') === 'vi') {
+      localizeNodes(Object.values((document as { nodes: Record<string, unknown> }).nodes));
+    }
+    const createBody = { kind: 'popup', name, document };
     steps.push({
       step: n++,
       what: `create the pop-up "${name}"`,

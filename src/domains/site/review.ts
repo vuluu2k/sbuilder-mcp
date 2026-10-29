@@ -671,6 +671,12 @@ export function reviewDesign(
     // `<img>` tags with no anchor, next to a button that carried the href and
     // published as `<a href>`. `sb_event` now writes both; this is for every
     // document that got here before it did, or by another road.
+    // A LINK TO "#" GOES NOWHERE (TTG gap #71): a pattern's "Xem tất cả" ships
+    // href "#" as a placeholder, and dead_nav reads events only. The top of
+    // the same page is not a destination a visitor meant to click towards.
+    if ((n.specials ?? {}).href === '#') {
+      out.push({ code: 'placeholder_link', nodeId: id, type, key: 'href', problem: 'Links to "#" — a click jumps to the top of this page and goes nowhere.', fix: fill('placeholder_link', { id }) });
+    }
     const dead = deadNavigation(n as never);
     if (dead) {
       out.push({

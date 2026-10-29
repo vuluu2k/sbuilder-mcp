@@ -61,12 +61,15 @@ function localizeSeed(doc: { nodes: Record<string, unknown> }, table: Readonly<R
  * "No products yet"), which is no page seed but the same English (TTG gap #46).
  * True when it changed something.
  */
+/** The specials a seed's words live in — `closeLabel` is the pop-up's close button. */
+export const SEED_COPY_KEYS = ['text', 'label', 'closeLabel'] as const;
+
 export function localizeNodes(nodes: Iterable<unknown>, table: Readonly<Record<string, string>> = SEED_COPY_VI): boolean {
   let changed = false;
   for (const n of nodes) {
     const sp = (n as { specials?: Record<string, unknown> }).specials;
     if (!sp) continue;
-    for (const k of ['text', 'label']) {
+    for (const k of SEED_COPY_KEYS) {
       const v = sp[k];
       if (typeof v === 'string' && table[v]) {
         sp[k] = table[v];

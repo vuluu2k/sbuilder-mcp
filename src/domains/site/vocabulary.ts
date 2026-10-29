@@ -361,6 +361,9 @@ export function animationNote(value: unknown): string | null {
       'stored, saved and published with no error at any step.'
     );
   }
+  // OFF IS A COMPLETE ANSWER (TTG gap #70): `{active:false}` at mobile is how a
+  // desktop animation is switched off on a phone, and nothing else is needed.
+  if (value.active === false) return null;
   const notes: string[] = [];
   if (value.active !== true) {
     notes.push(

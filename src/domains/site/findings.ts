@@ -32,6 +32,9 @@ export const FIX: Record<string, string> = {
   invisible_text:
     'Give it a colour that reads on its ground: sb_set id "<id>", namespace style, keys { "color": … } ' +
     '(or unset "color" so the theme decides). For a button, change its fill or its text — not both to the same.',
+  placeholder_link:
+    'Point it at a real destination: sb_event id "<id>" action "open_page" (a page id) or "go_to_url" ' +
+    '{ "url": "/path" } — that writes the href too — or remove the button.',
   low_contrast:
     'Darken the type or lighten its ground until it reads at 4.5:1 for body copy (3:1 for large ' +
     'headings): sb_set id "<id>", namespace style, keys { "color": … } — a theme colour ' +

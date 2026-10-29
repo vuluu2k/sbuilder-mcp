@@ -21,6 +21,12 @@ export const SEED_COPY_VI: Readonly<Record<string, string>> = {
   'New arrivals will show up here. Check back soon.': 'Sản phẩm mới sẽ sớm có ở đây — mời bạn quay lại sau.',
   'No posts yet': 'Chưa có bài viết',
   'New stories will show up here. Check back soon.': 'Bài viết mới sẽ sớm có ở đây.',
+  // The pop-up seed (editor features/overlays/seed.ts), minted here by
+  // sb_store overlay_attach (TTG gap #71).
+  'Pop-up': 'Thông báo',
+  'Tell your visitors what this is about.': 'Viết vài dòng cho khách biết thông báo này nói về điều gì.',
+  'Got it': 'Đã hiểu',
+  Close: 'Đóng',
 };
 
 /** The language part of a locale tag — "vi-VN", "vi_VN" and "VI" are all "vi". */
