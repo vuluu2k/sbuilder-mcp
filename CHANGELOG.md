@@ -6,6 +6,13 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.98.9] - 2026-10-29
+
+### Fixed
+- `sb_set` and `sb_add` no longer fail with "Cannot read properties of undefined (reading 'responsive')", even with `dry_run`, when a hidden node's `data.parent` points at a node that no longer exists.
+- `sb_set` evaluates `hidden_band` against the parent chain after applying all `edits[]`, so a batch that hides a parent in narrow bands and the child at base no longer warns, and a batch that unhides the parent does.
+- A phone field that looks like a confirmation field (such as "SĐT nhận mã xác nhận" or `confirmed_phone`) is treated as a re-entry field only when the form has another phone field, so a form's only phone field is reported as the phone field.
+
 ## [0.98.8] - 2026-10-29
 
 ### Added

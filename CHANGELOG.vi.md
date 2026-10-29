@@ -6,6 +6,13 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.98.9] - 2026-10-29
+
+### Fixed
+- `sb_set` và `sb_add` không còn lỗi "Cannot read properties of undefined (reading 'responsive')", kể cả khi dùng `dry_run`, khi `data.parent` của node bị ẩn trỏ vào node đã không còn tồn tại.
+- `sb_set` xét `hidden_band` trên chuỗi node cha sau khi áp toàn bộ `edits[]`, nên batch ẩn node cha ở các dải hẹp và ẩn node con ở base không còn cảnh báo, còn batch bỏ ẩn node cha thì có.
+- Ô số điện thoại trông như ô xác nhận (như "SĐT nhận mã xác nhận" hoặc `confirmed_phone`) chỉ được coi là ô nhập lại khi form còn một ô số điện thoại khác, nên ô số điện thoại duy nhất của form được báo là trường phone.
+
 ## [0.98.8] - 2026-10-29
 
 ### Added
