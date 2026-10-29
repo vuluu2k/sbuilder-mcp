@@ -781,7 +781,9 @@ tĩnh muốn thứ khách rốt cuộc nhìn thấy — không có bước này,
 khi-cuộn (`trigger: "view"`) sẽ chụp ra TRẮNG. Tiến độ của nó gắn với vị trí phần tử trong
 khung cuộn, mà cú walk nạp ảnh lazy cuộn xong lại về đầu trang, nên băng đó quay về
 `opacity: 0` đúng lúc chụp. Đo được: một băng trên bốn chụp ra rỗng trên một trang hoàn toàn
-đúng. Script tự viết nào có chụp màn hình cũng phải làm y vậy.
+đúng. Script tự viết nào có chụp màn hình cũng phải làm y vậy. Transition cũng bị tắt, nên một
+overlay được mở để chụp (`transform .25s` của drawer giỏ hàng) được đo ở vị trí cuối, không phải
+giữa lúc đang trượt vào.
 
 **Lưu trước**, rồi mint link preview đã ký và render trang bằng chính renderer Go của nền
 tảng — nên bức ảnh là của *bản nháp đã lưu*, không bao giờ là của sửa đổi chưa lưu. Trả về
@@ -1924,8 +1926,8 @@ không tìm ra:
 
 | Mã | Đo được |
 | --- | --- |
-| `off_canvas` | Nội dung tràn khỏi khung nhìn; trên điện thoại còn kéo theo thanh cuộn ngang cả trang |
-| `wider_than_viewport` | Hộp `fixed`/`sticky`/`absolute` tràn khỏi khung nhìn quá 1px, nêu bề rộng của nó so với khung nhìn — một panel fixed 400px trên điện thoại 390px. CSS tĩnh của platform giới hạn drawer giỏ hàng và drawer menu ở `max-width:100%` (v1.0.187), nên drawer đang mở rộng đúng bằng khung nhìn không bị báo; drawer còn bị báo là drawer tự mang `maxWidth` lấn át giới hạn đó. Cách sửa là `maxWidth: "100%"` ở mobile. Hộp trình duyệt không hiển thị (`visibility` hidden, nằm dưới `aria-hidden`) không bị xét, nên drawer đang đóng nằm ngoài màn hình không bị báo |
+| `off_canvas` | Nội dung tràn khỏi khung nhìn; trên điện thoại còn kéo theo thanh cuộn ngang cả trang. Hộp `visibility:hidden` vẫn tham gia bố cục, nên panel dropdown absolute đang ĐÓNG hay phần tử con reveal-on-hover tràn ra cũng bị báo ở đây ("Hidden, yet still laid out") |
+| `wider_than_viewport` | Hộp `fixed`/`sticky`/`absolute` tràn khỏi khung nhìn quá 1px, nêu bề rộng của nó so với khung nhìn — một panel fixed 400px trên điện thoại 390px. CSS tĩnh của platform giới hạn drawer giỏ hàng và drawer menu ở `max-width:100%` (v1.0.187), nên drawer đang mở rộng đúng bằng khung nhìn không bị báo; drawer còn bị báo là drawer tự mang `maxWidth` lấn át giới hạn đó. Cách sửa là `maxWidth: "100%"` ở mobile. Hộp bị ẩn (`visibility` khác `visible`) nằm trong một lớp `fixed` không bị xét, nên drawer đang đóng nằm ngoài màn hình không bị báo; hộp ẩn ở chỗ khác vẫn làm trang rộng ra và bị báo `off_canvas`. `aria-hidden` không che gì khỏi mắt nên không được đọc |
 | `text_too_small` | Chữ render dưới 12px, chỉ tính nơi thật sự có chữ |
 | `overlap` | Hai element đè lên nhau — lồng nhau, sai số 1px, và một hộp nằm trong lớp `fixed`/`sticky`/`absolute` so với hộp ngoài lớp đó (nút CTA nổi đè lên thứ nằm dưới góc màn hình) không tính; hai hộp trong cùng một lớp vẫn tính |
 | `title_bar_stranded` | Tiêu đề kèm một nút bên cạnh, nút cách xa mép phải của hàng — chỉ xét khi đứng cạnh nhau; hàng hoặc tiêu đề khai báo `center` được bỏ qua |

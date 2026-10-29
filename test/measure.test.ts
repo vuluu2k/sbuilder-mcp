@@ -126,6 +126,21 @@ describe('measureShot()', () => {
   it('says nothing about a box the browser does not show', () => {
     const f = measureShot(shot(390, [box('ca_1', 400, 0, 400, 900, { position: 'fixed', hidden: true })]));
     expect(f).toEqual([]);
+    // Its static interior, hidden by inheritance, rides the same fixed layer.
+    expect(measureShot(shot(390, [box('he_1', 424, 24, 352, 30, { hidden: true, inFixed: true, fontPx: 9, hasText: true })]))).toEqual([]);
+  });
+
+  // Review of v0.100.4: visibility:hidden still takes part in layout, so a CLOSED
+  // absolute dropdown panel (320px at x=200 on 390) made scrollWidth 520 — a
+  // horizontal scroll on a phone. Only a FIXED layer is out of the page's
+  // scrollable overflow; hidden still never counts as an overlap or as small text.
+  it('reports a hidden box outside a fixed layer that still widens the page', () => {
+    const f = measureShot(shot(390, [box('dp_1', 200, 40, 320, 200, { position: 'absolute', hidden: true, fontPx: 9, hasText: true })]));
+    expect(f.map((x) => x.code)).toEqual(['off_canvas']);
+    expect(f[0].problem).toMatch(/hidden/i);
+    expect(f[0].problem).toContain('200 → 520');
+    const pair = measureShot(shot(1440, [box('a_1', 0, 0, 200, 100, { hidden: true }), box('b_1', 50, 50, 200, 100)]));
+    expect(pair).toEqual([]);
   });
 
   it('reports each overlapping pair once, not twice', () => {

@@ -800,7 +800,9 @@ carrying a reveal-on-scroll entrance (`trigger: "view"`) comes back BLANK. Its p
 tied to where the element sits in the scrollport, and the lazy-image walk scrolls and then
 returns to the top, so the band is back at `opacity: 0` at the moment of the shot. Measured:
 one band of four came out empty on a page that was entirely correct. A script of your own
-that screenshots a page must do the same.
+that screenshots a page must do the same. Transitions are switched off too, so an overlay
+opened for the shot (the cart drawer's `transform .25s`) is measured where it ends, not
+mid-slide.
 
 **Saves first**, then mints a signed preview link and renders the page through the
 platform's own Go renderer — so the picture is of the *stored draft*, never of unsaved local
@@ -1962,8 +1964,8 @@ reading the document cannot find:
 
 | Code | Measured |
 | --- | --- |
-| `off_canvas` | Content past the viewport; on a phone it also drags a horizontal scrollbar across the page |
-| `wider_than_viewport` | A `fixed`/`sticky`/`absolute` box overhanging the viewport by more than 1px, with its width against the viewport's — a 400px fixed panel on a 390px phone. The platform's static CSS caps the cart and menu drawers at `max-width:100%` (v1.0.187), so an open drawer at the viewport's width is silent; one still reported carries its own `maxWidth` that outranks the cap. The fix is `maxWidth: "100%"` at mobile. A box the browser does not show (`visibility` hidden, under `aria-hidden`) is never judged, so a closed drawer parked off-screen is silent |
+| `off_canvas` | Content past the viewport; on a phone it also drags a horizontal scrollbar across the page. A `visibility:hidden` box still lays out, so a CLOSED absolute dropdown panel or reveal-on-hover child that overhangs is reported here too ("Hidden, yet still laid out") |
+| `wider_than_viewport` | A `fixed`/`sticky`/`absolute` box overhanging the viewport by more than 1px, with its width against the viewport's — a 400px fixed panel on a 390px phone. The platform's static CSS caps the cart and menu drawers at `max-width:100%` (v1.0.187), so an open drawer at the viewport's width is silent; one still reported carries its own `maxWidth` that outranks the cap. The fix is `maxWidth: "100%"` at mobile. A hidden box (`visibility` not `visible`) inside a `fixed` layer is never judged, so a closed drawer parked off-screen is silent; a hidden box elsewhere still widens the page and is `off_canvas`. `aria-hidden` hides nothing from the eye and is not read |
 | `text_too_small` | Body text rendering under 12px, only where text actually shows |
 | `overlap` | Two elements on top of each other — nesting, a pixel of rounding, and a box inside a `fixed`/`sticky`/`absolute` layer against one outside it (a floating CTA over whatever is under the viewport corner) are not counted; two boxes inside the same layer still are |
 | `title_bar_stranded` | A heading with one action beside it, the action well short of the row's right edge — side-by-side only; a row or heading that declares `center` is skipped |

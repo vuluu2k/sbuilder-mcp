@@ -355,6 +355,38 @@ describe.runIf(process.env.SB_BROWSER_TEST === '1')('measured against a real ren
     expect(found[0].problem).toContain('400px wide on a 390px viewport');
   }, 40_000);
 
+  // Review of v0.100.4: hidden is not out of layout. A CLOSED absolute dropdown
+  // panel overhanging a phone widens the page (scrollWidth 520 on 390) and is
+  // reported; the closed FIXED drawer above stays silent. aria-hidden paints
+  // anyway, so it no longer marks a box hidden.
+  it('reports a closed absolute dropdown panel past a phone, and does not read aria-hidden as hidden', async () => {
+    const html =
+      '<style>body{margin:0}.wb-dropdown{position:relative;margin-left:200px;width:100px}' +
+      '.wb-dropdown-panel{position:absolute;top:100%;left:0;width:320px;height:120px;visibility:hidden;opacity:0}</style>' +
+      '<div id="dd_00000001" class="wb-dropdown"><button id="bt_00000001">Menu</button>' +
+      '<div id="dp_00000001" class="wb-dropdown-panel">Panel</div></div>' +
+      '<div aria-hidden="true"><div id="fb_000a1dde" style="width:100px;height:20px">x</div></div>';
+    const { measure } = await import('../src/vision/measure.js');
+    const shots = await shoot(`data:text/html,${encodeURIComponent(html)}`, { widths: [390] });
+    expect(shots[0].boxes.find((b) => b.id === 'dp_00000001')?.hidden).toBe(true);
+    expect(shots[0].boxes.find((b) => b.id === 'fb_000a1dde')?.hidden).toBeUndefined();
+    expect(measure(shots).map((f) => [f.code, f.nodeId])).toEqual([['off_canvas', 'dp_00000001']]);
+  }, 40_000);
+
+  // A transition is a moving box: opening the drawer with a slow transform
+  // transition must still measure where it ENDS, not where it is mid-flight.
+  it('measures an overlay opened under a transition at its settled position', async () => {
+    const html =
+      '<style>.wb-cart-drawer{position:fixed;top:0;right:0;width:400px;height:100%;' +
+      'padding:24px;box-sizing:border-box;visibility:hidden;transform:translateX(105%);transition:transform 6s linear,visibility 0s linear 6s}' +
+      '.wb-cart-drawer.is-open{visibility:visible;transform:none;transition:transform 6s linear}</style>' +
+      '<div id="ca_f29bbf6a" class="wb-cart-drawer"><h2 id="he_00000001" class="wb-heading">Giỏ hàng</h2></div>';
+    const { measure } = await import('../src/vision/measure.js');
+    const open = await shoot(`data:text/html,${encodeURIComponent(html)}`, { widths: [390], open: 'ca_f29bbf6a' });
+    expect(open[0].boxes.find((b) => b.id === 'ca_f29bbf6a')?.x).toBe(-10);
+    expect(measure(open).map((f) => f.code)).toEqual(['wider_than_viewport']);
+  }, 40_000);
+
   /**
    * THE SHOT MUST NOT PAY FOR A TIMEOUT IT KNOWS WILL NOT RESOLVE.
    *

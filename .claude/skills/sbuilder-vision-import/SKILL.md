@@ -1092,3 +1092,14 @@ how the committed baseline above is kept current.
   `max-width:100%` in static CSS and the cart seed, so an open drawer measures exactly the
   viewport and stays silent (pinned in `test/platform-1187.test.ts`); a finding now means
   the node's own `#id` `maxWidth` outranks the cap.
+
+- **`hidden` IS PAINT, NOT LAYOUT — the entry above used to skip every hidden box** (review of
+  v0.100.4). A `visibility:hidden` box still lays out: a CLOSED absolute `.wb-dropdown-panel`
+  320px wide at x=200 made a 390 phone `scrollWidth` 520, and reveal-on-hover children do the
+  same. Only a hidden box in a FIXED layer (`Box.inFixed`, self or ancestor `position:fixed` —
+  out of the scrollable overflow) skips the width checks; any other hidden box that overhangs is
+  `off_canvas` ("Hidden, yet still laid out"), never `wider_than_viewport` (nobody sees it).
+  Hidden still never counts for overlap or small text. `aria-hidden` is NOT read any more: it
+  hides from assistive tech, not from the eye. And `settleAnimations` sets `transition:none`
+  beside `animation:none`, so an overlay opened for a framed look is measured at its end
+  position, not mid-slide (cart drawer `transform .25s`).

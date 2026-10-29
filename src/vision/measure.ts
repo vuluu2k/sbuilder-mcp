@@ -60,16 +60,21 @@ export function measureShot(shot: Shot, skip: ReadonlySet<string> = new Set(), d
     // why `reviewDesign` already skips them and this had to as well. A list
     // that is two dozen false positives long is a list nobody reads.
     if (skip.has(b.id)) continue;
-    // A box the browser does not show (a CLOSED drawer is `visibility:hidden`
-    // and translated off-screen by its own static CSS) is not a visitor's
-    // problem; the same drawer OPENED is (TTG gap #60).
-    if (b.hidden) continue;
+    // A CLOSED DRAWER is `visibility:hidden` AND fixed, translated off-screen by
+    // its own static CSS: nothing a visitor sees or scrolls to (TTG gap #60).
+    // Hidden is PAINT only, though — a hidden ABSOLUTE panel (a closed dropdown,
+    // a reveal-on-hover child) still lays out and still widens the page:
+    // measured, a 320px `.wb-dropdown-panel` at x=200 made a 390 phone scroll
+    // to 520 (review of v0.100.4). So only hidden-in-a-fixed-layer is skipped.
+    if (b.hidden && (b.inFixed || b.position === 'fixed')) continue;
 
     // A FLOATING BOX PAST THE VIEWPORT (TTG gap #60). A fixed drawer 400px wide
     // on a 390px phone overhangs by 10px with no scrollbar to show it — headless
     // has none, and a 24px padding hides most of it in the picture. Out of the
-    // flow nothing shrinks it, so the fix is a cap, said with the widths.
+    // flow nothing shrinks it, so the fix is a cap, said with the widths. A
+    // HIDDEN one is not seen at all; what it costs is the scroll (off_canvas).
     if (
+      !b.hidden &&
       (b.position === 'fixed' || b.position === 'sticky' || b.position === 'absolute') &&
       (b.x < -1 || b.x + b.w > shot.width + 1)
     ) {
@@ -88,14 +93,16 @@ export function measureShot(shot: Shot, skip: ReadonlySet<string> = new Set(), d
         code: 'off_canvas',
         nodeId: b.id,
         width: shot.width,
-        problem: `Extends past the ${shot.width}px viewport (${b.x} → ${b.x + b.w}).`,
+        problem:
+          (b.hidden ? 'Hidden, yet still laid out — it widens the page: ' : '') +
+          `Extends past the ${shot.width}px viewport (${b.x} → ${b.x + b.w}).`,
         fix: fill('off_canvas', { id: b.id }),
       });
     }
 
     // TEXT TOO SMALL. Only where text actually renders: a container inherits a
     // font size it never shows, and reporting that would be noise.
-    if (b.hasText && b.fontPx && b.fontPx < MIN_BODY_PX) {
+    if (!b.hidden && b.hasText && b.fontPx && b.fontPx < MIN_BODY_PX) {
       out.push({
         code: 'text_too_small',
         nodeId: b.id,

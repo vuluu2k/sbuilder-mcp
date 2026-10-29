@@ -75,11 +75,18 @@ export interface Box {
   layer?: string;
   /**
    * The browser paints nothing here: computed `visibility` is not `visible`
-   * (it inherits, so a closed drawer's whole interior carries it), or it sits
-   * under `aria-hidden="true"`. A closed overlay parked off-screen BY DESIGN is
-   * not a layout defect; the same overlay opened is (TTG gap #60).
+   * (it inherits, so a closed drawer's whole interior carries it). Painting
+   * only — the box still takes part in layout, so a hidden ABSOLUTE panel still
+   * widens the page. `aria-hidden` is not read: it hides from assistive tech,
+   * not from the eye (review of v0.100.4).
    */
   hidden?: true;
+  /**
+   * Self or an ancestor is `position: fixed` — out of the page's scrollable
+   * overflow. A closed drawer parked off-screen BY DESIGN is hidden AND here,
+   * and only that pair is exempt from the width checks (TTG gap #60).
+   */
+  inFixed?: true;
 }
 
 export type ShotFormat = 'jpeg' | 'png';
@@ -510,7 +517,10 @@ async function settleLazyImages(page: Page): Promise<void> {
  */
 async function settleAnimations(page: Page): Promise<void> {
   await page
-    .addStyleTag({ content: '*,*::before,*::after{animation:none !important}' })
+    // TRANSITION TOO: an overlay opened just before measuring slides in under
+    // its own transition (cart drawer `transform .25s`), and a shot mid-slide
+    // measures a box that is not where it ends. `none` jumps to the end value.
+    .addStyleTag({ content: '*,*::before,*::after{animation:none !important;transition:none !important}' })
     .catch(() => {});
 }
 
@@ -588,8 +598,11 @@ async function shootOne(
         const cs = getComputedStyle(el);
         const own = (el.textContent ?? '').trim();
         let layer: string | undefined;
-        for (let e: DomEl | null = el; e && layer === undefined; e = e.parentElement) {
-          if (!['absolute', 'fixed', 'sticky'].includes(getComputedStyle(e).position)) continue;
+        let inFixed = false;
+        for (let e: DomEl | null = el; e && !inFixed; e = e.parentElement) {
+          const p = getComputedStyle(e).position;
+          inFixed = p === 'fixed';
+          if (layer !== undefined || !['absolute', 'fixed', 'sticky'].includes(p)) continue;
           if (!e.id && !anon.has(e)) anon.set(e, `@${anon.size}`);
           layer = e.id || anon.get(e);
         }
@@ -604,7 +617,8 @@ async function shootOne(
           hasText: own.length > 0,
           position: cs.position,
           ...(layer ? { layer } : {}),
-          ...(cs.visibility !== 'visible' || el.closest('[aria-hidden="true"]') ? { hidden: true } : {}),
+          ...(cs.visibility !== 'visible' ? { hidden: true } : {}),
+          ...(inFixed ? { inFixed: true } : {}),
         };
       });
   })) as Box[];
