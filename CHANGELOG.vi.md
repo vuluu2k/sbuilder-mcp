@@ -6,6 +6,11 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.101.1] - 2026-10-29
+
+### Changed
+- `sb_set` ghi `clampTitle` vào config base ở breakpoint mặc định, nên việc tắt kẹp tiêu đề có hiệu lực trên trang đã xuất bản mà không cần `base: true`.
+
 ## [0.101.0] - 2026-10-29
 
 ### Added

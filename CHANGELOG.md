@@ -6,6 +6,11 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.101.1] - 2026-10-29
+
+### Changed
+- `sb_set` writes `clampTitle` to the base config at the default breakpoint, so turning off title clamping reaches the published page without `base: true`.
+
 ## [0.101.0] - 2026-10-29
 
 ### Added
