@@ -1091,8 +1091,12 @@ above today's measurement gets raised again without anybody looking.
   reader already built. `sb_traits_for` declares the skin controls' writes, and `keysOf` stops
   counting either kind of control NAME as a key.
 
-- **`PRESENT_ONLY_SOURCES` is read off `schema/src/binding.ts`** (review of v0.100.4): a key
-  added as a STATEMENT (`ctx['k'] = …` behind a guard, `put('k', v)` dropping an empty value) is
-  present-only; the object literal is always present. Hand-mirrored in `scope.go`, so the TS side
-  is the one read. Exits 1 if `product.id/tags/summary/ratingCount` stop reading as statements,
-  or a key falls outside `BINDING_SOURCES`. `record.*` is dynamic and handled in `review.ts`.
+- **`PRESENT_ONLY_SOURCES` is read off `schema/src/binding.ts` AND `render/scope/scope.go`**
+  (`scripts/presentonly.ts`; reviews of v0.100.4/.5): a key added as a STATEMENT (`ctx['k'] = …`
+  behind a guard, `put('k', v)` dropping an empty value) is present-only; the object/map literal
+  is always present. Keys may carry digits and underscores. The two are hand-mirrors, so a
+  BINDING_SOURCES key one adds as a statement while the other names it outside one EXITS 1; a
+  key only one side mentions is that side's answer (`site.money`/`site.timezone` are Go-only).
+  `pagerender.go` is NOT read — it re-stamps always-present `product.price`. Exits 1 if
+  `product.id/tags/summary/ratingCount` stop reading as statements, or a key falls outside
+  `BINDING_SOURCES`. `record.*` is dynamic and handled in `review.ts`.

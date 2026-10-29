@@ -15,6 +15,7 @@ import { execFileSync } from 'node:child_process';
 import { join, resolve, sep } from 'node:path';
 import { buildRequestShapes } from './shapes.js';
 import { reportInertDrift } from './inert-drift.js';
+import { presentOnlyFrom } from './presentonly.js';
 import { deadKeysModule, reportDeadKeys, scanDeadKeys } from './deadkey-scan.js';
 import { credentialFor } from '../src/transport/credential.js';
 import { PAGE_ROOT_ID, remapIds } from '../src/domains/site/ids.js';
@@ -412,41 +413,34 @@ function readBindingSources(repo: string): string[] {
   return [...found].sort();
 }
 
-/**
- * The binding sources a context holds ONLY WHEN THE ENTITY HAS ONE.
- *
- * `ApplyBindings` (render/scope/scope.go) skips a binding whose source the
- * context lacks, so on one field the LAST source THE CONTEXT RESOLVES renders —
- * and an earlier binding under a later present-only source (`product.tags`,
- * `product.summary`, the rating keys) is a FALLBACK, not dead weight. The
- * platform marks them in its own code: `schema/src/binding.ts` (the hand-mirror
- * of scope.go) builds the always-present keys as an object literal and adds the
- * present-only ones as STATEMENTS — `ctx['k'] = …` behind a guard, or
- * `put('k', v)` that drops an empty value. `record.*` is dynamic and omitted
- * when empty too (scope/record.go), so `sb_review` treats that namespace whole.
- */
+/** `scripts/presentonly.ts` reads both mirrors; this reads the files and keeps the drift asserts. */
 function readPresentOnlySources(repo: string, bindingSources: string[]): string[] {
-  let src = '';
-  try {
-    src = readFileSync(resolve(repo, 'schema/src/binding.ts'), 'utf8').replace(/^\s*\/\/[^\n]*$/gm, '');
-  } catch {
-    return [];
+  const read = (rel: string) => {
+    try {
+      return readFileSync(resolve(repo, rel), 'utf8');
+    } catch {
+      return '';
+    }
+  };
+  const ts = read('schema/src/binding.ts');
+  if (!ts) return [];
+  const { keys, error } = presentOnlyFrom(ts, read('server/render/scope/scope.go'), bindingSources);
+  if (error) {
+    console.error(error);
+    process.exit(1);
   }
-  const found = new Set<string>();
-  for (const m of src.matchAll(/\bctx\[['"]([a-zA-Z]+\.[a-zA-Z]+)['"]\]\s*=(?!=)/g)) found.add(m[1]);
-  for (const m of src.matchAll(/\bput\(\s*['"]([a-zA-Z]+\.[a-zA-Z]+)['"]/g)) found.add(m[1]);
   const need = ['product.id', 'product.tags', 'product.summary', 'product.ratingCount'];
-  const lost = need.filter((k) => !found.has(k));
+  const lost = need.filter((k) => !keys.includes(k));
   if (lost.length) {
     console.error(`present-only sources: binding.ts no longer adds ${lost.join(', ')} as a statement — has productContext changed shape?`);
     process.exit(1);
   }
-  const unknown = [...found].filter((k) => !bindingSources.includes(k));
+  const unknown = keys.filter((k) => !bindingSources.includes(k));
   if (unknown.length) {
     console.error(`present-only sources outside BINDING_SOURCES: ${unknown.join(', ')}`);
     process.exit(1);
   }
-  return [...found].sort();
+  return keys;
 }
 
 /**

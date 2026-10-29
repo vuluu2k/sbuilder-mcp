@@ -813,7 +813,7 @@ platform treats an unproven guard as indistinguishable from an absent one.
   a narrower-only style key rides the cascade tail to desktop (`cascade_tail`).
 - **A SECOND BINDING ON A FIELD IS USUALLY A FALLBACK, NOT DEAD WEIGHT** (review of v0.100.4).
   `ApplyBindings` SKIPS a source the context lacks (`val, ok := ctx[b.Source]; if !ok continue`),
-  and present-only keys — `product.summary/tags/id/variations/brand*`, the ratings, `site.*`,
+  and present-only keys — `product.summary/tags/id/variations/brand*`, the ratings, the site's contact/address/social/policy fields plus `site.money`/`site.timezone` (NOT `site.name`/`site.currency`),
   `record.*` — are absent on an entity without one. So "the last binding renders" was wrong: the
   last source THE CONTEXT RESOLVES does. TTG gap #62's own case (`product.title` then
   `product.tags`) is a fallback chain. `duplicate_binding_field` now fires only on a binding

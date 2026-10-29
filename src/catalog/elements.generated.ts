@@ -36474,6 +36474,7 @@ export const PRESENT_ONLY_SOURCES: string[] = [
   "site.facebook",
   "site.instagram",
   "site.localeSwitch",
+  "site.money",
   "site.moneySwitch",
   "site.postalCode",
   "site.privacyPolicy",
@@ -36483,6 +36484,7 @@ export const PRESENT_ONLY_SOURCES: string[] = [
   "site.supportEmail",
   "site.supportPhone",
   "site.tiktok",
+  "site.timezone",
   "site.youtube"
 ];
 
