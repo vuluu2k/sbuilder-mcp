@@ -6,6 +6,14 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.101.3] - 2026-10-29
+
+### Added
+- `sb_review` báo finding `filter_no_rows` cho phần tử filter hoặc sắp xếp không có dòng nào được bật, trừ filter giá có khoảng giá hoặc chế độ auto.
+
+### Fixed
+- `sb_add` gieo cho select sắp xếp sáu thứ tự sản phẩm (mới nhất, cũ nhất, giá, tên) theo ngôn ngữ của site thay vì xuất bản panel rỗng, trừ khi nó nhắm tới danh sách bản ghi.
+
 ## [0.101.2] - 2026-10-29
 
 ### Fixed

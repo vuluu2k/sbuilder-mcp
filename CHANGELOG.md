@@ -6,6 +6,14 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.101.3] - 2026-10-29
+
+### Added
+- `sb_review` reports a `filter_no_rows` finding for a filter or sort element with no enabled rows, except price filters with ranges or auto mode.
+
+### Fixed
+- `sb_add` seeds a sort select with the six product orders (newest, oldest, price, name) in the site language instead of publishing an empty panel, unless it targets a record list.
+
 ## [0.101.2] - 2026-10-29
 
 ### Fixed
