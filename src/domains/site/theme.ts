@@ -112,6 +112,45 @@ export function resolveVars(theme: StarterTheme, value: string, depth = 0): stri
   return value;
 }
 
+/**
+ * WHAT A NODE PAINTS BEHIND ITS CHILDREN (TTG gaps #64/#65). A picture — a
+ * `backgroundImage` (gradient or photo), a `background` shorthand carrying one,
+ * a scene or a video — has no single colour, so type on it is judged by nobody
+ * here and its inverted ink must never be read as the page's. Otherwise the own
+ * `backgroundColor`, else the PRESET's (`container-section` paints the section
+ * ground, so a band with no literal is not "unknown" when the theme is read).
+ * `literal` says the colour was authored on the node, not supplied by the theme.
+ * Null: the node paints nothing; its parent's ground shows through.
+ */
+export type Ground = { picture: true } | { color: string; literal: boolean };
+
+export function groundOf(
+  node: { data: { type: string }; style?: Record<string, unknown>; config?: Record<string, unknown>; specials?: Record<string, unknown> },
+  theme?: StarterTheme,
+): Ground | null {
+  const st = node.style ?? {};
+  const cfg = node.config ?? {};
+  const s = (v: unknown) => (typeof v === 'string' ? v.trim() : '');
+  const img = s(st.backgroundImage);
+  const bg = s(st.background);
+  if (
+    (img && img !== 'none') ||
+    /url\(|gradient\(/i.test(bg) ||
+    s(cfg.backgroundSceneSource) ||
+    s(cfg.backgroundVideoUrl)
+  ) {
+    return { picture: true };
+  }
+  const own = s(st.backgroundColor) || bg;
+  if (own && own !== 'transparent') {
+    return { color: theme ? resolveVars(theme, own) : own, literal: !own.includes('var(') };
+  }
+  if (!theme) return null;
+  const id = presetIdOf(node);
+  const p = id ? s(findPreset(theme, id)?.base.backgroundColor) : '';
+  return p && p !== 'transparent' ? { color: resolveVars(theme, p), literal: false } : null;
+}
+
 export interface PresetLayer {
   id: string;
   name: string;

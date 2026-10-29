@@ -48,7 +48,7 @@ import {
   PRODUCT_ACTION_BINDING_ID,
   type NodeEventLike,
 } from '../domains/site/navhref.js';
-import { childrenOf, isOverlay, overlayRoot, subtreeIds } from '../core/tree.js';
+import { childrenOf, isOverlay, isSharedSection, overlayRoot, pageChildren, subtreeIds } from '../core/tree.js';
 import { offscreenNodes, offscreenRootOf } from '../domains/site/offscreen.js';
 import { searchStock, SearchUnavailable, NO_SEARCH_NEXT, type StockPhoto } from '../transport/stock.js';
 import { siteFor, type ToolContext } from './context.js';
@@ -528,12 +528,18 @@ export function registerLiveTools(
       // The findings ride WITH the picture. Judging a page by eye and judging it
       // by rule are the same act, and separating them is how the second one gets
       // skipped.
-      const review = reviewField(ctx, session.current());
+      const doc = session.current().doc;
+      // A `url` OF ANOTHER PAGE (TTG gap #80): the shot is that page, the open
+      // document is not — so its review findings are not this picture's, and
+      // the tree-aware layout checks would compare the wrong tree. "Is it the
+      // open page" = one of the page's OWN bands (not shared chrome) rendered.
+      const shotIds = new Set((shots[0]?.boxes ?? []).map((b) => b.id));
+      const elsewhere = !!url && !pageChildren(doc).some((id) => !isSharedSection(doc, id) && shotIds.has(id));
+      const review = elsewhere ? {} : reviewField(ctx, session.current());
       // Measured on the render, not read off the document — a card that spills
       // at 390px is invisible to every check that only reads the tree.
       // The overlay subtree, read off the OPEN DOCUMENT — the boxes come from
       // the render and carry no idea which node is a drawer.
-      const doc = session.current().doc;
       // The same widening: an unstamped drawer is off-screen by its own CSS,
       // and judging its geometry produced thirteen false off-canvas findings
       // per page on a site whose pages were correct.
@@ -547,7 +553,19 @@ export function registerLiveTools(
         ? measure(shots, new Set([...skip].filter((id) => !opened.has(id))), doc).filter((f) => opened.has(f.nodeId))
         : node_id
           ? []
-          : measure(shots, skip, doc);
+          : elsewhere
+            ? measure(shots)
+            : measure(shots, skip, doc);
+      // TEXT ON A PICTURE IS NOT JUDGED for contrast (TTG gap #65) — say so once.
+      const onPicture = shots.some((s) => s.boxes.some((b) => b.overImage));
+      const contrastNote = onPicture
+        ? ctx.notices.once(
+            'contrast-picture',
+            'Text over a background image, video or canvas is not contrast-checked (a picture has no ' +
+              'one colour): look at it in the shot, and give it a scrim/veil or a text shadow if it ' +
+              'does not read.',
+          )
+        : undefined;
       const layout = compactFindings(visual);
       const layoutNotice = visual.length > 0 ? ctx.notices.once('measure', MEASURE_NOTICE) : undefined;
       // The legend rides with the first look only; the shape does not change after.
@@ -629,6 +647,10 @@ export function registerLiveTools(
       return images(shots.map((s) => ({ dataBase64: s.imageBase64, mimeType: s.mimeType })), {
         widths: shots.map((s) => s.width),
         ...(url ? { shot: url } : {}),
+        ...(elsewhere
+          ? { findings_note: `${url} is not the open page (none of its own sections rendered there), so the open page's review findings are not shown; only the measured layout is.` }
+          : {}),
+        ...(contrastNote ? { contrast_note: contrastNote } : {}),
         ...(previewNote ? { preview_note: previewNote } : {}),
         ...(canvasNote ? { canvas_note: canvasNote } : {}),
         ...(stuckNote ? { stuck_note: stuckNote } : {}),

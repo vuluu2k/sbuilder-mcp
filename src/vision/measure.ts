@@ -113,6 +113,24 @@ export function measureShot(shot: Shot, skip: ReadonlySet<string> = new Set(), d
     }
   }
 
+  // TEXT THAT DOES NOT READ ON ITS GROUND (TTG gap #65) — the computed ink
+  // against the composited ground the browser actually painted under it.
+  // 3:1 is the floor WCAG sets even for large text. Over a picture nothing is
+  // judged (`overImage`): it has no one colour, and sb_look says so.
+  for (const b of shot.boxes) {
+    if (skip.has(b.id) || b.hidden || !b.fg || !b.bg || b.overImage) continue;
+    const ratio = contrastOf(b.fg, b.bg);
+    if (ratio !== null && ratio < 3) {
+      out.push({
+        code: 'low_contrast',
+        nodeId: b.id,
+        width: shot.width,
+        problem: `Renders ${b.fg} on ${b.bg} — contrast ${ratio.toFixed(2)}:1, under the 3:1 floor; the words are hard or impossible to read.`,
+        fix: fill('low_contrast', { id: b.id }),
+      });
+    }
+  }
+
   // OVERLAP, between siblings only. Any parent overlaps its children by
   // definition, and an absolutely-positioned decoration over a band is a design
   // choice — but two elements in the same flow row sitting on top of each other
@@ -248,6 +266,29 @@ function titleBars(shot: Shot, doc: DocLike, byId: Map<string, Box>, skip: Reado
     }
   }
   return out;
+}
+
+/** WCAG contrast of a computed `rgb()`/`rgba()` ink over an opaque `rgb()` ground; null when unparseable. */
+export function contrastOf(fg: string, bg: string): number | null {
+  const parse = (c: string): number[] | null => {
+    const m = /rgba?\(([^)]+)\)/.exec(c);
+    const p = m ? m[1].split(/[\s,/]+/).filter(Boolean).map(Number) : [];
+    return p.length >= 3 && p.every((v) => !Number.isNaN(v)) ? [p[0], p[1], p[2], p[3] ?? 1] : null;
+  };
+  const f = parse(fg);
+  const g = parse(bg);
+  if (!f || !g) return null;
+  const a = f[3];
+  const ink = [0, 1, 2].map((i) => f[i] * a + g[i] * (1 - a));
+  const lum = (rgb: number[]) => {
+    const [r, gr, bl] = rgb.map((v) => {
+      const s = v / 255;
+      return s <= 0.03928 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4;
+    });
+    return 0.2126 * r + 0.7152 * gr + 0.0722 * bl;
+  };
+  const [hi, lo] = [lum(ink), lum(g)].sort((x, y) => y - x);
+  return (hi + 0.05) / (lo + 0.05);
 }
 
 function contains(outer: Box, inner: Box): boolean {

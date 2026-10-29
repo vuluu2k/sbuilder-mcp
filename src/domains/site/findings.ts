@@ -32,6 +32,10 @@ export const FIX: Record<string, string> = {
   invisible_text:
     'Give it a colour that reads on its ground: sb_set id "<id>", namespace style, keys { "color": … } ' +
     '(or unset "color" so the theme decides). For a button, change its fill or its text — not both to the same.',
+  low_contrast:
+    'Darken the type or lighten its ground until it reads at 4.5:1 for body copy (3:1 for large ' +
+    'headings): sb_set id "<id>", namespace style, keys { "color": … } — a theme colour ' +
+    '(var(--wb-color-heading) / var(--wb-color-text)) keeps it following the palette.',
   example_copy:
     'Write this shop\'s own words: sb_set id "<id>", namespace specials, keys { "<key>": … }. ' +
     'A figure, a delivery or return promise, or a customer quote must be TRUE for this shop — ' +

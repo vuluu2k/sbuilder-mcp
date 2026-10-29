@@ -30,7 +30,14 @@ declare const document: {
   /** The MutationObserver root — the whole tree, so nothing that renders is missed. */
   documentElement: unknown;
 };
-declare function getComputedStyle(el: unknown): { fontSize: string; position: string; visibility: string };
+declare function getComputedStyle(el: unknown): {
+  fontSize: string;
+  position: string;
+  visibility: string;
+  color: string;
+  backgroundColor: string;
+  backgroundImage: string;
+};
 declare const window: {
   innerWidth: number;
   innerHeight: number;
@@ -87,6 +94,16 @@ export interface Box {
    * and only that pair is exempt from the width checks (TTG gap #60).
    */
   inFixed?: true;
+  /**
+   * TEXT ELEMENTS ONLY (heading, text, button, text-dataset): the computed ink
+   * and the ground it actually reads on — every translucent background up to
+   * the first opaque one composited over white (TTG gap #65). `overImage`
+   * instead when a background image, video, canvas or picture sits in that
+   * chain: a picture has no one colour, so contrast is not judged there.
+   */
+  fg?: string;
+  bg?: string;
+  overImage?: true;
 }
 
 export type ShotFormat = 'jpeg' | 'png';
@@ -649,6 +666,37 @@ async function shootOne(
           .find((c) => c.startsWith('wb-'));
         const cs = getComputedStyle(el);
         const own = (el.textContent ?? '').trim();
+        // THE GROUND TEXT READS ON (TTG gap #65). Inline, no helper functions:
+        // the evaluate trap. Self upward to the first opaque background,
+        // translucent layers kept to composite; a picture anywhere stops it.
+        let ink: { fg: string; bg: string } | undefined;
+        let overImage = false;
+        if (own && ['heading', 'text', 'button', 'text-dataset'].includes(wb ? wb.slice(3) : '')) {
+          const layers: number[][] = [];
+          for (let e: DomEl | null = el; e; e = e.parentElement) {
+            const s = getComputedStyle(e);
+            const media = (e as unknown as { querySelector(q: string): unknown }).querySelector(
+              ':scope > video, :scope > canvas, :scope > picture, :scope > iframe',
+            );
+            if ((s.backgroundImage && s.backgroundImage !== 'none') || media) {
+              overImage = true;
+              break;
+            }
+            const m = /rgba?\(([^)]+)\)/.exec(s.backgroundColor);
+            const p = m ? m[1].split(/[\s,/]+/).filter(Boolean).map(Number) : [];
+            const a = p.length > 3 ? p[3] : p.length ? 1 : 0;
+            if (a > 0) layers.push([p[0], p[1], p[2], a]);
+            if (a >= 1) break;
+          }
+          if (!overImage) {
+            let base = [255, 255, 255];
+            for (let i = layers.length - 1; i >= 0; i--) {
+              const [r, g, b, a] = layers[i];
+              base = [r * a + base[0] * (1 - a), g * a + base[1] * (1 - a), b * a + base[2] * (1 - a)];
+            }
+            ink = { fg: cs.color, bg: `rgb(${base.map((c) => Math.round(c)).join(', ')})` };
+          }
+        }
         let layer: string | undefined;
         let inFixed = false;
         for (let e: DomEl | null = el; e && !inFixed; e = e.parentElement) {
@@ -671,6 +719,8 @@ async function shootOne(
           ...(layer ? { layer } : {}),
           ...(cs.visibility !== 'visible' ? { hidden: true } : {}),
           ...(inFixed ? { inFixed: true } : {}),
+          ...(ink ?? {}),
+          ...(overImage ? { overImage: true } : {}),
         };
       });
   }), 'measure the page')) as Box[];

@@ -8,6 +8,8 @@ import { HOVER_STATE, hoverHome } from './hover.js';
 import { ELEMENTS, BINDING_SOURCES, PRESENT_ONLY_SOURCES, BOUND_SPECIALS , FIRST_CHILD_ONLY, SATELLITE_RULES, ELEMENT_SEEDS } from '../../catalog/elements.generated.js';
 import type { PageDoc } from './document.js';
 import { fill } from './findings.js';
+import { groundOf, presetLayer, resolveVars, type Ground } from './theme.js';
+import type { StarterTheme } from '../../catalog/theme-types.js';
 import {
   hrefParamProblems,
   isRecordSource,
@@ -389,6 +391,8 @@ export function reviewDesign(
     siteLocale?: string | null;
     /** The SITE theme's literal font family per text-style slug, when read. Only `default_font` asks it. */
     fonts?: Readonly<Record<string, string>>;
+    /** The SITE theme, when read: resolves preset grounds and ink for `invisible_text` / `low_contrast`. */
+    theme?: StarterTheme;
   } = {},
 ): Finding[] {
   const d: DocLike = doc.doc;
@@ -566,26 +570,35 @@ export function reviewDesign(
     // TYPE THE SAME COLOUR AS WHAT IT SITS ON. Measured: a pattern dressed in
     // tokens read off an inverted band published a white "Mua ngay" on its own
     // white fill — present in the HTML, invisible on the page, clean in review.
-    // LITERAL COLOURS ONLY, on both sides, and the ground is the element's own
-    // fill or the nearest ancestor that sets one: a theme var or an unset page
-    // ground is not known here, and a dark theme would make a guessed "white"
-    // ground cry wolf on every light heading.
+    // The ground is the element's own fill or the nearest ancestor that paints
+    // one. WITH THE SITE THEME, a preset paints too (TTG gap #65: every section
+    // wore `container-section`'s #f7f9fb, no literal anywhere, so a white FAQ
+    // heading on it was "unknown, say nothing"). A PICTURE ground is never
+    // judged here (sb_look measures the render). Theme against theme is the
+    // theme's own design, so one side must be authored on a node.
     if ((type === 'text' || type === 'heading' || type === 'button') && !inOverlay.has(id)) {
-      const fg = rgbOf((n as { style?: Record<string, unknown> }).style?.color);
-      let ground: number[] | null = null;
+      const own = (n as { style?: Record<string, unknown> }).style?.color;
+      const ownFg = typeof own === 'string' && own.trim() !== '' && own !== 'inherit';
+      const presetFg = !ownFg && opts.theme ? presetLayer(opts.theme, 'site', n as never)?.paints.color : undefined;
+      const fg = rgbOf(ownFg ? (opts.theme ? resolveVars(opts.theme, own as string) : own) : presetFg);
+      let ground: Ground | null = null;
       for (let x: string | null | undefined = id; x && d.nodes[x] && !ground; x = d.nodes[x].data.parent) {
-        const bg = (d.nodes[x] as { style?: Record<string, unknown> }).style?.backgroundColor;
-        if (bg === undefined || bg === 'transparent' || bg === '') continue;
-        ground = rgbOf(bg);
-        if (!ground) break; // a var() or a gradient: unknown, say nothing
+        ground = groundOf(d.nodes[x] as never, opts.theme);
       }
-      if (fg && ground && contrast(fg, ground) < 1.5) {
+      const bg = ground && 'color' in ground ? rgbOf(ground.color) : null;
+      const authored = (ownFg && !String(own).includes('var(')) || (!!ground && 'literal' in ground && ground.literal);
+      const ratio = fg && bg && authored ? contrast(fg, bg) : Infinity;
+      if (ratio < 3) {
+        const code = ratio < 1.5 ? 'invisible_text' : 'low_contrast';
         out.push({
-          code: 'invisible_text',
+          code,
           nodeId: id,
           type,
-          problem: `Its colour is the colour it sits on (contrast ${contrast(fg, ground).toFixed(2)}:1) — the words are there and nobody can read them.`,
-          fix: fill('invisible_text', { id }),
+          problem:
+            ratio < 1.5
+              ? `Its colour is the colour it sits on (contrast ${ratio.toFixed(2)}:1) — the words are there and nobody can read them.`
+              : `Contrast ${ratio.toFixed(2)}:1 against its ground — under the 3:1 WCAG sets even for large text; most visitors will struggle to read it.`,
+          fix: fill(code, { id }),
         });
       }
     }

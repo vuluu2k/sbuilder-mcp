@@ -40,6 +40,7 @@ import { SEED_COPY_VI, langOf } from '../domains/site/seedcopy.js';
 import { PAGE_TYPES } from '../catalog/storepages.generated.js';
 import { skinLevelNote } from '../domains/site/fieldskin.js';
 import { siteTheme } from '../domains/site/theme-fetch.js';
+import type { StarterTheme } from '../catalog/theme-types.js';
 import { ensureSiteTheme } from './theme.js';
 import { request, redact, watchPageWrites, onPageSourceWrite, onGlobalWrite, onFormDocumentWrite } from '../transport/http.js';
 import { SPEC_GLOBAL_ID, SPEC_GLOBAL_REV, SPEC_OVERLAY_ID, SPEC_OVERLAY_REV, subtreeIds, ancestors, childrenOf, type NodeLike } from '../core/tree.js';
@@ -89,8 +90,9 @@ export function reviewField(
   formRedirects?: ReadonlySet<string>,
   siteLocale?: string | null,
   fonts?: Readonly<Record<string, string>>,
+  theme?: StarterTheme,
 ): Record<string, unknown> {
-  const all = reviewDesign(doc, { formTypes, pageType, formDocType, formRedirects, siteLocale, fonts });
+  const all = reviewDesign(doc, { formTypes, pageType, formDocType, formRedirects, siteLocale, fonts, theme });
   if (all.length === 0) return {};
   // MAINTENANCE IS ADVICE, kept out of `findings`: it works for a visitor, so
   // it must not stand between a page and its clean verdict. One `fixes` map
@@ -2202,8 +2204,12 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
       // styles name none (they inherit the page/site font), and an inherited family
       // is not known here, so such a slug is left out and the rule stays silent.
       const fonts: Record<string, string> = {};
+      let siteOwn: StarterTheme | undefined;
       try {
         const { theme, from } = await siteTheme(ctx, session.site());
+        // Preset grounds for the contrast rules — the SITE's own theme only: a
+        // starter answer for a site whose theme could not be read is a guess.
+        if (from === 'site') siteOwn = theme;
         for (const t of from === 'site' ? theme.textStyles : []) {
           const f = t.base?.fontFamily;
           if (typeof f === 'string' && f && !f.includes('var(')) fonts[t.slug] = f;
@@ -2211,7 +2217,7 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
       } catch {
         // A theme that cannot be read is a finding nobody gets, never a failed review.
       }
-      const field = reviewField(ctx, doc, formTypes, pageType, session.formType(), formRedirects, siteLocale, fonts);
+      const field = reviewField(ctx, doc, formTypes, pageType, session.formType(), formRedirects, siteLocale, fonts, siteOwn);
       // Clean = no finding a visitor meets; `advice` (maintenance) rides beside the verdict.
       const clean = !field.findings;
       return text({
@@ -2421,7 +2427,9 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
           dry_run !== false
             ? PageDoc.from((await loadSource(ctx, site_id, page_id)).document)
             : (await session.open(site_id, page_id), session.current());
-        const read = tokensFromPage(doc.doc);
+        // The site theme resolves a band's PRESET ground (TTG gap #64): a section
+        // with no literal still paints, and that paint says whether its type is inverted.
+        const read = tokensFromPage(doc.doc, (await siteTheme(ctx, site_id)).theme);
         // A BLANK PAGE HAS NO PATTERN TO READ, and the next authority is the
         // site's THEME rather than nothing — every element's style preset
         // resolves from it anyway. Carried as `var(--wb-color-…)`, so the band

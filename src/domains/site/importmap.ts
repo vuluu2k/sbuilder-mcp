@@ -6,6 +6,8 @@ import { stickySeeds } from './sticky.js';
 import { TEXT_STYLE_KEYS } from '../../catalog/elements.generated.js';
 import { normalizeUrl } from './discover.js';
 import { ICON_NAMES } from '../../catalog/icons.generated.js';
+import { groundOf, type Ground } from './theme.js';
+import type { StarterTheme } from '../../catalog/theme-types.js';
 
 /**
  * What the SOURCE painted, as computed values — raw observations, not decisions.
@@ -247,12 +249,11 @@ const str = (v: unknown): string | undefined =>
  * when they open a page and look at what a heading is. Nothing is averaged: an
  * average of two accents is a third colour that appears nowhere on the site.
  */
-export function tokensFromPage(doc: DocLike): PageTokens {
+export function tokensFromPage(doc: DocLike, theme?: StarterTheme): PageTokens {
   let heading: NodeLike | undefined;
   let text: NodeLike | undefined;
   let button: NodeLike | undefined;
   let section: NodeLike | undefined;
-  let block: NodeLike | undefined;
 
   // THE PAGE'S OWN BANDS ONLY. A shared header is usually dark with white type
   // and no padding, so reading it first dressed an inserted band in white text
@@ -266,7 +267,6 @@ export function tokensFromPage(doc: DocLike): PageTokens {
     else if (!button && t === 'button' && str(styleOf(n).backgroundColor) !== 'transparent') {
       button = n;
     } else if (!section && t === 'flex-section') section = n;
-    else if (!block && t === 'flex-block') block = n;
   };
   // NOT FROM A BAND ON A DARK OR COLOURED GROUND. Its type and buttons are
   // inverted on purpose, so they say nothing about the page's own. Measured: a
@@ -280,18 +280,36 @@ export function tokensFromPage(doc: DocLike): PageTokens {
     if (!n || seen.has(id)) return;
     seen.add(id);
     const t = n.data.type;
-    const dark = onDark || ((t === 'flex-section' || t === 'flex-block') && !lightGround(styleOf(n).backgroundColor));
+    // A PICTURE IS AN INVERTED GROUND TOO (TTG gap #64): a hero whose dark
+    // ground is a background image carried no backgroundColor, read as light,
+    // and its white h1 became the ink of every later pattern — white on #f7f9fb.
+    const dark = onDark || ((t === 'flex-section' || t === 'flex-block') && !lightGround(groundOf(n as never, theme)));
     if (!dark) visit(n);
     for (const k of n.data.nodes ?? []) read(k, dark, seen);
   };
   const seen = new Set<string>();
-  for (const id of pageChildren(doc)) if (!isGlobal(doc, id)) read(id, false, seen);
+  // THE BAND'S CONTENT WIDTH IS ITS OWN CONTAINER'S — a page-level section's
+  // DIRECT flex-block, on a light ground — never the first flex-block anywhere:
+  // that was a hero's 620px copy column, and it capped a 4-card shelf at 620.
+  // The WIDEST such container wins; a narrower one is a deliberate text band.
+  const widths: string[] = [];
+  for (const id of pageChildren(doc)) {
+    if (isGlobal(doc, id)) continue;
+    read(id, false, seen);
+    const s = doc.nodes[id];
+    if (s?.data.type !== 'flex-section' || !lightGround(groundOf(s as never, theme))) continue;
+    for (const k of s.data.nodes ?? []) {
+      const w = doc.nodes[k]?.data.type === 'flex-block' ? str(styleOf(doc.nodes[k]).maxWidth) : undefined;
+      if (w) widths.push(w);
+    }
+  }
+  const px = widths.filter((w) => /^\d+(\.\d+)?px$/.test(w)).sort((a, b) => parseFloat(b) - parseFloat(a));
+  const maxWidth = px[0] ?? widths[0];
 
   const h = styleOf(heading);
   const p = styleOf(text);
   const b = styleOf(button);
   const s = styleOf(section);
-  const bl = styleOf(block);
   return {
     ...(str(h.color) ? { headingColor: str(h.color) } : {}),
     ...(str(h.fontWeight) ? { headingWeight: str(h.fontWeight) } : {}),
@@ -301,18 +319,20 @@ export function tokensFromPage(doc: DocLike): PageTokens {
     ...(str(b.color) ? { buttonColor: str(b.color) } : {}),
     ...(str(b.borderRadius) ? { buttonRadius: str(b.borderRadius) } : {}),
     ...(str(s.padding) ? { sectionPadding: str(s.padding) } : {}),
-    ...(str(bl.maxWidth) ? { sectionMaxWidth: str(bl.maxWidth) } : {}),
+    ...(maxWidth ? { sectionMaxWidth: maxWidth } : {}),
   };
 }
 
 /**
  * Is this a ground ordinary type reads on? Unset, transparent, white, the
- * theme's own background token, or a literal colour light enough. Anything
- * else — a dark or saturated literal, another theme var — is treated as an
- * inverted band, which only ever costs a token read, never a wrong one.
+ * theme's own background token, or a colour light enough. Anything else — a
+ * picture, a dark or saturated colour, an unresolved theme var — is treated as
+ * an inverted band, which only ever costs a token read, never a wrong one.
  */
-function lightGround(bg: unknown): boolean {
-  const v = typeof bg === 'string' ? bg.trim().toLowerCase() : '';
+function lightGround(ground: Ground | null): boolean {
+  if (!ground) return true;
+  if ('picture' in ground) return false;
+  const v = ground.color.trim().toLowerCase();
   if (!v || v === 'transparent' || v === 'white' || v === 'var(--wb-color-background)') return true;
   let rgb: number[] | null = null;
   const hex = /^#([0-9a-f]{3}|[0-9a-f]{6})$/.exec(v);
