@@ -6,6 +6,22 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.98.5] - 2026-10-29
+
+### Added
+- Hộp trong `sb_look` có thêm trường `layer`, và hộp nằm trong lớp fixed, sticky hoặc absolute chỉ được so overlap với hộp cùng lớp.
+- `sb_traits_for` liệt kê các bảng skin như `pay_card_skin` mà catalog sinh ra cho các control của field.
+
+### Changed
+- Mọi tool chạm vào tài liệu đang mở chạy theo đúng thứ tự request tới, nên các lời gọi đồng thời không còn xen kẽ nhau.
+- `sb_page_open` giờ là điều kiện trước của các lệnh đọc trên trang đang mở, và các lệnh đó chờ nó hoàn tất.
+
+### Fixed
+- `sb_publish` báo các trang chỉ được publish lại qua cascade trong `cascaded` và giữ bản nháp của chúng trong `unpublished_drafts` cho tới khi publish đích danh, vì cascade không còn che bản nháp chưa lên live.
+- `sb_set` và `sb_add` không còn coi tên control của bộ chọn icon là config key, và báo `unknown_key` cho `config.icon` trên phần tử icon kèm gợi ý dùng `specials.name`.
+- `seed_override` cho `mobile.flexDirection: column` trên flex-block lật hàng đang ghi ở base, và ghi chú hàng packed của importer nói rõ hàng mobile.
+- `sb_review` không còn báo trang `/account` gộp đăng nhập và đăng ký là trang auth trùng lặp.
+
 ## [0.98.4] - 2026-10-29
 
 ### Fixed

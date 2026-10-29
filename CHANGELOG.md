@@ -6,6 +6,22 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.98.5] - 2026-10-29
+
+### Added
+- `sb_look` boxes carry a `layer` field, and a box inside a fixed, sticky or absolute layer is compared for overlap only with boxes in the same layer.
+- `sb_traits_for` lists the skin tables such as `pay_card_skin` that the catalog generates for field controls.
+
+### Changed
+- Every tool that touches the open document runs in the order its requests arrive, so concurrent calls no longer interleave.
+- `sb_page_open` is now required before the read commands that work on the open page, which wait for it.
+
+### Fixed
+- `sb_publish` reports pages it republished only through the cascade under `cascaded` and keeps their drafts in `unpublished_drafts` until they are published by name, because the cascade no longer hides a draft that is not live.
+- `sb_set` and `sb_add` no longer treat icon-picker control names as config keys, and report `unknown_key` for `config.icon` on an icon element with a pointer to `specials.name`.
+- `seed_override` for `mobile.flexDirection: column` on a flex-block flips a row stored at base, and the importer's packed-row note names the mobile row.
+- `sb_review` no longer flags the merged sign-in and sign-up page on `/account` as a duplicate auth page.
+
 ## [0.98.4] - 2026-10-29
 
 ### Fixed
