@@ -6,6 +6,19 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.100.1] - 2026-10-29
+
+### Changed
+- `sb_outline` chỉ thu gọn header, footer dùng chung và overlay, không thu gọn global custom section, và dòng thu gọn mang `collapsed: true`.
+- `sb_duplicate` liệt kê tối đa 40 node trong `copies`, quá giới hạn thì trả bản sao cấp trên cùng với `copied` và `copies_truncated`.
+- `sb_publish` chỉ hiện `cascade_note` một lần mỗi process, ở lần xuất hiện đầu tiên khi chạy thử hoặc publish thật.
+- Lỗi khi không tìm thấy nguồn trang nay ghi "page <id> not found on site <site> (deleted, or not this site/key)".
+
+### Fixed
+- `sb_store` với `action: "form"` và `node_id` đặt form giống `sb_add` và kiểm tra vị trí có lưu được trước, nên vị trí bị từ chối không còn để lại form thừa.
+- `sb_review` không còn báo `default_font` khi `responsive[bp].style.fontFamily` đã được đặt.
+- `sb_review` không còn tính `background-color` hay `border-color` là `color` khi xét `link_colour`.
+
 ## [0.100.0] - 2026-10-29
 
 ### Added

@@ -6,6 +6,19 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.100.1] - 2026-10-29
+
+### Changed
+- `sb_outline` collapses only shared headers, footers and overlays, not global custom sections, and a collapsed line carries `collapsed: true`.
+- `sb_duplicate` lists at most 40 nodes in `copies`, and past that it returns the top-level copy plus `copied` and `copies_truncated`.
+- `sb_publish` shows `cascade_note` once per process, on its first appearance in a dry run or a real publish.
+- The error for a missing page source now reads "page <id> not found on site <site> (deleted, or not this site/key)".
+
+### Fixed
+- `sb_store` with `action: "form"` and `node_id` places the form the same way as `sb_add` and checks that the position can be saved first, so a refused position no longer leaves a stray form behind.
+- `sb_review` no longer reports `default_font` when `responsive[bp].style.fontFamily` is already set.
+- `sb_review` no longer counts `background-color` or `border-color` as `color` for `link_colour`.
+
 ## [0.100.0] - 2026-10-29
 
 ### Added
