@@ -14,6 +14,7 @@ import { summarize } from '../src/tools/undo.js';
 import { globalWarning, sharedWriteNotes } from '../src/domains/site/traps.js';
 import { searchOperations } from '../src/catalog/search.js';
 import { shapeResponse } from '../src/tools/api.js';
+import { traitsFor } from '../src/catalog/element-search.js';
 
 /**
  * TTG GAPS #64–#81, found building a blog and a landing page on a Vietnamese
@@ -397,6 +398,20 @@ describe('#77 the sb_undo listing is compact and names the template', () => {
     } finally {
       await close();
     }
+  });
+});
+
+/* #73 ---------------------------------------------------------------------- */
+
+describe('#73 sb_traits_for narrowed to one control keeps what the full answer knows', () => {
+  it('a declared control carries its allowed values', () => {
+    const r = traitsFor('list-dataset', 'articleSourceType') as { values?: string[] };
+    expect(r.values).toEqual(expect.arrayContaining(['category', 'page_category', 'slot']));
+  });
+
+  it('an undeclared control names the config keys it most likely writes, not "set the CSS"', () => {
+    const r = traitsFor('popup', 'popup_trigger') as { likely_keys?: string[]; note?: string };
+    expect(r.likely_keys).toEqual(expect.arrayContaining(['config.triggerType', 'config.triggerDelay', 'config.triggerFreq']));
   });
 });
 

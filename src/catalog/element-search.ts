@@ -302,8 +302,8 @@ export const STYLE_NOTE =
 
 const UNDECLARED_NOTE =
   'Controls not listed under `declared` build their write in a Vue widget the platform does ' +
-  'not describe. Read a node that already uses one with sb_node_read, or set the CSS property ' +
-  'directly — style is open. Pass control:"<name>" to read one control.';
+  'not describe. Read a node that already uses one with sb_node_read; a VISUAL one can be set as ' +
+  'CSS (style is open), a behaviour lives in config (see defaults.config). Pass control:"<name>" to read one control.';
 
 /**
  * The inspector as NAMES, plus the declared writes in full.
@@ -329,7 +329,9 @@ export function traitsFor(type: string, control?: string): Record<string, unknow
     // "writes: null" while the key, its values and its fallback sat in the
     // generated vocabulary (TTG gap #47). Joined on the element's own config.
     if (desc.writes === null) {
-      const vocab = { ...sharedVocabularies(el.defaults ?? {}), ...elementVocabularies(el.type) }[control] as unknown as
+      // …or in the shared write vocabulary (`articleSourceType`, TTG gap #73).
+      const vocab = ({ ...sharedVocabularies(el.defaults ?? {}), ...elementVocabularies(el.type) }[control] ??
+        vocabulariesForWrites([control])[control]) as unknown as
         | (Record<string, unknown> & { target?: string; writeKey?: string })
         | undefined;
       if (vocab || control in (el.defaults?.config ?? {})) {
@@ -343,7 +345,42 @@ export function traitsFor(type: string, control?: string): Record<string, unknow
         };
       }
     }
-    return { type, control, ...desc };
+    // THE VALUES RIDE WITH THE NARROWED ANSWER TOO (TTG gap #73): `control:
+    // "articleSourceType"` answered `{writes}` while the unscoped call carried
+    // `config_values.articleSourceType.values`.
+    const writes = (desc.writes ?? []) as Array<{ target: string; writeKey: string }>;
+    if (writes.length) {
+      const own = { ...sharedVocabularies(el.defaults ?? {}), ...elementVocabularies(el.type) } as unknown as Record<string, Record<string, unknown>>;
+      const shared = vocabulariesForWrites(writes.map((w) => w.writeKey)) as unknown as Record<string, Record<string, unknown>>;
+      const v = writes.map((w) => own[w.writeKey] ?? shared[w.writeKey]).find(Boolean);
+      if (v) {
+        const { target: _t, writeKey: _w, ...values } = v;
+        void _t, _w;
+        return { type, control, ...desc, ...values };
+      }
+      return { type, control, ...desc };
+    }
+    // AN UNDECLARED CONTROL IS NOT ALWAYS CSS (TTG gap #73): popup_trigger is
+    // config.triggerType (delay|scroll|guest), and "set the CSS property" sent
+    // callers to style for a behaviour. The element's own seeded keys that share
+    // a word with the control name are the likeliest answer.
+    const words = control.toLowerCase().split(/[_-]/).map((w) => (w === 'bg' ? 'background' : w)).filter((w) => w.length > 2 && w !== el.type);
+    const likely = (['config', 'specials', 'style'] as const).flatMap((ns) =>
+      Object.keys((el.defaults as Record<string, Record<string, unknown> | undefined>)?.[ns] ?? {})
+        .filter((k) => words.length > 0 && words.every((w) => k.toLowerCase().includes(w)))
+        .map((k) => `${ns}.${k}`),
+    );
+    return {
+      type,
+      control,
+      writes: null,
+      ...(likely.length ? { likely_keys: likely } : {}),
+      note:
+        'The platform does not declare what this control writes (its widget builds the binding in Vue). ' +
+        (likely.length ? 'likely_keys are this element\'s seeded keys sharing its words. ' : '') +
+        'Read a node that already uses it with sb_node_read. Only a VISUAL control maps to open CSS in style ' +
+        '(e.g. a section background picture is style.backgroundImage) — a behaviour lives in config.',
+    };
   }
 
   // Read from base only whatever breakpoint is asked for — sb_set routes them
