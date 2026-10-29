@@ -122,7 +122,7 @@ export function canvasVerdict(document: unknown): CanvasVerdict {
 
 /** How the draft and the published copy stand relative to each other. */
 export interface Drift {
-  state: 'in_step' | 'draft_ahead' | 'never_published' | 'published_ahead';
+  state: 'in_step' | 'draft_ahead' | 'never_published';
   note: string;
 }
 
@@ -155,13 +155,78 @@ export function driftOf(
         'will disagree until this page is published.',
     };
   }
+  // LIVE LATER THAN THE DRAFT IS EVERY ORDINARY PUBLISH (TTG gap #75): the
+  // publish read the last saved draft, so the live page holds it. This used to
+  // read `published_ahead` and blame a cascade; a cascade that left a draft
+  // behind is remembered by sb_publish, never inferred from these timestamps.
   if (live > draft + 1000) {
-    return {
-      state: 'published_ahead',
-      note:
-        'The live page is NEWER than the draft. That happens on a cascaded publish — a shared ' +
-        'header edited elsewhere republishes every page carrying it — and is not a defect.',
-    };
+    return { state: 'in_step', note: 'Published after its last draft save — the live page is this draft.' };
   }
   return { state: 'in_step', note: 'The draft and the live page are the same revision.' };
+}
+
+/** A shared master as its list row reports it. */
+export interface Master {
+  id: string;
+  name?: string;
+  kind?: string;
+  rev?: number;
+  updatedAt?: string;
+}
+
+/**
+ * WHAT A PUBLISH WOULD CASCADE TO, computed the platform's own way (TTG gap
+ * #66): `globalCascadeTargets` takes the globals the PUBLISHED page shows and
+ * adds every other live page whose LIVE document stamps one of them
+ * (`specials.globalRev`) behind the master's `rev`; `sitewideCascadeTargets`
+ * adds every live page whose overlay stamp (`overlayRev`) is behind, whatever
+ * page is published. App blocks moving with an install are not modelled. A
+ * master behind on any live page it will reach is an edit going live now —
+ * possibly someone else's, unreviewed (a footer saved at 13:10:58 shipped on 19
+ * pages behind a throwaway post template).
+ */
+export function cascadePreview(input: {
+  explicit: ReadonlySet<string>;
+  targetGlobals: ReadonlySet<string>;
+  globals: Master[];
+  overlays: Master[];
+  published: Array<{ pageId?: unknown; document?: unknown }>;
+  names: Readonly<Record<string, string>>;
+}): {
+  would_cascade: Array<{ pageId: string; name: string; because: string[] }>;
+  shared_unpublished: Array<{ id: string; kind?: string; name?: string; updatedAt?: string; behind_on: number }>;
+} {
+  const masters = new Map<string, Master>();
+  for (const m of [...input.globals, ...input.overlays]) masters.set(m.id, m);
+  const would: Array<{ pageId: string; name: string; because: string[] }> = [];
+  const behind = new Map<string, number>();
+  for (const row of input.published) {
+    const pageId = String(row.pageId ?? '');
+    const nodes = (row.document as { nodes?: Record<string, { specials?: Record<string, unknown> }> } | undefined)?.nodes ?? {};
+    const because: string[] = [];
+    const hits: string[] = [];
+    for (const n of Object.values(nodes)) {
+      const sp = n?.specials ?? {};
+      for (const [idKey, revKey, global] of [['globalId', 'globalRev', true], ['overlayId', 'overlayRev', false]] as const) {
+        const id = sp[idKey];
+        if (typeof id !== 'string') continue;
+        const m = masters.get(id);
+        const stamp = Number(sp[revKey] ?? 0);
+        if (!m || typeof m.rev !== 'number' || stamp >= m.rev) continue;
+        const reaches = input.explicit.has(pageId) || !global || input.targetGlobals.has(id);
+        if (!reaches) continue;
+        hits.push(id);
+        because.push(`${m.kind ?? (global ? 'global' : 'overlay')} ${id}${m.name ? ` "${m.name}"` : ''} rev ${stamp} → ${m.rev}${m.updatedAt ? `, saved ${m.updatedAt}` : ''}`);
+      }
+    }
+    for (const id of new Set(hits)) behind.set(id, (behind.get(id) ?? 0) + 1);
+    if (because.length && !input.explicit.has(pageId)) {
+      would.push({ pageId, name: input.names[pageId] ?? '', because });
+    }
+  }
+  const shared = [...behind].map(([id, n]) => {
+    const m = masters.get(id)!;
+    return { id, ...(m.kind ? { kind: m.kind } : {}), ...(m.name ? { name: m.name } : {}), ...(m.updatedAt ? { updatedAt: m.updatedAt } : {}), behind_on: n };
+  });
+  return { would_cascade: would, shared_unpublished: shared };
 }

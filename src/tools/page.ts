@@ -7,7 +7,7 @@ import { isSourceStale, loadSource, saveSource, sourcePath } from '../transport/
 import { PAGE_SOURCE_OP } from './undo.js';
 import { previewUrl } from '../vision/preview.js';
 import { bandIds, proveLive, type LiveProof } from '../domains/site/liveproof.js';
-import { canvasVerdict, driftOf } from '../domains/site/pagestate.js';
+import { canvasVerdict, cascadePreview, driftOf, type Master } from '../domains/site/pagestate.js';
 import { PageDoc, type OutlineNode } from '../domains/site/document.js';
 import { canonicalRoot, PAGE_ROOT_ID } from '../domains/site/ids.js';
 import {
@@ -3021,6 +3021,7 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
       let drafts: Row[] = [];
       let fresh: Row[] = [];
       let held: Row[] = [];
+      let names: Record<string, string> = {};
       try {
         const got = (await request({
           base: ctx.base,
@@ -3029,6 +3030,7 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
           token: siteToken(ctx),
           fetchImpl: ctx.fetchImpl,
         })) as { pages?: Array<Record<string, unknown>> };
+        names = Object.fromEntries((got.pages ?? []).map((p) => [String(p.id), String(p.name ?? '')]));
         const others = (got.pages ?? []).filter((p) => p.id !== page_id);
         const row = (p: Record<string, unknown>): Row => ({
           pageId: String(p.id),
@@ -3081,18 +3083,59 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
           : {}),
       });
       if (dry_run !== false) {
-        // NO CASCADE PREVIEW EXISTS on the platform (page/globalservice.go
-        // cascadeTargets runs inside publish only), so the dry run says the rule
-        // rather than a list it cannot know (TTG gap #59); the real answer names
-        // the pages under `cascaded`. SPENT on first show, dry or real: a dry
-        // run repeated it on every preview.
+        // THE CASCADE, COMPUTED (TTG gap #66). The platform runs cascadeTargets
+        // only inside publish, but its inputs are all readable: the globals this
+        // page shows, each master's rev, and every live document's stamps. A
+        // failed read falls back to saying the rule (gap #59).
+        const preview = await (async () => {
+          const get = (p: string) =>
+            request({ base: ctx.base, method: 'GET', path: `/api/sites/${encodeURIComponent(site_id)}${p}`, token: siteToken(ctx), fetchImpl: ctx.fetchImpl }) as Promise<Record<string, unknown>>;
+          const [src, gl, ov, live] = await Promise.all([
+            loadSource(ctx, site_id, page_id),
+            get('/global-sections'),
+            get('/overlays'),
+            get('/published'),
+          ]);
+          const nodes = Object.values((src.document as { nodes?: Record<string, { specials?: Record<string, unknown> }> }).nodes ?? {});
+          const targetGlobals = new Set(
+            nodes.flatMap((n) => [n.specials?.globalRef, n.specials?.globalId]).filter((v): v is string => typeof v === 'string'),
+          );
+          return cascadePreview({
+            explicit: new Set(body.pageIds),
+            targetGlobals,
+            globals: (gl.globalSections ?? []) as Master[],
+            overlays: (ov.overlays ?? []) as Master[],
+            published: (live.published ?? []) as Array<{ pageId?: unknown; document?: unknown }>,
+            names,
+          });
+        })().catch(() => null);
+        const shared = preview?.shared_unpublished ?? [];
         const cascade = ctx.notices.once(
           'publish-cascade',
           'Publishing also republishes, from their LAST PUBLISHED version (never their draft), every live page ' +
-            'whose shared header/footer, overlay (cart drawer, pop-up) or app block is behind its master. The ' +
-            'platform offers no preview of that list; the real publish names them under cascaded.',
+            'whose shared header/footer, overlay (cart drawer, pop-up) or app block is behind its master. ' +
+            (preview
+              ? 'would_cascade is that list, computed from the masters\' revs and each live page\'s stamps (app blocks not modelled).'
+              : 'The cascade could not be read here; the real publish names them under cascaded.'),
         );
-        return text({ dry_run: true, would_post: path, body, ...draftNote(drafts, fresh), ...(cascade ? { cascade_note: cascade } : {}) });
+        return text({
+          dry_run: true,
+          would_post: path,
+          body,
+          ...draftNote(drafts, fresh),
+          ...(preview ? { would_cascade: preview.would_cascade } : {}),
+          ...(shared.length
+            ? {
+                shared_unpublished: shared,
+                shared_warning:
+                  `Publishing ships ${shared.length} shared edit(s) LIVE — ${shared.map((m) => `${m.kind ?? ''} "${m.name ?? m.id}"`.trim()).join(', ')} — ` +
+                  'saved after the live pages showing them were published' +
+                  (preview!.would_cascade.length ? `, onto ${preview!.would_cascade.length} page(s) you did not name (would_cascade)` : '') +
+                  '. Nobody may have reviewed them: open a page carrying each and sb_look it before publishing.',
+              }
+            : {}),
+          ...(cascade ? { cascade_note: cascade } : {}),
+        });
       }
       const res = (await request({
         base: ctx.base,

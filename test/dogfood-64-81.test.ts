@@ -7,6 +7,7 @@ import { reviewDesign } from '../src/domains/site/review.js';
 import { STARTER_THEME } from '../src/domains/site/theme.js';
 import { measureShot } from '../src/vision/measure.js';
 import type { Box, Shot } from '../src/vision/shoot.js';
+import { fakePlatform } from './helpers/platform.js';
 
 /**
  * TTG GAPS #64–#81, found building a blog and a landing page on a Vietnamese
@@ -113,6 +114,69 @@ describe('#65 sb_review reads a preset-painted ground', () => {
     });
     const plain = band([{ type: 'heading', specials: { text: 'Plain' } }]);
     expect(codes(page(hero, plain), STARTER_THEME)).toEqual([]);
+  });
+});
+
+/* #66 ---------------------------------------------------------------------- */
+
+describe('#66 sb_publish dry run names the cascade and the unreviewed shared edits', () => {
+  const root = (kids: Record<string, Record<string, unknown>>) => ({
+    schema_version: 2,
+    root_node_id: 'ROOT',
+    nodes: {
+      ROOT: { id: 'ROOT', data: { type: 'root', parent: null, nodes: Object.keys(kids) } },
+      ...Object.fromEntries(
+        Object.entries(kids).map(([id, specials]) => [id, { id, data: { type: 'flex-section', parent: 'ROOT', nodes: [] }, specials }]),
+      ),
+    },
+  });
+  const platform = (method: string, path: string) => {
+    if (method !== 'GET') return undefined;
+    if (path === '/api/sites/s1/pages') {
+      return {
+        pages: [
+          { id: 'pg_post', name: 'QA bài viết', slug: 'qa', type: 'post', updatedAt: '2026-10-29T15:00:00Z' },
+          { id: 'pg_home', name: 'Trang chủ', slug: '', type: 'page', updatedAt: '2026-10-29T12:00:00Z', publishedAt: '2026-10-29T12:04:00Z' },
+          { id: 'pg_about', name: 'Giới thiệu', slug: 'gt', type: 'about', updatedAt: '2026-10-29T12:00:00Z', publishedAt: '2026-10-29T12:04:00Z' },
+        ],
+      };
+    }
+    if (path === '/api/sites/s1/pages/pg_post/source') {
+      return { source: { pageId: 'pg_post', document: root({ fs_foot: { globalRef: 'gs_foot', globalKind: 'footer' } }) } };
+    }
+    if (path === '/api/sites/s1/global-sections') {
+      return { globalSections: [{ id: 'gs_foot', name: 'Footer', kind: 'footer', rev: 5, updatedAt: '2026-10-29T13:10:58Z' }] };
+    }
+    if (path === '/api/sites/s1/overlays') {
+      return { overlays: [{ id: 'ov_cart', name: 'Giỏ hàng', kind: 'cart', rev: 2, updatedAt: '2026-10-29T11:00:00Z' }] };
+    }
+    if (path === '/api/sites/s1/published') {
+      return {
+        published: [
+          { pageId: 'pg_home', document: root({ fs_f: { globalId: 'gs_foot', globalRev: 3 }, ca_1: { overlayId: 'ov_cart', overlayRev: 2 } }) },
+          // Not carrying the footer: the cascade does not reach it.
+          { pageId: 'pg_about', document: root({ fs_x: {}, ca_1: { overlayId: 'ov_cart', overlayRev: 2 } }) },
+        ],
+      };
+    }
+    return undefined;
+  };
+
+  it('lists the page a publish would republish, and the master saved after it went live', async () => {
+    const p = fakePlatform(platform);
+    const { call, close } = await p.connect();
+    try {
+      const r = await call('sb_publish', { site_id: 's1', page_id: 'pg_post' });
+      expect(r.isError, r.text).toBe(false);
+      const would = r.json.would_cascade as Array<{ pageId: string; name: string; because: string[] }>;
+      expect(would.map((w) => w.pageId)).toEqual(['pg_home']);
+      expect(would[0].because.join(' ')).toMatch(/gs_foot/);
+      const shared = r.json.shared_unpublished as Array<{ id: string }>;
+      expect(shared.map((s) => s.id)).toEqual(['gs_foot']);
+      expect(String(r.json.shared_warning)).toMatch(/Footer/);
+    } finally {
+      await close();
+    }
   });
 });
 

@@ -78,14 +78,15 @@ describe('driftOf says which copy is ahead', () => {
   });
 
   /**
-   * A cascaded publish — a shared header edited elsewhere republishes every
-   * page carrying it — legitimately puts the live row AHEAD of the draft. It
-   * is not a defect and must not be reported as one.
+   * TTG GAP #75: a live row LATER than the draft is what EVERY ordinary publish
+   * leaves (draft saved 15:43:30, published 15:44:41) — the live page holds that
+   * draft. It used to read `published_ahead` and blame a cascade. A cascade that
+   * left a draft behind is sb_publish's memory, not these timestamps.
    */
-  it('reports a live row ahead of the draft as the cascade it is', () => {
-    const d = driftOf(t('2026-09-21T08:00:00Z'), t('2026-09-21T09:00:00Z'));
-    expect(d.state).toBe('published_ahead');
-    expect(d.note).toContain('cascaded');
+  it('a publish after the last draft save is in_step, not published_ahead', () => {
+    const d = driftOf(t('2026-10-29T15:43:30Z'), t('2026-10-29T15:44:41Z'));
+    expect(d.state).toBe('in_step');
+    expect(d.note).not.toContain('cascade');
   });
 
   /**
