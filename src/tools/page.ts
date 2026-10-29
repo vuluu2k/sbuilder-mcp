@@ -2293,6 +2293,22 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
       const d = session.current();
       const guard: GuardOpts = { force, forced: [] };
       const forcedOf = () => (guard.forced!.length ? { forced: [...new Set(guard.forced)] } : {});
+      // EVERY copy's id, not just the root's: editing the copied row's answer
+      // used to take a whole sb_outline to find (TTG gap #53) — onto another
+      // page too (#77). CAPPED: the map grows with the subtree, and a 200-node
+      // section would pour 200 pairs into the reader. Past the cap, the copy's
+      // top level only.
+      const copiesOf = (map: Record<string, string>, from: PageDoc, root: string): Record<string, unknown> => {
+        const entry = (k: string) => [k, [map[k], from.doc.nodes[k]?.data.type ?? '']];
+        const all = Object.keys(map);
+        if (all.length <= DUPLICATE_COPIES_CAP) return { copies: Object.fromEntries(all.map(entry)) };
+        const top = [root, ...childrenOf(from.doc, root)].filter((k) => k in map).slice(0, DUPLICATE_COPIES_CAP);
+        const how = ctx.notices.once(
+          'duplicate-truncated',
+          'copies holds the copy and its direct children only (copied counts every node); a deeper sb_outline reads the rest.',
+        );
+        return { copied: all.length, copies: Object.fromEntries(top.map(entry)), copies_truncated: true, ...(how ? { copies_note: how } : {}) };
+      };
       if (!to_page_id) {
         if (to_site_id || parent_id || index !== undefined) {
           throw new Error('sbuilder: to_site_id, parent_id and index go with to_page_id — the page the copy lands on.');
@@ -2303,30 +2319,7 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
           return text({ dry_run: true, would_copy: ids.length, ...(refuse ? { would_refuse: refuse } : {}), ...forcedOf() });
         }
         await session.applyAndSave(patches);
-        // EVERY copy's id, not just the root's: editing the copied row's answer
-        // used to take a whole sb_outline to find (TTG gap #53).
-        // CAPPED: the map grows with the subtree, and a 200-node section would
-        // pour 200 pairs into the reader. Past the cap, the copy's top level only.
-        const entry = (from: string) => [from, [map[from], d.doc.nodes[from]?.data.type ?? '']];
-        const all = Object.keys(map);
-        if (all.length <= DUPLICATE_COPIES_CAP) {
-          return text({ duplicated: id, into: ids[0], copies: Object.fromEntries(all.map(entry)), rev: d.rev, ...forcedOf() });
-        }
-        const top = [id, ...childrenOf(d.doc, id)].filter((k) => k in map).slice(0, DUPLICATE_COPIES_CAP);
-        const how = ctx.notices.once(
-          'duplicate-truncated',
-          'copies holds the copy and its direct children only (copied counts every node); a deeper sb_outline reads the rest.',
-        );
-        return text({
-          duplicated: id,
-          into: ids[0],
-          copied: all.length,
-          copies: Object.fromEntries(top.map(entry)),
-          copies_truncated: true,
-          ...(how ? { copies_note: how } : {}),
-          rev: d.rev,
-          ...forcedOf(),
-        });
+        return text({ duplicated: id, into: ids[0], ...copiesOf(map, d, id), rev: d.rev, ...forcedOf() });
       }
 
       // ONTO ANOTHER PAGE — the editor's paste (`useCanvasClipboard.ts`).
@@ -2391,11 +2384,12 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
         reconciled = { copiedAssets: r.copiedAssets ?? 0, droppedRefs: r.droppedRefs ?? [] };
       }
       await session.open(toSite, to_page_id);
-      const { patches, ids } = place(session.current());
+      const { patches, ids, map } = place(session.current());
       await session.applyAndSave(patches);
       return text({
         copied: nodes,
         into: ids[0],
+        ...copiesOf(map, src, id),
         onto: { site_id: toSite, page_id: to_page_id },
         open_page: `${to_page_id} — the session now edits the page the copy landed on`,
         ...(reconciled ?? {}),

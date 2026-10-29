@@ -58,7 +58,9 @@ export function summarize(name: string, args: Record<string, unknown>): string {
   const parts = [
     str(spec?.type),
     str(args.id),
+    str(args.template_id),
     args.parent_id ? `under ${str(args.parent_id)}` : '',
+    args.to_page_id ? `onto ${str(args.to_page_id)}` : '',
     edits.join(', '),
     str(args.action),
   ].filter(Boolean);
@@ -236,8 +238,19 @@ export function registerUndoTools(server: McpServer, ctx: ToolContext, pages: Pa
         const otherPage = (e: UndoEntry) => !all && !!mine && e.operationId === PAGE_SOURCE_OP && e.path !== mine;
         const undoable = every.filter((e) => !otherPage(e));
         const hidden = every.length - undoable.length;
+        // THE OPEN PAGE'S SAVES ARE SAID ONCE (TTG gap #77): twenty rows each
+        // repeated the operation id, the full source path and the two field
+        // names (~6 KB). Other rows keep theirs — they are what tells them apart.
+        const own = (e: UndoEntry) => !!mine && e.operationId === PAGE_SOURCE_OP && e.path === mine;
+        const rows = undoable.map((e) => {
+          if (!own(e)) return e;
+          const { operationId, path, fields, ...rest } = e;
+          void operationId, path, fields;
+          return rest;
+        });
         return text({
-          undoable,
+          ...(undoable.some(own) ? { page_saves: `rows with no path are saves of the open page (${mine})` } : {}),
+          undoable: rows,
           ...(hidden ? { other_pages: hidden, other_pages_note: 'Saves to other pages; all:true lists them.' } : {}),
           ...(every.length === 0
             ? {

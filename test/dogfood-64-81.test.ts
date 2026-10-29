@@ -10,6 +10,7 @@ import type { Box, Shot } from '../src/vision/shoot.js';
 import { fakePlatform } from './helpers/platform.js';
 import { readinessGaps } from '../src/domains/site/readiness.js';
 import { animationNote } from '../src/domains/site/vocabulary.js';
+import { summarize } from '../src/tools/undo.js';
 
 /**
  * TTG GAPS #64–#81, found building a blog and a landing page on a Vietnamese
@@ -347,6 +348,49 @@ describe('#71 #77 patterns and the pop-up seed speak the site\'s language; templ
       await call('sb_store', { site_id: 's1', action: 'overlay_attach', kind: 'popup', dry_run: false });
       expect(texts(created)).toEqual(expect.arrayContaining(['Đóng', 'Đã hiểu']));
       expect(texts(created)).not.toContain('Got it');
+    } finally {
+      await close();
+    }
+  });
+});
+
+describe('#77 a cross-page sb_duplicate returns the copies map too', () => {
+  it('to_page_id answers old → [new, type] like the same-page call', async () => {
+    const p = fakePlatform();
+    const { call, close } = await p.connect();
+    try {
+      await call('sb_page_open', { site_id: 's1', page_id: 'pg_1' });
+      const add = await call('sb_add', { parent_id: 'ROOT', dry_run: false, spec: { type: 'flex-section', children: [{ type: 'heading', specials: { text: 'A' } }] } });
+      const section = Object.entries(add.json.added as Record<string, string>).find(([, t]) => t === 'flex-section')![0];
+      const r = await call('sb_duplicate', { id: section, to_page_id: 'pg_2', dry_run: false });
+      expect(r.isError, r.text).toBe(false);
+      const copies = r.json.copies as Record<string, [string, string]>;
+      expect(copies[section][1]).toBe('flex-section');
+      expect(Object.values(copies).map((c) => c[1])).toContain('heading');
+    } finally {
+      await close();
+    }
+  });
+});
+
+describe('#77 the sb_undo listing is compact and names the template', () => {
+  it('a template_use row says which template; open-page rows do not repeat the operation and path', async () => {
+    expect(summarize('sb_template_use', { template_id: 'sb_faq', page_id: 'pg_1' })).toContain('sb_faq');
+    const p = fakePlatform();
+    const { call, close } = await p.connect();
+    try {
+      await call('sb_page_open', { site_id: 's1', page_id: 'pg_1' });
+      await call('sb_add', { parent_id: 'ROOT', dry_run: false, spec: { type: 'flex-section' } });
+      await call('sb_add', { parent_id: 'ROOT', dry_run: false, spec: { type: 'flex-section' } });
+      const r = await call('sb_undo', {});
+      const rows = r.json.undoable as Array<Record<string, unknown>>;
+      expect(rows.length).toBe(2);
+      for (const row of rows) {
+        expect(row.operationId).toBeUndefined();
+        expect(row.path).toBeUndefined();
+        expect(row.tool).toBe('sb_add');
+      }
+      expect(String(r.json.page_saves)).toMatch(/pg_1/);
     } finally {
       await close();
     }

@@ -38,7 +38,9 @@ describe('sb_undo on a page', () => {
     expect(afterDup.nodes[section].data.nodes).toHaveLength(2);
 
     const list = await undoable(call);
-    expect(list[0].path).toBe(PATH);
+    // The open page's saves carry no path of their own (TTG gap #77) — the tool says which write.
+    expect(list[0].path).toBeUndefined();
+    expect(list[0].tool).toBe('sb_duplicate');
 
     // A dry run sends nothing and changes nothing.
     const writes = p.writes.length;
