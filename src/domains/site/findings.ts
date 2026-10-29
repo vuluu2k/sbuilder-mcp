@@ -218,6 +218,10 @@ export const FIX: Record<string, string> = {
     '{ "position": "sticky" } — sb_set seeds the offset and the layer order with it. Until ' +
     'then the platform compiles no rule for this state at all, so the override is stored, ' +
     'published and never painted. To drop it instead, remove the stuck slot.',
+  hidden_desktop_dead:
+    'To hide it at ≥1440px: sb_set id "<id>", namespace config, keys { "hidden": true } (lands at base). ' +
+    'To show it: sb_set id "<id>", namespace config, unset ["hidden"]. Either call also clears the dead ' +
+    'desktop slot.',
   // FORM DOCUMENT findings (`sb_page_open form_id`) — stored by the platform, answerable by nobody.
   form_options_empty:
     'Give it choices: sb_set id "<id>", namespace specials, keys { "options": ["…", "…"] } — ' +

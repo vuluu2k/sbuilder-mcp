@@ -610,6 +610,19 @@ export function setKeys(
     if (Object.keys(seeds).length) keys = { ...seeds, ...keys };
   }
 
+  // A DEAD `responsive.desktop.config.hidden` — where sb_set wrote a desktop
+  // `hidden` before 0.98.6, and read by nothing (render/css.go hiddenAt reads
+  // base for desktop). A desktop/base write or unset of `hidden` now lands at
+  // base, so it would never reach that slot: clear it in the same call.
+  const deskCfg = (doc.node(id) as { responsive?: Record<string, { config?: object } | undefined> }).responsive?.desktop?.config ?? {};
+  const deadHidden: Patch[] =
+    namespace === 'config' &&
+    'hidden' in deskCfg &&
+    ('hidden' in keys || (opts.unset ?? []).includes('hidden')) &&
+    (opts.base || (opts.breakpoint ?? 'desktop') === 'desktop')
+      ? [{ op: 'unset', path: ['nodes', id, 'responsive', 'desktop', 'config', 'hidden'] }]
+      : [];
+
   if (opts.base) {
     // Base IS legitimate, and this used to throw for anything that was not an
     // identity key — a refusal built on a misread of the platform's responsive
@@ -636,6 +649,7 @@ export function setKeys(
         value: v,
       })),
       ...removals,
+      ...deadHidden,
       ...(rebind ? [rebind] : []),
     ];
   }
@@ -672,6 +686,7 @@ export function setKeys(
       path: ['nodes', id, 'responsive', bp, namespace, k],
     })),
     ...unsetSplit.base.map((k) => ({ op: 'unset' as const, path: ['nodes', id, namespace, k] })),
+    ...deadHidden,
     ...(rebind ? [rebind] : []),
   ];
 }

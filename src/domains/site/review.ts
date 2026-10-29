@@ -1274,6 +1274,25 @@ export function reviewDesign(
       });
     }
 
+    // A DEAD DESKTOP `hidden`. Before 0.98.6 sb_set's default desktop write put
+    // config.hidden in responsive.desktop, which nothing reads: desktop takes
+    // BASE config.hidden (render/css.go hiddenAt), so the node still shows.
+    const deskHidden = (n as { responsive?: Record<string, { config?: Record<string, unknown> } | undefined> })
+      .responsive?.desktop?.config;
+    if (deskHidden && 'hidden' in deskHidden) {
+      const baseHidden = (n as { config?: Record<string, unknown> }).config?.hidden === true;
+      out.push({
+        code: 'hidden_desktop_dead',
+        nodeId: id,
+        type,
+        problem:
+          `responsive.desktop.config.hidden (${JSON.stringify(deskHidden.hidden)}) is read by nothing — desktop reads base ` +
+          `config.hidden, so this node ${baseHidden ? 'is hidden at ≥1440px by base, not by this slot' : 'still shows at ≥1440px'}.`,
+        key: 'config.hidden',
+        fix: fill('hidden_desktop_dead', { id }),
+      });
+    }
+
     const bindings =
       (n as unknown as { bindings?: Array<{ source?: string; field?: string }> }).bindings ?? [];
 

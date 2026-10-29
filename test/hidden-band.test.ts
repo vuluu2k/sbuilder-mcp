@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { fakePlatform } from './helpers/platform.js';
 import { PageDoc } from '../src/domains/site/document.js';
 import { addSubtree, setKeys } from '../src/domains/site/builder.js';
+import { reviewDesign } from '../src/domains/site/review.js';
 
 /**
  * `config.hidden` IS PER BAND AND DOES NOT CASCADE (render/css.go hiddenAt,
@@ -30,6 +31,30 @@ describe('config.hidden lands where each band reads it', () => {
     expect(paths).not.toContain(`nodes.${id}.responsive.desktop.config.hidden`);
     const un = setKeys(d, id, {}, { namespace: 'config', unset: ['hidden'] }).map((p) => p.path.join('.'));
     expect(un).toEqual([`nodes.${id}.config.hidden`]);
+  });
+
+  it('a desktop (or base) write of hidden also clears a dead responsive.desktop.config.hidden left by sb_set before 0.98.6', () => {
+    const { d, id } = page();
+    // What an older sb_set stored: the desktop slot, read by nothing.
+    d.apply([{ op: 'set', path: ['nodes', id, 'responsive', 'desktop', 'config', 'hidden'], value: true }]);
+    const un = setKeys(d, id, {}, { namespace: 'config', unset: ['hidden'] }).map((p) => p.path.join('.'));
+    expect(un.sort()).toEqual([`nodes.${id}.config.hidden`, `nodes.${id}.responsive.desktop.config.hidden`].sort());
+    const set = setKeys(d, id, { hidden: true }, { namespace: 'config', base: true }).map((p) => `${p.op}:${p.path.join('.')}`);
+    expect(set).toContain(`unset:nodes.${id}.responsive.desktop.config.hidden`);
+    // A narrower write leaves it alone — it is not that band's slot.
+    const mob = setKeys(d, id, { hidden: true }, { namespace: 'config', breakpoint: 'mobile' }).map((p) => p.path.join('.'));
+    expect(mob).toEqual([`nodes.${id}.responsive.mobile.config.hidden`]);
+  });
+
+  it('sb_review reports a dead responsive.desktop.config.hidden, and the fix clears it', () => {
+    const { d, id } = page();
+    d.apply([{ op: 'set', path: ['nodes', id, 'responsive', 'desktop', 'config', 'hidden'], value: true }]);
+    const f = reviewDesign(d).find((x) => x.code === 'hidden_desktop_dead');
+    expect(f?.nodeId).toBe(id);
+    expect(f?.problem).toMatch(/1440/);
+    expect(f?.fix).toMatch(/unset/);
+    d.apply(setKeys(d, id, {}, { namespace: 'config', unset: ['hidden'] }));
+    expect(reviewDesign(d).some((x) => x.code === 'hidden_desktop_dead')).toBe(false);
   });
 
   it('a narrower breakpoint keeps its own slot', () => {
@@ -109,6 +134,66 @@ describe('hiding at base says it hides only the desktop band, once', () => {
         },
       });
       expect(band(all)).toEqual([]);
+    } finally {
+      await close();
+    }
+  });
+});
+
+const NARROW = ['laptop', 'tablet', 'mobile'] as const;
+const hideAt = (id: string, bps: readonly string[]) => ({
+  edits: bps.map((breakpoint) => ({ id, namespace: 'config', keys: { hidden: true }, breakpoint })),
+  dry_run: false,
+});
+
+describe('hidden_band counts a band as showing only when no ancestor hides it there', () => {
+  it('sb_set: an ancestor hidden at the narrow bands makes a child\'s base hide complete', async () => {
+    const { call, close, id } = await open();
+    try {
+      await call('sb_set', hideAt(id, NARROW));
+      const kid = ((await call('sb_add', { parent_id: id, spec: { type: 'flex-block' }, dry_run: false })).json.added as string[])[0];
+      expect(band(await call('sb_set', { id: kid, namespace: 'config', keys: { hidden: true } }))).toEqual([]);
+    } finally {
+      await close();
+    }
+  });
+
+  it('sb_set: an ancestor hidden at mobile alone leaves laptop and tablet named, mobile not', async () => {
+    const { call, close, id } = await open();
+    try {
+      await call('sb_set', hideAt(id, ['mobile']));
+      const kid = ((await call('sb_add', { parent_id: id, spec: { type: 'flex-block' }, dry_run: false })).json.added as string[])[0];
+      const [c] = band(await call('sb_set', { id: kid, namespace: 'config', keys: { hidden: true } }));
+      expect(c.problem).toMatch(/laptop, tablet still show/);
+      expect(c.fix).not.toMatch(/mobile/);
+    } finally {
+      await close();
+    }
+  });
+
+  it('sb_add: parent_id\'s ancestors count', async () => {
+    const { call, close, id } = await open();
+    try {
+      await call('sb_set', hideAt(id, NARROW));
+      const mid = ((await call('sb_add', { parent_id: id, spec: { type: 'flex-block' }, dry_run: false })).json.added as string[])[0];
+      expect(band(await call('sb_add', { parent_id: mid, spec: { type: 'flex-block', config: { hidden: true } } }))).toEqual([]);
+    } finally {
+      await close();
+    }
+  });
+
+  it('sb_add: an outer spec node hidden at the narrow bands covers its hidden child', async () => {
+    const { call, close, id } = await open();
+    try {
+      const r = await call('sb_add', {
+        parent_id: id,
+        spec: {
+          type: 'flex-block',
+          responsive: { laptop: { config: { hidden: true } }, tablet: { config: { hidden: true } }, mobile: { config: { hidden: true } } },
+          children: [{ type: 'flex-block', config: { hidden: true } }],
+        },
+      });
+      expect(band(r)).toEqual([]);
     } finally {
       await close();
     }
