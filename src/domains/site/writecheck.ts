@@ -533,7 +533,7 @@ export function cascadeTail(node: Slots, written: Record<string, Record<string, 
   return out;
 }
 
-type HiddenSlots = { config?: Record<string, unknown>; responsive?: Record<string, { config?: Record<string, unknown> } | undefined> };
+export type HiddenSlots = { config?: Record<string, unknown>; responsive?: Record<string, { config?: Record<string, unknown> } | undefined> };
 
 /**
  * `config.hidden` IS PER BAND AND NEVER CASCADES (render/css.go hiddenAt,
@@ -542,9 +542,12 @@ type HiddenSlots = { config?: Record<string, unknown>; responsive?: Record<strin
  * base expects it gone everywhere, so say which bands still show it — once per
  * process, since the fact is the same for every node. `node` is AS IT WILL BE.
  */
-export function hiddenBand(node: HiddenSlots, id?: string): CheckedNote[] {
+export function hiddenBand(node: HiddenSlots, id?: string, above: readonly HiddenSlots[] = []): CheckedNote[] {
   if (node.config?.hidden !== true) return [];
-  const shown = ['laptop', 'tablet', 'mobile'].filter((bp) => node.responsive?.[bp]?.config?.hidden !== true);
+  // A band an ANCESTOR hides there is not showing this node either (`above`).
+  const shown = ['laptop', 'tablet', 'mobile'].filter((bp) =>
+    [node, ...above].every((n) => n.responsive?.[bp]?.config?.hidden !== true),
+  );
   if (!shown.length) return [];
   return [
     {
@@ -565,16 +568,21 @@ export function hiddenBand(node: HiddenSlots, id?: string): CheckedNote[] {
 }
 
 /** The same, for every node of a nested `sb_add` spec, as each will be born. */
-export function specCheck(spec: NodeSpec, idOf?: ReadonlyMap<NodeSpec, string>): CheckedNote[] {
+export function specCheck(
+  spec: NodeSpec,
+  idOf?: ReadonlyMap<NodeSpec, string>,
+  above: readonly HiddenSlots[] = [],
+): CheckedNote[] {
   const out: CheckedNote[] = [];
-  const walk = (s: NodeSpec) => {
+  const walk = (s: NodeSpec, up: readonly HiddenSlots[]) => {
     // addSubtree's minted id, so a per-node note names (and dedupes on) its node.
     const id = idOf?.get(s);
     const d = ELEMENTS[s.type]?.defaults;
     const born = d?.specials ?? {};
     if (s.config) out.push(...writeCheck(s.type, 'config', s.config));
     // Born as addSubtree stores it: a desktop-slot `hidden` lands at base.
-    out.push(...hiddenBand({ config: { hidden: s.responsive?.desktop?.config?.hidden ?? s.config?.hidden }, responsive: s.responsive }, id));
+    const self: HiddenSlots = { config: { hidden: s.responsive?.desktop?.config?.hidden ?? s.config?.hidden }, responsive: s.responsive };
+    out.push(...hiddenBand(self, id, up));
     for (const slot of Object.values(s.responsive ?? {})) if (slot.config) out.push(...writeCheck(s.type, 'config', slot.config));
     if (s.responsive) {
       const seeded = (d?.responsive ?? {}) as Slots['responsive'];
@@ -605,9 +613,9 @@ export function specCheck(spec: NodeSpec, idOf?: ReadonlyMap<NodeSpec, string>):
         });
       }
     }
-    for (const c of s.children ?? []) walk(c);
+    for (const c of s.children ?? []) walk(c, [self, ...up]);
   };
-  walk(spec);
+  walk(spec, above);
   return out;
 }
 

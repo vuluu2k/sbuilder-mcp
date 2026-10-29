@@ -40,10 +40,10 @@ import { skinLevelNote } from '../domains/site/fieldskin.js';
 import { siteTheme } from '../domains/site/theme-fetch.js';
 import { ensureSiteTheme } from './theme.js';
 import { request, redact, watchPageWrites, onPageSourceWrite, onGlobalWrite, onFormDocumentWrite } from '../transport/http.js';
-import { SPEC_GLOBAL_ID, SPEC_GLOBAL_REV, SPEC_OVERLAY_ID, SPEC_OVERLAY_REV, subtreeIds, type NodeLike } from '../core/tree.js';
+import { SPEC_GLOBAL_ID, SPEC_GLOBAL_REV, SPEC_OVERLAY_ID, SPEC_OVERLAY_REV, subtreeIds, ancestors, type NodeLike } from '../core/tree.js';
 import { siteToken } from './credentialpick.js';
 import { validateForSave } from '../domains/site/validate.js';
-import { cascadeTail, formDocChecks, hiddenBand, sayChecks, specCheck, writeCheck, type CheckedNote } from '../domains/site/writecheck.js';
+import { cascadeTail, formDocChecks, hiddenBand, sayChecks, specCheck, writeCheck, type CheckedNote, type HiddenSlots } from '../domains/site/writecheck.js';
 import { reviewDesign, REVIEW_NOTICE } from '../domains/site/review.js';
 import { exampleCopy } from '../domains/site/examplecopy.js';
 import { compactFindings } from '../domains/site/findings.js';
@@ -1627,7 +1627,7 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
         .join(' ');
       // Keys an element does not read, and values it does not know — on EVERY
       // node of the nested spec, as each will be born. Warned, still written.
-      const found = sayChecks([...specCheck(spec, idOf), ...session.formChecks(patches)], say);
+      const found = sayChecks([...specCheck(spec, idOf, [parent_id, ...ancestors(d.doc, parent_id)].map((a) => d.doc.nodes[a] as HiddenSlots)), ...session.formChecks(patches)], say);
       const checks = found.length ? { checks: found } : {};
       // A base-only key in a breakpoint slot lands at BASE (addSubtree routes it,
       // as sb_set does) and so reaches every width — routed AND said.
@@ -1859,7 +1859,7 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
         if (e.namespace !== 'config' || e.state || e.keys.hidden !== true || (!e.base && bp !== 'desktop') || !d.doc.nodes[e.id]) return [];
         const probe = { nodes: { [e.id]: JSON.parse(JSON.stringify(d.doc.nodes[e.id])) } };
         applyPatches(probe, patches.filter((p) => p.path[0] === 'nodes' && p.path[1] === e.id));
-        return hiddenBand(probe.nodes[e.id], e.id);
+        return hiddenBand(probe.nodes[e.id], e.id, ancestors(d.doc, e.id).map((a) => d.doc.nodes[a] as HiddenSlots));
       });
       const found = sayChecks([...checked, ...tail, ...hidden, ...session.formChecks(patches)], say);
       const checks = found.length ? { checks: found } : {};

@@ -659,8 +659,12 @@ chính seed của element lật lại ở một độ rộng hẹp hơn spec kh�
 `responsive.mobile.style.flexDirection` để giữ hàng), `hidden_band` (`config.hidden: true`
 ở base hoặc desktop trong khi `laptop`/`tablet`/`mobile` không ẩn — `hidden` không bao giờ
 cascade, nên ở base nó chỉ ẩn node ở ≥1440px; muốn ẩn mọi độ rộng thì ghi `hidden: true` ở base
-VÀ từng breakpoint hẹp hơn, một lệnh `sb_set` với `edits[]`). `config.hidden` ghi ở desktop được
-ghi vào BASE, chỗ duy nhất desktop đọc — `responsive.desktop.config.hidden` không ai đọc.
+VÀ từng breakpoint hẹp hơn, một lệnh `sb_set` với `edits[]`; dải nào một node CHA đã ẩn thì không
+tính là còn hiện — với `sb_add` là chuỗi cha của `parent_id` và các node ngoài của chính spec).
+`config.hidden` ghi ở desktop được
+ghi vào BASE, chỗ duy nhất desktop đọc — `responsive.desktop.config.hidden` không ai đọc; ghi
+hoặc `unset` `hidden` ở desktop hay base cũng xoá luôn slot chết đó, và `sb_review` báo nó là
+`hidden_desktop_dead`.
 `unknown_key` cũng báo khi tên control
 của một bộ CHỌN ICON bị ghi như key — `config.icon` trên `icon` render ngôi sao mặc định; phần
 sửa chỉ ra `specials.name`. Mỗi cảnh báo nói một lần mỗi process; dry run hiện nó mà không tiêu, nên
@@ -1695,6 +1699,7 @@ tài liệu:
 | `sticky_blocked` | Node đã ghim nằm dưới một ancestor cắt tràn. Sticky bám theo ancestor CUỘN ĐƯỢC gần nhất, nên ancestor đó trở thành chỗ bám và node ghim trong một hộp không bao giờ cuộn. Nó không nhúc nhích, và không gì báo cả. `key` chỉ ancestor cần sửa, không phải node |
 | `order_goes_nowhere` | Trang vừa cộng tổng giỏ vừa có form, mà không có gì trên `form:success` đưa khách đi đâu. Đơn được tạo còn trang đứng yên, mọi dòng tổng giờ là 0 vì giỏ vừa bị dọn — một đơn thành công trông y như đơn hỏng. `afterSubmit: { action: "redirect", pageId | url }` của form record giờ CÓ điều hướng (platform đóng dấu nó thành `sentRedirect` và đi theo sau chuỗi `form:success`), nhưng một `pageId` trỏ tới trang chưa publish sẽ lặng lẽ quay về thông báo, và kiểm tra này chỉ đọc event trên node — nên event `form:success` là cách sửa nó công nhận. Khi danh sách form của site cho biết form là loại gì thì chỉ form `order` mới tính, và tổng tiền của ngăn giỏ (overlay có trên mọi trang) không bao giờ tính — nên trang đăng nhập không phải trang thanh toán |
 | `hover_dead` | Hover được lưu ở `states.hover` trên element giữ hover ở chỗ khác — `button` giữ nó trong map phẳng `config.stateHover` mà renderer của chính nó compile. Được lưu, được publish, không ai vẽ. Mọi site server này dựng trước khi biết khác biệt đó đều dính |
+| `hidden_desktop_dead` | Có `responsive.desktop.config.hidden` — chỗ `sb_set` ghi `hidden` ở desktop trước 0.98.6. Không gì đọc nó (`render/css.go` hiddenAt đọc base cho desktop), nên node vẫn hiện ở ≥1440px trừ khi base `config.hidden` được đặt. Sửa: `sb_set` `hidden: true` (vào base) hoặc `unset: ["hidden"]`; cả hai đều xoá slot chết |
 | `stuck_no_host` | Override `stuck` trên node không có gì được ghim ở trên. `render/css.go` chỉ sinh CSS stuck khi có stuck host, nên phần tạo dáng được lưu, save, publish và không bao giờ vẽ. Thường do host bị bỏ ghim về sau, hoặc do import |
 | `no_h1` | Trang có heading mà không cái nào là `h1`. Mọi `heading` sinh ra là h2 (`specials.htmlTag`), `text` / `text-dataset` cũng đọc key đó, nên trang dựng ở đây — và mọi trang platform seed — không có tiêu đề chính cho máy tìm kiếm hay trình đọc màn hình. Canvas không hiện tag. Báo trên heading đầu tiên CỦA TRANG — dòng thương hiệu trong header dùng chung được bỏ qua, theo cả hai stamp (`globalRef`/`globalId`); đặt h1 lên đúng heading nói về trang, một cái thôi. Không bao giờ báo trong form document — trang nhúng form mới giữ h1 |
 | `invalid_action` | Sự kiện đã lưu có action mà element không hỗ trợ trên trigger đó (nút đã gắn mua hàng chỉ nhận `bindingEvents`). Được lưu nhưng không bao giờ chạy |

@@ -861,4 +861,8 @@ platform treats an unproven guard as indistinguishable from an absent one.
   `hidden:true` hides ≥1440px alone. `splitBaseOnly(…, bp)` routes a desktop `hidden` to base (not
   reported as base-only — it is not, elsewhere), and `hidden_band` (`writecheck.ts`, once per
   process) says which bands still show it and to write each. Warned, not auto-spread: hiding on
-  desktop only is a real design (the chrome's desktop menu).
+  desktop only is a real design (the chrome's desktop menu). A band an ANCESTOR hides there is not
+  "showing" (`hiddenBand(…, above)`; `sb_add` passes `parent_id`'s chain plus the spec's outer
+  nodes). Documents from before 0.98.6 still carry the dead `responsive.desktop.config.hidden`:
+  `sb_review` reports `hidden_desktop_dead`, and a desktop/base write or `unset` of `hidden`
+  removes that slot in the same call (`setKeys` `deadHidden`) — otherwise nothing could clear it.

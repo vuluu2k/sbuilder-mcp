@@ -668,9 +668,12 @@ unsaid — `flex-block` seeds `mobile.flexDirection: "column"`, as the editor do
 stacks at 390; say `responsive.mobile.style.flexDirection` to keep it), `hidden_band`
 (`config.hidden: true` at base or desktop while `laptop`/`tablet`/`mobile` do not hide it —
 `hidden` never cascades, so base hides the node at ≥1440px only; to hide it everywhere write
-`hidden: true` at base AND each narrower breakpoint, one `sb_set` with `edits[]`). A desktop
+`hidden: true` at base AND each narrower breakpoint, one `sb_set` with `edits[]`; a band an
+ANCESTOR already hides there does not count as showing it — for `sb_add`, `parent_id`'s chain
+and the spec's own outer nodes). A desktop
 `config.hidden` is written at BASE, the only place desktop reads it —
-`responsive.desktop.config.hidden` is read by nothing. `unknown_key` also
+`responsive.desktop.config.hidden` is read by nothing; a desktop or base write or `unset` of
+`hidden` also removes that dead slot, which `sb_review` reports as `hidden_desktop_dead`. `unknown_key` also
 fires on an icon PICKER's control name written as a key — `config.icon` on an `icon` renders
 the default star; the fix names `specials.name`. Each note is said once per process; a dry run shows it
 without spending it, so the real write shows it again.
@@ -1725,6 +1728,7 @@ box. Returns `{ findings, fixes, findings_notice? }`, in document order:
 | `sticky_blocked` | A pinned node under an ancestor that clips its overflow. Sticky resolves against its nearest SCROLLING ancestor, so that one becomes it and the node pins inside a box that never scrolls. It does not move, and nothing reports it. `key` names the ancestor to fix, not the node |
 | `order_goes_nowhere` | A page that totals a cart and carries a form, with nothing on `form:success` to send the shopper anywhere. The order is created and the page stays put, every total now reading 0 because the cart was just emptied — a completed order that looks like a failed one. The form record's own `afterSubmit: { action: "redirect", pageId | url }` does navigate (the platform stamps it as `sentRedirect` and follows it after the `form:success` chain), but a `pageId` whose page is unpublished silently falls back to the message, and this check reads only the node's events — so the `form:success` event is the fix it recognises. Only an `order` form counts when the site's form list says what the form is, and the cart drawer's own total (an overlay on every page) never does — so a login page is not a checkout |
 | `hover_dead` | A hover stored in `states.hover` on an element that keeps its hover somewhere else — a `button` keeps it in the flat `config.stateHover` map its own renderer compiles. Stored, published, painted by nobody. Every site this server built before it learned the difference carries these |
+| `hidden_desktop_dead` | `responsive.desktop.config.hidden` is present — where `sb_set` wrote a desktop `hidden` before 0.98.6. Nothing reads it (`render/css.go` hiddenAt reads base for desktop), so the node shows at ≥1440px unless base `config.hidden` is set. Fix: `sb_set` `hidden: true` (lands at base) or `unset: ["hidden"]`; either clears the dead slot |
 | `stuck_no_host` | A `stuck` override on a node with nothing pinned above it. `render/css.go` emits stuck CSS only under a stuck host, so the styling is stored, saved, published and never painted. Usually a host that was un-pinned later, or an import |
 | `no_h1` | The page has headings and none is an `h1`. Every `heading` ships as h2 (`specials.htmlTag`), and `text` / `text-dataset` take the same key, so a page built here — and every page the platform seeds — has no main title for a search engine or a screen reader. Nothing on the canvas shows the tag. Named on the page's OWN first heading — a shared header's brand line is skipped, by either stamp (`globalRef`/`globalId`); put the h1 on the one the page is about, once. Never in a form document — the page embedding the form owns the h1 |
 | `invalid_action` | A stored event whose action the element does not offer on that trigger (a purchase-bound button offers only `bindingEvents`). Stored, never fires |
