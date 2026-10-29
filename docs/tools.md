@@ -1778,6 +1778,7 @@ box. Returns `{ findings, fixes, findings_notice? }`, in document order:
 | `href_params_stranded` | `hrefParams` the renderer does not apply: the click is not ONE Open page / Go to URL action, or the node is purchase-bound |
 | `record_favorite_invalid` | A `toggle_record_favorite` heart outside any record row / record page, or a `show_record_favorites` tab whose `targetId` is not a non-relation record list or whose `view` is not `favorites` / `all` — it does nothing |
 | `dead_binding_field` | A binding field outside `specials` — stored, published, and ignored |
+| `duplicate_binding_field` | Two or more bindings write the same field. The renderer applies them in order and the LAST resolved one renders; the problem names it. `sb_bind` on that field replaces the binding and drops the duplicates |
 | `unknown_element` | A type the catalog does not know; run `npm run codegen` |
 | `unlinked_form` | A `form` naming no form — composes nothing and publishes an EMPTY BOX. The platform stays deliberately quiet about this one |
 | `link_colour` | An `<a>` in `specials.textHtml` with no inline `color` (`background-color` / `border-color` do not count): nothing styles a link inside text (no element control, no theme token), so it renders the browser's default blue `rgb(0,0,238)`, underlined. Fix: `<a href="…" style="color:inherit">` or the brand colour — the rich-text gate keeps a style color. `sb_add` / `sb_set` warn the same as `link_colour` |
@@ -1958,6 +1959,7 @@ reading the document cannot find:
 | Code | Measured |
 | --- | --- |
 | `off_canvas` | Content past the viewport; on a phone it also drags a horizontal scrollbar across the page |
+| `wider_than_viewport` | A `fixed`/`sticky`/`absolute` box overhanging the viewport by more than 1px, with its width against the viewport's — a 400px cart drawer on a 390px phone. The fix is `maxWidth: "100%"` at mobile. A box the browser does not show (`visibility` hidden, under `aria-hidden`) is never judged, so a closed drawer parked off-screen is silent |
 | `text_too_small` | Body text rendering under 12px, only where text actually shows |
 | `overlap` | Two elements on top of each other — nesting, a pixel of rounding, and a box inside a `fixed`/`sticky`/`absolute` layer against one outside it (a floating CTA over whatever is under the viewport corner) are not counted; two boxes inside the same layer still are |
 | `title_bar_stranded` | A heading with one action beside it, the action well short of the row's right edge — side-by-side only; a row or heading that declares `center` is skipped |
@@ -1967,7 +1969,9 @@ Each carries the **widths** it happens at, because that is most of the diagnosis
 1440 and broken at 390 is a responsive failure, not a broken element. They arrive as
 `layout`, with `layout_fixes` as the legend and `layout_notice` — measured, not read off the
 document; fix at the breakpoint named — the first time in a process. None of the three is
-present when nothing was measured, or when `node_id` frames one element.
+present when nothing was measured, or when `node_id` frames one element — except a `node_id`
+inside an overlay (the cart drawer, a menu drawer, a pop-up): `sb_look` opens it, and that
+overlay's own subtree is measured open.
 
 It does not judge taste. Whether a hero reads well is not measurable, and pretending
 otherwise would spend the agent's attention on what it cannot know.

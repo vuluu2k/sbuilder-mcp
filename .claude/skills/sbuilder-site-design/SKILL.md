@@ -389,7 +389,7 @@ Run these four, in this order. Three of them catch things `sb_review` cannot see
 
 1. `sb_look` at **1440, 768 and 390** — the tree cannot overflow, so a layout defect is
    invisible to every check that only reads the document.
-2. Read `layout` in the result, not just the picture. `off_canvas` and `overlap` are
+2. Read `layout` in the result, not just the picture. `off_canvas`, `wider_than_viewport` and `overlap` are
    measured on the render.
 3. Open the **published storefront URL**, not the draft preview, for any page with a
    repeater. Pass it to `sb_look` as `url`.

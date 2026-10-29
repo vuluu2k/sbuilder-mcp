@@ -23,7 +23,7 @@ import {
   recordScope,
 } from './record.js';
 import { formFieldFindings, isFormDocument } from './formdoc.js';
-import { deadNavigation, hasPurchaseBinding, liveEventTable, PAYLOAD_NEEDS, soleNavigationClick, type NodeEventLike } from './navhref.js';
+import { deadNavigation, hasPurchaseBinding, liveEventTable, PAYLOAD_NEEDS, PRODUCT_ACTION_BINDING_ID, soleNavigationClick, type NodeEventLike } from './navhref.js';
 import { unknownValueNote, unknownWriteNote, vocabularyFor, vocabularyForWrite } from './vocabulary.js';
 import { iconNote } from './icons.js';
 import { LINK_COLOUR, unstyledLinks } from './writecheck.js';
@@ -1329,7 +1329,7 @@ export function reviewDesign(
     }
 
     const bindings =
-      (n as unknown as { bindings?: Array<{ source?: string; field?: string }> }).bindings ?? [];
+      (n as unknown as { bindings?: Array<{ id?: string; source?: string; field?: string }> }).bindings ?? [];
 
     // A container with nothing in it is a band of empty space. The commonest way
     // to ship one is to add the section and then get distracted.
@@ -1662,6 +1662,30 @@ export function reviewDesign(
           fix: fill('dead_binding_field', {}),
         });
       }
+    }
+
+    // TWO BINDINGS ON ONE FIELD (TTG gap #62). ApplyBindings
+    // (render/scope/scope.go) walks them IN ORDER and each resolved source
+    // overwrites the special, so the LAST renders and the rest are dead weight
+    // that a reorder silently swaps. The purchase binding is not a field binding.
+    const byField = new Map<string, string[]>();
+    for (const b of bindings) {
+      if (!b.field || !b.source || b.id === PRODUCT_ACTION_BINDING_ID) continue;
+      byField.set(b.field, [...(byField.get(b.field) ?? []), b.source]);
+    }
+    for (const [field, sources] of byField) {
+      if (sources.length < 2) continue;
+      const wins = sources[sources.length - 1];
+      out.push({
+        code: 'duplicate_binding_field',
+        nodeId: id,
+        type,
+        key: field,
+        problem:
+          `${sources.length} bindings write ${field} (${sources.join(', ')}); the renderer applies them in ` +
+          `order, so ${wins} renders and the others are dead weight.`,
+        fix: fill('duplicate_binding_field', { id, key: field }),
+      });
     }
   }
 

@@ -1748,6 +1748,7 @@ tài liệu:
 | `href_params_stranded` | `hrefParams` renderer không áp dụng: click không phải MỘT hành động Mở trang / Đến URL, hoặc node gắn binding mua hàng |
 | `record_favorite_invalid` | Trái tim `toggle_record_favorite` nằm ngoài dòng record / trang record, hoặc tab `show_record_favorites` có `targetId` không phải danh sách record không-quan-hệ hay `view` không phải `favorites` / `all` — không làm gì |
 | `dead_binding_field` | Field binding ngoài `specials` — được lưu, được publish, và bị bỏ qua |
+| `duplicate_binding_field` | Hai binding trở lên cùng ghi một field. Renderer áp dụng theo thứ tự và binding resolve CUỐI CÙNG được hiển thị; problem nêu tên nó. `sb_bind` trên field đó thay binding và bỏ các bản trùng |
 | `unknown_element` | Type catalog không biết; chạy `npm run codegen` |
 | `unlinked_form` | `form` không trỏ tới form nào — compose ra rỗng và publish thành MỘT HỘP TRỐNG. Platform cố tình im lặng về lỗi này |
 | `example_copy` | Chữ mẫu của layout dựng sẵn chưa được thay — "Tiêu đề chính", "Lợi ích một", câu dặn agent trong ô ảnh trống, và các KHẲNG ĐỊNH bịa ("1.000+", "4,9/5", lời chứng thực ký tên người lạ). Lấy bằng cách dựng mọi pattern, trừ một danh sách ngắn nhãn dùng được nguyên ("Mua ngay", "Xem tất cả"). `sb_template_use` báo số phần tử vừa đặt còn chữ mẫu (`copy`) |
@@ -1920,6 +1921,7 @@ không tìm ra:
 | Mã | Đo được |
 | --- | --- |
 | `off_canvas` | Nội dung tràn khỏi khung nhìn; trên điện thoại còn kéo theo thanh cuộn ngang cả trang |
+| `wider_than_viewport` | Hộp `fixed`/`sticky`/`absolute` tràn khỏi khung nhìn quá 1px, nêu bề rộng của nó so với khung nhìn — cart drawer 400px trên điện thoại 390px. Cách sửa là `maxWidth: "100%"` ở mobile. Hộp trình duyệt không hiển thị (`visibility` hidden, nằm dưới `aria-hidden`) không bị xét, nên drawer đang đóng nằm ngoài màn hình không bị báo |
 | `text_too_small` | Chữ render dưới 12px, chỉ tính nơi thật sự có chữ |
 | `overlap` | Hai element đè lên nhau — lồng nhau, sai số 1px, và một hộp nằm trong lớp `fixed`/`sticky`/`absolute` so với hộp ngoài lớp đó (nút CTA nổi đè lên thứ nằm dưới góc màn hình) không tính; hai hộp trong cùng một lớp vẫn tính |
 | `title_bar_stranded` | Tiêu đề kèm một nút bên cạnh, nút cách xa mép phải của hàng — chỉ xét khi đứng cạnh nhau; hàng hoặc tiêu đề khai báo `center` được bỏ qua |
@@ -1929,7 +1931,8 @@ Mỗi lỗi kèm **các bề rộng** nó xảy ra, vì đó là phần lớn ch
 là lỗi responsive, không phải element hỏng. Chúng tới dưới `layout`, với `layout_fixes` là
 chú giải và `layout_notice` — đo trên bản render chứ không đọc từ tài liệu; sửa ở đúng
 breakpoint được nêu — lần đầu trong một process. Cả ba đều vắng mặt khi không đo được gì,
-hoặc khi `node_id` đóng khung một element.
+hoặc khi `node_id` đóng khung một element — trừ `node_id` nằm trong một overlay (cart drawer,
+menu drawer, pop-up): `sb_look` mở nó ra, và cây con của chính overlay đó được đo ở trạng thái mở.
 
 Nó không chấm thẩm mỹ. Một hero có đọc xuôi hay không thì không đo được, và giả vờ đo được
 sẽ tiêu tốn sự chú ý của agent vào thứ nó không thể biết.

@@ -23,8 +23,8 @@ describe('findings', () => {
   it('every template used by review and measure exists', () => {
     for (const code of [
       'empty_page', 'unknown_element', 'empty_container', 'empty_text', 'missing_media',
-      'placeholder_content', 'default_seed_copy', 'example_copy', 'invisible_text', 'demo_variant_options', 'form_fields_flush', 'dead_binding_source', 'dead_binding_field',
-      'off_canvas', 'text_too_small', 'overlap', 'title_bar_stranded', 'title_bar_offcenter',
+      'placeholder_content', 'default_seed_copy', 'example_copy', 'invisible_text', 'demo_variant_options', 'form_fields_flush', 'dead_binding_source', 'dead_binding_field', 'duplicate_binding_field',
+      'off_canvas', 'wider_than_viewport', 'text_too_small', 'overlap', 'title_bar_stranded', 'title_bar_offcenter',
     ]) expect(FIX[code], code).toBeTypeOf('string');
   });
 });

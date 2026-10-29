@@ -60,11 +60,30 @@ export function measureShot(shot: Shot, skip: ReadonlySet<string> = new Set(), d
     // why `reviewDesign` already skips them and this had to as well. A list
     // that is two dozen false positives long is a list nobody reads.
     if (skip.has(b.id)) continue;
+    // A box the browser does not show (a CLOSED drawer is `visibility:hidden`
+    // and translated off-screen by its own static CSS) is not a visitor's
+    // problem; the same drawer OPENED is (TTG gap #60).
+    if (b.hidden) continue;
 
-    // OFF-CANVAS. A negative x, or a right edge past the viewport, is content
-    // the visitor cannot reach — and on a phone it also drags a horizontal
-    // scrollbar across the whole page.
-    if (b.x < -SLOP || b.x + b.w > shot.width + SLOP) {
+    // A FLOATING BOX PAST THE VIEWPORT (TTG gap #60). A fixed drawer 400px wide
+    // on a 390px phone overhangs by 10px with no scrollbar to show it — headless
+    // has none, and a 24px padding hides most of it in the picture. Out of the
+    // flow nothing shrinks it, so the fix is a cap, said with the widths.
+    if (
+      (b.position === 'fixed' || b.position === 'sticky' || b.position === 'absolute') &&
+      (b.x < -1 || b.x + b.w > shot.width + 1)
+    ) {
+      out.push({
+        code: 'wider_than_viewport',
+        nodeId: b.id,
+        width: shot.width,
+        problem: `${b.position} box ${b.w}px wide on a ${shot.width}px viewport, overhanging it (${b.x} → ${b.x + b.w}).`,
+        fix: fill('wider_than_viewport', { id: b.id }),
+      });
+    } else if (b.x < -SLOP || b.x + b.w > shot.width + SLOP) {
+      // OFF-CANVAS. A negative x, or a right edge past the viewport, is content
+      // the visitor cannot reach — and on a phone it also drags a horizontal
+      // scrollbar across the whole page.
       out.push({
         code: 'off_canvas',
         nodeId: b.id,
@@ -100,6 +119,7 @@ export function measureShot(shot: Shot, skip: ReadonlySet<string> = new Set(), d
       // at those coordinates, and neither half of that pair is a defect.
       if (skip.has(b.id)) continue;
       if (a.w === 0 || a.h === 0 || b.w === 0 || b.h === 0) continue;
+      if (a.hidden || b.hidden) continue;
       // AND THE COMMENT ABOVE IS NOW IMPLEMENTED. It has always said that "an
       // absolutely-positioned decoration over a band is a design choice", and
       // nothing checked: `Box` carried no `position`, so the rule could not tell

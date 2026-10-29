@@ -1051,3 +1051,13 @@ how the committed baseline above is kept current.
   self-or-ancestor (`id`, or `@n`), computed inline in `shoot`'s evaluate (no named inner
   function — the `__name` trap); `measure` compares only boxes in the SAME layer, so a pinned
   header's own nav collision is still reported.
+
+- **A FRAMED LOOK MEASURED NOTHING, SO AN OPEN DRAWER WAS NEVER JUDGED** (TTG gap #60,
+  2026-10-29). A cart drawer `width:400px` overhung a 390px phone by 10px; headless has no
+  scrollbar and its 24px padding hid most of it, and `sb_look node_id:<drawer>` returned no
+  `layout` because a framed look ran no `measure`. Now a framed look that OPENS an overlay
+  measures that overlay's subtree (skip lifted for it alone), and `Box.hidden` (computed
+  `visibility` not `visible`, or under `aria-hidden="true"`) keeps a CLOSED one silent at the
+  box level. An out-of-flow (`fixed`/`sticky`/`absolute`) box past the viewport by >1px is
+  `wider_than_viewport` (its width vs the viewport, fix `maxWidth:100%` at mobile) instead of
+  `off_canvas`. The platform's `cartDrawerSeed` still ships no max-width — upstream (C).

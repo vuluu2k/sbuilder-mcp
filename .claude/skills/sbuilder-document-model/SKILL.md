@@ -805,7 +805,10 @@ platform treats an unproven guard as indistinguishable from an absent one.
   warns `text_markup` on tags in a plain key with an Html twin, and review counts `<key>Html`
   (and a `form-link`'s `linkText`) as content. Found building a live storefront, 2026-10-28,
   with four sibling defects: `sb_bind` appending a second binding on a bound field (it now
-  replaces in place), the shared-master warning repeated per node (now once per master per
+  replaces in place, and drops any LATER binding on that field — TTG gap #62; `ApplyBindings`,
+  `render/scope/scope.go`, walks bindings in order and the last RESOLVED source overwrites, so
+  `sb_review` reports a document that already holds two as `duplicate_binding_field`, naming
+  the one that renders), the shared-master warning repeated per node (now once per master per
   process, `shared`), `no_h1` / form-link seed noise inside a FORM document, and no word when
   a narrower-only style key rides the cascade tail to desktop (`cascade_tail`).
 - **A FILTER RENDERS ONLY `specials.filterValues`, and the EDITOR writes them on save.**

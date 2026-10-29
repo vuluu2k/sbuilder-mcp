@@ -103,6 +103,31 @@ describe('measureShot()', () => {
     expect(f.map((x) => x.code)).toEqual(['overlap']);
   });
 
+  // GAP #60 (TTG, 2026-10-29): the cart drawer carried `width:400px` and no
+  // max-width, so at 390 it overhung the left edge by 10px — "Giỏ hàng" sat
+  // flush at x=0, and the 24px padding hid most of it in the picture.
+  it('names a floating box wider than the viewport, with its width and a mobile fix', () => {
+    const f = measureShot(shot(390, [box('ca_f29bbf6a', -10, 0, 400, 900, { position: 'fixed' })]));
+    expect(f.map((x) => x.code)).toEqual(['wider_than_viewport']);
+    expect(f[0].problem).toContain('400px wide');
+    expect(f[0].problem).toContain('390px viewport');
+    expect(f[0].fix).toContain('ca_f29bbf6a');
+    expect(f[0].fix).toContain('maxWidth');
+  });
+
+  it('reports a floating box that merely overhangs, by more than a pixel', () => {
+    const f = measureShot(shot(390, [box('fb_1', 300, 0, 100, 48, { position: 'absolute' })]));
+    expect(f.map((x) => x.code)).toEqual(['wider_than_viewport']);
+    expect(measureShot(shot(390, [box('fb_1', 291, 0, 100, 48, { position: 'fixed' })]))).toEqual([]);
+  });
+
+  // A CLOSED drawer is `visibility:hidden` + translated off-screen by design
+  // (`cart-drawer/static_css.go`); only an open one is a visitor's problem.
+  it('says nothing about a box the browser does not show', () => {
+    const f = measureShot(shot(390, [box('ca_1', 400, 0, 400, 900, { position: 'fixed', hidden: true })]));
+    expect(f).toEqual([]);
+  });
+
   it('reports each overlapping pair once, not twice', () => {
     const f = measureShot(shot(1440, [box('a_1', 0, 0, 200, 100), box('b_1', 50, 50, 200, 100)]));
     expect(f.length).toBe(1);

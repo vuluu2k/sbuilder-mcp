@@ -284,6 +284,26 @@ describe.runIf(process.env.SB_BROWSER_TEST === '1')('measured against a real ren
     expect(measure(shots).filter((f) => f.code === 'overlap')).toEqual([]);
   }, 40_000);
 
+  // TTG gap #60: a 400px cart drawer on a 390px phone. Closed it is
+  // visibility:hidden and parked off-screen BY DESIGN — silent; opened (the
+  // platform's own `is-open`) it overhangs the left edge by 10px — reported.
+  it('reports an OPEN fixed drawer wider than the phone, and not a closed one', async () => {
+    const html =
+      '<style>.wb-cart-drawer{position:fixed;top:0;right:0;width:400px;height:100%;padding:24px;' +
+      'box-sizing:border-box;visibility:hidden;transform:translateX(105%)}' +
+      '.wb-cart-drawer.is-open{visibility:visible;transform:none}</style>' +
+      '<div id="ca_f29bbf6a" class="wb-cart-drawer"><h2 id="he_00000001" class="wb-heading">Giỏ hàng</h2></div>';
+    const { measure } = await import('../src/vision/measure.js');
+    const url = `data:text/html,${encodeURIComponent(html)}`;
+    const closed = await shoot(url, { widths: [390] });
+    expect(closed[0].boxes.find((b) => b.id === 'ca_f29bbf6a')?.hidden).toBe(true);
+    expect(measure(closed)).toEqual([]);
+    const open = await shoot(url, { widths: [390], open: 'ca_f29bbf6a' });
+    const found = measure(open);
+    expect(found.map((f) => [f.code, f.nodeId])).toEqual([['wider_than_viewport', 'ca_f29bbf6a']]);
+    expect(found[0].problem).toContain('400px wide on a 390px viewport');
+  }, 40_000);
+
   /**
    * THE SHOT MUST NOT PAY FOR A TIMEOUT IT KNOWS WILL NOT RESOLVE.
    *

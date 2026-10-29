@@ -99,8 +99,14 @@ export const FIX: Record<string, string> = {
   // "<key>" here is documentation, not a placeholder: this template is never
   // filled with a key, so the reader sees the form a field must take.
   dead_binding_field: 'Rebind with sb_bind and a field of the form "specials.<key>".',
+  duplicate_binding_field:
+    'Keep one: sb_bind id "<id>" field "<key>" with the source you want — it replaces the binding on ' +
+    'that field and drops the duplicates.',
   off_canvas:
     'Give it a width that can shrink — sb_set id "<id>", namespace style, keys { "maxWidth": "100%" } at this breakpoint.',
+  wider_than_viewport:
+    'Cap it at the screen: sb_set id "<id>", namespace style, keys { "maxWidth": "100%" }, ' +
+    'breakpoint "mobile" (and each other width it overhangs at).',
   text_too_small:
     'Raise it for this breakpoint: sb_set id "<id>", namespace style, keys { "fontSize": "16px" }.',
   title_bar_stranded:

@@ -205,12 +205,21 @@ export function bindNode(
   );
   if (at >= 0) {
     const prev = node.bindings[at] as { id?: string };
+    // And drop any LATER binding on the same field (TTG gap #62): the renderer
+    // applies them in order and the last one wins, so replacing only the first
+    // would leave the old source rendering. Highest index first, so each
+    // `remove` addresses the list as it still stands.
+    const extra = (node.bindings as Array<{ id?: string; field?: string }>)
+      .map((b, i) => (i > at && b?.field === field && b.id !== PRODUCT_ACTION_BINDING_ID ? i : -1))
+      .filter((i) => i >= 0)
+      .reverse();
     return [
       {
         op: 'set',
         path: ['nodes', id, 'bindings', String(at)],
         value: { id: prev.id ?? randomBytes(6).toString('hex'), source, field },
       },
+      ...extra.map((index) => ({ op: 'remove' as const, path: ['nodes', id, 'bindings'], index })),
     ];
   }
   return [
@@ -529,7 +538,16 @@ export function registerLiveTools(
       // and judging its geometry produced thirteen false off-canvas findings
       // per page on a site whose pages were correct.
       const skip = offscreenNodes(doc);
-      const visual = node_id ? [] : measure(shots, skip, doc);
+      // A framed look measures nothing — EXCEPT the overlay it opened, the one
+      // surface no whole-page look ever shows open (TTG gap #60: a 400px drawer
+      // on a 390px phone reported no layout). Judged alone: the page beneath is
+      // what a whole-page look is for.
+      const opened = openOverlay ? new Set(subtreeIds(doc, openOverlay)) : undefined;
+      const visual = opened
+        ? measure(shots, new Set([...skip].filter((id) => !opened.has(id))), doc).filter((f) => opened.has(f.nodeId))
+        : node_id
+          ? []
+          : measure(shots, skip, doc);
       const layout = compactFindings(visual);
       const layoutNotice = visual.length > 0 ? ctx.notices.once('measure', MEASURE_NOTICE) : undefined;
       // The legend rides with the first look only; the shape does not change after.

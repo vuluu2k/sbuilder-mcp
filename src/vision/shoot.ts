@@ -20,6 +20,7 @@ declare const document: {
     className: string;
     parentElement: DomEl | null;
     getBoundingClientRect(): { x: number; y: number; width: number; height: number };
+    closest(selector: string): unknown;
     textContent: string | null;
     complete?: boolean;
     naturalWidth?: number;
@@ -28,7 +29,7 @@ declare const document: {
   /** The MutationObserver root — the whole tree, so nothing that renders is missed. */
   documentElement: unknown;
 };
-declare function getComputedStyle(el: unknown): { fontSize: string; position: string };
+declare function getComputedStyle(el: unknown): { fontSize: string; position: string; visibility: string };
 declare const window: {
   innerWidth: number;
   innerHeight: number;
@@ -71,6 +72,13 @@ export interface Box {
    * collision, and `position` alone could not say so (TTG gap #29).
    */
   layer?: string;
+  /**
+   * The browser paints nothing here: computed `visibility` is not `visible`
+   * (it inherits, so a closed drawer's whole interior carries it), or it sits
+   * under `aria-hidden="true"`. A closed overlay parked off-screen BY DESIGN is
+   * not a layout defect; the same overlay opened is (TTG gap #60).
+   */
+  hidden?: true;
 }
 
 export type ShotFormat = 'jpeg' | 'png';
@@ -477,6 +485,7 @@ async function shootOne(
           hasText: own.length > 0,
           position: cs.position,
           ...(layer ? { layer } : {}),
+          ...(cs.visibility !== 'visible' || el.closest('[aria-hidden="true"]') ? { hidden: true } : {}),
         };
       });
   })) as Box[];
