@@ -2,7 +2,7 @@ import { describe, it, expect, vi, afterAll, afterEach } from 'vitest';
 import { spawn } from 'node:child_process';
 import { chromium, type Browser } from 'playwright-core';
 import { previewUrl } from '../src/vision/preview.js';
-import { capture } from '../src/vision/capture.js';
+import { capture, captureMany, crawlLinks } from '../src/vision/capture.js';
 import {
   shoot,
   closeBrowser,
@@ -13,6 +13,7 @@ import {
   ChromeStalled,
 } from '../src/vision/shoot.js';
 import { Session } from '../src/transport/auth.js';
+import { diffImages, closeDiffBrowser } from '../src/vision/imagediff.js';
 
 function ctxWith(f: typeof fetch) {
   const s = new Session('http://x', f);
@@ -94,6 +95,41 @@ describe('release()', () => {
     await release(browser, 5_000);
     expect(child.signalCode).toBe('SIGTERM');
   }, 10_000);
+
+  it('never signals pid 1 or below — kill(-1) is every process this user owns', async () => {
+    // The spy never delivers anything: the unguarded code would SIGKILL -1.
+    const kill = vi.spyOn(process, 'kill').mockImplementation(() => true);
+    try {
+      for (const id of [1, 0]) {
+        const browser = {
+          newBrowserCDPSession: async () => ({ send: async () => ({ processInfo: [{ type: 'browser', id }] }) }),
+          close: () => new Promise(() => {}),
+        } as unknown as Browser;
+        await release(browser, 50);
+      }
+      expect(kill).not.toHaveBeenCalled();
+    } finally {
+      kill.mockRestore();
+    }
+  });
+});
+
+describe('the fidelity diff browser', () => {
+  it('launches through launchChrome, so its pid is known and the test seam reaches it', async () => {
+    let launches = 0;
+    setLauncherForTest(async () => {
+      launches++;
+      return { newPage: () => Promise.reject(new Error('stub: no pages')), close: async () => {} } as unknown as Browser;
+    });
+    try {
+      const shot = { imageBase64: '', mimeType: 'image/png' as const };
+      await expect(diffImages(shot, shot)).rejects.toThrow(/stub/);
+      expect(launches).toBe(1);
+    } finally {
+      setLauncherForTest();
+      await closeDiffBrowser();
+    }
+  });
 });
 
 // Runs WITHOUT Chrome: the launcher is swapped for one that throws, which is
@@ -154,7 +190,13 @@ describe.runIf(process.env.SB_BROWSER_TEST === '1')('shoot()', () => {
   it('launches Chrome ONCE and reuses it across calls', async () => {
     // Proved by counting, not assumed: the real launcher is wrapped so every
     // launch is seen, then two looks are taken and only one launch happened.
+    //
+    // REUSE, NOT STALLS: under a loaded suite the 15s stall deadline once fired on
+    // a merely slow Chrome, the retry launched a second one, and this read "2"
+    // (review of v0.100.5). The stall path has its own stub tests; here a slow
+    // Chrome is waited for, so the count measures pooling and nothing else.
     await closeBrowser();
+    setStallForTest(60_000);
     let launches = 0;
     setLauncherForTest(async () => {
       launches++;
@@ -172,9 +214,10 @@ describe.runIf(process.env.SB_BROWSER_TEST === '1')('shoot()', () => {
       expect(launches).toBe(2);
     } finally {
       setLauncherForTest();
+      setStallForTest();
       await closeBrowser();
     }
-  }, 60_000);
+  }, 240_000);
 
   it('shoots the widths in parallel and returns them in the order asked', async () => {
     const html = '<section id="fs_1a2b3c4d" class="wb-flex-section" style="width:200px;height:50px"></section>';
@@ -554,6 +597,104 @@ describe('a Chrome that stalls, without needing Chrome', () => {
     });
     await expect(capture('data:text/html,x')).rejects.toThrow(/fresh Chrome answered/);
     expect(launches).toBe(2);
+  });
+
+  /** A stub browser counting its closes; `newPage` is the per-browser behaviour. */
+  const stub = (newPage: () => Promise<unknown>, closed: { n: number }) =>
+    ({
+      isConnected: () => true,
+      newPage,
+      close: async () => {
+        closed.n++;
+      },
+    }) as unknown as Browser;
+
+  it('a launch that answers AFTER its deadline is released, never orphaned — pool and import alike', async () => {
+    // Review of v0.100.5: the losing launch promise resolved into a Chrome nobody held.
+    setStallForTest(50);
+    let launched = 0;
+    const closed = { n: 0 };
+    setLauncherForTest(async () => {
+      await new Promise((r) => setTimeout(r, 300));
+      launched++;
+      return stub(() => Promise.reject(new Error('stub')), closed);
+    });
+    await expect(shoot('data:text/html,x', { widths: [390] })).rejects.toThrow(/did not start/);
+    await expect(capture('data:text/html,x')).rejects.toThrow(/did not start/);
+    await new Promise((r) => setTimeout(r, 500));
+    expect(launched).toBe(4); // each path retries once on a fresh Chrome
+    expect(closed.n).toBe(launched);
+  });
+
+  /** A tab that opens, then never answers anything — goto aside — not even its own close. */
+  const wedgedTab = () => ({
+    goto: async () => null,
+    evaluate: () => new Promise(() => {}),
+    addStyleTag: () => new Promise(() => {}),
+    waitForFunction: () => new Promise(() => {}),
+    screenshot: () => new Promise(() => {}),
+    close: () => new Promise(() => {}),
+  });
+
+  it('a Chrome that wedges AFTER the tab opened is given up on, and retried once', async () => {
+    setStallForTest(100);
+    let launches = 0;
+    const closed = { n: 0 };
+    setLauncherForTest(async () => {
+      launches++;
+      return stub(async () => wedgedTab(), closed);
+    });
+    await expect(shoot('data:text/html,x', { widths: [390], open: 'cd_00000001' })).rejects.toThrow(/Chrome did not/);
+    expect(launches).toBe(2);
+    await closeBrowser();
+    await expect(shoot('data:text/html,x', { widths: [390] })).rejects.toThrow(/Chrome did not/);
+    await expect(capture('data:text/html,x')).rejects.toThrow(/Chrome did not/);
+    expect(launches).toBe(6);
+  }, 30_000);
+
+  it('a site import replaces a wedged Chrome ONCE mid-run', async () => {
+    setStallForTest(100);
+    let launches = 0;
+    const closed = { n: 0 };
+    setLauncherForTest(async () => {
+      const n = ++launches;
+      let tabs = 0;
+      return stub(
+        () =>
+          n === 1
+            ? tabs++ === 0
+              ? Promise.reject(new Error('boom'))
+              : new Promise(() => {})
+            : Promise.reject(new Error('fresh')),
+        closed,
+      );
+    });
+    const out = await captureMany(['https://a.example/1', 'https://a.example/2', 'https://a.example/3']);
+    expect(out.map((o) => (o.ok ? 'ok' : o.why))).toEqual(['boom', 'fresh', 'fresh']);
+    expect(launches).toBe(2);
+    expect(closed.n).toBe(2);
+  });
+
+  it('when the fresh Chrome wedges too, the rest of a site import fails at once, not a deadline each', async () => {
+    setStallForTest(100);
+    let launches = 0;
+    setLauncherForTest(async () => {
+      launches++;
+      return stub(() => new Promise(() => {}), { n: 0 });
+    });
+    const urls = Array.from({ length: 10 }, (_, i) => `https://a.example/${i}`);
+    const t0 = Date.now();
+    const out = await captureMany(urls);
+    expect(Date.now() - t0).toBeLessThan(700);
+    expect(out).toHaveLength(10);
+    for (const o of out) expect(o.ok ? '' : o.why).toMatch(/Chrome did not open a tab/);
+    expect(launches).toBe(2);
+  });
+
+  it('a discovery crawl reports the pages it could not open', async () => {
+    setLauncherForTest(async () => stub(() => Promise.reject(new Error('boom')), { n: 0 }));
+    const r = await crawlLinks('https://a.example/', { depth: 1, canon: (u) => u });
+    expect(r.unread).toEqual([{ url: 'https://a.example/', why: 'boom' }]);
   });
 
   it('deadline() rejects a step that never settles, as ChromeStalled', async () => {

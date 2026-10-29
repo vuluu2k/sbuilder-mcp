@@ -802,7 +802,9 @@ returns to the top, so the band is back at `opacity: 0` at the moment of the sho
 one band of four came out empty on a page that was entirely correct. A script of your own
 that screenshots a page must do the same. Transitions are switched off too, so an overlay
 opened for the shot (the cart drawer's `transform .25s`) is measured where it ends, not
-mid-slide.
+mid-slide. One known gap, for custom-code pages only: a reveal chained to ANOTHER element's
+`transitionend` stays at its start, because with transitions off the browser fires
+`transitioncancel` instead. The platform's own runtime never listens for `transitionend`.
 
 **Saves first**, then mints a signed preview link and renders the page through the
 platform's own Go renderer — so the picture is of the *stored draft*, never of unsaved local
@@ -846,7 +848,9 @@ Chrome is launched on the first look and stays open for the life of the process,
 widths are captured in parallel, each in its own tab — a three-width look is roughly a
 second instead of three. Images come back as JPEG at quality 80 unless `format: "png"` is
 asked for; the format changes bytes and latency only, since the client prices an image by
-its pixel size, not its byte size.
+its pixel size, not its byte size. A Chrome that stops answering is replaced, not waited on:
+a launch gets 30s, opening a tab or reading the page 15s, and a miss relaunches once — a
+launch that answers after its deadline is closed when it arrives, never left running.
 
 
 **The draft preview DOES thread store data — judge a list page from it.** `ServePreview`
@@ -2225,7 +2229,11 @@ no browser, and it lists pages nothing links to. Only when there is none (or it 
 single page, which is what a half-configured generator emits) does the link crawl run, one
 browser navigation per page, bounded by `depth` and by the page budget. There is no knob to
 force the crawl: a caller who wants fewer pages than the sitemap offers wants `include` or
-`max_pages`, not a slower way to find the same list.
+`max_pages`, not a slower way to find the same list. A crawled page that would not open is
+listed in the dry run as `links_unread` (`{url, why}`) — its links were never followed, so a
+thin plan says why. While importing, a Chrome that wedges is replaced ONCE mid-run and the
+page re-read; if the fresh one wedges too, every remaining page fails at once with that
+reason instead of after a deadline each.
 
 **Order is part of the answer.** A sitemap can list five thousand URLs and the cap takes a
 dozen; taking the first dozen in file order gives a site made of whatever the generator

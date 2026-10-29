@@ -165,9 +165,17 @@ export function setLauncherForTest(fn?: Launcher): void {
  * one test seam) serves both, while each keeps a browser of its own.
  */
 export async function launchChrome(): Promise<Browser> {
-  const b = await deadline(launcher(), 'start');
-  void pidOf(b);
-  return b;
+  const launching = launcher();
+  try {
+    const b = await deadline(launching, 'start', stallMs * 2);
+    void pidOf(b);
+    return b;
+  } catch (e) {
+    // The deadline lost the race, not the launch: a Chrome that answers late is
+    // still a process nobody holds. Release it when it arrives (review of v0.100.5).
+    if (e instanceof ChromeStalled) void launching.then((late) => release(late), () => {});
+    throw e;
+  }
 }
 
 /**
@@ -181,6 +189,12 @@ export async function launchChrome(): Promise<Browser> {
  * handle, and in the server every later tool call, because calls run one at a
  * time. Healthy, the same steps took ≤3.7s at a load average of 47; the deadline
  * is four times that, and missing it costs a relaunch, not a failure.
+ *
+ * A LAUNCH GETS TWICE THAT (30s). It is the heaviest step under CPU contention
+ * (process spawn, profile, CDP handshake) and the review of v0.100.5 saw 15s
+ * expire on a launch that was merely slow — and a missed launch deadline spends
+ * a SECOND launch on the same overloaded machine, the opposite of relief. A tab
+ * or an evaluate is cheap, so it keeps 15s: there a miss really means a wedge.
  */
 let stallMs = 15_000;
 
@@ -203,6 +217,19 @@ export function deadline<T>(step: Promise<T>, what: string, ms = stallMs): Promi
       );
     }),
   ]);
+}
+
+/**
+ * A BEST-EFFORT page step: its own failure is swallowed (a page that refuses a
+ * stylesheet is still worth photographing), a STALL is not — a wedged Chrome
+ * answers no later step either, and swallowing it here would only move the
+ * hang to the next unbounded call.
+ */
+function soft<T>(step: Promise<T>, what: string, fallback: T, ms?: number): Promise<T> {
+  return deadline(step, what, ms).catch((e: unknown) => {
+    if (e instanceof ChromeStalled) throw e;
+    return fallback;
+  });
 }
 
 /**
@@ -288,7 +315,9 @@ export async function release(b: Browser, graceMs = 3_000): Promise<void> {
   const closing = b.close().catch(() => {});
   const stalled = await Promise.race([closing.then(() => false), sleep(graceMs, true, { ref: false })]);
   // No pid, no kill: Chrome's own watchdog still ends it, just not on our clock.
-  if (!stalled || !pid) return;
+  // `pid > 1` before `kill(-pid)`: -1 is EVERY process this user may signal.
+  // CDP only ever answers a real pid; this guards the day it does not.
+  if (!stalled || !pid || pid <= 1) return;
   for (const target of [-pid, pid]) {
     try {
       process.kill(target, 'SIGKILL');
@@ -347,6 +376,10 @@ export async function shoot(
   } catch (e) {
     if (!(e instanceof ChromeStalled)) throw e;
     // The pool would hand every later call this same wedged handle: replace it, once.
+    // CAVEAT: this closes the SHARED Chrome, so a second shoot() running at the same
+    // moment loses its tabs mid-shot. In the server sb_look is the only caller and
+    // runs on the serial queue (src/mcp/serial.ts — it is not in SESSION_FREE), so
+    // two shots never overlap; a script calling shoot() in parallel owns that risk.
     await closeBrowser();
     return shootWith(await browser(), url, opts);
   }
@@ -369,7 +402,10 @@ async function shootWith(
       try {
         return await shootOne(page, url, width, format, opts);
       } finally {
-        await page.close().catch(() => {});
+        // Bounded: a wedged Chrome does not answer a close either, and an
+        // unbounded one here would hang the stall it is unwinding from. Swallowed
+        // whole, so the error that brought us here is the one reported.
+        await deadline(page.close(), 'close a tab').catch(() => undefined);
       }
     }),
   );
@@ -399,8 +435,8 @@ async function shootWith(
  * photographed anyway — a late picture beats none.
  */
 export async function settleDom(page: Page, capMs = 2_000): Promise<void> {
-  await page
-    .evaluate(
+  await soft(
+    page.evaluate(
       ({ quiet, cap }) =>
         new Promise<void>((resolve) => {
           const start = Date.now();
@@ -430,8 +466,13 @@ export async function settleDom(page: Page, capMs = 2_000): Promise<void> {
       // settling is not failing. A silent thin import is worse than a refused
       // one, and the shoot path keeps the default it was tuned for.
       { quiet: 250, cap: capMs },
-    )
-    .catch(() => {});
+    ),
+    'settle',
+    undefined,
+    // The in-page cap bounds a page that keeps changing; this bounds a Chrome
+    // that stopped answering altogether.
+    capMs + stallMs,
+  );
 }
 
 /**
@@ -454,12 +495,14 @@ async function settleLazyImages(page: Page): Promise<void> {
   // A page with nothing lazy has nothing to walk for, and the walk is 60 ms a
   // screen. Checked rather than assumed: the renderer marks images below the
   // first screen lazy, so a short page legitimately has none.
-  const lazy = await page
-    .evaluate(() => document.querySelectorAll('img[loading="lazy"]').length)
-    .catch(() => 1);
+  const lazy = await soft(
+    page.evaluate(() => document.querySelectorAll('img[loading="lazy"]').length),
+    'count images',
+    1,
+  );
   if (!lazy) return;
-  await page
-    .evaluate(async () => {
+  await soft(
+    page.evaluate(async () => {
       const step = window.innerHeight || 900;
       const end = document.body.scrollHeight;
       // A very long page is walked in bigger strides rather than not at all.
@@ -469,19 +512,23 @@ async function settleLazyImages(page: Page): Promise<void> {
         await new Promise((r) => setTimeout(() => r(undefined), 60));
       }
       window.scrollTo(0, 0);
-    })
-    .catch(() => {});
+    }),
+    'walk the page',
+    undefined,
+  );
   // Give what the walk started a chance to arrive. `complete` is false while a
   // fetch is in flight; a decoded-but-broken image reports complete with a zero
   // natural width, and that is a REAL defect the shot should show, so it is not
   // waited on.
-  await page
-    .waitForFunction(
+  await soft(
+    page.waitForFunction(
       () => [...document.querySelectorAll('img')].every((i) => i.complete === true),
       undefined,
       { timeout: 3_000 },
-    )
-    .catch(() => {});
+    ),
+    'load images',
+    undefined,
+  );
 }
 
 /**
@@ -516,12 +563,17 @@ async function settleLazyImages(page: Page): Promise<void> {
  * Best-effort: a page that refuses a stylesheet is still worth photographing.
  */
 async function settleAnimations(page: Page): Promise<void> {
-  await page
-    // TRANSITION TOO: an overlay opened just before measuring slides in under
-    // its own transition (cart drawer `transform .25s`), and a shot mid-slide
-    // measures a box that is not where it ends. `none` jumps to the end value.
-    .addStyleTag({ content: '*,*::before,*::after{animation:none !important;transition:none !important}' })
-    .catch(() => {});
+  // TRANSITION TOO: an overlay opened just before measuring slides in under
+  // its own transition (cart drawer `transform .25s`), and a shot mid-slide
+  // measures a box that is not where it ends. `none` jumps to the end value.
+  // KNOWN GAP: a reveal chained to ANOTHER element's `transitionend` stays at its
+  // start — with no transition, `transitioncancel` fires instead. web_builder's
+  // own runtime never listens for `transitionend`; hand-written custom-code can.
+  await soft(
+    page.addStyleTag({ content: '*,*::before,*::after{animation:none !important;transition:none !important}' }),
+    'settle animations',
+    undefined,
+  );
 }
 
 async function shootOne(
@@ -556,7 +608,7 @@ async function shootOne(
   // plus `visibility:visible`. The scrim takes it too, so the shot matches what
   // a shopper sees rather than a panel floating over bare page.
   if (opts.open) {
-    await page.evaluate((id) => {
+    await deadline(page.evaluate((id) => {
       // The narrow `document` shim this file declares is for the MEASUREMENT
       // pass; here the real DOM is what runs, so reach it through the cast
       // rather than widening a shim that exists to keep that pass honest.
@@ -566,7 +618,7 @@ async function shootOne(
       };
       d.getElementById(id)?.classList.add('is-open');
       for (const s of d.querySelectorAll('.wb-cart-scrim')) s.classList.add('is-open');
-    }, opts.open);
+    }, opts.open), 'open the overlay');
   }
 
   await settleDom(page);
@@ -584,7 +636,7 @@ async function shootOne(
   // node. `type` is read off the leading `wb-` class, which is the only type
   // signal the render emits; the caller already knows the real types from
   // sb_outline, so this is a convenience, not a contract.
-  const boxes = (await page.evaluate(() => {
+  const boxes = (await deadline(page.evaluate(() => {
     // No named inner function: a transpiler's `__name` wrapper would not exist
     // in the page (the vision skill's evaluate trap).
     const anon = new Map<unknown, string>();
@@ -621,7 +673,7 @@ async function shootOne(
           ...(inFixed ? { inFixed: true } : {}),
         };
       });
-  })) as Box[];
+  }), 'measure the page')) as Box[];
 
   // ZOOM. A designer does not judge a card by looking at the whole page, and
   // a full-page shot of a long storefront makes one card a few pixels tall.

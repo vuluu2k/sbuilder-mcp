@@ -783,7 +783,9 @@ khung cuộn, mà cú walk nạp ảnh lazy cuộn xong lại về đầu trang,
 `opacity: 0` đúng lúc chụp. Đo được: một băng trên bốn chụp ra rỗng trên một trang hoàn toàn
 đúng. Script tự viết nào có chụp màn hình cũng phải làm y vậy. Transition cũng bị tắt, nên một
 overlay được mở để chụp (`transform .25s` của drawer giỏ hàng) được đo ở vị trí cuối, không phải
-giữa lúc đang trượt vào.
+giữa lúc đang trượt vào. Một lỗ hổng đã biết, chỉ với trang custom-code: hiệu ứng hiện ra móc vào
+`transitionend` của MỘT phần tử KHÁC sẽ đứng ở trạng thái đầu, vì khi tắt transition trình duyệt
+phát `transitioncancel` thay vào đó. Runtime của nền tảng không hề nghe `transitionend`.
 
 **Lưu trước**, rồi mint link preview đã ký và render trang bằng chính renderer Go của nền
 tảng — nên bức ảnh là của *bản nháp đã lưu*, không bao giờ là của sửa đổi chưa lưu. Trả về
@@ -823,7 +825,10 @@ chấm bức trang nó chưa từng nhìn thấy còn tệ hơn một agent ch�
 Chrome được mở ở lần look đầu tiên và giữ mở suốt vòng đời của process, còn các bề rộng được
 chụp song song, mỗi bề rộng một tab — một lần look ba bề rộng mất khoảng một giây thay vì
 ba. Ảnh trả về là JPEG chất lượng 80 trừ khi yêu cầu `format: "png"`; định dạng chỉ thay đổi
-số byte và độ trễ, vì client tính giá ảnh theo kích thước pixel chứ không theo số byte.
+số byte và độ trễ, vì client tính giá ảnh theo kích thước pixel chứ không theo số byte. Chrome
+ngừng trả lời thì bị thay chứ không bị chờ: khởi động được 30s, mở tab hay đọc trang 15s, trễ
+hạn thì khởi động lại một lần — một lần khởi động trả lời sau hạn sẽ bị đóng ngay khi tới,
+không bao giờ bị bỏ chạy mồ côi.
 
 
 **Bản xem trước CÓ luồng dữ liệu cửa hàng — cứ đánh giá trang danh sách từ nó.**
@@ -2181,7 +2186,11 @@ fetch, không cần trình duyệt, và nó liệt kê cả những trang không
 không có sitemap (hoặc sitemap chỉ liệt kê đúng một trang — thứ mà một generator cấu hình dở
 sinh ra) thì mới bò link, mỗi trang một lần mở trình duyệt, chặn bởi `depth` và bởi số trang
 tối đa. Không có nút để ép bò link: người gọi muốn ít trang hơn sitemap thì cần `include` hoặc
-`max_pages`, chứ không phải một cách chậm hơn để ra cùng danh sách đó.
+`max_pages`, chứ không phải một cách chậm hơn để ra cùng danh sách đó. Một trang bò tới mà
+không mở được sẽ nằm trong dry run dưới `links_unread` (`{url, why}`) — link của nó chưa từng
+được theo, nên một kế hoạch mỏng có lý do để đọc. Khi import, Chrome bị treo thì được thay MỘT
+lần giữa chừng và trang đó được đọc lại; nếu Chrome mới cũng treo, mọi trang còn lại báo lỗi
+ngay với lý do đó thay vì mỗi trang chờ hết một hạn.
 
 **Thứ tự là một phần của câu trả lời.** Một sitemap có thể liệt kê năm nghìn URL còn trần chỉ
 lấy một tá; lấy một tá đầu theo thứ tự trong file thì được một website gồm bất cứ thứ gì

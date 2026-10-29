@@ -1,5 +1,5 @@
-import { chromium, type Browser } from 'playwright-core';
-import { release } from './shoot.js';
+import type { Browser } from 'playwright-core';
+import { launchChrome, release } from './shoot.js';
 
 /** What `shoot()` returns for one width, narrowed to what a diff needs. */
 export interface ShotLike {
@@ -66,7 +66,9 @@ declare const document: {
 let shared: Browser | null = null;
 
 async function browser(): Promise<Browser> {
-  if (!shared) shared = await chromium.launch({ channel: 'chrome' });
+  // Through shoot's launcher: no Playwright signal handlers (src/index.ts owns
+  // them), a launch deadline, and a pid noted so `release` can kill a stuck close.
+  if (!shared) shared = await launchChrome();
   return shared;
 }
 

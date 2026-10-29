@@ -536,8 +536,22 @@ repo over a number here, and fix the line when you catch one stale.
   (`shoot.ts`, 15s = 4× the worst healthy step measured at load 47) turns a silent step
   into `ChromeStalled`; `shoot` and `capture` then release that Chrome and try ONCE on a
   fresh one. `capture` launches through `launchChrome()` — shoot's launcher and test seam,
-  still a fresh browser of its own, never the pool. `captureMany` only bounds it (a wedged
-  browser fails each remaining page after 15s); see the `ponytail:` note there.
+  still a fresh browser of its own, never the pool.
+
+  **AND THE BOUND HAD HOLES, closed in the review of v0.100.5.** (a) A launch that answered
+  AFTER its deadline was a Chrome nobody held — `launchChrome` now chains `release` onto the
+  losing promise. (b) A launch gets 30s (2× the step deadline): 15s expired on a merely slow
+  launch under suite load, and a missed launch deadline spends a SECOND launch on the same
+  overloaded machine. Tabs and evaluates keep 15s. (c) Every `page.evaluate` is bounded
+  (`soft()` swallows a step's own failure but never a stall; `settleDom` gets cap + 15s;
+  `readPage`'s read gets `navMs`), and a tab close is bounded and swallowed — an unbounded
+  close in a `finally` hung the very stall it was unwinding. (d) `captureMany` relaunches ONCE
+  mid-run and re-reads that page; a second wedge fails the rest at once. (e) `crawlLinks`
+  returns `unread`, surfaced as `links_unread`. (f) `release` never signals `pid <= 1`
+  (`kill(-1)` is every process the user owns). (g) `imagediff` launches through
+  `launchChrome`. The reuse test sets a 60s stall: it measures pooling, not stalls.
+  Concurrency: `shoot`'s retry closes the SHARED Chrome, safe only because `sb_look` (its one
+  caller) runs on the serial queue.
 
 - **A CAPTURE COULD NOT SAY IT HAD READ ALMOST NOTHING, because SETTLING IS NOT FAILING.** A
   page read while it is still building returns a small, correct-looking result: `skipped` empty,
@@ -1102,4 +1116,6 @@ how the committed baseline above is kept current.
   Hidden still never counts for overlap or small text. `aria-hidden` is NOT read any more: it
   hides from assistive tech, not from the eye. And `settleAnimations` sets `transition:none`
   beside `animation:none`, so an overlay opened for a framed look is measured at its end
-  position, not mid-slide (cart drawer `transform .25s`).
+  position, not mid-slide (cart drawer `transform .25s`). Known gap, custom-code only: a
+  reveal chained to ANOTHER element's `transitionend` stays at its start (the browser fires
+  `transitioncancel` instead); web_builder's runtime never listens for `transitionend`.

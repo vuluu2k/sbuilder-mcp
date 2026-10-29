@@ -176,6 +176,8 @@ async function discoverSite(
   robots?: RobotsRules;
   /** How many crawled URLs turned out to be another page under a different address. */
   aliases: number;
+  /** Crawled pages that would not open, so their links were never followed. */
+  unread?: Array<{ url: string; why: string }>;
 }> {
   // ROBOTS.TXT ANSWERS TWO QUESTIONS AND IS FETCHED ONCE. Where the sitemap
   // really is — plenty are not at /sitemap.xml, a shop platform names
@@ -205,7 +207,15 @@ async function discoverSite(
     seen.add(real);
     urls.push({ url: real, from: real === entry ? 'entry' : 'links' });
   }
-  return { source: 'links', urls, titles: crawled.titles, visited: crawled.visited, robots, aliases };
+  return {
+    source: 'links',
+    urls,
+    titles: crawled.titles,
+    visited: crawled.visited,
+    robots,
+    aliases,
+    ...(crawled.unread.length ? { unread: crawled.unread } : {}),
+  };
 }
 
 /**
@@ -588,6 +598,7 @@ export function registerImportTools(
           entry,
           discovered_by: found.source,
           ...(found.visited ? { pages_read_to_find_them: found.visited } : {}),
+          ...(found.unread ? { links_unread: found.unread } : {}),
           pages: plan.pages.map((p) => ({ url: p.url, slug: p.slug, name: p.name, ...lands(p) })),
           ...(Object.keys(plan.skipped).length || found.aliases
             ? { skipped: { ...plan.skipped, ...(found.aliases ? { 'canonical-alias': found.aliases } : {}) } }

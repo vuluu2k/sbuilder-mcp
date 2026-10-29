@@ -1546,9 +1546,11 @@ async function readPage<T>(
     // question actually being asked (has the page stopped changing) and answers
     // when it becomes true, bounded so a page that never settles is still read.
     await settleDom(page, settleMs);
-    return await work(page);
+    // Bounded by the page's own budget: a dense page reads in seconds, and an
+    // evaluate on a Chrome wedged after the tab opened never answers at all.
+    return await deadline(work(page), 'read the page', navMs);
   } finally {
-    await page?.close().catch(() => undefined);
+    if (page) await deadline(page.close(), 'close a tab').catch(() => undefined);
   }
 }
 
@@ -1653,28 +1655,40 @@ export type CaptureOutcome =
  */
 export async function captureMany(urls: string[], opts: CaptureOpts = {}): Promise<CaptureOutcome[]> {
   const limits = limitsFrom(opts);
-  return withBrowser(async (browser) => {
-    const out: CaptureOutcome[] = [];
-    for (const url of urls) {
-      try {
-        const result = (await readPage(
-          browser,
-          url,
-          opts.width ?? 1440,
-          (page) => page.evaluate(capturePage, limits),
-          opts.navTimeoutMs,
-          opts.settleMs,
-        )) as CaptureResult;
-        out.push({ url, ok: true, result });
-      } catch (e) {
-        // ponytail: a wedged Chrome (`ChromeStalled`) fails this page AND each later
-        // one after its own 15s deadline, rather than hanging the run; relaunch
-        // mid-loop if a site import is ever seen doing that.
-        out.push({ url, ok: false, why: readFailure(e) });
-      }
+  const out: CaptureOutcome[] = [];
+  let i = 0;
+  // A WEDGED CHROME IS REPLACED ONCE, MID-RUN, and the page it wedged on is read
+  // again on the fresh one. If that one wedges too the machine is the problem,
+  // and every remaining page fails AT ONCE with the reason — not after a
+  // deadline each, which on a twelve-page import was three silent minutes.
+  for (let attempt = 0; i < urls.length; attempt++) {
+    try {
+      await withBrowser(async (browser) => {
+        for (; i < urls.length; i++) {
+          try {
+            const result = (await readPage(
+              browser,
+              urls[i],
+              opts.width ?? 1440,
+              (page) => page.evaluate(capturePage, limits),
+              opts.navTimeoutMs,
+              opts.settleMs,
+            )) as CaptureResult;
+            out.push({ url: urls[i], ok: true, result });
+          } catch (e) {
+            if (e instanceof ChromeStalled) throw e;
+            out.push({ url: urls[i], ok: false, why: readFailure(e) });
+          }
+        }
+      });
+    } catch (e) {
+      // The first browser not starting at all is no run to report on.
+      if (attempt === 0 && !(e instanceof ChromeStalled)) throw e;
+      if (attempt === 0) continue;
+      for (; i < urls.length; i++) out.push({ url: urls[i], ok: false, why: readFailure(e) });
     }
-    return out;
-  });
+  }
+  return out;
 }
 
 /**
@@ -1743,13 +1757,21 @@ export async function crawlLinks(
      */
     canon: (url: string) => string | null;
   },
-): Promise<{ urls: string[]; titles: Map<string, string>; canonical: Map<string, string>; visited: number }> {
+): Promise<{
+  urls: string[];
+  titles: Map<string, string>;
+  canonical: Map<string, string>;
+  visited: number;
+  /** Pages the crawl could not open, so whatever they link to was never found. */
+  unread: Array<{ url: string; why: string }>;
+}> {
   const depth = Math.max(0, opts.depth ?? 1);
   const maxVisits = opts.maxVisits ?? 24;
   const found = new Set<string>([entry]);
   const titles = new Map<string, string>();
   const canonical = new Map<string, string>();
   let visited = 0;
+  const unread: Array<{ url: string; why: string }> = [];
   await withBrowser(async (browser) => {
     let frontier = [entry];
     // NAVIGATE ONLY WHILE THE LINKS CAN STILL BE USED. `depth` is how far from
@@ -1780,12 +1802,14 @@ export async function crawlLinks(
             found.add(url2);
             next.push(url2);
           }
-        } catch {
-          // A page that will not open contributes nothing and ends nothing.
+        } catch (e) {
+          // A page that will not open ends nothing, but it is SAID: its links
+          // were never followed, so a thin plan has a reason a caller can read.
+          unread.push({ url, why: readFailure(e) });
         }
       }
       frontier = next;
     }
   });
-  return { urls: [...found], titles, canonical, visited };
+  return { urls: [...found], titles, canonical, visited, unread };
 }
