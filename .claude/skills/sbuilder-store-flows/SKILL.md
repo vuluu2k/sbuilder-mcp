@@ -577,3 +577,12 @@ repo over a number here, and fix the line when you catch one stale.
   The finding is a lone register `phone`-ish box: a confirm-looking name or label ("SĐT nhận mã
   xác nhận", `confirmed_phone`) marks a box as re-entry only when ANOTHER phone-like field exists,
   because the one phone box on a form IS the phone whatever it is called.
+- **`sb_store action:"form"` + `node_id` places the form on the OPEN page** (TTG gap #58): a
+  `form` node is only a `specials.formId` reference, so it goes in any container. The placement
+  is checked BEFORE the form is created, `page_name` + `node_id` is refused, and a failed save
+  after creation reports `page_failed` rather than deleting the form (same rule as `page_name`).
+- **`pageSeo` / `unreachablePage` judge the OPEN draft page** (`openPageId`, TTG gap #48) — the
+  review an agent runs before its first publish used to pass a page that then published with the
+  site name as `<title>`. **A `settings.noIndex` page is never `unreachablePage`** (#49): the
+  platform's sitemap excludes it (`page/sitemap/sitemap.go`, read on web_builder ed66eb196), so an
+  unlinked noIndex page is a deliberate landing page and `seo {noIndex:true}` is how to clear it.

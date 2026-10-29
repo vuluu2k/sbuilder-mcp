@@ -31,10 +31,12 @@ import {
   hasSeed,
   heldFromFirstPublish,
   layoutDocument,
+  localizeNodes,
   seedDocument,
   seedSummary,
   seededTypes,
 } from '../domains/site/storepage.js';
+import { SEED_COPY_VI, langOf } from '../domains/site/seedcopy.js';
 import { PAGE_TYPES } from '../catalog/storepages.generated.js';
 import { skinLevelNote } from '../domains/site/fieldskin.js';
 import { siteTheme } from '../domains/site/theme-fetch.js';
@@ -86,8 +88,9 @@ export function reviewField(
   formDocType?: string,
   formRedirects?: ReadonlySet<string>,
   siteLocale?: string | null,
+  bodyFont?: string,
 ): Record<string, unknown> {
-  const all = reviewDesign(doc, { formTypes, pageType, formDocType, formRedirects, siteLocale });
+  const all = reviewDesign(doc, { formTypes, pageType, formDocType, formRedirects, siteLocale, bodyFont });
   if (all.length === 0) return {};
   // MAINTENANCE IS ADVICE, kept out of `findings`: it works for a visitor, so
   // it must not stand between a page and its clean verdict. One `fixes` map
@@ -144,6 +147,41 @@ export function saveRefusal(d: PageDoc, patches: Patch[]): { before: Set<string>
 /** `once` for a real write, `peek` for a dry run — the same notes, spent once. */
 function noticeFor(ctx: ToolContext, dryRun: boolean | undefined): (key: string, body: string) => string | undefined {
   return dryRun !== false ? (k, b) => ctx.notices.peek(k, b) : (k, b) => ctx.notices.once(k, b);
+}
+
+/** The site's `settings.locale`, or undefined when unset or unreadable — never a reason to fail. */
+async function siteLocaleOf(ctx: ToolContext, siteId: string): Promise<string | undefined> {
+  return request({
+    base: ctx.base,
+    method: 'GET',
+    path: `/api/sites/${encodeURIComponent(siteId)}/settings`,
+    token: siteToken(ctx),
+    fetchImpl: ctx.fetchImpl,
+  })
+    .then((r) => {
+      const l = (r as { settings?: { locale?: unknown } | null })?.settings?.locale;
+      return typeof l === 'string' && l ? l : undefined;
+    })
+    .catch(() => undefined);
+}
+
+/**
+ * WHAT `sb_add` MINTED, BY ID AND TYPE, satellites apart (TTG gap #53). A flat id
+ * list interleaved an empty state's heading with the caller's own children, so
+ * mapping ids to nodes was guesswork. A satellite hangs off its owner's config,
+ * not its child list; everything under one is satellite content too.
+ */
+function mintedIds(after: PageDoc, ids: string[]): { added: Record<string, string>; satellites: Record<string, string> } {
+  const added: Record<string, string> = {};
+  const satellites: Record<string, string> = {};
+  for (const id of ids) {
+    const n = after.doc.nodes[id];
+    if (!n) continue;
+    const parent = n.data.parent ? after.doc.nodes[n.data.parent] : undefined;
+    const sat = !!parent && (n.data.parent! in satellites || !parent.data.nodes.includes(id));
+    (sat ? satellites : added)[id] = n.data.type;
+  }
+  return { added, satellites };
 }
 
 export class PageSession {
@@ -1494,10 +1532,13 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
         'The open page as a compressed tree — id, type, name, child count, band, and whether a ' +
           'node is a shared global or a site overlay. Never the raw document: a real page is ' +
           'hundreds of KB of JSON.',
-      inputSchema: { depth: z.number().int().min(1).max(6).optional() },
+      inputSchema: {
+        depth: z.number().int().min(1).max(6).optional(),
+        chrome: z.boolean().optional().describe('Expand shared chrome and overlays (default one line each)'),
+      },
       annotations: { readOnlyHint: true },
     },
-    async ({ depth }) => text(session.current().outline({ depth })),
+    async ({ depth, chrome }) => text(session.current().outline({ depth, chrome: chrome === true })),
   );
 
   server.registerTool(
@@ -1520,7 +1561,16 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
       // there to read, so it invented one. See domains/site/theme.ts.
       const { theme, from } = await siteTheme(ctx, session.site());
       const preset = presetLayer(theme, from, node as never);
-      return text({ node, ...(preset ? { preset } : {}), ...(warn ? { warning: warn } : {}) });
+      // NO SCENE, NO SCENE KEYS (TTG gap #52): every section/block carries 13
+      // seeded backgroundScene* defaults, ~40% of a read, all inert while the
+      // source is empty. Left out of the answer only — the node is untouched.
+      const cfg = node.config ?? {};
+      const sceneOff = 'backgroundSceneSource' in cfg && !cfg.backgroundSceneSource;
+      const shown = sceneOff
+        ? { ...node, config: Object.fromEntries(Object.entries(cfg).filter(([k]) => !k.startsWith('backgroundScene'))) }
+        : node;
+      const omitted = sceneOff ? ctx.notices.once('node-read-scene', 'config.backgroundScene* omitted while backgroundSceneSource is empty (no scene)') : undefined;
+      return text({ node: shown, ...(omitted ? { omitted } : {}), ...(preset ? { preset } : {}), ...(warn ? { warning: warn } : {}) });
     },
   );
 
@@ -1547,7 +1597,14 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
         /^\s*icon:/i.test(query ?? '')
           ? { icons: searchIcons(query!.replace(/^\s*icon:/i, '').trim(), limit ?? 30) }
           : query && query.trim()
-          ? searchWithTemplates(query, catalogMatches(query, { limit, detail }))
+          ? searchWithTemplates(
+              query,
+              catalogMatches(query, { limit, detail }).map((m) => {
+                // Hints sent here are not re-sent by sb_traits_for (gap #52).
+                if (detail) ctx.notices.once(`hints:${m.type}`, 'x');
+                return m;
+              }),
+            )
           : {
               elements: catalogBrowse(),
               note:
@@ -1572,7 +1629,19 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
     },
       annotations: { readOnlyHint: true },
     },
-    async ({ type, control }) => text(traitsFor(type, control)),
+    // SAID ONCE PER PROCESS (TTG gap #52): an element's hints (also in
+    // sb_catalog_search detail:true) and the prose and animation vocabulary every
+    // element repeats — ~8 KB of list-dataset's ~16 KB, on every call.
+    async ({ type, control }) => {
+      const r = traitsFor(type, control);
+      if (control) return text(r);
+      const SAID = 'said earlier in this session';
+      if (!ctx.notices.once(`hints:${type}`, 'x')) r.hints = SAID;
+      for (const k of ['animation', 'animation_values', 'undeclared_note', 'style_is_open_css']) {
+        if (k in r && !ctx.notices.once(`traits:${k}`, 'x')) r[k] = SAID;
+      }
+      return text(r);
+    },
   );
 
   server.registerTool(
@@ -1604,6 +1673,18 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
       const at = index ?? (mid < rootKids ? mid : undefined);
       const { patches, ids, idOf } = addSubtree(d, parent_id, spec, at, guard);
       const forced = guard.forced!.length ? { forced: guard.forced } : {};
+      // THE SEED COPY IN THE SITE'S LANGUAGE (TTG gap #46): an empty state minted
+      // here said "No products yet" on a Vietnamese store, while sb_page_create
+      // already seeds through SEED_COPY_VI. Same default as there — vi when the
+      // locale is unread — and the settings read only when there is copy to move.
+      const minted = patches.filter((p) => p.op === 'set' && p.path.length === 2).map((p) => (p as { value: unknown }).value);
+      const seeded = minted.some((n) =>
+        ['text', 'label'].some((k) => {
+          const v = (n as { specials?: Record<string, unknown> }).specials?.[k];
+          return typeof v === 'string' && !!SEED_COPY_VI[v];
+        }),
+      );
+      if (seeded && langOf((await siteLocaleOf(ctx, session.site())) ?? 'vi') === 'vi') localizeNodes(minted);
       // ELEMENTS THAT RENDER CONVINCINGLY WHILE WIRED TO NOTHING. The add
       // succeeds completely, the tree is correct and the page photographs
       // right, so neither sb_review nor sb_look can see the gap — the moment
@@ -1678,7 +1759,17 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
         });
       }
       await session.applyAndSave(patches);
-      return text({ added: ids, rev: d.rev, ...(inert ? { inert } : {}), ...checks, ...base_only, ...filterOut, ...forced });
+      const { added, satellites } = mintedIds(session.current(), ids);
+      return text({
+        added,
+        ...(Object.keys(satellites).length ? { satellites } : {}),
+        rev: d.rev,
+        ...(inert ? { inert } : {}),
+        ...checks,
+        ...base_only,
+        ...filterOut,
+        ...forced,
+      });
     },
   );
 
@@ -1715,7 +1806,7 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
             z.object({
               id: z.string(),
               namespace: z.enum(['style', 'config', 'specials']),
-              keys: z.record(z.unknown()),
+              keys: z.record(z.unknown()).optional(),
               breakpoint: z.enum(['desktop', 'laptop', 'tablet', 'mobile']).optional(),
               base: z.boolean().optional(),
               state: z.string().optional(),
@@ -1732,7 +1823,10 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
       const d = session.current();
       const say = noticeFor(ctx, dry_run);
       // One shape inside: a single edit is a batch of one.
-      const batch: SetEdit[] = edits ?? [];
+      const batch: SetEdit[] = (edits ?? []).map((e) => {
+        if (!e.keys && !e.unset?.length) throw new Error(`sbuilder: sb_set edit for ${e.id} needs keys or unset`);
+        return { ...e, keys: e.keys ?? {}, breakpoint: e.breakpoint as Breakpoint | undefined };
+      });
       if (!edits) {
         // `keys` is optional when `unset` carries the work: a pure removal is a
         // legitimate edit, and demanding an empty object alongside it would make
@@ -1942,6 +2036,8 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
         const warn = warnings[batch[0].id];
         return text({
           set: touched[0].keys,
+          ...(touched[0].unset ? { unset: touched[0].unset } : {}),
+          ...(touched[0].absent ? { absent: touched[0].absent } : {}),
           rev: d.rev,
           ...(warn ? { warning: warn } : {}),
           ...shared,
@@ -2092,7 +2188,17 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
       } catch {
         // Readiness is additional information, never the reason a review fails.
       }
-      const field = reviewField(ctx, doc, formTypes, pageType, session.formType(), formRedirects, siteLocale);
+      // The site's body font, for `default_font` — a SITE theme only: the starter
+      // is set in Inter, so it can never disagree with an element's literal Inter.
+      let bodyFont: string | undefined;
+      try {
+        const { theme, from } = await siteTheme(ctx, session.site());
+        const f = theme.textStyles.find((t) => t.slug === 'text-2')?.base?.fontFamily;
+        if (from === 'site' && typeof f === 'string' && f && !f.includes('var(')) bodyFont = f;
+      } catch {
+        // A theme that cannot be read is a finding nobody gets, never a failed review.
+      }
+      const field = reviewField(ctx, doc, formTypes, pageType, session.formType(), formRedirects, siteLocale, bodyFont);
       // Clean = no finding a visitor meets; `advice` (maintenance) rides beside the verdict.
       const clean = !field.findings;
       return text({
@@ -2131,13 +2237,16 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
         if (to_site_id || parent_id || index !== undefined) {
           throw new Error('sbuilder: to_site_id, parent_id and index go with to_page_id — the page the copy lands on.');
         }
-        const { patches, ids } = duplicateNode(d, id, guard);
+        const { patches, ids, map } = duplicateNode(d, id, guard);
         if (dry_run !== false) {
           const refuse = session.wouldRefuse(patches);
           return text({ dry_run: true, would_copy: ids.length, ...(refuse ? { would_refuse: refuse } : {}), ...forcedOf() });
         }
         await session.applyAndSave(patches);
-        return text({ duplicated: id, into: ids[0], nodes: ids.length, rev: d.rev, ...forcedOf() });
+        // EVERY copy's id, not just the root's: editing the copied row's answer
+        // used to take a whole sb_outline to find (TTG gap #53).
+        const copies = Object.fromEntries(Object.entries(map).map(([from, to]) => [from, [to, d.doc.nodes[from]?.data.type ?? '']]));
+        return text({ duplicated: id, into: ids[0], copies, rev: d.rev, ...forcedOf() });
       }
 
       // ONTO ANOTHER PAGE — the editor's paste (`useCanvasClipboard.ts`).
@@ -2740,22 +2849,7 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
         // The SITE's language when the caller named none — the seed's English
         // copy is rewritten for a Vietnamese site (SEED_COPY_VI). Unreadable
         // settings fall back to the old default rather than block the create.
-        const lang =
-          locale ??
-          (layout
-            ? undefined
-            : await request({
-                base: ctx.base,
-                method: 'GET',
-                path: `/api/sites/${encodeURIComponent(site_id)}/settings`,
-                token: siteToken(ctx),
-                fetchImpl: ctx.fetchImpl,
-              })
-                .then((r) => {
-                  const l = (r as { settings?: { locale?: unknown } | null })?.settings?.locale;
-                  return typeof l === 'string' && l ? l : undefined;
-                })
-                .catch(() => undefined));
+        const lang = locale ?? (layout ? undefined : await siteLocaleOf(ctx, site_id));
         const document = layout ? layoutDocument(layout) : seedDocument(type ?? '', { locale: lang, headline });
         if (document) {
           try {
@@ -2946,7 +3040,17 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
           : {}),
       });
       if (dry_run !== false) {
-        return text({ dry_run: true, would_post: path, body, ...draftNote(drafts, fresh) });
+        // NO CASCADE PREVIEW EXISTS on the platform (page/globalservice.go
+        // cascadeTargets runs inside publish only), so the dry run says the rule
+        // rather than a list it cannot know (TTG gap #59); the real answer names
+        // the pages under `cascaded`.
+        const cascade = ctx.notices.peek(
+          'publish-cascade',
+          'Publishing also republishes, from their LAST PUBLISHED version (never their draft), every live page ' +
+            'whose shared header/footer, overlay (cart drawer, pop-up) or app block is behind its master. The ' +
+            'platform offers no preview of that list; the real publish names them under cascaded.',
+        );
+        return text({ dry_run: true, would_post: path, body, ...draftNote(drafts, fresh), ...(cascade ? { cascade_note: cascade } : {}) });
       }
       const res = (await request({
         base: ctx.base,
@@ -3152,9 +3256,10 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
         versions,
         history,
         note:
-          'The platform appends an autosave checkpoint on EVERY draft save and mints a ' +
-          'labelled snapshot on demand, and both outlive this process — so a checkpoint ' +
-          'before a whole-document PUT is already taken. Restore with sb_api_call ' +
+          'The platform keeps autosave checkpoints — one author\'s saves within 5 min of the ' +
+          'newest fold into that ONE row (web_builder e3b2ee056), so many saves can list as one ' +
+          'checkpoint holding the latest — and mints a labelled snapshot on demand; both outlive ' +
+          'this process. Snapshot before a risky whole-document PUT. Restore with sb_api_call ' +
           '"post:/api/sites/{siteId}/pages/{pageId}/versions/{versionId}/restore" or the ' +
           'history twin. A RESTORE CHANGES THE DRAFT ONLY: publish afterwards, or the ' +
           'storefront keeps serving the page you just rolled back from. The platform writes ' +
@@ -3225,11 +3330,11 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
           'copy: the editor loads the draft once and does not re-read it, so a save made here ' +
           'is invisible there until the tab is reloaded — and that tab\'s next save would ' +
           'store its older copy over this one. Reload the editor before editing there.',
-        // THE CHECKPOINT BEFORE A PUT ALREADY EXISTS, and that is worth
-        // stating rather than re-implementing: `saveDraftRaw` appends an
-        // autosave checkpoint on EVERY draft save, bounded by the service's
-        // own keep count, and `SaveVersion` mints a labelled snapshot beside
-        // it. What was missing was anyone SAYING so — this repo recorded for
+        // THE CHECKPOINTS EXIST, and that is worth stating rather than
+        // re-implementing: `saveDraftRaw` keeps autosave checkpoints — since
+        // web_builder e3b2ee056 one author's saves inside 5 min fold into the
+        // newest row (TTG gap #56: 15 saves listed one) — and `SaveVersion`
+        // mints a labelled snapshot beside them. What was missing was anyone SAYING so — this repo recorded for
         // three phases that a wrecked draft was unrecoverable, which was true
         // of the OpenAPI document and false of the platform.
         //

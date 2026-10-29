@@ -182,6 +182,7 @@ export async function gatherReadiness(
     menuLinks,
     openPageType: open && open.isDefaultTemplate !== false ? open.type : undefined,
     openType: open?.type,
+    openPageId,
     products,
     liveGateways,
     shippingMethods,

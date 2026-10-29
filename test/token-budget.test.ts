@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { connectedClient } from './harness.js';
+import { fakePlatform, blank } from './helpers/platform.js';
 
 const chars = (r: unknown) =>
   (r as { content: Array<{ type: string; text?: string }> }).content
@@ -171,7 +172,12 @@ describe('token budget — a diet without a scale comes back', () => {
     //
     // 38,150 -> 38,300 buys sb_media_upload `paths` (measured 38,208): a catalogue's photos
     // were 31 calls of one `path` each.
-    expect(JSON.stringify(tools).length).toBeLessThan(38_300);
+    //
+    // 38,300 -> 38,600 buys sb_outline `chrome`, sb_undo `all` and sb_store form `node_id`
+    // (measured 38,490; TTG gaps #52 #54 #58). `chrome` defaults the outline to ONE line per
+    // shared header/footer/overlay, which takes ~70% off every routine outline — far more
+    // than it costs here once.
+    expect(JSON.stringify(tools).length).toBeLessThan(38_600);
     for (const t of tools) expect(t.description, t.name).not.toMatch(/vanishes on publish/);
     const instructions = client.getInstructions() ?? '';
     expect(instructions.length).toBeGreaterThan(200);
@@ -202,6 +208,28 @@ describe('token budget — a diet without a scale comes back', () => {
     // (measured 13,852) rather than to just above today's number, because a
     // ceiling set at the measurement gets raised again without anybody looking.
     expect(chars(traits)).toBeLessThan(16_000);
+    // The SECOND read says the hints, the animation vocabulary and the two notes
+    // once (TTG gap #52): ~15.8 KB first, measured 7,960 after.
+    const again = await client.callTool({ name: 'sb_traits_for', arguments: { type: 'list-dataset' } });
+    expect(chars(again)).toBeLessThan(8_500);
+    await close();
+  });
+
+  it('a routine outline and node read carry no shared chrome or inert scene keys', async () => {
+    const p = fakePlatform();
+    const { call, close } = await p.connect();
+    const d = blank() as unknown as { nodes: Record<string, unknown> & { ROOT: { data: { nodes: string[] } } } };
+    // A shared header of 40 nodes ahead of one small section: the shape of every
+    // real page, where ~70% of an outline used to be chrome (TTG gap #52).
+    const header = Array.from({ length: 40 }, (_, i) => `hb${i}`);
+    d.nodes.ROOT.data.nodes = ['h', 's'];
+    d.nodes.h = { id: 'h', data: { type: 'flex-section', parent: 'ROOT', nodes: header }, specials: { globalId: 'g', globalKind: 'header' } };
+    for (const id of header) d.nodes[id] = { id, data: { type: 'button', parent: 'h', nodes: [] }, specials: {} };
+    d.nodes.s = { id: 's', data: { type: 'flex-section', parent: 'ROOT', nodes: [] }, specials: {}, config: { backgroundSceneSource: '', backgroundSceneEffect: 'gradient-mesh', backgroundSceneColor1: '#171717' } };
+    p.pages.set('pg_1', { document: d, rev: 1 });
+    await call('sb_page_open', { site_id: 's1', page_id: 'pg_1' });
+    expect((await call('sb_outline', { depth: 3 })).text.length).toBeLessThan(250);
+    expect(JSON.stringify((await call('sb_node_read', { id: 's' })).json.node)).not.toMatch(/backgroundScene/);
     await close();
   });
 

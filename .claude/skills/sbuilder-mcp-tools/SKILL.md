@@ -105,3 +105,11 @@ tools that never touch the document; a new tool is serialized unless listed ther
 A call whose `extra.signal` aborted while queued is SKIPPED at the head (an `McpError`, which
 the SDK discards unsent for an aborted request): running it performed a write nobody saw, and a
 client that timed out and retried an `sb_add` stored the section twice (review of v0.98.5).
+
+`currentCall` (`src/mcp/serial.ts`) is the running call's `{name, args}`, per call through
+AsyncLocalStorage, for code far below a tool that records history (`UndoLog.record` labels each
+entry with it). A free tool running in parallel never relabels a serialized one.
+
+`sb_traits_for` says an element's hints, the animation vocabulary and its two notes ONCE per
+process (`ctx.notices`, keys `hints:<type>` / `traits:<field>`; `sb_catalog_search detail:true`
+spends `hints:<type>` too). A second list-dataset read is ~8 KB, scaled in token-budget.

@@ -471,3 +471,17 @@ a measured need) and `sb_bind`, which belongs with Phase 3's binding work.
   (sb_page_state) still carries that instant (compared as `Date.parse` ms, precision may differ):
   published by the editor or `sb_api_call`, or unpublished, it is forgotten — else a stale
   `draft_ahead` outlived the publish that cleared it (review of v0.98.7).
+- **AUTOSAVE CHECKPOINTS FOLD PER AUTHOR PER 5 MINUTES** (web_builder `e3b2ee056`, on main):
+  `Service.checkpoint` overwrites the newest history row when the same author saves within
+  `checkpointEvery` (5 min) of it, so fifteen quick saves list as ONE checkpoint holding the
+  latest document. `sb_page_state`'s note used to say "a checkpoint on EVERY draft save" (TTG
+  gap #56) — a pre-PUT moment is kept only by an explicit `sb_page_version save`.
+- **A deleted page's source answers 404**, and `loadSource` / `saveSource` now say "page <id> no
+  longer exists … sb_page_open another" (status and code kept) instead of a bare
+  `source not found` (TTG gap #57).
+- **There is no publish-cascade preview** — `cascadeTargets` (`page/globalservice.go`) runs only
+  inside `Publish`; `sb_publish`'s dry run states the rule (`cascade_note`, once) and the real
+  answer names `cascaded` (TTG gap #59).
+- **`sb_undo` entries carry `tool` + `summary`**, read from `currentCall` (an AsyncLocalStorage
+  set per `tools/call` in `src/mcp/serial.ts`), and the listing is the open page's saves plus
+  non-page writes; `other_pages` counts the rest, `all:true` lists them (TTG gap #54).

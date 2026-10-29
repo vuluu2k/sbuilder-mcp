@@ -474,7 +474,17 @@ async function seedForm(
   headline: string | undefined,
   dryRun: boolean,
   settings?: Record<string, unknown>,
+  parentId?: string,
 ): Promise<unknown> {
+  // ON THE OPEN PAGE (TTG gap #58) — a `form` node is a reference
+  // (`specials.formId`) and goes anywhere a container does, so the only new part
+  // is placing it. Checked BEFORE the form exists: a refused placement must not
+  // leave a form nobody asked for to sit unplaced.
+  if (parentId) {
+    if (pageName) throw new Error('sbuilder: action:"form" takes page_name (a new page) or node_id (the open page), not both.');
+    if (session.site() !== siteId) throw new Error(`sbuilder: the open page is on site ${session.site()}, not ${siteId} — open a page of this site first.`);
+    addSubtree(session.current(), parentId, { type: 'form', specials: { formId: 'frm_check' } });
+  }
   const tpl = FORM_TEMPLATES[key as keyof typeof FORM_TEMPLATES] as {
     key: string;
     type: string;
@@ -518,7 +528,9 @@ async function seedForm(
           path: `/api/sites/${site}/forms/{formId}/document`,
         },
       ],
-      ...(pageName
+      ...(parentId
+        ? { would_also: `place a form node bound to the new form inside ${parentId} on the open page` }
+        : pageName
         ? {
             would_also: `create a page named ${JSON.stringify(pageName)} of type "${pageTypeFor(key)}" and put ` +
               'the form on it, so the form has an address a header can link to — wearing the ' +
@@ -584,6 +596,16 @@ async function seedForm(
   // for — the same rule the seed follows in sb_page_create.
   let page: Awaited<ReturnType<typeof placeFormOnPage>> | undefined;
   let page_failed: string | undefined;
+  let placed: { id: string; parent: string } | undefined;
+  if (parentId) {
+    try {
+      const { patches, ids } = addSubtree(session.current(), parentId, { type: 'form', specials: { formId: form.id } });
+      await session.applyAndSave(patches);
+      placed = { id: ids[0], parent: parentId };
+    } catch (e) {
+      page_failed = (e as Error).message.replace(/^sbuilder:\s*/, '').slice(0, 160);
+    }
+  }
   if (pageName) {
     try {
       page = await placeFormOnPage(ctx, session, siteId, form.id, pageName, headline, pageTypeFor(key));
@@ -597,8 +619,12 @@ async function seedForm(
     fields,
     ...settingsNote,
     ...(page ? { page } : {}),
+    ...(placed ? { placed } : {}),
     ...(page_failed ? { page_failed } : {}),
-    next: page
+    next: placed
+      ? `The form is on the open page as ${placed.id}. Publish the page with sb_publish. The submit ` +
+        'button lives in the FORM DOCUMENT (sb_page_open form_id), not on the page.'
+      : page
       ? `The form is on page ${page.id}. Publish it with sb_publish, and link to it from the ` +
         'header. The submit button lives in the FORM DOCUMENT, not on the page, and a page ' +
         'republish is what makes a form-document edit visible.'
@@ -683,7 +709,7 @@ export function registerStoreTools(server: McpServer, ctx: ToolContext, session:
         node_id: z
           .string()
           .optional()
-          .describe('action:"menu" — the menu node; "global_promote"/"template_save" — the section'),
+          .describe('action:"menu" — the menu node; "global_promote"/"template_save" — the section; "form" — a node of the open page to place it in'),
         global_kind: z.enum(['header', 'footer', 'custom']).optional(),
         template_id: z.string().optional().describe('action:"template_save" — overwrite this template\'s content'),
         menu_id: z.string().optional(),
@@ -841,7 +867,7 @@ export function registerStoreTools(server: McpServer, ctx: ToolContext, session:
           );
         }
         return text(
-          await seedForm(ctx, session, siteId, template, name, page_name, headline, dry_run !== false, settings),
+          await seedForm(ctx, session, siteId, template, name, page_name, headline, dry_run !== false, settings, node_id),
         );
       }
       const lang = (language ?? 'vi') as Language;

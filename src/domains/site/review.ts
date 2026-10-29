@@ -26,6 +26,7 @@ import { formFieldFindings, isFormDocument } from './formdoc.js';
 import { deadNavigation, hasPurchaseBinding, liveEventTable, PAYLOAD_NEEDS, soleNavigationClick, type NodeEventLike } from './navhref.js';
 import { unknownValueNote, unknownWriteNote, vocabularyFor, vocabularyForWrite } from './vocabulary.js';
 import { iconNote } from './icons.js';
+import { LINK_COLOUR, unstyledLinks } from './writecheck.js';
 
 /**
  * A defect somebody looking at the page would see.
@@ -367,6 +368,12 @@ export function hardcodedRecords(code: string): { count: number; keys: string[] 
  * can be an empty container. Findings are ordered by document order so a caller working
  * top-down meets them in the order they appear on screen.
  */
+/** The first family of a CSS font-family list, unquoted; lowercased to compare. */
+const family = (v: string, keepCase = false): string => {
+  const f = (v.split(',')[0] ?? '').trim().replace(/^["']|["']$/g, '');
+  return keepCase ? f : f.toLowerCase();
+};
+
 export function reviewDesign(
   doc: PageDoc,
   /** The site's forms by id → type, when read; lets `order_goes_nowhere` ask the form itself. */
@@ -380,6 +387,8 @@ export function reviewDesign(
     formDocType?: string;
     /** The site's `settings.locale`, when read. Only the store seeds' English copy asks it. */
     siteLocale?: string | null;
+    /** The site theme's body font family (text style text-2), when read. Only `default_font` asks it. */
+    bodyFont?: string;
   } = {},
 ): Finding[] {
   const d: DocLike = doc.doc;
@@ -579,6 +588,30 @@ export function reviewDesign(
           fix: fill('invisible_text', { id }),
         });
       }
+    }
+
+    // A LINK IN RICH TEXT IS THE BROWSER'S BLUE — see writecheck LINK_COLOUR (TTG gap #50).
+    const html = (n.specials ?? {}).textHtml;
+    if (typeof html === 'string' && unstyledLinks(html)) {
+      out.push({ code: 'link_colour', nodeId: id, type, key: 'textHtml', problem: LINK_COLOUR.problem, fix: fill('link_colour', { id }) });
+    }
+
+    // THE ELEMENT'S OWN LITERAL FONT ON A THEMED SITE (TTG gap #51). Most
+    // elements wear the theme's text style (`var(--wb-ts-…)`), but a few seed a
+    // LITERAL family — accordion-item's "Inter" — so an accordion header added
+    // to a site set in Be Vietnam Pro renders in Inter, and nothing said so.
+    // Only when the node still holds exactly the seed and the theme's body font
+    // is another family: a deliberate literal is the author's.
+    const ff = (n as { style?: Record<string, unknown> }).style?.fontFamily;
+    const seedFont = (meta.defaults as { style?: Record<string, unknown> }).style?.fontFamily;
+    if (opts.bodyFont && typeof ff === 'string' && ff === seedFont && !ff.includes('var(') && family(ff) !== family(opts.bodyFont)) {
+      out.push({
+        code: 'default_font',
+        nodeId: id,
+        type,
+        problem: `Still the element's own literal font "${ff}", while the site's text is set in "${family(opts.bodyFont, true)}" — it renders in a typeface nothing else on the page uses.`,
+        fix: fill('default_font', { id }),
+      });
     }
 
     // THE DEMO OPTIONS. product-variants seeds config.attributes Color

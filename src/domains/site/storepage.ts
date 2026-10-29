@@ -53,14 +53,28 @@ export function seededTypes(): string[] {
  */
 /** Rewrite every exact seed string the table carries, in place. */
 function localizeSeed(doc: { nodes: Record<string, unknown> }, table: Readonly<Record<string, string>>): void {
-  for (const n of Object.values(doc.nodes)) {
+  localizeNodes(Object.values(doc.nodes), table);
+}
+
+/**
+ * The same rewrite over loose nodes — what `sb_add` mints (an empty state's
+ * "No products yet"), which is no page seed but the same English (TTG gap #46).
+ * True when it changed something.
+ */
+export function localizeNodes(nodes: Iterable<unknown>, table: Readonly<Record<string, string>> = SEED_COPY_VI): boolean {
+  let changed = false;
+  for (const n of nodes) {
     const sp = (n as { specials?: Record<string, unknown> }).specials;
     if (!sp) continue;
     for (const k of ['text', 'label']) {
       const v = sp[k];
-      if (typeof v === 'string' && table[v]) sp[k] = table[v];
+      if (typeof v === 'string' && table[v]) {
+        sp[k] = table[v];
+        changed = true;
+      }
     }
   }
+  return changed;
 }
 
 export { SEED_COPY_VI } from './seedcopy.js';

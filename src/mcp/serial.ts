@@ -1,5 +1,16 @@
+import { AsyncLocalStorage } from 'node:async_hooks';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { CallToolRequestSchema, ErrorCode, McpError } from '@modelcontextprotocol/sdk/types.js';
+
+/**
+ * WHICH TOOL CALL IS RUNNING, for code far below it that records history:
+ * `sb_undo` listed thirteen identical `put:…/source` entries and the caller
+ * could not tell the sb_remove from the sb_move (TTG gap #54). Per call, so a
+ * parallel free tool never relabels a serialized one.
+ */
+export const currentCall = new AsyncLocalStorage<{ name: string; args: Record<string, unknown> }>();
+
+type Req = { params: { name: string; arguments?: Record<string, unknown> } };
 
 /**
  * ONE OPEN DOCUMENT, ONE CALL AT A TIME, IN ARRIVAL ORDER.
@@ -32,11 +43,12 @@ export function serializeToolCalls(server: McpServer, free: (name: string) => bo
   const set = inner.setRequestHandler.bind(inner);
   inner.setRequestHandler = ((schema: unknown, handler: (req: { params: { name: string } }, extra: { signal?: AbortSignal }) => unknown) => {
     if (schema !== CallToolRequestSchema) return set(schema as never, handler as never);
-    return set(schema as never, ((req: { params: { name: string } }, extra: { signal?: AbortSignal }) => {
-      if (free(req.params.name)) return handler(req, extra);
+    return set(schema as never, ((req: Req, extra: { signal?: AbortSignal }) => {
+      const call = () => currentCall.run({ name: req.params.name, args: req.params.arguments ?? {} }, () => handler(req, extra));
+      if (free(req.params.name)) return call();
       const run = tail.then(() => {
         if (extra?.signal?.aborted) throw new McpError(ErrorCode.ConnectionClosed, 'Request was cancelled');
-        return handler(req, extra);
+        return call();
       });
       tail = run.catch(() => undefined);
       return run;

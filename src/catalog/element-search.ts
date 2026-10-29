@@ -323,7 +323,27 @@ export function traitsFor(type: string, control?: string): Record<string, unknow
         `sbuilder: ${type} has no control "${control}". It has: ${el.controls.join(', ')}.`,
       );
     }
-    return { type, control, ...describeControl(control) };
+    const desc = describeControl(control);
+    // A CONTROL NAMED AFTER THE KEY IT WRITES. media-dataset's `layout` row is a
+    // Vue picker the trait registry does not declare, so this answered
+    // "writes: null" while the key, its values and its fallback sat in the
+    // generated vocabulary (TTG gap #47). Joined on the element's own config.
+    if (desc.writes === null) {
+      const vocab = { ...sharedVocabularies(el.defaults ?? {}), ...elementVocabularies(el.type) }[control] as unknown as
+        | (Record<string, unknown> & { target?: string; writeKey?: string })
+        | undefined;
+      if (vocab || control in (el.defaults?.config ?? {})) {
+        const { target = 'config', writeKey = control, ...values } = vocab ?? {};
+        return {
+          type,
+          control,
+          writes: [{ target, writeKey }],
+          ...values,
+          ...(target === 'config' && isBaseOnlyConfig(type, writeKey) ? { responsive: false } : {}),
+        };
+      }
+    }
+    return { type, control, ...desc };
   }
 
   // Read from base only whatever breakpoint is asked for — sb_set routes them

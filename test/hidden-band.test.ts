@@ -81,7 +81,7 @@ async function open() {
   const { call, close } = await p.connect();
   await call('sb_page_open', { site_id: 's1', page_id: 'pg_1' });
   const add = await call('sb_add', { parent_id: 'ROOT', spec: { type: 'flex-section' }, dry_run: false });
-  return { call, close, id: (add.json.added as string[])[0] };
+  return { call, close, id: Object.keys(add.json.added as Record<string, string>)[0] };
 }
 
 describe('hiding at base says it hides only the desktop band, once', () => {
@@ -151,7 +151,7 @@ describe('hidden_band counts a band as showing only when no ancestor hides it th
     const { call, close, id } = await open();
     try {
       await call('sb_set', hideAt(id, NARROW));
-      const kid = ((await call('sb_add', { parent_id: id, spec: { type: 'flex-block' }, dry_run: false })).json.added as string[])[0];
+      const kid = Object.keys((await call('sb_add', { parent_id: id, spec: { type: 'flex-block' }, dry_run: false })).json.added as Record<string, string>)[0];
       expect(band(await call('sb_set', { id: kid, namespace: 'config', keys: { hidden: true } }))).toEqual([]);
     } finally {
       await close();
@@ -162,7 +162,7 @@ describe('hidden_band counts a band as showing only when no ancestor hides it th
     const { call, close, id } = await open();
     try {
       await call('sb_set', hideAt(id, ['mobile']));
-      const kid = ((await call('sb_add', { parent_id: id, spec: { type: 'flex-block' }, dry_run: false })).json.added as string[])[0];
+      const kid = Object.keys((await call('sb_add', { parent_id: id, spec: { type: 'flex-block' }, dry_run: false })).json.added as Record<string, string>)[0];
       const [c] = band(await call('sb_set', { id: kid, namespace: 'config', keys: { hidden: true } }));
       expect(c.problem).toMatch(/laptop, tablet still show/);
       expect(c.fix).not.toMatch(/mobile/);
@@ -175,7 +175,7 @@ describe('hidden_band counts a band as showing only when no ancestor hides it th
     const { call, close, id } = await open();
     try {
       await call('sb_set', hideAt(id, NARROW));
-      const mid = ((await call('sb_add', { parent_id: id, spec: { type: 'flex-block' }, dry_run: false })).json.added as string[])[0];
+      const mid = Object.keys((await call('sb_add', { parent_id: id, spec: { type: 'flex-block' }, dry_run: false })).json.added as Record<string, string>)[0];
       expect(band(await call('sb_add', { parent_id: mid, spec: { type: 'flex-block', config: { hidden: true } } }))).toEqual([]);
     } finally {
       await close();
@@ -204,7 +204,7 @@ describe('hidden_band judges the ancestors as the WHOLE batch leaves them', () =
   it('one edits[] that hides the parent at the narrow bands and the child at base is silent', async () => {
     const { call, close, id } = await open();
     try {
-      const kid = ((await call('sb_add', { parent_id: id, spec: { type: 'flex-block' }, dry_run: false })).json.added as string[])[0];
+      const kid = Object.keys((await call('sb_add', { parent_id: id, spec: { type: 'flex-block' }, dry_run: false })).json.added as Record<string, string>)[0];
       const r = await call('sb_set', {
         edits: [
           ...NARROW.map((breakpoint) => ({ id, namespace: 'config', keys: { hidden: true }, breakpoint })),
@@ -221,7 +221,7 @@ describe('hidden_band judges the ancestors as the WHOLE batch leaves them', () =
     const { call, close, id } = await open();
     try {
       await call('sb_set', hideAt(id, NARROW));
-      const kid = ((await call('sb_add', { parent_id: id, spec: { type: 'flex-block' }, dry_run: false })).json.added as string[])[0];
+      const kid = Object.keys((await call('sb_add', { parent_id: id, spec: { type: 'flex-block' }, dry_run: false })).json.added as Record<string, string>)[0];
       const r = await call('sb_set', {
         edits: [
           ...NARROW.map((breakpoint) => ({ id, namespace: 'config', keys: { hidden: false }, breakpoint })),

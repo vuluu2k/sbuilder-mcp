@@ -33,6 +33,8 @@ import { text } from '../mcp/response.js';
 import { tokenFor } from './api.js';
 import type { ToolContext } from './context.js';
 import type { PageSession } from './page.js';
+import { currentCall } from '../mcp/serial.js';
+import { sourcePath } from '../transport/pages.js';
 
 export interface UndoEntry {
   /** 1 is the most recent. Stable only until the next write. */
@@ -43,6 +45,24 @@ export interface UndoEntry {
   at: string;
   /** The field names captured, so a caller can see what would go back. */
   fields: string[];
+  /** The tool whose write this reverses, and what it was asked to do. */
+  tool?: string;
+  summary?: string;
+}
+
+/** "sb_remove ac_1", "sb_add flex-section under ROOT", "sb_set bt_1, bt_2" — ids and types only, never values. */
+export function summarize(name: string, args: Record<string, unknown>): string {
+  const str = (v: unknown) => (typeof v === 'string' && v ? v : '');
+  const spec = args.spec as { type?: unknown } | undefined;
+  const edits = Array.isArray(args.edits) ? (args.edits as Array<{ id?: unknown }>).map((e) => str(e.id)).filter(Boolean) : [];
+  const parts = [
+    str(spec?.type),
+    str(args.id),
+    args.parent_id ? `under ${str(args.parent_id)}` : '',
+    edits.join(', '),
+    str(args.action),
+  ].filter(Boolean);
+  return [name, ...parts].join(' ').slice(0, 100);
 }
 
 interface Stored extends UndoEntry {
@@ -125,12 +145,14 @@ export class UndoLog {
   record(operationId: string, path: string, before: unknown, meta: { session?: boolean; peer?: string[] } = {}): void {
     const body = restoreBodyFrom(operationId, before);
     if (!body) return;
+    const call = currentCall.getStore();
     this.entries.unshift({
       index: 0,
       operationId,
       path,
       at: new Date().toISOString(),
       fields: Object.keys(body),
+      ...(call ? { tool: call.name, summary: summarize(call.name, call.args) } : {}),
       body,
       ...(meta.session ? { session: true } : {}),
       ...(meta.peer?.length ? { peer: meta.peer } : {}),
@@ -197,16 +219,27 @@ export function registerUndoTools(server: McpServer, ctx: ToolContext, pages: Pa
         '.../pages/{pageId}/history) survives a restart. No argument lists what is undoable.',
       inputSchema: {
         index: z.number().int().min(1).optional().describe('1 is the most recent write'),
+        all: z.boolean().optional().describe('Every page, not just the open one'),
         dry_run: z.boolean().optional(),
       },
       annotations: { readOnlyHint: false, destructiveHint: true, openWorldHint: true },
     },
-    async ({ index, dry_run }) => {
-      const undoable = ctx.undo.list();
+    async ({ index, all, dry_run }) => {
       if (index === undefined) {
+        // SCOPED TO THE OPEN PAGE (TTG gap #54): an entry from another page,
+        // hours old, sat in the list as just another `put:…/source`. Another
+        // page's saves are counted and hidden; non-page writes always show.
+        // Indexes stay global, so `index` means the same with or without `all`.
+        const every = ctx.undo.list();
+        const here = pages.page();
+        const mine = here ? sourcePath(here.siteId, here.pageId) : undefined;
+        const otherPage = (e: UndoEntry) => !all && !!mine && e.operationId === PAGE_SOURCE_OP && e.path !== mine;
+        const undoable = every.filter((e) => !otherPage(e));
+        const hidden = every.length - undoable.length;
         return text({
           undoable,
-          ...(undoable.length === 0
+          ...(hidden ? { other_pages: hidden, other_pages_note: 'Saves to other pages; all:true lists them.' } : {}),
+          ...(every.length === 0
             ? {
                 note:
                   'Nothing to undo. Page and form saves made here and PUTs through sb_api_call ' +

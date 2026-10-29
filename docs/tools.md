@@ -97,7 +97,9 @@ types, so a create does not try to supply an `id`.
 The distinction between the last two is still load-bearing: treating `body_note` as
 "takes no body" would send an empty PUT and wipe a page.
 
-Scoring is term hits weighted by field (tag 5, path 3, summary 2), ties broken by id. It is
+Scoring is term hits weighted by field (tag 5, path 3, summary 2), ties broken by id. A term
+hits the START of a word, never its middle — "list" inside "wishlist" once ranked
+`wishlist-demand` first for "list categories" — while a prefix still finds the longer form. It is
 deliberately not fuzzy — an empty list is cheap to recover from, a confidently wrong
 operation is not.
 
@@ -424,15 +426,25 @@ read them until now.
 site overlay, and `app: true` for the root of a composed app block — nothing under it is
 editable. **Never the raw document** — a real page is hundreds of KB.
 
+A shared header/footer or an overlay is **one line** (no `kids`) unless `chrome: true` — they
+are the same on every page and were ~70% of a routine outline. An `accordion-content` /
+`tab-content` row shows its `label`, so four FAQ rows are not four identical lines.
+
 ## `sb_node_read`
 
-`id`. One node in full. Attaches a `warning` when the node is a shared global.
+`id`. One node in full. Attaches a `warning` when the node is a shared global. While
+`config.backgroundSceneSource` is empty (no scene) the 13 seeded `backgroundScene*` keys are
+left out of the answer — they are inert, and were ~40% of a section's read. The node itself is
+untouched.
 
 **Many nodes at once.** The move after a look is "raise this heading, widen that card,
 recolour the button" — pass them as `edits` and it is one batch of patches, one save and
 one live frame instead of one of each per node. Every edit is checked before any patch is
 emitted, so a bad id in the fourth edit refuses the whole batch. The result is then
-`{ set: [{ id, keys }], rev, warnings? }` with `warnings` keyed by node id.
+`{ set: [{ id, keys, unset?, absent? }], rev, warnings? }` with `warnings` keyed by node id.
+`unset` lists the keys that were really there and are now removed; `absent` the ones named
+that the slot did not hold (usually the wrong slot — a breakpoint versus base). A single-node
+call carries the same two fields beside `set`.
 
 ## `sb_catalog_search`
 
@@ -478,6 +490,16 @@ list that replaces it once the node carries a purchase binding), and `bindable` 
 specials `sb_bind` accepts, including generated binding fields such as `boundProductId`). A declared control that writes a base-only key is marked
 `responsive: false`.
 
+Said **once per process**: the element's hints (also spent by `sb_catalog_search` with
+`detail: true`), `animation` / `animation_values`, `undeclared_note` and `style_is_open_css`
+read `"said earlier in this session"` on later calls — list-dataset went from ~15.8 KB to
+~8 KB on a second read.
+
+With `control`, a control the platform does not declare but which is NAMED AFTER a config key
+the element seeds or has a vocabulary for answers that key: `media-dataset` `layout` →
+`writes: [{ target: "config", writeKey: "layout" }]`, its `values`, `fallback`, and
+`responsive: false`. It used to answer `writes: null`.
+
 ## `sb_add`
 
 | Arg | Type | Notes |
@@ -490,6 +512,21 @@ specials `sb_bind` accepts, including generated binding fields such as `boundPro
 
 Pass `children` to build a whole section in one call. Refuses a root-only element inside a
 section, a child a parent's whitelist excludes, and any add into a non-container.
+
+**The answer maps ids to types.** `added: { "<id>": "<type>", … }` holds the spec's nodes (and
+any seeded content children) in build order; `satellites: { "<id>": "<type>" }` holds what hangs
+off an owner's config — an empty state and the heading/text inside it, an accordion's item skin —
+so a satellite's id is never mistaken for one of your children. It used to be one flat id list.
+
+**Seeded copy speaks the site's language.** An empty state minted here ("No products yet",
+"This item is unavailable", …) is rewritten through the same `SEED_COPY_VI` table
+`sb_page_create` uses when the site's `settings.locale` is `vi` — or unread, the same default.
+The settings are read only when the add minted such copy.
+
+**A `media-dataset` inside a card is one picture.** Added childless under a `dataset-block`
+(a list's card) or a `cart-item` with no `config.layout` of its own, it is seeded
+`layout: "single"` — what the editor's card and cart-line presets do. The default `bottom`
+draws the feature plus a thumbnail strip under every card.
 
 `inert` names an element that renders while wired to nothing; a placement hint
 (`accordion-content`, `menu-drawer`, a satellite) is silent when its parent — `parent_id` for the
@@ -556,7 +593,7 @@ writes `filterValues`); its dry run reports the counts, not the rows.
 | `unset` | string[]? | Keys to REMOVE from the same slot — the only way to undo a write. `null` is not the same: it is a stored value, so the override still counts as present |
 | `breakpoint` | `desktop` \| `laptop` \| `tablet` \| `mobile` | Defaults to `desktop` |
 | `base` | boolean? | Write at base instead of per breakpoint |
-| `edits` | array? | Many nodes in one call: `[{ id, namespace, keys, breakpoint?, base?, state?, unset? }]`; the single-node fields above are then ignored |
+| `edits` | array? | Many nodes in one call: `[{ id, namespace, keys?, breakpoint?, base?, state?, unset? }]` (`keys` optional when `unset` is given); the single-node fields above are then ignored |
 | `dry_run` | boolean? | Defaults to true |
 | `force` | boolean? | Override a soft guard; the message is returned as `forced[]` instead of thrown. Hard guards ignore it — see "What every write checks" |
 
@@ -1227,6 +1264,10 @@ Refuses ROOT, site overlays, and a subtree that contains an app block — the co
 the block's stamps and the save would reduce it back to a reference with a warning this
 client does not surface.
 
+The answer is `{ duplicated, into, copies, rev }`, where `copies` maps EVERY source id to its
+copy and type — `{ "<oldId>": ["<newId>", "<type>"] }`, satellites included — so the copied
+row's answer text is one lookup away instead of a whole `sb_outline`.
+
 **Onto another page — the editor's copy/paste.** `to_page_id` puts the copy on that page
 instead (`parent_id`, `index` optional; the default is ROOT, before a global footer), and
 `to_site_id` on another site. The parent gets the same checks `sb_add` gives one. A dry run
@@ -1391,6 +1432,10 @@ than sent: one unknown id makes the platform refuse the whole publish. The memor
 `publishedAt` the cascade wrote, and holds only while the page still carries it — published
 through the editor or `sb_api_call`, or unpublished, the page is forgotten and the timestamps
 answer again.
+
+The platform has **no cascade preview** — `cascadeTargets` runs inside publish only — so the dry
+run cannot list those pages; it states the rule once per process as `cascade_note`, and the real
+publish names them under `cascaded`.
 
 **It reports WHICH REVISION went live** — `id` (the published row), `publishedAt`, and
 `fromVersionId` (the draft version it was compiled from). Those three answer the question a
@@ -1722,6 +1767,8 @@ box. Returns `{ findings, fixes, findings_notice? }`, in document order:
 | `dead_binding_field` | A binding field outside `specials` — stored, published, and ignored |
 | `unknown_element` | A type the catalog does not know; run `npm run codegen` |
 | `unlinked_form` | A `form` naming no form — composes nothing and publishes an EMPTY BOX. The platform stays deliberately quiet about this one |
+| `link_colour` | An `<a>` in `specials.textHtml` with no inline `color`: nothing styles a link inside text (no element control, no theme token), so it renders the browser's default blue `rgb(0,0,238)`, underlined. Fix: `<a href="…" style="color:inherit">` or the brand colour — the rich-text gate keeps a style color. `sb_add` / `sb_set` warn the same as `link_colour` |
+| `default_font` | A node still holding its element's LITERAL seed font (`accordion-item`'s `"Inter"`) while the site theme's body text style (`text-2`) is another family — it renders in a typeface nothing else uses. `sb_review` only, and only on a site theme (the starter is Inter). Fix: `fontFamily: "var(--wb-ts-text-2-family)"` at base, the variable `tab-item` and `menu-item` already wear |
 | `default_seed_copy` | A seeded satellite still carrying the PLATFORM's own English copy — a repeater's empty state saying "No products yet" in `#171717` ink. Only ever visible when the list is empty, which is why nobody writes it. Also, from `sb_review` only (it reads the site's locale): a store seed's English line ("Add To Cart") on a Vietnamese site, naming the Vietnamese |
 | `example_copy` | A built-in layout's example copy never replaced — "Tiêu đề chính", "Lợi ích một", the picture-slot sentence addressed to the agent, and invented CLAIMS ("1.000+", "4,9/5", a testimonial signed by a stranger). Derived by building every pattern, minus a short list of labels usable as they stand ("Mua ngay", "Xem tất cả"). `sb_template_use` says how many it just placed (`copy`) |
 | `invisible_text` | Text or a button whose LITERAL colour has under 1.5:1 contrast with the nearest literal fill under it — present in the HTML, unreadable on the page. Silent when either side is a theme var |
@@ -1812,12 +1859,12 @@ publish panel then listed five gaps.
 | `siteChrome` | Two or more pages and NO global section, so each page carries its own header and footer. Changing the menu is one edit per page, the copies drift, and a visitor meets a slightly different site on every click. Asked of every site, not only a store — it is the one question here that is not about money |
 | `siteFooter` | Two or more pages, shared chrome exists, and none of it is a `footer` — every page ends at its last section, with no policy links, contact or copyright line. The footer is an opt-in flag on the chrome flow, so this is the default shape of a site built here. Fix: `sb_store action:"chrome" footer:true` |
 | `homepage` | No PUBLISHED page carries `isHomepage`, so "/" answers 404 while every page on the site is reachable by slug. `draft: true` when the home page exists unpublished. Fix: `PATCH /api/v1/pages/{id}` with `isHomepage: true` (it moves the star and clears the slug), or `sb_page_create` with `is_homepage: true`, which adopts the one the site has. Silent when the list did not carry the flag |
-| `unreachablePage` | A published content page that no menu item (by page id or url, any depth) and no `href` in the shared header/footer, on the open page, or in the body of any other published page points at — a `menu` node's own snapshot rows included; the other pages' documents are read only when a candidate exists. The address works and the sitemap lists it; no visitor ever arrives. Never the home page, a draft or an entity template. Fix: append `{ label, link: { type: "page", pageId } }` to the site menu (`GET`/`PUT /api/sites/{siteId}/menus`), or link it from the footer. Silent when the menus or the shared sections were not read |
+| `unreachablePage` | A published content page that no menu item (by page id or url, any depth) and no `href` in the shared header/footer, on the open page, or in the body of any other published page points at — a `menu` node's own snapshot rows included; the other pages' documents are read only when a candidate exists. The address works and the sitemap lists it; no visitor arrives but by search. Never the home page, a draft other than the OPEN page (judged before its first publish), an entity template, or a page with `settings.noIndex: true` — the sitemap leaves those out (`page/sitemap/sitemap.go`), so an unlinked one is a deliberate landing page. Fix: append `{ label, link: { type: "page", pageId } }` to the site menu (`GET`/`PUT /api/sites/{siteId}/menus`), or link it from the footer; a page kept out on purpose: `sb_page_update seo {noIndex: true}`. Silent when the menus or the shared sections were not read |
 | `cartDrawer` | Something opens the cart but the site has no cart drawer, so it opens nothing. Fix: `sb_store action:"cart"` |
 | `cartDrawerLanguage` | The cart drawer still carries ANOTHER locale's seed words (exact match against the editor's per-locale seeds, e.g. "Your cart" / "Checkout" on a `vi` site) — a store made before the drawer was seeded in the site's language. Text the merchant edited never matches. Asked of every site. Fix: open a page of the site, then `sb_store action:"cart" relocalize:true dry_run:false` |
 | `cartDrawerThumbnail` | The cart drawer's line thumbnail is a GALLERY (feature image plus thumbs strip) in a 64px line — a drawer seeded before the platform fixed its seed. Asked of every site. Fix: open a page of the site, then `sb_store action:"cart" relocalize:true dry_run:false` |
 | `cartCount` | Something opens the cart but nothing shows what is in it. `cart-count` is opt-in because `open_cart` is an ACTION any element can carry, so a site built with these tools never gets one: a shopper adds an item, sees a toast fade, and then no evidence anywhere that their basket is not empty |
-| `pageSeo` | Published content pages (`page`, `about`, `contact`, `policy`, `faq`, `blog`) whose `settings` carry no `title` or `description`. Each serves the SITE NAME as its `<title>` and no meta description, so a search result cannot tell them apart. Entity templates get theirs merged from the entity; error/maintain have no address. Fix: `sb_page_update` with `seo: {title, description}` — it reads the page and merges, because `settings` replaces wholesale on the platform. Silent when the page list did not carry `settings` |
+| `pageSeo` | Published content pages — and the OPEN page while still a draft, so the review before a first publish catches it — (`page`, `about`, `contact`, `policy`, `faq`, `blog`) whose `settings` carry no `title` or `description`. Each serves the SITE NAME as its `<title>` and no meta description, so a search result cannot tell them apart. Entity templates get theirs merged from the entity; error/maintain have no address. Fix: `sb_page_update` with `seo: {title, description}` — it reads the page and merges, because `settings` replaces wholesale on the platform. Silent when the page list did not carry `settings` |
 | `articleTemplate` / `blogCategoryPage` / `coursePage` / `brandPage` | The site has articles, blog categories, courses or product brands (counted from their own lists; brands from `GET /product-brands`) and no PUBLISHED page of type `post` / `blog` / `course` / `brand`. `/blog/{slug}`, `/blog-categories/{slug}`, `/courses/{slug}` and `/brands/{slug}` each resolve through that type's template (`storefront/entityroute.go`), so every such link 404s. `draft: true` when the page exists unpublished. For `course` and `brand`, which `sb_page_create` opens empty, the fix says to publish it WITH content — an empty entity template answers 500 at every one of its URLs. Silent when the count is zero or unread. Blog TAGS have no storefront route, so nothing is asked of them |
 | `categoryScope` | The open page is the shared `category` template and every product repeater on it is pinned to ONE named collection (`collectionType: "collection"`), so every `/collections/{slug}` shows that one. Since the platform scopes a category template itself, `all_products` / `page_collection` follow the URL and a shared template is correct — no page per category is needed |
 
@@ -2458,7 +2505,7 @@ Run a store flow that must happen in a **fixed order**.
 | `template` | enum? | `form` — which of the platform's 17 templates to seed |
 | `name` | string? | `form` — the form's name in the merchant's list. `overlay_attach` with no `overlay_id` — the new overlay's name. `chrome` — the site name the header shows (default: the site record's, which an API key cannot read) |
 | `footer` | boolean? | `chrome` — build a shared **footer** instead of a header |
-| `node_id` | string? | `menu` — the menu node on the open page |
+| `node_id` | string? | `menu` — the menu node on the open page. `form` — a node of the open page to place the new form in |
 | `menu_id` | string? | `menu` — an existing menu; omit to use the site's first, or create one |
 | `kind` | `"popup"` \| `"quickview"`? | `overlay_attach` — which kind of overlay to attach |
 | `overlay_id` | string? | `overlay_attach` — an existing overlay; omit to create one from the platform's seed |
@@ -2500,6 +2547,11 @@ By default it makes **no page**. Where a login form belongs is a design decision
 `/account` is the one page that is not a free choice: `membersOnlyRedirectTarget` sends every
 gated visitor there. Place the form yourself with `sb_add` and point `specials.formId` at the
 id this returns.
+
+**Or pass `node_id`** to place it on the OPEN page, inside that node: the `form` node pointing
+at the new form is added in the same call and reported as `placed: { id, parent }`. The
+placement is checked before the form is created (a bad node, or an open page on another site,
+creates nothing); `page_name` and `node_id` together are refused.
 
 **Or pass `page_name`** — and `headline` with it — to have that page made and the form placed
 on it in the same call: a new page — of type `login`, `register` or `contact` for those templates, else `page` — carrying a section, the headline if one was
@@ -2887,10 +2939,16 @@ carrying it — rather than as a defect.
 
 `recovery` LISTS the real recovery points rather than describing them, projected to
 id / label / when because one version of a two-node page measured 1,690 bytes and a listing
-of twenty realistic ones is 1.4 MB. The platform appends an autosave checkpoint on EVERY
-draft save and mints a labelled snapshot on demand, so **the checkpoint before a
-whole-document PUT is already taken**; a restore changes the DRAFT only, and the platform
-writes a `__pre_restore` version of its own first, so a restore is itself undoable.
+of twenty realistic ones is 1.4 MB. The platform keeps autosave checkpoints, but since
+web_builder `e3b2ee056` one author's saves within 5 minutes of the newest checkpoint FOLD into
+that one row (it holds the latest document) — so fifteen quick saves list as ONE checkpoint, and
+the moment before a risky whole-document PUT is only kept if you snapshot it (`sb_page_version`
+`"save"`). A restore changes the DRAFT only, and the platform writes a `__pre_restore` version
+of its own first, so a restore is itself undoable.
+
+**A deleted page** answers its source read and save with 404; every page tool now says
+`page <id> no longer exists (deleted, or a wrong id) — sb_page_open another page` instead of
+the bare `source not found`.
 
 `data` appears only when the page holds record lists: `record_lists` names each one's `{id,
 collection, relation?}`. THE DATA IS NOT IN THE DOCUMENT — a record edit moves neither the draft
@@ -2940,7 +2998,14 @@ choosing a higher index. Entries live in this process only, capped at 20; the pl
 | Arg | Type | Notes |
 | --- | --- | --- |
 | `index` | number? | 1 is the most recent write. Omit to **list** what is undoable |
+| `all` | boolean? | List every page's entries, not only the open page's |
 | `dry_run` | boolean? | Defaults to **true** |
+
+Each listed entry carries `tool` and a `summary` of what it was asked — `"sb_remove ac_1"`,
+`"sb_add flex-section under ROOT"`, `"sb_set bt_1, bt_2"` (ids and types, never values) — beside
+the operation, path and time. The list is the OPEN page's saves plus every non-page write;
+another page's saves are counted as `other_pages` and shown with `all: true`. Indexes are the
+same either way.
 
 Every whole-document replace this server can make is one-way: `PUT /settings` is not a patch
 and a partial body erases the store's configuration; `PUT .../forms/{id}/document` replaces a
@@ -2949,8 +3014,8 @@ the editor has undo. An agent had nothing, and one call does more damage.
 
 **FOR A PAGE THIS IS THE SECOND ANSWER, NOT THE ONLY ONE — and this page said otherwise for
 three phases.** It read "the platform has no page history, no versions and no restore", which
-was true of the OpenAPI document and false of the platform: `saveDraftRaw` appends an autosave
-checkpoint on every draft save, `SaveVersion` mints a labelled snapshot, and both restore.
+was true of the OpenAPI document and false of the platform: `saveDraftRaw` keeps autosave
+checkpoints (one author's saves within 5 min fold into one row), `SaveVersion` mints a labelled snapshot, and both restore.
 They carried no `@Router` line, so they reached a browser and reached nothing else — now
 annotated and on the call sheet (`sb_page_version`). Reach for them first when a
 page is what was wrecked: they are the platform's own and survive everything, while the log

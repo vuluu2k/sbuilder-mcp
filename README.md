@@ -85,7 +85,7 @@ in this client: one would put the very key the platform exists to hold back into
 | `sb_api_find` | Find API operations by intent — one line per match — then read one operation's call sheet by id: real parameter schemas, the credential it needs, and the body's fields read off the handler that decodes them, each carrying the trap its own doc comment records |
 | `sb_api_call` | Execute an operation, or any route by method+path; dry run by default. Field selection (dotted paths, on lists and single-object write answers) and local result pagination; `merge` for whole-record PUTs, `If-Match`, multipart `file` |
 | `sb_page_open` | Open a page for editing and return its outline — or, with `form_id`, a form's field document (fields, defaults, dependent-field rules) |
-| `sb_outline` | The open page as a compressed tree — never a raw document dump |
+| `sb_outline` | The open page as a compressed tree — never a raw document dump; shared header/footer and overlays one line each unless `chrome: true` |
 | `sb_node_read` | One node in full, with a warning if it is a shared global |
 | `sb_catalog_search` | Find an element by what it should do, using the platform's own AI hints |
 | `sb_traits_for` | An element's inspector — tabs, groups, controls and what each declared one writes — plus its AI hints, defaults and containment rules |
@@ -116,7 +116,7 @@ in this client: one would put the very key the platform exists to hold back into
 | `sb_theme` | Read or patch the site's palette and type scale — the layer every style preset resolves from, so one token repaints every page; per-breakpoint text-style overrides and element style `presets`; `locale` sets the site's language |
 | `sb_translate` | Translate a site the way the editor's Multilingual panel does — enable languages, list a page's strings as missing / done / outdated, write or machine-fill them, approve machine rows |
 | `sb_store` | Run a store flow that must happen in a fixed order — `checkout` (the four writes that make a working one), `checkout_sync` (the store's current payment and delivery methods into every existing order form, checkout page republished), `form` (any of the platform's 17 templates with its own field document), `chrome` (one shared header or footer on a real site menu — site name linked home, desktop menu, mobile drawer, search, cart and account icons), `menu` (a menu node bound to the site's menu, its links resolved), `overlay_attach` (a pop-up or quick view on the open page), `cart` (the site's cart drawer, when it has none; `relocalize` puts an existing one in the site's language) and `app` (a built-in app plus the pages it needs), `global_attach` / `global_detach` (put an EXISTING shared section on the open page, or take it off), `global_promote` (make a section on the page a NEW shared section) and `template_save` (save a section as a reusable template) |
-| `sb_undo` | Undo / redo this session's writes — page and form edits and `sb_api_call` PUTs; a page is refused if someone else saved it since. The platform's versions and history (`sb_page_version`) outlive this process |
+| `sb_undo` | Undo / redo this session's writes — page and form edits and `sb_api_call` PUTs, each named by tool and target, the open page's by default (`all: true` for every page); a page is refused if someone else saved it since. The platform's versions and history (`sb_page_version`) outlive this process |
 
 Twenty-eight tools, **919 API operations** (344 of the 429 writes carrying a body shape read
 off the handler), 124 elements, 95 binding sources. `sb_api_find`

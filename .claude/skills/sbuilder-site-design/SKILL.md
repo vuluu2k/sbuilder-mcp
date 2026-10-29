@@ -82,8 +82,12 @@ binding is the piece a hand build gets wrong.
 
 **5d. A REPEATER'S SOURCE IS A FIXED VOCABULARY, and a wrong word is silent.**
 `config.collectionType` takes `all_products`, `collection` (+ `collectionId`), `related` (the
-page product's neighbours), `featured` (the merchant's own flag) or `slot` (a curated shelf,
-with `relationSlotKey`). Anything else — `bestseller`, `newest` — normalises to `all_products`
+page product's neighbours), `featured` (the merchant's own flag), `slot` (a curated shelf,
+with `relationSlotKey`), `page_collection` (the category the URL names — one category template
+serving them all) or `page_brand` (the brand the URL names, on a brand page); `category` is an
+alias of `collection`. Seven values, read off the generated catalog 2026-10-29 (TTG gap #59) —
+the list grows, so `sb_traits_for list-dataset` `config_values.collectionType` is the authority.
+Anything else — `bestseller`, `newest` — normalises to `all_products`
 and repeats the whole catalogue under your heading, with no error. `sb_traits_for` lists the
 legal values under `config_values`; read them rather than guessing.
 

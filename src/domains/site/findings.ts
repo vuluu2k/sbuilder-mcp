@@ -36,6 +36,12 @@ export const FIX: Record<string, string> = {
     'Write this shop\'s own words: sb_set id "<id>", namespace specials, keys { "<key>": … }. ' +
     'A figure, a delivery or return promise, or a customer quote must be TRUE for this shop — ' +
     'if you do not know it, remove the element (sb_remove) rather than guess.',
+  link_colour:
+    'Colour each link inline: sb_set id "<id>", namespace specials, keys { "textHtml": … } with ' +
+    '<a href="…" style="color:inherit"> (or the brand colour) — no control or theme token reaches an <a> in text.',
+  default_font:
+    'Wear the site\'s text font: sb_set id "<id>", namespace style, base true, keys { "fontFamily": ' +
+    '"var(--wb-ts-text-2-family)" } — the variable tab-item and menu-item already use, so it follows the theme.',
   default_seed_copy:
     'Write it in the shop\'s own language and ink: sb_set id "<id>", namespace specials, ' +
     'keys { "<key>": … }. It is a seeded satellite (an empty state, an element\'s chrome), ' +

@@ -127,7 +127,7 @@ describe('sb_add and sb_set report unknown keys', () => {
         dry_run: false,
       });
       expect(r.raw).not.toMatch(/^sbuilder:/);
-      expect(r.json.added.length).toBeGreaterThan(0);
+      expect(Object.keys(r.json.added).length).toBeGreaterThan(0);
       expect(r.json.checks).toEqual([expect.objectContaining({ code: 'unknown_key', key: 'config.colour' })]);
     } finally {
       await close();

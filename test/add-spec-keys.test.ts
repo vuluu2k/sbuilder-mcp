@@ -50,7 +50,7 @@ describe('sb_add spec keys', () => {
         },
       });
       expect(added.isError, added.raw).toBe(false);
-      const btn = (added.json.added as string[])[1];
+      const btn = Object.keys(added.json.added as Record<string, string>)[1];
       const node = (await call('sb_node_read', { id: btn })).json.node;
       expect(node.responsive.tablet.config.hidden).toBe(true);
       expect(node.responsive.mobile.config.hidden).toBe(true);
@@ -69,7 +69,7 @@ describe('sb_add spec keys', () => {
         spec: { type: 'flex-section', children: [{ type: 'list-dataset', responsive: { mobile: { config: { quantity: 3, itemsPerRow: 1 } } } }] },
       });
       expect(added.isError, added.raw).toBe(false);
-      const list = (added.json.added as string[])[1];
+      const list = Object.keys(added.json.added as Record<string, string>)[1];
       const node = (await call('sb_node_read', { id: list })).json.node;
       expect(node.config.quantity).toBe(3);
       expect(node.responsive.mobile.config.quantity).toBeUndefined();

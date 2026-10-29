@@ -102,7 +102,8 @@ Phân biệt giữa hai mục cuối vẫn chịu lực: coi `body_note` là "kh
 PUT rỗng và xoá trắng một trang.
 
 Cách chấm điểm là đếm từ khoá có trọng số theo trường (tag 5, path 3, tóm tắt 2), hoà thì
-xếp theo id. Cố ý không dùng fuzzy — một danh sách rỗng thì dễ chữa, còn một operation sai
+xếp theo id. Từ khoá khớp ĐẦU một từ, không bao giờ giữa từ — "list" nằm trong "wishlist" từng
+đưa `wishlist-demand` lên đầu cho "list categories" — còn tiền tố vẫn tìm được dạng dài hơn. Cố ý không dùng fuzzy — một danh sách rỗng thì dễ chữa, còn một operation sai
 mà trông chắc chắn thì không.
 
 ### Lấp đầy một catalogue
@@ -421,15 +422,25 @@ bị rút gọn. Response vẫn luôn mang theo chúng; trước nay không ai �
 là site overlay, và `app: true` nếu là gốc của một app block đã ghép — không sửa được gì
 bên dưới nó. **Không bao giờ trả tài liệu thô** — một trang thật nặng hàng trăm KB.
 
+Header/footer dùng chung hoặc overlay chỉ là **một dòng** (không có `kids`) trừ khi
+`chrome: true` — chúng giống nhau trên mọi trang và từng chiếm ~70% một outline thường ngày.
+Dòng `accordion-content` / `tab-content` hiện `label` của nó, nên bốn dòng FAQ không còn là bốn
+dòng giống hệt nhau.
+
 ## `sb_node_read`
 
-`id`. Một node đầy đủ. Kèm `warning` nếu node đó là global dùng chung.
+`id`. Một node đầy đủ. Kèm `warning` nếu node đó là global dùng chung. Khi
+`config.backgroundSceneSource` rỗng (không có scene), 13 key `backgroundScene*` được gieo sẵn
+bị bỏ khỏi câu trả lời — chúng không có tác dụng và từng chiếm ~40% một lần đọc section. Bản
+thân node không đổi.
 
 **Nhiều node một lần.** Việc làm sau một lần look là "nâng heading này, mở rộng card kia, đổi
 màu nút" — đưa chúng vào `edits` thì chỉ còn một batch patch, một lần lưu và một frame live
 thay vì mỗi node một bộ. Mọi edit được kiểm tra trước khi phát ra bất kỳ patch nào, nên một
-id sai ở edit thứ tư từ chối cả batch. Kết quả khi đó là `{ set: [{ id, keys }], rev,
-warnings? }` với `warnings` khoá theo id node.
+id sai ở edit thứ tư từ chối cả batch. Kết quả khi đó là `{ set: [{ id, keys, unset?, absent? }], rev,
+warnings? }` với `warnings` khoá theo id node. `unset` liệt kê các key thật sự có và nay đã
+xoá; `absent` các key được nêu mà slot đó không có (thường là sai slot — breakpoint so với
+base). Lời gọi một-node mang cùng hai trường đó bên cạnh `set`.
 
 ## `sb_catalog_search`
 
@@ -474,6 +485,16 @@ kèm điều sẽ hiển thị nếu không thoả), `events` (các hành độn
 specials mà `sb_bind` chấp nhận, kể cả field binding được sinh như `boundProductId`). Control khai báo nào ghi vào key chỉ-base
 được đánh dấu `responsive: false`.
 
+Nói **một lần mỗi process**: hint của element (cũng được `sb_catalog_search` với
+`detail: true` dùng mất), `animation` / `animation_values`, `undeclared_note` và
+`style_is_open_css` thành `"said earlier in this session"` ở các lần gọi sau — list-dataset từ
+~15,8 KB xuống ~8 KB ở lần đọc thứ hai.
+
+Với `control`, một control nền tảng không khai báo nhưng MANG TÊN một key config mà element
+gieo sẵn hoặc có từ vựng sẽ trả về key đó: `media-dataset` `layout` →
+`writes: [{ target: "config", writeKey: "layout" }]`, `values`, `fallback` và
+`responsive: false`. Trước đây nó trả `writes: null`.
+
 ## `sb_add`
 
 | Tham số | Kiểu | Ghi chú |
@@ -487,6 +508,21 @@ specials mà `sb_bind` chấp nhận, kể cả field binding được sinh như
 Truyền `children` để dựng nguyên một section trong một lần gọi. Từ chối element root-only
 đặt trong section, con nằm ngoài whitelist của cha, và mọi lần thêm vào node không phải
 container.
+
+**Kết quả ánh xạ id → type.** `added: { "<id>": "<type>", … }` chứa các node của spec (và nội
+dung seed con nếu có) theo thứ tự dựng; `satellites: { "<id>": "<type>" }` chứa những gì treo
+trên config của node chủ — một empty state cùng heading/text bên trong, skin item của accordion —
+nên id satellite không bao giờ bị nhầm với con của bạn. Trước đây đó là một danh sách id phẳng.
+
+**Nội dung seed nói ngôn ngữ của site.** Empty state được tạo ở đây ("No products yet",
+"This item is unavailable", …) được viết lại qua đúng bảng `SEED_COPY_VI` mà `sb_page_create`
+dùng khi `settings.locale` của site là `vi` — hoặc không đọc được, cùng mặc định. Settings chỉ
+được đọc khi lần thêm tạo ra nội dung như vậy.
+
+**`media-dataset` trong một card là một ảnh.** Thêm không có con dưới `dataset-block` (card
+của list) hoặc `cart-item` mà không tự đặt `config.layout`, nó được gieo `layout: "single"` —
+đúng như preset card và dòng giỏ hàng của editor. Mặc định `bottom` vẽ ảnh chính cộng một dải
+thumbnail dưới mỗi card.
 
 `inert` nêu element render được nhưng không nối vào đâu; gợi ý về vị trí (`accordion-content`,
 `menu-drawer`, một satellite) im lặng khi cha của nó — `parent_id` với gốc spec, node spec bao
@@ -551,7 +587,7 @@ cùng lần gọi đó ghi `filterValues`); dry run của nó báo số dòng, k
 | `unset` | string[]? | Các key cần XOÁ khỏi đúng slot đó — cách duy nhất để hoàn tác một lần ghi. Đặt `null` không tương đương: null là một giá trị được lưu, nên override vẫn bị tính là đang tồn tại |
 | `breakpoint` | `desktop` \| `laptop` \| `tablet` \| `mobile` | Mặc định `desktop` |
 | `base` | boolean? | Ghi ở base thay vì theo breakpoint |
-| `edits` | array? | Nhiều node trong một lần gọi: `[{ id, namespace, keys, breakpoint?, base?, state?, unset? }]`; các tham số một-node ở trên khi đó bị bỏ qua |
+| `edits` | array? | Nhiều node trong một lần gọi: `[{ id, namespace, keys?, breakpoint?, base?, state?, unset? }]` (`keys` có thể bỏ khi có `unset`); các tham số một-node ở trên khi đó bị bỏ qua |
 | `dry_run` | boolean? | Mặc định true |
 | `force` | boolean? | Bỏ qua một guard mềm; thông điệp được trả về trong `forced[]` thay vì ném lỗi. Guard cứng bỏ qua tham số này — xem "Mỗi lần ghi kiểm tra gì" |
 
@@ -1206,6 +1242,10 @@ thiết kế làm liên tục. Style đi theo, và đó chính là mục đích.
 app block — bản sao sẽ mang dấu của block và lần lưu sẽ rút nó về tham chiếu kèm một cảnh
 báo client này không hiển thị.
 
+Kết quả là `{ duplicated, into, copies, rev }`, trong đó `copies` ánh xạ MỌI id nguồn sang bản
+sao và type của nó — `{ "<oldId>": ["<newId>", "<type>"] }`, kể cả satellite — nên text câu trả
+lời của dòng vừa nhân bản chỉ cách một lần tra, thay vì cả một `sb_outline`.
+
 **Sang trang khác — copy/paste của editor.** `to_page_id` đặt bản sao lên trang đó (`parent_id`,
 `index` không bắt buộc; mặc định là ROOT, trước footer dùng chung), còn `to_site_id` đặt sang
 site khác. Parent được kiểm tra như `sb_add` kiểm tra. Dry run ĐỌC trang đích và chạy kiểm
@@ -1363,6 +1403,10 @@ process, tới khi trang được publish đích danh (`publish_drafts: true` l�
 gửi đi: chỉ một id lạ là nền tảng từ chối cả lần publish. Bộ nhớ giữ `publishedAt` mà cascade
 đã ghi và chỉ còn hiệu lực khi trang vẫn mang đúng giá trị đó — trang được publish qua editor hay
 `sb_api_call`, hoặc bị gỡ publish, thì bị quên và mốc thời gian trả lời lại.
+
+Nền tảng **không có bản xem trước cascade** — `cascadeTargets` chỉ chạy bên trong publish — nên
+dry run không liệt kê được các trang đó; nó nói quy tắc một lần mỗi process dưới `cascade_note`,
+và lần publish thật gọi tên chúng ở `cascaded`.
 
 **Nó báo BẢN NÀO đã lên live** — `id` (dòng published), `publishedAt`, và `fromVersionId`
 (bản nháp mà nó được biên dịch từ đó). Ba trường này trả lời đúng câu người gọi hỏi ngay sau
@@ -1696,6 +1740,8 @@ tài liệu:
 | `example_copy` | Chữ mẫu của layout dựng sẵn chưa được thay — "Tiêu đề chính", "Lợi ích một", câu dặn agent trong ô ảnh trống, và các KHẲNG ĐỊNH bịa ("1.000+", "4,9/5", lời chứng thực ký tên người lạ). Lấy bằng cách dựng mọi pattern, trừ một danh sách ngắn nhãn dùng được nguyên ("Mua ngay", "Xem tất cả"). `sb_template_use` báo số phần tử vừa đặt còn chữ mẫu (`copy`) |
 | `invisible_text` | Chữ hoặc nút có màu LITERAL tương phản dưới 1.5:1 với nền literal gần nhất bên dưới — có trong HTML, không đọc được trên trang. Im lặng khi một bên là theme var |
 | `demo_variant_options` | `product-variants` vẫn mang Color Red/Green/Blue, Size S/M/L gieo sẵn. Config đó là bản dự phòng của platform cho sản phẩm không có trục tuỳ chọn, nên mọi sản phẩm đơn giản hiện tuỳ chọn không tồn tại. Xoá (`config.attributes: []`) thì sản phẩm CÓ tuỳ chọn vẫn hiện của nó — đã đo |
+| `link_colour` | Thẻ `<a>` trong `specials.textHtml` không có `color` inline: không gì style được link trong text (không control của element, không token theme), nên nó render màu xanh mặc định của trình duyệt `rgb(0,0,238)`, gạch chân. Sửa: `<a href="…" style="color:inherit">` hoặc màu thương hiệu — cổng rich-text giữ style color. `sb_add` / `sb_set` cũng cảnh báo `link_colour` |
+| `default_font` | Node vẫn giữ font CỨNG mà element gieo sẵn (`"Inter"` của `accordion-item`) trong khi text style body của theme site (`text-2`) là họ font khác — nó render bằng một kiểu chữ không chỗ nào khác dùng. Chỉ trong `sb_review`, và chỉ với theme của site (starter là Inter). Sửa: `fontFamily: "var(--wb-ts-text-2-family)"` ở base, biến mà `tab-item` và `menu-item` vốn đã dùng |
 | `default_seed_copy` | Một satellite được gieo sẵn vẫn mang nguyên chữ tiếng Anh của PLATFORM — empty state của repeater ghi "No products yet" bằng ink `#171717`. Chỉ hiện khi danh sách rỗng, nên không ai viết lại. Ngoài ra, chỉ trong `sb_review` (vì nó đọc locale của site): một dòng tiếng Anh của seed cửa hàng ("Add To Cart") trên site tiếng Việt, kèm bản tiếng Việt |
 | `form_fields_flush` | `form` / `form-segment` / `form-step-nav` xếp các field mà không có `gap`, khiến mỗi label đọc như thuộc về ô phía TRÊN nó. Khác với `config.fieldStackGap` — khoảng cách label↔control nhỏ hơn, nằm BÊN TRONG một field |
 | `dead_menu_link` | Mục menu không có `href` — renderer đọc `specials.menuItems` chứ không bao giờ đọc `menuId` |
@@ -1781,12 +1827,12 @@ hoàn toàn bằng bộ tool này review sạch, publish và render đúng; bả
 | `siteChrome` | Từ hai trang trở lên mà KHÔNG có global section nào, nên mỗi trang tự mang header/footer riêng. Đổi menu là sửa từng trang, các bản sao lệch dần, và khách gặp một site hơi khác ở mỗi lần bấm. Hỏi cho mọi site chứ không riêng cửa hàng — đây là câu hỏi duy nhất ở đây không liên quan tới tiền |
 | `siteFooter` | Từ hai trang trở lên, đã có global section mà không cái nào là `footer` — mỗi trang kết thúc ở section cuối, không link chính sách, liên hệ hay dòng bản quyền. Footer là cờ tuỳ chọn của luồng chrome, nên đây là dạng mặc định của site dựng ở đây. Sửa: `sb_store action:"chrome" footer:true` |
 | `homepage` | Không trang ĐÃ PUBLISH nào mang `isHomepage`, nên "/" trả 404 trong khi mọi trang khác vào được theo slug. `draft: true` khi trang chủ có nhưng chưa publish. Sửa: `PATCH /api/v1/pages/{id}` với `isHomepage: true` (chuyển ngôi sao và xoá slug), hoặc `sb_page_create` với `is_homepage: true` — nó nhận lại trang chủ site đã có. Im lặng khi danh sách trang không mang cờ |
-| `unreachablePage` | Trang nội dung đã publish mà không mục menu nào (theo id trang hay url, mọi cấp) và không `href` nào trong header/footer dùng chung, trên trang đang mở, hay trong thân bất kỳ trang published nào khác trỏ tới — kể cả snapshot của node `menu`; document của các trang khác chỉ được đọc khi có ứng viên. Địa chỉ vẫn vào được và sitemap vẫn liệt kê; không khách nào tới. Không bao giờ là trang chủ, bản nháp hay template thực thể. Sửa: thêm `{ label, link: { type: "page", pageId } }` vào menu của site (`GET`/`PUT /api/sites/{siteId}/menus`), hoặc link từ footer. Im lặng khi chưa đọc được menu hay global section |
+| `unreachablePage` | Trang nội dung đã publish mà không mục menu nào (theo id trang hay url, mọi cấp) và không `href` nào trong header/footer dùng chung, trên trang đang mở, hay trong thân bất kỳ trang published nào khác trỏ tới — kể cả snapshot của node `menu`; document của các trang khác chỉ được đọc khi có ứng viên. Địa chỉ vẫn vào được và sitemap vẫn liệt kê; không khách nào tới trừ qua tìm kiếm. Không bao giờ là trang chủ, bản nháp khác trang ĐANG MỞ (trang đang mở được xét trước lần publish đầu), template thực thể, hay trang có `settings.noIndex: true` — sitemap bỏ những trang đó (`page/sitemap/sitemap.go`), nên một trang như vậy không có link là landing page có chủ ý. Sửa: thêm `{ label, link: { type: "page", pageId } }` vào menu của site (`GET`/`PUT /api/sites/{siteId}/menus`), hoặc link từ footer; trang cố ý để ngoài: `sb_page_update seo {noIndex: true}`. Im lặng khi chưa đọc được menu hay global section |
 | `cartDrawer` | Có thứ mở giỏ nhưng site không có ngăn giỏ, nên bấm vào không mở gì. Sửa: `sb_store action:"cart"` |
 | `cartDrawerLanguage` | Ngăn giỏ vẫn mang chữ seed của MỘT NGÔN NGỮ KHÁC (khớp chính xác với seed theo locale của editor, ví dụ "Your cart" / "Checkout" trên site `vi`) — store tạo trước khi ngăn giỏ được seed theo ngôn ngữ site. Chữ merchant đã sửa không bao giờ khớp. Hỏi với mọi site. Sửa: mở một trang của site, rồi `sb_store action:"cart" relocalize:true dry_run:false` |
 | `cartDrawerThumbnail` | Thumbnail của dòng sản phẩm trong ngăn giỏ là một GALLERY (ảnh chính kèm dải ảnh nhỏ) nhét trong dòng 64px — ngăn giỏ seed trước khi nền tảng sửa seed. Hỏi với mọi site. Sửa: mở một trang của site, rồi `sb_store action:"cart" relocalize:true dry_run:false` |
 | `cartCount` | Có thứ mở được giỏ nhưng không có gì cho thấy trong giỏ có gì. `cart-count` là tuỳ chọn vì `open_cart` là một HÀNH ĐỘNG mà element nào cũng mang được, nên site dựng bằng bộ công cụ này không bao giờ tự có: khách thêm hàng, thấy một toast tắt đi, rồi không còn dấu hiệu nào cho thấy giỏ không rỗng |
-| `pageSeo` | Trang nội dung đã publish (`page`, `about`, `contact`, `policy`, `faq`, `blog`) mà `settings` không có `title` hoặc `description`. Mỗi trang như vậy dùng TÊN SITE làm `<title>` và không có meta description, nên kết quả tìm kiếm không phân biệt nổi. Template thực thể lấy SEO từ thực thể; error/maintain không có địa chỉ. Sửa: `sb_page_update` với `seo: {title, description}` — tool đọc trang rồi merge, vì phía platform `settings` thay cả cục. Im lặng khi danh sách trang không mang `settings` |
+| `pageSeo` | Trang nội dung đã publish — và trang ĐANG MỞ khi còn là bản nháp, để lần review trước lần publish đầu bắt được — (`page`, `about`, `contact`, `policy`, `faq`, `blog`) mà `settings` không có `title` hoặc `description`. Mỗi trang như vậy dùng TÊN SITE làm `<title>` và không có meta description, nên kết quả tìm kiếm không phân biệt nổi. Template thực thể lấy SEO từ thực thể; error/maintain không có địa chỉ. Sửa: `sb_page_update` với `seo: {title, description}` — tool đọc trang rồi merge, vì phía platform `settings` thay cả cục. Im lặng khi danh sách trang không mang `settings` |
 | `articleTemplate` / `blogCategoryPage` / `coursePage` / `brandPage` | Site có bài viết, danh mục blog, khoá học hoặc thương hiệu sản phẩm (đếm từ chính danh sách của chúng; thương hiệu từ `GET /product-brands`) mà không có trang ĐÃ PUBLISH thuộc type `post` / `blog` / `course` / `brand`. `/blog/{slug}`, `/blog-categories/{slug}`, `/courses/{slug}` và `/brands/{slug}` đều phân giải qua template của type đó (`storefront/entityroute.go`), nên mọi link như vậy đều 404. `draft: true` khi trang đã có nhưng chưa publish. Với `course` và `brand` — hai type `sb_page_create` mở ra rỗng — cách sửa nói rõ phải publish KÈM nội dung, vì template entity rỗng trả 500 ở mọi URL của nó. Im lặng khi số đếm bằng 0 hoặc không đọc được. TAG blog không có route storefront nên không bị hỏi |
 | `categoryScope` | Trang đang mở là template `category` dùng chung và mọi repeater sản phẩm trên đó đều ghim vào MỘT collection cố định (`collectionType: "collection"`), nên mọi `/collections/{slug}` đều hiện collection đó. Nền tảng đã tự thu hẹp template danh mục theo URL: `all_products` / `page_collection` đi theo URL, một template dùng chung là đúng — không cần mỗi danh mục một trang |
 
@@ -2406,7 +2452,7 @@ Chạy một luồng cửa hàng bắt buộc **đúng thứ tự**.
 | `template` | enum? | `form` — chọn một trong 17 template của nền tảng |
 | `name` | string? | `form` — tên form trong danh sách của chủ shop. `overlay_attach` không có `overlay_id` — tên overlay mới. `chrome` — tên site hiện trên header (mặc định: tên trong bản ghi site, mà API key không đọc được) |
 | `footer` | boolean? | `chrome` — dựng **footer** dùng chung thay vì header |
-| `node_id` | string? | `menu` — node menu trên trang đang mở |
+| `node_id` | string? | `menu` — node menu trên trang đang mở. `form` — node trên trang đang mở để đặt form mới vào |
 | `menu_id` | string? | `menu` — một menu đã có; bỏ trống để dùng menu đầu tiên của site, hoặc tạo mới |
 | `kind` | `"popup"` \| `"quickview"`? | `overlay_attach` — gắn loại overlay nào |
 | `overlay_id` | string? | `overlay_attach` — một overlay đã có; bỏ trống để tạo mới từ seed của nền tảng |
@@ -2447,6 +2493,11 @@ thay hẳn giá trị của mẫu chứ không gộp vào. Quy tắc đặt lị
 Mặc định nó **không tạo trang**. Đặt form ở đâu là quyết định thiết kế, và `/account` là
 trang duy nhất không được tự do chọn: `membersOnlyRedirectTarget` đưa mọi khách bị chặn về
 đó. Tự đặt form bằng `sb_add` rồi trỏ `specials.formId` vào id nó trả về.
+
+**Hoặc truyền `node_id`** để đặt nó lên trang ĐANG MỞ, bên trong node đó: node `form` trỏ tới
+form mới được thêm trong cùng lần gọi và báo lại là `placed: { id, parent }`. Vị trí được kiểm
+tra trước khi tạo form (node sai, hoặc trang đang mở thuộc site khác, thì không tạo gì);
+`page_name` và `node_id` cùng lúc bị từ chối.
 
 **Hoặc truyền `page_name`** — kèm `headline` nếu muốn — để trang đó được tạo và form được đặt
 lên nó trong cùng một lệnh: một trang mới — type `login`, `register` hoặc `contact` với các mẫu đó, còn lại `page` — mang một section, tiêu đề nếu có, và
@@ -2842,10 +2893,16 @@ LAN từ một header dùng chung sửa ở nơi khác — chứ không phải m
 
 `recovery` LIỆT KÊ các điểm phục hồi thật thay vì mô tả chúng, rút gọn còn id / nhãn / thời
 điểm vì một version của trang hai node đo được 1.690 byte và danh sách hai mươi bản thật là
-1,4 MB. Nền tảng thêm một checkpoint autosave ở MỌI lần lưu nháp và đúc một snapshot có nhãn
-khi được yêu cầu, nên **checkpoint trước một lần PUT toàn tài liệu đã được lấy sẵn**; một lần
-restore chỉ đổi bản NHÁP, và nền tảng tự ghi một version `__pre_restore` trước, nên restore
-cũng hoàn tác được.
+1,4 MB. Nền tảng giữ các checkpoint autosave, nhưng từ web_builder `e3b2ee056` các lần lưu
+của một tác giả trong vòng 5 phút kể từ checkpoint mới nhất GỘP vào đúng dòng đó (nó giữ tài
+liệu mới nhất) — nên mười lăm lần lưu nhanh chỉ hiện thành MỘT checkpoint, và thời điểm ngay
+trước một lần PUT toàn tài liệu rủi ro chỉ được giữ nếu bạn chụp nó (`sb_page_version`
+`"save"`). Restore chỉ đổi bản NHÁP, và nền tảng tự ghi một version `__pre_restore` trước, nên
+restore cũng hoàn tác được.
+
+**Trang đã bị xoá** trả 404 cho lần đọc và lưu source; mọi tool trang giờ nói
+`page <id> no longer exists (deleted, or a wrong id) — sb_page_open another page` thay cho câu
+trơn `source not found`.
 
 `data` chỉ có khi trang chứa danh sách record: `record_lists` liệt kê `{id, collection,
 relation?}` của từng cái. DỮ LIỆU KHÔNG NẰM TRONG TÀI LIỆU — sửa record không đổi bản nháp, không
@@ -2873,7 +2930,14 @@ lớn hơn. Các mục chỉ sống trong process này, tối đa 20; lịch s�
 | Tham số | Kiểu | Ghi chú |
 | --- | --- | --- |
 | `index` | number? | 1 là lần ghi gần nhất. Bỏ trống để **liệt kê** những gì hoàn tác được |
+| `all` | boolean? | Liệt kê mục của mọi trang, không chỉ trang đang mở |
 | `dry_run` | boolean? | Mặc định **true** |
+
+Mỗi mục trong danh sách mang `tool` và `summary` của việc nó được yêu cầu — `"sb_remove ac_1"`,
+`"sb_add flex-section under ROOT"`, `"sb_set bt_1, bt_2"` (id và type, không bao giờ là giá trị)
+— bên cạnh operation, path và thời điểm. Danh sách gồm các lần lưu của trang ĐANG MỞ cùng mọi
+lần ghi không phải trang; lần lưu của trang khác được đếm thành `other_pages` và hiện khi
+`all: true`. Chỉ số giữ nguyên dù có `all` hay không.
 
 Mọi lệnh thay-toàn-bộ-tài-liệu mà server này có thể gửi đều là một chiều: `PUT /settings`
 không phải patch, body thiếu trường là xoá cấu hình cửa hàng; `PUT .../forms/{id}/document`
@@ -2883,7 +2947,7 @@ bấm trong editor thì có undo. Agent thì không có gì, mà một lệnh c�
 **VỚI MỘT TRANG, ĐÂY LÀ ĐƯỜNG VỀ THỨ HAI CHỨ KHÔNG PHẢI DUY NHẤT — và trang này đã nói ngược
 lại suốt ba giai đoạn.** Nó từng viết "nền tảng không có lịch sử trang, không có version,
 không có restore", điều đó đúng với tài liệu OpenAPI và sai với nền tảng: `saveDraftRaw` ghi
-một checkpoint tự động ở mỗi lần lưu nháp, `SaveVersion` tạo một bản chụp có nhãn, và cả hai
+các checkpoint tự động (lần lưu của một tác giả trong 5 phút gộp vào một dòng), `SaveVersion` tạo một bản chụp có nhãn, và cả hai
 đều khôi phục được. Chúng không có dòng `@Router` nào, nên tới được trình duyệt mà không tới
 được gì khác — giờ đã được chú thích và có trên call sheet (`sb_page_version`).
 Khi thứ bị hỏng là một trang thì hãy dùng chúng trước: chúng là của chính nền tảng và sống

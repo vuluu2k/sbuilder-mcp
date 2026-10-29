@@ -58,6 +58,7 @@ export interface WriteNote {
     | 'form_field'
     | 'text_markup'
     | 'rich_dropped'
+    | 'link_colour'
     | 'cascade_tail'
     | 'seed_override'
     | 'hidden_band';
@@ -367,6 +368,13 @@ export function writeCheck(
           'relative path; no comments.',
       );
     }
+    // A LINK IN RICH TEXT IS THE BROWSER'S BLUE. Nothing styles `a` inside a
+    // text node — no element control, no theme token — so an <a> with no colour
+    // of its own paints the user-agent default rgb(0,0,238) (measured live on a
+    // #2e86ae site, TTG gap #50). The inline-rich gate keeps `style` color.
+    if (namespace === 'specials' && typeof v === 'string' && rich.includes(k) && !bad.length && unstyledLinks(v)) {
+      push(`link-colour:${type}.${k}`, 'link_colour', k, LINK_COLOUR.problem, LINK_COLOUR.fix);
+    }
     if (namespace === 'specials') {
       const un = unsupportedSettingNote(type, k, v);
       if (un) push(`unsupported:${type}.${k}=${JSON.stringify(v)}`, 'unsupported_setting', k, un, `Unset specials.${k}; ${type} never reads it.`);
@@ -385,6 +393,18 @@ export function writeCheck(
   }
   return out;
 }
+
+/** `<a …>` tags in rich text that set no colour of their own. */
+export function unstyledLinks(html: string): number {
+  return (html.match(/<a\b[^>]*>/gi) ?? []).filter((tag) => !/style\s*=\s*["'][^"']*\bcolor\s*:/i.test(tag)).length;
+}
+
+export const LINK_COLOUR = {
+  problem:
+    "A link in this rich text has no colour of its own, so it renders in the browser's default link blue " +
+    '(rgb(0,0,238)) with an underline — no element control or theme token reaches an <a> inside text.',
+  fix: 'Give each <a> its colour inline: <a href="…" style="color:inherit"> (or the brand colour); the rich-text gate keeps a style color.',
+};
 
 /**
  * `specials.formRules` on a form root, judged against the open form document.

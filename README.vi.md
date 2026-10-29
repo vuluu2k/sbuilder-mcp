@@ -82,7 +82,7 @@ nhét ngược lại vào mọi bản cài.
 | `sb_api_find` | Tìm operation theo ý định — mỗi kết quả một dòng — rồi đọc call sheet của một operation theo id: schema tham số thật, credential cần dùng, và các trường body đọc thẳng từ handler decode chúng, mỗi trường mang theo cái bẫy doc comment của chính nó ghi lại |
 | `sb_api_call` | Chạy operation, hoặc bất kỳ route nào bằng method+path; mặc định chạy khô. Chọn field (đường dẫn có dấu chấm, trên danh sách lẫn câu trả lời ghi một object) và phân trang kết quả phía MCP; `merge` cho PUT thay cả bản ghi, `If-Match`, `file` multipart |
 | `sb_page_open` | Mở một trang để sửa và trả về outline — hoặc, với `form_id`, tài liệu trường của biểu mẫu (trường, giá trị mặc định, quy tắc trường phụ thuộc) |
-| `sb_outline` | Trang đang mở dạng cây nén — không bao giờ dump tài liệu thô |
+| `sb_outline` | Trang đang mở dạng cây nén — không bao giờ dump tài liệu thô; header/footer dùng chung và overlay mỗi cái một dòng trừ khi `chrome: true` |
 | `sb_node_read` | Một node đầy đủ, kèm cảnh báo nếu nó là global dùng chung |
 | `sb_catalog_search` | Tìm element theo việc nó cần làm, dùng chính AI hints của nền tảng |
 | `sb_traits_for` | Inspector của element — tab, nhóm, control và mỗi control khai báo sẵn ghi vào đâu — kèm AI hints, default và luật chứa con |
@@ -113,7 +113,7 @@ nhét ngược lại vào mọi bản cài.
 | `sb_theme` | Đọc hoặc vá bảng màu và thang chữ của site — tầng mà mọi style preset phân giải từ đó, nên một token thay áo cho mọi trang; ghi đè text style theo breakpoint và vá `presets` của element; `locale` đặt ngôn ngữ của site |
 | `sb_translate` | Dịch site như bảng Đa ngôn ngữ của editor — bật ngôn ngữ, liệt kê chuỗi của một trang theo missing / done / outdated, ghi hoặc dịch máy, duyệt dòng do máy dịch |
 | `sb_store` | Chạy một luồng cửa hàng bắt buộc đúng thứ tự — `checkout` (bốn lệnh ghi tạo nên trang thanh toán), `checkout_sync` (đưa phương thức thanh toán và giao hàng hiện tại vào mọi form đặt hàng đã có, publish lại trang thanh toán), `form` (một trong 17 template của nền tảng kèm field document của nó), `chrome` (một header hoặc footer dùng chung trên menu thật của site — tên site dẫn về trang chủ, menu desktop, drawer mobile, ô tìm kiếm, icon giỏ hàng và tài khoản), `menu` (một node menu bind vào menu của site, link đã phân giải), `overlay_attach` (một pop-up hay quick view trên trang đang mở), `cart` (ngăn giỏ hàng của site, khi chưa có; `relocalize` đưa ngăn giỏ đã có về ngôn ngữ của site), `app` (một app dựng sẵn kèm những trang nó cần), và `global_attach` / `global_detach` (đặt một section dùng chung ĐÃ CÓ lên trang đang mở, hoặc gỡ ra), `global_promote` (biến một section trên trang thành section dùng chung MỚI) và `template_save` (lưu một section làm mẫu dùng lại) |
-| `sb_undo` | Hoàn tác / làm lại các thao tác ghi trong phiên — chỉnh sửa trang, form và PUT qua `sb_api_call`; trang bị từ chối nếu người khác đã lưu sau đó. Version và history của nền tảng (`sb_page_version`) sống lâu hơn process này |
+| `sb_undo` | Hoàn tác / làm lại các thao tác ghi trong phiên — chỉnh sửa trang, form và PUT qua `sb_api_call`, mỗi mục ghi tên tool và đối tượng, mặc định của trang đang mở (`all: true` cho mọi trang); trang bị từ chối nếu người khác đã lưu sau đó. Version và history của nền tảng (`sb_page_version`) sống lâu hơn process này |
 
 Hai mươi tám tool, **919 operation API** (344 trong 429 lệnh ghi có hình dạng body đọc thẳng
 từ handler), 124 element, 95 nguồn binding. `sb_api_find` là

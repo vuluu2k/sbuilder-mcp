@@ -260,7 +260,7 @@ describe('sb_add and sb_set notes', () => {
     try {
       const acc = await call('sb_add', { parent_id: 'ROOT', dry_run: false, spec: { type: 'flex-section', children: [{ type: 'accordion' }] } });
       expect(acc.isError, acc.raw).toBe(false);
-      const accId = (acc.json.added as string[])[1];
+      const accId = Object.keys(acc.json.added as Record<string, string>)[1];
       const root = await call('sb_add', { parent_id: accId, spec: { type: 'accordion-content' } });
       expect(root.isError, root.raw).toBe(false);
       expect(root.json.inert).toBeUndefined();
@@ -279,7 +279,7 @@ describe('sb_add and sb_set notes', () => {
     const { call, close } = await openClient();
     try {
       const added = await call('sb_add', { parent_id: 'ROOT', dry_run: false, spec: { type: 'flex-section', children: [{ type: 'list-dataset' }] } });
-      const list = (added.json.added as string[])[1];
+      const list = Object.keys(added.json.added as Record<string, string>)[1];
       const set = await call('sb_set', {
         id: list,
         namespace: 'config',

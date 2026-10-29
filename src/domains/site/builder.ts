@@ -234,7 +234,17 @@ export function addSubtree(
   const idOf = new Map<NodeSpec, string>();
 
   const pending = new Map<string, unknown>();
-  const build = (s: NodeSpec, parentNodeId: string): string => {
+  /** A repeated row — a list's card or a cart line — at or above this node. */
+  const inRow = (from: string): boolean => {
+    for (let id: string | null | undefined = from, hops = 0; id && hops < 64; hops++) {
+      const node = (pending.get(id) ?? doc.doc.nodes[id]) as { data?: { type?: string; parent?: string | null } } | undefined;
+      const t = node?.data?.type;
+      if (t === 'dataset-block' || t === 'cart-item') return true;
+      id = node?.data?.parent;
+    }
+    return false;
+  };
+  const build =(s: NodeSpec, parentNodeId: string): string => {
     refuseComposedStamp(s.specials);
     // A base-only config key in a breakpoint slot is read from BASE alone, so
     // it is routed there exactly as sb_set routes it (trap 4).
@@ -269,6 +279,14 @@ export function addSubtree(
       responsive,
       states: s.states,
     });
+    // A PICTURE IN A CARD IS ONE PICTURE. media-dataset's default layout is
+    // `bottom` — a feature plus a thumbnail strip — so a product card grew a
+    // strip of thumbnails (TTG gap #47). The editor's own card and cart-line
+    // presets seed the childless tile at `single` (datasetParts.ts
+    // seedBoundMediaTile); an explicit layout, or a gallery's children, win.
+    if (s.type === 'media-dataset' && s.config?.layout === undefined && !s.children?.length && inRow(parentNodeId)) {
+      n.config.layout = 'single';
+    }
     pending.set(n.id, n);
     idOf.set(s, n.id);
     // A child the element declares as a SATELLITE (an icon's cart-count, a
@@ -746,7 +764,7 @@ function rebindPatch(doc: PageDoc, id: string, keys: Record<string, unknown>): P
  * Refuses ROOT (there is nothing to put a second one beside) and an overlay
  * (not part of this document at all).
  */
-export function duplicateNode(doc: PageDoc, id: string, guard?: GuardOpts): { patches: Patch[]; ids: string[] } {
+export function duplicateNode(doc: PageDoc, id: string, guard?: GuardOpts): ReturnType<typeof copyNodeInto> {
   const parentId = doc.has(id) ? doc.node(id).data.parent : null;
   const at = parentId && doc.has(parentId) ? doc.node(parentId).data.nodes.indexOf(id) : -1;
   return copyNodeInto(doc, id, doc, parentId ?? '', at < 0 ? APPEND : at + 1, guard);
@@ -765,7 +783,7 @@ export function copyNodeInto(
   parentId: string,
   index: number,
   guard?: GuardOpts,
-): { patches: Patch[]; ids: string[] } {
+): { patches: Patch[]; ids: string[]; map: Record<string, string> } {
   const doc = src;
   const n = doc.node(id);
   if (id === doc.doc.root_node_id) throw new Error('sbuilder: cannot duplicate ROOT');
@@ -807,6 +825,8 @@ export function copyNodeInto(
 
   const patches: Patch[] = [];
   const ids: string[] = [];
+  /** Source id → its copy's id, so a caller can edit the copy without re-reading the tree. */
+  const map: Record<string, string> = {};
   // One pass, parent-first, so a child's `parent` always names an id already
   // emitted — the same ordering rule addSubtree follows.
   const copy = (srcId: string, newParent: string): string => {
@@ -833,6 +853,7 @@ export function copyNodeInto(
     for (const stamp of COPY_STRIPPED_SPECIALS) delete clone.specials?.[stamp];
     patches.push({ op: 'set', path: ['nodes', clone.id], value: clone });
     ids.push(clone.id);
+    map[srcId] = clone.id;
     for (const kid of src.data.nodes) {
       const kidId = copy(kid, clone.id);
       patches.push({ op: 'insert', path: ['nodes', clone.id, 'data', 'nodes'], index: APPEND, value: kidId });
@@ -861,7 +882,7 @@ export function copyNodeInto(
 
   const rootId = copy(id, parentId);
   patches.push({ op: 'insert', path: ['nodes', parentId, 'data', 'nodes'], index, value: rootId });
-  return { patches, ids };
+  return { patches, ids, map };
 }
 
 export function moveNode(doc: PageDoc, id: string, newParentId: string, index: number, guard?: GuardOpts): Patch[] {
@@ -971,13 +992,18 @@ export interface SetEdit {
  * Every edit is checked before any patch is emitted, so a bad id in the fourth
  * edit refuses the whole batch rather than leaving three applied.
  */
-export function setMany(doc: PageDoc, edits: SetEdit[], guard?: GuardOpts): { patches: Patch[]; touched: Array<{ id: string; keys: string[] }> } {
+export function setMany(
+  doc: PageDoc,
+  edits: SetEdit[],
+  guard?: GuardOpts,
+): { patches: Patch[]; touched: Array<{ id: string; keys: string[]; unset?: string[]; absent?: string[] }> } {
   if (edits.length === 0) throw new Error('sbuilder: sb_set edits is empty — nothing to write');
   const patches: Patch[] = [];
-  const touched: Array<{ id: string; keys: string[] }> = [];
+  const touched: Array<{ id: string; keys: string[]; unset?: string[]; absent?: string[] }> = [];
+  const valueAt = (path: Array<string | number>): unknown =>
+    path.reduce<unknown>((o, k) => (o && typeof o === 'object' ? (o as Record<string, unknown>)[k] : undefined), doc.doc);
   for (const e of edits) {
-    patches.push(
-      ...setKeys(doc, e.id, e.keys, {
+    const mine = setKeys(doc, e.id, e.keys, {
         namespace: e.namespace,
         breakpoint: e.breakpoint,
         base: e.base,
@@ -985,9 +1011,23 @@ export function setMany(doc: PageDoc, edits: SetEdit[], guard?: GuardOpts): { pa
         unset: e.unset,
         force: guard?.force,
         forced: guard?.forced,
-      }),
-    );
-    touched.push({ id: e.id, keys: Object.keys(e.keys) });
+      });
+    patches.push(...mine);
+    // WHAT AN UNSET REMOVED, said back (TTG gap #55) — and a key that was not
+    // in that slot named apart, since removing nothing is usually a wrong slot.
+    const wanted = new Set(e.unset ?? []);
+    const removed = new Set<string>();
+    for (const p of mine) {
+      const key = String(p.path[p.path.length - 1]);
+      if (p.op === 'unset' && wanted.has(key) && valueAt(p.path) !== undefined) removed.add(key);
+    }
+    const absent = [...wanted].filter((k) => !removed.has(k));
+    touched.push({
+      id: e.id,
+      keys: Object.keys(e.keys),
+      ...(wanted.size ? { unset: [...removed] } : {}),
+      ...(absent.length ? { absent } : {}),
+    });
   }
   return { patches, touched };
 }

@@ -147,6 +147,13 @@ export interface ReadinessInput {
   openPageType?: string;
   /** The open page's type, template or not; undefined when unknown. */
   openType?: string;
+  /**
+   * The open page's id. pageSeo and unreachablePage judge it as if published
+   * even while it is a draft (TTG gap #48): `sb_review` runs BEFORE the first
+   * publish, and a page reviewed clean then published with the site name as
+   * its <title>.
+   */
+  openPageId?: string;
   /** The site's pages; null when the list could not be read. */
   pages: ReadinessPage[] | null;
   /**
@@ -265,11 +272,20 @@ const drafted = (pages: ReadinessPage[], type: string) =>
 /** "N published pages (a, b, c, …)" — the head of a problem sentence that names its pages. */
 function pageCount(rows: ReadinessPage[]): string {
   const named = rows.map((p) => p.name).filter((n): n is string => !!n).slice(0, 3);
+  const drafts = rows.some((p) => p.status !== 'published');
   return (
-    `${rows.length} published page${rows.length === 1 ? '' : 's'}` +
+    `${rows.length} ${drafts ? '' : 'published '}page${rows.length === 1 ? '' : 's'}` +
     (named.length ? ` (${named.join(', ')}${rows.length > named.length ? ', …' : ''})` : '')
   );
 }
+
+/** Said when the open DRAFT is among the rows — it is not live yet, and will go live like this. */
+const draftNote = (rows: ReadinessPage[]): string =>
+  rows.some((p) => p.status !== 'published') ? ' The open page is still a draft: fix it before its first publish.' : '';
+
+/** Live, or the open page judged as if it were (see ReadinessInput.openPageId). */
+const judged = (p: ReadinessPage, input: ReadinessInput): boolean =>
+  p.status === 'published' || (!!input.openPageId && p.id === input.openPageId);
 
 /** "/about/", "/about?x=1" and "/about" are one address; "" is the home page. */
 function normalizePath(p: string): string {
@@ -312,7 +328,11 @@ export function unreachablePages(input: ReadinessInput): ReadinessPage[] {
   const byId = new Set(input.menuLinks.pageIds);
   return pages.filter(
     (p) =>
-      p.status === 'published' &&
+      judged(p, input) &&
+      // A noIndex page asks to be left out of search; the sitemap leaves it out
+      // (page/sitemap/sitemap.go), so an unlinked one is a deliberate landing
+      // page, not an orphan (TTG gap #49).
+      p.settings?.noIndex !== true &&
       INDEXED_PAGE_TYPES.has(p.type) &&
       p.isHomepage !== true &&
       typeof p.id === 'string' &&
@@ -374,12 +394,14 @@ export function readinessGaps(input: ReadinessInput): ReadinessGap[] {
         problem:
           pageCount(orphans) +
           ' that no menu item and no link in the shared header, footer or any other page ' +
-          'points at. The address works and the sitemap lists it; no visitor ever arrives.',
+          'points at. The address works and the sitemap lists it; no visitor arrives but by search.' +
+          draftNote(orphans),
         fix:
           'Add it to the site menu — read GET /api/sites/{siteId}/menus, append ' +
           '{ label, link: { type: "page", pageId } } and PUT the menu back; every bound menu ' +
           'node follows. Or link it from the footer with sb_event go_to_url. A page kept out ' +
-          'on purpose (a landing page for ads) can stay out — say so.',
+          'on purpose (a landing page for ads): sb_page_update seo {noIndex: true} — it leaves ' +
+          'the sitemap and this check.',
       });
     }
   }
@@ -523,7 +545,7 @@ export function readinessGaps(input: ReadinessInput): ReadinessGap[] {
   // an absent blob is "not read", not "empty".
   if (pages) {
     const bare = pages.filter((p) => {
-      if (p.status !== 'published' || !INDEXED_PAGE_TYPES.has(p.type)) return false;
+      if (!judged(p, input) || !INDEXED_PAGE_TYPES.has(p.type)) return false;
       const st = p.settings;
       if (!st || typeof st !== 'object') return false;
       const has = (k: string) => typeof st[k] === 'string' && (st[k] as string).trim() !== '';
@@ -538,7 +560,8 @@ export function readinessGaps(input: ReadinessInput): ReadinessGap[] {
           (bare.length === 1 ? ' carries' : ' carry') +
           ' no settings.title or settings.description. Each serves the SITE NAME as its ' +
           '<title> and no meta description — a search result cannot tell them apart, and ' +
-          'nothing on the canvas or in a screenshot shows it.',
+          'nothing on the canvas or in a screenshot shows it.' +
+          draftNote(bare),
         fix:
           'sb_page_update {page_id, seo: {title, description}} — it merges into the page ' +
           'settings, keeping the rest. Title is what the tab and the result show (under ~60 ' +

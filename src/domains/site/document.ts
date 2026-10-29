@@ -45,6 +45,8 @@ export interface OutlineNode {
    * map an agent designs from, and these were not on it.
    */
   satellite?: string;
+  /** An accordion / tab row's `specials.label` — four FAQ rows were four identical lines. */
+  label?: string;
   kids?: OutlineNode[];
 }
 
@@ -225,20 +227,28 @@ export class PageDoc {
    * cart drawer is there. `pageChildren` is for the RULES; this is for the
    * reader, and the `overlay: true` flag is how the two stay distinguishable.
    */
-  outline(opts: { depth?: number } = {}): OutlineNode[] {
+  /**
+   * `chrome: false` (the tool's default) stops at a shared header/footer or an
+   * overlay: one line each, no kids. They are the same on every page and were
+   * ~70% of a routine outline (TTG gap #52).
+   */
+  outline(opts: { depth?: number; chrome?: boolean } = {}): OutlineNode[] {
     const depth = opts.depth ?? 1;
     const line = (id: string, level: number): OutlineNode => {
       const n = this.node(id);
       const kidIds = childrenOf(this.doc, id);
       const out: OutlineNode = { id, type: n.data.type, children: kidIds.length };
       if (n.data.name) out.name = n.data.name;
+      const label = n.specials?.label;
+      if ((n.data.type === 'accordion-content' || n.data.type === 'tab-content') && typeof label === 'string' && label) out.label = label;
       if (level === 0) {
         if (isOverlay(this.doc, id)) out.overlay = true;
         else out.band = bandOf(this.doc, id);
       }
       if (isGlobal(this.doc, id)) out.global = true;
       if (appBlockRoot(this.doc, id) === id) out.app = true;
-      if (level + 1 < depth) {
+      const collapsed = opts.chrome === false && level === 0 && (out.overlay || out.global);
+      if (level + 1 < depth && !collapsed) {
         // Satellites come FIRST, and are counted apart from `children`: they are
         // this node's own chrome, not content in it, and mixing the two would
         // make the child count disagree with `data.nodes` — the number every

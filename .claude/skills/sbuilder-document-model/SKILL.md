@@ -869,3 +869,17 @@ platform treats an unproven guard as indistinguishable from an absent one.
   even on a dry run. Documents from before 0.98.6 still carry the dead `responsive.desktop.config.hidden`:
   `sb_review` reports `hidden_desktop_dead`, and a desktop/base write or `unset` of `hidden`
   removes that slot in the same call (`setKeys` `deadHidden`) — otherwise nothing could clear it.
+- **WHAT A FRESH AGENT TRIPPED ON, TTG gaps #46–#55 (2026-10-29).** `sb_add` now rewrites
+  minted seed copy (an empty state's "No products yet") through `SEED_COPY_VI` when the site
+  locale is `vi` or unread — sb_page_create's default — reading settings only when such copy was
+  minted. A childless `media-dataset` under a `dataset-block`/`cart-item` with no own `layout` is
+  seeded `single` (the editor's `seedBoundMediaTile`; `bottom` drew a thumbnail strip per card).
+  `sb_add` answers `added`/`satellites` as `{id: type}` maps and `sb_duplicate` `copies:
+  {old: [new, type]}` (`copyNodeInto` returns the map). `sb_outline` collapses a shared
+  header/footer/overlay to one line unless `chrome:true`, and shows accordion/tab row `label`s;
+  `sb_node_read` drops `backgroundScene*` while the source is empty. Review: `link_colour` (an
+  `<a>` in `textHtml` with no inline color paints UA blue rgb(0,0,238) — nothing styles it; also
+  warned by writecheck) and `default_font` (a node still on its element's LITERAL seed font —
+  `accordion-item`'s "Inter" — on a site theme whose `text-2` family differs; `tab-item` and
+  `menu-item` already wear `var(--wb-ts-text-2-family, Inter)`). `sb_set` unset echoes `unset` /
+  `absent` per edit, and `edits[].keys` is optional with an unset.

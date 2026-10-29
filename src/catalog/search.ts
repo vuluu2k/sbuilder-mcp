@@ -53,16 +53,21 @@ export function searchOperations(
   if (opts.tag) pool = pool.filter((o) => o.tags.includes(opts.tag!));
   if (terms.length === 0) return pool.slice(0, limit);
 
+  // A TERM MATCHES THE START OF A WORD, never the middle of one: "list" inside
+  // "wishlist" put wishlist-demand first for "list categories" (TTG gap #59).
+  // A prefix still lets "categor" or "product" find their longer forms.
+  const words = (s: string) => s.toLowerCase().split(/[^a-z0-9]+/).filter(Boolean);
+  const hit = (ws: string[], t: string) => ws.some((w) => w.startsWith(t));
   const scored: Array<{ op: ApiOperation; score: number }> = [];
   for (const op of pool) {
-    const tags = op.tags.join(' ').toLowerCase();
-    const path = op.path.toLowerCase();
-    const summary = op.summary.toLowerCase();
+    const tags = words(op.tags.join(' '));
+    const path = words(op.path);
+    const summary = words(op.summary);
     let score = 0;
     for (const t of terms) {
-      if (tags.includes(t)) score += WEIGHT.tag;
-      if (path.includes(t)) score += WEIGHT.path;
-      if (summary.includes(t)) score += WEIGHT.summary;
+      if (hit(tags, t)) score += WEIGHT.tag;
+      if (hit(path, t)) score += WEIGHT.path;
+      if (hit(summary, t)) score += WEIGHT.summary;
     }
     if (score > 0) scored.push({ op, score });
   }
