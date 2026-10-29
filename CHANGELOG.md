@@ -6,6 +6,37 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.101.0] - 2026-10-29
+
+### Added
+- `sb_publish` with `dry_run` previews the pages a publish will cascade to as `would_cascade`, and lists unpublished shared masters as `shared_unpublished` with a `shared_warning` at the top of the result.
+- `sb_look` measurements report `low_contrast` for text under 3:1 contrast against the nearest opaque background, and skip text over images.
+- `sb_template_use` returns an `ids` map of `{id: type}` and its satellites, as `sb_add` does, and carries `template_id` in its summary.
+- `sb_page_create` returns the `route` of the new page.
+- `sb_review` reports `placeholder_link` for links whose `href` is `#`.
+- `sb_event` with `open_page` accepts a bare `pageId` and builds the `{linkType, id, label, url}` link from the page list.
+
+### Changed
+- `sb_duplicate` to another page returns the same `copies` map as a duplicate on the open page.
+- `sb_undo` lists entries more compactly, without repeating `operationId`, `path` and `fields` for the open page.
+- `sb_template_use` and `overlay_attach` write seed text in Vietnamese on Vietnamese sites.
+- `sb_api_find` ranks the resource at the start of the path higher and prefers the shorter path on a tie, so "list products" finds the right operation, and `pick` names a field that no record carries.
+- `sb_traits_for` keeps the allowed values when it narrows a control, and suggests config keys such as `triggerType`, `Delay` and `Freq` for `popup_trigger` instead of pointing at CSS.
+- `sb_review` reports a finding inside a global section with `global: true` and says it once per process, so a shared header no longer repeats under FIX THESE.
+- `sb_review` reads preset backgrounds and treats image, scene and video backgrounds as dark, and `sb_import` reads band width from the section's own container.
+- `sb_api_find` and `sb_traits_for` read named string types as unions of their values, such as `ArticleStatus` and `ProductStatus`, with their predicates.
+- The catalog is regenerated from the latest platform, so a page's own title is no longer clamped to two lines and "View all" on a product shelf links to `/search`.
+
+### Fixed
+- Blog pages are treated as the `/blog-categories/{slug}` entity template, so `sb_review` no longer misreports their SEO or reachability, and `sb_publish` verifies a real entity address.
+- `sb_publish` no longer blames the cascade when live runs ahead of the draft after an ordinary publish.
+- `sb_look` with the `url` of another page no longer carries over the findings of the open page.
+- `sb_review` no longer reports a dead desktop cell whose value equals base as an error when the render shows maintenance.
+- Theme variable values such as `var(--wb-…)` are no longer flagged as detached from the theme.
+- An edit inside a pop-up states that it applies only to the pages the pop-up is attached to, and no longer reads as site-wide.
+- Disabling an animation with `{active:false}` no longer triggers a warning.
+- The cascade preview in `sb_publish` no longer leaves an unhandled rejection when credentials are missing.
+
 ## [0.100.6] - 2026-10-29
 
 ### Added

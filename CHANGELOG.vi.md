@@ -6,6 +6,37 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.101.0] - 2026-10-29
+
+### Added
+- `sb_publish` với `dry_run` xem trước các trang sẽ lan tới khi publish dưới dạng `would_cascade`, và liệt kê bản master dùng chung chưa xuất bản trong `shared_unpublished` cùng `shared_warning` ở đầu kết quả.
+- Phép đo của `sb_look` báo `low_contrast` cho chữ có tương phản dưới 3:1 so với nền đục gần nhất, và bỏ qua chữ nằm trên ảnh.
+- `sb_template_use` trả về bản đồ `ids` dạng `{id: type}` cùng các satellite như `sb_add`, và mang `template_id` trong summary.
+- `sb_page_create` trả về `route` của trang mới.
+- `sb_review` báo `placeholder_link` cho liên kết có `href` là `#`.
+- `sb_event` với `open_page` nhận `pageId` trần và tự dựng liên kết `{linkType, id, label, url}` từ danh sách trang.
+
+### Changed
+- `sb_duplicate` sang trang khác trả về cùng bản đồ `copies` như khi nhân bản trên trang đang mở.
+- `sb_undo` liệt kê gọn hơn, không lặp `operationId`, `path` và `fields` cho trang đang mở.
+- `sb_template_use` và `overlay_attach` ghi chữ seed bằng tiếng Việt trên site tiếng Việt.
+- `sb_api_find` cộng điểm cho tài nguyên đầu đường dẫn và ưu tiên đường ngắn hơn khi hòa điểm, nên "list products" ra đúng operation, và `pick` nêu trường mà không bản ghi nào mang.
+- `sb_traits_for` giữ các giá trị cho phép khi thu hẹp một control, và gợi ý các khóa config như `triggerType`, `Delay`, `Freq` cho `popup_trigger` thay vì chỉ sang CSS.
+- `sb_review` báo finding trong global section với `global: true` và chỉ nói một lần mỗi tiến trình, nên header dùng chung không còn lặp dưới FIX THESE.
+- `sb_review` đọc nền preset và coi nền ảnh, scene, video là nền tối, còn `sb_import` đọc độ rộng band từ container của chính section.
+- `sb_api_find` và `sb_traits_for` đọc các kiểu chuỗi có tên như `ArticleStatus` và `ProductStatus` thành union các giá trị, kèm vị từ của chúng.
+- Catalog được tái sinh theo platform mới nhất, nên tiêu đề của chính trang không còn bị kẹp hai dòng và "Xem tất cả" trên kệ sản phẩm dẫn tới `/search`.
+
+### Fixed
+- Trang blog được coi là template thực thể `/blog-categories/{slug}`, nên `sb_review` không còn báo sai SEO hay khả năng truy cập của chúng, và `sb_publish` kiểm một địa chỉ thực thể thật.
+- `sb_publish` không còn đổ cho cascade khi live đi trước bản nháp sau một lần publish thường.
+- `sb_look` với `url` của trang khác không còn mang findings của trang đang mở.
+- `sb_review` không còn báo lỗi cho ô desktop chết có giá trị trùng base khi render cho thấy đang bảo trì.
+- Giá trị biến theme như `var(--wb-…)` không còn bị cảnh báo là tách khỏi theme.
+- Sửa trong pop-up nói rõ chỉ áp dụng cho các trang được gắn pop-up, không còn bị hiểu là toàn site.
+- Tắt hoạt ảnh bằng `{active:false}` không còn bị cảnh báo.
+- Bản xem trước cascade của `sb_publish` không còn để lại rejection không xử lý khi thiếu credential.
+
 ## [0.100.6] - 2026-10-29
 
 ### Added
