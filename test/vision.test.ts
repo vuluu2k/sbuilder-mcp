@@ -1,7 +1,17 @@
 import { describe, it, expect, vi, afterAll, afterEach } from 'vitest';
-import { chromium } from 'playwright-core';
+import { spawn } from 'node:child_process';
+import { chromium, type Browser } from 'playwright-core';
 import { previewUrl } from '../src/vision/preview.js';
-import { shoot, closeBrowser, setLauncherForTest } from '../src/vision/shoot.js';
+import { capture } from '../src/vision/capture.js';
+import {
+  shoot,
+  closeBrowser,
+  setLauncherForTest,
+  setStallForTest,
+  release,
+  deadline,
+  ChromeStalled,
+} from '../src/vision/shoot.js';
 import { Session } from '../src/transport/auth.js';
 
 function ctxWith(f: typeof fetch) {
@@ -43,6 +53,47 @@ describe('previewUrl()', () => {
     ) as unknown as typeof fetch;
     await expect(previewUrl(ctxWith(f), 's1', 'pg_1')).rejects.toThrow(/no preview url/i);
   });
+});
+
+/**
+ * A CHROME THAT STALLS ON THE WAY OUT IS KILLED, NOT WAITED OUT.
+ *
+ * Measured under a loaded machine (the full browser suite, ten vitest workers):
+ * `browser.close()` sat 10.1s until Chrome's own "Teardown watchdog expired;
+ * recording dump and terminating", then a crash dump, exit code 2 — 10-24s per
+ * close, for a throwaway profile with nothing to save. No Chrome needed here: a
+ * real child process stands in for it, and `close()` resolves when it exits,
+ * which is what Playwright's does.
+ */
+describe('release()', () => {
+  const fakeChrome = (closeExits: boolean) => {
+    const child = spawn(process.execPath, ['-e', 'setTimeout(() => {}, 60000)'], { detached: true });
+    const exited = new Promise<void>((r) => child.once('exit', () => r()));
+    const browser = {
+      newBrowserCDPSession: async () => ({
+        send: async () => ({ processInfo: [{ type: 'browser', id: child.pid, cpuTime: 0 }] }),
+      }),
+      close: async () => {
+        if (closeExits) child.kill('SIGTERM');
+        await exited;
+      },
+    } as unknown as Browser;
+    return { child, exited, browser };
+  };
+
+  it('kills a Chrome whose teardown stalls once the grace runs out', async () => {
+    const { child, browser } = fakeChrome(false);
+    const t = Date.now();
+    await release(browser, 200);
+    expect(Date.now() - t).toBeLessThan(5_000);
+    expect(child.signalCode).toBe('SIGKILL');
+  }, 10_000);
+
+  it('just waits for a Chrome that closes on its own', async () => {
+    const { child, browser } = fakeChrome(true);
+    await release(browser, 5_000);
+    expect(child.signalCode).toBe('SIGTERM');
+  }, 10_000);
 });
 
 // Runs WITHOUT Chrome: the launcher is swapped for one that throws, which is
@@ -412,6 +463,70 @@ describe('browser reuse, without needing Chrome', () => {
       setLauncherForTest();
       await closeBrowser();
     }
+  });
+});
+
+/**
+ * A WEDGED CHROME IS REPLACED, NEVER WAITED ON.
+ *
+ * Measured in the full browser suite: a launch that never returned, and a
+ * `newPage` that never answered — not one stderr line from that Chrome after it —
+ * while a fresh Chrome a moment later worked at once. `newPage` has no timeout of
+ * its own, and the pool hands EVERY later shot the same wedged handle, so one
+ * stall failed a whole describe at 30s apiece (and in the server, every later
+ * call, because tool calls run one at a time).
+ */
+describe('a Chrome that stalls, without needing Chrome', () => {
+  afterEach(async () => {
+    setLauncherForTest();
+    setStallForTest();
+    await closeBrowser();
+  });
+
+  it('gives up on a tab that never opens, and retries ONCE on a fresh Chrome', async () => {
+    await closeBrowser();
+    setStallForTest(100);
+    let launches = 0;
+    setLauncherForTest(async () => {
+      const n = ++launches;
+      return {
+        isConnected: () => true,
+        newPage: () =>
+          n === 1 ? new Promise(() => {}) : Promise.reject(new Error('stub: the fresh Chrome answered')),
+        close: async () => {},
+      } as unknown as Browser;
+    });
+    await expect(shoot('data:text/html,x', { widths: [390] })).rejects.toThrow(/fresh Chrome answered/);
+    expect(launches).toBe(2);
+  });
+
+  it('says Chrome stalled when the fresh one stalls too, instead of hanging', async () => {
+    await closeBrowser();
+    setStallForTest(100);
+    setLauncherForTest(async () =>
+      ({ isConnected: () => true, newPage: () => new Promise(() => {}), close: async () => {} }) as unknown as Browser,
+    );
+    await expect(shoot('data:text/html,x', { widths: [390] })).rejects.toThrow(/Chrome did not open a tab within/);
+  });
+
+  it('an import gives up on a wedged Chrome too, and reads once more on a fresh one', async () => {
+    setStallForTest(100);
+    let launches = 0;
+    setLauncherForTest(async () => {
+      const n = ++launches;
+      return {
+        newPage: () =>
+          n === 1 ? new Promise(() => {}) : Promise.reject(new Error('stub: the fresh Chrome answered')),
+        close: async () => {},
+      } as unknown as Browser;
+    });
+    await expect(capture('data:text/html,x')).rejects.toThrow(/fresh Chrome answered/);
+    expect(launches).toBe(2);
+  });
+
+  it('deadline() rejects a step that never settles, as ChromeStalled', async () => {
+    await expect(deadline(new Promise(() => {}), 'start', 50)).rejects.toBeInstanceOf(ChromeStalled);
+    await expect(deadline(Promise.resolve(7), 'start', 50)).resolves.toBe(7);
   });
 });
 

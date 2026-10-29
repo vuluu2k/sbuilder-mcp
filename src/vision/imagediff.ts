@@ -1,4 +1,5 @@
 import { chromium, type Browser } from 'playwright-core';
+import { release } from './shoot.js';
 
 /** What `shoot()` returns for one width, narrowed to what a diff needs. */
 export interface ShotLike {
@@ -73,7 +74,7 @@ async function browser(): Promise<Browser> {
 export async function closeDiffBrowser(): Promise<void> {
   const b = shared;
   shared = null;
-  await b?.close().catch(() => {});
+  if (b) await release(b);
 }
 
 export async function diffImages(a: ShotLike, b: ShotLike, opts: DiffOpts = {}): Promise<DiffResult> {

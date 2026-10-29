@@ -511,6 +511,34 @@ repo over a number here, and fix the line when you catch one stale.
   96 images, 83 buttons. The SHOOT path still waits for `load`, because a photograph genuinely
   wants its images.
 
+- **THE BROWSER SUITE'S 60s TIMEOUTS WERE CHROME DYING SLOWLY, NOT THE PAGE** (2026-10-29).
+  Intermittent 60s failures in `capture()` tests (the embed one, the form one, `aria-hidden`)
+  and a whole `shoot()` describe at 30s looked like the iframe fixture again. Traced per
+  phase across ~20 full runs: goto/settle/evaluate never exceeded 1.7s; `browser.close()`
+  took 10-24s, and Playwright's `pw:browser` log named it — `Teardown watchdog expired;
+  recording dump and terminating` exactly 10.1s after the close, then a crash dump, exit
+  code 2. Chrome's graceful shutdown stalls under CPU contention (ten vitest workers) until
+  its own watchdog fires; the same lifecycle unloaded is 0.25s, 30 of 30. A 10s test hook
+  (`closeBrowser`, `closeDiffBrowser`) can never outlast that, and every `sb_import` on a
+  busy machine paid it after its result was in hand. `release()` (`shoot.ts`) waits 3s for
+  a close, then SIGKILLs the process GROUP — the pid comes from CDP
+  `SystemInfo.getProcessInfo`, since `launch()` has no `browser.process()`, and is read
+  BEFORE the close because its session dies with it. Every Chrome here is a temp profile, so
+  nothing is lost. All three close sites go through it. Do not "fix" this by raising a
+  test timeout: the 10s is Chrome's, plus however long the dump takes.
+
+  **AND A BUSY CHROME CAN WEDGE OUTRIGHT, on a step nothing bounded.** Same logs: a
+  `launch` that never returned, and a `newPage` that never answered (not one stderr line
+  from that Chrome after it) while a fresh Chrome a second later answered at once.
+  `newPage` takes no timeout, `launch` defaults to 180s, and the pool handed every later
+  shot the same wedged handle — one stall failed a whole `shoot()` describe at 30s apiece,
+  and in the server would block every later call (calls run one at a time). `deadline()`
+  (`shoot.ts`, 15s = 4× the worst healthy step measured at load 47) turns a silent step
+  into `ChromeStalled`; `shoot` and `capture` then release that Chrome and try ONCE on a
+  fresh one. `capture` launches through `launchChrome()` — shoot's launcher and test seam,
+  still a fresh browser of its own, never the pool. `captureMany` only bounds it (a wedged
+  browser fails each remaining page after 15s); see the `ponytail:` note there.
+
 - **A CAPTURE COULD NOT SAY IT HAD READ ALMOST NOTHING, because SETTLING IS NOT FAILING.** A
   page read while it is still building returns a small, correct-looking result: `skipped` empty,
   no error, a handful of nodes. MEASURED on ttgshop.vn on an afternoon it was taking 45 SECONDS

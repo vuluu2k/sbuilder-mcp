@@ -1,5 +1,5 @@
-import { chromium, type Browser, type Page } from 'playwright-core';
-import { settleDom } from './shoot.js';
+import type { Browser, Page } from 'playwright-core';
+import { ChromeStalled, deadline, launchChrome, release, settleDom } from './shoot.js';
 import type { Captured } from '../domains/site/importmap.js';
 
 /**
@@ -1469,14 +1469,11 @@ function capturePage(limits: { maxSections: number; maxImages: number; maxTextCh
 async function withBrowser<T>(fn: (browser: Browser) => Promise<T>): Promise<T> {
   let browser: Browser | undefined;
   try {
-    // No Playwright signal handlers: `src/index.ts` owns them (see shoot.ts).
-    browser = await chromium.launch({
-      channel: 'chrome',
-      handleSIGINT: false,
-      handleSIGTERM: false,
-      handleSIGHUP: false,
-    });
+    // shoot.ts's launcher (no Playwright signal handlers — `src/index.ts` owns
+    // them), but a FRESH Chrome, never the pool, and bounded by `deadline`.
+    browser = await launchChrome();
   } catch (e) {
+    if (e instanceof ChromeStalled) throw e;
     throw new Error(
       'sbuilder: could not start Chrome to read that page. This server uses the SYSTEM ' +
         `browser (playwright-core, channel "chrome") and did not find one: ${(e as Error).message}`,
@@ -1485,7 +1482,9 @@ async function withBrowser<T>(fn: (browser: Browser) => Promise<T>): Promise<T> 
   try {
     return await fn(browser);
   } finally {
-    await browser.close().catch(() => undefined);
+    // `release`, not `close`: the result is already in hand, and a busy machine
+    // made the close alone cost 10-24s (see `release` in shoot.ts).
+    await release(browser);
   }
 }
 
@@ -1523,7 +1522,7 @@ async function readPage<T>(
 ): Promise<T> {
   let page: Page | undefined;
   try {
-    page = await browser.newPage({ viewport: { width, height: 900 } });
+    page = await deadline(browser.newPage({ viewport: { width, height: 900 } }), 'open a tab');
     // `domcontentloaded`, NOT `load`, and `settleDom` does the rest.
     //
     // `load` waits for every SUBRESOURCE — including third-party iframes, which
@@ -1619,16 +1618,23 @@ function readFailure(e: unknown): string {
 /** Open a URL and capture it. */
 export async function capture(url: string, opts: CaptureOpts = {}): Promise<CaptureResult> {
   const limits = limitsFrom(opts);
-  return withBrowser((browser) =>
-    readPage(
-      browser,
-      url,
-      opts.width ?? 1440,
-      (page) => page.evaluate(capturePage, limits) as Promise<CaptureResult>,
-      opts.navTimeoutMs,
-      opts.settleMs,
-    ),
-  );
+  const read = () =>
+    withBrowser((browser) =>
+      readPage(
+        browser,
+        url,
+        opts.width ?? 1440,
+        (page) => page.evaluate(capturePage, limits) as Promise<CaptureResult>,
+        opts.navTimeoutMs,
+        opts.settleMs,
+      ),
+    );
+  // A wedged Chrome (see `deadline` in shoot.ts) is released by `withBrowser`;
+  // a fresh one reads the page once more.
+  return read().catch((e: unknown) => {
+    if (e instanceof ChromeStalled) return read();
+    throw e;
+  });
 }
 
 /** One page's outcome in a multi-page read: what was captured, or why it was not. */
@@ -1661,6 +1667,9 @@ export async function captureMany(urls: string[], opts: CaptureOpts = {}): Promi
         )) as CaptureResult;
         out.push({ url, ok: true, result });
       } catch (e) {
+        // ponytail: a wedged Chrome (`ChromeStalled`) fails this page AND each later
+        // one after its own 15s deadline, rather than hanging the run; relaunch
+        // mid-loop if a site import is ever seen doing that.
         out.push({ url, ok: false, why: readFailure(e) });
       }
     }

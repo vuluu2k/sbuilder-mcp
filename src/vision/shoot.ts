@@ -1,3 +1,4 @@
+import { setTimeout as sleep } from 'node:timers/promises';
 import { chromium, type Browser, type Page } from 'playwright-core';
 
 /**
@@ -115,8 +116,9 @@ const JPEG_QUALITY = 80;
  */
 async function launch(): Promise<Browser> {
   try {
-    return await launcher();
+    return await launchChrome();
   } catch (err) {
+    if (err instanceof ChromeStalled) throw err;
     throw new Error(
       'sbuilder: could not launch Google Chrome for the screenshot. sb_look needs Chrome ' +
         `installed — playwright-core bundles no browser. Underlying error: ${String(err)}`,
@@ -148,6 +150,52 @@ let launcher: Launcher = realLauncher;
  */
 export function setLauncherForTest(fn?: Launcher): void {
   launcher = fn ?? realLauncher;
+}
+
+/**
+ * A FRESH Chrome — not the pool — bounded by `deadline`, its pid noted while it
+ * still answers. `capture.ts` launches through this too, so one launcher (and
+ * one test seam) serves both, while each keeps a browser of its own.
+ */
+export async function launchChrome(): Promise<Browser> {
+  const b = await deadline(launcher(), 'start');
+  void pidOf(b);
+  return b;
+}
+
+/**
+ * A CHROME STEP THAT NEVER ANSWERS MEANS A WEDGED CHROME, and nothing else bounds it.
+ *
+ * MEASURED in the full browser suite on a busy machine: a `launch` that never
+ * returned, and a `newPage` that never answered — not one stderr line from that
+ * Chrome afterwards — while a fresh Chrome a moment later answered at once.
+ * `newPage` takes no timeout and `launch` defaults to 180s, so the caller simply
+ * hung: a test to its 60s limit, the pool's every later shot behind the same
+ * handle, and in the server every later tool call, because calls run one at a
+ * time. Healthy, the same steps took ≤3.7s at a load average of 47; the deadline
+ * is four times that, and missing it costs a relaunch, not a failure.
+ */
+let stallMs = 15_000;
+
+/** Tests only: shorten the stall deadline. Pass nothing to restore it. */
+export function setStallForTest(ms = 15_000): void {
+  stallMs = ms;
+}
+
+export class ChromeStalled extends Error {}
+
+/** `step`, or `ChromeStalled` once it has not answered for `ms`. */
+export function deadline<T>(step: Promise<T>, what: string, ms = stallMs): Promise<T> {
+  return Promise.race([
+    step,
+    // `ref: false`: a pending deadline never keeps a finished process alive.
+    sleep(ms, undefined, { ref: false }).then((): never => {
+      throw new ChromeStalled(
+        `sbuilder: Chrome did not ${what} within ${ms / 1000}s. A busy machine can wedge one, ` +
+          'and a fresh one usually answers at once: repeat the call.',
+      );
+    }),
+  ]);
 }
 
 /**
@@ -185,7 +233,64 @@ export async function closeBrowser(): Promise<void> {
   browserPromise = undefined;
   if (!p) return;
   const b = await p.catch(() => undefined);
-  if (b) await b.close().catch(() => {});
+  if (b) await release(b);
+}
+
+/**
+ * The OS pid of a launched Chrome, asked ONCE and kept — ideally right after the
+ * launch, while it still answers; the one that needs killing is the one that has
+ * stopped answering. `launch()` has no `browser.process()`, and CDP's
+ * `SystemInfo.getProcessInfo` is the door.
+ */
+const pids = new WeakMap<Browser, Promise<number | undefined>>();
+
+export function pidOf(b: Browser): Promise<number | undefined> {
+  let pid = pids.get(b);
+  if (!pid) {
+    // Inside `then`, so a handle that cannot open a CDP session (a test double, a
+    // non-Chromium browser) rejects into the catch rather than throwing past it.
+    pid = Promise.resolve()
+      .then(() => b.newBrowserCDPSession())
+      .then((s) => s.send('SystemInfo.getProcessInfo'))
+      .then((r) => r.processInfo.find((p) => p.type === 'browser')?.id)
+      .catch(() => undefined);
+    pids.set(b, pid);
+  }
+  return pid;
+}
+
+/**
+ * CLOSE A THROWAWAY CHROME WITHOUT WAITING OUT ITS TEARDOWN.
+ *
+ * `browser.close()` waits for Chrome to EXIT, with no deadline of its own. On a
+ * busy machine Chrome's graceful shutdown stalls until its own watchdog fires —
+ * MEASURED in the full browser suite: "Teardown watchdog expired; recording dump
+ * and terminating" exactly 10.1s after the close, then a crash dump, exit code 2,
+ * 10-24s per close. Every import paid it after its result was already in hand,
+ * and a 10s test hook could never outlast it. Unloaded, the same close is 0.25s.
+ *
+ * Every Chrome here runs on a temporary profile Playwright deletes afterwards, so
+ * a graceful exit saves nothing. A healthy close is still waited for; one that
+ * outlives `graceMs` is SIGKILLed as a process GROUP (Playwright spawns Chrome
+ * detached, so its pid leads the group and the helpers go with it), and
+ * Playwright's own exit handler then removes the profile.
+ */
+export async function release(b: Browser, graceMs = 3_000): Promise<void> {
+  // Bounded too: a wedged Chrome may not answer the question either.
+  const pid = await Promise.race([pidOf(b), sleep(graceMs, undefined, { ref: false })]);
+  const closing = b.close().catch(() => {});
+  const stalled = await Promise.race([closing.then(() => false), sleep(graceMs, true, { ref: false })]);
+  // No pid, no kill: Chrome's own watchdog still ends it, just not on our clock.
+  if (!stalled || !pid) return;
+  for (const target of [-pid, pid]) {
+    try {
+      process.kill(target, 'SIGKILL');
+      break;
+    } catch {
+      // Not a group leader (or Windows, which has no groups): the pid alone.
+    }
+  }
+  await closing;
 }
 
 /**
@@ -230,16 +335,30 @@ export async function shoot(
   url: string,
   opts: { widths?: number[]; node?: string; pad?: number; format?: ShotFormat; open?: string } = {},
 ): Promise<Shot[]> {
+  try {
+    return await shootWith(await browser(), url, opts);
+  } catch (e) {
+    if (!(e instanceof ChromeStalled)) throw e;
+    // The pool would hand every later call this same wedged handle: replace it, once.
+    await closeBrowser();
+    return shootWith(await browser(), url, opts);
+  }
+}
+
+async function shootWith(
+  b: Browser,
+  url: string,
+  opts: { widths?: number[]; node?: string; pad?: number; format?: ShotFormat; open?: string },
+): Promise<Shot[]> {
   const widths = opts.widths ?? DEFAULT_WIDTHS;
   const format = opts.format ?? DEFAULT_FORMAT;
-  const b = await browser();
   // Each page closes in ITS OWN finally. A list of pages closed after
   // Promise.all would miss a page whose `newPage` resolved after the first
   // rejection — and now that the browser lives for the whole process, a leaked
   // tab is leaked forever rather than until the next call.
   return Promise.all(
     widths.map(async (width) => {
-      const page = await b.newPage({ viewport: { width, height: 900 } });
+      const page = await deadline(b.newPage({ viewport: { width, height: 900 } }), 'open a tab');
       try {
         return await shootOne(page, url, width, format, opts);
       } finally {
