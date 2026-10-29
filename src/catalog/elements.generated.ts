@@ -41273,6 +41273,7 @@ export const BASE_ONLY_CONFIG: string[] = [
   "backgroundSceneUrl",
   "backgroundSceneModelUrl",
   "rowLimit",
+  "clampTitle",
   "optionSource",
   "recordAggregates",
   "recordCollectionId",

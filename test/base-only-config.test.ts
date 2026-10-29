@@ -85,6 +85,24 @@ describe('config keys the publish path reads from base only', () => {
     expect(at(patches, `nodes.${list}.bindings`)).toBeDefined();
   });
 
+  // text-dataset/html.go reads clampTitle raw (nodes.ConfigBool); the platform
+  // ledgered it at web_builder efacb346e. Before that a page title unclamped at
+  // the default breakpoint stayed clamped on the published page.
+  it('routes clampTitle to base at the default breakpoint', () => {
+    const d = PageDoc.from({
+      schema_version: 2,
+      root_node_id: 'rt',
+      nodes: {
+        rt: { id: 'rt', data: { type: 'root', parent: null, nodes: [] }, style: {}, config: {}, specials: {}, responsive: {} },
+      },
+    });
+    const { patches: add, ids } = addSubtree(d, 'rt', { type: 'text-dataset' });
+    d.apply(add);
+    const patches = setKeys(d, ids[0], { clampTitle: false }, { namespace: 'config' });
+    expect(at(patches, `nodes.${ids[0]}.config.clampTitle`)?.value).toBe(false);
+    expect(patches.filter((p) => p.path.includes('responsive'))).toEqual([]);
+  });
+
   it('still writes an ordinary config key per breakpoint', () => {
     const { d, list } = page();
     const patches = setKeys(d, list, { gap: '4px' }, { namespace: 'config', breakpoint: 'mobile' });

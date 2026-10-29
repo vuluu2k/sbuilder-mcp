@@ -599,8 +599,13 @@ repo over a number here, and fix the line when you catch one stale.
   published/active record's address through `ENTITY_LISTS` — the template's own slug answers an
   unbound 200. The page's OWN title in the product/category/blog/post seeds is `clampTitle:false`
   (web_builder d297788bc `unclampPageTitles`, captured by codegen); a card title in a list keeps the
-  clamp. KNOWN GAP: `clampTitle` is read raw (`nodes.ConfigBool`) but not in the platform's
-  `BASE_ONLY_CONFIG` ledger, so `sb_set` would write it per breakpoint — write it with `base:true`.
+  clamp. `clampTitle` is read raw (`nodes.ConfigBool`) and is in `BASE_ONLY_CONFIG` since web_builder
+  efacb346e, so `sb_set` routes it to base on its own (`test/base-only-config.test.ts`) — this
+  line used to say "write it with `base:true`"; that workaround is gone.
+  **`article.date` prints on the SITE's calendar and in its language** (web_builder 533355163):
+  the day in `SiteConfig.Timezone` (empty/unknown/`Local` → UTC), `vi`/`vi-VN` → `DD/MM/YYYY`,
+  anything else ISO `YYYY-MM-DD`, digits only. Before it, a post published 00:00–06:59 Vietnam
+  time printed the previous day — so set the store timezone, and do not "fix" a date by hand.
 - **PATTERNS AND THE POP-UP SEED ARE LOCALIZED** (TTG gap #71): `localizeMinted` (page.ts) runs
   `SEED_COPY_VI` over what `sb_add` and `sb_template_use` mint, and `attachOverlay` over the pop-up
   seed (`closeLabel` is a seed key too). `sb_product_shelf`'s "Xem tất cả" goes to `/search` — an
