@@ -6,6 +6,20 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.100.6] - 2026-10-29
+
+### Added
+- `sb_traits_for` và `sb_set` cung cấp các control cấp trang trên ROOT: `font_family`, `bg_color`, `bg_image`, `padding` và `class_css`.
+- `sb_import_site` báo `links_unread` cho các trang không đọc được liên kết.
+
+### Changed
+- Catalog được tái sinh theo platform mới nhất, nên text style của theme khởi đầu không còn `fontFamily` là "Inter".
+
+### Fixed
+- Text style của theme không có font family nay được đọc là `inherit`, nên element kế thừa font của trang hoặc site thay vì "Inter", và `default_font` không còn crash hay báo nhầm khi theme không nêu family.
+- `sb_look` và `sb_import` không còn để mồ côi một Chrome khởi động xong sau hạn, và mọi bước evaluate, settle và đóng tab của trang đều có hạn thời gian.
+- `sb_import` và `sb_import_site` thay một lần Chrome bị treo giữa chừng khi chụp rồi đọc lại trang đó, và nếu treo lần nữa thì báo lỗi ngay cho các trang còn lại.
+
 ## [0.100.5] - 2026-10-29
 
 ### Changed

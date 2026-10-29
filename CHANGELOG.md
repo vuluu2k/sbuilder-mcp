@@ -6,6 +6,20 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.100.6] - 2026-10-29
+
+### Added
+- `sb_traits_for` and `sb_set` expose page-level controls on ROOT: `font_family`, `bg_color`, `bg_image`, `padding` and `class_css`.
+- `sb_import_site` reports `links_unread` for pages whose links could not be read.
+
+### Changed
+- The catalog is regenerated from the latest platform, so the starter theme text styles no longer carry a `fontFamily` of "Inter".
+
+### Fixed
+- A theme text style with no font family now resolves to `inherit`, so elements take the page or site font instead of "Inter", and `default_font` no longer crashes or warns when a theme names no family.
+- `sb_look` and `sb_import` no longer leak a Chrome that finishes launching after its deadline, and every page evaluation, settle and tab close now has a time limit.
+- `sb_import` and `sb_import_site` replace a Chrome that hangs mid-capture once and re-read that page, and report the remaining pages as errors straight away if it hangs again.
+
 ## [0.100.5] - 2026-10-29
 
 ### Changed
