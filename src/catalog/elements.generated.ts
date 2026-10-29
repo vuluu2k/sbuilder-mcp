@@ -18,8 +18,54 @@ export const ELEMENTS: Record<string, CatalogElement> = {
     "hideInLayer": false,
     "childAllows": [],
     "defaults": {},
-    "inspector": [],
-    "controls": [],
+    "inspector": [
+      {
+        "tab": "general",
+        "groups": [
+          {
+            "key": "typography",
+            "label": "Typography",
+            "controls": [
+              "font_family"
+            ]
+          },
+          {
+            "key": "background",
+            "label": "Background",
+            "controls": [
+              "bg_color",
+              "bg_image"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "advanced",
+        "groups": [
+          {
+            "key": "spacing",
+            "label": "Spacing",
+            "controls": [
+              "padding"
+            ]
+          },
+          {
+            "key": "class_css",
+            "label": "Class",
+            "controls": [
+              "class_css"
+            ]
+          }
+        ]
+      }
+    ],
+    "controls": [
+      "font_family",
+      "bg_color",
+      "bg_image",
+      "padding",
+      "class_css"
+    ],
     "description": "The invisible page root that wraps all top-level sections.",
     "useWhen": [
       "Always present as the single root of every page document"

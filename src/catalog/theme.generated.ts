@@ -81,7 +81,6 @@ export const STARTER_THEME: StarterTheme = {
       "slug": "heading-1",
       "name": "Heading 1",
       "base": {
-        "fontFamily": "Inter",
         "fontSize": "48px",
         "fontWeight": "700",
         "fontStyle": "normal",
@@ -101,7 +100,6 @@ export const STARTER_THEME: StarterTheme = {
       "slug": "heading-2",
       "name": "Heading 2",
       "base": {
-        "fontFamily": "Inter",
         "fontSize": "36px",
         "fontWeight": "700",
         "fontStyle": "normal",
@@ -121,7 +119,6 @@ export const STARTER_THEME: StarterTheme = {
       "slug": "heading-3",
       "name": "Heading 3",
       "base": {
-        "fontFamily": "Inter",
         "fontSize": "28px",
         "fontWeight": "600",
         "fontStyle": "normal",
@@ -141,7 +138,6 @@ export const STARTER_THEME: StarterTheme = {
       "slug": "heading-4",
       "name": "Heading 4",
       "base": {
-        "fontFamily": "Inter",
         "fontSize": "22px",
         "fontWeight": "600",
         "fontStyle": "normal",
@@ -156,7 +152,6 @@ export const STARTER_THEME: StarterTheme = {
       "slug": "heading-5",
       "name": "Heading 5",
       "base": {
-        "fontFamily": "Inter",
         "fontSize": "18px",
         "fontWeight": "600",
         "fontStyle": "normal",
@@ -171,7 +166,6 @@ export const STARTER_THEME: StarterTheme = {
       "slug": "heading-6",
       "name": "Heading 6",
       "base": {
-        "fontFamily": "Inter",
         "fontSize": "16px",
         "fontWeight": "600",
         "fontStyle": "normal",
@@ -186,7 +180,6 @@ export const STARTER_THEME: StarterTheme = {
       "slug": "text-1",
       "name": "Text 1",
       "base": {
-        "fontFamily": "Inter",
         "fontSize": "16px",
         "fontWeight": "400",
         "fontStyle": "normal",
@@ -201,7 +194,6 @@ export const STARTER_THEME: StarterTheme = {
       "slug": "text-2",
       "name": "Text 2",
       "base": {
-        "fontFamily": "Inter",
         "fontSize": "14px",
         "fontWeight": "400",
         "fontStyle": "normal",
@@ -216,7 +208,6 @@ export const STARTER_THEME: StarterTheme = {
       "slug": "text-3",
       "name": "Text 3",
       "base": {
-        "fontFamily": "Inter",
         "fontSize": "12px",
         "fontWeight": "400",
         "fontStyle": "normal",
