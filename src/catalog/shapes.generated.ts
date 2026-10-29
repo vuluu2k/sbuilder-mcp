@@ -9,7 +9,7 @@ export const SHAPE_SOURCE = {
   "fromHandlers": 334,
   "fromSwaggerOnly": 10,
   "withReadOnly": 29,
-  "structsRead": 3467
+  "structsRead": 3469
 } as const;
 
 export const REQUEST_SHAPES: Record<string, RequestShape> = {
@@ -3244,6 +3244,20 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
       {
         "name": "password",
         "type": "string"
+      },
+      {
+        "name": "phone",
+        "type": "string",
+        "note": "Optional — a register form with a phone field (control name \"phone\", the palette's contact-phone row) sends it."
+      },
+      {
+        "name": "form",
+        "type": "string",
+        "note": "Form + Answers: which register form sent this, and its answers (passwords excluded) — read only to check the form's own rules, never stored."
+      },
+      {
+        "name": "answers",
+        "type": "{ [string]: string }"
       }
     ],
     "source": "go",
