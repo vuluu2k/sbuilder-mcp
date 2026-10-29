@@ -28,6 +28,8 @@ import { detachNote, presetIdOf, presetLayer } from '../domains/site/theme.js';
 import { inertHintsFor } from '../domains/site/inert.js';
 import {
   emptyEntityTemplateNote,
+  entityRoute,
+  ENTITY_LISTS,
   hasSeed,
   heldFromFirstPublish,
   layoutDocument,
@@ -167,6 +169,23 @@ export function addPlaced(d: PageDoc, parentId: string, spec: NodeSpec, index?: 
 /** `once` for a real write, `peek` for a dry run — the same notes, spent once. */
 function noticeFor(ctx: ToolContext, dryRun: boolean | undefined): (key: string, body: string) => string | undefined {
   return dryRun !== false ? (k, b) => ctx.notices.peek(k, b) : (k, b) => ctx.notices.once(k, b);
+}
+
+/** One real record's slug for an entity template's type — published/active first — or undefined. */
+async function firstEntitySlug(ctx: ToolContext, siteId: string, type: string | undefined): Promise<string | undefined> {
+  const list = type ? ENTITY_LISTS[type] : undefined;
+  if (!list) return undefined;
+  const got = (await request({
+    base: ctx.base,
+    method: 'GET',
+    path: `/api/sites/${encodeURIComponent(siteId)}/${list.path}`,
+    token: siteToken(ctx),
+    query: { limit: 20 },
+    fetchImpl: ctx.fetchImpl,
+  }).catch(() => ({}))) as Record<string, unknown>;
+  const rows = (list.keys.map((k) => got[k]).find(Array.isArray) ?? []) as Array<Record<string, unknown>>;
+  const live = rows.find((r) => r.status === undefined || r.status === 'published' || r.status === 'active') ?? rows[0];
+  return typeof live?.slug === 'string' && live.slug ? live.slug : undefined;
 }
 
 /** The site's `settings.locale`, or undefined when unset or unreadable — never a reason to fail. */
@@ -2938,8 +2957,11 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
         ? `This is the "${String(seeded?.layout)}" skeleton and it already has ${skeletonFindings} ` +
           'finding(s) — placeholder copy, empty slots. Open it and fill them; sb_review lists each.'
         : null;
+      // An entity template's own slug is not where anyone reads it (TTG gap #68).
+      const route = entityRoute(type);
       return text({
         ...res,
+        ...(route ? { route, route_note: `Served at ${route} for every record of its kind — its own slug answers an unbound page; never link it.` } : {}),
         ...(seeded ? { seeded } : {}),
         ...(blankNote ? { next: blankNote } : skeletonNote ? { next: skeletonNote } : {}),
         ...(wearing ? { chrome: wearing } : {}),
@@ -3021,7 +3043,7 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
       let drafts: Row[] = [];
       let fresh: Row[] = [];
       let held: Row[] = [];
-      let names: Record<string, string> = {};
+      const names: { name: Record<string, string>; type: Record<string, string> } = { name: {}, type: {} };
       try {
         const got = (await request({
           base: ctx.base,
@@ -3030,7 +3052,10 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
           token: siteToken(ctx),
           fetchImpl: ctx.fetchImpl,
         })) as { pages?: Array<Record<string, unknown>> };
-        names = Object.fromEntries((got.pages ?? []).map((p) => [String(p.id), String(p.name ?? '')]));
+        for (const p of got.pages ?? []) {
+          names.name[String(p.id)] = String(p.name ?? '');
+          names.type[String(p.id)] = String(p.type ?? 'page');
+        }
         const others = (got.pages ?? []).filter((p) => p.id !== page_id);
         const row = (p: Record<string, unknown>): Row => ({
           pageId: String(p.id),
@@ -3106,7 +3131,7 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
             globals: (gl.globalSections ?? []) as Master[],
             overlays: (ov.overlays ?? []) as Master[],
             published: (live.published ?? []) as Array<{ pageId?: unknown; document?: unknown }>,
-            names,
+            names: names.name,
           });
         })().catch(() => null);
         const shared = preview?.shared_unpublished ?? [];
@@ -3202,8 +3227,23 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
           // the one place the platform states where its pages are served from.
           const origin = new URL(await previewUrl(ctx, site_id, page_id)).origin;
           const slug = typeof row?.slug === 'string' ? row.slug : '';
-          const path = row?.isHomepage || slug === '' ? '/' : `/${slug}`;
-          live = await proveLive(origin + path, ids, ctx.fetchImpl ?? fetch);
+          // AN ENTITY TEMPLATE HAS NO ADDRESS OF ITS OWN (TTG gap #68): its slug
+          // answers 200 with nothing bound. Check one REAL record's URL instead.
+          const type = names.type[page_id];
+          const route = entityRoute(type);
+          const entitySlug = route ? await firstEntitySlug(ctx, site_id, type) : undefined;
+          if (route && !entitySlug) {
+            live = {
+              url: '',
+              status: 0,
+              serving: false,
+              checked: ids.length,
+              note: `An entity template is served at ${route}, never at its own slug, and no record was found to check one with. The publish succeeded.`,
+            };
+          } else {
+            const path = route ? route.replace('{slug}', encodeURIComponent(entitySlug!)) : row?.isHomepage || slug === '' ? '/' : `/${slug}`;
+            live = await proveLive(origin + path, ids, ctx.fetchImpl ?? fetch);
+          }
         } catch (e) {
           live = {
             url: '',

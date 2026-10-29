@@ -150,6 +150,26 @@ export function heldFromFirstPublish(type: string | undefined): boolean {
   return !!PAGE_TYPES.find((t) => t.type === type)?.routePattern?.includes('{slug}');
 }
 
+/** The `{slug}` route an ENTITY TEMPLATE serves (`/blog-categories/{slug}`), or null for a page with its own address. */
+export function entityRoute(type: string | undefined): string | null {
+  const route = PAGE_TYPES.find((t) => t.type === type)?.routePattern;
+  return route?.includes('{slug}') ? route : null;
+}
+
+/**
+ * Where ONE real record of an entity template's type is listed — the address
+ * `sb_publish verify` must fetch (TTG gap #68): the template's own slug answers
+ * 200 with an unbound page and proves nothing about /blog/{slug}.
+ */
+export const ENTITY_LISTS: Readonly<Record<string, { path: string; keys: readonly string[] }>> = {
+  product: { path: 'products', keys: ['products'] },
+  category: { path: 'product-categories', keys: ['categories', 'productCategories'] },
+  post: { path: 'articles', keys: ['articles'] },
+  blog: { path: 'blog-categories', keys: ['blogCategories', 'categories'] },
+  course: { path: 'courses', keys: ['courses'] },
+  brand: { path: 'product-brands', keys: ['brands'] },
+};
+
 /** A one-line summary of what a seed puts on the page, for the tool result. */
 export function seedSummary(type: string): { nodes: number } | null {
   const seed = STORE_PAGE_SEEDS[type];

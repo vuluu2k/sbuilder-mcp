@@ -90,13 +90,15 @@ export interface ReadinessPage {
 
 /**
  * The page types a search engine INDEXES under the page's own settings. Entity
- * templates (product, category, post, course, brand) get their <title> and
+ * templates (product, category, post, BLOG, course, brand) get their <title> and
  * description merged from the entity (storefront/entityroute.go
  * mergeEntitySettings); error and maintain have no address; the fixed-path and
  * auth types are chrome a crawler is not sent to. Mirrors page.SlugTypes minus
- * the auth four, plus the blog listing.
+ * the auth four. `blog` is NOT a listing: it is the /blog-categories/{slug}
+ * template (page/entitylinks.go linkTypeForPageType "blog" → blogCategory), so
+ * its own title and its own place in the menu were wrong fixes (TTG gap #68).
  */
-const INDEXED_PAGE_TYPES = new Set(['page', 'about', 'contact', 'policy', 'faq', 'blog']);
+const INDEXED_PAGE_TYPES = new Set(['page', 'about', 'contact', 'policy', 'faq']);
 
 interface NodeLike {
   /** Only to walk a card up to its list — see sellsThrough. */

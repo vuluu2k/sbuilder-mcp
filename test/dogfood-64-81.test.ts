@@ -8,6 +8,7 @@ import { STARTER_THEME } from '../src/domains/site/theme.js';
 import { measureShot } from '../src/vision/measure.js';
 import type { Box, Shot } from '../src/vision/shoot.js';
 import { fakePlatform } from './helpers/platform.js';
+import { readinessGaps } from '../src/domains/site/readiness.js';
 
 /**
  * TTG GAPS #64–#81, found building a blog and a landing page on a Vietnamese
@@ -174,6 +175,68 @@ describe('#66 sb_publish dry run names the cascade and the unreviewed shared edi
       const shared = r.json.shared_unpublished as Array<{ id: string }>;
       expect(shared.map((s) => s.id)).toEqual(['gs_foot']);
       expect(String(r.json.shared_warning)).toMatch(/Footer/);
+    } finally {
+      await close();
+    }
+  });
+});
+
+/* #68 ---------------------------------------------------------------------- */
+
+describe('#68 the blog type is the /blog-categories/{slug} entity template', () => {
+  const home = { id: 'pg_home', type: 'page', status: 'published', name: 'Trang chủ', path: '/', isHomepage: true, settings: { title: 't', description: 'd' } };
+  const blog = { id: 'pg_blog', type: 'blog', status: 'published', name: 'QA Blog danh mục', path: '/qa-blog-danh-muc', settings: {} };
+
+  it('is judged neither for its own SEO nor for being linked — the category supplies both', () => {
+    const ids = readinessGaps({
+      liveGateways: null,
+      shippingMethods: null,
+      pageNodes: [],
+      globalNodes: [],
+      globalKinds: ['header'],
+      menuLinks: { pageIds: [], hrefs: [] },
+      pages: [home, blog],
+      openPageId: 'pg_blog',
+    } as never).map((g) => g.id);
+    expect(ids).not.toContain('pageSeo');
+    expect(ids).not.toContain('unreachablePage');
+  });
+
+  const platform = (method: string, path: string) => {
+    if (method === 'GET' && path === '/api/sites/s1/pages') {
+      return { pages: [{ id: 'pg_blog', name: 'QA Blog', slug: 'qa-blog-danh-muc', type: 'blog', updatedAt: '2026-10-29T15:00:00Z' }] };
+    }
+    if (method === 'GET' && path === '/api/sites/s1/blog-categories') {
+      return { blogCategories: [{ id: 'bcat_1', slug: 'qa-kinh-nghiem-build-pc', name: 'QA' }] };
+    }
+    if (method === 'GET' && path === '/api/sites/s1/pages/pg_blog/preview') return { preview: { url: 'https://shop.example/_wb/preview?t=x' } };
+    if (method === 'POST' && path === '/api/sites/s1/publish') {
+      return { published: [{ pageId: 'pg_blog', slug: 'qa-blog-danh-muc', publishedAt: 'now', document: { root_node_id: 'ROOT', nodes: { ROOT: { data: { nodes: ['fs_1'] } } } } }] };
+    }
+    if (method === 'POST' && path === '/api/sites/s1/pages') return { page: { id: 'pg_blog', slug: 'qa-blog-danh-muc', type: 'blog' } };
+    return undefined;
+  };
+
+  it('sb_publish verify checks a REAL category address, not the template\'s own slug', async () => {
+    const p = fakePlatform(platform);
+    const { call, close } = await p.connect();
+    try {
+      const r = await call('sb_publish', { site_id: 's1', page_id: 'pg_blog', dry_run: false, verify: true });
+      expect(r.isError, r.text).toBe(false);
+      const live = r.json.live as { url: string };
+      expect(live.url).toBe('https://shop.example/blog-categories/qa-kinh-nghiem-build-pc');
+    } finally {
+      await close();
+    }
+  });
+
+  it('sb_page_create answers the route the template serves', async () => {
+    const p = fakePlatform(platform);
+    const { call, close } = await p.connect();
+    try {
+      const r = await call('sb_page_create', { site_id: 's1', name: 'QA Blog', type: 'blog', dry_run: false, seed: false, chrome: false });
+      expect(r.isError, r.text).toBe(false);
+      expect(r.json.route).toBe('/blog-categories/{slug}');
     } finally {
       await close();
     }
