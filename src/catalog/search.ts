@@ -14,6 +14,21 @@ import type { ApiOperation } from './types.js';
  */
 const WEIGHT = { tag: 5, path: 3, summary: 2 } as const;
 
+/** Query words that name an HTTP method. */
+const VERB_METHODS: Readonly<Record<string, readonly string[]>> = {
+  list: ['get'],
+  get: ['get'],
+  read: ['get'],
+  show: ['get'],
+  find: ['get'],
+  create: ['post'],
+  add: ['post'],
+  update: ['put', 'patch'],
+  edit: ['put', 'patch'],
+  delete: ['delete'],
+  remove: ['delete'],
+};
+
 /** Eight is enough to choose from; twelve was measured at 44 KB once the schemas rode along. */
 export const DEFAULT_FIND_LIMIT = 8;
 
@@ -69,9 +84,18 @@ export function searchOperations(
       if (hit(path, t)) score += WEIGHT.path;
       if (hit(summary, t)) score += WEIGHT.summary;
     }
+    // A VERB NAMES A METHOD (TTG gap #81): "list products" ranked the four
+    // product-categories/{id}/products routes, every method, above GET /products.
+    if (score > 0 && terms.some((t) => VERB_METHODS[t]?.includes(op.method.toLowerCase()))) score += WEIGHT.summary;
+    // …and the resource the path IS — its first segment past the site/v1 scope —
+    // outranks one that merely ends in the same word.
+    const resource = /^\/api\/(?:sites\/\{siteId\}|v1)\/([^/]+)/.exec(op.path)?.[1];
+    if (score > 0 && resource && terms.some((t) => resource === t || resource === `${t}s`)) score += WEIGHT.path;
     if (score > 0) scored.push({ op, score });
   }
-  scored.sort((a, b) => b.score - a.score || a.op.id.localeCompare(b.op.id));
+  // On a tie the SHORTER path is the resource itself, not something nested under another.
+  const depth = (o: ApiOperation) => o.path.split('/').length;
+  scored.sort((a, b) => b.score - a.score || depth(a.op) - depth(b.op) || a.op.id.localeCompare(b.op.id));
   return scored.slice(0, limit).map((s) => s.op);
 }
 

@@ -927,9 +927,35 @@ export function registerLiveTools(
       },
       annotations: { readOnlyHint: false, destructiveHint: false },
     },
-    async ({ id, action, trigger, payload, dry_run, force }) => {
+    async ({ id, action, trigger, payload: given, dry_run, force }) => {
       const d = session.current();
       const guard: GuardOpts = { force, forced: [] };
+      // A BARE PAGE ID IS ENOUGH (TTG gap #76): the page list has the url and
+      // the label the editor's picker would write, so this composes them rather
+      // than refusing and leaving the caller to build {linkType, id, label, url}.
+      let payload = given;
+      const pageRef = given?.pageId ?? given?.id;
+      if (action === 'open_page' && typeof pageRef === 'string' && pageRef && !given?.url) {
+        const listed = (await request({
+          base: ctx.base,
+          method: 'GET',
+          path: `/api/sites/${encodeURIComponent(session.site())}/pages`,
+          token: siteToken(ctx),
+          fetchImpl: ctx.fetchImpl,
+        }).catch(() => ({}))) as { pages?: Array<Record<string, unknown>> };
+        const pg = (listed.pages ?? []).find((p) => p.id === pageRef);
+        if (pg) {
+          const { pageId: _drop, ...rest } = given ?? {};
+          void _drop;
+          payload = {
+            ...rest,
+            linkType: 'page',
+            id: pageRef,
+            label: typeof given?.label === 'string' ? given.label : String(pg.name ?? ''),
+            url: pg.isHomepage || !pg.slug ? '/' : `/${String(pg.slug)}`,
+          };
+        }
+      }
       const patches = setEvent(d, id, trigger ?? 'click', action, payload, guard);
       const forced = guard.forced!.length ? { forced: guard.forced } : {};
       if (dry_run !== false) {

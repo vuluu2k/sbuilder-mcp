@@ -294,6 +294,10 @@ export function shapeResponse(
       shapingNote = 'pick matched no field on these items; original fields kept. Check the field names.';
     } else {
       items = projected;
+      // A FIELD NO RECORD CARRIES IS SAID (TTG gap #81): `pick:["categoryIds"]`
+      // on /api/v1/products silently returned records without it.
+      const missing = opts.pick.filter((f) => !objects.some((o) => f.split('.')[0] in o));
+      if (missing.length) shapingNote = `not on these records: ${missing.join(', ')} — check the field names.`;
     }
   }
   let cut: 'max_items' | 'size' | 'item_offset' | undefined = offset > 0 ? 'item_offset' : undefined;

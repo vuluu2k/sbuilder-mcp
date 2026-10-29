@@ -12,6 +12,8 @@ import { readinessGaps } from '../src/domains/site/readiness.js';
 import { animationNote } from '../src/domains/site/vocabulary.js';
 import { summarize } from '../src/tools/undo.js';
 import { globalWarning, sharedWriteNotes } from '../src/domains/site/traps.js';
+import { searchOperations } from '../src/catalog/search.js';
+import { shapeResponse } from '../src/tools/api.js';
 
 /**
  * TTG GAPS #64–#81, found building a blog and a landing page on a Vietnamese
@@ -417,6 +419,49 @@ describe('#74 an edit inside a pop-up is not "site-wide"', () => {
     expect(pop).toContain('/overlays/ov_b806/pages');
     expect(globalWarning(docOf('popup') as never, 'bt')).not.toMatch(/site-wide/);
     expect(sharedWriteNotes(docOf('cart-drawer') as never, ['bt'])[0].note).toMatch(/site-wide/);
+  });
+});
+
+/* #76 ---------------------------------------------------------------------- */
+
+describe('#76 sb_event open_page takes a bare page id', () => {
+  it('resolves url and label from the page list, and the href is projected', async () => {
+    const p = fakePlatform((method, path) =>
+      method === 'GET' && path === '/api/sites/s1/pages'
+        ? { pages: [{ id: 'pg_2', name: 'Giới thiệu', slug: 'gioi-thieu', type: 'about' }, { id: 'pg_home', name: 'Trang chủ', slug: '', isHomepage: true }] }
+        : undefined,
+    );
+    const { call, close } = await p.connect();
+    try {
+      await call('sb_page_open', { site_id: 's1', page_id: 'pg_1' });
+      const add = await call('sb_add', { parent_id: 'ROOT', dry_run: false, spec: { type: 'flex-section', children: [{ type: 'button', specials: { text: 'Xem' } }] } });
+      const btn = Object.entries(add.json.added as Record<string, string>).find(([, t]) => t === 'button')![0];
+      const r = await call('sb_event', { id: btn, action: 'open_page', payload: { pageId: 'pg_2' }, dry_run: false });
+      expect(r.isError, r.text).toBe(false);
+      const node = (p.pages.get('pg_1')!.document as { nodes: Record<string, { specials: Record<string, unknown>; events: Array<{ payload: Record<string, unknown> }> }> }).nodes[btn];
+      expect(node.events[0].payload).toMatchObject({ linkType: 'page', id: 'pg_2', label: 'Giới thiệu', url: '/gioi-thieu' });
+      expect(node.specials.href).toBe('/gioi-thieu');
+    } finally {
+      await close();
+    }
+  });
+});
+
+/* #81 ---------------------------------------------------------------------- */
+
+describe('#81 sb_api_find ranks the resource the query names', () => {
+  it('"list products" puts a GET of the products collection above a category\'s products', () => {
+    const ids = searchOperations('list products').map((o) => o.id);
+    const products = ids.findIndex((i) => i === 'get:/api/sites/{siteId}/products' || i === 'get:/api/v1/products');
+    const nested = ids.findIndex((i) => i.includes('/product-categories/{id}/products'));
+    expect(products).toBeGreaterThanOrEqual(0);
+    expect(products).toBeLessThan(nested === -1 ? Infinity : nested);
+    expect(ids[0].startsWith('get:')).toBe(true);
+  });
+
+  it('a picked field no record carries is named', () => {
+    const out = shapeResponse({ products: [{ id: 'p1', title: 'A' }], total: 1 }, { pick: ['id', 'categoryIds'] }) as Record<string, unknown>;
+    expect(JSON.stringify(out)).toMatch(/not on these records: categoryIds/);
   });
 });
 
