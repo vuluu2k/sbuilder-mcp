@@ -357,6 +357,8 @@ on the one open document.
 not the one open before — every tool that can reach the open document waits its turn, from the
 moment its request arrives. The catalog (`sb_catalog_search`, `sb_traits_for`, `sb_templates`),
 `sb_page_list`, the media library and the tools that never touch a page stay parallel.
+A call the client cancels (or times out) while it waits its turn never runs — otherwise a
+retried `sb_add` would store its section twice.
 
 Every tool that takes a `site_id` treats it as optional and falls back to
 `SB_SITE` — a key belongs to one site, so the install already knows it. An explicit
@@ -1378,6 +1380,9 @@ the page list denormalises from that row), so afterwards the timestamps say the 
 while its draft still waits. The result names those pages as `cascaded` and keeps any whose
 draft was ahead under `unpublished_drafts` — in that call and every later `sb_publish` of the
 same process, until the page is published by name (`publish_drafts: true` does it).
+`sb_page_state` reads the same memory, so such a page reports `drift.state: "draft_ahead"` there
+too. A remembered page that is no longer in the site's page list (deleted) is forgotten rather
+than sent: one unknown id makes the platform refuse the whole publish.
 
 **It reports WHICH REVISION went live** — `id` (the published row), `publishedAt`, and
 `fromVersionId` (the draft version it was compiled from). Those three answer the question a

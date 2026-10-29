@@ -102,3 +102,6 @@ answered from the previous page). The slot is taken in the `tools/call` REQUEST 
 the tool callback — the SDK validates arguments asynchronously first, and a schema with more
 ticks let a later call enter its callback earlier. `SESSION_FREE` in `src/server.ts` names the
 tools that never touch the document; a new tool is serialized unless listed there.
+A call whose `extra.signal` aborted while queued is SKIPPED at the head (an `McpError`, which
+the SDK discards unsent for an aborted request): running it performed a write nobody saw, and a
+client that timed out and retried an `sb_add` stored the section twice (review of v0.98.5).

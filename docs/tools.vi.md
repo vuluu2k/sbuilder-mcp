@@ -358,6 +358,8 @@ lượt với `sb_outline` / `sb_node_read` / `sb_set` sẽ được trả lời
 trang mở trước đó — mọi tool có thể chạm tài liệu đang mở đều chờ tới lượt, tính từ lúc request
 tới. Catalog (`sb_catalog_search`, `sb_traits_for`, `sb_templates`), `sb_page_list`, thư viện
 media và các tool không bao giờ chạm trang vẫn chạy song song.
+Lệnh mà client huỷ (hoặc hết giờ chờ) khi còn đang xếp hàng sẽ không bao giờ chạy — nếu không,
+một `sb_add` được gửi lại sẽ lưu section hai lần.
 
 Mọi tool nhận `site_id` đều coi nó là tuỳ chọn và lùi về `SB_SITE` — một khoá chỉ thuộc
 một site, nên bản cài đã biết sẵn. Tham số truyền tay luôn thắng.
@@ -1349,6 +1351,9 @@ của ai đó lên live. Dòng của nó giữ `fromVersionId` CŨ, và nó đ�
 khi bản nháp vẫn đang chờ. Kết quả gọi tên các trang đó ở `cascaded` và giữ trang nào có nháp
 mới hơn trong `unpublished_drafts` — ở lần gọi đó và mọi lần `sb_publish` sau trong cùng
 process, tới khi trang được publish đích danh (`publish_drafts: true` làm việc đó).
+`sb_page_state` đọc cùng bộ nhớ đó, nên trang như vậy cũng báo `drift.state: "draft_ahead"` ở
+đó. Trang đã nhớ mà không còn trong danh sách trang của site (đã xoá) thì bị quên chứ không được
+gửi đi: chỉ một id lạ là nền tảng từ chối cả lần publish.
 
 **Nó báo BẢN NÀO đã lên live** — `id` (dòng published), `publishedAt`, và `fromVersionId`
 (bản nháp mà nó được biên dịch từ đó). Ba trường này trả lời đúng câu người gọi hỏi ngay sau

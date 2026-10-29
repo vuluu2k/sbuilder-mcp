@@ -52,3 +52,44 @@ describe('a read sent beside sb_page_open answers from the page it opened', () =
     }
   });
 });
+
+/**
+ * A call the client CANCELLED while it waited in the queue must not run when it
+ * reaches the head: the SDK drops its answer either way, so a write there lands
+ * unseen — a client that timed out and retried an sb_add stored the section twice.
+ */
+describe('a call cancelled while queued never runs', () => {
+  it('skips the handler of an aborted call behind a slow one', async () => {
+    const posts: string[] = [];
+    const f = (async (url: unknown, init?: RequestInit) => {
+      const path = new URL(String(url)).pathname;
+      const json = (v: unknown) => new Response(JSON.stringify(v), { status: 200, headers: { 'content-type': 'application/json' } });
+      if (init?.method === 'POST') posts.push(path);
+      if (path.endsWith('/source')) {
+        await new Promise((r) => setTimeout(r, 80));
+        return json({ source: { pageId: 'pg_a', siteId: 's1', document: doc('he_aaaaaaaa'), schemaVersion: 2, updatedAt: 'now', rev: 1 } });
+      }
+      return json({ published: [{ pageId: 'pg_a' }], total: 1 });
+    }) as unknown as typeof fetch;
+    const session = new Session('http://x', f);
+    (session as unknown as { access: string }).access = 'jwt';
+    const { client, close } = await connectedClient({ fetchImpl: f, session, siteId: 's1' });
+    try {
+      const slow = client.callTool({ name: 'sb_page_open', arguments: { page_id: 'pg_a' } });
+      const ac = new AbortController();
+      const queued = client.callTool(
+        { name: 'sb_publish', arguments: { page_id: 'pg_a', dry_run: false } },
+        undefined,
+        { signal: ac.signal },
+      );
+      await new Promise((r) => setTimeout(r, 10));
+      ac.abort('client gave up');
+      await expect(queued).rejects.toThrow();
+      await slow;
+      await new Promise((r) => setTimeout(r, 30));
+      expect(posts).toEqual([]);
+    } finally {
+      await close();
+    }
+  });
+});

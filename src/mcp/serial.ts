@@ -1,5 +1,5 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import { CallToolRequestSchema } from '@modelcontextprotocol/sdk/types.js';
+import { CallToolRequestSchema, ErrorCode, McpError } from '@modelcontextprotocol/sdk/types.js';
 
 /**
  * ONE OPEN DOCUMENT, ONE CALL AT A TIME, IN ARRIVAL ORDER.
@@ -17,6 +17,12 @@ import { CallToolRequestSchema } from '@modelcontextprotocol/sdk/types.js';
  * library) and stay parallel. Call before the first `registerTool`, which is
  * when McpServer installs its `tools/call` handler.
  *
+ * A call the client CANCELLED while it waited (notifications/cancelled, or its
+ * own timeout) is skipped when it reaches the head: the SDK sends nothing for an
+ * aborted request either way, so running it only performs a write nobody sees —
+ * a timed-out sb_add, retried, stored its section twice. Thrown the way the SDK's
+ * own sendRequest refuses a cancelled call; the SDK discards it unsent.
+ *
  * ponytail: one FIFO for every session tool, so a slow sb_look delays the next
  * sb_set; a per-document lock only matters if two documents are ever open.
  */
@@ -24,11 +30,14 @@ export function serializeToolCalls(server: McpServer, free: (name: string) => bo
   let tail: Promise<unknown> = Promise.resolve();
   const inner = server.server;
   const set = inner.setRequestHandler.bind(inner);
-  inner.setRequestHandler = ((schema: unknown, handler: (req: { params: { name: string } }, extra: unknown) => unknown) => {
+  inner.setRequestHandler = ((schema: unknown, handler: (req: { params: { name: string } }, extra: { signal?: AbortSignal }) => unknown) => {
     if (schema !== CallToolRequestSchema) return set(schema as never, handler as never);
-    return set(schema as never, ((req: { params: { name: string } }, extra: unknown) => {
+    return set(schema as never, ((req: { params: { name: string } }, extra: { signal?: AbortSignal }) => {
       if (free(req.params.name)) return handler(req, extra);
-      const run = tail.then(() => handler(req, extra));
+      const run = tail.then(() => {
+        if (extra?.signal?.aborted) throw new McpError(ErrorCode.ConnectionClosed, 'Request was cancelled');
+        return handler(req, extra);
+      });
       tail = run.catch(() => undefined);
       return run;
     }) as never);

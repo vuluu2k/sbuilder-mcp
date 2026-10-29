@@ -216,6 +216,14 @@ describe('sb_publish: a cascade is not a publish of the draft', () => {
       const path = new URL(String(url)).pathname;
       const json = (v: unknown) => new Response(JSON.stringify(v), { status: 200, headers: { 'content-type': 'application/json' } });
       if (path.endsWith('/pages')) return json({ pages });
+      if (path.endsWith('/published')) {
+        return json({ published: pages.filter((p) => p.publishedAt).map((p) => ({ pageId: p.id, publishedAt: p.publishedAt })) });
+      }
+      const src = /\/pages\/([^/]+)\/source$/.exec(path);
+      if (src) {
+        const p = pages.find((x) => x.id === src[1])!;
+        return json({ source: { document: { root_node_id: 'ROOT', nodes: { ROOT: { id: 'ROOT', data: { type: 'body', parent: null, nodes: [] } } } }, updatedAt: p.updatedAt } });
+      }
       if (path.endsWith('/publish')) {
         const body = JSON.parse(String(init!.body));
         posts.push(body);
@@ -229,8 +237,53 @@ describe('sb_publish: a cascade is not a publish of the draft', () => {
       }
       return json({});
     }) as unknown as typeof fetch;
-    return { f, posts };
+    return { f, posts, pages };
   }
+
+  async function client(f: typeof fetch) {
+    const session = new Session('http://x', f);
+    (session as unknown as { access: string }).access = 'jwt';
+    const c = await connectedClient({ fetchImpl: f, session });
+    const call = async (name: string, args: Record<string, unknown>) =>
+      JSON.parse(((await c.client.callTool({ name, arguments: args })) as { content: Array<{ text: string }> }).content[0].text);
+    return { call, close: c.close };
+  }
+
+  it('forgets a remembered page that is no longer in the page list', async () => {
+    // A deleted page's id in pageIds makes publishTargets answer ErrPageNotFound
+    // for the whole batch — every later publish_drafts:true, until restart.
+    const { f, pages } = cascadingSite();
+    const { call, close } = await client(f);
+    try {
+      await call('sb_publish', { site_id: 's1', page_id: 'pg_home', dry_run: false });
+      const removed = pages.splice(pages.findIndex((p) => p.id === 'pg_cat'), 1)[0];
+      const next = await call('sb_publish', { site_id: 's1', page_id: 'pg_home', publish_drafts: true });
+      expect(next.body.pageIds).toEqual(['pg_home']);
+      expect(next.unpublished_drafts).toBeUndefined();
+      // Forgotten, not just skipped: back in the list, it is not resurrected.
+      pages.push(removed);
+      const back = await call('sb_publish', { site_id: 's1', page_id: 'pg_home', publish_drafts: true });
+      expect(back.body.pageIds).toEqual(['pg_home']);
+    } finally {
+      await close();
+    }
+  });
+
+  it('sb_page_state reports a cascade-hidden draft as ahead of live, until it is published by name', async () => {
+    const { f } = cascadingSite();
+    const { call, close } = await client(f);
+    try {
+      await call('sb_publish', { site_id: 's1', page_id: 'pg_home', dry_run: false });
+      const state = await call('sb_page_state', { site_id: 's1', page_id: 'pg_cat' });
+      expect(state.drift.state).toBe('draft_ahead');
+      expect(state.drift.note).toMatch(/cascade/i);
+      await call('sb_publish', { site_id: 's1', page_id: 'pg_cat', dry_run: false });
+      const after = await call('sb_page_state', { site_id: 's1', page_id: 'pg_cat' });
+      expect(after.drift.state).not.toBe('draft_ahead');
+    } finally {
+      await close();
+    }
+  });
 
   it('names the cascaded pages and keeps their unpublished drafts listed, this call and the next', async () => {
     const { f, posts } = cascadingSite();

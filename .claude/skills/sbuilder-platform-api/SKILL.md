@@ -463,3 +463,7 @@ a measured need) and `sb_bind`, which belongs with Phase 3's binding work.
   answer, not asked for), keeps their drafts listed, and remembers them per site for the
   process until published by name. Exact detection across processes needs each page's live
   version `createdAt` (`GET …/versions`, `isLive`) — not built; the listing is heavy.
+  `sb_page_state` consults the same memory (else it said `in_step` for a page `sb_publish`
+  listed). A remembered id missing from the fetched page list is DROPPED, never sent:
+  `publishTargets` answers ErrPageNotFound for the WHOLE batch on one unknown id, so a deleted
+  page broke every later `publish_drafts:true` until restart.

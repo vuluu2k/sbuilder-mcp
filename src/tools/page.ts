@@ -2893,8 +2893,14 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
         const state = (p: Record<string, unknown>) =>
           driftOf(p.updatedAt as string | undefined, p.publishedAt as string | undefined).state;
         drafts = others.filter((p) => state(p) === 'draft_ahead').map(row);
-        for (const m of cascadeMasked.get(site_id)?.values() ?? []) {
-          if (m.pageId !== page_id && !drafts.some((d) => d.pageId === m.pageId)) drafts.push(m);
+        // A remembered page no longer listed was DELETED: sending its id makes
+        // the platform's publishTargets refuse the whole batch (ErrPageNotFound),
+        // on every publish_drafts:true until restart. Forget it.
+        const listed = new Set((got.pages ?? []).map((p) => String(p.id)));
+        const memory = cascadeMasked.get(site_id);
+        for (const m of memory?.values() ?? []) {
+          if (!listed.has(m.pageId)) memory!.delete(m.pageId);
+          else if (m.pageId !== page_id && !drafts.some((d) => d.pageId === m.pageId)) drafts.push(m);
         }
         const unborn = others.filter((p) => state(p) === 'never_published').map(row);
         fresh = unborn.filter((r) => !heldFromFirstPublish(r.type));
@@ -3079,7 +3085,17 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
         ((row?.document as { nodes?: Record<string, unknown> } | undefined)?.nodes ?? {}),
       ).length;
 
-      const drift = driftOf(src.updatedAt, row?.publishedAt as string | undefined);
+      // The same cascade memory sb_publish lists unpublished_drafts from: a
+      // cascade moved publishedAt past this draft, so the timestamps lie.
+      const drift = cascadeMasked.get(site_id)?.has(pageId)
+        ? {
+            state: 'draft_ahead' as const,
+            note:
+              'The draft has changes the live page does not. A cascade this process ran republished ' +
+              'this page from its LAST PUBLISHED version and moved publishedAt past the draft, so the ' +
+              'timestamps read in step. Publish it by its own page_id.',
+          }
+        : driftOf(src.updatedAt, row?.publishedAt as string | undefined);
 
       // Projected to id + label + when, never the documents: one version of a
       // two-node page measured 1,690 bytes over the wire, so a realistic page
