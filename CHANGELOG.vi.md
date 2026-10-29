@@ -6,6 +6,15 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.98.6] - 2026-10-29
+
+### Added
+- `sb_add` và `sb_set` báo check `hidden_band` (một lần mỗi process) khi node bị ẩn ở base, vì cách đó chỉ ẩn từ 1440px trở lên, và nêu các cách ghi theo từng breakpoint để ẩn ở mọi độ rộng.
+- `sb_add`, `sb_set` và `sb_review` báo `form_register_phone` với form đăng ký có trường số điện thoại không tên `phone`.
+
+### Fixed
+- `sb_set` và `sb_add` ghi `config.hidden` đặt ở desktop vào base, vì renderer chỉ đọc base cho desktop và không bao giờ đọc slot desktop mà giá trị này từng được ghi vào.
+
 ## [0.98.5] - 2026-10-29
 
 ### Added

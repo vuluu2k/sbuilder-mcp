@@ -6,6 +6,15 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.98.6] - 2026-10-29
+
+### Added
+- `sb_add` and `sb_set` report a `hidden_band` check, once per process, when a node is hidden at base, because that hides it only at 1440px and wider, and name the per-breakpoint writes that hide it at every width.
+- `sb_add`, `sb_set` and `sb_review` report `form_register_phone` for a register form whose phone field is not named `phone`.
+
+### Fixed
+- `sb_set` and `sb_add` write `config.hidden` set at desktop to base, because the renderer reads only base for desktop and never read the desktop slot it was written to.
+
 ## [0.98.5] - 2026-10-29
 
 ### Added
