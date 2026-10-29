@@ -1043,3 +1043,11 @@ how the committed baseline above is kept current.
   This is the `Box.position` lesson again, one field along: a comment described behaviour the
   code did not have, because the code asked a question ADJACENT to the one the comment was
   about.
+
+- **A STATIC BOX INSIDE A FLOATING LAYER WAS STILL MEASURED AGAINST THE PAGE** (TTG gap #29,
+  2026-10-29). The `Box.position` exemption skips a `fixed`/`sticky`/`absolute` box ITSELF;
+  its static children (the button inside a fixed CTA) were compared with whatever content sat
+  under the viewport corner, on every page. `Box.layer` is the nearest out-of-flow
+  self-or-ancestor (`id`, or `@n`), computed inline in `shoot`'s evaluate (no named inner
+  function — the `__name` trap); `measure` compares only boxes in the SAME layer, so a pinned
+  header's own nav collision is still reported.

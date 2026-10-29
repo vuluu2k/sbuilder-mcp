@@ -78,6 +78,31 @@ describe('measureShot()', () => {
     expect(f.map((x) => x.code)).toEqual(['overlap']);
   });
 
+  // GAP #29 (TTG, 2026-10-29): a floating CTA (`fb_633c5307`, position:fixed,
+  // bottom-right, in the footer global) — its BUTTON is static, so the old
+  // per-box exemption did not reach it, and `bt_… overlaps fb_…` fired against
+  // whatever sat under the viewport corner on every page.
+  it('does NOT compare a box inside a fixed/sticky/absolute layer with one outside it', () => {
+    const f = measureShot(
+      shot(1440, [
+        box('fb_fixed01', 1300, 700, 120, 48, { position: 'fixed', layer: 'fb_fixed01' }),
+        box('bt_cta0001', 1304, 704, 112, 40, { position: 'static', layer: 'fb_fixed01' }),
+        box('fb_content', 1000, 650, 400, 200, { position: 'static' }),
+      ]),
+    );
+    expect(f).toEqual([]);
+  });
+
+  it('still compares two boxes inside the SAME floating layer', () => {
+    const f = measureShot(
+      shot(1440, [
+        box('bt_a000001', 0, 0, 200, 100, { layer: 'hd_sticky1' }),
+        box('bt_b000001', 50, 50, 200, 100, { layer: 'hd_sticky1' }),
+      ]),
+    );
+    expect(f.map((x) => x.code)).toEqual(['overlap']);
+  });
+
   it('reports each overlapping pair once, not twice', () => {
     const f = measureShot(shot(1440, [box('a_1', 0, 0, 200, 100), box('b_1', 50, 50, 200, 100)]));
     expect(f.length).toBe(1);

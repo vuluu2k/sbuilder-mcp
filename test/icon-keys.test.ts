@@ -144,3 +144,24 @@ describe('nearestIcons — a misspelled name gets the icon it meant', () => {
     expect(nearestIcons('user')[0]).toMatch(/^User/);
   });
 });
+
+/**
+ * GAP #24 (TTG, 2026-10-29): `sb_add {type:"icon", config:{icon:"ComputerLine"}}`
+ * answered `{"added":[…]}` with no note and rendered the default star. The
+ * `icon` CONTROL is an IconPicker writing `specials.name`; counting its NAME as a
+ * key made `config.icon` look known.
+ */
+describe('an icon picker control name is not a key', () => {
+  it('config.icon / specials.icon on an icon warn and name specials.name', () => {
+    for (const ns of ['config', 'specials']) {
+      const notes = specCheck({ type: 'icon', [ns]: { icon: 'ComputerLine' } } as never);
+      const n = notes.find((c) => c.note.code === 'unknown_key')?.note;
+      expect(n, ns).toBeDefined();
+      expect(n!.fix).toMatch(/specials\.name/);
+    }
+  });
+
+  it('the real key stays silent', () => {
+    expect(specCheck({ type: 'icon', specials: { name: 'ComputerLine' } } as never)).toEqual([]);
+  });
+});

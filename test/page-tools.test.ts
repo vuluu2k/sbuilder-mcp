@@ -196,6 +196,67 @@ describe('sb_publish: other pages with unpublished drafts', () => {
   });
 });
 
+/**
+ * GAP #27 (TTG, 2026-10-29): publishing the home page after editing the global
+ * header AND seven other pages' drafts "published" 19 pages — each other page
+ * from its PREVIOUS version (platform: a cascade renders `publishSourceFor`'s
+ * last-published document and keeps the old `fromVersionId`, by design), and the
+ * cascade's fresh published row bumped each page's denormalised `publishedAt`
+ * past `updatedAt`, so the next sb_publish listed none of them. The tool also
+ * dropped every published page from `unpublished_drafts` in the same call.
+ */
+describe('sb_publish: a cascade is not a publish of the draft', () => {
+  function cascadingSite() {
+    const pages = [
+      { id: 'pg_home', name: 'Home', slug: '', status: 'published', updatedAt: '2026-10-28T10:00:00Z', publishedAt: '2026-10-27T10:00:00Z' },
+      { id: 'pg_cat', name: 'PC Gaming', slug: 'pc-gaming', status: 'published', updatedAt: '2026-10-28T10:00:00Z', publishedAt: '2026-10-27T10:00:00Z' },
+    ];
+    const posts: any[] = [];
+    const f = (async (url: unknown, init?: RequestInit) => {
+      const path = new URL(String(url)).pathname;
+      const json = (v: unknown) => new Response(JSON.stringify(v), { status: 200, headers: { 'content-type': 'application/json' } });
+      if (path.endsWith('/pages')) return json({ pages });
+      if (path.endsWith('/publish')) {
+        const body = JSON.parse(String(init!.body));
+        posts.push(body);
+        // The shared header moved, so the platform cascades to pg_cat from its OLD version.
+        const ids = [...new Set([...body.pageIds, 'pg_cat'])];
+        for (const p of pages) if (ids.includes(p.id)) p.publishedAt = '2026-10-29T10:00:00Z';
+        return json({
+          published: ids.map((id: string) => ({ pageId: id, fromVersionId: body.pageIds.includes(id) ? 'pv_new' : 'pv_old' })),
+          total: ids.length,
+        });
+      }
+      return json({});
+    }) as unknown as typeof fetch;
+    return { f, posts };
+  }
+
+  it('names the cascaded pages and keeps their unpublished drafts listed, this call and the next', async () => {
+    const { f, posts } = cascadingSite();
+    const session = new Session('http://x', f);
+    (session as unknown as { access: string }).access = 'jwt';
+    const { client, close } = await connectedClient({ fetchImpl: f, session });
+    const call = async (args: Record<string, unknown>) =>
+      JSON.parse(((await client.callTool({ name: 'sb_publish', arguments: args })) as { content: Array<{ text: string }> }).content[0].text);
+    try {
+      const out = await call({ site_id: 's1', page_id: 'pg_home', dry_run: false });
+      expect(out.cascaded).toEqual(['pg_cat']);
+      expect(out.unpublished_drafts.map((p: any) => p.pageId)).toEqual(['pg_cat']);
+      // The timestamps now say pg_cat is clean; it is not.
+      const next = await call({ site_id: 's1', page_id: 'pg_home', publish_drafts: true });
+      expect(next.body.pageIds).toEqual(['pg_home', 'pg_cat']);
+      // Publishing it explicitly is what clears it.
+      await call({ site_id: 's1', page_id: 'pg_cat', dry_run: false });
+      const after = await call({ site_id: 's1', page_id: 'pg_home' });
+      expect(after.unpublished_drafts).toBeUndefined();
+      expect(posts.length).toBe(2);
+    } finally {
+      await close();
+    }
+  });
+});
+
 describe('sb_page_create', () => {
   it('sends the page TYPE, which is what routes /checkout and /products', async () => {
     const { client, close } = await connectedClient();

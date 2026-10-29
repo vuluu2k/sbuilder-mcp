@@ -839,3 +839,18 @@ platform treats an unproven guard as indistinguishable from an absent one.
   `accordion` told a correct caller it would not render.
 - **`base_only` is spent per key but said ONCE**, listing the new keys — three keys used to carry the
   ~400-char paragraph three times in one result.
+- **AN ICON PICKER'S CONTROL NAME IS NOT A KEY** (TTG gap #24, 2026-10-29). `keysOf` counts a
+  control's NAME as a key (rows named after what they write); the `icon` control is an
+  IconPicker writing `specials.name`, so `config.icon` read as known, saved, and rendered the
+  default star. `ICON_CONTROLS` and `FIELD_SKIN_BY_CONTROL` (generated) are excluded from the
+  name rule, and the `unknown_key` fix names the element's real icon key.
+- **AN ELEMENT SEED FLIPS THE AXIS ON MOBILE** (TTG gap #26). `flex-block` seeds
+  `responsive.mobile.style.flexDirection: "column"` — the editor drops it the same way, so it is
+  not a bug — and `mergeResponsive` merges per namespace, so a spec's own `mobile.style`
+  without `flexDirection` keeps it: a row written at base stacks at 390. `specCheck` says so as
+  `seed_override` (flexDirection only; a seeded mobile gap is spacing). Our own packed row
+  (`importmap` `c.pack`: menus, button pairs) had the same defect against its own comment
+  ("it wraps, so it needs no stack breakpoint") and now says `mobile.flexDirection: "row"`.
+- **`mergedAuthPage` IS SILENT ON THE `account` PAGE** (TTG gap #28). The platform sends sign-in
+  and sign-up there (`membersonly.go` redirect, `pagetyperoute.go` fallback), so the design
+  skill's rule 6a is right; `openType` (the open page's type, template or not) carries it.

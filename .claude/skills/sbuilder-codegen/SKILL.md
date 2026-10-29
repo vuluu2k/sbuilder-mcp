@@ -1083,3 +1083,10 @@ above today's measurement gets raised again without anybody looking.
   (the fixture the Go gate and the editor mirror both run) is copied to
   `test/inline-representable-cases.generated.json`, so `rich_dropped` is held to the same verdicts
   with no checkout; it exits 1 if the file stops reading as `{cases:[{name,html,ok}]}`.
+
+- **`FIELD_SKIN_BY_CONTROL` and `ICON_CONTROLS` are read off `widgets.ts`** (TTG gaps #24/#25,
+  2026-10-29). Each skin panel is a `FieldSkinRows` widget over ONE named knob table
+  (`knobs: PAY_CARD_SKIN_KNOBS`), resolved through the same `grp()` the field-skin reader uses;
+  a non-identifier table exits 1. `ICON_CONTROLS` is the `byControl` key set the `ICON_KEYS`
+  reader already built. `sb_traits_for` declares the skin controls' writes, and `keysOf` stops
+  counting either kind of control NAME as a key.

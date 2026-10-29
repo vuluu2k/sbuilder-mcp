@@ -451,3 +451,15 @@ a measured need) and `sb_bind`, which belongs with Phase 3's binding work.
   `fontFamily: "Inter"`, which outranks the text style; measured live, a `text_styles` font change
   left headings and buttons in Inter. `sb_theme presets` patches them and `presets_pin_font` names
   them. Text styles also keep responsive overrides (heading-3 mobile 24px) a base-only patch leaves.
+- **A PUBLISH CASCADE IS NOT A PUBLISH OF THE DRAFT, and afterwards the timestamps lie** (TTG
+  gap #27, 2026-10-29, read off `page/service.go` publishTargets + `globalservice.go`).
+  `cascadeTargets` adds every LIVE page whose global / overlay / app-block stamp is behind;
+  `publishSourceFor(isCascade)` renders it from its LAST PUBLISHED version (by design: a
+  shared edit must not drag a draft live) and the row keeps `prev.FromVersionID`. But the
+  fresh row's `PublishedAt: now()` is what `Page.publishedAt` is denormalised from
+  (`store.go` GetPage/ListPages), so `updatedAt > publishedAt` turns false for every cascaded
+  page whose draft never went live. Measured on TTG: 19 pages "published", 7 drafts left
+  behind, the next `unpublished_drafts` empty. `sb_publish` names `cascaded` pages (in the
+  answer, not asked for), keeps their drafts listed, and remembers them per site for the
+  process until published by name. Exact detection across processes needs each page's live
+  version `createdAt` (`GET …/versions`, `isLive`) — not built; the listing is heavy.

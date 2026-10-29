@@ -54,3 +54,26 @@ describe('a field-skin knob on the wrong node', () => {
     }
   });
 });
+
+/**
+ * GAP #25 (TTG, 2026-10-29): `sb_traits_for form-payment control:"pay_card_skin"`
+ * answered `writes: null` + "the platform does not declare", while the payCard*
+ * keys it writes were already generated. Each skin panel is one FieldSkinRows
+ * widget over one knob table, read at codegen into FIELD_SKIN_BY_CONTROL.
+ */
+describe('sb_traits_for describes the skin controls', () => {
+  it('pay_card_skin writes the payCard* card table on config', async () => {
+    const { traitsFor } = await import('../src/catalog/element-search.js');
+    const t = traitsFor('form-payment', 'pay_card_skin') as { writes: Array<{ target: string; writeKey: string }> };
+    expect(t.writes).toContainEqual({ target: 'config', writeKey: 'payCardBg' });
+    expect(t.writes.map((w) => w.writeKey)).not.toContain('payCardAccent'); // pay_state_skin's
+    const s = traitsFor('form-payment', 'pay_state_skin') as { writes: Array<{ writeKey: string }> };
+    expect(s.writes.map((w) => w.writeKey)).toContain('payCardSelectedBg');
+  });
+
+  it('lists them under declared', async () => {
+    const { traitsFor } = await import('../src/catalog/element-search.js');
+    const t = traitsFor('form-payment') as { declared: Record<string, unknown> };
+    expect(Object.keys(t.declared)).toEqual(expect.arrayContaining(['pay_card_skin', 'pay_marker_skin']));
+  });
+});

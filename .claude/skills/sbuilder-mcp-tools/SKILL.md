@@ -93,3 +93,12 @@ rule, and it is what keeps `src/live/session.ts` small. See `CLAUDE.md`'s yield 
 A new tool is not done until it appears in **three** places beyond its own file:
 `src/server.ts`, `docs/tools.md` **and** `docs/tools.vi.md`, and the tool table in both
 READMEs. Plus a test under `test/`.
+
+## One open document, one call at a time
+
+`PageSession` holds ONE open document, so every tool that can reach it runs in arrival order
+(`src/mcp/serial.ts`, TTG gap #30, 2026-10-29: `sb_outline` batched with `sb_page_open`
+answered from the previous page). The slot is taken in the `tools/call` REQUEST handler, not in
+the tool callback — the SDK validates arguments asynchronously first, and a schema with more
+ticks let a later call enter its callback earlier. `SESSION_FREE` in `src/server.ts` names the
+tools that never touch the document; a new tool is serialized unless listed there.

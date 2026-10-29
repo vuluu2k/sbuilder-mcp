@@ -770,6 +770,19 @@ describe('readinessGaps() — account forms stacked on one page', () => {
   it('still reports once the second account form is a different kind', () => {
     expect(ids([formNode('f_login'), formNode('f_register')], FORMS)).toContain('mergedAuthPage');
   });
+
+  // GAP #28 (TTG, 2026-10-29): the finding fired on /account built the way the
+  // design skill's rule 6a says, and nothing could clear it. The PLATFORM sends
+  // both there: a members-only page redirects an anonymous visitor to /account
+  // (storefront/membersonly.go), and a form-link to the login/register page TYPE
+  // with no such page lands on "/account — the account page every store has,
+  // which carries its own sign-in and sign-up" (storefront/pagetyperoute.go).
+  it('is silent on the account page, where the platform puts sign-in and sign-up', () => {
+    const on = (openType: string) =>
+      readinessGaps({ ...base, openType, pageNodes: [formNode('f_login'), formNode('f_register')], forms: FORMS } as never).map((g) => g.id);
+    expect(on('account')).not.toContain('mergedAuthPage');
+    expect(on('page')).toContain('mergedAuthPage');
+  });
 });
 
 /**

@@ -2808,6 +2808,17 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
     },
   );
 
+  // DRAFTS A CASCADE HID, per site, for this process (TTG gap #27). A cascade
+  // re-renders a live page from the version it LAST published (the platform's
+  // publishSourceFor, by design) and writes a fresh published row — and the
+  // page list's `publishedAt` is denormalised from that row, so the draft that
+  // did NOT go live now reads older than "published". Remembered here until the
+  // page is published by name.
+  // ponytail: in-process; a new process sees only timestamps again. Exact would
+  // compare each page's updatedAt with its live version's createdAt
+  // (GET …/versions, isLive) — a heavy listing per page.
+  const cascadeMasked = new Map<string, Map<string, { pageId: string; name: string; slug: string; type: string }>>();
+
   server.registerTool(
     'sb_publish',
     {
@@ -2873,6 +2884,9 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
         const state = (p: Record<string, unknown>) =>
           driftOf(p.updatedAt as string | undefined, p.publishedAt as string | undefined).state;
         drafts = others.filter((p) => state(p) === 'draft_ahead').map(row);
+        for (const m of cascadeMasked.get(site_id)?.values() ?? []) {
+          if (m.pageId !== page_id && !drafts.some((d) => d.pageId === m.pageId)) drafts.push(m);
+        }
         const unborn = others.filter((p) => state(p) === 'never_published').map(row);
         fresh = unborn.filter((r) => !heldFromFirstPublish(r.type));
         held = unborn.filter((r) => heldFromFirstPublish(r.type));
@@ -2886,7 +2900,7 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
         ...(left.length
           ? {
               unpublished_drafts: left,
-              drafts_note: 'Draft saved after its last publish (updatedAt past publishedAt — no platform flag says so). publish_drafts:true publishes them too.',
+              drafts_note: 'Draft not live: saved after its last publish (updatedAt past publishedAt), or held back by a cascade this process saw — no platform flag says so. publish_drafts:true publishes them too.',
             }
           : {}),
         ...(unborn.length
@@ -2942,6 +2956,15 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
       // `continue`). sb_page_create followed by sb_publish does exactly that:
       // the call succeeds, the page never flips to published, and the URL 404s.
       const landed = published.some((p) => p.pageId === page_id);
+      // A page in the answer that was NOT asked for is a CASCADE: rendered from
+      // its last published version, so its draft is exactly as unpublished as
+      // before. It stays under unpublished_drafts, and is remembered.
+      const asked = new Set(body.pageIds);
+      const cascaded = published.map((p) => String(p.pageId)).filter((id) => !asked.has(id));
+      const masked = cascadeMasked.get(site_id) ?? new Map();
+      cascadeMasked.set(site_id, masked);
+      for (const id of asked) masked.delete(id);
+      for (const d of drafts) if (cascaded.includes(d.pageId)) masked.set(d.pageId, d);
       // A 200 PROVES A ROW WAS STORED, NOT THAT A VISITOR IS BEING SERVED IT.
       // The storefront answers `cache-control: public, max-age=60`, so the two
       // legitimately differ for up to a minute — long enough for a caller to
@@ -2972,10 +2995,20 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
           };
         }
       }
+      const cascadeNote = cascaded.length
+        ? ctx.notices.once(
+            'publish-cascade',
+            'cascaded: pages republished because they share a changed global section or overlay. The ' +
+              'platform renders each from the version it LAST published (fromVersionId unchanged), never ' +
+              'from its draft — and bumps its publishedAt, so a draft still waiting is listed under ' +
+              'unpublished_drafts here, not by the timestamps.',
+          )
+        : undefined;
       return text({
         published,
+        ...(cascaded.length ? { cascaded, ...(cascadeNote ? { cascade_note: cascadeNote } : {}) } : {}),
         ...draftNote(
-          drafts.filter((d) => !published.some((p) => p.pageId === d.pageId)),
+          drafts.filter((d) => !asked.has(d.pageId)),
           fresh.filter((d) => !published.some((p) => p.pageId === d.pageId)),
         ),
         ...(live ? { live } : {}),

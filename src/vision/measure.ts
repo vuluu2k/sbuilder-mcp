@@ -116,6 +116,11 @@ export function measureShot(shot: Shot, skip: ReadonlySet<string> = new Set(), d
       // this check exists to find.
       if (a.position && a.position !== 'static' && a.position !== 'relative') continue;
       if (b.position && b.position !== 'static' && b.position !== 'relative') continue;
+      // And a box INSIDE such a layer floats with it: a static button in a fixed
+      // CTA meets whatever content is under the viewport corner on every page.
+      // Two boxes in the same layer are still compared — a header's own nav
+      // colliding is a real defect, pinned or not.
+      if ((a.layer ?? '') !== (b.layer ?? '')) continue;
       const pairKey = `${a.id}|${b.id}`;
       if (seen.has(pairKey)) continue;
       // Skip ancestry: a box containing another is nesting, not collision.

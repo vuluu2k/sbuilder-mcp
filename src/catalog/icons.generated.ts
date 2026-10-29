@@ -116,3 +116,10 @@ export const ICON_KEYS: Record<string, ReadonlyArray<{ ns: 'specials' | 'config'
     }
   ]
 };
+
+/**
+ * Every inspector control that IS an icon picker (`widgets.ts`). Its name is a
+ * WIDGET, not a key: the `icon` control writes `specials.name` on an `icon`,
+ * so `config.icon` there is stored and read by nothing (the star renders).
+ */
+export const ICON_CONTROLS: ReadonlyArray<string> = ["breadcrumb_icon","button_icon","chat_launcher_icon","divider_icon","field_icon","icon","list_dataset_nav","list_item_icon","popup_close"];

@@ -215,6 +215,31 @@ describe('a narrower-only style key reaches desktop through the cascade tail', (
     }
   });
 
+  // GAP #26 (TTG, 2026-10-29): three small rows written `flexDirection:"row"` at
+  // base, with their own `responsive.mobile.style.gap`, stacked at 390 — the
+  // element's seed `responsive.mobile.style.flexDirection:"column"` (the editor
+  // seeds the same) survives the per-namespace merge, and nothing said so.
+  it('sb_add says when an element seed overrides a base style key at a narrower width', async () => {
+    const { call, close } = await openClient();
+    try {
+      const r = await call('sb_add', {
+        parent_id: 'sec',
+        spec: { type: 'flex-block', style: { flexDirection: 'row' }, responsive: { mobile: { style: { gap: '8px' } } } },
+      });
+      const seed = (r.json.checks as Array<{ code: string; key: string; fix: string }>).filter((c) => c.code === 'seed_override');
+      expect(seed).toEqual([expect.objectContaining({ key: 'style.flexDirection' })]);
+      expect(seed[0].fix).toMatch(/responsive.*mobile.*flexDirection/);
+      // Saying the mobile answer out loud is silent — the caller decided.
+      const quiet = await call('sb_add', {
+        parent_id: 'sec',
+        spec: { type: 'flex-block', style: { flexDirection: 'row' }, responsive: { mobile: { style: { flexDirection: 'row' } } } },
+      });
+      expect(((quiet.json.checks ?? []) as Array<{ code: string }>).filter((c) => c.code === 'seed_override')).toEqual([]);
+    } finally {
+      await close();
+    }
+  });
+
   it('sb_add names each node, so a second node with the same narrower-only key is still told', async () => {
     const { call, close } = await openClient();
     try {

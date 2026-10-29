@@ -10,11 +10,15 @@ import { chromium, type Browser, type Page } from 'playwright-core';
  * shape: exactly the two calls that really do run in Chrome, type-checked, and
  * no claim beyond them.
  */
+interface DomEl {
+  id: string;
+  parentElement: DomEl | null;
+}
 declare const document: {
   querySelectorAll(selector: string): Array<{
     id: string;
     className: string;
-    parentElement: { id: string } | null;
+    parentElement: DomEl | null;
     getBoundingClientRect(): { x: number; y: number; width: number; height: number };
     textContent: string | null;
     complete?: boolean;
@@ -60,6 +64,13 @@ export interface Box {
    * against the `icon` sitting in its corner.
    */
   position?: string;
+  /**
+   * The nearest fixed/sticky/absolute self-or-ancestor (its `id`, or `@<n>` when
+   * it has none); absent in the flow. A STATIC button inside a fixed floating
+   * CTA sits over whatever is under the viewport corner on every page — not a
+   * collision, and `position` alone could not say so (TTG gap #29).
+   */
+  layer?: string;
 }
 
 export type ShotFormat = 'jpeg' | 'png';
@@ -436,8 +447,11 @@ async function shootOne(
   // node. `type` is read off the leading `wb-` class, which is the only type
   // signal the render emits; the caller already knows the real types from
   // sb_outline, so this is a convenience, not a contract.
-  const boxes = (await page.evaluate(() =>
-    [...document.querySelectorAll('[id]')]
+  const boxes = (await page.evaluate(() => {
+    // No named inner function: a transpiler's `__name` wrapper would not exist
+    // in the page (the vision skill's evaluate trap).
+    const anon = new Map<unknown, string>();
+    return [...document.querySelectorAll('[id]')]
       .filter((el) => el.id === 'ROOT' || /^[a-z]{2}_[0-9a-f]{8}$/.test(el.id))
       .map((el) => {
         const r = el.getBoundingClientRect();
@@ -446,6 +460,12 @@ async function shootOne(
           .find((c) => c.startsWith('wb-'));
         const cs = getComputedStyle(el);
         const own = (el.textContent ?? '').trim();
+        let layer: string | undefined;
+        for (let e: DomEl | null = el; e && layer === undefined; e = e.parentElement) {
+          if (!['absolute', 'fixed', 'sticky'].includes(getComputedStyle(e).position)) continue;
+          if (!e.id && !anon.has(e)) anon.set(e, `@${anon.size}`);
+          layer = e.id || anon.get(e);
+        }
         return {
           id: el.id,
           type: wb ? wb.slice(3) : '',
@@ -456,9 +476,10 @@ async function shootOne(
           fontPx: Math.round(parseFloat(cs.fontSize) || 0),
           hasText: own.length > 0,
           position: cs.position,
+          ...(layer ? { layer } : {}),
         };
-      }),
-  )) as Box[];
+      });
+  })) as Box[];
 
   // ZOOM. A designer does not judge a card by looking at the whole page, and
   // a full-page shot of a long storefront makes one card a few pixels tall.

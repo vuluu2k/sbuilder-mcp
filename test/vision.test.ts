@@ -272,6 +272,18 @@ describe.runIf(process.env.SB_BROWSER_TEST === '1')('measured against a real ren
     expect(measure(shots).some((f) => f.code === 'text_too_small')).toBe(true);
   }, 40_000);
 
+  // TTG gap #29: a static button inside a fixed floating CTA over page content.
+  it('does not call a static child of a fixed CTA an overlap with the content under it', async () => {
+    const html =
+      '<div id="fb_0000c0de" style="height:400px;background:#eee">content</div>' +
+      '<div id="fb_f1xed000" style="position:fixed;left:10px;top:10px;width:120px;height:48px">' +
+      '<a id="bt_0000c7a0" style="display:block;width:120px;height:48px">Call</a></div>';
+    const { measure } = await import('../src/vision/measure.js');
+    const shots = await shoot(`data:text/html,${encodeURIComponent(html)}`, { widths: [1440] });
+    expect(shots[0].boxes.find((b) => b.id === 'bt_0000c7a0')?.layer).toBe('fb_f1xed000');
+    expect(measure(shots).filter((f) => f.code === 'overlap')).toEqual([]);
+  }, 40_000);
+
   /**
    * THE SHOT MUST NOT PAY FOR A TIMEOUT IT KNOWS WILL NOT RESOLVE.
    *

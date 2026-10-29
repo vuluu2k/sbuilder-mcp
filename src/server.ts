@@ -19,6 +19,7 @@ import { registerUndoTools } from './tools/undo.js';
 import { registerThemeTools } from './tools/theme.js';
 import { registerTranslateTools } from './tools/translate.js';
 import type { ToolContext } from './tools/context.js';
+import { serializeToolCalls } from './mcp/serial.js';
 
 /**
  * Sent on every handshake, so it is short, and says nothing a tool description
@@ -51,6 +52,26 @@ export function pkgVersion(): string {
   }
 }
 
+/**
+ * Tools that never touch the open document, so they need not wait their turn.
+ * Anything not named here is serialized — the safe default for a new tool.
+ */
+const SESSION_FREE: ReadonlySet<string> = new Set([
+  'sb_connect',
+  'sb_site_list',
+  'sb_api_find',
+  'sb_api_call',
+  'sb_page_update',
+  'sb_code',
+  'sb_theme',
+  'sb_catalog_search',
+  'sb_traits_for',
+  'sb_templates',
+  'sb_page_list',
+  'sb_media_list',
+  'sb_media_upload',
+]);
+
 export function buildContext(): ToolContext {
   const base = process.env.SB_API ?? 'http://localhost:8080';
   return {
@@ -77,6 +98,9 @@ export function createServer(ctx: ToolContext = buildContext()): McpServer {
   server.server.oninitialized = () => {
     setAgentClient(server.server.getClientVersion(), pkgVersion());
   };
+  // Every tool that can reach the open document runs in arrival order — see
+  // mcp/serial.ts. Before the first registerTool, which installs tools/call.
+  serializeToolCalls(server, (name) => SESSION_FREE.has(name));
   registerSessionTools(server, ctx);
   registerApiTools(server, ctx);
   const pageSession = registerPageTools(server, ctx);

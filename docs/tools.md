@@ -352,6 +352,12 @@ on the one open document.
 | `page_id` | string? | One of `page_id` / `form_id` |
 | `form_id` | string? | Open a form's field document instead |
 
+**Calls on the open document run in arrival order.** A client that batches `sb_page_open` with
+`sb_outline` / `sb_node_read` / `sb_set` gets the reads answered from the page it just opened,
+not the one open before — every tool that can reach the open document waits its turn, from the
+moment its request arrives. The catalog (`sb_catalog_search`, `sb_traits_for`, `sb_templates`),
+`sb_page_list`, the media library and the tools that never touch a page stay parallel.
+
 Every tool that takes a `site_id` treats it as optional and falls back to
 `SB_SITE` — a key belongs to one site, so the install already knows it. An explicit
 argument always wins.
@@ -651,7 +657,12 @@ tag or attribute in `specials.textHtml` the editor's inline rich-text schema can
 `<p>`, `<div>`, `<h2>`, a `class`, an `href` to `javascript:`/`data:` (entity-encoded too — `&#106;avascript:` is read as the platform decodes it), an HTML comment — names each one: the platform's render gate drops the WHOLE
 value and shows the escaped plain `text`; break lines with `<br>`), `cascade_tail` (a
 style key written only at `laptop`/`tablet`/`mobile` that neither base nor desktop declares,
-judged with the element's defaults — the cascade carries it to desktop). Each note is said once per process; a dry run shows it
+judged with the element's defaults — the cascade carries it to desktop), `seed_override` (a
+base `flexDirection` that the element's OWN seed flips at a narrower width the spec leaves
+unsaid — `flex-block` seeds `mobile.flexDirection: "column"`, as the editor does, so a row
+stacks at 390; say `responsive.mobile.style.flexDirection` to keep it). `unknown_key` also
+fires on an icon PICKER's control name written as a key — `config.icon` on an `icon` renders
+the default star; the fix names `specials.name`. Each note is said once per process; a dry run shows it
 without spending it, so the real write shows it again.
 
 Dry runs of `sb_add`, `sb_set`, `sb_move`, `sb_remove`, `sb_duplicate`, `sb_bind`, `sb_event` and `sb_template_use` run the
@@ -1130,6 +1141,10 @@ render (`name` is a lucide icon id, `src` a URL, `filterSource` a registry id th
 switches on). An EMPTY `specials` list is the complete answer, not an omission: an icon's only
 string is an icon id. Any `/translations` operation's call sheet carries the entity half.
 
+Each field-skin panel (`field_skin`, `pay_card_skin`, `pay_state_skin`, `radio_skin` …) is
+listed under `declared` with the config keys it writes — one knob table each, read at codegen
+from the editor's `FieldSkinRows` widgets.
+
 `sb_set` also warns when a FIELD-SKIN key lands on a form node that renders none of it — the
 FORM dresses every field it holds with the input vocabulary, while a payment card, choice group,
 timeslot or file field carries its own, and a knob on the wrong one is stored and read by
@@ -1348,6 +1363,14 @@ out, and a site with no home page to read is left alone rather than guessed at.
 
 `sb_publish` **cascades**: a page sharing a global section with others republishes them too,
 because a header edited once must not go live on one page and stay stale on the rest.
+
+**A cascaded page goes live from the version it LAST published, never from its draft** — the
+platform's `publishSourceFor`, by design, so a shared edit cannot drag somebody's unfinished
+page live. Its row keeps the OLD `fromVersionId`, and it bumps the page's `publishedAt` (which
+the page list denormalises from that row), so afterwards the timestamps say the page is clean
+while its draft still waits. The result names those pages as `cascaded` and keeps any whose
+draft was ahead under `unpublished_drafts` — in that call and every later `sb_publish` of the
+same process, until the page is published by name (`publish_drafts: true` does it).
 
 **It reports WHICH REVISION went live** — `id` (the published row), `publishedAt`, and
 `fromVersionId` (the draft version it was compiled from). Those three answer the question a
@@ -1764,6 +1787,7 @@ publish panel then listed five gaps.
 | `categoryImages` | Product categories with no `image` while the open page (or a shared section) shows a `collection-media` tile — it drew `<img src="">`, a broken-image icon, until web_builder PR #118 (74ca59dd2); now the grey placeholder — still not the category. Fix: upload, then PUT the category back with `image` (`merge:true`) |
 | `productImages` | Active products with no `images`: every card, cart line and product page shows the platform's grey placeholder (`render/nodes/image/html.go`, no src → `ImagePlaceholder`). Fix: `sb_media_upload`, then PUT the product back with `images: [url, …]` — first is the primary |
 | `cartTrigger` | Nothing opens the cart on its own; a shopper who closes the drawer cannot get back |
+| `mergedAuthPage` | A page other than `/account` carries two or more different ACCOUNT forms (login, register, forgot …). Silent on the `account` page: the platform sends both jobs there — a members-only page redirects to `/account`, and a form-link to the login/register page type with no such page lands there. Fix: one page per form (`sb_store action:"form"` with `page_name`), or move them into a `tab` on `/account` |
 | `siteChrome` | Two or more pages and NO global section, so each page carries its own header and footer. Changing the menu is one edit per page, the copies drift, and a visitor meets a slightly different site on every click. Asked of every site, not only a store — it is the one question here that is not about money |
 | `siteFooter` | Two or more pages, shared chrome exists, and none of it is a `footer` — every page ends at its last section, with no policy links, contact or copyright line. The footer is an opt-in flag on the chrome flow, so this is the default shape of a site built here. Fix: `sb_store action:"chrome" footer:true` |
 | `homepage` | No PUBLISHED page carries `isHomepage`, so "/" answers 404 while every page on the site is reachable by slug. `draft: true` when the home page exists unpublished. Fix: `PATCH /api/v1/pages/{id}` with `isHomepage: true` (it moves the star and clears the slug), or `sb_page_create` with `is_homepage: true`, which adopts the one the site has. Silent when the list did not carry the flag |
@@ -1854,7 +1878,7 @@ reading the document cannot find:
 | --- | --- |
 | `off_canvas` | Content past the viewport; on a phone it also drags a horizontal scrollbar across the page |
 | `text_too_small` | Body text rendering under 12px, only where text actually shows |
-| `overlap` | Two elements on top of each other — nesting and a pixel of rounding are not counted |
+| `overlap` | Two elements on top of each other — nesting, a pixel of rounding, and a box inside a `fixed`/`sticky`/`absolute` layer against one outside it (a floating CTA over whatever is under the viewport corner) are not counted; two boxes inside the same layer still are |
 | `title_bar_stranded` | A heading with one action beside it, the action well short of the row's right edge — side-by-side only; a row or heading that declares `center` is skipped |
 | `title_bar_offcenter` | The same pair, the action's centre off the heading block's |
 

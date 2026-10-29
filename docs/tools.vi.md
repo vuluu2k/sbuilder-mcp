@@ -353,6 +353,12 @@ thao tác trên đúng một tài liệu đang mở.
 | `page_id` | string? | Một trong `page_id` / `form_id` |
 | `form_id` | string? | Mở tài liệu trường của một biểu mẫu thay cho trang |
 
+**Các lệnh lên tài liệu đang mở chạy theo thứ tự đến.** Client gửi `sb_page_open` cùng một
+lượt với `sb_outline` / `sb_node_read` / `sb_set` sẽ được trả lời từ trang vừa mở, không phải
+trang mở trước đó — mọi tool có thể chạm tài liệu đang mở đều chờ tới lượt, tính từ lúc request
+tới. Catalog (`sb_catalog_search`, `sb_traits_for`, `sb_templates`), `sb_page_list`, thư viện
+media và các tool không bao giờ chạm trang vẫn chạy song song.
+
 Mọi tool nhận `site_id` đều coi nó là tuỳ chọn và lùi về `SB_SITE` — một khoá chỉ thuộc
 một site, nên bản cài đã biết sẵn. Tham số truyền tay luôn thắng.
 
@@ -642,7 +648,12 @@ trong `specials.textHtml` mà schema rich-text inline của editor không tạo 
 `<div>`, `<h2>`, một `class`, `href` tới `javascript:`/`data:` (kể cả dạng mã hoá entity — `&#106;avascript:` được đọc như nền tảng giải mã), một comment HTML — nêu tên từng cái: cổng render của nền tảng bỏ CẢ giá trị và hiện
 `text` thường đã escape; xuống dòng bằng `<br>`), `cascade_tail` (key style chỉ ghi ở
 `laptop`/`tablet`/`mobile` mà cả base lẫn desktop đều không khai, xét cùng giá trị mặc định
-của element — cascade mang nó lên desktop). Mỗi cảnh báo nói một lần mỗi process; dry run hiện nó mà không tiêu, nên
+của element — cascade mang nó lên desktop), `seed_override` (`flexDirection` ghi ở base mà
+chính seed của element lật lại ở một độ rộng hẹp hơn spec không nói tới — `flex-block` seed
+`mobile.flexDirection: "column"`, giống editor, nên một hàng xếp dọc ở 390; ghi
+`responsive.mobile.style.flexDirection` để giữ hàng). `unknown_key` cũng báo khi tên control
+của một bộ CHỌN ICON bị ghi như key — `config.icon` trên `icon` render ngôi sao mặc định; phần
+sửa chỉ ra `specials.name`. Mỗi cảnh báo nói một lần mỗi process; dry run hiện nó mà không tiêu, nên
 lần ghi thật vẫn hiện lại.
 
 Dry run của `sb_add`, `sb_set`, `sb_move`, `sb_remove`, `sb_duplicate`, `sb_bind`, `sb_event` và `sb_template_use` chạy
@@ -1107,6 +1118,10 @@ icon lucide, `src` là URL, `filterSource` là id registry mà renderer switch t
 `specials` RỖNG là câu trả lời đầy đủ chứ không phải thiếu: chuỗi duy nhất của icon là một id
 icon. Phần entity nằm trong call sheet của mọi operation `/translations`.
 
+Mỗi bảng skin của trường (`field_skin`, `pay_card_skin`, `pay_state_skin`, `radio_skin` …)
+được liệt kê trong `declared` cùng các key config nó ghi — mỗi bảng một danh sách knob, đọc lúc
+codegen từ các widget `FieldSkinRows` của editor.
+
 `sb_set` cũng cảnh báo khi một key FIELD-SKIN rơi vào form node không render nó — FORM khoác
 bộ input vocabulary cho mọi field nó chứa, còn payment card, choice group, timeslot hay file
 field mang bộ riêng, và knob đặt nhầm chỗ thì được lưu mà không ai đọc. Cảnh báo nêu luôn node
@@ -1319,6 +1334,14 @@ làm hỏng cả lệnh tạo.
 
 `sb_publish` **lan**: trang dùng chung global section với trang khác sẽ publish luôn các
 trang đó, vì header sửa một lần không được lên live ở trang này mà cũ ở trang kia.
+
+**Trang được lan tới lên live từ bản nó publish GẦN NHẤT, không bao giờ từ bản nháp** —
+`publishSourceFor` của nền tảng, có chủ ý, để một chỗ sửa dùng chung không kéo trang dở dang
+của ai đó lên live. Dòng của nó giữ `fromVersionId` CŨ, và nó đẩy `publishedAt` của trang lên
+(danh sách trang lấy trường này từ dòng đó), nên sau đó mốc thời gian nói trang đã sạch trong
+khi bản nháp vẫn đang chờ. Kết quả gọi tên các trang đó ở `cascaded` và giữ trang nào có nháp
+mới hơn trong `unpublished_drafts` — ở lần gọi đó và mọi lần `sb_publish` sau trong cùng
+process, tới khi trang được publish đích danh (`publish_drafts: true` làm việc đó).
 
 **Nó báo BẢN NÀO đã lên live** — `id` (dòng published), `publishedAt`, và `fromVersionId`
 (bản nháp mà nó được biên dịch từ đó). Ba trường này trả lời đúng câu người gọi hỏi ngay sau
@@ -1732,6 +1755,7 @@ hoàn toàn bằng bộ tool này review sạch, publish và render đúng; bả
 | `categoryImages` | Danh mục sản phẩm không có `image` trong khi trang đang mở (hoặc section dùng chung) có ô `collection-media` — trước web_builder PR #118 (74ca59dd2) nó render `<img src="">` — biểu tượng ảnh vỡ; giờ là ô placeholder xám — vẫn không phải ảnh danh mục. Sửa: upload, rồi PUT danh mục kèm `image` (`merge:true`) |
 | `productImages` | Sản phẩm active không có `images`: mọi thẻ, dòng giỏ hàng và trang sản phẩm hiện ô xám placeholder của platform (`render/nodes/image/html.go`, không src → `ImagePlaceholder`). Sửa: `sb_media_upload`, rồi PUT nguyên product kèm `images: [url, …]` — ảnh đầu là ảnh chính |
 | `cartTrigger` | Không gì mở được giỏ; khách đóng ngăn giỏ rồi không quay lại được |
+| `mergedAuthPage` | Một trang KHÔNG phải `/account` mang từ hai form TÀI KHOẢN khác loại trở lên (login, register, forgot …). Im lặng trên trang `account`: nền tảng gửi cả hai việc về đó — trang chỉ-thành-viên chuyển hướng về `/account`, và form-link tới loại trang login/register khi chưa có trang đó cũng rơi về đó. Sửa: mỗi form một trang (`sb_store action:"form"` kèm `page_name`), hoặc gom vào một `tab` trên `/account` |
 | `siteChrome` | Từ hai trang trở lên mà KHÔNG có global section nào, nên mỗi trang tự mang header/footer riêng. Đổi menu là sửa từng trang, các bản sao lệch dần, và khách gặp một site hơi khác ở mỗi lần bấm. Hỏi cho mọi site chứ không riêng cửa hàng — đây là câu hỏi duy nhất ở đây không liên quan tới tiền |
 | `siteFooter` | Từ hai trang trở lên, đã có global section mà không cái nào là `footer` — mỗi trang kết thúc ở section cuối, không link chính sách, liên hệ hay dòng bản quyền. Footer là cờ tuỳ chọn của luồng chrome, nên đây là dạng mặc định của site dựng ở đây. Sửa: `sb_store action:"chrome" footer:true` |
 | `homepage` | Không trang ĐÃ PUBLISH nào mang `isHomepage`, nên "/" trả 404 trong khi mọi trang khác vào được theo slug. `draft: true` khi trang chủ có nhưng chưa publish. Sửa: `PATCH /api/v1/pages/{id}` với `isHomepage: true` (chuyển ngôi sao và xoá slug), hoặc `sb_page_create` với `is_homepage: true` — nó nhận lại trang chủ site đã có. Im lặng khi danh sách trang không mang cờ |
@@ -1816,7 +1840,7 @@ không tìm ra:
 | --- | --- |
 | `off_canvas` | Nội dung tràn khỏi khung nhìn; trên điện thoại còn kéo theo thanh cuộn ngang cả trang |
 | `text_too_small` | Chữ render dưới 12px, chỉ tính nơi thật sự có chữ |
-| `overlap` | Hai element đè lên nhau — lồng nhau và sai số 1px không tính |
+| `overlap` | Hai element đè lên nhau — lồng nhau, sai số 1px, và một hộp nằm trong lớp `fixed`/`sticky`/`absolute` so với hộp ngoài lớp đó (nút CTA nổi đè lên thứ nằm dưới góc màn hình) không tính; hai hộp trong cùng một lớp vẫn tính |
 | `title_bar_stranded` | Tiêu đề kèm một nút bên cạnh, nút cách xa mép phải của hàng — chỉ xét khi đứng cạnh nhau; hàng hoặc tiêu đề khai báo `center` được bỏ qua |
 | `title_bar_offcenter` | Cùng cặp đó, tâm dọc của nút lệch khỏi tâm khối tiêu đề |
 

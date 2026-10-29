@@ -1,5 +1,6 @@
 import { ELEMENTS, TRAIT_WRITES, WRITE_PRECONDITIONS } from './elements.generated.js';
 import { FORM_TEMPLATES } from './checkout.generated.js';
+import { FIELD_SKIN_BY_CONTROL } from './fieldskin.generated.js';
 import { isBaseOnlyConfig } from '../domains/site/baseonly.js';
 import { bindableFields } from '../domains/site/writecheck.js';
 import {
@@ -277,6 +278,10 @@ export function searchWithTemplates<E extends { type: string }>(query: string, e
  */
 export function describeControl(key: string): Record<string, unknown> {
   const d = TRAIT_WRITES[key];
+  // A skin panel is one FieldSkinRows widget over one knob table — generated,
+  // so it is declared even though the trait registry never names it.
+  const skin = FIELD_SKIN_BY_CONTROL[key];
+  if (!d && skin) return { writes: skin.map((k) => ({ target: 'config', writeKey: k })) };
   if (!d) {
     return {
       writes: null,
@@ -334,11 +339,10 @@ export function traitsFor(type: string, control?: string): Record<string, unknow
 
   const declared: Record<string, unknown> = {};
   for (const c of el.controls) {
-    if (!TRAIT_WRITES[c]) continue;
-    const base = TRAIT_WRITES[c].writes.some(
-      (w) => w.target === 'config' && isBaseOnlyConfig(type, w.writeKey),
-    );
-    declared[c] = { ...describeControl(c), ...(base ? { responsive: false } : {}) };
+    const desc = describeControl(c) as { writes: Array<{ target: string; writeKey: string }> | null };
+    if (!desc.writes) continue;
+    const base = desc.writes.some((w) => w.target === 'config' && isBaseOnlyConfig(type, w.writeKey));
+    declared[c] = { ...desc, ...(base ? { responsive: false } : {}) };
   }
   const preconditions = WRITE_PRECONDITIONS.filter((p) => p.types.includes(type)).map(
     ({ types: _, ...p }) => p,

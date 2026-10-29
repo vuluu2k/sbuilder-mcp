@@ -100,6 +100,13 @@ comment ruling out "a page-document scan hunting for a login form". So splitting
 sign-in onto its own page breaks the platform's own redirect: the shopper lands
 on `/account` with nowhere to sign in.
 
+The platform confirms the one page twice more: a form-link to the `login` / `register` page
+TYPE with no such page lands on "/account — the account page every store has, which carries
+its own sign-in and sign-up" (`storefront/pagetyperoute.go`). Separate login/register pages
+are first-class too (the editor's auth page layouts), so both builds are right; `sb_review`'s
+`mergedAuthPage` stays silent on the `account` page since TTG gap #28 (2026-10-29), when it
+contradicted this rule and nothing could clear it.
+
 Build the PAIR `member-gate`'s hint names — one gate `audience: "guests"`, one
 `audience: "members"` — because the seed only gives you the members half
 (`accountPageSeed.ts`: heading + `account-info` + `order-history` +

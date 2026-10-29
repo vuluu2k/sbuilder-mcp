@@ -312,3 +312,141 @@ export const FIELD_SKIN_BY_NODE: Record<string, string[]> = {
     "panelShadowColor"
   ]
 };
+
+/**
+ * The config keys each skin CONTROL writes — one `FieldSkinRows` widget over one
+ * knob table (`editor/src/trait/widgets.ts`). The trait registry describes none
+ * of these controls, so without this `sb_traits_for` called them undeclared.
+ */
+export const FIELD_SKIN_BY_CONTROL: Record<string, string[]> = {
+  "field_skin": [
+    "fieldBg",
+    "fieldBorderColor",
+    "fieldBorderWidth",
+    "fieldRadius",
+    "fieldPadY",
+    "fieldPadX"
+  ],
+  "field_text_skin": [
+    "fieldTextColor",
+    "fieldFontSize",
+    "fieldPlaceholderColor"
+  ],
+  "field_state_skin": [
+    "fieldFocusColor",
+    "fieldErrorColor"
+  ],
+  "field_area_skin": [
+    "fieldAreaMinHeight"
+  ],
+  "search_panel_skin": [
+    "panelBg",
+    "panelBorderColor",
+    "panelBorderWidth",
+    "panelRadius",
+    "panelOffset"
+  ],
+  "search_panel_shadow": [
+    "panelShadowY",
+    "panelShadowBlur",
+    "panelShadowColor"
+  ],
+  "form_message_skin": [
+    "formSentColor",
+    "formSentSize",
+    "formErrorSize"
+  ],
+  "radio_skin": [
+    "choiceRowGap",
+    "choiceColGap",
+    "choiceGap",
+    "choiceSize",
+    "choiceBorderWidth",
+    "choiceBorderColor",
+    "choiceBg",
+    "choiceAccent",
+    "choiceTextColor",
+    "choiceFontSize",
+    "choiceDot"
+  ],
+  "checkbox_skin": [
+    "choiceRowGap",
+    "choiceColGap",
+    "choiceGap",
+    "choiceSize",
+    "choiceBorderWidth",
+    "choiceBorderColor",
+    "choiceBg",
+    "choiceAccent",
+    "choiceTextColor",
+    "choiceFontSize",
+    "choiceRadius",
+    "choiceMarkWidth"
+  ],
+  "timeslot_skin": [
+    "slotBg",
+    "slotBorderColor",
+    "slotBorderWidth",
+    "slotRadius",
+    "slotPadY",
+    "slotPadX",
+    "slotGap",
+    "slotMinWidth",
+    "slotMinHeight",
+    "slotAccent",
+    "slotHoverColor",
+    "slotSelectedWeight",
+    "slotTextColor",
+    "slotFontSize"
+  ],
+  "slot_marker_skin": [
+    "slotMarkerSize",
+    "slotMarkerDot",
+    "slotMarkerGap"
+  ],
+  "file_skin": [
+    "fileGap",
+    "filePlaceholderWeight"
+  ],
+  "field_chrome": [
+    "fieldStackGap",
+    "fieldReqColor",
+    "fieldHintOpacity",
+    "fieldLabelColor",
+    "fieldLabelSize",
+    "fieldLabelWeight",
+    "fieldHintColor",
+    "fieldHintSize",
+    "fieldLabelPosition",
+    "fieldLabelPosition",
+    "fieldLabelPosition",
+    "fieldLabelPosition",
+    "fieldLabelWidth"
+  ],
+  "pay_card_skin": [
+    "payCardBg",
+    "payCardBorderColor",
+    "payCardBorderWidth",
+    "payCardRadius",
+    "payCardPadY",
+    "payCardPadX",
+    "payCardGap",
+    "payCardRowGap"
+  ],
+  "pay_state_skin": [
+    "payCardAccent",
+    "payCardSelectedBg",
+    "payCardHoverColor",
+    "payCardHoverBg"
+  ],
+  "pay_text_skin": [
+    "payCardText",
+    "payCardNameWeight",
+    "payCardDescOpacity",
+    "payCardBodyGap"
+  ],
+  "pay_marker_skin": [
+    "payMarkerSize",
+    "payMarkerDot"
+  ]
+};

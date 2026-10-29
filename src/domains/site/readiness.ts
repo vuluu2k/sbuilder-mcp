@@ -145,6 +145,8 @@ export interface ReadinessInput {
    * links to); undefined when unknown. Only `category` is read.
    */
   openPageType?: string;
+  /** The open page's type, template or not; undefined when unknown. */
+  openType?: string;
   /** The site's pages; null when the list could not be read. */
   pages: ReadinessPage[] | null;
   /**
@@ -562,8 +564,14 @@ export function readinessGaps(input: ReadinessInput): ReadinessGap[] {
   //
   // COUNTED BY DISTINCT TYPE, not by how many form nodes there are. A form split
   // across segments is several nodes of ONE type and is not this defect.
+  //
+  // NOT ON /account (TTG gap #28): the platform sends both jobs THERE — a
+  // members-only page redirects an anonymous visitor to /account
+  // (storefront/membersonly.go), and a form-link to the login or register page
+  // TYPE with no such page lands on "/account — the account page every store
+  // has, which carries its own sign-in and sign-up" (storefront/pagetyperoute.go).
   const authTypes = new Set(['login', 'register', 'forgot', 'reset', 'verify']);
-  if (input.forms && input.forms.length > 0) {
+  if (input.forms && input.forms.length > 0 && input.openType !== 'account') {
     const typeOf = new Map(
       input.forms
         .filter((f): f is { id: string; type: string } => !!f?.id && !!f?.type)

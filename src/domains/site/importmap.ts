@@ -729,6 +729,11 @@ function shape(c: Captured, t: PageTokens): NodeSpec | null {
             gap: '24px',
             ...(c.align === 'center' ? { justifyContent: 'center' } : {}),
           },
+          // SAID AT MOBILE because `flex-block` SEEDS `mobile.flexDirection:
+          // column`, which this row's base `row` does not reach — so every
+          // packed row (a menu, a pair of buttons) stacked at 390 instead of
+          // wrapping, the opposite of what the comment above promises (TTG #26).
+          responsive: { mobile: { style: { flexDirection: 'row' } } },
           // `width: auto` IS THE LOAD-BEARING HALF, and leaving it out looked
           // like the whole idea had failed. `flex-block` seeds `width: 100%`
           // from its element defaults, and `flex: 0 0 auto` only says "do not

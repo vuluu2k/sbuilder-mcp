@@ -22,7 +22,7 @@ describe('traitsFor() write facts', () => {
     for (const el of Object.values(ELEMENTS)) {
       const t = traitsFor(el.type) as T;
       for (const [c, d] of Object.entries<T>(t.declared)) {
-        const base = TRAIT_WRITES[c].writes.some(
+        const base = (d.writes ?? TRAIT_WRITES[c].writes).some(
           (w) => w.target === 'config' && isBaseOnlyConfig(el.type, w.writeKey),
         );
         expect(d.responsive === false).toBe(base);

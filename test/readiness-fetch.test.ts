@@ -105,6 +105,12 @@ describe('gatherReadiness reads the form list', () => {
     expect(input.maintenanceMode).toBe(true);
   });
 
+  it('carries the open page type through, whatever its template flag', async () => {
+    const { ctx } = platform({ forms: [] }, [{ id: 'pg_acc', type: 'account', status: 'published', isDefaultTemplate: false }]);
+    const input = await gatherReadiness(ctx, 's1', [], 'pg_acc');
+    expect(input.openType).toBe('account');
+  });
+
   it('reports null rather than an empty list when the read gives no forms', async () => {
     const { ctx } = platform({ unexpected: true });
     const input = await gatherReadiness(ctx, 's1', [formNode('f_login'), formNode('f_register')]);

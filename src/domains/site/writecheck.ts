@@ -9,13 +9,13 @@ import {
   TRAIT_WRITES,
   WRITE_PRECONDITIONS,
 } from '../../catalog/elements.generated.js';
-import { FIELD_SKIN_BY_NODE } from '../../catalog/fieldskin.generated.js';
+import { FIELD_SKIN_BY_CONTROL, FIELD_SKIN_BY_NODE } from '../../catalog/fieldskin.generated.js';
 import { FORM_RULE_VOCAB } from '../../catalog/formrules.generated.js';
 import type { DocLike } from '../../core/tree.js';
 import type { NodeSpec } from './builder.js';
 import { fill } from './findings.js';
 import { collectsValue, formFieldFindings, formFields, nameFromLabel } from './formdoc.js';
-import { ICON_KEYS } from '../../catalog/icons.generated.js';
+import { ICON_CONTROLS, ICON_KEYS } from '../../catalog/icons.generated.js';
 import { TRANSLATABLE_SPECIALS } from '../../catalog/translations.generated.js';
 import { INLINE_RICH } from '../../catalog/richtext.generated.js';
 import { iconNote } from './icons.js';
@@ -58,7 +58,8 @@ export interface WriteNote {
     | 'form_field'
     | 'text_markup'
     | 'rich_dropped'
-    | 'cascade_tail';
+    | 'cascade_tail'
+    | 'seed_override';
   id?: string;
   /** `<namespace>.<key>` */
   key: string;
@@ -131,9 +132,13 @@ function keysOf(type: string): Record<'config' | 'specials', Set<string>> | null
   add('specials', TRANSLATABLE_SPECIALS[type]);
   // A control the trait registry does not describe is often an inspector row
   // named after the key it writes (`{ key: 'quickviewId', visible: false }` on
-  // list-dataset), so its NAME counts as a key in either namespace.
-  add('config', el.controls);
-  add('specials', el.controls);
+  // list-dataset), so its NAME counts as a key in either namespace — unless the
+  // control is a WIDGET whose writes are generated: the `icon` picker writes
+  // `specials.name`, so counting `icon` made `config.icon` look known and the
+  // star rendered (TTG gap #24).
+  const named = el.controls.filter((c) => !ICON_CONTROLS.includes(c) && !FIELD_SKIN_BY_CONTROL[c]);
+  add('config', named);
+  add('specials', named);
   for (const v of [...Object.values(ELEMENT_VALUES[type] ?? {}), ...Object.values(ELEMENT_VALUES['*'] ?? {})]) {
     add(v.target, [v.writeKey]);
   }
@@ -296,7 +301,9 @@ export function writeCheck(
           'it, the write changes nothing on the page.',
         ks[other].has(k)
           ? `${type} reads ${other}.${k} — write it in namespace "${other}".`
-          : `Check the spelling against sb_traits_for "${type}"; a CSS property belongs in namespace ` +
+          : /icon/i.test(k) && ICON_KEYS[type]?.length
+            ? `${type} keeps its glyph in ${ICON_KEYS[type].map((i) => `${i.ns}.${i.key}`).join(' / ')} — write the icon name there.`
+            : `Check the spelling against sb_traits_for "${type}"; a CSS property belongs in namespace ` +
               '"style". Ignore this if the key is newer than this catalog.',
       );
       continue;
@@ -544,6 +551,26 @@ export function specCheck(spec: NodeSpec, idOf?: ReadonlyMap<NodeSpec, string>):
       out.push(...cascadeTail(node, Object.fromEntries(Object.entries(s.responsive).map(([bp, slot]) => [bp, slot.style])), id));
     }
     if (s.specials) out.push(...writeCheck(s.type, 'specials', s.specials, { specials: { ...born, ...s.specials } }));
+    // The element's OWN seed flipping the axis the caller wrote at base, at a
+    // width the caller left unsaid: flex-block seeds `mobile.flexDirection:
+    // column` (the editor drops it the same way), so a row written at base
+    // stacks at 390 (TTG gap #26). The axis only — a seeded mobile gap is spacing.
+    for (const [bp, slot] of Object.entries((d?.responsive ?? {}) as Record<string, { style?: Record<string, unknown> }>)) {
+      for (const [k, v] of Object.entries(slot?.style ?? {})) {
+        if (k !== 'flexDirection' || !s.style || !(k in s.style) || s.style[k] === v) continue;
+        if ((s.responsive?.[bp as 'mobile']?.style ?? {})[k] !== undefined) continue;
+        out.push({
+          once: `seed-override:${s.type}.${bp}.${k}`,
+          note: {
+            code: 'seed_override',
+            ...(id ? { id } : {}),
+            key: `style.${k}`,
+            problem: `${s.type} seeds responsive.${bp}.style.${k} = ${JSON.stringify(v)} (as the editor does), so the ${JSON.stringify(s.style[k])} written at base does not hold at ${bp}.`,
+            fix: `If it should, say it: responsive: { ${bp}: { style: { ${k}: ${JSON.stringify(s.style[k])} } } } in the spec, or sb_set breakpoint "${bp}".`,
+          },
+        });
+      }
+    }
     for (const c of s.children ?? []) walk(c);
   };
   walk(spec);
