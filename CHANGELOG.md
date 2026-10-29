@@ -6,6 +6,16 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.100.2] - 2026-10-29
+
+### Changed
+- `sb_look` with a `node_id` inside an overlay such as the cart drawer now measures the overlay's subtree in its open state.
+
+### Fixed
+- `sb_look` reports `wider_than_viewport` for fixed, sticky or absolute boxes that overflow the viewport by more than 1px, so a 400px cart drawer on a 390px phone is no longer missed.
+- `sb_review` reports `duplicate_binding_field` when two bindings target the same field, naming the binding that is displayed.
+- `sb_bind` on a field with duplicate bindings replaces the first one and drops the later duplicates.
+
 ## [0.100.1] - 2026-10-29
 
 ### Changed

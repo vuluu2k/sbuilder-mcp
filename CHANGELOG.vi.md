@@ -6,6 +6,16 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.100.2] - 2026-10-29
+
+### Changed
+- `sb_look` với `node_id` nằm trong overlay như cart drawer nay đo cây con của overlay ở trạng thái đang mở.
+
+### Fixed
+- `sb_look` báo `wider_than_viewport` cho hộp fixed, sticky hoặc absolute tràn khung nhìn quá 1px, nên cart drawer 400px trên điện thoại 390px không còn bị bỏ sót.
+- `sb_review` báo `duplicate_binding_field` khi hai binding cùng trỏ vào một field, kèm binding đang được hiển thị.
+- `sb_bind` trên field có binding trùng sẽ thay binding đầu và bỏ các binding trùng phía sau.
+
 ## [0.100.1] - 2026-10-29
 
 ### Changed
