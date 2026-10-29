@@ -831,6 +831,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
         "cart_remove",
         "cart_increment",
         "cart_decrement",
+        "clear_cart",
         "change_tab",
         "open_dropdown",
         "close_dropdown",
@@ -1466,6 +1467,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
         "cart_remove",
         "cart_increment",
         "cart_decrement",
+        "clear_cart",
         "change_tab",
         "open_dropdown",
         "close_dropdown",
@@ -29204,7 +29206,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
       "product|summary": [
         {
           "id": "bind-text",
-          "source": "product.title",
+          "source": "product.summary",
           "field": "specials.boundText",
           "target": {
             "type": "product",
@@ -32602,9 +32604,9 @@ export const ELEMENTS: Record<string, CatalogElement> = {
       "animation",
       "class_css"
     ],
-    "description": "A store-bound text display for a product title, vendor, or description (config.kind). Renders escaped plain text for title/vendor, or the product's sanitized rich-text HTML for the description kind. For the description kind, a Compact display type clamps the text to config.descriptionLines with an optional \"show more / show less\" toggle. Owns no children; when placed under a product it binds to that product's live field, falling back to the seeded config text when unbound. Supports default / hover / active interaction states.",
+    "description": "A store-bound text display for a product title, vendor, summary (the short description), or description (config.kind). Renders escaped plain text for title/vendor/summary, or the product's sanitized rich-text HTML for the description kind. For the description kind, a Compact display type clamps the text to config.descriptionLines with an optional \"show more / show less\" toggle. Owns no children; when placed under a product it binds to that product's live field, falling back to the seeded config text when unbound. Supports default / hover / active interaction states.",
     "useWhen": [
-      "Product title, vendor, or description text in a product layout",
+      "Product title, vendor, short summary, or description text in a product layout",
       "A long product description that should collapse to a few lines with a \"show more\" toggle",
       "Product text that needs hover/active styling"
     ],
@@ -32614,7 +32616,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
       "Free-form author HTML/markup — the description kind renders only the product's own sanitized rich text, not arbitrary content"
     ],
     "contentTips": [
-      "Set config.kind to \"title\", \"vendor\", or \"description\"",
+      "Set config.kind to \"title\", \"vendor\", \"summary\" (the product's one-line short description, plain text — the card line), or \"description\"",
       "For a description, set config.descriptionDisplayType to \"Compact\" and config.descriptionLines to clamp it; enable specials.moreButtonEnabled for the toggle",
       "Customise config.moreText / config.lessText and config.icon (the chevron) for the toggle",
       "Style per state (default / hover / active) via the state switcher",
@@ -36369,6 +36371,7 @@ export const BINDING_SOURCES: string[] = [
   "product.priceCents",
   "product.ratingAverage",
   "product.ratingCount",
+  "product.summary",
   "product.tags",
   "product.title",
   "product.url",

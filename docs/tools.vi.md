@@ -552,7 +552,10 @@ ra đều lưu được, publish được và render mãi placeholder. Binding c
 `tags`, và `{datasetSource:"product", kind:"tags"}` rơi về dòng product đầu tiên — `product.title`
 — nên dòng "tag thông số" hiện tên sản phẩm. Với element có các dòng khác nhau theo kind
 (`text-dataset`, `pricing-dataset`), kind mà catalog không biết giờ bị từ chối kèm danh sách kind
-hợp lệ; element không có trục kind vẫn rơi về theo nguồn.
+hợp lệ; element không có trục kind vẫn rơi về theo nguồn. `summary` trên `text-dataset` của
+product bind `product.summary` — mô tả ngắn một dòng, chữ thường, đúng dòng mà THẺ sản phẩm cần
+(web_builder 69a6becbb; trước đó kind này rơi về tiêu đề). `description` vẫn là phần thân
+rich-text.
 
 **Khối giá là một cha `prices` chứa hai lá**, đúng hình picker của editor thả ra và seed trang
 product dùng: một `pricing-dataset` trần sinh ra kèm lá `kind:"price"` và lá `kind:"compare_price"`,
@@ -868,6 +871,12 @@ còn event là thứ xảy ra song song. Hỏi ở đây sẽ bị từ chối v
 
 Một hành động cho một trigger, thay tại chỗ: hai `click` trên một node là hai câu trả lời cho
 một câu hỏi.
+
+Allow-list được sinh tự động, nên `sb_traits_for <type>` → `events` chính là từ vựng. Nhóm giỏ
+hàng trên `button` / `icon`: `open_cart` / `close_cart`, `cart_remove` / `cart_increment` /
+`cart_decrement` (một dòng, nằm trong `cart-item`), và `clear_cart` — xoá TOÀN BỘ giỏ, chỉ
+click, không payload, không hỏi xác nhận; là nút "Xóa tất cả" đặt phía trên các dòng của trang
+giỏ hàng hoặc ở chân drawer, bên ngoài danh sách.
 
 **MỖI LẦN GHI ĐỀU MANG THEO PHÉP CHIẾU `<a href>`, vì `node.events` KHÔNG BAO GIỜ được
 renderer đọc.** Một click điều hướng DUY NHẤT được render từ `specials.href` và không từ đâu

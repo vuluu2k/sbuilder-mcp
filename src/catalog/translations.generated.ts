@@ -1350,6 +1350,9 @@ export const TRANSLATABLE_ENTITY_FIELDS: Record<
       "key": "title"
     },
     {
+      "key": "summary"
+    },
+    {
       "key": "description",
       "html": true
     },

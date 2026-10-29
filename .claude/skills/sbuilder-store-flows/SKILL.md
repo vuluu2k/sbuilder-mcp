@@ -515,6 +515,10 @@ repo over a number here, and fix the line when you catch one stale.
   cart icons wired to nothing and `sb_review` said nothing. `sb_store action:"cart"` creates it
   from `OVERLAY_SEEDS.cart` (codegen, the editor's `cartDrawerSeed()`), under fresh ids, and
   `readiness` reports `cartDrawer` off `GET /overlays` — silent when that list is unread.
+  **`clear_cart` empties the WHOLE cart** (web_builder ced5e2336; `button`/`icon`, click only, no
+  payload, no confirm — the label says "Xóa tất cả"). It is a hostless control: put it OUTSIDE the
+  `cart-order` list — above the cart page's lines or in the drawer footer — unlike `cart_remove`,
+  which acts on its own line inside a `cart-item`. Checkout already clears the cart it ordered.
 
 - **`action:"chrome"` BUILT ITS NAVIGATION AS A ROW OF BUTTONS, and `sb_review` flagged it as
   `handbuilt_menu`.** No drawer on a phone, no site menu to edit once, a cart that was a box

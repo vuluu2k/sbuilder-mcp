@@ -556,7 +556,10 @@ platform's `datasetBindings.ts` (plus `BINDING_KIND`) is enumerated at codegen, 
 `{datasetSource:"product", kind:"tags"}` fell back to the first product row — `product.title` —
 so a spec-tags line showed the product name. On an element whose rows differ by kind
 (`text-dataset`, `pricing-dataset`) a kind the catalog does not know is now refused with the
-list of known ones; an element with no kind axis still falls back by source.
+list of known ones; an element with no kind axis still falls back by source. `summary` on a
+product `text-dataset` binds `product.summary` — the one-line short description, plain text,
+the line a product CARD wants (web_builder 69a6becbb; before it the kind fell through to the
+title). `description` stays the rich-text body.
 
 **A price display is a `prices` parent over two leaves**, the shape the editor's picker drops and
 the product page seed uses: a bare `pricing-dataset` arrives holding a `kind:"price"` and a
@@ -892,6 +895,12 @@ pointed at `sb_bind`.
 
 One action per trigger, replaced in place: a second `click` on one node is two answers to one
 question.
+
+The allow-list is generated, so `sb_traits_for <type>` → `events` is the vocabulary. The cart
+family on `button` / `icon`: `open_cart` / `close_cart`, `cart_remove` / `cart_increment` /
+`cart_decrement` (one line, inside a `cart-item`), and `clear_cart` — empties the WHOLE cart,
+click only, no payload, no confirmation; a "Remove all" control above the cart page's lines or
+in the drawer footer, outside the list.
 
 **EVERY WRITE CARRIES THE `<a href>` PROJECTION WITH IT, because `node.events` is never read
 by a renderer.** A SOLE navigation click renders as `specials.href` and from nothing else:

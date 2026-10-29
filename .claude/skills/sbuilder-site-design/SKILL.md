@@ -143,6 +143,13 @@ button — a purchase is a BINDING. `sb_event` with `open_cart` on a standalone
 cart control in the header — that one is an EVENT. Getting these two backwards
 is the commonest mistake here, and both tools refuse the other's job by name.
 
+**8a. A card's one-line blurb is `kind: "summary"`, not `description`.** A
+product `text-dataset` with `kind: "summary"` binds `product.summary` — the
+short plain-text line a merchant writes for cards and listings (translatable).
+`description` is the rich-text BODY and belongs on the product page, clamped
+with `descriptionLines` if at all. Before web_builder 69a6becbb `summary` fell
+through to the title, so a card from an older catalog showed the name twice.
+
 **9. Publish.** It CASCADES through shared globals: publishing one page
 republishes every page carrying a global it touched.
 
