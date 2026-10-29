@@ -413,6 +413,43 @@ function readBindingSources(repo: string): string[] {
 }
 
 /**
+ * The binding sources a context holds ONLY WHEN THE ENTITY HAS ONE.
+ *
+ * `ApplyBindings` (render/scope/scope.go) skips a binding whose source the
+ * context lacks, so on one field the LAST source THE CONTEXT RESOLVES renders —
+ * and an earlier binding under a later present-only source (`product.tags`,
+ * `product.summary`, the rating keys) is a FALLBACK, not dead weight. The
+ * platform marks them in its own code: `schema/src/binding.ts` (the hand-mirror
+ * of scope.go) builds the always-present keys as an object literal and adds the
+ * present-only ones as STATEMENTS — `ctx['k'] = …` behind a guard, or
+ * `put('k', v)` that drops an empty value. `record.*` is dynamic and omitted
+ * when empty too (scope/record.go), so `sb_review` treats that namespace whole.
+ */
+function readPresentOnlySources(repo: string, bindingSources: string[]): string[] {
+  let src = '';
+  try {
+    src = readFileSync(resolve(repo, 'schema/src/binding.ts'), 'utf8').replace(/^\s*\/\/[^\n]*$/gm, '');
+  } catch {
+    return [];
+  }
+  const found = new Set<string>();
+  for (const m of src.matchAll(/\bctx\[['"]([a-zA-Z]+\.[a-zA-Z]+)['"]\]\s*=(?!=)/g)) found.add(m[1]);
+  for (const m of src.matchAll(/\bput\(\s*['"]([a-zA-Z]+\.[a-zA-Z]+)['"]/g)) found.add(m[1]);
+  const need = ['product.id', 'product.tags', 'product.summary', 'product.ratingCount'];
+  const lost = need.filter((k) => !found.has(k));
+  if (lost.length) {
+    console.error(`present-only sources: binding.ts no longer adds ${lost.join(', ')} as a statement — has productContext changed shape?`);
+    process.exit(1);
+  }
+  const unknown = [...found].filter((k) => !bindingSources.includes(k));
+  if (unknown.length) {
+    console.error(`present-only sources outside BINDING_SOURCES: ${unknown.join(', ')}`);
+    process.exit(1);
+  }
+  return [...found].sort();
+}
+
+/**
  * Per element type, the `specials` keys its renderer reads FROM A BINDING.
  *
  * Read straight out of the Go renderers, one directory per element type, because
@@ -1393,6 +1430,7 @@ export const API_DEFINITIONS: Record<string, unknown> = ${JSON.stringify(
 
   const docVersion = readDocSchemaVersion(repo);
   const bindingSources = readBindingSources(repo);
+  const presentOnly = readPresentOnlySources(repo, bindingSources);
   const boundSpecials = readBoundSpecials(repo);
   const firstChildOnly = readFirstChildOnly(repo);
   const baseOnly = readBaseOnlyConfig(repo);
@@ -3301,6 +3339,9 @@ export const ELEMENT_SOURCE = ${JSON.stringify({ count: types.length, docSchemaV
 export const ELEMENTS: Record<string, CatalogElement> = ${JSON.stringify(elements, null, 2)};
 
 export const BINDING_SOURCES: string[] = ${JSON.stringify(bindingSources, null, 2)};
+
+/** Sources a context holds only when the entity has one (scripts/gen-catalog.ts readPresentOnlySources). */
+export const PRESENT_ONLY_SOURCES: string[] = ${JSON.stringify(presentOnly, null, 2)};
 
 export const BOUND_SPECIALS: Record<string, string[]> = ${JSON.stringify(boundSpecials, null, 2)};
 

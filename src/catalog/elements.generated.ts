@@ -36407,6 +36407,39 @@ export const BINDING_SOURCES: string[] = [
   "site.youtube"
 ];
 
+/** Sources a context holds only when the entity has one (scripts/gen-catalog.ts readPresentOnlySources). */
+export const PRESENT_ONLY_SOURCES: string[] = [
+  "course.ratingAverage",
+  "course.ratingCount",
+  "product.attributes",
+  "product.brandLogo",
+  "product.brandUrl",
+  "product.bundleItems",
+  "product.id",
+  "product.model",
+  "product.ratingAverage",
+  "product.ratingCount",
+  "product.summary",
+  "product.tags",
+  "product.variations",
+  "site.addressLine",
+  "site.country",
+  "site.description",
+  "site.facebook",
+  "site.instagram",
+  "site.localeSwitch",
+  "site.moneySwitch",
+  "site.postalCode",
+  "site.privacyPolicy",
+  "site.province",
+  "site.returnPolicy",
+  "site.shippingPolicy",
+  "site.supportEmail",
+  "site.supportPhone",
+  "site.tiktok",
+  "site.youtube"
+];
+
 export const BOUND_SPECIALS: Record<string, string[]> = {
   "bundle-items": [
     "boundBundleItems"

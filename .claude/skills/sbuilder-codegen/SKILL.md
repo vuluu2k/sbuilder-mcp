@@ -1090,3 +1090,9 @@ above today's measurement gets raised again without anybody looking.
   a non-identifier table exits 1. `ICON_CONTROLS` is the `byControl` key set the `ICON_KEYS`
   reader already built. `sb_traits_for` declares the skin controls' writes, and `keysOf` stops
   counting either kind of control NAME as a key.
+
+- **`PRESENT_ONLY_SOURCES` is read off `schema/src/binding.ts`** (review of v0.100.4): a key
+  added as a STATEMENT (`ctx['k'] = …` behind a guard, `put('k', v)` dropping an empty value) is
+  present-only; the object literal is always present. Hand-mirrored in `scope.go`, so the TS side
+  is the one read. Exits 1 if `product.id/tags/summary/ratingCount` stop reading as statements,
+  or a key falls outside `BINDING_SOURCES`. `record.*` is dynamic and handled in `review.ts`.

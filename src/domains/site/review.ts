@@ -5,7 +5,7 @@ import { bandOf, isGlobal, type Band } from './traps.js';
 import { exampleCopy } from './examplecopy.js';
 import { SEED_COPY_VI, langOf } from './seedcopy.js';
 import { HOVER_STATE, hoverHome } from './hover.js';
-import { ELEMENTS, BINDING_SOURCES, BOUND_SPECIALS , FIRST_CHILD_ONLY, SATELLITE_RULES, ELEMENT_SEEDS } from '../../catalog/elements.generated.js';
+import { ELEMENTS, BINDING_SOURCES, PRESENT_ONLY_SOURCES, BOUND_SPECIALS , FIRST_CHILD_ONLY, SATELLITE_RULES, ELEMENT_SEEDS } from '../../catalog/elements.generated.js';
 import type { PageDoc } from './document.js';
 import { fill } from './findings.js';
 import {
@@ -1668,25 +1668,35 @@ export function reviewDesign(
     }
 
     // TWO BINDINGS ON ONE FIELD (TTG gap #62). ApplyBindings
-    // (render/scope/scope.go) walks them IN ORDER and each resolved source
-    // overwrites the special, so the LAST renders and the rest are dead weight
-    // that a reorder silently swaps. The purchase binding is not a field binding.
+    // (render/scope/scope.go) walks them IN ORDER, SKIPS a source the context
+    // does not hold, and each resolved one overwrites the special — so the last
+    // source THE CONTEXT RESOLVES wins. An earlier binding is dead only under a
+    // later source that is ALWAYS there: same context (namespace) and not
+    // present-only. Under `product.tags`, `product.summary`, a rating or a
+    // `record.*` field it is the fallback for an entity without one, and a
+    // source from another context may be outside this node's scope altogether.
+    // The purchase binding is not a field binding.
     const byField = new Map<string, string[]>();
     for (const b of bindings) {
       if (!b.field || !b.source || b.id === PRODUCT_ACTION_BINDING_ID) continue;
       byField.set(b.field, [...(byField.get(b.field) ?? []), b.source]);
     }
+    const ns = (s: string) => s.split('.')[0];
+    const always = (s: string) => ns(s) !== 'record' && !PRESENT_ONLY_SOURCES.includes(s);
     for (const [field, sources] of byField) {
-      if (sources.length < 2) continue;
-      const wins = sources[sources.length - 1];
+      const shadow = (i: number) => sources.slice(i + 1).filter((t) => ns(t) === ns(sources[i]) && always(t)).pop();
+      const deadAt = sources.map((_, i) => i).filter((i) => shadow(i));
+      if (!deadAt.length) continue;
+      const dead = deadAt.map((i) => sources[i]);
       out.push({
         code: 'duplicate_binding_field',
         nodeId: id,
         type,
         key: field,
         problem:
-          `${sources.length} bindings write ${field} (${sources.join(', ')}); the renderer applies them in ` +
-          `order, so ${wins} renders and the others are dead weight.`,
+          `${sources.length} bindings write ${field} (${sources.join(', ')}); the renderer applies them in order ` +
+          `and the last source the context resolves wins, so ${dead.join(', ')} never renders — ` +
+          `${shadow(deadAt[0])} always resolves after it.`,
         fix: fill('duplicate_binding_field', { id, key: field }),
       });
     }

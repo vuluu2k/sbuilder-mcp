@@ -927,7 +927,11 @@ Cả hai tham số đều được kiểm với từ vựng sinh tự động, v
 mãi mãi — `applyBindings` đọc namespace từ field rồi bỏ qua mọi thứ khác.
 
 Mỗi field chỉ có một nguồn: bind vào field mà node đã bind sẽ **thay** binding đó tại chỗ, giữ
-nguyên id, thay vì thêm binding thứ hai để runtime phải chọn.
+nguyên id, thay vì thêm binding thứ hai để runtime phải chọn, và bỏ mọi binding sau đó trên
+cùng field. Khi field đang giữ nhiều hơn một binding, kết quả có `collapsed` (các nguồn nó từng
+giữ, theo thứ tự): renderer bỏ qua nguồn mà context không có, nên binding đứng trước một nguồn
+present-only (`product.summary`, `product.tags`, rating, `record.*`) là nguồn dự phòng, và việc
+bind lại đã thay cả chuỗi đó.
 
 Nguồn **record** (một field trong Collection của merchant) là nguồn duy nhất không danh sách nào
 chứa được, vì nó gọi field bằng ID: `record.fld_<16 hex>`, hoặc `record.html.fld_<16 hex>` cho
@@ -1748,7 +1752,7 @@ tài liệu:
 | `href_params_stranded` | `hrefParams` renderer không áp dụng: click không phải MỘT hành động Mở trang / Đến URL, hoặc node gắn binding mua hàng |
 | `record_favorite_invalid` | Trái tim `toggle_record_favorite` nằm ngoài dòng record / trang record, hoặc tab `show_record_favorites` có `targetId` không phải danh sách record không-quan-hệ hay `view` không phải `favorites` / `all` — không làm gì |
 | `dead_binding_field` | Field binding ngoài `specials` — được lưu, được publish, và bị bỏ qua |
-| `duplicate_binding_field` | Hai binding trở lên cùng ghi một field. Renderer áp dụng theo thứ tự và binding resolve CUỐI CÙNG được hiển thị; problem nêu tên nó. `sb_bind` trên field đó thay binding và bỏ các bản trùng |
+| `duplicate_binding_field` | Hai binding trở lên cùng ghi một field và một binding đứng trước không bao giờ được hiển thị. Renderer áp dụng theo thứ tự, bỏ qua nguồn mà context không có, và nguồn cuối cùng mà context resolve được sẽ thắng — nên chỉ binding đứng trước một nguồn LUÔN CÓ của cùng context mới là thừa; problem nêu tên nó và nguồn che nó. Chuỗi mà nguồn sau là present-only (`product.summary`, `product.tags`, rating, `product.id`, `product.variations`, `site.*`, `record.*` — `PRESENT_ONLY_SOURCES`, đọc từ `binding.ts` của platform) hoặc thuộc context khác là chuỗi dự phòng và không bị báo. `sb_bind` trên field đó thay binding và bỏ các bản trùng |
 | `unknown_element` | Type catalog không biết; chạy `npm run codegen` |
 | `unlinked_form` | `form` không trỏ tới form nào — compose ra rỗng và publish thành MỘT HỘP TRỐNG. Platform cố tình im lặng về lỗi này |
 | `example_copy` | Chữ mẫu của layout dựng sẵn chưa được thay — "Tiêu đề chính", "Lợi ích một", câu dặn agent trong ô ảnh trống, và các KHẲNG ĐỊNH bịa ("1.000+", "4,9/5", lời chứng thực ký tên người lạ). Lấy bằng cách dựng mọi pattern, trừ một danh sách ngắn nhãn dùng được nguyên ("Mua ngay", "Xem tất cả"). `sb_template_use` báo số phần tử vừa đặt còn chữ mẫu (`copy`) |

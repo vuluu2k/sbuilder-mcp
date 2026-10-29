@@ -952,7 +952,11 @@ stored, saved, published, and ignored forever — `applyBindings` reads the name
 field and skips anything else.
 
 A field has one source: binding a field the node already binds **replaces** that binding in
-place, keeping its id, instead of adding a second one for the runtime to choose between.
+place, keeping its id, instead of adding a second one for the runtime to choose between, and
+drops any later binding on that field. When the field held more than one, the result carries
+`collapsed` (the sources it held, in order): the renderer skips a source the context lacks, so
+an earlier binding under a present-only one (`product.summary`, `product.tags`, a rating,
+`record.*`) was a fallback, and rebinding replaced the whole chain.
 
 A **record** source (a merchant Collection's field) is the one no list holds, because it names
 the field by ID: `record.fld_<16 hex>`, or `record.html.fld_<16 hex>` for a richtext field, plus
@@ -1778,7 +1782,7 @@ box. Returns `{ findings, fixes, findings_notice? }`, in document order:
 | `href_params_stranded` | `hrefParams` the renderer does not apply: the click is not ONE Open page / Go to URL action, or the node is purchase-bound |
 | `record_favorite_invalid` | A `toggle_record_favorite` heart outside any record row / record page, or a `show_record_favorites` tab whose `targetId` is not a non-relation record list or whose `view` is not `favorites` / `all` — it does nothing |
 | `dead_binding_field` | A binding field outside `specials` — stored, published, and ignored |
-| `duplicate_binding_field` | Two or more bindings write the same field. The renderer applies them in order and the LAST resolved one renders; the problem names it. `sb_bind` on that field replaces the binding and drops the duplicates |
+| `duplicate_binding_field` | Two or more bindings write the same field and an earlier one can never render. The renderer applies them in order, skips a source the context lacks, and the last source the context resolves wins — so only a binding under a later ALWAYS-present source of the same context is dead; the problem names it and the source that shadows it. A chain whose later source is present-only (`product.summary`, `product.tags`, a rating, `product.id`, `product.variations`, `site.*`, `record.*` — `PRESENT_ONLY_SOURCES`, read off the platform's `binding.ts`) or from another context is a fallback and is silent. `sb_bind` on that field replaces the binding and drops the duplicates |
 | `unknown_element` | A type the catalog does not know; run `npm run codegen` |
 | `unlinked_form` | A `form` naming no form — composes nothing and publishes an EMPTY BOX. The platform stays deliberately quiet about this one |
 | `link_colour` | An `<a>` in a BUTTON's `specials.textHtml` with no inline `color` (`background-color` / `border-color` do not count): a button styles no `<a>`, so it renders the browser's default blue `rgb(0,0,238)`. A `text` or `heading` is never flagged — since platform v1.0.187 their links inherit the text colour, underlined, so no inline colour is needed there. Fix: `<a href="…" style="color:inherit">`, or drop the inner link and give the button its own `href`. `sb_add` / `sb_set` warn the same as `link_colour` |

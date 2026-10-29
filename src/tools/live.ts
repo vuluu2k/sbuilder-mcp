@@ -1027,12 +1027,32 @@ export function registerLiveTools(
         }
       }
       const forced = guard.forced!.length ? { forced: guard.forced } : {};
+      // A FALLBACK CHAIN COLLAPSED. ApplyBindings skips a source the context
+      // lacks, so earlier bindings under a present-only one (product.summary,
+      // tags, rating, record.*) render when it is absent. Replacing them all is
+      // what a rebind asks for — and is said, since it can lose a fallback.
+      const prior = action === undefined
+        ? ((d.node(id) as unknown as { bindings?: Array<{ id?: string; field?: string; source?: string }> }).bindings ?? [])
+            .filter((b) => b?.field === field && b.id !== PRODUCT_ACTION_BINDING_ID)
+            .map((b) => b.source ?? '')
+        : [];
+      const collapsed = prior.length > 1
+        ? {
+            collapsed: prior,
+            collapsed_note: (dry_run !== false ? ctx.notices.peek : ctx.notices.once).call(
+              ctx.notices,
+              'bind:collapsed',
+              `${field} held a chain; the renderer shows the last source the context resolves, so an earlier one was ` +
+                'a fallback for an entity without the later one. Now one binding — rebind each if the chain was wanted.',
+            ),
+          }
+        : {};
       if (dry_run !== false) {
         const refuse = session.wouldRefuse(patches);
-        return text({ dry_run: true, patches, ...(refuse ? { would_refuse: refuse } : {}), ...forced });
+        return text({ dry_run: true, patches, ...(refuse ? { would_refuse: refuse } : {}), ...collapsed, ...forced });
       }
       await session.applyAndSave(patches);
-      return text({ bound: id, source, field, ...(action ? { action } : {}), rev: d.rev, ...forced });
+      return text({ bound: id, source, field, ...(action ? { action } : {}), ...collapsed, rev: d.rev, ...forced });
     },
   );
 }

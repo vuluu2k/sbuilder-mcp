@@ -169,6 +169,27 @@ describe('sb_bind checks the field against what the element renders', () => {
       await close();
     }
   });
+
+  // An earlier binding under a present-only source is a FALLBACK; rebinding the
+  // field replaces the whole chain, which is right when asked — and is said.
+  it('says when a rebind collapses a fallback chain, and not for a single binding', async () => {
+    const chain = JSON.parse(JSON.stringify(DOC));
+    chain.nodes.txt.bindings = [
+      { id: 'bind-text', source: 'product.title', field: 'specials.boundText' },
+      { id: 'b2', source: 'product.summary', field: 'specials.boundText' },
+    ];
+    const { call, close } = await openClient(chain);
+    try {
+      const dry = await call('sb_bind', { id: 'txt', source: 'product.vendor', field: 'specials.boundText' });
+      expect(dry.json.collapsed).toEqual(['product.title', 'product.summary']);
+      const real = await call('sb_bind', { id: 'txt', source: 'product.vendor', field: 'specials.boundText', dry_run: false });
+      expect(real.json.collapsed).toEqual(['product.title', 'product.summary']);
+      const again = await call('sb_bind', { id: 'txt', source: 'product.title', field: 'specials.boundText' });
+      expect(again.json.collapsed).toBeUndefined();
+    } finally {
+      await close();
+    }
+  });
 });
 
 describe('sb_event refuses a navigation with nowhere to go', () => {
