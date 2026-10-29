@@ -451,6 +451,9 @@ a measured need) and `sb_bind`, which belongs with Phase 3's binding work.
   `fontFamily: "Inter"`, which outranks the text style; measured live, a `text_styles` font change
   left headings and buttons in Inter. `sb_theme presets` patches them and `presets_pin_font` names
   them. Text styles also keep responsive overrides (heading-3 mobile 24px) a base-only patch leaves.
+  Since web_builder v1.0.187 (e8900e4d9) the STARTER seeds `var(--wb-ts-<slug>-family, Inter)`
+  instead, so a NEW site pins nothing; a theme saved before that keeps its literal "Inter", which
+  is why the check stays (its test fixture is such a theme, not the current starter).
 - **A PUBLISH CASCADE IS NOT A PUBLISH OF THE DRAFT, and afterwards the timestamps lie** (TTG
   gap #27, 2026-10-29, read off `page/service.go` publishTargets + `globalservice.go`).
   `cascadeTargets` adds every LIVE page whose global / overlay / app-block stamp is behind;

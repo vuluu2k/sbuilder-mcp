@@ -119,9 +119,21 @@ describe('sb_theme', () => {
     expect(sent.every((s) => s.method !== 'PUT')).toBe(true);
   });
 
-  // THE STARTER IS THE FIXTURE: its presets carry the literal `fontFamily:
-  // "Inter"` a real site was measured carrying, and heading-3 its mobile 24px.
-  const starter = () => structuredClone(STARTER_THEME);
+  // A SITE THEME FROM BEFORE web_builder v1.0.187: its presets carry the literal
+  // `fontFamily: "Inter"` a real site was measured carrying (the starter now
+  // seeds `var(--wb-ts-<slug>-family, Inter)`, but a saved theme keeps what it
+  // was born with), and heading-3 its mobile 24px.
+  const PINNED = ['heading-default', 'text-default', 'text-dataset-default', 'button-default'];
+  const starter = () => {
+    const t = structuredClone(STARTER_THEME);
+    for (const p of t.presets) if (PINNED.includes(p.id) && p.base) p.base.fontFamily = 'Inter';
+    return t;
+  };
+
+  it('the current starter pins no literal family — every preset follows its text style', async () => {
+    const { out } = await call({ text_styles: { 'heading-3': { fontFamily: 'Be Vietnam Pro' } } }, structuredClone(STARTER_THEME));
+    expect(out.presets_pin_font).toBeUndefined();
+  });
   const putTheme = (sent: Array<{ method?: string; body?: unknown }>) =>
     (sent.find((s) => s.method === 'PUT')!.body as { theme: typeof STARTER_THEME }).theme;
 

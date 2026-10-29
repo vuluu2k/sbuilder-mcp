@@ -371,11 +371,13 @@ export function registerThemeTools(server: McpServer, ctx: ToolContext): void {
         patchLayers(theme.presets.find((p) => p.id === id)!, decls, `presets.${id}`, changes);
       }
 
-      // A FAMILY ON A TEXT STYLE REACHES NOTHING A PRESET PINS. heading-default,
-      // text-default, text-dataset-default and button-default carry a literal
-      // `fontFamily: "Inter"`, so changing the style's family changed nothing on
-      // headings or buttons — measured on a live storefront. Named, not fixed:
-      // which presets should follow is the caller's design decision.
+      // A FAMILY ON A TEXT STYLE REACHES NOTHING A PRESET PINS. A site theme saved
+      // before web_builder v1.0.187 carries a literal `fontFamily: "Inter"` on
+      // heading-default, text-default, text-dataset-default and button-default
+      // (the starter now seeds `var(--wb-ts-…-family, Inter)`), so changing the
+      // style's family changed nothing on headings or buttons — measured on a
+      // live storefront. Named, not fixed: which presets should follow is the
+      // caller's design decision.
       const families = new Set(
         Object.values(text_styles ?? {})
           .map((d) => d.fontFamily)

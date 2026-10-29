@@ -43,6 +43,7 @@ export const OVERLAY_SEEDS: Record<'cart' | 'popup' | 'quickview', OverlayDocume
           "display": "flex",
           "flexDirection": "column",
           "width": "400px",
+          "maxWidth": "100%",
           "gap": "8px",
           "padding": "20px 24px",
           "backgroundColor": "#ffffff",
@@ -1482,7 +1483,7 @@ export const OVERLAY_SEEDS: Record<'cart' | 'popup' | 'quickview', OverlayDocume
           "fontSize": "16px",
           "lineHeight": "140%",
           "textAlign": "left",
-          "fontFamily": "Inter"
+          "fontFamily": "var(--wb-ts-text-1-family, Inter)"
         },
         "config": {
           "kind": "price",
@@ -1550,7 +1551,7 @@ export const OVERLAY_SEEDS: Record<'cart' | 'popup' | 'quickview', OverlayDocume
           "fontSize": "16px",
           "lineHeight": "140%",
           "textAlign": "left",
-          "fontFamily": "Inter"
+          "fontFamily": "var(--wb-ts-text-1-family, Inter)"
         },
         "config": {
           "kind": "compare_price",
@@ -1694,7 +1695,7 @@ export const OVERLAY_SEEDS: Record<'cart' | 'popup' | 'quickview', OverlayDocume
           "custom": {}
         },
         "style": {
-          "fontFamily": "Inter",
+          "fontFamily": "var(--wb-ts-heading-6-family, Inter)",
           "color": "var(--wb-sc-heading, #000000)",
           "lineHeight": "1.3",
           "fontWeight": "700",
@@ -1719,7 +1720,7 @@ export const OVERLAY_SEEDS: Record<'cart' | 'popup' | 'quickview', OverlayDocume
           "custom": {}
         },
         "style": {
-          "fontFamily": "Inter",
+          "fontFamily": "var(--wb-ts-text-1-family, Inter)",
           "fontSize": "16px",
           "color": "var(--wb-sc-link, #171717)",
           "lineHeight": "1.3",
@@ -2093,6 +2094,7 @@ export const CART_SEEDS: Record<string, OverlayDocument> = {
           "display": "flex",
           "flexDirection": "column",
           "width": "400px",
+          "maxWidth": "100%",
           "gap": "8px",
           "padding": "20px 24px",
           "backgroundColor": "#ffffff",
@@ -2930,6 +2932,7 @@ export const CART_SEEDS: Record<string, OverlayDocument> = {
           "display": "flex",
           "flexDirection": "column",
           "width": "400px",
+          "maxWidth": "100%",
           "gap": "8px",
           "padding": "20px 24px",
           "backgroundColor": "#ffffff",

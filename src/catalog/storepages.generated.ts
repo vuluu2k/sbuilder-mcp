@@ -535,7 +535,7 @@ export const PAGE_LAYOUT_SEEDS: Record<string, { schema_version: number; root_no
           "backgroundColor": "var(--wb-sc-border, #f5f5f5)",
           "color": "var(--wb-sc-heading, #171717)",
           "textAlign": "left",
-          "fontFamily": "Inter",
+          "fontFamily": "var(--wb-ts-text-2-family, Inter)",
           "fontSize": "14px",
           "padding": "12px 16px"
         },
@@ -2196,7 +2196,7 @@ export const STORE_PAGE_SEEDS: Record<string, { schema_version: number; root_nod
           "fontSize": "16px",
           "lineHeight": "140%",
           "textAlign": "left",
-          "fontFamily": "Inter"
+          "fontFamily": "var(--wb-ts-text-1-family, Inter)"
         },
         "config": {
           "kind": "price",
@@ -2264,7 +2264,7 @@ export const STORE_PAGE_SEEDS: Record<string, { schema_version: number; root_nod
           "fontSize": "16px",
           "lineHeight": "140%",
           "textAlign": "left",
-          "fontFamily": "Inter"
+          "fontFamily": "var(--wb-ts-text-1-family, Inter)"
         },
         "config": {
           "kind": "compare_price",
@@ -2408,7 +2408,7 @@ export const STORE_PAGE_SEEDS: Record<string, { schema_version: number; root_nod
           "custom": {}
         },
         "style": {
-          "fontFamily": "Inter",
+          "fontFamily": "var(--wb-ts-heading-6-family, Inter)",
           "color": "var(--wb-sc-heading, #000000)",
           "lineHeight": "1.3",
           "fontWeight": "700",
@@ -2433,7 +2433,7 @@ export const STORE_PAGE_SEEDS: Record<string, { schema_version: number; root_nod
           "custom": {}
         },
         "style": {
-          "fontFamily": "Inter",
+          "fontFamily": "var(--wb-ts-text-1-family, Inter)",
           "fontSize": "16px",
           "color": "var(--wb-sc-link, #171717)",
           "lineHeight": "1.3",

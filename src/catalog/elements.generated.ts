@@ -4085,7 +4085,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
         "width": "fit-content",
         "height": "fit-content",
         "padding": "8px 16px",
-        "fontFamily": "Inter",
+        "fontFamily": "var(--wb-ts-heading-4-family, Inter)",
         "color": "#000000"
       },
       "specials": {
@@ -10985,7 +10985,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
         "width": "100%",
         "height": "fit-content",
         "textAlign": "left",
-        "fontFamily": "Inter",
+        "fontFamily": "var(--wb-ts-text-1-family, Inter)",
         "gap": "16px",
         "padding": "0px",
         "margin": "0px",
@@ -12074,7 +12074,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
         "backgroundColor": "var(--wb-sc-border, #f5f5f5)",
         "color": "var(--wb-sc-heading, #171717)",
         "textAlign": "left",
-        "fontFamily": "Inter",
+        "fontFamily": "var(--wb-ts-text-2-family, Inter)",
         "fontSize": "14px",
         "padding": "12px 16px"
       },
@@ -12244,7 +12244,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
         "width": "100%",
         "height": "fit-content",
         "textAlign": "left",
-        "fontFamily": "Inter",
+        "fontFamily": "var(--wb-ts-text-1-family, Inter)",
         "lineHeight": "140%",
         "gap": "8px",
         "color": "#111111",
@@ -13066,6 +13066,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
         "display": "flex",
         "flexDirection": "column",
         "width": "400px",
+        "maxWidth": "100%",
         "gap": "8px",
         "padding": "20px 24px",
         "backgroundColor": "#ffffff",
@@ -17270,7 +17271,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
     "childAllows": [],
     "defaults": {
       "style": {
-        "fontFamily": "Inter",
+        "fontFamily": "var(--wb-ts-heading-6-family, Inter)",
         "color": "var(--wb-sc-heading, #000000)",
         "lineHeight": "1.3",
         "fontWeight": "700",
@@ -17394,7 +17395,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
         }
       },
       "style": {
-        "fontFamily": "Inter",
+        "fontFamily": "var(--wb-ts-text-1-family, Inter)",
         "fontSize": "16px",
         "color": "var(--wb-sc-link, #171717)",
         "lineHeight": "1.3",
@@ -33844,7 +33845,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
         "color": "#111111",
         "fontSize": "16px",
         "textAlign": "left",
-        "fontFamily": "Inter",
+        "fontFamily": "var(--wb-ts-text-1-family, Inter)",
         "--wb-cl-cols": "3",
         "--wb-cl-gap": "24px",
         "--wb-cl-grow": "0"
@@ -39787,7 +39788,7 @@ export const ELEMENT_SEEDS: Record<string, NodeSeed[]> = {
         "fontSize": "16px",
         "lineHeight": "140%",
         "textAlign": "left",
-        "fontFamily": "Inter"
+        "fontFamily": "var(--wb-ts-text-1-family, Inter)"
       },
       "config": {
         "kind": "price"
@@ -39800,7 +39801,7 @@ export const ELEMENT_SEEDS: Record<string, NodeSeed[]> = {
         "fontSize": "16px",
         "lineHeight": "140%",
         "textAlign": "left",
-        "fontFamily": "Inter"
+        "fontFamily": "var(--wb-ts-text-1-family, Inter)"
       },
       "config": {
         "kind": "compare_price"

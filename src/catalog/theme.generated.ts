@@ -270,7 +270,7 @@ export const STARTER_THEME: StarterTheme = {
         "padding": "10px 24px",
         "textAlign": "center",
         "fontSize": "14px",
-        "fontFamily": "Inter",
+        "fontFamily": "var(--wb-ts-text-2-family, Inter)",
         "lineHeight": "20px"
       },
       "responsive": {
@@ -563,7 +563,7 @@ export const STARTER_THEME: StarterTheme = {
       "base": {
         "textAlign": "left",
         "lineHeight": "130%",
-        "fontFamily": "Inter",
+        "fontFamily": "var(--wb-ts-heading-1-family, Inter)",
         "fontSize": "48px",
         "color": "var(--wb-sc-heading, var(--wb-color-heading))"
       },
@@ -649,7 +649,7 @@ export const STARTER_THEME: StarterTheme = {
       "base": {
         "textAlign": "left",
         "lineHeight": "140%",
-        "fontFamily": "Inter",
+        "fontFamily": "var(--wb-ts-text-1-family, Inter)",
         "fontSize": "16px",
         "color": "var(--wb-sc-text, var(--wb-color-text))"
       }
@@ -661,7 +661,7 @@ export const STARTER_THEME: StarterTheme = {
       "base": {
         "textAlign": "left",
         "lineHeight": "140%",
-        "fontFamily": "Inter",
+        "fontFamily": "var(--wb-ts-text-1-family, Inter)",
         "fontSize": "16px",
         "color": "var(--wb-sc-text, var(--wb-color-text))"
       }
