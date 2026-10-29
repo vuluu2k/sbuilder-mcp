@@ -6,6 +6,16 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.100.0] - 2026-10-29
+
+### Added
+- Buttons and icons accept the `clear_cart` click action, which empties the whole cart, and `sb_event` offers it on buttons.
+- `product` gains a translatable `summary` field.
+
+### Changed
+- `sb_add` and `sb_set` seed a text dataset with `kind: "summary"` bound to `product.summary` instead of `product.title`.
+- The catalog now lists `product.summary` among the binding sources.
+
 ## [0.99.0] - 2026-10-29
 
 ### Added

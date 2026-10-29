@@ -6,6 +6,16 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.100.0] - 2026-10-29
+
+### Added
+- Button và icon nhận click action `clear_cart` để xoá toàn bộ giỏ hàng, và `sb_event` đưa action này cho button.
+- `product` có thêm trường dịch `summary`.
+
+### Changed
+- `sb_add` và `sb_set` seed text dataset có `kind: "summary"` bind vào `product.summary` thay vì `product.title`.
+- Catalog liệt kê thêm `product.summary` trong các nguồn binding.
+
 ## [0.99.0] - 2026-10-29
 
 ### Added
