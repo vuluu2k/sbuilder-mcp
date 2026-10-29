@@ -1,5 +1,5 @@
 import { isDeepStrictEqual } from 'node:util';
-import { childrenOf, childrenWithSatellites, isOverlay, isSharedSection, pageChildren, appBlockRoot, SPEC_GLOBAL_REF, SPEC_APP_BLOCK_REF, type DocLike } from '../../core/tree.js';
+import { childrenOf, childrenWithSatellites, isOverlay, isSharedSection, pageChildren, subtreeIds, appBlockRoot, SPEC_GLOBAL_REF, SPEC_APP_BLOCK_REF, type DocLike } from '../../core/tree.js';
 import { STUCK_STATE, stickyBlockedBy, stuckHostOf, isPinnedNode } from './sticky.js';
 import { bandOf, isGlobal, type Band } from './traps.js';
 import { exampleCopy } from './examplecopy.js';
@@ -64,6 +64,12 @@ export interface Finding {
    * ten problems. The flag lets a caller say "site-wide" once.
    */
   overlay?: boolean;
+  /**
+   * Set when the node lives in a GLOBAL SECTION (shared header/footer master):
+   * fixing it edits every page carrying it, and the same finding would come
+   * back on each of them (TTG gap #69). Said once per process by sb_review.
+   */
+  global?: boolean;
   /**
    * ABSENT means `error` — it will not work for a visitor — which is every code
    * this file had before the field existed, so no old finding grew a byte.
@@ -1332,14 +1338,19 @@ export function reviewDesign(
       .responsive?.desktop?.config;
     if (deskHidden && 'hidden' in deskHidden) {
       const baseHidden = (n as { config?: Record<string, unknown> }).config?.hidden === true;
+      // THE DEAD VALUE AGREEING WITH THE RENDER IS TIDINESS, not a defect (TTG
+      // gap #69): `false` over an unhidden base shows the node, as it says.
+      const agrees = (deskHidden.hidden === true) === baseHidden;
       out.push({
         code: 'hidden_desktop_dead',
         nodeId: id,
         type,
         problem:
           `responsive.desktop.config.hidden (${JSON.stringify(deskHidden.hidden)}) is read by nothing — desktop reads base ` +
-          `config.hidden, so this node ${baseHidden ? 'is hidden at ≥1440px by base, not by this slot' : 'still shows at ≥1440px'}.`,
+          `config.hidden, so this node ${baseHidden ? 'is hidden at ≥1440px by base, not by this slot' : 'still shows at ≥1440px'}` +
+          (agrees ? ', which is what the dead slot says: harmless, clear it when convenient.' : '.'),
         key: 'config.hidden',
+        ...(agrees ? { severity: 'maintenance' as const } : {}),
         fix: fill('hidden_desktop_dead', { id }),
       });
     }
@@ -1774,5 +1785,8 @@ export function reviewDesign(
   // A FORM DOCUMENT's fields that store fine and can never be answered.
   for (const f of formFieldFindings(d, opts.formDocType)) out.push({ ...f, fix: fill(f.code, { id: f.nodeId }) });
 
-  return out;
+  // A SHARED MASTER'S NODE says so (TTG gap #69), like `overlay` — composed
+  // global sections only; their subtree, satellites included.
+  const inGlobal = new Set(pageChildren(d).filter((id) => isGlobal(d, id)).flatMap((id) => subtreeIds(d, id)));
+  return inGlobal.size ? out.map((f) => (inGlobal.has(f.nodeId) ? { ...f, global: true } : f)) : out;
 }

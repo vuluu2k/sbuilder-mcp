@@ -243,6 +243,55 @@ describe('#68 the blog type is the /blog-categories/{slug} entity template', () 
   });
 });
 
+/* #69 ---------------------------------------------------------------------- */
+
+describe('#69 a dead desktop slot inside the shared header', () => {
+  const node = (id: string, type: string, parent: string | null, nodes: string[] = [], extra: Record<string, unknown> = {}) => ({
+    id, data: { type, parent, nodes }, style: {}, config: {}, specials: {}, responsive: {}, events: [], bindings: [], ...extra,
+  });
+  const doc = (dead: boolean, baseHidden?: boolean) => ({
+    schema_version: 2,
+    root_node_id: 'ROOT',
+    nodes: {
+      ROOT: node('ROOT', 'root', null, ['fs_head', 'fs_body']),
+      fs_head: node('fs_head', 'flex-section', 'ROOT', ['fb_2ea82bf3'], { specials: { globalId: 'gs_7465c2fb', globalKind: 'header' } }),
+      fb_2ea82bf3: node('fb_2ea82bf3', 'flex-block', 'fs_head', ['he_1'], {
+        responsive: { desktop: { config: { hidden: dead } } },
+        config: baseHidden === undefined ? {} : { hidden: baseHidden },
+      }),
+      he_1: node('he_1', 'heading', 'fb_2ea82bf3', [], { specials: { text: 'TTG Shop' } }),
+      fs_body: node('fs_body', 'flex-section', 'ROOT', ['he_2']),
+      he_2: node('he_2', 'heading', 'fs_body', [], { specials: { text: 'Nội dung' } }),
+    },
+  });
+  const dead = (d: unknown) => reviewDesign(PageDoc.from(d as never)).find((f) => f.code === 'hidden_desktop_dead')!;
+
+  it('is marked global, and is maintenance when the dead value matches what renders', () => {
+    const agrees = dead(doc(false));
+    expect(agrees.global).toBe(true);
+    expect(agrees.severity).toBe('maintenance');
+    // `hidden:true` in the dead slot while base shows it: the author's intent is not what renders.
+    expect(dead(doc(true)).severity).toBeUndefined();
+  });
+
+  it('a shared master\'s finding is said once per process, not on every page and every call', async () => {
+    const p = fakePlatform();
+    p.pages.set('pg_1', { rev: 1, document: doc(true) });
+    const { call, close } = await p.connect();
+    try {
+      const first = await call('sb_page_open', { site_id: 's1', page_id: 'pg_1' });
+      const codes = (r: typeof first) => JSON.stringify(r.json.findings ?? []);
+      expect(codes(first)).toMatch(/hidden_desktop_dead.*"global":true/);
+      const second = await call('sb_review', {});
+      expect(codes(second)).not.toMatch(/hidden_desktop_dead/);
+      // The page's own findings still come back every time.
+      expect(codes(second)).toMatch(/no_h1/);
+    } finally {
+      await close();
+    }
+  });
+});
+
 /* #65 sb_look -------------------------------------------------------------- */
 
 describe('#65 sb_look measures contrast on the render', () => {

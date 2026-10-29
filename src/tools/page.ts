@@ -94,7 +94,12 @@ export function reviewField(
   fonts?: Readonly<Record<string, string>>,
   theme?: StarterTheme,
 ): Record<string, unknown> {
-  const all = reviewDesign(doc, { formTypes, pageType, formDocType, formRedirects, siteLocale, fonts, theme });
+  // A SHARED MASTER'S FINDING IS SAID ONCE PER PROCESS (TTG gap #69): the same
+  // header node came back on every page, every sb_page_open/sb_look/sb_review,
+  // ~15 times in one session, under "FIX THESE". Keyed by master node and code.
+  const all = reviewDesign(doc, { formTypes, pageType, formDocType, formRedirects, siteLocale, fonts, theme }).filter(
+    (f) => !f.global || ctx.notices.once(`global-finding:${f.code}:${f.nodeId}`, '1') !== undefined,
+  );
   if (all.length === 0) return {};
   // MAINTENANCE IS ADVICE, kept out of `findings`: it works for a visitor, so
   // it must not stand between a page and its clean verdict. One `fixes` map
