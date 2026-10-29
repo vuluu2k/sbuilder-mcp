@@ -15,7 +15,12 @@ import type { Patch } from '../../core/patch.js';
  * attribute axis), the FIXED pairs from `schema/src/filters/sources.ts`, and
  * price rows from the author's `filterRanges` in the `<from>-<to>` grammar
  * `matchesRange` parses (measured live: `f.price=4500000000-7000000000` filters,
- * `..` returns nothing). `sort` and the blog/course sources are not covered.
+ * `..` returns nothing). A `sort` select gets the six product orders the editor's
+ * "Sort control" preset seeds (editor/src/element/sortOptions.ts, render/filters
+ * SortKeys; the vi labels are this server's) — without them it published an
+ * empty panel (TTG, 2026-10-30). Not
+ * when it aims at a record list, whose keys are `<fieldId>_asc|desc`. The
+ * blog/course sources are not covered.
  */
 export const FILTER_VALUE_TYPES = new Set(['filter-checkbox', 'filter-radio', 'filter-tag', 'filter-color', 'select']);
 
@@ -29,6 +34,14 @@ const FIXED: Record<string, Array<[string, Record<string, string>]>> = {
   availability: [
     ['in_stock', { en: 'In stock', vi: 'Còn hàng' }],
     ['out_of_stock', { en: 'Out of stock', vi: 'Hết hàng' }],
+  ],
+  sort: [
+    ['newest', { en: 'Newest', vi: 'Mới nhất' }],
+    ['oldest', { en: 'Oldest', vi: 'Cũ nhất' }],
+    ['price_asc', { en: 'Price: low to high', vi: 'Giá: thấp đến cao' }],
+    ['price_desc', { en: 'Price: high to low', vi: 'Giá: cao đến thấp' }],
+    ['name_asc', { en: 'Name: A-Z', vi: 'Tên: A-Z' }],
+    ['name_desc', { en: 'Name: Z-A', vi: 'Tên: Z-A' }],
   ],
   purchase_history: [
     ['purchased', { en: 'Purchased', vi: 'Đã mua' }],
@@ -46,12 +59,37 @@ interface Facets {
 type Row = { value: string; label: string; enabled: boolean; color?: string; slug?: string; depth?: number };
 type Specials = Record<string, unknown>;
 
-/** Would the dialog's save write rows for this node? `force` = its source just moved. */
-export function wantsRows(type: string, sp: Specials, force = false): boolean {
+/**
+ * The node's source as the renderer reads it: a `select` with none publishes as
+ * a sort (render/nodes/dropdown WireSource(n, "sort")).
+ */
+export function sourceOf(type: string, sp: Specials): string {
+  if (typeof sp.filterSource === 'string' && sp.filterSource) return sp.filterSource;
+  return type === 'select' ? 'sort' : '';
+}
+
+/**
+ * Would the dialog's save write rows for this node? `force` = its source just
+ * moved. `nodes` = the document, to leave a sort aimed at a record list alone.
+ */
+export function wantsRows(
+  type: string,
+  sp: Specials,
+  force = false,
+  nodes: Record<string, { data: { type: string }; config?: Record<string, unknown> }> = {},
+): boolean {
   if (!FILTER_VALUE_TYPES.has(type)) return false;
   const mode = sp.filterValueMode ?? 'all';
   if (mode !== 'all' && mode !== '') return false;
-  if (typeof sp.filterSource !== 'string' || !sp.filterSource || sp.filterSource === 'sort') return false;
+  const source = sourceOf(type, sp);
+  if (!source) return false;
+  if (source === 'sort') {
+    const targets = [
+      ...(typeof sp.filterTarget === 'string' && sp.filterTarget ? [sp.filterTarget] : []),
+      ...(Array.isArray(sp.filterTargets) ? (sp.filterTargets as unknown[]).map(String) : []),
+    ];
+    if (targets.some((t) => nodes[t]?.data.type === 'list-dataset' && nodes[t]?.config?.datasetSource === 'record')) return false;
+  }
   return force || !Array.isArray(sp.filterValues) || sp.filterValues.length === 0;
 }
 

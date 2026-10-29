@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { fakePlatform } from './helpers/platform.js';
+import { wantsRows } from '../src/domains/site/filtervalues.js';
 
 /**
  * A FILTER ADDED WITH sb_add RENDERED NOTHING. The Go renderer
@@ -114,6 +115,25 @@ describe('sb_add materializes a filter\'s rows', () => {
     await en.close();
   });
 
+  it('a sort select gets the six product orders in the site language — an empty one published an empty panel', async () => {
+    const vi = await setup({ locale: 'vi' });
+    const rows = (await vi.added({ type: 'select', specials: { filterSource: 'sort' } })).node.specials!.filterValues as Array<{ value: string; label: string }>;
+    expect(rows.map((r) => r.value)).toEqual(['newest', 'oldest', 'price_asc', 'price_desc', 'name_asc', 'name_desc']);
+    expect(rows[2].label).toBe('Giá: thấp đến cao');
+    expect(vi.reads()).toBe(0);
+    await vi.close();
+  });
+
+  it('a sort aimed at a record list is left alone — product keys mean nothing to it', () => {
+    const nodes = {
+      li_rec: { data: { type: 'list-dataset' }, config: { datasetSource: 'record' } },
+      li_prod: { data: { type: 'list-dataset' }, config: { datasetSource: 'product' } },
+    };
+    expect(wantsRows('select', { filterSource: 'sort', filterTargets: ['li_rec'] }, false, nodes)).toBe(false);
+    expect(wantsRows('select', { filterSource: 'sort', filterTargets: ['li_prod'] }, false, nodes)).toBe(true);
+    expect(wantsRows('select', { filterSource: 'sort' }, false, nodes)).toBe(true);
+  });
+
   it('price derives rows from filterRanges in the from-to grammar the storefront filters on', async () => {
     // Measured: f.price=4500000000-7000000000 filters; the `..` grammar returns nothing.
     const { added, close } = await setup();
@@ -165,5 +185,16 @@ describe('sb_set re-sources a filter', () => {
     expect(out.json.filters).toEqual([{ id, source: 'tag', rows: 1 }]);
     expect(doc().nodes[id].specials!.filterValues).toEqual([{ value: 'sale', label: 'Sale', enabled: true }]);
     await close();
+  });
+});
+
+describe('sourceOf', () => {
+  it('a select with no filterSource is a sort; a legacy filterTarget record list still stops the seed', async () => {
+    const { sourceOf } = await import('../src/domains/site/filtervalues.js');
+    expect(sourceOf('select', {})).toBe('sort');
+    expect(sourceOf('filter-checkbox', {})).toBe('');
+    expect(wantsRows('select', {})).toBe(true);
+    const nodes = { li_rec: { data: { type: 'list-dataset' }, config: { datasetSource: 'record' } } };
+    expect(wantsRows('select', { filterTarget: 'li_rec' }, false, nodes)).toBe(false);
   });
 });

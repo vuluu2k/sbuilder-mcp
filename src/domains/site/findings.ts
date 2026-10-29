@@ -191,6 +191,11 @@ export const FIX: Record<string, string> = {
     '{ "filterSource": "record", "filterAxis": "fld_…", "filterTargets": ["<list id>"], "filterBehavior": "filter" } — ' +
     'axis types text/select/reference/url/date/boolean/integer/number. A sort select takes filterValues ' +
     '[{ "value": "fld_…_asc" | "fld_…_desc", "label": "…" }].',
+  filter_no_rows:
+    'Re-derive its rows: sb_set id "<id>", namespace specials, keys { "filterSource": "<its source>" } — a product ' +
+    'sort gets the six orders, a catalogue source reads the facets, a price filter needs filterRanges. A sort aimed ' +
+    'at a record list takes filterValues [{ "value": "fld_…_asc" | "fld_…_desc", "label": "…", "enabled": true }]; ' +
+    'anything else, write specials.filterValues [{ "value": …, "label": …, "enabled": true }] yourself.',
   record_relation_unset:
     'Link it to its parent row: sb_set id "<id>", namespace config, keys { "recordRelationField": "fld_…" } — ' +
     'the ID of a "reference" field in THIS list\'s collection that targets the enclosing list\'s collection ' +

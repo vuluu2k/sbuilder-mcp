@@ -75,7 +75,7 @@ import type { LiveSession } from '../live/session.js';
 import type { Box } from '../vision/shoot.js';
 import { siteFor, type ToolContext } from './context.js';
 import { projectList, PAGE_FIELDS, TEMPLATE_FIELDS } from './project.js';
-import { FILTER_VALUE_TYPES, RESOURCE_KEYS, filterPatches, wantsRows } from '../domains/site/filtervalues.js';
+import { FILTER_VALUE_TYPES, RESOURCE_KEYS, filterPatches, sourceOf, wantsRows } from '../domains/site/filtervalues.js';
 
 /**
  * Findings, in the shape every surface returns them.
@@ -1786,8 +1786,8 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
         const after = d.preview(patches).doc.nodes;
         const targets = ids
           .map((id) => ({ id, node: after[id] }))
-          .filter(({ node }) => node && wantsRows(node.data.type, (node.specials ?? {}) as Record<string, unknown>))
-          .map(({ id, node }) => ({ id, specials: (node.specials ?? {}) as Record<string, unknown> }));
+          .filter(({ node }) => node && wantsRows(node.data.type, (node.specials ?? {}) as Record<string, unknown>, false, after as never))
+          .map(({ id, node }) => ({ id, specials: { ...(node.specials ?? {}), filterSource: sourceOf(node.data.type, (node.specials ?? {}) as Record<string, unknown>) } }));
         if (targets.length) {
           const got = await filterPatches(ctx, session.site(), targets);
           patches.push(...got.patches);
@@ -1896,7 +1896,8 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
       const resourced = batch
         .filter((e) => e.namespace === 'specials' && !('filterValues' in e.keys) && RESOURCE_KEYS.some((k) => k in e.keys))
         .map((e) => ({ id: e.id, specials: { ...(d.doc.nodes[e.id]?.specials ?? {}), ...e.keys } as Record<string, unknown> }))
-        .filter((t) => wantsRows(d.doc.nodes[t.id]?.data.type ?? '', t.specials, true));
+        .filter((t) => wantsRows(d.doc.nodes[t.id]?.data.type ?? '', t.specials, true, d.doc.nodes as never))
+        .map((t) => ({ ...t, specials: { ...t.specials, filterSource: sourceOf(d.doc.nodes[t.id]?.data.type ?? '', t.specials) } }));
       // Its patches join the batch only on the real write: a dry run's `patches`
       // never echoes what a GET read (rule 8) — `filters` says the row counts.
       const refiltered = resourced.length ? await filterPatches(ctx, session.site(), resourced) : null;

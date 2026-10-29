@@ -1,4 +1,5 @@
 import { isDeepStrictEqual } from 'node:util';
+import { FILTER_VALUE_TYPES, sourceOf } from './filtervalues.js';
 import { childrenOf, childrenWithSatellites, isOverlay, isSharedSection, pageChildren, subtreeIds, appBlockRoot, SPEC_GLOBAL_REF, SPEC_APP_BLOCK_REF, type DocLike } from '../../core/tree.js';
 import { STUCK_STATE, stickyBlockedBy, stuckHostOf, isPinnedNode } from './sticky.js';
 import { bandOf, isGlobal, type Band } from './traps.js';
@@ -995,6 +996,34 @@ export function reviewDesign(
           });
         }
       }
+      // A FILTER OR SORT WITH NO ROWS shows nothing to choose (TTG, 2026-10-30: the
+      // category page's "Sắp xếp" opened onto an empty panel; a filter-* with no
+      // rows renders nothing at all). The renderer prints ONLY specials.filterValues,
+      // except price rows derived from filterRanges and the `auto` mode that follows
+      // the page. Record filters are left out: their rows are a field's values this
+      // server cannot derive, and record_filter_invalid judges them.
+      {
+        const sp = (n.specials ?? {}) as Record<string, unknown>;
+        const mode = sp.filterValueMode ?? 'all';
+        const source = sourceOf(type, sp);
+        const rows = Array.isArray(sp.filterValues) ? (sp.filterValues as Array<{ enabled?: unknown; value?: unknown }>) : [];
+        const priceDerived = source === 'price' && Array.isArray(sp.filterRanges) && sp.filterRanges.length > 0;
+        if (
+          FILTER_VALUE_TYPES.has(type) &&
+          mode !== 'auto' &&
+          source && source !== 'record' && !priceDerived &&
+          !rows.some((r) => r?.enabled !== false && String(r?.value ?? '') !== '')
+        ) {
+          out.push({
+            code: 'filter_no_rows',
+            nodeId: id,
+            type,
+            problem: `A ${source} ${type} with no enabled rows — ${type === 'select' ? 'it opens onto an empty panel' : 'it renders nothing'}; a shopper has nothing to choose.`,
+            fix: fill('filter_no_rows', { id }),
+          });
+        }
+      }
+
       // RECORD LINK PARAMETERS and VISITOR FAVORITES (web_builder v1.0.174, contract §7.6/§7.7).
       // Both read the record of the row they sit in — or the page's, on a record page.
       {
