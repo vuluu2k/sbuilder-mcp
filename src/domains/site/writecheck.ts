@@ -368,11 +368,12 @@ export function writeCheck(
           'relative path; no comments.',
       );
     }
-    // A LINK IN RICH TEXT IS THE BROWSER'S BLUE. Nothing styles `a` inside a
-    // text node — no element control, no theme token — so an <a> with no colour
-    // of its own paints the user-agent default rgb(0,0,238) (measured live on a
-    // #2e86ae site, TTG gap #50). The inline-rich gate keeps `style` color.
-    if (namespace === 'specials' && typeof v === 'string' && rich.includes(k) && !bad.length && unstyledLinks(v)) {
+    // A LINK IN A BUTTON'S RICH TEXT IS THE BROWSER'S BLUE. Since web_builder
+    // v1.0.187 (a8097f59e) `.wb-text a` / `.wb-heading a` inherit the text
+    // colour, underlined — TTG gap #50 is closed there. `button` renders
+    // textHtml too (nodes.RichText) and its static CSS styles no `a`, so an <a>
+    // with no colour of its own still paints rgb(0,0,238) inside one.
+    if (namespace === 'specials' && typeof v === 'string' && rich.includes(k) && !bad.length && !LINK_INHERITS.has(type) && unstyledLinks(v)) {
       push(`link-colour:${type}.${k}`, 'link_colour', k, LINK_COLOUR.problem, LINK_COLOUR.fix);
     }
     if (namespace === 'specials') {
@@ -399,11 +400,14 @@ export function unstyledLinks(html: string): number {
   return (html.match(/<a\b[^>]*>/gi) ?? []).filter((tag) => !/style\s*=\s*["'](?:[^"']*[;\s])?color\s*:/i.test(tag)).length;
 }
 
+/** Elements whose static CSS gives an <a> in textHtml the text's own colour (web_builder a8097f59e). */
+export const LINK_INHERITS: ReadonlySet<string> = new Set(['heading', 'text']);
+
 export const LINK_COLOUR = {
   problem:
-    "A link in this rich text has no colour of its own, so it renders in the browser's default link blue " +
-    '(rgb(0,0,238)) with an underline — no element control or theme token reaches an <a> inside text.',
-  fix: 'Give each <a> its colour inline: <a href="…" style="color:inherit"> (or the brand colour); the rich-text gate keeps a style color.',
+    "A link in this button's rich text has no colour of its own, so it renders in the browser's default link blue " +
+    '(rgb(0,0,238)) — text and heading make a link inherit their colour; a button styles no <a>.',
+  fix: 'Give each <a> its colour inline: <a href="…" style="color:inherit">, or drop the inner link and give the button its own href.',
 };
 
 /**

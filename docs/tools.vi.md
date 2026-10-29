@@ -1754,8 +1754,8 @@ tài liệu:
 | `example_copy` | Chữ mẫu của layout dựng sẵn chưa được thay — "Tiêu đề chính", "Lợi ích một", câu dặn agent trong ô ảnh trống, và các KHẲNG ĐỊNH bịa ("1.000+", "4,9/5", lời chứng thực ký tên người lạ). Lấy bằng cách dựng mọi pattern, trừ một danh sách ngắn nhãn dùng được nguyên ("Mua ngay", "Xem tất cả"). `sb_template_use` báo số phần tử vừa đặt còn chữ mẫu (`copy`) |
 | `invisible_text` | Chữ hoặc nút có màu LITERAL tương phản dưới 1.5:1 với nền literal gần nhất bên dưới — có trong HTML, không đọc được trên trang. Im lặng khi một bên là theme var |
 | `demo_variant_options` | `product-variants` vẫn mang Color Red/Green/Blue, Size S/M/L gieo sẵn. Config đó là bản dự phòng của platform cho sản phẩm không có trục tuỳ chọn, nên mọi sản phẩm đơn giản hiện tuỳ chọn không tồn tại. Xoá (`config.attributes: []`) thì sản phẩm CÓ tuỳ chọn vẫn hiện của nó — đã đo |
-| `link_colour` | Thẻ `<a>` trong `specials.textHtml` không có `color` inline (`background-color` / `border-color` không tính): không gì style được link trong text (không control của element, không token theme), nên nó render màu xanh mặc định của trình duyệt `rgb(0,0,238)`, gạch chân. Sửa: `<a href="…" style="color:inherit">` hoặc màu thương hiệu — cổng rich-text giữ style color. `sb_add` / `sb_set` cũng cảnh báo `link_colour` |
-| `default_font` | Node vẫn giữ font CỨNG mà element gieo sẵn (`"Inter"` của `accordion-item`) trong khi text style body của theme site (`text-2`) là họ font khác — nó render bằng một kiểu chữ không chỗ nào khác dùng. Chỉ trong `sb_review`, chỉ với theme của site (starter là Inter), và im lặng khi bất kỳ breakpoint nào tự đặt `fontFamily`. Sửa: `fontFamily: "var(--wb-ts-text-2-family)"` ở base, biến mà `tab-item` và `menu-item` vốn đã dùng |
+| `link_colour` | Thẻ `<a>` trong `specials.textHtml` của một BUTTON không có `color` inline (`background-color` / `border-color` không tính): button không style thẻ `<a>` nào, nên nó render màu xanh mặc định của trình duyệt `rgb(0,0,238)`. `text` và `heading` không bao giờ bị báo — từ platform v1.0.187 link trong đó kế thừa màu chữ, có gạch chân, nên không cần màu inline. Sửa: `<a href="…" style="color:inherit">`, hoặc bỏ link bên trong và cho chính button một `href`. `sb_add` / `sb_set` cũng cảnh báo `link_colour` |
+| `default_font` | Node vẫn giữ font gieo CŨ dạng chữ cứng `"Inter"` — element nay gieo `var(--wb-ts-<slug>-family, Inter)` (platform v1.0.187), nên một `"Inter"` trần trùng với fallback của biến đó là node tạo trước thay đổi — trong khi text style `<slug>` của theme site là họ font khác; nó render bằng một kiểu chữ không chỗ nào khác dùng. `var(--wb-ts-…)` không bao giờ bị báo, chữ cứng trên element không gieo font cũng vậy. Chỉ trong `sb_review`, chỉ với theme của site (starter là Inter), và im lặng khi bất kỳ breakpoint nào tự đặt `fontFamily`. Sửa: đặt `fontFamily` ở base bằng biến gieo của element mà problem nêu |
 | `default_seed_copy` | Một satellite được gieo sẵn vẫn mang nguyên chữ tiếng Anh của PLATFORM — empty state của repeater ghi "No products yet" bằng ink `#171717`. Chỉ hiện khi danh sách rỗng, nên không ai viết lại. Ngoài ra, chỉ trong `sb_review` (vì nó đọc locale của site): một dòng tiếng Anh của seed cửa hàng ("Add To Cart") trên site tiếng Việt, kèm bản tiếng Việt |
 | `form_fields_flush` | `form` / `form-segment` / `form-step-nav` xếp các field mà không có `gap`, khiến mỗi label đọc như thuộc về ô phía TRÊN nó. Khác với `config.fieldStackGap` — khoảng cách label↔control nhỏ hơn, nằm BÊN TRONG một field |
 | `dead_menu_link` | Mục menu không có `href` — renderer đọc `specials.menuItems` chứ không bao giờ đọc `menuId` |
@@ -1921,7 +1921,7 @@ không tìm ra:
 | Mã | Đo được |
 | --- | --- |
 | `off_canvas` | Nội dung tràn khỏi khung nhìn; trên điện thoại còn kéo theo thanh cuộn ngang cả trang |
-| `wider_than_viewport` | Hộp `fixed`/`sticky`/`absolute` tràn khỏi khung nhìn quá 1px, nêu bề rộng của nó so với khung nhìn — cart drawer 400px trên điện thoại 390px. Cách sửa là `maxWidth: "100%"` ở mobile. Hộp trình duyệt không hiển thị (`visibility` hidden, nằm dưới `aria-hidden`) không bị xét, nên drawer đang đóng nằm ngoài màn hình không bị báo |
+| `wider_than_viewport` | Hộp `fixed`/`sticky`/`absolute` tràn khỏi khung nhìn quá 1px, nêu bề rộng của nó so với khung nhìn — một panel fixed 400px trên điện thoại 390px. CSS tĩnh của platform giới hạn drawer giỏ hàng và drawer menu ở `max-width:100%` (v1.0.187), nên drawer đang mở rộng đúng bằng khung nhìn không bị báo; drawer còn bị báo là drawer tự mang `maxWidth` lấn át giới hạn đó. Cách sửa là `maxWidth: "100%"` ở mobile. Hộp trình duyệt không hiển thị (`visibility` hidden, nằm dưới `aria-hidden`) không bị xét, nên drawer đang đóng nằm ngoài màn hình không bị báo |
 | `text_too_small` | Chữ render dưới 12px, chỉ tính nơi thật sự có chữ |
 | `overlap` | Hai element đè lên nhau — lồng nhau, sai số 1px, và một hộp nằm trong lớp `fixed`/`sticky`/`absolute` so với hộp ngoài lớp đó (nút CTA nổi đè lên thứ nằm dưới góc màn hình) không tính; hai hộp trong cùng một lớp vẫn tính |
 | `title_bar_stranded` | Tiêu đề kèm một nút bên cạnh, nút cách xa mép phải của hàng — chỉ xét khi đứng cạnh nhau; hàng hoặc tiêu đề khai báo `center` được bỏ qua |
@@ -2436,9 +2436,10 @@ thoại LỚN hơn trên desktop; kết quả liệt kê từng trường hợp 
 **`presets`** vá một style preset của element — `{ "<presetId>": { <khai báo>, mobile?: {…} } }`
 — gộp vào tài liệu đã đọc như mọi thứ khác, id lạ bị từ chối kèm danh sách id thật, mỗi thay đổi
 báo `from`→`to` dưới dạng `presets.<id>[.<bp>].<prop>`. Nó tồn tại vì preset có thể ghim literal
-riêng: `heading-default`, `text-default`, `text-dataset-default` và `button-default` của theme
-khởi đầu mang `fontFamily: "Inter"` (và `heading-default` có `fontSize` riêng), thứ ĐÈ lên text
-style. Nên khi `text_styles` đổi `fontFamily`, kết quả nêu mọi preset còn mang literal family
+riêng: trên theme site lưu trước platform v1.0.187, `heading-default`, `text-default`,
+`text-dataset-default` và `button-default` mang `fontFamily: "Inter"` (và `heading-default` có
+`fontSize` riêng), thứ ĐÈ lên text style. (Theme khởi đầu nay dùng
+`var(--wb-ts-<slug>-family, Inter)`, nên site mới không ghim gì.) Nên khi `text_styles` đổi `fontFamily`, kết quả nêu mọi preset còn mang literal family
 khác trong `presets_pin_font` (`{ preset, fontFamily }`) — vá chúng trong cùng lần gọi để chúng
 đi theo.
 

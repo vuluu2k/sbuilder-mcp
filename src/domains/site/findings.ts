@@ -38,10 +38,10 @@ export const FIX: Record<string, string> = {
     'if you do not know it, remove the element (sb_remove) rather than guess.',
   link_colour:
     'Colour each link inline: sb_set id "<id>", namespace specials, keys { "textHtml": … } with ' +
-    '<a href="…" style="color:inherit"> (or the brand colour) — no control or theme token reaches an <a> in text.',
+    '<a href="…" style="color:inherit"> — or drop the inner link and give the button its own href.',
   default_font:
-    'Wear the site\'s text font: sb_set id "<id>", namespace style, base true, keys { "fontFamily": ' +
-    '"var(--wb-ts-text-2-family)" } — the variable tab-item and menu-item already use, so it follows the theme.',
+    'Wear the theme\'s font again: sb_set id "<id>", namespace style, base true, keys { "fontFamily": ' +
+    '<the var(--wb-ts-…) the problem names> } — the element\'s seed today, so it follows the theme.',
   default_seed_copy:
     'Write it in the shop\'s own language and ink: sb_set id "<id>", namespace specials, ' +
     'keys { "<key>": … }. It is a seeded satellite (an empty state, an element\'s chrome), ' +

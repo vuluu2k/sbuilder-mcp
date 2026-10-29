@@ -88,9 +88,9 @@ export function reviewField(
   formDocType?: string,
   formRedirects?: ReadonlySet<string>,
   siteLocale?: string | null,
-  bodyFont?: string,
+  fonts?: Readonly<Record<string, string>>,
 ): Record<string, unknown> {
-  const all = reviewDesign(doc, { formTypes, pageType, formDocType, formRedirects, siteLocale, bodyFont });
+  const all = reviewDesign(doc, { formTypes, pageType, formDocType, formRedirects, siteLocale, fonts });
   if (all.length === 0) return {};
   // MAINTENANCE IS ADVICE, kept out of `findings`: it works for a visitor, so
   // it must not stand between a page and its clean verdict. One `fixes` map
@@ -2197,17 +2197,19 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
       } catch {
         // Readiness is additional information, never the reason a review fails.
       }
-      // The site's body font, for `default_font` — a SITE theme only: the starter
-      // is set in Inter, so it can never disagree with an element's literal Inter.
-      let bodyFont: string | undefined;
+      // The site's font per text style, for `default_font` — a SITE theme only: the
+      // starter is set in Inter, so it can never disagree with an old literal Inter.
+      const fonts: Record<string, string> = {};
       try {
         const { theme, from } = await siteTheme(ctx, session.site());
-        const f = theme.textStyles.find((t) => t.slug === 'text-2')?.base?.fontFamily;
-        if (from === 'site' && typeof f === 'string' && f && !f.includes('var(')) bodyFont = f;
+        for (const t of from === 'site' ? theme.textStyles : []) {
+          const f = t.base?.fontFamily;
+          if (typeof f === 'string' && f && !f.includes('var(')) fonts[t.slug] = f;
+        }
       } catch {
         // A theme that cannot be read is a finding nobody gets, never a failed review.
       }
-      const field = reviewField(ctx, doc, formTypes, pageType, session.formType(), formRedirects, siteLocale, bodyFont);
+      const field = reviewField(ctx, doc, formTypes, pageType, session.formType(), formRedirects, siteLocale, fonts);
       // Clean = no finding a visitor meets; `advice` (maintenance) rides beside the verdict.
       const clean = !field.findings;
       return text({

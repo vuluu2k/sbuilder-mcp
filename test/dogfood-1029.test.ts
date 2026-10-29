@@ -144,10 +144,11 @@ describe('#48 #49 sb_review judges the open draft, and a noIndex page is not an 
 
 /* #50 ---------------------------------------------------------------------- */
 
-describe('#50 a link in rich text paints the browser default blue', () => {
-  const codes = (html: string) => writeCheck('text', 'specials', { textHtml: html }).map((c) => c.note.code);
+// Since web_builder v1.0.187 text/heading links inherit (test/platform-1187.test.ts); a button's do not.
+describe('#50 a link in a button\'s rich text paints the browser default blue', () => {
+  const codes = (html: string) => writeCheck('button', 'specials', { textHtml: html }).map((c) => c.note.code);
   it('warns on an <a> with no colour of its own', () => {
-    const n = writeCheck('text', 'specials', { textHtml: 'Xem <a href="/p">trang chính sách</a>' }, { id: 't1' }).find((c) => c.note.code === 'link_colour');
+    const n = writeCheck('button', 'specials', { textHtml: 'Xem <a href="/p">trang chính sách</a>' }, { id: 't1' }).find((c) => c.note.code === 'link_colour');
     expect(n?.note.problem).toMatch(/blue/);
     expect(n?.note.fix).toMatch(/style="color:/);
   });
@@ -163,7 +164,7 @@ describe('#50 a link in rich text paints the browser default blue', () => {
       nodes: {
         ROOT: { id: 'ROOT', data: { type: 'root', parent: null, nodes: ['s'] }, specials: {} },
         s: { id: 's', data: { type: 'flex-section', parent: 'ROOT', nodes: ['t'] }, specials: {} },
-        t: { id: 't', data: { type: 'text', parent: 's', nodes: [] }, specials: { text: 'x', textHtml: 'Xem <a href="/p">đây</a>' } },
+        t: { id: 't', data: { type: 'button', parent: 's', nodes: [] }, specials: { text: 'x', textHtml: 'Xem <a href="/p">đây</a>' } },
       },
     } as never);
     expect(reviewDesign(doc).map((f) => f.code)).toContain('link_colour');
@@ -185,12 +186,12 @@ describe('#51 an accordion header still in the element\'s literal Inter on a the
       },
     } as never);
   it('is reported when the theme body font is another family', () => {
-    const f = reviewDesign(doc(), { bodyFont: 'Be Vietnam Pro' }).find((x) => x.code === 'default_font');
+    const f = reviewDesign(doc(), { fonts: { 'text-2': 'Be Vietnam Pro' } }).find((x) => x.code === 'default_font');
     expect(f?.nodeId).toBe('ai');
     expect(f?.problem).toMatch(/Be Vietnam Pro/);
   });
   it('is silent when the theme is Inter too, or unknown', () => {
-    expect(reviewDesign(doc(), { bodyFont: 'Inter' }).map((x) => x.code)).not.toContain('default_font');
+    expect(reviewDesign(doc(), { fonts: { 'text-2': 'Inter' } }).map((x) => x.code)).not.toContain('default_font');
     expect(reviewDesign(doc()).map((x) => x.code)).not.toContain('default_font');
   });
 });

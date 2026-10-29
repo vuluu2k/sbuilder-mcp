@@ -26,7 +26,7 @@ import { formFieldFindings, isFormDocument } from './formdoc.js';
 import { deadNavigation, hasPurchaseBinding, liveEventTable, PAYLOAD_NEEDS, PRODUCT_ACTION_BINDING_ID, soleNavigationClick, type NodeEventLike } from './navhref.js';
 import { unknownValueNote, unknownWriteNote, vocabularyFor, vocabularyForWrite } from './vocabulary.js';
 import { iconNote } from './icons.js';
-import { LINK_COLOUR, unstyledLinks } from './writecheck.js';
+import { LINK_COLOUR, LINK_INHERITS, unstyledLinks } from './writecheck.js';
 
 /**
  * A defect somebody looking at the page would see.
@@ -387,8 +387,8 @@ export function reviewDesign(
     formDocType?: string;
     /** The site's `settings.locale`, when read. Only the store seeds' English copy asks it. */
     siteLocale?: string | null;
-    /** The site theme's body font family (text style text-2), when read. Only `default_font` asks it. */
-    bodyFont?: string;
+    /** The SITE theme's literal font family per text-style slug, when read. Only `default_font` asks it. */
+    fonts?: Readonly<Record<string, string>>;
   } = {},
 ): Finding[] {
   const d: DocLike = doc.doc;
@@ -590,28 +590,31 @@ export function reviewDesign(
       }
     }
 
-    // A LINK IN RICH TEXT IS THE BROWSER'S BLUE — see writecheck LINK_COLOUR (TTG gap #50).
+    // A LINK IN A BUTTON'S RICH TEXT IS THE BROWSER'S BLUE — see writecheck LINK_COLOUR.
     const html = (n.specials ?? {}).textHtml;
-    if (typeof html === 'string' && unstyledLinks(html)) {
+    if (typeof html === 'string' && !LINK_INHERITS.has(type) && unstyledLinks(html)) {
       out.push({ code: 'link_colour', nodeId: id, type, key: 'textHtml', problem: LINK_COLOUR.problem, fix: fill('link_colour', { id }) });
     }
 
-    // THE ELEMENT'S OWN LITERAL FONT ON A THEMED SITE (TTG gap #51). Most
-    // elements wear the theme's text style (`var(--wb-ts-…)`), but a few seed a
-    // LITERAL family — accordion-item's "Inter" — so an accordion header added
-    // to a site set in Be Vietnam Pro renders in Inter, and nothing said so.
-    // Only when the node still holds exactly the seed and the theme's body font
-    // is another family: a deliberate literal is the author's.
+    // A NODE STILL ON THE OLD LITERAL SEED FONT (TTG gap #51). Until web_builder
+    // v1.0.187 (e8900e4d9) a few elements seeded a LITERAL "Inter"; they now seed
+    // `var(--wb-ts-<slug>-family, Inter)`. A node created before that still holds
+    // the bare fallback, so on a site set in Be Vietnam Pro it renders in Inter.
+    // Flag only that exact residue — the stored value equals the fallback of the
+    // element's own seed var — against the family of the text style that var
+    // names. A var() is never flagged; a deliberate literal is the author's.
     const ff = (n as { style?: Record<string, unknown> }).style?.fontFamily;
     const seedFont = (meta.defaults as { style?: Record<string, unknown> }).style?.fontFamily;
+    const seed = typeof seedFont === 'string' ? /^var\(--wb-ts-([a-z0-9-]+)-family,\s*(.+)\)$/.exec(seedFont) : null;
+    const themed = seed ? opts.fonts?.[seed[1]] : undefined;
     // A family set at any breakpoint is the author's answer too.
     const perBp = Object.values((n as { responsive?: Record<string, { style?: Record<string, unknown> }> }).responsive ?? {}).some((r) => r?.style?.fontFamily !== undefined);
-    if (opts.bodyFont && !perBp && typeof ff === 'string' && ff === seedFont && !ff.includes('var(') && family(ff) !== family(opts.bodyFont)) {
+    if (seed && themed && !perBp && typeof ff === 'string' && family(ff) === family(seed[2]) && !ff.includes('var(') && family(ff) !== family(themed)) {
       out.push({
         code: 'default_font',
         nodeId: id,
         type,
-        problem: `Still the element's own literal font "${ff}", while the site's text is set in "${family(opts.bodyFont, true)}" — it renders in a typeface nothing else on the page uses.`,
+        problem: `Still the element's old literal seed font "${ff}", while the site's ${seed[1]} text style is "${family(themed, true)}" — it renders in a typeface nothing else on the page uses. The element now seeds ${seedFont}.`,
         fix: fill('default_font', { id }),
       });
     }

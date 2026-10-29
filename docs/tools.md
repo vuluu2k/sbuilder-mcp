@@ -1781,8 +1781,8 @@ box. Returns `{ findings, fixes, findings_notice? }`, in document order:
 | `duplicate_binding_field` | Two or more bindings write the same field. The renderer applies them in order and the LAST resolved one renders; the problem names it. `sb_bind` on that field replaces the binding and drops the duplicates |
 | `unknown_element` | A type the catalog does not know; run `npm run codegen` |
 | `unlinked_form` | A `form` naming no form — composes nothing and publishes an EMPTY BOX. The platform stays deliberately quiet about this one |
-| `link_colour` | An `<a>` in `specials.textHtml` with no inline `color` (`background-color` / `border-color` do not count): nothing styles a link inside text (no element control, no theme token), so it renders the browser's default blue `rgb(0,0,238)`, underlined. Fix: `<a href="…" style="color:inherit">` or the brand colour — the rich-text gate keeps a style color. `sb_add` / `sb_set` warn the same as `link_colour` |
-| `default_font` | A node still holding its element's LITERAL seed font (`accordion-item`'s `"Inter"`) while the site theme's body text style (`text-2`) is another family — it renders in a typeface nothing else uses. `sb_review` only, only on a site theme (the starter is Inter), and silent when any breakpoint sets its own `fontFamily`. Fix: `fontFamily: "var(--wb-ts-text-2-family)"` at base, the variable `tab-item` and `menu-item` already wear |
+| `link_colour` | An `<a>` in a BUTTON's `specials.textHtml` with no inline `color` (`background-color` / `border-color` do not count): a button styles no `<a>`, so it renders the browser's default blue `rgb(0,0,238)`. A `text` or `heading` is never flagged — since platform v1.0.187 their links inherit the text colour, underlined, so no inline colour is needed there. Fix: `<a href="…" style="color:inherit">`, or drop the inner link and give the button its own `href`. `sb_add` / `sb_set` warn the same as `link_colour` |
+| `default_font` | A node still holding the OLD literal seed font `"Inter"` — elements now seed `var(--wb-ts-<slug>-family, Inter)` (platform v1.0.187), so a bare `"Inter"` equal to that var's fallback is a node created before the change — while the site theme's `<slug>` text style is another family; it renders in a typeface nothing else uses. A `var(--wb-ts-…)` is never flagged, nor a literal on an element that seeds no font. `sb_review` only, only on a site theme (the starter is Inter), and silent when any breakpoint sets its own `fontFamily`. Fix: set `fontFamily` at base to the element's seed var the problem names |
 | `default_seed_copy` | A seeded satellite still carrying the PLATFORM's own English copy — a repeater's empty state saying "No products yet" in `#171717` ink. Only ever visible when the list is empty, which is why nobody writes it. Also, from `sb_review` only (it reads the site's locale): a store seed's English line ("Add To Cart") on a Vietnamese site, naming the Vietnamese |
 | `example_copy` | A built-in layout's example copy never replaced — "Tiêu đề chính", "Lợi ích một", the picture-slot sentence addressed to the agent, and invented CLAIMS ("1.000+", "4,9/5", a testimonial signed by a stranger). Derived by building every pattern, minus a short list of labels usable as they stand ("Mua ngay", "Xem tất cả"). `sb_template_use` says how many it just placed (`copy`) |
 | `invisible_text` | Text or a button whose LITERAL colour has under 1.5:1 contrast with the nearest literal fill under it — present in the HTML, unreadable on the page. Silent when either side is a theme var |
@@ -1959,7 +1959,7 @@ reading the document cannot find:
 | Code | Measured |
 | --- | --- |
 | `off_canvas` | Content past the viewport; on a phone it also drags a horizontal scrollbar across the page |
-| `wider_than_viewport` | A `fixed`/`sticky`/`absolute` box overhanging the viewport by more than 1px, with its width against the viewport's — a 400px cart drawer on a 390px phone. The fix is `maxWidth: "100%"` at mobile. A box the browser does not show (`visibility` hidden, under `aria-hidden`) is never judged, so a closed drawer parked off-screen is silent |
+| `wider_than_viewport` | A `fixed`/`sticky`/`absolute` box overhanging the viewport by more than 1px, with its width against the viewport's — a 400px fixed panel on a 390px phone. The platform's static CSS caps the cart and menu drawers at `max-width:100%` (v1.0.187), so an open drawer at the viewport's width is silent; one still reported carries its own `maxWidth` that outranks the cap. The fix is `maxWidth: "100%"` at mobile. A box the browser does not show (`visibility` hidden, under `aria-hidden`) is never judged, so a closed drawer parked off-screen is silent |
 | `text_too_small` | Body text rendering under 12px, only where text actually shows |
 | `overlap` | Two elements on top of each other — nesting, a pixel of rounding, and a box inside a `fixed`/`sticky`/`absolute` layer against one outside it (a floating CTA over whatever is under the viewport corner) are not counted; two boxes inside the same layer still are |
 | `title_bar_stranded` | A heading with one action beside it, the action well short of the row's right edge — side-by-side only; a row or heading that declares `center` is skipped |
@@ -2489,9 +2489,10 @@ LARGER than the desktop one; the answer lists each such case under `responsive_l
 **`presets`** patches an element style preset — `{ "<presetId>": { <declarations>, mobile?: {…} } }`
 — merged into the read document like everything else, an unknown id refused with the real ones
 named, every change reported `from`→`to` as `presets.<id>[.<bp>].<prop>`. It exists because a
-preset can pin its own literal: the starter's `heading-default`, `text-default`,
-`text-dataset-default` and `button-default` carry `fontFamily: "Inter"` (and `heading-default`
-its own `fontSize`), which OUTRANK the text style. So when `text_styles` changes a `fontFamily`,
+preset can pin its own literal: on a site theme saved before platform v1.0.187, `heading-default`,
+`text-default`, `text-dataset-default` and `button-default` carry `fontFamily: "Inter"` (and
+`heading-default` its own `fontSize`), which OUTRANK the text style. (The starter now wears
+`var(--wb-ts-<slug>-family, Inter)`, so a newer site pins nothing.) So when `text_styles` changes a `fontFamily`,
 the answer names every preset still carrying a different literal family under
 `presets_pin_font` (`{ preset, fontFamily }`) — patch them in the same call to make them follow.
 

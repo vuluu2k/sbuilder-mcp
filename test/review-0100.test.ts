@@ -94,7 +94,7 @@ describe('2. default_font is silent when a breakpoint carries its own fontFamily
         },
       },
     } as never);
-    expect(reviewDesign(doc, { bodyFont: 'Be Vietnam Pro' }).map((x) => x.code)).not.toContain('default_font');
+    expect(reviewDesign(doc, { fonts: { 'text-2': 'Be Vietnam Pro' } }).map((x) => x.code)).not.toContain('default_font');
   });
 });
 
@@ -141,7 +141,7 @@ describe('4. sb_outline collapses shared header/footer and overlays only, and sa
 });
 
 describe('5. link_colour reads `color`, not background-color / border-color', () => {
-  const codes = (html: string) => writeCheck('text', 'specials', { textHtml: html }).map((c) => c.note.code);
+  const codes = (html: string) => writeCheck('button', 'specials', { textHtml: html }).map((c) => c.note.code);
   it('a link with only a background or border colour still paints UA blue', () => {
     expect(codes('<a href="/p" style="background-color:#fff">x</a>')).toContain('link_colour');
     expect(codes('<a href="/p" style="border-color:#000">x</a>')).toContain('link_colour');

@@ -1060,4 +1060,7 @@ how the committed baseline above is kept current.
   `visibility` not `visible`, or under `aria-hidden="true"`) keeps a CLOSED one silent at the
   box level. An out-of-flow (`fixed`/`sticky`/`absolute`) box past the viewport by >1px is
   `wider_than_viewport` (its width vs the viewport, fix `maxWidth:100%` at mobile) instead of
-  `off_canvas`. The platform's `cartDrawerSeed` still ships no max-width — upstream (C).
+  `off_canvas`. Upstream closed it in v1.0.187 (9f51a4cc4): cart and menu drawers carry
+  `max-width:100%` in static CSS and the cart seed, so an open drawer measures exactly the
+  viewport and stays silent (pinned in `test/platform-1187.test.ts`); a finding now means
+  the node's own `#id` `maxWidth` outranks the cap.

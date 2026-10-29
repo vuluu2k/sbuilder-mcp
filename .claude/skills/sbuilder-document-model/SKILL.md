@@ -883,10 +883,21 @@ platform treats an unproven guard as indistinguishable from an absent one.
   collapses a shared HEADER/FOOTER (`globalKind`) or overlay to one line marked `collapsed:true`
   unless `chrome:true` — a `custom` global is middle-band content and stays open — and shows
   accordion/tab row `label`s;
-  `sb_node_read` drops `backgroundScene*` while the source is empty. Review: `link_colour` (an
-  `<a>` in `textHtml` with no inline color paints UA blue rgb(0,0,238) — nothing styles it; also
-  warned by writecheck; `background-color`/`border-color` are not a `color`) and `default_font` (a node still on its element's LITERAL seed font —
-  `accordion-item`'s "Inter" — on a site theme whose `text-2` family differs; `tab-item` and
-  `menu-item` already wear `var(--wb-ts-text-2-family, Inter)`; silent when any
-  `responsive[bp].style.fontFamily` is set — the author answered per breakpoint). `sb_set` unset echoes `unset` /
+  `sb_node_read` drops `backgroundScene*` while the source is empty. `sb_set` unset echoes `unset` /
   `absent` per edit, and `edits[].keys` is optional with an unset.
+- **A LINK IN TEXT/HEADING RICH TEXT IS NO LONGER UA BLUE** (web_builder v1.0.187, a8097f59e:
+  `.wb-text a` / `.wb-heading a {color:inherit;text-decoration:underline}`). This used to say
+  every `<a>` in `textHtml` needs an inline `style="color:…"`; that is now wrong for text and
+  heading — the link takes the element's own colour. `link_colour` (review + writecheck) fires
+  only OUTSIDE `LINK_INHERITS` — today `button`, which renders `textHtml` through
+  `nodes.RichText` while its static CSS styles no `a`. `background-color`/`border-color` are
+  not a `color`.
+- **`default_font` FLAGS THE OLD LITERAL SEED, NEVER A VAR** (v1.0.187, e8900e4d9). Element
+  seeds moved from literal `"Inter"` to `var(--wb-ts-<slug>-family, Inter)` (accordion-item,
+  breadcrumb, list, content-list, text-marquee-item, product-variant-label/-option,
+  pricing-dataset leaves …). The rule this replaced compared against the seed, so after the
+  regen it could never fire. It now flags a node whose stored literal equals the FALLBACK of
+  its element's seed var, judged against the site theme's family for THAT `<slug>` (not
+  `text-2` alone — `product-variant-label` wears `heading-6`); silent on any `var(`, on an
+  element seeding no font, on the starter theme, and when any
+  `responsive[bp].style.fontFamily` is set — the author answered per breakpoint.
