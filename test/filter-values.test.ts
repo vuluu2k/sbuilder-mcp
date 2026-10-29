@@ -48,8 +48,8 @@ async function setup(opts: { facets?: unknown; facetsFail?: boolean; locale?: st
     return undefined;
   });
   const { call: raw, close } = await p.connect();
-  const call = (name: string, args: Record<string, unknown>) => raw(name, { site_id: 's1', ...args });
-  await call('sb_page_open', { page_id: 'pg_1' });
+  const call = raw;
+  await call('sb_page_open', { site_id: 's1', page_id: 'pg_1' });
   const doc = () => p.pages.get('pg_1')!.document as Doc;
   const added = async (spec: Record<string, unknown>) => {
     const out = await call('sb_add', {

@@ -26,8 +26,8 @@ async function setup() {
   });
   p.pages.set('pg_1', { document: { schema_version: 2, ...source() }, rev: 1 });
   const { call: raw, close } = await p.connect();
-  const call = (name: string, args: Record<string, unknown>) => raw(name, { site_id: 's1', ...args });
-  await call('sb_page_open', { page_id: 'pg_1' });
+  const call = raw;
+  await call('sb_page_open', { site_id: 's1', page_id: 'pg_1' });
   const doc = (k: string) => p.pages.get(k)?.document as Doc | undefined;
   return { call, close, doc, reconciles };
 }

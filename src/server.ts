@@ -20,6 +20,7 @@ import { registerThemeTools } from './tools/theme.js';
 import { registerTranslateTools } from './tools/translate.js';
 import type { ToolContext } from './tools/context.js';
 import { serializeToolCalls } from './mcp/serial.js';
+import { refuseUnknownArgs } from './mcp/strict.js';
 
 /**
  * Sent on every handshake, so it is short, and says nothing a tool description
@@ -101,6 +102,7 @@ export function createServer(ctx: ToolContext = buildContext()): McpServer {
   // Every tool that can reach the open document runs in arrival order — see
   // mcp/serial.ts. Before the first registerTool, which installs tools/call.
   serializeToolCalls(server, (name) => SESSION_FREE.has(name));
+  refuseUnknownArgs(server);
   registerSessionTools(server, ctx);
   registerApiTools(server, ctx);
   const pageSession = registerPageTools(server, ctx);

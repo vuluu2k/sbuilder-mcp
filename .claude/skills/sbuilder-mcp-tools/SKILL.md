@@ -94,6 +94,12 @@ A new tool is not done until it appears in **three** places beyond its own file:
 `src/server.ts`, `docs/tools.md` **and** `docs/tools.vi.md`, and the tool table in both
 READMEs. Plus a test under `test/`.
 
+Every raw-shape `inputSchema` is made `.strict()` at registration (`src/mcp/strict.ts`), so an
+argument a tool does not declare is REFUSED by name, never dropped (TTG gap #82, 2026-10-30:
+`sb_look` given `page_id` shot the session's deleted page and 404'd naming neither). A test
+helper that spreads `site_id` into every call breaks on a tool without one — pass it to
+`sb_page_open` only.
+
 ## One open document, one call at a time
 
 `PageSession` holds ONE open document, so every tool that can reach it runs in arrival order
