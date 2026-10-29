@@ -6,6 +6,16 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.100.3] - 2026-10-29
+
+### Changed
+- Element seeds, the starter theme presets and the `sb_store` overlay seeds now use `var(--wb-ts-<slug>-family, Inter)` instead of a hard-coded "Inter", following platform v1.0.187.
+- The cart drawer seed now sets `maxWidth: "100%"`, including in the cart overlay seeds.
+
+### Fixed
+- `sb_review` reports `link_colour` only for buttons, because links in text and heading elements now inherit the text colour and are underlined.
+- `sb_review` reports `default_font` for nodes that still hold the old seeded "Inter" fallback, compared with the font family of the element's own text style, and never for `var()` values.
+
 ## [0.100.2] - 2026-10-29
 
 ### Changed

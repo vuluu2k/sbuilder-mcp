@@ -6,6 +6,16 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.100.3] - 2026-10-29
+
+### Changed
+- Seed của element, preset theme khởi đầu và seed overlay của `sb_store` nay dùng `var(--wb-ts-<slug>-family, Inter)` thay cho "Inter" cứng, theo platform v1.0.187.
+- Seed cart drawer nay đặt `maxWidth: "100%"`, kể cả trong seed overlay giỏ hàng.
+
+### Fixed
+- `sb_review` chỉ báo `link_colour` cho button, vì link trong text và heading nay kế thừa màu chữ và có gạch chân.
+- `sb_review` báo `default_font` cho node còn giữ font gieo cũ "Inter" làm fallback, so với họ font của text style của chính element, và không bao giờ báo với giá trị `var()`.
+
 ## [0.100.2] - 2026-10-29
 
 ### Changed
