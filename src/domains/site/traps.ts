@@ -146,11 +146,27 @@ export function globalWarning(doc: DocLike, id: string): string | null {
   // findings `overlay: true` instead of reporting them once per page.
   const ov = overlayRoot(doc, id);
   if (ov !== null) {
-    const oid = doc.nodes[ov].specials?.[SPEC_OVERLAY_ID];
     const self = ov === id ? '' : ` (inside overlay ${ov})`;
-    return `Node ${id}${self} belongs to the site overlay ${JSON.stringify(oid)} — the cart drawer or a pop-up. It is ONE master composed onto every page, so this change is site-wide, not page-local. Say so when reporting it.`;
+    return `Node ${id}${self} ${overlayReach(doc, ov)} Say so when reporting it.`;
   }
   return null;
+}
+
+/**
+ * WHERE AN OVERLAY MASTER SHOWS (TTG gap #74). The cart drawer is on every page
+ * by construction; a pop-up only on the pages it is attached to (or every page
+ * when `allPages`) — measured, the home page had no `.wb-popup` while the
+ * landing page carrying it did. "Site-wide" was right for the cart alone.
+ */
+function overlayReach(doc: DocLike, ov: string): string {
+  const oid = String(doc.nodes[ov].specials?.[SPEC_OVERLAY_ID] ?? '');
+  if (doc.nodes[ov].data.type === 'popup') {
+    return (
+      `belongs to the pop-up ${JSON.stringify(oid)}, ONE master shown on every page it is attached to ` +
+      `(GET /api/sites/{siteId}/overlays/${oid}/pages lists them; all of them if it is allPages), so this change lands on each.`
+    );
+  }
+  return `belongs to the site overlay ${JSON.stringify(oid)} (the cart drawer is one). It is ONE master composed onto every page, so this change is site-wide, not page-local.`;
 }
 
 /**
@@ -174,7 +190,7 @@ export function sharedWriteNotes(doc: DocLike, ids: string[]): Array<{ once: str
       ? `${n} edited inside the shared global section ${JSON.stringify(sp[SPEC_GLOBAL_ID])}${
           sp[SPEC_GLOBAL_KIND] ? ` (${sp[SPEC_GLOBAL_KIND]})` : ''
         }, root ${m}. Editing it changes EVERY page that carries it, and publishing cascades to all of them. Say so when reporting this change.`
-      : `${n} edited inside the site overlay ${JSON.stringify(sp[SPEC_OVERLAY_ID])} (root ${m}) — the cart drawer or a pop-up. It is ONE master composed onto every page, so this change is site-wide, not page-local. Say so when reporting it.`;
+      : `${n} edited (root ${m}): it ${overlayReach(doc, m)} Say so when reporting it.`;
     return { once: `shared-write:${m}`, note };
   });
 }

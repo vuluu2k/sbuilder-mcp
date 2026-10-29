@@ -4,13 +4,14 @@ import { addSubtree } from '../src/domains/site/builder.js';
 import { tokensFromPage } from '../src/domains/site/importmap.js';
 import { clearThemeCache } from '../src/domains/site/theme-fetch.js';
 import { reviewDesign } from '../src/domains/site/review.js';
-import { STARTER_THEME } from '../src/domains/site/theme.js';
+import { STARTER_THEME, detachNote, presetLayer } from '../src/domains/site/theme.js';
 import { measureShot } from '../src/vision/measure.js';
 import type { Box, Shot } from '../src/vision/shoot.js';
 import { fakePlatform } from './helpers/platform.js';
 import { readinessGaps } from '../src/domains/site/readiness.js';
 import { animationNote } from '../src/domains/site/vocabulary.js';
 import { summarize } from '../src/tools/undo.js';
+import { globalWarning, sharedWriteNotes } from '../src/domains/site/traps.js';
 
 /**
  * TTG GAPS #64–#81, found building a blog and a landing page on a Vietnamese
@@ -391,6 +392,53 @@ describe('#77 the sb_undo listing is compact and names the template', () => {
         expect(row.tool).toBe('sb_add');
       }
       expect(String(r.json.page_saves)).toMatch(/pg_1/);
+    } finally {
+      await close();
+    }
+  });
+});
+
+/* #74 ---------------------------------------------------------------------- */
+
+describe('#74 an edit inside a pop-up is not "site-wide"', () => {
+  const docOf = (rootType: string) => ({
+    schema_version: 2,
+    root_node_id: 'ROOT',
+    nodes: {
+      ROOT: { id: 'ROOT', data: { type: 'root', parent: null, nodes: ['ov'] }, specials: {} },
+      ov: { id: 'ov', data: { type: rootType, parent: 'ROOT', nodes: ['bt'] }, specials: { overlayId: 'ov_b806' } },
+      bt: { id: 'bt', data: { type: 'button', parent: 'ov', nodes: [] }, specials: {} },
+    },
+  });
+  it('a pop-up names the pages it is attached to; the cart drawer stays site-wide', () => {
+    const pop = sharedWriteNotes(docOf('popup') as never, ['bt'])[0].note;
+    expect(pop).not.toMatch(/site-wide/);
+    expect(pop).toMatch(/attached/);
+    expect(pop).toContain('/overlays/ov_b806/pages');
+    expect(globalWarning(docOf('popup') as never, 'bt')).not.toMatch(/site-wide/);
+    expect(sharedWriteNotes(docOf('cart-drawer') as never, ['bt'])[0].note).toMatch(/site-wide/);
+  });
+});
+
+/* #78 ---------------------------------------------------------------------- */
+
+describe('#78 a theme-variable value does not "detach the node from the theme"', () => {
+  it('detachNote stays silent for var(--wb-…) and still speaks for a literal', () => {
+    const layer = presetLayer(STARTER_THEME, 'site', { data: { type: 'button' } })!;
+    expect(detachNote(layer, ['color'], { color: 'var(--wb-color-primary)' })).toBeNull();
+    expect(detachNote(layer, ['color'], { color: '#ff0000' })).toMatch(/OUTRANKS/);
+  });
+
+  it('sb_set with a theme var raises no detach check', async () => {
+    const p = fakePlatform();
+    const { call, close } = await p.connect();
+    try {
+      await call('sb_page_open', { site_id: 's1', page_id: 'pg_1' });
+      const add = await call('sb_add', { parent_id: 'ROOT', dry_run: false, spec: { type: 'flex-section', children: [{ type: 'button', specials: { text: 'Mua' } }] } });
+      const btn = Object.entries(add.json.added as Record<string, string>).find(([, t]) => t === 'button')![0];
+      const r = await call('sb_set', { edits: [{ id: btn, namespace: 'style', keys: { color: 'var(--wb-color-primary)' } }], dry_run: false });
+      expect(r.isError, r.text).toBe(false);
+      expect(r.text).not.toMatch(/stops following the theme/);
     } finally {
       await close();
     }

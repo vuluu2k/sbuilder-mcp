@@ -215,8 +215,11 @@ export function presetLayer(
  * doing it without knowing, which detaches the node from the theme silently and
  * for good.
  */
-export function detachNote(layer: PresetLayer, keys: string[]): string | null {
-  const clashes = keys.filter((k) => k in layer.paints && !layer.overridden.includes(k));
+export function detachNote(layer: PresetLayer, keys: string[], written: Record<string, unknown> = {}): string | null {
+  // A THEME VARIABLE IS NOT A DETACHMENT (TTG gap #78): `var(--wb-color-primary)`
+  // follows every palette change; only a literal freezes today's value.
+  const themed = (k: string) => typeof written[k] === 'string' && (written[k] as string).trim().startsWith('var(--wb-');
+  const clashes = keys.filter((k) => k in layer.paints && !layer.overridden.includes(k) && !themed(k));
   if (!clashes.length) return null;
   const shown = clashes.map((k) => `${k} (preset paints ${layer.paints[k]})`).join(', ');
   return (

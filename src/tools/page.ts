@@ -1965,7 +1965,7 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
         for (const e of wearers) {
           const layer = presetLayer(theme, from, d.doc.nodes[e.id] as never);
           if (!layer || seen.has(layer.id)) continue;
-          const note = detachNote(layer, Object.keys(e.keys));
+          const note = detachNote(layer, Object.keys(e.keys ?? {}), e.keys);
           if (!note) continue;
           seen.add(layer.id);
           const once = say(`preset-detach:${layer.id}`, note);
