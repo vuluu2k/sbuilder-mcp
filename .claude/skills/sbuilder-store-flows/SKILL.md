@@ -566,3 +566,6 @@ repo over a number here, and fix the line when you catch one stale.
   customer.phone`, or a `tel` input that is not a re-entry (`mapTo confirmPhone`, or a hand-built box whose name/label
   matches confirm/repeat/re_enter/xac_nhan/nhap_lai) — is the only one and
   is not named `phone`; `test/register-phone.test.ts` also holds every template's phone to the name.
+  Since web_builder a666c262a the `POST /_wb/account/register` shape declares `phone` plus `form`
+  and `answers` (which form sent it and its non-password answers, read only to check the form's own
+  rules, never stored) — the island fills them; nothing in this repo posts that route.
