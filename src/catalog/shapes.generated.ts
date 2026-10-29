@@ -880,7 +880,8 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
       },
       {
         "name": "bodyType",
-        "type": "ArticleBodyType"
+        "type": "\"richtext\" | \"page\"",
+        "note": "ArticleBodyType: its declared constants (no write validator); BodyTypeRenders() is true only for \"richtext\""
       },
       {
         "name": "content",
@@ -896,7 +897,8 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
       },
       {
         "name": "status",
-        "type": "ArticleStatus"
+        "type": "\"draft\" | \"published\" | \"archived\"",
+        "note": "ArticleStatus: its declared constants (no write validator); StorefrontVisible() is true only for \"published\""
       },
       {
         "name": "categoryIds",
@@ -1002,7 +1004,8 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
       },
       {
         "name": "bodyType",
-        "type": "ArticleBodyType"
+        "type": "\"richtext\" | \"page\"",
+        "note": "ArticleBodyType: its declared constants (no write validator); BodyTypeRenders() is true only for \"richtext\""
       },
       {
         "name": "content",
@@ -1018,7 +1021,8 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
       },
       {
         "name": "status",
-        "type": "ArticleStatus"
+        "type": "\"draft\" | \"published\" | \"archived\"",
+        "note": "ArticleStatus: its declared constants (no write validator); StorefrontVisible() is true only for \"published\""
       },
       {
         "name": "categoryIds",
@@ -1760,7 +1764,8 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
       },
       {
         "name": "status",
-        "type": "\"draft\" | \"active\" | \"archived\" | \"review\""
+        "type": "\"draft\" | \"active\" | \"archived\" | \"review\"",
+        "note": "StorefrontVisible() is true only for \"active\""
       },
       {
         "name": "level",
@@ -1967,7 +1972,8 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
       },
       {
         "name": "status",
-        "type": "\"draft\" | \"active\" | \"archived\" | \"review\""
+        "type": "\"draft\" | \"active\" | \"archived\" | \"review\"",
+        "note": "StorefrontVisible() is true only for \"active\""
       },
       {
         "name": "level",
@@ -2402,7 +2408,8 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
       },
       {
         "name": "status",
-        "type": "\"draft\" | \"active\" | \"archived\" | \"review\""
+        "type": "\"draft\" | \"active\" | \"archived\" | \"review\"",
+        "note": "StorefrontVisible() is true only for \"active\""
       },
       {
         "name": "level",
@@ -2609,7 +2616,8 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
       },
       {
         "name": "status",
-        "type": "\"draft\" | \"active\" | \"archived\" | \"review\""
+        "type": "\"draft\" | \"active\" | \"archived\" | \"review\"",
+        "note": "StorefrontVisible() is true only for \"active\""
       },
       {
         "name": "level",
@@ -4727,7 +4735,8 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
       },
       {
         "name": "type",
-        "type": "Type"
+        "type": "\"custom\" | \"contact\" | \"subscribe\" | \"order\" | \"booking\" | \"review\" | \"login\" | \"register\" | \"forgot\" | \"reset\" | \"verify\"",
+        "note": "Type: its declared constants (no write validator); ConfirmationEligible() is true only for \"contact\" | \"subscribe\"; IsAuth() is true only for \"login\" | \"register\" | \"forgot\" | \"reset\" | \"verify\""
       },
       {
         "name": "version",
@@ -4830,7 +4839,8 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
       },
       {
         "name": "type",
-        "type": "Type"
+        "type": "\"custom\" | \"contact\" | \"subscribe\" | \"order\" | \"booking\" | \"review\" | \"login\" | \"register\" | \"forgot\" | \"reset\" | \"verify\"",
+        "note": "Type: its declared constants (no write validator); ConfirmationEligible() is true only for \"contact\" | \"subscribe\"; IsAuth() is true only for \"login\" | \"register\" | \"forgot\" | \"reset\" | \"verify\""
       },
       {
         "name": "version",
@@ -4925,8 +4935,8 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
       },
       {
         "name": "type",
-        "type": "forms.Type",
-        "note": "Type, when present, changes the form's type in the SAME write."
+        "type": "\"custom\" | \"contact\" | \"subscribe\" | \"order\" | \"booking\" | \"review\" | \"login\" | \"register\" | \"forgot\" | \"reset\" | \"verify\"",
+        "note": "Type, when present, changes the form's type in the SAME write. Type: its declared constants (no write validator); ConfirmationEligible() is true only for \"contact\" | \"subscribe\"; IsAuth() is true only for \"login\" | \"register\" | \"forgot\" | \"reset\" | \"verify\""
       },
       {
         "name": "settings",
@@ -5005,7 +5015,8 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
     "fields": [
       {
         "name": "status",
-        "type": "forms.SubmissionStatus"
+        "type": "\"complete\" | \"draft\" | \"spam\" | \"cancelled\" | \"confirmed\" | \"no_show\" | \"awaiting_deposit\"",
+        "note": "SubmissionStatus: its declared constants (no write validator); HoldsSeat() is true only for \"complete\" | \"confirmed\" | \"awaiting_deposit\""
       },
       {
         "name": "deposit",
@@ -6554,7 +6565,8 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
       },
       {
         "name": "role",
-        "type": "\"owner\" | \"admin\" | \"member\""
+        "type": "\"owner\" | \"admin\" | \"member\"",
+        "note": "Assignable() is true only for \"admin\" | \"member\"; MayManageSites() is true only for \"owner\" | \"admin\"; MayManageMembers() is true only for \"owner\"; MayReviewTemplates() is true only for \"owner\" | \"admin\""
       }
     ],
     "source": "go",
@@ -6564,7 +6576,8 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
     "fields": [
       {
         "name": "role",
-        "type": "\"owner\" | \"admin\" | \"member\""
+        "type": "\"owner\" | \"admin\" | \"member\"",
+        "note": "Assignable() is true only for \"admin\" | \"member\"; MayManageSites() is true only for \"owner\" | \"admin\"; MayManageMembers() is true only for \"owner\"; MayReviewTemplates() is true only for \"owner\" | \"admin\""
       }
     ],
     "source": "go",
@@ -8613,7 +8626,8 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
       },
       {
         "name": "status",
-        "type": "ProductStatus"
+        "type": "\"draft\" | \"active\" | \"archived\"",
+        "note": "ProductStatus: its declared constants (no write validator); StorefrontVisible() is true only for \"active\""
       },
       {
         "name": "tags",
@@ -8966,7 +8980,8 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
       },
       {
         "name": "status",
-        "type": "ProductStatus"
+        "type": "\"draft\" | \"active\" | \"archived\"",
+        "note": "ProductStatus: its declared constants (no write validator); StorefrontVisible() is true only for \"active\""
       },
       {
         "name": "tags",
@@ -10601,11 +10616,13 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
       },
       {
         "name": "status",
-        "type": "Status"
+        "type": "\"requested\" | \"approved\" | \"rejected\" | \"received\" | \"refunded\" | \"cancelled\"",
+        "note": "Status: its declared constants (no write validator); Open() is true only for \"requested\" | \"approved\" | \"received\""
       },
       {
         "name": "reason",
-        "type": "Reason"
+        "type": "\"damaged\" | \"wrong_item\" | \"not_as_described\" | \"size_fit\" | \"changed_mind\" | \"other\"",
+        "note": "Reason: its declared constants (no write validator); MerchantFault() is true only for \"damaged\" | \"wrong_item\" | \"not_as_described\""
       },
       {
         "name": "comment",
@@ -10710,11 +10727,13 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
       },
       {
         "name": "status",
-        "type": "Status"
+        "type": "\"requested\" | \"approved\" | \"rejected\" | \"received\" | \"refunded\" | \"cancelled\"",
+        "note": "Status: its declared constants (no write validator); Open() is true only for \"requested\" | \"approved\" | \"received\""
       },
       {
         "name": "reason",
-        "type": "Reason"
+        "type": "\"damaged\" | \"wrong_item\" | \"not_as_described\" | \"size_fit\" | \"changed_mind\" | \"other\"",
+        "note": "Reason: its declared constants (no write validator); MerchantFault() is true only for \"damaged\" | \"wrong_item\" | \"not_as_described\""
       },
       {
         "name": "comment",
@@ -10838,7 +10857,8 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
       },
       {
         "name": "status",
-        "type": "Status"
+        "type": "\"pending\" | \"published\" | \"rejected\"",
+        "note": "Status: its declared constants (no write validator); Counts() is true only for \"published\""
       },
       {
         "name": "reply",
@@ -10902,7 +10922,8 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
       },
       {
         "name": "status",
-        "type": "Status"
+        "type": "\"pending\" | \"published\" | \"rejected\"",
+        "note": "Status: its declared constants (no write validator); Counts() is true only for \"published\""
       },
       {
         "name": "reply",

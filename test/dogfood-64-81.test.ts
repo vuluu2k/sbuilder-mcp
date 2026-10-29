@@ -12,7 +12,8 @@ import { readinessGaps } from '../src/domains/site/readiness.js';
 import { animationNote } from '../src/domains/site/vocabulary.js';
 import { summarize } from '../src/tools/undo.js';
 import { globalWarning, sharedWriteNotes } from '../src/domains/site/traps.js';
-import { searchOperations } from '../src/catalog/search.js';
+import { describeOperation, findOperation, searchOperations } from '../src/catalog/search.js';
+import { REQUEST_SHAPES } from '../src/catalog/shapes.generated.js';
 import { shapeResponse } from '../src/tools/api.js';
 import { traitsFor } from '../src/catalog/element-search.js';
 
@@ -398,6 +399,27 @@ describe('#77 the sb_undo listing is compact and names the template', () => {
     } finally {
       await close();
     }
+  });
+});
+
+/* #72 ---------------------------------------------------------------------- */
+
+describe('#72 a call sheet lists a named string type\'s values, and what renders', () => {
+  type F = { name: string; type: string; note?: string };
+  const field = (name: string): F => {
+    const fields = (JSON.parse(JSON.stringify(describeOperation(findOperation('post:/api/sites/{siteId}/articles')!))) as { body_shape: { fields: F[] } })
+      .body_shape.fields;
+    return fields.find((f) => f.name === name)!;
+  };
+  it('status and bodyType carry their values; the sheet says only richtext renders and only published is served', () => {
+    expect(field('status').type).toBe('"draft" | "published" | "archived"');
+    expect(field('status').note).toContain('StorefrontVisible() is true only for "published"');
+    expect(field('bodyType').type).toBe('"richtext" | "page"');
+    expect(field('bodyType').note).toContain('BodyTypeRenders() is true only for "richtext"');
+  });
+
+  it('a type with consts but no predicate stays silent — its consts may be a subset (site.Role)', () => {
+    expect(JSON.stringify(REQUEST_SHAPES)).not.toContain(JSON.stringify('"owner" | "admin" | "editor" | "viewer"').slice(1, -1));
   });
 });
 

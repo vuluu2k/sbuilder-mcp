@@ -216,12 +216,27 @@ const TYPED_CONST = /^\s*(?:const\s+)?([A-Za-z_]\w*)\s+([A-Za-z_]\w*)\s*=\s*"((?
 const VALIDATOR = /^func\s+(?:Valid\w*\(\s*\w+\s+\*?([A-Za-z_]\w*)\s*\)|\(\s*\w+\s+\*?([A-Za-z_]\w*)\s*\)\s*(?:Valid|IsValid)\(\s*\))\s*bool\s*\{(.*)$/;
 /** `<dir>::<Type>` → the literals its validator accepts. */
 const enumValues = new Map<string, string[]>();
+/**
+ * `<dir>::<Type>` → its declared constants, for a type with NO validator (TTG gap
+ * #72): `ArticleStatus`, `ArticleBodyType`, `ProductStatus` printed their type
+ * name and nothing a write could send. Labelled as the declared set, never as a
+ * validated one — the validator rule above still wins wherever one exists.
+ */
+const constValues = new Map<string, string[]>();
+/**
+ * `<dir>::<Type>` → each bool PREDICATE over the type that answers with `==`
+ * arms alone (`StorefrontVisible` → published, `BodyTypeRenders` → richtext):
+ * the half a value list cannot say — a `page` body is stored and never rendered.
+ */
+const predicates = new Map<string, string[]>();
+const PREDICATE = /^func\s+(?:\(\s*(\w+)\s+\*?([A-Za-z_]\w*)\s*\)\s*([A-Z]\w*)\(\s*\)|([A-Z]\w*)\(\s*(\w+)\s+\*?([A-Za-z_]\w*)\s*\))\s*bool\s*\{(.*)$/;
 const stringTypes = new Set<string>();
 let enumPkgs: PackageIndex = new Map();
 
 function readEnums(files: string[], root: string): void {
   const consts = new Map<string, { type: string; value: string }>(); // `<dir>::<Name>`
   const validators: Array<{ dir: string; type: string; body: string }> = [];
+  const preds: Array<{ dir: string; type: string; name: string; param: string; body: string }> = [];
   for (const file of files) {
     const dir = dirOf(file, root);
     if (!dir) continue;
@@ -238,6 +253,15 @@ function readEnums(files: string[], root: string): void {
           for (let j = i + 1; j < lines.length && !/^\}/.test(lines[j]); j++) body += `\n${lines[j]}`;
         }
         validators.push({ dir, type: v[1] ?? v[2], body });
+      } else {
+        const p = PREDICATE.exec(line);
+        if (p && !/^(?:Is)?Valid/.test(p[3] ?? p[4])) {
+          let body = p[7];
+          if (!/\}\s*$/.test(line)) {
+            for (let j = i + 1; j < lines.length && !/^\}/.test(lines[j]); j++) body += `\n${lines[j]}`;
+          }
+          preds.push({ dir, type: p[2] ?? p[6], name: p[3] ?? p[4], param: p[1] ?? p[5], body });
+        }
       }
       if (/^const\s*\(\s*$/.test(line)) inConst = true;
       else if (inConst && /^\)/.test(line)) inConst = false;
@@ -266,6 +290,46 @@ function readEnums(files: string[], root: string): void {
     }
     if (ok && vals.length >= 2) enumValues.set(key, vals);
   }
+  // `return x == A || x == B` and nothing else — anything that looks up or
+  // computes says nothing.
+  for (const { dir, type, name, param, body } of preds) {
+    const key = `${dir}::${type}`;
+    if (!stringTypes.has(key)) continue;
+    const code = body.replace(/\/\/.*$/gm, '').trim().replace(/\}\s*$/, '').trim();
+    const m = new RegExp(`^return\\s+(${param}\\s*==\\s*\\w+(?:\\s*\\|\\|\\s*${param}\\s*==\\s*\\w+)*)$`).exec(code);
+    if (!m) continue;
+    const vals = [...m[1].matchAll(/==\s*(\w+)/g)].map((x) => consts.get(`${dir}::${x[1]}`));
+    if (vals.some((c) => !c || c.type !== type)) continue;
+    predicates.set(key, [...(predicates.get(key) ?? []), `${name}() is true only for ${vals.map((c) => JSON.stringify(c!.value)).join(' | ')}`]);
+  }
+  // NO VALIDATOR: the declared constants — but ONLY for a type its package
+  // reasons about member by member (a predicate above). That is the evidence the
+  // set is closed. `site.Role` (custom `role_…` ids) and `Permission`
+  // (`<domain>.read|write` built at runtime) have consts and no predicate, and
+  // their consts are a SUBSET — printing them would call a working value wrong.
+  for (const key of predicates.keys()) {
+    if (enumValues.has(key)) continue;
+    const [dir, type] = key.split('::');
+    const vals = [...consts].filter(([k, c]) => k.startsWith(`${dir}::`) && c.type === type).map(([, c]) => c.value);
+    if (new Set(vals).size >= 2) constValues.set(key, [...new Set(vals)]);
+  }
+}
+
+/** What the declared-constants list and the predicates add to a field's note, or undefined. */
+function enumNote(goType: string, dir: string): string | undefined {
+  const t = goType.trim().replace(/^[*[\]]+/, '');
+  let key: string | undefined;
+  if (!t.includes('.')) key = `${dir}::${t}`;
+  else {
+    const dirs = enumPkgs.get(t);
+    if (dirs?.length === 1) key = `${dirs[0]}::${t.split('.')[1]}`;
+  }
+  if (!key) return undefined;
+  const parts = [
+    ...(constValues.has(key) ? [`${key.split('::')[1]}: its declared constants (no write validator)`] : []),
+    ...(predicates.get(key) ?? []),
+  ];
+  return parts.length ? parts.join('; ') : undefined;
 }
 
 function enumOf(t: string, dir: string): string | undefined {
@@ -275,7 +339,7 @@ function enumOf(t: string, dir: string): string | undefined {
     const dirs = enumPkgs.get(t);
     if (dirs?.length === 1) key = `${dirs[0]}::${t.split('.')[1]}`;
   }
-  const vals = key ? enumValues.get(key) : undefined;
+  const vals = key ? (enumValues.get(key) ?? constValues.get(key)) : undefined;
   return vals && vals.length >= 2 ? vals.map((v) => JSON.stringify(v)).join(' | ') : undefined;
 }
 
@@ -502,7 +566,7 @@ function flatten(
   for (const f of s.fields) {
     if (f.jsonName === '-') continue;
     if (!/^[A-Z]/.test(f.goName)) continue; // unexported never reaches JSON
-    const note = noteFrom(f.doc);
+    const note = [noteFrom(f.doc), enumNote(f.goType, s.dir)].filter(Boolean).join(' ') || undefined;
     const nested = expandNested ? nestedOf(f.goType, s.dir, index, pkgs) : undefined;
     out.push({
       name: f.jsonName ?? f.goName,
@@ -1046,6 +1110,8 @@ export function buildRequestShapes(repo: string, operationIds: Set<string>): Sha
   for (const file of files) readStructs(file, root, index);
   const pkgs = packageIndexOf(index);
   enumValues.clear();
+  constValues.clear();
+  predicates.clear();
   stringTypes.clear();
   readEnums(files, root);
   enumPkgs = new Map();
