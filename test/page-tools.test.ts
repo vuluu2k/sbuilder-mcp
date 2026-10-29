@@ -231,7 +231,7 @@ describe('sb_publish: a cascade is not a publish of the draft', () => {
         const ids = [...new Set([...body.pageIds, 'pg_cat'])];
         for (const p of pages) if (ids.includes(p.id)) p.publishedAt = '2026-10-29T10:00:00Z';
         return json({
-          published: ids.map((id: string) => ({ pageId: id, fromVersionId: body.pageIds.includes(id) ? 'pv_new' : 'pv_old' })),
+          published: ids.map((id: string) => ({ pageId: id, publishedAt: '2026-10-29T10:00:00Z', fromVersionId: body.pageIds.includes(id) ? 'pv_new' : 'pv_old' })),
           total: ids.length,
         });
       }
@@ -266,6 +266,37 @@ describe('sb_publish: a cascade is not a publish of the draft', () => {
       expect(back.body.pageIds).toEqual(['pg_home']);
     } finally {
       await close();
+    }
+  });
+
+  it('forgets a cascade once the page is published or unpublished by another door', async () => {
+    // The editor or sb_api_call publishes pg_cat: publishedAt moves past the cascade's.
+    const { f, pages } = cascadingSite();
+    const { call, close } = await client(f);
+    try {
+      await call('sb_publish', { site_id: 's1', page_id: 'pg_home', dry_run: false });
+      expect((await call('sb_page_state', { site_id: 's1', page_id: 'pg_cat' })).drift.state).toBe('draft_ahead');
+      pages.find((p) => p.id === 'pg_cat')!.publishedAt = '2026-10-30T10:00:00Z';
+      expect((await call('sb_page_state', { site_id: 's1', page_id: 'pg_cat' })).drift.state).not.toBe('draft_ahead');
+      const next = await call('sb_publish', { site_id: 's1', page_id: 'pg_home', publish_drafts: true });
+      expect(next.body.pageIds).toEqual(['pg_home']);
+      expect(next.unpublished_drafts).toBeUndefined();
+    } finally {
+      await close();
+    }
+    // Unpublished: no live row, no publishedAt — nothing for a draft to be ahead of.
+    const two = cascadingSite();
+    const c2 = await client(two.f);
+    try {
+      await c2.call('sb_publish', { site_id: 's1', page_id: 'pg_home', dry_run: false });
+      delete (two.pages.find((p) => p.id === 'pg_cat') as { publishedAt?: string }).publishedAt;
+      // Listed as a first publish (it has no live copy now), not as a draft a cascade hid.
+      const next = await c2.call('sb_publish', { site_id: 's1', page_id: 'pg_home' });
+      expect(next.unpublished_drafts).toBeUndefined();
+      expect(next.first_publish.map((r: { pageId: string }) => r.pageId)).toEqual(['pg_cat']);
+      expect((await c2.call('sb_page_state', { site_id: 's1', page_id: 'pg_cat' })).drift.state).not.toBe('draft_ahead');
+    } finally {
+      await c2.close();
     }
   });
 

@@ -466,4 +466,8 @@ a measured need) and `sb_bind`, which belongs with Phase 3's binding work.
   `sb_page_state` consults the same memory (else it said `in_step` for a page `sb_publish`
   listed). A remembered id missing from the fetched page list is DROPPED, never sent:
   `publishTargets` answers ErrPageNotFound for the WHOLE batch on one unknown id, so a deleted
-  page broke every later `publish_drafts:true` until restart.
+  page broke every later `publish_drafts:true` until restart. Each entry stores the cascade's
+  `publishedAt` and holds only while the page list (sb_publish) / `/published` row
+  (sb_page_state) still carries that instant (compared as `Date.parse` ms, precision may differ):
+  published by the editor or `sb_api_call`, or unpublished, it is forgotten — else a stale
+  `draft_ahead` outlived the publish that cleared it (review of v0.98.7).

@@ -2822,11 +2822,20 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
   // publishSourceFor, by design) and writes a fresh published row — and the
   // page list's `publishedAt` is denormalised from that row, so the draft that
   // did NOT go live now reads older than "published". Remembered here until the
-  // page is published by name.
+  // page is published by name — or until its publishedAt is no longer the one
+  // the cascade wrote: the editor or sb_api_call published it, or it was
+  // unpublished, and the timestamps tell the truth again.
   // ponytail: in-process; a new process sees only timestamps again. Exact would
   // compare each page's updatedAt with its live version's createdAt
   // (GET …/versions, isLive) — a heavy listing per page.
-  const cascadeMasked = new Map<string, Map<string, { pageId: string; name: string; slug: string; type: string }>>();
+  const cascadeMasked = new Map<
+    string,
+    Map<string, { row: { pageId: string; name: string; slug: string; type: string }; publishedAt: unknown }>
+  >();
+  // Compared as instants (ms): the publish answer and the listings may print
+  // the same time at different precision.
+  const stillCascaded = (m: { publishedAt: unknown }, now: unknown): boolean =>
+    typeof m.publishedAt === 'string' && typeof now === 'string' && Date.parse(m.publishedAt) === Date.parse(now);
 
   server.registerTool(
     'sb_publish',
@@ -2896,11 +2905,13 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
         // A remembered page no longer listed was DELETED: sending its id makes
         // the platform's publishTargets refuse the whole batch (ErrPageNotFound),
         // on every publish_drafts:true until restart. Forget it.
-        const listed = new Set((got.pages ?? []).map((p) => String(p.id)));
+        // Published or unpublished by another door since: publishedAt moved, forget it too.
+        const listed = new Map((got.pages ?? []).map((p) => [String(p.id), p]));
         const memory = cascadeMasked.get(site_id);
         for (const m of memory?.values() ?? []) {
-          if (!listed.has(m.pageId)) memory!.delete(m.pageId);
-          else if (m.pageId !== page_id && !drafts.some((d) => d.pageId === m.pageId)) drafts.push(m);
+          const id = m.row.pageId;
+          if (!listed.has(id) || !stillCascaded(m, listed.get(id)!.publishedAt)) memory!.delete(id);
+          else if (id !== page_id && !drafts.some((d) => d.pageId === id)) drafts.push(m.row);
         }
         const unborn = others.filter((p) => state(p) === 'never_published').map(row);
         fresh = unborn.filter((r) => !heldFromFirstPublish(r.type));
@@ -2979,7 +2990,11 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
       const masked = cascadeMasked.get(site_id) ?? new Map();
       cascadeMasked.set(site_id, masked);
       for (const id of asked) masked.delete(id);
-      for (const d of drafts) if (cascaded.includes(d.pageId)) masked.set(d.pageId, d);
+      for (const d of drafts) {
+        if (!cascaded.includes(d.pageId)) continue;
+        const at = published.find((p) => String(p.pageId) === d.pageId)?.publishedAt;
+        masked.set(d.pageId, { row: d, publishedAt: at });
+      }
       // A 200 PROVES A ROW WAS STORED, NOT THAT A VISITOR IS BEING SERVED IT.
       // The storefront answers `cache-control: public, max-age=60`, so the two
       // legitimately differ for up to a minute — long enough for a caller to
@@ -3086,8 +3101,12 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
       ).length;
 
       // The same cascade memory sb_publish lists unpublished_drafts from: a
-      // cascade moved publishedAt past this draft, so the timestamps lie.
-      const drift = cascadeMasked.get(site_id)?.has(pageId)
+      // cascade moved publishedAt past this draft, so the timestamps lie —
+      // while the live row still carries the publishedAt that cascade wrote.
+      const memory = cascadeMasked.get(site_id);
+      const remembered = memory?.get(pageId);
+      if (remembered && !stillCascaded(remembered, row?.publishedAt)) memory!.delete(pageId);
+      const drift = memory?.has(pageId)
         ? {
             state: 'draft_ahead' as const,
             note:

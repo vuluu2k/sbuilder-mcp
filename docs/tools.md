@@ -1386,7 +1386,10 @@ draft was ahead under `unpublished_drafts` — in that call and every later `sb_
 same process, until the page is published by name (`publish_drafts: true` does it).
 `sb_page_state` reads the same memory, so such a page reports `drift.state: "draft_ahead"` there
 too. A remembered page that is no longer in the site's page list (deleted) is forgotten rather
-than sent: one unknown id makes the platform refuse the whole publish.
+than sent: one unknown id makes the platform refuse the whole publish. The memory keeps the
+`publishedAt` the cascade wrote, and holds only while the page still carries it — published
+through the editor or `sb_api_call`, or unpublished, the page is forgotten and the timestamps
+answer again.
 
 **It reports WHICH REVISION went live** — `id` (the published row), `publishedAt`, and
 `fromVersionId` (the draft version it was compiled from). Those three answer the question a

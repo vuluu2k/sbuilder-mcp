@@ -1358,7 +1358,9 @@ mới hơn trong `unpublished_drafts` — ở lần gọi đó và mọi lần `
 process, tới khi trang được publish đích danh (`publish_drafts: true` làm việc đó).
 `sb_page_state` đọc cùng bộ nhớ đó, nên trang như vậy cũng báo `drift.state: "draft_ahead"` ở
 đó. Trang đã nhớ mà không còn trong danh sách trang của site (đã xoá) thì bị quên chứ không được
-gửi đi: chỉ một id lạ là nền tảng từ chối cả lần publish.
+gửi đi: chỉ một id lạ là nền tảng từ chối cả lần publish. Bộ nhớ giữ `publishedAt` mà cascade
+đã ghi và chỉ còn hiệu lực khi trang vẫn mang đúng giá trị đó — trang được publish qua editor hay
+`sb_api_call`, hoặc bị gỡ publish, thì bị quên và mốc thời gian trả lời lại.
 
 **Nó báo BẢN NÀO đã lên live** — `id` (dòng published), `publishedAt`, và `fromVersionId`
 (bản nháp mà nó được biên dịch từ đó). Ba trường này trả lời đúng câu người gọi hỏi ngay sau
