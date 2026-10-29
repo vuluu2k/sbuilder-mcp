@@ -389,7 +389,8 @@ reaches the platform, which would refuse it with 409 anyway; a dry run reports `
 hours make no slot, a third date field on a booking-type form, a phone field on a
 register-type form not named `phone` (the sign-up stores the phone only from the control
 named exactly `phone` — the palette's contact-phone row; a `tel` box whose name or label reads
-as a re-entry — `confirm…`, `xac_nhan…`, "Nhập lại…" — is not taken for the phone), and a new field with no
+as a re-entry — `confirm…`, `xac_nhan…`, "Nhập lại…" — is not taken for the phone when another
+phone-like field exists; the ONLY phone-like box is the phone, whatever it is called), and a new field with no
 `specials.name`; `sb_review` reports the first four as `form_options_empty`,
 `form_timeslot_dead`, `form_booking_dates` and `form_register_phone`.
 
@@ -670,7 +671,7 @@ stacks at 390; say `responsive.mobile.style.flexDirection` to keep it), `hidden_
 `hidden` never cascades, so base hides the node at ≥1440px only; to hide it everywhere write
 `hidden: true` at base AND each narrower breakpoint, one `sb_set` with `edits[]`; a band an
 ANCESTOR already hides there does not count as showing it — for `sb_add`, `parent_id`'s chain
-and the spec's own outer nodes). A desktop
+and the spec's own outer nodes; for `sb_set`, the chain as the whole `edits[]` leaves it). A desktop
 `config.hidden` is written at BASE, the only place desktop reads it —
 `responsive.desktop.config.hidden` is read by nothing; a desktop or base write or `unset` of
 `hidden` also removes that dead slot, which `sb_review` reports as `hidden_desktop_dead`. `unknown_key` also

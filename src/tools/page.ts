@@ -1853,13 +1853,15 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
         return cascadeTail(probe.nodes[e.id], { [bp]: e.keys }, e.id);
       });
       // config.hidden at base/desktop hides ≥1440px only — judged on the node
-      // AS IT WILL BE, so a batch that hides every band says nothing.
+      // AS IT WILL BE — and so are its ancestors, since one edits[] can hide the
+      // parent at the narrow bands — so a batch that hides every band says nothing.
       const hidden = batch.flatMap((e) => {
         const bp = e.breakpoint ?? 'desktop';
         if (e.namespace !== 'config' || e.state || e.keys.hidden !== true || (!e.base && bp !== 'desktop') || !d.doc.nodes[e.id]) return [];
-        const probe = { nodes: { [e.id]: JSON.parse(JSON.stringify(d.doc.nodes[e.id])) } };
-        applyPatches(probe, patches.filter((p) => p.path[0] === 'nodes' && p.path[1] === e.id));
-        return hiddenBand(probe.nodes[e.id], e.id, ancestors(d.doc, e.id).map((a) => d.doc.nodes[a] as HiddenSlots));
+        const chain = [e.id, ...ancestors(d.doc, e.id)];
+        const probe = { nodes: Object.fromEntries(chain.map((a) => [a, JSON.parse(JSON.stringify(d.doc.nodes[a]))])) };
+        applyPatches(probe, patches.filter((p) => p.path[0] === 'nodes' && chain.includes(String(p.path[1]))));
+        return hiddenBand(probe.nodes[e.id], e.id, chain.slice(1).map((a) => probe.nodes[a] as HiddenSlots));
       });
       const found = sayChecks([...checked, ...tail, ...hidden, ...session.formChecks(patches)], say);
       const checks = found.length ? { checks: found } : {};

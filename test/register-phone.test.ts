@@ -39,17 +39,38 @@ describe('a register form keeps its phone only under the name "phone"', () => {
     expect(codes(reg({ name: 'so_dien_thoai', inputType: 'tel' }), 'register')).toEqual(['form_register_phone:fm_p']);
     expect(codes(reg({ name: 'phone', mapTo: 'customer.phone', inputType: 'tel' }), 'register')).toEqual([]);
     expect(codes(reg({ name: 'sdt', mapTo: 'customer.phone', inputType: 'tel' }), 'contact')).toEqual([]);
-    // The re-entry box is a check against the phone, not a phone of its own.
-    expect(codes(reg({ name: 'confirm_phone', mapTo: 'customer.confirmPhone', inputType: 'tel' }), 'register')).toEqual([]);
   });
 
-  it('a hand-built confirm box (tel, no mapTo, a re-entry name or label) is not taken for the phone', () => {
-    expect(codes(reg({ name: 'confirm_phone', inputType: 'tel' }), 'register')).toEqual([]);
-    expect(codes(reg({ name: 'phoneConfirm', inputType: 'tel' }), 'register')).toEqual([]);
-    expect(codes(reg({ name: 'sdt_2', label: 'Nhập lại số điện thoại', inputType: 'tel' }), 'register')).toEqual([]);
-    expect(codes(reg({ name: 'xac_nhan_sdt', inputType: 'tel' }), 'register')).toEqual([]);
+  // The re-entry box AHEAD of the phone, so a check that took it for the phone would name fm_c.
+  const withConfirm = (confirm: Record<string, unknown>, phone: Record<string, unknown> = { name: 'sdt', inputType: 'tel' }) => {
+    const doc = reg(phone) as { nodes: Record<string, unknown> };
+    doc.nodes.fm_1 = node('fm_1', 'form', null, {}, ['fm_e', 'fm_c', 'fm_p', 'fm_s']);
+    doc.nodes.fm_c = node('fm_c', 'form-text', 'fm_1', confirm);
+    return doc;
+  };
+
+  it('a confirm box (mapTo confirmPhone, or tel with a re-entry name or label) beside the phone is not taken for it', () => {
+    for (const c of [
+      { name: 'confirm_phone', mapTo: 'customer.confirmPhone', inputType: 'tel' },
+      { name: 'confirm_phone', inputType: 'tel' },
+      { name: 'phoneConfirm', inputType: 'tel' },
+      { name: 'sdt_2', label: 'Nhập lại số điện thoại', inputType: 'tel' },
+      { name: 'xac_nhan_sdt', inputType: 'tel' },
+    ]) {
+      expect(codes(withConfirm(c), 'register'), c.name).toEqual(['form_register_phone:fm_p']);
+      expect(codes(withConfirm(c, { name: 'phone', inputType: 'tel' }), 'register'), c.name).toEqual([]);
+    }
     // mapTo customer.phone is the platform's own word for the phone — a name never overrides it.
     expect(codes(reg({ name: 'confirm', mapTo: 'customer.phone', inputType: 'tel' }), 'register')).toEqual(['form_register_phone:fm_p']);
+  });
+
+  it('a confirm-looking tel box that is the ONLY phone-like field is the phone, and is flagged', () => {
+    for (const s of [
+      { name: 'sdt', label: 'Số điện thoại xác nhận đơn', inputType: 'tel' },
+      { name: 'ma', label: 'SĐT nhận mã xác nhận', inputType: 'tel' },
+      { name: 'repeat_customer_phone', inputType: 'tel' },
+      { name: 'confirmed_phone', inputType: 'tel' },
+    ]) expect(codes(reg(s), 'register'), s.name).toEqual(['form_register_phone:fm_p']);
   });
 
   it('every platform form template that carries a phone names it "phone"', () => {

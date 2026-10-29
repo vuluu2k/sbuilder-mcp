@@ -63,6 +63,11 @@ describe('tree', () => {
     };
     expect(ancestors(cyc, 'a')).toEqual(['b']);
   });
+
+  it('ancestors stops at a parent pointer naming a missing node', () => {
+    const torn: DocLike = { schema_version: 2, root_node_id: 'a', nodes: { a: node('a', [], {}, 'b'), b: node('b', [], {}, 'gone') } };
+    expect(ancestors(torn, 'a')).toEqual(['b']);
+  });
 });
 
 describe('subtreeIds and satellites', () => {

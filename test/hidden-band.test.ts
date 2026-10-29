@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { fakePlatform } from './helpers/platform.js';
+import { fakePlatform, blank } from './helpers/platform.js';
 import { PageDoc } from '../src/domains/site/document.js';
 import { addSubtree, setKeys } from '../src/domains/site/builder.js';
 import { reviewDesign } from '../src/domains/site/review.js';
@@ -194,6 +194,82 @@ describe('hidden_band counts a band as showing only when no ancestor hides it th
         },
       });
       expect(band(r)).toEqual([]);
+    } finally {
+      await close();
+    }
+  });
+});
+
+describe('hidden_band judges the ancestors as the WHOLE batch leaves them', () => {
+  it('one edits[] that hides the parent at the narrow bands and the child at base is silent', async () => {
+    const { call, close, id } = await open();
+    try {
+      const kid = ((await call('sb_add', { parent_id: id, spec: { type: 'flex-block' }, dry_run: false })).json.added as string[])[0];
+      const r = await call('sb_set', {
+        edits: [
+          ...NARROW.map((breakpoint) => ({ id, namespace: 'config', keys: { hidden: true }, breakpoint })),
+          { id: kid, namespace: 'config', keys: { hidden: true } },
+        ],
+      });
+      expect(band(r)).toEqual([]);
+    } finally {
+      await close();
+    }
+  });
+
+  it('and one that un-hides the parent there while hiding the child at base warns', async () => {
+    const { call, close, id } = await open();
+    try {
+      await call('sb_set', hideAt(id, NARROW));
+      const kid = ((await call('sb_add', { parent_id: id, spec: { type: 'flex-block' }, dry_run: false })).json.added as string[])[0];
+      const r = await call('sb_set', {
+        edits: [
+          ...NARROW.map((breakpoint) => ({ id, namespace: 'config', keys: { hidden: false }, breakpoint })),
+          { id: kid, namespace: 'config', keys: { hidden: true } },
+        ],
+      });
+      expect(band(r)).toHaveLength(1);
+    } finally {
+      await close();
+    }
+  });
+});
+
+describe('a node whose parent pointer dangles', () => {
+  const dangling = () => {
+    const p = fakePlatform();
+    const doc = blank();
+    doc.nodes.ROOT.data.nodes = ['sec1'];
+    (doc.nodes as Record<string, unknown>).sec1 = {
+      id: 'sec1',
+      data: { type: 'flex-section', parent: 'gone', nodes: [] },
+      style: {},
+      config: {},
+      specials: {},
+    };
+    p.pages.set('pg_1', { document: doc, rev: 1 });
+    return p;
+  };
+
+  it('sb_set hidden:true still answers, and still names the bands', async () => {
+    const { call, close } = await dangling().connect();
+    try {
+      await call('sb_page_open', { site_id: 's1', page_id: 'pg_1' });
+      const r = await call('sb_set', { id: 'sec1', namespace: 'config', keys: { hidden: true } });
+      expect(r.isError, r.text).toBe(false);
+      expect(band(r)).toHaveLength(1);
+    } finally {
+      await close();
+    }
+  });
+
+  it('sb_add of a hidden child under it still answers', async () => {
+    const { call, close } = await dangling().connect();
+    try {
+      await call('sb_page_open', { site_id: 's1', page_id: 'pg_1' });
+      const r = await call('sb_add', { parent_id: 'sec1', spec: { type: 'flex-block', config: { hidden: true } } });
+      expect(r.isError, r.text).toBe(false);
+      expect(band(r)).toHaveLength(1);
     } finally {
       await close();
     }

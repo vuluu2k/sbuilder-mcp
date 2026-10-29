@@ -144,12 +144,16 @@ export function subtreeIds(doc: DocLike, id: string): string[] {
   return out;
 }
 
-/** Ids from this node's parent up to ROOT. Cycle-safe for the same reason. */
+/**
+ * Ids from this node's parent up to ROOT. Cycle-safe for the same reason, and
+ * stops at a parent pointer naming a node the document does not hold — every
+ * caller maps the ids back to `doc.nodes[a]`, and a dangling one is undefined.
+ */
 export function ancestors(doc: DocLike, id: string): string[] {
   const out: string[] = [];
   const seen = new Set<string>([id]);
   let cur = doc.nodes[id]?.data.parent ?? null;
-  while (cur && !seen.has(cur)) {
+  while (cur && !seen.has(cur) && doc.nodes[cur]) {
     seen.add(cur);
     out.push(cur);
     cur = doc.nodes[cur]?.data.parent ?? null;

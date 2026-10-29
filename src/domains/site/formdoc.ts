@@ -189,13 +189,13 @@ export function formFieldFindings(d: DocLike, formType?: string): FormFieldFindi
       /confirm|repeat|re_?enter|xac_?nhan|nhap_?lai/i.test(
         `${postedName(n)} ${nameFromLabel(String(n.specials?.label ?? ''))}`,
       );
-    const phoneish = fields.find((n) => {
-      const s = n.specials ?? {};
-      return (
-        s.mapTo === 'customer.phone' ||
-        (s.inputType === 'tel' && s.mapTo !== 'customer.confirmPhone' && !reentry(n))
-      );
-    });
+    const tel = (n: NodeLike): boolean => n.specials?.mapTo === 'customer.phone' || n.specials?.inputType === 'tel';
+    // …but only when it confirms SOMETHING: the one phone-like box on the form
+    // ("SĐT nhận mã xác nhận", confirmed_phone) IS the phone, whatever it says.
+    const phoneish =
+      fields.find(
+        (n) => n.specials?.mapTo === 'customer.phone' || (tel(n) && n.specials?.mapTo !== 'customer.confirmPhone' && !reentry(n)),
+      ) ?? fields.find(tel);
     if (phoneish && !fields.some((n) => postedName(n) === 'phone')) {
       out.push({
         code: 'form_register_phone',

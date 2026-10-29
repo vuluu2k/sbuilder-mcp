@@ -863,6 +863,9 @@ platform treats an unproven guard as indistinguishable from an absent one.
   process) says which bands still show it and to write each. Warned, not auto-spread: hiding on
   desktop only is a real design (the chrome's desktop menu). A band an ANCESTOR hides there is not
   "showing" (`hiddenBand(…, above)`; `sb_add` passes `parent_id`'s chain plus the spec's outer
-  nodes). Documents from before 0.98.6 still carry the dead `responsive.desktop.config.hidden`:
+  nodes; `sb_set` judges the chain with the WHOLE `edits[]` applied, since one batch can hide the
+  parent and the child together). `ancestors()` stops at a `data.parent` naming a missing node —
+  it used to push the dangling id, and `hidden:true` on such a node crashed `sb_set`/`sb_add`
+  even on a dry run. Documents from before 0.98.6 still carry the dead `responsive.desktop.config.hidden`:
   `sb_review` reports `hidden_desktop_dead`, and a desktop/base write or `unset` of `hidden`
   removes that slot in the same call (`setKeys` `deadHidden`) — otherwise nothing could clear it.

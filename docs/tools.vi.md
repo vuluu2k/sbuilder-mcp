@@ -389,7 +389,8 @@ tảng (nền tảng cũng sẽ từ chối với 409); dry run báo `would_refu
 ba trên form loại booking, trường số điện thoại trên form loại register không tên `phone` (lúc
 đăng ký nền tảng chỉ lưu số điện thoại từ control tên đúng `phone` — dòng contact-phone của
 palette; ô `tel` có tên hoặc nhãn kiểu nhập lại — `confirm…`, `xac_nhan…`, "Nhập lại…" — không bị
-coi là số điện thoại), hoặc trường mới không có `specials.name`; `sb_review` báo bốn trường hợp đầu là
+coi là số điện thoại khi form còn một trường số điện thoại khác; ô số điện thoại DUY NHẤT chính là
+số điện thoại, dù tên gì), hoặc trường mới không có `specials.name`; `sb_review` báo bốn trường hợp đầu là
 `form_options_empty`, `form_timeslot_dead`, `form_booking_dates`, `form_register_phone`.
 
 **SATELLITE CÓ TRÊN BẢN ĐỒ.** Tám kiểu element sở hữu node treo ở `config[<key>]` chứ không
@@ -660,7 +661,8 @@ chính seed của element lật lại ở một độ rộng hẹp hơn spec kh�
 ở base hoặc desktop trong khi `laptop`/`tablet`/`mobile` không ẩn — `hidden` không bao giờ
 cascade, nên ở base nó chỉ ẩn node ở ≥1440px; muốn ẩn mọi độ rộng thì ghi `hidden: true` ở base
 VÀ từng breakpoint hẹp hơn, một lệnh `sb_set` với `edits[]`; dải nào một node CHA đã ẩn thì không
-tính là còn hiện — với `sb_add` là chuỗi cha của `parent_id` và các node ngoài của chính spec).
+tính là còn hiện — với `sb_add` là chuỗi cha của `parent_id` và các node ngoài của chính spec; với
+`sb_set` là chuỗi cha sau khi áp cả `edits[]`).
 `config.hidden` ghi ở desktop được
 ghi vào BASE, chỗ duy nhất desktop đọc — `responsive.desktop.config.hidden` không ai đọc; ghi
 hoặc `unset` `hidden` ở desktop hay base cũng xoá luôn slot chết đó, và `sb_review` báo nó là
