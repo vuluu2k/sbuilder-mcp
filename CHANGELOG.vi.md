@@ -6,6 +6,13 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.98.7] - 2026-10-29
+
+### Fixed
+- `sb_publish` xoá khỏi bộ nhớ cascade các page id đã nhớ mà không còn trong danh sách trang thay vì gửi đi, nên một id lạ không còn làm platform từ chối cả lô.
+- `sb_page_state` báo `draft_ahead` với trang có bản nháp bị cascade che, khớp với `unpublished_drafts`.
+- Request đang xếp hàng mà bị huỷ trước khi tới đầu hàng không còn chạy, nên `sb_add` không còn lưu một section hai lần.
+
 ## [0.98.6] - 2026-10-29
 
 ### Added
