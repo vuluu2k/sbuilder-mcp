@@ -6,6 +6,17 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.100.5] - 2026-10-29
+
+### Changed
+- `sb_bind` trả về `collapsed` cùng các nguồn bị thay và một ghi chú một lần khi thay chuỗi nhiều binding của một field bằng một binding duy nhất.
+
+### Fixed
+- Phép đo của `sb_look` báo `off_canvas` cho hộp ẩn dạng absolute, như panel dropdown đang đóng, mà vẫn làm trang rộng ra, và chỉ bỏ qua hộp ẩn nằm trong lớp fixed, như drawer đang đóng.
+- `sb_look` không còn coi hộp `aria-hidden` là ẩn, và hộp ẩn vẫn được tính vào bề rộng nhưng không tính vào overlap hay chữ nhỏ.
+- `sb_look` tắt CSS transition trước khi đo, nên overlay vừa mở được đo ở vị trí cuối.
+- `sb_review` chỉ báo `duplicate_binding_field` khi binding bị che bởi một nguồn luôn có, vì binding đứng trước nguồn present-only như `product.summary`, `rating` hay `record.*` là dự phòng.
+
 ## [0.100.4] - 2026-10-29
 
 ### Fixed

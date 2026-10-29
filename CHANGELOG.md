@@ -6,6 +6,17 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.100.5] - 2026-10-29
+
+### Changed
+- `sb_bind` returns `collapsed` with the replaced sources and a one-time note when it replaces a field's chain of several bindings with one.
+
+### Fixed
+- `sb_look` measurements report `off_canvas` for a hidden absolute box, such as a closed dropdown panel, that still widens the page, and skip only hidden boxes inside a fixed layer, such as a closed drawer.
+- `sb_look` no longer treats `aria-hidden` boxes as hidden, and hidden boxes still count for width but not for overlap or small text.
+- `sb_look` turns off CSS transitions before measuring, so an overlay opened just before measuring is measured at its final position.
+- `sb_review` reports `duplicate_binding_field` only when a binding is shadowed by a source that is always present, because a binding before a present-only source such as `product.summary`, `rating` or `record.*` is a fallback.
+
 ## [0.100.4] - 2026-10-29
 
 ### Fixed
