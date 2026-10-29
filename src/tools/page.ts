@@ -2197,8 +2197,10 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
       } catch {
         // Readiness is additional information, never the reason a review fails.
       }
-      // The site's font per text style, for `default_font` — a SITE theme only: the
-      // starter is set in Inter, so it can never disagree with an old literal Inter.
+      // The site's font per text style, for `default_font` — a SITE theme only, and
+      // only a style that NAMES a family. Since web_builder 81d036721 the starter's
+      // styles name none (they inherit the page/site font), and an inherited family
+      // is not known here, so such a slug is left out and the rule stays silent.
       const fonts: Record<string, string> = {};
       try {
         const { theme, from } = await siteTheme(ctx, session.site());

@@ -67,6 +67,17 @@ export function findPreset(theme: StarterTheme, id: string): StylePreset | null 
  * was deleted, or the theme is older than the preset) and inventing a colour for
  * it would be the exact failure this module exists to prevent.
  */
+/** `--wb-ts-<slug>-<suffix>` → the text-style prop it carries (schema theme.ts textStyleDecls). */
+const TS_PROP: Record<string, string> = {
+  family: 'fontFamily',
+  size: 'fontSize',
+  weight: 'fontWeight',
+  style: 'fontStyle',
+  'line-height': 'lineHeight',
+  'letter-spacing': 'letterSpacing',
+  transform: 'textTransform',
+};
+
 export function resolveVars(theme: StarterTheme, value: string, depth = 0): string {
   if (depth > 6 || !value.includes('var(')) return value;
   const m = /^var\(\s*(--wb-[a-zA-Z0-9-]+)\s*(?:,\s*([\s\S]+?)\s*)?\)$/.exec(value.trim());
@@ -76,6 +87,21 @@ export function resolveVars(theme: StarterTheme, value: string, depth = 0): stri
     theme.schemes.find((s) => s.id === theme.lightSchemeId) ?? theme.schemes[0] ?? null;
 
   let next: string | undefined;
+  if (name.startsWith('--wb-ts-')) {
+    // A text style DECLARES every prop, empty when unset (schema theme.ts
+    // textStyleDecls), so for a slug the theme carries the fallback never applies:
+    // an empty var is invalid at computed time and the element INHERITS. The
+    // starter's styles name no family since web_builder 81d036721 — reporting the
+    // `Inter` fallback there would tell an agent to write the very literal that
+    // commit removed. `color` is composed (role/ref) and keeps the old reading.
+    const rest = name.slice('--wb-ts-'.length);
+    const ts = theme.textStyles.find((t) => rest.startsWith(`${t.slug}-`));
+    const key = ts && TS_PROP[rest.slice(ts.slug.length + 1)];
+    if (ts && key) {
+      const v = (ts.base as Record<string, unknown> | undefined)?.[key];
+      return typeof v === 'string' && v ? resolveVars(theme, v, depth + 1) : 'inherit';
+    }
+  }
   if (name.startsWith('--wb-sc-')) next = scheme?.roles?.[name.slice('--wb-sc-'.length)];
   else if (name.startsWith('--wb-color-')) {
     next = theme.colors.find((c) => c.id === name.slice('--wb-color-'.length))?.value;

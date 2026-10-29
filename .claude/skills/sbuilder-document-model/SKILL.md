@@ -910,3 +910,13 @@ platform treats an unproven guard as indistinguishable from an absent one.
   `text-2` alone — `product-variant-label` wears `heading-6`); silent on any `var(`, on an
   element seeding no font, on the starter theme, and when any
   `responsive[bp].style.fontFamily` is set — the author answered per breakpoint.
+- **A TEXT STYLE WITH NO FAMILY INHERITS; THE VAR'S FALLBACK NEVER APPLIES** (web_builder
+  81d036721, regen at 8243d5180). The starter's text styles stopped seeding `"Inter"`, and
+  `textStyleDecls` declares every `--wb-ts-<slug>-<prop>` — EMPTY when unset — so
+  `var(--wb-ts-heading-1-family, Inter)` is invalid at computed time and the element inherits
+  the page/site font (ROOT's `font_family`, Settings ▸ Font). `resolveVars` answers `inherit`
+  for such a slug (the `Inter` fallback only for a slug the theme lacks), so `sb_node_read`'s
+  preset block never tells an agent to write the literal that commit removed. `default_font`
+  stays SILENT on a slug with no family: the inherited family is not known here (a known miss,
+  not a false positive). ROOT gained `font_family`, `bg_color`, `bg_image`, `padding`,
+  `class_css` in the same regen — all style/universal keys, so `sb_set` on ROOT takes them.
