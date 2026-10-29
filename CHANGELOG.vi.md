@@ -6,6 +6,11 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.101.2] - 2026-10-29
+
+### Fixed
+- Mọi công cụ từ chối tham số không khai báo bằng lỗi nêu tên khóa thay vì lặng lẽ bỏ qua, nên `sb_look` không còn chụp nhầm trang khi nhận `page_id` rồi báo 404.
+
 ## [0.101.1] - 2026-10-29
 
 ### Changed

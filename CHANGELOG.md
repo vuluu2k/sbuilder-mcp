@@ -6,6 +6,11 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.101.2] - 2026-10-29
+
+### Fixed
+- Every tool refuses an undeclared argument with an error naming the key instead of silently ignoring it, so `sb_look` no longer screenshots the wrong page when given `page_id` and reporting a 404.
+
 ## [0.101.1] - 2026-10-29
 
 ### Changed
