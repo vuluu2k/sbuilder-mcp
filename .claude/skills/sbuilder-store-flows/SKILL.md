@@ -563,5 +563,6 @@ repo over a number here, and fix the line when you catch one stale.
   customer.phone`, `inputType: tel`); there is no `form-phone` element. The `register` template
   ships no phone; `sb_store` adds none. `formFieldFindings` reports `form_register_phone` (via
   `sb_add`/`sb_set` checks and `sb_review`) when a register form's phone-ish field — `mapTo
-  customer.phone`, or a `tel` input that is not the `confirmPhone` re-entry — is the only one and
+  customer.phone`, or a `tel` input that is not a re-entry (`mapTo confirmPhone`, or a hand-built box whose name/label
+  matches confirm/repeat/re_enter/xac_nhan/nhap_lai) — is the only one and
   is not named `phone`; `test/register-phone.test.ts` also holds every template's phone to the name.

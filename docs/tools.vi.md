@@ -388,7 +388,8 @@ tảng (nền tảng cũng sẽ từ chối với 409); dry run báo `would_refu
 (`form_field`) khi trường lựa chọn không có options, khung giờ không tạo ra slot nào, có ngày thứ
 ba trên form loại booking, trường số điện thoại trên form loại register không tên `phone` (lúc
 đăng ký nền tảng chỉ lưu số điện thoại từ control tên đúng `phone` — dòng contact-phone của
-palette), hoặc trường mới không có `specials.name`; `sb_review` báo bốn trường hợp đầu là
+palette; ô `tel` có tên hoặc nhãn kiểu nhập lại — `confirm…`, `xac_nhan…`, "Nhập lại…" — không bị
+coi là số điện thoại), hoặc trường mới không có `specials.name`; `sb_review` báo bốn trường hợp đầu là
 `form_options_empty`, `form_timeslot_dead`, `form_booking_dates`, `form_register_phone`.
 
 **SATELLITE CÓ TRÊN BẢN ĐỒ.** Tám kiểu element sở hữu node treo ở `config[<key>]` chứ không

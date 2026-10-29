@@ -184,9 +184,17 @@ export function formFieldFindings(d: DocLike, formType?: string): FormFieldFindi
   // when some field already posts as `phone`; the re-entry box is not a phone.
   if (formType === 'register') {
     const fields = formFields(d).filter((n) => collectsValue(n.data.type));
+    // A hand-built confirm box (tel, no mapTo) is told apart by its name or label.
+    const reentry = (n: NodeLike): boolean =>
+      /confirm|repeat|re_?enter|xac_?nhan|nhap_?lai/i.test(
+        `${postedName(n)} ${nameFromLabel(String(n.specials?.label ?? ''))}`,
+      );
     const phoneish = fields.find((n) => {
       const s = n.specials ?? {};
-      return s.mapTo === 'customer.phone' || (s.inputType === 'tel' && s.mapTo !== 'customer.confirmPhone');
+      return (
+        s.mapTo === 'customer.phone' ||
+        (s.inputType === 'tel' && s.mapTo !== 'customer.confirmPhone' && !reentry(n))
+      );
     });
     if (phoneish && !fields.some((n) => postedName(n) === 'phone')) {
       out.push({

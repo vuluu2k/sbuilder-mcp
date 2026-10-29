@@ -43,6 +43,15 @@ describe('a register form keeps its phone only under the name "phone"', () => {
     expect(codes(reg({ name: 'confirm_phone', mapTo: 'customer.confirmPhone', inputType: 'tel' }), 'register')).toEqual([]);
   });
 
+  it('a hand-built confirm box (tel, no mapTo, a re-entry name or label) is not taken for the phone', () => {
+    expect(codes(reg({ name: 'confirm_phone', inputType: 'tel' }), 'register')).toEqual([]);
+    expect(codes(reg({ name: 'phoneConfirm', inputType: 'tel' }), 'register')).toEqual([]);
+    expect(codes(reg({ name: 'sdt_2', label: 'Nhập lại số điện thoại', inputType: 'tel' }), 'register')).toEqual([]);
+    expect(codes(reg({ name: 'xac_nhan_sdt', inputType: 'tel' }), 'register')).toEqual([]);
+    // mapTo customer.phone is the platform's own word for the phone — a name never overrides it.
+    expect(codes(reg({ name: 'confirm', mapTo: 'customer.phone', inputType: 'tel' }), 'register')).toEqual(['form_register_phone:fm_p']);
+  });
+
   it('every platform form template that carries a phone names it "phone"', () => {
     for (const [key, tpl] of Object.entries(FORM_TEMPLATES)) {
       const doc = (tpl as { document: { nodes: Record<string, { specials?: Record<string, unknown> }> } }).document;

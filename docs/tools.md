@@ -388,7 +388,8 @@ reaches the platform, which would refuse it with 409 anyway; a dry run reports `
 `sb_add`/`sb_set` warn (`form_field`) about a choice field with no options, a time slot whose
 hours make no slot, a third date field on a booking-type form, a phone field on a
 register-type form not named `phone` (the sign-up stores the phone only from the control
-named exactly `phone` — the palette's contact-phone row), and a new field with no
+named exactly `phone` — the palette's contact-phone row; a `tel` box whose name or label reads
+as a re-entry — `confirm…`, `xac_nhan…`, "Nhập lại…" — is not taken for the phone), and a new field with no
 `specials.name`; `sb_review` reports the first four as `form_options_empty`,
 `form_timeslot_dead`, `form_booking_dates` and `form_register_phone`.
 
