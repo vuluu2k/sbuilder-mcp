@@ -6,6 +6,13 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.98.4] - 2026-10-29
+
+### Fixed
+- `sb_review` và `sb_add` báo `rich_dropped` cho liên kết trong `specials.textHtml` có `href` giấu `javascript:` hoặc `data:` sau tham chiếu ký tự số hoặc tên, và không còn báo nhầm các tham chiếu sai cú pháp như `javascript&colonalert(1)`.
+- `sb_review` và `sb_add` không còn báo `rich_dropped` cho chuỗi `<!` nằm trong giá trị thuộc tính có ngoặc hoặc cho thuộc tính trên thẻ đóng, và coi `</` theo sau bởi ký tự không phải chữ là comment.
+- `sb_review` không còn coi `product.priceCents` là key được dòng giỏ hàng điền, vì mỗi dòng hiển thị giá trị placeholder cho key này.
+
 ## [0.98.3] - 2026-10-28
 
 ### Fixed

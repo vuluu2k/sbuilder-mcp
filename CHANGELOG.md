@@ -6,6 +6,13 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.98.4] - 2026-10-29
+
+### Fixed
+- `sb_review` and `sb_add` report `rich_dropped` for `specials.textHtml` links whose `href` hides `javascript:` or `data:` behind numeric or named character references, and no longer flag malformed references such as `javascript&colonalert(1)`.
+- `sb_review` and `sb_add` no longer report `rich_dropped` for a `<!` sequence inside a quoted attribute value or for attributes on a closing tag, and treat `</` followed by a non-letter as a comment.
+- `sb_review` no longer treats `product.priceCents` as filled by a cart line, because each cart line renders a placeholder value for it.
+
 ## [0.98.3] - 2026-10-28
 
 ### Fixed
