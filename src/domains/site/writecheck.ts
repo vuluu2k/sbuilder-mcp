@@ -396,7 +396,7 @@ export function writeCheck(
 
 /** `<a …>` tags in rich text that set no colour of their own. */
 export function unstyledLinks(html: string): number {
-  return (html.match(/<a\b[^>]*>/gi) ?? []).filter((tag) => !/style\s*=\s*["'][^"']*\bcolor\s*:/i.test(tag)).length;
+  return (html.match(/<a\b[^>]*>/gi) ?? []).filter((tag) => !/style\s*=\s*["'](?:[^"']*[;\s])?color\s*:/i.test(tag)).length;
 }
 
 export const LINK_COLOUR = {

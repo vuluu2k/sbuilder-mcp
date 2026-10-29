@@ -604,7 +604,9 @@ export function reviewDesign(
     // is another family: a deliberate literal is the author's.
     const ff = (n as { style?: Record<string, unknown> }).style?.fontFamily;
     const seedFont = (meta.defaults as { style?: Record<string, unknown> }).style?.fontFamily;
-    if (opts.bodyFont && typeof ff === 'string' && ff === seedFont && !ff.includes('var(') && family(ff) !== family(opts.bodyFont)) {
+    // A family set at any breakpoint is the author's answer too.
+    const perBp = Object.values((n as { responsive?: Record<string, { style?: Record<string, unknown> }> }).responsive ?? {}).some((r) => r?.style?.fontFamily !== undefined);
+    if (opts.bodyFont && !perBp && typeof ff === 'string' && ff === seedFont && !ff.includes('var(') && family(ff) !== family(opts.bodyFont)) {
       out.push({
         code: 'default_font',
         nodeId: id,

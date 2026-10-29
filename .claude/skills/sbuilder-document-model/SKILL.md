@@ -875,11 +875,15 @@ platform treats an unproven guard as indistinguishable from an absent one.
   minted. A childless `media-dataset` under a `dataset-block`/`cart-item` with no own `layout` is
   seeded `single` (the editor's `seedBoundMediaTile`; `bottom` drew a thumbnail strip per card).
   `sb_add` answers `added`/`satellites` as `{id: type}` maps and `sb_duplicate` `copies:
-  {old: [new, type]}` (`copyNodeInto` returns the map). `sb_outline` collapses a shared
-  header/footer/overlay to one line unless `chrome:true`, and shows accordion/tab row `label`s;
+  {old: [new, type]}` (`copyNodeInto` returns the map) — capped at 40 nodes, past which it is the
+  copy's top level + `copied` count + `copies_truncated` (token-budget pins it). `sb_outline`
+  collapses a shared HEADER/FOOTER (`globalKind`) or overlay to one line marked `collapsed:true`
+  unless `chrome:true` — a `custom` global is middle-band content and stays open — and shows
+  accordion/tab row `label`s;
   `sb_node_read` drops `backgroundScene*` while the source is empty. Review: `link_colour` (an
   `<a>` in `textHtml` with no inline color paints UA blue rgb(0,0,238) — nothing styles it; also
-  warned by writecheck) and `default_font` (a node still on its element's LITERAL seed font —
+  warned by writecheck; `background-color`/`border-color` are not a `color`) and `default_font` (a node still on its element's LITERAL seed font —
   `accordion-item`'s "Inter" — on a site theme whose `text-2` family differs; `tab-item` and
-  `menu-item` already wear `var(--wb-ts-text-2-family, Inter)`). `sb_set` unset echoes `unset` /
+  `menu-item` already wear `var(--wb-ts-text-2-family, Inter)`; silent when any
+  `responsive[bp].style.fontFamily` is set — the author answered per breakpoint). `sb_set` unset echoes `unset` /
   `absent` per edit, and `edits[].keys` is optional with an unset.

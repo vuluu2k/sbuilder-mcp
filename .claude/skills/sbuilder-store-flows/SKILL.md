@@ -583,8 +583,11 @@ repo over a number here, and fix the line when you catch one stale.
   because the one phone box on a form IS the phone whatever it is called.
 - **`sb_store action:"form"` + `node_id` places the form on the OPEN page** (TTG gap #58): a
   `form` node is only a `specials.formId` reference, so it goes in any container. The placement
-  is checked BEFORE the form is created, `page_name` + `node_id` is refused, and a failed save
-  after creation reports `page_failed` rather than deleting the form (same rule as `page_name`).
+  is checked BEFORE the form is created — through `addPlaced` (sb_add's own placement: `ROOT` =
+  end of the middle band) AND `saveRefusal`, because the pre-check once ran `addSubtree` alone and
+  a `node_id:"ROOT"` form landed after the shared footer, was refused, and left a stray form behind
+  an `isError:false`. `page_name` + `node_id` is refused, and a failed save after creation reports
+  `page_failed` rather than deleting the form (same rule as `page_name`).
 - **`pageSeo` / `unreachablePage` judge the OPEN draft page** (`openPageId`, TTG gap #48) — the
   review an agent runs before its first publish used to pass a page that then published with the
   site name as `<title>`. **A `settings.noIndex` page is never `unreachablePage`** (#49): the

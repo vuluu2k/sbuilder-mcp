@@ -374,7 +374,7 @@ describe('#56 #57 sb_page_state', () => {
       kill();
       const r = (await client.callTool({ name: 'sb_page_state', arguments: {} })) as { isError?: boolean; content: Array<{ text?: string }> };
       expect(r.isError).toBe(true);
-      expect(r.content[0].text).toMatch(/no longer exists/);
+      expect(r.content[0].text).toMatch(/not found on site s1 \(deleted, or not this site\/key\)/);
       expect(r.content[0].text).toMatch(/sb_page_open/);
     } finally {
       await close();

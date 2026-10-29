@@ -34,6 +34,8 @@ export interface OutlineNode {
   overlay?: boolean;
   /** The root of a composed app block: edits under it are lost on save (trap 5). */
   app?: boolean;
+  /** Shared header/footer or overlay folded to one line; `chrome: true` expands it. */
+  collapsed?: boolean;
   /**
    * A SATELLITE, and the `config` key its owner points at it with.
    *
@@ -229,8 +231,9 @@ export class PageDoc {
    */
   /**
    * `chrome: false` (the tool's default) stops at a shared header/footer or an
-   * overlay: one line each, no kids. They are the same on every page and were
-   * ~70% of a routine outline (TTG gap #52).
+   * overlay: one line each, no kids, marked `collapsed`. They are the same on
+   * every page and were ~70% of a routine outline (TTG gap #52). A CUSTOM global
+   * is middle-band content the agent designs in, so it stays expanded.
    */
   outline(opts: { depth?: number; chrome?: boolean } = {}): OutlineNode[] {
     const depth = opts.depth ?? 1;
@@ -247,7 +250,9 @@ export class PageDoc {
       }
       if (isGlobal(this.doc, id)) out.global = true;
       if (appBlockRoot(this.doc, id) === id) out.app = true;
-      const collapsed = opts.chrome === false && level === 0 && (out.overlay || out.global);
+      const kind = n.specials?.globalKind;
+      const collapsed = opts.chrome === false && level === 0 && (out.overlay || (out.global && (kind === 'header' || kind === 'footer')));
+      if (collapsed && level + 1 < depth && (kidIds.length || satellitesOf(this.doc, id).length)) out.collapsed = true;
       if (level + 1 < depth && !collapsed) {
         // Satellites come FIRST, and are counted apart from `children`: they are
         // this node's own chrome, not content in it, and mixing the two would

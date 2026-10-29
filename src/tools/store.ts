@@ -43,7 +43,7 @@ import { API_DEFINITIONS } from '../catalog/api.generated.js';
 import { siteToken } from './credentialpick.js';
 import { siteFor, type ToolContext } from './context.js';
 import { withFreshIds } from '../domains/site/ids.js';
-import { siteChrome, wearChrome, type PageSession } from './page.js';
+import { addPlaced, saveRefusal, siteChrome, wearChrome, type PageSession } from './page.js';
 import { addSubtree } from '../domains/site/builder.js';
 import { attachGlobal, buildChrome, detachGlobal, promoteGlobal, saveTemplate } from './chrome.js';
 import { bindMenu } from './menu.js';
@@ -483,7 +483,10 @@ async function seedForm(
   if (parentId) {
     if (pageName) throw new Error('sbuilder: action:"form" takes page_name (a new page) or node_id (the open page), not both.');
     if (session.site() !== siteId) throw new Error(`sbuilder: the open page is on site ${session.site()}, not ${siteId} — open a page of this site first.`);
-    addSubtree(session.current(), parentId, { type: 'form', specials: { formId: 'frm_check' } });
+    // sb_add's placement AND the save's own verdict: a page that would refuse
+    // the form node must refuse it here, while there is still no form.
+    const refusal = saveRefusal(session.current(), addPlaced(session.current(), parentId, { type: 'form', specials: { formId: 'frm_check' } }).patches).refusal;
+    if (refusal) throw new Error(`sbuilder: ${refusal} — no form was created.`);
   }
   const tpl = FORM_TEMPLATES[key as keyof typeof FORM_TEMPLATES] as {
     key: string;
@@ -599,7 +602,7 @@ async function seedForm(
   let placed: { id: string; parent: string } | undefined;
   if (parentId) {
     try {
-      const { patches, ids } = addSubtree(session.current(), parentId, { type: 'form', specials: { formId: form.id } });
+      const { patches, ids } = addPlaced(session.current(), parentId, { type: 'form', specials: { formId: form.id } });
       await session.applyAndSave(patches);
       placed = { id: ids[0], parent: parentId };
     } catch (e) {

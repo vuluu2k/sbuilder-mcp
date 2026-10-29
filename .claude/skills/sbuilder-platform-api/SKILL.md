@@ -476,11 +476,13 @@ a measured need) and `sb_bind`, which belongs with Phase 3's binding work.
   `checkpointEvery` (5 min) of it, so fifteen quick saves list as ONE checkpoint holding the
   latest document. `sb_page_state`'s note used to say "a checkpoint on EVERY draft save" (TTG
   gap #56) — a pre-PUT moment is kept only by an explicit `sb_page_version save`.
-- **A deleted page's source answers 404**, and `loadSource` / `saveSource` now say "page <id> no
-  longer exists … sb_page_open another" (status and code kept) instead of a bare
+- **A deleted page's source answers 404 — and so does a wrong site id or a key scoped to another
+  site**, so `loadSource` / `saveSource` say "page <id> not found on site <site> (deleted, or not
+  this site/key) … sb_page_open another" (status and code kept) instead of a bare
   `source not found` (TTG gap #57).
 - **There is no publish-cascade preview** — `cascadeTargets` (`page/globalservice.go`) runs only
-  inside `Publish`; `sb_publish`'s dry run states the rule (`cascade_note`, once) and the real
+  inside `Publish`; `sb_publish`'s dry run states the rule (`cascade_note`, SPENT on first show — a peek
+  repeated it on every dry run) and the real
   answer names `cascaded` (TTG gap #59).
 - **`sb_undo` entries carry `tool` + `summary`**, read from `currentCall` (an AsyncLocalStorage
   set per `tools/call` in `src/mcp/serial.ts`), and the listing is the open page's saves plus

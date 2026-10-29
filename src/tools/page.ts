@@ -42,7 +42,7 @@ import { skinLevelNote } from '../domains/site/fieldskin.js';
 import { siteTheme } from '../domains/site/theme-fetch.js';
 import { ensureSiteTheme } from './theme.js';
 import { request, redact, watchPageWrites, onPageSourceWrite, onGlobalWrite, onFormDocumentWrite } from '../transport/http.js';
-import { SPEC_GLOBAL_ID, SPEC_GLOBAL_REV, SPEC_OVERLAY_ID, SPEC_OVERLAY_REV, subtreeIds, ancestors, type NodeLike } from '../core/tree.js';
+import { SPEC_GLOBAL_ID, SPEC_GLOBAL_REV, SPEC_OVERLAY_ID, SPEC_OVERLAY_REV, subtreeIds, ancestors, childrenOf, type NodeLike } from '../core/tree.js';
 import { siteToken } from './credentialpick.js';
 import { validateForSave } from '../domains/site/validate.js';
 import { cascadeTail, formDocChecks, hiddenBand, sayChecks, specCheck, writeCheck, type CheckedNote, type HiddenSlots } from '../domains/site/writecheck.js';
@@ -115,6 +115,8 @@ export function reviewField(
  */
 /** How long a save in the live room waits for its ops' acks before leaving `X-WB-Live-Peer` off. */
 const LIVE_ACK_CAP_MS = 2_000;
+/** sb_duplicate's full old → [new, type] map stops here; past it, the top level and a count. */
+const DUPLICATE_COPIES_CAP = 40;
 
 /** What `LiveSession.publish` did with a batch. */
 type Published = { sent: boolean; opIds: string[] };
@@ -142,6 +144,22 @@ export function saveRefusal(d: PageDoc, patches: Patch[]): { before: Set<string>
     };
   }
   return { before, refusal: null };
+}
+
+/**
+ * `addSubtree` with sb_add's placement: ROOT WITH NO INDEX MEANS "ANOTHER
+ * SECTION OF THE PAGE" — the end of the middle band, as sb_template_use and
+ * sb_duplicate already place one. Appended last it landed after a shared
+ * footer, and the band-order check refused the save — on exactly the call
+ * empty_page's fix names. Only when a footer is there to land behind: a FORM
+ * document's root has none, and addSubtree's own default (above the submit
+ * button) is right. Shared with sb_store action:"form" + node_id, which
+ * appended after the footer and stored a stray form.
+ */
+export function addPlaced(d: PageDoc, parentId: string, spec: NodeSpec, index?: number, guard?: GuardOpts) {
+  const rootKids = d.doc.nodes[d.doc.root_node_id]?.data.nodes.length ?? 0;
+  const mid = parentId === d.doc.root_node_id ? middleEnd(d.doc) : rootKids;
+  return addSubtree(d, parentId, spec, index ?? (mid < rootKids ? mid : undefined), guard);
 }
 
 /** `once` for a real write, `peek` for a dry run — the same notes, spent once. */
@@ -1662,16 +1680,7 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
     async ({ parent_id, spec, index, dry_run, force }) => {
       const d = session.current();
       const guard: GuardOpts = { force, forced: [] };
-      // ROOT WITH NO INDEX MEANS "ANOTHER SECTION OF THE PAGE": the end of the
-      // middle band, as sb_template_use and sb_duplicate already place one.
-      // Appended last it landed after a shared footer, and the band-order check
-      // refused the save — on exactly the call empty_page's fix names.
-      // Only when a footer is there to land behind: a FORM document's root has
-      // none, and addSubtree's own default (above the submit button) is right.
-      const rootKids = d.doc.nodes[d.doc.root_node_id]?.data.nodes.length ?? 0;
-      const mid = parent_id === d.doc.root_node_id ? middleEnd(d.doc) : rootKids;
-      const at = index ?? (mid < rootKids ? mid : undefined);
-      const { patches, ids, idOf } = addSubtree(d, parent_id, spec, at, guard);
+      const { patches, ids, idOf } = addPlaced(d, parent_id, spec as NodeSpec, index, guard);
       const forced = guard.forced!.length ? { forced: guard.forced } : {};
       // THE SEED COPY IN THE SITE'S LANGUAGE (TTG gap #46): an empty state minted
       // here said "No products yet" on a Vietnamese store, while sb_page_create
@@ -2245,8 +2254,28 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
         await session.applyAndSave(patches);
         // EVERY copy's id, not just the root's: editing the copied row's answer
         // used to take a whole sb_outline to find (TTG gap #53).
-        const copies = Object.fromEntries(Object.entries(map).map(([from, to]) => [from, [to, d.doc.nodes[from]?.data.type ?? '']]));
-        return text({ duplicated: id, into: ids[0], copies, rev: d.rev, ...forcedOf() });
+        // CAPPED: the map grows with the subtree, and a 200-node section would
+        // pour 200 pairs into the reader. Past the cap, the copy's top level only.
+        const entry = (from: string) => [from, [map[from], d.doc.nodes[from]?.data.type ?? '']];
+        const all = Object.keys(map);
+        if (all.length <= DUPLICATE_COPIES_CAP) {
+          return text({ duplicated: id, into: ids[0], copies: Object.fromEntries(all.map(entry)), rev: d.rev, ...forcedOf() });
+        }
+        const top = [id, ...childrenOf(d.doc, id)].filter((k) => k in map).slice(0, DUPLICATE_COPIES_CAP);
+        const how = ctx.notices.once(
+          'duplicate-truncated',
+          'copies holds the copy and its direct children only (copied counts every node); a deeper sb_outline reads the rest.',
+        );
+        return text({
+          duplicated: id,
+          into: ids[0],
+          copied: all.length,
+          copies: Object.fromEntries(top.map(entry)),
+          copies_truncated: true,
+          ...(how ? { copies_note: how } : {}),
+          rev: d.rev,
+          ...forcedOf(),
+        });
       }
 
       // ONTO ANOTHER PAGE — the editor's paste (`useCanvasClipboard.ts`).
@@ -3043,8 +3072,9 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
         // NO CASCADE PREVIEW EXISTS on the platform (page/globalservice.go
         // cascadeTargets runs inside publish only), so the dry run says the rule
         // rather than a list it cannot know (TTG gap #59); the real answer names
-        // the pages under `cascaded`.
-        const cascade = ctx.notices.peek(
+        // the pages under `cascaded`. SPENT on first show, dry or real: a dry
+        // run repeated it on every preview.
+        const cascade = ctx.notices.once(
           'publish-cascade',
           'Publishing also republishes, from their LAST PUBLISHED version (never their draft), every live page ' +
             'whose shared header/footer, overlay (cart drawer, pop-up) or app block is behind its master. The ' +

@@ -426,8 +426,9 @@ read them until now.
 site overlay, and `app: true` for the root of a composed app block — nothing under it is
 editable. **Never the raw document** — a real page is hundreds of KB.
 
-A shared header/footer or an overlay is **one line** (no `kids`) unless `chrome: true` — they
-are the same on every page and were ~70% of a routine outline. An `accordion-content` /
+A shared header/footer or an overlay is **one line** (no `kids`, marked `collapsed: true`) unless
+`chrome: true` — they are the same on every page and were ~70% of a routine outline. A `custom`
+global is middle-band content and stays expanded. An `accordion-content` /
 `tab-content` row shows its `label`, so four FAQ rows are not four identical lines.
 
 ## `sb_node_read`
@@ -1275,7 +1276,9 @@ client does not surface.
 
 The answer is `{ duplicated, into, copies, rev }`, where `copies` maps EVERY source id to its
 copy and type — `{ "<oldId>": ["<newId>", "<type>"] }`, satellites included — so the copied
-row's answer text is one lookup away instead of a whole `sb_outline`.
+row's answer text is one lookup away instead of a whole `sb_outline`. Past 40 copied nodes the
+map is capped: `copies` holds the copy and its direct children, `copied` the full count, and
+`copies_truncated: true` says a deeper `sb_outline` reads the rest.
 
 **Onto another page — the editor's copy/paste.** `to_page_id` puts the copy on that page
 instead (`parent_id`, `index` optional; the default is ROOT, before a global footer), and
@@ -1443,8 +1446,9 @@ through the editor or `sb_api_call`, or unpublished, the page is forgotten and t
 answer again.
 
 The platform has **no cascade preview** — `cascadeTargets` runs inside publish only — so the dry
-run cannot list those pages; it states the rule once per process as `cascade_note`, and the real
-publish names them under `cascaded`.
+run cannot list those pages; it states the rule ONCE per process as `cascade_note` — spent on the
+first dry run that shows it, not repeated on every preview — and the real publish names them under
+`cascaded`.
 
 **It reports WHICH REVISION went live** — `id` (the published row), `publishedAt`, and
 `fromVersionId` (the draft version it was compiled from). Those three answer the question a
@@ -1776,8 +1780,8 @@ box. Returns `{ findings, fixes, findings_notice? }`, in document order:
 | `dead_binding_field` | A binding field outside `specials` — stored, published, and ignored |
 | `unknown_element` | A type the catalog does not know; run `npm run codegen` |
 | `unlinked_form` | A `form` naming no form — composes nothing and publishes an EMPTY BOX. The platform stays deliberately quiet about this one |
-| `link_colour` | An `<a>` in `specials.textHtml` with no inline `color`: nothing styles a link inside text (no element control, no theme token), so it renders the browser's default blue `rgb(0,0,238)`, underlined. Fix: `<a href="…" style="color:inherit">` or the brand colour — the rich-text gate keeps a style color. `sb_add` / `sb_set` warn the same as `link_colour` |
-| `default_font` | A node still holding its element's LITERAL seed font (`accordion-item`'s `"Inter"`) while the site theme's body text style (`text-2`) is another family — it renders in a typeface nothing else uses. `sb_review` only, and only on a site theme (the starter is Inter). Fix: `fontFamily: "var(--wb-ts-text-2-family)"` at base, the variable `tab-item` and `menu-item` already wear |
+| `link_colour` | An `<a>` in `specials.textHtml` with no inline `color` (`background-color` / `border-color` do not count): nothing styles a link inside text (no element control, no theme token), so it renders the browser's default blue `rgb(0,0,238)`, underlined. Fix: `<a href="…" style="color:inherit">` or the brand colour — the rich-text gate keeps a style color. `sb_add` / `sb_set` warn the same as `link_colour` |
+| `default_font` | A node still holding its element's LITERAL seed font (`accordion-item`'s `"Inter"`) while the site theme's body text style (`text-2`) is another family — it renders in a typeface nothing else uses. `sb_review` only, only on a site theme (the starter is Inter), and silent when any breakpoint sets its own `fontFamily`. Fix: `fontFamily: "var(--wb-ts-text-2-family)"` at base, the variable `tab-item` and `menu-item` already wear |
 | `default_seed_copy` | A seeded satellite still carrying the PLATFORM's own English copy — a repeater's empty state saying "No products yet" in `#171717` ink. Only ever visible when the list is empty, which is why nobody writes it. Also, from `sb_review` only (it reads the site's locale): a store seed's English line ("Add To Cart") on a Vietnamese site, naming the Vietnamese |
 | `example_copy` | A built-in layout's example copy never replaced — "Tiêu đề chính", "Lợi ích một", the picture-slot sentence addressed to the agent, and invented CLAIMS ("1.000+", "4,9/5", a testimonial signed by a stranger). Derived by building every pattern, minus a short list of labels usable as they stand ("Mua ngay", "Xem tất cả"). `sb_template_use` says how many it just placed (`copy`) |
 | `invisible_text` | Text or a button whose LITERAL colour has under 1.5:1 contrast with the nearest literal fill under it — present in the HTML, unreadable on the page. Silent when either side is a theme var |
@@ -2559,8 +2563,10 @@ id this returns.
 
 **Or pass `node_id`** to place it on the OPEN page, inside that node: the `form` node pointing
 at the new form is added in the same call and reported as `placed: { id, parent }`. The
-placement is checked before the form is created (a bad node, or an open page on another site,
-creates nothing); `page_name` and `node_id` together are refused.
+placement is checked before the form is created — with `sb_add`'s placement (`ROOT` means the end
+of the middle band, ahead of a shared footer) and the save's own verdict, so a bad node, an open
+page on another site, or a placement the save would refuse creates nothing; `page_name` and
+`node_id` together are refused.
 
 **Or pass `page_name`** — and `headline` with it — to have that page made and the form placed
 on it in the same call: a new page — of type `login`, `register` or `contact` for those templates, else `page` — carrying a section, the headline if one was
@@ -2956,7 +2962,8 @@ the moment before a risky whole-document PUT is only kept if you snapshot it (`s
 of its own first, so a restore is itself undoable.
 
 **A deleted page** answers its source read and save with 404; every page tool now says
-`page <id> no longer exists (deleted, or a wrong id) — sb_page_open another page` instead of
+`page <id> not found on site <site> (deleted, or not this site/key) — sb_page_open another page`
+— a 404 is also a wrong site id or a key scoped to another site — instead of
 the bare `source not found`.
 
 `data` appears only when the page holds record lists: `record_lists` names each one's `{id,

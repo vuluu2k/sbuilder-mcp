@@ -233,6 +233,19 @@ describe('token budget — a diet without a scale comes back', () => {
     await close();
   });
 
+  it('sb_duplicate of a large subtree answers a capped copies map', async () => {
+    // The old → [new, type] map grew with the subtree: ~60 chars a node, so a
+    // 200-node section answered ~12 KB. Past 40 nodes, the top level and a count.
+    const p = fakePlatform();
+    const { call, close } = await p.connect();
+    await call('sb_page_open', { site_id: 's1', page_id: 'pg_1' });
+    const cards = Array.from({ length: 200 }, () => ({ type: 'text' }));
+    const add = await call('sb_add', { parent_id: 'ROOT', dry_run: false, spec: { type: 'flex-section', children: [{ type: 'flex-block', children: cards }] } });
+    const sec = Object.keys(add.json.added as Record<string, string>)[0];
+    expect((await call('sb_duplicate', { id: sec, dry_run: false })).text.length).toBeLessThan(600);
+    await close();
+  });
+
   it('a call sheet carrying a body shape still fits in a few hundred tokens', async () => {
     const { client, close } = await connectedClient();
     // The heaviest one measured, and the reason there is a ceiling at all: a body

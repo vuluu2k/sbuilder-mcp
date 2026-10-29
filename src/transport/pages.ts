@@ -55,17 +55,18 @@ export function sourcePath(siteId: string, pageId: string): string {
  * back out on write.
  */
 /**
- * A 404 on a page's source is a DELETED page (or a wrong id), and the session
+ * A 404 on a page's source is a DELETED page, a wrong site id, or a key scoped to
+ * another site — and the session
  * may still be pointing at it: a bare "source not found [http 404]" after an
  * sb_api_call delete told the caller nothing (TTG gap #57). Same status and
  * code, a sentence that says what to do.
  */
-const gone = (pageId: string) => (e: unknown): never => {
+const gone = (siteId: string, pageId: string) => (e: unknown): never => {
   if (e instanceof ApiError && e.status === 404) {
     throw new ApiError(
       404,
       e.code,
-      `page ${pageId} no longer exists (deleted, or a wrong id) — sb_page_open another page; sb_page_list lists them`,
+      `page ${pageId} not found on site ${siteId} (deleted, or not this site/key) — sb_page_open another page; sb_page_list lists them`,
       e.details,
       e.fields,
     );
@@ -84,7 +85,7 @@ export async function loadSource(
     path: sourcePath(siteId, pageId),
     token: siteToken(ctx),
     fetchImpl: ctx.fetchImpl,
-  }).catch(gone(pageId))) as { source: PageSource };
+  }).catch(gone(siteId, pageId))) as { source: PageSource };
   return out.source;
 }
 
@@ -130,6 +131,6 @@ export async function saveSource(
     body: { document, schemaVersion: document.schema_version ?? 1, ...(baseRev ? { baseRev } : {}) },
     ...(livePeer && LIVE_PEER.test(livePeer) ? { headers: { 'X-WB-Live-Peer': livePeer } } : {}),
     fetchImpl: ctx.fetchImpl,
-  }).catch(gone(pageId))) as { source: PageSource };
+  }).catch(gone(siteId, pageId))) as { source: PageSource };
   return out.source;
 }

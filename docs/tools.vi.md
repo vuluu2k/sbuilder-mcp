@@ -422,8 +422,9 @@ bị rút gọn. Response vẫn luôn mang theo chúng; trước nay không ai �
 là site overlay, và `app: true` nếu là gốc của một app block đã ghép — không sửa được gì
 bên dưới nó. **Không bao giờ trả tài liệu thô** — một trang thật nặng hàng trăm KB.
 
-Header/footer dùng chung hoặc overlay chỉ là **một dòng** (không có `kids`) trừ khi
-`chrome: true` — chúng giống nhau trên mọi trang và từng chiếm ~70% một outline thường ngày.
+Header/footer dùng chung hoặc overlay chỉ là **một dòng** (không có `kids`, đánh dấu
+`collapsed: true`) trừ khi `chrome: true` — chúng giống nhau trên mọi trang và từng chiếm ~70% một
+outline thường ngày. Global `custom` là nội dung dải giữa nên vẫn được mở ra.
 Dòng `accordion-content` / `tab-content` hiện `label` của nó, nên bốn dòng FAQ không còn là bốn
 dòng giống hệt nhau.
 
@@ -1253,7 +1254,9 @@ báo client này không hiển thị.
 
 Kết quả là `{ duplicated, into, copies, rev }`, trong đó `copies` ánh xạ MỌI id nguồn sang bản
 sao và type của nó — `{ "<oldId>": ["<newId>", "<type>"] }`, kể cả satellite — nên text câu trả
-lời của dòng vừa nhân bản chỉ cách một lần tra, thay vì cả một `sb_outline`.
+lời của dòng vừa nhân bản chỉ cách một lần tra, thay vì cả một `sb_outline`. Quá 40 node thì map
+bị giới hạn: `copies` chỉ giữ bản sao và con trực tiếp của nó, `copied` là tổng số, và
+`copies_truncated: true` báo rằng một `sb_outline` sâu hơn đọc phần còn lại.
 
 **Sang trang khác — copy/paste của editor.** `to_page_id` đặt bản sao lên trang đó (`parent_id`,
 `index` không bắt buộc; mặc định là ROOT, trước footer dùng chung), còn `to_site_id` đặt sang
@@ -1414,8 +1417,9 @@ gửi đi: chỉ một id lạ là nền tảng từ chối cả lần publish. 
 `sb_api_call`, hoặc bị gỡ publish, thì bị quên và mốc thời gian trả lời lại.
 
 Nền tảng **không có bản xem trước cascade** — `cascadeTargets` chỉ chạy bên trong publish — nên
-dry run không liệt kê được các trang đó; nó nói quy tắc một lần mỗi process dưới `cascade_note`,
-và lần publish thật gọi tên chúng ở `cascaded`.
+dry run không liệt kê được các trang đó; nó nói quy tắc MỘT lần mỗi process dưới `cascade_note` —
+tiêu ngay ở lần dry run đầu tiên hiện nó, không lặp lại mỗi lần xem trước — và lần publish thật gọi
+tên chúng ở `cascaded`.
 
 **Nó báo BẢN NÀO đã lên live** — `id` (dòng published), `publishedAt`, và `fromVersionId`
 (bản nháp mà nó được biên dịch từ đó). Ba trường này trả lời đúng câu người gọi hỏi ngay sau
@@ -1749,8 +1753,8 @@ tài liệu:
 | `example_copy` | Chữ mẫu của layout dựng sẵn chưa được thay — "Tiêu đề chính", "Lợi ích một", câu dặn agent trong ô ảnh trống, và các KHẲNG ĐỊNH bịa ("1.000+", "4,9/5", lời chứng thực ký tên người lạ). Lấy bằng cách dựng mọi pattern, trừ một danh sách ngắn nhãn dùng được nguyên ("Mua ngay", "Xem tất cả"). `sb_template_use` báo số phần tử vừa đặt còn chữ mẫu (`copy`) |
 | `invisible_text` | Chữ hoặc nút có màu LITERAL tương phản dưới 1.5:1 với nền literal gần nhất bên dưới — có trong HTML, không đọc được trên trang. Im lặng khi một bên là theme var |
 | `demo_variant_options` | `product-variants` vẫn mang Color Red/Green/Blue, Size S/M/L gieo sẵn. Config đó là bản dự phòng của platform cho sản phẩm không có trục tuỳ chọn, nên mọi sản phẩm đơn giản hiện tuỳ chọn không tồn tại. Xoá (`config.attributes: []`) thì sản phẩm CÓ tuỳ chọn vẫn hiện của nó — đã đo |
-| `link_colour` | Thẻ `<a>` trong `specials.textHtml` không có `color` inline: không gì style được link trong text (không control của element, không token theme), nên nó render màu xanh mặc định của trình duyệt `rgb(0,0,238)`, gạch chân. Sửa: `<a href="…" style="color:inherit">` hoặc màu thương hiệu — cổng rich-text giữ style color. `sb_add` / `sb_set` cũng cảnh báo `link_colour` |
-| `default_font` | Node vẫn giữ font CỨNG mà element gieo sẵn (`"Inter"` của `accordion-item`) trong khi text style body của theme site (`text-2`) là họ font khác — nó render bằng một kiểu chữ không chỗ nào khác dùng. Chỉ trong `sb_review`, và chỉ với theme của site (starter là Inter). Sửa: `fontFamily: "var(--wb-ts-text-2-family)"` ở base, biến mà `tab-item` và `menu-item` vốn đã dùng |
+| `link_colour` | Thẻ `<a>` trong `specials.textHtml` không có `color` inline (`background-color` / `border-color` không tính): không gì style được link trong text (không control của element, không token theme), nên nó render màu xanh mặc định của trình duyệt `rgb(0,0,238)`, gạch chân. Sửa: `<a href="…" style="color:inherit">` hoặc màu thương hiệu — cổng rich-text giữ style color. `sb_add` / `sb_set` cũng cảnh báo `link_colour` |
+| `default_font` | Node vẫn giữ font CỨNG mà element gieo sẵn (`"Inter"` của `accordion-item`) trong khi text style body của theme site (`text-2`) là họ font khác — nó render bằng một kiểu chữ không chỗ nào khác dùng. Chỉ trong `sb_review`, chỉ với theme của site (starter là Inter), và im lặng khi bất kỳ breakpoint nào tự đặt `fontFamily`. Sửa: `fontFamily: "var(--wb-ts-text-2-family)"` ở base, biến mà `tab-item` và `menu-item` vốn đã dùng |
 | `default_seed_copy` | Một satellite được gieo sẵn vẫn mang nguyên chữ tiếng Anh của PLATFORM — empty state của repeater ghi "No products yet" bằng ink `#171717`. Chỉ hiện khi danh sách rỗng, nên không ai viết lại. Ngoài ra, chỉ trong `sb_review` (vì nó đọc locale của site): một dòng tiếng Anh của seed cửa hàng ("Add To Cart") trên site tiếng Việt, kèm bản tiếng Việt |
 | `form_fields_flush` | `form` / `form-segment` / `form-step-nav` xếp các field mà không có `gap`, khiến mỗi label đọc như thuộc về ô phía TRÊN nó. Khác với `config.fieldStackGap` — khoảng cách label↔control nhỏ hơn, nằm BÊN TRONG một field |
 | `dead_menu_link` | Mục menu không có `href` — renderer đọc `specials.menuItems` chứ không bao giờ đọc `menuId` |
@@ -2505,8 +2509,9 @@ trang duy nhất không được tự do chọn: `membersOnlyRedirectTarget` đ�
 
 **Hoặc truyền `node_id`** để đặt nó lên trang ĐANG MỞ, bên trong node đó: node `form` trỏ tới
 form mới được thêm trong cùng lần gọi và báo lại là `placed: { id, parent }`. Vị trí được kiểm
-tra trước khi tạo form (node sai, hoặc trang đang mở thuộc site khác, thì không tạo gì);
-`page_name` và `node_id` cùng lúc bị từ chối.
+tra trước khi tạo form — theo cách đặt của `sb_add` (`ROOT` nghĩa là cuối dải giữa, trước footer
+dùng chung) và phán quyết của chính lần lưu, nên node sai, trang đang mở thuộc site khác, hoặc vị
+trí mà lần lưu sẽ từ chối thì không tạo gì; `page_name` và `node_id` cùng lúc bị từ chối.
 
 **Hoặc truyền `page_name`** — kèm `headline` nếu muốn — để trang đó được tạo và form được đặt
 lên nó trong cùng một lệnh: một trang mới — type `login`, `register` hoặc `contact` với các mẫu đó, còn lại `page` — mang một section, tiêu đề nếu có, và
@@ -2910,7 +2915,8 @@ trước một lần PUT toàn tài liệu rủi ro chỉ được giữ nếu b
 restore cũng hoàn tác được.
 
 **Trang đã bị xoá** trả 404 cho lần đọc và lưu source; mọi tool trang giờ nói
-`page <id> no longer exists (deleted, or a wrong id) — sb_page_open another page` thay cho câu
+`page <id> not found on site <site> (deleted, or not this site/key) — sb_page_open another page`
+— 404 cũng có thể là sai site id hoặc key thuộc site khác — thay cho câu
 trơn `source not found`.
 
 `data` chỉ có khi trang chứa danh sách record: `record_lists` liệt kê `{id, collection,
