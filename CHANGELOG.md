@@ -6,6 +6,20 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.98.8] - 2026-10-29
+
+### Added
+- `sb_review` reports `hidden_desktop_dead` for a node with a dead `responsive.desktop.config.hidden` slot and says how to fix it.
+
+### Changed
+- The catalog regenerates so that `POST /_wb/account/register` accepts `phone`, `form` and `answers`, where `form` and `answers` only let the platform check the form's rules and are not stored.
+
+### Fixed
+- `sb_set` removes the dead desktop `hidden` slot when it writes or unsets `hidden` at desktop or base.
+- `sb_add` and `sb_set` no longer report `hidden_band` as visible in a band where a parent node is already hidden.
+- A phone re-entry field that the builder generates is no longer treated as the phone field of a register form.
+- `sb_publish`, `sb_page_state` and the next `sb_publish` use the remembered cascade state only while the page's `publishedAt` is still the one the cascade recorded, so a page published through the editor or `sb_api_call`, or unpublished, is no longer treated as cascaded.
+
 ## [0.98.7] - 2026-10-29
 
 ### Fixed

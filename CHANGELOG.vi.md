@@ -6,6 +6,20 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.98.8] - 2026-10-29
+
+### Added
+- `sb_review` báo `hidden_desktop_dead` với node có slot `responsive.desktop.config.hidden` chết và nêu cách sửa.
+
+### Changed
+- Catalog được tái sinh để `POST /_wb/account/register` nhận thêm `phone`, `form` và `answers`, trong đó `form` và `answers` chỉ để platform kiểm luật của form và không được lưu.
+
+### Fixed
+- `sb_set` xoá slot `hidden` chết ở desktop khi ghi hoặc unset `hidden` ở desktop hoặc base.
+- `sb_add` và `sb_set` không còn báo `hidden_band` là còn hiện ở dải mà node cha đã bị ẩn.
+- Ô nhập lại số điện thoại do builder tự dựng không còn bị coi là trường phone của form đăng ký.
+- `sb_publish`, `sb_page_state` và lần `sb_publish` kế tiếp chỉ dùng trạng thái cascade đã nhớ khi `publishedAt` của trang vẫn là mốc cascade đã ghi, nên trang được publish qua editor hoặc `sb_api_call`, hoặc bị gỡ publish, không còn bị coi là đã cascade.
+
 ## [0.98.7] - 2026-10-29
 
 ### Fixed
