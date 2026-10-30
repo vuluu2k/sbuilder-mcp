@@ -1836,7 +1836,9 @@ Cursor, Windsurf, VS Code, Codex. `--client cursor,codex` names them; `--dry-run
 ## `sb_review` — what a visitor would see
 
 Distinct from whether the page saves: a perfectly storable document can publish as an empty
-box. Returns `{ findings, fixes, findings_notice? }`, in document order:
+box. Returns `{ page, findings, fixes, findings_notice? }`, in document order. `page` is the page
+it reviewed; pass `page_id` to refuse any other — a client can deliver a batched `sb_page_open`
+AFTER the review, which then reviews the previous page:
 
 | Code | The defect |
 | --- | --- |

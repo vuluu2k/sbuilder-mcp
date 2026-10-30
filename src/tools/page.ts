@@ -2199,12 +2199,19 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
       description:
         'What a VISITOR would meet on the open page (blank band, placeholder, dead binding) AND ' +
           "what stands between this store and a paid order (checkout page, gateway, delivery, a " +
-          'way back to the cart). Run it before calling a page finished.',
-      inputSchema: {},
+          'cart link). Run it before calling a page done; page_id: only that page.',
+      inputSchema: { page_id: z.string().optional() },
       annotations: { readOnlyHint: true },
     },
-    async () => {
+    async ({ page_id }) => {
       const doc = session.current();
+      // A REVIEW OF THE WRONG PAGE READS AS A CLEAN ONE. Measured on TTG: sb_page_open
+      // batched with sb_review reached the server SECOND (the client's own dispatch,
+      // past serial.ts), and the account page's review was the search page's.
+      const open = session.page()?.pageId;
+      if (page_id && page_id !== open) {
+        throw new Error(`sbuilder: the open page is ${open}, not ${page_id} — call sb_page_open first, then review.`);
+      }
       // THE STORE'S OWN READINESS, which no API exposes and no page document
       // can show. A page can review perfectly clean and still sit on a store
       // with no checkout page, no gateway and no way back to the cart.
@@ -2263,6 +2270,7 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
       // Clean = no finding a visitor meets; `advice` (maintenance) rides beside the verdict.
       const clean = !field.findings;
       return text({
+        page: open,
         ...(clean ? { findings: [], verdict: 'Nothing a visitor would notice on this page.' } : {}),
         ...field,
         ...store,

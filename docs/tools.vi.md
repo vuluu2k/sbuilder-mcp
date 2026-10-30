@@ -1802,8 +1802,9 @@ Windsurf, VS Code, Codex. `--client cursor,codex` để chỉ định; `--dry-ru
 ## `sb_review` — thứ một người xem sẽ thấy
 
 Khác với chuyện trang có lưu được hay không: một tài liệu lưu được hoàn hảo vẫn có thể
-publish ra một cái hộp rỗng. Trả về `{ findings, fixes, findings_notice? }`, theo thứ tự
-tài liệu:
+publish ra một cái hộp rỗng. Trả về `{ page, findings, fixes, findings_notice? }`, theo thứ tự
+tài liệu. `page` là trang đã được review; truyền `page_id` để từ chối mọi trang khác — client có thể
+gửi một `sb_page_open` gọi song song tới SAU review, và review khi đó chấm trang trước đó:
 
 | Mã | Khiếm khuyết |
 | --- | --- |

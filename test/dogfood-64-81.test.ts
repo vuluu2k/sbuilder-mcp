@@ -124,6 +124,16 @@ describe('#65 sb_review reads a preset-painted ground', () => {
     const plain = band([{ type: 'heading', specials: { text: 'Plain' } }]);
     expect(codes(page(hero, plain), STARTER_THEME)).toEqual([]);
   });
+
+  it('an own transparent fill overrides the preset\'s: a link-style button is judged on the band under it', () => {
+    const link = (bg?: string) => ({
+      type: 'button',
+      specials: { text: 'Đăng nhập', stylePreset: 'button-default' },
+      style: { color: '#40484c', ...(bg ? { backgroundColor: bg } : {}) },
+    });
+    expect(codes(page(band([link('transparent')], { backgroundColor: '#eceef0' })), STARTER_THEME)).toEqual([]);
+    expect(codes(page(band([link()], { backgroundColor: '#eceef0' })), STARTER_THEME).map((f) => f.code)).toEqual(['low_contrast']);
+  });
 });
 
 /* #66 ---------------------------------------------------------------------- */

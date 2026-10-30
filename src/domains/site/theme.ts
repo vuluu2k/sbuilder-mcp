@@ -145,7 +145,9 @@ export function groundOf(
   if (own && own !== 'transparent') {
     return { color: theme ? resolveVars(theme, own) : own, literal: !own.includes('var(') };
   }
-  if (!theme) return null;
+  // An OWN `transparent` overrides the preset's fill (TTG: header links on
+  // button-default's #2e86ae read 2.28:1 while the page showed the bar's #eceef0).
+  if (own || !theme) return null;
   const id = presetIdOf(node);
   const p = id ? s(findPreset(theme, id)?.base.backgroundColor) : '';
   return p && p !== 'transparent' ? { color: resolveVars(theme, p), literal: false } : null;
