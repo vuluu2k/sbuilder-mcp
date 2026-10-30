@@ -6,6 +6,16 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.104.0] - 2026-10-30
+
+### Added
+- `sb_function` creates, test-runs, lists, reads, removes and reads logs and usage of backend functions, and manages their secrets, with writes defaulting to `dry_run` and secret values never shown in previews or results.
+- `sb_function` rejects invalid slugs and keys locally, puts `compile_error` first when a build fails, and says so plainly when the platform has functions disabled or the plan has no runs.
+
+### Changed
+- `sb_api_call` redacts secret values on function secret routes, vendor admin keys and customer password fields, and redacts the whole body when it normalises an error.
+- The generated catalog is regenerated against web_builder v1.0.201 and now covers 949 operations.
+
 ## [0.103.0] - 2026-10-30
 
 ### Added

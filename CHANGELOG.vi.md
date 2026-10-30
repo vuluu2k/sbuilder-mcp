@@ -6,6 +6,16 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.104.0] - 2026-10-30
+
+### Added
+- `sb_function` tạo, chạy thử, liệt kê, đọc, xóa, xem nhật ký và lượt dùng của backend functions, đồng thời quản lý secret của chúng, với thao tác ghi mặc định `dry_run` và giá trị secret không bao giờ hiện trong bản xem trước hay kết quả.
+- `sb_function` từ chối tại chỗ slug và key không hợp lệ, đặt `compile_error` lên đầu khi bản build hỏng, và nói thẳng khi nền tảng tắt functions hoặc gói không có lượt chạy.
+
+### Changed
+- `sb_api_call` che giá trị secret trên các route secret của function, khóa vendor admin và trường mật khẩu của khách, và che toàn bộ nội dung khi chuẩn hóa lỗi.
+- Catalog sinh tự động được sinh lại theo web_builder v1.0.201 và nay gồm 949 operation.
+
 ## [0.103.0] - 2026-10-30
 
 ### Added
