@@ -6,6 +6,11 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.102.1] - 2026-10-30
+
+### Fixed
+- `sb_review` không còn báo `tag_filters_share_key` cho các bộ lọc thẻ có cùng giá trị, chẳng hạn sidebar desktop và bản accordion mobile dùng chung một khóa có chủ đích.
+
 ## [0.102.0] - 2026-10-30
 
 ### Added
