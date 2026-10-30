@@ -13,7 +13,14 @@ describe('tag_filters_share_key', () => {
     });
     doc.apply(patches);
     const fids = ids.filter((i) => doc.node(i).data.type === 'filter-checkbox');
-    fids.forEach((id, i) => Object.assign((doc.node(id) as unknown as { specials: Record<string, unknown> }).specials, { filterSource: 'tag', ...filters[i] }));
+    // Each its own values unless the case says otherwise: identical values are a mirror.
+    fids.forEach((id, i) =>
+      Object.assign((doc.node(id) as unknown as { specials: Record<string, unknown> }).specials, {
+        filterSource: 'tag',
+        filterValues: [{ value: `v${i}`, label: `V${i}`, enabled: true }],
+        ...filters[i],
+      }),
+    );
     return reviewDesign(doc, {}).filter((f) => f.code === 'tag_filters_share_key');
   };
 
@@ -28,5 +35,12 @@ describe('tag_filters_share_key', () => {
     expect(page({ filterBehavior: 'event' }, {})).toHaveLength(0);
     expect(page({ filterTargets: ['li_a'] }, { filterTargets: ['li_b'] })).toHaveLength(0);
     expect(page({ filterTargets: ['li_a'] }, {})).toHaveLength(1);
+  });
+
+  it('a mirror — the same values on a mobile copy — shares the key on purpose', () => {
+    const cpu = [{ value: 'ryzen 7 9700x', label: 'Ryzen 7 9700X', enabled: true }];
+    const vga = [{ value: 'rtx 5070 12gb', label: 'RTX 5070 12GB', enabled: true }];
+    expect(page({ filterGroupKey: 'cpu', filterValues: cpu }, { filterGroupKey: 'cpu', filterValues: cpu })).toHaveLength(0);
+    expect(page({ filterValues: cpu }, { filterValues: vga })).toHaveLength(1);
   });
 });

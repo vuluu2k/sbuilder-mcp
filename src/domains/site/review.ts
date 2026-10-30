@@ -540,7 +540,9 @@ export function reviewDesign(
   // emptied the shelf on two CPUs. Since web_builder's tag filter groups each filter owns
   // `f.tag.<filterGroupKey>`: values OR within it, groups AND. Event filters write no URL.
   {
-    const byKey = new Map<string, Array<{ id: string; type: string; targets: string[] }>>();
+    // A MIRROR — the same values on another breakpoint's copy (desktop sidebar, mobile
+    // accordion) — shares the key on purpose; only DIFFERENT value sets are two facets.
+    const byKey = new Map<string, Array<{ id: string; type: string; targets: string[]; values: string }>>();
     for (const id of walkOrder) {
       const n = d.nodes[id];
       const sp = (n.specials ?? {}) as Record<string, unknown>;
@@ -551,12 +553,14 @@ export function reviewDesign(
         ...(Array.isArray(sp.filterTargets) ? sp.filterTargets.filter((t): t is string => typeof t === 'string' && t !== '') : []),
       ];
       const key = g ? `tag.${g}` : 'tag';
-      byKey.set(key, [...(byKey.get(key) ?? []), { id, type: n.data.type, targets }]);
+      const rows = Array.isArray(sp.filterValues) ? (sp.filterValues as Array<{ value?: unknown }>) : [];
+      const values = rows.map((r) => String(r?.value ?? '').toLowerCase()).sort().join('\n');
+      byKey.set(key, [...(byKey.get(key) ?? []), { id, type: n.data.type, targets, values }]);
     }
     for (const [key, list] of byKey) {
       const overlaps = (a: string[], b: string[]) => a.length === 0 || b.length === 0 || a.some((t) => b.includes(t));
       for (let i = 1; i < list.length; i++) {
-        if (!list.slice(0, i).some((p) => overlaps(p.targets, list[i].targets))) continue;
+        if (!list.slice(0, i).some((p) => p.values !== list[i].values && overlaps(p.targets, list[i].targets))) continue;
         out.push({
           code: 'tag_filters_share_key',
           nodeId: list[i].id,
