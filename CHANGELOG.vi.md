@@ -6,6 +6,14 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.102.0] - 2026-10-30
+
+### Added
+- `sb_review` báo finding `tag_filters_share_key` khi hai bộ lọc thẻ trở lên cùng nhắm một danh sách và dùng chung khóa URL `f.tag`, đồng thời gợi ý đặt `filterGroupKey` riêng cho từng bộ lọc cùng `filterMatch` là `any`.
+
+### Changed
+- Catalog sinh tự động được sinh lại theo web_builder v1.0.194.
+
 ## [0.101.4] - 2026-10-30
 
 ### Added

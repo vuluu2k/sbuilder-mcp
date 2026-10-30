@@ -6,6 +6,14 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.102.0] - 2026-10-30
+
+### Added
+- `sb_review` reports a `tag_filters_share_key` finding when two or more tag filters that target the same list write the same `f.tag` URL key, and suggests giving each its own `filterGroupKey` with `filterMatch` set to `any`.
+
+### Changed
+- The generated catalog is regenerated against web_builder v1.0.194.
+
 ## [0.101.4] - 2026-10-30
 
 ### Added
