@@ -6,6 +6,19 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.103.0] - 2026-10-30
+
+### Added
+- `sb_code` nhận `language` là html, css, javascript, scss, typescript, json hoặc text, tự suy từ đuôi tên file khi bỏ trống và từ chối đuôi lạ cho đến khi truyền `language`.
+- `sb_code` nhận `placement` là `none`, đây là giá trị duy nhất mà file json và text chấp nhận.
+- `sb_code` trả về `compile_error` khi bản build scss hoặc typescript hỏng, nêu rõ bản build cũ vẫn còn được phục vụ hay chưa có gì được phục vụ.
+- `sb_code` trả về `url` dạng `/_wb/code/<name>` cho file site-wide đang bật có `placement` là `none`.
+
+### Changed
+- `sb_code` gửi `expectedUpdatedAt` khi cập nhật và xóa, và xung đột `code_file_changed` yêu cầu người gọi chạy lại.
+- `sb_code` từ chối nguồn scss và typescript mở đầu bằng thẻ bao, và kiểm tra lại css và javascript được phục vụ nguyên văn khi chuyển ra khỏi `none`.
+- Catalog sinh tự động được sinh lại theo web_builder v1.0.199 và nay gồm 923 operation.
+
 ## [0.102.1] - 2026-10-30
 
 ### Fixed

@@ -6,6 +6,19 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.103.0] - 2026-10-30
+
+### Added
+- `sb_code` accepts a `language` of html, css, javascript, scss, typescript, json or text, infers it from the file extension when omitted, and refuses unknown extensions until `language` is passed.
+- `sb_code` accepts `placement` set to `none`, which is the only placement json and text files take.
+- `sb_code` returns a `compile_error` when a scss or typescript build fails, stating whether the previous build is still served or nothing is served.
+- `sb_code` returns a `url` of the form `/_wb/code/<name>` for site-wide, enabled files with `placement` set to `none`.
+
+### Changed
+- `sb_code` sends `expectedUpdatedAt` on updates and deletes, and a `code_file_changed` conflict tells the caller to re-run.
+- `sb_code` rejects scss and typescript sources that start with a wrapper tag, and re-validates css and javascript served verbatim when they move out of `none`.
+- The generated catalog is regenerated against web_builder v1.0.199 and now covers 923 operations.
+
 ## [0.102.1] - 2026-10-30
 
 ### Fixed
