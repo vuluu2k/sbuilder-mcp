@@ -11,7 +11,7 @@ export function fakePlatform(extra: (method: string, path: string, body: unknown
   /** Form FIELD documents: GET answers `{ document }` (null when never saved), PUT `{ schema }`. */
   const forms = new Map<string, unknown>();
   const FORM_DOC = /^\/api\/sites\/[^/]+\/forms\/([^/]+)\/document$/;
-  const writes: Array<{ method: string; path: string }> = [];
+  const writes: Array<{ method: string; path: string; query: string }> = [];
   const SOURCE = /^\/api\/sites\/([^/]+)\/pages\/([^/]+)\/source$/;
   const json = (b: unknown, status = 200) =>
     new Response(JSON.stringify(b), { status, headers: { 'content-type': 'application/json' } });
@@ -19,9 +19,13 @@ export function fakePlatform(extra: (method: string, path: string, body: unknown
     const url = new URL(String(input));
     const method = (init?.method ?? 'GET').toUpperCase();
     const body = init?.body ? JSON.parse(String(init.body)) : undefined;
-    if (method !== 'GET') writes.push({ method, path: url.pathname });
+    if (method !== 'GET') writes.push({ method, path: url.pathname, query: url.search });
     const own = extra(method, url.pathname, body);
-    if (own !== undefined) return json(own);
+    // `__status` lets a fixture answer an error in the platform's one shape.
+    if (own !== undefined) {
+      const { __status, ...rest } = own as { __status?: number };
+      return __status ? json(rest, __status) : json(own);
+    }
     const f = FORM_DOC.exec(url.pathname);
     if (f) {
       if (method === 'PUT') {

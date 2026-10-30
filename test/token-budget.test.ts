@@ -177,7 +177,11 @@ describe('token budget — a diet without a scale comes back', () => {
     // (measured 38,490; TTG gaps #52 #54 #58). `chrome` defaults the outline to ONE line per
     // shared header/footer/overlay, which takes ~70% off every routine outline — far more
     // than it costs here once.
-    expect(JSON.stringify(tools).length).toBeLessThan(38_600);
+    //
+    // 38,600 -> 39,000 buys sb_code's file kinds (+256; measured 38,596 -> 38,852): four more
+    // languages and placement `none`, each with a rule that 400s or serves nothing when
+    // guessed (json/text take only `none`, scss/ts compile on write, a `none` file is a url).
+    expect(JSON.stringify(tools).length).toBeLessThan(39_000);
     for (const t of tools) expect(t.description, t.name).not.toMatch(/vanishes on publish/);
     const instructions = client.getInstructions() ?? '';
     expect(instructions.length).toBeGreaterThan(200);

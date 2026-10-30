@@ -1,6 +1,6 @@
 # Tools
 
-Four tools reach 919 platform operations, and 344 of the 429 writes among them carry a body
+Four tools reach 923 platform operations, and 346 of the 431 writes among them carry a body
 shape read off the handler that decodes it. `sb_api_find` is an index, not a tool per
 endpoint — see [why](../README.md#tools).
 
@@ -1611,14 +1611,41 @@ pixels, analytics tags, chat widgets and site-wide CSS go. Each file is injected
 `body_start` or `body_end` of every page, or of one page when created with `page_id`. This is
 not the `custom-code` element, which renders inside the page body.
 `action:"list"` (`page_id` lists that page's files plus the site-wide ones), `"set"` (no `id`
-creates, defaulting to `javascript` / `body_end` / enabled; with `id` it merges the named
-fields over the stored row, because **the platform's PUT is a full replace and a partial body
-blanks `content`**) and `"remove"`. Writes are dry runs by default.
+creates, enabled by default; with `id` it merges the named fields over the stored row, because
+**the platform's PUT is a full replace and a partial body blanks `content`**) and `"remove"`.
+Writes are dry runs by default. The update and the remove carry the read row's `updatedAt` as
+`expectedUpdatedAt`, so a file someone else changed in between answers 409
+`code_file_changed` instead of being overwritten or deleted — re-run the call, which re-reads.
+
+Languages: `html`, `css`, `javascript`, `scss`, `typescript`, `json`, `text`. On create an
+omitted `language` comes from the name's extension, by the Code Dock's own table (`.scss` →
+scss, `.ts`/`.tsx` → typescript, `.json`/`.webmanifest` → json, `.txt`/`.md`/`.svg`/`.xml`/`.csv`
+→ text); a name with no extension ("Analytics tag") stays `javascript`, and an extension the
+table does not know ("Pixel v2.1", "zalo.me") is REFUSED before any request — pass `language`
+explicitly. An explicit `language` always wins. An omitted `placement` comes from the language: css/scss → `head`, json/text →
+`none`, the rest → `body_end`.
+
+- **scss and typescript are compiled on write.** A failed build is still stored — the source
+  plus `compileError` — so the row carries `compile_error`, and a `set` whose build failed
+  LEADS with `compile_error` instead of reading as a clean success. It says which case applies,
+  read from the answer: the site keeps the previous build (one existed and the language did
+  not change), or nothing is served or injected until a build succeeds.
+- **json and text are never injected and take only `placement:"none"`**; anything else is
+  refused before a request (the platform answers 400). Any language may sit at `none`.
+- **An enabled, site-wide `none` file is served** at `/_wb/code/<name>` on the store host
+  (sandboxed, `nosniff`; scss/ts serve their compiled output, and nothing until one build has
+  succeeded). Such rows carry that `url`; a page-scoped or disabled one is not served.
 
 Injected at serve time, so a write is live on the next request with no publish. css is
 wrapped in `<style>` and javascript in `<script>` unless the content already opens with that
-tag. Markup in a css/javascript file would be wrapped again and render as text, so it is
-refused with `language:"html"` named as the fix.
+tag; other leading markup would be wrapped again and render as text, so it is refused with
+`language:"html"` named as the fix (not at placement `none`, which is served raw — but moving
+such a file out of `none` is judged again). scss and
+typescript output is ALWAYS wrapped and their source is compiled at every placement, so any
+content opening with `<` is refused — a `.tsx` opening `<script>` would compile to
+`React.createElement("script")` and throw on every page. Write plain SCSS/TypeScript, or use
+`language:"html"`. Content is capped at 512 KiB, and a write
+while another save on the site is still compiling answers 503 `code_files_busy` — retry.
 
 ## `sb_translate`
 

@@ -4,12 +4,12 @@
 import type { RequestShape } from './types.js';
 
 export const SHAPE_SOURCE = {
-  "writeOperations": 429,
-  "shaped": 344,
-  "fromHandlers": 334,
+  "writeOperations": 431,
+  "shaped": 346,
+  "fromHandlers": 336,
   "fromSwaggerOnly": 10,
   "withReadOnly": 29,
-  "structsRead": 3494
+  "structsRead": 3502
 } as const;
 
 export const REQUEST_SHAPES: Record<string, RequestShape> = {
@@ -1393,11 +1393,11 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
       },
       {
         "name": "language",
-        "type": "\"html\" | \"css\" | \"javascript\""
+        "type": "Language"
       },
       {
         "name": "placement",
-        "type": "\"head\" | \"body_start\" | \"body_end\""
+        "type": "Placement"
       },
       {
         "name": "content",
@@ -1418,6 +1418,15 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
       {
         "name": "updatedAt",
         "type": "string (RFC3339)"
+      },
+      {
+        "name": "compiled",
+        "type": "string",
+        "note": "Compiled and CompileError are SERVER-OWNED build output of a scss or typescript row (\"\" for every other language): Compiled is what the storefront injects or serves, CompileError the last failure as \"<name>:<line>:<column>: <message>\"."
+      },
+      {
+        "name": "compileError",
+        "type": "string"
       }
     ],
     "source": "go",
@@ -1426,7 +1435,9 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
       "id",
       "siteId",
       "createdAt",
-      "updatedAt"
+      "updatedAt",
+      "compiled",
+      "compileError"
     ]
   },
   "put:/api/sites/{siteId}/code-files/{id}": {
@@ -1449,11 +1460,11 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
       },
       {
         "name": "language",
-        "type": "\"html\" | \"css\" | \"javascript\""
+        "type": "Language"
       },
       {
         "name": "placement",
-        "type": "\"head\" | \"body_start\" | \"body_end\""
+        "type": "Placement"
       },
       {
         "name": "content",
@@ -1474,6 +1485,15 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
       {
         "name": "updatedAt",
         "type": "string (RFC3339)"
+      },
+      {
+        "name": "compiled",
+        "type": "string",
+        "note": "Compiled and CompileError are SERVER-OWNED build output of a scss or typescript row (\"\" for every other language): Compiled is what the storefront injects or serves, CompileError the last failure as \"<name>:<line>:<column>: <message>\"."
+      },
+      {
+        "name": "compileError",
+        "type": "string"
       },
       {
         "name": "expectedUpdatedAt",
@@ -6990,6 +7010,70 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
     ],
     "source": "go",
     "goType": "payoutBody"
+  },
+  "post:/api/admin/template-categories": {
+    "fields": [
+      {
+        "name": "slug",
+        "type": "string"
+      },
+      {
+        "name": "position",
+        "type": "number"
+      },
+      {
+        "name": "enabled",
+        "type": "boolean"
+      },
+      {
+        "name": "translations",
+        "type": "TemplateCategoryTranslation[] | null",
+        "fields": [
+          {
+            "name": "locale",
+            "type": "string"
+          },
+          {
+            "name": "name",
+            "type": "string"
+          }
+        ]
+      }
+    ],
+    "source": "go",
+    "goType": "platformadmin.TemplateCategoryInput"
+  },
+  "patch:/api/admin/template-categories/{id}": {
+    "fields": [
+      {
+        "name": "slug",
+        "type": "string"
+      },
+      {
+        "name": "position",
+        "type": "number"
+      },
+      {
+        "name": "enabled",
+        "type": "boolean"
+      },
+      {
+        "name": "translations",
+        "type": "TemplateCategoryTranslation[] | null",
+        "fields": [
+          {
+            "name": "locale",
+            "type": "string"
+          },
+          {
+            "name": "name",
+            "type": "string"
+          }
+        ]
+      }
+    ],
+    "source": "go",
+    "goType": "platformadmin.TemplateCategoryInput"
   },
   "post:/api/admin/translation-keys": {
     "fields": [

@@ -3,9 +3,9 @@
 import type { ApiOperation } from './types.js';
 
 export const SWAGGER_SOURCE = {
-  "operations": 919,
-  "definitions": 329,
-  "bodyCarrying": 430,
+  "operations": 923,
+  "definitions": 331,
+  "bodyCarrying": 434,
   "bodyUndescribed": 115,
   "generatedFrom": "server/docs/swagger.json"
 } as const;
@@ -1884,6 +1884,90 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/admin/template-categories",
+    "method": "GET",
+    "path": "/api/admin/template-categories",
+    "tags": [
+      "admin"
+    ],
+    "summary": "Platform template categories (list / create / edit / delete)",
+    "params": [
+      {
+        "name": "category",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "Category (POST/PATCH)"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "github_com_webbuilder_server_internal_platformadmin.TemplateCategoryInput",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/api/admin/template-categories",
+    "method": "POST",
+    "path": "/api/admin/template-categories",
+    "tags": [
+      "admin"
+    ],
+    "summary": "Platform template categories (list / create / edit / delete)",
+    "params": [
+      {
+        "name": "category",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "Category (POST/PATCH)"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "github_com_webbuilder_server_internal_platformadmin.TemplateCategoryInput",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "patch:/api/admin/template-categories/{id}",
+    "method": "PATCH",
+    "path": "/api/admin/template-categories/{id}",
+    "tags": [
+      "admin"
+    ],
+    "summary": "Platform template categories (list / create / edit / delete)",
+    "params": [
+      {
+        "name": "category",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "Category (POST/PATCH)"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "github_com_webbuilder_server_internal_platformadmin.TemplateCategoryInput",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "delete:/api/admin/template-categories/{id}",
+    "method": "DELETE",
+    "path": "/api/admin/template-categories/{id}",
+    "tags": [
+      "admin"
+    ],
+    "summary": "Platform template categories (list / create / edit / delete)",
+    "params": [
+      {
+        "name": "category",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "Category (POST/PATCH)"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "github_com_webbuilder_server_internal_platformadmin.TemplateCategoryInput",
     "credential": "siteScoped"
   },
   {
@@ -27080,7 +27164,15 @@ export const API_OPERATIONS: ApiOperation[] = [
       "templates"
     ],
     "summary": "The site templates a new store can be created from",
-    "params": [],
+    "params": [
+      {
+        "name": "locale",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Language for category names (falls back to the platform default, then the slug)"
+      }
+    ],
     "bodyDescribed": false,
     "bodyRef": null,
     "credential": "siteScoped"
@@ -29580,6 +29672,13 @@ export const API_DEFINITIONS: Record<string, unknown> = {
   "github_com_webbuilder_server_internal_codefiles.CodeFile": {
     "type": "object",
     "properties": {
+      "compileError": {
+        "type": "string"
+      },
+      "compiled": {
+        "description": "Compiled and CompileError are SERVER-OWNED build output of a scss or\ntypescript row (\"\" for every other language): Compiled is what the\nstorefront injects or serves, CompileError the last failure as\n\"<name>:<line>:<column>: <message>\". The adapters persist both exactly as\ngiven; the compile decorator (codefiles/compile) is what assigns them on\nevery write, whatever a request body carried.",
+        "type": "string"
+      },
       "content": {
         "type": "string"
       },
@@ -29620,12 +29719,20 @@ export const API_DEFINITIONS: Record<string, unknown> = {
     "enum": [
       "html",
       "css",
-      "javascript"
+      "javascript",
+      "scss",
+      "typescript",
+      "json",
+      "text"
     ],
     "x-enum-varnames": [
       "LanguageHTML",
       "LanguageCSS",
-      "LanguageJavaScript"
+      "LanguageJavaScript",
+      "LanguageSCSS",
+      "LanguageTypeScript",
+      "LanguageJSON",
+      "LanguageText"
     ]
   },
   "github_com_webbuilder_server_internal_codefiles.Placement": {
@@ -29633,12 +29740,14 @@ export const API_DEFINITIONS: Record<string, unknown> = {
     "enum": [
       "head",
       "body_start",
-      "body_end"
+      "body_end",
+      "none"
     ],
     "x-enum-varnames": [
       "PlacementHead",
       "PlacementBodyStart",
-      "PlacementBodyEnd"
+      "PlacementBodyEnd",
+      "PlacementNone"
     ]
   },
   "github_com_webbuilder_server_internal_collections.Field": {
@@ -31265,6 +31374,37 @@ export const API_DEFINITIONS: Record<string, unknown> = {
       },
       "sandbox": {
         "type": "boolean"
+      }
+    }
+  },
+  "github_com_webbuilder_server_internal_platformadmin.TemplateCategoryInput": {
+    "type": "object",
+    "properties": {
+      "enabled": {
+        "type": "boolean"
+      },
+      "position": {
+        "type": "integer"
+      },
+      "slug": {
+        "type": "string"
+      },
+      "translations": {
+        "type": "array",
+        "items": {
+          "$ref": "#/definitions/github_com_webbuilder_server_internal_platformadmin.TemplateCategoryTranslation"
+        }
+      }
+    }
+  },
+  "github_com_webbuilder_server_internal_platformadmin.TemplateCategoryTranslation": {
+    "type": "object",
+    "properties": {
+      "locale": {
+        "type": "string"
+      },
+      "name": {
+        "type": "string"
       }
     }
   },
@@ -36683,6 +36823,9 @@ export const API_DEFINITIONS: Record<string, unknown> = {
   "internal_publicapi.CodeFile": {
     "type": "object",
     "properties": {
+      "compileError": {
+        "type": "string"
+      },
       "content": {
         "type": "string"
       },

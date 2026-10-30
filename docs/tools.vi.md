@@ -1,6 +1,6 @@
 # Bộ tool
 
-Bốn tool với tới 919 operation của nền tảng, và 344 trong 429 lệnh ghi trong số đó mang theo
+Bốn tool với tới 923 operation của nền tảng, và 346 trong 431 lệnh ghi trong số đó mang theo
 hình dạng body đọc thẳng từ handler decode chúng. `sb_api_find` là một chỉ mục, không phải mỗi
 endpoint một tool — [lý do](../README.vi.md#bộ-tool).
 
@@ -1578,14 +1578,41 @@ tag analytics, widget chat và CSS toàn site. Mỗi file được chèn vào `h
 `body_end` của mọi trang, hoặc của một trang nếu tạo kèm `page_id`. Đây không phải element
 `custom-code`, thứ render bên trong thân trang.
 `action:"list"` (`page_id` liệt kê file của trang đó cùng file toàn site), `"set"` (không có
-`id` thì tạo mới, mặc định `javascript` / `body_end` / bật; có `id` thì gộp các trường được
-nhắc vào bản đang lưu, vì **PUT của platform thay cả bản ghi và body thiếu sẽ xoá trắng
-`content`**) và `"remove"`. Mặc định mọi lệnh ghi là dry run.
+`id` thì tạo mới, mặc định bật; có `id` thì gộp các trường được nhắc vào bản đang lưu, vì
+**PUT của platform thay cả bản ghi và body thiếu sẽ xoá trắng `content`**) và `"remove"`.
+Mặc định mọi lệnh ghi là dry run. Lệnh cập nhật và lệnh xoá mang `updatedAt` của bản vừa đọc
+dưới dạng `expectedUpdatedAt`, nên file bị người khác sửa ở giữa sẽ nhận 409
+`code_file_changed` thay vì bị ghi đè hay xoá — chạy lại lệnh, nó sẽ đọc lại trước.
+
+Ngôn ngữ: `html`, `css`, `javascript`, `scss`, `typescript`, `json`, `text`. Khi tạo mới mà
+bỏ `language`, nó được suy ra từ đuôi tên file theo đúng bảng của Code Dock (`.scss` → scss,
+`.ts`/`.tsx` → typescript, `.json`/`.webmanifest` → json, `.txt`/`.md`/`.svg`/`.xml`/`.csv` →
+text); tên không có đuôi ("Analytics tag") vẫn là `javascript`, còn đuôi mà bảng không biết
+("Pixel v2.1", "zalo.me") bị TỪ CHỐI trước khi gửi request — hãy truyền `language` rõ ràng.
+`language` truyền vào luôn thắng. Bỏ
+`placement` thì nó theo ngôn ngữ: css/scss → `head`, json/text → `none`, còn lại → `body_end`.
+
+- **scss và typescript được biên dịch lúc ghi.** Bản build lỗi vẫn được lưu — mã nguồn kèm
+  `compileError` — nên dòng đó mang `compile_error`, và một lệnh `set` build lỗi sẽ MỞ ĐẦU
+  bằng `compile_error` chứ không trông như thành công trọn vẹn. Nó nói rõ trường hợp nào, đọc
+  từ câu trả lời: site giữ bản build trước (đã có một bản và ngôn ngữ không đổi), hoặc không
+  có gì được phục vụ hay chèn cho tới khi một lần build thành công.
+- **json và text không bao giờ được chèn và chỉ nhận `placement:"none"`**; giá trị khác bị từ
+  chối trước khi gửi request (platform trả 400). Ngôn ngữ nào cũng có thể đặt ở `none`.
+- **File `none` toàn site đang bật được phục vụ** tại `/_wb/code/<name>` trên host cửa hàng
+  (sandbox, `nosniff`; scss/ts phục vụ bản đã biên dịch, và không phục vụ gì cho tới khi có một
+  lần build thành công). Các dòng đó mang `url`; file theo trang hoặc đang tắt thì không.
 
 Mã được chèn lúc phục vụ trang, nên lệnh ghi có hiệu lực ngay ở request kế tiếp mà không cần
 publish. css được bọc trong `<style>`, javascript trong `<script>`, trừ khi nội dung đã mở đầu
-bằng thẻ đó. Markup trong file css/javascript sẽ bị bọc lần nữa và hiện ra thành chữ, nên bị
-từ chối, kèm gợi ý dùng `language:"html"`.
+bằng thẻ đó; markup khác ở đầu sẽ bị bọc lần nữa và hiện ra thành chữ, nên bị từ chối, kèm gợi
+ý dùng `language:"html"` (trừ ở placement `none`, vốn được phục vụ nguyên văn — nhưng chuyển
+file đó ra khỏi `none` thì bị xét lại). Bản biên dịch
+của scss và typescript LUÔN bị bọc và mã nguồn được biên dịch ở mọi placement, nên mọi nội
+dung mở đầu bằng `<` đều bị từ chối — một file `.tsx` mở đầu bằng `<script>` sẽ biên dịch thành
+`React.createElement("script")` và lỗi trên mọi trang. Hãy viết SCSS/TypeScript thuần, hoặc
+dùng `language:"html"`. Nội dung tối đa 512 KiB, và lệnh ghi
+khi một lần lưu khác trên site đang biên dịch sẽ nhận 503 `code_files_busy` — thử lại.
 
 ## `sb_translate`
 
