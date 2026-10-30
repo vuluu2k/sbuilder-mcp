@@ -6,6 +6,14 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.101.4] - 2026-10-30
+
+### Added
+- `sb_review` accepts an optional `page_id` and refuses with an error when it is not the open page, and its result names the reviewed page in `page`.
+
+### Fixed
+- `sb_review` scores a button with its own `transparent` background against the real surface behind it instead of the preset's fill, so it no longer reports false low-contrast findings.
+
 ## [0.101.3] - 2026-10-29
 
 ### Added

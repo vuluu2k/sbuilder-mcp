@@ -6,6 +6,14 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.101.4] - 2026-10-30
+
+### Added
+- `sb_review` nhận thêm `page_id` tùy chọn và báo lỗi khi nó không phải trang đang mở, đồng thời kết quả ghi tên trang được review trong `page`.
+
+### Fixed
+- `sb_review` chấm nút có nền `transparent` riêng trên nền thật phía sau thay vì màu nền của preset, nên không còn báo sai lỗi tương phản thấp.
+
 ## [0.101.3] - 2026-10-29
 
 ### Added
