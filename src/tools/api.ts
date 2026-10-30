@@ -12,7 +12,7 @@ import {
 import { readFile, stat, writeFile } from 'node:fs/promises';
 import { basename } from 'node:path';
 import { guardLocal } from '../transport/localfile.js';
-import { request, redact, ApiError } from '../transport/http.js';
+import { request, redact, redactSecretBody, ApiError } from '../transport/http.js';
 import { typeForName } from '../transport/media.js';
 import { restoreBodyFrom } from './undo.js';
 import { text } from '../mcp/response.js';
@@ -760,7 +760,7 @@ export async function callOperation(ctx: ToolContext, args: CallArgs): Promise<u
               field,
               path: args.file.path,
               bytes: (await stat(args.file.path)).size,
-              ...(scalars.length ? { fields: Object.fromEntries(scalars) } : {}),
+              ...(scalars.length ? { fields: redactSecretBody(path, Object.fromEntries(scalars)) } : {}),
             },
           }
         : undefined;
@@ -777,7 +777,8 @@ export async function callOperation(ctx: ToolContext, args: CallArgs): Promise<u
         // The CALLER's body, never the merged one: a merge folds in what the GET
         // answered, and redact() hides only secret-looking KEY NAMES — a webhook
         // URL or an account number under an ordinary key would be printed.
-        body: upload ?? args.body,
+        // A secret under an ordinary field name (`value`, `key`) on the routes that carry one.
+        body: upload ?? redactSecretBody(path, args.body),
       }),
       ...(download ? { would_save: args.file!.path } : {}),
       ...(merged ? { merge: merged } : {}),

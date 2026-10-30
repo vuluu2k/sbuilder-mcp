@@ -4,12 +4,12 @@
 import type { RequestShape } from './types.js';
 
 export const SHAPE_SOURCE = {
-  "writeOperations": 431,
-  "shaped": 346,
-  "fromHandlers": 336,
+  "writeOperations": 441,
+  "shaped": 354,
+  "fromHandlers": 344,
   "fromSwaggerOnly": 10,
   "withReadOnly": 29,
-  "structsRead": 3502
+  "structsRead": 3571
 } as const;
 
 export const REQUEST_SHAPES: Record<string, RequestShape> = {
@@ -5051,6 +5051,98 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
     ],
     "source": "go",
     "goType": "(inline)"
+  },
+  "post:/api/sites/{siteId}/functions": {
+    "fields": [
+      {
+        "name": "slug",
+        "type": "string"
+      },
+      {
+        "name": "language",
+        "type": "functions.Language"
+      },
+      {
+        "name": "content",
+        "type": "string"
+      },
+      {
+        "name": "enabled",
+        "type": "boolean | null"
+      },
+      {
+        "name": "expectedUpdatedAt",
+        "type": "string (RFC3339) | null"
+      }
+    ],
+    "source": "go",
+    "goType": "FunctionInput"
+  },
+  "put:/api/sites/{siteId}/functions/{id}": {
+    "fields": [
+      {
+        "name": "slug",
+        "type": "string"
+      },
+      {
+        "name": "language",
+        "type": "functions.Language"
+      },
+      {
+        "name": "content",
+        "type": "string"
+      },
+      {
+        "name": "enabled",
+        "type": "boolean | null"
+      },
+      {
+        "name": "expectedUpdatedAt",
+        "type": "string (RFC3339) | null"
+      }
+    ],
+    "source": "go",
+    "goType": "FunctionInput"
+  },
+  "post:/api/sites/{siteId}/functions/{id}/test": {
+    "fields": [
+      {
+        "name": "method",
+        "type": "string"
+      },
+      {
+        "name": "path",
+        "type": "string"
+      },
+      {
+        "name": "query",
+        "type": "string"
+      },
+      {
+        "name": "headers",
+        "type": "{ [string]: string }"
+      },
+      {
+        "name": "cookies",
+        "type": "{ [string]: string }"
+      },
+      {
+        "name": "body",
+        "type": "string"
+      }
+    ],
+    "source": "go",
+    "goType": "TestInput"
+  },
+  "put:/api/sites/{siteId}/functions/secrets/{key}": {
+    "fields": [
+      {
+        "name": "value",
+        "type": "string"
+      }
+    ],
+    "source": "go",
+    "goType": "SecretInput"
   },
   "post:/api/sites/{siteId}/gift-cards": {
     "fields": [
@@ -10258,6 +10350,98 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
     ],
     "source": "go",
     "goType": "CustomerInput"
+  },
+  "post:/api/v1/functions": {
+    "fields": [
+      {
+        "name": "slug",
+        "type": "string"
+      },
+      {
+        "name": "language",
+        "type": "string"
+      },
+      {
+        "name": "content",
+        "type": "string"
+      },
+      {
+        "name": "enabled",
+        "type": "boolean | null"
+      },
+      {
+        "name": "expectedUpdatedAt",
+        "type": "string (RFC3339) | null"
+      }
+    ],
+    "source": "go",
+    "goType": "FunctionInput"
+  },
+  "put:/api/v1/functions/{id}": {
+    "fields": [
+      {
+        "name": "slug",
+        "type": "string"
+      },
+      {
+        "name": "language",
+        "type": "string"
+      },
+      {
+        "name": "content",
+        "type": "string"
+      },
+      {
+        "name": "enabled",
+        "type": "boolean | null"
+      },
+      {
+        "name": "expectedUpdatedAt",
+        "type": "string (RFC3339) | null"
+      }
+    ],
+    "source": "go",
+    "goType": "FunctionInput"
+  },
+  "post:/api/v1/functions/{id}/test": {
+    "fields": [
+      {
+        "name": "method",
+        "type": "string"
+      },
+      {
+        "name": "path",
+        "type": "string"
+      },
+      {
+        "name": "query",
+        "type": "string"
+      },
+      {
+        "name": "headers",
+        "type": "{ [string]: string }"
+      },
+      {
+        "name": "cookies",
+        "type": "{ [string]: string }"
+      },
+      {
+        "name": "body",
+        "type": "string"
+      }
+    ],
+    "source": "go",
+    "goType": "FunctionTestInput"
+  },
+  "put:/api/v1/functions/secrets/{key}": {
+    "fields": [
+      {
+        "name": "value",
+        "type": "string"
+      }
+    ],
+    "source": "go",
+    "goType": "FunctionSecretInput"
   },
   "patch:/api/v1/media/{id}": {
     "fields": [

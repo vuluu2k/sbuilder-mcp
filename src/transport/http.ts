@@ -96,6 +96,61 @@ export function redact(value: unknown): unknown {
   return value;
 }
 
+/**
+ * Routes whose body carries a SECRET under a field name `redact()` cannot know is one,
+ * because the same name is ordinary everywhere else. Keyed on the PATH so `value` /
+ * `key` / `new` stay readable on every other body. Read off the catalog (2026-10-31):
+ * a function secret's `value` (editor and /api/v1), a platform vendor key's bare `key`
+ * (`platformadmin/rest/*keys.go`), and a shopper's `current`/`new` password.
+ */
+const SECRET_BODY_FIELDS: Array<[RegExp, string[]]> = [
+  [/^\/api\/sites\/[^/]+\/functions\/secrets\/[^/]+$/, ['value']],
+  [/^\/api\/v1\/functions\/secrets\/[^/]+$/, ['value']],
+  [/^\/api\/admin\/(ai|geo|image|translation)-keys$/, ['key']],
+  [/^\/_wb\/account\/password$/, ['current', 'new']],
+];
+
+/**
+ * The path as the ROUTER may see it, not as the caller spelled it — at EVERY decoding
+ * stage (raw, decoded once, twice, … until stable), because whether a proxy or the router
+ * decodes `%2F` once, twice or never is not this client's to know. Each stage drops the
+ * query/fragment, collapses `/` and `\`, resolves dot segments the way fetch does and
+ * drops a trailing `/`. `null` when a step throws — the caller then fails CLOSED. Measured
+ * by review: a trailing slash, `x/../`, `./`, `//`, `%2F`, and a `%252F..` that is a route
+ * only at a middle stage each reached the secret route while missing this table.
+ */
+function routeStages(path: string): string[] | null {
+  const norm = (p: string) =>
+    // Collapse first: a leading `//` would otherwise be read as a HOST by URL.
+    new URL(p.split(/[?#]/)[0].replace(/[\\/]+/g, '/'), 'http://h').pathname.replace(/\/+/g, '/').replace(/(.)\/$/, '$1');
+  const stages: string[] = [];
+  let s = path;
+  try {
+    for (let i = 0; i < 5; i++) {
+      stages.push(norm(s));
+      const d = decodeURIComponent(s);
+      if (d === s) return stages;
+      s = d;
+    }
+  } catch {
+    return null;
+  }
+  return null; // still encoded past the cap: fail closed
+}
+
+const ALL_SECRET_FIELDS = [...new Set(SECRET_BODY_FIELDS.flatMap(([, f]) => f))];
+
+/** `body` with the secret fields of `path`'s route replaced by a marker; any other body as given. */
+export function redactSecretBody(path: string, body: unknown): unknown {
+  const stages = routeStages(path);
+  const fields =
+    stages === null ? ALL_SECRET_FIELDS : SECRET_BODY_FIELDS.find(([re]) => stages.some((st) => re.test(st)))?.[1];
+  if (!fields || !body || typeof body !== 'object' || Array.isArray(body)) return body;
+  const out: Record<string, unknown> = { ...(body as Record<string, unknown>) };
+  for (const f of fields) if (f in out) out[f] = '[redacted]';
+  return out;
+}
+
 /** A write that carries a PAGE document: create, source save, the partner PATCH. */
 const PAGE_WRITE = /\/pages(\/[^/]+(\/source)?)?$/;
 

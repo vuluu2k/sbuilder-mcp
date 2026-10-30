@@ -1647,6 +1647,51 @@ content opening with `<` is refused — a `.tsx` opening `<script>` would compil
 `language:"html"`. Content is capped at 512 KiB, and a write
 while another save on the site is still compiling answers 503 `code_files_busy` — retry.
 
+## `sb_function`
+
+The site's BACKEND FUNCTIONS (`/api/sites/{siteId}/functions…`, web_builder v1.0.201): author
+TypeScript or JavaScript served at `/_wb/fn/<slug>` on the store host, run in a sandbox with the
+site's sealed secrets (`ctx.env`), its collections and `fetch`. A slug starting with `_` is a
+MODULE — importable by the site's other functions, with no route. This is the platform's own
+context, not a code file, so it is not `sb_code`.
+
+Owner and admin only: the `functions` RBAC domain is closed below admin for READ as well as
+write. An agent key (`SB_TOKEN`) needs the `functions.read` / `functions.write` scopes AND a
+minter who is owner or admin. With the platform's `WB_FUNCTIONS` switch off, every action
+answers one message saying functions are switched off (`functions_disabled` 404 on these
+routes, `resource_unavailable` 503 on `/api/v1`).
+
+- `list` — every function and module: id, slug, language, enabled, size, `route`
+  (`/_wb/fn/<slug>`, not for a module), `module: true`, and `compile_error` when the last build
+  failed. No source.
+- `get` {`id`} — one function, with its `content` and `updatedAt`.
+- `set` — no `id` creates {`slug`, `content`, `language`? (`typescript` default), `enabled`?
+  (true)}. With `id` it reads the row and sends it back WHOLE with only the named fields moved
+  plus `expectedUpdatedAt`, because **the PUT is a full replace** (an omitted `enabled` reads
+  as true); a row someone else wrote in between answers 409 `function_changed` — re-run. A slug
+  the platform's pattern refuses (`^_?[a-z0-9][a-z0-9-]{0,62}$`) is refused before any request.
+  The compiled bundle is server-owned and never sent. **A failed build is stored, not
+  refused**, so the answer LEADS with `compile_error`: a new function serves nothing until a
+  build succeeds; an updated one keeps serving its previous build.
+- `remove` {`id`} deletes a function (its run log goes with it, and its importers then carry
+  a compile error); {`key`} deletes a secret.
+- `test` {`id`, `method`? (GET), `path`? (after `/_wb/fn/<slug>`), `query`? (no `?`),
+  `headers`?, `cookies`? (only `fn_` names reach the function), `body`?} runs it from the
+  editor surface and answers `outcome`, `status`, `headers`, `setCookies` (as data — never
+  set on this origin), the first 64 KiB of `body`, `console`, `error` and `durationMs`. **It
+  runs for real** — fetches, collection writes and secrets are live — and **counts toward the
+  site's monthly quota**; that is said once per process. A plan with no function runs answers
+  `function_not_in_plan`, reported as "the site's plan grants no function runs".
+- `logs` {`id`?, `limit`? (1-200, default 50)} — the newest runs from the site's 200-row ring;
+  no request or response body is kept.
+- `usage` — this UTC month's runs against the plan's limit (`limit: 0` = not in the plan).
+- `secret` — no `key` lists the KEYS (`[{key, updatedAt}]`); {`key`, `value`} sets one (keys
+  `^[A-Z_][A-Z0-9_]{0,63}$`, values up to 8 KiB, 50 per site). **The value is write-only**:
+  it goes on the wire and nowhere else — not in a dry-run preview, not in a result. A `key`
+  with no `value` is refused rather than read as a delete; use `remove`.
+
+`set`, `remove`, `test` and a secret write are dry runs by default.
+
 ## `sb_translate`
 
 The editor's **Multilingual** panel as one tool, over the session-scoped

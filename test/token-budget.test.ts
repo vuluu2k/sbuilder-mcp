@@ -181,7 +181,14 @@ describe('token budget — a diet without a scale comes back', () => {
     // 38,600 -> 39,000 buys sb_code's file kinds (+256; measured 38,596 -> 38,852): four more
     // languages and placement `none`, each with a rule that 400s or serves nothing when
     // guessed (json/text take only `none`, scss/ts compile on write, a `none` file is a url).
-    expect(JSON.stringify(tools).length).toBeLessThan(39_000);
+    //
+    // 39,000 -> 40,500 buys `sb_function` (+1,363; measured 38,852 -> 40,215): backend
+    // functions are their own platform context (not code_files), eight actions over twelve
+    // routes. A full-replace PUT whose omitted `enabled` reads as true, a test run that
+    // spends the monthly quota, and secrets whose value must never be echoed — each wrong
+    // silently through a hand-built sb_api_call sequence. The 17-field schema is most of it
+    // (836); the description was cut 461 -> 349.
+    expect(JSON.stringify(tools).length).toBeLessThan(40_500);
     for (const t of tools) expect(t.description, t.name).not.toMatch(/vanishes on publish/);
     const instructions = client.getInstructions() ?? '';
     expect(instructions.length).toBeGreaterThan(200);

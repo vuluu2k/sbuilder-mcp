@@ -3,9 +3,9 @@
 import type { ApiOperation } from './types.js';
 
 export const SWAGGER_SOURCE = {
-  "operations": 923,
-  "definitions": 331,
-  "bodyCarrying": 434,
+  "operations": 949,
+  "definitions": 350,
+  "bodyCarrying": 450,
   "bodyUndescribed": 115,
   "generatedFrom": "server/docs/swagger.json"
 } as const;
@@ -1158,6 +1158,90 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "summary": "List the site's running flash-sale campaigns and items",
     "params": [],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/_wb/fn/{slug}",
+    "method": "GET",
+    "path": "/_wb/fn/{slug}",
+    "tags": [
+      "storefunctions"
+    ],
+    "summary": "Run a backend function",
+    "params": [
+      {
+        "name": "slug",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Function slug"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/_wb/fn/{slug}",
+    "method": "POST",
+    "path": "/_wb/fn/{slug}",
+    "tags": [
+      "storefunctions"
+    ],
+    "summary": "Run a backend function",
+    "params": [
+      {
+        "name": "slug",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Function slug"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "put:/_wb/fn/{slug}",
+    "method": "PUT",
+    "path": "/_wb/fn/{slug}",
+    "tags": [
+      "storefunctions"
+    ],
+    "summary": "Run a backend function",
+    "params": [
+      {
+        "name": "slug",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Function slug"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "delete:/_wb/fn/{slug}",
+    "method": "DELETE",
+    "path": "/_wb/fn/{slug}",
+    "tags": [
+      "storefunctions"
+    ],
+    "summary": "Run a backend function",
+    "params": [
+      {
+        "name": "slug",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Function slug"
+      }
+    ],
     "bodyDescribed": false,
     "bodyRef": null,
     "credential": "siteScoped"
@@ -12511,6 +12595,356 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/sites/{siteId}/functions",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/functions",
+    "tags": [
+      "functions"
+    ],
+    "summary": "List or create backend functions",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "function",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "Function to create (POST only)"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "internal_functions_rest.FunctionInput",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/api/sites/{siteId}/functions",
+    "method": "POST",
+    "path": "/api/sites/{siteId}/functions",
+    "tags": [
+      "functions"
+    ],
+    "summary": "List or create backend functions",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "function",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "Function to create (POST only)"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "internal_functions_rest.FunctionInput",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/sites/{siteId}/functions/invocations",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/functions/invocations",
+    "tags": [
+      "functions"
+    ],
+    "summary": "The site's recent function runs",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "functionId",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Only this function's runs"
+      },
+      {
+        "name": "limit",
+        "in": "query",
+        "required": false,
+        "type": "integer",
+        "description": "1..200 (default 50)"
+      },
+      {
+        "name": "offset",
+        "in": "query",
+        "required": false,
+        "type": "integer",
+        "description": "Page offset"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/sites/{siteId}/functions/secrets",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/functions/secrets",
+    "tags": [
+      "functions"
+    ],
+    "summary": "List the site's function secrets (keys only)",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "put:/api/sites/{siteId}/functions/secrets/{key}",
+    "method": "PUT",
+    "path": "/api/sites/{siteId}/functions/secrets/{key}",
+    "tags": [
+      "functions"
+    ],
+    "summary": "Set or delete one function secret",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "key",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Secret key"
+      },
+      {
+        "name": "secret",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "The value (PUT only)"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "internal_functions_rest.SecretInput",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "delete:/api/sites/{siteId}/functions/secrets/{key}",
+    "method": "DELETE",
+    "path": "/api/sites/{siteId}/functions/secrets/{key}",
+    "tags": [
+      "functions"
+    ],
+    "summary": "Set or delete one function secret",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "key",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Secret key"
+      },
+      {
+        "name": "secret",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "The value (PUT only)"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "internal_functions_rest.SecretInput",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/sites/{siteId}/functions/usage",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/functions/usage",
+    "tags": [
+      "functions"
+    ],
+    "summary": "This UTC month's function runs against the plan",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/sites/{siteId}/functions/{id}",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/functions/{id}",
+    "tags": [
+      "functions"
+    ],
+    "summary": "Read, replace or delete one backend function",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Function ID (fn_…)"
+      },
+      {
+        "name": "function",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "Replacement (PUT only); may carry expectedUpdatedAt"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "internal_functions_rest.FunctionInput",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "put:/api/sites/{siteId}/functions/{id}",
+    "method": "PUT",
+    "path": "/api/sites/{siteId}/functions/{id}",
+    "tags": [
+      "functions"
+    ],
+    "summary": "Read, replace or delete one backend function",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Function ID (fn_…)"
+      },
+      {
+        "name": "function",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "Replacement (PUT only); may carry expectedUpdatedAt"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "internal_functions_rest.FunctionInput",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "delete:/api/sites/{siteId}/functions/{id}",
+    "method": "DELETE",
+    "path": "/api/sites/{siteId}/functions/{id}",
+    "tags": [
+      "functions"
+    ],
+    "summary": "Read, replace or delete one backend function",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Function ID (fn_…)"
+      },
+      {
+        "name": "function",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "Replacement (PUT only); may carry expectedUpdatedAt"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "internal_functions_rest.FunctionInput",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/api/sites/{siteId}/functions/{id}/test",
+    "method": "POST",
+    "path": "/api/sites/{siteId}/functions/{id}/test",
+    "tags": [
+      "functions"
+    ],
+    "summary": "Run a function from the editor",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Function ID (fn_…)"
+      },
+      {
+        "name": "input",
+        "in": "body",
+        "required": true,
+        "type": "object",
+        "description": "The request to run it with"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "internal_functions_rest.TestInput",
     "credential": "siteScoped"
   },
   {
@@ -28324,6 +28758,277 @@ export const API_OPERATIONS: ApiOperation[] = [
     "credential": "apiKey"
   },
   {
+    "id": "get:/api/v1/functions",
+    "method": "GET",
+    "path": "/api/v1/functions",
+    "tags": [
+      "v1"
+    ],
+    "summary": "List or create backend functions",
+    "params": [
+      {
+        "name": "function",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "Function to create (POST only; enabled defaults to true)"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "internal_publicapi.FunctionInput",
+    "credential": "apiKey"
+  },
+  {
+    "id": "post:/api/v1/functions",
+    "method": "POST",
+    "path": "/api/v1/functions",
+    "tags": [
+      "v1"
+    ],
+    "summary": "List or create backend functions",
+    "params": [
+      {
+        "name": "function",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "Function to create (POST only; enabled defaults to true)"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "internal_publicapi.FunctionInput",
+    "credential": "apiKey"
+  },
+  {
+    "id": "get:/api/v1/functions/invocations",
+    "method": "GET",
+    "path": "/api/v1/functions/invocations",
+    "tags": [
+      "v1"
+    ],
+    "summary": "The store's recent function runs",
+    "params": [
+      {
+        "name": "function_id",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Only this function's runs"
+      },
+      {
+        "name": "limit",
+        "in": "query",
+        "required": false,
+        "type": "integer",
+        "description": "Page size (max 200)"
+      },
+      {
+        "name": "offset",
+        "in": "query",
+        "required": false,
+        "type": "integer",
+        "description": "Page offset"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "apiKey"
+  },
+  {
+    "id": "get:/api/v1/functions/secrets",
+    "method": "GET",
+    "path": "/api/v1/functions/secrets",
+    "tags": [
+      "v1"
+    ],
+    "summary": "List the store's function secrets (keys only)",
+    "params": [],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "apiKey"
+  },
+  {
+    "id": "put:/api/v1/functions/secrets/{key}",
+    "method": "PUT",
+    "path": "/api/v1/functions/secrets/{key}",
+    "tags": [
+      "v1"
+    ],
+    "summary": "Set or delete one function secret",
+    "params": [
+      {
+        "name": "key",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Secret key"
+      },
+      {
+        "name": "secret",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "The value (PUT only)"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "internal_publicapi.FunctionSecretInput",
+    "credential": "apiKey"
+  },
+  {
+    "id": "delete:/api/v1/functions/secrets/{key}",
+    "method": "DELETE",
+    "path": "/api/v1/functions/secrets/{key}",
+    "tags": [
+      "v1"
+    ],
+    "summary": "Set or delete one function secret",
+    "params": [
+      {
+        "name": "key",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Secret key"
+      },
+      {
+        "name": "secret",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "The value (PUT only)"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "internal_publicapi.FunctionSecretInput",
+    "credential": "apiKey"
+  },
+  {
+    "id": "get:/api/v1/functions/usage",
+    "method": "GET",
+    "path": "/api/v1/functions/usage",
+    "tags": [
+      "v1"
+    ],
+    "summary": "This UTC month's function runs against the plan",
+    "params": [],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "apiKey"
+  },
+  {
+    "id": "get:/api/v1/functions/{id}",
+    "method": "GET",
+    "path": "/api/v1/functions/{id}",
+    "tags": [
+      "v1"
+    ],
+    "summary": "Read, replace or delete one backend function",
+    "params": [
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Function ID (fn_…)"
+      },
+      {
+        "name": "function",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "Replacement (PUT only; enabled REQUIRED)"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "internal_publicapi.FunctionInput",
+    "credential": "apiKey"
+  },
+  {
+    "id": "put:/api/v1/functions/{id}",
+    "method": "PUT",
+    "path": "/api/v1/functions/{id}",
+    "tags": [
+      "v1"
+    ],
+    "summary": "Read, replace or delete one backend function",
+    "params": [
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Function ID (fn_…)"
+      },
+      {
+        "name": "function",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "Replacement (PUT only; enabled REQUIRED)"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "internal_publicapi.FunctionInput",
+    "credential": "apiKey"
+  },
+  {
+    "id": "delete:/api/v1/functions/{id}",
+    "method": "DELETE",
+    "path": "/api/v1/functions/{id}",
+    "tags": [
+      "v1"
+    ],
+    "summary": "Read, replace or delete one backend function",
+    "params": [
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Function ID (fn_…)"
+      },
+      {
+        "name": "function",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "Replacement (PUT only; enabled REQUIRED)"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "internal_publicapi.FunctionInput",
+    "credential": "apiKey"
+  },
+  {
+    "id": "post:/api/v1/functions/{id}/test",
+    "method": "POST",
+    "path": "/api/v1/functions/{id}/test",
+    "tags": [
+      "v1"
+    ],
+    "summary": "Run a backend function once",
+    "params": [
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Function ID (fn_…)"
+      },
+      {
+        "name": "input",
+        "in": "body",
+        "required": true,
+        "type": "object",
+        "description": "The request to run it with"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "internal_publicapi.FunctionTestInput",
+    "credential": "apiKey"
+  },
+  {
     "id": "get:/api/v1/media",
     "method": "GET",
     "path": "/api/v1/media",
@@ -30693,6 +31398,17 @@ export const API_DEFINITIONS: Record<string, unknown> = {
       "TypeForgot",
       "TypeReset",
       "TypeVerify"
+    ]
+  },
+  "github_com_webbuilder_server_internal_functions.Language": {
+    "type": "string",
+    "enum": [
+      "typescript",
+      "javascript"
+    ],
+    "x-enum-varnames": [
+      "LanguageTypeScript",
+      "LanguageJavaScript"
     ]
   },
   "github_com_webbuilder_server_internal_giftcards.GiftCard": {
@@ -36239,6 +36955,63 @@ export const API_DEFINITIONS: Record<string, unknown> = {
       }
     }
   },
+  "internal_functions_rest.FunctionInput": {
+    "type": "object",
+    "properties": {
+      "content": {
+        "type": "string"
+      },
+      "enabled": {
+        "type": "boolean"
+      },
+      "expectedUpdatedAt": {
+        "type": "string"
+      },
+      "language": {
+        "$ref": "#/definitions/github_com_webbuilder_server_internal_functions.Language"
+      },
+      "slug": {
+        "type": "string"
+      }
+    }
+  },
+  "internal_functions_rest.SecretInput": {
+    "type": "object",
+    "properties": {
+      "value": {
+        "type": "string"
+      }
+    }
+  },
+  "internal_functions_rest.TestInput": {
+    "type": "object",
+    "properties": {
+      "body": {
+        "type": "string"
+      },
+      "cookies": {
+        "type": "object",
+        "additionalProperties": {
+          "type": "string"
+        }
+      },
+      "headers": {
+        "type": "object",
+        "additionalProperties": {
+          "type": "string"
+        }
+      },
+      "method": {
+        "type": "string"
+      },
+      "path": {
+        "type": "string"
+      },
+      "query": {
+        "type": "string"
+      }
+    }
+  },
   "internal_giftcards_rest.adjustRequest": {
     "type": "object",
     "properties": {
@@ -37281,6 +38054,270 @@ export const API_DEFINITIONS: Record<string, unknown> = {
       },
       "total": {
         "type": "integer"
+      }
+    }
+  },
+  "internal_publicapi.Function": {
+    "type": "object",
+    "properties": {
+      "compileError": {
+        "type": "string"
+      },
+      "content": {
+        "type": "string"
+      },
+      "createdAt": {
+        "type": "string"
+      },
+      "enabled": {
+        "type": "boolean"
+      },
+      "id": {
+        "type": "string"
+      },
+      "language": {
+        "type": "string"
+      },
+      "slug": {
+        "type": "string"
+      },
+      "updatedAt": {
+        "type": "string"
+      }
+    }
+  },
+  "internal_publicapi.FunctionInput": {
+    "type": "object",
+    "properties": {
+      "content": {
+        "type": "string"
+      },
+      "enabled": {
+        "type": "boolean"
+      },
+      "expectedUpdatedAt": {
+        "type": "string"
+      },
+      "language": {
+        "type": "string"
+      },
+      "slug": {
+        "type": "string"
+      }
+    }
+  },
+  "internal_publicapi.FunctionInvocation": {
+    "type": "object",
+    "properties": {
+      "console": {
+        "type": "string"
+      },
+      "durationMs": {
+        "type": "integer"
+      },
+      "error": {
+        "type": "string"
+      },
+      "functionId": {
+        "type": "string"
+      },
+      "id": {
+        "type": "string"
+      },
+      "memoryBytes": {
+        "type": "integer"
+      },
+      "outcome": {
+        "type": "string"
+      },
+      "slug": {
+        "type": "string"
+      },
+      "startedAt": {
+        "type": "string"
+      },
+      "status": {
+        "type": "integer"
+      },
+      "test": {
+        "type": "boolean"
+      }
+    }
+  },
+  "internal_publicapi.FunctionInvocationListResponse": {
+    "type": "object",
+    "properties": {
+      "invocations": {
+        "type": "array",
+        "items": {
+          "$ref": "#/definitions/internal_publicapi.FunctionInvocation"
+        }
+      },
+      "total": {
+        "type": "integer"
+      }
+    }
+  },
+  "internal_publicapi.FunctionListResponse": {
+    "type": "object",
+    "properties": {
+      "functions": {
+        "type": "array",
+        "items": {
+          "$ref": "#/definitions/internal_publicapi.Function"
+        }
+      },
+      "total": {
+        "type": "integer"
+      }
+    }
+  },
+  "internal_publicapi.FunctionResponse": {
+    "type": "object",
+    "properties": {
+      "function": {
+        "$ref": "#/definitions/internal_publicapi.Function"
+      }
+    }
+  },
+  "internal_publicapi.FunctionSecret": {
+    "type": "object",
+    "properties": {
+      "key": {
+        "type": "string"
+      },
+      "updatedAt": {
+        "type": "string"
+      }
+    }
+  },
+  "internal_publicapi.FunctionSecretInput": {
+    "type": "object",
+    "properties": {
+      "value": {
+        "type": "string"
+      }
+    }
+  },
+  "internal_publicapi.FunctionSecretListResponse": {
+    "type": "object",
+    "properties": {
+      "secrets": {
+        "type": "array",
+        "items": {
+          "$ref": "#/definitions/internal_publicapi.FunctionSecret"
+        }
+      },
+      "total": {
+        "type": "integer"
+      }
+    }
+  },
+  "internal_publicapi.FunctionSecretResponse": {
+    "type": "object",
+    "properties": {
+      "secret": {
+        "$ref": "#/definitions/internal_publicapi.FunctionSecret"
+      }
+    }
+  },
+  "internal_publicapi.FunctionTestInput": {
+    "type": "object",
+    "properties": {
+      "body": {
+        "type": "string"
+      },
+      "cookies": {
+        "type": "object",
+        "additionalProperties": {
+          "type": "string"
+        }
+      },
+      "headers": {
+        "type": "object",
+        "additionalProperties": {
+          "type": "string"
+        }
+      },
+      "method": {
+        "type": "string"
+      },
+      "path": {
+        "type": "string"
+      },
+      "query": {
+        "type": "string"
+      }
+    }
+  },
+  "internal_publicapi.FunctionTestResponse": {
+    "type": "object",
+    "properties": {
+      "result": {
+        "$ref": "#/definitions/internal_publicapi.FunctionTestResult"
+      }
+    }
+  },
+  "internal_publicapi.FunctionTestResult": {
+    "type": "object",
+    "properties": {
+      "body": {
+        "type": "string"
+      },
+      "console": {
+        "type": "string"
+      },
+      "durationMs": {
+        "type": "integer"
+      },
+      "error": {
+        "type": "string"
+      },
+      "headers": {
+        "type": "array",
+        "items": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "memoryBytes": {
+        "type": "integer"
+      },
+      "outcome": {
+        "type": "string"
+      },
+      "setCookies": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "status": {
+        "type": "integer"
+      }
+    }
+  },
+  "internal_publicapi.FunctionUsage": {
+    "type": "object",
+    "properties": {
+      "invocations": {
+        "type": "integer"
+      },
+      "limit": {
+        "type": "integer"
+      },
+      "periodStart": {
+        "type": "string"
+      }
+    }
+  },
+  "internal_publicapi.FunctionUsageResponse": {
+    "type": "object",
+    "properties": {
+      "usage": {
+        "$ref": "#/definitions/internal_publicapi.FunctionUsage"
       }
     }
   },

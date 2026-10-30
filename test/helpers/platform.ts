@@ -6,7 +6,7 @@ import { connectedClient } from '../harness.js';
  * fixture can add, save, re-open and review through the public tools. Every
  * other path answers `{}` — the harness default — unless `extra` claims it.
  */
-export function fakePlatform(extra: (method: string, path: string, body: unknown) => unknown | undefined = () => undefined) {
+export function fakePlatform(extra: (method: string, path: string, body: unknown, query: string) => unknown | undefined = () => undefined) {
   const pages = new Map<string, { document: unknown; rev: number }>();
   /** Form FIELD documents: GET answers `{ document }` (null when never saved), PUT `{ schema }`. */
   const forms = new Map<string, unknown>();
@@ -20,7 +20,7 @@ export function fakePlatform(extra: (method: string, path: string, body: unknown
     const method = (init?.method ?? 'GET').toUpperCase();
     const body = init?.body ? JSON.parse(String(init.body)) : undefined;
     if (method !== 'GET') writes.push({ method, path: url.pathname, query: url.search });
-    const own = extra(method, url.pathname, body);
+    const own = extra(method, url.pathname, body, url.search);
     // `__status` lets a fixture answer an error in the platform's one shape.
     if (own !== undefined) {
       const { __status, ...rest } = own as { __status?: number };

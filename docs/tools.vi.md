@@ -1614,6 +1614,51 @@ dung mở đầu bằng `<` đều bị từ chối — một file `.tsx` mở �
 dùng `language:"html"`. Nội dung tối đa 512 KiB, và lệnh ghi
 khi một lần lưu khác trên site đang biên dịch sẽ nhận 503 `code_files_busy` — thử lại.
 
+## `sb_function`
+
+Các BACKEND FUNCTION của site (`/api/sites/{siteId}/functions…`, web_builder v1.0.201):
+TypeScript hoặc JavaScript do tác giả viết, phục vụ tại `/_wb/fn/<slug>` trên host cửa hàng,
+chạy trong sandbox với secret đã niêm phong của site (`ctx.env`), các collection và `fetch`.
+Slug bắt đầu bằng `_` là MODULE — các function khác của site import được, không có route. Đây
+là ngữ cảnh riêng của nền tảng, không phải file mã, nên không phải `sb_code`.
+
+Chỉ owner và admin: miền RBAC `functions` đóng dưới admin cho cả ĐỌC lẫn ghi. Agent key
+(`SB_TOKEN`) cần scope `functions.read` / `functions.write` VÀ người tạo key phải là owner hoặc
+admin. Khi công tắc `WB_FUNCTIONS` của nền tảng tắt, mọi action trả về một thông báo duy nhất
+nói function đang bị tắt (`functions_disabled` 404 trên các route này, `resource_unavailable`
+503 trên `/api/v1`).
+
+- `list` — mọi function và module: id, slug, language, enabled, kích thước, `route`
+  (`/_wb/fn/<slug>`, module thì không có), `module: true`, và `compile_error` khi lần build
+  gần nhất lỗi. Không kèm mã nguồn.
+- `get` {`id`} — một function, kèm `content` và `updatedAt`.
+- `set` — không có `id` thì tạo {`slug`, `content`, `language`? (mặc định `typescript`),
+  `enabled`? (true)}. Có `id` thì đọc bản ghi rồi gửi lại NGUYÊN BẢN chỉ đổi các trường được
+  nhắc, kèm `expectedUpdatedAt`, vì **PUT thay cả bản ghi** (bỏ `enabled` sẽ thành true); bản
+  ghi bị người khác ghi ở giữa trả 409 `function_changed` — chạy lại. Slug mà pattern của nền
+  tảng từ chối (`^_?[a-z0-9][a-z0-9-]{0,62}$`) bị từ chối trước khi gửi request. Bundle đã
+  biên dịch do server giữ và không bao giờ được gửi. **Build lỗi vẫn được lưu, không bị từ
+  chối**, nên câu trả lời MỞ ĐẦU bằng `compile_error`: function mới không phục vụ gì cho đến
+  khi build thành công; function được cập nhật vẫn phục vụ bản build trước.
+- `remove` {`id`} xoá một function (nhật ký chạy đi theo, và các function import nó sẽ mang
+  compile error); {`key`} xoá một secret.
+- `test` {`id`, `method`? (GET), `path`? (sau `/_wb/fn/<slug>`), `query`? (không có `?`),
+  `headers`?, `cookies`? (chỉ tên `fn_` tới được function), `body`?} chạy nó từ phía editor và
+  trả `outcome`, `status`, `headers`, `setCookies` (dạng dữ liệu — không bao giờ set trên
+  origin này), 64 KiB đầu của `body`, `console`, `error` và `durationMs`. **Nó chạy thật** —
+  fetch, ghi collection và secret đều thật — và **tính vào hạn mức tháng của site**; điều này
+  được nói một lần mỗi process. Gói không có lượt chạy function trả `function_not_in_plan`,
+  được báo là "gói của site không cấp lượt chạy function nào".
+- `logs` {`id`?, `limit`? (1-200, mặc định 50)} — các lượt chạy mới nhất trong vòng 200 dòng
+  của site; không giữ body của request hay response.
+- `usage` — số lượt chạy tháng UTC này so với giới hạn của gói (`limit: 0` = không có trong gói).
+- `secret` — không có `key` thì liệt kê các KEY (`[{key, updatedAt}]`); {`key`, `value`} đặt
+  một secret (key `^[A-Z_][A-Z0-9_]{0,63}$`, giá trị tối đa 8 KiB, 50 secret mỗi site). **Giá trị
+  chỉ-ghi**: nó chỉ đi trên đường truyền — không có trong bản xem trước dry run, không có trong
+  kết quả. `key` không kèm `value` bị từ chối chứ không hiểu thành xoá; dùng `remove`.
+
+`set`, `remove`, `test` và lệnh ghi secret mặc định là dry run.
+
 ## `sb_translate`
 
 Bảng **Đa ngôn ngữ** của editor gói thành một tool, qua các route session-scoped

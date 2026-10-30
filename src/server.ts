@@ -12,6 +12,7 @@ import { registerPageTools } from './tools/page.js';
 import { registerPageUpdateTools } from './tools/pageupdate.js';
 import { registerPageVersionTools } from './tools/pageversion.js';
 import { registerCodeTools } from './tools/code.js';
+import { registerFunctionTools } from './tools/function.js';
 import { registerLiveTools } from './tools/live.js';
 import { registerStoreTools } from './tools/store.js';
 import { registerImportTools } from './tools/importpage.js';
@@ -64,6 +65,7 @@ const SESSION_FREE: ReadonlySet<string> = new Set([
   'sb_api_call',
   'sb_page_update',
   'sb_code',
+  'sb_function',
   'sb_theme',
   'sb_catalog_search',
   'sb_traits_for',
@@ -109,6 +111,7 @@ export function createServer(ctx: ToolContext = buildContext()): McpServer {
   registerPageUpdateTools(server, ctx);
   registerPageVersionTools(server, ctx, pageSession);
   registerCodeTools(server, ctx);
+  registerFunctionTools(server, ctx);
   registerLiveTools(server, ctx, pageSession);
   registerStoreTools(server, ctx, pageSession);
   registerThemeTools(server, ctx);

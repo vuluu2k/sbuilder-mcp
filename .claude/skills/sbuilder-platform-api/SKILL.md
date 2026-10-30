@@ -494,3 +494,11 @@ a measured need) and `sb_bind`, which belongs with Phase 3's binding work.
 - **`sb_undo` entries carry `tool` + `summary`**, read from `currentCall` (an AsyncLocalStorage
   set per `tools/call` in `src/mcp/serial.ts`), and the listing is the open page's saves plus
   non-page writes; `other_pages` counts the rest, `all:true` lists them (TTG gap #54).
+- **A SECRET CAN SIT UNDER AN ORDINARY FIELD NAME, and `redact()` keys off names** (2026-10-31,
+  backend functions). A function secret's PUT body is `{value}` (`/api/sites/{id}/functions/secrets/{key}`
+  and `/api/v1/functions/secrets/{key}`), a platform vendor key's is `{label, key}` (`/api/admin/{ai,geo,image,translation}-keys`),
+  a shopper's password change `{current, new}` — so `sb_api_call`'s dry run printed all three.
+  `redactSecretBody(path, body)` beside `redact()` masks those fields BY ROUTE; adding `value`/`key`
+  to the global list would blank every translation row and collection item. A new route of this
+  shape goes in its `SECRET_BODY_FIELDS` table. Functions are owner/admin only (`functions.read`
+  is closed below admin too): a `wbk_` key needs `functions.*` scopes AND an owner/admin minter.
