@@ -1,5 +1,5 @@
 import { isDeepStrictEqual } from 'node:util';
-import { FILTER_VALUE_TYPES, sourceOf } from './filtervalues.js';
+import { FILTER_VALUE_TYPES, TAG_GROUP, sourceOf } from './filtervalues.js';
 import { childrenOf, childrenWithSatellites, isOverlay, isSharedSection, pageChildren, subtreeIds, appBlockRoot, SPEC_GLOBAL_REF, SPEC_APP_BLOCK_REF, type DocLike } from '../../core/tree.js';
 import { STUCK_STATE, stickyBlockedBy, stuckHostOf, isPinnedNode } from './sticky.js';
 import { bandOf, isGlobal, type Band } from './traps.js';
@@ -535,6 +535,41 @@ export function reviewDesign(
   // shape and is legitimately a list of links; a two-button pair is a call to
   // action, not a menu. The check that fires on those is one an author learns to
   // ignore, which costs more than the one it catches.
+  // TAG FILTERS SHARING ONE URL KEY (TTG, 2026-10-30): CPU, VGA and RAM tag filters all
+  // wrote `f.tag=`, under ONE match mode — OR returned machines with either part, AND
+  // emptied the shelf on two CPUs. Since web_builder's tag filter groups each filter owns
+  // `f.tag.<filterGroupKey>`: values OR within it, groups AND. Event filters write no URL.
+  {
+    const byKey = new Map<string, Array<{ id: string; type: string; targets: string[] }>>();
+    for (const id of walkOrder) {
+      const n = d.nodes[id];
+      const sp = (n.specials ?? {}) as Record<string, unknown>;
+      if (!FILTER_VALUE_TYPES.has(n.data.type) || sourceOf(n.data.type, sp) !== 'tag' || sp.filterBehavior === 'event') continue;
+      const g = typeof sp.filterGroupKey === 'string' && TAG_GROUP.test(sp.filterGroupKey) ? sp.filterGroupKey : '';
+      const targets = [
+        ...(typeof sp.filterTarget === 'string' && sp.filterTarget ? [sp.filterTarget] : []),
+        ...(Array.isArray(sp.filterTargets) ? sp.filterTargets.filter((t): t is string => typeof t === 'string' && t !== '') : []),
+      ];
+      const key = g ? `tag.${g}` : 'tag';
+      byKey.set(key, [...(byKey.get(key) ?? []), { id, type: n.data.type, targets }]);
+    }
+    for (const [key, list] of byKey) {
+      const overlaps = (a: string[], b: string[]) => a.length === 0 || b.length === 0 || a.some((t) => b.includes(t));
+      for (let i = 1; i < list.length; i++) {
+        if (!list.slice(0, i).some((p) => overlaps(p.targets, list[i].targets))) continue;
+        out.push({
+          code: 'tag_filters_share_key',
+          nodeId: list[i].id,
+          type: list[i].type,
+          problem:
+            `${list.length} tag filters on this page write the same URL key f.${key}, so their values combine under ONE ` +
+            'match mode: OR returns products carrying a value from either filter, AND empties the shelf when a shopper ticks two values of one.',
+          fix: fill('tag_filters_share_key', { id: list[i].id }),
+        });
+      }
+    }
+  }
+
   for (const [containerId, childIds] of [...Object.keys(d.nodes)].map(
     (id) => [id, childrenOf(d, id)] as const,
   )) {

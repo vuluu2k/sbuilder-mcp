@@ -196,6 +196,10 @@ export const FIX: Record<string, string> = {
     'sort gets the six orders, a catalogue source reads the facets, a price filter needs filterRanges. A sort aimed ' +
     'at a record list takes filterValues [{ "value": "fld_…_asc" | "fld_…_desc", "label": "…", "enabled": true }]; ' +
     'anything else, write specials.filterValues [{ "value": …, "label": …, "enabled": true }] yourself.',
+  tag_filters_share_key:
+    'Give each tag filter its own group: sb_set id "<id>", namespace specials, keys { "filterGroupKey": "cpu" } ' +
+    '(a slug, ^[a-z0-9][a-z0-9_-]{0,31}$ — one per filter: "cpu", "vga", "ram"), and set "filterMatch": "any" so values ' +
+    'OR inside the group. Groups AND with each other, so CPU X + VGA Y narrows to machines holding both.',
   record_relation_unset:
     'Link it to its parent row: sb_set id "<id>", namespace config, keys { "recordRelationField": "fld_…" } — ' +
     'the ID of a "reference" field in THIS list\'s collection that targets the enclosing list\'s collection ' +

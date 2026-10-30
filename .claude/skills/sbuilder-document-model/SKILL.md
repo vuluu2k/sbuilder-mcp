@@ -826,6 +826,12 @@ platform treats an unproven guard as indistinguishable from an absent one.
   minted rendered an empty box. `src/domains/site/filtervalues.ts` is that save for mode `all`;
   `sb_set` re-derives on `filterSource`/`filterAxis`/`filterRanges`. Price rows are
   `<fromCents>-<toCents>` (open end `<from>-`, `predicate.ts matchesRange`); `..` matches nothing.
+- **Tag filters on one shelf share `f.tag=` and ONE match mode** unless each carries
+  `specials.filterGroupKey` (web_builder v1.0.194, `^[a-z0-9][a-z0-9_-]{0,31}$`): then each owns
+  `f.tag.<group>=` — values OR within (or AND by its own `filterMatch`), groups AND. TTG's CPU/VGA/RAM
+  filters had to choose between OR (CPU X + VGA Y = either) and AND (two CPUs = empty) before it.
+  `sb_review` reports `tag_filters_share_key`. An `event` filter stays bare `tag` (writes no URL).
+  Never model specs as product `attributes`: those are VARIANT axes, and a PUT rebuilds the matrix.
 - **A `textHtml` with ONE non-inline tag is DROPPED WHOLE at render** (`scope.GateInlineRichSpecials`
   → `sanitize.IsInlineRepresentable`): `<p>…</p>` published the escaped plain `text`, measured live
   2026-10-28. `writecheck` warns `rich_dropped` naming each tag/attribute outside `INLINE_RICH`, an

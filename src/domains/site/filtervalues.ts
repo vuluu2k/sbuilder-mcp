@@ -24,6 +24,9 @@ import type { Patch } from '../../core/patch.js';
  */
 export const FILTER_VALUE_TYPES = new Set(['filter-checkbox', 'filter-radio', 'filter-tag', 'filter-color', 'select']);
 
+/** web_builder's tag filter group grammar (schema sources.ts TAG_GROUP_RE): `f.tag.<group>=`. */
+export const TAG_GROUP = /^[a-z0-9][a-z0-9_-]{0,31}$/;
+
 /** The keys whose change re-derives the rows on sb_set. */
 export const RESOURCE_KEYS = ['filterSource', 'filterAxis', 'filterRanges'];
 
