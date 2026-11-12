@@ -6,6 +6,18 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.105.0] - 2026-11-13
+
+### Added
+- `sb_collection` quản lý trọn vẹn các bảng dữ liệu của site: tạo, sửa và xoá bảng; liệt kê, thêm, sửa, xoá và sắp xếp trường có kiểu; liệt kê, đọc, thêm, sửa, xoá, di chuyển và sắp xếp bản ghi; xuất và nhập CSV; và upsert theo external id. Lệnh ghi, xoá và nhập mặc định `dry_run`.
+- `sb_collection` `edit` đọc bản ghi rồi gửi lại nguyên bản kèm `rev`, nên lệnh sửa không bao giờ gỡ đăng bản ghi hay làm mất giá trị không được nhắc tới, và bản ghi bị lưu ở giữa được báo lại thay vì bị ghi đè.
+- `sb_collection` từ chối key trường mà nền tảng sẽ từ chối trước khi gửi gì, và nêu tên trang, biểu mẫu hay bảng còn đang dùng một bảng hoặc bản ghi không xoá được.
+
+### Changed
+- `sb_translate` từ chối `write` và `auto` với locale là market (mượn chữ của ngôn ngữ khác với tiền tệ riêng) và nêu ngôn ngữ cần dịch thay.
+- `sb_function` nói function do platform admin bật chứ không phải do `WB_FUNCTIONS`, và mô tả lượt chạy là tùy theo hạn mức tháng của site chứ không phải tính năng của gói.
+- Catalog sinh tự động được sinh lại theo web_builder v1.0.237 và nay gồm 969 operation; element trang liệt kê thêm phần nền video và nền 3D.
+
 ## [0.104.0] - 2026-10-30
 
 ### Added

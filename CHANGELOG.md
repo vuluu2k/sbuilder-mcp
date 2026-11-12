@@ -6,6 +6,18 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.105.0] - 2026-11-13
+
+### Added
+- `sb_collection` manages a site's data tables end to end: create, update and delete tables; list, add, update, delete and reorder typed fields; list, read, add, edit, delete, move and reorder records; CSV export and import; and upsert by external id. Writes, deletes and imports default to `dry_run`.
+- `sb_collection` `edit` reads the record and sends it back whole with its `rev`, so an edit never unpublishes the row or drops values it did not name, and a row saved in between is reported rather than overwritten.
+- `sb_collection` rejects field keys the platform would refuse before sending anything, and names the pages, forms or tables that still use a table or record it cannot delete.
+
+### Changed
+- `sb_translate` refuses `write` and `auto` for a market locale (one that borrows another language's words at its own currency) and names the language to translate instead.
+- `sb_function` says functions are switched on by a platform admin rather than by `WB_FUNCTIONS`, and describes runs as subject to the site's monthly allowance rather than a plan feature.
+- The generated catalog is regenerated against web_builder v1.0.237 and now covers 969 operations; the page element lists the background video and 3D background settings.
+
 ## [0.104.0] - 2026-10-30
 
 ### Added
