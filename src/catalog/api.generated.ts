@@ -3,10 +3,10 @@
 import type { ApiOperation } from './types.js';
 
 export const SWAGGER_SOURCE = {
-  "operations": 949,
-  "definitions": 350,
-  "bodyCarrying": 450,
-  "bodyUndescribed": 115,
+  "operations": 969,
+  "definitions": 364,
+  "bodyCarrying": 464,
+  "bodyUndescribed": 121,
   "generatedFrom": "server/docs/swagger.json"
 } as const;
 
@@ -1743,6 +1743,90 @@ export const API_OPERATIONS: ApiOperation[] = [
     "credential": "siteScoped"
   },
   {
+    "id": "get:/api/admin/ai-free-credits",
+    "method": "GET",
+    "path": "/api/admin/ai-free-credits",
+    "tags": [
+      "admin"
+    ],
+    "summary": "Read or change the monthly free AI credits per account",
+    "params": [
+      {
+        "name": "body",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "PUT only. monthlyCredits 0 to 1000000; 0 grants nothing."
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "github_com_webbuilder_server_internal_platformadmin.AIFreeCreditsView",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "put:/api/admin/ai-free-credits",
+    "method": "PUT",
+    "path": "/api/admin/ai-free-credits",
+    "tags": [
+      "admin"
+    ],
+    "summary": "Read or change the monthly free AI credits per account",
+    "params": [
+      {
+        "name": "body",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "PUT only. monthlyCredits 0 to 1000000; 0 grants nothing."
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "github_com_webbuilder_server_internal_platformadmin.AIFreeCreditsView",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/admin/ai-image",
+    "method": "GET",
+    "path": "/api/admin/ai-image",
+    "tags": [
+      "admin"
+    ],
+    "summary": "Read or change the assistant's image generator",
+    "params": [
+      {
+        "name": "body",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "PUT only. apiKey absent keeps the saved key, empty clears it."
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "github_com_webbuilder_server_internal_platformadmin.AIImageInput",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "put:/api/admin/ai-image",
+    "method": "PUT",
+    "path": "/api/admin/ai-image",
+    "tags": [
+      "admin"
+    ],
+    "summary": "Read or change the assistant's image generator",
+    "params": [
+      {
+        "name": "body",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "PUT only. apiKey absent keeps the saved key, empty clears it."
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "github_com_webbuilder_server_internal_platformadmin.AIImageInput",
+    "credential": "siteScoped"
+  },
+  {
     "id": "get:/api/admin/ai-keys",
     "method": "GET",
     "path": "/api/admin/ai-keys",
@@ -1790,6 +1874,153 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "summary": "Record that a person dealt with a queued transfer",
     "params": [],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/admin/functions",
+    "method": "GET",
+    "path": "/api/admin/functions",
+    "tags": [
+      "admin"
+    ],
+    "summary": "Read or change the backend functions switch and run limits",
+    "params": [
+      {
+        "name": "body",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "PUT only"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "github_com_webbuilder_server_internal_platformadmin.FunctionsSettingsInput",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "put:/api/admin/functions",
+    "method": "PUT",
+    "path": "/api/admin/functions",
+    "tags": [
+      "admin"
+    ],
+    "summary": "Read or change the backend functions switch and run limits",
+    "params": [
+      {
+        "name": "body",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "PUT only"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "github_com_webbuilder_server_internal_platformadmin.FunctionsSettingsInput",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/admin/functions/overrides",
+    "method": "GET",
+    "path": "/api/admin/functions/overrides",
+    "tags": [
+      "admin"
+    ],
+    "summary": "List the per-site backend functions allow/block list",
+    "params": [
+      {
+        "name": "limit",
+        "in": "query",
+        "required": false,
+        "type": "integer",
+        "description": "page size, clamped 1..200 (default 50)"
+      },
+      {
+        "name": "offset",
+        "in": "query",
+        "required": false,
+        "type": "integer",
+        "description": "rows to skip"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "put:/api/admin/functions/overrides/{site}",
+    "method": "PUT",
+    "path": "/api/admin/functions/overrides/{site}",
+    "tags": [
+      "admin"
+    ],
+    "summary": "Set or remove one site's backend functions override",
+    "params": [
+      {
+        "name": "site",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "site id or slug (PUT); site id (DELETE)"
+      },
+      {
+        "name": "body",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "PUT only — allow needs monthlyCap 1..100000000, block needs 0"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "github_com_webbuilder_server_internal_platformadmin.FunctionOverrideInput",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "delete:/api/admin/functions/overrides/{site}",
+    "method": "DELETE",
+    "path": "/api/admin/functions/overrides/{site}",
+    "tags": [
+      "admin"
+    ],
+    "summary": "Set or remove one site's backend functions override",
+    "params": [
+      {
+        "name": "site",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "site id or slug (PUT); site id (DELETE)"
+      },
+      {
+        "name": "body",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "PUT only — allow needs monthlyCap 1..100000000, block needs 0"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "github_com_webbuilder_server_internal_platformadmin.FunctionOverrideInput",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/admin/functions/usage",
+    "method": "GET",
+    "path": "/api/admin/functions/usage",
+    "tags": [
+      "admin"
+    ],
+    "summary": "Backend functions usage: this month's runs, recent failures, this replica's slots",
+    "params": [
+      {
+        "name": "limit",
+        "in": "query",
+        "required": false,
+        "type": "integer",
+        "description": "top sites, clamped 1..100 (default 50)"
+      }
+    ],
     "bodyDescribed": false,
     "bodyRef": null,
     "credential": "siteScoped"
@@ -2076,6 +2307,193 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "summary": "Manage the platform's machine-translation credentials",
     "params": [],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/agent-bridge",
+    "method": "GET",
+    "path": "/api/agent-bridge",
+    "tags": [
+      "ai"
+    ],
+    "summary": "sb agent: receive the editor assistant's CLI rounds (SSE), or answer one",
+    "params": [],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/api/agent-bridge/results/{id}",
+    "method": "POST",
+    "path": "/api/agent-bridge/results/{id}",
+    "tags": [
+      "ai"
+    ],
+    "summary": "sb agent: answer one CLI round",
+    "params": [
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Job id (32 hex) from the stream's job event"
+      },
+      {
+        "name": "body",
+        "in": "body",
+        "required": true,
+        "type": "object",
+        "description": "{text} — the CLI's schema-shaped answer — or {error}; or {partial, seq}: a fragment of the answer as it is written, numbered from 0"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/api/agent-bridge/start",
+    "method": "POST",
+    "path": "/api/agent-bridge/start",
+    "tags": [
+      "ai"
+    ],
+    "summary": "sb new: turn a sentence into an editor link that builds a new site",
+    "params": [
+      {
+        "name": "body",
+        "in": "body",
+        "required": true,
+        "type": "object",
+        "description": "{prompt} — what to build, at most 2000 characters, and fewer if they are long in bytes"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/api/agent-bridge/start/redeem",
+    "method": "POST",
+    "path": "/api/agent-bridge/start/redeem",
+    "tags": [
+      "ai"
+    ],
+    "summary": "Editor: read the sentence behind an sb new link",
+    "params": [
+      {
+        "name": "body",
+        "in": "body",
+        "required": true,
+        "type": "object",
+        "description": "{ticket} — the link's start parameter"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/agent-bridge/status",
+    "method": "GET",
+    "path": "/api/agent-bridge/status",
+    "tags": [
+      "ai"
+    ],
+    "summary": "Whether the signed-in author's sb agent is running",
+    "params": [],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/ai/credits",
+    "method": "GET",
+    "path": "/api/ai/credits",
+    "tags": [
+      "ai"
+    ],
+    "summary": "The signed-in account's AI credits",
+    "params": [
+      {
+        "name": "wallet",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "org:<id> to read an organisation's wallet; absent reads the caller's own"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/api/ai/credits",
+    "method": "POST",
+    "path": "/api/ai/credits",
+    "tags": [
+      "ai"
+    ],
+    "summary": "Buy AI credits into a wallet the caller may fund",
+    "params": [
+      {
+        "name": "body",
+        "in": "body",
+        "required": true,
+        "type": "object",
+        "description": "{credits:N, wallet?:\\"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/api/ai/messages",
+    "method": "POST",
+    "path": "/api/ai/messages",
+    "tags": [
+      "ai"
+    ],
+    "summary": "Ask the assistant from the account, on the platform's key",
+    "params": [
+      {
+        "name": "Accept",
+        "in": "header",
+        "required": false,
+        "type": "string",
+        "description": "text/event-stream to receive the answer as it is written; anything else returns one JSON body"
+      },
+      {
+        "name": "message",
+        "in": "body",
+        "required": true,
+        "type": "object",
+        "description": "question (required), history (prior turns: role user|assistant, text), clientTools (tools the browser answers) and wallet (org:<id> to spend an organisation's credits; absent spends the asker's own)"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/api/ai/tool-results",
+    "method": "POST",
+    "path": "/api/ai/tool-results",
+    "tags": [
+      "ai"
+    ],
+    "summary": "Deliver the result of a client-side tool call on an account-level ask",
+    "params": [
+      {
+        "name": "result",
+        "in": "body",
+        "required": true,
+        "type": "object",
+        "description": "id (the tool_request's own id, from the SSE event) and result (what the tool answered, as a string)"
+      }
+    ],
     "bodyDescribed": false,
     "bodyRef": null,
     "credential": "siteScoped"
@@ -5042,7 +5460,7 @@ export const API_OPERATIONS: ApiOperation[] = [
         "in": "body",
         "required": true,
         "type": "object",
-        "description": "question (required), history (prior turns: role user|assistant, text) and context (the selected element the agent may propose edits to)"
+        "description": "question (required), history (prior turns: role user|assistant, text), context (the selected element the agent may propose edits to), manage (true when asked from the dashboard or a manage screen) and wallet (org:<id> to spend an organisation's credits; absent spends the asker's own)"
       }
     ],
     "bodyDescribed": false,
@@ -23136,6 +23554,76 @@ export const API_OPERATIONS: ApiOperation[] = [
     "credential": "siteScoped"
   },
   {
+    "id": "get:/api/sites/{siteId}/reports/customers",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/reports/customers",
+    "tags": [
+      "reports"
+    ],
+    "summary": "Best customers",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "from",
+        "in": "query",
+        "required": true,
+        "type": "string",
+        "description": "First day, YYYY-MM-DD"
+      },
+      {
+        "name": "to",
+        "in": "query",
+        "required": true,
+        "type": "string",
+        "description": "Last day, YYYY-MM-DD"
+      },
+      {
+        "name": "channel",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "all | pos | web"
+      },
+      {
+        "name": "locationId",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Location filter"
+      },
+      {
+        "name": "sort",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "spent (default) | orders"
+      },
+      {
+        "name": "limit",
+        "in": "query",
+        "required": false,
+        "type": "integer",
+        "description": "Page size (default 50, max 200)"
+      },
+      {
+        "name": "offset",
+        "in": "query",
+        "required": false,
+        "type": "integer",
+        "description": "Offset"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
     "id": "get:/api/sites/{siteId}/reports/events",
     "method": "GET",
     "path": "/api/sites/{siteId}/reports/events",
@@ -32090,6 +32578,314 @@ export const API_DEFINITIONS: Record<string, unknown> = {
       },
       "sandbox": {
         "type": "boolean"
+      }
+    }
+  },
+  "github_com_webbuilder_server_internal_platformadmin.AIFreeCreditsView": {
+    "type": "object",
+    "properties": {
+      "monthlyCredits": {
+        "description": "MonthlyCredits is what each account gets a month, no rollover. 0 is none.",
+        "type": "integer"
+      }
+    }
+  },
+  "github_com_webbuilder_server_internal_platformadmin.AIImageInput": {
+    "type": "object",
+    "properties": {
+      "apiKey": {
+        "type": "string"
+      },
+      "enabled": {
+        "type": "boolean"
+      },
+      "model": {
+        "type": "string"
+      },
+      "provider": {
+        "type": "string"
+      }
+    }
+  },
+  "github_com_webbuilder_server_internal_platformadmin.AIImageModel": {
+    "type": "object",
+    "properties": {
+      "creditsPerImage": {
+        "type": "integer"
+      },
+      "model": {
+        "type": "string"
+      },
+      "provider": {
+        "type": "string"
+      }
+    }
+  },
+  "github_com_webbuilder_server_internal_platformadmin.AIImageView": {
+    "type": "object",
+    "properties": {
+      "creditsPerImage": {
+        "type": "integer"
+      },
+      "enabled": {
+        "type": "boolean"
+      },
+      "fromEnv": {
+        "description": "FromEnv: nothing was saved here yet, so WB_AI_IMAGE_* is what applies.",
+        "type": "boolean"
+      },
+      "hasOwnKey": {
+        "description": "HasOwnKey: a key was saved for images specifically.",
+        "type": "boolean"
+      },
+      "keySource": {
+        "description": "KeySource is where the key in use comes from: own, pool, env or empty.",
+        "type": "string"
+      },
+      "model": {
+        "type": "string"
+      },
+      "models": {
+        "type": "array",
+        "items": {
+          "$ref": "#/definitions/github_com_webbuilder_server_internal_platformadmin.AIImageModel"
+        }
+      },
+      "provider": {
+        "type": "string"
+      },
+      "ready": {
+        "description": "Ready: the assistant is offered the tool right now. Otherwise Reason says\nwhy: off, noKey, badKey, noStorage or unpriced.",
+        "type": "boolean"
+      },
+      "reason": {
+        "type": "string"
+      }
+    }
+  },
+  "github_com_webbuilder_server_internal_platformadmin.FunctionFailureView": {
+    "type": "object",
+    "properties": {
+      "outcome": {
+        "type": "string"
+      },
+      "siteId": {
+        "type": "string"
+      },
+      "siteSlug": {
+        "type": "string"
+      },
+      "slug": {
+        "type": "string"
+      },
+      "startedAt": {
+        "type": "string"
+      }
+    }
+  },
+  "github_com_webbuilder_server_internal_platformadmin.FunctionFailuresView": {
+    "type": "object",
+    "properties": {
+      "byOutcome": {
+        "type": "object",
+        "additionalProperties": {
+          "type": "integer"
+        }
+      },
+      "recent": {
+        "type": "array",
+        "items": {
+          "$ref": "#/definitions/github_com_webbuilder_server_internal_platformadmin.FunctionFailureView"
+        }
+      },
+      "since": {
+        "type": "string"
+      }
+    }
+  },
+  "github_com_webbuilder_server_internal_platformadmin.FunctionOverrideInput": {
+    "type": "object",
+    "properties": {
+      "mode": {
+        "type": "string"
+      },
+      "monthlyCap": {
+        "type": "integer"
+      },
+      "note": {
+        "type": "string"
+      }
+    }
+  },
+  "github_com_webbuilder_server_internal_platformadmin.FunctionOverrideView": {
+    "type": "object",
+    "properties": {
+      "mode": {
+        "type": "string"
+      },
+      "monthlyCap": {
+        "type": "integer"
+      },
+      "note": {
+        "type": "string"
+      },
+      "siteId": {
+        "type": "string"
+      },
+      "siteName": {
+        "type": "string"
+      },
+      "siteSlug": {
+        "type": "string"
+      },
+      "updatedAt": {
+        "type": "string"
+      },
+      "updatedBy": {
+        "type": "string"
+      }
+    }
+  },
+  "github_com_webbuilder_server_internal_platformadmin.FunctionUsageSiteView": {
+    "type": "object",
+    "properties": {
+      "mode": {
+        "type": "string"
+      },
+      "monthlyCap": {
+        "type": "integer"
+      },
+      "runs": {
+        "type": "integer"
+      },
+      "siteId": {
+        "type": "string"
+      },
+      "siteName": {
+        "type": "string"
+      },
+      "siteSlug": {
+        "type": "string"
+      }
+    }
+  },
+  "github_com_webbuilder_server_internal_platformadmin.FunctionsLimits": {
+    "type": "object",
+    "properties": {
+      "freeMonthlyRuns": {
+        "description": "FreeMonthlyRuns: runs every site gets a month regardless of plan.",
+        "type": "integer"
+      },
+      "ipPerMinute": {
+        "type": "integer"
+      },
+      "maxConcurrent": {
+        "type": "integer"
+      },
+      "siteConcurrent": {
+        "type": "integer"
+      },
+      "sitePerMinute": {
+        "type": "integer"
+      },
+      "wallTimeoutMs": {
+        "type": "integer"
+      }
+    }
+  },
+  "github_com_webbuilder_server_internal_platformadmin.FunctionsReplicaView": {
+    "type": "object",
+    "properties": {
+      "name": {
+        "type": "string"
+      },
+      "refusals": {
+        "type": "object",
+        "additionalProperties": {
+          "type": "integer",
+          "format": "int64"
+        }
+      },
+      "slotsInUse": {
+        "type": "integer"
+      },
+      "slotsMax": {
+        "type": "integer"
+      },
+      "startedAt": {
+        "type": "string"
+      }
+    }
+  },
+  "github_com_webbuilder_server_internal_platformadmin.FunctionsSettingsInput": {
+    "type": "object",
+    "properties": {
+      "enabled": {
+        "type": "boolean"
+      },
+      "limits": {
+        "$ref": "#/definitions/github_com_webbuilder_server_internal_platformadmin.FunctionsLimits"
+      }
+    }
+  },
+  "github_com_webbuilder_server_internal_platformadmin.FunctionsSettingsView": {
+    "type": "object",
+    "properties": {
+      "ceilings": {
+        "$ref": "#/definitions/github_com_webbuilder_server_internal_platformadmin.FunctionsLimits"
+      },
+      "enabled": {
+        "type": "boolean"
+      },
+      "floors": {
+        "$ref": "#/definitions/github_com_webbuilder_server_internal_platformadmin.FunctionsLimits"
+      },
+      "limits": {
+        "$ref": "#/definitions/github_com_webbuilder_server_internal_platformadmin.FunctionsLimits"
+      },
+      "lockedByServer": {
+        "description": "LockedByServer: the replica that answered runs with WB_FUNCTIONS=0 (or an\nunknown value), so it stays off whatever is saved.",
+        "type": "boolean"
+      },
+      "propagationSeconds": {
+        "description": "PropagationSeconds is how long another replica may take to see a change.",
+        "type": "integer"
+      },
+      "replica": {
+        "type": "string"
+      },
+      "updatedAt": {
+        "description": "UpdatedAt is null until the settings were first saved.",
+        "type": "string"
+      },
+      "updatedBy": {
+        "type": "string"
+      }
+    }
+  },
+  "github_com_webbuilder_server_internal_platformadmin.FunctionsUsageView": {
+    "type": "object",
+    "properties": {
+      "activeSites": {
+        "type": "integer"
+      },
+      "failures": {
+        "$ref": "#/definitions/github_com_webbuilder_server_internal_platformadmin.FunctionFailuresView"
+      },
+      "periodStart": {
+        "type": "string"
+      },
+      "replica": {
+        "$ref": "#/definitions/github_com_webbuilder_server_internal_platformadmin.FunctionsReplicaView"
+      },
+      "sites": {
+        "type": "array",
+        "items": {
+          "$ref": "#/definitions/github_com_webbuilder_server_internal_platformadmin.FunctionUsageSiteView"
+        }
+      },
+      "totalRuns": {
+        "type": "integer"
       }
     }
   },

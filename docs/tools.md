@@ -1657,8 +1657,9 @@ context, not a code file, so it is not `sb_code`.
 
 Owner and admin only: the `functions` RBAC domain is closed below admin for READ as well as
 write. An agent key (`SB_TOKEN`) needs the `functions.read` / `functions.write` scopes AND a
-minter who is owner or admin. With the platform's `WB_FUNCTIONS` switch off, every action
-answers one message saying functions are switched off (`functions_disabled` 404 on these
+minter who is owner or admin. Functions are switched on platform-wide by a platform admin
+(Admin → Settings → Backend functions, off by default; `WB_FUNCTIONS=0` is only an emergency
+brake). While they are off, every action answers one message saying so (`functions_disabled` 404 on these
 routes, `resource_unavailable` 503 on `/api/v1`).
 
 - `list` — every function and module: id, slug, language, enabled, size, `route`
@@ -1680,17 +1681,57 @@ routes, `resource_unavailable` 503 on `/api/v1`).
   editor surface and answers `outcome`, `status`, `headers`, `setCookies` (as data — never
   set on this origin), the first 64 KiB of `body`, `console`, `error` and `durationMs`. **It
   runs for real** — fetches, collection writes and secrets are live — and **counts toward the
-  site's monthly quota**; that is said once per process. A plan with no function runs answers
-  `function_not_in_plan`, reported as "the site's plan grants no function runs".
+  site's monthly allowance**; that is said once per process. Runs are subject to that allowance
+  (the plan's, a platform-wide free allowance, or an admin override); a site whose allowance is
+  0 answers `function_not_in_plan`, reported as "no function runs left in its monthly allowance".
 - `logs` {`id`?, `limit`? (1-200, default 50)} — the newest runs from the site's 200-row ring;
   no request or response body is kept.
-- `usage` — this UTC month's runs against the plan's limit (`limit: 0` = not in the plan).
+- `usage` — this UTC month's runs against the site's monthly allowance (`limit: 0` = no runs).
 - `secret` — no `key` lists the KEYS (`[{key, updatedAt}]`); {`key`, `value`} sets one (keys
   `^[A-Z_][A-Z0-9_]{0,63}$`, values up to 8 KiB, 50 per site). **The value is write-only**:
   it goes on the wire and nowhere else — not in a dry-run preview, not in a result. A `key`
   with no `value` is refused rather than read as a delete; use `remove`.
 
 `set`, `remove`, `test` and a secret write are dry runs by default.
+
+## `sb_collection`
+
+The site's DATA TABLES — the editor's Collections (`/api/sites/{siteId}/collections…`). It uses
+the editor surface, not `/api/v1/collections`: the public surface reaches records only, with no
+table or field writes. Either credential works; an agent key needs the `collections.read` /
+`collections.write` scopes. Limits: 50 tables per site, 30 fields per table, 5,000 records per
+table (409 `limit`). `collection` is a table's id (`col_…`) or slug.
+
+- Tables: `list`; `create` {`name`, `slug`? (from the name), `public_read`?}; `update`
+  {`collection`, `name`?, `slug`?, `public_read`?} keeps whatever is not given; `delete`
+  {`collection`} — the preview counts the records that go with it. A table a page binds, a form
+  writes into or another table's reference field points at is refused (409 `in_use`, naming them).
+- Fields: `fields` {`collection`}; `field_add` {`key`, `type`, `name`? (the label; defaults to
+  the key), `required`?, `options`? (select/tags), `ref`? (reference: the target table)};
+  `field_update` {`field` (id or key), …} — **the PUT replaces the whole field**, so the stored
+  properties go back with the change; `type` and a reference's target cannot change, and a new
+  `key` renames the value in every record; `field_delete` drops the value from every record;
+  `field_order` {`ids`: every field id or key}. Types: text, richtext, number, integer, boolean,
+  image, gallery, url, date, select, tags, reference. Keys follow `^[a-z][a-z0-9_]{0,39}$` and are
+  refused before any request; select/tags need 1-100 unique options (a tags option cannot hold a
+  comma).
+- Records: `records` {`collection`, `sort`? (a field key, `-key` for descending), `filter`?
+  (`{key: value}`, one field), `published`? (true = published only), `external_id`?, `offset`?,
+  `limit`? (default 50, max 200)}; `get` {`id`}; `add` {`collection`, `values`, `published`?
+  (true), `external_id`?}; `edit` {`id`, `values`?, `published`?, `external_id`?} reads the row,
+  merges `values` (a `null` clears that key) and sends it back WHOLE with its `rev`. **A record
+  PUT with no `published` unpublishes the row**, so the stored flag always goes back; a row saved
+  in between answers 409 `stale_record` — re-run. `remove` {`id`} (refused while other records
+  link to it); `move` {`id`, `delta`: -1 or 1}; `order` {`collection`, `ids`: every record id}.
+- CSV: `export` {`collection`} answers the CSV text (inline up to 200,000 characters, then
+  `truncated` — page with `records`); `import` {`collection`, `csv`: a header row of field keys}
+  APPENDS rows (max 5 MB), sent as the raw body; a bad cell refuses the whole file with
+  `invalid_rows` naming row and field. `upsert` {`collection`, `records`: up to 500
+  `{external_id, values, published?}`} creates or replaces by external id, so running it twice
+  creates nothing the second time; it answers `created` / `updated` / `unchanged`. A reference
+  value in an upsert may be `{"externalId": "…"}`.
+
+Every write, delete and import is a dry run by default.
 
 ## `sb_translate`
 
@@ -1726,7 +1767,10 @@ The editor's **Multilingual** panel as one tool, over the session-scoped
 **The review gate:** only `source: "human"` rows are served to shoppers. Machine rows wait
 until reviewed, or until `settings.translations.autoApprove`. Said once per process. A
 `locale` not in `settings.locales` is stored but served by no storefront —
-`locale_not_enabled` says so. Every write defaults to `dry_run: true`.
+`locale_not_enabled` says so. A MARKET — a language whose `settings.localeInfo` entry borrows
+another enabled language's words (`en-au` reading `en`, at its own currency) — is refused by
+`write` and `auto`, naming the language to translate instead: its own rows are never served.
+Every write defaults to `dry_run: true`.
 
 ## Working with the other MCP servers
 

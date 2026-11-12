@@ -353,15 +353,16 @@ async function send(opts: RequestOpts, retried = false): Promise<unknown> {
   const headers: Record<string, string> = { Accept: 'application/json', ...identityHeaders(), ...opts.headers };
   if (opts.token) headers.Authorization = `Bearer ${opts.token}`;
   // A FormData body is multipart, and fetch must write its Content-Type itself
-  // so the boundary matches the body it builds.
-  const multipart = opts.body instanceof FormData;
+  // so the boundary matches the body it builds. A Blob goes as its own bytes and
+  // type (a CSV import reads the raw request body).
+  const multipart = opts.body instanceof FormData || opts.body instanceof Blob;
   if (opts.body !== undefined && !multipart) headers['Content-Type'] = 'application/json';
   const body = withPageRoot(opts);
 
   const res = await doFetch(buildUrl(opts.base, opts.path, opts.query), {
     method: opts.method,
     headers,
-    body: body === undefined ? undefined : multipart ? (body as FormData) : JSON.stringify(body),
+    body: body === undefined ? undefined : multipart ? (body as FormData | Blob) : JSON.stringify(body),
   });
   if (res.status === 401 && opts.token && !retried) {
     for (const renew of renewers) {

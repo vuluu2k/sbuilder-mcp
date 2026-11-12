@@ -4,15 +4,29 @@
 import type { RequestShape } from './types.js';
 
 export const SHAPE_SOURCE = {
-  "writeOperations": 441,
-  "shaped": 354,
-  "fromHandlers": 344,
+  "writeOperations": 451,
+  "shaped": 362,
+  "fromHandlers": 352,
   "fromSwaggerOnly": 10,
   "withReadOnly": 29,
-  "structsRead": 3571
+  "structsRead": 3630
 } as const;
 
 export const REQUEST_SHAPES: Record<string, RequestShape> = {
+  "post:/api/ai/credits": {
+    "fields": [
+      {
+        "name": "credits",
+        "type": "number | null"
+      },
+      {
+        "name": "wallet",
+        "type": "string"
+      }
+    ],
+    "source": "go",
+    "goType": "(inline)"
+  },
   "post:/api/sites/{id}/ai-credits/purchase": {
     "fields": [
       {
@@ -4071,6 +4085,49 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
     "source": "go",
     "goType": "grantRequest"
   },
+  "post:/api/agent-bridge/start": {
+    "fields": [
+      {
+        "name": "prompt",
+        "type": "string"
+      }
+    ],
+    "source": "go",
+    "goType": "(inline)"
+  },
+  "post:/api/agent-bridge/start/redeem": {
+    "fields": [
+      {
+        "name": "ticket",
+        "type": "string"
+      }
+    ],
+    "source": "go",
+    "goType": "(inline)"
+  },
+  "post:/api/agent-bridge/results/{id}": {
+    "fields": [
+      {
+        "name": "text",
+        "type": "string"
+      },
+      {
+        "name": "error",
+        "type": "string"
+      },
+      {
+        "name": "partial",
+        "type": "string | null",
+        "note": "Partial + Seq: a fragment of the answer as it is written."
+      },
+      {
+        "name": "seq",
+        "type": "number"
+      }
+    ],
+    "source": "go",
+    "goType": "(inline)"
+  },
   "post:/api/sites/{siteId}/ai/messages": {
     "fields": [
       {
@@ -4121,6 +4178,16 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
         "name": "auto",
         "type": "boolean",
         "note": "Auto says the author turned the autonomous mode on for this turn."
+      },
+      {
+        "name": "manage",
+        "type": "boolean",
+        "note": "Manage says the question comes from the dashboard or a manage screen, with no page open."
+      },
+      {
+        "name": "wallet",
+        "type": "string",
+        "note": "Wallet is a wallet the asker chose to spend (`org:<id>`)."
       }
     ],
     "source": "go",
@@ -6993,6 +7060,39 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
     "source": "go",
     "goType": "(inline)"
   },
+  "put:/api/admin/ai-free-credits": {
+    "fields": [
+      {
+        "name": "monthlyCredits",
+        "type": "number",
+        "note": "MonthlyCredits is what each account gets a month, no rollover."
+      }
+    ],
+    "source": "go",
+    "goType": "platformadmin.AIFreeCreditsView"
+  },
+  "put:/api/admin/ai-image": {
+    "fields": [
+      {
+        "name": "enabled",
+        "type": "boolean"
+      },
+      {
+        "name": "provider",
+        "type": "string"
+      },
+      {
+        "name": "model",
+        "type": "string"
+      },
+      {
+        "name": "apiKey",
+        "type": "string | null"
+      }
+    ],
+    "source": "go",
+    "goType": "platformadmin.AIImageInput"
+  },
   "post:/api/admin/ai-keys": {
     "fields": [
       {
@@ -7020,6 +7120,65 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
     ],
     "source": "go",
     "goType": "(inline)"
+  },
+  "put:/api/admin/functions": {
+    "fields": [
+      {
+        "name": "enabled",
+        "type": "boolean"
+      },
+      {
+        "name": "limits",
+        "type": "FunctionsLimits",
+        "fields": [
+          {
+            "name": "maxConcurrent",
+            "type": "number"
+          },
+          {
+            "name": "siteConcurrent",
+            "type": "number"
+          },
+          {
+            "name": "wallTimeoutMs",
+            "type": "number"
+          },
+          {
+            "name": "ipPerMinute",
+            "type": "number"
+          },
+          {
+            "name": "sitePerMinute",
+            "type": "number"
+          },
+          {
+            "name": "freeMonthlyRuns",
+            "type": "number",
+            "note": "FreeMonthlyRuns: runs every site gets a month regardless of plan."
+          }
+        ]
+      }
+    ],
+    "source": "go",
+    "goType": "platformadmin.FunctionsSettingsInput"
+  },
+  "put:/api/admin/functions/overrides/{site}": {
+    "fields": [
+      {
+        "name": "mode",
+        "type": "string"
+      },
+      {
+        "name": "monthlyCap",
+        "type": "number"
+      },
+      {
+        "name": "note",
+        "type": "string"
+      }
+    ],
+    "source": "go",
+    "goType": "platformadmin.FunctionOverrideInput"
   },
   "post:/api/admin/geo-keys": {
     "fields": [

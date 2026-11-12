@@ -43,6 +43,23 @@ function localesOf(s: Settings): { def: string; locales: string[] } {
   return { def, locales: [...new Set([def, ...list.map((l) => l.toLowerCase())])] };
 }
 
+/**
+ * sitelocales.MarketsOf for one code (web_builder a251ad995): the enabled language a MARKET
+ * reads its words from (`en-au` → `en`), or undefined. Served reads follow the borrowed
+ * language, so a row written under the market's own code is never shown to anyone.
+ */
+function marketOf(l: string, s: Settings): string | undefined {
+  const { locales } = localesOf(s);
+  const info = (s.localeInfo ?? {}) as Record<string, { content?: unknown } | undefined>;
+  const borrows = (code: string) => {
+    const e = Object.entries(info).find(([k]) => k.trim().toLowerCase() === code)?.[1];
+    const c = typeof e?.content === 'string' ? e.content.trim().toLowerCase() : '';
+    return c && c !== code && locales.includes(code) && locales.includes(c) ? c : undefined;
+  };
+  const c = borrows(l);
+  return c && !borrows(c) ? c : undefined; // a chain is dropped, as the platform drops it
+}
+
 export function registerTranslateTools(server: McpServer, ctx: ToolContext, session: PageSession): void {
   server.registerTool(
     'sb_translate',
@@ -95,6 +112,10 @@ export function registerTranslateTools(server: McpServer, ctx: ToolContext, sess
         localesOf(s).locales.includes(l)
           ? {}
           : { locale_not_enabled: `${l} is not in settings.locales, so no storefront serves it — sb_translate action:"locales" add:["${l}"].` };
+      const notMarket = (l: string, s: Settings) => {
+        const c = marketOf(l, s);
+        if (c) throw new Error(`sbuilder: ${l} is a market — it shows the ${c} translation at its own currency, so nothing written under ${l} is ever served. Translate ${c} instead.`);
+      };
       const gate = (dry: boolean) => {
         const n = dry ? ctx.notices.peek('translate_review_gate', REVIEW_GATE) : ctx.notices.once('translate_review_gate', REVIEW_GATE);
         return n ? { note: n } : {};
@@ -182,6 +203,7 @@ export function registerTranslateTools(server: McpServer, ctx: ToolContext, sess
 
         case 'write': {
           const l = locale();
+          notMarket(l, await readSettings());
           const entries = need(args.entries, 'entries');
           if (!entries.length || entries.length > 500) throw new Error('sbuilder: write takes 1–500 entries per call.');
           const nodes = await pageNodes();
@@ -211,6 +233,7 @@ export function registerTranslateTools(server: McpServer, ctx: ToolContext, sess
         case 'auto': {
           const l = locale();
           const s = await readSettings();
+          notMarket(l, s);
           const from = (args.from?.trim().toLowerCase() || localesOf(s).def);
           if (from === l) throw new Error(`sbuilder: ${l} is the source language; pick another target or pass from.`);
           const rows = collectPageEntries(await pageNodes(), { machine: true }).map((r) => ({

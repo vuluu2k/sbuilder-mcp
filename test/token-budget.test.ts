@@ -188,7 +188,13 @@ describe('token budget — a diet without a scale comes back', () => {
     // spends the monthly quota, and secrets whose value must never be echoed — each wrong
     // silently through a hand-built sb_api_call sequence. The 17-field schema is most of it
     // (836); the description was cut 461 -> 349.
-    expect(JSON.stringify(tools).length).toBeLessThan(40_500);
+    //
+    // 40,500 -> 42,500 buys `sb_collection` (+2,084; measured 40,216 -> 42,300): data tables are
+    // nineteen actions over fifteen routes, and three of them lose data through a hand-built
+    // sb_api_call — a record PUT with no `published` UNPUBLISHES the row, its `values` replace
+    // the stored ones, and a CSV import must go as the raw body, not JSON. The schema is 1,734
+    // of it; sort/filter were folded (`-key`, `{key: value}`) and record ids share `id`.
+    expect(JSON.stringify(tools).length).toBeLessThan(42_500);
     for (const t of tools) expect(t.description, t.name).not.toMatch(/vanishes on publish/);
     const instructions = client.getInstructions() ?? '';
     expect(instructions.length).toBeGreaterThan(200);

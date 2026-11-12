@@ -40,11 +40,15 @@ type Fn = {
   updatedAt?: string;
 };
 
+// web_builder 3c4a03190: the switch is the platform admin's (Admin → Settings → Backend
+// functions, off by default); WB_FUNCTIONS is only an emergency brake now.
 const OFF =
-  'backend functions are switched off on this platform (the operator has not set WB_FUNCTIONS=1) — nothing can list, write or run one here';
-const NO_PLAN = "the site's plan grants no function runs (its monthly limit is 0)";
+  'backend functions are switched off on this platform (a platform admin turns them on in Admin → Settings → Backend functions) — nothing can list, write or run one here';
+// Runs are subject to the site's monthly allowance (plan, platform-wide free allowance or an
+// admin override) — not a plan feature as such. Code function_not_in_plan is limit 0.
+const NO_PLAN = "the site has no function runs left in its monthly allowance (its limit is 0)";
 const QUOTA_NOTICE =
-  "A test run executes the function for real — its fetches, collection writes and secrets are live — and counts toward the site's monthly function quota (action:\"usage\").";
+  "A test run executes the function for real — its fetches, collection writes and secrets are live — and counts toward the site's monthly function allowance (action:\"usage\").";
 
 /** One clear sentence for the refusals an agent cannot fix by retrying differently. */
 function explained<T>(p: Promise<T>): Promise<T> {

@@ -159,9 +159,9 @@ describe('sb_function', () => {
       expect(r.isError, r.text).toBe(false);
       expect(p.writes[0]).toMatchObject({ method: 'POST', path: `${B}/fn_1/test`, body: { method: 'POST', path: '/x', query: 'a=1', headers: { 'x-y': '1' }, cookies: { fn_s: 'v' }, body: '{}' } });
       expect(r.json.result).toMatchObject({ outcome: 'ok', status: 200, setCookies: ['fn_a=1; Path=/'], body: 'hi', console: 'log\n', durationMs: 12 });
-      expect(r.text).toMatch(/quota/);
+      expect(r.text).toMatch(/allowance/);
       const again = await call('sb_function', { ...args, dry_run: false });
-      expect(again.text).not.toMatch(/quota/);
+      expect(again.text).not.toMatch(/allowance/);
     });
   });
 
@@ -232,18 +232,18 @@ describe('sb_function', () => {
       await withCall(platform({ disabled }), async (call) => {
         const r = await call('sb_function', { site_id: 's1', action: 'list' });
         expect(r.isError).toBe(true);
-        expect(r.text).toMatch(/switched off.*WB_FUNCTIONS/);
+        expect(r.text).toMatch(/switched off.*Admin → Settings → Backend functions/);
       });
     }
   });
 
-  it('a plan with no function runs says so, on test and on usage', async () => {
+  it('a site whose monthly allowance is 0 says so, on test and on usage', async () => {
     await withCall(platform({ notInPlan: true }), async (call) => {
       const t = await call('sb_function', { site_id: 's1', action: 'test', id: 'fn_1', dry_run: false });
       expect(t.isError).toBe(true);
-      expect(t.text).toMatch(/plan grants no function runs/);
+      expect(t.text).toMatch(/no function runs left in its monthly allowance/);
       const u = await call('sb_function', { site_id: 's1', action: 'usage' });
-      expect(u.text).toMatch(/plan grants no function runs/);
+      expect(u.text).toMatch(/no function runs left in its monthly allowance/);
     });
   });
 });

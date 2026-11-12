@@ -1624,8 +1624,9 @@ là ngữ cảnh riêng của nền tảng, không phải file mã, nên không 
 
 Chỉ owner và admin: miền RBAC `functions` đóng dưới admin cho cả ĐỌC lẫn ghi. Agent key
 (`SB_TOKEN`) cần scope `functions.read` / `functions.write` VÀ người tạo key phải là owner hoặc
-admin. Khi công tắc `WB_FUNCTIONS` của nền tảng tắt, mọi action trả về một thông báo duy nhất
-nói function đang bị tắt (`functions_disabled` 404 trên các route này, `resource_unavailable`
+admin. Function được bật cho toàn nền tảng bởi platform admin (Admin → Settings → Backend
+functions, mặc định tắt; `WB_FUNCTIONS=0` chỉ còn là phanh khẩn cấp). Khi đang tắt, mọi action
+trả về một thông báo duy nhất nói function đang bị tắt (`functions_disabled` 404 trên các route này, `resource_unavailable`
 503 trên `/api/v1`).
 
 - `list` — mọi function và module: id, slug, language, enabled, kích thước, `route`
@@ -1647,17 +1648,56 @@ nói function đang bị tắt (`functions_disabled` 404 trên các route này, 
   trả `outcome`, `status`, `headers`, `setCookies` (dạng dữ liệu — không bao giờ set trên
   origin này), 64 KiB đầu của `body`, `console`, `error` và `durationMs`. **Nó chạy thật** —
   fetch, ghi collection và secret đều thật — và **tính vào hạn mức tháng của site**; điều này
-  được nói một lần mỗi process. Gói không có lượt chạy function trả `function_not_in_plan`,
-  được báo là "gói của site không cấp lượt chạy function nào".
+  được nói một lần mỗi process. Lượt chạy tùy theo hạn mức tháng đó (của gói, hạn mức miễn phí
+  chung của nền tảng, hoặc thiết lập riêng của admin); site có hạn mức 0 trả
+  `function_not_in_plan`, được báo là "không còn lượt chạy function trong hạn mức tháng".
 - `logs` {`id`?, `limit`? (1-200, mặc định 50)} — các lượt chạy mới nhất trong vòng 200 dòng
   của site; không giữ body của request hay response.
-- `usage` — số lượt chạy tháng UTC này so với giới hạn của gói (`limit: 0` = không có trong gói).
+- `usage` — số lượt chạy tháng UTC này so với hạn mức tháng của site (`limit: 0` = không còn lượt).
 - `secret` — không có `key` thì liệt kê các KEY (`[{key, updatedAt}]`); {`key`, `value`} đặt
   một secret (key `^[A-Z_][A-Z0-9_]{0,63}$`, giá trị tối đa 8 KiB, 50 secret mỗi site). **Giá trị
   chỉ-ghi**: nó chỉ đi trên đường truyền — không có trong bản xem trước dry run, không có trong
   kết quả. `key` không kèm `value` bị từ chối chứ không hiểu thành xoá; dùng `remove`.
 
 `set`, `remove`, `test` và lệnh ghi secret mặc định là dry run.
+
+## `sb_collection`
+
+Các BẢNG DỮ LIỆU của site — mục Collections trong editor (`/api/sites/{siteId}/collections…`).
+Tool dùng surface của editor, không phải `/api/v1/collections`: surface công khai chỉ chạm tới
+bản ghi, không ghi được bảng hay trường. Dùng được cả hai loại credential; agent key cần scope
+`collections.read` / `collections.write`. Giới hạn: 50 bảng mỗi site, 30 trường mỗi bảng, 5.000
+bản ghi mỗi bảng (409 `limit`). `collection` là id (`col_…`) hoặc slug của bảng.
+
+- Bảng: `list`; `create` {`name`, `slug`? (lấy từ tên), `public_read`?}; `update`
+  {`collection`, `name`?, `slug`?, `public_read`?} giữ nguyên những gì không truyền; `delete`
+  {`collection`} — bản xem trước đếm số bản ghi bị xoá theo. Bảng đang được một trang bind, một
+  biểu mẫu ghi vào hoặc trường reference của bảng khác trỏ tới sẽ bị từ chối (409 `in_use`, kèm tên).
+- Trường: `fields` {`collection`}; `field_add` {`key`, `type`, `name`? (nhãn; mặc định là key),
+  `required`?, `options`? (select/tags), `ref`? (reference: bảng đích)}; `field_update` {`field`
+  (id hoặc key), …} — **PUT thay cả trường**, nên các thuộc tính đã lưu được gửi lại cùng thay
+  đổi; không đổi được `type` hay bảng đích của reference, còn `key` mới sẽ đổi tên giá trị trong
+  mọi bản ghi; `field_delete` xoá giá trị khỏi mọi bản ghi; `field_order` {`ids`: mọi id hoặc key
+  của trường}. Kiểu: text, richtext, number, integer, boolean, image, gallery, url, date, select,
+  tags, reference. Key theo `^[a-z][a-z0-9_]{0,39}$` và bị từ chối trước khi gửi request;
+  select/tags cần 1-100 lựa chọn không trùng (lựa chọn của tags không được chứa dấu phẩy).
+- Bản ghi: `records` {`collection`, `sort`? (key của trường, `-key` để giảm dần), `filter`?
+  (`{key: value}`, một trường), `published`? (true = chỉ bản đã đăng), `external_id`?,
+  `offset`?, `limit`? (mặc định 50, tối đa 200)}; `get` {`id`}; `add` {`collection`, `values`,
+  `published`? (true), `external_id`?}; `edit` {`id`, `values`?, `published`?, `external_id`?}
+  đọc bản ghi, gộp `values` (`null` xoá key đó) rồi gửi lại NGUYÊN BẢN kèm `rev`. **PUT bản ghi
+  không có `published` sẽ gỡ đăng bản ghi**, nên trạng thái đã lưu luôn được gửi lại; bản ghi bị
+  lưu ở giữa trả 409 `stale_record` — chạy lại. `remove` {`id`} (bị từ chối khi bản ghi khác còn
+  liên kết tới); `move` {`id`, `delta`: -1 hoặc 1}; `order` {`collection`, `ids`: mọi id bản ghi}.
+- CSV: `export` {`collection`} trả nội dung CSV (tối đa 200.000 ký tự, quá thì `truncated` —
+  phân trang bằng `records`); `import` {`collection`, `csv`: dòng tiêu đề là key của trường}
+  THÊM dòng mới (tối đa 5 MB), gửi nguyên văn làm body; một ô sai sẽ từ chối cả file với
+  `invalid_rows` nêu dòng và trường. `upsert` {`collection`, `records`: tối đa 500
+  `{external_id, values, published?}`} tạo hoặc thay theo external id, nên chạy hai lần thì lần
+  sau không tạo gì; trả `created` / `updated` / `unchanged`. Giá trị reference trong upsert có thể
+  là `{"externalId": "…"}`.
+
+Mọi lệnh ghi, xoá và import mặc định là dry run.
 
 ## `sb_translate`
 
@@ -1692,7 +1732,10 @@ Bảng **Đa ngôn ngữ** của editor gói thành một tool, qua các route s
 **Cổng duyệt:** chỉ dòng `source: "human"` được phục vụ cho người mua. Dòng máy chờ đến khi
 được duyệt, hoặc khi bật `settings.translations.autoApprove`. Nói một lần mỗi process. Một
 `locale` không có trong `settings.locales` vẫn được lưu nhưng không storefront nào phục vụ —
-`locale_not_enabled` báo điều đó. Mọi lệnh ghi mặc định `dry_run: true`.
+`locale_not_enabled` báo điều đó. Một MARKET — ngôn ngữ có mục `settings.localeInfo` mượn chữ
+của một ngôn ngữ khác đang bật (`en-au` đọc `en`, với tiền tệ riêng) — bị `write` và `auto` từ
+chối, kèm tên ngôn ngữ cần dịch thay: các dòng của chính nó không bao giờ được phục vụ.
+Mọi lệnh ghi mặc định `dry_run: true`.
 
 ## Dùng chung với các MCP server khác
 

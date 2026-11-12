@@ -17,7 +17,23 @@ export const ELEMENTS: Record<string, CatalogElement> = {
     "locked": false,
     "hideInLayer": false,
     "childAllows": [],
-    "defaults": {},
+    "defaults": {
+      "config": {
+        "backgroundSceneSource": "",
+        "backgroundSceneEffect": "gradient-mesh",
+        "backgroundSceneGallery": "podium",
+        "backgroundSceneSpeed": "normal",
+        "backgroundSceneIntensity": "normal",
+        "backgroundSceneColors": "theme",
+        "backgroundSceneColor1": "#171717",
+        "backgroundSceneColor2": "#ffffff",
+        "backgroundSceneColor3": "#6b7280",
+        "backgroundSceneUrl": "",
+        "backgroundSceneModelUrl": "",
+        "backgroundSceneVeil": 0,
+        "backgroundSceneVeilColor": "#000000"
+      }
+    },
     "inspector": [
       {
         "tab": "general",
@@ -34,7 +50,50 @@ export const ELEMENTS: Record<string, CatalogElement> = {
             "label": "Background",
             "controls": [
               "bg_color",
-              "bg_image"
+              "bg_image",
+              "bg_video"
+            ]
+          },
+          {
+            "key": "bg_scene_source",
+            "label": "Background 3D",
+            "controls": [
+              "bg_scene_source"
+            ]
+          },
+          {
+            "key": "bg_scene_spline",
+            "label": "Spline",
+            "controls": [
+              "bg_scene_spline"
+            ]
+          },
+          {
+            "key": "bg_scene_effect",
+            "label": "Effect",
+            "controls": [
+              "bg_scene_effect"
+            ]
+          },
+          {
+            "key": "bg_scene_gallery",
+            "label": "Scene",
+            "controls": [
+              "bg_scene_gallery"
+            ]
+          },
+          {
+            "key": "bg_scene_model",
+            "label": "Model",
+            "controls": [
+              "bg_scene_model"
+            ]
+          },
+          {
+            "key": "bg_scene_veil",
+            "label": "Scrim",
+            "controls": [
+              "bg_scene_veil"
             ]
           }
         ]
@@ -63,6 +122,13 @@ export const ELEMENTS: Record<string, CatalogElement> = {
       "font_family",
       "bg_color",
       "bg_image",
+      "bg_video",
+      "bg_scene_source",
+      "bg_scene_spline",
+      "bg_scene_effect",
+      "bg_scene_gallery",
+      "bg_scene_model",
+      "bg_scene_veil",
       "padding",
       "class_css"
     ],

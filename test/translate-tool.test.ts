@@ -7,7 +7,7 @@ import { sourceHash } from '../src/domains/site/translate.js';
  * fill, approve, enable a language — so an agent no longer rebuilds the
  * collector, the FNV fingerprint and the settings merge by hand.
  */
-function site() {
+function site(init?: Record<string, unknown>) {
   const doc = blank() as { nodes: Record<string, unknown> };
   doc.nodes.ROOT = { ...(doc.nodes.ROOT as object), data: { type: 'root', parent: null, nodes: ['h1', 'm'] } };
   doc.nodes.h1 = {
@@ -24,7 +24,7 @@ function site() {
     style: {},
     config: {},
   };
-  let settings: Record<string, unknown> | null = { locale: 'vi', currency: 'VND', theme: { keep: 1 } };
+  let settings: Record<string, unknown> | null = init ?? { locale: 'vi', currency: 'VND', theme: { keep: 1 } };
   const sent: Array<{ method: string; path: string; body: unknown }> = [];
   const fake = fakePlatform((method, path, body) => {
     if (!path.startsWith('/api/sites/s1/') || path.endsWith('/source')) return undefined;
@@ -55,6 +55,27 @@ function site() {
 const writes = (sent: Array<{ method: string }>) => sent.filter((s) => s.method !== 'GET');
 
 describe('sb_translate', () => {
+  it('write and auto refuse a MARKET (it borrows another language), naming the one to translate', async () => {
+    const { fake, sent } = site({ locale: 'vi', locales: ['vi', 'en', 'en-au', 'fr'], localeInfo: { 'en-au': { content: 'en', currency: 'AUD' }, fr: { currency: 'EUR' } } });
+    const { call, close } = await fake.connect();
+    try {
+      for (const action of ['write', 'auto']) {
+        const r = await call('sb_translate', {
+          action, site_id: 's1', page_id: 'p1', locale: 'en-au', dry_run: false,
+          entries: [{ entity_id: 'm', field: 'menuItems.a.label', value: 'Home' }],
+        });
+        expect(r.isError, action).toBe(true);
+        expect(r.text).toMatch(/en-au is a market.*Translate en instead/);
+      }
+      // A language with only a currency is not a market: the write goes through.
+      const fr = await call('sb_translate', { action: 'write', site_id: 's1', page_id: 'p1', locale: 'fr', dry_run: false, entries: [{ entity_id: 'm', field: 'menuItems.a.label', value: 'Accueil' }] });
+      expect(fr.isError, fr.text).toBe(false);
+      expect(writes(sent)).toHaveLength(1);
+    } finally {
+      await close();
+    }
+  });
+
   it('page: joins the collected rows with stored values and hashes', async () => {
     const { fake } = site();
     const { call, close } = await fake.connect();

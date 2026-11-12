@@ -5350,7 +5350,21 @@ export const STORE_PAGE_SEEDS: Record<string, { schema_version: number; root_nod
           "custom": {}
         },
         "style": {},
-        "config": {},
+        "config": {
+          "backgroundSceneSource": "",
+          "backgroundSceneEffect": "gradient-mesh",
+          "backgroundSceneGallery": "podium",
+          "backgroundSceneSpeed": "normal",
+          "backgroundSceneIntensity": "normal",
+          "backgroundSceneColors": "theme",
+          "backgroundSceneColor1": "#171717",
+          "backgroundSceneColor2": "#ffffff",
+          "backgroundSceneColor3": "#6b7280",
+          "backgroundSceneUrl": "",
+          "backgroundSceneModelUrl": "",
+          "backgroundSceneVeil": 0,
+          "backgroundSceneVeilColor": "#000000"
+        },
         "specials": {},
         "responsive": {},
         "events": [],

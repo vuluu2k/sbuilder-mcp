@@ -18,10 +18,11 @@ export function fakePlatform(extra: (method: string, path: string, body: unknown
   const fetchImpl = (async (input: string | URL, init?: RequestInit) => {
     const url = new URL(String(input));
     const method = (init?.method ?? 'GET').toUpperCase();
-    const body = init?.body ? JSON.parse(String(init.body)) : undefined;
+    const body = typeof init?.body === 'string' ? JSON.parse(init.body) : init?.body; // a Blob (CSV import) stays itself
     if (method !== 'GET') writes.push({ method, path: url.pathname, query: url.search });
     const own = extra(method, url.pathname, body, url.search);
     // `__status` lets a fixture answer an error in the platform's one shape.
+    if (own instanceof Response) return own; // a non-JSON answer (CSV export)
     if (own !== undefined) {
       const { __status, ...rest } = own as { __status?: number };
       return __status ? json(rest, __status) : json(own);
