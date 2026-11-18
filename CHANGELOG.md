@@ -6,6 +6,16 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.107.0] - 2026-11-18
+
+### Added
+- `sb_store` `site_template` with `dry_run: false` captures a 1440×1080 screenshot of the published home page and uploads it as the template's gallery preview image, so templates built by an agent no longer appear without one.
+- `sb_store` `site_template` refuses to upload a preview when the home page is a 404 or blank, and reports a failed capture as a note while keeping the template marking.
+- `sb_store` `site_template` dry run returns `already_template.categories` with the categories currently assigned to a site that is already a template.
+
+### Changed
+- Screenshot capture for template previews routes every browser request through a local egress proxy that resolves DNS itself and connects only to public unicast addresses, so a custom domain or authored page cannot reach loopback, private or metadata addresses; it allows https only, blocks service workers, and is skipped only when the API base is itself local.
+
 ## [0.106.0] - 2026-11-18
 
 ### Added

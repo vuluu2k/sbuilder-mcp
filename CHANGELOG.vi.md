@@ -6,6 +6,16 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.107.0] - 2026-11-18
+
+### Added
+- `sb_store` `site_template` với `dry_run: false` chụp khung 1440×1080 của trang chủ đã xuất bản và tải lên làm ảnh xem trước của mẫu trong thư viện, nên mẫu do agent dựng không còn thiếu ảnh.
+- `sb_store` `site_template` từ chối tải ảnh xem trước khi trang chủ là 404 hoặc trống, và báo lỗi chụp như một ghi chú trong khi vẫn giữ việc đánh dấu mẫu.
+- Bản chạy thử của `sb_store` `site_template` trả về `already_template.categories` với các danh mục đang gán cho site vốn đã là mẫu.
+
+### Changed
+- Việc chụp ảnh xem trước của mẫu cho mọi request của trình duyệt đi qua một proxy egress cục bộ tự tra DNS và chỉ nối tới địa chỉ unicast công khai, nên tên miền riêng hay trang do tác giả viết không thể truy cập địa chỉ loopback, mạng nội bộ hay metadata; proxy chỉ cho phép https, chặn service worker, và chỉ được bỏ qua khi API base chính là máy local.
+
 ## [0.106.0] - 2026-11-18
 
 ### Added
