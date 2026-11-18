@@ -6,6 +6,12 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.107.1] - 2026-11-18
+
+### Fixed
+- `sb_store` `site_template` works with only a site API key, reading the template's eligibility and assigned categories from the site's own template route instead of the session-only category list.
+- `sb_store` `site_template` falls back to the shared category list when the server does not report `fileable`, so it no longer wrongly says the site is not in the platform organization.
+
 ## [0.107.0] - 2026-11-18
 
 ### Added

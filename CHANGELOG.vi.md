@@ -6,6 +6,12 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.107.1] - 2026-11-18
+
+### Fixed
+- `sb_store` `site_template` chạy được chỉ với API key của site, đọc khả năng đánh dấu mẫu và các danh mục đang gán từ route template của chính site thay vì danh sách danh mục chỉ nhận phiên đăng nhập.
+- `sb_store` `site_template` quay về danh sách danh mục chung khi máy chủ chưa trả `fileable`, nên không còn báo nhầm site không thuộc tổ chức nền tảng.
+
 ## [0.107.0] - 2026-11-18
 
 ### Added
