@@ -1191,17 +1191,41 @@ export async function markSiteTemplate(
     throw new Error('sbuilder: this site belongs to no organization, and a template is an organization\'s — pass org_id (the platform organization\'s, for the public gallery).');
   }
   const org = (attach ?? orgId)!;
-  const listed = await get<{ categories?: Cat[]; fileable?: boolean }>(
-    `/api/templates/categories?locale=${encodeURIComponent(opts.language ?? 'vi')}&orgId=${encodeURIComponent(org)}`,
-  );
-  // The current filing, read behind the site's own membership check.
-  const filed = site?.isTemplate && listed.fileable
-    ? ((await get<{ template?: { categories?: string[] } }>(`${sitePath}/template`).catch(() => ({ template: undefined }))).template?.categories ?? [])
-    : [];
-  const cats = listed.categories ?? [];
+  const locale = encodeURIComponent(opts.language ?? 'vi');
+  // Already in its org: ONE site-scoped read answers the catalogue, whether it
+  // files, and the current filing — and it takes the site's API key, which the
+  // session-only /api/templates/categories refuses (an agent of the platform org
+  // connected by key could not mark at all). Attaching needs a session anyway (a
+  // key cannot move a site between orgs), so only that path reads the global list.
+  let cats: Cat[] = [];
+  let fileable = false;
+  let filed: string[] = [];
+  const global = async () => {
+    const listed = await get<{ categories?: Cat[]; fileable?: boolean }>(
+      `/api/templates/categories?locale=${locale}&orgId=${encodeURIComponent(org)}`,
+    );
+    cats = listed.categories ?? [];
+    fileable = !!listed.fileable;
+  };
+  if (attach) {
+    await global();
+  } else {
+    const { template: t } = await get<{ template?: { categories?: string[]; fileable?: boolean; available?: Cat[] } }>(
+      `${sitePath}/template?locale=${locale}`,
+    );
+    if (site?.isTemplate) filed = t?.categories ?? [];
+    if (typeof t?.fileable === 'boolean') {
+      cats = t.available ?? [];
+      fileable = t.fileable;
+    } else {
+      // A platform older than web_builder v1.0.275 does not say: ask the global
+      // list rather than call a platform author "not the platform organization".
+      await global();
+    }
+  }
   // Only the platform org's templates reach the gallery; refusing HERE keeps a
   // mark from landing with a filing the server would then reject.
-  if (opts.categories?.length && !listed.fileable) {
+  if (opts.categories?.length && !fileable) {
     throw new Error(`sbuilder: organization ${org} is not the platform organization, so its templates have no gallery categories — drop categories (its members see the template on their own shelf).`);
   }
   const chosen = opts.categories?.length
@@ -1225,7 +1249,7 @@ export async function markSiteTemplate(
       ...state,
       ...(attach ? { would_attach_to: attach } : {}),
       would_mark: { name: name?.trim(), description, categories: chosen?.map((c) => c.slug) },
-      ...(listed.fileable
+      ...(fileable
         ? { categories_available: catalogue(cats) }
         : { categories_available: [], note: 'not the platform organization — no gallery categories; the template goes on its members\' shelf' }),
       write:

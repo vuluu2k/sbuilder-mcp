@@ -233,10 +233,12 @@ describe('sb_store action:"template_save"', () => {
 });
 
 describe('sb_store action:"site_template"', () => {
-  async function site(orgId = '', publicUrl?: string) {
+  async function site(orgId = '', publicUrl?: string, oldServer = false) {
     const sent: Array<{ method: string; path: string; body: any }> = [];
+    const reads: string[] = [];
     const p = fakePlatform((method, path, body, query) => {
       if (method !== 'GET') sent.push({ method, path, body });
+      else reads.push(path);
       if (path === '/api/sites/s1' && method === 'GET') {
         return { site: { name: 'Shop', orgId, publicUrl, isTemplate: !!publicUrl, templateName: 'Cũ' } };
       }
@@ -250,7 +252,11 @@ describe('sb_store action:"site_template"', () => {
         };
       }
       if (path === '/api/sites/s1/template' && method === 'GET') {
-        return { template: { isTemplate: true, categories: ['fashion'] } };
+        // The site-scoped read: catalogue + fileable for the site's OWN org, in the asked locale.
+        const fileable = orgId === 'org_p';
+        const name = query.includes('locale=en') ? 'Fashion' : 'Thời trang';
+        if (oldServer) return { template: { isTemplate: !!publicUrl, categories: publicUrl ? ['fashion'] : [] } };
+        return { template: { isTemplate: !!publicUrl, categories: publicUrl ? ['fashion'] : [], fileable, available: fileable ? [{ slug: 'fashion', name }] : [] } };
       }
       if (path === '/api/sites/s1/section-templates/st_1/share') return { sectionTemplate: { share: 'pending' } };
       if (path === '/api/sites/s1/template') return { site: { isTemplate: true } };
@@ -259,7 +265,7 @@ describe('sb_store action:"site_template"', () => {
     });
     const { call: raw, close } = await p.connect();
     const call = (args: Record<string, unknown>) => raw('sb_store', { site_id: 's1', action: 'site_template', ...args });
-    return { call, close, sent };
+    return { call, close, sent, reads };
   }
 
   it('dry run shows pages + catalogue and sends nothing', async () => {
@@ -268,6 +274,27 @@ describe('sb_store action:"site_template"', () => {
     expect(dry.json).toMatchObject({ dry_run: true, organization: 'org_p', pages: ['Trang chủ', 'Sản phẩm'] });
     expect(dry.json.categories_available).toEqual([{ slug: 'fashion', name: 'Thời trang' }]);
     expect(sent).toEqual([]);
+    await close();
+  });
+
+  it('a platform that predates fileable on the site route falls back to the global list', async () => {
+    const { call, close, reads } = await site('org_p', undefined, true);
+    const dry = await call({ name: 'Shop', categories: ['fashion'] });
+    expect(dry.isError, dry.text).toBe(false);
+    expect(dry.json.categories_available).toEqual([{ slug: 'fashion', name: 'Thời trang' }]);
+    expect(reads).toContain('/api/templates/categories');
+    await close();
+  });
+
+  it('a site already in its org reads the catalogue from its OWN route — the one an API key may call', async () => {
+    const { call, close, sent, reads } = await site('org_p');
+    const out = await call({ name: 'Shop', categories: ['fashion'], language: 'en', dry_run: false });
+    expect(out.isError, out.text).toBe(false);
+    expect(reads, 'read the session-only global catalogue').not.toContain('/api/templates/categories');
+    expect(reads).toContain('/api/sites/s1/template');
+    expect(sent.find((x) => x.method === 'POST')?.body).toEqual({ name: 'Shop', categories: ['fashion'] });
+    const dry = await call({ name: 'Shop', language: 'en' });
+    expect(dry.json.categories_available, 'the locale did not reach the read').toEqual([{ slug: 'fashion', name: 'Fashion' }]);
     await close();
   });
 
