@@ -6,6 +6,19 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.106.0] - 2026-11-18
+
+### Added
+- `sb_store` `site_template` đưa cả site làm mẫu của tổ chức với `name`, `description` và `categories` của thư viện, và gắn site vào `org_id` trước khi đánh dấu nếu site chưa thuộc tổ chức nào.
+- `sb_store` `site_template` từ chối danh mục với tổ chức không phải tổ chức nền tảng trước khi ghi gì, và từ chối `dry_run: false` khi thiếu `name`.
+- `sb_store` `site_template_remove` gỡ site đã được đưa làm mẫu.
+- `sb_store` `template_share` gửi section template đã lưu lên hàng duyệt của tổ chức.
+- `sb_store` `template_save` nhận `description` và `categories` (slug hoặc id), và bản chạy thử trả về `categories_available` kèm lời dặn đặt tên, mô tả và xếp mẫu vào một hoặc hai danh mục.
+
+### Changed
+- `sb_store` `template_save` với `template_id` nay cập nhật cả tên, mô tả và danh mục chứ không chỉ nội dung, và báo rõ nội dung đã được lưu khi chỉ phần cập nhật metadata bị lỗi.
+- `sb_templates` hiện `share` và `shareNote` cho từng mẫu.
+
 ## [0.105.0] - 2026-11-13
 
 ### Added

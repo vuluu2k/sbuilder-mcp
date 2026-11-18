@@ -6,6 +6,19 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.106.0] - 2026-11-18
+
+### Added
+- `sb_store` `site_template` offers the whole site as its organization's template with a `name`, `description` and gallery `categories`, attaching the site to `org_id` first when it has no organization.
+- `sb_store` `site_template` refuses categories for an organization other than the platform organization before writing anything, and refuses `dry_run: false` without a `name`.
+- `sb_store` `site_template_remove` withdraws a site that was offered as a template.
+- `sb_store` `template_share` sends a saved section template to the organization's review.
+- `sb_store` `template_save` accepts `description` and `categories` (slugs or ids), and its dry run returns `categories_available` with a prompt to name, describe and file the template under one or two categories.
+
+### Changed
+- `sb_store` `template_save` with `template_id` now updates the template's name, description and categories as well as its content, and reports that the content was saved when only the metadata update fails.
+- `sb_templates` lists `share` and `shareNote` for each template.
+
 ## [0.105.0] - 2026-11-13
 
 ### Added
