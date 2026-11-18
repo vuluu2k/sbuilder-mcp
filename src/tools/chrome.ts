@@ -1,4 +1,5 @@
 import { request } from '../transport/http.js';
+import { snapshot } from '../vision/shoot.js';
 import { siteToken } from './credentialpick.js';
 import { siteFor, type ToolContext } from './context.js';
 import { addSubtree, removeNode, type NodeSpec } from '../domains/site/builder.js';
@@ -1177,7 +1178,9 @@ export async function markSiteTemplate(
 ): Promise<Record<string, unknown>> {
   const sitePath = `/api/sites/${encodeURIComponent(siteId)}`;
   const get = async <T>(path: string) => (await request({ base: ctx.base, method: 'GET', path, token: siteToken(ctx), fetchImpl: ctx.fetchImpl })) as T;
-  const { site } = await get<{ site?: { name?: string; orgId?: string; isTemplate?: boolean; templateName?: string; templateDescription?: string } }>(sitePath);
+  const { site } = await get<{
+    site?: { name?: string; orgId?: string; isTemplate?: boolean; templateName?: string; templateDescription?: string; publicUrl?: string };
+  }>(sitePath);
   const description = opts.description?.trim();
   const orgId = site?.orgId || undefined;
   if (opts.orgId && orgId && orgId !== opts.orgId) {
@@ -1191,6 +1194,10 @@ export async function markSiteTemplate(
   const listed = await get<{ categories?: Cat[]; fileable?: boolean }>(
     `/api/templates/categories?locale=${encodeURIComponent(opts.language ?? 'vi')}&orgId=${encodeURIComponent(org)}`,
   );
+  // The current filing, read behind the site's own membership check.
+  const filed = site?.isTemplate && listed.fileable
+    ? ((await get<{ template?: { categories?: string[] } }>(`${sitePath}/template`).catch(() => ({ template: undefined }))).template?.categories ?? [])
+    : [];
   const cats = listed.categories ?? [];
   // Only the platform org's templates reach the gallery; refusing HERE keeps a
   // mark from landing with a filing the server would then reject.
@@ -1205,7 +1212,9 @@ export async function markSiteTemplate(
     site: site?.name,
     organization: attach ?? orgId,
     pages: pages.pages?.map((p) => p.name ?? p.slug),
-    ...(site?.isTemplate ? { already_template: { name: site.templateName, description: site.templateDescription } } : {}),
+    ...(site?.isTemplate
+      ? { already_template: { name: site.templateName, description: site.templateDescription, ...(filed.length ? { categories: filed } : {}) } }
+      : {}),
   };
   if (!opts.dryRun && !name?.trim()) {
     throw new Error('sbuilder: action:"site_template" needs name — run it as a dry run first to read the pages and the categories, then name it.');
@@ -1246,7 +1255,30 @@ export async function markSiteTemplate(
       .join('; ');
     throw new Error(done ? `${msg} (${done} — re-run site_template to retry the rest)` : msg);
   }
+  // THE CARD'S PICTURE. A screenshot is otherwise taken only when a person sits
+  // on the dashboard, so an agent-built template reached the gallery blank.
+  // Best effort: the mark already stands, so a failure is a note, not an error.
+  let picture: string;
+  try {
+    if (!site?.publicUrl) throw new Error('the site has no public address yet');
+    // Private addresses are allowed only when the PLATFORM itself is local (dev,
+    // where every storefront is *.localhost) — never steered there by a domain.
+    const local = ['localhost', '127.0.0.1', '::1', '[::1]'].includes(new URL(ctx.base).hostname) || new URL(ctx.base).hostname.endsWith('.localhost');
+    const jpeg = await snapshot(new URL(site.publicUrl, ctx.base).toString(), { allowPrivate: local });
+    await request({
+      base: ctx.base,
+      method: 'PUT',
+      path: `${sitePath}/preview`,
+      token: siteToken(ctx),
+      body: new Blob([jpeg], { type: 'image/jpeg' }),
+      fetchImpl: ctx.fetchImpl,
+    });
+    picture = 'captured from the published homepage';
+  } catch (e) {
+    picture = `not captured (${(e as Error).message}) — publish the homepage, then re-run site_template`;
+  }
   return {
+    picture,
     template: { site_id: siteId, name: name!.trim(), ...(description ? { description } : {}), ...(chosen ? { categories: chosen.map((c) => c.slug) } : {}) },
     ...(attach ? { attached_to: attach } : {}),
     next:

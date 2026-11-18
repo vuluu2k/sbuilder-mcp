@@ -1,4 +1,5 @@
 import { setTimeout as sleep } from 'node:timers/promises';
+import { egressProxy, resolvePublic } from './egress.js';
 import { chromium, type Browser, type Page } from 'playwright-core';
 
 /**
@@ -426,6 +427,84 @@ async function shootWith(
       }
     }),
   );
+}
+
+/**
+ * Why `url` may not be photographed from this machine, or undefined. The cheap
+ * up-front answer for a clear error; the ENFORCEMENT is the egress proxy, which
+ * re-checks the address it actually dials for every request (egress.ts).
+ */
+export async function blockedUrl(url: string): Promise<string | undefined> {
+  let u: URL;
+  try {
+    u = new URL(url);
+  } catch {
+    return 'not a URL';
+  }
+  if (u.protocol !== 'https:') return `scheme ${u.protocol} (only https is photographed)`;
+  const r = await resolvePublic(u.hostname);
+  return 'refused' in r ? r.refused : undefined;
+}
+
+/**
+ * ONE VIEWPORT of a page as JPEG — the dashboard/gallery thumbnail shape (the top
+ * of the homepage, not the whole scroll), small enough for the 2 MB preview cap.
+ * Same pooled browser, same bounded settle, same stall recovery as `shoot`.
+ */
+export async function snapshot(
+  url: string,
+  opts: { width?: number; height?: number; allowPrivate?: boolean } = {},
+): Promise<Uint8Array> {
+  if (!opts.allowPrivate) {
+    const why = await blockedUrl(url);
+    if (why) throw new Error(`refusing to photograph ${why}`);
+  }
+  const once = async (b: Browser) => {
+    // ITS OWN CONTEXT, every byte through the egress proxy: redirects, frames,
+    // images, sockets and re-resolved names all meet the address check at the
+    // moment of the connect (measured: a local server saw 0 hits from 127.0.0.1,
+    // localhost, [::1], <img>, <iframe> and fetch; 1 hit with no proxy).
+    // `<-loopback>` is belt and braces: Chrome documents an implicit "never proxy
+    // localhost" rule, which this Chromium did NOT apply to a context proxy
+    // (also measured) — the flag keeps it that way if a version starts to. A
+    // service worker could fetch outside the page's view, so none may register.
+    const context = await deadline(
+      b.newContext({
+        viewport: { width: opts.width ?? 1440, height: opts.height ?? 1080 },
+        serviceWorkers: 'block',
+        ...(opts.allowPrivate ? {} : { proxy: { server: await egressProxy(), bypass: '<-loopback>' } }),
+      }),
+      'open a context',
+    );
+    const page = await deadline(context.newPage(), 'open a tab');
+    try {
+      // A 404/500 page is not the site — photographing it would make a broken
+      // card look like a real one.
+      const res = await page.goto(url, { waitUntil: 'load', timeout: 30_000 });
+      if (res && !res.ok()) throw new Error(`the page answered HTTP ${res.status()}`);
+      await settleDom(page);
+      // A blank page photographs as a white card, which hides the "no picture"
+      // gap an operator would otherwise see. Refuse it instead.
+      const shows = await deadline(
+        page.evaluate(() => {
+          const d = document as unknown as { body?: { innerText: string }; querySelector(sel: string): unknown };
+          return !!d.body && (d.body.innerText.trim().length > 0 || d.querySelector('img,picture,video,svg,canvas') !== null);
+        }),
+        'read the page',
+      );
+      if (!shows) throw new Error('the page shows nothing yet');
+      return new Uint8Array(await deadline(page.screenshot({ type: 'jpeg', quality: JPEG_QUALITY }), 'take the screenshot'));
+    } finally {
+      await deadline(context.close(), 'close a tab').catch(() => undefined);
+    }
+  };
+  try {
+    return await once(await browser());
+  } catch (e) {
+    if (!(e instanceof ChromeStalled)) throw e;
+    await closeBrowser();
+    return once(await browser());
+  }
 }
 
 /**

@@ -1,5 +1,14 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { fakePlatform } from './helpers/platform.js';
+
+// site_template photographs the published homepage; no real Chrome in tests.
+const snap = vi.hoisted(() => ({
+  fn: vi.fn(async (_url: string, _opts?: { allowPrivate?: boolean }) => new Uint8Array([0xff, 0xd8, 0xff])),
+}));
+vi.mock('../src/vision/shoot.js', async (orig) => ({
+  ...(await orig<typeof import('../src/vision/shoot.js')>()),
+  snapshot: (url: string, opts?: { allowPrivate?: boolean }) => snap.fn(url, opts),
+}));
 
 /**
  * "Set as Global" and "Save as template" were editor-only: an agent had to
@@ -224,14 +233,24 @@ describe('sb_store action:"template_save"', () => {
 });
 
 describe('sb_store action:"site_template"', () => {
-  async function site(orgId = '') {
+  async function site(orgId = '', publicUrl?: string) {
     const sent: Array<{ method: string; path: string; body: any }> = [];
     const p = fakePlatform((method, path, body, query) => {
       if (method !== 'GET') sent.push({ method, path, body });
-      if (path === '/api/sites/s1' && method === 'GET') return { site: { name: 'Shop', orgId } };
+      if (path === '/api/sites/s1' && method === 'GET') {
+        return { site: { name: 'Shop', orgId, publicUrl, isTemplate: !!publicUrl, templateName: 'Cũ' } };
+      }
+      if (path === '/api/sites/s1/preview') return { preview: { status: 'ready' } };
       if (path === '/api/sites/s1/pages') return { pages: [{ name: 'Trang chủ' }, { name: 'Sản phẩm' }] };
       if (path === '/api/templates/categories') {
-        return { categories: [{ slug: 'fashion', name: 'Thời trang' }], fileable: query.includes('orgId=org_p') };
+        const fileable = query.includes('orgId=org_p');
+        return {
+          categories: [{ slug: 'fashion', name: 'Thời trang' }],
+          fileable,
+        };
+      }
+      if (path === '/api/sites/s1/template' && method === 'GET') {
+        return { template: { isTemplate: true, categories: ['fashion'] } };
       }
       if (path === '/api/sites/s1/section-templates/st_1/share') return { sectionTemplate: { share: 'pending' } };
       if (path === '/api/sites/s1/template') return { site: { isTemplate: true } };
@@ -281,6 +300,38 @@ describe('sb_store action:"site_template"', () => {
     const { call, close, sent } = await site('org_p');
     expect((await call({ dry_run: false })).text).toMatch(/needs name/);
     expect(sent).toEqual([]);
+    await close();
+  });
+
+  it('photographs the published homepage as the card picture', async () => {
+    snap.fn.mockClear();
+    const { call, close, sent } = await site('org_p', 'https://shop.sbuilder.site/');
+    const out = await call({ name: 'Shop', dry_run: false });
+    expect(out.isError, out.text).toBe(false);
+    // The platform here is not local, so private addresses stay refused.
+    expect(snap.fn).toHaveBeenCalledWith('https://shop.sbuilder.site/', { allowPrivate: false });
+    const put = sent.find((x) => x.path === '/api/sites/s1/preview');
+    expect(put?.method, 'no preview upload').toBe('PUT');
+    expect(put?.body instanceof Blob && put.body.type, 'uploaded as a JPEG blob').toBe('image/jpeg');
+    expect(out.json.picture).toMatch(/captured from the published homepage/);
+    await close();
+  });
+
+  it('the dry run of an existing template shows its current filing', async () => {
+    const { call, close } = await site('org_p', 'https://shop.sbuilder.site/');
+    const dry = await call({ name: 'Shop' });
+    expect(dry.json.already_template).toEqual({ name: 'Cũ', categories: ['fashion'] });
+    await close();
+  });
+
+  it('a failed photograph is a note — the mark still stands', async () => {
+    snap.fn.mockClear();
+    snap.fn.mockRejectedValueOnce(new Error('the page answered HTTP 404'));
+    const { call, close, sent } = await site('org_p', 'https://shop.sbuilder.site/');
+    const out = await call({ name: 'Shop', dry_run: false });
+    expect(out.isError, out.text).toBe(false);
+    expect(out.json.picture).toMatch(/not captured \(the page answered HTTP 404\)/);
+    expect(sent.map((x) => x.path)).toEqual(['/api/sites/s1/template']);
     await close();
   });
 
