@@ -194,7 +194,12 @@ describe('token budget — a diet without a scale comes back', () => {
     // sb_api_call — a record PUT with no `published` UNPUBLISHES the row, its `values` replace
     // the stored ones, and a CSV import must go as the raw body, not JSON. The schema is 1,734
     // of it; sort/filter were folded (`-key`, `{key: value}`) and record ids share `id`.
-    expect(JSON.stringify(tools).length).toBeLessThan(42_500);
+    //
+    // 42,500 -> 42,800 buys sb_store `site_template`(`_remove`), `template_share` + `description`/`categories`/`org_id`
+    // (+367; measured 42,300 -> 42,667): an agent writing the platform org's templates left each
+    // one unnamed for its use and unfiled, so an operator had to describe and file it by hand
+    // before listing it. The brief and the catalogue ride the dry run, not this list.
+    expect(JSON.stringify(tools).length).toBeLessThan(42_800);
     for (const t of tools) expect(t.description, t.name).not.toMatch(/vanishes on publish/);
     const instructions = client.getInstructions() ?? '';
     expect(instructions.length).toBeGreaterThan(200);

@@ -1014,15 +1014,53 @@ export async function promoteGlobal(
   };
 }
 
+type Cat = { id?: string; slug: string; name?: string };
+
+/** The section-template category catalogue (enabled, named for `language`). */
+async function sectionCategories(ctx: ToolContext, base: string, language: string): Promise<Cat[]> {
+  const got = (await request({
+    base: ctx.base,
+    method: 'GET',
+    path: `${base}/categories?locale=${encodeURIComponent(language)}`,
+    token: siteToken(ctx),
+    fetchImpl: ctx.fetchImpl,
+  })) as { categories?: Cat[] };
+  return got.categories ?? [];
+}
+
+/**
+ * Resolve what the agent wrote — an id OR a slug — to catalogue entries. An
+ * unknown one is refused with the whole list, never dropped: a template filed
+ * under nothing is one an operator has to file by hand, the chore this exists
+ * to remove.
+ */
+function pickCategories(cats: Cat[], wanted: string[], what: string): Cat[] {
+  return wanted.map((w) => {
+    const hit = cats.find((c) => c.id === w || c.slug === w);
+    if (!hit) {
+      const list = cats.map((c) => `${c.slug} (${c.name ?? c.slug})`).join(', ') || 'none — the catalogue is empty';
+      throw new Error(`sbuilder: no ${what} category "${w}". Choose from: ${list}.`);
+    }
+    return hit;
+  });
+}
+
+const catalogue = (cats: Cat[]) => cats.map((c) => ({ slug: c.slug, name: c.name ?? c.slug }));
+
 /**
  * Save a section on the OPEN page as a reusable section template — the editor's
  * "Save as template". The page is untouched; `sb_template_use` places a copy.
+ *
+ * `description` and `categories` (slugs or ids from the dry run's catalogue)
+ * travel with it, so on a site of the PLATFORM organization the operator's only
+ * act in admin → Section templates is turning Listed on.
  *
  * With `templateId` it REWRITES that template's content instead — the editor's
  * template edit mode. The agent's way in is the full toolset: place the template
  * on a page with sb_template_use, edit it there, save it back over the template.
  * The PUT is fenced on the template's `rev`, read from the list (there is no
  * single-template GET), so an edit somebody else saved in between is refused.
+ * Name/description/categories given alongside are PATCHed after it.
  */
 export async function saveTemplate(
   ctx: ToolContext,
@@ -1030,11 +1068,31 @@ export async function saveTemplate(
   siteId: string,
   nodeId: string | undefined,
   name: string | undefined,
-  opts: { dryRun: boolean; templateId?: string },
-): Promise<{ dry_run?: true; template?: { id: string; name: string }; nodes: number; next: string }> {
+  opts: { dryRun: boolean; templateId?: string; description?: string; categories?: string[]; language?: string },
+): Promise<Record<string, unknown>> {
   const doc = session.current();
   const id = liftable(doc.doc, nodeId, 'template_save');
   const base = `/api/sites/${encodeURIComponent(siteId)}/section-templates`;
+  // Read only when it is used: a plain save must not start failing because the
+  // catalogue read does.
+  const cats = opts.dryRun || opts.categories?.length ? await sectionCategories(ctx, base, opts.language ?? 'vi') : [];
+  const chosen = opts.categories?.length
+    ? [...new Map(pickCategories(cats, opts.categories, 'section-template').map((c) => [c.slug, c])).values()]
+    : undefined;
+  const categoryIds = chosen?.map((c) => c.id).filter((x): x is string => !!x);
+  const description = opts.description?.trim();
+  const document = sectionDocument(doc.doc, id);
+  const nodes = Object.keys(document.nodes).length;
+  // The dry run is where the agent CHOOSES: it gets the catalogue and the brief.
+  const choose = {
+    categories_available: catalogue(cats),
+    ...(chosen ? { categories: chosen.map((c) => c.slug) } : {}),
+    ...(chosen && description ? {} : {
+      write:
+        'Before saving, name it for what the section IS ("Hero ảnh lớn + 2 nút", not "Section 3"), write a ' +
+        'one-sentence description of what it is for, and pick 1–2 categories from categories_available that fit.',
+    }),
+  };
   if (opts.templateId) {
     const list = (await request({ base: ctx.base, method: 'GET', path: base, token: siteToken(ctx), fetchImpl: ctx.fetchImpl })) as {
       sectionTemplates?: Array<{ id?: string; name?: string; rev?: number; source?: string }>;
@@ -1044,41 +1102,178 @@ export async function saveTemplate(
     if (t.source && t.source !== 'site') {
       throw new Error(`sbuilder: template "${opts.templateId}" is a ${t.source} template, not this site's own — save a new one instead.`);
     }
-    const document = sectionDocument(doc.doc, id);
-    const nodes = Object.keys(document.nodes).length;
-    const path = `${base}/${encodeURIComponent(opts.templateId)}/document`;
+    const patch = {
+      ...(name?.trim() ? { name: name.trim() } : {}),
+      ...(description ? { description } : {}),
+      ...(categoryIds ? { categoryIds } : {}),
+    };
     if (opts.dryRun) {
-      return { dry_run: true, nodes, next: `Nothing was sent. Re-call with dry_run:false to replace "${t.name ?? opts.templateId}"'s content.` };
+      return { dry_run: true, nodes, ...(Object.keys(patch).length ? { would_patch: patch } : {}), ...choose, next: `Nothing was sent. Re-call with dry_run:false to replace "${t.name ?? opts.templateId}"'s content.` };
     }
-    await request({ base: ctx.base, method: 'PUT', path, token: siteToken(ctx), body: { document, rev: t.rev ?? 0 }, fetchImpl: ctx.fetchImpl });
+    await request({ base: ctx.base, method: 'PUT', path: `${base}/${encodeURIComponent(opts.templateId)}/document`, token: siteToken(ctx), body: { document, rev: t.rev ?? 0 }, fetchImpl: ctx.fetchImpl });
+    // The content is saved now; a metadata failure must say so, or the agent
+    // retries the whole rewrite against a rev that has already moved.
+    let metaError: string | undefined;
+    if (Object.keys(patch).length) {
+      try {
+        await request({ base: ctx.base, method: 'PATCH', path: `${base}/${encodeURIComponent(opts.templateId)}`, token: siteToken(ctx), body: patch, fetchImpl: ctx.fetchImpl });
+      } catch (e) {
+        metaError = (e as Error).message;
+      }
+    }
     return {
-      template: { id: opts.templateId, name: t.name ?? '' },
+      template: { id: opts.templateId, name: metaError ? (t.name ?? '') : (patch.name ?? t.name ?? '') },
       nodes,
+      ...(metaError
+        ? { warning: `the CONTENT was saved, but name/description/categories were not: ${metaError}. Re-run with only those fields and no node change.` }
+        : chosen ? { categories: chosen.map((c) => c.slug) } : {}),
       next:
         'Pages that placed this template earlier keep their own copy; only new placements get this content. ' +
-        'A template shared with the organization goes back to review after a content change.' +
-        (name?.trim() ? ' `name` was not applied — a rewrite changes content only.' : ''),
+        'A template shared with the organization goes back to review after a content change.',
     };
   }
   if (!name?.trim()) throw new Error('sbuilder: action:"template_save" needs name — the template\'s name in the library.');
-  const document = sectionDocument(doc.doc, id);
-  const nodes = Object.keys(document.nodes).length;
   if (opts.dryRun) {
-    return { dry_run: true, nodes, next: 'Nothing was sent. Re-call with dry_run:false to save it.' };
+    return { dry_run: true, nodes, would_save: { name: name.trim(), ...(description ? { description } : {}) }, ...choose, next: 'Nothing was sent. Re-call with dry_run:false to save it.' };
   }
   const made = (await request({
     base: ctx.base,
     method: 'POST',
     path: base,
     token: siteToken(ctx),
-    body: { name: name.trim(), document },
+    body: { name: name.trim(), ...(description ? { description } : {}), document, ...(categoryIds ? { categoryIds } : {}) },
     fetchImpl: ctx.fetchImpl,
-  })) as { sectionTemplate?: { id?: unknown } };
+  })) as { sectionTemplate?: { id?: unknown; categoryIds?: string[] } };
   const tid = made.sectionTemplate?.id;
   if (typeof tid !== 'string' || !tid) throw new Error('sbuilder: the platform created no section template.');
+  // The create answers what IS filed (a filing failure does not fail it), so a
+  // shortfall is read off the answer rather than assumed from the request.
+  const filed = made.sectionTemplate?.categoryIds ?? [];
+  const missed = categoryIds && filed.length < categoryIds.length;
   return {
     template: { id: tid, name: name.trim() },
     nodes,
-    next: 'Place a copy with sb_template_use; sb_templates lists it.',
+    ...(chosen ? { categories: chosen.filter((c) => c.id && filed.includes(c.id)).map((c) => c.slug) } : {}),
+    ...(missed ? { warning: 'the template was saved but its categories were NOT filed — re-run with template_id and categories to file them.' } : {}),
+    next:
+      'Place a copy with sb_template_use; sb_templates lists it. On a site of the platform organization it now ' +
+      'waits in admin → Section templates, where an operator turns Listed on.',
   };
+}
+
+/**
+ * Offer the WHOLE SITE as its organization's starting template — every page it
+ * has comes along when someone starts from it. With `orgId` the site is first
+ * attached to that organization (owner only). `categories` are platform gallery
+ * slugs (the dry run lists them), filed with the mark, so an operator's only act
+ * in admin → Templates is the listing switch. The server refuses categories for
+ * a site outside the platform organization rather than filing them into nothing.
+ */
+export async function markSiteTemplate(
+  ctx: ToolContext,
+  siteId: string,
+  name: string | undefined,
+  opts: { dryRun: boolean; description?: string; categories?: string[]; orgId?: string; language?: string },
+): Promise<Record<string, unknown>> {
+  const sitePath = `/api/sites/${encodeURIComponent(siteId)}`;
+  const get = async <T>(path: string) => (await request({ base: ctx.base, method: 'GET', path, token: siteToken(ctx), fetchImpl: ctx.fetchImpl })) as T;
+  const { site } = await get<{ site?: { name?: string; orgId?: string; isTemplate?: boolean; templateName?: string; templateDescription?: string } }>(sitePath);
+  const description = opts.description?.trim();
+  const orgId = site?.orgId || undefined;
+  if (opts.orgId && orgId && orgId !== opts.orgId) {
+    throw new Error(`sbuilder: this site already belongs to organization ${orgId}; detach it in the dashboard before offering it to ${opts.orgId}.`);
+  }
+  const attach = opts.orgId && !orgId ? opts.orgId : undefined;
+  if (!orgId && !attach) {
+    throw new Error('sbuilder: this site belongs to no organization, and a template is an organization\'s — pass org_id (the platform organization\'s, for the public gallery).');
+  }
+  const org = (attach ?? orgId)!;
+  const listed = await get<{ categories?: Cat[]; fileable?: boolean }>(
+    `/api/templates/categories?locale=${encodeURIComponent(opts.language ?? 'vi')}&orgId=${encodeURIComponent(org)}`,
+  );
+  const cats = listed.categories ?? [];
+  // Only the platform org's templates reach the gallery; refusing HERE keeps a
+  // mark from landing with a filing the server would then reject.
+  if (opts.categories?.length && !listed.fileable) {
+    throw new Error(`sbuilder: organization ${org} is not the platform organization, so its templates have no gallery categories — drop categories (its members see the template on their own shelf).`);
+  }
+  const chosen = opts.categories?.length
+    ? [...new Map(pickCategories(cats, opts.categories, 'template').map((c) => [c.slug, c])).values()]
+    : undefined;
+  const pages = await get<{ pages?: Array<{ name?: string; slug?: string }> }>(`${sitePath}/pages`).catch(() => ({ pages: undefined }));
+  const state = {
+    site: site?.name,
+    organization: attach ?? orgId,
+    pages: pages.pages?.map((p) => p.name ?? p.slug),
+    ...(site?.isTemplate ? { already_template: { name: site.templateName, description: site.templateDescription } } : {}),
+  };
+  if (!opts.dryRun && !name?.trim()) {
+    throw new Error('sbuilder: action:"site_template" needs name — run it as a dry run first to read the pages and the categories, then name it.');
+  }
+  if (opts.dryRun) {
+    return {
+      ...(opts.dryRun ? { dry_run: true } : {}),
+      ...state,
+      ...(attach ? { would_attach_to: attach } : {}),
+      would_mark: { name: name?.trim(), description, categories: chosen?.map((c) => c.slug) },
+      ...(listed.fileable
+        ? { categories_available: catalogue(cats) }
+        : { categories_available: [], note: 'not the platform organization — no gallery categories; the template goes on its members\' shelf' }),
+      write:
+        'Name the template for the business it starts ("Shop thời trang nữ", not "Template 1"), write ONE sentence ' +
+        'on who it is for and what it comes with (read `pages`), and pick 1–2 categories from categories_available. ' +
+        'Then re-call with dry_run:false.',
+    };
+  }
+  if (attach) {
+    await request({ base: ctx.base, method: 'PUT', path: `${sitePath}/org`, token: siteToken(ctx), body: { orgId: attach }, fetchImpl: ctx.fetchImpl });
+  }
+  try {
+    await request({
+      base: ctx.base,
+      method: 'POST',
+      path: `${sitePath}/template`,
+      token: siteToken(ctx),
+      body: { name: name!.trim(), ...(description ? { description } : {}), ...(chosen ? { categories: chosen.map((c) => c.slug) } : {}) },
+      fetchImpl: ctx.fetchImpl,
+    });
+  } catch (e) {
+    // Say what already happened: the attach (if any) stands, and a refused
+    // filing means the mark itself landed.
+    const msg = (e as Error).message;
+    const done = [attach ? `the site WAS attached to ${attach}` : '', /categories_not_filed|marked as a template/.test(msg) ? 'it IS marked as a template' : '']
+      .filter(Boolean)
+      .join('; ');
+    throw new Error(done ? `${msg} (${done} — re-run site_template to retry the rest)` : msg);
+  }
+  return {
+    template: { site_id: siteId, name: name!.trim(), ...(description ? { description } : {}), ...(chosen ? { categories: chosen.map((c) => c.slug) } : {}) },
+    ...(attach ? { attached_to: attach } : {}),
+    next:
+      'Publish every page first — the gallery card shows the published storefront. On the platform organization an ' +
+      'operator now turns it on in admin → Templates (one switch); in any other organization it is on its members\' shelf already.',
+  };
+}
+
+/** Withdraw the site from its organization's templates (gallery listing goes with it). */
+export async function unmarkSiteTemplate(ctx: ToolContext, siteId: string, dryRun: boolean): Promise<Record<string, unknown>> {
+  const path = `/api/sites/${encodeURIComponent(siteId)}/template`;
+  if (dryRun) return { dry_run: true, would_delete: path, next: 'Sites already started from it keep their copy. Re-call with dry_run:false.' };
+  await request({ base: ctx.base, method: 'DELETE', path, token: siteToken(ctx), fetchImpl: ctx.fetchImpl });
+  return { withdrawn: siteId, next: 'It is off the organization\'s shelf and the gallery; site_template marks it again.' };
+}
+
+/**
+ * Offer one of this site's section templates to its ORGANIZATION's shelf — the
+ * review queue a reviewer approves from. (The platform org's own templates need
+ * no review: an operator lists them in admin.)
+ */
+export async function shareTemplate(ctx: ToolContext, siteId: string, templateId: string | undefined, dryRun: boolean): Promise<Record<string, unknown>> {
+  if (!templateId) throw new Error('sbuilder: action:"template_share" needs template_id — sb_templates lists them.');
+  const path = `/api/sites/${encodeURIComponent(siteId)}/section-templates/${encodeURIComponent(templateId)}/share`;
+  if (dryRun) return { dry_run: true, would_post: path, next: 'Re-call with dry_run:false to send it for review.' };
+  const got = (await request({ base: ctx.base, method: 'POST', path, token: siteToken(ctx), fetchImpl: ctx.fetchImpl })) as {
+    sectionTemplate?: { share?: string };
+  };
+  return { shared: templateId, share: got.sectionTemplate?.share ?? 'pending', next: 'A reviewer of the organization approves or rejects it; sb_templates shows its state.' };
 }

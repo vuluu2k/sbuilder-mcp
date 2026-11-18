@@ -45,7 +45,16 @@ import { siteFor, type ToolContext } from './context.js';
 import { withFreshIds } from '../domains/site/ids.js';
 import { addPlaced, saveRefusal, siteChrome, wearChrome, type PageSession } from './page.js';
 import { addSubtree } from '../domains/site/builder.js';
-import { attachGlobal, buildChrome, detachGlobal, promoteGlobal, saveTemplate } from './chrome.js';
+import {
+  attachGlobal,
+  buildChrome,
+  detachGlobal,
+  markSiteTemplate,
+  promoteGlobal,
+  saveTemplate,
+  shareTemplate,
+  unmarkSiteTemplate,
+} from './chrome.js';
 import { bindMenu } from './menu.js';
 import { attachOverlay, ensureCartDrawer, relocalizeCartDrawer } from './overlay.js';
 import { installApp } from './app.js';
@@ -670,7 +679,9 @@ export function registerStoreTools(server: McpServer, ctx: ToolContext, session:
         'wrongly build a second one. action:"global_promote" turns a section on the open page ' +
         '(node_id) into a NEW shared section (global_kind header|footer|custom, default custom) and ' +
         'leaves the page referencing it; action:"template_save" saves one as a section template ' +
-        '(name). Dry run returns the plan.',
+        '(name; template_share sends one to the org\'s review). site_template offers the whole site as its org\'s ' +
+        'template (org_id attaches first; site_template_remove withdraws). ' +
+        'Dry run returns the plan.',
       inputSchema: {
         action: z.enum([
           'checkout',
@@ -685,6 +696,9 @@ export function registerStoreTools(server: McpServer, ctx: ToolContext, session:
           'global_detach',
           'global_promote',
           'template_save',
+          'site_template',
+          'site_template_remove',
+          'template_share',
         ]),
         site_id: z.string().optional(),
         language: z.enum(['vi', 'en']).optional().describe('Copy language, default vi'),
@@ -715,6 +729,15 @@ export function registerStoreTools(server: McpServer, ctx: ToolContext, session:
           .describe('action:"menu" — the menu node; "global_promote"/"template_save" — the section; "form" — a node of the open page to place it in'),
         global_kind: z.enum(['header', 'footer', 'custom']).optional(),
         template_id: z.string().optional().describe('action:"template_save" — overwrite this template\'s content'),
+        description: z
+          .string()
+          .optional()
+          .describe('template_save/site_template: one sentence, what it is for'),
+        categories: z
+          .array(z.string())
+          .optional()
+          .describe('template_save/site_template: slugs from the dry run'),
+        org_id: z.string().optional(),
         menu_id: z.string().optional(),
         kind: z
           .enum(['popup', 'quickview'])
@@ -769,6 +792,9 @@ export function registerStoreTools(server: McpServer, ctx: ToolContext, session:
       global_id,
       global_kind,
       template_id,
+      description,
+      categories,
+      org_id,
       relocalize,
       settings,
       dry_run,
@@ -792,7 +818,20 @@ export function registerStoreTools(server: McpServer, ctx: ToolContext, session:
       }
       if (action === 'template_save') {
         return text(
-          await saveTemplate(ctx, session, siteId, node_id, name, { dryRun: dry_run !== false, templateId: template_id }),
+          await saveTemplate(ctx, session, siteId, node_id, name, {
+            dryRun: dry_run !== false,
+            templateId: template_id,
+            description,
+            categories,
+            language,
+          }),
+        );
+      }
+      if (action === 'site_template_remove') return text(await unmarkSiteTemplate(ctx, siteId, dry_run !== false));
+      if (action === 'template_share') return text(await shareTemplate(ctx, siteId, template_id, dry_run !== false));
+      if (action === 'site_template') {
+        return text(
+          await markSiteTemplate(ctx, siteId, name, { dryRun: dry_run !== false, description, categories, orgId: org_id, language }),
         );
       }
       if (action === 'app') {

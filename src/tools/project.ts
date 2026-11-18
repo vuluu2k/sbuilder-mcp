@@ -14,7 +14,7 @@ export const PAGE_FIELDS = [
   'id', 'name', 'slug', 'path', 'isHomepage', 'type', 'status', 'updatedAt', 'publishedAt',
 ];
 export const TEMPLATE_FIELDS = [
-  'id', 'name', 'description', 'categoryIds', 'source', 'listed', 'updatedAt',
+  'id', 'name', 'description', 'categoryIds', 'source', 'listed', 'share', 'shareNote', 'updatedAt',
 ];
 export const MEDIA_FIELDS = [
   'id', 'name', 'url', 'mediaType', 'contentType', 'sizeBytes', 'width', 'height', 'folderId', 'state',
