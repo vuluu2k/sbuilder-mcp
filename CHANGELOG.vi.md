@@ -6,6 +6,14 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.110.2] - 2026-11-19
+
+### Added
+- Phần tử `text-dataset` có thêm chế độ đếm kết quả (`datasetSource` `list`, `kind` `count`) in ra `countFormat` như "24 sản phẩm" từ danh sách sản phẩm của trang.
+
+### Changed
+- Danh mục phần tử được tạo lại theo web_builder v1.0.285, và hướng dẫn `hoverSwapImage` nay nêu rõ yêu cầu về thư viện ảnh.
+
 ## [0.110.1] - 2026-11-19
 
 ### Added

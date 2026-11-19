@@ -6,6 +6,14 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.110.2] - 2026-11-19
+
+### Added
+- The `text-dataset` element gains a result-count mode (`datasetSource` `list`, `kind` `count`) that prints a `countFormat` such as "24 sản phẩm" from the page's product list.
+
+### Changed
+- The element catalog is regenerated against web_builder v1.0.285, and the `hoverSwapImage` guidance now spells out the gallery requirement.
+
 ## [0.110.1] - 2026-11-19
 
 ### Added
