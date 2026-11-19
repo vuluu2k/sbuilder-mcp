@@ -10,7 +10,7 @@ import type { TokenPair } from './stored.js';
  */
 
 /** What the approval page shows as the asking app — on the server's allowlist
- *  (web_builder KnownDeviceClients) from v1.0.277; older servers say "unknown app". */
+ *  (web_builder KnownDeviceClients) from v1.0.278; older servers say "unknown app". */
 export const DEVICE_CLIENT = 'sbuilder-mcp';
 
 export interface DeviceStart {
