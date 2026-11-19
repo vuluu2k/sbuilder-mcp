@@ -389,6 +389,7 @@ export const OVERLAY_SEEDS: Record<'cart' | 'popup' | 'quickview', OverlayDocume
         "specials": {
           "htmlTag": "h4",
           "moreButtonEnabled": false,
+          "countFormat": "",
           "stylePreset": "text-dataset-default"
         },
         "responsive": {},
@@ -1381,6 +1382,7 @@ export const OVERLAY_SEEDS: Record<'cart' | 'popup' | 'quickview', OverlayDocume
         "specials": {
           "htmlTag": "h3",
           "moreButtonEnabled": false,
+          "countFormat": "",
           "stylePreset": "text-dataset-default"
         },
         "responsive": {},
@@ -1799,6 +1801,7 @@ export const OVERLAY_SEEDS: Record<'cart' | 'popup' | 'quickview', OverlayDocume
         "specials": {
           "htmlTag": "p",
           "moreButtonEnabled": true,
+          "countFormat": "",
           "stylePreset": "text-dataset-default"
         },
         "responsive": {},
@@ -2442,6 +2445,7 @@ export const CART_SEEDS: Record<string, OverlayDocument> = {
         "specials": {
           "htmlTag": "h4",
           "moreButtonEnabled": false,
+          "countFormat": "",
           "stylePreset": "text-dataset-default"
         },
         "responsive": {},
@@ -3280,6 +3284,7 @@ export const CART_SEEDS: Record<string, OverlayDocument> = {
         "specials": {
           "htmlTag": "h4",
           "moreButtonEnabled": false,
+          "countFormat": "",
           "stylePreset": "text-dataset-default"
         },
         "responsive": {},

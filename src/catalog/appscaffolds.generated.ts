@@ -76,6 +76,7 @@ export const APP_SCAFFOLDS: Record<
             "specials": {
               "htmlTag": "p",
               "moreButtonEnabled": false,
+              "countFormat": "",
               "stylePreset": "text-dataset-default"
             },
             "responsive": {},
@@ -122,6 +123,7 @@ export const APP_SCAFFOLDS: Record<
             "specials": {
               "htmlTag": "p",
               "moreButtonEnabled": false,
+              "countFormat": "",
               "stylePreset": "text-dataset-default"
             },
             "responsive": {},
@@ -168,6 +170,7 @@ export const APP_SCAFFOLDS: Record<
             "specials": {
               "htmlTag": "p",
               "moreButtonEnabled": false,
+              "countFormat": "",
               "stylePreset": "text-dataset-default"
             },
             "responsive": {},
@@ -264,6 +267,7 @@ export const APP_SCAFFOLDS: Record<
             "specials": {
               "htmlTag": "p",
               "moreButtonEnabled": false,
+              "countFormat": "",
               "stylePreset": "text-dataset-default"
             },
             "responsive": {},
@@ -599,6 +603,7 @@ export const APP_SCAFFOLDS: Record<
             "specials": {
               "htmlTag": "p",
               "moreButtonEnabled": false,
+              "countFormat": "",
               "stylePreset": "text-dataset-default"
             },
             "responsive": {},
@@ -645,6 +650,7 @@ export const APP_SCAFFOLDS: Record<
             "specials": {
               "htmlTag": "p",
               "moreButtonEnabled": false,
+              "countFormat": "",
               "stylePreset": "text-dataset-default"
             },
             "responsive": {},

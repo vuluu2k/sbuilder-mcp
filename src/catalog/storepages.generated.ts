@@ -901,6 +901,7 @@ export const PAGE_LAYOUT_SEEDS: Record<string, { schema_version: number; root_no
         "specials": {
           "htmlTag": "h4",
           "moreButtonEnabled": false,
+          "countFormat": "",
           "stylePreset": "text-dataset-default"
         },
         "responsive": {},
@@ -947,6 +948,7 @@ export const PAGE_LAYOUT_SEEDS: Record<string, { schema_version: number; root_no
         "specials": {
           "htmlTag": "p",
           "moreButtonEnabled": false,
+          "countFormat": "",
           "stylePreset": "text-dataset-default"
         },
         "responsive": {},
@@ -993,6 +995,7 @@ export const PAGE_LAYOUT_SEEDS: Record<string, { schema_version: number; root_no
         "specials": {
           "htmlTag": "p",
           "moreButtonEnabled": false,
+          "countFormat": "",
           "stylePreset": "text-dataset-default"
         },
         "responsive": {},
@@ -2095,6 +2098,7 @@ export const STORE_PAGE_SEEDS: Record<string, { schema_version: number; root_nod
         "specials": {
           "htmlTag": "h3",
           "moreButtonEnabled": false,
+          "countFormat": "",
           "stylePreset": "text-dataset-default"
         },
         "responsive": {},
@@ -2513,6 +2517,7 @@ export const STORE_PAGE_SEEDS: Record<string, { schema_version: number; root_nod
         "specials": {
           "htmlTag": "p",
           "moreButtonEnabled": true,
+          "countFormat": "",
           "stylePreset": "text-dataset-default"
         },
         "responsive": {},
@@ -2942,6 +2947,7 @@ export const STORE_PAGE_SEEDS: Record<string, { schema_version: number; root_nod
         "specials": {
           "htmlTag": "h3",
           "moreButtonEnabled": false,
+          "countFormat": "",
           "stylePreset": "text-dataset-default"
         },
         "responsive": {},
@@ -3379,6 +3385,7 @@ export const STORE_PAGE_SEEDS: Record<string, { schema_version: number; root_nod
         "specials": {
           "htmlTag": "h4",
           "moreButtonEnabled": false,
+          "countFormat": "",
           "stylePreset": "text-dataset-default"
         },
         "responsive": {},
@@ -4101,6 +4108,7 @@ export const STORE_PAGE_SEEDS: Record<string, { schema_version: number; root_nod
         "specials": {
           "htmlTag": "h4",
           "moreButtonEnabled": false,
+          "countFormat": "",
           "stylePreset": "text-dataset-default"
         },
         "responsive": {},
@@ -4396,6 +4404,7 @@ export const STORE_PAGE_SEEDS: Record<string, { schema_version: number; root_nod
         "specials": {
           "htmlTag": "h3",
           "moreButtonEnabled": false,
+          "countFormat": "",
           "stylePreset": "text-dataset-default"
         },
         "responsive": {},
@@ -4658,6 +4667,7 @@ export const STORE_PAGE_SEEDS: Record<string, { schema_version: number; root_nod
         "specials": {
           "htmlTag": "h4",
           "moreButtonEnabled": false,
+          "countFormat": "",
           "stylePreset": "text-dataset-default"
         },
         "responsive": {},
@@ -4704,6 +4714,7 @@ export const STORE_PAGE_SEEDS: Record<string, { schema_version: number; root_nod
         "specials": {
           "htmlTag": "p",
           "moreButtonEnabled": false,
+          "countFormat": "",
           "stylePreset": "text-dataset-default"
         },
         "responsive": {},
@@ -4750,6 +4761,7 @@ export const STORE_PAGE_SEEDS: Record<string, { schema_version: number; root_nod
         "specials": {
           "htmlTag": "p",
           "moreButtonEnabled": false,
+          "countFormat": "",
           "stylePreset": "text-dataset-default"
         },
         "responsive": {},
@@ -5022,6 +5034,7 @@ export const STORE_PAGE_SEEDS: Record<string, { schema_version: number; root_nod
         "specials": {
           "htmlTag": "h3",
           "moreButtonEnabled": false,
+          "countFormat": "",
           "stylePreset": "text-dataset-default"
         },
         "responsive": {},
@@ -5068,6 +5081,7 @@ export const STORE_PAGE_SEEDS: Record<string, { schema_version: number; root_nod
         "specials": {
           "htmlTag": "p",
           "moreButtonEnabled": false,
+          "countFormat": "",
           "stylePreset": "text-dataset-default"
         },
         "responsive": {},
@@ -5114,6 +5128,7 @@ export const STORE_PAGE_SEEDS: Record<string, { schema_version: number; root_nod
         "specials": {
           "htmlTag": "p",
           "moreButtonEnabled": true,
+          "countFormat": "",
           "stylePreset": "text-dataset-default"
         },
         "responsive": {},

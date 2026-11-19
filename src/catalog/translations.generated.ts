@@ -2,9 +2,9 @@
 // Source: <WB_REPO>/schema/src/elements/translatableFields.ts
 
 export const TRANSLATION_SOURCE = {
-  "elements": 68,
-  "pairs": 190,
-  "neverKeys": 191,
+  "elements": 69,
+  "pairs": 191,
+  "neverKeys": 192,
   "entityTypes": 12
 } as const;
 
@@ -34,6 +34,9 @@ export const TRANSLATION_ENTITY_TYPES: string[] = [
 export const TRANSLATABLE_SPECIALS: Record<string, string[]> = {
   "popup": [
     "closeLabel"
+  ],
+  "text-dataset": [
+    "countFormat"
   ],
   "select": [
     "placeholder",
@@ -388,6 +391,7 @@ export const NEVER_TRANSLATED: string[] = [
   "boundCompareCents",
   "boundHref",
   "boundHrefLabel",
+  "boundImage",
   "boundModel",
   "boundMoneyOverride",
   "boundPriceCents",
@@ -580,6 +584,15 @@ export const TRANSLATABLE_FIELDS: Record<string, TranslatableFieldSpec[]> = {
   "popup": [
     {
       "key": "closeLabel"
+    }
+  ],
+  "text-dataset": [
+    {
+      "key": "countFormat",
+      "when": {
+        "key": "datasetSource",
+        "equals": "list"
+      }
     }
   ],
   "select": [

@@ -16031,7 +16031,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
       "Use a consistent image ratio (config.featureImageRatio) so the layout does not jump between images — default is a uniform 1:1 square; \"auto\" uses each image's natural size.",
       "Hover-zoom is on by default at 150% (config.hoverZoomValue); set it to 100 to disable, or raise it up to 300 for a closer zoom.",
       "Nav arrows sit \"inside\" (overlaid) or \"outside\" the image via config.listNavPosition.",
-      "config.hoverSwapImage fades in the NEXT gallery photo while the pointer is on the tile OR anywhere on the linked product card around it — the product-grid effect, nothing else to set. It needs a gallery of 2+, is off by default, and does nothing on a touch screen (no pointer), so a phone keeps the first photo."
+      "config.hoverSwapImage fades in the NEXT gallery photo while the pointer is on the tile OR anywhere on the linked product card around it — the product-grid effect, nothing else to set. It needs a gallery of 2+ (a product with one photo just holds still), is off by default, and does nothing on a touch screen (no pointer), so a phone keeps the first photo. A product-bound tile shown with NO product in context renders its grey placeholders, and the swap then fades to the next placeholder."
     ],
     "semantics": [
       "product-image",
@@ -29459,6 +29459,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
       "specials": {
         "htmlTag": "p",
         "moreButtonEnabled": false,
+        "countFormat": "",
         "stylePreset": "text-dataset-default"
       },
       "bindings": [
@@ -32760,6 +32761,31 @@ export const ELEMENTS: Record<string, CatalogElement> = {
             ]
           },
           {
+            "key": "result_count",
+            "label": "Result count",
+            "controls": [
+              "count_format",
+              "kind",
+              "productId",
+              "categoryId",
+              "datasetSource",
+              "recordField",
+              "recordFieldType",
+              "recordFormat",
+              "textValue",
+              "descriptionDisplayType",
+              "descriptionLines",
+              "clampTitle",
+              "moreText",
+              "lessText",
+              "moreButtonColor",
+              "icon",
+              "textGlobalStyle",
+              "htmlTag",
+              "moreButtonEnabled"
+            ]
+          },
+          {
             "key": "description_display",
             "label": "Description display",
             "controls": [
@@ -32892,6 +32918,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
       "article",
       "record_field",
       "record_format",
+      "count_format",
       "description_display",
       "width_select",
       "height_select",
@@ -32921,7 +32948,8 @@ export const ELEMENTS: Record<string, CatalogElement> = {
     "useWhen": [
       "Product title, vendor, short summary, or description text in a product layout",
       "A long product description that should collapse to a few lines with a \"show more\" toggle",
-      "Product text that needs hover/active styling"
+      "Product text that needs hover/active styling",
+      "A result count beside a product grid (\"24 sản phẩm\") — config.datasetSource \"list\", kind \"count\""
     ],
     "avoidWhen": [
       "Generic static copy not tied to a product — use text or heading",
@@ -32933,7 +32961,8 @@ export const ELEMENTS: Record<string, CatalogElement> = {
       "For a description, set config.descriptionDisplayType to \"Compact\" and config.descriptionLines to clamp it; enable specials.moreButtonEnabled for the toggle",
       "Customise config.moreText / config.lessText and config.icon (the chevron) for the toggle",
       "Style per state (default / hover / active) via the state switcher",
-      "In a record list on a number/integer field, set config.recordFormat to \"money\" to print it in the site currency (record.money.<fieldId>)"
+      "In a record list on a number/integer field, set config.recordFormat to \"money\" to print it in the site currency (record.money.<fieldId>)",
+      "RESULT COUNT: config.datasetSource \"list\" + config.kind \"count\" prints specials.countFormat with \"{count}\" replaced by how many products the PAGE's product list holds (the first product list on the page; filters and the category page narrow it). Place it outside the list, e.g. beside the sort select; no bindings"
     ],
     "semantics": [
       "product",
