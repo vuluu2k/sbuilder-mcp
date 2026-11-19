@@ -4,12 +4,12 @@
 import type { RequestShape } from './types.js';
 
 export const SHAPE_SOURCE = {
-  "writeOperations": 451,
-  "shaped": 362,
-  "fromHandlers": 352,
-  "fromSwaggerOnly": 10,
+  "writeOperations": 464,
+  "shaped": 373,
+  "fromHandlers": 362,
+  "fromSwaggerOnly": 11,
   "withReadOnly": 29,
-  "structsRead": 3630
+  "structsRead": 3847
 } as const;
 
 export const REQUEST_SHAPES: Record<string, RequestShape> = {
@@ -1386,6 +1386,20 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
     ],
     "source": "go",
     "goType": "chatbot.Input"
+  },
+  "post:/api/sites/{siteId}/code-components/{name}/render": {
+    "fields": [
+      {
+        "name": "version",
+        "type": "number"
+      },
+      {
+        "name": "props",
+        "type": "{ [string]: any }"
+      }
+    ],
+    "source": "go",
+    "goType": "RenderRequest"
   },
   "post:/api/sites/{siteId}/code-files": {
     "fields": [
@@ -7121,6 +7135,44 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
     "source": "go",
     "goType": "(inline)"
   },
+  "put:/api/admin/ai-models": {
+    "fields": [
+      {
+        "name": "build",
+        "type": "AIModelChoiceView",
+        "fields": [
+          {
+            "name": "provider",
+            "type": "string"
+          },
+          {
+            "name": "model",
+            "type": "string"
+          }
+        ]
+      },
+      {
+        "name": "edit",
+        "type": "AIModelChoiceView",
+        "fields": [
+          {
+            "name": "provider",
+            "type": "string"
+          },
+          {
+            "name": "model",
+            "type": "string"
+          }
+        ]
+      },
+      {
+        "name": "prices",
+        "type": "{ [string]: number }"
+      }
+    ],
+    "source": "go",
+    "goType": "platformadmin.AIModelsView"
+  },
   "put:/api/admin/functions": {
     "fields": [
       {
@@ -10220,6 +10272,28 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
     "source": "go",
     "goType": "BlogCategoryInput"
   },
+  "post:/api/v1/code-components": {
+    "fields": [
+      {
+        "name": "name",
+        "type": "string"
+      },
+      {
+        "name": "propsSchema",
+        "type": "object"
+      },
+      {
+        "name": "ssrBundle",
+        "type": "string"
+      },
+      {
+        "name": "clientBundle",
+        "type": "string"
+      }
+    ],
+    "source": "go",
+    "goType": "CodeComponentInput"
+  },
   "post:/api/v1/code-files": {
     "fields": [
       {
@@ -10649,6 +10723,25 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
     "source": "go",
     "goType": "OrderStatusInput"
   },
+  "put:/api/v1/pages/{id}/document": {
+    "fields": [
+      {
+        "name": "document",
+        "type": "object"
+      },
+      {
+        "name": "schemaVersion",
+        "type": "number"
+      },
+      {
+        "name": "baseRev",
+        "type": "number",
+        "note": "BaseRev is REQUIRED here, unlike the editor's route: an integration that forgets it would silently overwrite a merchant's edit made in the editor."
+      }
+    ],
+    "source": "go",
+    "goType": "PageDocumentInput"
+  },
   "post:/api/v1/pages": {
     "fields": [
       {
@@ -10706,6 +10799,38 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
       {
         "name": "settings",
         "type": "object"
+      },
+      {
+        "name": "defaultTemplate",
+        "type": "boolean | null",
+        "note": "DefaultTemplate: true makes this page the one that renders its type when an entity has no explicit link (the previous default, if any, is replaced)."
+      },
+      {
+        "name": "base",
+        "type": "PagePatchBase | null",
+        "note": "Base is what you READ of the fields you are changing (optional).",
+        "fields": [
+          {
+            "name": "name",
+            "type": "string | null"
+          },
+          {
+            "name": "slug",
+            "type": "string | null"
+          },
+          {
+            "name": "type",
+            "type": "string | null"
+          },
+          {
+            "name": "isHomepage",
+            "type": "boolean | null"
+          },
+          {
+            "name": "settings",
+            "type": "object"
+          }
+        ]
       }
     ],
     "source": "go",
@@ -10896,6 +11021,182 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
     ],
     "source": "go",
     "goType": "ProductInput"
+  },
+  "post:/api/v1/pages/{id}/render-context": {
+    "fields": [
+      {
+        "name": "document",
+        "type": "object",
+        "note": "Document is the page document to render — the draft as `sb site pull` wrote it, edited locally."
+      },
+      {
+        "name": "request",
+        "type": "renderctx.Request",
+        "note": "Request is the storefront request to render it for; Path defaults to the page's own address.",
+        "fields": [
+          {
+            "name": "path",
+            "type": "string",
+            "note": "Path defaults to the page's own path."
+          },
+          {
+            "name": "query",
+            "type": "string"
+          },
+          {
+            "name": "cookies",
+            "type": "{ [string]: string }"
+          }
+        ]
+      },
+      {
+        "name": "cssLanes",
+        "type": "object",
+        "note": "CSSLanes is \"inline\" (default) or {\"base\": \"https://…/\"} for external <link> lanes served from that base."
+      }
+    ],
+    "source": "go",
+    "goType": "RenderContextRequest"
+  },
+  "post:/api/v1/global-sections": {
+    "fields": [
+      {
+        "name": "name",
+        "type": "string"
+      },
+      {
+        "name": "kind",
+        "type": "string",
+        "note": "Kind is header, footer or custom, and cannot be changed afterwards."
+      },
+      {
+        "name": "document",
+        "type": "object"
+      }
+    ],
+    "source": "go",
+    "goType": "GlobalSectionCreate"
+  },
+  "put:/api/v1/global-sections/{id}": {
+    "fields": [
+      {
+        "name": "document",
+        "type": "object"
+      },
+      {
+        "name": "baseRev",
+        "type": "number",
+        "note": "BaseRev is REQUIRED — the rev you read."
+      },
+      {
+        "name": "name",
+        "type": "string | null",
+        "note": "Name renames the section when present and different."
+      },
+      {
+        "name": "base",
+        "type": "GlobalSectionBase | null",
+        "note": "Base is what you READ of the metadata you are changing.",
+        "fields": [
+          {
+            "name": "name",
+            "type": "string | null"
+          }
+        ]
+      }
+    ],
+    "source": "go",
+    "goType": "GlobalSectionInput"
+  },
+  "post:/api/v1/overlays": {
+    "fields": [
+      {
+        "name": "name",
+        "type": "string",
+        "note": "Name defaults per kind when blank."
+      },
+      {
+        "name": "kind",
+        "type": "string",
+        "note": "Kind is cart, popup or quickview."
+      },
+      {
+        "name": "document",
+        "type": "object"
+      },
+      {
+        "name": "allPages",
+        "type": "boolean | null"
+      },
+      {
+        "name": "pages",
+        "type": "string[] | null"
+      }
+    ],
+    "source": "go",
+    "goType": "OverlayCreate"
+  },
+  "put:/api/v1/overlays/{id}": {
+    "fields": [
+      {
+        "name": "document",
+        "type": "object"
+      },
+      {
+        "name": "baseRev",
+        "type": "number",
+        "note": "BaseRev is REQUIRED — the rev you read."
+      },
+      {
+        "name": "name",
+        "type": "string | null",
+        "note": "Name, AllPages and Pages are optional and, when absent, left alone."
+      },
+      {
+        "name": "allPages",
+        "type": "boolean | null"
+      },
+      {
+        "name": "pages",
+        "type": "string[] | null"
+      },
+      {
+        "name": "base",
+        "type": "OverlayBase | null",
+        "note": "Base is what you READ of the metadata you are changing: required for each of name/allPages/pages that you change (400 base_required), refused 409 source_stale when the stored value is no longer it.",
+        "fields": [
+          {
+            "name": "name",
+            "type": "string | null"
+          },
+          {
+            "name": "allPages",
+            "type": "boolean | null"
+          },
+          {
+            "name": "pages",
+            "type": "string[] | null"
+          }
+        ]
+      }
+    ],
+    "source": "go",
+    "goType": "OverlayInput"
+  },
+  "put:/api/v1/theme": {
+    "fields": [
+      {
+        "name": "document",
+        "type": "object"
+      },
+      {
+        "name": "expectedUpdatedAt",
+        "type": "string | null",
+        "note": "ExpectedUpdatedAt is the `updatedAt` you read (\"\" when none was saved yet)."
+      }
+    ],
+    "source": "go",
+    "goType": "ThemeInput"
   },
   "put:/api/v1/translations": {
     "fields": [
@@ -12086,6 +12387,11 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
       {
         "name": "description",
         "type": "string"
+      },
+      {
+        "name": "categories",
+        "type": "string[]",
+        "note": "Categories are gallery category SLUGS (GET /api/templates/categories); given, they REPLACE the filing."
       }
     ],
     "source": "go",

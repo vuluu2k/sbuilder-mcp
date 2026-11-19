@@ -138,6 +138,18 @@ or YouTube/Vimeo/Maps iframe ships unreviewed and drifts on the next palette cha
 That finding is advice, not a defect. A plain third-party script or an unknown
 embed is the legitimate use and is not flagged.
 
+**7b. Interactivity no element has is a CODE COMPONENT, not a custom-code script.**
+A calculator, a quiz, a configurator: the site's own React in `components/<Name>.tsx`,
+written in the site repo and uploaded with `sb site push` (the CLI's
+`sbuilder-components` skill) — this server never writes one. It places one:
+`sb_components` for the pushed names, versions and each version's props schema, then
+`sb_add {type:"code-component", specials:{component, version, props}}`. Props are the
+content kinds only; a `css` prop is a style key `--<name>`, per breakpoint. `html` and
+`clientUrl` are the platform's (rendered on every save) and are dropped if sent. Both
+writes refuse an unknown component, version or prop before saving, because the
+platform does not: it stores the node BLANK and answers 200 with a
+`codeComponentRender` warning, which comes back as `render_warnings`.
+
 **8. The purchase controls.** `sb_bind` with `action: "add_to_cart"` on the buy
 button — a purchase is a BINDING. `sb_event` with `open_cart` on a standalone
 cart control in the header — that one is an EVENT. Getting these two backwards

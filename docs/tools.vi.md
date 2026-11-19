@@ -466,7 +466,7 @@ base). Lời gọi một-node mang cùng hai trường đó bên cạnh `set`.
 | `limit` | number? | Mặc định 8, tối đa 60 |
 | `detail` | boolean? | Thêm `useWhen`, `avoidWhen`, `contentTips` vào mọi kết quả |
 
-Tìm trong chính AI hints của nền tảng trên cả 124 element. Mỗi kết quả là
+Tìm trong chính AI hints của nền tảng trên cả 125 element. Mỗi kết quả là
 `{ type, label, category, description }`, kèm `isContainer: true` / `isRootOnly: true` chỉ
 khi đúng — bốn trường để **chọn**. Bản thân các hint, do đội nền tảng viết đúng cho mục đích
 này, đi kèm `sb_traits_for` của element đã chọn, hoặc kèm mọi kết quả khi `detail: true`;
@@ -1613,6 +1613,34 @@ dung mở đầu bằng `<` đều bị từ chối — một file `.tsx` mở �
 `React.createElement("script")` và lỗi trên mọi trang. Hãy viết SCSS/TypeScript thuần, hoặc
 dùng `language:"html"`. Nội dung tối đa 512 KiB, và lệnh ghi
 khi một lần lưu khác trên site đang biên dịch sẽ nhận 503 `code_files_busy` — thử lại.
+
+## `sb_components`
+
+Các CODE COMPONENT của site (`/api/sites/{siteId}/code-components`): component React (Preact)
+riêng của site, viết trong repo site tại `components/<Name>.tsx` và tải lên bằng
+`sb site push` — server này không bao giờ ghi component. Chỉ đọc: `name`, version `latest` và
+mọi version kèm schema `props` của nó (`{ <prop>: { kind, default?, options? } }`), mới nhất
+trước; `name` thu hẹp về một component. Version là bất biến và do nền tảng đánh số.
+
+Code component dành cho một khoảng trống không element gốc nào phủ — tương tác (máy tính, quiz,
+bộ cấu hình) hoặc markup không element nào tạo được — giống như `custom-code`; element gốc luôn
+đi trước. Nó được đặt dưới dạng node `code-component`:
+
+```json
+{ "type": "code-component",
+  "specials": { "component": "Faq", "version": 3, "props": { "question": "…", "open": false } },
+  "style": { "--gap-size": "16px" } }
+```
+
+`sb_add` và `sb_set` KIỂM TRA pin trước khi ghi, kể cả chạy thử: component và version phải tồn
+tại, và mỗi key của `props` phải là content prop của ĐÚNG version đó với giá trị đúng kind
+(`text`, `richtext`, `link`, `image` → string; `enum` → một trong `options`; `boolean`;
+`number`). Prop lạ bị từ chối kèm danh sách prop version đó nhận. Prop `css` không bao giờ là
+prop: nó là key style `--<name>`, theo breakpoint, và bị từ chối trong `props` kèm cách sửa.
+`specials.html` và `specials.clientUrl` do nền tảng render mỗi lần lưu: giá trị gửi lên bị bỏ
+và kết quả nói rõ (`derived`). Render lỗi thì node được lưu TRỐNG và vẫn lưu; cảnh báo
+`codeComponentRender` của lần lưu được trả nguyên văn trong `render_warnings`
+(`{code, nodeId, name, reason}`).
 
 ## `sb_function`
 

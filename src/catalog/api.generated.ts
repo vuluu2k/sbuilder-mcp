@@ -3,10 +3,10 @@
 import type { ApiOperation } from './types.js';
 
 export const SWAGGER_SOURCE = {
-  "operations": 969,
-  "definitions": 364,
-  "bodyCarrying": 464,
-  "bodyUndescribed": 121,
+  "operations": 1007,
+  "definitions": 437,
+  "bodyCarrying": 484,
+  "bodyUndescribed": 122,
   "generatedFrom": "server/docs/swagger.json"
 } as const;
 
@@ -623,6 +623,41 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "summary": "Countries and administrative divisions for an address field",
     "params": [],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/_wb/cc/{site}/{name}/{version}",
+    "method": "GET",
+    "path": "/_wb/cc/{site}/{name}/{version}",
+    "tags": [
+      "code-components"
+    ],
+    "summary": "A published page's code-component client bundle",
+    "params": [
+      {
+        "name": "site",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site id (must be the host's own store)"
+      },
+      {
+        "name": "name",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Component name"
+      },
+      {
+        "name": "version",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Version number followed by .js"
+      }
+    ],
     "bodyDescribed": false,
     "bodyRef": null,
     "credential": "siteScoped"
@@ -1850,6 +1885,48 @@ export const API_OPERATIONS: ApiOperation[] = [
     "params": [],
     "bodyDescribed": false,
     "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/admin/ai-models",
+    "method": "GET",
+    "path": "/api/admin/ai-models",
+    "tags": [
+      "admin"
+    ],
+    "summary": "Read or change the assistant's models and per-model credit prices",
+    "params": [
+      {
+        "name": "body",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "PUT only. build/edit are provider+model (both empty = the key's own model); prices maps a model id to a percent of its provider's rate, 1 to 10000, at most 50 entries."
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "github_com_webbuilder_server_internal_platformadmin.AIModelsView",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "put:/api/admin/ai-models",
+    "method": "PUT",
+    "path": "/api/admin/ai-models",
+    "tags": [
+      "admin"
+    ],
+    "summary": "Read or change the assistant's models and per-model credit prices",
+    "params": [
+      {
+        "name": "body",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "PUT only. build/edit are provider+model (both empty = the key's own model); prices maps a model id to a percent of its provider's rate, 1 to 10000, at most 50 entries."
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "github_com_webbuilder_server_internal_platformadmin.AIModelsView",
     "credential": "siteScoped"
   },
   {
@@ -6628,6 +6705,139 @@ export const API_OPERATIONS: ApiOperation[] = [
         "required": true,
         "type": "object",
         "description": "sourceSiteId + tree"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/sites/{siteId}/code-components",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/code-components",
+    "tags": [
+      "code-components"
+    ],
+    "summary": "List the store's code components (latest version of each)",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/api/sites/{siteId}/code-components/{name}/render",
+    "method": "POST",
+    "path": "/api/sites/{siteId}/code-components/{name}/render",
+    "tags": [
+      "code-components"
+    ],
+    "summary": "Render one component for the canvas preview",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "name",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Component name"
+      },
+      {
+        "name": "body",
+        "in": "body",
+        "required": true,
+        "type": "object",
+        "description": "version and props"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "internal_codecomponents_rest.RenderRequest",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/sites/{siteId}/code-components/{name}/versions",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/code-components/{name}/versions",
+    "tags": [
+      "code-components"
+    ],
+    "summary": "List every version of one component, newest first",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "name",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Component name"
+      },
+      {
+        "name": "limit",
+        "in": "query",
+        "required": false,
+        "type": "integer",
+        "description": "Page size (default 50, at most 200)"
+      },
+      {
+        "name": "offset",
+        "in": "query",
+        "required": false,
+        "type": "integer",
+        "description": "Rows to skip"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/sites/{siteId}/code-components/{name}/versions/{n}",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/code-components/{name}/versions/{n}",
+    "tags": [
+      "code-components"
+    ],
+    "summary": "Read one version of a component (props schema, sizes, sha; no bundle bytes)",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "name",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Component name"
+      },
+      {
+        "name": "n",
+        "in": "path",
+        "required": true,
+        "type": "integer",
+        "description": "Version number"
       }
     ],
     "bodyDescribed": false,
@@ -13956,6 +14166,45 @@ export const API_OPERATIONS: ApiOperation[] = [
         "description": "Global section ID"
       }
     ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/sites/{siteId}/host-link",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/host-link",
+    "tags": [
+      "host-link"
+    ],
+    "summary": "Read, mint (or rotate) or revoke the site's host secret (Manage)",
+    "params": [],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/api/sites/{siteId}/host-link",
+    "method": "POST",
+    "path": "/api/sites/{siteId}/host-link",
+    "tags": [
+      "host-link"
+    ],
+    "summary": "Read, mint (or rotate) or revoke the site's host secret (Manage)",
+    "params": [],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "delete:/api/sites/{siteId}/host-link",
+    "method": "DELETE",
+    "path": "/api/sites/{siteId}/host-link",
+    "tags": [
+      "host-link"
+    ],
+    "summary": "Read, mint (or rotate) or revoke the site's host secret (Manage)",
+    "params": [],
     "bodyDescribed": false,
     "bodyRef": null,
     "credential": "siteScoped"
@@ -26914,6 +27163,41 @@ export const API_OPERATIONS: ApiOperation[] = [
     "credential": "siteScoped"
   },
   {
+    "id": "get:/api/sites/{siteId}/template",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/template",
+    "tags": [
+      "sites"
+    ],
+    "summary": "Offer this site as its organization's template, or withdraw it",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "template",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "name, description, categories (gallery category slugs; POST only)"
+      },
+      {
+        "name": "locale",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "GET: language for the names in `available`"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
     "id": "post:/api/sites/{siteId}/template",
     "method": "POST",
     "path": "/api/sites/{siteId}/template",
@@ -26934,7 +27218,14 @@ export const API_OPERATIONS: ApiOperation[] = [
         "in": "body",
         "required": false,
         "type": "object",
-        "description": "name, description (POST only)"
+        "description": "name, description, categories (gallery category slugs; POST only)"
+      },
+      {
+        "name": "locale",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "GET: language for the names in `available`"
       }
     ],
     "bodyDescribed": false,
@@ -26962,7 +27253,14 @@ export const API_OPERATIONS: ApiOperation[] = [
         "in": "body",
         "required": false,
         "type": "object",
-        "description": "name, description (POST only)"
+        "description": "name, description, categories (gallery category slugs; POST only)"
+      },
+      {
+        "name": "locale",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "GET: language for the names in `available`"
       }
     ],
     "bodyDescribed": false,
@@ -28100,6 +28398,34 @@ export const API_OPERATIONS: ApiOperation[] = [
     "credential": "siteScoped"
   },
   {
+    "id": "get:/api/templates/categories",
+    "method": "GET",
+    "path": "/api/templates/categories",
+    "tags": [
+      "templates"
+    ],
+    "summary": "The template categories a site template can be filed under",
+    "params": [
+      {
+        "name": "locale",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Language for category names (falls back to the platform default, then the slug)"
+      },
+      {
+        "name": "orgId",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Answer `fileable`: whether this organization's templates can be filed (only the platform org's reach the gallery)"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
     "id": "post:/api/templates/{siteId}",
     "method": "POST",
     "path": "/api/templates/{siteId}",
@@ -28126,6 +28452,19 @@ export const API_OPERATIONS: ApiOperation[] = [
     "bodyDescribed": true,
     "bodyRef": "internal_templates_rest.useBody",
     "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/v1/app-blocks",
+    "method": "GET",
+    "path": "/api/v1/app-blocks",
+    "tags": [
+      "v1"
+    ],
+    "summary": "List the app blocks this store can place on a page",
+    "params": [],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "apiKey"
   },
   {
     "id": "get:/api/v1/app-data",
@@ -28593,6 +28932,188 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": true,
     "bodyRef": "internal_publicapi.BlogCategoryInput",
+    "credential": "apiKey"
+  },
+  {
+    "id": "post:/api/v1/checkout-sessions",
+    "method": "POST",
+    "path": "/api/v1/checkout-sessions",
+    "tags": [
+      "v1"
+    ],
+    "summary": "Create a single-use checkout link",
+    "params": [
+      {
+        "name": "Idempotency-Key",
+        "in": "header",
+        "required": false,
+        "type": "string",
+        "description": "Makes a retry return the same session (max 255 chars)"
+      },
+      {
+        "name": "session",
+        "in": "body",
+        "required": true,
+        "type": "object",
+        "description": "The basket"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "internal_publicapi.CheckoutSessionInput",
+    "credential": "apiKey"
+  },
+  {
+    "id": "get:/api/v1/code-components",
+    "method": "GET",
+    "path": "/api/v1/code-components",
+    "tags": [
+      "v1"
+    ],
+    "summary": "List the store's code components, or upload a version",
+    "params": [
+      {
+        "name": "codeComponent",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "Version to upload (POST only)"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "internal_publicapi.CodeComponentInput",
+    "credential": "apiKey"
+  },
+  {
+    "id": "post:/api/v1/code-components",
+    "method": "POST",
+    "path": "/api/v1/code-components",
+    "tags": [
+      "v1"
+    ],
+    "summary": "List the store's code components, or upload a version",
+    "params": [
+      {
+        "name": "codeComponent",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "Version to upload (POST only)"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "internal_publicapi.CodeComponentInput",
+    "credential": "apiKey"
+  },
+  {
+    "id": "get:/api/v1/code-components/{name}",
+    "method": "GET",
+    "path": "/api/v1/code-components/{name}",
+    "tags": [
+      "v1"
+    ],
+    "summary": "Read the latest version of one component",
+    "params": [
+      {
+        "name": "name",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Component name"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "apiKey"
+  },
+  {
+    "id": "get:/api/v1/code-components/{name}/versions",
+    "method": "GET",
+    "path": "/api/v1/code-components/{name}/versions",
+    "tags": [
+      "v1"
+    ],
+    "summary": "List every version of one component, newest first",
+    "params": [
+      {
+        "name": "name",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Component name"
+      },
+      {
+        "name": "limit",
+        "in": "query",
+        "required": false,
+        "type": "integer",
+        "description": "Page size"
+      },
+      {
+        "name": "offset",
+        "in": "query",
+        "required": false,
+        "type": "integer",
+        "description": "Rows to skip"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "apiKey"
+  },
+  {
+    "id": "get:/api/v1/code-components/{name}/versions/{version}",
+    "method": "GET",
+    "path": "/api/v1/code-components/{name}/versions/{version}",
+    "tags": [
+      "v1"
+    ],
+    "summary": "Read or delete one version of a component",
+    "params": [
+      {
+        "name": "name",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Component name"
+      },
+      {
+        "name": "version",
+        "in": "path",
+        "required": true,
+        "type": "integer",
+        "description": "Version number"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "apiKey"
+  },
+  {
+    "id": "delete:/api/v1/code-components/{name}/versions/{version}",
+    "method": "DELETE",
+    "path": "/api/v1/code-components/{name}/versions/{version}",
+    "tags": [
+      "v1"
+    ],
+    "summary": "Read or delete one version of a component",
+    "params": [
+      {
+        "name": "name",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Component name"
+      },
+      {
+        "name": "version",
+        "in": "path",
+        "required": true,
+        "type": "integer",
+        "description": "Version number"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
     "credential": "apiKey"
   },
   {
@@ -29517,6 +30038,206 @@ export const API_OPERATIONS: ApiOperation[] = [
     "credential": "apiKey"
   },
   {
+    "id": "get:/api/v1/global-sections",
+    "method": "GET",
+    "path": "/api/v1/global-sections",
+    "tags": [
+      "v1"
+    ],
+    "summary": "List or create global sections",
+    "params": [
+      {
+        "name": "limit",
+        "in": "query",
+        "required": false,
+        "type": "integer",
+        "description": "Page size (max 200)"
+      },
+      {
+        "name": "offset",
+        "in": "query",
+        "required": false,
+        "type": "integer",
+        "description": "Page offset"
+      },
+      {
+        "name": "section",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "The section to create (POST only; 201 {globalSection})"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "internal_publicapi.GlobalSectionCreate",
+    "credential": "apiKey"
+  },
+  {
+    "id": "post:/api/v1/global-sections",
+    "method": "POST",
+    "path": "/api/v1/global-sections",
+    "tags": [
+      "v1"
+    ],
+    "summary": "List or create global sections",
+    "params": [
+      {
+        "name": "limit",
+        "in": "query",
+        "required": false,
+        "type": "integer",
+        "description": "Page size (max 200)"
+      },
+      {
+        "name": "offset",
+        "in": "query",
+        "required": false,
+        "type": "integer",
+        "description": "Page offset"
+      },
+      {
+        "name": "section",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "The section to create (POST only; 201 {globalSection})"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "internal_publicapi.GlobalSectionCreate",
+    "credential": "apiKey"
+  },
+  {
+    "id": "get:/api/v1/global-sections/{id}",
+    "method": "GET",
+    "path": "/api/v1/global-sections/{id}",
+    "tags": [
+      "v1"
+    ],
+    "summary": "Read or save one global section",
+    "params": [
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Global section ID"
+      },
+      {
+        "name": "section",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "The content to save (PUT only)"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "internal_publicapi.GlobalSectionInput",
+    "credential": "apiKey"
+  },
+  {
+    "id": "put:/api/v1/global-sections/{id}",
+    "method": "PUT",
+    "path": "/api/v1/global-sections/{id}",
+    "tags": [
+      "v1"
+    ],
+    "summary": "Read or save one global section",
+    "params": [
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Global section ID"
+      },
+      {
+        "name": "section",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "The content to save (PUT only)"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "internal_publicapi.GlobalSectionInput",
+    "credential": "apiKey"
+  },
+  {
+    "id": "delete:/api/v1/global-sections/{id}",
+    "method": "DELETE",
+    "path": "/api/v1/global-sections/{id}",
+    "tags": [
+      "v1"
+    ],
+    "summary": "Delete a global section",
+    "params": [
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Global section ID"
+      },
+      {
+        "name": "force",
+        "in": "query",
+        "required": false,
+        "type": "boolean",
+        "description": "Delete even though pages still show it"
+      },
+      {
+        "name": "If-Match",
+        "in": "header",
+        "required": true,
+        "type": "string",
+        "description": "The rev you read"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "apiKey"
+  },
+  {
+    "id": "get:/api/v1/host-link",
+    "method": "GET",
+    "path": "/api/v1/host-link",
+    "tags": [
+      "v1"
+    ],
+    "summary": "Read, mint (or rotate) or revoke the host secret of a Next.js host",
+    "params": [],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "apiKey"
+  },
+  {
+    "id": "put:/api/v1/host-link",
+    "method": "PUT",
+    "path": "/api/v1/host-link",
+    "tags": [
+      "v1"
+    ],
+    "summary": "Read, mint (or rotate) or revoke the host secret of a Next.js host",
+    "params": [],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "apiKey"
+  },
+  {
+    "id": "delete:/api/v1/host-link",
+    "method": "DELETE",
+    "path": "/api/v1/host-link",
+    "tags": [
+      "v1"
+    ],
+    "summary": "Read, mint (or rotate) or revoke the host secret of a Next.js host",
+    "params": [],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "apiKey"
+  },
+  {
     "id": "get:/api/v1/media",
     "method": "GET",
     "path": "/api/v1/media",
@@ -29958,6 +30679,167 @@ export const API_OPERATIONS: ApiOperation[] = [
     "credential": "apiKey"
   },
   {
+    "id": "get:/api/v1/overlays",
+    "method": "GET",
+    "path": "/api/v1/overlays",
+    "tags": [
+      "v1"
+    ],
+    "summary": "List or create overlays",
+    "params": [
+      {
+        "name": "limit",
+        "in": "query",
+        "required": false,
+        "type": "integer",
+        "description": "Page size (max 200)"
+      },
+      {
+        "name": "offset",
+        "in": "query",
+        "required": false,
+        "type": "integer",
+        "description": "Page offset"
+      },
+      {
+        "name": "overlay",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "The overlay to create (POST only; 201 {overlay}; a second cart is 409 cart_exists)"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "internal_publicapi.OverlayCreate",
+    "credential": "apiKey"
+  },
+  {
+    "id": "post:/api/v1/overlays",
+    "method": "POST",
+    "path": "/api/v1/overlays",
+    "tags": [
+      "v1"
+    ],
+    "summary": "List or create overlays",
+    "params": [
+      {
+        "name": "limit",
+        "in": "query",
+        "required": false,
+        "type": "integer",
+        "description": "Page size (max 200)"
+      },
+      {
+        "name": "offset",
+        "in": "query",
+        "required": false,
+        "type": "integer",
+        "description": "Page offset"
+      },
+      {
+        "name": "overlay",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "The overlay to create (POST only; 201 {overlay}; a second cart is 409 cart_exists)"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "internal_publicapi.OverlayCreate",
+    "credential": "apiKey"
+  },
+  {
+    "id": "get:/api/v1/overlays/{id}",
+    "method": "GET",
+    "path": "/api/v1/overlays/{id}",
+    "tags": [
+      "v1"
+    ],
+    "summary": "Read or save one overlay",
+    "params": [
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Overlay ID"
+      },
+      {
+        "name": "overlay",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "The content to save (PUT only)"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "internal_publicapi.OverlayInput",
+    "credential": "apiKey"
+  },
+  {
+    "id": "put:/api/v1/overlays/{id}",
+    "method": "PUT",
+    "path": "/api/v1/overlays/{id}",
+    "tags": [
+      "v1"
+    ],
+    "summary": "Read or save one overlay",
+    "params": [
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Overlay ID"
+      },
+      {
+        "name": "overlay",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "The content to save (PUT only)"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "internal_publicapi.OverlayInput",
+    "credential": "apiKey"
+  },
+  {
+    "id": "delete:/api/v1/overlays/{id}",
+    "method": "DELETE",
+    "path": "/api/v1/overlays/{id}",
+    "tags": [
+      "v1"
+    ],
+    "summary": "Delete an overlay",
+    "params": [
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Overlay ID"
+      },
+      {
+        "name": "force",
+        "in": "query",
+        "required": false,
+        "type": "boolean",
+        "description": "Delete even though it is still shown"
+      },
+      {
+        "name": "If-Match",
+        "in": "header",
+        "required": true,
+        "type": "string",
+        "description": "The rev you read"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "apiKey"
+  },
+  {
     "id": "get:/api/v1/pages",
     "method": "GET",
     "path": "/api/v1/pages",
@@ -30114,6 +30996,13 @@ export const API_OPERATIONS: ApiOperation[] = [
         "description": "Page ID"
       },
       {
+        "name": "If-Match",
+        "in": "header",
+        "required": false,
+        "type": "string",
+        "description": "DELETE only: the draft rev you read"
+      },
+      {
         "name": "page",
         "in": "body",
         "required": false,
@@ -30140,6 +31029,13 @@ export const API_OPERATIONS: ApiOperation[] = [
         "required": true,
         "type": "string",
         "description": "Page ID"
+      },
+      {
+        "name": "If-Match",
+        "in": "header",
+        "required": false,
+        "type": "string",
+        "description": "DELETE only: the draft rev you read"
       },
       {
         "name": "page",
@@ -30170,6 +31066,13 @@ export const API_OPERATIONS: ApiOperation[] = [
         "description": "Page ID"
       },
       {
+        "name": "If-Match",
+        "in": "header",
+        "required": false,
+        "type": "string",
+        "description": "DELETE only: the draft rev you read"
+      },
+      {
         "name": "page",
         "in": "body",
         "required": false,
@@ -30179,6 +31082,62 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": true,
     "bodyRef": "internal_publicapi.PagePatch",
+    "credential": "apiKey"
+  },
+  {
+    "id": "get:/api/v1/pages/{id}/document",
+    "method": "GET",
+    "path": "/api/v1/pages/{id}/document",
+    "tags": [
+      "v1"
+    ],
+    "summary": "Read or save one page's draft document",
+    "params": [
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Page ID"
+      },
+      {
+        "name": "document",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "The draft to save (PUT only)"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "internal_publicapi.PageDocumentInput",
+    "credential": "apiKey"
+  },
+  {
+    "id": "put:/api/v1/pages/{id}/document",
+    "method": "PUT",
+    "path": "/api/v1/pages/{id}/document",
+    "tags": [
+      "v1"
+    ],
+    "summary": "Read or save one page's draft document",
+    "params": [
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Page ID"
+      },
+      {
+        "name": "document",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "The draft to save (PUT only)"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "internal_publicapi.PageDocumentInput",
     "credential": "apiKey"
   },
   {
@@ -30200,6 +31159,34 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
+    "credential": "apiKey"
+  },
+  {
+    "id": "post:/api/v1/pages/{id}/render-context",
+    "method": "POST",
+    "path": "/api/v1/pages/{id}/render-context",
+    "tags": [
+      "v1"
+    ],
+    "summary": "Get a ready renderpage envelope for a page document",
+    "params": [
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Page ID"
+      },
+      {
+        "name": "body",
+        "in": "body",
+        "required": true,
+        "type": "object",
+        "description": "The document and request to render"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "internal_publicapi.RenderContextRequest",
     "credential": "apiKey"
   },
   {
@@ -30413,6 +31400,48 @@ export const API_OPERATIONS: ApiOperation[] = [
     "credential": "apiKey"
   },
   {
+    "id": "get:/api/v1/theme",
+    "method": "GET",
+    "path": "/api/v1/theme",
+    "tags": [
+      "v1"
+    ],
+    "summary": "Read or save the site's design theme",
+    "params": [
+      {
+        "name": "theme",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "The theme to save (PUT only)"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "internal_publicapi.ThemeInput",
+    "credential": "apiKey"
+  },
+  {
+    "id": "put:/api/v1/theme",
+    "method": "PUT",
+    "path": "/api/v1/theme",
+    "tags": [
+      "v1"
+    ],
+    "summary": "Read or save the site's design theme",
+    "params": [
+      {
+        "name": "theme",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "The theme to save (PUT only)"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "internal_publicapi.ThemeInput",
+    "credential": "apiKey"
+  },
+  {
     "id": "get:/api/v1/translations",
     "method": "GET",
     "path": "/api/v1/translations",
@@ -30448,6 +31477,20 @@ export const API_OPERATIONS: ApiOperation[] = [
         "required": false,
         "type": "string",
         "description": "Many entities, comma-separated"
+      },
+      {
+        "name": "cursor",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "LISTING (no entityId/entityIds): the nextCursor of the previous page"
+      },
+      {
+        "name": "limit",
+        "in": "query",
+        "required": false,
+        "type": "integer",
+        "description": "LISTING: page size (default 100, max 200)"
       },
       {
         "name": "field",
@@ -30499,6 +31542,20 @@ export const API_OPERATIONS: ApiOperation[] = [
         "description": "Many entities, comma-separated"
       },
       {
+        "name": "cursor",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "LISTING (no entityId/entityIds): the nextCursor of the previous page"
+      },
+      {
+        "name": "limit",
+        "in": "query",
+        "required": false,
+        "type": "integer",
+        "description": "LISTING: page size (default 100, max 200)"
+      },
+      {
         "name": "field",
         "in": "query",
         "required": false,
@@ -30546,6 +31603,20 @@ export const API_OPERATIONS: ApiOperation[] = [
         "required": false,
         "type": "string",
         "description": "Many entities, comma-separated"
+      },
+      {
+        "name": "cursor",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "LISTING (no entityId/entityIds): the nextCursor of the previous page"
+      },
+      {
+        "name": "limit",
+        "in": "query",
+        "required": false,
+        "type": "integer",
+        "description": "LISTING: page size (default 100, max 200)"
       },
       {
         "name": "field",
@@ -32009,6 +33080,35 @@ export const API_DEFINITIONS: Record<string, unknown> = {
       }
     }
   },
+  "github_com_webbuilder_server_internal_integrations.Integration": {
+    "type": "object",
+    "properties": {
+      "config": {
+        "type": "object",
+        "additionalProperties": {
+          "type": "string"
+        }
+      },
+      "createdAt": {
+        "type": "string"
+      },
+      "enabled": {
+        "type": "boolean"
+      },
+      "id": {
+        "type": "string"
+      },
+      "provider": {
+        "type": "string"
+      },
+      "siteId": {
+        "type": "string"
+      },
+      "updatedAt": {
+        "type": "string"
+      }
+    }
+  },
   "github_com_webbuilder_server_internal_menus.Item": {
     "type": "object",
     "properties": {
@@ -32484,6 +33584,113 @@ export const API_DEFINITIONS: Record<string, unknown> = {
       }
     }
   },
+  "github_com_webbuilder_server_internal_page.AppBlockIsland": {
+    "type": "object",
+    "properties": {
+      "moduleURL": {
+        "type": "string"
+      },
+      "name": {
+        "type": "string"
+      }
+    }
+  },
+  "github_com_webbuilder_server_internal_page.AppBlockManifest": {
+    "type": "object",
+    "properties": {
+      "appID": {
+        "description": "AppID is who published this block. It is here for ONE reason: the island\nname that reaches the page is namespaced by it, which is what stops two\napps' modules sharing a registration.",
+        "type": "string"
+      },
+      "declared": {
+        "description": "Declared is the block's editing surface, FLATTENED. internal/page never\nrenders a trait bar, so it has no use for groups, labels or widget names\n— only for which {slot, target, key} the agency opened. The composition\nroot does the flattening, where slots and traits are both in scope.",
+        "type": "array",
+        "items": {
+          "$ref": "#/definitions/github_com_webbuilder_server_internal_page.AppBlockWrite"
+        }
+      },
+      "islands": {
+        "description": "Islands is the version's declaration list — bare name to module URL — so a\nnode's island reference resolves without a second read.",
+        "type": "array",
+        "items": {
+          "$ref": "#/definitions/github_com_webbuilder_server_internal_page.AppBlockIsland"
+        }
+      },
+      "nodes": {
+        "type": "array",
+        "items": {
+          "$ref": "#/definitions/github_com_webbuilder_server_internal_page.AppBlockNode"
+        }
+      },
+      "ref": {
+        "description": "Ref is the stored form this manifest answers to.",
+        "type": "string"
+      },
+      "rootID": {
+        "type": "string"
+      },
+      "slots": {
+        "description": "Slots names the addressable nodes, by MANIFEST id. Needed here because\nthe merchant's stored settings are keyed by slot NAME and this is where\nthey are resolved onto real nodes.",
+        "type": "array",
+        "items": {
+          "$ref": "#/definitions/github_com_webbuilder_server_internal_page.AppBlockSlot"
+        }
+      },
+      "versionID": {
+        "description": "VersionID is the app version this manifest came from — see\nSpecAppBlockVersion for the one question it answers. Empty on a source\nthat does not report one, which reads as \"unknown\" and never as \"stale\":\na cascade that fired on a missing stamp would re-render every page on\nevery publish forever.",
+        "type": "string"
+      }
+    }
+  },
+  "github_com_webbuilder_server_internal_page.AppBlockNode": {
+    "type": "object",
+    "properties": {
+      "children": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "id": {
+        "type": "string"
+      },
+      "island": {
+        "description": "Island is the BARE name this node hydrates with, resolved against the\nmanifest's own Islands list at materialization. Empty for the ordinary\nnode, which hosts none.",
+        "type": "string"
+      },
+      "props": {
+        "type": "array",
+        "items": {
+          "type": "integer"
+        }
+      },
+      "type": {
+        "type": "string"
+      }
+    }
+  },
+  "github_com_webbuilder_server_internal_page.AppBlockSlot": {
+    "type": "object",
+    "properties": {
+      "name": {
+        "type": "string"
+      },
+      "nodeID": {
+        "type": "string"
+      }
+    }
+  },
+  "github_com_webbuilder_server_internal_page.AppBlockWrite": {
+    "type": "object",
+    "properties": {
+      "slot": {
+        "type": "string"
+      },
+      "target": {
+        "type": "string"
+      }
+    }
+  },
   "github_com_webbuilder_server_internal_page.BulkResult": {
     "type": "object",
     "properties": {
@@ -32535,6 +33742,126 @@ export const API_DEFINITIONS: Record<string, unknown> = {
       }
     }
   },
+  "github_com_webbuilder_server_internal_page.FormRef": {
+    "type": "object",
+    "properties": {
+      "authKind": {
+        "description": "AuthKind names an ACCOUNT form's kind — \"login\", \"register\", \"forgot\",\n\"reset\" or \"verify\" (forms.Type.IsAuth), or \"\" for an ordinary form. It\nrides on the placement for the same reason CartOrder does: the\npublished page is static HTML, and the submit island (Task 7) reads\nthis off the markup to route the form to /_wb/account/* instead of the\nforms submit endpoint — there is no server left to ask once the page is\non the wire.",
+        "type": "string"
+      },
+      "bookingHasSlotInfo": {
+        "description": "BookingHasSlotInfo says the slots endpoint has something to say for\nthis form — a capacity rule (per slot or per day) OR closed dates —\nso the published form should ask /_wb/forms/{id}/slots when the\nvisitor picks a date and gray out (or announce) what the submit\nwould refuse. Without it the calendar island never fetches — a form\nwith no rule must not spend a request per date change asking a\nquestion with no answer.",
+        "type": "boolean"
+      },
+      "bookingMaxDays": {
+        "type": "integer"
+      },
+      "bookingMinDays": {
+        "description": "BookingMinDays / BookingMaxDays are the booking rulebook's notice\nwindow (forms.BookingSettings), carried so the published calendar box\ncan clamp its own min/max — a COURTESY beside the server's authoritative\ncheck (forms/booking.go), exactly the acceptedDates split: the island\nnarrows what the box offers, the server decides what is accepted. Zero\nmeans no rule and stamps nothing, so a page published before this is\nbyte-identical.",
+        "type": "integer"
+      },
+      "cartOrder": {
+        "description": "CartOrder says this form sells whatever is in the shopper's cart at\nsubmit time (forms.OrderSourceCart), rather than one pinned product. It\nrides on the PLACEMENT because a published page is static HTML: the\nisland running on it knows only what the markup told it, and there is\nnothing left to ask.",
+        "type": "boolean"
+      },
+      "document": {
+        "type": "array",
+        "items": {
+          "type": "integer"
+        }
+      },
+      "pinnedOrder": {
+        "description": "PinnedOrder says this is a TypeOrder form pinned to one product —\nforms.ResolvePinnedLine's own predicate (shared, not re-derived here),\nso this marker can never disagree with what quoting/submitting that\nsame form resolves. Rides on the placement for the same reason\nCartOrder does: it becomes `data-wb-order-source=\"pinned\"`, the mirror\nof CartOrder's \"cart\" value, so a submit island can tell the two apart\nfrom the markup alone.",
+        "type": "boolean"
+      },
+      "redirectPath": {
+        "description": "RedirectPath sends the visitor somewhere instead of showing a message.\nEmpty for the message behaviour.",
+        "type": "string"
+      },
+      "reviewForm": {
+        "description": "ReviewForm says this form records a product REVIEW, so its published\nmarkup must carry the product the page is showing — otherwise a review\nform placed on a product TEMPLATE has nothing to attach its submissions\nto, and the merchant's only option is one form per product.\n\nIt rides on the placement for the reason CartOrder and AuthKind do: the\npublished page is static HTML, and the submit island reads this off the\nmarkup — there is no server left to ask once the page is on the wire.",
+        "type": "boolean"
+      },
+      "sentText": {
+        "description": "SentText is the confirmation shown in place of the form. Empty means the\nauthor left it blank; the island then falls back to its own wording\nrather than to silence.",
+        "type": "string"
+      }
+    }
+  },
+  "github_com_webbuilder_server_internal_page.GlobalKind": {
+    "type": "string",
+    "enum": [
+      "header",
+      "footer",
+      "custom"
+    ],
+    "x-enum-varnames": [
+      "KindHeader",
+      "KindFooter",
+      "KindCustom"
+    ]
+  },
+  "github_com_webbuilder_server_internal_page.GlobalSection": {
+    "type": "object",
+    "properties": {
+      "createdAt": {
+        "type": "string"
+      },
+      "document": {
+        "description": "Document is a { root_node_id, nodes } envelope holding exactly ONE\nflex-section tree. Opaque here, same as PageSource.Document.",
+        "type": "array",
+        "items": {
+          "type": "integer"
+        }
+      },
+      "id": {
+        "type": "string"
+      },
+      "kind": {
+        "$ref": "#/definitions/github_com_webbuilder_server_internal_page.GlobalKind"
+      },
+      "name": {
+        "type": "string"
+      },
+      "rev": {
+        "description": "Rev increments on every content write and is the fence that stops a stale\nsecond tab from overwriting a newer master. See Decompose + SaveDraft.",
+        "type": "integer"
+      },
+      "siteId": {
+        "type": "string"
+      },
+      "updatedAt": {
+        "type": "string"
+      },
+      "updatedBy": {
+        "type": "string"
+      }
+    }
+  },
+  "github_com_webbuilder_server_internal_page.SiteOverlay": {
+    "type": "object",
+    "properties": {
+      "document": {
+        "type": "array",
+        "items": {
+          "type": "integer"
+        }
+      },
+      "id": {
+        "type": "string"
+      },
+      "kind": {
+        "type": "string"
+      },
+      "name": {
+        "type": "string"
+      },
+      "rev": {
+        "type": "integer",
+        "format": "int64"
+      }
+    }
+  },
   "github_com_webbuilder_server_internal_page.UpdatePageInput": {
     "type": "object",
     "properties": {
@@ -32558,6 +33885,43 @@ export const API_DEFINITIONS: Record<string, unknown> = {
       },
       "type": {
         "type": "string"
+      }
+    }
+  },
+  "github_com_webbuilder_server_internal_page.Warning": {
+    "type": "object",
+    "properties": {
+      "code": {
+        "type": "string"
+      },
+      "globalId": {
+        "type": "string"
+      },
+      "name": {
+        "type": "string"
+      },
+      "nodeId": {
+        "description": "NodeID and Reason carry a node-level warning (WarnCodeComponentRender):\nwhich node, and why, in words a toast or a CLI line can show.",
+        "type": "string"
+      },
+      "overlayId": {
+        "description": "OverlayID carries an overlay warning's subject. A FIELD OF ITS OWN rather\nthan a reuse of GlobalID: the two name rows in different tables, so one\nfield holding \"an id of whichever kind Code implies\" is the shape that\nmakes a client resolve it against the wrong store and silently show\nnothing.",
+        "type": "string"
+      },
+      "reason": {
+        "type": "string"
+      }
+    }
+  },
+  "github_com_webbuilder_server_internal_page_pagerender.ProductRating": {
+    "type": "object",
+    "properties": {
+      "average": {
+        "type": "number",
+        "format": "float64"
+      },
+      "count": {
+        "type": "integer"
       }
     }
   },
@@ -32660,6 +34024,34 @@ export const API_DEFINITIONS: Record<string, unknown> = {
       },
       "reason": {
         "type": "string"
+      }
+    }
+  },
+  "github_com_webbuilder_server_internal_platformadmin.AIModelChoiceView": {
+    "type": "object",
+    "properties": {
+      "model": {
+        "type": "string"
+      },
+      "provider": {
+        "type": "string"
+      }
+    }
+  },
+  "github_com_webbuilder_server_internal_platformadmin.AIModelsView": {
+    "type": "object",
+    "properties": {
+      "build": {
+        "$ref": "#/definitions/github_com_webbuilder_server_internal_platformadmin.AIModelChoiceView"
+      },
+      "edit": {
+        "$ref": "#/definitions/github_com_webbuilder_server_internal_platformadmin.AIModelChoiceView"
+      },
+      "prices": {
+        "type": "object",
+        "additionalProperties": {
+          "type": "integer"
+        }
       }
     }
   },
@@ -34990,6 +36382,560 @@ export const API_DEFINITIONS: Record<string, unknown> = {
         "type": "array",
         "items": {
           "$ref": "#/definitions/github_com_webbuilder_server_internal_products.PriceTier"
+        }
+      }
+    }
+  },
+  "github_com_webbuilder_server_internal_renderctx.ArticleIn": {
+    "type": "object",
+    "properties": {
+      "author": {
+        "type": "string"
+      },
+      "categories": {
+        "description": "Categories are blog category NAMES, already resolved, in the order the\narticle stores its ids — the join happens in bindings.ArticleSource, one\nlayer up, exactly as the TS half joins before calling articleContext.\n\nNames, not ids: a context is what RENDERS, and `bcat_9f2a…` on a blog card\nis not a category, it is a bug the author cannot report precisely.",
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "categoryIDs": {
+        "description": "CategoryIDs are the same categories as IDS — what a repeater FILTERS on,\nwhere Categories above is what a card PRINTS. Two fields for one\nrelationship, deliberately: the id is stable and the name is editable, so a\nfilter keyed on the name would silently empty a listing the day someone\nrenamed a category.\n\nArticleContext does NOT emit these; the FEED builder stamps them\n(pagerender.articlesFeed), the same seam product.categoryIds uses.",
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "content": {
+        "description": "Content is the article BODY as rich HTML. It reaches a RAW sink (the\ntext-dataset's boundHtml special), which is only sound because\ninternal/blog sanitises it on INGEST (blog.go: sanitize.HTML on save) —\nthe same contract product descriptions already ride on. Any future writer\nof this field owes the same guarantee.",
+        "type": "string"
+      },
+      "id": {
+        "type": "string"
+      },
+      "image": {
+        "type": "string"
+      },
+      "publishedAt": {
+        "description": "PublishedAt is the instant the article went live; the zero time means \"not\npublished\", which binds an empty string.",
+        "type": "string"
+      },
+      "slug": {
+        "description": "Slug is the article's own storefront slug — the second segment of\n/blog/{slug}, and the ONLY input to `article.url`.",
+        "type": "string"
+      },
+      "summary": {
+        "type": "string"
+      },
+      "tags": {
+        "description": "Tags are the article's free-form tags, in the order it stores them.",
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "title": {
+        "type": "string"
+      }
+    }
+  },
+  "github_com_webbuilder_server_internal_renderctx.BlogCategoryIn": {
+    "type": "object",
+    "properties": {
+      "description": {
+        "type": "string"
+      },
+      "id": {
+        "type": "string"
+      },
+      "image": {
+        "type": "string"
+      },
+      "parent": {
+        "type": "string"
+      },
+      "slug": {
+        "description": "Slug is the category's own storefront slug — the second segment of\n/blog-categories/{slug}, and the ONLY input to `blogCategory.url`.",
+        "type": "string"
+      },
+      "title": {
+        "description": "Title is the category's user-facing NAME (blog.Category.Name) — the source\nkey and the struct field differ for the same reason CategoryContext's do.",
+        "type": "string"
+      }
+    }
+  },
+  "github_com_webbuilder_server_internal_renderctx.BrandIn": {
+    "type": "object",
+    "properties": {
+      "description": {
+        "type": "string"
+      },
+      "id": {
+        "type": "string"
+      },
+      "image": {
+        "type": "string"
+      },
+      "slug": {
+        "description": "Slug is the brand's own storefront slug — the second segment of\n/brands/{slug}, and the ONLY input to `brand.url`.",
+        "type": "string"
+      },
+      "title": {
+        "description": "Title is the brand's NAME (products.Brand.Name); Image is its LOGO.",
+        "type": "string"
+      }
+    }
+  },
+  "github_com_webbuilder_server_internal_renderctx.CourseIn": {
+    "type": "object",
+    "properties": {
+      "description": {
+        "description": "Description is the long body as rich HTML. It reaches a RAW sink, which\nis only sound because internal/courses sanitises it on INGEST\n(NormalizeCourse: sanitize.HTML on every write) — the same contract\narticle bodies and product descriptions already ride on. Any future\nwriter of this field owes the same guarantee.",
+        "type": "string"
+      },
+      "durationSec": {
+        "description": "DurationSec is the total runtime in seconds, as the catalogue stores it.\nThe context divides it down to whole minutes.",
+        "type": "integer"
+      },
+      "id": {
+        "type": "string"
+      },
+      "image": {
+        "type": "string"
+      },
+      "instructor": {
+        "type": "string"
+      },
+      "instructorAvatar": {
+        "description": "InstructorAvatar / InstructorBio complete the instructor card. Bound as\nplain strings like the two above; the avatar is a media URL the courses\ncontext reports through its AssetUsage adapter, so purging that image\ncannot silently blank a published page.",
+        "type": "string"
+      },
+      "instructorBio": {
+        "type": "string"
+      },
+      "instructorTitle": {
+        "type": "string"
+      },
+      "language": {
+        "type": "string"
+      },
+      "lessons": {
+        "type": "integer"
+      },
+      "level": {
+        "type": "string"
+      },
+      "preview": {
+        "description": "Preview is the public trailer. Public by definition: it is the thing a\nshopper watches BEFORE buying, so it is never gated.",
+        "type": "string"
+      },
+      "priceCents": {
+        "description": "PriceCents is the price of the product that unlocks the course,\nProductSlug is that product's own address, and ProductID is its identity.\nAll three are resolved one layer up (bindings.CourseSource) from the\ncourse_products link, because a course does not itself have a price —\nwhat sells is the product. They come from ONE resolution so the price a\npage quotes, the link it offers and the line an enrol button adds can\nnever name three different products.",
+        "type": "integer"
+      },
+      "productID": {
+        "type": "string"
+      },
+      "productSlug": {
+        "type": "string"
+      },
+      "ratingAverage": {
+        "type": "number",
+        "format": "float64"
+      },
+      "ratingCount": {
+        "description": "RatingCount / RatingAverage are the SELLING PRODUCT's published-review\naggregate, resolved through the same course_products join the price comes\nfrom. A course has no reviews of its own — what a shopper reviewed is the\nthing they bought — so binding the product's aggregate is the honest\nanswer rather than a second, emptier one.",
+        "type": "integer"
+      },
+      "sections": {
+        "type": "integer"
+      },
+      "slug": {
+        "description": "Slug is the course's own storefront slug — the second segment of\n/courses/{slug}, and the ONLY input to `course.url`.",
+        "type": "string"
+      },
+      "students": {
+        "description": "Students is the LIVE enrollment count — the same predicate the seat cap\ncounts against, so a sales page never advertises a cohort of lapsed\nstudents.",
+        "type": "integer"
+      },
+      "summary": {
+        "type": "string"
+      },
+      "tags": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "title": {
+        "type": "string"
+      }
+    }
+  },
+  "github_com_webbuilder_server_internal_renderctx.Data": {
+    "type": "object",
+    "properties": {
+      "articles": {
+        "type": "array",
+        "items": {
+          "$ref": "#/definitions/github_com_webbuilder_server_internal_renderctx.ArticleIn"
+        }
+      },
+      "blogCategories": {
+        "type": "array",
+        "items": {
+          "$ref": "#/definitions/github_com_webbuilder_server_internal_renderctx.BlogCategoryIn"
+        }
+      },
+      "brands": {
+        "type": "array",
+        "items": {
+          "$ref": "#/definitions/github_com_webbuilder_server_internal_renderctx.BrandIn"
+        }
+      },
+      "collections": {
+        "type": "array",
+        "items": {
+          "$ref": "#/definitions/render.CategoryData"
+        }
+      },
+      "courses": {
+        "type": "array",
+        "items": {
+          "$ref": "#/definitions/github_com_webbuilder_server_internal_renderctx.CourseIn"
+        }
+      },
+      "flashSaleProductIds": {
+        "description": "FlashSaleProductIDs are the products a RUNNING flash sale lists, in the\norder a sale shelf shows them (production: ProductSource.Flash's\nRunningProductIDs). Empty = no sale running, and the shelf renders empty\nexactly as it does between sales.",
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "pageNames": {
+        "type": "object",
+        "additionalProperties": {
+          "type": "string"
+        }
+      },
+      "pagePaths": {
+        "type": "object",
+        "additionalProperties": {
+          "type": "string"
+        }
+      },
+      "products": {
+        "type": "array",
+        "items": {
+          "$ref": "#/definitions/render.ProductData"
+        }
+      },
+      "ratings": {
+        "type": "object",
+        "additionalProperties": {
+          "$ref": "#/definitions/github_com_webbuilder_server_internal_page_pagerender.ProductRating"
+        }
+      },
+      "reads": {
+        "description": "Reads are RECORDED port answers (call + arguments → results), written by\nthe render-context endpoint while it rendered the page through the\nproduction ports. A call renderpage makes that matches one is answered\nfrom here, exactly as production answered it — windows, totals and all;\nanything else falls back to deriving an answer from the lists above.",
+        "type": "array",
+        "items": {
+          "$ref": "#/definitions/github_com_webbuilder_server_internal_renderctx.Read"
+        }
+      },
+      "records": {
+        "type": "object",
+        "additionalProperties": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "reviews": {
+        "type": "object",
+        "additionalProperties": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/render.Review"
+          }
+        }
+      }
+    }
+  },
+  "github_com_webbuilder_server_internal_renderctx.ImagesIn": {
+    "type": "object",
+    "properties": {
+      "base": {
+        "type": "string"
+      }
+    }
+  },
+  "github_com_webbuilder_server_internal_renderctx.Input": {
+    "type": "object",
+    "properties": {
+      "analytics": {
+        "description": "Analytics are the connected measurement integrations (provider, enabled, config).",
+        "type": "array",
+        "items": {
+          "$ref": "#/definitions/github_com_webbuilder_server_internal_integrations.Integration"
+        }
+      },
+      "appBlocks": {
+        "type": "object",
+        "additionalProperties": {
+          "$ref": "#/definitions/github_com_webbuilder_server_internal_page.AppBlockManifest"
+        }
+      },
+      "baseDomain": {
+        "description": "BaseDomain is the storefront base domain (public origin = slug.baseDomain).",
+        "type": "string"
+      },
+      "codeFiles": {
+        "description": "CodeFiles are the site's/page's custom code. A file that is compiled in\nproduction (ts, scss…) must carry its Compiled output: nothing here runs\nesbuild. PageID (if set) is matched against page.id.",
+        "type": "array",
+        "items": {
+          "$ref": "#/definitions/github_com_webbuilder_server_internal_codefiles.CodeFile"
+        }
+      },
+      "cssLanes": {
+        "description": "CSSLanes is \"inline\" (default: one <style> bundle) or {\"base\": \"https://…/\"}\n(external <link> lanes served from base + key; lane bytes in the output).",
+        "type": "array",
+        "items": {
+          "type": "integer"
+        }
+      },
+      "data": {
+        "$ref": "#/definitions/github_com_webbuilder_server_internal_renderctx.Data"
+      },
+      "fontGroups": {
+        "description": "FontGroups are the site's uploaded font families (with Files).",
+        "type": "array",
+        "items": {
+          "$ref": "#/definitions/github_com_webbuilder_server_internal_fonts.FontGroup"
+        }
+      },
+      "forms": {
+        "type": "object",
+        "additionalProperties": {
+          "$ref": "#/definitions/github_com_webbuilder_server_internal_page.FormRef"
+        }
+      },
+      "globals": {
+        "description": "Globals are the site's global-section masters; the page's document holds\nreference nodes to them (specials.globalId), composed at publish.",
+        "type": "array",
+        "items": {
+          "$ref": "#/definitions/github_com_webbuilder_server_internal_page.GlobalSection"
+        }
+      },
+      "images": {
+        "description": "Images carries what the renderer's image pass needs that no port answers:\nhow a media URL maps to its storage key (see ImagesIn).",
+        "allOf": [
+          {
+            "$ref": "#/definitions/github_com_webbuilder_server_internal_renderctx.ImagesIn"
+          }
+        ]
+      },
+      "localPort": {
+        "description": "LocalPort is the port a LOCAL stack answers on (storefront.Handler.LocalPort):\nappended to the absolute origins printed for a base domain under\n`localhost`, and inert for every other base domain.",
+        "type": "string"
+      },
+      "localeDisplay": {
+        "description": "LocaleDisplay is the platform language catalogue for the site's\npublished languages: lower-case code → {Name (endonym), Currency, Flag}.\nWithout it a language switcher names each language by its bare code.",
+        "type": "object",
+        "additionalProperties": {
+          "$ref": "#/definitions/render.LocaleDisplay"
+        }
+      },
+      "overlays": {
+        "description": "Overlays are the site overlays shown ON THIS PAGE (the cart, plus the\npop-ups the page references); Forms and AppBlocks are keyed by the ref id\nthe page's nodes carry.",
+        "type": "array",
+        "items": {
+          "$ref": "#/definitions/github_com_webbuilder_server_internal_page.SiteOverlay"
+        }
+      },
+      "page": {
+        "$ref": "#/definitions/github_com_webbuilder_server_internal_renderctx.PageIn"
+      },
+      "primaryDomain": {
+        "description": "PrimaryDomain is the site's verified primary custom domain (bare host,\ne.g. \"shop.example.com\"): canonical, og:url and hreflang are built on it\ninstead of slug.baseDomain, and the request is served on it.",
+        "type": "string"
+      },
+      "quickViews": {
+        "description": "QuickViews are the quick-view panels the page's lists name (read by id).",
+        "type": "array",
+        "items": {
+          "$ref": "#/definitions/github_com_webbuilder_server_internal_page.SiteOverlay"
+        }
+      },
+      "request": {
+        "$ref": "#/definitions/github_com_webbuilder_server_internal_renderctx.Request"
+      },
+      "runtime": {
+        "description": "Runtime pins the island-runtime bundle (no disk in wasm): Version is the\nbundle version, Base the CDN base it is served from (empty = the platform's\nown /_wb/runtime/<version>/). An empty Version emits no loader tags.",
+        "type": "object",
+        "properties": {
+          "base": {
+            "type": "string"
+          },
+          "version": {
+            "type": "string"
+          }
+        }
+      },
+      "site": {
+        "$ref": "#/definitions/github_com_webbuilder_server_internal_renderctx.SiteIn"
+      },
+      "siteSettings": {
+        "description": "SiteSettings and Theme are the stored documents verbatim (the\nsitesettings / sitetheme JSON objects) — what the platform reads at serve.",
+        "type": "array",
+        "items": {
+          "type": "integer"
+        }
+      },
+      "theme": {
+        "type": "array",
+        "items": {
+          "type": "integer"
+        }
+      },
+      "translations": {
+        "description": "Translations back all three translation ports; see translations.",
+        "allOf": [
+          {
+            "$ref": "#/definitions/github_com_webbuilder_server_internal_renderctx.translations"
+          }
+        ]
+      }
+    }
+  },
+  "github_com_webbuilder_server_internal_renderctx.PageIn": {
+    "type": "object",
+    "properties": {
+      "document": {
+        "type": "array",
+        "items": {
+          "type": "integer"
+        }
+      },
+      "id": {
+        "type": "string"
+      },
+      "isHomepage": {
+        "type": "boolean"
+      },
+      "name": {
+        "type": "string"
+      },
+      "settings": {
+        "type": "array",
+        "items": {
+          "type": "integer"
+        }
+      },
+      "slug": {
+        "type": "string"
+      },
+      "type": {
+        "type": "string"
+      }
+    }
+  },
+  "github_com_webbuilder_server_internal_renderctx.Read": {
+    "type": "object",
+    "properties": {
+      "args": {
+        "type": "array",
+        "items": {
+          "type": "integer"
+        }
+      },
+      "call": {
+        "type": "string"
+      },
+      "result": {
+        "type": "array",
+        "items": {
+          "type": "integer"
+        }
+      }
+    }
+  },
+  "github_com_webbuilder_server_internal_renderctx.Request": {
+    "type": "object",
+    "properties": {
+      "cookies": {
+        "type": "object",
+        "additionalProperties": {
+          "type": "string"
+        }
+      },
+      "path": {
+        "description": "Path defaults to the page's own path. Query is the raw query string.",
+        "type": "string"
+      },
+      "query": {
+        "type": "string"
+      }
+    }
+  },
+  "github_com_webbuilder_server_internal_renderctx.SiteIn": {
+    "type": "object",
+    "properties": {
+      "id": {
+        "type": "string"
+      },
+      "maintenance": {
+        "type": "boolean"
+      },
+      "name": {
+        "type": "string"
+      },
+      "slug": {
+        "type": "string"
+      }
+    }
+  },
+  "github_com_webbuilder_server_internal_renderctx.translations": {
+    "type": "object",
+    "properties": {
+      "entities": {
+        "description": "Entities: locale → entityType → entityId → field → text. The \"page\" type\nis the page SEO metadata the storefront reads.",
+        "type": "object",
+        "additionalProperties": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      },
+      "nodes": {
+        "description": "Nodes: locale → nodeId → key → text.",
+        "type": "object",
+        "additionalProperties": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "reads": {
+        "description": "Reads: see Read. Calls \"Translations.ForNodes\", \"Translations.For\",\n\"Translations.ForType\".",
+        "type": "array",
+        "items": {
+          "$ref": "#/definitions/github_com_webbuilder_server_internal_renderctx.Read"
         }
       }
     }
@@ -37465,11 +39411,65 @@ export const API_DEFINITIONS: Record<string, unknown> = {
       "EventFormSubmitted"
     ]
   },
+  "github_com_webbuilder_server_render_money.ConvertRule": {
+    "type": "object",
+    "properties": {
+      "text": {
+        "type": "string"
+      },
+      "value": {
+        "description": "Value is the threshold in MAJOR units (see deviation 2 in money.ts).",
+        "type": "number"
+      }
+    }
+  },
+  "github_com_webbuilder_server_render_money.CurrencyAdvanced": {
+    "type": "object",
+    "properties": {
+      "convert": {
+        "type": "array",
+        "items": {
+          "$ref": "#/definitions/github_com_webbuilder_server_render_money.ConvertRule"
+        }
+      },
+      "rounding": {
+        "description": "Rounding honors only 0.1 | 1 | 10; anything else is a no-op.",
+        "type": "number"
+      },
+      "useDot": {
+        "description": "UseDot is 0|1, not a bool — builderx stores an int. Nil means 1 (on).",
+        "type": "integer"
+      }
+    }
+  },
+  "github_com_webbuilder_server_render_money.CurrencyPrice": {
+    "type": "object",
+    "properties": {
+      "compareAtCents": {
+        "type": "integer"
+      },
+      "priceCents": {
+        "type": "integer"
+      }
+    }
+  },
   "internal_appinstalls_rest.versionChoice": {
     "type": "object",
     "properties": {
       "versionId": {
         "type": "string"
+      }
+    }
+  },
+  "internal_codecomponents_rest.RenderRequest": {
+    "type": "object",
+    "properties": {
+      "props": {
+        "type": "object",
+        "additionalProperties": {}
+      },
+      "version": {
+        "type": "integer"
       }
     }
   },
@@ -37821,6 +39821,21 @@ export const API_DEFINITIONS: Record<string, unknown> = {
       }
     }
   },
+  "internal_hostlink_rest.Link": {
+    "type": "object",
+    "properties": {
+      "createdAt": {
+        "type": "string"
+      },
+      "secret": {
+        "description": "Secret is present ONLY in the answer to POST.",
+        "type": "string"
+      },
+      "siteId": {
+        "type": "string"
+      }
+    }
+  },
   "internal_orders_public.quoteRequest": {
     "type": "object",
     "properties": {
@@ -38096,6 +40111,78 @@ export const API_DEFINITIONS: Record<string, unknown> = {
         "type": "string"
       },
       "ward": {
+        "type": "string"
+      }
+    }
+  },
+  "internal_publicapi.AppBlock": {
+    "type": "object",
+    "properties": {
+      "appId": {
+        "type": "string"
+      },
+      "appName": {
+        "type": "string"
+      },
+      "icon": {
+        "type": "string"
+      },
+      "installId": {
+        "type": "string"
+      },
+      "key": {
+        "type": "string"
+      },
+      "name": {
+        "type": "string"
+      },
+      "ref": {
+        "description": "Ref is the string to put in a node's `specials.appBlockRef`.",
+        "type": "string"
+      },
+      "rootType": {
+        "description": "RootType is the element type the reference node carries.",
+        "type": "string"
+      },
+      "settings": {
+        "description": "Settings are what the node's `specials.appBlockValues` may hold, as\n{slot, target, writeKey} triples: values are keyed `values[slot][target]`\nand written per breakpoint (`{\"title\":{\"style\":{\"color\":{\"desktop\":\"#f00\"}}}}`).",
+        "type": "array",
+        "items": {
+          "$ref": "#/definitions/internal_publicapi.AppBlockSetting"
+        }
+      }
+    }
+  },
+  "internal_publicapi.AppBlockListResponse": {
+    "type": "object",
+    "properties": {
+      "appBlocks": {
+        "type": "array",
+        "items": {
+          "$ref": "#/definitions/internal_publicapi.AppBlock"
+        }
+      },
+      "total": {
+        "type": "integer"
+      }
+    }
+  },
+  "internal_publicapi.AppBlockSetting": {
+    "type": "object",
+    "properties": {
+      "group": {
+        "type": "string"
+      },
+      "slot": {
+        "type": "string"
+      },
+      "target": {
+        "type": "string"
+      },
+      "widget": {
+        "type": "string"
+      },
+      "writeKey": {
         "type": "string"
       }
     }
@@ -38386,6 +40473,163 @@ export const API_DEFINITIONS: Record<string, unknown> = {
     "properties": {
       "category": {
         "$ref": "#/definitions/internal_publicapi.BlogCategory"
+      }
+    }
+  },
+  "internal_publicapi.CheckoutSession": {
+    "type": "object",
+    "properties": {
+      "currency": {
+        "type": "string"
+      },
+      "expiresAt": {
+        "type": "string"
+      },
+      "id": {
+        "type": "string"
+      },
+      "lines": {
+        "type": "array",
+        "items": {
+          "$ref": "#/definitions/internal_publicapi.CheckoutSessionLine"
+        }
+      },
+      "replayed": {
+        "description": "Replayed is true when this is the answer to a retried Idempotency-Key.",
+        "type": "boolean"
+      },
+      "subtotalCents": {
+        "description": "SubtotalCents is the goods only, in minor units (hundredths for every\ncurrency, VND included). Shipping, discount codes, tax and gift cards are\nthe shopper's, resolved by the store's checkout page.",
+        "type": "integer"
+      },
+      "url": {
+        "description": "URL is on the STORE's origin. Open it in the shopper's browser; it works\nonce, for 30 minutes, on this store only.",
+        "type": "string"
+      }
+    }
+  },
+  "internal_publicapi.CheckoutSessionInput": {
+    "type": "object",
+    "properties": {
+      "lines": {
+        "type": "array",
+        "items": {
+          "$ref": "#/definitions/internal_publicapi.CheckoutSessionLineInput"
+        }
+      }
+    }
+  },
+  "internal_publicapi.CheckoutSessionLine": {
+    "type": "object",
+    "properties": {
+      "image": {
+        "type": "string"
+      },
+      "name": {
+        "type": "string"
+      },
+      "priceCents": {
+        "type": "integer"
+      },
+      "productId": {
+        "type": "string"
+      },
+      "qty": {
+        "type": "integer"
+      },
+      "totalCents": {
+        "type": "integer"
+      },
+      "variantId": {
+        "type": "string"
+      }
+    }
+  },
+  "internal_publicapi.CheckoutSessionLineInput": {
+    "type": "object",
+    "properties": {
+      "productId": {
+        "type": "string"
+      },
+      "qty": {
+        "type": "integer"
+      },
+      "variantId": {
+        "description": "VariantID is required when the product has more than one sellable variant.",
+        "type": "string"
+      }
+    }
+  },
+  "internal_publicapi.CheckoutSessionResponse": {
+    "type": "object",
+    "properties": {
+      "checkoutSession": {
+        "$ref": "#/definitions/internal_publicapi.CheckoutSession"
+      }
+    }
+  },
+  "internal_publicapi.CodeComponent": {
+    "type": "object",
+    "properties": {
+      "clientSize": {
+        "type": "integer"
+      },
+      "createdAt": {
+        "type": "string"
+      },
+      "name": {
+        "type": "string"
+      },
+      "propsSchema": {
+        "type": "object"
+      },
+      "sha256": {
+        "type": "string"
+      },
+      "ssrSize": {
+        "type": "integer"
+      },
+      "version": {
+        "type": "integer"
+      }
+    }
+  },
+  "internal_publicapi.CodeComponentInput": {
+    "type": "object",
+    "properties": {
+      "clientBundle": {
+        "type": "string"
+      },
+      "name": {
+        "type": "string"
+      },
+      "propsSchema": {
+        "type": "object"
+      },
+      "ssrBundle": {
+        "type": "string"
+      }
+    }
+  },
+  "internal_publicapi.CodeComponentListResponse": {
+    "type": "object",
+    "properties": {
+      "codeComponents": {
+        "type": "array",
+        "items": {
+          "$ref": "#/definitions/internal_publicapi.CodeComponent"
+        }
+      },
+      "total": {
+        "type": "integer"
+      }
+    }
+  },
+  "internal_publicapi.CodeComponentResponse": {
+    "type": "object",
+    "properties": {
+      "codeComponent": {
+        "$ref": "#/definitions/internal_publicapi.CodeComponent"
       }
     }
   },
@@ -39117,6 +41361,136 @@ export const API_DEFINITIONS: Record<string, unknown> = {
       }
     }
   },
+  "internal_publicapi.GlobalSection": {
+    "type": "object",
+    "properties": {
+      "document": {
+        "description": "Document is the master's `{root_node_id, nodes}` tree, stamp-free.",
+        "type": "array",
+        "items": {
+          "type": "integer"
+        }
+      },
+      "id": {
+        "type": "string"
+      },
+      "kind": {
+        "type": "string"
+      },
+      "name": {
+        "description": "Name is the display name; Kind (header|footer|custom) is fixed at creation.",
+        "type": "string"
+      },
+      "rev": {
+        "description": "Rev is the fence: send it back as baseRev.",
+        "type": "integer"
+      },
+      "updatedAt": {
+        "type": "string"
+      },
+      "usageCount": {
+        "description": "UsageCount is how many pages show it. List rows only.",
+        "type": "integer"
+      }
+    }
+  },
+  "internal_publicapi.GlobalSectionBase": {
+    "type": "object",
+    "properties": {
+      "name": {
+        "type": "string"
+      }
+    }
+  },
+  "internal_publicapi.GlobalSectionCreate": {
+    "type": "object",
+    "properties": {
+      "document": {
+        "type": "array",
+        "items": {
+          "type": "integer"
+        }
+      },
+      "kind": {
+        "description": "Kind is header, footer or custom, and cannot be changed afterwards.",
+        "type": "string"
+      },
+      "name": {
+        "type": "string"
+      }
+    }
+  },
+  "internal_publicapi.GlobalSectionInput": {
+    "type": "object",
+    "properties": {
+      "base": {
+        "description": "Base is what you READ of the metadata you are changing. Required for a\nfield you change (400 base_required), and refused 409 source_stale when\nthe stored value is no longer it: a rename does not move `rev`, so rev\nalone cannot tell that an editor renamed the section after your GET.",
+        "allOf": [
+          {
+            "$ref": "#/definitions/internal_publicapi.GlobalSectionBase"
+          }
+        ]
+      },
+      "baseRev": {
+        "description": "BaseRev is REQUIRED — the rev you read. A master that moved since answers\n409 source_stale.",
+        "type": "integer"
+      },
+      "document": {
+        "type": "array",
+        "items": {
+          "type": "integer"
+        }
+      },
+      "name": {
+        "description": "Name renames the section when present and different. Optional.",
+        "type": "string"
+      }
+    }
+  },
+  "internal_publicapi.GlobalSectionListResponse": {
+    "type": "object",
+    "properties": {
+      "globalSections": {
+        "type": "array",
+        "items": {
+          "$ref": "#/definitions/internal_publicapi.GlobalSection"
+        }
+      },
+      "total": {
+        "type": "integer"
+      }
+    }
+  },
+  "internal_publicapi.GlobalSectionResponse": {
+    "type": "object",
+    "properties": {
+      "globalSection": {
+        "$ref": "#/definitions/internal_publicapi.GlobalSection"
+      },
+      "warnings": {
+        "description": "Warnings names a step that failed AFTER the content was saved (the save\nitself stands), or a code component in it that could not be rendered\n(stored empty). Absent when everything landed.",
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      }
+    }
+  },
+  "internal_publicapi.HostLinkMinted": {
+    "type": "object",
+    "properties": {
+      "createdAt": {
+        "type": "string"
+      },
+      "secret": {
+        "description": "Secret signs the host's forwarded requests (see the header format in the\ndescription). Shown here and never again: lose it and mint a new one.",
+        "type": "string"
+      },
+      "siteId": {
+        "type": "string"
+      }
+    }
+  },
   "internal_publicapi.MediaFolder": {
     "type": "object",
     "properties": {
@@ -39329,6 +41703,154 @@ export const API_DEFINITIONS: Record<string, unknown> = {
       }
     }
   },
+  "internal_publicapi.Overlay": {
+    "type": "object",
+    "properties": {
+      "allPages": {
+        "description": "AllPages: the pop-up shows on every page, including ones not made yet.",
+        "type": "boolean"
+      },
+      "document": {
+        "type": "array",
+        "items": {
+          "type": "integer"
+        }
+      },
+      "id": {
+        "type": "string"
+      },
+      "kind": {
+        "description": "Kind is cart|popup|quickview, fixed at creation.",
+        "type": "string"
+      },
+      "name": {
+        "type": "string"
+      },
+      "pages": {
+        "description": "Pages are the ids of the pages that show this pop-up by name. Always []\nfor a cart (on every page by construction) and a quick view (named by a\nlist's own config).",
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "rev": {
+        "type": "integer"
+      },
+      "updatedAt": {
+        "type": "string"
+      }
+    }
+  },
+  "internal_publicapi.OverlayBase": {
+    "type": "object",
+    "properties": {
+      "allPages": {
+        "type": "boolean"
+      },
+      "name": {
+        "type": "string"
+      },
+      "pages": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      }
+    }
+  },
+  "internal_publicapi.OverlayCreate": {
+    "type": "object",
+    "properties": {
+      "allPages": {
+        "type": "boolean"
+      },
+      "document": {
+        "type": "array",
+        "items": {
+          "type": "integer"
+        }
+      },
+      "kind": {
+        "description": "Kind is cart, popup or quickview. A site has ONE cart: a second is 409.",
+        "type": "string"
+      },
+      "name": {
+        "description": "Name defaults per kind when blank.",
+        "type": "string"
+      },
+      "pages": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      }
+    }
+  },
+  "internal_publicapi.OverlayInput": {
+    "type": "object",
+    "properties": {
+      "allPages": {
+        "type": "boolean"
+      },
+      "base": {
+        "description": "Base is what you READ of the metadata you are changing: required for each\nof name/allPages/pages that you change (400 base_required), refused 409\nsource_stale when the stored value is no longer it. Metadata changes do\nnot move `rev`, so rev alone cannot tell an editor changed them after\nyour GET.",
+        "allOf": [
+          {
+            "$ref": "#/definitions/internal_publicapi.OverlayBase"
+          }
+        ]
+      },
+      "baseRev": {
+        "description": "BaseRev is REQUIRED — the rev you read.",
+        "type": "integer"
+      },
+      "document": {
+        "type": "array",
+        "items": {
+          "type": "integer"
+        }
+      },
+      "name": {
+        "description": "Name, AllPages and Pages are optional and, when absent, left alone. Pages\nREPLACES the set of pages that show the pop-up.",
+        "type": "string"
+      },
+      "pages": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      }
+    }
+  },
+  "internal_publicapi.OverlayListResponse": {
+    "type": "object",
+    "properties": {
+      "overlays": {
+        "type": "array",
+        "items": {
+          "$ref": "#/definitions/internal_publicapi.Overlay"
+        }
+      },
+      "total": {
+        "type": "integer"
+      }
+    }
+  },
+  "internal_publicapi.OverlayResponse": {
+    "type": "object",
+    "properties": {
+      "overlay": {
+        "$ref": "#/definitions/internal_publicapi.Overlay"
+      },
+      "warnings": {
+        "description": "Warnings names a step that failed AFTER the row/content was written (the\nwrite itself stands). Absent when everything landed.",
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      }
+    }
+  },
   "internal_publicapi.Page": {
     "type": "object",
     "properties": {
@@ -39385,6 +41907,59 @@ export const API_DEFINITIONS: Record<string, unknown> = {
       }
     }
   },
+  "internal_publicapi.PageDocument": {
+    "type": "object",
+    "properties": {
+      "document": {
+        "type": "array",
+        "items": {
+          "type": "integer"
+        }
+      },
+      "rev": {
+        "description": "Rev is the draft's revision. Send it back as baseRev: a draft that has\nmoved since is refused (409 source_stale) instead of overwritten.",
+        "type": "integer"
+      },
+      "schemaVersion": {
+        "type": "integer"
+      },
+      "updatedAt": {
+        "type": "string"
+      },
+      "warnings": {
+        "type": "array",
+        "items": {
+          "$ref": "#/definitions/github_com_webbuilder_server_internal_page.Warning"
+        }
+      }
+    }
+  },
+  "internal_publicapi.PageDocumentInput": {
+    "type": "object",
+    "properties": {
+      "baseRev": {
+        "description": "BaseRev is REQUIRED here, unlike the editor's route: an integration that\nforgets it would silently overwrite a merchant's edit made in the editor.",
+        "type": "integer"
+      },
+      "document": {
+        "type": "array",
+        "items": {
+          "type": "integer"
+        }
+      },
+      "schemaVersion": {
+        "type": "integer"
+      }
+    }
+  },
+  "internal_publicapi.PageDocumentResponse": {
+    "type": "object",
+    "properties": {
+      "document": {
+        "$ref": "#/definitions/internal_publicapi.PageDocument"
+      }
+    }
+  },
   "internal_publicapi.PageInput": {
     "type": "object",
     "properties": {
@@ -39430,6 +42005,18 @@ export const API_DEFINITIONS: Record<string, unknown> = {
   "internal_publicapi.PagePatch": {
     "type": "object",
     "properties": {
+      "base": {
+        "description": "Base is what you READ of the fields you are changing (optional). For each\nfield this PATCH actually changes, if base carries that field, the stored\nvalue must still equal it — settings compared as canonical JSON — or the\nwhole PATCH is refused 409 source_stale with details.field, and nothing is\nwritten. Without base the PATCH behaves as before: it is how a tool that\nread the page from a file avoids overwriting an editor's change made since.",
+        "allOf": [
+          {
+            "$ref": "#/definitions/internal_publicapi.PagePatchBase"
+          }
+        ]
+      },
+      "defaultTemplate": {
+        "description": "DefaultTemplate: true makes this page the one that renders its type when\nan entity has no explicit link (the previous default, if any, is\nreplaced). false is refused — a type's default is moved by choosing\nanother page, never cleared. Only entity-bearing types (product,\ncategory, blog, post, course…) can be one.",
+        "type": "boolean"
+      },
       "isHomepage": {
         "type": "boolean"
       },
@@ -39447,6 +42034,29 @@ export const API_DEFINITIONS: Record<string, unknown> = {
       },
       "sortOrder": {
         "type": "integer"
+      },
+      "type": {
+        "type": "string"
+      }
+    }
+  },
+  "internal_publicapi.PagePatchBase": {
+    "type": "object",
+    "properties": {
+      "isHomepage": {
+        "type": "boolean"
+      },
+      "name": {
+        "type": "string"
+      },
+      "settings": {
+        "type": "array",
+        "items": {
+          "type": "integer"
+        }
+      },
+      "slug": {
+        "type": "string"
       },
       "type": {
         "type": "string"
@@ -39603,6 +42213,45 @@ export const API_DEFINITIONS: Record<string, unknown> = {
       }
     }
   },
+  "internal_publicapi.RenderContextRequest": {
+    "type": "object",
+    "properties": {
+      "cssLanes": {
+        "description": "CSSLanes is \"inline\" (default) or {\"base\": \"https://…/\"} for external\n<link> lanes served from that base.",
+        "type": "object"
+      },
+      "document": {
+        "description": "Document is the page document to render — the draft as `sb site pull`\nwrote it, edited locally. Required.",
+        "type": "array",
+        "items": {
+          "type": "integer"
+        }
+      },
+      "request": {
+        "description": "Request is the storefront request to render it for; Path defaults to the\npage's own address.",
+        "allOf": [
+          {
+            "$ref": "#/definitions/github_com_webbuilder_server_internal_renderctx.Request"
+          }
+        ]
+      }
+    }
+  },
+  "internal_publicapi.RenderContextResponse": {
+    "type": "object",
+    "properties": {
+      "envelope": {
+        "$ref": "#/definitions/github_com_webbuilder_server_internal_renderctx.Input"
+      },
+      "unsupported": {
+        "description": "Unsupported names the production features this envelope cannot replay and\nthe document or request looks like it uses — the page may differ from the\nstorefront there. Empty means nothing known is missing.",
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      }
+    }
+  },
   "internal_publicapi.SEO": {
     "type": "object",
     "properties": {
@@ -39635,6 +42284,45 @@ export const API_DEFINITIONS: Record<string, unknown> = {
       },
       "twitterCard": {
         "type": "string"
+      }
+    }
+  },
+  "internal_publicapi.Theme": {
+    "type": "object",
+    "properties": {
+      "document": {
+        "description": "Document is null until a theme has been saved.",
+        "type": "array",
+        "items": {
+          "type": "integer"
+        }
+      },
+      "updatedAt": {
+        "description": "UpdatedAt is \"\" until a theme has been saved. Send it back as\nexpectedUpdatedAt.",
+        "type": "string"
+      }
+    }
+  },
+  "internal_publicapi.ThemeInput": {
+    "type": "object",
+    "properties": {
+      "document": {
+        "type": "array",
+        "items": {
+          "type": "integer"
+        }
+      },
+      "expectedUpdatedAt": {
+        "description": "ExpectedUpdatedAt is the `updatedAt` you read (\"\" when none was saved\nyet). REQUIRED to be present: a theme save replaces the whole document and\nis live at once, so a blind write is refused rather than defaulted.",
+        "type": "string"
+      }
+    }
+  },
+  "internal_publicapi.ThemeResponse": {
+    "type": "object",
+    "properties": {
+      "theme": {
+        "$ref": "#/definitions/internal_publicapi.Theme"
       }
     }
   },
@@ -40129,6 +42817,259 @@ export const API_DEFINITIONS: Record<string, unknown> = {
       },
       "saleStartsAt": {
         "$ref": "#/definitions/internal_tickets_rest.optTime"
+      }
+    }
+  },
+  "render.CategoryData": {
+    "type": "object",
+    "properties": {
+      "description": {
+        "type": "string"
+      },
+      "id": {
+        "description": "ID is the collection's own id. It travels with the row because a\ncustom-collections list picks rows BY ID (see nodes.CollectionIDKey); the\nsingle-item preview path ignores it.",
+        "type": "string"
+      },
+      "image": {
+        "type": "string"
+      },
+      "parent": {
+        "description": "Parent is the collection's parent id (\"\" = root). The catalogue is a\nTREE (products.Category.ParentID) and this is where that fact used to be\ndropped — the filter dialog then had to show a hierarchy as a flat list.\nRender itself never reads it; the storefeed facets do.",
+        "type": "string"
+      },
+      "slug": {
+        "description": "Slug is the collection's own storefront slug — the second segment of\n/collections/{slug}, and the ONLY input to `category.url`. It rides the row\nfor the same reason ID does: the row is what a card renders from, and a\ncard that cannot say where its collection lives cannot open it.",
+        "type": "string"
+      },
+      "title": {
+        "type": "string"
+      }
+    }
+  },
+  "render.LocaleDisplay": {
+    "type": "object",
+    "properties": {
+      "currency": {
+        "type": "string"
+      },
+      "flag": {
+        "type": "string"
+      },
+      "name": {
+        "type": "string"
+      }
+    }
+  },
+  "render.ProductAttr": {
+    "type": "object",
+    "properties": {
+      "name": {
+        "type": "string"
+      },
+      "values": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      }
+    }
+  },
+  "render.ProductBundleItem": {
+    "type": "object",
+    "properties": {
+      "quantity": {
+        "type": "integer"
+      },
+      "title": {
+        "type": "string"
+      }
+    }
+  },
+  "render.ProductData": {
+    "type": "object",
+    "properties": {
+      "attributes": {
+        "description": "Attributes / Variants are the product's REAL option axes and purchasable\nrows, threaded so a bound product-variants picker renders live attributes\n(product.attributes → the option blocks) and its island reacts to real\nper-variant price/stock (product.variations → wb:props). Nil → the\npicker keeps its authored config (the documented off-product fallback).",
+        "type": "array",
+        "items": {
+          "$ref": "#/definitions/render.ProductAttr"
+        }
+      },
+      "brandLogo": {
+        "description": "BrandLogo / BrandSlug are the product's brand row's logo and slug\n(products.Brand of Product.BrandID) → the PRESENT-ONLY product.brandLogo /\nproduct.brandUrl keys (render.ProductBrandContext). Empty = no key.",
+        "type": "string"
+      },
+      "brandSlug": {
+        "type": "string"
+      },
+      "bundleItems": {
+        "description": "BundleItems is what a COMBO contains, already resolved to display names\n(internal/bindings/product.go). Nil for every ordinary product — which is\nnearly all of them — and that nil is what keeps product.bundleItems out of\nthe binding context, leaving every existing render byte-unchanged.",
+        "type": "array",
+        "items": {
+          "$ref": "#/definitions/render.ProductBundleItem"
+        }
+      },
+      "categoryIDs": {
+        "description": "CategoryIDs is this product's collection membership, used by a store\nrepeater bound to a specific collection (config.collectionId) to decide\nwhether the product belongs in that collection's rows.\n\nIt carries each DIRECT category id PLUS every ANCESTOR of those categories.\nThat upward expansion is what lets a consumer answer \"is this product in\ncategory C or any of its descendants?\" — the ProductsInCategoryTree\nsemantic, which is what a collection page must show — with a FLAT\nmembership test instead of a tree walk. Both renderers therefore need only\n`slices.Contains(CategoryIDs, want)`, which is why the editor mirror stays\nbyte-identical without duplicating the category tree.\n\nNil is the honest empty: a product in no collection matches only the\n\"all products\" selection.",
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "compareAtCents": {
+        "type": "integer"
+      },
+      "createdAt": {
+        "description": "CreatedAt is when the product was added — the only honest basis for a\n\"newest\" sort. The feed's own order is `ORDER BY id` (products/postgres/\nquery.sql ListProductRows), which is not a date, so ordering by recency\nwithout this would be ordering by something else and calling it recency.\nZero for a fixture that does not exercise sorting; the sort treats a zero\ndate as oldest so a partial fixture degrades predictably.",
+        "type": "string"
+      },
+      "description": {
+        "type": "string"
+      },
+      "featured": {
+        "description": "Featured is the merchant's merchandising pick (products.Product.Featured),\nused by a store repeater bound to the \"featured\" source kind to decide\nwhether the product belongs in its rows.\n\nA FLAG rather than a rank: the catalogue stores a boolean, so there is no\nordering to carry, and the feed's own order is what a featured shelf shows.\n\nFalse is the honest default — a fixture that omits it describes a product\nnobody has flagged, which is every product in a store that has flagged\nnone.",
+        "type": "boolean"
+      },
+      "id": {
+        "description": "ID is the product's stable id (products.Product.ID), the key a node's\nconfig.productId pin resolves against in the render scope. Empty for a\nfixture that doesn't exercise pinning.",
+        "type": "string"
+      },
+      "image": {
+        "type": "string"
+      },
+      "images": {
+        "description": "Images is the full gallery (primary first) → product.images. Image above is\nthe primary alone (Images[0]); both are threaded so a media-dataset can bind\nthe single feature (product.image) or the whole thumbnail strip (product.images).",
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "modelURL": {
+        "description": "ModelURL is the product's own 3D model (products.Product.ModelURL) →\nthe PRESENT-ONLY `product.model` binding key, which a spline-scene on a\nproduct template reads into specials.boundModel. Empty is the normal\nvalue and means the key is not stamped at all, so a bound 3D element\nkeeps its authored file — and, through that, its poster.",
+        "type": "string"
+      },
+      "moneyOverride": {
+        "description": "MoneyOverride is this product's override of the site money display\n(product.money_override). Zero value → the site config formats the price\nunchanged. Applied by the caller via ApplyMoneyOverride before ProductContext.",
+        "allOf": [
+          {
+            "$ref": "#/definitions/render.ProductMoneyOverride"
+          }
+        ]
+      },
+      "priceCents": {
+        "type": "integer"
+      },
+      "slug": {
+        "type": "string"
+      },
+      "summary": {
+        "description": "Summary is the product's SHORT description (products.Product.Summary), plain\ntext → the PRESENT-ONLY `product.summary` key (render.ProductSummaryContext).\nEmpty means the key is not stamped, so a bound node keeps its authored text.",
+        "type": "string"
+      },
+      "tags": {
+        "description": "Tags are the product's merchant-typed tags (products.Product.Tags) → the\nPRESENT-ONLY `product.tags` binding key (render.ProductTagsContext). Nil\nmeans the key is not stamped, so a bound node keeps its authored text.",
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "title": {
+        "type": "string"
+      },
+      "variants": {
+        "type": "array",
+        "items": {
+          "$ref": "#/definitions/render.ProductVariant"
+        }
+      },
+      "vendor": {
+        "type": "string"
+      }
+    }
+  },
+  "render.ProductMoneyOverride": {
+    "type": "object",
+    "properties": {
+      "advanced": {
+        "type": "object",
+        "additionalProperties": {
+          "$ref": "#/definitions/github_com_webbuilder_server_render_money.CurrencyAdvanced"
+        }
+      },
+      "prices": {
+        "description": "omitempty: a product with no fixed price emits byte-identical data-mo to\nbefore this field existed (the currency-switcher marker JSON is unchanged).",
+        "type": "object",
+        "additionalProperties": {
+          "$ref": "#/definitions/github_com_webbuilder_server_render_money.CurrencyPrice"
+        }
+      },
+      "rates": {
+        "type": "object",
+        "additionalProperties": {
+          "type": "number",
+          "format": "float64"
+        }
+      }
+    }
+  },
+  "render.ProductVariant": {
+    "type": "object",
+    "properties": {
+      "compareAtCents": {
+        "type": "integer"
+      },
+      "id": {
+        "description": "ID is the variant's own id (`var_<hex>`) — the identifier an ORDER LINE\nmust name. It rides the render row because the page is where the browser\nlearns it: without it add-to-cart had nothing to send and composed one out\nof the selected values, which the server never matched, so a cart holding\nany variant product refused the whole order.",
+        "type": "string"
+      },
+      "images": {
+        "description": "The variant's own gallery (first = primary). Feeds the picker's per-value\nswatch/thumbnail image (builderx resolveImage): a value's image is the first\nimage of the first sellable variant carrying that value. Mirror of\nschema binding.ts ProductLike.variants[].images.",
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "priceCents": {
+        "type": "integer"
+      },
+      "stock": {
+        "type": "integer"
+      },
+      "values": {
+        "type": "object",
+        "additionalProperties": {
+          "type": "string"
+        }
+      }
+    }
+  },
+  "render.Review": {
+    "type": "object",
+    "properties": {
+      "authorName": {
+        "description": "AuthorName is the name shown beside the review — free text the reviewer\ntyped, never the customer record's.",
+        "type": "string"
+      },
+      "body": {
+        "type": "string"
+      },
+      "createdAt": {
+        "type": "string"
+      },
+      "rating": {
+        "description": "Rating is 1-5. Never 0: the server refuses anything outside the range on\ningest (reviews.Validate).",
+        "type": "integer"
+      },
+      "reply": {
+        "description": "Reply is the merchant's public answer, or \"\" when unanswered.",
+        "type": "string"
+      },
+      "title": {
+        "type": "string"
+      },
+      "verified": {
+        "description": "Verified is SERVER-COMPUTED from the reviewer's own purchase history.",
+        "type": "boolean"
       }
     }
   }

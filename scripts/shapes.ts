@@ -1145,6 +1145,11 @@ export function buildRequestShapes(repo: string, operationIds: Set<string>): Sha
         const key = `${site.fromDir}::(inline)`;
         fields = flatten(key, new Map([[key, site.inline]]), pkgs);
       } else if (site.ref) {
+        // A MAP is a schemaless body (`var raw map[string]json.RawMessage`, read
+        // key by key — publicapi/checkoutsessions.go): no struct names its fields,
+        // so there is no shape to emit and nothing went unresolved. Swagger's own
+        // body description stays the operation's only word on it.
+        if (site.ref.replace(/^\*/, '').startsWith('map[')) continue;
         goType = site.ref;
         const key = resolveRef(site.ref, site.fromDir, index, pkgs);
         fields = key ? flatten(key, index, pkgs) : null;
