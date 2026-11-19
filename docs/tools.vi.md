@@ -441,7 +441,7 @@ Header/footer dùng chung hoặc overlay chỉ là **một dòng** (không có `
 `collapsed: true`) trừ khi `chrome: true` — chúng giống nhau trên mọi trang và từng chiếm ~70% một
 outline thường ngày. Global `custom` là nội dung dải giữa nên vẫn được mở ra.
 Dòng `accordion-content` / `tab-content` hiện `label` của nó, nên bốn dòng FAQ không còn là bốn
-dòng giống hệt nhau. Một mega `menu-panel` hiện `menu_item` (id dòng nó thay thế) và `label` của
+dòng giống hệt nhau. Một mega `menu-panel` hiện `menu_item` (id dòng có dropdown là panel này) và `label` của
 dòng đó.
 
 ## `sb_node_read`
@@ -532,7 +532,7 @@ câu trả lời nên biết sẵn:
 | `parent_id` | string | |
 | `spec` | object | `{ type, name?, style?, config?, specials?, responsive?, children? }` — **lồng nhau**; `responsive` là `{ desktop|laptop|tablet|mobile: { style?, config? } }` (key config chỉ-base được chuyển về base, như `sb_set`). Key khác bị từ chối — click dùng `sb_event`, dữ liệu `sb_bind`, hover `sb_set` với `state` |
 | `index` | number? | Mặc định nối vào cuối — trừ khi thêm vào ROOT của trang có footer dùng chung: khi đó mặc định là cuối band GIỮA (nối sau footer thì bước kiểm tra thứ tự band chặn lần lưu) |
-| `menu_item_id` | string? | Chỉ cho mega menu: với cha là `menu` và `spec.type: "menu-panel"`, đây là id dòng trong `specials.menuItems` mà panel thay thế. Bị từ chối với mọi cặp cha/con khác |
+| `menu_item_id` | string? | Chỉ cho mega menu: với cha là `menu` và `spec.type: "menu-panel"`, đây là id dòng trong `specials.menuItems` mà dropdown của nó trở thành panel. Bị từ chối với mọi cặp cha/con khác |
 | `dry_run` | boolean? | Mặc định true |
 | `force` | boolean? | Bỏ qua một guard mềm; thông điệp được trả về trong `forced[]` thay vì ném lỗi. Guard cứng bỏ qua tham số này — xem "Mỗi lần ghi kiểm tra gì" |
 
@@ -545,7 +545,9 @@ mới — bị từ chối và được chỉ tên tham số; id dòng không t�
 dòng có `panelId` đang trỏ tới một panel còn sống bị từ chối (thêm nội dung vào panel đó, hoặc
 `sb_remove` nó trước). `panelId` không trỏ tới node nào được coi là chưa có panel, giống cả hai
 renderer. `sb_remove` panel sẽ xoá `panelId` của dòng trong cùng lần lưu, và `sb_store
-action:"menu"` giữ nguyên `panelId` của mọi dòng khi bind lại.
+action:"menu"` giữ nguyên `panelId` của mọi dòng khi bind lại. `sb_move` panel bị từ chối (dòng sẽ trỏ tới node menu không
+còn giữ — hãy `sb_remove` nó), `sb_duplicate` trong cùng trang cũng vậy (bản sao không dòng nào trỏ
+tới — hãy tạo panel riêng cho dòng khác). Thêm đúng cách thì không có ghi chú `inert`.
 
 Truyền `children` để dựng nguyên một section trong một lần gọi. Từ chối element root-only
 đặt trong section, con nằm ngoài whitelist của cha, và mọi lần thêm vào node không phải

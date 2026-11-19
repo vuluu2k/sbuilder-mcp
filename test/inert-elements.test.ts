@@ -154,6 +154,12 @@ describe('elements that render convincingly while doing nothing', () => {
   it('warns that a menu-panel is wired from its menu entry, not the page tree', () => {
     const n = inertHint('menu-panel')!;
     expect(n).toMatch(/menu entry/);
+    expect(n).toMatch(/sb_add parent_id <menu> menu_item_id <row id>/);
+  });
+
+  it('a menu-panel under a menu is hosted (silent); placed loose it still warns', () => {
+    expect(inertHintsFor([{ type: 'menu-panel', parent: 'flex-section' }]).map((h) => h.type), 'loose warns').toEqual(['menu-panel']);
+    expect(inertHintsFor([{ type: 'menu-panel', parent: 'menu' }]), 'hosted is silent').toEqual([]);
   });
 
   it('has a non-empty note for every entry, and every key is a real catalog element', () => {

@@ -1743,8 +1743,9 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
       index: z.number().int().min(0).optional(),
       menu_item_id: z
         .string()
+        .min(1)
         .optional()
-        .describe('Mega panel: the menuItems row id it replaces (menu parent, menu-panel spec)'),
+        .describe('Mega panel: the menuItems row id whose dropdown it becomes (menu parent, menu-panel spec)'),
       dry_run: z.boolean().optional(),
       force: z.boolean().optional().describe('Override a render-inference guard; reported as forced'),
     },

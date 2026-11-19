@@ -10,7 +10,7 @@ import { Session } from '../src/transport/auth.js';
 import { Notices } from '../src/mcp/notices.js';
 import { UndoLog } from '../src/tools/undo.js';
 import { PageDoc } from '../src/domains/site/document.js';
-import { addSubtree, removeNode } from '../src/domains/site/builder.js';
+import { addSubtree, removeNode, moveNode, duplicateNode } from '../src/domains/site/builder.js';
 
 type Row = { id: string; label: string; href: string; panelId?: string; items?: Row[] };
 const ROWS: Row[] = [
@@ -129,9 +129,48 @@ describe('sb_remove of a mega panel', () => {
   });
 });
 
+describe('a mega panel stays where its row points', () => {
+  it('sb_move of a menu\'s panel is refused naming sb_remove; a loose panel still moves', () => {
+    const { d, menu, section } = menuDoc();
+    const mega = addSubtree(d, menu, PANEL, undefined, undefined, 'r2');
+    d.apply(mega.patches);
+    const loose = addSubtree(d, section, PANEL);
+    d.apply(loose.patches);
+    expect(() => moveNode(d, loose.ids[0], 'ROOT', 0), 'liveness: a loose panel moves').not.toThrow();
+    expect(() => moveNode(d, mega.ids[0], section, 0)).toThrow(
+      new RegExp(`${mega.ids[0]} is the mega panel .* Moving it is refused.*sb_remove ${mega.ids[0]}`),
+    );
+  });
+
+  it('a same-page sb_duplicate of a menu\'s panel is refused naming menu_item_id; a loose one duplicates', () => {
+    const { d, menu, section } = menuDoc();
+    const mega = addSubtree(d, menu, PANEL, undefined, undefined, 'r2');
+    d.apply(mega.patches);
+    const loose = addSubtree(d, section, PANEL);
+    d.apply(loose.patches);
+    expect(() => duplicateNode(d, loose.ids[0]), 'liveness: a loose panel duplicates').not.toThrow();
+    expect(() => duplicateNode(d, mega.ids[0])).toThrow(/Duplicating it is refused.*sb_add parent_id <menu> menu_item_id <row id>/);
+  });
+
+  it("a menu's OTHER children (its satellites, data.parent = menu) are not mistaken for a panel", () => {
+    const { d, menu } = menuDoc();
+    const sat = Object.values(d.doc.nodes).find((n) => n.data.parent === menu && n.data.type !== 'menu-panel');
+    expect(sat, 'fixture: the menu has a satellite').toBeDefined();
+    let err = '';
+    try {
+      duplicateNode(d, sat!.id);
+    } catch (e) {
+      err = String(e);
+    }
+    expect(err, 'duplicate of a satellite is not the panel refusal').not.toMatch(/mega panel/);
+  });
+});
+
 describe('end to end through the tools: add, re-bind, remove', () => {
   it('one save each; the re-bind keeps the panel; sb_remove unbinds the row', async () => {
-    const { d, menu } = menuDoc();
+    // A stored row with an EMPTY id: `menu_item_id: ""` would match it, so the
+    // schema has to refuse the empty string before any lookup.
+    const { d, menu } = menuDoc([...ROWS, { id: '', label: 'Blank', href: '' }]);
     let current: unknown = d.doc;
     const saved: Array<{ document: { nodes: Record<string, { data: { nodes: string[] }; specials: Record<string, unknown> }> } }> = [];
     const SITE_MENU = {
@@ -165,27 +204,57 @@ describe('end to end through the tools: add, re-bind, remove', () => {
     const rows = (i: number) => saved[i].document.nodes[menu].specials.menuItems as Row[];
 
     await client.callTool({ name: 'sb_page_open', arguments: { site_id: 's1', page_id: 'pg_1' } });
+    const dry = parse(
+      await client.callTool({ name: 'sb_add', arguments: { parent_id: menu, spec: PANEL, menu_item_id: 'r1a' } }),
+    );
+    expect(dry.dry_run, 'dry run by default').toBe(true);
+    expect(dry.would_add).toBe(1);
+    expect(saved.length, 'a dry run saves nothing').toBe(0);
+    // The empty string is no row id: refused by the schema, not looked up.
+    const empty = await client.callTool({ name: 'sb_add', arguments: { parent_id: menu, spec: PANEL, menu_item_id: '' } });
+    expect((empty as { isError?: boolean }).isError, 'empty menu_item_id refused').toBe(true);
+    expect(saved.length, 'and nothing saved').toBe(0);
+    expect(JSON.stringify(empty), 'refused by the schema, not by a row lookup').not.toMatch(/has no row/);
+
     const add = await client.callTool({
       name: 'sb_add',
       arguments: { parent_id: menu, spec: PANEL, menu_item_id: 'r1a', dry_run: false },
     });
     expect((add as { isError?: boolean }).isError, JSON.stringify(add)).toBeFalsy();
-    const panel = Object.keys(parse(add).added)[0];
+    const first = Object.keys(parse(add).added)[0];
+    // The CORRECT placement is hosted: no "never renders" note (the dry run only peeked).
+    expect(parse(add).inert, 'no inert note on a hosted mega panel').toBeUndefined();
     expect(saved.length, 'panel + row pointer in ONE save').toBe(1);
-    expect(saved[0].document.nodes[menu].data.nodes).toContain(panel);
-    expect(rows(0)[0].items![0].panelId).toBe(panel);
+    expect(saved[0].document.nodes[menu].data.nodes).toContain(first);
+    expect(rows(0)[0].items![0].panelId).toBe(first);
+
+    // sb_undo of the add takes BOTH halves away: no panel node, no row pointer.
+    const undo = await client.callTool({ name: 'sb_undo', arguments: { index: 1, dry_run: false } });
+    expect((undo as { isError?: boolean }).isError, JSON.stringify(undo)).toBeFalsy();
+    expect(saved.length, 'undo saved').toBe(2);
+    expect(saved[1].document.nodes[first], 'panel gone').toBeUndefined();
+    expect(saved[1].document.nodes[menu].data.nodes, 'menu no longer holds it').not.toContain(first);
+    expect(rows(1)[0].items![0].panelId, 'row pointer gone').toBeUndefined();
+
+    const again = await client.callTool({
+      name: 'sb_add',
+      arguments: { parent_id: menu, spec: PANEL, menu_item_id: 'r1a', dry_run: false },
+    });
+    const panel = Object.keys(parse(again).added)[0];
+    expect(rows(2)[0].items![0].panelId, 'the row converts again after the undo').toBe(panel);
 
     await client.callTool({ name: 'sb_store', arguments: { action: 'menu', node_id: menu, dry_run: false } });
-    expect(saved.length).toBe(2);
+    expect(saved.length).toBe(4);
     // Liveness: the re-bind really rewrote the rows (the site's label won)…
-    expect(rows(1)[0].label, 're-bind took the site rows').toBe('Shop!');
+    expect(rows(3)[0].label, 're-bind took the site rows').toBe('Shop!');
     // …and still carried the panel pointer across.
-    expect(rows(1)[0].items![0].panelId, 'panelId preserved by re-bind').toBe(panel);
+    expect(rows(3)[0].items![0].panelId, 'panelId preserved by re-bind').toBe(panel);
 
     await client.callTool({ name: 'sb_remove', arguments: { id: panel, dry_run: false } });
-    expect(saved.length).toBe(3);
-    expect(saved[2].document.nodes[panel]).toBeUndefined();
-    expect(rows(2)[0].items![0].panelId, 'row unbound with the panel').toBeUndefined();
+    expect(saved.length).toBe(5);
+    expect(saved[4].document.nodes[panel]).toBeUndefined();
+    expect(rows(4)[0].items![0].panelId, 'row unbound with the panel').toBeUndefined();
+
     await close();
   });
 });

@@ -817,6 +817,7 @@ function rebindPatch(doc: PageDoc, id: string, keys: Record<string, unknown>): P
  * (not part of this document at all).
  */
 export function duplicateNode(doc: PageDoc, id: string, guard?: GuardOpts): ReturnType<typeof copyNodeInto> {
+  refuseMenuPanel(doc, id, 'Duplicating', 'a copy would be named by no row and render nowhere. Give another row its own panel with sb_add parent_id <menu> menu_item_id <row id>');
   const parentId = doc.has(id) ? doc.node(id).data.parent : null;
   const at = parentId && doc.has(parentId) ? doc.node(parentId).data.nodes.indexOf(id) : -1;
   return copyNodeInto(doc, id, doc, parentId ?? '', at < 0 ? APPEND : at + 1, guard);
@@ -937,8 +938,21 @@ export function copyNodeInto(
   return { patches, ids, map };
 }
 
+/**
+ * A MENU'S MEGA PANEL lives only where its row points: moved out, the row names
+ * a node the menu no longer holds (the dropdown silently falls back to links);
+ * duplicated, the copy is named by no row. Both are refused.
+ */
+function refuseMenuPanel(doc: PageDoc, id: string, verb: string, why: string): void {
+  const n = doc.doc.nodes[id];
+  const parent = n?.data.parent ? doc.doc.nodes[n.data.parent] : undefined;
+  if (n?.data.type !== 'menu-panel' || parent?.data.type !== 'menu') return;
+  throw new Error(`sbuilder: ${id} is the mega panel of a row of the menu ${n.data.parent}. ${verb} it is refused: ${why}.`);
+}
+
 export function moveNode(doc: PageDoc, id: string, newParentId: string, index: number, guard?: GuardOpts): Patch[] {
   const n = doc.node(id);
+  refuseMenuPanel(doc, id, 'Moving', `its row would still point at it while the menu no longer holds it. To take the panel away, sb_remove ${id} (the row goes back to its link list in the same save)`);
   refuseOverlay(doc, id, 'moving');
   soft(guard, () => refuseAppBlockInterior(doc, id, 'moving'));
   const newParent = doc.node(newParentId);

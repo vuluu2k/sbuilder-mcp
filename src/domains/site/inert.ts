@@ -295,16 +295,18 @@ export const INERT_ON_ADD: Record<string, InertHint> = {
     host: 'hamburger-menu',
   },
 
-  // `menu` itself cannot hold children at all (isContainer: false), so a
-  // menu-panel is wired from the MENU ENTRY's own configuration, never from
-  // the page tree — yet any ordinary container on a page will accept one.
+  // A menu-panel renders only as a MENU's child that one row of the menu's
+  // specials.menuItems names through `panelId` — the one way to place it is
+  // sb_add with menu_item_id (which writes both halves), so under a menu it is
+  // hosted and silent. Any ordinary container on a page also accepts one.
   'menu-panel': {
     note:
-      'A menu-panel is a mega-menu surface behind ONE entry of a site menu, wired from that ' +
-      "entry's own configuration — not from the page tree, since a menu node cannot hold " +
-      'children at all. Placed loose on a page it is accepted by any ordinary container and, per ' +
-      'its own AVOID, "only renders inside its owning menu entry" — never on its own. Reference ' +
-      'it from the menu entry it belongs to (Manage menu), not by adding it to a page.',
+      'A menu-panel is a mega-menu surface behind ONE entry of a site menu: it renders only as ' +
+      "the menu's own child that the entry's row names (specials.menuItems[].panelId). Placed " +
+      'loose on a page it is accepted by any ordinary container and, per its own AVOID, "only ' +
+      'renders inside its owning menu entry" — never on its own. Add it with sb_add parent_id ' +
+      '<menu> menu_item_id <row id>, which appends it and points the row at it in one save.',
+    host: 'menu',
   },
 };
 

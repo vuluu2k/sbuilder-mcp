@@ -445,7 +445,7 @@ A shared header/footer or an overlay is **one line** (no `kids`, marked `collaps
 `chrome: true` — they are the same on every page and were ~70% of a routine outline. A `custom`
 global is middle-band content and stays expanded. An `accordion-content` /
 `tab-content` row shows its `label`, so four FAQ rows are not four identical lines. A mega
-`menu-panel` shows `menu_item` (the row id it replaces) and that row's `label`.
+`menu-panel` shows `menu_item` (the id of the row whose dropdown it is) and that row's `label`.
 
 ## `sb_node_read`
 
@@ -538,7 +538,7 @@ sharing its words — `popup_trigger` → `config.triggerType`, `config.triggerD
 | `parent_id` | string | |
 | `spec` | object | `{ type, name?, style?, config?, specials?, responsive?, children? }` — **nested**; `responsive` is `{ desktop|laptop|tablet|mobile: { style?, config? } }` (a base-only config key is moved to base, as `sb_set` does). Any other key is refused — a click is `sb_event`, data `sb_bind`, a hover `sb_set` with `state` |
 | `index` | number? | Defaults to append — except onto ROOT of a page wearing a shared footer, where it defaults to the end of the MIDDLE band (appended after the footer, the band-order check refused the save) |
-| `menu_item_id` | string? | Mega menu only: with a `menu` parent and `spec.type: "menu-panel"`, the `specials.menuItems` row id the panel replaces. Refused for any other parent/child pair |
+| `menu_item_id` | string? | Mega menu only: with a `menu` parent and `spec.type: "menu-panel"`, the `specials.menuItems` row id whose dropdown the panel becomes. Refused for any other parent/child pair |
 | `dry_run` | boolean? | Defaults to true |
 | `force` | boolean? | Override a soft guard; the message is returned as `forced[]` instead of thrown. Hard guards ignore it — see "What every write checks" |
 
@@ -551,7 +551,9 @@ refused naming the argument; an unknown row id is refused listing the real ones;
 `panelId` already names a live panel is refused (add into that panel, or `sb_remove` it first). A
 `panelId` naming nothing reads as no panel, as both renderers read it. `sb_remove` on the panel
 clears the row's `panelId` in the same save, and `sb_store action:"menu"` keeps every row's
-`panelId` across a re-bind.
+`panelId` across a re-bind. `sb_move` of the panel is refused (its row would point at a node the
+menu no longer holds — `sb_remove` it instead), and so is a same-page `sb_duplicate` (the copy would
+be named by no row — give another row its own panel). Added correctly, it carries no `inert` note.
 
 Pass `children` to build a whole section in one call. Refuses a root-only element inside a
 section, a child a parent's whitelist excludes, and any add into a non-container.
