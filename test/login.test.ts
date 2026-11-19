@@ -10,7 +10,8 @@ import { jwtExpiry } from '../src/transport/auth.js';
 import { login, useSite, WAIT } from '../src/tools/login.js';
 import { connect } from '../src/tools/session.js';
 import { keyServes, tokenFor } from '../src/tools/api.js';
-import { buildEntry, deviceLogin, runInstallCli } from '../src/install/index.js';
+import { buildEntry, deviceLogin, PROD_API, runInstall, runInstallCli } from '../src/install/index.js';
+import { pickLang } from '../src/install/guided.js';
 import { buildContext } from '../src/server.js';
 import type { ToolContext } from '../src/tools/context.js';
 
@@ -234,7 +235,7 @@ describe('install --login', () => {
     const { f } = platform({ pendingPolls: 2 });
     const lines: string[] = [];
     const ok = await deviceLogin(API, { fetchImpl: f, sleep: async () => {}, open: () => false, log: (l) => lines.push(l) });
-    expect(ok).toBe(true);
+    expect(ok).toBe('A1');
     expect(lines.join('\n')).toContain('ABCD-EFGH');
     expect(readPairSync(API)).toEqual({ accessToken: 'A1', refreshToken: 'R1' });
   });
@@ -243,9 +244,9 @@ describe('install --login', () => {
     await savePair(API, { accessToken: 'A1', refreshToken: 'R1' });
     const { f, calls } = platform();
     const lines: string[] = [];
-    expect(await deviceLogin(API, { fetchImpl: f, log: (l) => lines.push(l) })).toBe(true);
+    expect(await deviceLogin(API, { fetchImpl: f, log: (l) => lines.push(l) })).toBe('A1');
     expect(calls).not.toContain('/api/auth/device/start');
-    expect(lines[0]).toMatch(/Already signed in as owner@shop.vn/);
+    expect(lines[0]).toMatch(/Already signed in: owner@shop.vn/);
   });
 
   it('writes no key and no password, only where and which site', () => {
@@ -388,5 +389,84 @@ describe('review fixes', () => {
 
   it('--login never writes a password, even one in the environment', () => {
     expect(buildEntry({ login: true, api: API, email: 'e@x', password: 'pw' }).env).toEqual({ SB_API: API });
+  });
+});
+
+describe('the guided install — one command, no flags to understand', () => {
+  // Passed as deps.home, never via process.env.HOME: a vitest worker's env is a
+  // copy os.homedir() does not read, and the install lands in the REAL home.
+  const home = () => join(dir, 'home');
+  const claudeEnv = (h: string) =>
+    JSON.parse(readFileSync(join(h, '.claude.json'), 'utf8')).mcpServers.sbuilder.env;
+
+  it('signs in, lets the person pick a store by number, installs, and says what next — in Vietnamese', async () => {
+    const h = home();
+    const { f } = platform({ pendingPolls: 1 });
+    const lines: string[] = [];
+    const asked: string[] = [];
+    const code = await runInstall(['--api', API, '--client', 'claude-code'], { home: home(),
+      fetchImpl: f, sleep: async () => {}, open: () => true, log: (l) => lines.push(l), lang: 'vi',
+      ask: async (q) => (asked.push(q), '2'),
+    });
+    const out = lines.join('\n');
+    expect(code, out).toBe(0);
+    expect(out).toMatch(/Bước 1\/3[\s\S]*ABCD-EFGH[\s\S]*Bước 2\/3[\s\S]*1\. Áo Thun[\s\S]*2\. Trà[\s\S]*Bước 3\/3/);
+    expect(asked[0]).toMatch(/1–2/);
+    expect(out).toMatch(/Xong!.*\n.*cửa hàng Trà/);
+    expect(claudeEnv(h)).toEqual({ SB_API: API, SB_SITE: 's2', SB_SITE_NAME: 'Trà' });
+    // A stale npx cache would start a pre-login server that never sees the login.
+    expect(JSON.parse(readFileSync(join(h, '.claude.json'), 'utf8')).mcpServers.sbuilder.args).toEqual(['-y', 'sbuilder-mcp@latest']);
+  });
+
+  it('defaults to the production platform — no --api to know about', async () => {
+    home();
+    const hosts: string[] = [];
+    const f = vi.fn(async (url: unknown) => {
+      hosts.push(new URL(String(url)).origin);
+      return json({ error: 'stop', code: 'device_login_unavailable' }, 503);
+    }) as unknown as typeof fetch;
+    await runInstall(['--client', 'claude-code'], { home: home(), fetchImpl: f, log: () => {}, lang: 'en', ask: undefined });
+    expect(hosts[0]).toBe(PROD_API);
+  });
+
+  it('a store named by the screen is used without asking; its name is filled in', async () => {
+    const h = home();
+    await savePair(API, { accessToken: 'A1', refreshToken: 'R1' });
+    const { f } = platform();
+    const ask = vi.fn(async () => '1');
+    expect(await runInstall(['--api', API, '--site', 's2', '--client', 'claude-code'], { home: home(), fetchImpl: f, log: () => {}, lang: 'en', ask })).toBe(0);
+    expect(ask).not.toHaveBeenCalled();
+    expect(claudeEnv(h)).toEqual({ SB_API: API, SB_SITE: 's2', SB_SITE_NAME: 'Trà' });
+  });
+
+  it('no terminal to ask in: installs without a store rather than hanging', async () => {
+    const h = home();
+    await savePair(API, { accessToken: 'A1', refreshToken: 'R1' });
+    const { f } = platform();
+    const lines: string[] = [];
+    expect(await runInstall(['--api', API, '--client', 'claude-code'], { home: home(), fetchImpl: f, log: (l) => lines.push(l), lang: 'en', ask: undefined })).toBe(0);
+    expect(lines.join('\n')).toMatch(/Skipped/);
+    expect(claudeEnv(h)).toEqual({ SB_API: API });
+  });
+
+  it('a denial installs nothing', async () => {
+    const h = home();
+    const { f } = platform({ deny: true });
+    expect(await runInstall(['--api', API, '--client', 'claude-code'], { home: home(), fetchImpl: f, sleep: async () => {}, open: () => false, log: () => {}, lang: 'en', ask: undefined })).toBe(1);
+    expect(() => readFileSync(join(h, '.claude.json'))).toThrow();
+  });
+
+  it('a key still installs the old way, with no browser', async () => {
+    const h = home();
+    const { f, calls } = platform();
+    expect(await runInstall(['--token', 'wbk_k', '--api', API, '--site', 's1', '--client', 'claude-code'], { home: home(), fetchImpl: f, log: () => {}, lang: 'en', ask: undefined })).toBe(0);
+    expect(calls).toEqual([]);
+    expect(claudeEnv(h)).toEqual({ SB_API: API, SB_TOKEN: 'wbk_k', SB_SITE: 's1' });
+  });
+
+  it('speaks Vietnamese when told to, or when the machine is Vietnamese', () => {
+    expect(pickLang('vi')).toBe('vi');
+    expect(pickLang(undefined, { LANG: 'vi_VN.UTF-8' })).toBe('vi');
+    expect(pickLang(undefined, { LANG: 'en_US.UTF-8' })).toBe('en');
   });
 });

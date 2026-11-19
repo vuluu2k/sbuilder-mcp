@@ -8,26 +8,26 @@ quả rồi xuất bản — mà không cần người bấm gì.
 
 ## Cài đặt
 
-Một lệnh ghi server này vào mọi agent client trên máy bạn:
+Một lệnh, không phải chép gì:
+
+```bash
+npx -y sbuilder-mcp@latest install
+```
+
+Lệnh dẫn bạn qua ba bước: **đăng nhập** (trang trình duyệt mở ra — gõ mã hiện trong terminal rồi
+bấm Chấp thuận), **chọn cửa hàng** (gõ số), và **cài** vào mọi agent client tìm thấy trên máy.
+Sau đó mở lại agent và hỏi thử *"liệt kê các trang của cửa hàng tôi"*. Không khoá, không mật khẩu,
+không file cấu hình nào phải sửa. Máy tiếng Việt (hoặc `--lang vi`) thì lệnh nói tiếng Việt; chạy
+`npx sbuilder-mcp` không kèm gì thì nó chỉ nhắc lệnh này. Phát triển ở local: thêm
+`--api http://localhost:8080`.
+
+Màn **Ứng dụng → AI agent** của cửa hàng đưa sẵn đúng lệnh này với cửa hàng đã chọn (`--site`).
+
+### Hoặc dùng khoá API (một cửa hàng, script, CI)
 
 ```bash
 npx -y sbuilder-mcp install --token wbk_… --api https://your-host --site site_…
 ```
-
-### Hoặc đăng nhập cả tài khoản bằng trình duyệt
-
-```bash
-npx -y sbuilder-mcp@latest install --login --api https://your-host --site site_…
-```
-
-Lệnh in ra một mã và mở trang đăng nhập của nền tảng: gõ mã, kiểm tra khớp, bấm **Đồng ý**.
-Không khoá, không mật khẩu nào bị ghi ra — phiên đăng nhập được giữ trong
-`~/.config/sb/credentials.json` (chỉ chủ máy đọc được), **cùng file với `sb login`**, nên một lần
-đồng ý là CLI và mọi cửa sổ agent đều đăng nhập, và vẫn còn sau khi khởi động lại. `--site` là
-site agent bắt đầu làm; với cả tài khoản nó với tới mọi site bạn có quyền, và `sb_site_use`
-chuyển site. Đã đăng nhập rồi thì lệnh báo và bỏ qua trình duyệt. Ngay trong cuộc chat,
-`sb_login` làm việc tương tự (lần gọi đầu trả mã, lần sau chờ bạn đồng ý), và
-`sb_login action:"logout"` đăng xuất máy.
 
 Nó biết Claude Code, Claude Desktop, Cursor, Windsurf, VS Code và Codex, và cài vào những
 cái nó tìm thấy. Chỉ định bằng `--client cursor,codex`, hoặc diễn thử với `--dry-run`. Một

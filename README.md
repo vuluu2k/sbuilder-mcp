@@ -8,26 +8,27 @@ publish it — with no human clicking anything.
 
 ## Install
 
-One command writes this server into every agent client on your machine:
+One command, nothing to copy:
+
+```bash
+npx -y sbuilder-mcp@latest install
+```
+
+It walks you through three steps: **sign in** (a browser page opens — type the code shown in
+the terminal and press Approve), **choose your store** (type its number), and **install** into
+every agent client it finds. Then restart your agent and ask it something like *"list the pages
+of my store"*. No key, no password and no config file to edit. It speaks Vietnamese on a
+Vietnamese machine (or with `--lang vi`), and run with no arguments it just tells you this
+command. Local development: add `--api http://localhost:8080`.
+
+The store's **Apps → AI agent** screen hands you the same command with the store already
+chosen (`--site`).
+
+### With an API key instead (one store, scripts, CI)
 
 ```bash
 npx -y sbuilder-mcp install --token wbk_… --api https://your-host --site site_…
 ```
-
-### Or sign in the whole account in the browser
-
-```bash
-npx -y sbuilder-mcp@latest install --login --api https://your-host --site site_…
-```
-
-It prints a code and opens the platform's sign-in page: type the code, check it matches, press
-**Approve**. No key and no password is written anywhere — the login is kept in
-`~/.config/sb/credentials.json` (owner-only), **the same file `sb login` uses**, so one approval
-signs in the CLI and every agent window together, and survives restarts. `--site` is the site
-the agent starts on; with the account it can reach every site you can, and `sb_site_use` moves
-it. Already signed in? The command says so and skips the browser. Inside a chat, `sb_login`
-does the same thing (the first call returns the code, the next one waits for the approval), and
-`sb_login action:"logout"` signs the machine out.
 
 It knows Claude Code, Claude Desktop, Cursor, Windsurf, VS Code and Codex, and installs into
 the ones it finds. Name them with `--client cursor,codex`, or rehearse with `--dry-run`. An

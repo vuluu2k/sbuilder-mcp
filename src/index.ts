@@ -2,6 +2,7 @@
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { buildContext, createServer } from './server.js';
 import { runInstall } from './install/index.js';
+import { pickLang } from './install/guided.js';
 import { pkgVersion } from './server.js';
 import { closeBrowser } from './vision/shoot.js';
 
@@ -9,6 +10,20 @@ async function main(): Promise<void> {
   // `sbuilder-mcp install` writes this server into the agent clients on this
   // machine and exits. Checked BEFORE the transport opens: an installer that
   // also spoke MCP on stdout would corrupt the protocol for whatever ran it.
+  // RUN BY HAND, NOT BY AN AGENT. A client always talks over a pipe; a person
+  // who typed `npx sbuilder-mcp` in a terminal would otherwise stare at a cursor
+  // that never moves. Tell them the one command they wanted.
+  if (process.stdin.isTTY && !process.argv[2]) {
+    const vi = pickLang() === 'vi';
+    console.error(
+      vi
+        ? 'sbuilder-mcp là máy chủ MCP — agent AI (Claude Code, Cursor…) tự chạy nó.\n' +
+            'Để kết nối máy này với Store Builder, chạy:\n\n  npx -y sbuilder-mcp@latest install\n'
+        : 'sbuilder-mcp is an MCP server — your AI agent (Claude Code, Cursor…) runs it.\n' +
+            'To connect this machine to Store Builder, run:\n\n  npx -y sbuilder-mcp@latest install\n',
+    );
+    process.exit(0);
+  }
   if (process.argv[2] === 'install') {
     process.exit(await runInstall(process.argv.slice(3), { version: pkgVersion() }));
   }
