@@ -6,6 +6,17 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.110.0] - 2026-11-19
+
+### Added
+- `install` chạy bằng một lệnh có hướng dẫn, `npx -y sbuilder-mcp@latest install`, mặc định đăng nhập bằng trình duyệt, chọn cửa hàng bằng số và cài vào mọi agent qua ba bước.
+- Chạy `npx sbuilder-mcp` không kèm tham số trong terminal sẽ in ra lệnh cần chạy thay vì đứng im.
+- Trình cài đặt nói tiếng Việt khi máy dùng tiếng Việt hoặc khi truyền `--lang vi`.
+
+### Changed
+- `install` mặc định dùng nền tảng thật (`https://api.sbuilder.io.vn`), nên chỉ cần `--api` khi dùng nền tảng local.
+- Cấu hình client do cài đặt kiểu đăng nhập ghi ra dùng `sbuilder-mcp@latest`, nên bản cũ trong cache npx không thể chạy một phiên bản không đọc được phiên đăng nhập.
+
 ## [0.109.1] - 2026-11-19
 
 ### Fixed

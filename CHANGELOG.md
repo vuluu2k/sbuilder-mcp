@@ -6,6 +6,17 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.110.0] - 2026-11-19
+
+### Added
+- `install` runs as a single guided command, `npx -y sbuilder-mcp@latest install`, that signs in through the browser by default, lets you pick a store by number, and installs into every agent in three steps.
+- Running `npx sbuilder-mcp` with no arguments in a terminal prints the command to run instead of sitting silent.
+- The installer speaks Vietnamese when the machine language is Vietnamese or `--lang vi` is passed.
+
+### Changed
+- `install` targets the live platform (`https://api.sbuilder.io.vn`) by default, so `--api` is only needed for a local platform.
+- Client configs written by a login-style install pin `sbuilder-mcp@latest`, so a stale npx cache cannot run a version that cannot read the login session.
+
 ## [0.109.1] - 2026-11-19
 
 ### Fixed
