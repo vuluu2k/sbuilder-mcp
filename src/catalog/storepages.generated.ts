@@ -2358,6 +2358,7 @@ export const STORE_PAGE_SEEDS: Record<string, { schema_version: number; root_nod
           },
           "optionGap": "",
           "showAttributes": [],
+          "pickAction": "select",
           "variantLabelId": "sppro_12",
           "variantOptionId": "sppro_13"
         },

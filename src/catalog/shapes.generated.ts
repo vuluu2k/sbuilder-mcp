@@ -4,12 +4,12 @@
 import type { RequestShape } from './types.js';
 
 export const SHAPE_SOURCE = {
-  "writeOperations": 465,
-  "shaped": 374,
+  "writeOperations": 466,
+  "shaped": 375,
   "fromHandlers": 363,
-  "fromSwaggerOnly": 11,
+  "fromSwaggerOnly": 12,
   "withReadOnly": 29,
-  "structsRead": 3867
+  "structsRead": 3870
 } as const;
 
 export const REQUEST_SHAPES: Record<string, RequestShape> = {

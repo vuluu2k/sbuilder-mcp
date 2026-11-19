@@ -16031,7 +16031,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
       "Use a consistent image ratio (config.featureImageRatio) so the layout does not jump between images — default is a uniform 1:1 square; \"auto\" uses each image's natural size.",
       "Hover-zoom is on by default at 150% (config.hoverZoomValue); set it to 100 to disable, or raise it up to 300 for a closer zoom.",
       "Nav arrows sit \"inside\" (overlaid) or \"outside\" the image via config.listNavPosition.",
-      "config.hoverSwapImage shows the NEXT gallery photo while the pointer is on the tile — the product-grid effect. It needs a gallery of 2+, is off by default, and does nothing on a touch screen (no pointer), so a phone keeps the first photo."
+      "config.hoverSwapImage fades in the NEXT gallery photo while the pointer is on the tile OR anywhere on the linked product card around it — the product-grid effect, nothing else to set. It needs a gallery of 2+, is off by default, and does nothing on a touch screen (no pointer), so a phone keeps the first photo."
     ],
     "semantics": [
       "product-image",
@@ -17129,7 +17129,8 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "gap": 8
         },
         "optionGap": "",
-        "showAttributes": []
+        "showAttributes": [],
+        "pickAction": "select"
       },
       "specials": {
         "displayType": "select",
@@ -17363,7 +17364,8 @@ export const ELEMENTS: Record<string, CatalogElement> = {
             "label": "Variant display",
             "controls": [
               "variant_display",
-              "variant_show_attributes"
+              "variant_show_attributes",
+              "variant_pick_action"
             ]
           },
           {
@@ -17460,6 +17462,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
       "defaultVariant",
       "variant_display",
       "variant_show_attributes",
+      "variant_pick_action",
       "variant_label",
       "variant_option",
       "width_select",
@@ -17493,6 +17496,8 @@ export const ELEMENTS: Record<string, CatalogElement> = {
       "Use specials.defaultVariant.enabled + values to pre-select a value per attribute",
       "A product CARD in a list (product-list / dataset card) should usually show only the colour axis: set config.showAttributes to that one attribute name (e.g. [\"Color\"] or [\"Màu sắc\"]) and leave Size for the product page buy box, which keeps showAttributes empty (= every attribute)",
       "config.showAttributes matches attribute names trimmed and case-insensitively, keeps the product order, and drops a name the product does not have",
+      "config.pickAction: \"add_to_cart\" turns every value into a quick-add button — clicking a size selects it AND adds that variant (quantity 1) to the cart, keeping any colour already picked elsewhere on the card. Use it for a product-CARD quick add (showAttributes [\"Size\"], specials.displayType \"image_label\"), usually inside a flex-block overlay with config.revealOnHover true; keep the default \"select\" on a product page buy box, where an Add to cart button does the adding",
+      "Sold-out values are crossed out automatically on the published page (both modes); in \"add_to_cart\" mode they cannot be clicked. Do not hand-style or hide them",
       "Style the attribute labels through the product-variant-label satellite and the options through the product-variant-option satellite",
       "Do not add children — the blocks, labels and options are rendered internally"
     ],
@@ -41578,6 +41583,7 @@ export const BASE_ONLY_CONFIG: string[] = [
   "rowLimit",
   "clampTitle",
   "showAttributes",
+  "pickAction",
   "optionSource",
   "recordAggregates",
   "recordCollectionId",

@@ -1644,6 +1644,7 @@ export const OVERLAY_SEEDS: Record<'cart' | 'popup' | 'quickview', OverlayDocume
           },
           "optionGap": "",
           "showAttributes": [],
+          "pickAction": "select",
           "variantLabelId": "qv_12",
           "variantOptionId": "qv_13"
         },

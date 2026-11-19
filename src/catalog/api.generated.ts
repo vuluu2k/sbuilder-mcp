@@ -3,9 +3,9 @@
 import type { ApiOperation } from './types.js';
 
 export const SWAGGER_SOURCE = {
-  "operations": 1009,
-  "definitions": 441,
-  "bodyCarrying": 485,
+  "operations": 1011,
+  "definitions": 444,
+  "bodyCarrying": 487,
   "bodyUndescribed": 122,
   "generatedFrom": "server/docs/swagger.json"
 } as const;
@@ -31442,6 +31442,48 @@ export const API_OPERATIONS: ApiOperation[] = [
     "credential": "apiKey"
   },
   {
+    "id": "get:/api/v1/site-settings",
+    "method": "GET",
+    "path": "/api/v1/site-settings",
+    "tags": [
+      "v1"
+    ],
+    "summary": "Read or save the site's settings",
+    "params": [
+      {
+        "name": "siteSettings",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "The settings to save (PUT only)"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "internal_publicapi.SiteSettingsInput",
+    "credential": "apiKey"
+  },
+  {
+    "id": "put:/api/v1/site-settings",
+    "method": "PUT",
+    "path": "/api/v1/site-settings",
+    "tags": [
+      "v1"
+    ],
+    "summary": "Read or save the site's settings",
+    "params": [
+      {
+        "name": "siteSettings",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "The settings to save (PUT only)"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "internal_publicapi.SiteSettingsInput",
+    "credential": "apiKey"
+  },
+  {
     "id": "get:/api/v1/theme",
     "method": "GET",
     "path": "/api/v1/theme",
@@ -42369,15 +42411,48 @@ export const API_DEFINITIONS: Record<string, unknown> = {
       }
     }
   },
+  "internal_publicapi.SiteSettings": {
+    "type": "object",
+    "properties": {
+      "document": {
+        "description": "Document is null until settings have been saved.",
+        "type": "object"
+      },
+      "updatedAt": {
+        "description": "UpdatedAt is \"\" until settings have been saved. Send it back as\nexpectedUpdatedAt.",
+        "type": "string"
+      }
+    }
+  },
+  "internal_publicapi.SiteSettingsInput": {
+    "type": "object",
+    "properties": {
+      "document": {
+        "type": "array",
+        "items": {
+          "type": "integer"
+        }
+      },
+      "expectedUpdatedAt": {
+        "description": "ExpectedUpdatedAt is the `updatedAt` you read (\"\" when none was saved\nyet). REQUIRED to be present: a settings save replaces the whole document\nand is live at once, so a blind write is refused rather than defaulted.",
+        "type": "string"
+      }
+    }
+  },
+  "internal_publicapi.SiteSettingsResponse": {
+    "type": "object",
+    "properties": {
+      "siteSettings": {
+        "$ref": "#/definitions/internal_publicapi.SiteSettings"
+      }
+    }
+  },
   "internal_publicapi.Theme": {
     "type": "object",
     "properties": {
       "document": {
         "description": "Document is null until a theme has been saved.",
-        "type": "array",
-        "items": {
-          "type": "integer"
-        }
+        "type": "object"
       },
       "updatedAt": {
         "description": "UpdatedAt is \"\" until a theme has been saved. Send it back as\nexpectedUpdatedAt.",
