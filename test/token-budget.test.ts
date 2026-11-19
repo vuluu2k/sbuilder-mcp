@@ -204,7 +204,13 @@ describe('token budget — a diet without a scale comes back', () => {
     // pin with a wrong name, version or prop saves a BLANK box with only a render warning to
     // say why, and the props schema it must match lives nowhere else an agent can read. The
     // placement rules ride its once-notice, not this list.
-    expect(JSON.stringify(tools).length).toBeLessThan(43_400);
+    //
+    // 43,400 -> 44,200 buys `sb_login` + `sb_site_use` (+803; measured 43,285 -> 44,088): the
+    // whole account through a browser approval instead of a password in six config files, and
+    // moving between its sites. Without them the agent works one site per install, and an
+    // account call (sites, members, org) needed SB_PASSWORD written to disk. Descriptions were
+    // cut to one sentence each; the walkthrough rides the tools' answers, not this list.
+    expect(JSON.stringify(tools).length).toBeLessThan(44_200);
     for (const t of tools) expect(t.description, t.name).not.toMatch(/vanishes on publish/);
     const instructions = client.getInstructions() ?? '';
     expect(instructions.length).toBeGreaterThan(200);

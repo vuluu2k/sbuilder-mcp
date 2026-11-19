@@ -48,12 +48,12 @@ describe('connect()', () => {
     expect(JSON.stringify(out)).not.toContain('hunter2');
   });
 
-  it('names both env vars when neither credentials nor args are present', async () => {
+  it('says how to sign in when neither credentials nor args are present', async () => {
     const f = scriptedFetch();
     const saved = [process.env.SB_EMAIL, process.env.SB_PASSWORD];
     delete process.env.SB_EMAIL;
     delete process.env.SB_PASSWORD;
-    await expect(connect(ctx(f), {})).rejects.toThrow(/SB_EMAIL.*SB_PASSWORD/);
+    await expect(connect(ctx(f), {})).rejects.toThrow(/sb_login.*SB_TOKEN/);
     if (saved[0]) process.env.SB_EMAIL = saved[0];
     if (saved[1]) process.env.SB_PASSWORD = saved[1];
   });

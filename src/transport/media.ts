@@ -8,6 +8,7 @@ import { request as httpRequest } from 'node:http';
 import { request as httpsRequest } from 'node:https';
 import { ApiError } from './http.js';
 import { siteToken } from '../tools/credentialpick.js';
+import { keyServes } from '../tools/api.js';
 import type { ToolContext } from '../tools/context.js';
 
 export interface UploadedAsset {
@@ -107,7 +108,7 @@ async function fromUrl(
 ): Promise<UploadedAsset | null> {
   const doFetch = ctx.fetchImpl ?? fetch;
   // Its own fetch, so the 401 renewal in http.ts never sees it — renew first.
-  if (!ctx.apiKey && ctx.session.loggedIn()) await ctx.session.ensureFresh().catch(() => undefined);
+  if (ctx.session.loggedIn() && !keyServes(ctx, siteId)) await ctx.session.ensureFresh().catch(() => undefined);
   const res = await doFetch(`${ctx.base.replace(/\/$/, '')}/api/media/${encodeURIComponent(siteId)}/from-url`, {
     method: 'POST',
     headers: {
@@ -338,7 +339,7 @@ export async function uploadMedia(
   source: { path?: string; url?: string; name?: string; folderId?: string },
 ): Promise<UploadedAsset> {
   const doFetch = ctx.fetchImpl ?? fetch;
-  if (!ctx.apiKey && ctx.session.loggedIn()) await ctx.session.ensureFresh().catch(() => undefined);
+  if (ctx.session.loggedIn() && !keyServes(ctx, siteId)) await ctx.session.ensureFresh().catch(() => undefined);
 
   // THE SERVER'S OWN DOOR FIRST, when the source is a URL.
   //
@@ -417,7 +418,7 @@ export async function uploadMedia(
       // built — but the identity headers belong here as much as on any other call:
       // an install whose only traffic is image uploads is still an install.
       headers: {
-        Authorization: `Bearer ${siteToken(ctx)}`,
+        Authorization: `Bearer ${siteToken(ctx, siteId)}`,
         Accept: 'application/json',
         ...identityHeaders(),
       },
@@ -439,7 +440,9 @@ export async function uploadMedia(
   // So a refusal here is not the end of the road, and retrying costs one request
   // on a path that was failing anyway. Only when BOTH doors refuse is the key
   // itself the suspect.
-  if ((res.status === 401 || res.status === 403) && ctx.apiKey) {
+  // Only for the KEY's own site: /api/v1 names no site, so off it this retry
+  // would upload into the key's store and report success.
+  if ((res.status === 401 || res.status === 403) && keyServes(ctx, siteId)) {
     const viaPartner = await post('/api/v1/media');
     if (viaPartner.ok) res = viaPartner;
   }
@@ -477,7 +480,7 @@ export async function uploadMedia(
           'site, since a key minted for another one is refused before the upload is read. Or the ' +
           'DEPLOYMENT: /api/media took keys only from "feat(media): a wbk_ API key may upload", ' +
           'so a server older than that refuses a perfectly good key — check the running build ' +
-          "before changing the key. Failing both, set SB_EMAIL / SB_PASSWORD to upload as a person.",
+          "before changing the key. Failing both, call sb_login to upload as a person.",
       );
     }
     const env = (parsed ?? {}) as {

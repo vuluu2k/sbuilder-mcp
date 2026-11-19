@@ -8,6 +8,6 @@ import type { ToolContext } from './context.js';
  * the rule and quietly grow a second copy of it. There is exactly one answer to
  * "which token opens /api/sites", and it lives in `tokenFor`.
  */
-export function siteToken(ctx: ToolContext): string {
-  return tokenFor(ctx, 'siteScoped') as string;
+export function siteToken(ctx: ToolContext, siteId?: string): string {
+  return tokenFor(ctx, 'siteScoped', siteId) as string;
 }

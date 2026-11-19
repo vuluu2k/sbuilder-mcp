@@ -1,5 +1,7 @@
 import { targets, detected, type ClientTarget } from './paths.js';
 import { mergeInto, type ServerEntry } from './write.js';
+import { openBrowser, pollDevice, startDevice } from '../transport/device.js';
+import { readPairSync, rotate, savePair } from '../transport/stored.js';
 
 /** The name the server appears under in every client. */
 export const SERVER_NAME = 'sbuilder';
@@ -13,6 +15,8 @@ export interface InstallOpts {
   site?: string;
   /** That site's display name, written as SB_SITE_NAME. */
   siteName?: string;
+  /** Sign the machine in through the browser instead of writing a key or a password. */
+  login?: boolean;
   /** Client ids; empty means every client detected on this machine. */
   clients?: string[];
   dryRun?: boolean;
@@ -45,8 +49,12 @@ const FLAGS = [
   '--email',
   '--password',
   '--client',
+  '--login',
   '--dry-run',
 ] as const;
+
+/** Flags that take no value. */
+const SWITCHES: ReadonlySet<string> = new Set(['--login', '--dry-run']);
 
 export function buildEntry(opts: InstallOpts, pkg = 'sbuilder-mcp'): ServerEntry {
   const env: Record<string, string> = {};
@@ -64,8 +72,9 @@ export function buildEntry(opts: InstallOpts, pkg = 'sbuilder-mcp'): ServerEntry
   // and writing an account password into six config files to buy the handful of
   // account-level calls it adds is a bad trade the installer should not make for
   // someone.
-  if (!opts.token && opts.email) env.SB_EMAIL = opts.email;
-  if (!opts.token && opts.password) env.SB_PASSWORD = opts.password;
+  // Nor with --login: the point of it is that no password is written anywhere.
+  if (!opts.token && !opts.login && opts.email) env.SB_EMAIL = opts.email;
+  if (!opts.token && !opts.login && opts.password) env.SB_PASSWORD = opts.password;
   return { command: 'npx', args: ['-y', pkg], env };
 }
 
@@ -138,7 +147,7 @@ export function runInstallCli(argv: string[]): number {
     const i = argv.indexOf(f);
     if (i >= 0) {
       taken.add(i);
-      if (f !== '--dry-run') taken.add(i + 1);
+      if (!SWITCHES.has(f)) taken.add(i + 1);
     }
   }
   const unknown = argv.filter((a, i) => a.startsWith('--') && !taken.has(i));
@@ -157,13 +166,16 @@ export function runInstallCli(argv: string[]): number {
     email: get('--email') ?? process.env.SB_EMAIL,
     password: get('--password') ?? process.env.SB_PASSWORD,
     clients: get('--client')?.split(','),
+    login: argv.includes('--login'),
     dryRun: argv.includes('--dry-run'),
   };
 
-  if (!opts.token && !(opts.email && opts.password)) {
+  if (!opts.token && !(opts.email && opts.password) && !opts.login) {
     console.error(
       'sbuilder: nothing to install with.\n' +
-        '  Get a key from your store: Apps → AI agent → Create key, then\n' +
+        '  Sign in through the browser (the whole account, no key to copy):\n' +
+        '    npx -y sbuilder-mcp install --login --api https://your-host --site site_…\n' +
+        '  or use a key from your store: Apps → AI agent → Create key, then\n' +
         '    npx -y sbuilder-mcp install --token wbk_… --api https://your-host\n',
     );
     return 1;
@@ -206,4 +218,92 @@ export function runInstallCli(argv: string[]): number {
   }
   if (opts.dryRun) return 0;
   return results.some((r) => r.status === 'installed' || r.status === 'unchanged') ? 0 : 1;
+}
+
+export interface LoginDeps {
+  log?: (line: string) => void;
+  sleep?: (ms: number) => Promise<void>;
+  fetchImpl?: typeof fetch;
+  open?: (url: string) => boolean;
+  version?: string;
+}
+
+/** The stored login's email when it still works (renewing it once if refused), else undefined. */
+async function storedUser(api: string, f: typeof fetch): Promise<string | undefined> {
+  let pair = readPairSync(api);
+  for (let attempt = 0; pair && attempt < 2; attempt++) {
+    const res = await f(`${api.replace(/\/+$/, '')}/api/auth/me`, {
+      headers: { Authorization: `Bearer ${pair.accessToken}` },
+    }).catch(() => null);
+    if (res?.ok) {
+      const me = (await res.json().catch(() => ({}))) as { user?: { email?: string } };
+      return me.user?.email || 'this account';
+    }
+    if (res?.status !== 401) return undefined;
+    pair = await rotate(api, pair.accessToken, f).catch(() => undefined);
+  }
+  return undefined;
+}
+
+/**
+ * `install --login`: the browser sign-in `sb login` does, in this terminal.
+ * Reuses a login the machine already holds. Returns false when it did not sign in.
+ */
+export async function deviceLogin(api: string, deps: LoginDeps = {}): Promise<boolean> {
+  const log = deps.log ?? ((l: string) => console.error(l));
+  const sleep = deps.sleep ?? ((ms: number) => new Promise((r) => setTimeout(r, ms)));
+  const f = deps.fetchImpl ?? fetch;
+  const already = await storedUser(api, f);
+  if (already) {
+    log(`✔ Already signed in as ${already} on ${api}.`);
+    return true;
+  }
+  const s = await startDevice(api, deps.version ?? '0.0.0', f);
+  log('Sign in to Store Builder');
+  log(`  1. Open    ${s.verificationUri}`);
+  log(`  2. Type    ${s.userCode}`);
+  log(`  3. Check the page shows the same code, then Approve. It expires in ${Math.round(s.expiresIn / 60)} minutes.`);
+  if ((deps.open ?? openBrowser)(s.verificationUri)) log('Opened the page in your browser. Waiting for approval…');
+  let interval = s.interval * 1000;
+  const deadline = Date.now() + s.expiresIn * 1000;
+  while (Date.now() < deadline) {
+    await sleep(interval);
+    // A dropped connection is not a refusal; anything else the server says is.
+    const r = await pollDevice(api, s.deviceCode, f).catch((err: unknown) => {
+      if (err instanceof TypeError) return { state: 'pending' as const };
+      throw err;
+    });
+    if (r.state === 'approved') {
+      await savePair(api, r.pair);
+      log('✔ Signed in. The login is kept on this machine (shared with the sb CLI).');
+      return true;
+    }
+    if (r.state === 'slow') interval += 5000;
+    if (r.state === 'denied') {
+      log('✖ The sign-in was denied in the browser. Nothing was installed.');
+      return false;
+    }
+    if (r.state === 'expired') break;
+  }
+  log('✖ The code expired before it was approved. Run the command again.');
+  return false;
+}
+
+/** The CLI entry: signs in first when --login is given, then writes the clients. */
+export async function runInstall(argv: string[], deps: LoginDeps = {}): Promise<number> {
+  if (argv.includes('--login') && !argv.includes('--dry-run')) {
+    const i = argv.indexOf('--api');
+    const api = (i >= 0 ? argv[i + 1] : undefined) ?? process.env.SB_API;
+    if (!api) {
+      console.error('sbuilder: --login needs --api https://your-host (the platform to sign in to).');
+      return 1;
+    }
+    try {
+      if (!(await deviceLogin(api, deps))) return 1;
+    } catch (err) {
+      console.error((err as Error).message);
+      return 1;
+    }
+  }
+  return runInstallCli(argv);
 }

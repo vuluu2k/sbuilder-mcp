@@ -5,6 +5,7 @@ import { text } from '../mcp/response.js';
 import { API_OPERATIONS } from '../catalog/api.generated.js';
 import { PLATFORM_SOURCE } from '../catalog/source.generated.js';
 import type { ToolContext } from './context.js';
+import { accountSummary } from './login.js';
 
 export interface ConnectResult {
   user: string;
@@ -71,12 +72,36 @@ export function catalogAge(now = new Date()): string {
  * failing the whole connect over it would hide that from a caller who does not
  * need /api/v1 at all.
  */
+const LIVE_HINT =
+  'Nobody watching an open editor sees these edits until sb_live_join is called. Call it ' +
+  'now if a person has the site open — it always yields to a human, and is safe to leave on ' +
+  'for the whole session.';
+
 export async function connect(
   ctx: ToolContext,
   args: { email?: string; password?: string },
 ): Promise<ConnectResult> {
   const email = args.email ?? process.env.SB_EMAIL;
   const password = args.password ?? process.env.SB_PASSWORD;
+
+  // THE MACHINE'S ACCOUNT LOGIN (sb_login / install --login / sb login): the
+  // whole account, every site, no password anywhere.
+  if (ctx.session.isStored() && !(args.email && args.password)) {
+    const acct = await accountSummary(ctx);
+    return {
+      user: acct.user,
+      sites: acct.sites,
+      api_key: ctx.apiKey ? 'present' : 'missing',
+      ...(acct.site ? { site: acct.site } : {}),
+      ...(acct.site_name ? { site_name: acct.site_name } : {}),
+      operations: API_OPERATIONS.length,
+      ...(catalogAge() ? { catalog: catalogAge() } : {}),
+      note:
+        'Signed in to the whole account (browser login). ' + acct.note +
+        (ctx.apiKey ? '' : ' /api/v1 operations need an API key; use the /api/sites/{siteId}/… ones.'),
+      live: LIVE_HINT,
+    };
+  }
 
   // KEY-ONLY MODE. An API key from the site's Agent app opens both surfaces on
   // its own, which is the whole point of the connect button: one env var, no
@@ -96,12 +121,13 @@ export async function connect(
         ? `Connected with an API key alone, on site ${ctx.siteId} (SB_SITE)${
             ctx.siteName ? `, the store called ${JSON.stringify(ctx.siteName)}` : ''
           }. Every tool ` +
-          'defaults to it, so site_id is optional. Set SB_EMAIL and SB_PASSWORD as well if ' +
-          'you want account-level calls (listing sites, members, roles), which a key cannot make.'
+          'defaults to it, so site_id is optional. Call sb_login (approve in the browser) for ' +
+          'account-level calls and other sites (listing sites, members, roles, sb_site_use), ' +
+          'which a key cannot make.'
         : 'Connected with an API key alone. It is bound to one site, so there is no site list — ' +
-          'pass that site id to sb_page_open, or set SB_SITE once and leave site_id out. Set ' +
-          'SB_EMAIL and SB_PASSWORD as well if you want account-level calls (listing sites, ' +
-          'members, roles), which a key cannot make.',
+          'pass that site id to sb_page_open, or set SB_SITE once and leave site_id out. Call ' +
+          'sb_login (approve in the browser) for account-level calls and other sites, which a ' +
+          'key cannot make.',
       // SAID HERE BECAUSE HERE IS WHERE IT IS STILL FREE.
       //
       // `sb_live_join` is opt-in and one call, and an agent that never makes it
@@ -115,17 +141,15 @@ export async function connect(
       // an editor open beside it and never joined, because no surface an agent
       // reads on the way in mentions the room. The tool's own description says
       // what it does; nothing said WHEN. Connect is that when.
-      live:
-        'Nobody watching an open editor sees these edits until sb_live_join is called. Call it ' +
-        'now if a person has the site open — it takes this key\'s own name, always yields to a ' +
-        'human, and is safe to leave on for the whole session.',
+      live: LIVE_HINT,
     };
   }
 
   if (!email || !password) {
     throw new Error(
-      'sbuilder: set SB_TOKEN to an API key from the site\'s Agent app, or set SB_EMAIL and ' +
-        'SB_PASSWORD for a full account session.',
+      'sbuilder: not signed in. Call sb_login — it opens the browser, the person types a code and ' +
+        'approves, and the whole account is reachable. (Or set SB_TOKEN to an API key from the ' +
+        'site\'s Agent app.)',
     );
   }
   await ctx.session.login(email, password);
@@ -160,8 +184,7 @@ export function registerSessionTools(server: McpServer, ctx: ToolContext): void 
     'sb_connect',
     {
       description:
-        'Log in and list the sites this account can operate. Call this first. Reads SB_EMAIL and ' +
-          'SB_PASSWORD from the environment unless you pass them.',
+        'Call this first: what this install can reach, and the account\'s sites.',
       inputSchema: {
       email: z.string().optional(),
       password: z.string().optional(),
@@ -193,12 +216,12 @@ export function registerSessionTools(server: McpServer, ctx: ToolContext): void 
               (ctx.siteId
                 ? `This install works on ${ctx.siteId} (SB_SITE).`
                 : 'Set SB_SITE to the site you mean.') +
-              ' Set SB_EMAIL and SB_PASSWORD if you genuinely need the account-level list.',
+              ' Call sb_login (approve in the browser) if you need the account-level list.',
           );
         }
         throw new Error(
-          'sbuilder: no credential. Set SB_TOKEN to an API key, or SB_EMAIL and SB_PASSWORD ' +
-            'and call sb_connect.',
+          'sbuilder: no credential. Call sb_login (approve in the browser), or set SB_TOKEN to an ' +
+            'API key.',
         );
       }
       return text(

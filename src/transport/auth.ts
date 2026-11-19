@@ -1,4 +1,5 @@
 import { onUnauthorized, request } from './http.js';
+import { RELOGIN, rotate, takePair, type TokenPair as StoredPair } from './stored.js';
 
 interface TokenPair {
   accessToken: string;
@@ -30,6 +31,13 @@ export class Session {
   private expiresAt = 0;
   private refreshToken: string | null = null;
   private name = '';
+  /**
+   * The pair came from the machine's shared login file (sb login / sb_login),
+   * not from a password sign-in of this process. Two consequences: a refresh
+   * goes through the file's lock (other processes hold the same pair), and
+   * exiting does NOT sign it out — the login belongs to the machine.
+   */
+  private stored = false;
 
   constructor(
     private readonly base: string,
@@ -65,6 +73,57 @@ export class Session {
     return this.name;
   }
 
+  set userName(v: string) {
+    this.name = v;
+  }
+
+  /** True when this session is the machine's shared account login. */
+  isStored(): boolean {
+    return this.stored && this.access !== null;
+  }
+
+  /**
+   * Take over the machine's stored login. A password session this process
+   * opened is signed out first, so it does not strand a device slot.
+   */
+  async adoptStored(pair: StoredPair): Promise<void> {
+    // No await when nothing is held, so a boot-time adoption is synchronous.
+    if (!this.stored && this.access) await this.logout();
+    this.stored = true;
+    this.access = pair.accessToken;
+    this.refreshToken = pair.refreshToken;
+    // A stored pair carries no expiresIn; the token's own `exp` says when, so
+    // ensureFresh() can renew before a call that cannot retry (uploads, socket).
+    this.expiresAt = jwtExpiry(pair.accessToken);
+    this.listen();
+  }
+
+  /**
+   * Sign the MACHINE out: revoke the stored login on the server and remove it
+   * from the shared file. Every MCP window and the sb CLI lose it together.
+   */
+  async forgetStored(): Promise<void> {
+    await this.renewing?.catch(() => undefined);
+    const mine = this.refreshToken;
+    this.stored = false;
+    this.access = null;
+    this.refreshToken = null;
+    this.unrenew?.();
+    this.unrenew = null;
+    // Revoke what the FILE holds — `sb login` may have replaced the pair this
+    // process adopted — and the one in memory if it differs.
+    const filed = await takePair(this.base);
+    for (const rt of new Set([filed?.refreshToken, mine].filter(Boolean) as string[])) {
+      await request({
+        base: this.base,
+        method: 'POST',
+        path: '/api/auth/logout',
+        body: { refreshToken: rt },
+        fetchImpl: this.fetchImpl,
+      }).catch((err) => console.error('[sbuilder-mcp] sign-out failed:', (err as Error).message));
+    }
+  }
+
   token(): string {
     if (!this.access) throw new Error('sbuilder: not logged in — call sb_connect first');
     return this.access;
@@ -87,6 +146,7 @@ export class Session {
     // A second sb_connect in one process would otherwise strand the first
     // device session — see logout().
     await this.logout();
+    this.stored = false;
     const out = (await request({
       base: this.base,
       method: 'POST',
@@ -105,6 +165,28 @@ export class Session {
   async refresh(): Promise<void> {
     const rt = this.refreshToken;
     if (!rt) throw new Error('sbuilder: no refresh token — log in first');
+    if (this.stored) {
+      const stale = this.access;
+      let next: StoredPair;
+      try {
+        next = await rotate(this.base, stale ?? '', this.fetchImpl ?? fetch);
+      } catch (err) {
+        // The login is gone (or the file is): stop presenting a dead token.
+        if ((err as Error).message === RELOGIN) {
+          this.access = null;
+          this.refreshToken = null;
+          this.unrenew?.();
+          this.unrenew = null;
+        }
+        throw err;
+      }
+      if (this.refreshToken !== rt) return;
+      if (this.access) this.retired.add(this.access);
+      this.access = next.accessToken;
+      this.refreshToken = next.refreshToken;
+      this.expiresAt = jwtExpiry(next.accessToken);
+      return;
+    }
     const out = (await request({
       base: this.base,
       method: 'POST',
@@ -150,11 +232,14 @@ export class Session {
     // brings back, not the one it just spent (presenting a used one ends the session).
     await this.renewing?.catch(() => undefined);
     const refreshToken = this.refreshToken;
+    const shared = this.stored;
     this.access = null;
     this.refreshToken = null;
     this.unrenew?.();
     this.unrenew = null;
-    if (!refreshToken) return;
+    // THE MACHINE'S login, shared with other windows and the sb CLI: a process
+    // exiting is not the person signing out. forgetStored() is that.
+    if (!refreshToken || shared) return;
     try {
       await request({
         base: this.base,
@@ -166,6 +251,18 @@ export class Session {
     } catch (err) {
       console.error('[sbuilder-mcp] sign-out failed:', (err as Error).message);
     }
+  }
+}
+
+/** A JWT's `exp` as an epoch-ms deadline; 0 when it is not a JWT or has none. */
+export function jwtExpiry(token: string): number {
+  try {
+    const part = token.split('.')[1];
+    if (!part) return 0;
+    const exp = (JSON.parse(Buffer.from(part, 'base64url').toString('utf8')) as { exp?: unknown }).exp;
+    return typeof exp === 'number' && exp > 0 ? exp * 1000 : 0;
+  } catch {
+    return 0;
   }
 }
 

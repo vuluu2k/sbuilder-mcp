@@ -18,6 +18,13 @@ export interface ToolContext {
    * did not choose.
    */
   siteName?: string;
+  /**
+   * The site SB_TOKEN belongs to (SB_SITE at boot, when a key is set). Fixed
+   * for the process, unlike `siteId`, which sb_site_use moves: once the agent
+   * works on another site, the key must stop being offered — it would be
+   * refused there, and /api/v1 would silently act on the KEY's store.
+   */
+  keySite?: string;
   /** Injected in tests; undefined means global fetch. */
   fetchImpl?: typeof fetch;
   /** Injected in tests; undefined means a real DNS lookup (every address of the host). */

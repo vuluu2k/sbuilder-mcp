@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { buildContext, createServer } from './server.js';
-import { runInstallCli } from './install/index.js';
+import { runInstall } from './install/index.js';
+import { pkgVersion } from './server.js';
 import { closeBrowser } from './vision/shoot.js';
 
 async function main(): Promise<void> {
@@ -9,7 +10,7 @@ async function main(): Promise<void> {
   // machine and exits. Checked BEFORE the transport opens: an installer that
   // also spoke MCP on stdout would corrupt the protocol for whatever ran it.
   if (process.argv[2] === 'install') {
-    process.exit(runInstallCli(process.argv.slice(3)));
+    process.exit(await runInstall(process.argv.slice(3), { version: pkgVersion() }));
   }
   const ctx = buildContext();
   const server = createServer(ctx);

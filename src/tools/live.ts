@@ -53,6 +53,7 @@ import { offscreenNodes, offscreenRootOf } from '../domains/site/offscreen.js';
 import { searchStock, SearchUnavailable, NO_SEARCH_NEXT, type StockPhoto } from '../transport/stock.js';
 import { siteFor, type ToolContext } from './context.js';
 import { siteToken } from './credentialpick.js';
+import { keyServes } from './api.js';
 import { projectList, MEDIA_FIELDS } from './project.js';
 import type { PageSession } from './page.js';
 
@@ -372,17 +373,17 @@ export function setEvent(
  * rotates, and a captured string replays an expired token forever on every
  * reconnect — silently, because a rejected socket auth still fires `onopen`.
  */
-export function liveTokenFor(ctx: ToolContext): () => string {
+export function liveTokenFor(ctx: ToolContext, siteId?: string): () => string {
   if (!ctx.session.loggedIn() && !ctx.apiKey) {
     throw new Error(
-      'sbuilder: the live-edit room needs a credential. Set SB_TOKEN, or SB_EMAIL and ' +
-        'SB_PASSWORD, and call sb_connect before sb_live_join.',
+      'sbuilder: the live-edit room needs a credential. Call sb_login (or set SB_TOKEN) ' +
+        'before sb_live_join.',
     );
   }
-  // Prefer the key, for the reason `tokenFor` prefers it everywhere: a key is
-  // narrower — one site, its own scopes, revocable on its own — while a session
-  // carries the whole account.
-  return () => (ctx.apiKey ? ctx.apiKey : ctx.session.token());
+  // The same rule as every other call (tokenFor): the narrower key on ITS site,
+  // the account login on any other — a key is refused by another site's room,
+  // and a refused socket fails silently.
+  return () => siteToken(ctx, siteId);
 }
 
 /**
@@ -403,14 +404,14 @@ export function liveTokenFor(ctx: ToolContext): () => string {
  * different site or re-join after a drop.
  */
 export function joinRoom(ctx: ToolContext, session: PageSession, siteId: string): void {
-  const tokenFn = liveTokenFor(ctx);
+  const tokenFn = liveTokenFor(ctx, siteId);
   const wsBase = ctx.base.replace(/^http/, 'ws').replace(/\/$/, '');
   const socket = new RealtimeSocket(
     `${wsBase}/api/realtime/ws?site=${encodeURIComponent(siteId)}`,
     tokenFn,
     undefined,
     // A key never expires this way; a session renews near its end of life.
-    ctx.apiKey ? undefined : () => ctx.session.ensureFresh(),
+    keyServes(ctx, siteId) ? undefined : () => ctx.session.ensureFresh(),
   );
   const live = new LiveSession(socket, {
     onRemote: (patches) => session.applyRemote(patches),

@@ -2406,11 +2406,11 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
       if (!crossSite && to_page_id === from.pageId) {
         throw new Error('sbuilder: that is the open page — omit to_page_id to duplicate in place.');
       }
-      if (crossSite && ctx.apiKey) {
+      if (crossSite && ctx.apiKey && !ctx.session.loggedIn()) {
         // A key belongs to exactly ONE site, and every /api/sites route prefers it.
         throw new Error(
-          'sbuilder: a cross-site paste needs a session login — an API key (SB_TOKEN) opens one site only. ' +
-            'Unset SB_TOKEN and connect with SB_EMAIL/SB_PASSWORD as a member of both sites.',
+          'sbuilder: a cross-site paste needs the account login — an API key (SB_TOKEN) opens one site only. ' +
+            'Call sb_login (as a member of both sites), then paste again.',
         );
       }
       // A FROZEN copy of the source: opening the target replaces the session's document.

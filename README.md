@@ -14,6 +14,21 @@ One command writes this server into every agent client on your machine:
 npx -y sbuilder-mcp install --token wbk_… --api https://your-host --site site_…
 ```
 
+### Or sign in the whole account in the browser
+
+```bash
+npx -y sbuilder-mcp@latest install --login --api https://your-host --site site_…
+```
+
+It prints a code and opens the platform's sign-in page: type the code, check it matches, press
+**Approve**. No key and no password is written anywhere — the login is kept in
+`~/.config/sb/credentials.json` (owner-only), **the same file `sb login` uses**, so one approval
+signs in the CLI and every agent window together, and survives restarts. `--site` is the site
+the agent starts on; with the account it can reach every site you can, and `sb_site_use` moves
+it. Already signed in? The command says so and skips the browser. Inside a chat, `sb_login`
+does the same thing (the first call returns the code, the next one waits for the approval), and
+`sb_login action:"logout"` signs the machine out.
+
 It knows Claude Code, Claude Desktop, Cursor, Windsurf, VS Code and Codex, and installs into
 the ones it finds. Name them with `--client cursor,codex`, or rehearse with `--dry-run`. An
 option it does not know is **refused**, not ignored — a flag that silently does nothing is
@@ -62,9 +77,12 @@ site API, including the page document and the live-edit socket, and it is bounde
 on every request: its own scopes, the live role of the member who created it, and the single
 store it belongs to.
 
-`SB_EMAIL` + `SB_PASSWORD` remain optional, and buy exactly one thing: **account-level**
-calls — listing your sites, managing members and roles — which a key deliberately cannot
-make, because those mean "this person's account".
+Account-level calls — listing your sites, managing members and roles, working on another
+site — are what a key deliberately cannot make, because those mean "this person's account".
+For those, sign in with `install --login` / `sb_login` (above). `SB_EMAIL` + `SB_PASSWORD`
+still work, but put a password in every config file the installer touches. With both a key
+and the account login, the key is used on its own site and the account everywhere else;
+`/api/v1` (which names no site) is refused once the agent moved off the key's site.
 
 `SB_API` defaults to `http://localhost:8080`. Secrets are read from the environment only.
 
@@ -82,6 +100,8 @@ in this client: one would put the very key the platform exists to hold back into
 | --- | --- |
 | `sb_connect` | Log in, list the sites this account can operate, report which credentials are present |
 | `sb_site_list` | List the sites this account can operate |
+| `sb_login` | Sign the whole account in through the browser (a code to type + Approve); remembered on this machine, shared with `sb login`; `action:"logout"` signs out |
+| `sb_site_use` | Switch the site every tool defaults to, among the account's sites |
 | `sb_api_find` | Find API operations by intent — one line per match — then read one operation's call sheet by id: real parameter schemas, the credential it needs, and the body's fields read off the handler that decodes them, each carrying the trap its own doc comment records |
 | `sb_api_call` | Execute an operation, or any route by method+path; dry run by default. Field selection (dotted paths, on lists and single-object write answers) and local result pagination; `merge` for whole-record PUTs, `If-Match`, multipart `file` |
 | `sb_page_open` | Open a page for editing and return its outline — or, with `form_id`, a form's field document (fields, defaults, dependent-field rules) |

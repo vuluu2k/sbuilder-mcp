@@ -194,7 +194,7 @@ async function writeLocale(
 function refusal(siteId: string, what: string, refused: string[], ctx: ToolContext): Error {
   return new Error(
     `sbuilder: 403 — the platform refused to ${what} on ${siteId} with ${refused.join(' and ')}` +
-      (ctx.apiKey && !ctx.session.loggedIn() ? ' (no session to try: set SB_EMAIL/SB_PASSWORD)' : '') +
+      (ctx.apiKey && !ctx.session.loggedIn() ? ' (no account login to try: call sb_login)' : '') +
       '. The whole-settings write needs settings permission; a locale-only write needs ' +
       'pages.write on a platform that has it. Nothing was changed.',
   );

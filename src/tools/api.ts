@@ -371,7 +371,26 @@ export function shapeResponse(
  * session carries the whole account. Preferring it is also what lets a merchant
  * connect an agent with one env var and no password.
  */
-export function tokenFor(ctx: ToolContext, credential: string): string | undefined {
+/**
+ * The session moved off the site the API key belongs to. `keySite` is '' when a
+ * key was given with no SB_SITE: its site is unknown, so ANY switch counts.
+ */
+export function onOtherSite(ctx: ToolContext): boolean {
+  return ctx.keySite !== undefined && !!ctx.siteId && ctx.siteId !== ctx.keySite;
+}
+
+/**
+ * May the API key act for `siteId` (default: the current site)? Never once the
+ * session moved elsewhere — a key refused there is retried through /api/v1,
+ * which acts on the KEY's store: a write on the wrong site, reported as success.
+ */
+export function keyServes(ctx: ToolContext, siteId?: string): boolean {
+  if (!ctx.apiKey) return false;
+  if (ctx.keySite && siteId !== undefined) return siteId === ctx.keySite;
+  return !onOtherSite(ctx);
+}
+
+export function tokenFor(ctx: ToolContext, credential: string, siteId?: string): string | undefined {
   if (credential === 'apiKey') {
     // Naming the env var matters: the alternative is a 401 api_key_required
     // from the platform, which reads like a permissions problem rather than an
@@ -379,10 +398,27 @@ export function tokenFor(ctx: ToolContext, credential: string): string | undefin
     if (!ctx.apiKey) {
       throw new Error('sbuilder: SB_TOKEN is not set — /api/v1 operations need an API key');
     }
+    // /api/v1 names no site: the KEY decides which store it acts on. After a
+    // switch, a call meant for the current site would land on the key's.
+    if (onOtherSite(ctx)) {
+      throw new Error(
+        `sbuilder: /api/v1 acts on the API key's own site (${ctx.keySite}), and this session ` +
+          `now works on ${ctx.siteId}. Use the /api/sites/{siteId}/… operation instead, or ` +
+          `sb_site_use ${ctx.keySite} to go back.`,
+      );
+    }
     return ctx.apiKey;
   }
   if (credential === 'siteScoped') {
-    if (ctx.apiKey) return ctx.apiKey;
+    // The key on its own site; the account login anywhere else. Never the key
+    // off its site, even when the login is gone: that is a wrong-site write.
+    if (keyServes(ctx, siteId)) return ctx.apiKey;
+    if (ctx.apiKey && !ctx.session.loggedIn()) {
+      throw new Error(
+        'sbuilder: this session works on another site than the API key\'s, and the account ' +
+          'login is gone. Call sb_login again, or sb_site_use the key\'s own site.',
+      );
+    }
     if (ctx.session.loggedIn()) return ctx.session.token();
     throw new Error(
       'sbuilder: no credential for this site. Set SB_TOKEN to an API key from the site\'s ' +

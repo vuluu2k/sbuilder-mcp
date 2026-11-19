@@ -14,6 +14,21 @@ Một lệnh ghi server này vào mọi agent client trên máy bạn:
 npx -y sbuilder-mcp install --token wbk_… --api https://your-host --site site_…
 ```
 
+### Hoặc đăng nhập cả tài khoản bằng trình duyệt
+
+```bash
+npx -y sbuilder-mcp@latest install --login --api https://your-host --site site_…
+```
+
+Lệnh in ra một mã và mở trang đăng nhập của nền tảng: gõ mã, kiểm tra khớp, bấm **Đồng ý**.
+Không khoá, không mật khẩu nào bị ghi ra — phiên đăng nhập được giữ trong
+`~/.config/sb/credentials.json` (chỉ chủ máy đọc được), **cùng file với `sb login`**, nên một lần
+đồng ý là CLI và mọi cửa sổ agent đều đăng nhập, và vẫn còn sau khi khởi động lại. `--site` là
+site agent bắt đầu làm; với cả tài khoản nó với tới mọi site bạn có quyền, và `sb_site_use`
+chuyển site. Đã đăng nhập rồi thì lệnh báo và bỏ qua trình duyệt. Ngay trong cuộc chat,
+`sb_login` làm việc tương tự (lần gọi đầu trả mã, lần sau chờ bạn đồng ý), và
+`sb_login action:"logout"` đăng xuất máy.
+
 Nó biết Claude Code, Claude Desktop, Cursor, Windsurf, VS Code và Codex, và cài vào những
 cái nó tìm thấy. Chỉ định bằng `--client cursor,codex`, hoặc diễn thử với `--dry-run`. Một
 tuỳ chọn nó không biết sẽ bị **từ chối**, không phải bỏ qua — một cờ âm thầm không làm gì
@@ -59,9 +74,12 @@ Một khoá là đủ. Nó với tới cả bề mặt đối tác (`/api/v1`) l
 trang và socket live-edit, và bị chặn ba lớp ở mỗi request: scope của chính nó, role sống của
 thành viên đã tạo ra nó, và đúng một cửa hàng nó thuộc về.
 
-`SB_EMAIL` + `SB_PASSWORD` vẫn tuỳ chọn, và mua đúng một thứ: các lệnh **cấp tài khoản** —
-liệt kê site, quản lý thành viên và role — mà khoá cố ý không làm được, vì những thứ đó nghĩa
-là "tài khoản của người này".
+Các lệnh **cấp tài khoản** — liệt kê site, quản lý thành viên và role, làm việc trên site
+khác — là thứ khoá cố ý không làm được, vì chúng nghĩa là "tài khoản của người này". Muốn có
+thì đăng nhập bằng `install --login` / `sb_login` (ở trên). `SB_EMAIL` + `SB_PASSWORD` vẫn
+dùng được, nhưng ghi mật khẩu vào mọi file cấu hình. Có cả khoá lẫn đăng nhập tài khoản thì
+khoá dùng trên site của nó, tài khoản dùng ở mọi site khác; `/api/v1` (không ghi site) bị từ
+chối khi agent đã chuyển khỏi site của khoá.
 
 `SB_API` mặc định `http://localhost:8080`. Bí mật chỉ đọc từ biến môi trường.
 
@@ -79,6 +97,8 @@ nhét ngược lại vào mọi bản cài.
 | --- | --- |
 | `sb_connect` | Đăng nhập, liệt kê site tài khoản vận hành được, báo đang có credential nào |
 | `sb_site_list` | Liệt kê site tài khoản vận hành được |
+| `sb_login` | Đăng nhập cả tài khoản bằng trình duyệt (gõ mã + Đồng ý); nhớ trên máy, dùng chung với `sb login`; `action:"logout"` để đăng xuất |
+| `sb_site_use` | Đổi site mọi tool mặc định làm việc, trong các site của tài khoản |
 | `sb_api_find` | Tìm operation theo ý định — mỗi kết quả một dòng — rồi đọc call sheet của một operation theo id: schema tham số thật, credential cần dùng, và các trường body đọc thẳng từ handler decode chúng, mỗi trường mang theo cái bẫy doc comment của chính nó ghi lại |
 | `sb_api_call` | Chạy operation, hoặc bất kỳ route nào bằng method+path; mặc định chạy khô. Chọn field (đường dẫn có dấu chấm, trên danh sách lẫn câu trả lời ghi một object) và phân trang kết quả phía MCP; `merge` cho PUT thay cả bản ghi, `If-Match`, `file` multipart |
 | `sb_page_open` | Mở một trang để sửa và trả về outline — hoặc, với `form_id`, tài liệu trường của biểu mẫu (trường, giá trị mặc định, quy tắc trường phụ thuộc) |
