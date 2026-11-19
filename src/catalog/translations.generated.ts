@@ -4,7 +4,7 @@
 export const TRANSLATION_SOURCE = {
   "elements": 68,
   "pairs": 190,
-  "neverKeys": 188,
+  "neverKeys": 191,
   "entityTypes": 12
 } as const;
 
@@ -392,6 +392,7 @@ export const NEVER_TRANSLATED: string[] = [
   "boundMoneyOverride",
   "boundPriceCents",
   "boundProductURL",
+  "boundTags",
   "boundValue",
   "breakEnd",
   "breakStart",
@@ -450,6 +451,7 @@ export const NEVER_TRANSLATED: string[] = [
   "hrefParams",
   "html",
   "htmlTag",
+  "hydrateProps",
   "icon",
   "iconEnabled",
   "iconName",
@@ -548,6 +550,7 @@ export const NEVER_TRANSLATED: string[] = [
   "stepMode",
   "stylePreset",
   "symbolChar",
+  "tag",
   "target",
   "thresholdCents",
   "trackUrl",

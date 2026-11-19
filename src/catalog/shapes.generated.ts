@@ -4,12 +4,12 @@
 import type { RequestShape } from './types.js';
 
 export const SHAPE_SOURCE = {
-  "writeOperations": 464,
-  "shaped": 373,
-  "fromHandlers": 362,
+  "writeOperations": 465,
+  "shaped": 374,
+  "fromHandlers": 363,
   "fromSwaggerOnly": 11,
   "withReadOnly": 29,
-  "structsRead": 3847
+  "structsRead": 3867
 } as const;
 
 export const REQUEST_SHAPES: Record<string, RequestShape> = {
@@ -10293,6 +10293,24 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
     ],
     "source": "go",
     "goType": "CodeComponentInput"
+  },
+  "post:/api/v1/code-components/preview": {
+    "fields": [
+      {
+        "name": "ssrBundle",
+        "type": "string"
+      },
+      {
+        "name": "propsSchema",
+        "type": "object"
+      },
+      {
+        "name": "props",
+        "type": "{ [string]: any }"
+      }
+    ],
+    "source": "go",
+    "goType": "CodeComponentPreviewInput"
   },
   "post:/api/v1/code-files": {
     "fields": [

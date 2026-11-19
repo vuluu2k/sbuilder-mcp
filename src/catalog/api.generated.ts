@@ -3,9 +3,9 @@
 import type { ApiOperation } from './types.js';
 
 export const SWAGGER_SOURCE = {
-  "operations": 1007,
-  "definitions": 437,
-  "bodyCarrying": 484,
+  "operations": 1009,
+  "definitions": 441,
+  "bodyCarrying": 485,
   "bodyUndescribed": 122,
   "generatedFrom": "server/docs/swagger.json"
 } as const;
@@ -29005,6 +29005,27 @@ export const API_OPERATIONS: ApiOperation[] = [
     "credential": "apiKey"
   },
   {
+    "id": "post:/api/v1/code-components/preview",
+    "method": "POST",
+    "path": "/api/v1/code-components/preview",
+    "tags": [
+      "v1"
+    ],
+    "summary": "Render an unstored SSR bundle once, before uploading it",
+    "params": [
+      {
+        "name": "preview",
+        "in": "body",
+        "required": true,
+        "type": "object",
+        "description": "Bundle, props schema and props"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "internal_publicapi.CodeComponentPreviewInput",
+    "credential": "apiKey"
+  },
+  {
     "id": "get:/api/v1/code-components/{name}",
     "method": "GET",
     "path": "/api/v1/code-components/{name}",
@@ -31138,6 +31159,27 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": true,
     "bodyRef": "internal_publicapi.PageDocumentInput",
+    "credential": "apiKey"
+  },
+  {
+    "id": "get:/api/v1/pages/{id}/preview",
+    "method": "GET",
+    "path": "/api/v1/pages/{id}/preview",
+    "tags": [
+      "v1"
+    ],
+    "summary": "Mint a draft-preview link for one page",
+    "params": [
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Page ID"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
     "credential": "apiKey"
   },
   {
@@ -40625,6 +40667,29 @@ export const API_DEFINITIONS: Record<string, unknown> = {
       }
     }
   },
+  "internal_publicapi.CodeComponentPreviewInput": {
+    "type": "object",
+    "properties": {
+      "props": {
+        "type": "object",
+        "additionalProperties": {}
+      },
+      "propsSchema": {
+        "type": "object"
+      },
+      "ssrBundle": {
+        "type": "string"
+      }
+    }
+  },
+  "internal_publicapi.CodeComponentPreviewResponse": {
+    "type": "object",
+    "properties": {
+      "html": {
+        "type": "string"
+      }
+    }
+  },
   "internal_publicapi.CodeComponentResponse": {
     "type": "object",
     "properties": {
@@ -42060,6 +42125,23 @@ export const API_DEFINITIONS: Record<string, unknown> = {
       },
       "type": {
         "type": "string"
+      }
+    }
+  },
+  "internal_publicapi.PagePreview": {
+    "type": "object",
+    "properties": {
+      "url": {
+        "description": "URL opens the page's saved draft as a visitor would see it. Signed, valid\nfor one hour, needs no credential: whoever holds it can view the draft.",
+        "type": "string"
+      }
+    }
+  },
+  "internal_publicapi.PagePreviewResponse": {
+    "type": "object",
+    "properties": {
+      "preview": {
+        "$ref": "#/definitions/internal_publicapi.PagePreview"
       }
     }
   },

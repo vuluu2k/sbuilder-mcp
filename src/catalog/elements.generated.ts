@@ -17128,7 +17128,8 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "direction": "vertical",
           "gap": 8
         },
-        "optionGap": ""
+        "optionGap": "",
+        "showAttributes": []
       },
       "specials": {
         "displayType": "select",
@@ -17361,7 +17362,8 @@ export const ELEMENTS: Record<string, CatalogElement> = {
             "key": "variant_display",
             "label": "Variant display",
             "controls": [
-              "variant_display"
+              "variant_display",
+              "variant_show_attributes"
             ]
           },
           {
@@ -17457,6 +17459,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
       "displayType",
       "defaultVariant",
       "variant_display",
+      "variant_show_attributes",
       "variant_label",
       "variant_option",
       "width_select",
@@ -17488,6 +17491,8 @@ export const ELEMENTS: Record<string, CatalogElement> = {
       "Seed config.attributes with { name, values } objects — one per product attribute",
       "Use specials.displayType: \"select\" for a dropdown, \"image_label\" for image+label buttons, or \"image\" for image swatches",
       "Use specials.defaultVariant.enabled + values to pre-select a value per attribute",
+      "A product CARD in a list (product-list / dataset card) should usually show only the colour axis: set config.showAttributes to that one attribute name (e.g. [\"Color\"] or [\"Màu sắc\"]) and leave Size for the product page buy box, which keeps showAttributes empty (= every attribute)",
+      "config.showAttributes matches attribute names trimmed and case-insensitively, keeps the product order, and drops a name the product does not have",
       "Style the attribute labels through the product-variant-label satellite and the options through the product-variant-option satellite",
       "Do not add children — the blocks, labels and options are rendered internally"
     ],
@@ -27859,8 +27864,10 @@ export const ELEMENTS: Record<string, CatalogElement> = {
       "specials": {
         "mode": "percent",
         "text": "Sale",
+        "tag": "",
         "boundPriceCents": "",
-        "boundCompareCents": ""
+        "boundCompareCents": "",
+        "boundTags": ""
       },
       "style": {
         "display": "inline-flex",
@@ -27893,6 +27900,11 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "field": "specials.boundCompareCents"
         },
         {
+          "id": "bind-tags",
+          "source": "product.tags",
+          "field": "specials.boundTags"
+        },
+        {
           "id": "bind-product-id",
           "source": "product.id",
           "field": "specials.boundProductId"
@@ -27917,6 +27929,11 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "field": "specials.boundCompareCents"
         },
         {
+          "id": "bind-tags",
+          "source": "product.tags",
+          "field": "specials.boundTags"
+        },
+        {
           "id": "bind-product-id",
           "source": "product.id",
           "field": "specials.boundProductId"
@@ -27937,6 +27954,11 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "id": "bind-compare-cents",
           "source": "product.compareAtCents",
           "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-tags",
+          "source": "product.tags",
+          "field": "specials.boundTags"
         },
         {
           "id": "bind-product-id",
@@ -27961,6 +27983,11 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "field": "specials.boundCompareCents"
         },
         {
+          "id": "bind-tags",
+          "source": "product.tags",
+          "field": "specials.boundTags"
+        },
+        {
           "id": "bind-product-id",
           "source": "product.id",
           "field": "specials.boundProductId"
@@ -27981,6 +28008,11 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "id": "bind-compare-cents",
           "source": "product.compareAtCents",
           "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-tags",
+          "source": "product.tags",
+          "field": "specials.boundTags"
         },
         {
           "id": "bind-product-id",
@@ -28005,6 +28037,11 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "field": "specials.boundCompareCents"
         },
         {
+          "id": "bind-tags",
+          "source": "product.tags",
+          "field": "specials.boundTags"
+        },
+        {
           "id": "bind-product-id",
           "source": "product.id",
           "field": "specials.boundProductId"
@@ -28025,6 +28062,11 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "id": "bind-compare-cents",
           "source": "product.compareAtCents",
           "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-tags",
+          "source": "product.tags",
+          "field": "specials.boundTags"
         },
         {
           "id": "bind-product-id",
@@ -28049,6 +28091,11 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "field": "specials.boundCompareCents"
         },
         {
+          "id": "bind-tags",
+          "source": "product.tags",
+          "field": "specials.boundTags"
+        },
+        {
           "id": "bind-product-id",
           "source": "product.id",
           "field": "specials.boundProductId"
@@ -28071,6 +28118,11 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "field": "specials.boundCompareCents"
         },
         {
+          "id": "bind-tags",
+          "source": "product.tags",
+          "field": "specials.boundTags"
+        },
+        {
           "id": "bind-product-id",
           "source": "product.id",
           "field": "specials.boundProductId"
@@ -28089,7 +28141,8 @@ export const ELEMENTS: Record<string, CatalogElement> = {
               "product",
               "productId",
               "boundPriceCents",
-              "boundCompareCents"
+              "boundCompareCents",
+              "boundTags"
             ]
           },
           {
@@ -28097,7 +28150,8 @@ export const ELEMENTS: Record<string, CatalogElement> = {
             "label": "Content",
             "controls": [
               "sale_badge_mode",
-              "sale_badge_text"
+              "sale_badge_text",
+              "sale_badge_tag"
             ]
           },
           {
@@ -28191,8 +28245,10 @@ export const ELEMENTS: Record<string, CatalogElement> = {
       "productId",
       "boundPriceCents",
       "boundCompareCents",
+      "boundTags",
       "sale_badge_mode",
       "sale_badge_text",
+      "sale_badge_tag",
       "width_select",
       "height_select",
       "size_bounds",
@@ -28212,18 +28268,21 @@ export const ELEMENTS: Record<string, CatalogElement> = {
       "animation",
       "class_css"
     ],
-    "description": "A small \"−20%\" / \"Sale\" pill for a product card or product page, computed at render time from the bound product's price and compare-at cents. Purely static — no island, no runtime module. Two content modes: specials.mode \"percent\" shows a computed \"−N%\"; \"text\" shows an authored word (default \"Sale\"). Renders nothing at all when the product has no real saving (no compare-at price, or compare-at at or below price) — it never invents a discount.",
+    "description": "A small pill for a product card or product page: \"−20%\" / \"Sale\" computed from the bound product's price and compare-at cents, or a merchandising label like \"NEW\" / \"BÁN CHẠY\" driven by the product's tags. Purely static — no island, no runtime module. Three content modes: specials.mode \"percent\" shows a computed \"−N%\"; \"text\" shows an authored word (default \"Sale\"); \"tag\" shows specials.text only when the bound product carries the tag in specials.tag (trimmed, case-insensitive). percent/text render nothing when the product has no real saving (no compare-at price, or compare-at at or below price) — it never invents a discount; tag mode renders nothing when the product lacks the tag.",
     "useWhen": [
       "A product card or product page needs a quick visual flag that the item is on sale",
-      "Beside a pricing-dataset price display, to draw attention to the struck-through compare-at"
+      "Beside a pricing-dataset price display, to draw attention to the struck-through compare-at",
+      "A product card needs a NEW / BEST SELLER / BÁN CHẠY pill on only the products the merchant tagged — use specials.mode \"tag\""
     ],
     "avoidWhen": [
       "The exact amount saved needs to show in money (\"tiết kiệm 50.000₫\") — this element only shows a percentage or a fixed word, never a formatted amount",
-      "The badge should show on every product regardless of a real discount — that is authored text, not this element"
+      "The badge should show on every product regardless of a real discount or tag — that is authored text, not this element"
     ],
     "contentTips": [
       "Leave specials.mode as \"percent\" for a computed \"−N%\"; set it to \"text\" for a generic word like \"Sale\" instead",
-      "The percentage and the visibility both come from the bound product — nothing to seed here beyond the mode/text choice"
+      "The percentage and the visibility both come from the bound product — nothing to seed here beyond the mode/text choice",
+      "For a NEW / BEST SELLER pill set specials.mode \"tag\", specials.tag to the product tag to match (e.g. \"new\", \"ban-chay\") and specials.text to the word shown (e.g. \"NEW\", \"BÁN CHẠY\"); one badge per tag — stack two badges for two pills",
+      "Tag mode reads specials.boundTags, filled by the binding {\"id\":\"bind-tags\",\"source\":\"product.tags\",\"field\":\"specials.boundTags\"} that the editor adds on drop. A badge authored OUTSIDE the editor (sb page source, MCP sb_add) must carry that binding — or be bound with sb_bind product.tags → specials.boundTags — or it renders nothing"
     ],
     "semantics": [
       "product",
@@ -28232,7 +28291,10 @@ export const ELEMENTS: Record<string, CatalogElement> = {
       "ecommerce",
       "price",
       "badge",
-      "promotion"
+      "promotion",
+      "tag",
+      "new",
+      "bestseller"
     ]
   },
   "flash-sale-price": {
@@ -36737,7 +36799,8 @@ export const BOUND_SPECIALS: Record<string, string[]> = {
   ],
   "sale-badge": [
     "boundCompareCents",
-    "boundPriceCents"
+    "boundPriceCents",
+    "boundTags"
   ],
   "spline-scene": [
     "boundModel"
@@ -38810,6 +38873,17 @@ export const TRAIT_WRITES: Record<string, TraitDescription> = {
       {
         "target": "specials",
         "writeKey": "text",
+        "type": "string"
+      }
+    ]
+  },
+  "sale_badge_tag": {
+    "key": "sale_badge_tag",
+    "label": "Tag",
+    "writes": [
+      {
+        "target": "specials",
+        "writeKey": "tag",
         "type": "string"
       }
     ]
@@ -41430,7 +41504,8 @@ export const ELEMENT_VALUES: Record<string, Record<string, ValueVocabulary>> = {
       "writeKey": "mode",
       "values": [
         "percent",
-        "text"
+        "text",
+        "tag"
       ],
       "readBy": "sale_badge_mode (editor picker)"
     }
@@ -41502,6 +41577,7 @@ export const BASE_ONLY_CONFIG: string[] = [
   "backgroundSceneModelUrl",
   "rowLimit",
   "clampTitle",
+  "showAttributes",
   "optionSource",
   "recordAggregates",
   "recordCollectionId",

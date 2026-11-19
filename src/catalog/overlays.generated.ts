@@ -1643,6 +1643,7 @@ export const OVERLAY_SEEDS: Record<'cart' | 'popup' | 'quickview', OverlayDocume
             "gap": 8
           },
           "optionGap": "",
+          "showAttributes": [],
           "variantLabelId": "qv_12",
           "variantOptionId": "qv_13"
         },

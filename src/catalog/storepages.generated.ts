@@ -2357,6 +2357,7 @@ export const STORE_PAGE_SEEDS: Record<string, { schema_version: number; root_nod
             "gap": 8
           },
           "optionGap": "",
+          "showAttributes": [],
           "variantLabelId": "sppro_12",
           "variantOptionId": "sppro_13"
         },

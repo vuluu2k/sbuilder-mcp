@@ -4,9 +4,9 @@
 import type { DeadKey } from './element-types.js';
 
 export const DEAD_KEY_SOURCE = {
-  "files": 6453,
-  "identifiers": 118047,
-  "seededKeys": 465,
+  "files": 6480,
+  "identifiers": 118475,
+  "seededKeys": 468,
   "dead": 0
 } as const;
 
