@@ -6,6 +6,21 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.108.0] - 2026-11-19
+
+### Added
+- `sb_components` liệt kê code component của site ở chế độ chỉ đọc, kèm version mới nhất và `propsSchema` của từng version, dùng được với API key của site hoặc phiên đăng nhập.
+- `sb_add` và `sb_set` đặt và cấu hình element `code-component`, kiểm tra component, version và props đã pin theo `propsSchema` của đúng version đó trước khi ghi, kể cả khi `dry_run`.
+- `sb_add` và `sb_set` báo các key do máy chủ suy ra như `html`, `clientUrl` và `hydrateProps` trong `derived`, và trả nguyên văn cảnh báo lưu `codeComponentRender` của nền tảng trong `render_warnings`.
+- Catalog API bao phủ element `code-component` và các route code-components, nên `sb_traits_for`, `sb_add` và `sb_api_find` nhận ra chúng.
+
+### Changed
+- `sb_set` kiểm tra lại pin của code component khi `unset` và gộp mọi chỉnh sửa trên cùng một node trong batch thành một lần kiểm tra trên trạng thái cuối.
+- Phần hướng dẫn của máy chủ nhắc đến code component cạnh custom code cho những khoảng trống mà không element gốc nào phủ.
+
+### Fixed
+- `sb_add` và `sb_set` từ chối giá trị prop link, image, text, richtext và enum của code component mà nền tảng sẽ loại bỏ khi làm sạch, như link không phải http(s), giá trị quá lớn hoặc UTF-8 không hợp lệ.
+
 ## [0.107.1] - 2026-11-18
 
 ### Fixed

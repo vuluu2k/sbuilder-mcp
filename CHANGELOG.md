@@ -6,6 +6,21 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.108.0] - 2026-11-19
+
+### Added
+- `sb_components` lists a site's code components read-only, with each component's latest version and every version's `propsSchema`, and works with either a site API key or a session.
+- `sb_add` and `sb_set` place and configure the `code-component` element, checking the pinned component, version and props against that version's `propsSchema` before writing, including on `dry_run`.
+- `sb_add` and `sb_set` report server-derived keys such as `html`, `clientUrl` and `hydrateProps` under `derived` and return the platform's `codeComponentRender` save warning in `render_warnings`.
+- The API catalog covers the `code-component` element and the code-components routes, so `sb_traits_for`, `sb_add` and `sb_api_find` recognise them.
+
+### Changed
+- `sb_set` re-checks the code component pin on `unset` and merges all edits to one node in a batch into a single check on the final state.
+- The server instructions mention code components next to custom code for gaps that no native element covers.
+
+### Fixed
+- `sb_add` and `sb_set` reject code component link, image, text, richtext and enum prop values that the platform would sanitize away, such as non-http(s) links, oversized values or invalid UTF-8.
+
 ## [0.107.1] - 2026-11-18
 
 ### Fixed
