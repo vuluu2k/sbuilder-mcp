@@ -6,6 +6,20 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.110.1] - 2026-11-19
+
+### Added
+- `sb_add` takes `menu_item_id` to turn a menu row into a mega panel, and `sb_outline` tags the panel with its row id and label.
+- The `sale-badge` element gains a `tag` mode that binds product tags, and `product-variants` gains a `showAttributes` option.
+- The API catalog grows to 1009 operations, adding `POST /api/v1/code-components/preview` and `GET /api/v1/pages/{id}/preview`.
+
+### Changed
+- `sb_remove` of a mega panel clears its menu row's `panelId` in the same save.
+
+### Fixed
+- `sb_move` of a menu's mega panel and a same-page `sb_duplicate` of one are refused with a pointer to `sb_remove` or `menu_item_id`, instead of leaving a row that points at nothing.
+- A mega panel added under its menu with `menu_item_id` no longer warns that it never renders.
+
 ## [0.110.0] - 2026-11-19
 
 ### Added

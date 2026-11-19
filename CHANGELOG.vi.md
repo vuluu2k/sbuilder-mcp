@@ -6,6 +6,20 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.110.1] - 2026-11-19
+
+### Added
+- `sb_add` nhận `menu_item_id` để biến một hàng menu thành mega panel, và `sb_outline` gắn nhãn panel bằng id và nhãn của hàng đó.
+- Phần tử `sale-badge` có thêm chế độ `tag` gắn thẻ sản phẩm, và `product-variants` có thêm tùy chọn `showAttributes`.
+- Danh mục API tăng lên 1009 thao tác, thêm `POST /api/v1/code-components/preview` và `GET /api/v1/pages/{id}/preview`.
+
+### Changed
+- `sb_remove` một mega panel xoá `panelId` của hàng menu tương ứng trong cùng một lần lưu.
+
+### Fixed
+- `sb_move` mega panel của menu và `sb_duplicate` nó trong cùng trang bị từ chối kèm gợi ý dùng `sb_remove` hoặc `menu_item_id`, thay vì để lại một hàng trỏ vào chỗ không có gì.
+- Mega panel thêm vào menu bằng `menu_item_id` không còn bị cảnh báo là không bao giờ hiển thị.
+
 ## [0.110.0] - 2026-11-19
 
 ### Added
