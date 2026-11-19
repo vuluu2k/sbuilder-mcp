@@ -6,6 +6,11 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.109.1] - 2026-11-19
+
+### Fixed
+- `sb_site_use` không còn được đánh dấu chỉ-đọc, nên các client tự động duyệt công cụ chỉ-đọc giờ sẽ hỏi trước khi nó đổi site mà mọi lệnh ghi sau đó rơi vào.
+
 ## [0.109.0] - 2026-11-19
 
 ### Added

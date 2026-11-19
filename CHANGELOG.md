@@ -6,6 +6,11 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.109.1] - 2026-11-19
+
+### Fixed
+- `sb_site_use` is no longer marked read-only, so clients that auto-approve read-only tools now ask before it changes the site every later write lands on.
+
 ## [0.109.0] - 2026-11-19
 
 ### Added
