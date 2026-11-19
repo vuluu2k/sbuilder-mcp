@@ -33,7 +33,7 @@ import { refuseUnknownArgs } from './mcp/strict.js';
  */
 const INSTRUCTIONS = `Store Builder. Call sb_connect first.
 
-API: sb_api_find query → one line per operation (${SWAGGER_SOURCE.operations} reachable); sb_api_find id → its call sheet; sb_api_call runs it. /api/v1 paths take the API key, every other path the session; each is refused on the other's surface. Undescribed body: send back a modified copy of the matching GET.
+API: sb_api_find query → one line per operation (${SWAGGER_SOURCE.operations} reachable); sb_api_find id → its call sheet; sb_api_call runs it. /api/v1 paths take the API key only; every other path takes the key or the session. Undescribed body: send back a modified copy of the matching GET.
 
 Design, native first: sb_page_open → sb_catalog_search (${ELEMENT_SOURCE.count} elements) → sb_traits_for → sb_add one NESTED native spec per section → sb_bind/sb_event → sb_look + sb_review. custom-code or a code component (sb_components) only for a gap you can name no element covers.
 - Writes and API calls default to dry_run:true; pass dry_run:false to act.

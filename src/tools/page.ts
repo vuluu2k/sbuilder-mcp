@@ -74,7 +74,8 @@ import { HOVER_STATE, PARENT_HOVER_STATE, hoverHostNote, hoverRoutingNote } from
 import type { LiveSession } from '../live/session.js';
 import type { Box } from '../vision/shoot.js';
 import { siteFor, type ToolContext } from './context.js';
-import { CODE_COMPONENT, checkPin, derivedNote, stripDerived, touchesPin } from './components.js';
+import { ELEMENTS } from '../catalog/elements.generated.js';
+import { CODE_COMPONENT, pinChecker, derivedNote, stripDerived, touchesPin } from './components.js';
 import { projectList, PAGE_FIELDS, TEMPLATE_FIELDS } from './project.js';
 import { FILTER_VALUE_TYPES, RESOURCE_KEYS, filterPatches, sourceOf, wantsRows } from '../domains/site/filtervalues.js';
 
@@ -297,7 +298,7 @@ export class PageSession {
   /** The open read handed back an empty document and a ROOT was invented for it. */
   private openedSeeded = false;
   private warnings: ComposeWarning[] = [];
-  /** The last save's `codeComponentRender` warnings, verbatim — see takeRenderWarnings. */
+  /** The last save's `codeComponentRender` warnings, verbatim — see renderWarnings. */
   private renderWarns: unknown[] = [];
   private boxes: Box[] = [];
   /**
@@ -983,11 +984,13 @@ export class PageSession {
     return this.liveState;
   }
 
-  /** The code-component render warnings of the save just made, once: reading clears them. */
-  takeRenderWarnings(): unknown[] {
-    const out = this.renderWarns;
-    this.renderWarns = [];
-    return out;
+  /**
+   * The LAST save's code-component render warnings, verbatim. Reset at the top of
+   * every save, so a save that is skipped (nothing changed) or fails reports none
+   * rather than an earlier save's.
+   */
+  renderWarnings(): unknown[] {
+    return this.renderWarns;
   }
 
   /** What the server said it could not compose when this page was opened. */
@@ -1756,9 +1759,12 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
         for (const c of n.children ?? []) walkCC(c);
       };
       walkCC(spec as NodeSpec);
+      const checkPin = pinChecker(ctx, session.site());
+      // Checked AS createNode WILL STORE IT: the element's defaults under the spec (version 1, props {}).
+      const ccDefaults = (ELEMENTS[CODE_COMPONENT]?.defaults?.specials ?? {}) as Record<string, unknown>;
       for (const n of ccNodes) {
         for (const k of stripDerived(n.specials)) ccDropped.add(k);
-        await checkPin(ctx, session.site(), n.specials ?? {}, n.name ?? n.type);
+        await checkPin({ ...structuredClone(ccDefaults), ...(n.specials ?? {}) }, n.name ?? n.type);
       }
       const derived = ccDropped.size ? { derived: derivedNote([...ccDropped]) } : {};
       const guard: GuardOpts = { force, forced: [] };
@@ -1845,7 +1851,7 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
       }
       await session.applyAndSave(patches);
       const { added, satellites } = mintedIds(session.current(), ids);
-      const rendered = session.takeRenderWarnings();
+      const rendered = session.renderWarnings();
       return text({
         added,
         ...(Object.keys(satellites).length ? { satellites } : {}),
@@ -1927,16 +1933,23 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
       // A code-component's pin is re-checked against what the site pushed —
       // a new version may not take the props the node carries — and its
       // platform-rendered html/clientUrl are dropped (sb_add does the same).
+      // Every edit of the batch is folded per node first, so the pin is judged on
+      // the state the save stores, not on an intermediate one.
       const ccDropped = new Set<string>();
+      const ccNext = new Map<string, Record<string, unknown>>();
+      const ccCheck = new Set<string>();
       for (const e of batch) {
         const n = d.doc.nodes[e.id];
         if (e.namespace !== 'specials' || n?.data.type !== CODE_COMPONENT) continue;
         for (const k of stripDerived(e.keys)) ccDropped.add(k);
-        if (!touchesPin(e.keys) && !e.unset?.some((k) => k === 'props')) continue;
-        const next: Record<string, unknown> = { ...(n.specials ?? {}), ...e.keys };
+        const next = ccNext.get(e.id) ?? { ...(n.specials ?? {}) };
+        Object.assign(next, e.keys);
         for (const k of e.unset ?? []) delete next[k];
-        await checkPin(ctx, session.site(), next, e.id);
+        ccNext.set(e.id, next);
+        if (touchesPin(e.keys, e.unset)) ccCheck.add(e.id);
       }
+      const checkPin = pinChecker(ctx, session.site());
+      for (const id of ccCheck) await checkPin(ccNext.get(id)!, id);
       const derived = ccDropped.size ? { derived: derivedNote([...ccDropped]) } : {};
       const guard: GuardOpts = { force, forced: [] };
       const { patches, touched } = setMany(d, batch, guard);
@@ -2128,7 +2141,7 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
       const warnings: Record<string, string> = stuck();
       if (refiltered) patches.push(...refiltered.patches);
       await session.applyAndSave(patches);
-      const rendered = session.takeRenderWarnings();
+      const rendered = session.renderWarnings();
       const ccOut = { ...derived, ...(rendered.length ? { render_warnings: rendered } : {}) };
       // ONCE PER SHARED MASTER PER PROCESS, not once per node: the fact is about
       // the header or the drawer, and a batch touching one button twice used to

@@ -144,11 +144,15 @@ written in the site repo and uploaded with `sb site push` (the CLI's
 `sbuilder-components` skill) — this server never writes one. It places one:
 `sb_components` for the pushed names, versions and each version's props schema, then
 `sb_add {type:"code-component", specials:{component, version, props}}`. Props are the
-content kinds only; a `css` prop is a style key `--<name>`, per breakpoint. `html` and
-`clientUrl` are the platform's (rendered on every save) and are dropped if sent. Both
-writes refuse an unknown component, version or prop before saving, because the
-platform does not: it stores the node BLANK and answers 200 with a
-`codeComponentRender` warning, which comes back as `render_warnings`.
+content kinds only; a `css` prop is a style key `--<name>`, per breakpoint. `html`,
+`clientUrl` and `hydrateProps` are the platform's (rendered on every save) and are
+dropped if sent. Both writes refuse a bad pin before saving, because the platform
+fails it quietly in one of two ways: an unknown component or version, or a prop value
+of the wrong kind (a non-string text, an enum outside its options, a link that is not
+http(s) or site-relative, an over-long string), stores the node BLANK and answers 200
+with a `codeComponentRender` warning (it comes back as `render_warnings`); a prop the
+version does not declare, or a css prop sent in `props`, is DROPPED in silence and the
+node renders with its default.
 
 **8. The purchase controls.** `sb_bind` with `action: "add_to_cart"` on the buy
 button — a purchase is a BINDING. `sb_event` with `open_cart` on a standalone

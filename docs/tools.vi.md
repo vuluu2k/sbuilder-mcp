@@ -1619,8 +1619,8 @@ khi một lần lưu khác trên site đang biên dịch sẽ nhận 503 `code_f
 Các CODE COMPONENT của site (`/api/sites/{siteId}/code-components`): component React (Preact)
 riêng của site, viết trong repo site tại `components/<Name>.tsx` và tải lên bằng
 `sb site push` — server này không bao giờ ghi component. Chỉ đọc: `name`, version `latest` và
-mọi version kèm schema `props` của nó (`{ <prop>: { kind, default?, options? } }`), mới nhất
-trước; `name` thu hẹp về một component. Version là bất biến và do nền tảng đánh số.
+schema `props` của nó (`{ <prop>: { kind, default?, options? } }`); có `name` thì trả mọi
+version của component đó kèm schema, mới nhất trước. Version là bất biến và do nền tảng đánh số.
 
 Code component dành cho một khoảng trống không element gốc nào phủ — tương tác (máy tính, quiz,
 bộ cấu hình) hoặc markup không element nào tạo được — giống như `custom-code`; element gốc luôn
@@ -1632,13 +1632,19 @@ bộ cấu hình) hoặc markup không element nào tạo được — giống n
   "style": { "--gap-size": "16px" } }
 ```
 
-`sb_add` và `sb_set` KIỂM TRA pin trước khi ghi, kể cả chạy thử: component và version phải tồn
-tại, và mỗi key của `props` phải là content prop của ĐÚNG version đó với giá trị đúng kind
-(`text`, `richtext`, `link`, `image` → string; `enum` → một trong `options`; `boolean`;
-`number`). Prop lạ bị từ chối kèm danh sách prop version đó nhận. Prop `css` không bao giờ là
-prop: nó là key style `--<name>`, theo breakpoint, và bị từ chối trong `props` kèm cách sửa.
-`specials.html` và `specials.clientUrl` do nền tảng render mỗi lần lưu: giá trị gửi lên bị bỏ
-và kết quả nói rõ (`derived`). Render lỗi thì node được lưu TRỐNG và vẫn lưu; cảnh báo
+`sb_add` và `sb_set` KIỂM TRA pin trước khi ghi, kể cả chạy thử, trên node đúng như nó sẽ được
+lưu (`version` bỏ trống ở `sb_add` là mặc định của element, 1; `sb_set` gộp cả batch theo
+từng node, kể cả `unset`). Component và version phải tồn tại, và mỗi key của `props` phải là
+content prop của ĐÚNG version đó với giá trị đúng kind, theo đúng luật của nền tảng
+(`SanitizeProps`): `text`, `richtext`, `enum` → chuỗi tối đa 64 KiB (`enum` thuộc `options`);
+`link`, `image` → URL http(s) hoặc tương đối trong site, tối đa 2048 byte; `boolean`; `number`
+hữu hạn. Giá trị `null` nghĩa là "dùng mặc định", `props: null` là không có prop. Nền tảng xử
+lý pin sai một cách im lặng theo hai kiểu, nên hai tool này từ chối trước: component hoặc
+version không có, hoặc giá trị sai, thì node được lưu TRỐNG mà vẫn lưu; prop version đó không
+khai báo, hoặc prop `css`, thì bị BỎ im lặng. Vì vậy prop lạ bị từ chối kèm danh sách prop
+version đó nhận, và prop `css` — key style `--<name>`, theo breakpoint — bị từ chối trong
+`props` kèm cách sửa. `specials.html`, `specials.clientUrl` và `specials.hydrateProps` do nền
+tảng render mỗi lần lưu: giá trị gửi lên bị bỏ và kết quả nói rõ (`derived`). Cảnh báo
 `codeComponentRender` của lần lưu được trả nguyên văn trong `render_warnings`
 (`{code, nodeId, name, reason}`).
 

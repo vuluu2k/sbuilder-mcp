@@ -200,7 +200,7 @@ describe('token budget — a diet without a scale comes back', () => {
     // one unnamed for its use and unfiled, so an operator had to describe and file it by hand
     // before listing it. The brief and the catalogue ride the dry run, not this list.
     //
-    // 42,800 -> 43,400 buys `sb_components` (+589; measured 42,667 -> 43,256): a code-component
+    // 42,800 -> 43,400 buys `sb_components` (+618; measured 42,667 -> 43,285): a code-component
     // pin with a wrong name, version or prop saves a BLANK box with only a render warning to
     // say why, and the props schema it must match lives nowhere else an agent can read. The
     // placement rules ride its once-notice, not this list.

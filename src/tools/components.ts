@@ -18,7 +18,7 @@ import { siteFor, type ToolContext } from './context.js';
  */
 export const CODE_COMPONENT = 'code-component';
 /** Server-owned on every save (internal/page/codecomponents.go): a sent value is discarded. */
-export const DERIVED_KEYS = ['html', 'clientUrl'] as const;
+export const DERIVED_KEYS = ['html', 'clientUrl', 'hydrateProps'] as const;
 const CONTENT_KEYS = ['component', 'version', 'props'];
 
 export type PropSpec = { kind?: string; default?: unknown; options?: unknown[] };
@@ -29,86 +29,127 @@ const base = (siteId: string) => `/api/sites/${encodeURIComponent(siteId)}/code-
 const get = (ctx: ToolContext, path: string, query?: Record<string, number>) =>
   request({ base: ctx.base, method: 'GET', path, token: siteToken(ctx), query, fetchImpl: ctx.fetchImpl });
 
-/** Each component's LATEST version. */
+/** Each component's LATEST version, with that version's propsSchema. */
 async function latest(ctx: ToolContext, siteId: string): Promise<Version[]> {
   const out = (await get(ctx, base(siteId))) as { codeComponents?: Version[] };
   return out.codeComponents ?? [];
 }
 
-/** Every version of one component, newest first; null when the site has no such component. */
+/** Every version of one component, newest first; null when the platform says there is no such component. */
 async function versionsOf(ctx: ToolContext, siteId: string, name: string): Promise<Version[] | null> {
   try {
     // ponytail: one page of 200, the platform's per-component version cap.
     const out = (await get(ctx, `${base(siteId)}/${encodeURIComponent(name)}/versions`, { limit: 200 })) as { versions?: Version[] };
     return out.versions ?? [];
   } catch (e) {
-    if (e instanceof ApiError && e.status === 404) return null;
+    // Only the platform's own "no such component": a 404 from a proxy or an
+    // unwired route is a failure to report, not an answer about the site.
+    if (e instanceof ApiError && e.status === 404 && e.code === 'not_found') return null;
     throw e;
   }
 }
 
 const PLACE_NOTICE =
   'Place one with sb_add {type:"code-component", specials:{component, version, props}}. props are the ' +
-  'content props; a kind:"css" prop is a style key "--<name>" (per breakpoint), never a prop. html and ' +
-  'clientUrl are rendered by the platform on save — never send them. A component is written in the site ' +
-  'repo (components/<Name>.tsx) and uploaded with `sb site push`; this server only places it.';
+  'content props; a kind:"css" prop is a style key "--<name>" (per breakpoint), never a prop. html, ' +
+  'clientUrl and hydrateProps are rendered by the platform on save — never send them. A component is ' +
+  'written in the site repo (components/<Name>.tsx) and uploaded with `sb site push`; this server only places it.';
 
-const KIND_OK: Record<string, (v: unknown, p: PropSpec) => boolean> = {
-  text: (v) => typeof v === 'string',
-  richtext: (v) => typeof v === 'string',
-  link: (v) => typeof v === 'string',
-  image: (v) => typeof v === 'string',
-  enum: (v, p) => typeof v === 'string' && (!Array.isArray(p.options) || p.options.includes(v)),
-  boolean: (v) => typeof v === 'boolean',
-  number: (v) => typeof v === 'number' && Number.isFinite(v),
-};
+// Mirrors codecomponents.SanitizeProps / PropDef.value (props.go): what the
+// platform refuses with ErrInvalidProps, which stores the node blank.
+const MAX_TEXT_BYTES = 64 << 10;
+const MAX_URL_BYTES = 2048;
 
-/**
- * Refuse a code-component pin the platform would store as a blank box: an
- * unknown component or version, or props its version's `propsSchema` does not
- * declare (or declares with another kind). `specials` is the node's specials
- * AS THEY WILL BE. Throws; returns nothing when the pin is good.
- */
-export async function checkPin(ctx: ToolContext, siteId: string, specials: Record<string, unknown>, at: string): Promise<void> {
-  const { component, version, props = {} } = specials;
-  const fail = (msg: string): never => {
-    throw new Error(`sbuilder: ${at}: ${msg}`);
-  };
-  if (typeof component !== 'string' || !component) {
-    fail('a code-component needs specials.component — sb_components lists this site\'s components');
+/** Mirror of props.go `safeURL`: "", http(s)://, or site-relative. */
+export function safeURL(s: string): boolean {
+  if (s === '') return true;
+  // eslint-disable-next-line no-control-regex
+  if (/[\u0000-\u001f\u007f]/.test(s)) return false;
+  const t = s.trim();
+  if (t.startsWith('//') || t.startsWith('/\\') || t.startsWith('\\')) return false;
+  const colon = t.indexOf(':');
+  if (colon < 0) return true;
+  const i = t.search(/[/?#]/);
+  if (i >= 0 && i < colon) return true; // the ':' is in the path or query, not a scheme
+  return ['http', 'https'].includes(t.slice(0, colon).toLowerCase());
+}
+
+const STRING_KINDS = new Set(['text', 'richtext', 'link', 'image', 'enum']);
+
+/** Why `v` is not a valid value of `p`, or undefined when it is (or the kind is one this build does not know). */
+function invalid(v: unknown, p: PropSpec): string | undefined {
+  const kind = p.kind ?? '';
+  if (STRING_KINDS.has(kind)) {
+    if (typeof v !== 'string') return 'expected a string';
+    const limit = kind === 'link' || kind === 'image' ? MAX_URL_BYTES : MAX_TEXT_BYTES;
+    // A lone surrogate is the only invalid UTF-8 a JS string can carry.
+    if (Buffer.byteLength(v, 'utf8') > limit || !(v as string & { isWellFormed(): boolean }).isWellFormed()) return `longer than ${limit} bytes or not valid UTF-8`;
+    if ((kind === 'link' || kind === 'image') && !safeURL(v)) return 'must be an http(s) or site-relative URL';
+    if (kind === 'enum' && Array.isArray(p.options) && !p.options.includes(v)) return `not one of ${p.options.join(', ')}`;
+    return undefined;
   }
-  const name = component as string;
-  const vs = await versionsOf(ctx, siteId, name);
-  if (!vs) {
-    const names = (await latest(ctx, siteId)).map((v) => v.name);
-    fail(
-      `this site has no code component "${name}" (it has: ${names.join(', ') || 'none'}). Write ` +
-        `components/${name}.tsx in the site repo and upload it with \`sb site push\` first.`,
-    );
-  }
-  const found = vs!.find((v) => v.version === version);
-  if (!found) {
-    fail(`"${name}" has no version ${JSON.stringify(version)} — versions: ${vs!.map((v) => v.version).join(', ') || 'none'}`);
-  }
-  if (!props || typeof props !== 'object' || Array.isArray(props)) fail('specials.props must be an object');
-  const schema = found!.propsSchema ?? {};
-  const content = Object.keys(schema).filter((k) => schema[k]?.kind !== 'css');
-  const where = `${name} v${found!.version}`;
-  for (const [k, v] of Object.entries(props as Record<string, unknown>)) {
-    const p = schema[k];
-    if (!p) fail(`unknown prop "${k}" — ${where} takes: ${content.join(', ') || 'no props'}`);
-    if (p!.kind === 'css') fail(`"${k}" is a css prop — set it as style "--${k}" (per breakpoint), not in props`);
-    const ok = KIND_OK[p!.kind ?? ''];
-    if (ok && !ok(v, p!)) {
-      const opts = p!.kind === 'enum' && Array.isArray(p!.options) ? ` (one of ${p!.options.join(', ')})` : '';
-      fail(`prop "${k}" of ${where} is kind ${p!.kind}${opts}; got ${JSON.stringify(v)}`);
-    }
-  }
+  if (kind === 'boolean') return typeof v === 'boolean' ? undefined : 'expected true or false';
+  if (kind === 'number') return typeof v === 'number' && Number.isFinite(v) ? undefined : 'expected a finite number';
+  return undefined;
 }
 
 /**
- * Drop any `html` / `clientUrl` a caller put in a code-component's specials,
- * IN PLACE, and say so. The platform overwrites both on every save, so a sent
+ * A pin checker for ONE tool call: the versions of each component are read
+ * once, however many nodes of the call pin it.
+ *
+ * It refuses what the platform would get wrong without saying so. An unknown
+ * component or version, or a prop value of the wrong kind, stores the node
+ * BLANK (a render warning is the only trace); a prop the version does not
+ * declare, or a css prop, is DROPPED in silence by SanitizeProps. `specials`
+ * is the node's specials AS THEY WILL BE STORED. Throws; resolves when good.
+ */
+export function pinChecker(ctx: ToolContext, siteId: string) {
+  const cache = new Map<string, Promise<Version[] | null>>();
+  const versions = (name: string) => {
+    if (!cache.has(name)) cache.set(name, versionsOf(ctx, siteId, name));
+    return cache.get(name)!;
+  };
+  return async (specials: Record<string, unknown>, at: string): Promise<void> => {
+    const { component, version } = specials;
+    const props = specials.props ?? {}; // null is "no props", as the platform reads it
+    const fail = (msg: string): never => {
+      throw new Error(`sbuilder: ${at}: ${msg}`);
+    };
+    if (typeof component !== 'string' || !component) {
+      fail("a code-component needs specials.component — sb_components lists this site's components");
+    }
+    if (version === undefined || version === null) fail('a code-component needs specials.version — sb_components lists them');
+    const name = component as string;
+    const vs = await versions(name);
+    if (!vs) {
+      const names = (await latest(ctx, siteId)).map((v) => v.name);
+      fail(
+        `this site has no code component "${name}" (it has: ${names.join(', ') || 'none'}). Write ` +
+          `components/${name}.tsx in the site repo and upload it with \`sb site push\` first.`,
+      );
+    }
+    const found = vs!.find((v) => v.version === version);
+    if (!found) {
+      fail(`"${name}" has no version ${JSON.stringify(version)} — versions: ${vs!.map((v) => v.version).join(', ') || 'none'}`);
+    }
+    if (typeof props !== 'object' || Array.isArray(props)) fail('specials.props must be an object');
+    const schema = found!.propsSchema ?? {};
+    const content = Object.keys(schema).filter((k) => schema[k]?.kind !== 'css');
+    const where = `${name} v${found!.version}`;
+    for (const [k, v] of Object.entries(props as Record<string, unknown>)) {
+      const p = schema[k];
+      if (!p) fail(`unknown prop "${k}" — ${where} takes: ${content.join(', ') || 'no props'}`);
+      if (p!.kind === 'css') fail(`"${k}" is a css prop — set it as style "--${k}" (per breakpoint), not in props`);
+      if (v === null) continue; // null is "use the default"
+      const why = invalid(v, p!);
+      if (why) fail(`prop "${k}" of ${where} is kind ${p!.kind}: ${why}; got ${JSON.stringify(v).slice(0, 80)}`);
+    }
+  };
+}
+
+/**
+ * Drop any server-derived key a caller put in a code-component's specials,
+ * IN PLACE, and say so. The platform overwrites them on every save, so a sent
  * value would only make the caller believe it set the markup.
  */
 export function stripDerived(specials: Record<string, unknown> | undefined): string[] {
@@ -121,16 +162,17 @@ export function stripDerived(specials: Record<string, unknown> | undefined): str
 export const derivedNote = (keys: string[]): string =>
   `specials ${keys.join(' / ')} dropped: the platform renders them from component + version + props on save.`;
 
-/** A specials write on a code-component that needs the pin re-checked. */
-export const touchesPin = (keys: Record<string, unknown>): boolean => CONTENT_KEYS.some((k) => k in keys);
+/** A specials write (keys or unset) on a code-component that needs the pin re-checked. */
+export const touchesPin = (keys: Record<string, unknown>, unset: string[] = []): boolean =>
+  CONTENT_KEYS.some((k) => k in keys || unset.includes(k));
 
 export function registerComponentTools(server: McpServer, ctx: ToolContext): void {
   server.registerTool(
     'sb_components',
     {
       description:
-        "The site's code components (its own React, pushed by `sb site push`): name, latest, and " +
-        "each version's props schema — what a code-component node may pin and set.",
+        "The site's code components (its own React, pushed by `sb site push`): name, latest and its props " +
+        'schema; with name, every version and its schema — what a code-component node may pin and set.',
       inputSchema: {
         site_id: z.string().optional(),
         name: z.string().optional(),
@@ -139,19 +181,20 @@ export function registerComponentTools(server: McpServer, ctx: ToolContext): voi
     },
     async ({ site_id: given, name }) => {
       const siteId = siteFor(ctx, given);
-      const names = name ? [name] : (await latest(ctx, siteId)).map((v) => v.name);
-      const components = [];
-      for (const n of names) {
-        const vs = await versionsOf(ctx, siteId, n);
-        if (!vs) throw new Error(`sbuilder: this site has no code component "${n}"`);
-        components.push({
-          name: n,
-          latest: vs[0]?.version,
-          versions: vs.map((v) => ({ version: v.version, props: v.propsSchema ?? {} })),
-        });
-      }
       const note = ctx.notices.once('components:place', PLACE_NOTICE);
-      return text({ components, ...(note ? { note } : {}) });
+      const said = note ? { note } : {};
+      if (!name) {
+        const components = (await latest(ctx, siteId)).map((v) => ({ name: v.name, latest: v.version, props: v.propsSchema ?? {} }));
+        return text({ components, ...said });
+      }
+      const vs = await versionsOf(ctx, siteId, name);
+      if (!vs) throw new Error(`sbuilder: this site has no code component "${name}" — sb_components without name lists them`);
+      return text({
+        name,
+        latest: vs[0]?.version,
+        versions: vs.map((v) => ({ version: v.version, props: v.propsSchema ?? {} })),
+        ...said,
+      });
     },
   );
 }
