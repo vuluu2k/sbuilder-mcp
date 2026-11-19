@@ -4,7 +4,7 @@ import { connectedClient } from './harness.js';
 const READ_ONLY = [
   'sb_connect', 'sb_site_list', 'sb_api_find', 'sb_page_open', 'sb_outline', 'sb_node_read',
   'sb_catalog_search', 'sb_traits_for', 'sb_review', 'sb_templates', 'sb_page_list', 'sb_media_list',
-  'sb_page_state', 'sb_components', 'sb_site_use',
+  'sb_page_state', 'sb_components',
 ];
 
 describe('tool annotations', () => {
@@ -21,6 +21,8 @@ describe('tool annotations', () => {
     for (const name of READ_ONLY) {
       expect(tools.find((t) => t.name === name)!.annotations!.readOnlyHint, name).toBe(true);
     }
+    // It retargets every later write, so a client must not auto-approve it.
+    expect(tools.find((t) => t.name === 'sb_site_use')!.annotations!.readOnlyHint).toBe(false);
     for (const name of ['sb_remove', 'sb_api_call', 'sb_undo']) {
       expect(tools.find((t) => t.name === name)!.annotations!.destructiveHint, name).toBe(true);
     }

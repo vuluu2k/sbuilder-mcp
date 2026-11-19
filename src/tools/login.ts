@@ -219,7 +219,9 @@ export function registerLoginTools(server: McpServer, ctx: ToolContext, version:
       description:
         'Switch the site every tool defaults to (needs the sb_login account login).',
       inputSchema: { site_id: z.string() },
-      annotations: { readOnlyHint: true },
+      // NOT read-only: it moves where every later write lands, so a client that
+      // auto-approves read-only tools must still ask before it.
+      annotations: { readOnlyHint: false, idempotentHint: true },
     },
     async ({ site_id }) => text(await useSite(ctx, site_id)),
   );
