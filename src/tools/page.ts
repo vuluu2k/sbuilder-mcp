@@ -168,10 +168,10 @@ export function saveRefusal(d: PageDoc, patches: Patch[]): { before: Set<string>
  * button) is right. Shared with sb_store action:"form" + node_id, which
  * appended after the footer and stored a stray form.
  */
-export function addPlaced(d: PageDoc, parentId: string, spec: NodeSpec, index?: number, guard?: GuardOpts) {
+export function addPlaced(d: PageDoc, parentId: string, spec: NodeSpec, index?: number, guard?: GuardOpts, menuItemId?: string) {
   const rootKids = d.doc.nodes[d.doc.root_node_id]?.data.nodes.length ?? 0;
   const mid = parentId === d.doc.root_node_id ? middleEnd(d.doc) : rootKids;
-  return addSubtree(d, parentId, spec, index ?? (mid < rootKids ? mid : undefined), guard);
+  return addSubtree(d, parentId, spec, index ?? (mid < rootKids ? mid : undefined), guard, menuItemId);
 }
 
 /** `once` for a real write, `peek` for a dry run — the same notes, spent once. */
@@ -1741,12 +1741,16 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
       parent_id: z.string(),
       spec: specSchema,
       index: z.number().int().min(0).optional(),
+      menu_item_id: z
+        .string()
+        .optional()
+        .describe('Mega panel: the menuItems row id it replaces (menu parent, menu-panel spec)'),
       dry_run: z.boolean().optional(),
       force: z.boolean().optional().describe('Override a render-inference guard; reported as forced'),
     },
       annotations: { readOnlyHint: false, destructiveHint: false },
     },
-    async ({ parent_id, spec, index, dry_run, force }) => {
+    async ({ parent_id, spec, index, menu_item_id, dry_run, force }) => {
       const d = session.current();
       // A CODE COMPONENT IS CHECKED AGAINST WHAT THE SITE PUSHED before anything
       // is placed: an unknown name, version or prop stores a blank box, and only
@@ -1768,7 +1772,7 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
       }
       const derived = ccDropped.size ? { derived: derivedNote([...ccDropped]) } : {};
       const guard: GuardOpts = { force, forced: [] };
-      const { patches, ids, idOf } = addPlaced(d, parent_id, spec as NodeSpec, index, guard);
+      const { patches, ids, idOf } = addPlaced(d, parent_id, spec as NodeSpec, index, guard, menu_item_id);
       const forced = guard.forced!.length ? { forced: guard.forced } : {};
       // THE SEED COPY IN THE SITE'S LANGUAGE (TTG gap #46): an empty state minted
       // here said "No products yet" on a Vietnamese store, while sb_page_create

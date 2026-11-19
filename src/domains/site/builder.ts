@@ -4,6 +4,9 @@ import {
   subtreeIds,
   ancestors,
   appBlockRoot,
+  menuRows,
+  rowPanel,
+  type MenuRow,
   SPEC_GLOBAL_ID,
   SPEC_GLOBAL_KIND,
   SPEC_GLOBAL_REF,
@@ -94,10 +97,47 @@ function requireContainer(
   child?: { type: string; config?: Record<string, unknown> },
 ): void {
   if (!ELEMENTS[parentType]?.isContainer && !isPriceLeaf(parentType, parentKind, child)) {
+    // The one child a menu holds is a MEGA PANEL, and it is only ever born
+    // bound to a row — so the refusal names the call that makes one.
+    const mega =
+      parentType === 'menu' && child?.type === 'menu-panel'
+        ? ` A mega panel is added on its own: sb_add parent_id ${parentId} with menu_item_id ` +
+          '(the row id from its specials.menuItems) and spec {type:"menu-panel"}.'
+        : '';
     throw new Error(
-      `sbuilder: ${parentId} is a ${parentType}, which is not a container — it cannot hold children.`,
+      `sbuilder: ${parentId} is a ${parentType}, which is not a container — it cannot hold children.${mega}`,
     );
   }
+}
+
+/**
+ * A MEGA PANEL for one menu row — the editor's convertMenuRowToPanel
+ * (stores/node.ts): the panel is appended to the MENU's `data.nodes`, and the
+ * row (matched by id at any depth) gets `panelId` in the same save. Returns the
+ * cloned snapshot whose matching row the caller points at the minted panel.
+ */
+function megaPanelRows(doc: PageDoc, menuId: string, menuItemId: string): { rows: unknown; row: MenuRow } {
+  const menu = doc.node(menuId);
+  const rows = structuredClone(menu.specials?.menuItems ?? []);
+  const all = menuRows(rows);
+  const row = all.find((r) => r.id === menuItemId);
+  if (!row) {
+    const known = all.map((r) => r.id).filter((x): x is string => typeof x === 'string' && x !== '');
+    throw new Error(
+      `sbuilder: the menu ${menuId} has no row "${menuItemId}". Its rows: ` +
+        (known.length ? known.join(', ') : 'none (bind it first with sb_store action:"menu")') +
+        '.',
+    );
+  }
+  const existing = rowPanel(doc.doc, menuId, row);
+  if (existing) {
+    throw new Error(
+      `sbuilder: row "${menuItemId}" of ${menuId} already has a mega panel (${existing}). Add ` +
+        `content into it with sb_add parent_id ${existing}, restyle it with sb_set, or sb_remove ` +
+        `${existing} to put the row back on its link list.`,
+    );
+  }
+  return { rows, row };
 }
 
 function requireAllowed(parentType: string, childType: string, g?: GuardOpts): void {
@@ -202,9 +242,17 @@ export function addSubtree(
   spec: NodeSpec,
   index?: number,
   guard?: GuardOpts,
+  menuItemId?: string,
 ): { patches: Patch[]; ids: string[]; idOf: Map<NodeSpec, string> } {
   const parent = doc.node(parentId);
   soft(guard, () => refuseAppBlockParent(doc, parentId, 'adding'));
+  if (menuItemId !== undefined && !(parent.data.type === 'menu' && spec.type === 'menu-panel')) {
+    throw new Error(
+      `sbuilder: menu_item_id names the menu row a mega panel serves, so it applies only to a ` +
+        `menu-panel added directly under a menu — not to a ${spec.type} under a ${parent.data.type}.`,
+    );
+  }
+  const mega = menuItemId !== undefined ? megaPanelRows(doc, parentId, menuItemId) : undefined;
   // A SATELLITE the parent declares (`icon` → `cart-count` as `cartCountId`) is
   // attached the way the editor's `addDetachedNode` does: `data.parent` = the
   // host, NOT in its `data.nodes`, and the host points at it from base config.
@@ -222,7 +270,7 @@ export function addSubtree(
     // A DOCUMENT'S OWN ROOT always holds children — including a FORM document's,
     // whose root is a `form`: a leaf on a page (its meta says isContainer:false,
     // because the fields live elsewhere) and the field list in its own document.
-    if (parentId !== doc.doc.root_node_id) requireContainer(parent.data.type, parentId, parent.config?.kind, spec);
+    if (parentId !== doc.doc.root_node_id && !mega) requireContainer(parent.data.type, parentId, parent.config?.kind, spec);
     requireAllowed(parent.data.type, spec.type, guard);
     soft(guard, () => refuseBesideSegments(doc, parentId, spec.type));
   }
@@ -341,6 +389,10 @@ export function addSubtree(
   }
   const at = index ?? indexBeforeFormBar(doc, parentId, spec.type);
   patches.push({ op: 'insert', path: ['nodes', parentId, 'data', 'nodes'], index: at, value: rootId });
+  if (mega) {
+    mega.row.panelId = rootId;
+    patches.push({ op: 'set', path: ['nodes', parentId, 'specials', 'menuItems'], value: mega.rows });
+  }
   return { patches, ids, idOf };
 }
 
@@ -941,6 +993,14 @@ export function removeNode(doc: PageDoc, id: string, guard?: GuardOpts): Patch[]
       if (parent.config?.[rule.configKey] === id) {
         patches.push({ op: 'set', path: ['nodes', parentId, 'config', rule.configKey], value: '' });
       }
+    }
+    // A MEGA PANEL: its row goes back on the plain link list in the same save,
+    // as the editor's removeMenuRowPanel does — never a row naming a gone node.
+    if (parent.data.type === 'menu' && n.data.type === 'menu-panel') {
+      const rows = structuredClone(parent.specials?.menuItems ?? []);
+      const hits = menuRows(rows).filter((r) => r.panelId === id);
+      for (const r of hits) delete r.panelId;
+      if (hits.length) patches.push({ op: 'set', path: ['nodes', parentId, 'specials', 'menuItems'], value: rows });
     }
   }
   // Unset the whole subtree AND everything hanging off it — a node left behind

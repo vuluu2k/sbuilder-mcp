@@ -572,6 +572,16 @@ repo over a number here, and fix the line when you catch one stale.
   (the editor's `indexBeforeStepBar`), and duplicate posted names / `mapTo` are refused before
   the round trip because the platform refuses them with 409 (`forms/schema.go`).
 
+- **A MENU HOLDS ONE KIND OF CHILD, AND ONLY TOGETHER WITH A ROW POINTER.** A `menu` is no
+  container, but the editor's "Edit dropdown" (`convertMenuRowToPanel`) appends a `menu-panel`
+  to its `data.nodes` and sets `panelId` on the `specials.menuItems` row (by `id`, any depth) in
+  one commit. `sb_add` makes exactly that exception, keyed on `menu_item_id`; a panel with no row
+  pointer renders nowhere (both renderers resolve the panel FROM the row — `panelChild`), so the
+  bare child stays refused. `sb_remove` clears the row (`removeMenuRowPanel`); the re-bind keeps
+  it (`preservePanels` in `src/tools/menu.ts`). Not mirrored, like the editor: `sb_duplicate` of a
+  menu copies the panel under a new id while the copy's row still names the original's, so the
+  copy's dropdown degrades to links. `test/mega-panel.test.ts`.
+
 ## The five traps
 
 Each fails SILENTLY. Each is encoded in `src/domains/site/traps.ts` (trap 5 in

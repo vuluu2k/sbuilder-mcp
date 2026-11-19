@@ -197,3 +197,37 @@ export function appBlockRoot(doc: DocLike, id: string): string | null {
   for (const a of ancestors(doc, id)) if (stamped(doc.nodes[a])) return a;
   return null;
 }
+
+/** A `specials.menuItems` row, as stored — the snapshot nests arbitrarily. */
+export interface MenuRow {
+  id?: unknown;
+  label?: unknown;
+  panelId?: unknown;
+  items?: unknown;
+}
+
+/**
+ * Every row of a menu snapshot, depth first — the editor's `findRow`
+ * (features/menus/megaPanel.ts) and `findRowByPanelId` both walk this way.
+ */
+export function menuRows(raw: unknown, out: MenuRow[] = []): MenuRow[] {
+  if (!Array.isArray(raw)) return out;
+  for (const r of raw) {
+    if (!r || typeof r !== 'object') continue;
+    out.push(r as MenuRow);
+    menuRows((r as MenuRow).items, out);
+  }
+  return out;
+}
+
+/**
+ * A row's mega panel, resolved the way the renderers do (menu/html.go
+ * panelChild, the store's menuRowPanel): the id must name a `menu-panel` that
+ * really is a CHILD of this menu. A dangling id reads as no panel.
+ */
+export function rowPanel(doc: DocLike, menuId: string, row: MenuRow): string | null {
+  const pid = row.panelId;
+  if (typeof pid !== 'string' || pid === '') return null;
+  if (!doc.nodes[menuId]?.data.nodes.includes(pid)) return null;
+  return doc.nodes[pid]?.data.type === 'menu-panel' ? pid : null;
+}

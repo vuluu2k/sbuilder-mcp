@@ -210,7 +210,12 @@ describe('token budget — a diet without a scale comes back', () => {
     // moving between its sites. Without them the agent works one site per install, and an
     // account call (sites, members, org) needed SB_PASSWORD written to disk. Descriptions were
     // cut to one sentence each; the walkthrough rides the tools' answers, not this list.
-    expect(JSON.stringify(tools).length).toBeLessThan(44_200);
+    //
+    // 44,200 -> 44,600 buys sb_add `menu_item_id` (+148; measured 44,088 -> 44,236): the editor's
+    // "Edit dropdown" — a menu row turned into a mega panel — had no agent equivalent, because a
+    // menu is no container and the panel only renders when its row names it. One optional string;
+    // the rules (unknown row, row already converted) ride the refusals, not this list.
+    expect(JSON.stringify(tools).length).toBeLessThan(44_600);
     for (const t of tools) expect(t.description, t.name).not.toMatch(/vanishes on publish/);
     const instructions = client.getInstructions() ?? '';
     expect(instructions.length).toBeGreaterThan(200);

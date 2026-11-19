@@ -1,5 +1,5 @@
 import { applyPatches, type Patch } from '../../core/patch.js';
-import { childrenOf, isOverlay, appBlockRoot, type DocLike, type NodeLike } from '../../core/tree.js';
+import { childrenOf, isOverlay, appBlockRoot, menuRows, rowPanel, type DocLike, type NodeLike } from '../../core/tree.js';
 import { bandOf, isGlobal, type Band } from './traps.js';
 import { SATELLITE_RULES } from '../../catalog/elements.generated.js';
 
@@ -49,6 +49,8 @@ export interface OutlineNode {
   satellite?: string;
   /** An accordion / tab row's `specials.label` — four FAQ rows were four identical lines. */
   label?: string;
+  /** A MEGA PANEL: the menu row (`specials.menuItems[].id`) it replaces; `label` is that row's. */
+  menu_item?: string;
   kids?: OutlineNode[];
 }
 
@@ -244,6 +246,12 @@ export class PageDoc {
       if (n.data.name) out.name = n.data.name;
       const label = n.specials?.label;
       if ((n.data.type === 'accordion-content' || n.data.type === 'tab-content') && typeof label === 'string' && label) out.label = label;
+      const menuId = n.data.parent;
+      if (n.data.type === 'menu-panel' && menuId && this.doc.nodes[menuId]?.data.type === 'menu') {
+        const row = menuRows(this.doc.nodes[menuId].specials?.menuItems).find((r) => rowPanel(this.doc, menuId, r) === id);
+        if (typeof row?.id === 'string') out.menu_item = row.id;
+        if (typeof row?.label === 'string' && row.label) out.label = row.label;
+      }
       if (level === 0) {
         if (isOverlay(this.doc, id)) out.overlay = true;
         else out.band = bandOf(this.doc, id);
