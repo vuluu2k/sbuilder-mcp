@@ -681,7 +681,7 @@ export const STARTER_THEME: StarterTheme = {
       "name": "Muted",
       "kind": "bodyText",
       "base": {
-        "color": "var(--wb-sc-border, var(--wb-color-muted))",
+        "color": "color-mix(in srgb, var(--wb-sc-text, var(--wb-color-text)) 65%, transparent)",
         "maxWidth": "680px"
       }
     },
@@ -702,7 +702,7 @@ export const STARTER_THEME: StarterTheme = {
       "name": "Note",
       "kind": "bodyText",
       "base": {
-        "color": "var(--wb-sc-border, var(--wb-color-muted))",
+        "color": "color-mix(in srgb, var(--wb-sc-text, var(--wb-color-text)) 65%, transparent)",
         "marginTop": "8px"
       }
     },

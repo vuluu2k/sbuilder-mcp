@@ -4,7 +4,7 @@
 export const TRANSLATION_SOURCE = {
   "elements": 68,
   "pairs": 190,
-  "neverKeys": 184,
+  "neverKeys": 188,
   "entityTypes": 12
 } as const;
 
@@ -398,9 +398,11 @@ export const NEVER_TRANSLATED: string[] = [
   "button",
   "capturesProduct",
   "className",
+  "clientUrl",
   "closeIcon",
   "code",
   "collectionIds",
+  "component",
   "contentType",
   "copyFrom",
   "country",
@@ -446,6 +448,7 @@ export const NEVER_TRANSLATED: string[] = [
   "hoverHostDepth",
   "href",
   "hrefParams",
+  "html",
   "htmlTag",
   "icon",
   "iconEnabled",
@@ -550,6 +553,7 @@ export const NEVER_TRANSLATED: string[] = [
   "trackUrl",
   "urlParam",
   "variant",
+  "version",
   "videoId",
   "videoSrc"
 ];

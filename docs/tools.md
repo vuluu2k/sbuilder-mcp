@@ -470,7 +470,7 @@ call carries the same two fields beside `set`.
 | `limit` | number? | Default 8, max 60 |
 | `detail` | boolean? | Add `useWhen`, `avoidWhen`, `contentTips` to every match |
 
-Searches the platform's own AI hints across all 124 elements. Each match is
+Searches the platform's own AI hints across all 125 elements. Each match is
 `{ type, label, category, description }`, plus `isContainer: true` / `isRootOnly: true`
 only when true — four fields to **choose** by. The hints themselves, written by the platform
 team for exactly this purpose, come with `sb_traits_for` for the element chosen, or on every
@@ -1646,6 +1646,41 @@ content opening with `<` is refused — a `.tsx` opening `<script>` would compil
 `React.createElement("script")` and throw on every page. Write plain SCSS/TypeScript, or use
 `language:"html"`. Content is capped at 512 KiB, and a write
 while another save on the site is still compiling answers 503 `code_files_busy` — retry.
+
+## `sb_components`
+
+The site's CODE COMPONENTS (`/api/sites/{siteId}/code-components`): its own React (Preact)
+components, written in the site repo as `components/<Name>.tsx` and uploaded with
+`sb site push` — this server never writes one. Read-only: each component's `name`, `latest`
+version and its `props` schema (`{ <prop>: { kind, default?, options? } }`); with `name`,
+every version of that component with its schema, newest first. Versions are immutable and numbered by the platform.
+
+A code component answers a gap no native element covers — interactivity (a calculator, a
+quiz, a configurator) or markup no element produces — the same way `custom-code` does; native
+elements come first. It is placed as a `code-component` node:
+
+```json
+{ "type": "code-component",
+  "specials": { "component": "Faq", "version": 3, "props": { "question": "…", "open": false } },
+  "style": { "--gap-size": "16px" } }
+```
+
+`sb_add` and `sb_set` CHECK the pin before writing, dry run included, on the node as it will
+be stored (an omitted `version` on `sb_add` is the element's default, 1; `sb_set` checks the
+whole batch per node, `unset` included). The component and the version must exist, and every
+key of `props` must be a content prop of THAT version with a value of its kind, by the
+platform's own rules (`SanitizeProps`): `text`, `richtext`, `enum` → a string of at most
+64 KiB (`enum` one of its `options`); `link`, `image` → an http(s) or site-relative URL of at
+most 2048 bytes; `boolean`; a finite `number`. A `null` value means "use the default" and
+`props: null` means none. The platform handles a bad pin quietly in two ways, which is why
+these refuse it: an unknown component or version, or a wrong value, stores the node BLANK and
+still saves; a prop the version does not declare, or a `css` prop, is DROPPED in silence. So
+an unknown prop is refused naming the props the version takes, and a `css` prop — a style key
+`--<name>`, per breakpoint — is refused in `props` with that fix. `specials.html`,
+`specials.clientUrl` and `specials.hydrateProps` are rendered by the platform on every save:
+a supplied value is dropped and the result says so (`derived`). The save's
+`codeComponentRender` warnings come back verbatim as `render_warnings`
+(`{code, nodeId, name, reason}`).
 
 ## `sb_function`
 

@@ -74,6 +74,8 @@ import { HOVER_STATE, PARENT_HOVER_STATE, hoverHostNote, hoverRoutingNote } from
 import type { LiveSession } from '../live/session.js';
 import type { Box } from '../vision/shoot.js';
 import { siteFor, type ToolContext } from './context.js';
+import { ELEMENTS } from '../catalog/elements.generated.js';
+import { CODE_COMPONENT, pinChecker, derivedNote, stripDerived, touchesPin } from './components.js';
 import { projectList, PAGE_FIELDS, TEMPLATE_FIELDS } from './project.js';
 import { FILTER_VALUE_TYPES, RESOURCE_KEYS, filterPatches, sourceOf, wantsRows } from '../domains/site/filtervalues.js';
 
@@ -296,6 +298,8 @@ export class PageSession {
   /** The open read handed back an empty document and a ROOT was invented for it. */
   private openedSeeded = false;
   private warnings: ComposeWarning[] = [];
+  /** The last save's `codeComponentRender` warnings, verbatim — see renderWarnings. */
+  private renderWarns: unknown[] = [];
   private boxes: Box[] = [];
   /**
    * Set when the open document is a FORM's field document (`openForm`) rather
@@ -980,6 +984,15 @@ export class PageSession {
     return this.liveState;
   }
 
+  /**
+   * The LAST save's code-component render warnings, verbatim. Reset at the top of
+   * every save, so a save that is skipped (nothing changed) or fails reports none
+   * rather than an earlier save's.
+   */
+  renderWarnings(): unknown[] {
+    return this.renderWarns;
+  }
+
   /** What the server said it could not compose when this page was opened. */
   composeWarnings(): ComposeWarning[] {
     return this.warnings;
@@ -1029,6 +1042,7 @@ export class PageSession {
    * will ever store.
    */
   async save(inherited: ReadonlySet<string> = new Set(), staleThrows = false): Promise<void> {
+    this.renderWarns = [];
     if (this.stale) {
       // THE YIELD RULE. The room moved in a way this client cannot reconcile, so
       // it must not write its copy over whatever is there now. Re-pull, and make
@@ -1170,6 +1184,11 @@ export class PageSession {
       if (this.saving === pending) this.saving = null;
     }
     this.sourceRev = saved.rev ?? 0;
+    // A code component that failed to render is STORED BLANK and the save still
+    // answers 200 — this warning is the only place the reason exists.
+    this.renderWarns = (saved.warnings ?? []).filter(
+      (w) => !!w && typeof w === 'object' && (w as { code?: unknown }).code === 'codeComponentRender',
+    );
     // RE-STAMP THE FENCE, or lose every edit after this one.
     //
     // The save reports each shared master's new revision precisely so the client
@@ -1729,6 +1748,25 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
     },
     async ({ parent_id, spec, index, dry_run, force }) => {
       const d = session.current();
+      // A CODE COMPONENT IS CHECKED AGAINST WHAT THE SITE PUSHED before anything
+      // is placed: an unknown name, version or prop stores a blank box, and only
+      // a later render warning would say why. Its derived html/clientUrl are the
+      // platform's, so a supplied one is dropped and said.
+      const ccDropped = new Set<string>();
+      const ccNodes: NodeSpec[] = [];
+      const walkCC = (n: NodeSpec): void => {
+        if (n.type === CODE_COMPONENT) ccNodes.push(n);
+        for (const c of n.children ?? []) walkCC(c);
+      };
+      walkCC(spec as NodeSpec);
+      const checkPin = pinChecker(ctx, session.site());
+      // Checked AS createNode WILL STORE IT: the element's defaults under the spec (version 1, props {}).
+      const ccDefaults = (ELEMENTS[CODE_COMPONENT]?.defaults?.specials ?? {}) as Record<string, unknown>;
+      for (const n of ccNodes) {
+        for (const k of stripDerived(n.specials)) ccDropped.add(k);
+        await checkPin({ ...structuredClone(ccDefaults), ...(n.specials ?? {}) }, n.name ?? n.type);
+      }
+      const derived = ccDropped.size ? { derived: derivedNote([...ccDropped]) } : {};
       const guard: GuardOpts = { force, forced: [] };
       const { patches, ids, idOf } = addPlaced(d, parent_id, spec as NodeSpec, index, guard);
       const forced = guard.forced!.length ? { forced: guard.forced } : {};
@@ -1807,11 +1845,13 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
           ...checks,
           ...base_only,
           ...filterOut,
+          ...derived,
           ...forced,
         });
       }
       await session.applyAndSave(patches);
       const { added, satellites } = mintedIds(session.current(), ids);
+      const rendered = session.renderWarnings();
       return text({
         added,
         ...(Object.keys(satellites).length ? { satellites } : {}),
@@ -1820,6 +1860,8 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
         ...checks,
         ...base_only,
         ...filterOut,
+        ...derived,
+        ...(rendered.length ? { render_warnings: rendered } : {}),
         ...forced,
       });
     },
@@ -1888,6 +1930,27 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
         }
         batch.push({ id, namespace, keys: keys ?? {}, breakpoint: breakpoint as Breakpoint | undefined, base, state, unset });
       }
+      // A code-component's pin is re-checked against what the site pushed —
+      // a new version may not take the props the node carries — and its
+      // platform-rendered html/clientUrl are dropped (sb_add does the same).
+      // Every edit of the batch is folded per node first, so the pin is judged on
+      // the state the save stores, not on an intermediate one.
+      const ccDropped = new Set<string>();
+      const ccNext = new Map<string, Record<string, unknown>>();
+      const ccCheck = new Set<string>();
+      for (const e of batch) {
+        const n = d.doc.nodes[e.id];
+        if (e.namespace !== 'specials' || n?.data.type !== CODE_COMPONENT) continue;
+        for (const k of stripDerived(e.keys)) ccDropped.add(k);
+        const next = ccNext.get(e.id) ?? { ...(n.specials ?? {}) };
+        Object.assign(next, e.keys);
+        for (const k of e.unset ?? []) delete next[k];
+        ccNext.set(e.id, next);
+        if (touchesPin(e.keys, e.unset)) ccCheck.add(e.id);
+      }
+      const checkPin = pinChecker(ctx, session.site());
+      for (const id of ccCheck) await checkPin(ccNext.get(id)!, id);
+      const derived = ccDropped.size ? { derived: derivedNote([...ccDropped]) } : {};
       const guard: GuardOpts = { force, forced: [] };
       const { patches, touched } = setMany(d, batch, guard);
       const forced = guard.forced!.length ? { forced: guard.forced } : {};
@@ -2071,12 +2134,15 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
           ...filterOut,
           ...(Object.keys(hostNotes).length ? { hover_host: hostNotes } : {}),
           ...(note ? { note } : {}),
+          ...derived,
           ...forced,
         });
       }
       const warnings: Record<string, string> = stuck();
       if (refiltered) patches.push(...refiltered.patches);
       await session.applyAndSave(patches);
+      const rendered = session.renderWarnings();
+      const ccOut = { ...derived, ...(rendered.length ? { render_warnings: rendered } : {}) };
       // ONCE PER SHARED MASTER PER PROCESS, not once per node: the fact is about
       // the header or the drawer, and a batch touching one button twice used to
       // carry the same paragraph twice.
@@ -2101,6 +2167,7 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
           ...(skinNote ? { field_skin: skinNote } : {}),
           ...filterOut,
           ...(hostNotes[batch[0].id] ? { hover_host: hostNotes[batch[0].id] } : {}),
+          ...ccOut,
           ...forced,
         });
       }
@@ -2116,6 +2183,7 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
         ...(skinNote ? { field_skin: skinNote } : {}),
         ...filterOut,
         ...(Object.keys(hostNotes).length ? { hover_host: hostNotes } : {}),
+        ...ccOut,
         ...forced,
       });
     },

@@ -12,6 +12,7 @@ import { registerPageTools } from './tools/page.js';
 import { registerPageUpdateTools } from './tools/pageupdate.js';
 import { registerPageVersionTools } from './tools/pageversion.js';
 import { registerCodeTools } from './tools/code.js';
+import { registerComponentTools } from './tools/components.js';
 import { registerFunctionTools } from './tools/function.js';
 import { registerCollectionTools } from './tools/collection.js';
 import { registerLiveTools } from './tools/live.js';
@@ -32,9 +33,9 @@ import { refuseUnknownArgs } from './mcp/strict.js';
  */
 const INSTRUCTIONS = `Store Builder. Call sb_connect first.
 
-API: sb_api_find query → one line per operation (${SWAGGER_SOURCE.operations} reachable); sb_api_find id → its call sheet; sb_api_call runs it. /api/v1 paths take the API key, every other path the session; each is refused on the other's surface. Undescribed body: send back a modified copy of the matching GET.
+API: sb_api_find query → one line per operation (${SWAGGER_SOURCE.operations} reachable); sb_api_find id → its call sheet; sb_api_call runs it. /api/v1 paths take the API key only; every other path takes the key or the session. Undescribed body: send back a modified copy of the matching GET.
 
-Design, native first: sb_page_open → sb_catalog_search (${ELEMENT_SOURCE.count} elements) → sb_traits_for → sb_add one NESTED native spec per section → sb_bind/sb_event → sb_look + sb_review. custom-code only for a gap you can name that no element covers.
+Design, native first: sb_page_open → sb_catalog_search (${ELEMENT_SOURCE.count} elements) → sb_traits_for → sb_add one NESTED native spec per section → sb_bind/sb_event → sb_look + sb_review. custom-code or a code component (sb_components) only for a gap you can name no element covers.
 - Writes and API calls default to dry_run:true; pass dry_run:false to act.
 - sb_set writes per breakpoint by default; base is the cascade's fallback layer, for values that should not vary.
 - Outline flags: global = shared master, an edit lands on every page; overlay = not this page; app = app block, not editable inside.
@@ -66,6 +67,7 @@ const SESSION_FREE: ReadonlySet<string> = new Set([
   'sb_api_call',
   'sb_page_update',
   'sb_code',
+  'sb_components',
   'sb_function',
   'sb_collection',
   'sb_theme',
@@ -113,6 +115,7 @@ export function createServer(ctx: ToolContext = buildContext()): McpServer {
   registerPageUpdateTools(server, ctx);
   registerPageVersionTools(server, ctx, pageSession);
   registerCodeTools(server, ctx);
+  registerComponentTools(server, ctx);
   registerFunctionTools(server, ctx);
   registerCollectionTools(server, ctx);
   registerLiveTools(server, ctx, pageSession);

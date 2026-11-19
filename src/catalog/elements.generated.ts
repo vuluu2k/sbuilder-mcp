@@ -3,7 +3,7 @@
 import type { CatalogElement, NodeSeed, SatelliteRule, TraitDescription, ValueVocabulary, WritePrecondition } from './element-types.js';
 
 export const ELEMENT_SOURCE = {
-  "count": 124,
+  "count": 125,
   "docSchemaVersion": 2
 } as const;
 
@@ -10231,6 +10231,130 @@ export const ELEMENTS: Record<string, CatalogElement> = {
       "embed",
       "iframe",
       "snippet",
+      "advanced"
+    ]
+  },
+  "code-component": {
+    "type": "code-component",
+    "label": "Code component",
+    "category": "media",
+    "isContainer": false,
+    "isRootOnly": false,
+    "locked": false,
+    "hideInLayer": false,
+    "childAllows": [],
+    "defaults": {
+      "specials": {
+        "component": "",
+        "version": 1,
+        "props": {},
+        "html": ""
+      },
+      "style": {
+        "width": "100%",
+        "height": "fit-content"
+      }
+    },
+    "inspector": [
+      {
+        "tab": "general",
+        "groups": [
+          {
+            "key": "size",
+            "label": "Size",
+            "controls": [
+              "width_select",
+              "height_select",
+              "size_bounds"
+            ]
+          },
+          {
+            "key": "background",
+            "label": "Background",
+            "controls": [
+              "bg_color",
+              "bg_image"
+            ]
+          },
+          {
+            "key": "shape",
+            "label": "Shape",
+            "controls": [
+              "border",
+              "corner",
+              "shadow"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "advanced",
+        "groups": [
+          {
+            "key": "spacing",
+            "label": "Spacing",
+            "controls": [
+              "padding_margin"
+            ]
+          },
+          {
+            "key": "display",
+            "label": "Display",
+            "controls": [
+              "display"
+            ]
+          },
+          {
+            "key": "animation",
+            "label": "Animation",
+            "controls": [
+              "animation"
+            ]
+          },
+          {
+            "key": "class_css",
+            "label": "Class",
+            "controls": [
+              "class_css"
+            ]
+          }
+        ]
+      }
+    ],
+    "controls": [
+      "width_select",
+      "height_select",
+      "size_bounds",
+      "bg_color",
+      "bg_image",
+      "border",
+      "corner",
+      "shadow",
+      "padding_margin",
+      "display",
+      "animation",
+      "class_css"
+    ],
+    "description": "A developer-written code component (React/Preact) pinned by name and version, shown as its server-rendered HTML.",
+    "useWhen": [
+      "The site repo already defines a component for this block (a pricing table, a custom calculator) and the page should place it"
+    ],
+    "avoidWhen": [
+      "A native element covers the need — use heading, text, image, button or a section instead",
+      "For a one-off embed snippet — use custom-code",
+      "Do not invent a component name: only components the site has pushed exist"
+    ],
+    "contentTips": [
+      "Set `component` to an existing component name; props go in `props`, never in `html`",
+      "`html` is derived by the server on save — do not write it by hand",
+      "A length or colour belongs in a style custom property (a css prop), not in a content prop",
+      "A css prop name is lowercase kebab (^[a-z][a-z0-9]*(-[a-z0-9]+)*$), stored as style `--<name>`: Go kebab-cases style keys and the editor does not, so a camelCase name would diverge"
+    ],
+    "semantics": [
+      "component",
+      "code",
+      "react",
+      "custom",
       "advanced"
     ]
   },
@@ -37130,6 +37254,39 @@ export const TRAIT_WRITES: Record<string, TraitDescription> = {
       {
         "target": "specials",
         "writeKey": "htmlTag",
+        "type": "string"
+      }
+    ]
+  },
+  "youtube_url": {
+    "key": "youtube_url",
+    "label": "YouTube URL",
+    "writes": [
+      {
+        "target": "specials",
+        "writeKey": "videoId",
+        "type": "string"
+      }
+    ]
+  },
+  "icon_name": {
+    "key": "icon_name",
+    "label": "Icon name (e.g. FacebookFill, InstagramFill, YoutubeFill, PhoneFill, MailFill)",
+    "writes": [
+      {
+        "target": "specials",
+        "writeKey": "name",
+        "type": "string"
+      }
+    ]
+  },
+  "map_location": {
+    "key": "map_location",
+    "label": "Map address",
+    "writes": [
+      {
+        "target": "specials",
+        "writeKey": "location",
         "type": "string"
       }
     ]
