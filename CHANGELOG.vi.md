@@ -6,6 +6,21 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.109.0] - 2026-11-19
+
+### Added
+- `sb_login` đăng nhập bằng tài khoản nền tảng qua luồng nhập mã trên trình duyệt ngay trong cuộc chat, lần gọi đầu trả mã, lần sau chờ duyệt, và đăng xuất máy bằng `action:"logout"`.
+- `sb_site_use` đổi site mặc định trong các site của tài khoản, và tùy chọn `--site` mới chọn site bắt đầu.
+- `install --login` chạy luồng đăng nhập nhập mã ngay trong terminal và ghi cấu hình client không có khoá hay mật khẩu, bỏ qua trình duyệt khi đã đăng nhập.
+
+### Changed
+- Phiên đăng nhập được lưu ở `~/.config/sb/credentials.json`, dùng chung với `sb login` cùng giao thức khoá và đọc lại trước khi xoay, nên một lần duyệt đăng nhập cả CLI lẫn mọi cửa sổ agent.
+- API key của site chỉ dùng trên site của nó, còn phiên tài khoản dùng ở mọi site khác.
+
+### Fixed
+- Các lệnh gọi `/api/v1`, kể cả bước thử lại upload qua `/api/v1/media`, bị từ chối sau khi rời site của khoá, thay vì âm thầm ghi vào cửa hàng của khoá mà vẫn báo thành công.
+- Trình duyệt mở khi đăng nhập chỉ nhận URL http và https và được chạy không qua shell.
+
 ## [0.108.0] - 2026-11-19
 
 ### Added

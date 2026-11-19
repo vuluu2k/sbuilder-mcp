@@ -6,6 +6,21 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.109.0] - 2026-11-19
+
+### Added
+- `sb_login` signs in with a platform account through the browser device-code flow from inside the chat, returning the code on the first call, waiting for approval on the next, and signing the machine out with `action:"logout"`.
+- `sb_site_use` switches the default site among the account's sites, and the new `--site` option picks the starting site.
+- `install --login` runs the device-code login in the terminal and writes the client config without any key or password, skipping the browser when already signed in.
+
+### Changed
+- The login session is stored in `~/.config/sb/credentials.json`, shared with `sb login` under the same lock and re-read-before-rotate protocol, so one approval signs in the CLI and every agent window.
+- A site API key is used only on its own site while the account session covers every other site.
+
+### Fixed
+- `/api/v1` calls, including the `/api/v1/media` upload retry, are refused after switching away from the key's site instead of silently writing to the key's store while reporting success.
+- The browser opened for login only accepts http and https URLs and is launched without a shell.
+
 ## [0.108.0] - 2026-11-19
 
 ### Added
