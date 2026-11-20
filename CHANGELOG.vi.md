@@ -6,6 +6,14 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.111.4] - 2026-11-20
+
+### Added
+- Danh mục API có thêm `POST /api/sites/{siteId}/integrations/detect`, giúp `sb_api_find` và `sb_api_call` nhận diện mã theo dõi trong đoạn snippet, URL hoặc id trần được dán vào qua trường body `text`.
+
+### Changed
+- Danh mục API được tạo lại theo web_builder v1.0.301, và danh sách provider của integrations giờ có thêm `openai_pixel` cho ChatGPT Ads.
+
 ## [0.111.3] - 2026-11-20
 
 ### Added
