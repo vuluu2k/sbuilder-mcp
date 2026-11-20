@@ -58,6 +58,7 @@ import {
 import { bindMenu } from './menu.js';
 import { attachOverlay, ensureCartDrawer, relocalizeCartDrawer } from './overlay.js';
 import { installApp } from './app.js';
+import { trackingFlow } from './tracking.js';
 import { BUILTIN_APP_KEYS } from '../catalog/appscaffolds.generated.js';
 import { ELEMENTS } from '../catalog/elements.generated.js';
 import { PAGE_TYPES } from '../catalog/storepages.generated.js';
@@ -681,7 +682,8 @@ export function registerStoreTools(server: McpServer, ctx: ToolContext, session:
         'leaves the page referencing it; action:"template_save" saves one as a section template ' +
         '(name; template_share sends one to the org\'s review). site_template offers the whole site as its org\'s ' +
         'template (org_id attaches first; site_template_remove withdraws). ' +
-        'Dry run returns the plan.',
+        'action:"tracking": trackers + traffic sources; text installs a pasted snippet; provider+enabled ' +
+        'switches one. Dry run returns the plan.',
       inputSchema: {
         action: z.enum([
           'checkout',
@@ -699,6 +701,7 @@ export function registerStoreTools(server: McpServer, ctx: ToolContext, session:
           'site_template',
           'site_template_remove',
           'template_share',
+          'tracking',
         ]),
         site_id: z.string().optional(),
         language: z.enum(['vi', 'en']).optional().describe('Copy language, default vi'),
@@ -770,6 +773,11 @@ export function registerStoreTools(server: McpServer, ctx: ToolContext, session:
               'to the site locale\'s (edited text untouched), and turn a gallery line thumbnail into a ' +
               'single image; needs a page of the site open',
           ),
+        text: z.string().optional(),
+        provider: z
+          .enum(['google_analytics', 'google_tag_manager', 'facebook_pixel', 'tiktok_pixel', 'openai_pixel'])
+          .optional(),
+        enabled: z.boolean().optional(),
         dry_run: z.boolean().optional(),
       },
       annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: true },
@@ -797,9 +805,16 @@ export function registerStoreTools(server: McpServer, ctx: ToolContext, session:
       org_id,
       relocalize,
       settings,
+      text: trackingText,
+      provider,
+      enabled,
       dry_run,
     }) => {
       const siteId = siteFor(ctx, given);
+      if (action === 'tracking') {
+        const dryRun = dry_run !== false;
+        return text(await trackingFlow(ctx, siteId, { text: trackingText, provider, enabled, dryRun }));
+      }
       if (action === 'global_attach' || action === 'global_detach') {
         // THE COMPOSED STAMP IS NEVER THE CALLER'S TO WRITE. A page references
         // a master with `specials.globalRef`; the server composes it in on read

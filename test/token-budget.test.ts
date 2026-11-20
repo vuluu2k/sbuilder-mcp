@@ -215,7 +215,13 @@ describe('token budget — a diet without a scale comes back', () => {
     // "Edit dropdown" — a menu row turned into a mega panel — had no agent equivalent, because a
     // menu is no container and the panel only renders when its row names it. One optional string;
     // the rules (unknown row, row already converted) ride the refusals, not this list.
-    expect(JSON.stringify(tools).length).toBeLessThan(44_400);
+    //
+    // 44,400 -> 44,800 buys sb_store `tracking` (+432; measured 44,264 -> 44,696): a store's
+    // measurement in one call — every tracker with its `problem`, where visitors came from
+    // (ChatGPT, Facebook…), installing whatever a pasted vendor snippet sets up and switching
+    // one tracker. By hand it is four routes and a detect step an agent has to know exist. One
+    // sentence in the description; the three params carry no descriptions (the answers explain).
+    expect(JSON.stringify(tools).length).toBeLessThan(44_800);
     for (const t of tools) expect(t.description, t.name).not.toMatch(/vanishes on publish/);
     const instructions = client.getInstructions() ?? '';
     expect(instructions.length).toBeGreaterThan(200);
