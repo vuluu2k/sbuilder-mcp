@@ -6,6 +6,21 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.111.0] - 2026-11-20
+
+### Added
+- `sb_set` takes `pin_wider` to write a base value in the same save and list it under `pinned`, so a mobile-only value no longer reaches desktop.
+- The element catalog adds a colour-swatch mode, cart-line variant and `show_added`, `toggle_visibility`, breadcrumb `homeDisplay` and `separatorType`, and list-dataset navigation, growing to 620 controls and 97 binding sources.
+
+### Changed
+- The responsive cascade-tail warning now counts every wider breakpoint slot and state layer, and names each width the value reaches.
+- The `unknown_key` problem names the catalog build it was judged against and advises updating sbuilder-mcp when the key is newer.
+- The element catalog is regenerated against web_builder v1.0.291.
+
+### Fixed
+- `sb_review` no longer reports `static_in_dataset` for icon-only buttons, generic labels, or record-action controls in a product card.
+- `sb_review` flags a hard-coded heading only inside a real repeater such as `list-dataset`, not in a single-record dataset block.
+
 ## [0.110.2] - 2026-11-19
 
 ### Added

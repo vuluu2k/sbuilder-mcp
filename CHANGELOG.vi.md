@@ -6,6 +6,21 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.111.0] - 2026-11-20
+
+### Added
+- `sb_set` nhận `pin_wider` để ghi giá trị base trong cùng một lần lưu và liệt kê dưới `pinned`, nên giá trị chỉ đặt cho mobile không còn lan lên desktop.
+- Danh mục phần tử thêm chế độ ô màu, biến thể dòng giỏ hàng và `show_added`, `toggle_visibility`, `homeDisplay` và `separatorType` của breadcrumb, cùng điều hướng list-dataset, nâng lên 620 điều khiển và 97 nguồn binding.
+
+### Changed
+- Cảnh báo cascade tail của responsive nay tính mọi slot breakpoint rộng hơn và các lớp state, đồng thời nêu từng độ rộng mà giá trị lan tới.
+- Vấn đề `unknown_key` nêu rõ bản danh mục dùng để đánh giá và khuyên cập nhật sbuilder-mcp khi key mới hơn danh mục.
+- Danh mục phần tử được tạo lại theo web_builder v1.0.291.
+
+### Fixed
+- `sb_review` không còn báo `static_in_dataset` cho nút chỉ có icon, nhãn chung chung hoặc điều khiển thao tác bản ghi trong thẻ sản phẩm.
+- `sb_review` chỉ gắn cờ tiêu đề viết cứng bên trong repeater thật như `list-dataset`, không phải trong khối dataset một bản ghi.
+
 ## [0.110.2] - 2026-11-19
 
 ### Added
