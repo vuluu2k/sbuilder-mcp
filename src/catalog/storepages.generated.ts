@@ -2140,7 +2140,8 @@ export const STORE_PAGE_SEEDS: Record<string, { schema_version: number; root_nod
           "priceValue": "$0.00",
           "compareValue": "$0.00",
           "displayPriceId": "both",
-          "textGlobalStyle": "text-1"
+          "textGlobalStyle": "text-1",
+          "compareColor": "#7b7b7b"
         },
         "specials": {
           "htmlTag": "p"
@@ -2208,7 +2209,8 @@ export const STORE_PAGE_SEEDS: Record<string, { schema_version: number; root_nod
           "priceValue": "$0.00",
           "compareValue": "$0.00",
           "displayPriceId": "both",
-          "textGlobalStyle": "text-1"
+          "textGlobalStyle": "text-1",
+          "compareColor": "#7b7b7b"
         },
         "specials": {
           "htmlTag": "p"
@@ -2276,7 +2278,8 @@ export const STORE_PAGE_SEEDS: Record<string, { schema_version: number; root_nod
           "priceValue": "$0.00",
           "compareValue": "$0.00",
           "displayPriceId": "both",
-          "textGlobalStyle": "text-1"
+          "textGlobalStyle": "text-1",
+          "compareColor": "#7b7b7b"
         },
         "specials": {
           "htmlTag": "p"
@@ -2436,7 +2439,9 @@ export const STORE_PAGE_SEEDS: Record<string, { schema_version: number; root_nod
           "textAlign": "left"
         },
         "config": {
-          "textGlobalStyle": "heading-6"
+          "textGlobalStyle": "heading-6",
+          "valueColor": "inherit",
+          "valueWeight": "inherit"
         },
         "specials": {},
         "responsive": {},
@@ -3437,7 +3442,8 @@ export const STORE_PAGE_SEEDS: Record<string, { schema_version: number; root_nod
           "priceValue": "$0.00",
           "compareValue": "$0.00",
           "displayPriceId": "both",
-          "textGlobalStyle": "text-1"
+          "textGlobalStyle": "text-1",
+          "compareColor": "#7b7b7b"
         },
         "specials": {
           "htmlTag": "p"
@@ -4160,7 +4166,8 @@ export const STORE_PAGE_SEEDS: Record<string, { schema_version: number; root_nod
           "priceValue": "$0.00",
           "compareValue": "$0.00",
           "displayPriceId": "both",
-          "textGlobalStyle": "text-1"
+          "textGlobalStyle": "text-1",
+          "compareColor": "#7b7b7b"
         },
         "specials": {
           "htmlTag": "p"

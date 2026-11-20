@@ -25,7 +25,9 @@ describe('the source list is complete enough not to cry wolf', () => {
     // pricing-dataset ships a binding to product.moneyOverride. Reading only
     // the Go renderer's context missed it, so sb_review reported the platform's
     // own element as a dead binding on every page that priced anything.
-    for (const seeded of ['product.moneyOverride', 'product.price', 'product.compareAtPrice']) {
+    // cartLine.variantLabel reaches a cart row through a row directive
+    // (render/html.go rowDirectiveFor), never through a *Context scope.
+    for (const seeded of ['product.moneyOverride', 'product.price', 'product.compareAtPrice', 'cartLine.variantLabel']) {
       expect(BINDING_SOURCES, seeded).toContain(seeded);
     }
   });

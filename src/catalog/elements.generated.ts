@@ -1634,7 +1634,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
             "controls": [
               "icon",
               "icon_color",
-              "icon_size"
+              "icon_size_bp"
             ]
           },
           {
@@ -1713,7 +1713,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
       "size_bounds",
       "icon",
       "icon_color",
-      "icon_size",
+      "icon_size_bp",
       "action",
       "icon_cart_badge",
       "padding",
@@ -1739,7 +1739,8 @@ export const ELEMENTS: Record<string, CatalogElement> = {
       "As a clickable action — use a button with an icon instead"
     ],
     "contentTips": [
-      "Use a PascalCase RemixIcon name (e.g. \"StarFill\", \"CheckFill\", \"ArrowRightFill\") in specials.name"
+      "Use a PascalCase RemixIcon name (e.g. \"StarFill\", \"CheckFill\", \"ArrowRightFill\") in specials.name",
+      "config.iconSize is the GLYPH size in px (default 24) and is responsive: set it per breakpoint (e.g. 34 at desktop, 24 at mobile) to resize the glyph inside a box whose width/height also differ per breakpoint"
     ],
     "semantics": [
       "icon",
@@ -17614,6 +17615,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
       "Use specials.displayType \"color\" for fashion-style colour pills (~30×17px, rounded, ringed when selected). The colours come from ONE site-level map, Settings → Variant colours (site settings `variantColors`: { \"<value>\": \"#hex\" }, matched trimmed and case-insensitively) — never put hex codes on the node. A value the map has no colour for renders as a label chip, so an unmapped value is still pickable",
       "In \"color\" mode size the pills per breakpoint with config.swatchWidth / swatchHeight / swatchRadius (px numbers; defaults 30 / 17 / 999) and the selected ring with config.swatchRing (a colour)",
       "Set config.variantLabel.showValue: true to show the chosen value beside the attribute name (\"Màu sắc: Trắng\"); the published page updates it as the shopper picks. Most useful with \"color\" / \"image\" swatches, whose values have no visible text",
+      "The chosen value inherits the label's look. To style it apart (e.g. a grey #525252 name with a black value at weight 500), set config.valueColor / config.valueWeight (\"400\", \"500\", \"700\" or \"inherit\" — the values the inspector offers) on the LABEL satellite (the node config.variantLabelId points at), per breakpoint; \"inherit\" = same as the name",
       "Use specials.defaultVariant.enabled + values to pre-select a value per attribute",
       "A product CARD in a list (product-list / dataset card) should usually show only the colour axis: set config.showAttributes to that one attribute name (e.g. [\"Color\"] or [\"Màu sắc\"]) and leave Size for the product page buy box, which keeps showAttributes empty (= every attribute)",
       "config.showAttributes matches attribute names trimmed and case-insensitively, keeps the product order, and drops a name the product does not have",
@@ -17653,7 +17655,9 @@ export const ELEMENTS: Record<string, CatalogElement> = {
         "textAlign": "left"
       },
       "config": {
-        "textGlobalStyle": "heading-6"
+        "textGlobalStyle": "heading-6",
+        "valueColor": "inherit",
+        "valueWeight": "inherit"
       }
     },
     "inspector": [
@@ -17740,6 +17744,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
       "Anywhere in a page tree — it is a style-holder, not a rendered element"
     ],
     "contentTips": [
+      "config.valueColor / config.valueWeight style the chosen VALUE inside the label (\"Màu sắc: Trắng\", shown when the owner sets config.variantLabel.showValue) apart from the name, per breakpoint; the default \"inherit\" keeps it the same as the name",
       "Style the attribute labels by editing this node: its base style is the label look"
     ],
     "semantics": [
@@ -17974,7 +17979,8 @@ export const ELEMENTS: Record<string, CatalogElement> = {
         "priceValue": "$0.00",
         "compareValue": "$0.00",
         "displayPriceId": "both",
-        "textGlobalStyle": "text-1"
+        "textGlobalStyle": "text-1",
+        "compareColor": "#7b7b7b"
       },
       "specials": {
         "htmlTag": "p"
@@ -27812,7 +27818,8 @@ export const ELEMENTS: Record<string, CatalogElement> = {
             "label": "Price display",
             "controls": [
               "price_display",
-              "price_position"
+              "price_position",
+              "price_compare_color"
             ]
           },
           {
@@ -27841,6 +27848,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
             "controls": [
               "text_global_style",
               "text_color",
+              "price_compare_color",
               "text_style",
               "font_family",
               "font_size",
@@ -27927,6 +27935,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
       "htmlTag",
       "price_display",
       "price_position",
+      "price_compare_color",
       "width_select",
       "height_select",
       "size_bounds",
@@ -27969,7 +27978,8 @@ export const ELEMENTS: Record<string, CatalogElement> = {
       "Set config.kind to \"prices\" to show one or both values, or \"price\" / \"compare_price\" for a single value",
       "When kind is \"prices\", use config.displayPriceId (\"price\" | \"compare_price\" | \"both\") to pick which values show",
       "Seed config.priceValue and config.compareValue with the formatted strings (\"$0.00\")",
-      "Style the price text on each CHILD through its Typography group; the parent styles the box only. The compare price is rendered struck-through and seeded muted (#7f7f7f)",
+      "Style the price text on each CHILD through its Typography group; the parent styles the box only. The compare price is rendered struck-through and muted (#7b7b7b)",
+      "The struck compare price ignores text color (its span carries its own grey) — recolour it with config.compareColor (per breakpoint, e.g. \"#e00000\" for a red sale). Set it on the parent to colour every child's compare value, or on the compare_price child alone",
       "config.position on the parent sets the axis (\"top\"/\"bottom\" stack vertically) and puts the compare value first for \"right\"/\"bottom\"",
       "Inside a cart-item row, displayPriceId \"both\" shows each line's price and its struck-through compare-at; the compare value hides itself on a line that saves nothing, so \"both\" is safe for a cart whose products mostly have no compare price"
     ],
@@ -36799,6 +36809,7 @@ export const BINDING_SOURCES: string[] = [
   "cartLine.lineTotalCents",
   "cartLine.quantity",
   "cartLine.variant",
+  "cartLine.variantLabel",
   "category.description",
   "category.image",
   "category.title",
@@ -40643,7 +40654,8 @@ export const STATIC_SIZING: Record<string, string[]> = {
   ],
   "heading": [],
   "icon": [
-    "height"
+    "height",
+    "width"
   ],
   "image": [],
   "image-comparison": [
@@ -42237,7 +42249,8 @@ export const BASE_ONLY_CONFIG: string[] = [
  * breakpoint by the satellite CSS compiler as the --icon-size var.
  */
 export const BASE_ONLY_EXCEPTIONS: string[] = [
-  "quantity-button:iconSize"
+  "quantity-button:iconSize",
+  "icon:iconSize"
 ];
 
 /**

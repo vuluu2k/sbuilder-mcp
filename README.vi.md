@@ -139,7 +139,7 @@ nhét ngược lại vào mọi bản cài.
 | `sb_undo` | Hoàn tác / làm lại các thao tác ghi trong phiên — chỉnh sửa trang, form và PUT qua `sb_api_call`, mỗi mục ghi tên tool và đối tượng, mặc định của trang đang mở (`all: true` cho mọi trang); trang bị từ chối nếu người khác đã lưu sau đó. Version và history của nền tảng (`sb_page_version`) sống lâu hơn process này |
 
 Bốn mươi tool, **1011 operation API** (375 trong 466 lệnh ghi có hình dạng body đọc thẳng
-từ handler), 125 element, 97 nguồn binding. `sb_api_find` là
+từ handler), 125 element, 98 nguồn binding. `sb_api_find` là
 một chỉ mục chứ không phải mỗi endpoint một tool, nên danh sách tool vẫn ngắn trong khi mọi
 thứ nền tảng làm được vẫn với tới — và operation mới thêm bên nền tảng sẽ tự có sau lần
 `npm run codegen` kế tiếp.

@@ -404,6 +404,19 @@ function readBindingSources(repo: string): string[] {
     console.error(`binding sources: *Context functions return keys the list lacks: ${missing.join(', ')}`);
     process.exit(1);
   }
+  // A CART-ROW source never enters a scope: the value lives in the shopper's
+  // browser and reaches the row through a row directive (render/html.go
+  // rowDirectiveFor) — `cartLine.variantLabel` is the case. Read the switch's
+  // cases, or sb_review calls the platform's own cart-line label seed dead.
+  try {
+    const html = readFileSync(resolve(repo, 'server/render/html.go'), 'utf8');
+    const body = html.match(/^func rowDirectiveFor\([^\n]*\n([\s\S]*?)^\}/m)?.[1] ?? '';
+    for (const m of body.matchAll(/case ((?:"[a-zA-Z]+\.[a-zA-Z]+",?\s*)+):/g))
+      for (const k of m[1].matchAll(/"([a-zA-Z]+\.[a-zA-Z]+)"/g)) found.add(k[1]);
+    if (!body) console.error('binding sources: rowDirectiveFor not found in server/render/html.go — cart-row sources skipped');
+  } catch {
+    /* a checkout without the Go side */
+  }
   if (found.size < 15 || namespaces.size < 5) {
     console.error(
       `only ${found.size} binding sources in ${namespaces.size} namespaces found — have scope.go / binding.ts moved?`,

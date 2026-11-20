@@ -54,18 +54,20 @@ describe('config keys the publish path reads from base only', () => {
     // quantity-button's iconSize becomes the --icon-size var through the
     // satellite CSS compiler, so forcing it to base would take a working
     // per-breakpoint control away.
-    expect(isBaseOnlyConfig('icon', 'iconSize')).toBe(true);
+    // list-item still reads iconSize from base; icon and quantity-button compile it.
+    expect(isBaseOnlyConfig('list-item', 'iconSize')).toBe(true);
     expect(isBaseOnlyConfig('quantity-button', 'iconSize')).toBe(false);
+    expect(isBaseOnlyConfig('icon', 'iconSize')).toBe(false);
   });
 
   it('leaves every other config key on the breakpoint', () => {
-    const { base, responsive } = splitBaseOnly('icon', { iconSize: 32, gap: '8px' });
+    const { base, responsive } = splitBaseOnly('list-item', { iconSize: 32, gap: '8px' });
     expect(base).toEqual({ iconSize: 32 });
     expect(responsive).toEqual({ gap: '8px' });
   });
 
   it('splits an unset the same way, so a removal lands where the write did', () => {
-    const { base, responsive } = splitBaseOnlyKeys('icon', ['iconSize', 'gap']);
+    const { base, responsive } = splitBaseOnlyKeys('list-item', ['iconSize', 'gap']);
     expect(base).toEqual(['iconSize']);
     expect(responsive).toEqual(['gap']);
   });

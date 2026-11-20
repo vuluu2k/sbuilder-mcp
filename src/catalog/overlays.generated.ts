@@ -471,7 +471,8 @@ export const OVERLAY_SEEDS: Record<'cart' | 'popup' | 'quickview', OverlayDocume
           "priceValue": "$0.00",
           "compareValue": "0.00",
           "displayPriceId": "both",
-          "textGlobalStyle": "text-1"
+          "textGlobalStyle": "text-1",
+          "compareColor": "#7b7b7b"
         },
         "specials": {
           "htmlTag": "p"
@@ -1473,7 +1474,8 @@ export const OVERLAY_SEEDS: Record<'cart' | 'popup' | 'quickview', OverlayDocume
           "priceValue": "$0.00",
           "compareValue": "$0.00",
           "displayPriceId": "both",
-          "textGlobalStyle": "text-1"
+          "textGlobalStyle": "text-1",
+          "compareColor": "#7b7b7b"
         },
         "specials": {
           "htmlTag": "p"
@@ -1541,7 +1543,8 @@ export const OVERLAY_SEEDS: Record<'cart' | 'popup' | 'quickview', OverlayDocume
           "priceValue": "$0.00",
           "compareValue": "$0.00",
           "displayPriceId": "both",
-          "textGlobalStyle": "text-1"
+          "textGlobalStyle": "text-1",
+          "compareColor": "#7b7b7b"
         },
         "specials": {
           "htmlTag": "p"
@@ -1609,7 +1612,8 @@ export const OVERLAY_SEEDS: Record<'cart' | 'popup' | 'quickview', OverlayDocume
           "priceValue": "$0.00",
           "compareValue": "$0.00",
           "displayPriceId": "both",
-          "textGlobalStyle": "text-1"
+          "textGlobalStyle": "text-1",
+          "compareColor": "#7b7b7b"
         },
         "specials": {
           "htmlTag": "p"
@@ -1769,7 +1773,9 @@ export const OVERLAY_SEEDS: Record<'cart' | 'popup' | 'quickview', OverlayDocume
           "textAlign": "left"
         },
         "config": {
-          "textGlobalStyle": "heading-6"
+          "textGlobalStyle": "heading-6",
+          "valueColor": "inherit",
+          "valueWeight": "inherit"
         },
         "specials": {},
         "responsive": {},
@@ -2592,7 +2598,8 @@ export const CART_SEEDS: Record<string, OverlayDocument> = {
           "priceValue": "$0.00",
           "compareValue": "0.00",
           "displayPriceId": "both",
-          "textGlobalStyle": "text-1"
+          "textGlobalStyle": "text-1",
+          "compareColor": "#7b7b7b"
         },
         "specials": {
           "htmlTag": "p"
@@ -3479,7 +3486,8 @@ export const CART_SEEDS: Record<string, OverlayDocument> = {
           "priceValue": "$0.00",
           "compareValue": "0.00",
           "displayPriceId": "both",
-          "textGlobalStyle": "text-1"
+          "textGlobalStyle": "text-1",
+          "compareColor": "#7b7b7b"
         },
         "specials": {
           "htmlTag": "p"
