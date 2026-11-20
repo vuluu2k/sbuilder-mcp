@@ -6,6 +6,14 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.111.1] - 2026-11-20
+
+### Added
+- Phần tử `product-variants` có thêm `maxVisible` để gộp các giá trị màu hoặc ảnh dư thành ô "+N", `preselect` để chọn sẵn giá trị đầu tiên, và `pickAfter` cùng `pickAddedId` để hiện pop-up đã thêm vào giỏ thay cho ngăn kéo giỏ hàng sau khi chọn.
+
+### Changed
+- Danh mục phần tử được tạo lại theo web_builder v1.0.292.
+
 ## [0.111.0] - 2026-11-20
 
 ### Added

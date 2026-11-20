@@ -6,6 +6,14 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.111.1] - 2026-11-20
+
+### Added
+- The `product-variants` element gains `maxVisible` to collapse extra colour or image values into a "+N" cell, `preselect` to choose a first value, and `pickAfter` with `pickAddedId` to show the added-to-cart pop-up instead of the cart drawer after a pick.
+
+### Changed
+- The element catalog is regenerated against web_builder v1.0.292.
+
 ## [0.111.0] - 2026-11-20
 
 ### Added
