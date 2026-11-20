@@ -17174,6 +17174,10 @@ export const ELEMENTS: Record<string, CatalogElement> = {
         "optionGap": "",
         "showAttributes": [],
         "pickAction": "select",
+        "preselect": "none",
+        "pickAfter": "open_cart",
+        "pickAddedId": "",
+        "maxVisible": 0,
         "swatchWidth": 30,
         "swatchHeight": 17,
         "swatchRadius": 999,
@@ -17456,8 +17460,12 @@ export const ELEMENTS: Record<string, CatalogElement> = {
             "label": "Variant display",
             "controls": [
               "variant_display",
+              "variant_max_visible",
               "variant_show_attributes",
-              "variant_pick_action"
+              "variant_preselect",
+              "variant_pick_action",
+              "variant_pick_after",
+              "pickAddedId"
             ]
           },
           {
@@ -17563,8 +17571,12 @@ export const ELEMENTS: Record<string, CatalogElement> = {
       "displayType",
       "defaultVariant",
       "variant_display",
+      "variant_max_visible",
       "variant_show_attributes",
+      "variant_preselect",
       "variant_pick_action",
+      "variant_pick_after",
+      "pickAddedId",
       "variant_label",
       "variant_option",
       "variant_color_width",
@@ -17606,6 +17618,8 @@ export const ELEMENTS: Record<string, CatalogElement> = {
       "A product CARD in a list (product-list / dataset card) should usually show only the colour axis: set config.showAttributes to that one attribute name (e.g. [\"Color\"] or [\"Màu sắc\"]) and leave Size for the product page buy box, which keeps showAttributes empty (= every attribute)",
       "config.showAttributes matches attribute names trimmed and case-insensitively, keeps the product order, and drops a name the product does not have",
       "config.pickAction: \"add_to_cart\" turns every value into a quick-add button — clicking a size selects it AND adds that variant (quantity 1) to the cart, keeping any colour already picked elsewhere on the card. Use it for a product-CARD quick add (showAttributes [\"Size\"], specials.displayType \"image_label\"), usually inside a flex-block overlay with config.revealOnHover true; keep the default \"select\" on a product page buy box, where an Add to cart button does the adding",
+      "After a pick-to-add the cart drawer opens (config.pickAfter \"open_cart\", the default). Set config.pickAfter: \"show_added\" with config.pickAddedId = the overlay id of the site's added-to-cart pop-up to show that small card instead; an empty or missing pop-up falls back to the drawer, so the add is never silent",
+      "config.maxVisible (a count, PER BREAKPOINT; 0 = all) caps how many values a \"color\" / \"image\" / \"image_label\" row shows — the rest collapse into one \"+N\" cell (Coolmate cards: 4 colour pills then \"+1\"). Set it on base and override it in responsive.mobile for a phone. A pre-selected value past the limit stays visible (it takes the last slot). The \"+N\" text uses the product-variant-option satellite's typography. Ignored by \"select\"",
       "Sold-out values are crossed out automatically on the published page (both modes); in \"add_to_cart\" mode they cannot be clicked. Do not hand-style or hide them",
       "Style the attribute labels through the product-variant-label satellite and the options through the product-variant-option satellite",
       "Do not add children — the blocks, labels and options are rendered internally"
