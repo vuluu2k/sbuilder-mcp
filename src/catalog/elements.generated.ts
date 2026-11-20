@@ -40236,6 +40236,389 @@ export const FIRST_CHILD_ONLY: string[] = [
   "list-dataset"
 ];
 
+/** Sizing properties each element's own stylesheet sets (scripts/gen-catalog.ts readStaticSizing) — where sb_set pin_wider must not write a CSS initial. */
+export const STATIC_SIZING: Record<string, string[]> = {
+  "accordion": [
+    "height",
+    "width"
+  ],
+  "accordion-content": [
+    "width"
+  ],
+  "accordion-item": [],
+  "account-info": [
+    "height",
+    "maxWidth",
+    "width"
+  ],
+  "address-book": [
+    "height"
+  ],
+  "breadcrumb": [
+    "height",
+    "width"
+  ],
+  "bundle-items": [],
+  "button": [
+    "height",
+    "width"
+  ],
+  "carousel": [
+    "height",
+    "width"
+  ],
+  "carousel-slide": [
+    "width"
+  ],
+  "cart-count": [],
+  "cart-drawer": [
+    "maxHeight",
+    "maxWidth",
+    "width"
+  ],
+  "cart-item": [],
+  "cart-order": [
+    "width"
+  ],
+  "cart-total": [],
+  "chat-widget": [
+    "height",
+    "maxHeight",
+    "maxWidth",
+    "width"
+  ],
+  "code-component": [],
+  "collection-media": [
+    "height",
+    "width"
+  ],
+  "content-list": [
+    "height",
+    "width"
+  ],
+  "content-list-item": [],
+  "countdown": [
+    "width"
+  ],
+  "course-outline": [
+    "height"
+  ],
+  "course-player": [
+    "height",
+    "maxHeight",
+    "maxWidth",
+    "width"
+  ],
+  "currency-switcher": [
+    "width"
+  ],
+  "custom-code": [
+    "height"
+  ],
+  "dataset-block": [
+    "maxWidth",
+    "width"
+  ],
+  "divider": [
+    "height",
+    "width"
+  ],
+  "dropdown": [
+    "height",
+    "width"
+  ],
+  "dropdown-panel": [],
+  "dropdown-trigger": [],
+  "fieldskin": [
+    "height"
+  ],
+  "filter-checkbox": [
+    "height",
+    "width"
+  ],
+  "filter-color": [
+    "height",
+    "width"
+  ],
+  "filter-radio": [
+    "height",
+    "width"
+  ],
+  "filter-slider": [
+    "height",
+    "width"
+  ],
+  "filter-tag": [
+    "height",
+    "width"
+  ],
+  "filtershared": [
+    "height",
+    "width"
+  ],
+  "flash-sale-price": [],
+  "flash-sale-progress": [
+    "height",
+    "width"
+  ],
+  "flex-block": [
+    "width"
+  ],
+  "flex-section": [
+    "maxWidth",
+    "width"
+  ],
+  "form": [
+    "height"
+  ],
+  "form-address": [
+    "height",
+    "maxHeight",
+    "maxWidth",
+    "width"
+  ],
+  "form-calendar": [
+    "height",
+    "width"
+  ],
+  "form-checkbox": [
+    "height",
+    "width"
+  ],
+  "form-date": [
+    "height",
+    "width"
+  ],
+  "form-discount-code": [],
+  "form-estimate": [],
+  "form-file": [
+    "height",
+    "maxWidth"
+  ],
+  "form-link": [],
+  "form-number": [
+    "height",
+    "width"
+  ],
+  "form-paragraph": [],
+  "form-payment": [
+    "height",
+    "maxWidth",
+    "width"
+  ],
+  "form-radio": [
+    "height",
+    "width"
+  ],
+  "form-segment": [],
+  "form-select": [
+    "height",
+    "width"
+  ],
+  "form-step-button": [
+    "height",
+    "width"
+  ],
+  "form-step-count": [],
+  "form-step-nav": [],
+  "form-submit": [
+    "height",
+    "width"
+  ],
+  "form-text": [
+    "height",
+    "width"
+  ],
+  "form-timeslot": [
+    "height",
+    "width"
+  ],
+  "form-title": [],
+  "formestimate": [],
+  "formoptions": [],
+  "formpattern": [],
+  "free-ship-bar": [
+    "height",
+    "width"
+  ],
+  "google-map": [
+    "height",
+    "width"
+  ],
+  "hamburger-menu": [
+    "height",
+    "maxHeight",
+    "maxWidth",
+    "width"
+  ],
+  "heading": [],
+  "icon": [
+    "height"
+  ],
+  "image": [],
+  "image-comparison": [
+    "height",
+    "width"
+  ],
+  "image-marquee": [
+    "width"
+  ],
+  "list": [],
+  "list-dataset": [
+    "height",
+    "width"
+  ],
+  "list-empty": [],
+  "list-item": [],
+  "list-loading": [],
+  "locale-switcher": [
+    "height",
+    "width"
+  ],
+  "media-dataset": [
+    "height",
+    "width"
+  ],
+  "member-field": [],
+  "member-gate": [],
+  "menu": [
+    "height",
+    "width"
+  ],
+  "menu-drawer": [],
+  "menu-dropdown": [],
+  "menu-item": [],
+  "menu-panel": [
+    "width"
+  ],
+  "my-courses": [
+    "height",
+    "maxWidth",
+    "width"
+  ],
+  "my-tickets": [
+    "height"
+  ],
+  "my-vouchers": [
+    "height"
+  ],
+  "order-history": [
+    "height",
+    "width"
+  ],
+  "order-receipt": [
+    "width"
+  ],
+  "overlayplace": [],
+  "payment-status": [],
+  "points-card": [
+    "height",
+    "width"
+  ],
+  "points-prompt": [],
+  "popover": [
+    "height",
+    "width"
+  ],
+  "popup": [
+    "height",
+    "maxHeight",
+    "width"
+  ],
+  "pricing-dataset": [],
+  "product-image-feature": [
+    "height",
+    "width"
+  ],
+  "product-image-list": [
+    "height",
+    "width"
+  ],
+  "product-variant-label": [],
+  "product-variant-option": [],
+  "product-variants": [
+    "height",
+    "maxHeight",
+    "width"
+  ],
+  "qr-code": [
+    "height",
+    "width"
+  ],
+  "quantity-button": [],
+  "quantity-dataset": [
+    "height",
+    "width"
+  ],
+  "quantity-input": [],
+  "quickview": [
+    "maxWidth",
+    "width"
+  ],
+  "rating-stars": [
+    "height",
+    "width"
+  ],
+  "root": [],
+  "sale-badge": [],
+  "search-input": [
+    "height",
+    "maxHeight",
+    "maxWidth",
+    "width"
+  ],
+  "search-keywords": [],
+  "select": [],
+  "soundcloud": [
+    "height",
+    "width"
+  ],
+  "spline-scene": [
+    "height",
+    "width"
+  ],
+  "tab": [
+    "width"
+  ],
+  "tab-content": [
+    "width"
+  ],
+  "tab-item": [],
+  "text": [],
+  "text-dataset": [
+    "height",
+    "width"
+  ],
+  "text-marquee": [
+    "width"
+  ],
+  "text-marquee-item": [],
+  "theme-switcher": [
+    "height",
+    "width"
+  ],
+  "timeslot": [],
+  "video": [
+    "height",
+    "width"
+  ],
+  "vimeo": [
+    "height",
+    "width"
+  ],
+  "voucher-list": [
+    "height"
+  ],
+  "wishlist-list": [
+    "height",
+    "width"
+  ],
+  "youtube": [
+    "height",
+    "width"
+  ]
+};
+
 /**
  * What a setting needs from its NEIGHBOURS before it does anything.
  *

@@ -482,6 +482,52 @@ function readBoundSpecials(repo: string): Record<string, string[]> {
 }
 
 /**
+ * WHICH SIZING PROPERTIES AN ELEMENT'S OWN STYLESHEET SETS, per node dir.
+ *
+ * `sb_set pin_wider` writes a CSS initial (`max-width:none`, `width:auto`) at
+ * base so a narrow-only value stops falling back up to desktop. A per-node rule
+ * is an ID selector (render/style/style.go NodeSel), so it beats the element's
+ * static CSS UNCONDITIONALLY — `.wb-divider{width:100%}` would collapse under a
+ * pinned `auto`. So the pin is only safe where the element sets no such
+ * property itself, and the renderer's Go source is the only place that says.
+ *
+ * Deliberately over-inclusive: ANY mention in the dir's Go (comments, per-node
+ * css.go, quoted keys), plus every `render/nodes/<pkg>` the dir imports (the
+ * shared field skin). A false "sets it" costs a pin; a false "does not" costs a
+ * desktop layout.
+ */
+function readStaticSizing(repo: string): Record<string, string[]> {
+  const dir = resolve(repo, 'server/render/nodes');
+  const CAMEL: Record<string, string> = { width: 'width', height: 'height', 'max-width': 'maxWidth', 'max-height': 'maxHeight' };
+  const own = new Map<string, Set<string>>();
+  const uses = new Map<string, Set<string>>();
+  for (const entry of readdirSync(dir, { withFileTypes: true })) {
+    if (!entry.isDirectory()) continue;
+    const props = new Set<string>();
+    const imports = new Set<string>();
+    for (const f of readdirSync(resolve(dir, entry.name))) {
+      if (!f.endsWith('.go') || f.endsWith('_test.go')) continue;
+      const src = readFileSync(resolve(dir, entry.name, f), 'utf8');
+      for (const m of src.matchAll(/(?:^|[^-\w])(max-width|max-height|width|height)(?:\s*:|")/gm)) props.add(CAMEL[m[1]]);
+      for (const m of src.matchAll(/"[^"]*\/server\/render\/nodes\/([a-z0-9-]+)"/g)) imports.add(m[1]);
+    }
+    own.set(entry.name, props);
+    uses.set(entry.name, imports);
+  }
+  const out: Record<string, string[]> = {};
+  for (const [type, props] of own) {
+    const all = new Set(props);
+    for (const pkg of uses.get(type) ?? []) for (const p of own.get(pkg) ?? []) all.add(p);
+    out[type] = [...all].sort();
+  }
+  if (!out.divider?.includes('width')) {
+    console.error('render/nodes/divider no longer reads as setting width — has the static CSS moved?');
+    process.exit(1);
+  }
+  return out;
+}
+
+/**
  * The elements whose renderer clones only their FIRST child.
  *
  * `list-dataset` returns `n.Data.Nodes[0]` as the template it repeats per record
@@ -1427,6 +1473,7 @@ export const API_DEFINITIONS: Record<string, unknown> = ${JSON.stringify(
   const presentOnly = readPresentOnlySources(repo, bindingSources);
   const boundSpecials = readBoundSpecials(repo);
   const firstChildOnly = readFirstChildOnly(repo);
+  const staticSizing = readStaticSizing(repo);
   const baseOnly = readBaseOnlyConfig(repo);
   baseOnly.keys.push(...readRecordBaseOnly(repo, baseOnly.keys));
   const recordProbes = recordBindingProbes(bindMod.datasetBindings);
@@ -3354,6 +3401,9 @@ export const SATELLITE_RULES: Record<string, SatelliteRule[]> = ${JSON.stringify
 export const ELEMENT_SEEDS: Record<string, NodeSeed[]> = ${JSON.stringify(elementSeeds, null, 2)};
 
 export const FIRST_CHILD_ONLY: string[] = ${JSON.stringify(firstChildOnly, null, 2)};
+
+/** Sizing properties each element's own stylesheet sets (scripts/gen-catalog.ts readStaticSizing) — where sb_set pin_wider must not write a CSS initial. */
+export const STATIC_SIZING: Record<string, string[]> = ${JSON.stringify(staticSizing, null, 2)};
 
 /**
  * What a setting needs from its NEIGHBOURS before it does anything.
