@@ -6,6 +6,16 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.111.3] - 2026-11-20
+
+### Added
+- The element catalog adds `compareColor` for the struck compare price, which can be set per breakpoint on a price parent or on the `compare_price` child.
+- The element catalog adds `valueColor` and `valueWeight` to style the chosen variant value apart from its label name.
+
+### Changed
+- The element catalog is regenerated against web_builder v1.0.299, and cart-line variant labels now count as live binding sources.
+- The icon guidance now describes `config.iconSize` as the per-breakpoint glyph size in px, and the `icon` element's `iconSize` is recognised as a live key.
+
 ## [0.111.2] - 2026-11-20
 
 ### Changed

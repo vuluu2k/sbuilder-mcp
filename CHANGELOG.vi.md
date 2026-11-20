@@ -6,6 +6,16 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.111.3] - 2026-11-20
+
+### Added
+- Danh mục phần tử có thêm `compareColor` để đổi màu giá so sánh bị gạch ngang, đặt được theo từng breakpoint trên phần tử cha của giá hoặc trên phần tử con `compare_price`.
+- Danh mục phần tử có thêm `valueColor` và `valueWeight` để tạo kiểu cho giá trị biến thể đã chọn tách khỏi tên nhãn.
+
+### Changed
+- Danh mục phần tử được tạo lại theo web_builder v1.0.299, và nhãn biến thể của dòng giỏ hàng giờ được tính là nguồn binding đang hoạt động.
+- Hướng dẫn về icon giờ mô tả `config.iconSize` là kích thước glyph tính bằng px theo từng breakpoint, và `iconSize` của phần tử `icon` được nhận là key đang hoạt động.
+
 ## [0.111.2] - 2026-11-20
 
 ### Changed
