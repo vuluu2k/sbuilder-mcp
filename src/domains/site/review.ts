@@ -1,6 +1,6 @@
 import { isDeepStrictEqual } from 'node:util';
 import { FILTER_VALUE_TYPES, TAG_GROUP, sourceOf } from './filtervalues.js';
-import { childrenOf, childrenWithSatellites, isOverlay, isSharedSection, pageChildren, subtreeIds, appBlockRoot, SPEC_GLOBAL_REF, SPEC_APP_BLOCK_REF, type DocLike } from '../../core/tree.js';
+import { ancestors, childrenOf, childrenWithSatellites, isOverlay, isSharedSection, pageChildren, subtreeIds, appBlockRoot, SPEC_GLOBAL_REF, SPEC_APP_BLOCK_REF, type DocLike } from '../../core/tree.js';
 import { STUCK_STATE, stickyBlockedBy, stuckHostOf, isPinnedNode } from './sticky.js';
 import { bandOf, isGlobal, type Band } from './traps.js';
 import { exampleCopy } from './examplecopy.js';
@@ -204,12 +204,20 @@ const GENERIC_LABELS: ReadonlySet<string> = new Set(
   [
     ...Object.entries(SEED_COPY_VI).flat(),
     'Thêm vào giỏ hàng', 'Xem nhanh', 'Xem chi tiết', 'Chi tiết', 'Xem thêm', 'Mua', 'Giảm giá', 'Mới',
+    'Bán chạy', 'Hết hàng', 'Freeship', 'Free ship', 'Bestseller', 'Best seller', 'Sold out',
     'Quick view', 'View', 'View details', 'Details', 'Shop now', 'Sale', 'New', 'Hot',
-  ].map((s) => s.toLowerCase()),
+  ].map(normLabel),
 );
 
+/** NFC, lowercased, edge punctuation / symbols / emoji stripped: "🔥 Bán chạy!" → "bán chạy". */
+function normLabel(v: string): string {
+  return v.normalize('NFC').replace(/^[\p{P}\p{S}\s]+|[\p{P}\p{S}\s]+$/gu, '').toLowerCase();
+}
+
+// ponytail: an exact word list, not "1–2 words, no digits": "Áo Polo" is two
+// words and a product name. Grow the list when a real badge is misreported.
 function genericLabel(v: unknown): boolean {
-  return typeof v === 'string' && GENERIC_LABELS.has(v.trim().toLowerCase());
+  return typeof v === 'string' && GENERIC_LABELS.has(normLabel(v));
 }
 
 /** Click actions that act on the record the card renders, so a constant label is right. */
@@ -1550,13 +1558,18 @@ export function reviewDesign(
       // control whose click is about THIS record (quick view, wishlist, a
       // purchase binding, a bound link) or a generic action/badge word. Only for
       // text: a picture is never constant by design.
-      const constant = key === 'text' && (genericLabel(value) || recordScoped((n as { events?: NodeEventLike[] }).events, bindings));
+      const generic = key === 'text' && genericLabel(value);
+      const constant = generic || (key === 'text' && recordScoped((n as { events?: NodeEventLike[] }).events, bindings));
       // A HEADING HARD-CODED IN THE RECORD TEMPLATE — a product name typed into
-      // the card — shows that one name on every card. The template only: a
-      // satellite (the list's empty state) is authored once on purpose.
+      // the card — shows that one name on every card. Only under a real
+      // REPEATER (FIRST_CHILD_ONLY: list-dataset), never a single-record
+      // dataset-block (a buy box); not in a satellite (the list's empty state,
+      // authored once on purpose); and only a generic label exempts it — a bound
+      // link makes the card clickable, not its name right.
       const hardCoded =
-        type === 'heading' && key === 'text' && !isBlank && value !== seed && !inSatellite.has(id);
-      if (repeater && !constant && (isBlank || (seed !== undefined && value === seed) || hardCoded)) {
+        type === 'heading' && key === 'text' && !isBlank && value !== seed && !generic && !inSatellite.has(id) &&
+        ancestors(d, id).some((a) => FIRST_CHILD_ONLY.includes(d.nodes[a]?.data.type ?? ''));
+      if (repeater && ((!constant && (isBlank || (seed !== undefined && value === seed))) || hardCoded)) {
         out.push({
           code: 'static_in_dataset',
           nodeId: id,

@@ -337,6 +337,48 @@ describe('reviewDesign()', () => {
       expect(codesFor(generic.d, generic.id)).not.toContain('static_in_dataset');
     });
 
+    it.each([
+      ['quick_view', { events: [{ id: 'e1', name: 'click', action: 'quick_view' }] }],
+      ['toggle_wishlist', { events: [{ id: 'e1', name: 'click', action: 'toggle_wishlist' }] }],
+      ['cart_increment', { events: [{ id: 'e1', name: 'click', action: 'cart_increment' }] }],
+      ['a purchase binding', { bindings: [{ id: 'bind-product-action', source: 'product.id', field: 'specials.boundProductId' }] }],
+      ['a bound href', { bindings: [{ id: 'b1', source: 'product.url', field: 'specials.href' }] }],
+      ['a bound boundProductURL', { bindings: [{ id: 'b1', source: 'product.url', field: 'specials.boundProductURL' }] }],
+    ])('a seed-text button whose %s is about the record is not static_in_dataset', (_, extra) => {
+      const { d, id } = card({ type: 'button' });
+      expect(codesFor(d, id), 'liveness: the bare seed button fires').toContain('static_in_dataset');
+      d.apply(Object.entries(extra).map(([k, v]) => ({ op: 'set' as const, path: ['nodes', id, k], value: v })));
+      expect(codesFor(d, id)).not.toContain('static_in_dataset');
+    });
+
+    it('a bound link does NOT excuse a product name typed into the card heading', () => {
+      const { d, id } = card({ type: 'heading', specials: { text: 'Áo Polo Coolmate Basic' } });
+      d.apply([{ op: 'set', path: ['nodes', id, 'bindings'], value: [{ id: 'b1', source: 'product.url', field: 'specials.href' }] }]);
+      expect(codesFor(d, id)).toContain('static_in_dataset');
+    });
+
+    it('reads a badge heading through NFC, emoji and punctuation', () => {
+      for (const text of ['🔥 Bán chạy!', 'Hết hàng'.normalize('NFD'), 'SOLD OUT']) {
+        const { d, id } = card({ type: 'heading', specials: { text } });
+        expect(codesFor(d, id), text).not.toContain('static_in_dataset');
+      }
+    });
+
+    it('a heading in a single-record dataset-block (a buy box) is not a repeater card', () => {
+      const d = emptyDoc();
+      d.apply(
+        addSubtree(d, 'ROOT', {
+          type: 'flex-section',
+          children: [{ type: 'dataset-block', children: [{ type: 'heading', specials: { text: 'Áo Polo Coolmate Basic' } }] }],
+        }).patches,
+      );
+      const block = d.node(d.node('ROOT').data.nodes[0]).data.nodes[0];
+      const h = d.node(block).data.nodes[0];
+      expect(codesFor(d, h), 'standalone dataset-block').not.toContain('static_in_dataset');
+      const listed = card({ type: 'heading', specials: { text: 'Áo Polo Coolmate Basic' } });
+      expect(codesFor(listed.d, listed.id), 'the same heading under list-dataset').toContain('static_in_dataset');
+    });
+
     it("does not flag the list's own empty-state heading (a satellite, authored once)", () => {
       const { d, list } = card({ type: 'heading', specials: { text: 'Áo Polo' } });
       d.apply([
