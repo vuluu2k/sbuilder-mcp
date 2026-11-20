@@ -234,3 +234,22 @@ describe('sb_event refuses a navigation with nowhere to go', () => {
     }
   });
 });
+
+/**
+ * A STALE CATALOG, NOT A WRONG KEY. `sb_add` reported `unknown_key
+ * specials.countFormat` for a key the deployed server read: the published MCP's
+ * catalog predated it. The platform reports no version to compare, so the note
+ * names the catalog's build and says a newer server may know the key.
+ */
+describe('unknown_key names the catalog it was judged against', () => {
+  it('says which web_builder build, and that updating sbuilder-mcp may be the fix', async () => {
+    const { PLATFORM_SOURCE } = await import('../src/catalog/source.generated.js');
+    expect(PLATFORM_SOURCE.commit, 'fixture: the committed catalog carries its provenance').toBeTruthy();
+    const [c] = writeCheck('heading', 'specials', { countFormatX: 'x' });
+    expect(c.note.code).toBe('unknown_key');
+    expect(c.note.problem).toContain(PLATFORM_SOURCE.commit!.slice(0, 9));
+    expect(c.note.problem).toContain(PLATFORM_SOURCE.committedAt!.slice(0, 10));
+    expect(c.note.fix).toMatch(/sbuilder-mcp@latest/);
+    expect(writeCheck('heading', 'specials', { text: 'x' }).map((n) => n.note.code), 'a known key stays silent').not.toContain('unknown_key');
+  });
+});

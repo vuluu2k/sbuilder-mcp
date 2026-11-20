@@ -17,6 +17,7 @@ import { fill } from './findings.js';
 import { collectsValue, formFieldFindings, formFields, nameFromLabel } from './formdoc.js';
 import { ICON_CONTROLS, ICON_KEYS } from '../../catalog/icons.generated.js';
 import { TRANSLATABLE_SPECIALS } from '../../catalog/translations.generated.js';
+import { PLATFORM_SOURCE } from '../../catalog/source.generated.js';
 import { INLINE_RICH } from '../../catalog/richtext.generated.js';
 import { iconNote } from './icons.js';
 import {
@@ -106,6 +107,16 @@ const WIDGET_WRITES: Record<string, ['config' | 'specials', string]> = {
 };
 
 const known = new Map<string, Record<'config' | 'specials', Set<string>>>();
+
+/**
+ * WHICH CATALOG judged a key unknown. The platform reports no version of its
+ * own (`/healthz` says "ok"), so nothing can compare this catalog with the
+ * deployment — but naming the build turns "unknown key" into "unknown to a
+ * catalog from <date>", which is what a key the server added last week is.
+ */
+const CATALOG_BUILD = PLATFORM_SOURCE.commit && PLATFORM_SOURCE.committedAt
+  ? `this MCP's catalog (web_builder ${PLATFORM_SOURCE.commit.slice(0, 9)}, ${PLATFORM_SOURCE.committedAt.slice(0, 10)})`
+  : "this MCP's catalog";
 
 function keysOf(type: string): Record<'config' | 'specials', Set<string>> | null {
   const el = ELEMENTS[type];
@@ -298,15 +309,16 @@ export function writeCheck(
         `unknown-key:${type}.${namespace}.${k}`,
         'unknown_key',
         k,
-        `${namespace}.${k} is not a key ${type} is known to read — not in its seeded defaults, its ` +
-          'declared controls or any generated vocabulary. It is stored as written; if nothing reads ' +
-          'it, the write changes nothing on the page.',
+        `${namespace}.${k} is not a key ${type} is known to read in ${CATALOG_BUILD} — not in its seeded ` +
+          'defaults, its declared controls or any generated vocabulary. It is stored as written; a newer ' +
+          'server may read it, and if nothing does, the write changes nothing on the page.',
         ks[other].has(k)
           ? `${type} reads ${other}.${k} — write it in namespace "${other}".`
           : /icon/i.test(k) && ICON_KEYS[type]?.length
             ? `${type} keeps its glyph in ${ICON_KEYS[type].map((i) => `${i.ns}.${i.key}`).join(' / ')} — write the icon name there.`
             : `Check the spelling against sb_traits_for "${type}"; a CSS property belongs in namespace ` +
-              '"style". Ignore this if the key is newer than this catalog.',
+              '"style". If the key is newer than the catalog, the server may know it — update sbuilder-mcp ' +
+              '(npx -y sbuilder-mcp@latest) and ignore this.',
       );
       continue;
     }
