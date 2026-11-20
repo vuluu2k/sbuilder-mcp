@@ -209,7 +209,8 @@ export const APP_SCAFFOLDS: Record<
             },
             "specials": {
               "text": "Button",
-              "stylePreset": "button-default"
+              "stylePreset": "button-default",
+              "toggledText": ""
             },
             "responsive": {},
             "events": [

@@ -948,6 +948,9 @@ export const ELEMENTS: Record<string, CatalogElement> = {
         "open_dropdown",
         "close_dropdown",
         "toggle_dropdown",
+        "toggle_visibility",
+        "show_node",
+        "hide_node",
         "logout_customer",
         "toggle_wishlist",
         "quick_view",
@@ -959,13 +962,15 @@ export const ELEMENTS: Record<string, CatalogElement> = {
     "bindingEvents": {
       "click": [
         "open_cart",
-        "go_to_checkout"
+        "go_to_checkout",
+        "show_added"
       ]
     },
     "defaults": {
       "specials": {
         "text": "Button",
-        "stylePreset": "button-default"
+        "stylePreset": "button-default",
+        "toggledText": ""
       },
       "style": {
         "width": "fit-content",
@@ -1154,7 +1159,8 @@ export const ELEMENTS: Record<string, CatalogElement> = {
       "For plain inline navigation text — use a link element instead"
     ],
     "contentTips": [
-      "Action-oriented, 1–3 words: \"Get started\", \"Buy now\", \"Learn more\""
+      "Action-oriented, 1–3 words: \"Get started\", \"Buy now\", \"Learn more\"",
+      "On an add-to-cart button the click event says what happens after the add: open_cart (the drawer), go_to_checkout, or show_added (a small \"added to cart\" pop-up named by payload.id, instead of the drawer)"
     ],
     "semantics": [
       "cta",
@@ -1412,6 +1418,9 @@ export const ELEMENTS: Record<string, CatalogElement> = {
         "open_dropdown",
         "close_dropdown",
         "toggle_dropdown",
+        "toggle_visibility",
+        "show_node",
+        "hide_node",
         "quick_view",
         "close_quick_view"
       ]
@@ -1584,6 +1593,9 @@ export const ELEMENTS: Record<string, CatalogElement> = {
         "open_dropdown",
         "close_dropdown",
         "toggle_dropdown",
+        "toggle_visibility",
+        "show_node",
+        "hide_node",
         "logout_customer",
         "toggle_wishlist",
         "quick_view",
@@ -12464,6 +12476,9 @@ export const ELEMENTS: Record<string, CatalogElement> = {
         "source": "auto",
         "showCurrent": true,
         "homeLabel": "Home",
+        "homeDisplay": "label",
+        "separatorType": "icon",
+        "separatorText": "/",
         "crumbs": [
           {
             "id": "bc_home",
@@ -12493,6 +12508,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
       "config": {
         "iconSize": 16,
         "iconColor": "#000000",
+        "homeIconSize": 14,
         "textGlobalStyle": "text-1",
         "currentColor": "",
         "maxItems": 0
@@ -12509,6 +12525,8 @@ export const ELEMENTS: Record<string, CatalogElement> = {
               "breadcrumb_source",
               "breadcrumb_items",
               "breadcrumb_home_label",
+              "breadcrumb_home_display",
+              "breadcrumb_home_icon_size",
               "breadcrumb_show_current",
               "breadcrumb_max_items",
               "breadcrumb_current_color"
@@ -12526,6 +12544,8 @@ export const ELEMENTS: Record<string, CatalogElement> = {
             "key": "breadcrumb_icon",
             "label": "Breadcrumb icon",
             "controls": [
+              "breadcrumb_separator_type",
+              "breadcrumb_separator_text",
               "breadcrumb_icon",
               "icon_size_bp",
               "breadcrumb_icon_color"
@@ -12609,11 +12629,15 @@ export const ELEMENTS: Record<string, CatalogElement> = {
       "breadcrumb_source",
       "breadcrumb_items",
       "breadcrumb_home_label",
+      "breadcrumb_home_display",
+      "breadcrumb_home_icon_size",
       "breadcrumb_show_current",
       "breadcrumb_max_items",
       "breadcrumb_current_color",
       "width_select",
       "size_bounds",
+      "breadcrumb_separator_type",
+      "breadcrumb_separator_text",
       "breadcrumb_icon",
       "icon_size_bp",
       "breadcrumb_icon_color",
@@ -13527,7 +13551,9 @@ export const ELEMENTS: Record<string, CatalogElement> = {
             "key": "popup_overlay",
             "label": "Overlay",
             "controls": [
-              "popup_scrim"
+              "popup_scrim",
+              "dimPage",
+              "autoClose"
             ]
           },
           {
@@ -13595,6 +13621,8 @@ export const ELEMENTS: Record<string, CatalogElement> = {
       "popup_effect",
       "popup_pages",
       "popup_scrim",
+      "dimPage",
+      "autoClose",
       "bg_color",
       "bg_image",
       "bg_video",
@@ -13617,7 +13645,8 @@ export const ELEMENTS: Record<string, CatalogElement> = {
     ],
     "contentTips": [
       "Give it a way out: a close control inside the panel, since the scrim and Escape are not obvious to everyone",
-      "Keep it short — a pop-up is read standing up, over something the shopper was already doing"
+      "Keep it short — a pop-up is read standing up, over something the shopper was already doing",
+      "For a small NON-MODAL card (the \"added to cart\" notice under a header bag) set config.dimPage false — no scrim, focus stays where the shopper is, a press outside closes it — and config.autoClose to the seconds it stays (0 = until dismissed); place it with config.placement \"top-right\" and config.offsetTop"
     ],
     "semantics": [
       "popup",
@@ -13744,7 +13773,9 @@ export const ELEMENTS: Record<string, CatalogElement> = {
     "contentTips": [
       "it stays a horizontal row by default; stacking it into a column on phones is a per-breakpoint choice, not a rewrite",
       "size a fixed-width thumbnail with a definite flex basis, never auto — an image seeds its own full width and would push the text column to nothing",
-      "the quantity control inside a row edits THAT line, not the quantity on the product page"
+      "the quantity control inside a row edits THAT line, not the quantity on the product page",
+      "show the chosen variant (\"Trắng / S\") with a text-dataset on datasetSource \"cartLine\", kind \"variant\" under the title; it hides itself on a line without one",
+      "show the struck-through compare-at with a pricing-dataset on displayPriceId \"both\"; it hides on a line that saves nothing"
     ],
     "semantics": [
       "cart",
@@ -13785,6 +13816,14 @@ export const ELEMENTS: Record<string, CatalogElement> = {
             "controls": [
               "list_empty_state",
               "emptyStateId"
+            ]
+          },
+          {
+            "key": "cart_lines",
+            "label": "Lines",
+            "controls": [
+              "cart_line_scope",
+              "lineScope"
             ]
           },
           {
@@ -13855,6 +13894,8 @@ export const ELEMENTS: Record<string, CatalogElement> = {
     "controls": [
       "list_empty_state",
       "emptyStateId",
+      "cart_line_scope",
+      "lineScope",
       "width_select",
       "height_select",
       "size_bounds",
@@ -13885,6 +13926,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
       "give it exactly one child row and design that row; a second child is not repeated and will not appear on the published page",
       "inside the row, ordinary dataset elements work unchanged — a product title shows the line’s title, a price shows the line’s price",
       "the empty-cart message is this element’s own setting, shown only when the shopper has added nothing",
+      "config.lineScope \"added\" repeats only the line the shopper JUST added — the row of an \"added to cart\" pop-up; the default repeats the whole cart",
       "a delete control on the row should carry the remove-from-cart action; it removes the row it sits in, not the first one"
     ],
     "semantics": [
@@ -17126,11 +17168,16 @@ export const ELEMENTS: Record<string, CatalogElement> = {
         "variantLabel": {
           "active": true,
           "direction": "vertical",
-          "gap": 8
+          "gap": 8,
+          "showValue": false
         },
         "optionGap": "",
         "showAttributes": [],
-        "pickAction": "select"
+        "pickAction": "select",
+        "swatchWidth": 30,
+        "swatchHeight": 17,
+        "swatchRadius": 999,
+        "swatchRing": "#171717"
       },
       "specials": {
         "displayType": "select",
@@ -17159,6 +17206,11 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "id": "bind-product-id",
           "source": "product.id",
           "field": "specials.boundProductId"
+        },
+        {
+          "id": "bind-colors",
+          "source": "site.variantColors",
+          "field": "specials.boundColors"
         }
       ]
     },
@@ -17183,6 +17235,11 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "id": "bind-product-id",
           "source": "product.id",
           "field": "specials.boundProductId"
+        },
+        {
+          "id": "bind-colors",
+          "source": "site.variantColors",
+          "field": "specials.boundColors"
         }
       ],
       "category|title": [
@@ -17205,6 +17262,11 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "id": "bind-product-id",
           "source": "product.id",
           "field": "specials.boundProductId"
+        },
+        {
+          "id": "bind-colors",
+          "source": "site.variantColors",
+          "field": "specials.boundColors"
         }
       ],
       "article|title": [
@@ -17227,6 +17289,11 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "id": "bind-product-id",
           "source": "product.id",
           "field": "specials.boundProductId"
+        },
+        {
+          "id": "bind-colors",
+          "source": "site.variantColors",
+          "field": "specials.boundColors"
         }
       ],
       "blogCategory|title": [
@@ -17249,6 +17316,11 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "id": "bind-product-id",
           "source": "product.id",
           "field": "specials.boundProductId"
+        },
+        {
+          "id": "bind-colors",
+          "source": "site.variantColors",
+          "field": "specials.boundColors"
         }
       ],
       "course|title": [
@@ -17271,6 +17343,11 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "id": "bind-product-id",
           "source": "product.id",
           "field": "specials.boundProductId"
+        },
+        {
+          "id": "bind-colors",
+          "source": "site.variantColors",
+          "field": "specials.boundColors"
         }
       ],
       "review|title": [
@@ -17293,6 +17370,11 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "id": "bind-product-id",
           "source": "product.id",
           "field": "specials.boundProductId"
+        },
+        {
+          "id": "bind-colors",
+          "source": "site.variantColors",
+          "field": "specials.boundColors"
         }
       ],
       "brand|title": [
@@ -17315,6 +17397,11 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "id": "bind-product-id",
           "source": "product.id",
           "field": "specials.boundProductId"
+        },
+        {
+          "id": "bind-colors",
+          "source": "site.variantColors",
+          "field": "specials.boundColors"
         }
       ],
       "record|title": [
@@ -17337,6 +17424,11 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "id": "bind-product-id",
           "source": "product.id",
           "field": "specials.boundProductId"
+        },
+        {
+          "id": "bind-colors",
+          "source": "site.variantColors",
+          "field": "specials.boundColors"
         }
       ]
     },
@@ -17380,6 +17472,16 @@ export const ELEMENTS: Record<string, CatalogElement> = {
             "label": "Variant option",
             "controls": [
               "variant_option"
+            ]
+          },
+          {
+            "key": "variant_color",
+            "label": "Colour swatch",
+            "controls": [
+              "variant_color_width",
+              "variant_color_height",
+              "variant_color_radius",
+              "variant_color_ring"
             ]
           },
           {
@@ -17465,6 +17567,10 @@ export const ELEMENTS: Record<string, CatalogElement> = {
       "variant_pick_action",
       "variant_label",
       "variant_option",
+      "variant_color_width",
+      "variant_color_height",
+      "variant_color_radius",
+      "variant_color_ring",
       "width_select",
       "height_select",
       "size_bounds",
@@ -17479,7 +17585,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
       "animation",
       "class_css"
     ],
-    "description": "A store-bound product variant picker. Renders one block per product attribute (e.g. Color, Size), each showing the attribute name and its selectable values as a dropdown, image+label buttons, or image swatches (specials.displayType). Owns no children — the label and option skins are held by two satellites. config.attributes seeds the attributes; specials.defaultVariant marks the pre-selected value per attribute.",
+    "description": "A store-bound product variant picker. Renders one block per product attribute (e.g. Color, Size), each showing the attribute name and its selectable values as a dropdown, image+label buttons, image swatches, or COLOUR swatch pills painted from the site colour map (specials.displayType). Owns no children — the label and option skins are held by two satellites. config.attributes seeds the attributes; specials.defaultVariant marks the pre-selected value per attribute.",
     "useWhen": [
       "Product buy-box where the shopper picks a variant (colour, size, material) before add-to-cart",
       "Product page that must surface selectable product options",
@@ -17493,6 +17599,9 @@ export const ELEMENTS: Record<string, CatalogElement> = {
     "contentTips": [
       "Seed config.attributes with { name, values } objects — one per product attribute",
       "Use specials.displayType: \"select\" for a dropdown, \"image_label\" for image+label buttons, or \"image\" for image swatches",
+      "Use specials.displayType \"color\" for fashion-style colour pills (~30×17px, rounded, ringed when selected). The colours come from ONE site-level map, Settings → Variant colours (site settings `variantColors`: { \"<value>\": \"#hex\" }, matched trimmed and case-insensitively) — never put hex codes on the node. A value the map has no colour for renders as a label chip, so an unmapped value is still pickable",
+      "In \"color\" mode size the pills per breakpoint with config.swatchWidth / swatchHeight / swatchRadius (px numbers; defaults 30 / 17 / 999) and the selected ring with config.swatchRing (a colour)",
+      "Set config.variantLabel.showValue: true to show the chosen value beside the attribute name (\"Màu sắc: Trắng\"); the published page updates it as the shopper picks. Most useful with \"color\" / \"image\" swatches, whose values have no visible text",
       "Use specials.defaultVariant.enabled + values to pre-select a value per attribute",
       "A product CARD in a list (product-list / dataset card) should usually show only the colour axis: set config.showAttributes to that one attribute name (e.g. [\"Color\"] or [\"Màu sắc\"]) and leave Size for the product page buy box, which keeps showAttributes empty (= every attribute)",
       "config.showAttributes matches attribute names trimmed and case-insensitively, keeps the product order, and drops a name the product does not have",
@@ -17507,7 +17616,9 @@ export const ELEMENTS: Record<string, CatalogElement> = {
       "store",
       "ecommerce",
       "variants",
-      "options"
+      "options",
+      "swatch",
+      "color"
     ]
   },
   "product-variant-label": {
@@ -27845,7 +27956,8 @@ export const ELEMENTS: Record<string, CatalogElement> = {
       "When kind is \"prices\", use config.displayPriceId (\"price\" | \"compare_price\" | \"both\") to pick which values show",
       "Seed config.priceValue and config.compareValue with the formatted strings (\"$0.00\")",
       "Style the price text on each CHILD through its Typography group; the parent styles the box only. The compare price is rendered struck-through and seeded muted (#7f7f7f)",
-      "config.position on the parent sets the axis (\"top\"/\"bottom\" stack vertically) and puts the compare value first for \"right\"/\"bottom\""
+      "config.position on the parent sets the axis (\"top\"/\"bottom\" stack vertically) and puts the compare value first for \"right\"/\"bottom\"",
+      "Inside a cart-item row, displayPriceId \"both\" shows each line's price and its struck-through compare-at; the compare value hides itself on a line that saves nothing, so \"both\" is safe for a cart whose products mostly have no compare price"
     ],
     "semantics": [
       "product",
@@ -32949,7 +33061,8 @@ export const ELEMENTS: Record<string, CatalogElement> = {
       "Product title, vendor, short summary, or description text in a product layout",
       "A long product description that should collapse to a few lines with a \"show more\" toggle",
       "Product text that needs hover/active styling",
-      "A result count beside a product grid (\"24 sản phẩm\") — config.datasetSource \"list\", kind \"count\""
+      "A result count beside a product grid (\"24 sản phẩm\") — config.datasetSource \"list\", kind \"count\"",
+      "The variant a shopper chose (\"Trắng / S\") inside a cart line — config.datasetSource \"cartLine\", kind \"variant\""
     ],
     "avoidWhen": [
       "Generic static copy not tied to a product — use text or heading",
@@ -32962,7 +33075,8 @@ export const ELEMENTS: Record<string, CatalogElement> = {
       "Customise config.moreText / config.lessText and config.icon (the chevron) for the toggle",
       "Style per state (default / hover / active) via the state switcher",
       "In a record list on a number/integer field, set config.recordFormat to \"money\" to print it in the site currency (record.money.<fieldId>)",
-      "RESULT COUNT: config.datasetSource \"list\" + config.kind \"count\" prints specials.countFormat with \"{count}\" replaced by how many products the PAGE's product list holds (the first product list on the page; filters and the category page narrow it). Place it outside the list, e.g. beside the sort select; no bindings"
+      "RESULT COUNT: config.datasetSource \"list\" + config.kind \"count\" prints specials.countFormat with \"{count}\" replaced by how many products the PAGE's product list holds (the first product list on the page; filters and the category page narrow it). Place it outside the list, e.g. beside the sort select; no bindings",
+      "CART LINE VARIANT: config.datasetSource \"cartLine\" + config.kind \"variant\", placed INSIDE a cart-item row (under the product title). It prints the chosen variant of each line (\"Trắng / S\") and hides itself on a line with none (a product without variants, or a line saved before labels existed). config.textValue is only the canvas placeholder (\"Color / Size\"); outside a cart row it never fills"
     ],
     "semantics": [
       "product",
@@ -36746,6 +36860,7 @@ export const BINDING_SOURCES: string[] = [
   "site.supportPhone",
   "site.tiktok",
   "site.timezone",
+  "site.variantColors",
   "site.youtube"
 ];
 
@@ -36781,6 +36896,7 @@ export const PRESENT_ONLY_SOURCES: string[] = [
   "site.supportPhone",
   "site.tiktok",
   "site.timezone",
+  "site.variantColors",
   "site.youtube"
 ];
 
@@ -36823,6 +36939,7 @@ export const BOUND_SPECIALS: Record<string, string[]> = {
   ],
   "product-variants": [
     "boundAttributes",
+    "boundColors",
     "boundVariations"
   ],
   "qr-code": [
@@ -38363,6 +38480,20 @@ export const TRAIT_WRITES: Record<string, TraitDescription> = {
       "base": "bottom"
     }
   },
+  "cart_line_scope": {
+    "key": "cart_line_scope",
+    "label": "Show",
+    "writes": [
+      {
+        "target": "config",
+        "writeKey": "lineScope",
+        "type": "string"
+      }
+    ],
+    "defaults": {
+      "base": "all"
+    }
+  },
   "main_image_source": {
     "key": "main_image_source",
     "label": "Main image",
@@ -38886,6 +39017,51 @@ export const TRAIT_WRITES: Record<string, TraitDescription> = {
         "target": "specials",
         "writeKey": "showCurrent",
         "type": "boolean"
+      }
+    ]
+  },
+  "breadcrumb_home_display": {
+    "key": "breadcrumb_home_display",
+    "label": "Home",
+    "writes": [
+      {
+        "target": "specials",
+        "writeKey": "homeDisplay",
+        "type": "string"
+      }
+    ]
+  },
+  "breadcrumb_home_icon_size": {
+    "key": "breadcrumb_home_icon_size",
+    "label": "Home icon size",
+    "writes": [
+      {
+        "target": "config",
+        "writeKey": "homeIconSize",
+        "type": "number",
+        "unit": "px"
+      }
+    ]
+  },
+  "breadcrumb_separator_type": {
+    "key": "breadcrumb_separator_type",
+    "label": "Separator",
+    "writes": [
+      {
+        "target": "specials",
+        "writeKey": "separatorType",
+        "type": "string"
+      }
+    ]
+  },
+  "breadcrumb_separator_text": {
+    "key": "breadcrumb_separator_text",
+    "label": "Character",
+    "writes": [
+      {
+        "target": "specials",
+        "writeKey": "separatorText",
+        "type": "string"
       }
     ]
   },
@@ -41805,6 +41981,15 @@ export const ELEMENT_VALUES: Record<string, Record<string, ValueVocabulary>> = {
     }
   },
   "breadcrumb": {
+    "breadcrumb_separator_type": {
+      "target": "specials",
+      "writeKey": "separatorType",
+      "values": [
+        "icon",
+        "text"
+      ],
+      "readBy": "breadcrumb_separator_type (editor picker)"
+    },
     "breadcrumb_source": {
       "target": "specials",
       "writeKey": "source",
@@ -41813,6 +41998,16 @@ export const ELEMENT_VALUES: Record<string, Record<string, ValueVocabulary>> = {
         "manual"
       ],
       "readBy": "breadcrumb_source (editor picker)"
+    },
+    "breadcrumb_home_display": {
+      "target": "specials",
+      "writeKey": "homeDisplay",
+      "values": [
+        "label",
+        "icon",
+        "both"
+      ],
+      "readBy": "breadcrumb_home_display (editor picker)"
     }
   },
   "divider": {
@@ -41913,6 +42108,17 @@ export const ELEMENT_VALUES: Record<string, Record<string, ValueVocabulary>> = {
         "page"
       ],
       "readBy": "qr_source (editor picker)"
+    }
+  },
+  "cart-order": {
+    "cart_line_scope": {
+      "target": "config",
+      "writeKey": "lineScope",
+      "values": [
+        "all",
+        "added"
+      ],
+      "readBy": "cart_line_scope (editor picker)"
     }
   },
   "sale-badge": {

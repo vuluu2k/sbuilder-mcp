@@ -33,7 +33,7 @@ export const OVERLAY_SEEDS: Record<'cart' | 'popup' | 'quickview', OverlayDocume
           "nodes": [
             "cart_2",
             "cart_5",
-            "cart_20"
+            "cart_21"
           ],
           "isCanvas": true,
           "hidden": false,
@@ -220,7 +220,7 @@ export const OVERLAY_SEEDS: Record<'cart' | 'popup' | 'quickview', OverlayDocume
           "gap": "16px"
         },
         "config": {
-          "emptyStateId": "cart_16"
+          "emptyStateId": "cart_17"
         },
         "specials": {
           "emptyText": "Your cart is empty"
@@ -237,8 +237,8 @@ export const OVERLAY_SEEDS: Record<'cart' | 'popup' | 'quickview', OverlayDocume
           "nodes": [
             "cart_8",
             "cart_9",
-            "cart_12",
-            "cart_15"
+            "cart_13",
+            "cart_16"
           ],
           "isCanvas": true,
           "hidden": false,
@@ -321,7 +321,8 @@ export const OVERLAY_SEEDS: Record<'cart' | 'popup' | 'quickview', OverlayDocume
           "parent": "cart_7",
           "nodes": [
             "cart_10",
-            "cart_11"
+            "cart_11",
+            "cart_12"
           ],
           "isCanvas": true,
           "hidden": false,
@@ -410,6 +411,51 @@ export const OVERLAY_SEEDS: Record<'cart' | 'popup' | 'quickview', OverlayDocume
       "cart_11": {
         "id": "cart_11",
         "data": {
+          "type": "text-dataset",
+          "parent": "cart_9",
+          "nodes": [],
+          "isCanvas": false,
+          "hidden": false,
+          "custom": {}
+        },
+        "style": {
+          "fontSize": "12px",
+          "color": "#6b7280"
+        },
+        "config": {
+          "datasetSource": "cartLine",
+          "kind": "variant",
+          "recordField": "",
+          "recordFieldType": "",
+          "recordFormat": "",
+          "textValue": "Color / Size",
+          "descriptionDisplayType": "Full",
+          "descriptionLines": 3,
+          "moreText": "Show more",
+          "lessText": "Show less",
+          "icon": true,
+          "moreButtonColor": "#000000",
+          "textGlobalStyle": "text-1"
+        },
+        "specials": {
+          "htmlTag": "p",
+          "moreButtonEnabled": false,
+          "countFormat": "",
+          "stylePreset": "text-dataset-default"
+        },
+        "responsive": {},
+        "events": [],
+        "bindings": [
+          {
+            "id": "bind-text",
+            "source": "cartLine.variantLabel",
+            "field": "specials.boundText"
+          }
+        ]
+      },
+      "cart_12": {
+        "id": "cart_12",
+        "data": {
           "type": "pricing-dataset",
           "parent": "cart_9",
           "nodes": [],
@@ -423,8 +469,8 @@ export const OVERLAY_SEEDS: Record<'cart' | 'popup' | 'quickview', OverlayDocume
         "config": {
           "kind": "prices",
           "priceValue": "$0.00",
-          "compareValue": "$0.00",
-          "displayPriceId": "price",
+          "compareValue": "0.00",
+          "displayPriceId": "both",
           "textGlobalStyle": "text-1"
         },
         "specials": {
@@ -470,8 +516,8 @@ export const OVERLAY_SEEDS: Record<'cart' | 'popup' | 'quickview', OverlayDocume
           }
         ]
       },
-      "cart_12": {
-        "id": "cart_12",
+      "cart_13": {
+        "id": "cart_13",
         "data": {
           "type": "quantity-dataset",
           "parent": "cart_7",
@@ -493,8 +539,8 @@ export const OVERLAY_SEEDS: Record<'cart' | 'popup' | 'quickview', OverlayDocume
         },
         "config": {
           "defaultNum": 1,
-          "quantityButtonId": "cart_13",
-          "quantityInputId": "cart_14"
+          "quantityButtonId": "cart_14",
+          "quantityInputId": "cart_15"
         },
         "specials": {
           "button": true
@@ -514,11 +560,11 @@ export const OVERLAY_SEEDS: Record<'cart' | 'popup' | 'quickview', OverlayDocume
           }
         ]
       },
-      "cart_13": {
-        "id": "cart_13",
+      "cart_14": {
+        "id": "cart_14",
         "data": {
           "type": "quantity-button",
-          "parent": "cart_12",
+          "parent": "cart_13",
           "nodes": [],
           "isCanvas": false,
           "hidden": false,
@@ -544,11 +590,11 @@ export const OVERLAY_SEEDS: Record<'cart' | 'popup' | 'quickview', OverlayDocume
         "events": [],
         "bindings": []
       },
-      "cart_14": {
-        "id": "cart_14",
+      "cart_15": {
+        "id": "cart_15",
         "data": {
           "type": "quantity-input",
-          "parent": "cart_12",
+          "parent": "cart_13",
           "nodes": [],
           "isCanvas": false,
           "hidden": false,
@@ -566,8 +612,8 @@ export const OVERLAY_SEEDS: Record<'cart' | 'popup' | 'quickview', OverlayDocume
         "events": [],
         "bindings": []
       },
-      "cart_15": {
-        "id": "cart_15",
+      "cart_16": {
+        "id": "cart_16",
         "data": {
           "type": "icon",
           "parent": "cart_7",
@@ -600,15 +646,15 @@ export const OVERLAY_SEEDS: Record<'cart' | 'popup' | 'quickview', OverlayDocume
         ],
         "bindings": []
       },
-      "cart_16": {
-        "id": "cart_16",
+      "cart_17": {
+        "id": "cart_17",
         "data": {
           "type": "list-empty",
           "parent": "cart_6",
           "nodes": [
-            "cart_17",
             "cart_18",
-            "cart_19"
+            "cart_19",
+            "cart_20"
           ],
           "isCanvas": true,
           "hidden": false,
@@ -629,11 +675,11 @@ export const OVERLAY_SEEDS: Record<'cart' | 'popup' | 'quickview', OverlayDocume
         "events": [],
         "bindings": []
       },
-      "cart_17": {
-        "id": "cart_17",
+      "cart_18": {
+        "id": "cart_18",
         "data": {
           "type": "icon",
-          "parent": "cart_16",
+          "parent": "cart_17",
           "nodes": [],
           "isCanvas": false,
           "hidden": false,
@@ -655,11 +701,11 @@ export const OVERLAY_SEEDS: Record<'cart' | 'popup' | 'quickview', OverlayDocume
         "events": [],
         "bindings": []
       },
-      "cart_18": {
-        "id": "cart_18",
+      "cart_19": {
+        "id": "cart_19",
         "data": {
           "type": "heading",
-          "parent": "cart_16",
+          "parent": "cart_17",
           "nodes": [],
           "isCanvas": false,
           "hidden": false,
@@ -685,11 +731,11 @@ export const OVERLAY_SEEDS: Record<'cart' | 'popup' | 'quickview', OverlayDocume
         "events": [],
         "bindings": []
       },
-      "cart_19": {
-        "id": "cart_19",
+      "cart_20": {
+        "id": "cart_20",
         "data": {
           "type": "text",
-          "parent": "cart_16",
+          "parent": "cart_17",
           "nodes": [],
           "isCanvas": false,
           "hidden": false,
@@ -714,15 +760,15 @@ export const OVERLAY_SEEDS: Record<'cart' | 'popup' | 'quickview', OverlayDocume
         "events": [],
         "bindings": []
       },
-      "cart_20": {
-        "id": "cart_20",
+      "cart_21": {
+        "id": "cart_21",
         "data": {
           "type": "flex-block",
           "parent": "cart_1",
           "nodes": [
-            "cart_21",
             "cart_22",
-            "cart_23"
+            "cart_23",
+            "cart_24"
           ],
           "isCanvas": true,
           "hidden": false,
@@ -757,11 +803,11 @@ export const OVERLAY_SEEDS: Record<'cart' | 'popup' | 'quickview', OverlayDocume
         "events": [],
         "bindings": []
       },
-      "cart_21": {
-        "id": "cart_21",
+      "cart_22": {
+        "id": "cart_22",
         "data": {
           "type": "cart-total",
-          "parent": "cart_20",
+          "parent": "cart_21",
           "nodes": [],
           "isCanvas": false,
           "hidden": false,
@@ -788,11 +834,11 @@ export const OVERLAY_SEEDS: Record<'cart' | 'popup' | 'quickview', OverlayDocume
         "events": [],
         "bindings": []
       },
-      "cart_22": {
-        "id": "cart_22",
+      "cart_23": {
+        "id": "cart_23",
         "data": {
           "type": "button",
-          "parent": "cart_20",
+          "parent": "cart_21",
           "nodes": [],
           "isCanvas": false,
           "hidden": false,
@@ -809,7 +855,8 @@ export const OVERLAY_SEEDS: Record<'cart' | 'popup' | 'quickview', OverlayDocume
         },
         "specials": {
           "text": "Checkout",
-          "stylePreset": "button-default"
+          "stylePreset": "button-default",
+          "toggledText": ""
         },
         "responsive": {},
         "events": [
@@ -822,11 +869,11 @@ export const OVERLAY_SEEDS: Record<'cart' | 'popup' | 'quickview', OverlayDocume
         ],
         "bindings": []
       },
-      "cart_23": {
-        "id": "cart_23",
+      "cart_24": {
+        "id": "cart_24",
         "data": {
           "type": "button",
-          "parent": "cart_20",
+          "parent": "cart_21",
           "nodes": [],
           "isCanvas": false,
           "hidden": false,
@@ -846,7 +893,8 @@ export const OVERLAY_SEEDS: Record<'cart' | 'popup' | 'quickview', OverlayDocume
         },
         "specials": {
           "text": "Continue shopping",
-          "stylePreset": "button-default"
+          "stylePreset": "button-default",
+          "toggledText": ""
         },
         "responsive": {},
         "events": [
@@ -991,7 +1039,8 @@ export const OVERLAY_SEEDS: Record<'cart' | 'popup' | 'quickview', OverlayDocume
         },
         "specials": {
           "text": "Got it",
-          "stylePreset": "button-default"
+          "stylePreset": "button-default",
+          "toggledText": ""
         },
         "responsive": {},
         "events": [
@@ -1642,11 +1691,16 @@ export const OVERLAY_SEEDS: Record<'cart' | 'popup' | 'quickview', OverlayDocume
           "variantLabel": {
             "active": true,
             "direction": "vertical",
-            "gap": 8
+            "gap": 8,
+            "showValue": false
           },
           "optionGap": "",
           "showAttributes": [],
           "pickAction": "select",
+          "swatchWidth": 30,
+          "swatchHeight": 17,
+          "swatchRadius": 999,
+          "swatchRing": "#171717",
           "variantLabelId": "qv_12",
           "variantOptionId": "qv_13"
         },
@@ -1685,6 +1739,11 @@ export const OVERLAY_SEEDS: Record<'cart' | 'popup' | 'quickview', OverlayDocume
             "id": "bind-product-id",
             "source": "product.id",
             "field": "specials.boundProductId"
+          },
+          {
+            "id": "bind-colors",
+            "source": "site.variantColors",
+            "field": "specials.boundColors"
           }
         ]
       },
@@ -1941,6 +2000,7 @@ export const OVERLAY_SEEDS: Record<'cart' | 'popup' | 'quickview', OverlayDocume
         "specials": {
           "text": "Add To Cart",
           "stylePreset": "button-default",
+          "toggledText": "",
           "icon": "ShoppingCart2Fill"
         },
         "responsive": {},
@@ -1995,7 +2055,8 @@ export const OVERLAY_SEEDS: Record<'cart' | 'popup' | 'quickview', OverlayDocume
         },
         "specials": {
           "text": "Buy It Now",
-          "stylePreset": "button-default"
+          "stylePreset": "button-default",
+          "toggledText": ""
         },
         "responsive": {},
         "events": [],
@@ -2089,7 +2150,7 @@ export const CART_SEEDS: Record<string, OverlayDocument> = {
           "nodes": [
             "cart_2",
             "cart_5",
-            "cart_20"
+            "cart_21"
           ],
           "isCanvas": true,
           "hidden": false,
@@ -2276,7 +2337,7 @@ export const CART_SEEDS: Record<string, OverlayDocument> = {
           "gap": "16px"
         },
         "config": {
-          "emptyStateId": "cart_16"
+          "emptyStateId": "cart_17"
         },
         "specials": {
           "emptyText": "Your cart is empty"
@@ -2293,8 +2354,8 @@ export const CART_SEEDS: Record<string, OverlayDocument> = {
           "nodes": [
             "cart_8",
             "cart_9",
-            "cart_12",
-            "cart_15"
+            "cart_13",
+            "cart_16"
           ],
           "isCanvas": true,
           "hidden": false,
@@ -2377,7 +2438,8 @@ export const CART_SEEDS: Record<string, OverlayDocument> = {
           "parent": "cart_7",
           "nodes": [
             "cart_10",
-            "cart_11"
+            "cart_11",
+            "cart_12"
           ],
           "isCanvas": true,
           "hidden": false,
@@ -2466,6 +2528,51 @@ export const CART_SEEDS: Record<string, OverlayDocument> = {
       "cart_11": {
         "id": "cart_11",
         "data": {
+          "type": "text-dataset",
+          "parent": "cart_9",
+          "nodes": [],
+          "isCanvas": false,
+          "hidden": false,
+          "custom": {}
+        },
+        "style": {
+          "fontSize": "12px",
+          "color": "#6b7280"
+        },
+        "config": {
+          "datasetSource": "cartLine",
+          "kind": "variant",
+          "recordField": "",
+          "recordFieldType": "",
+          "recordFormat": "",
+          "textValue": "Color / Size",
+          "descriptionDisplayType": "Full",
+          "descriptionLines": 3,
+          "moreText": "Show more",
+          "lessText": "Show less",
+          "icon": true,
+          "moreButtonColor": "#000000",
+          "textGlobalStyle": "text-1"
+        },
+        "specials": {
+          "htmlTag": "p",
+          "moreButtonEnabled": false,
+          "countFormat": "",
+          "stylePreset": "text-dataset-default"
+        },
+        "responsive": {},
+        "events": [],
+        "bindings": [
+          {
+            "id": "bind-text",
+            "source": "cartLine.variantLabel",
+            "field": "specials.boundText"
+          }
+        ]
+      },
+      "cart_12": {
+        "id": "cart_12",
+        "data": {
           "type": "pricing-dataset",
           "parent": "cart_9",
           "nodes": [],
@@ -2479,8 +2586,8 @@ export const CART_SEEDS: Record<string, OverlayDocument> = {
         "config": {
           "kind": "prices",
           "priceValue": "$0.00",
-          "compareValue": "$0.00",
-          "displayPriceId": "price",
+          "compareValue": "0.00",
+          "displayPriceId": "both",
           "textGlobalStyle": "text-1"
         },
         "specials": {
@@ -2526,8 +2633,8 @@ export const CART_SEEDS: Record<string, OverlayDocument> = {
           }
         ]
       },
-      "cart_12": {
-        "id": "cart_12",
+      "cart_13": {
+        "id": "cart_13",
         "data": {
           "type": "quantity-dataset",
           "parent": "cart_7",
@@ -2549,8 +2656,8 @@ export const CART_SEEDS: Record<string, OverlayDocument> = {
         },
         "config": {
           "defaultNum": 1,
-          "quantityButtonId": "cart_13",
-          "quantityInputId": "cart_14"
+          "quantityButtonId": "cart_14",
+          "quantityInputId": "cart_15"
         },
         "specials": {
           "button": true
@@ -2570,11 +2677,11 @@ export const CART_SEEDS: Record<string, OverlayDocument> = {
           }
         ]
       },
-      "cart_13": {
-        "id": "cart_13",
+      "cart_14": {
+        "id": "cart_14",
         "data": {
           "type": "quantity-button",
-          "parent": "cart_12",
+          "parent": "cart_13",
           "nodes": [],
           "isCanvas": false,
           "hidden": false,
@@ -2600,11 +2707,11 @@ export const CART_SEEDS: Record<string, OverlayDocument> = {
         "events": [],
         "bindings": []
       },
-      "cart_14": {
-        "id": "cart_14",
+      "cart_15": {
+        "id": "cart_15",
         "data": {
           "type": "quantity-input",
-          "parent": "cart_12",
+          "parent": "cart_13",
           "nodes": [],
           "isCanvas": false,
           "hidden": false,
@@ -2622,8 +2729,8 @@ export const CART_SEEDS: Record<string, OverlayDocument> = {
         "events": [],
         "bindings": []
       },
-      "cart_15": {
-        "id": "cart_15",
+      "cart_16": {
+        "id": "cart_16",
         "data": {
           "type": "icon",
           "parent": "cart_7",
@@ -2656,15 +2763,15 @@ export const CART_SEEDS: Record<string, OverlayDocument> = {
         ],
         "bindings": []
       },
-      "cart_16": {
-        "id": "cart_16",
+      "cart_17": {
+        "id": "cart_17",
         "data": {
           "type": "list-empty",
           "parent": "cart_6",
           "nodes": [
-            "cart_17",
             "cart_18",
-            "cart_19"
+            "cart_19",
+            "cart_20"
           ],
           "isCanvas": true,
           "hidden": false,
@@ -2685,11 +2792,11 @@ export const CART_SEEDS: Record<string, OverlayDocument> = {
         "events": [],
         "bindings": []
       },
-      "cart_17": {
-        "id": "cart_17",
+      "cart_18": {
+        "id": "cart_18",
         "data": {
           "type": "icon",
-          "parent": "cart_16",
+          "parent": "cart_17",
           "nodes": [],
           "isCanvas": false,
           "hidden": false,
@@ -2711,11 +2818,11 @@ export const CART_SEEDS: Record<string, OverlayDocument> = {
         "events": [],
         "bindings": []
       },
-      "cart_18": {
-        "id": "cart_18",
+      "cart_19": {
+        "id": "cart_19",
         "data": {
           "type": "heading",
-          "parent": "cart_16",
+          "parent": "cart_17",
           "nodes": [],
           "isCanvas": false,
           "hidden": false,
@@ -2741,11 +2848,11 @@ export const CART_SEEDS: Record<string, OverlayDocument> = {
         "events": [],
         "bindings": []
       },
-      "cart_19": {
-        "id": "cart_19",
+      "cart_20": {
+        "id": "cart_20",
         "data": {
           "type": "text",
-          "parent": "cart_16",
+          "parent": "cart_17",
           "nodes": [],
           "isCanvas": false,
           "hidden": false,
@@ -2770,15 +2877,15 @@ export const CART_SEEDS: Record<string, OverlayDocument> = {
         "events": [],
         "bindings": []
       },
-      "cart_20": {
-        "id": "cart_20",
+      "cart_21": {
+        "id": "cart_21",
         "data": {
           "type": "flex-block",
           "parent": "cart_1",
           "nodes": [
-            "cart_21",
             "cart_22",
-            "cart_23"
+            "cart_23",
+            "cart_24"
           ],
           "isCanvas": true,
           "hidden": false,
@@ -2813,11 +2920,11 @@ export const CART_SEEDS: Record<string, OverlayDocument> = {
         "events": [],
         "bindings": []
       },
-      "cart_21": {
-        "id": "cart_21",
+      "cart_22": {
+        "id": "cart_22",
         "data": {
           "type": "cart-total",
-          "parent": "cart_20",
+          "parent": "cart_21",
           "nodes": [],
           "isCanvas": false,
           "hidden": false,
@@ -2844,11 +2951,11 @@ export const CART_SEEDS: Record<string, OverlayDocument> = {
         "events": [],
         "bindings": []
       },
-      "cart_22": {
-        "id": "cart_22",
+      "cart_23": {
+        "id": "cart_23",
         "data": {
           "type": "button",
-          "parent": "cart_20",
+          "parent": "cart_21",
           "nodes": [],
           "isCanvas": false,
           "hidden": false,
@@ -2865,7 +2972,8 @@ export const CART_SEEDS: Record<string, OverlayDocument> = {
         },
         "specials": {
           "text": "Checkout",
-          "stylePreset": "button-default"
+          "stylePreset": "button-default",
+          "toggledText": ""
         },
         "responsive": {},
         "events": [
@@ -2878,11 +2986,11 @@ export const CART_SEEDS: Record<string, OverlayDocument> = {
         ],
         "bindings": []
       },
-      "cart_23": {
-        "id": "cart_23",
+      "cart_24": {
+        "id": "cart_24",
         "data": {
           "type": "button",
-          "parent": "cart_20",
+          "parent": "cart_21",
           "nodes": [],
           "isCanvas": false,
           "hidden": false,
@@ -2902,7 +3010,8 @@ export const CART_SEEDS: Record<string, OverlayDocument> = {
         },
         "specials": {
           "text": "Continue shopping",
-          "stylePreset": "button-default"
+          "stylePreset": "button-default",
+          "toggledText": ""
         },
         "responsive": {},
         "events": [
@@ -2928,7 +3037,7 @@ export const CART_SEEDS: Record<string, OverlayDocument> = {
           "nodes": [
             "cart_2",
             "cart_5",
-            "cart_20"
+            "cart_21"
           ],
           "isCanvas": true,
           "hidden": false,
@@ -3115,7 +3224,7 @@ export const CART_SEEDS: Record<string, OverlayDocument> = {
           "gap": "16px"
         },
         "config": {
-          "emptyStateId": "cart_16"
+          "emptyStateId": "cart_17"
         },
         "specials": {
           "emptyText": "Giỏ hàng đang trống"
@@ -3132,8 +3241,8 @@ export const CART_SEEDS: Record<string, OverlayDocument> = {
           "nodes": [
             "cart_8",
             "cart_9",
-            "cart_12",
-            "cart_15"
+            "cart_13",
+            "cart_16"
           ],
           "isCanvas": true,
           "hidden": false,
@@ -3216,7 +3325,8 @@ export const CART_SEEDS: Record<string, OverlayDocument> = {
           "parent": "cart_7",
           "nodes": [
             "cart_10",
-            "cart_11"
+            "cart_11",
+            "cart_12"
           ],
           "isCanvas": true,
           "hidden": false,
@@ -3305,6 +3415,51 @@ export const CART_SEEDS: Record<string, OverlayDocument> = {
       "cart_11": {
         "id": "cart_11",
         "data": {
+          "type": "text-dataset",
+          "parent": "cart_9",
+          "nodes": [],
+          "isCanvas": false,
+          "hidden": false,
+          "custom": {}
+        },
+        "style": {
+          "fontSize": "12px",
+          "color": "#6b7280"
+        },
+        "config": {
+          "datasetSource": "cartLine",
+          "kind": "variant",
+          "recordField": "",
+          "recordFieldType": "",
+          "recordFormat": "",
+          "textValue": "Color / Size",
+          "descriptionDisplayType": "Full",
+          "descriptionLines": 3,
+          "moreText": "Show more",
+          "lessText": "Show less",
+          "icon": true,
+          "moreButtonColor": "#000000",
+          "textGlobalStyle": "text-1"
+        },
+        "specials": {
+          "htmlTag": "p",
+          "moreButtonEnabled": false,
+          "countFormat": "",
+          "stylePreset": "text-dataset-default"
+        },
+        "responsive": {},
+        "events": [],
+        "bindings": [
+          {
+            "id": "bind-text",
+            "source": "cartLine.variantLabel",
+            "field": "specials.boundText"
+          }
+        ]
+      },
+      "cart_12": {
+        "id": "cart_12",
+        "data": {
           "type": "pricing-dataset",
           "parent": "cart_9",
           "nodes": [],
@@ -3318,8 +3473,8 @@ export const CART_SEEDS: Record<string, OverlayDocument> = {
         "config": {
           "kind": "prices",
           "priceValue": "$0.00",
-          "compareValue": "$0.00",
-          "displayPriceId": "price",
+          "compareValue": "0.00",
+          "displayPriceId": "both",
           "textGlobalStyle": "text-1"
         },
         "specials": {
@@ -3365,8 +3520,8 @@ export const CART_SEEDS: Record<string, OverlayDocument> = {
           }
         ]
       },
-      "cart_12": {
-        "id": "cart_12",
+      "cart_13": {
+        "id": "cart_13",
         "data": {
           "type": "quantity-dataset",
           "parent": "cart_7",
@@ -3388,8 +3543,8 @@ export const CART_SEEDS: Record<string, OverlayDocument> = {
         },
         "config": {
           "defaultNum": 1,
-          "quantityButtonId": "cart_13",
-          "quantityInputId": "cart_14"
+          "quantityButtonId": "cart_14",
+          "quantityInputId": "cart_15"
         },
         "specials": {
           "button": true
@@ -3409,11 +3564,11 @@ export const CART_SEEDS: Record<string, OverlayDocument> = {
           }
         ]
       },
-      "cart_13": {
-        "id": "cart_13",
+      "cart_14": {
+        "id": "cart_14",
         "data": {
           "type": "quantity-button",
-          "parent": "cart_12",
+          "parent": "cart_13",
           "nodes": [],
           "isCanvas": false,
           "hidden": false,
@@ -3439,11 +3594,11 @@ export const CART_SEEDS: Record<string, OverlayDocument> = {
         "events": [],
         "bindings": []
       },
-      "cart_14": {
-        "id": "cart_14",
+      "cart_15": {
+        "id": "cart_15",
         "data": {
           "type": "quantity-input",
-          "parent": "cart_12",
+          "parent": "cart_13",
           "nodes": [],
           "isCanvas": false,
           "hidden": false,
@@ -3461,8 +3616,8 @@ export const CART_SEEDS: Record<string, OverlayDocument> = {
         "events": [],
         "bindings": []
       },
-      "cart_15": {
-        "id": "cart_15",
+      "cart_16": {
+        "id": "cart_16",
         "data": {
           "type": "icon",
           "parent": "cart_7",
@@ -3495,15 +3650,15 @@ export const CART_SEEDS: Record<string, OverlayDocument> = {
         ],
         "bindings": []
       },
-      "cart_16": {
-        "id": "cart_16",
+      "cart_17": {
+        "id": "cart_17",
         "data": {
           "type": "list-empty",
           "parent": "cart_6",
           "nodes": [
-            "cart_17",
             "cart_18",
-            "cart_19"
+            "cart_19",
+            "cart_20"
           ],
           "isCanvas": true,
           "hidden": false,
@@ -3524,11 +3679,11 @@ export const CART_SEEDS: Record<string, OverlayDocument> = {
         "events": [],
         "bindings": []
       },
-      "cart_17": {
-        "id": "cart_17",
+      "cart_18": {
+        "id": "cart_18",
         "data": {
           "type": "icon",
-          "parent": "cart_16",
+          "parent": "cart_17",
           "nodes": [],
           "isCanvas": false,
           "hidden": false,
@@ -3550,11 +3705,11 @@ export const CART_SEEDS: Record<string, OverlayDocument> = {
         "events": [],
         "bindings": []
       },
-      "cart_18": {
-        "id": "cart_18",
+      "cart_19": {
+        "id": "cart_19",
         "data": {
           "type": "heading",
-          "parent": "cart_16",
+          "parent": "cart_17",
           "nodes": [],
           "isCanvas": false,
           "hidden": false,
@@ -3580,11 +3735,11 @@ export const CART_SEEDS: Record<string, OverlayDocument> = {
         "events": [],
         "bindings": []
       },
-      "cart_19": {
-        "id": "cart_19",
+      "cart_20": {
+        "id": "cart_20",
         "data": {
           "type": "text",
-          "parent": "cart_16",
+          "parent": "cart_17",
           "nodes": [],
           "isCanvas": false,
           "hidden": false,
@@ -3609,15 +3764,15 @@ export const CART_SEEDS: Record<string, OverlayDocument> = {
         "events": [],
         "bindings": []
       },
-      "cart_20": {
-        "id": "cart_20",
+      "cart_21": {
+        "id": "cart_21",
         "data": {
           "type": "flex-block",
           "parent": "cart_1",
           "nodes": [
-            "cart_21",
             "cart_22",
-            "cart_23"
+            "cart_23",
+            "cart_24"
           ],
           "isCanvas": true,
           "hidden": false,
@@ -3652,11 +3807,11 @@ export const CART_SEEDS: Record<string, OverlayDocument> = {
         "events": [],
         "bindings": []
       },
-      "cart_21": {
-        "id": "cart_21",
+      "cart_22": {
+        "id": "cart_22",
         "data": {
           "type": "cart-total",
-          "parent": "cart_20",
+          "parent": "cart_21",
           "nodes": [],
           "isCanvas": false,
           "hidden": false,
@@ -3683,11 +3838,11 @@ export const CART_SEEDS: Record<string, OverlayDocument> = {
         "events": [],
         "bindings": []
       },
-      "cart_22": {
-        "id": "cart_22",
+      "cart_23": {
+        "id": "cart_23",
         "data": {
           "type": "button",
-          "parent": "cart_20",
+          "parent": "cart_21",
           "nodes": [],
           "isCanvas": false,
           "hidden": false,
@@ -3704,7 +3859,8 @@ export const CART_SEEDS: Record<string, OverlayDocument> = {
         },
         "specials": {
           "text": "Thanh toán",
-          "stylePreset": "button-default"
+          "stylePreset": "button-default",
+          "toggledText": ""
         },
         "responsive": {},
         "events": [
@@ -3717,11 +3873,11 @@ export const CART_SEEDS: Record<string, OverlayDocument> = {
         ],
         "bindings": []
       },
-      "cart_23": {
-        "id": "cart_23",
+      "cart_24": {
+        "id": "cart_24",
         "data": {
           "type": "button",
-          "parent": "cart_20",
+          "parent": "cart_21",
           "nodes": [],
           "isCanvas": false,
           "hidden": false,
@@ -3741,7 +3897,8 @@ export const CART_SEEDS: Record<string, OverlayDocument> = {
         },
         "specials": {
           "text": "Tiếp tục mua sắm",
-          "stylePreset": "button-default"
+          "stylePreset": "button-default",
+          "toggledText": ""
         },
         "responsive": {},
         "events": [

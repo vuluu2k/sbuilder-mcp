@@ -2358,11 +2358,16 @@ export const STORE_PAGE_SEEDS: Record<string, { schema_version: number; root_nod
           "variantLabel": {
             "active": true,
             "direction": "vertical",
-            "gap": 8
+            "gap": 8,
+            "showValue": false
           },
           "optionGap": "",
           "showAttributes": [],
           "pickAction": "select",
+          "swatchWidth": 30,
+          "swatchHeight": 17,
+          "swatchRadius": 999,
+          "swatchRing": "#171717",
           "variantLabelId": "sppro_12",
           "variantOptionId": "sppro_13"
         },
@@ -2401,6 +2406,11 @@ export const STORE_PAGE_SEEDS: Record<string, { schema_version: number; root_nod
             "id": "bind-product-id",
             "source": "product.id",
             "field": "specials.boundProductId"
+          },
+          {
+            "id": "bind-colors",
+            "source": "site.variantColors",
+            "field": "specials.boundColors"
           }
         ]
       },
@@ -2657,6 +2667,7 @@ export const STORE_PAGE_SEEDS: Record<string, { schema_version: number; root_nod
         "specials": {
           "text": "Add To Cart",
           "stylePreset": "button-default",
+          "toggledText": "",
           "icon": "ShoppingCart2Fill"
         },
         "responsive": {},
@@ -2711,7 +2722,8 @@ export const STORE_PAGE_SEEDS: Record<string, { schema_version: number; root_nod
         },
         "specials": {
           "text": "Buy It Now",
-          "stylePreset": "button-default"
+          "stylePreset": "button-default",
+          "toggledText": ""
         },
         "responsive": {},
         "events": [],

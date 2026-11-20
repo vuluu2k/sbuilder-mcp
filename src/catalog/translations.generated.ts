@@ -3,8 +3,8 @@
 
 export const TRANSLATION_SOURCE = {
   "elements": 69,
-  "pairs": 191,
-  "neverKeys": 192,
+  "pairs": 192,
+  "neverKeys": 196,
   "entityTypes": 12
 } as const;
 
@@ -170,7 +170,8 @@ export const TRANSLATABLE_SPECIALS: Record<string, string[]> = {
   ],
   "button": [
     "text",
-    "textHtml"
+    "textHtml",
+    "toggledText"
   ],
   "cart-order": [
     "emptyText"
@@ -372,6 +373,7 @@ export const TRANSLATABLE_SPECIALS: Record<string, string[]> = {
  */
 export const NEVER_TRANSLATED: string[] = [
   "acceptedDates",
+  "addedCard",
   "addressGroup",
   "addressLink",
   "afterSrc",
@@ -450,6 +452,7 @@ export const NEVER_TRANSLATED: string[] = [
   "format",
   "hideOnPage",
   "hideWhenEmpty",
+  "homeDisplay",
   "hoverHostDepth",
   "href",
   "hrefParams",
@@ -528,6 +531,8 @@ export const NEVER_TRANSLATED: string[] = [
   "selectMode",
   "sentRedirect",
   "sentText",
+  "separatorText",
+  "separatorType",
   "setRange",
   "showCount",
   "showCountdown",
@@ -916,6 +921,9 @@ export const TRANSLATABLE_FIELDS: Record<string, TranslatableFieldSpec[]> = {
     {
       "key": "textHtml",
       "html": true
+    },
+    {
+      "key": "toggledText"
     }
   ],
   "cart-order": [

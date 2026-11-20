@@ -143,7 +143,7 @@ in this client: one would put the very key the platform exists to hold back into
 | `sb_undo` | Undo / redo this session's writes — page and form edits and `sb_api_call` PUTs, each named by tool and target, the open page's by default (`all: true` for every page); a page is refused if someone else saved it since. The platform's versions and history (`sb_page_version`) outlive this process |
 
 Forty tools, **1011 API operations** (375 of the 466 writes carrying a body shape read
-off the handler), 125 elements, 96 binding sources. `sb_api_find`
+off the handler), 125 elements, 97 binding sources. `sb_api_find`
 is an index rather than a tool per endpoint, so the tool list stays short while everything
 the platform can do stays reachable — and operations added to the platform arrive with the
 next `npm run codegen`.
