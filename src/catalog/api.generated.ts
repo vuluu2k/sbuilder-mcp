@@ -3,9 +3,9 @@
 import type { ApiOperation } from './types.js';
 
 export const SWAGGER_SOURCE = {
-  "operations": 1011,
-  "definitions": 444,
-  "bodyCarrying": 492,
+  "operations": 1012,
+  "definitions": 445,
+  "bodyCarrying": 493,
   "bodyUndescribed": 122,
   "generatedFrom": "server/docs/swagger.json"
 } as const;
@@ -14326,6 +14326,34 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": true,
     "bodyRef": "github_com_webbuilder_server_internal_integrations.Integration",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/api/sites/{siteId}/integrations/detect",
+    "method": "POST",
+    "path": "/api/sites/{siteId}/integrations/detect",
+    "tags": [
+      "integrations"
+    ],
+    "summary": "Recognise the trackers in a pasted snippet",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "body",
+        "in": "body",
+        "required": true,
+        "type": "object",
+        "description": "The pasted text"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "internal_integrations_rest.detectRequest",
     "credential": "siteScoped"
   },
   {
@@ -33234,7 +33262,7 @@ export const API_DEFINITIONS: Record<string, unknown> = {
         "type": "string"
       },
       "provider": {
-        "description": "Provider is one of google_analytics, google_tag_manager, facebook_pixel, tiktok_pixel.",
+        "description": "Provider is one of google_analytics, google_tag_manager, facebook_pixel, tiktok_pixel, openai_pixel.",
         "type": "string"
       },
       "siteId": {
@@ -39968,6 +39996,15 @@ export const API_DEFINITIONS: Record<string, unknown> = {
         "type": "string"
       },
       "siteId": {
+        "type": "string"
+      }
+    }
+  },
+  "internal_integrations_rest.detectRequest": {
+    "type": "object",
+    "properties": {
+      "text": {
+        "description": "Text is whatever the merchant pasted: one or several vendor snippets, a URL or a bare id.",
         "type": "string"
       }
     }

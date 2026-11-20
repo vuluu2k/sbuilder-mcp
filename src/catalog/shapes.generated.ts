@@ -4,12 +4,12 @@
 import type { RequestShape } from './types.js';
 
 export const SHAPE_SOURCE = {
-  "writeOperations": 466,
-  "shaped": 375,
-  "fromHandlers": 363,
+  "writeOperations": 467,
+  "shaped": 376,
+  "fromHandlers": 364,
   "fromSwaggerOnly": 12,
   "withReadOnly": 29,
-  "structsRead": 3873
+  "structsRead": 3874
 } as const;
 
 export const REQUEST_SHAPES: Record<string, RequestShape> = {
@@ -5406,7 +5406,7 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
       {
         "name": "provider",
         "type": "string",
-        "note": "Provider is one of google_analytics, google_tag_manager, facebook_pixel, tiktok_pixel."
+        "note": "Provider is one of google_analytics, google_tag_manager, facebook_pixel, tiktok_pixel, openai_pixel."
       },
       {
         "name": "enabled",
@@ -5449,7 +5449,7 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
       {
         "name": "provider",
         "type": "string",
-        "note": "Provider is one of google_analytics, google_tag_manager, facebook_pixel, tiktok_pixel."
+        "note": "Provider is one of google_analytics, google_tag_manager, facebook_pixel, tiktok_pixel, openai_pixel."
       },
       {
         "name": "enabled",
@@ -5478,6 +5478,17 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
       "createdAt",
       "updatedAt"
     ]
+  },
+  "post:/api/sites/{siteId}/integrations/detect": {
+    "fields": [
+      {
+        "name": "text",
+        "type": "string",
+        "note": "Text is whatever the merchant pasted: one or several vendor snippets, a URL or a bare id."
+      }
+    ],
+    "source": "go",
+    "goType": "detectRequest"
   },
   "post:/api/sites/{siteId}/locations": {
     "fields": [
