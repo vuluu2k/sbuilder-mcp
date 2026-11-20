@@ -5,7 +5,7 @@ import type { ApiOperation } from './types.js';
 export const SWAGGER_SOURCE = {
   "operations": 1011,
   "definitions": 444,
-  "bodyCarrying": 487,
+  "bodyCarrying": 492,
   "bodyUndescribed": 122,
   "generatedFrom": "server/docs/swagger.json"
 } as const;
@@ -14265,7 +14265,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     "tags": [
       "integrations"
     ],
-    "summary": "List or connect site integrations",
+    "summary": "List or connect site integrations (GA4, GTM, Meta Pixel, TikTok Pixel)",
     "params": [
       {
         "name": "siteId",
@@ -14273,10 +14273,24 @@ export const API_OPERATIONS: ApiOperation[] = [
         "required": true,
         "type": "string",
         "description": "Site ID"
+      },
+      {
+        "name": "dryRun",
+        "in": "query",
+        "required": false,
+        "type": "boolean",
+        "description": "true = validate and clean only, nothing saved (POST only)"
+      },
+      {
+        "name": "integration",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "Provider + config to connect (POST only); id/siteId/timestamps are server-owned"
       }
     ],
-    "bodyDescribed": false,
-    "bodyRef": null,
+    "bodyDescribed": true,
+    "bodyRef": "github_com_webbuilder_server_internal_integrations.Integration",
     "credential": "siteScoped"
   },
   {
@@ -14286,7 +14300,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     "tags": [
       "integrations"
     ],
-    "summary": "List or connect site integrations",
+    "summary": "List or connect site integrations (GA4, GTM, Meta Pixel, TikTok Pixel)",
     "params": [
       {
         "name": "siteId",
@@ -14294,10 +14308,24 @@ export const API_OPERATIONS: ApiOperation[] = [
         "required": true,
         "type": "string",
         "description": "Site ID"
+      },
+      {
+        "name": "dryRun",
+        "in": "query",
+        "required": false,
+        "type": "boolean",
+        "description": "true = validate and clean only, nothing saved (POST only)"
+      },
+      {
+        "name": "integration",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "Provider + config to connect (POST only); id/siteId/timestamps are server-owned"
       }
     ],
-    "bodyDescribed": false,
-    "bodyRef": null,
+    "bodyDescribed": true,
+    "bodyRef": "github_com_webbuilder_server_internal_integrations.Integration",
     "credential": "siteScoped"
   },
   {
@@ -14322,10 +14350,17 @@ export const API_OPERATIONS: ApiOperation[] = [
         "required": true,
         "type": "string",
         "description": "Integration ID"
+      },
+      {
+        "name": "integration",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "Provider, enabled, config (PUT only)"
       }
     ],
-    "bodyDescribed": false,
-    "bodyRef": null,
+    "bodyDescribed": true,
+    "bodyRef": "github_com_webbuilder_server_internal_integrations.Integration",
     "credential": "siteScoped"
   },
   {
@@ -14350,10 +14385,17 @@ export const API_OPERATIONS: ApiOperation[] = [
         "required": true,
         "type": "string",
         "description": "Integration ID"
+      },
+      {
+        "name": "integration",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "Provider, enabled, config (PUT only)"
       }
     ],
-    "bodyDescribed": false,
-    "bodyRef": null,
+    "bodyDescribed": true,
+    "bodyRef": "github_com_webbuilder_server_internal_integrations.Integration",
     "credential": "siteScoped"
   },
   {
@@ -14378,10 +14420,17 @@ export const API_OPERATIONS: ApiOperation[] = [
         "required": true,
         "type": "string",
         "description": "Integration ID"
+      },
+      {
+        "name": "integration",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "Provider, enabled, config (PUT only)"
       }
     ],
-    "bodyDescribed": false,
-    "bodyRef": null,
+    "bodyDescribed": true,
+    "bodyRef": "github_com_webbuilder_server_internal_integrations.Integration",
     "credential": "siteScoped"
   },
   {
@@ -33168,6 +33217,7 @@ export const API_DEFINITIONS: Record<string, unknown> = {
     "type": "object",
     "properties": {
       "config": {
+        "description": "Config holds the one id: measurementId (G-…), containerId (GTM-…) or pixelId (Meta: digits); a pasted snippet or URL is accepted and the id extracted.",
         "type": "object",
         "additionalProperties": {
           "type": "string"
@@ -33177,12 +33227,14 @@ export const API_DEFINITIONS: Record<string, unknown> = {
         "type": "string"
       },
       "enabled": {
+        "description": "Enabled false keeps the id but puts no tag on the storefront.",
         "type": "boolean"
       },
       "id": {
         "type": "string"
       },
       "provider": {
+        "description": "Provider is one of google_analytics, google_tag_manager, facebook_pixel, tiktok_pixel.",
         "type": "string"
       },
       "siteId": {

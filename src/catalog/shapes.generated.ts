@@ -9,7 +9,7 @@ export const SHAPE_SOURCE = {
   "fromHandlers": 363,
   "fromSwaggerOnly": 12,
   "withReadOnly": 29,
-  "structsRead": 3871
+  "structsRead": 3873
 } as const;
 
 export const REQUEST_SHAPES: Record<string, RequestShape> = {
@@ -5405,15 +5405,18 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
       },
       {
         "name": "provider",
-        "type": "string"
+        "type": "string",
+        "note": "Provider is one of google_analytics, google_tag_manager, facebook_pixel, tiktok_pixel."
       },
       {
         "name": "enabled",
-        "type": "boolean"
+        "type": "boolean",
+        "note": "Enabled false keeps the id but puts no tag on the storefront."
       },
       {
         "name": "config",
-        "type": "{ [string]: string }"
+        "type": "{ [string]: string }",
+        "note": "Config holds the one id: measurementId (G-…), containerId (GTM-…) or pixelId (Meta: digits); a pasted snippet or URL is accepted and the id extracted."
       },
       {
         "name": "createdAt",
@@ -5445,15 +5448,18 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
       },
       {
         "name": "provider",
-        "type": "string"
+        "type": "string",
+        "note": "Provider is one of google_analytics, google_tag_manager, facebook_pixel, tiktok_pixel."
       },
       {
         "name": "enabled",
-        "type": "boolean"
+        "type": "boolean",
+        "note": "Enabled false keeps the id but puts no tag on the storefront."
       },
       {
         "name": "config",
-        "type": "{ [string]: string }"
+        "type": "{ [string]: string }",
+        "note": "Config holds the one id: measurementId (G-…), containerId (GTM-…) or pixelId (Meta: digits); a pasted snippet or URL is accepted and the id extracted."
       },
       {
         "name": "createdAt",
