@@ -743,9 +743,15 @@ liệt kê tối đa năm tên gần nhất), `animation`, `dead_key`, `precondi
 cặp `textHtml` — nó render bị escape, lộ nguyên thẻ), `rich_dropped` (thẻ hoặc thuộc tính
 trong `specials.textHtml` mà schema rich-text inline của editor không tạo ra được — `<p>`,
 `<div>`, `<h2>`, một `class`, `href` tới `javascript:`/`data:` (kể cả dạng mã hoá entity — `&#106;avascript:` được đọc như nền tảng giải mã), một comment HTML — nêu tên từng cái: cổng render của nền tảng bỏ CẢ giá trị và hiện
-`text` thường đã escape; xuống dòng bằng `<br>`), `cascade_tail` (key style chỉ ghi ở
-`laptop`/`tablet`/`mobile` mà cả base lẫn desktop đều không khai, xét cùng giá trị mặc định
-của element — cascade mang nó lên desktop), `seed_override` (`flexDirection` ghi ở base mà
+`text` thường đã escape; xuống dòng bằng `<br>`), `cascade_tail` (key style — hoặc key style
+của một state — chỉ ghi ở `laptop`/`tablet`/`mobile` mà base lẫn mọi breakpoint RỘNG hơn đều
+không khai, xét trên node sau khi ghi (sb_add: spec cùng mặc định của element; sb_set: node đã lưu
+sau lần ghi) — cascade fallback ngược lên và mang nó tới
+mọi độ rộng lớn hơn; `sb_set pin_wider:true` ghi một giá trị base an toàn trong cùng lần lưu và
+liệt kê ở `pinned`: mặc định của chính element, nếu không thì `none` cho `maxWidth`/`maxHeight`
+và `auto` cho `width`/`height` chỉ khi stylesheet của element không tự đặt thuộc tính đó — và
+không bao giờ khi style preset của node đặt key ở bất kỳ breakpoint nào (pin là rule ID, sẽ đè
+preset); key khác vẫn chỉ cảnh báo kèm lý do), `seed_override` (`flexDirection` ghi ở base mà
 chính seed của element lật lại ở một độ rộng hẹp hơn spec không nói tới — `flex-block` seed
 `mobile.flexDirection: "column"`, giống editor, nên một hàng xếp dọc ở 390; ghi
 `responsive.mobile.style.flexDirection` để giữ hàng), `hidden_band` (`config.hidden: true`

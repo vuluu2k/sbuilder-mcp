@@ -6,12 +6,15 @@ import {
   ELEMENTS,
   HOVER_HOMES,
   SATELLITE_RULES,
+  STATIC_SIZING,
   TRAIT_WRITES,
   WRITE_PRECONDITIONS,
 } from '../../catalog/elements.generated.js';
 import { FIELD_SKIN_BY_CONTROL, FIELD_SKIN_BY_NODE } from '../../catalog/fieldskin.generated.js';
 import { FORM_RULE_VOCAB } from '../../catalog/formrules.generated.js';
 import type { DocLike } from '../../core/tree.js';
+import { applyPatches, type Patch } from '../../core/patch.js';
+import type { StylePreset } from '../../catalog/theme-types.js';
 import type { NodeSpec } from './builder.js';
 import { fill } from './findings.js';
 import { collectsValue, formFieldFindings, formFields, nameFromLabel } from './formdoc.js';
@@ -537,36 +540,171 @@ export function formDocChecks(before: DocLike, after: DocLike, formType?: string
   return out;
 }
 
-type Slots = { style?: Record<string, unknown>; responsive?: Record<string, { style?: Record<string, unknown> } | undefined> };
+/**
+ * Widest → narrowest: the platform's `BREAKPOINT_ORDER` (schema/src/breakpoints.ts,
+ * mirrored by server/render/generated BreakpointOrder), the order BOTH cascades
+ * walk. Copied, not invented — change it only when the platform's changes.
+ */
+export const BREAKPOINT_ORDER = ['desktop', 'laptop', 'tablet', 'mobile'] as const;
+
+type StyleSlot = { style?: Record<string, unknown>; states?: Record<string, { style?: Record<string, unknown> } | undefined> };
+type Slots = StyleSlot & { responsive?: Record<string, StyleSlot | undefined> };
 
 /**
- * THE CASCADE'S TAIL (trap 4). A key resolves current → wider → BASE →
- * narrower, so a style key written only at a narrower slot reaches DESKTOP
- * whenever neither base nor desktop declares it — a tablet `flexWrap: wrap`
- * broke a desktop header into two rows. `node` is the node AS IT WILL BE, with
- * its element defaults, so flex-block's seeded base `flexDirection: row` keeps
- * its own mobile column silent; `written` is what this write put at each slot.
+ * Whether `key` is said at base or at any breakpoint WIDER than `bp` — in the
+ * plain style, or in one state's layer (`mergeStateNs` cascades a state on its
+ * own: the plain style does not stop a mobile hover value reaching desktop's hover).
  */
-export function cascadeTail(node: Slots, written: Record<string, Record<string, unknown> | undefined>, id?: string): CheckedNote[] {
+export function saidWider(node: Slots, bp: string, key: string, state?: string): boolean {
+  const layer = (s: StyleSlot | undefined) => (state ? s?.states?.[state]?.style : s?.style);
+  if (layer(node)?.[key] !== undefined) return true;
+  const i = BREAKPOINT_ORDER.indexOf(bp as (typeof BREAKPOINT_ORDER)[number]);
+  return BREAKPOINT_ORDER.slice(0, Math.max(i, 0)).some((w) => layer(node.responsive?.[w])?.[key] !== undefined);
+}
+
+/**
+ * THE CASCADE FALLS BACK UP (trap 4). A key resolves current → wider → BASE →
+ * narrower (schema cascade.ts resolveNamespace / style/cascade.go
+ * MergeNamespace), so a style key written only at a narrow slot ALSO fills every
+ * wider breakpoint that leaves it unset — a mobile `maxWidth: 170px` capped a
+ * desktop search box (BASIX), a tablet `flexWrap: wrap` broke a desktop header.
+ * `node` is the node AS IT WILL BE, with its element defaults, so flex-block's
+ * seeded base `flexDirection: row` keeps its own mobile column silent; `written`
+ * is what this write put at each slot; `state` reads that state's layer instead.
+ */
+export function cascadeTail(
+  node: Slots,
+  written: Record<string, Record<string, unknown> | undefined>,
+  id?: string,
+  state?: string,
+): CheckedNote[] {
   const out: CheckedNote[] = [];
-  for (const bp of ['laptop', 'tablet', 'mobile']) {
+  for (const [i, bp] of BREAKPOINT_ORDER.entries()) {
+    if (i === 0) continue;
+    const wider = BREAKPOINT_ORDER.slice(0, i).join(', ');
     for (const k of Object.keys(written[bp] ?? {})) {
-      if (node.style?.[k] !== undefined || node.responsive?.desktop?.style?.[k] !== undefined) continue;
+      if (saidWider(node, bp, k, state)) continue;
+      const st = state ? ` (state "${state}")` : '';
       out.push({
-        once: `cascade-tail:${id ?? ""}:${k}`,
+        once: `cascade-tail:${id ?? ''}:${state ?? ''}:${k}`,
         note: {
           code: 'cascade_tail',
           ...(id ? { id } : {}),
           key: `style.${k}`,
           problem:
-            `style.${k} is set at ${bp} and neither base nor desktop declares it. The cascade reads current → ` +
-            `wider → BASE → narrower, so desktop renders the ${bp} value too.`,
-          fix: `Say the wide-screen answer at base: sb_set id "${id ?? '<id>'}", namespace style, base:true, keys { "${k}": <desktop value> }.`,
+            `style.${k}${st} is set only at ${bp}, and neither base nor a wider breakpoint declares it. The ` +
+            `cascade falls back UP to the nearest narrower slot, so ${wider} render the ${bp} value too.`,
+          fix:
+            `Say the wide-screen answer at base: sb_set id "${id ?? '<id>'}", namespace style, base:true` +
+            `${state ? `, state:"${state}"` : ''}, keys { "${k}": <desktop value> } — or repeat this write with ` +
+            'pin_wider:true, which pins a safe default at base where one exists.',
         },
       });
     }
   }
   return out;
+}
+
+/**
+ * A CSS initial that means "no constraint here", for the four sizing keys where
+ * one exists. Anything else (colour, padding, an inherited font) has no neutral
+ * value — `color: initial` breaks inheritance — so `pin_wider` only warns.
+ */
+const NEUTRAL: Readonly<Record<string, string>> = { maxWidth: 'none', maxHeight: 'none', width: 'auto', height: 'auto' };
+
+/** A pin, or the reason none is safe — said in that key's warning. */
+export type Pin = { value: unknown; from: string } | { reason: string };
+
+/**
+ * The value `pin_wider` writes at base so a narrow-only key stays narrow, or
+ * why none is safe. A per-node rule is an ID selector, so a pin beats BOTH the
+ * element's preset (a class rule) and its static CSS unconditionally:
+ *  - a preset that sets the key at ANY breakpoint refuses the pin — the starter
+ *    body-default text preset caps reading width at 680px, and `none` would wipe it;
+ *  - else the element's own seeded default (the value a freshly added node has,
+ *    so this RESTORES what the author removed — labelled so);
+ *  - else the CSS initial, only where the element's stylesheet does not set
+ *    that property itself (`STATIC_SIZING`) and the type is in the catalog;
+ *  - a state gets nothing more: its neutral answer is the plain style.
+ */
+export function pinFor(type: string, key: string, state?: string, preset?: StylePreset | null): Pin {
+  const presetSets =
+    preset &&
+    (preset.base?.[key] !== undefined ||
+      Object.values(preset.responsive ?? {}).some((slot) => slot?.[key] !== undefined) ||
+      Object.values(preset.states ?? {}).some((slot) => slot?.[key] !== undefined));
+  if (presetSets) return { reason: `its style preset "${preset!.id}" sets ${key}, and a base pin would override the preset` };
+  const d = ELEMENTS[type]?.defaults as
+    | { style?: Record<string, unknown>; states?: Record<string, { style?: Record<string, unknown> }>; responsive?: Record<string, { style?: Record<string, unknown> }> }
+    | undefined;
+  const seeded = state ? d?.states?.[state]?.style?.[key] : (d?.style?.[key] ?? d?.responsive?.desktop?.style?.[key]);
+  if (seeded !== undefined) return { value: seeded, from: 'element default (restores the seeded value)' };
+  if (state) return { reason: `a "${state}" value has no neutral constant — its desktop answer is the plain style` };
+  if (!(key in NEUTRAL)) return { reason: `no CSS initial is neutral for ${key}` };
+  const sets = STATIC_SIZING[type];
+  if (!sets) return { reason: `${type} is not in this MCP's catalog` };
+  if (sets.includes(key)) return { reason: `${type}'s own stylesheet sets ${key}` };
+  return { value: NEUTRAL[key], from: 'CSS initial' };
+}
+
+/** A narrow-slot style write, read off where the patches LANDED (a routed hover counts where it went). */
+function narrowWrites(patches: readonly Patch[]): Array<{ bp: string; state?: string; key: string }> {
+  const out: Array<{ bp: string; state?: string; key: string }> = [];
+  for (const p of patches) {
+    if (p.op !== 'set' || p.path[2] !== 'responsive') continue;
+    const [, , , bp, a, b, c, k] = p.path.map(String);
+    if (!BREAKPOINT_ORDER.slice(1).includes(bp as never)) continue;
+    if (a === 'style' && b !== undefined && p.path.length === 6) out.push({ bp, key: b });
+    else if (a === 'states' && c === 'style' && k !== undefined && p.path.length === 8) out.push({ bp, state: b, key: k });
+  }
+  return out;
+}
+
+/**
+ * The fallback-up check for one node's sb_set patches, and — with `pin` — the
+ * base writes that stop it. `node` is the node BEFORE the write; the answer is
+ * judged on it AFTER, so a batch that also writes desktop says nothing.
+ */
+export function fallUp(
+  node: object,
+  patches: readonly Patch[],
+  id: string,
+  type: string,
+  pin: boolean,
+  preset?: StylePreset | null,
+): { pins: Patch[]; pinned: Array<{ id: string; key: string; state?: string; value: unknown; from: string }>; notes: CheckedNote[] } {
+  const writes = narrowWrites(patches);
+  if (!writes.length) return { pins: [], pinned: [], notes: [] };
+  const probe = { nodes: { [id]: JSON.parse(JSON.stringify(node)) } };
+  applyPatches(probe, patches as Patch[]);
+  const pins: Patch[] = [];
+  const pinned: Array<{ id: string; key: string; state?: string; value: unknown; from: string }> = [];
+  const why = new Map<string, string>();
+  if (pin) {
+    const done = new Set<string>();
+    for (const w of writes) {
+      const tag = `${w.state ?? ''}:${w.key}`;
+      if (done.has(tag) || saidWider(probe.nodes[id], w.bp, w.key, w.state)) continue;
+      done.add(tag);
+      const v = pinFor(type, w.key, w.state, preset);
+      if ('reason' in v) {
+        why.set(`style.${w.key}`, v.reason);
+        continue;
+      }
+      pins.push({ op: 'set', path: ['nodes', id, ...(w.state ? ['states', w.state] : []), 'style', w.key], value: v.value });
+      pinned.push({ id, key: `style.${w.key}`, ...(w.state ? { state: w.state } : {}), value: v.value, from: v.from });
+    }
+    applyPatches(probe, pins);
+  }
+  const notes = writes.flatMap((w) => cascadeTail(probe.nodes[id], { [w.bp]: { [w.key]: true } }, id, w.state));
+  if (pin) {
+    for (const n of notes) {
+      n.note.fix =
+        `pin_wider wrote nothing for ${n.note.key} on ${type}: ${why.get(n.note.key) ?? 'no safe value'}. ` +
+        `Say the desktop value yourself: sb_set id "${id}", namespace style, base:true, keys { … }.`;
+    }
+  }
+  return { pins, pinned, notes };
 }
 
 export type HiddenSlots = { config?: Record<string, unknown>; responsive?: Record<string, { config?: Record<string, unknown> } | undefined> };
@@ -624,7 +762,9 @@ export function specCheck(
       const seeded = (d?.responsive ?? {}) as Slots['responsive'];
       const node: Slots = {
         style: { ...((d?.style ?? {}) as Record<string, unknown>), ...s.style },
-        responsive: { desktop: { style: { ...seeded?.desktop?.style, ...s.responsive.desktop?.style } } },
+        responsive: Object.fromEntries(
+          BREAKPOINT_ORDER.map((bp) => [bp, { style: { ...seeded?.[bp]?.style, ...s.responsive?.[bp]?.style } }]),
+        ),
       };
       out.push(...cascadeTail(node, Object.fromEntries(Object.entries(s.responsive).map(([bp, slot]) => [bp, slot.style])), id));
     }

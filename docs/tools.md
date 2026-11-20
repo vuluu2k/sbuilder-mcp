@@ -755,8 +755,14 @@ on an element with a `textHtml` twin — it renders escaped, tags showing), `ric
 tag or attribute in `specials.textHtml` the editor's inline rich-text schema cannot produce —
 `<p>`, `<div>`, `<h2>`, a `class`, an `href` to `javascript:`/`data:` (entity-encoded too — `&#106;avascript:` is read as the platform decodes it), an HTML comment — names each one: the platform's render gate drops the WHOLE
 value and shows the escaped plain `text`; break lines with `<br>`), `cascade_tail` (a
-style key written only at `laptop`/`tablet`/`mobile` that neither base nor desktop declares,
-judged with the element's defaults — the cascade carries it to desktop), `seed_override` (a
+style key — or one state's style key — written only at `laptop`/`tablet`/`mobile` that neither
+base nor any WIDER breakpoint declares, judged on the node as it will be (sb_add: the spec plus the
+element's defaults; sb_set: the stored node after the write) — the cascade falls
+back up and carries it to every wider width; `sb_set pin_wider:true` writes a safe base value
+in the same save and lists it under `pinned`: the element's own default, else `none` for
+`maxWidth`/`maxHeight` and `auto` for `width`/`height` only where the element's stylesheet sets
+no such property itself — and never where the node's style preset sets the key at any breakpoint
+(a pin is an ID rule and would override it); any other key stays a warning saying why), `seed_override` (a
 base `flexDirection` that the element's OWN seed flips at a narrower width the spec leaves
 unsaid — `flex-block` seeds `mobile.flexDirection: "column"`, as the editor does, so a row
 stacks at 390; say `responsive.mobile.style.flexDirection` to keep it), `hidden_band`

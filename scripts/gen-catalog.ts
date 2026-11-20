@@ -520,8 +520,8 @@ function readStaticSizing(repo: string): Record<string, string[]> {
     for (const pkg of uses.get(type) ?? []) for (const p of own.get(pkg) ?? []) all.add(p);
     out[type] = [...all].sort();
   }
-  if (!out.divider?.includes('width')) {
-    console.error('render/nodes/divider no longer reads as setting width — has the static CSS moved?');
+  if (!out.divider?.includes('width') || !out['search-input']?.includes('maxWidth')) {
+    console.error('divider width / search-input max-width no longer read as set — has the static CSS moved?');
     process.exit(1);
   }
   return out;

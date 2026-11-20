@@ -820,7 +820,12 @@ platform treats an unproven guard as indistinguishable from an absent one.
   `sb_review` reports a document that already holds two as `duplicate_binding_field`, naming
   the one that renders), the shared-master warning repeated per node (now once per master per
   process, `shared`), `no_h1` / form-link seed noise inside a FORM document, and no word when
-  a narrower-only style key rides the cascade tail to desktop (`cascade_tail`).
+  a narrower-only style key rides the cascade tail to desktop (`cascade_tail`). Since
+  2026-11-20 "said wider" means base OR any wider slot (`BREAKPOINT_ORDER` in writecheck.ts —
+  a tablet value stops a mobile one) and covers state layers (`mergeStateNs` falls back up
+  too); `pin_wider` pins a CSS initial ONLY where `STATIC_SIZING` says the element's own
+  stylesheet sets no such property — a per-node rule is an ID selector and beats static CSS,
+  so a blind `width:auto` collapses `.wb-divider{width:100%}`.
 - **A SECOND BINDING ON A FIELD IS USUALLY A FALLBACK, NOT DEAD WEIGHT** (review of v0.100.4).
   `ApplyBindings` SKIPS a source the context lacks (`val, ok := ctx[b.Source]; if !ok continue`),
   and present-only keys — `product.summary/tags/id/variations/brand*`, the ratings, the site's contact/address/social/policy fields plus `site.money`/`site.timezone` (NOT `site.name`/`site.currency`),

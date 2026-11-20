@@ -4,7 +4,7 @@ import { Session } from '../src/transport/auth.js';
 import { PageDoc } from '../src/domains/site/document.js';
 import { addSubtree } from '../src/domains/site/builder.js';
 import { reviewDesign } from '../src/domains/site/review.js';
-import { writeCheck, specCheck } from '../src/domains/site/writecheck.js';
+import { writeCheck, specCheck, pinFor } from '../src/domains/site/writecheck.js';
 import { bindNode } from '../src/tools/live.js';
 import { emptyDoc } from './helpers/doc.js';
 
@@ -128,7 +128,7 @@ const DOC = {
   schema_version: 2,
   root_node_id: 'ROOT',
   nodes: {
-    ROOT: { id: 'ROOT', data: { type: 'root', parent: null, nodes: ['hd', 'sec'] }, specials: {} },
+    ROOT: { id: 'ROOT', data: { type: 'root', parent: null, nodes: ['hd', 'sec', 'box'] }, specials: {} },
     hd: {
       id: 'hd',
       data: { type: 'flex-section', parent: 'ROOT', nodes: ['b1', 'b2'] },
@@ -137,6 +137,20 @@ const DOC = {
     b1: { id: 'b1', data: { type: 'button', parent: 'hd', nodes: [] }, specials: { text: 'A' } },
     b2: { id: 'b2', data: { type: 'button', parent: 'hd', nodes: [] }, specials: { text: 'B' } },
     sec: { id: 'sec', data: { type: 'flex-section', parent: 'ROOT', nodes: [] }, style: { display: 'flex' } },
+    // The fallback-up fixtures: an image with nothing sized, an image whose
+    // TABLET slot says maxWidth, and a divider (its own stylesheet sets width).
+    box: { id: 'box', data: { type: 'flex-section', parent: 'ROOT', nodes: ['pic', 'pic2', 'hr', 'txt', 'txt2'] }, style: { display: 'flex' } },
+    pic: { id: 'pic', data: { type: 'image', parent: 'box', nodes: [] }, specials: { src: 'https://x/a.png' } },
+    pic2: {
+      id: 'pic2',
+      data: { type: 'image', parent: 'box', nodes: [] },
+      specials: { src: 'https://x/b.png' },
+      responsive: { tablet: { style: { maxWidth: '600px' } } },
+    },
+    hr: { id: 'hr', data: { type: 'divider', parent: 'box', nodes: [] } },
+    // body-default caps reading width at 680px in the starter theme; txt2 wears text-default.
+    txt: { id: 'txt', data: { type: 'text', parent: 'box', nodes: [] }, specials: { text: 'Đoạn văn', stylePreset: 'body-default' } },
+    txt2: { id: 'txt2', data: { type: 'text', parent: 'box', nodes: [] }, specials: { text: 'Đoạn văn' } },
   },
 };
 
@@ -238,6 +252,111 @@ describe('a narrower-only style key reaches desktop through the cascade tail', (
     } finally {
       await close();
     }
+  });
+
+  type Note = { code: string; id?: string; key: string; problem: string; fix: string };
+  const tails = (r: { json: Record<string, unknown> }) => ((r.json.checks ?? []) as Note[]).filter((c) => c.code === 'cascade_tail');
+
+  it('a value at a WIDER breakpoint (not only base/desktop) stops the fall — and names every width it reaches', async () => {
+    const { call, close } = await openClient();
+    try {
+      const hit = await call('sb_set', { id: 'pic', namespace: 'style', keys: { maxWidth: '170px' }, breakpoint: 'mobile' });
+      expect(tails(hit).map((c) => c.key), 'liveness: nothing wider on pic').toEqual(['style.maxWidth']);
+      expect(tails(hit)[0].problem).toMatch(/desktop, laptop, tablet/);
+      expect(tails(hit)[0].fix).toMatch(/pin_wider/);
+      const quiet = await call('sb_set', { id: 'pic2', namespace: 'style', keys: { maxWidth: '170px' }, breakpoint: 'mobile' });
+      expect(tails(quiet), "pic2's tablet maxWidth is wider than mobile").toEqual([]);
+    } finally {
+      await close();
+    }
+  });
+
+  it('a state write at a narrow breakpoint falls back up too, judged on that state alone', async () => {
+    const { call, close } = await openClient();
+    try {
+      const hit = await call('sb_set', { id: 'sec', namespace: 'style', state: 'hover', keys: { backgroundColor: 'red' }, breakpoint: 'tablet' });
+      expect(tails(hit).map((c) => c.key)).toEqual(['style.backgroundColor']);
+      expect(tails(hit)[0].problem).toMatch(/state "hover"/);
+      await call('sb_set', { id: 'box', namespace: 'style', state: 'hover', base: true, keys: { backgroundColor: 'blue' }, dry_run: false });
+      const quiet = await call('sb_set', { id: 'box', namespace: 'style', state: 'hover', keys: { backgroundColor: 'red' }, breakpoint: 'tablet' });
+      expect(tails(quiet), 'base hover declares it').toEqual([]);
+    } finally {
+      await close();
+    }
+  });
+
+  it('pin_wider writes the CSS initial at base where the element sets no such property itself', async () => {
+    const { call, close } = await openClient();
+    try {
+      const r = await call('sb_set', { id: 'pic', namespace: 'style', keys: { maxWidth: '170px' }, breakpoint: 'mobile', pin_wider: true });
+      expect(r.json.pinned).toEqual([{ id: 'pic', key: 'style.maxWidth', value: 'none', from: 'CSS initial' }]);
+      expect(r.json.patches).toContainEqual({ op: 'set', path: ['nodes', 'pic', 'style', 'maxWidth'], value: 'none' });
+      expect(tails(r), 'pinned, so nothing falls').toEqual([]);
+    } finally {
+      await close();
+    }
+  });
+
+  it("pin_wider prefers the element's own default (button width: fit-content)", async () => {
+    const { call, close } = await openClient();
+    try {
+      const r = await call('sb_set', { id: 'b1', namespace: 'style', keys: { width: '100%' }, breakpoint: 'mobile', pin_wider: true });
+      expect(r.json.pinned).toEqual([
+        { id: 'b1', key: 'style.width', value: 'fit-content', from: 'element default (restores the seeded value)' },
+      ]);
+    } finally {
+      await close();
+    }
+  });
+
+  it("pin_wider never overrides a preset that sets the key — body-default's 680px reading width", async () => {
+    const { call, close } = await openClient();
+    try {
+      const r = await call('sb_set', { id: 'txt', namespace: 'style', keys: { maxWidth: '320px' }, breakpoint: 'mobile', pin_wider: true });
+      expect(r.json.pinned).toBeUndefined();
+      expect(tails(r)[0].fix).toMatch(/preset "body-default" sets maxWidth/);
+      const twin = await call('sb_set', { id: 'txt2', namespace: 'style', keys: { maxWidth: '320px' }, breakpoint: 'mobile', pin_wider: true });
+      expect(twin.json.pinned, 'text-default sets no maxWidth').toEqual([{ id: 'txt2', key: 'style.maxWidth', value: 'none', from: 'CSS initial' }]);
+    } finally {
+      await close();
+    }
+  });
+
+  it('pin_wider only warns where no value is safe: a divider sets its own width, a colour has no neutral', async () => {
+    const { call, close } = await openClient();
+    try {
+      const r = await call('sb_set', {
+        edits: [
+          { id: 'hr', namespace: 'style', keys: { width: '50%' }, breakpoint: 'mobile' },
+          { id: 'pic', namespace: 'style', keys: { color: 'red' }, breakpoint: 'mobile' },
+        ],
+        pin_wider: true,
+      });
+      expect(r.json.pinned).toBeUndefined();
+      expect(tails(r).map((c) => `${c.id}:${c.key}`).sort()).toEqual(['hr:style.width', 'pic:style.color']);
+      const fix = Object.fromEntries(tails(r).map((c) => [c.id, c.fix]));
+      expect(fix.hr).toMatch(/divider's own stylesheet sets width/);
+      expect(fix.pic).toMatch(/no CSS initial is neutral for color/);
+    } finally {
+      await close();
+    }
+  });
+
+  it('pinFor refuses a type the catalog does not carry', () => {
+    expect(pinFor('no-such-element', 'maxWidth')).toEqual({ reason: "no-such-element is not in this MCP's catalog" });
+    expect(pinFor('image', 'maxWidth'), 'liveness: a known type with no sizing rule pins').toEqual({ value: 'none', from: 'CSS initial' });
+  });
+
+  it('sb_add: a mobile-only maxWidth falls up; with tablet also set, the mobile one does not', () => {
+    const notes = (responsive: Record<string, unknown>) =>
+      specCheck({ type: 'image', responsive } as never)
+        .map((c) => c.note)
+        .filter((n) => n.code === 'cascade_tail');
+    expect(notes({ mobile: { style: { maxWidth: '170px' } } }).map((n) => n.problem)).toEqual([expect.stringMatching(/only at mobile/)]);
+    const both = notes({ tablet: { style: { maxWidth: '600px' } }, mobile: { style: { maxWidth: '170px' } } });
+    expect(both.some((n) => /only at mobile/.test(n.problem)), 'tablet is wider than mobile').toBe(false);
+    expect(both.map((n) => n.problem), 'the tablet value itself still reaches desktop').toEqual([expect.stringMatching(/only at tablet/)]);
+    expect(notes({ desktop: { style: { maxWidth: '900px' } }, mobile: { style: { maxWidth: '170px' } } }), 'desktop says it').toEqual([]);
   });
 
   it('sb_add names each node, so a second node with the same narrower-only key is still told', async () => {

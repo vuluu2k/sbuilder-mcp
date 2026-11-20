@@ -24,7 +24,8 @@ import {
   type SetEdit,
 } from '../domains/site/builder.js';
 import { baseOnlyNote, splitBaseOnly } from '../domains/site/baseonly.js';
-import { detachNote, presetIdOf, presetLayer } from '../domains/site/theme.js';
+import { detachNote, findPreset, presetIdOf, presetLayer } from '../domains/site/theme.js';
+import { STARTER_THEME } from '../catalog/theme.generated.js';
 import { inertHintsFor } from '../domains/site/inert.js';
 import {
   emptyEntityTemplateNote,
@@ -49,7 +50,7 @@ import { request, redact, watchPageWrites, onPageSourceWrite, onGlobalWrite, onF
 import { SPEC_GLOBAL_ID, SPEC_GLOBAL_REV, SPEC_OVERLAY_ID, SPEC_OVERLAY_REV, subtreeIds, ancestors, childrenOf, type NodeLike } from '../core/tree.js';
 import { siteToken } from './credentialpick.js';
 import { validateForSave } from '../domains/site/validate.js';
-import { cascadeTail, formDocChecks, hiddenBand, sayChecks, specCheck, writeCheck, type CheckedNote, type HiddenSlots } from '../domains/site/writecheck.js';
+import { fallUp, formDocChecks, hiddenBand, sayChecks, specCheck, writeCheck, type CheckedNote, type HiddenSlots } from '../domains/site/writecheck.js';
 import { reviewDesign, REVIEW_NOTICE } from '../domains/site/review.js';
 import { exampleCopy } from '../domains/site/examplecopy.js';
 import { compactFindings } from '../domains/site/findings.js';
@@ -1913,12 +1914,16 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
             }),
           )
           .optional(),
+        pin_wider: z
+          .boolean()
+          .optional()
+          .describe('Pin a safe base value so a narrow-only style key does not fall back up; see pinned'),
         dry_run: z.boolean().optional(),
         force: z.boolean().optional().describe('Override a render-inference guard; reported as forced'),
       },
       annotations: { readOnlyHint: false, destructiveHint: false },
     },
-    async ({ id, namespace, keys, breakpoint, base, state, unset, edits, dry_run, force }) => {
+    async ({ id, namespace, keys, breakpoint, base, state, unset, edits, pin_wider, dry_run, force }) => {
       const d = session.current();
       const say = noticeFor(ctx, dry_run);
       // One shape inside: a single edit is a batch of one.
@@ -1959,6 +1964,33 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
       const guard: GuardOpts = { force, forced: [] };
       const { patches, touched } = setMany(d, batch, guard);
       const forced = guard.forced!.length ? { forced: guard.forced } : {};
+      // A NARROW-ONLY STYLE KEY FALLS BACK UP to every wider breakpoint that
+      // leaves it unset (trap 4) — a mobile maxWidth capped a desktop search box.
+      // Judged per node on its patches as they LANDED, so a routed hover counts
+      // where it went; `pin_wider` adds the base writes that stop it to this save.
+      // A preset is a class rule the pin (an ID rule) would override, so the pin
+      // asks the node's preset first — fetched only when a pin is asked for.
+      const pinTheme = pin_wider === true ? (await siteTheme(ctx, session.site())).theme : null;
+      const presetOf = (nid: string) => {
+        const pid = pinTheme ? presetIdOf(d.doc.nodes[nid] as never) : null;
+        if (!pid) return null;
+        return findPreset({ ...pinTheme!, presets: pinTheme!.presets ?? [] }, pid) ?? findPreset(STARTER_THEME, pid);
+      };
+      const fall = [...new Set(batch.filter((e) => e.namespace === 'style').map((e) => e.id))]
+        .filter((nid) => d.doc.nodes[nid])
+        .map((nid) =>
+          fallUp(
+            d.doc.nodes[nid],
+            patches.filter((p) => p.path[0] === 'nodes' && p.path[1] === nid),
+            nid,
+            d.doc.nodes[nid].data.type,
+            pin_wider === true,
+            presetOf(nid),
+          ),
+        );
+      for (const f of fall) patches.push(...f.pins);
+      const pinnedList = fall.flatMap((f) => f.pinned);
+      const pinned = pinnedList.length ? { pinned: pinnedList } : {};
       // A FILTER RE-SOURCED KEEPS THE OLD SOURCE'S ROWS unless they are
       // re-derived — a brand filter listing categories. Same post-step as sb_add.
       const resourced = batch
@@ -2058,15 +2090,7 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
           ...(e.namespace === 'specials' ? { specials: { ...(n?.specials ?? {}), ...e.keys } } : {}),
         });
       });
-      // A narrower-only style key reaches desktop (trap 4's tail), judged on
-      // the node AS IT WILL BE — only that node's patches, on a copy of it.
-      const tail = batch.flatMap((e) => {
-        const bp = e.breakpoint ?? 'desktop';
-        if (e.namespace !== 'style' || e.base || e.state || bp === 'desktop' || !d.doc.nodes[e.id]) return [];
-        const probe = { nodes: { [e.id]: JSON.parse(JSON.stringify(d.doc.nodes[e.id])) } };
-        applyPatches(probe, patches.filter((p) => p.path[0] === 'nodes' && p.path[1] === e.id));
-        return cascadeTail(probe.nodes[e.id], { [bp]: e.keys }, e.id);
-      });
+      const tail = fall.flatMap((f) => f.notes);
       // config.hidden at base/desktop hides ≥1440px only — judged on the node
       // AS IT WILL BE — and so are its ancestors, since one edits[] can hide the
       // parent at the narrow bands — so a batch that hides every band says nothing.
@@ -2135,6 +2159,7 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
           ...(baseNote ? { base_only: baseNote } : {}),
           ...(presetNote ? { preset: presetNote } : {}),
           ...checks,
+          ...pinned,
           ...(skinNote ? { field_skin: skinNote } : {}),
           ...filterOut,
           ...(Object.keys(hostNotes).length ? { hover_host: hostNotes } : {}),
@@ -2169,6 +2194,7 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
           ...(baseNote ? { base_only: baseNote } : {}),
           ...(presetNote ? { preset: presetNote } : {}),
           ...checks,
+          ...pinned,
           ...(skinNote ? { field_skin: skinNote } : {}),
           ...filterOut,
           ...(hostNotes[batch[0].id] ? { hover_host: hostNotes[batch[0].id] } : {}),
@@ -2185,6 +2211,7 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
         ...(baseNote ? { base_only: baseNote } : {}),
         ...(presetNote ? { preset: presetNote } : {}),
         ...checks,
+        ...pinned,
         ...(skinNote ? { field_skin: skinNote } : {}),
         ...filterOut,
         ...(Object.keys(hostNotes).length ? { hover_host: hostNotes } : {}),
