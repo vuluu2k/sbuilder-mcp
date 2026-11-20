@@ -6,6 +6,11 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.111.2] - 2026-11-20
+
+### Changed
+- Danh mục API được tạo lại theo web_builder v1.0.293, nên `sb_api_find` và `sb_api_call` giờ mô tả body của POST và PUT `/api/sites/{siteId}/integrations`, gồm provider hợp lệ, `config.measurementId`, `containerId` và `pixelId`, đoạn mã dán nguyên, kiểm tra bằng `?dryRun=true`, và lỗi `invalid_tracking_id`.
+
 ## [0.111.1] - 2026-11-20
 
 ### Added
