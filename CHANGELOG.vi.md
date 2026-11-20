@@ -6,6 +6,13 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.112.0] - 2026-11-20
+
+### Added
+- `sb_store` có thêm `action: "tracking"`, khi không truyền tham số sẽ liệt kê mọi tracker (GA4, GTM, Meta/TikTok Pixel, ChatGPT Ads) cùng ID, trạng thái bật/tắt và vấn đề, kèm khách đến từ đâu trong 30 ngày qua.
+- `sb_store` `action: "tracking"` nhận đoạn mã dán vào qua `text`, nhận diện nhà cung cấp, làm sạch ID, rồi cập nhật tracker đã có hoặc tạo mới, mặc định chạy `dry_run`.
+- `sb_store` `action: "tracking"` nhận `provider` và `enabled` để bật/tắt một tracker, và lỗi của một nhà cung cấp không chặn các nhà cung cấp khác.
+
 ## [0.111.5] - 2026-11-20
 
 ### Changed

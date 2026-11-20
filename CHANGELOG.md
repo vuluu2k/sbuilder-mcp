@@ -6,6 +6,13 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.112.0] - 2026-11-20
+
+### Added
+- `sb_store` adds `action: "tracking"`, which with no arguments lists every tracker (GA4, GTM, Meta/TikTok Pixel, ChatGPT Ads) with its ID, enabled state and problems, plus where visitors came from over the last 30 days.
+- `sb_store` `action: "tracking"` accepts a pasted `text` snippet, recognises the provider, cleans the ID, and updates the existing tracker or creates a new one, defaulting to `dry_run`.
+- `sb_store` `action: "tracking"` accepts `provider` and `enabled` to switch a single tracker on or off, and one provider's failure does not block the others.
+
 ## [0.111.5] - 2026-11-20
 
 ### Changed
