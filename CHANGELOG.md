@@ -6,6 +6,11 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.111.5] - 2026-11-20
+
+### Changed
+- The element catalog is regenerated against web_builder v1.0.302, and the collection list guidance now says `collectionListType` `page_collections` lists a leaf collection's siblings (the parent's children).
+
 ## [0.111.4] - 2026-11-20
 
 ### Added

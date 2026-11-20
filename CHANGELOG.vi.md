@@ -6,6 +6,11 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.111.5] - 2026-11-20
+
+### Changed
+- Danh mục phần tử được tạo lại theo web_builder v1.0.302, và hướng dẫn về danh sách bộ sưu tập giờ nêu rõ `collectionListType` `page_collections` liệt kê các bộ sưu tập cùng cấp (con của bộ sưu tập cha) khi trang là một bộ sưu tập lá.
+
 ## [0.111.4] - 2026-11-20
 
 ### Added
