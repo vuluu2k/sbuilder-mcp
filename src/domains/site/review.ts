@@ -6,6 +6,7 @@ import { bandOf, isGlobal, type Band } from './traps.js';
 import { exampleCopy } from './examplecopy.js';
 import { SEED_COPY_VI, langOf } from './seedcopy.js';
 import { HOVER_STATE, hoverHome } from './hover.js';
+import { ICON_KEYS } from '../../catalog/icons.generated.js';
 import { ELEMENTS, BINDING_SOURCES, PRESENT_ONLY_SOURCES, BOUND_SPECIALS , FIRST_CHILD_ONLY, SATELLITE_RULES, ELEMENT_SEEDS } from '../../catalog/elements.generated.js';
 import type { PageDoc } from './document.js';
 import { fill } from './findings.js';
@@ -188,6 +189,37 @@ const FIELD_STACKS = new Set(['form', 'form-segment', 'form-step-nav']);
 function repeats(type: string): boolean {
   const meta = ELEMENTS[type];
   return Boolean(meta?.isContainer && meta.category === 'dataset');
+}
+
+/** Whether the node's text is blank because its face is a glyph (an icon key holds one). */
+function iconOnly(type: string, specials: Record<string, unknown> | undefined): boolean {
+  return (ICON_KEYS[type] ?? []).some((k) => k.ns === 'specials' && typeof specials?.[k.key] === 'string' && String(specials[k.key]).trim() !== '');
+}
+
+/**
+ * Card labels that are constant by design: the platform's own store seeds in
+ * both languages (SEED_COPY_VI) plus the generic action/badge words agents type.
+ */
+const GENERIC_LABELS: ReadonlySet<string> = new Set(
+  [
+    ...Object.entries(SEED_COPY_VI).flat(),
+    'Thêm vào giỏ hàng', 'Xem nhanh', 'Xem chi tiết', 'Chi tiết', 'Xem thêm', 'Mua', 'Giảm giá', 'Mới',
+    'Quick view', 'View', 'View details', 'Details', 'Shop now', 'Sale', 'New', 'Hot',
+  ].map((s) => s.toLowerCase()),
+);
+
+function genericLabel(v: unknown): boolean {
+  return typeof v === 'string' && GENERIC_LABELS.has(v.trim().toLowerCase());
+}
+
+/** Click actions that act on the record the card renders, so a constant label is right. */
+const RECORD_ACTIONS: ReadonlySet<string> = new Set(['quick_view', 'toggle_wishlist', 'cart_remove', 'cart_increment', 'cart_decrement']);
+
+/** Whether the node's click (or its binding) is about THIS record: quick view, wishlist, purchase, its link. */
+function recordScoped(events: NodeEventLike[] | undefined, bindings: Array<{ id?: string; field?: string }>): boolean {
+  if ((events ?? []).some((e) => !!e?.action && RECORD_ACTIONS.has(e.action))) return true;
+  if (hasPurchaseBinding(bindings)) return true;
+  return bindings.some((b) => b.field === 'specials.href' || LINK_SPECIALS.has(String(b.field).replace(/^specials\./, '')));
 }
 
 /** The element types that can actually show a record: their renderer reads a bound special. */
@@ -448,6 +480,10 @@ export function reviewDesign(
   const inRepeater = new Map<string, string>();
   // Which nodes sit inside an overlay, so their findings can say so.
   const inOverlay = new Set<string>();
+  // Which nodes sit in a SATELLITE (an empty state, an element's chrome) rather
+  // than in the record template — a repeater's "Chưa có sản phẩm" heading is
+  // authored once on purpose, so the hard-coded-heading check below skips it.
+  const inSatellite = new Set<string>();
   // A CHILD ID NAMING NO NODE. `validateForSave` already refuses this on the
   // way OUT — "Node X lists child Y, which is not in the document" — but a
   // review runs on a document that is already damaged, which is exactly when a
@@ -462,11 +498,12 @@ export function reviewDesign(
   // down and so cannot hand the traversal to `walk`, which is precisely the
   // caller `walk`'s own comment warns will get this wrong.
   const dangling: Array<{ parent: string; child: string }> = [];
-  const go = (id: string, repeater?: string, overlay = false): void => {
+  const go = (id: string, repeater?: string, overlay = false, satellite = false): void => {
     if (seen.has(id)) return;
     seen.add(id);
     if (!d.nodes[id]) return;
     if (overlay) inOverlay.add(id);
+    if (satellite) inSatellite.add(id);
     walkOrder.push(id);
     if (repeater) inRepeater.set(id, repeater);
     if (appBlockRoot(d, id) === id) return;
@@ -479,7 +516,7 @@ export function reviewDesign(
     // child-only list; this had made it.
     for (const k of childrenWithSatellites(d, id)) {
       if (!d.nodes[k]) dangling.push({ parent: id, child: k });
-      go(k, inner, overlay || overlayIds.has(k));
+      go(k, inner, overlay || overlayIds.has(k), satellite || !d.nodes[id].data.nodes.includes(k));
     }
   };
   go(d.root_node_id);
@@ -1500,12 +1537,26 @@ export function reviewDesign(
       const blank = (v: unknown) => v === undefined || v === null || String(v).trim() === '';
       const isBlank = blank(value) && alsoCarries(type, key).every((k) => blank((n.specials ?? {})[k]));
       if (supplied(key)) continue;
+      // AN ICON-ONLY CONTROL HAS NO TEXT TO BE MISSING. A bag-icon button that
+      // opens the card's quick view carries text "" and a glyph; it was reported
+      // as `static_in_dataset` inside a product card and as `empty_text` outside.
+      if (key === 'text' && isBlank && iconOnly(type, n.specials)) continue;
 
       // INSIDE A REPEATER the generic advice is actively wrong: setting a static
       // src on an image in a product card puts the SAME picture on every card and
       // the product's own photo can never appear. The defect is the element
       // choice, not the missing value, so it gets its own finding and its own fix.
-      if (repeater && (isBlank || (seed !== undefined && value === seed))) {
+      // A LABEL THAT IS THE SAME ON EVERY CARD BY DESIGN — "Thêm vào giỏ" on a
+      // control whose click is about THIS record (quick view, wishlist, a
+      // purchase binding, a bound link) or a generic action/badge word. Only for
+      // text: a picture is never constant by design.
+      const constant = key === 'text' && (genericLabel(value) || recordScoped((n as { events?: NodeEventLike[] }).events, bindings));
+      // A HEADING HARD-CODED IN THE RECORD TEMPLATE — a product name typed into
+      // the card — shows that one name on every card. The template only: a
+      // satellite (the list's empty state) is authored once on purpose.
+      const hardCoded =
+        type === 'heading' && key === 'text' && !isBlank && value !== seed && !inSatellite.has(id);
+      if (repeater && !constant && (isBlank || (seed !== undefined && value === seed) || hardCoded)) {
         out.push({
           code: 'static_in_dataset',
           nodeId: id,

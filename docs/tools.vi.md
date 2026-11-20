@@ -1978,7 +1978,7 @@ gửi một `sb_page_open` gọi song song tới SAU review, và review khi đó
 | `empty_container` | Section không chứa gì — một dải trống |
 | `placeholder_content` | Vẫn là chữ mặc định của element ("Enter your text here"). Trừ `form-link`, chữ seed của nó là copy thật |
 | `empty_text` / `missing_media` | Element bỏ trống — khoảng trắng, hoặc ảnh vỡ. Chữ trong `textHtml` được tính (renderer ưu tiên nó), `linkText` của `form-link` cũng vậy |
-| `static_in_dataset` | Một element nằm trong repeater nhưng chỉ render nội dung do tài liệu ghi — cùng một tấm ảnh trên mọi thẻ sản phẩm |
+| `static_in_dataset` | Một element nằm trong repeater nhưng chỉ render nội dung do tài liệu ghi — cùng một tấm ảnh trên mọi thẻ sản phẩm, hoặc tên sản phẩm gõ cứng vào heading của thẻ. Không báo cho nút chỉ có icon, nhãn chung ("Thêm vào giỏ", "Xem nhanh") hay nút có click thuộc về bản ghi (xem nhanh, yêu thích, binding mua hàng, link đã bind) |
 | `unbound_dataset_element` | Element dataset không có binding nào — nó chờ một `bound…` special mà không ai ghi |
 | `dead_binding_source` | Nguồn renderer không cung cấp — hiện placeholder mãi mãi. Nguồn `record.*` chỉ hợp lệ ở dạng `record.fld_<16 hex>` / `record.html.fld_<16 hex>` / `record.money.fld_<16 hex>` / `record.(money.)agg.<key>` / `record.(money.)ref.<fld>.<fld>` / `record.id` / `record.url`, và chỉ dạng html được vào `specials.boundHtml` |
 | `card_source_unset` | `dataset-block` không khai `config.datasetSource` bên trong một danh sách không phải sản phẩm — nó bind `product.url`, không bao giờ có giá trị ở đó, nên card publish ra không bấm được. Sửa: gán nguồn của danh sách cho card (`sb_add` giờ tự làm) |

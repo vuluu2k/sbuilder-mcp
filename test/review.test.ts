@@ -273,6 +273,83 @@ describe('reviewDesign()', () => {
     expect(f!.fix).toContain('collection-media');
   });
 
+  /**
+   * A CONSTANT LABEL IS NOT A MISSING BINDING. A bag-icon button in a product
+   * card that opens the card's quick view was reported "every record shows the
+   * same text" — it renders no record text at all. Each exemption keeps a
+   * firing twin, so a widened exemption reddens a test named for it.
+   */
+  describe('static_in_dataset exemptions', () => {
+    /** A product card holding one `child`; returns the doc and the child's id. */
+    function card(child: Parameters<typeof addSubtree>[2]) {
+      const d = emptyDoc();
+      d.apply(
+        addSubtree(d, 'ROOT', {
+          type: 'flex-section',
+          children: [{ type: 'list-dataset', children: [{ type: 'dataset-block', children: [child] }] }],
+        }).patches,
+      );
+      const list = d.node(d.node('ROOT').data.nodes[0]).data.nodes[0];
+      const block = d.node(list).data.nodes[0];
+      return { d, list, id: d.node(block).data.nodes[0] };
+    }
+    const codesFor = (d: PageDoc, id: string) => reviewDesign(d).filter((f) => f.nodeId === id).map((f) => f.code);
+
+    it('skips an icon-only button, inside a card and outside one', () => {
+      const inCard = card({ type: 'button', specials: { text: '', icon: 'ShoppingBag3Line' } });
+      expect(codesFor(inCard.d, inCard.id), 'icon-only button in a card').toEqual([]);
+      const d = emptyDoc();
+      d.apply(addSubtree(d, 'ROOT', { type: 'flex-section', children: [{ type: 'button', specials: { text: '', icon: 'ShoppingBag3Line' } }] }).patches);
+      const btn = d.node(d.node('ROOT').data.nodes[0]).data.nodes[0];
+      expect(codesFor(d, btn), 'icon-only button on the page').not.toContain('empty_text');
+    });
+
+    it('still flags a blank button with NO icon in a card', () => {
+      const { d, id } = card({ type: 'button', specials: { text: '' } });
+      expect(codesFor(d, id)).toContain('static_in_dataset');
+    });
+
+    it('skips a placeholder button whose click is a record action, and calls it a placeholder instead', () => {
+      const { d, id } = card({ type: 'button' });
+      expect(codesFor(d, id), 'liveness: the seed "Button" fires before the event').toContain('static_in_dataset');
+      d.apply([{ op: 'set', path: ['nodes', id, 'events'], value: [{ id: 'e1', name: 'click', action: 'quick_view' }] }]);
+      const after = codesFor(d, id);
+      expect(after).not.toContain('static_in_dataset');
+      expect(after, 'the seed copy is still a placeholder').toContain('placeholder_content');
+    });
+
+    it('does not exempt a click that is not about the record', () => {
+      const { d, id } = card({ type: 'button' });
+      d.apply([{ op: 'set', path: ['nodes', id, 'events'], value: [{ id: 'e1', name: 'click', action: 'open_cart' }] }]);
+      expect(codesFor(d, id)).toContain('static_in_dataset');
+    });
+
+    it('still flags the placeholder heading in a card', () => {
+      const { d, id } = card({ type: 'heading' });
+      expect(codesFor(d, id)).toContain('static_in_dataset');
+    });
+
+    it('flags a product name hard-coded into the card heading, but not a generic one', () => {
+      const named = card({ type: 'heading', specials: { text: 'Áo Polo Coolmate Basic' } });
+      const f = reviewDesign(named.d).find((x) => x.nodeId === named.id && x.code === 'static_in_dataset');
+      expect(f?.problem).toContain(named.list);
+      const generic = card({ type: 'heading', specials: { text: 'Xem nhanh' } });
+      expect(codesFor(generic.d, generic.id)).not.toContain('static_in_dataset');
+    });
+
+    it("does not flag the list's own empty-state heading (a satellite, authored once)", () => {
+      const { d, list } = card({ type: 'heading', specials: { text: 'Áo Polo' } });
+      d.apply([
+        { op: 'set', path: ['nodes', 'emp_1'], value: { id: 'emp_1', data: { type: 'list-empty', parent: list, nodes: ['emh_1'] }, style: {}, config: {}, specials: {} } },
+        { op: 'set', path: ['nodes', 'emh_1'], value: { id: 'emh_1', data: { type: 'heading', parent: 'emp_1', nodes: [] }, style: {}, config: {}, specials: { htmlTag: 'h3', text: 'Chưa có áo nào' } } },
+        { op: 'set', path: ['nodes', list, 'config', 'emptyStateId'], value: 'emp_1' },
+      ]);
+      const all = reviewDesign(d);
+      expect(all.some((x) => x.code === 'static_in_dataset' && x.type === 'heading' && x.nodeId !== 'emh_1'), 'liveness: the template heading fires').toBe(true);
+      expect(all.some((x) => x.nodeId === 'emh_1' && x.code === 'static_in_dataset'), 'empty-state heading').toBe(false);
+    });
+  });
+
   it('leaves the same element alone outside a repeater', () => {
     const d = emptyDoc();
     d.apply(addSubtree(d, 'ROOT', { type: 'flex-section', children: [{ type: 'image' }] }).patches);

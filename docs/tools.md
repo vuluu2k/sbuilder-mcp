@@ -2014,7 +2014,7 @@ AFTER the review, which then reviews the previous page:
 | `empty_container` | A section holding nothing — an empty band |
 | `placeholder_content` | Still the copy the element ships with ("Enter your text here"). Not `form-link`, whose seed is real copy |
 | `empty_text` / `missing_media` | An element left blank — empty space, or a broken image. Copy in `textHtml` counts (the renderer prefers it), and so does a `form-link`'s `linkText` |
-| `static_in_dataset` | An element inside a repeater that renders only what the document authors — the same picture on every product card |
+| `static_in_dataset` | An element inside a repeater that renders only what the document authors — the same picture on every product card, or a product name typed into the card's heading. Not raised for an icon-only control, a generic label ("Thêm vào giỏ", "Xem nhanh") or a control whose click is about the record (quick view, wishlist, a purchase binding, a bound link) |
 | `unbound_dataset_element` | A dataset element with no binding at all — it waits for a bound special nothing writes |
 | `dead_binding_source` | A source the renderer never provides — shows the placeholder forever. A `record.*` source counts only as `record.fld_<16 hex>` / `record.html.fld_<16 hex>` / `record.money.fld_<16 hex>` / `record.(money.)agg.<key>` / `record.(money.)ref.<fld>.<fld>` / `record.id` / `record.url`, and only the html form into `specials.boundHtml` |
 | `card_source_unset` | A `dataset-block` naming no `config.datasetSource` inside a non-product list — it binds `product.url`, which never resolves there, so the published card is not clickable. Fix: set the list's source on the card (`sb_add` now does this itself) |
