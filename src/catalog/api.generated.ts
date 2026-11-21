@@ -14307,7 +14307,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     "tags": [
       "integrations"
     ],
-    "summary": "List or connect site integrations (GA4, GTM, Meta Pixel, TikTok Pixel, Google Ads, Clarity)",
+    "summary": "List or connect site integrations (GA4, GTM, Meta Pixel, TikTok Pixel, ChatGPT Ads, Google Ads, Clarity)",
     "params": [
       {
         "name": "siteId",
@@ -14342,7 +14342,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     "tags": [
       "integrations"
     ],
-    "summary": "List or connect site integrations (GA4, GTM, Meta Pixel, TikTok Pixel, Google Ads, Clarity)",
+    "summary": "List or connect site integrations (GA4, GTM, Meta Pixel, TikTok Pixel, ChatGPT Ads, Google Ads, Clarity)",
     "params": [
       {
         "name": "siteId",
