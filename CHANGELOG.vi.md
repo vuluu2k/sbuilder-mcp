@@ -6,6 +6,14 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.112.1] - 2026-11-21
+
+### Added
+- Danh mục API có thêm `GET /api/sites/{siteId}/forms/submissions/channels`, giúp `sb_api_find` và `sb_api_call` đếm lượt gửi biểu mẫu và đơn hàng theo kênh lưu lượng (ChatGPT, Facebook, Google) trong khoảng `from`/`to`.
+
+### Changed
+- Endpoint lượt gửi biểu mẫu trong danh mục API nhận thêm tham số truy vấn `orderId` để chỉ trả về phản hồi đã tạo ra đơn hàng đó, và danh mục được tạo lại theo web_builder 72a54e8.
+
 ## [0.112.0] - 2026-11-20
 
 ### Added
