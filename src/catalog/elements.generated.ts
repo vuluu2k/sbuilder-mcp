@@ -19245,6 +19245,43 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "field": "specials.boundProductId"
         }
       ],
+      "product|sku": [
+        {
+          "id": "bind-price",
+          "source": "product.price",
+          "field": "specials.boundPrice",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "sku"
+          }
+        },
+        {
+          "id": "bind-compare",
+          "source": "product.compareAtPrice",
+          "field": "specials.boundCompare"
+        },
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents"
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-price-mo",
+          "source": "product.moneyOverride",
+          "field": "specials.boundMoneyOverride"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
       "category|title": [
         {
           "id": "bind-price",
@@ -20438,6 +20475,43 @@ export const ELEMENTS: Record<string, CatalogElement> = {
             "type": "product",
             "id": "",
             "kind": "duration"
+          }
+        },
+        {
+          "id": "bind-compare",
+          "source": "product.compareAtPrice",
+          "field": "specials.boundCompare"
+        },
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents"
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-price-mo",
+          "source": "product.moneyOverride",
+          "field": "specials.boundMoneyOverride"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "category|sku": [
+        {
+          "id": "bind-price",
+          "source": "product.price",
+          "field": "specials.boundPrice",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "sku"
           }
         },
         {
@@ -21687,6 +21761,43 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "field": "specials.boundProductId"
         }
       ],
+      "article|sku": [
+        {
+          "id": "bind-price",
+          "source": "product.price",
+          "field": "specials.boundPrice",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "sku"
+          }
+        },
+        {
+          "id": "bind-compare",
+          "source": "product.compareAtPrice",
+          "field": "specials.boundCompare"
+        },
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents"
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-price-mo",
+          "source": "product.moneyOverride",
+          "field": "specials.boundMoneyOverride"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
       "blogCategory|title": [
         {
           "id": "bind-price",
@@ -22880,6 +22991,43 @@ export const ELEMENTS: Record<string, CatalogElement> = {
             "type": "product",
             "id": "",
             "kind": "duration"
+          }
+        },
+        {
+          "id": "bind-compare",
+          "source": "product.compareAtPrice",
+          "field": "specials.boundCompare"
+        },
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents"
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-price-mo",
+          "source": "product.moneyOverride",
+          "field": "specials.boundMoneyOverride"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "blogCategory|sku": [
+        {
+          "id": "bind-price",
+          "source": "product.price",
+          "field": "specials.boundPrice",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "sku"
           }
         },
         {
@@ -24129,6 +24277,43 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "field": "specials.boundProductId"
         }
       ],
+      "course|sku": [
+        {
+          "id": "bind-price",
+          "source": "product.price",
+          "field": "specials.boundPrice",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "sku"
+          }
+        },
+        {
+          "id": "bind-compare",
+          "source": "product.compareAtPrice",
+          "field": "specials.boundCompare"
+        },
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents"
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-price-mo",
+          "source": "product.moneyOverride",
+          "field": "specials.boundMoneyOverride"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
       "review|title": [
         {
           "id": "bind-price",
@@ -25322,6 +25507,43 @@ export const ELEMENTS: Record<string, CatalogElement> = {
             "type": "product",
             "id": "",
             "kind": "duration"
+          }
+        },
+        {
+          "id": "bind-compare",
+          "source": "product.compareAtPrice",
+          "field": "specials.boundCompare"
+        },
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents"
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-price-mo",
+          "source": "product.moneyOverride",
+          "field": "specials.boundMoneyOverride"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "review|sku": [
+        {
+          "id": "bind-price",
+          "source": "product.price",
+          "field": "specials.boundPrice",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "sku"
           }
         },
         {
@@ -26571,6 +26793,43 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "field": "specials.boundProductId"
         }
       ],
+      "brand|sku": [
+        {
+          "id": "bind-price",
+          "source": "product.price",
+          "field": "specials.boundPrice",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "sku"
+          }
+        },
+        {
+          "id": "bind-compare",
+          "source": "product.compareAtPrice",
+          "field": "specials.boundCompare"
+        },
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents"
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-price-mo",
+          "source": "product.moneyOverride",
+          "field": "specials.boundMoneyOverride"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
       "record|title": [
         {
           "id": "bind-price",
@@ -27764,6 +28023,43 @@ export const ELEMENTS: Record<string, CatalogElement> = {
             "type": "product",
             "id": "",
             "kind": "duration"
+          }
+        },
+        {
+          "id": "bind-compare",
+          "source": "product.compareAtPrice",
+          "field": "specials.boundCompare"
+        },
+        {
+          "id": "bind-price-cents",
+          "source": "product.priceCents",
+          "field": "specials.boundPriceCents"
+        },
+        {
+          "id": "bind-compare-cents",
+          "source": "product.compareAtCents",
+          "field": "specials.boundCompareCents"
+        },
+        {
+          "id": "bind-price-mo",
+          "source": "product.moneyOverride",
+          "field": "specials.boundMoneyOverride"
+        },
+        {
+          "id": "bind-product-id",
+          "source": "product.id",
+          "field": "specials.boundProductId"
+        }
+      ],
+      "record|sku": [
+        {
+          "id": "bind-price",
+          "source": "product.price",
+          "field": "specials.boundPrice",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "sku"
           }
         },
         {
@@ -30008,6 +30304,18 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           }
         }
       ],
+      "product|sku": [
+        {
+          "id": "bind-text",
+          "source": "product.sku",
+          "field": "specials.boundText",
+          "target": {
+            "type": "product",
+            "id": "",
+            "kind": "sku"
+          }
+        }
+      ],
       "category|title": [
         {
           "id": "bind-text",
@@ -30401,6 +30709,18 @@ export const ELEMENTS: Record<string, CatalogElement> = {
             "type": "category",
             "id": "",
             "kind": "duration"
+          }
+        }
+      ],
+      "category|sku": [
+        {
+          "id": "bind-text",
+          "source": "category.title",
+          "field": "specials.boundText",
+          "target": {
+            "type": "category",
+            "id": "",
+            "kind": "sku"
           }
         }
       ],
@@ -30800,6 +31120,18 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           }
         }
       ],
+      "article|sku": [
+        {
+          "id": "bind-text",
+          "source": "article.title",
+          "field": "specials.boundText",
+          "target": {
+            "type": "article",
+            "id": "",
+            "kind": "sku"
+          }
+        }
+      ],
       "blogCategory|title": [
         {
           "id": "bind-text",
@@ -31193,6 +31525,18 @@ export const ELEMENTS: Record<string, CatalogElement> = {
             "type": "blogCategory",
             "id": "",
             "kind": "duration"
+          }
+        }
+      ],
+      "blogCategory|sku": [
+        {
+          "id": "bind-text",
+          "source": "blogCategory.title",
+          "field": "specials.boundText",
+          "target": {
+            "type": "blogCategory",
+            "id": "",
+            "kind": "sku"
           }
         }
       ],
@@ -31592,6 +31936,18 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           }
         }
       ],
+      "course|sku": [
+        {
+          "id": "bind-text",
+          "source": "course.title",
+          "field": "specials.boundText",
+          "target": {
+            "type": "course",
+            "id": "",
+            "kind": "sku"
+          }
+        }
+      ],
       "review|title": [
         {
           "id": "bind-text",
@@ -31985,6 +32341,18 @@ export const ELEMENTS: Record<string, CatalogElement> = {
             "type": "review",
             "id": "",
             "kind": "duration"
+          }
+        }
+      ],
+      "review|sku": [
+        {
+          "id": "bind-text",
+          "source": "review.title",
+          "field": "specials.boundText",
+          "target": {
+            "type": "review",
+            "id": "",
+            "kind": "sku"
           }
         }
       ],
@@ -32384,6 +32752,18 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           }
         }
       ],
+      "brand|sku": [
+        {
+          "id": "bind-text",
+          "source": "brand.title",
+          "field": "specials.boundText",
+          "target": {
+            "type": "brand",
+            "id": "",
+            "kind": "sku"
+          }
+        }
+      ],
       "record|title": [
         {
           "id": "bind-text",
@@ -32777,6 +33157,18 @@ export const ELEMENTS: Record<string, CatalogElement> = {
             "type": "record",
             "id": "",
             "kind": "duration"
+          }
+        }
+      ],
+      "record|sku": [
+        {
+          "id": "bind-text",
+          "source": "",
+          "field": "specials.boundText",
+          "target": {
+            "type": "record",
+            "id": "",
+            "kind": "sku"
           }
         }
       ]
@@ -36857,6 +37249,7 @@ export const BINDING_SOURCES: string[] = [
   "product.priceCents",
   "product.ratingAverage",
   "product.ratingCount",
+  "product.sku",
   "product.summary",
   "product.tags",
   "product.title",
@@ -36905,6 +37298,7 @@ export const PRESENT_ONLY_SOURCES: string[] = [
   "product.model",
   "product.ratingAverage",
   "product.ratingCount",
+  "product.sku",
   "product.summary",
   "product.tags",
   "product.variations",
