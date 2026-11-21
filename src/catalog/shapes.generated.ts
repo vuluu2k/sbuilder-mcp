@@ -9,7 +9,7 @@ export const SHAPE_SOURCE = {
   "fromHandlers": 364,
   "fromSwaggerOnly": 12,
   "withReadOnly": 29,
-  "structsRead": 3874
+  "structsRead": 3876
 } as const;
 
 export const REQUEST_SHAPES: Record<string, RequestShape> = {

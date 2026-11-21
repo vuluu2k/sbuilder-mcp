@@ -3,7 +3,7 @@
 import type { ApiOperation } from './types.js';
 
 export const SWAGGER_SOURCE = {
-  "operations": 1012,
+  "operations": 1013,
   "definitions": 445,
   "bodyCarrying": 493,
   "bodyUndescribed": 122,
@@ -12715,6 +12715,48 @@ export const API_OPERATIONS: ApiOperation[] = [
         "required": false,
         "type": "integer",
         "description": "Page size (max 200)"
+      },
+      {
+        "name": "orderId",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Only the response whose sink made this order — its channel is the order's traffic source"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/sites/{siteId}/forms/submissions/channels",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/forms/submissions/channels",
+    "tags": [
+      "forms"
+    ],
+    "summary": "Count submissions and orders by traffic channel (ChatGPT, Facebook, Google…)",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "from",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Window start (RFC3339 or YYYY-MM-DD)"
+      },
+      {
+        "name": "to",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Last day counted (YYYY-MM-DD, inclusive) or an exclusive RFC3339 instant"
       }
     ],
     "bodyDescribed": false,
