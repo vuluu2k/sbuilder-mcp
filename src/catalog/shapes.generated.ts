@@ -9,7 +9,7 @@ export const SHAPE_SOURCE = {
   "fromHandlers": 364,
   "fromSwaggerOnly": 12,
   "withReadOnly": 29,
-  "structsRead": 3876
+  "structsRead": 3881
 } as const;
 
 export const REQUEST_SHAPES: Record<string, RequestShape> = {
@@ -5406,7 +5406,7 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
       {
         "name": "provider",
         "type": "string",
-        "note": "Provider is one of google_analytics, google_tag_manager, facebook_pixel, tiktok_pixel, openai_pixel."
+        "note": "Provider is one of google_analytics, google_tag_manager, facebook_pixel, tiktok_pixel, openai_pixel, google_ads, microsoft_clarity."
       },
       {
         "name": "enabled",
@@ -5449,7 +5449,7 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
       {
         "name": "provider",
         "type": "string",
-        "note": "Provider is one of google_analytics, google_tag_manager, facebook_pixel, tiktok_pixel, openai_pixel."
+        "note": "Provider is one of google_analytics, google_tag_manager, facebook_pixel, tiktok_pixel, openai_pixel, google_ads, microsoft_clarity."
       },
       {
         "name": "enabled",

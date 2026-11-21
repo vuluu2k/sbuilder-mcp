@@ -14307,7 +14307,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     "tags": [
       "integrations"
     ],
-    "summary": "List or connect site integrations (GA4, GTM, Meta Pixel, TikTok Pixel)",
+    "summary": "List or connect site integrations (GA4, GTM, Meta Pixel, TikTok Pixel, Google Ads, Clarity)",
     "params": [
       {
         "name": "siteId",
@@ -14342,7 +14342,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     "tags": [
       "integrations"
     ],
-    "summary": "List or connect site integrations (GA4, GTM, Meta Pixel, TikTok Pixel)",
+    "summary": "List or connect site integrations (GA4, GTM, Meta Pixel, TikTok Pixel, Google Ads, Clarity)",
     "params": [
       {
         "name": "siteId",
@@ -33304,7 +33304,7 @@ export const API_DEFINITIONS: Record<string, unknown> = {
         "type": "string"
       },
       "provider": {
-        "description": "Provider is one of google_analytics, google_tag_manager, facebook_pixel, tiktok_pixel, openai_pixel.",
+        "description": "Provider is one of google_analytics, google_tag_manager, facebook_pixel, tiktok_pixel, openai_pixel, google_ads, microsoft_clarity.",
         "type": "string"
       },
       "siteId": {

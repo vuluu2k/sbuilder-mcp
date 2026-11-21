@@ -24,6 +24,25 @@ function store(opts: { failCreate?: boolean } = {}) {
       config: { measurementId: 'UA-1', note: 'keep' },
       problem: 'UA- is Universal Analytics',
     },
+    {
+      id: 'i_fb',
+      provider: 'facebook_pixel',
+      enabled: true,
+      config: {
+        pixelId: '1234567890123456',
+        serverStatus: 'error',
+        serverError: 'HTTP 400 Malformed access token',
+        serverAt: '2026-11-21T05:24:33Z',
+      },
+      tokenSet: true,
+    },
+    {
+      id: 'i_tt',
+      provider: 'tiktok_pixel',
+      enabled: true,
+      config: { pixelId: 'CABCDEFGHIJ123456789' },
+      tokenSet: false,
+    },
   ];
   const f = (async (url: unknown, init?: RequestInit) => {
     const path = new URL(String(url)).pathname;
@@ -118,6 +137,8 @@ describe('sb_store action:"tracking"', () => {
       'facebook_pixel',
       'tiktok_pixel',
       'openai_pixel',
+      'google_ads',
+      'microsoft_clarity',
     ]);
     expect(trackers[0]).toEqual({
       provider: 'google_analytics',
@@ -126,6 +147,21 @@ describe('sb_store action:"tracking"', () => {
       problem: 'UA- is Universal Analytics',
     });
     expect(trackers[4]).toEqual({ provider: 'openai_pixel', connected: false });
+    expect(trackers[2], 'a stored token reports whether server sending works').toEqual({
+      provider: 'facebook_pixel',
+      id: '1234567890123456',
+      enabled: true,
+      serverEvents: {
+        status: 'error',
+        error: 'HTTP 400 Malformed access token',
+        at: '2026-11-21T05:24:33Z',
+      },
+    });
+    expect(trackers[3], 'no token, no serverEvents line').toEqual({
+      provider: 'tiktok_pixel',
+      id: 'CABCDEFGHIJ123456789',
+      enabled: true,
+    });
     expect(out.channelsLast30Days).toEqual([{ channel: 'chatgpt', submissions: 4, orders: 1 }]);
     expect(
       calls.filter((c) => c.method !== 'GET'),
@@ -204,7 +240,7 @@ describe('sb_store action:"tracking"', () => {
       name: 'sb_store',
       arguments: {
         action: 'tracking',
-        provider: 'tiktok_pixel',
+        provider: 'microsoft_clarity',
         enabled: false,
       },
     })) as {

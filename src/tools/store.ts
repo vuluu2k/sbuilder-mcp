@@ -58,7 +58,7 @@ import {
 import { bindMenu } from './menu.js';
 import { attachOverlay, ensureCartDrawer, relocalizeCartDrawer } from './overlay.js';
 import { installApp } from './app.js';
-import { trackingFlow } from './tracking.js';
+import { TRACKING_FIELDS, trackingFlow } from './tracking.js';
 import { BUILTIN_APP_KEYS } from '../catalog/appscaffolds.generated.js';
 import { ELEMENTS } from '../catalog/elements.generated.js';
 import { PAGE_TYPES } from '../catalog/storepages.generated.js';
@@ -775,7 +775,7 @@ export function registerStoreTools(server: McpServer, ctx: ToolContext, session:
           ),
         text: z.string().optional(),
         provider: z
-          .enum(['google_analytics', 'google_tag_manager', 'facebook_pixel', 'tiktok_pixel', 'openai_pixel'])
+          .enum(Object.keys(TRACKING_FIELDS) as [string, ...string[]])
           .optional(),
         enabled: z.boolean().optional(),
         dry_run: z.boolean().optional(),

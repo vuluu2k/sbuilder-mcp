@@ -28,6 +28,8 @@ interface Integration {
   enabled: boolean;
   config: Record<string, string>;
   problem?: string;
+  /** A Meta/TikTok server-events token is stored (the token itself is never returned). */
+  tokenSet?: boolean;
 }
 
 /** web_builder's providers and the one config field each reads (integrations/providers.go). */
@@ -37,6 +39,8 @@ export const TRACKING_FIELDS: Record<string, string> = {
   facebook_pixel: 'pixelId',
   tiktok_pixel: 'pixelId',
   openai_pixel: 'pixelId',
+  google_ads: 'conversionId',
+  microsoft_clarity: 'projectId',
 };
 
 export interface TrackingArgs {
@@ -176,6 +180,17 @@ export async function trackingFlow(ctx: ToolContext, siteId: string, args: Track
         id: idOf(r),
         enabled: r.enabled,
         ...(r.problem ? { problem: r.problem } : {}),
+        // Server-side events (Meta CAPI / TikTok Events API): the token is set
+        // on the Integrations screen; this reports whether sending works.
+        ...(r.tokenSet
+          ? {
+              serverEvents: {
+                status: r.config?.serverStatus || 'waiting',
+                ...(r.config?.serverError ? { error: r.config.serverError } : {}),
+                ...(r.config?.serverAt ? { at: r.config.serverAt } : {}),
+              },
+            }
+          : {}),
       };
     }),
     channelsLast30Days: channels,
