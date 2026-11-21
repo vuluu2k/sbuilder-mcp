@@ -33783,6 +33783,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
         "pauseOnHover": true,
         "loop": true,
         "transition": "slide",
+        "navPosition": "sides",
         "transitionMs": 350,
         "dotColor": "",
         "dotActiveColor": "",
@@ -33807,6 +33808,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
               "pauseOnHover",
               "loop",
               "transition",
+              "navPosition",
               "transitionMs",
               "dotColor",
               "dotActiveColor",
@@ -33893,6 +33895,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
       "pauseOnHover",
       "loop",
       "transition",
+      "navPosition",
       "transitionMs",
       "dotColor",
       "dotActiveColor",
@@ -33927,7 +33930,8 @@ export const ELEMENTS: Record<string, CatalogElement> = {
       "Add a carousel-slide per slide; put an image plus a heading/button inside each",
       "Toggle config.showArrows / config.showDots for the navigation affordances",
       "Enable config.autoplay (with config.autoplayMs) for a self-advancing banner",
-      "Set config.transition to \"fade\" for a cross-fade instead of a horizontal slide"
+      "Set config.transition to \"fade\" for a cross-fade instead of a horizontal slide",
+      "Set config.navPosition to \"bottom-right\" to group the arrows in the bottom-right corner with the pagination bars beside them (a fashion-store hero); \"sides\" (default) centres them on each edge"
     ],
     "semantics": [
       "carousel",
