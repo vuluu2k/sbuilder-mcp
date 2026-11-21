@@ -6,6 +6,13 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.112.2] - 2026-11-21
+
+### Added
+- `sb_store` `action: "tracking"` lists Google Ads (`google_ads`) and Microsoft Clarity (`microsoft_clarity`) trackers alongside the existing providers.
+- `sb_store` `action: "tracking"` reports `serverEvents` (`status`, `error`, `at`) for a Meta or TikTok tracker that has a stored token, without ever returning the token.
+- The element catalog adds the carousel `config.navPosition` key, regenerated against web_builder 7ca95442e.
+
 ## [0.112.1] - 2026-11-21
 
 ### Added

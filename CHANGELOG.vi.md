@@ -6,6 +6,13 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.112.2] - 2026-11-21
+
+### Added
+- `sb_store` `action: "tracking"` liệt kê thêm các tracker Google Ads (`google_ads`) và Microsoft Clarity (`microsoft_clarity`) bên cạnh các nhà cung cấp hiện có.
+- `sb_store` `action: "tracking"` báo cáo `serverEvents` (`status`, `error`, `at`) cho tracker Meta hoặc TikTok đã lưu token, và không bao giờ trả về token.
+- Danh mục element có thêm khóa `config.navPosition` của carousel, được tạo lại theo web_builder 7ca95442e.
+
 ## [0.112.1] - 2026-11-21
 
 ### Added
