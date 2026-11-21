@@ -204,8 +204,15 @@ describe('a narrower-only style key reaches desktop through the cascade tail', (
   it('sb_set names a mobile-only key once, and is silent when base declares it', async () => {
     const { call, close } = await openClient();
     try {
-      const r = await call('sb_set', { id: 'sec', namespace: 'style', keys: { order: '9' }, breakpoint: 'mobile', dry_run: false });
+      const r = await call('sb_set', { id: 'sec', namespace: 'style', keys: { order: '9' }, breakpoint: 'mobile', pin_wider: false, dry_run: false });
       expect(r.json.checks).toEqual([expect.objectContaining({ code: 'cascade_tail', id: 'sec', key: 'style.order' })]);
+      // The DEFAULT pins instead: `order` has no neutral value, so base gets an
+      // empty one — the cascade stops there and the browser drops `order:;`.
+      const pinned = await call('sb_set', { id: 'sec', namespace: 'style', keys: { flexGrow: '2' }, breakpoint: 'mobile' });
+      expect(pinned.json.checks, 'pinned by default, so nothing falls').toBeUndefined();
+      expect(pinned.json.pinned).toEqual([
+        expect.objectContaining({ id: 'sec', key: 'style.flexGrow', value: '' }),
+      ]);
       // `display` is declared at base on this node: the tail never reaches desktop.
       const quiet = await call('sb_set', { id: 'sec', namespace: 'style', keys: { display: 'block' }, breakpoint: 'tablet', dry_run: false });
       expect(quiet.json.checks).toBeUndefined();
@@ -260,11 +267,11 @@ describe('a narrower-only style key reaches desktop through the cascade tail', (
   it('a value at a WIDER breakpoint (not only base/desktop) stops the fall — and names every width it reaches', async () => {
     const { call, close } = await openClient();
     try {
-      const hit = await call('sb_set', { id: 'pic', namespace: 'style', keys: { maxWidth: '170px' }, breakpoint: 'mobile' });
+      const hit = await call('sb_set', { id: 'pic', namespace: 'style', keys: { maxWidth: '170px' }, breakpoint: 'mobile', pin_wider: false });
       expect(tails(hit).map((c) => c.key), 'liveness: nothing wider on pic').toEqual(['style.maxWidth']);
       expect(tails(hit)[0].problem).toMatch(/desktop, laptop, tablet/);
       expect(tails(hit)[0].fix).toMatch(/pin_wider/);
-      const quiet = await call('sb_set', { id: 'pic2', namespace: 'style', keys: { maxWidth: '170px' }, breakpoint: 'mobile' });
+      const quiet = await call('sb_set', { id: 'pic2', namespace: 'style', keys: { maxWidth: '170px' }, breakpoint: 'mobile', pin_wider: false });
       expect(tails(quiet), "pic2's tablet maxWidth is wider than mobile").toEqual([]);
     } finally {
       await close();
@@ -274,11 +281,11 @@ describe('a narrower-only style key reaches desktop through the cascade tail', (
   it('a state write at a narrow breakpoint falls back up too, judged on that state alone', async () => {
     const { call, close } = await openClient();
     try {
-      const hit = await call('sb_set', { id: 'sec', namespace: 'style', state: 'hover', keys: { backgroundColor: 'red' }, breakpoint: 'tablet' });
+      const hit = await call('sb_set', { id: 'sec', namespace: 'style', state: 'hover', keys: { backgroundColor: 'red' }, breakpoint: 'tablet', pin_wider: false });
       expect(tails(hit).map((c) => c.key)).toEqual(['style.backgroundColor']);
       expect(tails(hit)[0].problem).toMatch(/state "hover"/);
       await call('sb_set', { id: 'box', namespace: 'style', state: 'hover', base: true, keys: { backgroundColor: 'blue' }, dry_run: false });
-      const quiet = await call('sb_set', { id: 'box', namespace: 'style', state: 'hover', keys: { backgroundColor: 'red' }, breakpoint: 'tablet' });
+      const quiet = await call('sb_set', { id: 'box', namespace: 'style', state: 'hover', keys: { backgroundColor: 'red' }, breakpoint: 'tablet', pin_wider: false });
       expect(tails(quiet), 'base hover declares it').toEqual([]);
     } finally {
       await close();
@@ -313,8 +320,11 @@ describe('a narrower-only style key reaches desktop through the cascade tail', (
     const { call, close } = await openClient();
     try {
       const r = await call('sb_set', { id: 'txt', namespace: 'style', keys: { maxWidth: '320px' }, breakpoint: 'mobile', pin_wider: true });
-      expect(r.json.pinned).toBeUndefined();
-      expect(tails(r)[0].fix).toMatch(/preset "body-default" sets maxWidth/);
+      // Not `none` (that would wipe the preset's 680px): an EMPTY base, which the
+      // browser drops, so the preset's class rule still paints desktop.
+      expect(r.json.pinned).toEqual([expect.objectContaining({ id: 'txt', key: 'style.maxWidth', value: '' })]);
+      expect((r.json.pinned as Array<{ from: string }>)[0].from).toMatch(/preset "body-default" sets maxWidth/);
+      expect(tails(r)).toEqual([]);
       const twin = await call('sb_set', { id: 'txt2', namespace: 'style', keys: { maxWidth: '320px' }, breakpoint: 'mobile', pin_wider: true });
       expect(twin.json.pinned, 'text-default sets no maxWidth').toEqual([{ id: 'txt2', key: 'style.maxWidth', value: 'none', from: 'CSS initial' }]);
     } finally {
@@ -322,7 +332,7 @@ describe('a narrower-only style key reaches desktop through the cascade tail', (
     }
   });
 
-  it('pin_wider only warns where no value is safe: a divider sets its own width, a colour has no neutral', async () => {
+  it('pin_wider pins EMPTY where no value is safe: a divider sets its own width, a colour has no neutral', async () => {
     const { call, close } = await openClient();
     try {
       const r = await call('sb_set', {
@@ -332,11 +342,15 @@ describe('a narrower-only style key reaches desktop through the cascade tail', (
         ],
         pin_wider: true,
       });
-      expect(r.json.pinned).toBeUndefined();
-      expect(tails(r).map((c) => `${c.id}:${c.key}`).sort()).toEqual(['hr:style.width', 'pic:style.color']);
-      const fix = Object.fromEntries(tails(r).map((c) => [c.id, c.fix]));
-      expect(fix.hr).toMatch(/divider's own stylesheet sets width/);
-      expect(fix.pic).toMatch(/no CSS initial is neutral for color/);
+      const pinned = r.json.pinned as Array<{ id: string; key: string; value: unknown; from: string }>;
+      expect(pinned.map((p) => `${p.id}:${p.key}=${JSON.stringify(p.value)}`).sort()).toEqual([
+        'hr:style.width=""',
+        'pic:style.color=""',
+      ]);
+      const from = Object.fromEntries(pinned.map((p) => [p.id, p.from]));
+      expect(from.hr).toMatch(/divider's own stylesheet sets width/);
+      expect(from.pic).toMatch(/no CSS initial is neutral for color/);
+      expect(tails(r), 'pinned, so nothing falls').toEqual([]);
     } finally {
       await close();
     }

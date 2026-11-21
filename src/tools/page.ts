@@ -1917,7 +1917,7 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
         pin_wider: z
           .boolean()
           .optional()
-          .describe('Pin a safe base value so a narrow-only style key does not fall back up; see pinned'),
+          .describe('Default ON: a narrow-only style key gets a base pin so it does not fall back up to wider widths (see pinned). false writes the narrow slot alone'),
         dry_run: z.boolean().optional(),
         force: z.boolean().optional().describe('Override a render-inference guard; reported as forced'),
       },
@@ -1970,7 +1970,7 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
       // where it went; `pin_wider` adds the base writes that stop it to this save.
       // A preset is a class rule the pin (an ID rule) would override, so the pin
       // asks the node's preset first — fetched only when a pin is asked for.
-      const pinTheme = pin_wider === true ? (await siteTheme(ctx, session.site())).theme : null;
+      const pinTheme = pin_wider !== false ? (await siteTheme(ctx, session.site())).theme : null;
       const presetOf = (nid: string) => {
         const pid = pinTheme ? presetIdOf(d.doc.nodes[nid] as never) : null;
         if (!pid) return null;
@@ -1984,7 +1984,7 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
             patches.filter((p) => p.path[0] === 'nodes' && p.path[1] === nid),
             nid,
             d.doc.nodes[nid].data.type,
-            pin_wider === true,
+            pin_wider !== false,
             presetOf(nid),
           ),
         );

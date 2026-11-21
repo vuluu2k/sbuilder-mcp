@@ -597,7 +597,7 @@ export function cascadeTail(
           fix:
             `Say the wide-screen answer at base: sb_set id "${id ?? '<id>'}", namespace style, base:true` +
             `${state ? `, state:"${state}"` : ''}, keys { "${k}": <desktop value> } — or repeat this write with ` +
-            'pin_wider:true, which pins a safe default at base where one exists.',
+            'sb_set without pin_wider:false, which pins base (a safe default, else an empty value) so it stays narrow.',
         },
       });
     }
@@ -679,31 +679,26 @@ export function fallUp(
   applyPatches(probe, patches as Patch[]);
   const pins: Patch[] = [];
   const pinned: Array<{ id: string; key: string; state?: string; value: unknown; from: string }> = [];
-  const why = new Map<string, string>();
   if (pin) {
     const done = new Set<string>();
     for (const w of writes) {
       const tag = `${w.state ?? ''}:${w.key}`;
       if (done.has(tag) || saidWider(probe.nodes[id], w.bp, w.key, w.state)) continue;
       done.add(tag);
-      const v = pinFor(type, w.key, w.state, preset);
-      if ('reason' in v) {
-        why.set(`style.${w.key}`, v.reason);
-        continue;
-      }
+      const p = pinFor(type, w.key, w.state, preset);
+      // NO SAFE VALUE IS NOT NO PIN. An EMPTY base value is a key to the cascade
+      // (`k in values`, so the fall stops) and a declaration the browser drops
+      // (`width:;`), so it overrides neither the preset nor the element's own
+      // stylesheet — the two things every refusal above protects. It is what the
+      // editor's own store pins for every narrow-only style write (web_builder
+      // stores/node.ts setNodeValue).
+      const v = 'reason' in p ? { value: '', from: `empty base — ${p.reason}, so nothing is painted there` } : p;
       pins.push({ op: 'set', path: ['nodes', id, ...(w.state ? ['states', w.state] : []), 'style', w.key], value: v.value });
       pinned.push({ id, key: `style.${w.key}`, ...(w.state ? { state: w.state } : {}), value: v.value, from: v.from });
     }
     applyPatches(probe, pins);
   }
   const notes = writes.flatMap((w) => cascadeTail(probe.nodes[id], { [w.bp]: { [w.key]: true } }, id, w.state));
-  if (pin) {
-    for (const n of notes) {
-      n.note.fix =
-        `pin_wider wrote nothing for ${n.note.key} on ${type}: ${why.get(n.note.key) ?? 'no safe value'}. ` +
-        `Say the desktop value yourself: sb_set id "${id}", namespace style, base:true, keys { … }.`;
-    }
-  }
   return { pins, pinned, notes };
 }
 
