@@ -6,6 +6,14 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.112.3] - 2026-11-21
+
+### Changed
+- `sb_set` now defaults `pin_wider` to on (pass `pin_wider: false` to opt out), so a style key written at a narrow breakpoint no longer leaks to wider ones.
+
+### Fixed
+- `sb_set` pins an empty value for a wider breakpoint when no safe value exists (a preset or the element's own stylesheet sets the key, or a colour has no neutral), so neither the preset nor the element CSS is overridden.
+
 ## [0.112.2] - 2026-11-21
 
 ### Added

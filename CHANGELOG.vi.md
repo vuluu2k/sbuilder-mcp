@@ -6,6 +6,14 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.112.3] - 2026-11-21
+
+### Changed
+- `sb_set` nay bật `pin_wider` theo mặc định (truyền `pin_wider: false` để tắt), nên khóa style ghi ở breakpoint hẹp không còn lan sang các breakpoint rộng hơn.
+
+### Fixed
+- `sb_set` ghim giá trị rỗng cho breakpoint rộng hơn khi không có giá trị an toàn (preset hoặc stylesheet riêng của element đã đặt khóa đó, hoặc màu không có giá trị trung tính), nên preset và CSS của element không bị ghi đè.
+
 ## [0.112.2] - 2026-11-21
 
 ### Added
