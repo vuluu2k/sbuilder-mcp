@@ -14,7 +14,7 @@ interface Call {
   body?: Record<string, unknown>;
 }
 
-function store(opts: { failCreate?: boolean } = {}) {
+function store(opts: { failCreate?: boolean; noHealth?: boolean } = {}) {
   const calls: Call[] = [];
   const rows = [
     {
@@ -56,6 +56,16 @@ function store(opts: { failCreate?: boolean } = {}) {
       });
     if (path === '/api/sites/s1/integrations' && method === 'GET')
       return json({ integrations: rows, total: rows.length });
+    if (path === '/api/sites/s1/integrations/health') {
+      if (opts.noHealth) return json({ error: 'not found' }, 404);
+      return json({
+        advice: [{ code: 'server_token_missing', provider: 'tiktok_pixel', severity: 'suggest', message: 'm' }],
+        total: 1,
+      });
+    }
+    if (path.endsWith('/test') && method === 'POST') {
+      return json({ test: { ok: false, message: 'HTTP 400 Malformed access token', mode: 'test_event_code' } });
+    }
     if (path === '/api/sites/s1/integrations/detect') {
       const text = String(body?.text ?? '');
       const found = [];
@@ -85,8 +95,13 @@ function store(opts: { failCreate?: boolean } = {}) {
       }
       return json({ integration: { id: 'i_new', ...body } }, 201);
     }
-    if (path.startsWith('/api/sites/s1/integrations/') && method === 'PUT')
-      return json({ integration: { id: 'i_ga', ...body } });
+    if (path.startsWith('/api/sites/s1/integrations/') && method === 'PUT') {
+      // The platform never echoes a token: it answers tokenSet instead.
+      const config = { ...(body?.config as Record<string, string>) };
+      const tokenSet = !!config.accessToken;
+      delete config.accessToken;
+      return json({ integration: { id: path.split('/').pop(), ...body, config, tokenSet } });
+    }
     if (path === '/api/sites/s1/forms/submissions/channels') {
       return json({
         channels: [{ channel: 'chatgpt', submissions: 4, orders: 1 }],
@@ -250,4 +265,65 @@ describe('sb_store action:"tracking"', () => {
     await close();
     expect(res.content[0].text).toContain('not connected');
   });
+
+  it('status carries the platform advice, and an older platform without /health still answers', async () => {
+    let out = await call(store().f, {});
+    expect(out.advice, 'advice relayed').toEqual([
+      { code: 'server_token_missing', provider: 'tiktok_pixel', severity: 'suggest', message: 'm' },
+    ]);
+    out = await call(store({ noHealth: true }).f, {});
+    expect(out.advice, 'no /health is reported, not thrown').toHaveProperty('unavailable');
+    expect(out.trackers, 'liveness: the status still answers').toBeTruthy();
+  });
+
+  it('provider + config: merges extras into the stored config, keeps server keys out, masks a token in the plan', async () => {
+    const { f, calls } = store();
+    const plan = await call(f, { provider: 'facebook_pixel', config: { accessToken: 'EAAsecret', testEventCode: 'TEST1' } });
+    const step = (plan.plan as Array<{ method: string; body: { config: Record<string, string> } }>)[0];
+    expect(step.method).toBe('PUT');
+    expect(step.body.config, 'plan shows the merge, token masked').toEqual({
+      pixelId: '1234567890123456',
+      accessToken: '***',
+      testEventCode: 'TEST1',
+    });
+    expect(JSON.stringify(plan), 'a token leaked into the plan').not.toContain('EAAsecret');
+    expect(calls.filter((c) => c.method === 'PUT'), 'a dry run wrote').toHaveLength(0);
+
+    const done = await call(f, { provider: 'facebook_pixel', config: { accessToken: 'EAAsecret' }, dry_run: false });
+    const put = calls.find((c) => c.method === 'PUT')!;
+    expect(put.body!.config, 'server-owned status keys written back').toEqual({
+      pixelId: '1234567890123456',
+      accessToken: 'EAAsecret',
+    });
+    expect(done.tokenSet, 'the result says a token is stored').toBe(true);
+    expect(JSON.stringify(done), 'a token leaked into the result').not.toContain('EAAsecret');
+  });
+
+  it('provider + config on an unconnected tracker creates it', async () => {
+    const { f, calls } = store();
+    await call(f, { provider: 'google_ads', config: { conversionId: 'AW-1', purchaseLabel: 'L1' }, dry_run: false });
+    const post = calls.find((c) => c.method === 'POST' && c.path === '/api/sites/s1/integrations');
+    expect(post?.body, 'no create').toMatchObject({
+      provider: 'google_ads',
+      enabled: true,
+      config: { conversionId: 'AW-1', purchaseLabel: 'L1' },
+    });
+  });
+
+  it('provider + test: relays the platform test result; dry run only plans; unconnected is refused', async () => {
+    const { f, calls } = store();
+    const plan = await call(f, { provider: 'facebook_pixel', test: true });
+    expect(plan.plan, 'dry run plan').toEqual([{ method: 'POST', path: '/api/sites/s1/integrations/i_fb/test' }]);
+    expect(calls.some((c) => c.path.endsWith('/test')), 'a dry run sent a test').toBe(false);
+    const res = await call(f, { provider: 'facebook_pixel', test: true, dry_run: false });
+    expect(res).toEqual({ ok: false, message: 'HTTP 400 Malformed access token', mode: 'test_event_code' });
+    const { client, close } = await clientOver(store().f);
+    const r = (await client.callTool({
+      name: 'sb_store',
+      arguments: { action: 'tracking', provider: 'google_ads', test: true, dry_run: false },
+    })) as { content: Array<{ text: string }> };
+    await close();
+    expect(r.content[0].text).toContain('not connected');
+  });
 });
+

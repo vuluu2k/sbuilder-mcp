@@ -682,8 +682,8 @@ export function registerStoreTools(server: McpServer, ctx: ToolContext, session:
         'leaves the page referencing it; action:"template_save" saves one as a section template ' +
         '(name; template_share sends one to the org\'s review). site_template offers the whole site as its org\'s ' +
         'template (org_id attaches first; site_template_remove withdraws). ' +
-        'action:"tracking": trackers + traffic sources; text installs a pasted snippet; provider+enabled ' +
-        'switches one. Dry run returns the plan.',
+        'action:"tracking": status + advice; text installs a snippet; provider+enabled|config ' +
+        '(extras, "" clears)|test. Dry run returns the plan.',
       inputSchema: {
         action: z.enum([
           'checkout',
@@ -778,6 +778,8 @@ export function registerStoreTools(server: McpServer, ctx: ToolContext, session:
           .enum(Object.keys(TRACKING_FIELDS) as [string, ...string[]])
           .optional(),
         enabled: z.boolean().optional(),
+        config: z.record(z.string(), z.string()).optional(),
+        test: z.boolean().optional(),
         dry_run: z.boolean().optional(),
       },
       annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: true },
@@ -808,12 +810,23 @@ export function registerStoreTools(server: McpServer, ctx: ToolContext, session:
       text: trackingText,
       provider,
       enabled,
+      config: trackingConfig,
+      test: trackingTest,
       dry_run,
     }) => {
       const siteId = siteFor(ctx, given);
       if (action === 'tracking') {
         const dryRun = dry_run !== false;
-        return text(await trackingFlow(ctx, siteId, { text: trackingText, provider, enabled, dryRun }));
+        return text(
+          await trackingFlow(ctx, siteId, {
+            text: trackingText,
+            provider,
+            enabled,
+            config: trackingConfig,
+            test: trackingTest,
+            dryRun,
+          }),
+        );
       }
       if (action === 'global_attach' || action === 'global_detach') {
         // THE COMPOSED STAMP IS NEVER THE CALLER'S TO WRITE. A page references

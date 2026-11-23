@@ -221,7 +221,12 @@ describe('token budget — a diet without a scale comes back', () => {
     // (ChatGPT, Facebook…), installing whatever a pasted vendor snippet sets up and switching
     // one tracker. By hand it is four routes and a detect step an agent has to know exist. One
     // sentence in the description; the three params carry no descriptions (the answers explain).
-    expect(JSON.stringify(tools).length).toBeLessThan(44_800);
+    //
+    // 44,800 -> 45,000 buys sb_store tracking `config` + `test` (+~190 incl. the provider enum's two
+    // new providers; measured 44,888): setting a tracker's extra fields (Google Ads labels, test
+    // event code, a server-events token) and pressing the platform's "Gửi thử" — the two things a
+    // merchant's agent could not do at all. The status's `advice` rides the answer, not this list.
+    expect(JSON.stringify(tools).length).toBeLessThan(45_000);
     for (const t of tools) expect(t.description, t.name).not.toMatch(/vanishes on publish/);
     const instructions = client.getInstructions() ?? '';
     expect(instructions.length).toBeGreaterThan(200);

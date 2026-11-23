@@ -47,8 +47,19 @@ export interface TrackingArgs {
   text?: string;
   provider?: string;
   enabled?: boolean;
+  /** Extra fields of one tracker (labels, testEventCode, accessToken…); "" clears one. */
+  config?: Record<string, string>;
+  /** Send one test event for `provider` through the platform's "Gửi thử". */
+  test?: boolean;
   dryRun: boolean;
 }
+
+/** Config keys that are secrets: never echoed back in a plan or a result. */
+const SECRET_KEYS = new Set(['accessToken']);
+/** Keys the platform owns (delivery status): never sent back on a write. */
+const isServerKey = (k: string) => k.startsWith('server');
+const masked = (config: Record<string, string>) =>
+  Object.fromEntries(Object.entries(config).map(([k, v]) => [k, SECRET_KEYS.has(k) && v ? '***' : v]));
 
 export async function trackingFlow(ctx: ToolContext, siteId: string, args: TrackingArgs): Promise<unknown> {
   const site = encodeURIComponent(siteId);
@@ -64,6 +75,45 @@ export async function trackingFlow(ctx: ToolContext, siteId: string, args: Track
     })) as T;
   const current = async () => (await send<{ integrations?: Integration[] }>('GET', base)).integrations ?? [];
   const idOf = (i: Integration) => i.config?.[TRACKING_FIELDS[i.provider] ?? ''] ?? '';
+
+  if (args.test) {
+    if (!args.provider || !(args.provider in TRACKING_FIELDS)) {
+      throw new Error(`sbuilder: test needs provider, one of ${Object.keys(TRACKING_FIELDS).join(', ')}.`);
+    }
+    const row = (await current()).find((i) => i.provider === args.provider);
+    if (!row?.id) throw new Error(`sbuilder: ${args.provider} is not connected.`);
+    const path = `${base}/${encodeURIComponent(row.id)}/test`;
+    if (args.dryRun) return { dryRun: true, plan: [{ method: 'POST', path }] };
+    return (await send<{ test: unknown }>('POST', path)).test;
+  }
+
+  if (args.config !== undefined) {
+    if (!args.provider || !(args.provider in TRACKING_FIELDS)) {
+      throw new Error(`sbuilder: config needs provider, one of ${Object.keys(TRACKING_FIELDS).join(', ')}.`);
+    }
+    const row = (await current()).find((i) => i.provider === args.provider);
+    // The stored config never carries the token (the platform masks it); an absent
+    // accessToken key KEEPS the stored one, "" clears it. Server-owned status keys
+    // are dropped rather than written back.
+    const kept = Object.fromEntries(Object.entries(row?.config ?? {}).filter(([k]) => !isServerKey(k)));
+    const body = {
+      provider: args.provider,
+      enabled: args.enabled ?? row?.enabled ?? true,
+      config: { ...kept, ...args.config },
+    };
+    const step = row?.id
+      ? { method: 'PUT', path: `${base}/${encodeURIComponent(row.id)}` }
+      : { method: 'POST', path: base };
+    if (args.dryRun) return { dryRun: true, plan: [{ ...step, body: { ...body, config: masked(body.config) } }] };
+    const saved = await send<{ integration: Integration }>(step.method, step.path, body);
+    return {
+      provider: args.provider,
+      id: idOf(saved.integration),
+      enabled: saved.integration.enabled,
+      config: saved.integration.config,
+      tokenSet: !!saved.integration.tokenSet,
+    };
+  }
 
   if (args.provider !== undefined || args.enabled !== undefined) {
     if (!args.provider || args.enabled === undefined) {
@@ -164,6 +214,14 @@ export async function trackingFlow(ctx: ToolContext, siteId: string, args: Track
   }
 
   const rows = await current();
+  // What the platform says is missing or broken (one rule set for the screen, the
+  // assistant and this tool). An older platform has no /health: say so, don't fail.
+  let advice: unknown = [];
+  try {
+    advice = (await send<{ advice?: unknown[] }>('GET', `${base}/health`)).advice ?? [];
+  } catch (e) {
+    advice = { unavailable: (e as Error).message };
+  }
   let channels: unknown = null;
   try {
     channels =
@@ -194,5 +252,6 @@ export async function trackingFlow(ctx: ToolContext, siteId: string, args: Track
       };
     }),
     channelsLast30Days: channels,
+    advice,
   };
 }
