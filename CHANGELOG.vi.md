@@ -6,6 +6,15 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.113.0] - 2026-11-23
+
+### Added
+- `sb_store` `action: "tracking"` với `provider` và `config` ghi các trường bổ sung của tracker (nhãn Google Ads, mã test event, token server-events), trong đó `""` xóa trường và token được che trong bản xem trước và không bao giờ được trả về.
+- `sb_store` `action: "tracking"` với `provider` và `test` gửi test event của nền tảng.
+- Trạng thái `sb_store` `action: "tracking"` chuyển tiếp lời khuyên về sức khỏe tích hợp của nền tảng, và báo là không khả dụng trên nền tảng cũ thay vì thất bại.
+- Danh mục element có thêm kind `sku` của text-dataset và nguồn binding `product.sku`, được tạo lại theo web_builder baea13efb.
+- Danh mục API có thêm khóa ChatGPT Ads CAPI, mã test của TikTok và lượt nhấn submit, được tạo lại theo web_builder fa1afd866.
+
 ## [0.112.3] - 2026-11-21
 
 ### Changed

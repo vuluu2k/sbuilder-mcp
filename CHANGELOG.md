@@ -6,6 +6,15 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.113.0] - 2026-11-23
+
+### Added
+- `sb_store` `action: "tracking"` with `provider` and `config` writes a tracker's extra fields (Google Ads labels, a test event code, a server-events token), where `""` clears a field and the token is masked in a plan and never returned.
+- `sb_store` `action: "tracking"` with `provider` and `test` sends the platform's test event.
+- `sb_store` `action: "tracking"` status relays the platform's integrations health advice, and reports it as unavailable on an older platform instead of failing.
+- The element catalog adds the text-dataset kind `sku` and the `product.sku` binding source, regenerated against web_builder baea13efb.
+- The API catalog adds the ChatGPT Ads CAPI key, the TikTok test code and submit clicks, regenerated against web_builder fa1afd866.
+
 ## [0.112.3] - 2026-11-21
 
 ### Changed
