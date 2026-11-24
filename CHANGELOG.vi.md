@@ -6,6 +6,18 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.113.1] - 2026-11-24
+
+### Changed
+- `sb_site_list` trả về kết quả nhỏ hơn nhiều nhờ bỏ `effectivePermissions` lặp lại của các site thuộc chủ sở hữu, mốc thời gian, cài đặt chuyển hướng và ảnh chụp màn hình, trong khi người không phải chủ sở hữu vẫn giữ quyền của mình và cờ template, maintenance hoặc building đúng vẫn được giữ.
+- `sb_page_list` chỉ nói bảng loại trang và các ghi chú của nó một lần cho mỗi tiến trình, và vẫn giữ `pages` và `usually_also` ở mọi lần gọi.
+- Các phát hiện của review nêu câu mô tả vấn đề chung của mọi phát hiện cùng mã một lần dưới `problems[code]` thay vì lặp lại trên từng phát hiện.
+- Phản hồi `tools/list` nhỏ hơn vì không còn gửi `$schema` theo từng tool và dấu `execution` mặc định.
+
+### Fixed
+- `sb_review` không còn báo lớp ảnh (khối tuyệt đối rỗng tự vẽ ảnh hoặc màu nền) là `empty_container`, nên cách sửa không còn gợi ý xóa ảnh banner.
+- `sb_review` không còn báo phần chữ đặt trên một phần tử ảnh tuyệt đối là `invisible_text` so với nền của section.
+
 ## [0.113.0] - 2026-11-23
 
 ### Added

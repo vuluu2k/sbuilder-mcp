@@ -6,6 +6,18 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.113.1] - 2026-11-24
+
+### Changed
+- `sb_site_list` returns a much smaller result by dropping the repeated `effectivePermissions` of an owner's sites, timestamps, redirect settings and screenshots, while a non-owner keeps its permissions and a true template, maintenance or building flag stays.
+- `sb_page_list` says the page-type table and its notes once per process, and keeps `pages` and `usually_also` on every call.
+- Review findings state a problem sentence shared by every finding of the same code once under `problems[code]` instead of repeating it on each finding.
+- The `tools/list` response is smaller because the per-tool `$schema` and default `execution` stamps are no longer sent.
+
+### Fixed
+- `sb_review` no longer reports a picture layer (an empty absolute block that paints its own photo or fill) as `empty_container`, so its fix no longer suggests removing the banner photo.
+- `sb_review` no longer reports copy placed over an absolute picture child as `invisible_text` against the section's background.
+
 ## [0.113.0] - 2026-11-23
 
 ### Added
