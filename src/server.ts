@@ -25,7 +25,7 @@ import { registerThemeTools } from './tools/theme.js';
 import { registerTranslateTools } from './tools/translate.js';
 import type { ToolContext } from './tools/context.js';
 import { serializeToolCalls } from './mcp/serial.js';
-import { refuseUnknownArgs } from './mcp/strict.js';
+import { compactToolList, refuseUnknownArgs } from './mcp/strict.js';
 
 /**
  * Sent on every handshake, so it is short, and says nothing a tool description
@@ -122,6 +122,7 @@ export function createServer(ctx: ToolContext = buildContext()): McpServer {
   // mcp/serial.ts. Before the first registerTool, which installs tools/call.
   serializeToolCalls(server, (name) => SESSION_FREE.has(name));
   refuseUnknownArgs(server);
+  compactToolList(server);
   registerSessionTools(server, ctx);
   registerLoginTools(server, ctx, pkgVersion());
   registerApiTools(server, ctx);

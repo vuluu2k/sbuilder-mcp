@@ -131,5 +131,19 @@ describe('sb_page_list carries the advice', () => {
       USUAL_PAGES.filter((u) => !u.when).map((u) => u.key).sort(),
     );
     expect(body.usually_also_note).toMatch(/Advice, not/);
+    expect((body as Record<string, unknown>).page_types, 'first call carries the type table').toBeTruthy();
+  });
+
+  // Runs after the case above in the same process: directives are spent, data is not.
+  it('a second listing drops the type table and notes, keeps pages and usually_also', async () => {
+    const res = (await client.callTool({ name: 'sb_page_list', arguments: { site_id: 's1' } })) as {
+      content: Array<{ text: string }>;
+    };
+    const body = JSON.parse(res.content[0].text) as Record<string, unknown>;
+    expect(body.pages, 'pages').toHaveLength(1);
+    expect(body.usually_also, 'usually_also is data, said every call').toBeTruthy();
+    expect(body.page_types, 'type table said twice').toBeUndefined();
+    expect(body.page_types_note, 'type note said twice').toBeUndefined();
+    expect(body.usually_also_note, 'usual note said twice').toBeUndefined();
   });
 });

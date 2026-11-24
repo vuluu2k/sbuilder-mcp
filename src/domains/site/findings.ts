@@ -294,6 +294,35 @@ export function compactFindings<T extends { code: string; fix: string }>(
 }
 
 /**
+ * A `problem` sentence every finding of its code repeats is said ONCE, under
+ * `problems[code]` — the same move `fixes` made for the fix. Measured
+ * 2026-11-24 on a real home page: twelve empty_container findings carried the
+ * same sentence twelve times, seven handbuilt_menu ones a 300-char paragraph
+ * each. A finding whose sentence DIFFERS from its code's first one keeps it
+ * (it carries a count, a contrast, a key), so nothing a finding says is lost.
+ */
+export function shareProblems<T extends { code: string; problem?: string }>(
+  items: T[],
+): { findings: Array<T | Omit<T, 'problem'>>; problems: Record<string, string> } {
+  const first: Record<string, string> = {};
+  const seen: Record<string, number> = {};
+  for (const it of items) {
+    if (typeof it.problem !== 'string') continue;
+    first[it.code] ??= it.problem;
+    if (it.problem === first[it.code]) seen[it.code] = (seen[it.code] ?? 0) + 1;
+  }
+  const problems: Record<string, string> = {};
+  for (const [code, n] of Object.entries(seen)) if (n > 1) problems[code] = first[code];
+  const findings = items.map((it) => {
+    if (problems[it.code] === undefined || it.problem !== problems[it.code]) return it;
+    const { problem, ...rest } = it;
+    void problem;
+    return rest;
+  });
+  return { findings, problems };
+}
+
+/**
  * What a COMPOSE WARNING means for the document now in hand.
  *
  * These ride on `GET .../source` beside the page. The client typed the field and

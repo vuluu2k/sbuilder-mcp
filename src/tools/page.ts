@@ -53,7 +53,7 @@ import { validateForSave } from '../domains/site/validate.js';
 import { fallUp, formDocChecks, hiddenBand, sayChecks, specCheck, writeCheck, type CheckedNote, type HiddenSlots } from '../domains/site/writecheck.js';
 import { reviewDesign, REVIEW_NOTICE } from '../domains/site/review.js';
 import { exampleCopy } from '../domains/site/examplecopy.js';
-import { compactFindings } from '../domains/site/findings.js';
+import { compactFindings, shareProblems } from '../domains/site/findings.js';
 import { readinessGaps, READINESS_NOTICE, siteLanguage } from '../domains/site/readiness.js';
 import { gatherReadiness } from '../domains/site/readiness-fetch.js';
 import { globalWarning, restampPatches, RESPONSIVE_NOTICE, sharedWriteNotes } from '../domains/site/traps.js';
@@ -108,13 +108,17 @@ export function reviewField(
   // MAINTENANCE IS ADVICE, kept out of `findings`: it works for a visitor, so
   // it must not stand between a page and its clean verdict. One `fixes` map
   // serves both lists.
-  const { findings, fixes } = compactFindings(all.filter((f) => f.severity !== 'maintenance'));
-  const advice = compactFindings(all.filter((f) => f.severity === 'maintenance'));
+  const compact = compactFindings(all.filter((f) => f.severity !== 'maintenance'));
+  const advised = compactFindings(all.filter((f) => f.severity === 'maintenance'));
+  const { findings, problems } = shareProblems(compact.findings);
+  const advice = shareProblems(advised.findings);
   const notice = findings.length ? ctx.notices.once('review', REVIEW_NOTICE) : undefined;
+  const shared = { ...problems, ...advice.problems };
   return {
     ...(findings.length ? { findings } : {}),
     ...(advice.findings.length ? { advice: advice.findings } : {}),
-    fixes: { ...fixes, ...advice.fixes },
+    ...(Object.keys(shared).length ? { problems: shared } : {}),
+    fixes: { ...compact.fixes, ...advised.fixes },
     ...(notice ? { findings_notice: notice } : {}),
   };
 }
@@ -2786,8 +2790,14 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
       // in this server can tell a site that has them from one that does not.
       // See ./inventory.ts: advice, matched by name, and the note says both.
       const missing = missingUsualPages(raw.pages ?? null);
+      // The type table and both notes are DIRECTIVES, not data about this site —
+      // ~1,500 characters that rode on every listing. Said once per process
+      // (ctx.notices); `usually_also` itself is data and stays on every call.
+      const firstTypes = ctx.notices.once('page_list.types', '1') !== undefined;
+      const firstUsual = missing.length > 0 && ctx.notices.once('page_list.usual', '1') !== undefined;
       return text({
         ...(projectList(raw, 'pages', PAGE_FIELDS) as Record<string, unknown>),
+        ...(firstTypes ? {
         // EVERY TYPE THE PLATFORM HAS, and the address each one answers at.
         //
         // Here rather than in `sb_page_create`'s argument description, because
@@ -2818,13 +2828,16 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
           'icon, own slug, any number); everything else is type "page". sb_page_create picks ' +
           'the purpose type from the name when you pass none. ' +
           'usually_also below lists the ones most sites have; it is a floor, not a ceiling.',
+        } : {}),
         ...(missing.length
           ? {
               usually_also: Object.fromEntries(missing.map((m) => [m.key, m.why])),
-              usually_also_note:
-                'Pages most sites have that this one appears not to, found by NAME because they ' +
-                'have no type — one you named unusually will show here anyway. Advice, not ' +
-                'defects: sb_review reports the pages the storefront routes by type.',
+              ...(firstUsual ? {
+                usually_also_note:
+                  'Pages most sites have that this one appears not to, found by NAME because they ' +
+                  'have no type — one you named unusually will show here anyway. Advice, not ' +
+                  'defects: sb_review reports the pages the storefront routes by type.',
+              } : {}),
             }
           : {}),
       });

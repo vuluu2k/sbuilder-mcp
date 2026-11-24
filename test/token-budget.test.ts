@@ -226,7 +226,14 @@ describe('token budget — a diet without a scale comes back', () => {
     // new providers; measured 44,888): setting a tracker's extra fields (Google Ads labels, test
     // event code, a server-events token) and pressing the platform's "Gửi thử" — the two things a
     // merchant's agent could not do at all. The status's `advice` rides the answer, not this list.
-    expect(JSON.stringify(tools).length).toBeLessThan(45_000);
+    //
+    // 45,000 -> 42,500, measured 41,024 (from 44,888): `compactToolList` (mcp/strict.ts) drops the
+    // SDK's per-tool `"$schema"` and `execution:{taskSupport:"forbidden"}` — the spec's default when
+    // absent. Pure wire weight, no description lost; the two asserts below keep it from coming back.
+    const wire = JSON.stringify(tools);
+    expect(wire, 'tools/list re-grew a $schema stamp').not.toContain('"$schema"');
+    expect(wire, 'tools/list re-grew a default execution block').not.toContain('"taskSupport":"forbidden"');
+    expect(wire.length).toBeLessThan(42_500);
     for (const t of tools) expect(t.description, t.name).not.toMatch(/vanishes on publish/);
     const instructions = client.getInstructions() ?? '';
     expect(instructions.length).toBeGreaterThan(200);

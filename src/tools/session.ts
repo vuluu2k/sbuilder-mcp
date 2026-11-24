@@ -179,6 +179,27 @@ export async function connect(
   return result;
 }
 
+/**
+ * ONE SITE ROW, WITHOUT WHAT EVERY ROW REPEATS.
+ *
+ * The raw `GET /api/sites` row carries `effectivePermissions` — 54 strings, the
+ * same 54 on every site the caller owns — plus zero-value timestamps, redirect
+ * settings and a screenshot. Measured 2026-11-24: nine sites, ~12,000 characters,
+ * ~10,000 of them the permission list. An owner holds every permission, so the
+ * list is said only for a non-owner role, where it is the point. Flags that are
+ * false are left out; a `true` one (template, maintenance, building) changes what
+ * a caller should do with the site, so it stays.
+ */
+export function compactSite(s: Record<string, unknown>): Record<string, unknown> {
+  const out: Record<string, unknown> = { id: s.id, name: s.name, slug: s.slug, url: s.publicUrl, role: s.role };
+  if (s.orgId) out.org_id = s.orgId;
+  if (s.isTemplate) out.template = s.templateName || true;
+  if (s.maintenanceMode) out.maintenance = true;
+  if (s.building) out.building = true;
+  if (s.role !== 'owner' && Array.isArray(s.effectivePermissions)) out.permissions = s.effectivePermissions;
+  return out;
+}
+
 export function registerSessionTools(server: McpServer, ctx: ToolContext): void {
   server.registerTool(
     'sb_connect',
@@ -224,15 +245,15 @@ export function registerSessionTools(server: McpServer, ctx: ToolContext): void 
             'API key.',
         );
       }
-      return text(
-        await request({
-          base: ctx.base,
-          method: 'GET',
-          path: '/api/sites',
-          token: ctx.session.token(),
-          fetchImpl: ctx.fetchImpl,
-        }),
-      );
+      const listed = (await request({
+        base: ctx.base,
+        method: 'GET',
+        path: '/api/sites',
+        token: ctx.session.token(),
+        fetchImpl: ctx.fetchImpl,
+      })) as { sites?: Array<Record<string, unknown>>; total?: number };
+      const sites = (listed?.sites ?? []).map(compactSite);
+      return text({ sites, total: listed?.total ?? sites.length });
     },
   );
 }
