@@ -32,6 +32,18 @@ import { unknownValueNote, unknownWriteNote, vocabularyFor, vocabularyForWrite }
 import { iconNote } from './icons.js';
 import { LINK_COLOUR, LINK_INHERITS, unstyledLinks } from './writecheck.js';
 
+/** Whether `containerId` holds an absolutely-positioned child that paints a picture over it. */
+function coveredByPicture(d: { nodes: Record<string, { data: { type: string; parent?: string | null; nodes?: string[] }; style?: Record<string, unknown> }> }, containerId: string): boolean {
+  for (const k of d.nodes[containerId]?.data.nodes ?? []) {
+    const c = d.nodes[k];
+    if (!c || c.style?.position !== 'absolute') continue;
+    if (c.data.type === 'image' || c.data.type === 'video') return true;
+    const g = groundOf(c as never);
+    if (g && 'picture' in g) return true;
+  }
+  return false;
+}
+
 /**
  * A defect somebody looking at the page would see.
  *
@@ -97,7 +109,8 @@ export const REVIEW_NOTICE =
   'while findings stand; if you believe one is a false positive, say which and why. ' +
   'A finding marked overlay:true is in the cart drawer or a pop-up — fix it the same way ' +
   '(sb_set lands there), but it is SITE-WIDE, so fix it once rather than once per page. ' +
-  '`advice` lists what works but is hard to edit — never a blocker.';
+  '`advice` lists what works but is hard to edit — never a blocker. A finding with no ' +
+  '`problem` shares its code\'s sentence under `problems`; its fix is under `fixes`.';
 
 /** The specials keys an element seeds that hold its visible content. */
 function contentKeys(type: string): string[] {
@@ -674,7 +687,11 @@ export function reviewDesign(
       const fg = rgbOf(ownFg ? (opts.theme ? resolveVars(opts.theme, own as string) : own) : presetFg);
       let ground: Ground | null = null;
       for (let x: string | null | undefined = id; x && d.nodes[x] && !ground; x = d.nodes[x].data.parent) {
-        ground = groundOf(d.nodes[x] as never, opts.theme);
+        // A PICTURE LAYER LAID OVER THE ANCESTOR is the ground too, not only the ancestor's own
+        // fill: the banner pattern is an empty absolutely-positioned block carrying the photo,
+        // with the copy in a sibling above it. Measured 2026-11-24 on a live home page: white
+        // headings over that photo read "1.00:1" against the section's white, eight times.
+        ground = (x !== id && coveredByPicture(d, x) ? { picture: true } : null) ?? groundOf(d.nodes[x] as never, opts.theme);
       }
       const bg = ground && 'color' in ground ? rgbOf(ground.color) : null;
       const authored = (ownFg && !String(own).includes('var(')) || (!!ground && 'literal' in ground && ground.literal);
@@ -1509,9 +1526,15 @@ export function reviewDesign(
     const isReference =
       (n.specials ?? {})[SPEC_GLOBAL_REF] !== undefined ||
       (n.specials ?? {})[SPEC_APP_BLOCK_REF] !== undefined;
+    // OR IT IS ITSELF THE PICTURE (or a fill): an empty block painting a photo, a gradient
+    // scrim or a colour is a layer, not an empty band — the banner pattern above. Its fix
+    // ("remove it with sb_remove") deleted the photo. Own paint only: a theme preset's
+    // ground on an empty section is still an empty band.
+    const paints = groundOf(n as never) !== null;
     if (
       meta.isContainer &&
       childrenOf(d, id).length === 0 &&
+      !paints &&
       !isReference &&
       !drawsOwnControl &&
       !(bindings.length > 0 && drawsItsOwnContent(type))
