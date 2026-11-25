@@ -2484,7 +2484,12 @@ export function registerPageTools(server: McpServer, ctx: ToolContext): PageSess
           base: ctx.base,
           method: 'POST',
           path: `/api/sites/${encodeURIComponent(toSite)}/clipboard/reconcile`,
-          token: siteToken(ctx),
+          // THE ACCOUNT SESSION, never the key, even on the key's own site: the reconcile
+          // reads the SOURCE site's assets, which only a person's membership vouches for.
+          // The platform refuses a delegated (API-key) caller here (web_builder
+          // sitecopy/rest, 2026-11-25); a key on the target used to pass because it
+          // borrowed its creator's standing on every other site.
+          token: ctx.session.loggedIn() ? ctx.session.token() : siteToken(ctx),
           body: { sourceSiteId: from.siteId, tree },
           fetchImpl: ctx.fetchImpl,
         })) as { reconcile?: { tree?: { rootId?: string; nodes?: Record<string, unknown> }; copiedAssets?: number; droppedRefs?: unknown[] } };

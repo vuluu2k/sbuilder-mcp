@@ -82,3 +82,41 @@ describe('sb_duplicate onto another page', () => {
     await close();
   });
 });
+
+describe('the cross-site reconcile credential', () => {
+  // The platform refuses a delegated (API-key) caller on /clipboard/reconcile: the
+  // reconcile reads the SOURCE site, which only a person's membership vouches for.
+  // A key on the TARGET site used to ride along, because siteToken prefers the key
+  // on its own site.
+  it('sends the account session, not the API key, even when the key is the target site', async () => {
+    const { Session } = await import('../src/transport/auth.js');
+    const { connectedClient } = await import('./harness.js');
+    const auths: Record<string, string> = {};
+    const json = (b: unknown) => new Response(JSON.stringify(b), { status: 200, headers: { 'content-type': 'application/json' } });
+    const fetchImpl = (async (input: string | URL, init?: RequestInit) => {
+      const url = new URL(String(input));
+      const auth = String((init?.headers as Record<string, string>)?.Authorization ?? '');
+      if (url.pathname.endsWith('/clipboard/reconcile')) {
+        auths.reconcile = auth;
+        const body = JSON.parse(String(init?.body));
+        return json({ reconcile: { tree: body.tree, copiedAssets: 0, droppedRefs: [] } });
+      }
+      const m = /^\/api\/sites\/([^/]+)\/pages\/([^/]+)\/source$/.exec(url.pathname);
+      if (m) {
+        const document = m[2] === 'pg_1' ? { schema_version: 2, ...source() } : { schema_version: 2, root_node_id: 'ROOT', nodes: { ROOT: { id: 'ROOT', data: { type: 'root', parent: null, nodes: [] } } } };
+        return json({ source: { pageId: m[2], siteId: m[1], document, schemaVersion: 2, updatedAt: 'now', rev: 1 } });
+      }
+      return json({});
+    }) as unknown as typeof fetch;
+    const session = new Session('http://x', fetchImpl);
+    (session as unknown as { access: string }).access = 'session-jwt';
+    const { client, close } = await connectedClient({ fetchImpl, session, apiKey: 'wbk_target_key', keySite: 's2' } as never);
+    const call = (name: string, args: Record<string, unknown>) => client.callTool({ name, arguments: args });
+    await call('sb_page_open', { site_id: 's1', page_id: 'pg_1' });
+    const out = (await call('sb_duplicate', { id: 's1', to_page_id: 'pg_9', to_site_id: 's2', dry_run: false })) as { isError?: boolean; content: Array<{ text: string }> };
+    expect(out.isError, out.content[0]?.text).toBeFalsy();
+    expect(auths.reconcile, 'liveness: the reconcile was reached').toBeDefined();
+    expect(auths.reconcile).toBe('Bearer session-jwt');
+    await close();
+  });
+});
