@@ -6,6 +6,14 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.114.0] - 2026-11-25
+
+### Added
+- `sb_form` lists a site's forms, creates a blank or custom form from a field list in one call, merges form settings with notify-address reporting, and reads submissions paged and filtered, with writes defaulting to `dry_run: true`.
+
+### Changed
+- `sb_page_open`'s "no field document yet" error now also points at `sb_form` `action: "create"`.
+
 ## [0.113.2] - 2026-11-25
 
 ### Fixed

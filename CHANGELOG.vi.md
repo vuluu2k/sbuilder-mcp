@@ -6,6 +6,14 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.114.0] - 2026-11-25
+
+### Added
+- `sb_form` liệt kê các form của site, tạo form trống hoặc tùy chỉnh từ danh sách trường trong một lần gọi, gộp cài đặt form kèm báo cáo địa chỉ nhận thông báo, và đọc các submission có phân trang và lọc, trong đó các thao tác ghi mặc định `dry_run: true`.
+
+### Changed
+- Lỗi "no field document yet" của `sb_page_open` giờ cũng chỉ tới `sb_form` `action: "create"`.
+
 ## [0.113.2] - 2026-11-25
 
 ### Fixed
