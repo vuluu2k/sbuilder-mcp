@@ -6,6 +6,11 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.113.2] - 2026-11-25
+
+### Fixed
+- `sb_duplicate` reconciles a cross-site paste with the account session instead of an API key, so a key for the target site no longer borrows its creator's standing on the source site.
+
 ## [0.113.1] - 2026-11-24
 
 ### Changed

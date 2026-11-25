@@ -6,6 +6,11 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.113.2] - 2026-11-25
+
+### Fixed
+- `sb_duplicate` đối chiếu thao tác dán giữa các site bằng phiên tài khoản thay vì khóa API, nên khóa của site đích không còn mượn quyền của người tạo nó trên site nguồn.
+
 ## [0.113.1] - 2026-11-24
 
 ### Changed
