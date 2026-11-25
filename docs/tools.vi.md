@@ -1754,6 +1754,45 @@ bản ghi mỗi bảng (409 `limit`). `collection` là id (`col_…`) hoặc slu
 
 Mọi lệnh ghi, xoá và import mặc định là dry run.
 
+## `sb_form`
+
+Các biểu mẫu của site dưới dạng BẢN GHI (`/api/sites/{siteId}/forms…`): danh sách, tạo mới, cài
+đặt và các lượt gửi. CÁC TRƯỜNG của một biểu mẫu có sẵn được sửa bằng tool trang (`sb_page_open
+form_id`, rồi `sb_add` / `sb_set`); biểu mẫu từ mẫu của nền tảng (liên hệ, đặt lịch, đăng nhập…)
+dùng `sb_store action:"form"`. Dùng được cả hai loại credential; agent key cần `forms.read` /
+`forms.write`, và lỗi 403 nói rõ thiếu quyền nào thay vì trả về danh sách rỗng.
+
+- `list`: `[{id, name, type, submissions?, unread?}]`.
+- `create` {`name`? ("Form"), `fields`? `[{type, label, required?, placeholder?, options?}]`}:
+  POST biểu mẫu, rồi PUT tài liệu trường — gốc form, mỗi trường dựng từ giá trị mặc định trong
+  catalog của element (cùng `addSubtree` mà `sb_add` dùng) với `name` gửi đi lấy từ nhãn
+  (`Dịch vụ` → `dich_vu`, không trùng), và một nút gửi. Không có `fields` thì là biểu mẫu trống
+  nhưng vẫn có tài liệu, nên `sb_page_open form_id` mở được. `type` là một trong form-text,
+  form-number, form-select, form-radio, form-checkbox, form-date, form-calendar, form-file,
+  form-timeslot (tiền tố `form-` có thể bỏ); loại khác, `options` trên trường không phải lựa
+  chọn, hoặc placeholder trên trường không có placeholder đều bị từ chối trước khi gửi request.
+  Nếu PUT tài liệu thất bại, biểu mẫu vừa tạo bị xoá lại và lỗi được trả về (nếu lệnh xoá đó
+  cũng thất bại, lỗi sẽ nói rõ — hãy xoá biểu mẫu bằng tay). Kết quả có id biểu
+  mẫu và bước tiếp theo `sb_page_open form_id` / `sb_add {type:"form", specials:{formId}}`.
+- `settings` {`form_id`, `settings`}: đọc biểu mẫu, gộp các key được truyền SÂU MỘT CẤP lên cài
+  đặt đã lưu (`{notify:{recipients:[…]}}` giữ nguyên `notify.enabled`), rồi PUT lại cả bản ghi —
+  mọi key không nhắc tới được gửi lại nguyên vẹn. Key thường dùng: `notify` {`enabled`,
+  `recipients`}, `afterSubmit` {`action`: message|redirect, `message`, `pageId` | `url`},
+  `collectionId` (lưu lượt gửi vào một bảng dữ liệu), `submitLabel`. Key không có trong cấu trúc
+  Settings của nền tảng được nêu ở `settings_unknown` (bộ giải mã bỏ qua nó). Người nhận chưa có
+  trong danh sách notify-addresses của site được POST vào đó SAU KHI PUT cài đặt thành công (mỗi
+  POST gửi một email chứa link xác minh); mọi người nhận chưa bấm link xác minh được liệt kê ở
+  `waiting_verification` — **họ không nhận được email nào cho tới khi bấm**. Khi có `notify` và
+  `notify.enabled` sau khi gộp không phải true, `notify_disabled` báo rằng không email nào được
+  gửi cho tới khi bật notify. Bản xem trước dry run chỉ hiện các key được truyền, không bao giờ hiện cài đặt đã lưu.
+- `submissions` {`form_id`, `limit`? (20; nền tảng tự giới hạn), `offset`?, `status`?, `q`?,
+  `from`? / `to`? (ngày hoặc thời điểm RFC 3339 — giá trị khác bị từ chối, vì nền tảng lặng lẽ
+  bỏ giá trị không đọc được; `from` chỉ có ngày là đầu ngày đó, `to` chỉ có ngày là cuối ngày đó), `field` + `value`?, `unread`?}: `{submissions: [{id, at, status,
+  unread?, values: {name: câu trả lời}, files?}], total, next_offset?}`. Lượt gửi là dữ liệu của
+  khách: không ghi log.
+
+`create` và `settings` mặc định là dry run; `list` và `submissions` không bao giờ ghi.
+
 ## `sb_translate`
 
 Bảng **Đa ngôn ngữ** của editor gói thành một tool, qua các route session-scoped

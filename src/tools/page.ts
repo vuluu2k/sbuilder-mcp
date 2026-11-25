@@ -946,7 +946,7 @@ export class PageSession {
     })) as { document?: unknown };
     if (!got?.document) {
       throw new Error(
-        `sbuilder: form ${formId} has no field document yet — create forms with sb_store action:"form".`,
+        `sbuilder: form ${formId} has no field document yet — create one with sb_form action:"create" (a blank or custom form, with its document) or sb_store action:"form" (a template form).`,
       );
     }
     // The RECORD's type decides which document rules apply (a booking form reads

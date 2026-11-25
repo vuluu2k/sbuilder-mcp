@@ -17,6 +17,7 @@ import { registerCodeTools } from './tools/code.js';
 import { registerComponentTools } from './tools/components.js';
 import { registerFunctionTools } from './tools/function.js';
 import { registerCollectionTools } from './tools/collection.js';
+import { registerFormTools } from './tools/form.js';
 import { registerLiveTools } from './tools/live.js';
 import { registerStoreTools } from './tools/store.js';
 import { registerImportTools } from './tools/importpage.js';
@@ -73,6 +74,7 @@ const SESSION_FREE: ReadonlySet<string> = new Set([
   'sb_components',
   'sb_function',
   'sb_collection',
+  'sb_form',
   'sb_theme',
   'sb_catalog_search',
   'sb_traits_for',
@@ -133,6 +135,7 @@ export function createServer(ctx: ToolContext = buildContext()): McpServer {
   registerComponentTools(server, ctx);
   registerFunctionTools(server, ctx);
   registerCollectionTools(server, ctx);
+  registerFormTools(server, ctx);
   registerLiveTools(server, ctx, pageSession);
   registerStoreTools(server, ctx, pageSession);
   registerThemeTools(server, ctx);

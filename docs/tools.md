@@ -1789,6 +1789,48 @@ table (409 `limit`). `collection` is a table's id (`col_…`) or slug.
 
 Every write, delete and import is a dry run by default.
 
+## `sb_form`
+
+A site's forms as RECORDS (`/api/sites/{siteId}/forms…`): the list, a new one, its settings and
+its responses. The FIELDS of an existing form are edited with the page tools (`sb_page_open
+form_id`, then `sb_add` / `sb_set`); a form from one of the platform's templates (contact,
+booking, login…) is `sb_store action:"form"`. Either credential works; an agent key needs
+`forms.read` / `forms.write`, and a 403 says which one is missing instead of answering an empty
+list.
+
+- `list`: `[{id, name, type, submissions?, unread?}]`.
+- `create` {`name`? ("Form"), `fields`? `[{type, label, required?, placeholder?, options?}]`}:
+  POSTs the form, then PUTs its field document — the form root, each field built from the
+  element's catalog defaults (the same `addSubtree` `sb_add` uses) with a posted `name` taken from
+  its label (`Dịch vụ` → `dich_vu`, made unique), and a submit button. With no `fields` it is a
+  blank form that still has a document, so `sb_page_open form_id` can open it. `type` is one of
+  form-text, form-number, form-select, form-radio, form-checkbox, form-date, form-calendar,
+  form-file, form-timeslot (the `form-` prefix is optional); anything else, `options` on a
+  non-choice field or a placeholder a field does not have is refused before any request. If the
+  document PUT fails, the new form is deleted again and the error returned (if that delete fails
+  too, the error says so — delete the form by hand). The answer carries
+  the form id and the `sb_page_open form_id` / `sb_add {type:"form", specials:{formId}}` next steps.
+- `settings` {`form_id`, `settings`}: reads the form, merges the given keys ONE LEVEL deep over
+  the stored settings (`{notify:{recipients:[…]}}` keeps `notify.enabled`), and PUTs the whole
+  record back — every key not named goes back unchanged. Typical keys: `notify` {`enabled`,
+  `recipients`}, `afterSubmit` {`action`: message|redirect, `message`, `pageId` | `url`},
+  `collectionId` (save responses into a data table), `submitLabel`. A key the platform's
+  Settings shape does not declare is named under `settings_unknown` (the decoder drops it). A
+  recipient not yet on the site's notify-addresses ledger is POSTed there AFTER the settings PUT
+  lands (each POST mails a verification link); every recipient that has not clicked its
+  verification link is listed under `waiting_verification` — **it receives no mail until it
+  does**. When `notify` is given and the merged `notify.enabled` is not true, `notify_disabled`
+  says no mail is sent until notify is enabled. The dry-run preview shows only the keys given,
+  never the stored settings.
+- `submissions` {`form_id`, `limit`? (20; the platform clamps), `offset`?, `status`?, `q`?,
+  `from`? / `to`? (a date or RFC 3339 time — anything else is refused, because the platform
+  drops an unparseable one silently; a date-only `from` is the start of that day, a date-only
+  `to` the end of it), `field` + `value`?, `unread`?}: `{submissions: [{id, at,
+  status, unread?, values: {name: answer}, files?}], total, next_offset?}`. Responses are visitor
+  data: nothing is logged.
+
+`create` and `settings` are dry runs by default; `list` and `submissions` never write.
+
 ## `sb_translate`
 
 The editor's **Multilingual** panel as one tool, over the session-scoped
