@@ -3,7 +3,7 @@
 
 export const TRANSLATION_SOURCE = {
   "elements": 69,
-  "pairs": 210,
+  "pairs": 215,
   "neverKeys": 201,
   "entityTypes": 12
 } as const;
@@ -227,7 +227,9 @@ export const TRANSLATABLE_SPECIALS: Record<string, string[]> = {
     "provincePlaceholder",
     "wardPlaceholder",
     "detailPlaceholder",
-    "placeholder"
+    "placeholder",
+    "requiredText",
+    "invalidText"
   ],
   "form-discount-code": [
     "label",
@@ -237,7 +239,8 @@ export const TRANSLATABLE_SPECIALS: Record<string, string[]> = {
     "appliedText",
     "unknownCodeText",
     "codeNotUsableText",
-    "quoteFailedText"
+    "quoteFailedText",
+    "requiredText"
   ],
   "form-radio": [
     "label",
@@ -249,11 +252,13 @@ export const TRANSLATABLE_SPECIALS: Record<string, string[]> = {
   "form-payment": [
     "label",
     "description",
-    "methods"
+    "methods",
+    "requiredText"
   ],
   "form-timeslot": [
     "label",
-    "description"
+    "description",
+    "requiredText"
   ],
   "form-checkbox": [
     "label",
@@ -1081,6 +1086,12 @@ export const TRANSLATABLE_FIELDS: Record<string, TranslatableFieldSpec[]> = {
     },
     {
       "key": "placeholder"
+    },
+    {
+      "key": "requiredText"
+    },
+    {
+      "key": "invalidText"
     }
   ],
   "form-discount-code": [
@@ -1107,6 +1118,9 @@ export const TRANSLATABLE_FIELDS: Record<string, TranslatableFieldSpec[]> = {
     },
     {
       "key": "quoteFailedText"
+    },
+    {
+      "key": "requiredText"
     }
   ],
   "form-radio": [
@@ -1143,6 +1157,9 @@ export const TRANSLATABLE_FIELDS: Record<string, TranslatableFieldSpec[]> = {
           "description"
         ]
       }
+    },
+    {
+      "key": "requiredText"
     }
   ],
   "form-timeslot": [
@@ -1151,6 +1168,9 @@ export const TRANSLATABLE_FIELDS: Record<string, TranslatableFieldSpec[]> = {
     },
     {
       "key": "description"
+    },
+    {
+      "key": "requiredText"
     }
   ],
   "form-checkbox": [

@@ -1806,7 +1806,7 @@ list.
   blank form that still has a document, so `sb_page_open form_id` can open it. `type` is one of
   form-text, form-number, form-select, form-radio, form-checkbox, form-date, form-calendar,
   form-file, form-timeslot (the `form-` prefix is optional); anything else, `options` on a
-  non-choice field or a placeholder a field does not have is refused before any request. Rule keys: `requiredText` / `invalidText` (the shopper-facing refusal sentences; every type but form-timeslot), `minChecked` / `maxChecked` (form-checkbox, whole numbers, 0 = no bound), `acceptedDates` (`past`|`future`) / `minDate` / `maxDate` (form-date, `YYYY-MM-DD`, inclusive), `maxFileMB` (form-file, 1-25); a key on the wrong type, a bad value or min above max is refused the same way. If the
+  non-choice field or a placeholder a field does not have is refused before any request. Rule keys: `requiredText` / `invalidText` (the shopper-facing refusal sentences; form-timeslot takes `requiredText` only), `minChecked` / `maxChecked` (form-checkbox, whole numbers, 0 = no bound), `acceptedDates` (`past`|`future`) / `minDate` / `maxDate` (form-date, `YYYY-MM-DD`, inclusive), `maxFileMB` (form-file, 1-25); a key on the wrong type, a bad value or min above max is refused the same way. If the
   document PUT fails, the new form is deleted again and the error returned (if that delete fails
   too, the error says so — delete the form by hand). The answer carries
   the form id and the `sb_page_open form_id` / `sb_add {type:"form", specials:{formId}}` next steps.

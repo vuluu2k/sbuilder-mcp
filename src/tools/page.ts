@@ -225,7 +225,7 @@ function idMap(m: { added: Record<string, string>; satellites: Record<string, st
 }
 
 /** The site's `settings.locale`, or undefined when unset or unreadable — never a reason to fail. */
-async function siteLocaleOf(ctx: ToolContext, siteId: string): Promise<string | undefined> {
+export async function siteLocaleOf(ctx: ToolContext, siteId: string): Promise<string | undefined> {
   return request({
     base: ctx.base,
     method: 'GET',

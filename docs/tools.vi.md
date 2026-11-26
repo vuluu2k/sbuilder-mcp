@@ -1770,7 +1770,7 @@ dùng `sb_store action:"form"`. Dùng được cả hai loại credential; agent
   nhưng vẫn có tài liệu, nên `sb_page_open form_id` mở được. `type` là một trong form-text,
   form-number, form-select, form-radio, form-checkbox, form-date, form-calendar, form-file,
   form-timeslot (tiền tố `form-` có thể bỏ); loại khác, `options` trên trường không phải lựa
-  chọn, hoặc placeholder trên trường không có placeholder đều bị từ chối trước khi gửi request. Khoá luật: `requiredText` / `invalidText` (câu từ chối hiện cho người điền; mọi loại trừ form-timeslot), `minChecked` / `maxChecked` (form-checkbox, số nguyên, 0 = không giới hạn), `acceptedDates` (`past`|`future`) / `minDate` / `maxDate` (form-date, `YYYY-MM-DD`, gồm cả đầu mút), `maxFileMB` (form-file, 1-25); khoá sai loại, giá trị sai hoặc min lớn hơn max bị từ chối tương tự.
+  chọn, hoặc placeholder trên trường không có placeholder đều bị từ chối trước khi gửi request. Khoá luật: `requiredText` / `invalidText` (câu từ chối hiện cho người điền; form-timeslot chỉ nhận `requiredText`), `minChecked` / `maxChecked` (form-checkbox, số nguyên, 0 = không giới hạn), `acceptedDates` (`past`|`future`) / `minDate` / `maxDate` (form-date, `YYYY-MM-DD`, gồm cả đầu mút), `maxFileMB` (form-file, 1-25); khoá sai loại, giá trị sai hoặc min lớn hơn max bị từ chối tương tự.
   Nếu PUT tài liệu thất bại, biểu mẫu vừa tạo bị xoá lại và lỗi được trả về (nếu lệnh xoá đó
   cũng thất bại, lỗi sẽ nói rõ — hãy xoá biểu mẫu bằng tay). Kết quả có id biểu
   mẫu và bước tiếp theo `sb_page_open form_id` / `sb_add {type:"form", specials:{formId}}`.

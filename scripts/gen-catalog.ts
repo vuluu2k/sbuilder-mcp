@@ -3655,7 +3655,7 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = ${JSON.stringify(
   // takes no orders.
   const formTpl = (await import(resolve(repo, 'editor/src/element/formTemplates.ts'))) as {
     FORM_TEMPLATES: Array<{ key: string; type: string; settings?: Record<string, unknown> }>;
-    buildTemplateDocument: (tpl: unknown) => { nodes: Record<string, { specials?: Record<string, unknown> }> };
+    buildTemplateDocument: (tpl: unknown, locale?: string) => { nodes: Record<string, { specials?: Record<string, unknown> }> };
   };
   const pageSeed = (await import(resolve(repo, 'editor/src/element/checkoutPageSeed.ts'))) as {
     buildCheckoutPageDocument: (formId: string, headline: string) => unknown;
@@ -3666,6 +3666,9 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = ${JSON.stringify(
     process.exit(1);
   }
   const checkoutFormDoc = stableIds(formTpl.buildTemplateDocument(tpl), 'ckf');
+  // The same form in English: the editor seeds copy by the site's locale and
+  // codegen has no site, so the vi document above is today's and this is `en`.
+  const checkoutFormDocEn = stableIds(formTpl.buildTemplateDocument(tpl, 'en'), 'ckf');
   const seeded = Object.values(checkoutFormDoc.nodes).map((n) => n.specials?.name);
   for (const required of ['payment_method', 'shipping_method']) {
     if (!seeded.includes(required)) {
@@ -3725,6 +3728,7 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = ${JSON.stringify(
       type: t.type,
       settings: t.settings ?? {},
       document: doc,
+      document_en: stableIds(formTpl.buildTemplateDocument(t, 'en'), `f${t.key.slice(0, 3)}`),
     };
   }
   const templateCount = Object.keys(formTemplates).length;
@@ -3748,6 +3752,9 @@ export const HEADLINE_SENTINEL = '__SB_HEADLINE__';
 export const CHECKOUT_FORM = ${JSON.stringify({ type: tpl.type, settings: tpl.settings ?? {} }, null, 2)} as const;
 
 export const CHECKOUT_FORM_DOCUMENT = ${JSON.stringify(checkoutFormDoc, null, 2)};
+
+/** The same form with its seed copy in English — what an \`en\` site's editor would place. */
+export const CHECKOUT_FORM_DOCUMENT_EN = ${JSON.stringify(checkoutFormDocEn, null, 2)};
 
 export const CHECKOUT_PAGE_DOCUMENT = ${JSON.stringify(checkoutPageDoc, null, 2)};
 

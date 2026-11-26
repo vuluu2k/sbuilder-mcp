@@ -92,6 +92,7 @@ describe('sb_form', () => {
           { type: 'form-checkbox', label: 'Tags', options: ['a', 'b'], minChecked: 1, maxChecked: 2, requiredText: 'Pick one', invalidText: 'Too many' },
           { type: 'form-date', label: 'Day', acceptedDates: 'future', minDate: '2026-01-01', maxDate: '2026-12-31' },
           { type: 'form-file', label: 'Doc', maxFileMB: 5 },
+          { type: 'form-timeslot', label: 'Slot', requiredText: 'Pick a time' },
         ],
       });
       expect(ok.isError, ok.text).toBe(false);
@@ -100,11 +101,13 @@ describe('sb_form', () => {
       expect(kids[0].specials).toMatchObject({ minChecked: 1, maxChecked: 2, requiredText: 'Pick one', invalidText: 'Too many' });
       expect(kids[1].specials).toMatchObject({ acceptedDates: 'future', minDate: '2026-01-01', maxDate: '2026-12-31' });
       expect(kids[2].specials.maxFileMB).toBe(5);
+      expect(kids[3].data.type, 'liveness: the 4th kid is the slot picker').toBe('form-timeslot');
+      expect(kids[3].specials.requiredText).toBe('Pick a time');
     });
     const before = p.hits.length;
     const bad: Array<[Record<string, unknown>, RegExp]> = [
       [{ type: 'form-text', label: 'A', minChecked: 1 }, /minChecked applies to a checkbox group/],
-      [{ type: 'form-timeslot', label: 'A', requiredText: 'x' }, /form-timeslot has no requiredText/],
+      [{ type: 'form-timeslot', label: 'A', invalidText: 'x' }, /form-timeslot has no invalidText/],
       [{ type: 'form-checkbox', label: 'A', minChecked: 3, maxChecked: 2 }, /minChecked 3 is above maxChecked 2/],
       [{ type: 'form-date', label: 'A', minDate: '2026-02-30' }, /minDate "2026-02-30" is not a date/],
       [{ type: 'form-date', label: 'A', minDate: '2026-05-01', maxDate: '2026-04-01' }, /after maxDate/],

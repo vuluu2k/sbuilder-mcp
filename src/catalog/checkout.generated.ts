@@ -245,6 +245,8 @@ export const CHECKOUT_FORM_DOCUMENT = {
         "name": "tinh_thanh",
         "label": "Tỉnh / Thành phố",
         "description": "",
+        "requiredText": "",
+        "invalidText": "",
         "required": true,
         "showLabel": true,
         "mapTo": "customer.state",
@@ -288,6 +290,8 @@ export const CHECKOUT_FORM_DOCUMENT = {
         "name": "phuong_xa",
         "label": "Phường / Xã",
         "description": "",
+        "requiredText": "",
+        "invalidText": "",
         "required": true,
         "showLabel": true,
         "mapTo": "customer.ward",
@@ -331,6 +335,8 @@ export const CHECKOUT_FORM_DOCUMENT = {
         "name": "dia_chi",
         "label": "Số nhà, tên đường",
         "description": "",
+        "requiredText": "",
+        "invalidText": "",
         "required": true,
         "showLabel": true,
         "mapTo": "customer.address",
@@ -456,6 +462,7 @@ export const CHECKOUT_FORM_DOCUMENT = {
         "name": "payment_method",
         "label": "Phương thức thanh toán",
         "description": "",
+        "requiredText": "",
         "required": true,
         "showLabel": true,
         "mapTo": "order.paymentMethod",
@@ -753,6 +760,762 @@ export const CHECKOUT_FORM_DOCUMENT = {
       "specials": {
         "text": "Đặt hàng",
         "submittingText": "Đang gửi…"
+      },
+      "responsive": {},
+      "events": [],
+      "bindings": []
+    }
+  }
+};
+
+/** The same form with its seed copy in English — what an `en` site's editor would place. */
+export const CHECKOUT_FORM_DOCUMENT_EN = {
+  "root_node_id": "ckf_1",
+  "nodes": {
+    "ckf_1": {
+      "id": "ckf_1",
+      "data": {
+        "type": "form",
+        "parent": null,
+        "nodes": [
+          "ckf_2",
+          "ckf_3",
+          "ckf_4",
+          "ckf_5",
+          "ckf_6",
+          "ckf_7",
+          "ckf_8",
+          "ckf_9",
+          "ckf_10",
+          "ckf_11",
+          "ckf_12",
+          "ckf_13",
+          "ckf_14",
+          "ckf_15",
+          "ckf_16",
+          "ckf_17",
+          "ckf_18"
+        ],
+        "isCanvas": false,
+        "hidden": false,
+        "custom": {}
+      },
+      "style": {
+        "display": "flex",
+        "flexDirection": "column",
+        "width": "100%",
+        "height": "fit-content",
+        "gap": "16px"
+      },
+      "config": {},
+      "specials": {
+        "formId": "",
+        "segmentId": "",
+        "formRules": "[{\"id\":\"rule_vat\",\"join\":\"and\",\"conditions\":[{\"field\":\"xuat_hoa_don_vat\",\"op\":\"empty\",\"value\":\"\"}],\"targets\":[{\"field\":\"vat_tax_code\",\"action\":\"hidden\"},{\"field\":\"vat_company\",\"action\":\"hidden\"},{\"field\":\"vat_address\",\"action\":\"hidden\"},{\"field\":\"vat_email\",\"action\":\"hidden\"}]}]"
+      },
+      "responsive": {},
+      "events": [],
+      "bindings": []
+    },
+    "ckf_2": {
+      "id": "ckf_2",
+      "data": {
+        "type": "form-title",
+        "parent": "ckf_1",
+        "nodes": [],
+        "isCanvas": false,
+        "hidden": false,
+        "custom": {}
+      },
+      "style": {
+        "width": "100%",
+        "height": "fit-content",
+        "textAlign": "left",
+        "lineHeight": "130%",
+        "fontSize": "20px",
+        "fontWeight": "600",
+        "color": "var(--wb-sc-heading, #171717)"
+      },
+      "config": {},
+      "specials": {
+        "htmlTag": "h3",
+        "text": "Checkout"
+      },
+      "responsive": {
+        "mobile": {
+          "style": {
+            "fontSize": "18px"
+          }
+        }
+      },
+      "events": [],
+      "bindings": []
+    },
+    "ckf_3": {
+      "id": "ckf_3",
+      "data": {
+        "type": "form-text",
+        "parent": "ckf_1",
+        "nodes": [],
+        "isCanvas": false,
+        "hidden": false,
+        "custom": {}
+      },
+      "style": {
+        "width": "100%"
+      },
+      "config": {
+        "iconPosition": "left"
+      },
+      "specials": {
+        "showIcon": false,
+        "iconName": "",
+        "name": "full_name",
+        "label": "Full name",
+        "placeholder": "",
+        "description": "",
+        "required": true,
+        "showLabel": true,
+        "mapTo": "customer.fullName",
+        "prefillValue": "",
+        "urlParam": "",
+        "hideOnPage": false,
+        "multiline": false,
+        "inputType": "text",
+        "limitChars": false,
+        "minChars": 0,
+        "maxChars": 500,
+        "patternPreset": "",
+        "pattern": "",
+        "patternCountries": [],
+        "requiredText": "",
+        "invalidText": ""
+      },
+      "responsive": {},
+      "events": [],
+      "bindings": []
+    },
+    "ckf_4": {
+      "id": "ckf_4",
+      "data": {
+        "type": "form-text",
+        "parent": "ckf_1",
+        "nodes": [],
+        "isCanvas": false,
+        "hidden": false,
+        "custom": {}
+      },
+      "style": {
+        "width": "100%"
+      },
+      "config": {
+        "iconPosition": "left"
+      },
+      "specials": {
+        "showIcon": false,
+        "iconName": "",
+        "name": "phone",
+        "label": "Phone number",
+        "placeholder": "",
+        "description": "",
+        "required": true,
+        "showLabel": true,
+        "mapTo": "customer.phone",
+        "prefillValue": "",
+        "urlParam": "",
+        "hideOnPage": false,
+        "multiline": false,
+        "inputType": "tel",
+        "limitChars": false,
+        "minChars": 0,
+        "maxChars": 500,
+        "patternPreset": "",
+        "pattern": "",
+        "patternCountries": [],
+        "requiredText": "",
+        "invalidText": ""
+      },
+      "responsive": {},
+      "events": [],
+      "bindings": []
+    },
+    "ckf_5": {
+      "id": "ckf_5",
+      "data": {
+        "type": "form-text",
+        "parent": "ckf_1",
+        "nodes": [],
+        "isCanvas": false,
+        "hidden": false,
+        "custom": {}
+      },
+      "style": {
+        "width": "100%"
+      },
+      "config": {
+        "iconPosition": "left"
+      },
+      "specials": {
+        "showIcon": false,
+        "iconName": "",
+        "name": "email",
+        "label": "Email",
+        "placeholder": "",
+        "description": "",
+        "required": false,
+        "showLabel": true,
+        "mapTo": "customer.email",
+        "prefillValue": "",
+        "urlParam": "",
+        "hideOnPage": false,
+        "multiline": false,
+        "inputType": "email",
+        "limitChars": false,
+        "minChars": 0,
+        "maxChars": 500,
+        "patternPreset": "",
+        "pattern": "",
+        "patternCountries": [],
+        "requiredText": "",
+        "invalidText": ""
+      },
+      "responsive": {},
+      "events": [],
+      "bindings": []
+    },
+    "ckf_6": {
+      "id": "ckf_6",
+      "data": {
+        "type": "form-address",
+        "parent": "ckf_1",
+        "nodes": [],
+        "isCanvas": false,
+        "hidden": false,
+        "custom": {}
+      },
+      "style": {
+        "width": "100%"
+      },
+      "config": {},
+      "specials": {
+        "name": "tinh_thanh",
+        "label": "Province / City",
+        "description": "",
+        "requiredText": "",
+        "invalidText": "",
+        "required": true,
+        "showLabel": true,
+        "mapTo": "customer.state",
+        "part": "province",
+        "addressLink": true,
+        "addressGroup": "",
+        "provinceField": "",
+        "allowedCodes": [],
+        "presetCode": "",
+        "copyFrom": "",
+        "sameDefault": true,
+        "placeholder": "Choose a province / city",
+        "provinceLabel": "Province / City",
+        "wardLabel": "Ward / Commune",
+        "detailLabel": "Street address",
+        "provincePlaceholder": "Choose a province / city",
+        "wardPlaceholder": "Choose a ward / commune",
+        "detailPlaceholder": "e.g. 12 Nguyen Hue",
+        "showDetail": true,
+        "country": "VN"
+      },
+      "responsive": {},
+      "events": [],
+      "bindings": []
+    },
+    "ckf_7": {
+      "id": "ckf_7",
+      "data": {
+        "type": "form-address",
+        "parent": "ckf_1",
+        "nodes": [],
+        "isCanvas": false,
+        "hidden": false,
+        "custom": {}
+      },
+      "style": {
+        "width": "100%"
+      },
+      "config": {},
+      "specials": {
+        "name": "phuong_xa",
+        "label": "Ward / Commune",
+        "description": "",
+        "requiredText": "",
+        "invalidText": "",
+        "required": true,
+        "showLabel": true,
+        "mapTo": "customer.ward",
+        "part": "ward",
+        "addressLink": true,
+        "addressGroup": "",
+        "provinceField": "",
+        "allowedCodes": [],
+        "presetCode": "",
+        "copyFrom": "",
+        "sameDefault": true,
+        "placeholder": "Choose a ward / commune",
+        "provinceLabel": "Province / City",
+        "wardLabel": "Ward / Commune",
+        "detailLabel": "Street address",
+        "provincePlaceholder": "Choose a province / city",
+        "wardPlaceholder": "Choose a ward / commune",
+        "detailPlaceholder": "e.g. 12 Nguyen Hue",
+        "showDetail": true,
+        "country": "VN"
+      },
+      "responsive": {},
+      "events": [],
+      "bindings": []
+    },
+    "ckf_8": {
+      "id": "ckf_8",
+      "data": {
+        "type": "form-address",
+        "parent": "ckf_1",
+        "nodes": [],
+        "isCanvas": false,
+        "hidden": false,
+        "custom": {}
+      },
+      "style": {
+        "width": "100%"
+      },
+      "config": {},
+      "specials": {
+        "name": "dia_chi",
+        "label": "Street address",
+        "description": "",
+        "requiredText": "",
+        "invalidText": "",
+        "required": true,
+        "showLabel": true,
+        "mapTo": "customer.address",
+        "part": "street",
+        "addressLink": true,
+        "addressGroup": "",
+        "provinceField": "",
+        "allowedCodes": [],
+        "presetCode": "",
+        "copyFrom": "",
+        "sameDefault": true,
+        "placeholder": "e.g. 12 Nguyen Hue",
+        "provinceLabel": "Province / City",
+        "wardLabel": "Ward / Commune",
+        "detailLabel": "Street address",
+        "provincePlaceholder": "Choose a province / city",
+        "wardPlaceholder": "Choose a ward / commune",
+        "detailPlaceholder": "e.g. 12 Nguyen Hue",
+        "showDetail": true,
+        "country": "VN"
+      },
+      "responsive": {},
+      "events": [],
+      "bindings": []
+    },
+    "ckf_9": {
+      "id": "ckf_9",
+      "data": {
+        "type": "form-select",
+        "parent": "ckf_1",
+        "nodes": [],
+        "isCanvas": false,
+        "hidden": false,
+        "custom": {}
+      },
+      "style": {
+        "width": "100%"
+      },
+      "config": {
+        "optionSource": "manual",
+        "recordCollectionId": "",
+        "recordLabelField": "",
+        "recordParentField": "",
+        "recordParentNode": ""
+      },
+      "specials": {
+        "name": "shipping_method",
+        "label": "Shipping method",
+        "description": "",
+        "required": false,
+        "showLabel": true,
+        "mapTo": "order.shippingMethod",
+        "options": [],
+        "defaultValue": "",
+        "requiredText": "",
+        "invalidText": "",
+        "placeholder": "Choose a shipping method",
+        "urlParam": ""
+      },
+      "responsive": {},
+      "events": [],
+      "bindings": []
+    },
+    "ckf_10": {
+      "id": "ckf_10",
+      "data": {
+        "type": "form-text",
+        "parent": "ckf_1",
+        "nodes": [],
+        "isCanvas": false,
+        "hidden": false,
+        "custom": {}
+      },
+      "style": {
+        "width": "100%"
+      },
+      "config": {
+        "iconPosition": "left"
+      },
+      "specials": {
+        "showIcon": false,
+        "iconName": "",
+        "name": "discount_code",
+        "label": "Discount code",
+        "placeholder": "Enter a code if you have one",
+        "description": "",
+        "required": false,
+        "showLabel": true,
+        "mapTo": "order.discountCode",
+        "prefillValue": "",
+        "urlParam": "",
+        "hideOnPage": false,
+        "multiline": false,
+        "inputType": "text",
+        "limitChars": false,
+        "minChars": 0,
+        "maxChars": 500,
+        "patternPreset": "",
+        "pattern": "",
+        "patternCountries": [],
+        "requiredText": "",
+        "invalidText": ""
+      },
+      "responsive": {},
+      "events": [],
+      "bindings": []
+    },
+    "ckf_11": {
+      "id": "ckf_11",
+      "data": {
+        "type": "form-payment",
+        "parent": "ckf_1",
+        "nodes": [],
+        "isCanvas": false,
+        "hidden": false,
+        "custom": {}
+      },
+      "style": {
+        "width": "100%"
+      },
+      "config": {},
+      "specials": {
+        "name": "payment_method",
+        "label": "Payment method",
+        "description": "",
+        "requiredText": "",
+        "required": true,
+        "showLabel": true,
+        "mapTo": "order.paymentMethod",
+        "methods": [],
+        "defaultValue": "",
+        "showLogos": true,
+        "logoShape": "auto",
+        "showMarker": true
+      },
+      "responsive": {},
+      "events": [],
+      "bindings": []
+    },
+    "ckf_12": {
+      "id": "ckf_12",
+      "data": {
+        "type": "form-checkbox",
+        "parent": "ckf_1",
+        "nodes": [],
+        "isCanvas": false,
+        "hidden": false,
+        "custom": {}
+      },
+      "style": {
+        "width": "100%"
+      },
+      "config": {
+        "columns": 1,
+        "optionSource": "manual",
+        "recordCollectionId": "",
+        "recordLabelField": ""
+      },
+      "specials": {
+        "name": "xuat_hoa_don_vat",
+        "label": "Issue a VAT invoice",
+        "description": "",
+        "required": false,
+        "showLabel": false,
+        "mapTo": "",
+        "options": [
+          "Issue a VAT invoice"
+        ],
+        "defaultValue": "",
+        "requiredText": "",
+        "invalidText": "",
+        "minChecked": 0,
+        "maxChecked": 0
+      },
+      "responsive": {},
+      "events": [],
+      "bindings": []
+    },
+    "ckf_13": {
+      "id": "ckf_13",
+      "data": {
+        "type": "form-text",
+        "parent": "ckf_1",
+        "nodes": [],
+        "isCanvas": false,
+        "hidden": false,
+        "custom": {}
+      },
+      "style": {
+        "width": "100%"
+      },
+      "config": {
+        "iconPosition": "left"
+      },
+      "specials": {
+        "showIcon": false,
+        "iconName": "",
+        "name": "vat_tax_code",
+        "label": "Tax code",
+        "placeholder": "e.g. 0312345678 or 0312345678-001",
+        "description": "",
+        "required": true,
+        "showLabel": true,
+        "mapTo": "order.vatTaxCode",
+        "prefillValue": "",
+        "urlParam": "",
+        "hideOnPage": false,
+        "multiline": false,
+        "inputType": "text",
+        "limitChars": false,
+        "minChars": 0,
+        "maxChars": 500,
+        "patternPreset": "",
+        "pattern": "",
+        "patternCountries": [],
+        "requiredText": "",
+        "invalidText": ""
+      },
+      "responsive": {},
+      "events": [],
+      "bindings": []
+    },
+    "ckf_14": {
+      "id": "ckf_14",
+      "data": {
+        "type": "form-text",
+        "parent": "ckf_1",
+        "nodes": [],
+        "isCanvas": false,
+        "hidden": false,
+        "custom": {}
+      },
+      "style": {
+        "width": "100%"
+      },
+      "config": {
+        "iconPosition": "left"
+      },
+      "specials": {
+        "showIcon": false,
+        "iconName": "",
+        "name": "vat_company",
+        "label": "Company name",
+        "placeholder": "",
+        "description": "",
+        "required": true,
+        "showLabel": true,
+        "mapTo": "order.vatCompany",
+        "prefillValue": "",
+        "urlParam": "",
+        "hideOnPage": false,
+        "multiline": false,
+        "inputType": "text",
+        "limitChars": false,
+        "minChars": 0,
+        "maxChars": 500,
+        "patternPreset": "",
+        "pattern": "",
+        "patternCountries": [],
+        "requiredText": "",
+        "invalidText": ""
+      },
+      "responsive": {},
+      "events": [],
+      "bindings": []
+    },
+    "ckf_15": {
+      "id": "ckf_15",
+      "data": {
+        "type": "form-text",
+        "parent": "ckf_1",
+        "nodes": [],
+        "isCanvas": false,
+        "hidden": false,
+        "custom": {}
+      },
+      "style": {
+        "width": "100%"
+      },
+      "config": {
+        "iconPosition": "left"
+      },
+      "specials": {
+        "showIcon": false,
+        "iconName": "",
+        "name": "vat_address",
+        "label": "Company address",
+        "placeholder": "",
+        "description": "",
+        "required": true,
+        "showLabel": true,
+        "mapTo": "order.vatAddress",
+        "prefillValue": "",
+        "urlParam": "",
+        "hideOnPage": false,
+        "multiline": false,
+        "inputType": "text",
+        "limitChars": false,
+        "minChars": 0,
+        "maxChars": 500,
+        "patternPreset": "",
+        "pattern": "",
+        "patternCountries": [],
+        "requiredText": "",
+        "invalidText": ""
+      },
+      "responsive": {},
+      "events": [],
+      "bindings": []
+    },
+    "ckf_16": {
+      "id": "ckf_16",
+      "data": {
+        "type": "form-text",
+        "parent": "ckf_1",
+        "nodes": [],
+        "isCanvas": false,
+        "hidden": false,
+        "custom": {}
+      },
+      "style": {
+        "width": "100%"
+      },
+      "config": {
+        "iconPosition": "left"
+      },
+      "specials": {
+        "showIcon": false,
+        "iconName": "",
+        "name": "vat_email",
+        "label": "Invoice email",
+        "placeholder": "",
+        "description": "",
+        "required": false,
+        "showLabel": true,
+        "mapTo": "order.vatEmail",
+        "prefillValue": "",
+        "urlParam": "",
+        "hideOnPage": false,
+        "multiline": false,
+        "inputType": "email",
+        "limitChars": false,
+        "minChars": 0,
+        "maxChars": 500,
+        "patternPreset": "",
+        "pattern": "",
+        "patternCountries": [],
+        "requiredText": "",
+        "invalidText": ""
+      },
+      "responsive": {},
+      "events": [],
+      "bindings": []
+    },
+    "ckf_17": {
+      "id": "ckf_17",
+      "data": {
+        "type": "form-text",
+        "parent": "ckf_1",
+        "nodes": [],
+        "isCanvas": false,
+        "hidden": false,
+        "custom": {}
+      },
+      "style": {
+        "width": "100%"
+      },
+      "config": {
+        "iconPosition": "left"
+      },
+      "specials": {
+        "showIcon": false,
+        "iconName": "",
+        "name": "order_note",
+        "label": "Note",
+        "placeholder": "",
+        "description": "",
+        "required": false,
+        "showLabel": true,
+        "mapTo": "order.note",
+        "prefillValue": "",
+        "urlParam": "",
+        "hideOnPage": false,
+        "multiline": true,
+        "inputType": "text",
+        "limitChars": false,
+        "minChars": 0,
+        "maxChars": 500,
+        "patternPreset": "",
+        "pattern": "",
+        "patternCountries": [],
+        "requiredText": "",
+        "invalidText": ""
+      },
+      "responsive": {},
+      "events": [],
+      "bindings": []
+    },
+    "ckf_18": {
+      "id": "ckf_18",
+      "data": {
+        "type": "form-submit",
+        "parent": "ckf_1",
+        "nodes": [],
+        "isCanvas": false,
+        "hidden": false,
+        "custom": {}
+      },
+      "style": {
+        "width": "100%",
+        "padding": "10px 16px",
+        "backgroundColor": "var(--wb-sc-buttonBg, #171717)",
+        "color": "var(--wb-sc-buttonText, #ffffff)",
+        "borderRadius": "6px"
+      },
+      "config": {
+        "iconSize": 20,
+        "iconGap": 8,
+        "iconPosition": "left"
+      },
+      "specials": {
+        "text": "Place order",
+        "submittingText": "Sending…"
       },
       "responsive": {},
       "events": [],
@@ -1379,6 +2142,285 @@ export const FORM_TEMPLATES = {
           "bindings": []
         }
       }
+    },
+    "document_en": {
+      "root_node_id": "fcon_1",
+      "nodes": {
+        "fcon_1": {
+          "id": "fcon_1",
+          "data": {
+            "type": "form",
+            "parent": null,
+            "nodes": [
+              "fcon_2",
+              "fcon_3",
+              "fcon_4",
+              "fcon_5",
+              "fcon_6",
+              "fcon_7"
+            ],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "display": "flex",
+            "flexDirection": "column",
+            "width": "100%",
+            "height": "fit-content",
+            "gap": "16px"
+          },
+          "config": {},
+          "specials": {
+            "formId": "",
+            "segmentId": "",
+            "formRules": ""
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "fcon_2": {
+          "id": "fcon_2",
+          "data": {
+            "type": "form-title",
+            "parent": "fcon_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%",
+            "height": "fit-content",
+            "textAlign": "left",
+            "lineHeight": "130%",
+            "fontSize": "20px",
+            "fontWeight": "600",
+            "color": "var(--wb-sc-heading, #171717)"
+          },
+          "config": {},
+          "specials": {
+            "htmlTag": "h3",
+            "text": "Contact us"
+          },
+          "responsive": {
+            "mobile": {
+              "style": {
+                "fontSize": "18px"
+              }
+            }
+          },
+          "events": [],
+          "bindings": []
+        },
+        "fcon_3": {
+          "id": "fcon_3",
+          "data": {
+            "type": "form-text",
+            "parent": "fcon_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%"
+          },
+          "config": {
+            "iconPosition": "left"
+          },
+          "specials": {
+            "showIcon": false,
+            "iconName": "",
+            "name": "full_name",
+            "label": "Full name",
+            "placeholder": "",
+            "description": "",
+            "required": true,
+            "showLabel": true,
+            "mapTo": "customer.fullName",
+            "prefillValue": "",
+            "urlParam": "",
+            "hideOnPage": false,
+            "multiline": false,
+            "inputType": "text",
+            "limitChars": false,
+            "minChars": 0,
+            "maxChars": 500,
+            "patternPreset": "",
+            "pattern": "",
+            "patternCountries": [],
+            "requiredText": "",
+            "invalidText": ""
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "fcon_4": {
+          "id": "fcon_4",
+          "data": {
+            "type": "form-text",
+            "parent": "fcon_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%"
+          },
+          "config": {
+            "iconPosition": "left"
+          },
+          "specials": {
+            "showIcon": false,
+            "iconName": "",
+            "name": "email",
+            "label": "Email",
+            "placeholder": "",
+            "description": "",
+            "required": true,
+            "showLabel": true,
+            "mapTo": "customer.email",
+            "prefillValue": "",
+            "urlParam": "",
+            "hideOnPage": false,
+            "multiline": false,
+            "inputType": "email",
+            "limitChars": false,
+            "minChars": 0,
+            "maxChars": 500,
+            "patternPreset": "",
+            "pattern": "",
+            "patternCountries": [],
+            "requiredText": "",
+            "invalidText": ""
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "fcon_5": {
+          "id": "fcon_5",
+          "data": {
+            "type": "form-text",
+            "parent": "fcon_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%"
+          },
+          "config": {
+            "iconPosition": "left"
+          },
+          "specials": {
+            "showIcon": false,
+            "iconName": "",
+            "name": "phone",
+            "label": "Phone number",
+            "placeholder": "",
+            "description": "",
+            "required": false,
+            "showLabel": true,
+            "mapTo": "customer.phone",
+            "prefillValue": "",
+            "urlParam": "",
+            "hideOnPage": false,
+            "multiline": false,
+            "inputType": "tel",
+            "limitChars": false,
+            "minChars": 0,
+            "maxChars": 500,
+            "patternPreset": "",
+            "pattern": "",
+            "patternCountries": [],
+            "requiredText": "",
+            "invalidText": ""
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "fcon_6": {
+          "id": "fcon_6",
+          "data": {
+            "type": "form-text",
+            "parent": "fcon_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%"
+          },
+          "config": {
+            "iconPosition": "left"
+          },
+          "specials": {
+            "showIcon": false,
+            "iconName": "",
+            "name": "notes",
+            "label": "Message",
+            "placeholder": "",
+            "description": "",
+            "required": false,
+            "showLabel": true,
+            "mapTo": "customer.notes",
+            "prefillValue": "",
+            "urlParam": "",
+            "hideOnPage": false,
+            "multiline": true,
+            "inputType": "text",
+            "limitChars": false,
+            "minChars": 0,
+            "maxChars": 500,
+            "patternPreset": "",
+            "pattern": "",
+            "patternCountries": [],
+            "requiredText": "",
+            "invalidText": ""
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "fcon_7": {
+          "id": "fcon_7",
+          "data": {
+            "type": "form-submit",
+            "parent": "fcon_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%",
+            "padding": "10px 16px",
+            "backgroundColor": "var(--wb-sc-buttonBg, #171717)",
+            "color": "var(--wb-sc-buttonText, #ffffff)",
+            "borderRadius": "6px"
+          },
+          "config": {
+            "iconSize": 20,
+            "iconGap": 8,
+            "iconPosition": "left"
+          },
+          "specials": {
+            "text": "Submit",
+            "submittingText": "Sending…"
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        }
+      }
     }
   },
   "subscribe": {
@@ -1549,6 +2591,177 @@ export const FORM_TEMPLATES = {
           "specials": {
             "text": "Đăng ký",
             "submittingText": "Đang gửi…"
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        }
+      }
+    },
+    "document_en": {
+      "root_node_id": "fsub_1",
+      "nodes": {
+        "fsub_1": {
+          "id": "fsub_1",
+          "data": {
+            "type": "form",
+            "parent": null,
+            "nodes": [
+              "fsub_2",
+              "fsub_3",
+              "fsub_4",
+              "fsub_5"
+            ],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "display": "flex",
+            "flexDirection": "column",
+            "width": "100%",
+            "height": "fit-content",
+            "gap": "16px"
+          },
+          "config": {},
+          "specials": {
+            "formId": "",
+            "segmentId": "",
+            "formRules": ""
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "fsub_2": {
+          "id": "fsub_2",
+          "data": {
+            "type": "form-title",
+            "parent": "fsub_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%",
+            "height": "fit-content",
+            "textAlign": "left",
+            "lineHeight": "130%",
+            "fontSize": "20px",
+            "fontWeight": "600",
+            "color": "var(--wb-sc-heading, #171717)"
+          },
+          "config": {},
+          "specials": {
+            "htmlTag": "h3",
+            "text": "Subscribe to our newsletter"
+          },
+          "responsive": {
+            "mobile": {
+              "style": {
+                "fontSize": "18px"
+              }
+            }
+          },
+          "events": [],
+          "bindings": []
+        },
+        "fsub_3": {
+          "id": "fsub_3",
+          "data": {
+            "type": "form-paragraph",
+            "parent": "fsub_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%",
+            "height": "fit-content",
+            "textAlign": "left",
+            "lineHeight": "150%",
+            "fontSize": "14px",
+            "color": "#525252"
+          },
+          "config": {},
+          "specials": {
+            "text": "Get promotions and news about new products by email."
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "fsub_4": {
+          "id": "fsub_4",
+          "data": {
+            "type": "form-text",
+            "parent": "fsub_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%"
+          },
+          "config": {
+            "iconPosition": "left"
+          },
+          "specials": {
+            "showIcon": false,
+            "iconName": "",
+            "name": "email",
+            "label": "Email",
+            "placeholder": "Your email",
+            "description": "",
+            "required": true,
+            "showLabel": false,
+            "mapTo": "customer.email",
+            "prefillValue": "",
+            "urlParam": "",
+            "hideOnPage": false,
+            "multiline": false,
+            "inputType": "email",
+            "limitChars": false,
+            "minChars": 0,
+            "maxChars": 500,
+            "patternPreset": "",
+            "pattern": "",
+            "patternCountries": [],
+            "requiredText": "",
+            "invalidText": ""
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "fsub_5": {
+          "id": "fsub_5",
+          "data": {
+            "type": "form-submit",
+            "parent": "fsub_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%",
+            "padding": "10px 16px",
+            "backgroundColor": "var(--wb-sc-buttonBg, #171717)",
+            "color": "var(--wb-sc-buttonText, #ffffff)",
+            "borderRadius": "6px"
+          },
+          "config": {
+            "iconSize": 20,
+            "iconGap": 8,
+            "iconPosition": "left"
+          },
+          "specials": {
+            "text": "Sign up",
+            "submittingText": "Sending…"
           },
           "responsive": {},
           "events": [],
@@ -1741,6 +2954,8 @@ export const FORM_TEMPLATES = {
             "name": "tinh_thanh",
             "label": "Tỉnh / Thành phố",
             "description": "",
+            "requiredText": "",
+            "invalidText": "",
             "required": true,
             "showLabel": true,
             "mapTo": "customer.state",
@@ -1784,6 +2999,8 @@ export const FORM_TEMPLATES = {
             "name": "phuong_xa",
             "label": "Phường / Xã",
             "description": "",
+            "requiredText": "",
+            "invalidText": "",
             "required": true,
             "showLabel": true,
             "mapTo": "customer.ward",
@@ -1827,6 +3044,8 @@ export const FORM_TEMPLATES = {
             "name": "dia_chi",
             "label": "Số nhà, tên đường",
             "description": "",
+            "requiredText": "",
+            "invalidText": "",
             "required": true,
             "showLabel": true,
             "mapTo": "customer.address",
@@ -1961,6 +3180,419 @@ export const FORM_TEMPLATES = {
           "specials": {
             "text": "Đặt hàng",
             "submittingText": "Đang gửi…"
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        }
+      }
+    },
+    "document_en": {
+      "root_node_id": "ford_1",
+      "nodes": {
+        "ford_1": {
+          "id": "ford_1",
+          "data": {
+            "type": "form",
+            "parent": null,
+            "nodes": [
+              "ford_2",
+              "ford_3",
+              "ford_4",
+              "ford_5",
+              "ford_6",
+              "ford_7",
+              "ford_8",
+              "ford_9",
+              "ford_10"
+            ],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "display": "flex",
+            "flexDirection": "column",
+            "width": "100%",
+            "height": "fit-content",
+            "gap": "16px"
+          },
+          "config": {},
+          "specials": {
+            "formId": "",
+            "segmentId": "",
+            "formRules": ""
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "ford_2": {
+          "id": "ford_2",
+          "data": {
+            "type": "form-title",
+            "parent": "ford_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%",
+            "height": "fit-content",
+            "textAlign": "left",
+            "lineHeight": "130%",
+            "fontSize": "20px",
+            "fontWeight": "600",
+            "color": "var(--wb-sc-heading, #171717)"
+          },
+          "config": {},
+          "specials": {
+            "htmlTag": "h3",
+            "text": "Place order"
+          },
+          "responsive": {
+            "mobile": {
+              "style": {
+                "fontSize": "18px"
+              }
+            }
+          },
+          "events": [],
+          "bindings": []
+        },
+        "ford_3": {
+          "id": "ford_3",
+          "data": {
+            "type": "form-text",
+            "parent": "ford_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%"
+          },
+          "config": {
+            "iconPosition": "left"
+          },
+          "specials": {
+            "showIcon": false,
+            "iconName": "",
+            "name": "full_name",
+            "label": "Full name",
+            "placeholder": "",
+            "description": "",
+            "required": true,
+            "showLabel": true,
+            "mapTo": "customer.fullName",
+            "prefillValue": "",
+            "urlParam": "",
+            "hideOnPage": false,
+            "multiline": false,
+            "inputType": "text",
+            "limitChars": false,
+            "minChars": 0,
+            "maxChars": 500,
+            "patternPreset": "",
+            "pattern": "",
+            "patternCountries": [],
+            "requiredText": "",
+            "invalidText": ""
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "ford_4": {
+          "id": "ford_4",
+          "data": {
+            "type": "form-text",
+            "parent": "ford_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%"
+          },
+          "config": {
+            "iconPosition": "left"
+          },
+          "specials": {
+            "showIcon": false,
+            "iconName": "",
+            "name": "phone",
+            "label": "Phone number",
+            "placeholder": "",
+            "description": "",
+            "required": true,
+            "showLabel": true,
+            "mapTo": "customer.phone",
+            "prefillValue": "",
+            "urlParam": "",
+            "hideOnPage": false,
+            "multiline": false,
+            "inputType": "tel",
+            "limitChars": false,
+            "minChars": 0,
+            "maxChars": 500,
+            "patternPreset": "",
+            "pattern": "",
+            "patternCountries": [],
+            "requiredText": "",
+            "invalidText": ""
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "ford_5": {
+          "id": "ford_5",
+          "data": {
+            "type": "form-address",
+            "parent": "ford_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%"
+          },
+          "config": {},
+          "specials": {
+            "name": "tinh_thanh",
+            "label": "Province / City",
+            "description": "",
+            "requiredText": "",
+            "invalidText": "",
+            "required": true,
+            "showLabel": true,
+            "mapTo": "customer.state",
+            "part": "province",
+            "addressLink": true,
+            "addressGroup": "",
+            "provinceField": "",
+            "allowedCodes": [],
+            "presetCode": "",
+            "copyFrom": "",
+            "sameDefault": true,
+            "placeholder": "Choose a province / city",
+            "provinceLabel": "Province / City",
+            "wardLabel": "Ward / Commune",
+            "detailLabel": "Street address",
+            "provincePlaceholder": "Choose a province / city",
+            "wardPlaceholder": "Choose a ward / commune",
+            "detailPlaceholder": "e.g. 12 Nguyen Hue",
+            "showDetail": true,
+            "country": "VN"
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "ford_6": {
+          "id": "ford_6",
+          "data": {
+            "type": "form-address",
+            "parent": "ford_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%"
+          },
+          "config": {},
+          "specials": {
+            "name": "phuong_xa",
+            "label": "Ward / Commune",
+            "description": "",
+            "requiredText": "",
+            "invalidText": "",
+            "required": true,
+            "showLabel": true,
+            "mapTo": "customer.ward",
+            "part": "ward",
+            "addressLink": true,
+            "addressGroup": "",
+            "provinceField": "",
+            "allowedCodes": [],
+            "presetCode": "",
+            "copyFrom": "",
+            "sameDefault": true,
+            "placeholder": "Choose a ward / commune",
+            "provinceLabel": "Province / City",
+            "wardLabel": "Ward / Commune",
+            "detailLabel": "Street address",
+            "provincePlaceholder": "Choose a province / city",
+            "wardPlaceholder": "Choose a ward / commune",
+            "detailPlaceholder": "e.g. 12 Nguyen Hue",
+            "showDetail": true,
+            "country": "VN"
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "ford_7": {
+          "id": "ford_7",
+          "data": {
+            "type": "form-address",
+            "parent": "ford_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%"
+          },
+          "config": {},
+          "specials": {
+            "name": "dia_chi",
+            "label": "Street address",
+            "description": "",
+            "requiredText": "",
+            "invalidText": "",
+            "required": true,
+            "showLabel": true,
+            "mapTo": "customer.address",
+            "part": "street",
+            "addressLink": true,
+            "addressGroup": "",
+            "provinceField": "",
+            "allowedCodes": [],
+            "presetCode": "",
+            "copyFrom": "",
+            "sameDefault": true,
+            "placeholder": "e.g. 12 Nguyen Hue",
+            "provinceLabel": "Province / City",
+            "wardLabel": "Ward / Commune",
+            "detailLabel": "Street address",
+            "provincePlaceholder": "Choose a province / city",
+            "wardPlaceholder": "Choose a ward / commune",
+            "detailPlaceholder": "e.g. 12 Nguyen Hue",
+            "showDetail": true,
+            "country": "VN"
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "ford_8": {
+          "id": "ford_8",
+          "data": {
+            "type": "form-number",
+            "parent": "ford_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%"
+          },
+          "config": {
+            "iconPosition": "left"
+          },
+          "specials": {
+            "showIcon": false,
+            "iconName": "",
+            "name": "quantity",
+            "label": "Quantity",
+            "placeholder": "",
+            "description": "",
+            "required": true,
+            "showLabel": true,
+            "requiredText": "",
+            "invalidText": "",
+            "mapTo": "order.quantity",
+            "prefillValue": "",
+            "urlParam": "",
+            "hideOnPage": false,
+            "setRange": true,
+            "minValue": 1,
+            "maxValue": 500,
+            "step": 0
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "ford_9": {
+          "id": "ford_9",
+          "data": {
+            "type": "form-text",
+            "parent": "ford_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%"
+          },
+          "config": {
+            "iconPosition": "left"
+          },
+          "specials": {
+            "showIcon": false,
+            "iconName": "",
+            "name": "order_note",
+            "label": "Note",
+            "placeholder": "",
+            "description": "",
+            "required": false,
+            "showLabel": true,
+            "mapTo": "order.note",
+            "prefillValue": "",
+            "urlParam": "",
+            "hideOnPage": false,
+            "multiline": true,
+            "inputType": "text",
+            "limitChars": false,
+            "minChars": 0,
+            "maxChars": 500,
+            "patternPreset": "",
+            "pattern": "",
+            "patternCountries": [],
+            "requiredText": "",
+            "invalidText": ""
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "ford_10": {
+          "id": "ford_10",
+          "data": {
+            "type": "form-submit",
+            "parent": "ford_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%",
+            "padding": "10px 16px",
+            "backgroundColor": "var(--wb-sc-buttonBg, #171717)",
+            "color": "var(--wb-sc-buttonText, #ffffff)",
+            "borderRadius": "6px"
+          },
+          "config": {
+            "iconSize": 20,
+            "iconGap": 8,
+            "iconPosition": "left"
+          },
+          "specials": {
+            "text": "Place order",
+            "submittingText": "Sending…"
           },
           "responsive": {},
           "events": [],
@@ -2207,6 +3839,8 @@ export const FORM_TEMPLATES = {
             "name": "tinh_thanh",
             "label": "Tỉnh / Thành phố",
             "description": "",
+            "requiredText": "",
+            "invalidText": "",
             "required": true,
             "showLabel": true,
             "mapTo": "customer.state",
@@ -2250,6 +3884,8 @@ export const FORM_TEMPLATES = {
             "name": "phuong_xa",
             "label": "Phường / Xã",
             "description": "",
+            "requiredText": "",
+            "invalidText": "",
             "required": true,
             "showLabel": true,
             "mapTo": "customer.ward",
@@ -2293,6 +3929,8 @@ export const FORM_TEMPLATES = {
             "name": "dia_chi",
             "label": "Số nhà, tên đường",
             "description": "",
+            "requiredText": "",
+            "invalidText": "",
             "required": true,
             "showLabel": true,
             "mapTo": "customer.address",
@@ -2418,6 +4056,7 @@ export const FORM_TEMPLATES = {
             "name": "payment_method",
             "label": "Phương thức thanh toán",
             "description": "",
+            "requiredText": "",
             "required": true,
             "showLabel": true,
             "mapTo": "order.paymentMethod",
@@ -2721,6 +4360,760 @@ export const FORM_TEMPLATES = {
           "bindings": []
         }
       }
+    },
+    "document_en": {
+      "root_node_id": "fche_1",
+      "nodes": {
+        "fche_1": {
+          "id": "fche_1",
+          "data": {
+            "type": "form",
+            "parent": null,
+            "nodes": [
+              "fche_2",
+              "fche_3",
+              "fche_4",
+              "fche_5",
+              "fche_6",
+              "fche_7",
+              "fche_8",
+              "fche_9",
+              "fche_10",
+              "fche_11",
+              "fche_12",
+              "fche_13",
+              "fche_14",
+              "fche_15",
+              "fche_16",
+              "fche_17",
+              "fche_18"
+            ],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "display": "flex",
+            "flexDirection": "column",
+            "width": "100%",
+            "height": "fit-content",
+            "gap": "16px"
+          },
+          "config": {},
+          "specials": {
+            "formId": "",
+            "segmentId": "",
+            "formRules": "[{\"id\":\"rule_vat\",\"join\":\"and\",\"conditions\":[{\"field\":\"xuat_hoa_don_vat\",\"op\":\"empty\",\"value\":\"\"}],\"targets\":[{\"field\":\"vat_tax_code\",\"action\":\"hidden\"},{\"field\":\"vat_company\",\"action\":\"hidden\"},{\"field\":\"vat_address\",\"action\":\"hidden\"},{\"field\":\"vat_email\",\"action\":\"hidden\"}]}]"
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "fche_2": {
+          "id": "fche_2",
+          "data": {
+            "type": "form-title",
+            "parent": "fche_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%",
+            "height": "fit-content",
+            "textAlign": "left",
+            "lineHeight": "130%",
+            "fontSize": "20px",
+            "fontWeight": "600",
+            "color": "var(--wb-sc-heading, #171717)"
+          },
+          "config": {},
+          "specials": {
+            "htmlTag": "h3",
+            "text": "Checkout"
+          },
+          "responsive": {
+            "mobile": {
+              "style": {
+                "fontSize": "18px"
+              }
+            }
+          },
+          "events": [],
+          "bindings": []
+        },
+        "fche_3": {
+          "id": "fche_3",
+          "data": {
+            "type": "form-text",
+            "parent": "fche_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%"
+          },
+          "config": {
+            "iconPosition": "left"
+          },
+          "specials": {
+            "showIcon": false,
+            "iconName": "",
+            "name": "full_name",
+            "label": "Full name",
+            "placeholder": "",
+            "description": "",
+            "required": true,
+            "showLabel": true,
+            "mapTo": "customer.fullName",
+            "prefillValue": "",
+            "urlParam": "",
+            "hideOnPage": false,
+            "multiline": false,
+            "inputType": "text",
+            "limitChars": false,
+            "minChars": 0,
+            "maxChars": 500,
+            "patternPreset": "",
+            "pattern": "",
+            "patternCountries": [],
+            "requiredText": "",
+            "invalidText": ""
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "fche_4": {
+          "id": "fche_4",
+          "data": {
+            "type": "form-text",
+            "parent": "fche_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%"
+          },
+          "config": {
+            "iconPosition": "left"
+          },
+          "specials": {
+            "showIcon": false,
+            "iconName": "",
+            "name": "phone",
+            "label": "Phone number",
+            "placeholder": "",
+            "description": "",
+            "required": true,
+            "showLabel": true,
+            "mapTo": "customer.phone",
+            "prefillValue": "",
+            "urlParam": "",
+            "hideOnPage": false,
+            "multiline": false,
+            "inputType": "tel",
+            "limitChars": false,
+            "minChars": 0,
+            "maxChars": 500,
+            "patternPreset": "",
+            "pattern": "",
+            "patternCountries": [],
+            "requiredText": "",
+            "invalidText": ""
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "fche_5": {
+          "id": "fche_5",
+          "data": {
+            "type": "form-text",
+            "parent": "fche_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%"
+          },
+          "config": {
+            "iconPosition": "left"
+          },
+          "specials": {
+            "showIcon": false,
+            "iconName": "",
+            "name": "email",
+            "label": "Email",
+            "placeholder": "",
+            "description": "",
+            "required": false,
+            "showLabel": true,
+            "mapTo": "customer.email",
+            "prefillValue": "",
+            "urlParam": "",
+            "hideOnPage": false,
+            "multiline": false,
+            "inputType": "email",
+            "limitChars": false,
+            "minChars": 0,
+            "maxChars": 500,
+            "patternPreset": "",
+            "pattern": "",
+            "patternCountries": [],
+            "requiredText": "",
+            "invalidText": ""
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "fche_6": {
+          "id": "fche_6",
+          "data": {
+            "type": "form-address",
+            "parent": "fche_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%"
+          },
+          "config": {},
+          "specials": {
+            "name": "tinh_thanh",
+            "label": "Province / City",
+            "description": "",
+            "requiredText": "",
+            "invalidText": "",
+            "required": true,
+            "showLabel": true,
+            "mapTo": "customer.state",
+            "part": "province",
+            "addressLink": true,
+            "addressGroup": "",
+            "provinceField": "",
+            "allowedCodes": [],
+            "presetCode": "",
+            "copyFrom": "",
+            "sameDefault": true,
+            "placeholder": "Choose a province / city",
+            "provinceLabel": "Province / City",
+            "wardLabel": "Ward / Commune",
+            "detailLabel": "Street address",
+            "provincePlaceholder": "Choose a province / city",
+            "wardPlaceholder": "Choose a ward / commune",
+            "detailPlaceholder": "e.g. 12 Nguyen Hue",
+            "showDetail": true,
+            "country": "VN"
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "fche_7": {
+          "id": "fche_7",
+          "data": {
+            "type": "form-address",
+            "parent": "fche_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%"
+          },
+          "config": {},
+          "specials": {
+            "name": "phuong_xa",
+            "label": "Ward / Commune",
+            "description": "",
+            "requiredText": "",
+            "invalidText": "",
+            "required": true,
+            "showLabel": true,
+            "mapTo": "customer.ward",
+            "part": "ward",
+            "addressLink": true,
+            "addressGroup": "",
+            "provinceField": "",
+            "allowedCodes": [],
+            "presetCode": "",
+            "copyFrom": "",
+            "sameDefault": true,
+            "placeholder": "Choose a ward / commune",
+            "provinceLabel": "Province / City",
+            "wardLabel": "Ward / Commune",
+            "detailLabel": "Street address",
+            "provincePlaceholder": "Choose a province / city",
+            "wardPlaceholder": "Choose a ward / commune",
+            "detailPlaceholder": "e.g. 12 Nguyen Hue",
+            "showDetail": true,
+            "country": "VN"
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "fche_8": {
+          "id": "fche_8",
+          "data": {
+            "type": "form-address",
+            "parent": "fche_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%"
+          },
+          "config": {},
+          "specials": {
+            "name": "dia_chi",
+            "label": "Street address",
+            "description": "",
+            "requiredText": "",
+            "invalidText": "",
+            "required": true,
+            "showLabel": true,
+            "mapTo": "customer.address",
+            "part": "street",
+            "addressLink": true,
+            "addressGroup": "",
+            "provinceField": "",
+            "allowedCodes": [],
+            "presetCode": "",
+            "copyFrom": "",
+            "sameDefault": true,
+            "placeholder": "e.g. 12 Nguyen Hue",
+            "provinceLabel": "Province / City",
+            "wardLabel": "Ward / Commune",
+            "detailLabel": "Street address",
+            "provincePlaceholder": "Choose a province / city",
+            "wardPlaceholder": "Choose a ward / commune",
+            "detailPlaceholder": "e.g. 12 Nguyen Hue",
+            "showDetail": true,
+            "country": "VN"
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "fche_9": {
+          "id": "fche_9",
+          "data": {
+            "type": "form-select",
+            "parent": "fche_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%"
+          },
+          "config": {
+            "optionSource": "manual",
+            "recordCollectionId": "",
+            "recordLabelField": "",
+            "recordParentField": "",
+            "recordParentNode": ""
+          },
+          "specials": {
+            "name": "shipping_method",
+            "label": "Shipping method",
+            "description": "",
+            "required": false,
+            "showLabel": true,
+            "mapTo": "order.shippingMethod",
+            "options": [],
+            "defaultValue": "",
+            "requiredText": "",
+            "invalidText": "",
+            "placeholder": "Choose a shipping method",
+            "urlParam": ""
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "fche_10": {
+          "id": "fche_10",
+          "data": {
+            "type": "form-text",
+            "parent": "fche_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%"
+          },
+          "config": {
+            "iconPosition": "left"
+          },
+          "specials": {
+            "showIcon": false,
+            "iconName": "",
+            "name": "discount_code",
+            "label": "Discount code",
+            "placeholder": "Enter a code if you have one",
+            "description": "",
+            "required": false,
+            "showLabel": true,
+            "mapTo": "order.discountCode",
+            "prefillValue": "",
+            "urlParam": "",
+            "hideOnPage": false,
+            "multiline": false,
+            "inputType": "text",
+            "limitChars": false,
+            "minChars": 0,
+            "maxChars": 500,
+            "patternPreset": "",
+            "pattern": "",
+            "patternCountries": [],
+            "requiredText": "",
+            "invalidText": ""
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "fche_11": {
+          "id": "fche_11",
+          "data": {
+            "type": "form-payment",
+            "parent": "fche_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%"
+          },
+          "config": {},
+          "specials": {
+            "name": "payment_method",
+            "label": "Payment method",
+            "description": "",
+            "requiredText": "",
+            "required": true,
+            "showLabel": true,
+            "mapTo": "order.paymentMethod",
+            "methods": [],
+            "defaultValue": "",
+            "showLogos": true,
+            "logoShape": "auto",
+            "showMarker": true
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "fche_12": {
+          "id": "fche_12",
+          "data": {
+            "type": "form-checkbox",
+            "parent": "fche_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%"
+          },
+          "config": {
+            "columns": 1,
+            "optionSource": "manual",
+            "recordCollectionId": "",
+            "recordLabelField": ""
+          },
+          "specials": {
+            "name": "xuat_hoa_don_vat",
+            "label": "Issue a VAT invoice",
+            "description": "",
+            "required": false,
+            "showLabel": false,
+            "mapTo": "",
+            "options": [
+              "Issue a VAT invoice"
+            ],
+            "defaultValue": "",
+            "requiredText": "",
+            "invalidText": "",
+            "minChecked": 0,
+            "maxChecked": 0
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "fche_13": {
+          "id": "fche_13",
+          "data": {
+            "type": "form-text",
+            "parent": "fche_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%"
+          },
+          "config": {
+            "iconPosition": "left"
+          },
+          "specials": {
+            "showIcon": false,
+            "iconName": "",
+            "name": "vat_tax_code",
+            "label": "Tax code",
+            "placeholder": "e.g. 0312345678 or 0312345678-001",
+            "description": "",
+            "required": true,
+            "showLabel": true,
+            "mapTo": "order.vatTaxCode",
+            "prefillValue": "",
+            "urlParam": "",
+            "hideOnPage": false,
+            "multiline": false,
+            "inputType": "text",
+            "limitChars": false,
+            "minChars": 0,
+            "maxChars": 500,
+            "patternPreset": "",
+            "pattern": "",
+            "patternCountries": [],
+            "requiredText": "",
+            "invalidText": ""
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "fche_14": {
+          "id": "fche_14",
+          "data": {
+            "type": "form-text",
+            "parent": "fche_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%"
+          },
+          "config": {
+            "iconPosition": "left"
+          },
+          "specials": {
+            "showIcon": false,
+            "iconName": "",
+            "name": "vat_company",
+            "label": "Company name",
+            "placeholder": "",
+            "description": "",
+            "required": true,
+            "showLabel": true,
+            "mapTo": "order.vatCompany",
+            "prefillValue": "",
+            "urlParam": "",
+            "hideOnPage": false,
+            "multiline": false,
+            "inputType": "text",
+            "limitChars": false,
+            "minChars": 0,
+            "maxChars": 500,
+            "patternPreset": "",
+            "pattern": "",
+            "patternCountries": [],
+            "requiredText": "",
+            "invalidText": ""
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "fche_15": {
+          "id": "fche_15",
+          "data": {
+            "type": "form-text",
+            "parent": "fche_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%"
+          },
+          "config": {
+            "iconPosition": "left"
+          },
+          "specials": {
+            "showIcon": false,
+            "iconName": "",
+            "name": "vat_address",
+            "label": "Company address",
+            "placeholder": "",
+            "description": "",
+            "required": true,
+            "showLabel": true,
+            "mapTo": "order.vatAddress",
+            "prefillValue": "",
+            "urlParam": "",
+            "hideOnPage": false,
+            "multiline": false,
+            "inputType": "text",
+            "limitChars": false,
+            "minChars": 0,
+            "maxChars": 500,
+            "patternPreset": "",
+            "pattern": "",
+            "patternCountries": [],
+            "requiredText": "",
+            "invalidText": ""
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "fche_16": {
+          "id": "fche_16",
+          "data": {
+            "type": "form-text",
+            "parent": "fche_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%"
+          },
+          "config": {
+            "iconPosition": "left"
+          },
+          "specials": {
+            "showIcon": false,
+            "iconName": "",
+            "name": "vat_email",
+            "label": "Invoice email",
+            "placeholder": "",
+            "description": "",
+            "required": false,
+            "showLabel": true,
+            "mapTo": "order.vatEmail",
+            "prefillValue": "",
+            "urlParam": "",
+            "hideOnPage": false,
+            "multiline": false,
+            "inputType": "email",
+            "limitChars": false,
+            "minChars": 0,
+            "maxChars": 500,
+            "patternPreset": "",
+            "pattern": "",
+            "patternCountries": [],
+            "requiredText": "",
+            "invalidText": ""
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "fche_17": {
+          "id": "fche_17",
+          "data": {
+            "type": "form-text",
+            "parent": "fche_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%"
+          },
+          "config": {
+            "iconPosition": "left"
+          },
+          "specials": {
+            "showIcon": false,
+            "iconName": "",
+            "name": "order_note",
+            "label": "Note",
+            "placeholder": "",
+            "description": "",
+            "required": false,
+            "showLabel": true,
+            "mapTo": "order.note",
+            "prefillValue": "",
+            "urlParam": "",
+            "hideOnPage": false,
+            "multiline": true,
+            "inputType": "text",
+            "limitChars": false,
+            "minChars": 0,
+            "maxChars": 500,
+            "patternPreset": "",
+            "pattern": "",
+            "patternCountries": [],
+            "requiredText": "",
+            "invalidText": ""
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "fche_18": {
+          "id": "fche_18",
+          "data": {
+            "type": "form-submit",
+            "parent": "fche_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%",
+            "padding": "10px 16px",
+            "backgroundColor": "var(--wb-sc-buttonBg, #171717)",
+            "color": "var(--wb-sc-buttonText, #ffffff)",
+            "borderRadius": "6px"
+          },
+          "config": {
+            "iconSize": 20,
+            "iconGap": 8,
+            "iconPosition": "left"
+          },
+          "specials": {
+            "text": "Place order",
+            "submittingText": "Sending…"
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        }
+      }
     }
   },
   "address": {
@@ -2915,6 +5308,8 @@ export const FORM_TEMPLATES = {
             "name": "quoc_gia",
             "label": "Quốc gia",
             "description": "",
+            "requiredText": "",
+            "invalidText": "",
             "required": true,
             "showLabel": true,
             "mapTo": "customer.country",
@@ -2958,6 +5353,8 @@ export const FORM_TEMPLATES = {
             "name": "tinh_thanh",
             "label": "Tỉnh / Thành phố",
             "description": "",
+            "requiredText": "",
+            "invalidText": "",
             "required": true,
             "showLabel": true,
             "mapTo": "customer.state",
@@ -3001,6 +5398,8 @@ export const FORM_TEMPLATES = {
             "name": "phuong_xa",
             "label": "Phường / Xã",
             "description": "",
+            "requiredText": "",
+            "invalidText": "",
             "required": true,
             "showLabel": true,
             "mapTo": "customer.ward",
@@ -3044,6 +5443,8 @@ export const FORM_TEMPLATES = {
             "name": "dia_chi",
             "label": "Số nhà, tên đường",
             "description": "",
+            "requiredText": "",
+            "invalidText": "",
             "required": true,
             "showLabel": true,
             "mapTo": "customer.address",
@@ -3087,6 +5488,8 @@ export const FORM_TEMPLATES = {
             "name": "dia_chi_2",
             "label": "Toà nhà, tầng, căn hộ",
             "description": "",
+            "requiredText": "",
+            "invalidText": "",
             "required": false,
             "showLabel": true,
             "mapTo": "customer.addressLine2",
@@ -3130,6 +5533,8 @@ export const FORM_TEMPLATES = {
             "name": "ma_buu_chinh",
             "label": "Mã bưu chính",
             "description": "",
+            "requiredText": "",
+            "invalidText": "",
             "required": false,
             "showLabel": true,
             "mapTo": "customer.postalCode",
@@ -3207,6 +5612,8 @@ export const FORM_TEMPLATES = {
             "name": "giong_dia_chi_giao",
             "label": "Giống địa chỉ giao hàng",
             "description": "",
+            "requiredText": "",
+            "invalidText": "",
             "required": false,
             "showLabel": true,
             "mapTo": "",
@@ -3250,6 +5657,8 @@ export const FORM_TEMPLATES = {
             "name": "hd_quoc_gia",
             "label": "Quốc gia",
             "description": "",
+            "requiredText": "",
+            "invalidText": "",
             "required": false,
             "showLabel": true,
             "mapTo": "",
@@ -3293,6 +5702,8 @@ export const FORM_TEMPLATES = {
             "name": "hd_tinh_thanh",
             "label": "Tỉnh / Thành phố",
             "description": "",
+            "requiredText": "",
+            "invalidText": "",
             "required": false,
             "showLabel": true,
             "mapTo": "",
@@ -3336,6 +5747,8 @@ export const FORM_TEMPLATES = {
             "name": "hd_phuong_xa",
             "label": "Phường / Xã",
             "description": "",
+            "requiredText": "",
+            "invalidText": "",
             "required": false,
             "showLabel": true,
             "mapTo": "",
@@ -3379,6 +5792,8 @@ export const FORM_TEMPLATES = {
             "name": "hd_dia_chi",
             "label": "Số nhà, tên đường",
             "description": "",
+            "requiredText": "",
+            "invalidText": "",
             "required": false,
             "showLabel": true,
             "mapTo": "",
@@ -3422,6 +5837,8 @@ export const FORM_TEMPLATES = {
             "name": "hd_ma_buu_chinh",
             "label": "Mã bưu chính",
             "description": "",
+            "requiredText": "",
+            "invalidText": "",
             "required": false,
             "showLabel": true,
             "mapTo": "",
@@ -3472,6 +5889,782 @@ export const FORM_TEMPLATES = {
           "specials": {
             "text": "Gửi",
             "submittingText": "Đang gửi…"
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        }
+      }
+    },
+    "document_en": {
+      "root_node_id": "fadd_1",
+      "nodes": {
+        "fadd_1": {
+          "id": "fadd_1",
+          "data": {
+            "type": "form",
+            "parent": null,
+            "nodes": [
+              "fadd_2",
+              "fadd_3",
+              "fadd_4",
+              "fadd_5",
+              "fadd_6",
+              "fadd_7",
+              "fadd_8",
+              "fadd_9",
+              "fadd_10",
+              "fadd_11",
+              "fadd_12",
+              "fadd_13",
+              "fadd_14",
+              "fadd_15",
+              "fadd_16",
+              "fadd_17",
+              "fadd_18"
+            ],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "display": "flex",
+            "flexDirection": "column",
+            "width": "100%",
+            "height": "fit-content",
+            "gap": "16px"
+          },
+          "config": {},
+          "specials": {
+            "formId": "",
+            "segmentId": "",
+            "formRules": ""
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "fadd_2": {
+          "id": "fadd_2",
+          "data": {
+            "type": "form-title",
+            "parent": "fadd_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%",
+            "height": "fit-content",
+            "textAlign": "left",
+            "lineHeight": "130%",
+            "fontSize": "20px",
+            "fontWeight": "600",
+            "color": "var(--wb-sc-heading, #171717)"
+          },
+          "config": {},
+          "specials": {
+            "htmlTag": "h3",
+            "text": "Shipping address"
+          },
+          "responsive": {
+            "mobile": {
+              "style": {
+                "fontSize": "18px"
+              }
+            }
+          },
+          "events": [],
+          "bindings": []
+        },
+        "fadd_3": {
+          "id": "fadd_3",
+          "data": {
+            "type": "form-text",
+            "parent": "fadd_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%"
+          },
+          "config": {
+            "iconPosition": "left"
+          },
+          "specials": {
+            "showIcon": false,
+            "iconName": "",
+            "name": "full_name",
+            "label": "Full name",
+            "placeholder": "",
+            "description": "",
+            "required": true,
+            "showLabel": true,
+            "mapTo": "customer.fullName",
+            "prefillValue": "",
+            "urlParam": "",
+            "hideOnPage": false,
+            "multiline": false,
+            "inputType": "text",
+            "limitChars": false,
+            "minChars": 0,
+            "maxChars": 500,
+            "patternPreset": "",
+            "pattern": "",
+            "patternCountries": [],
+            "requiredText": "",
+            "invalidText": ""
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "fadd_4": {
+          "id": "fadd_4",
+          "data": {
+            "type": "form-text",
+            "parent": "fadd_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%"
+          },
+          "config": {
+            "iconPosition": "left"
+          },
+          "specials": {
+            "showIcon": false,
+            "iconName": "",
+            "name": "phone",
+            "label": "Phone number",
+            "placeholder": "",
+            "description": "",
+            "required": true,
+            "showLabel": true,
+            "mapTo": "customer.phone",
+            "prefillValue": "",
+            "urlParam": "",
+            "hideOnPage": false,
+            "multiline": false,
+            "inputType": "tel",
+            "limitChars": false,
+            "minChars": 0,
+            "maxChars": 500,
+            "patternPreset": "",
+            "pattern": "",
+            "patternCountries": [],
+            "requiredText": "",
+            "invalidText": ""
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "fadd_5": {
+          "id": "fadd_5",
+          "data": {
+            "type": "form-address",
+            "parent": "fadd_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%"
+          },
+          "config": {},
+          "specials": {
+            "name": "quoc_gia",
+            "label": "Country",
+            "description": "",
+            "requiredText": "",
+            "invalidText": "",
+            "required": true,
+            "showLabel": true,
+            "mapTo": "customer.country",
+            "part": "country",
+            "addressLink": true,
+            "addressGroup": "",
+            "provinceField": "",
+            "allowedCodes": [],
+            "presetCode": "VN",
+            "copyFrom": "",
+            "sameDefault": true,
+            "placeholder": "Choose a country",
+            "provinceLabel": "Province / City",
+            "wardLabel": "Ward / Commune",
+            "detailLabel": "Street address",
+            "provincePlaceholder": "Choose a province / city",
+            "wardPlaceholder": "Choose a ward / commune",
+            "detailPlaceholder": "e.g. 12 Nguyen Hue",
+            "showDetail": true,
+            "country": "VN"
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "fadd_6": {
+          "id": "fadd_6",
+          "data": {
+            "type": "form-address",
+            "parent": "fadd_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%"
+          },
+          "config": {},
+          "specials": {
+            "name": "tinh_thanh",
+            "label": "Province / City",
+            "description": "",
+            "requiredText": "",
+            "invalidText": "",
+            "required": true,
+            "showLabel": true,
+            "mapTo": "customer.state",
+            "part": "province",
+            "addressLink": true,
+            "addressGroup": "",
+            "provinceField": "",
+            "allowedCodes": [],
+            "presetCode": "",
+            "copyFrom": "",
+            "sameDefault": true,
+            "placeholder": "Choose a province / city",
+            "provinceLabel": "Province / City",
+            "wardLabel": "Ward / Commune",
+            "detailLabel": "Street address",
+            "provincePlaceholder": "Choose a province / city",
+            "wardPlaceholder": "Choose a ward / commune",
+            "detailPlaceholder": "e.g. 12 Nguyen Hue",
+            "showDetail": true,
+            "country": "VN"
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "fadd_7": {
+          "id": "fadd_7",
+          "data": {
+            "type": "form-address",
+            "parent": "fadd_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%"
+          },
+          "config": {},
+          "specials": {
+            "name": "phuong_xa",
+            "label": "Ward / Commune",
+            "description": "",
+            "requiredText": "",
+            "invalidText": "",
+            "required": true,
+            "showLabel": true,
+            "mapTo": "customer.ward",
+            "part": "ward",
+            "addressLink": true,
+            "addressGroup": "",
+            "provinceField": "",
+            "allowedCodes": [],
+            "presetCode": "",
+            "copyFrom": "",
+            "sameDefault": true,
+            "placeholder": "Choose a ward / commune",
+            "provinceLabel": "Province / City",
+            "wardLabel": "Ward / Commune",
+            "detailLabel": "Street address",
+            "provincePlaceholder": "Choose a province / city",
+            "wardPlaceholder": "Choose a ward / commune",
+            "detailPlaceholder": "e.g. 12 Nguyen Hue",
+            "showDetail": true,
+            "country": "VN"
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "fadd_8": {
+          "id": "fadd_8",
+          "data": {
+            "type": "form-address",
+            "parent": "fadd_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%"
+          },
+          "config": {},
+          "specials": {
+            "name": "dia_chi",
+            "label": "Street address",
+            "description": "",
+            "requiredText": "",
+            "invalidText": "",
+            "required": true,
+            "showLabel": true,
+            "mapTo": "customer.address",
+            "part": "street",
+            "addressLink": true,
+            "addressGroup": "",
+            "provinceField": "",
+            "allowedCodes": [],
+            "presetCode": "",
+            "copyFrom": "",
+            "sameDefault": true,
+            "placeholder": "e.g. 12 Nguyen Hue",
+            "provinceLabel": "Province / City",
+            "wardLabel": "Ward / Commune",
+            "detailLabel": "Street address",
+            "provincePlaceholder": "Choose a province / city",
+            "wardPlaceholder": "Choose a ward / commune",
+            "detailPlaceholder": "e.g. 12 Nguyen Hue",
+            "showDetail": true,
+            "country": "VN"
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "fadd_9": {
+          "id": "fadd_9",
+          "data": {
+            "type": "form-address",
+            "parent": "fadd_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%"
+          },
+          "config": {},
+          "specials": {
+            "name": "dia_chi_2",
+            "label": "Apartment, floor, unit",
+            "description": "",
+            "requiredText": "",
+            "invalidText": "",
+            "required": false,
+            "showLabel": true,
+            "mapTo": "customer.addressLine2",
+            "part": "line2",
+            "addressLink": true,
+            "addressGroup": "",
+            "provinceField": "",
+            "allowedCodes": [],
+            "presetCode": "",
+            "copyFrom": "",
+            "sameDefault": true,
+            "placeholder": "Optional",
+            "provinceLabel": "Province / City",
+            "wardLabel": "Ward / Commune",
+            "detailLabel": "Street address",
+            "provincePlaceholder": "Choose a province / city",
+            "wardPlaceholder": "Choose a ward / commune",
+            "detailPlaceholder": "e.g. 12 Nguyen Hue",
+            "showDetail": true,
+            "country": "VN"
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "fadd_10": {
+          "id": "fadd_10",
+          "data": {
+            "type": "form-address",
+            "parent": "fadd_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%"
+          },
+          "config": {},
+          "specials": {
+            "name": "ma_buu_chinh",
+            "label": "Postal code",
+            "description": "",
+            "requiredText": "",
+            "invalidText": "",
+            "required": false,
+            "showLabel": true,
+            "mapTo": "customer.postalCode",
+            "part": "postalCode",
+            "addressLink": true,
+            "addressGroup": "",
+            "provinceField": "",
+            "allowedCodes": [],
+            "presetCode": "",
+            "copyFrom": "",
+            "sameDefault": true,
+            "placeholder": "",
+            "provinceLabel": "Province / City",
+            "wardLabel": "Ward / Commune",
+            "detailLabel": "Street address",
+            "provincePlaceholder": "Choose a province / city",
+            "wardPlaceholder": "Choose a ward / commune",
+            "detailPlaceholder": "e.g. 12 Nguyen Hue",
+            "showDetail": true,
+            "country": "VN"
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "fadd_11": {
+          "id": "fadd_11",
+          "data": {
+            "type": "form-title",
+            "parent": "fadd_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%",
+            "height": "fit-content",
+            "textAlign": "left",
+            "lineHeight": "130%",
+            "fontSize": "20px",
+            "fontWeight": "600",
+            "color": "var(--wb-sc-heading, #171717)"
+          },
+          "config": {},
+          "specials": {
+            "htmlTag": "h3",
+            "text": "Invoice address"
+          },
+          "responsive": {
+            "mobile": {
+              "style": {
+                "fontSize": "18px"
+              }
+            }
+          },
+          "events": [],
+          "bindings": []
+        },
+        "fadd_12": {
+          "id": "fadd_12",
+          "data": {
+            "type": "form-address",
+            "parent": "fadd_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%"
+          },
+          "config": {},
+          "specials": {
+            "name": "giong_dia_chi_giao",
+            "label": "Same as shipping address",
+            "description": "",
+            "requiredText": "",
+            "invalidText": "",
+            "required": false,
+            "showLabel": true,
+            "mapTo": "",
+            "part": "sameAs",
+            "addressLink": true,
+            "addressGroup": "billing",
+            "provinceField": "",
+            "allowedCodes": [],
+            "presetCode": "",
+            "copyFrom": "",
+            "sameDefault": true,
+            "placeholder": "",
+            "provinceLabel": "Province / City",
+            "wardLabel": "Ward / Commune",
+            "detailLabel": "Street address",
+            "provincePlaceholder": "Choose a province / city",
+            "wardPlaceholder": "Choose a ward / commune",
+            "detailPlaceholder": "e.g. 12 Nguyen Hue",
+            "showDetail": true,
+            "country": "VN"
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "fadd_13": {
+          "id": "fadd_13",
+          "data": {
+            "type": "form-address",
+            "parent": "fadd_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%"
+          },
+          "config": {},
+          "specials": {
+            "name": "hd_quoc_gia",
+            "label": "Country",
+            "description": "",
+            "requiredText": "",
+            "invalidText": "",
+            "required": false,
+            "showLabel": true,
+            "mapTo": "",
+            "part": "country",
+            "addressLink": true,
+            "addressGroup": "billing",
+            "provinceField": "",
+            "allowedCodes": [],
+            "presetCode": "VN",
+            "copyFrom": "",
+            "sameDefault": true,
+            "placeholder": "Choose a country",
+            "provinceLabel": "Province / City",
+            "wardLabel": "Ward / Commune",
+            "detailLabel": "Street address",
+            "provincePlaceholder": "Choose a province / city",
+            "wardPlaceholder": "Choose a ward / commune",
+            "detailPlaceholder": "e.g. 12 Nguyen Hue",
+            "showDetail": true,
+            "country": "VN"
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "fadd_14": {
+          "id": "fadd_14",
+          "data": {
+            "type": "form-address",
+            "parent": "fadd_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%"
+          },
+          "config": {},
+          "specials": {
+            "name": "hd_tinh_thanh",
+            "label": "Province / City",
+            "description": "",
+            "requiredText": "",
+            "invalidText": "",
+            "required": false,
+            "showLabel": true,
+            "mapTo": "",
+            "part": "province",
+            "addressLink": true,
+            "addressGroup": "billing",
+            "provinceField": "",
+            "allowedCodes": [],
+            "presetCode": "",
+            "copyFrom": "",
+            "sameDefault": true,
+            "placeholder": "Choose a province / city",
+            "provinceLabel": "Province / City",
+            "wardLabel": "Ward / Commune",
+            "detailLabel": "Street address",
+            "provincePlaceholder": "Choose a province / city",
+            "wardPlaceholder": "Choose a ward / commune",
+            "detailPlaceholder": "e.g. 12 Nguyen Hue",
+            "showDetail": true,
+            "country": "VN"
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "fadd_15": {
+          "id": "fadd_15",
+          "data": {
+            "type": "form-address",
+            "parent": "fadd_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%"
+          },
+          "config": {},
+          "specials": {
+            "name": "hd_phuong_xa",
+            "label": "Ward / Commune",
+            "description": "",
+            "requiredText": "",
+            "invalidText": "",
+            "required": false,
+            "showLabel": true,
+            "mapTo": "",
+            "part": "ward",
+            "addressLink": true,
+            "addressGroup": "billing",
+            "provinceField": "",
+            "allowedCodes": [],
+            "presetCode": "",
+            "copyFrom": "",
+            "sameDefault": true,
+            "placeholder": "Choose a ward / commune",
+            "provinceLabel": "Province / City",
+            "wardLabel": "Ward / Commune",
+            "detailLabel": "Street address",
+            "provincePlaceholder": "Choose a province / city",
+            "wardPlaceholder": "Choose a ward / commune",
+            "detailPlaceholder": "e.g. 12 Nguyen Hue",
+            "showDetail": true,
+            "country": "VN"
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "fadd_16": {
+          "id": "fadd_16",
+          "data": {
+            "type": "form-address",
+            "parent": "fadd_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%"
+          },
+          "config": {},
+          "specials": {
+            "name": "hd_dia_chi",
+            "label": "Street address",
+            "description": "",
+            "requiredText": "",
+            "invalidText": "",
+            "required": false,
+            "showLabel": true,
+            "mapTo": "",
+            "part": "street",
+            "addressLink": true,
+            "addressGroup": "billing",
+            "provinceField": "",
+            "allowedCodes": [],
+            "presetCode": "",
+            "copyFrom": "",
+            "sameDefault": true,
+            "placeholder": "e.g. 12 Nguyen Hue",
+            "provinceLabel": "Province / City",
+            "wardLabel": "Ward / Commune",
+            "detailLabel": "Street address",
+            "provincePlaceholder": "Choose a province / city",
+            "wardPlaceholder": "Choose a ward / commune",
+            "detailPlaceholder": "e.g. 12 Nguyen Hue",
+            "showDetail": true,
+            "country": "VN"
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "fadd_17": {
+          "id": "fadd_17",
+          "data": {
+            "type": "form-address",
+            "parent": "fadd_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%"
+          },
+          "config": {},
+          "specials": {
+            "name": "hd_ma_buu_chinh",
+            "label": "Postal code",
+            "description": "",
+            "requiredText": "",
+            "invalidText": "",
+            "required": false,
+            "showLabel": true,
+            "mapTo": "",
+            "part": "postalCode",
+            "addressLink": true,
+            "addressGroup": "billing",
+            "provinceField": "",
+            "allowedCodes": [],
+            "presetCode": "",
+            "copyFrom": "",
+            "sameDefault": true,
+            "placeholder": "",
+            "provinceLabel": "Province / City",
+            "wardLabel": "Ward / Commune",
+            "detailLabel": "Street address",
+            "provincePlaceholder": "Choose a province / city",
+            "wardPlaceholder": "Choose a ward / commune",
+            "detailPlaceholder": "e.g. 12 Nguyen Hue",
+            "showDetail": true,
+            "country": "VN"
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "fadd_18": {
+          "id": "fadd_18",
+          "data": {
+            "type": "form-submit",
+            "parent": "fadd_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%",
+            "padding": "10px 16px",
+            "backgroundColor": "var(--wb-sc-buttonBg, #171717)",
+            "color": "var(--wb-sc-buttonText, #ffffff)",
+            "borderRadius": "6px"
+          },
+          "config": {
+            "iconSize": 20,
+            "iconGap": 8,
+            "iconPosition": "left"
+          },
+          "specials": {
+            "text": "Submit",
+            "submittingText": "Sending…"
           },
           "responsive": {},
           "events": [],
@@ -3744,6 +6937,267 @@ export const FORM_TEMPLATES = {
           "bindings": []
         }
       }
+    },
+    "document_en": {
+      "root_node_id": "fcon_1",
+      "nodes": {
+        "fcon_1": {
+          "id": "fcon_1",
+          "data": {
+            "type": "form",
+            "parent": null,
+            "nodes": [
+              "fcon_2",
+              "fcon_3",
+              "fcon_4",
+              "fcon_5",
+              "fcon_6",
+              "fcon_7"
+            ],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "display": "flex",
+            "flexDirection": "column",
+            "width": "100%",
+            "height": "fit-content",
+            "gap": "16px"
+          },
+          "config": {},
+          "specials": {
+            "formId": "",
+            "segmentId": "",
+            "formRules": ""
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "fcon_2": {
+          "id": "fcon_2",
+          "data": {
+            "type": "form-title",
+            "parent": "fcon_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%",
+            "height": "fit-content",
+            "textAlign": "left",
+            "lineHeight": "130%",
+            "fontSize": "20px",
+            "fontWeight": "600",
+            "color": "var(--wb-sc-heading, #171717)"
+          },
+          "config": {},
+          "specials": {
+            "htmlTag": "h3",
+            "text": "Request a consultation"
+          },
+          "responsive": {
+            "mobile": {
+              "style": {
+                "fontSize": "18px"
+              }
+            }
+          },
+          "events": [],
+          "bindings": []
+        },
+        "fcon_3": {
+          "id": "fcon_3",
+          "data": {
+            "type": "form-paragraph",
+            "parent": "fcon_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%",
+            "height": "fit-content",
+            "textAlign": "left",
+            "lineHeight": "150%",
+            "fontSize": "14px",
+            "color": "#525252"
+          },
+          "config": {},
+          "specials": {
+            "text": "Leave your details and we'll call you back."
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "fcon_4": {
+          "id": "fcon_4",
+          "data": {
+            "type": "form-text",
+            "parent": "fcon_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%"
+          },
+          "config": {
+            "iconPosition": "left"
+          },
+          "specials": {
+            "showIcon": false,
+            "iconName": "",
+            "name": "full_name",
+            "label": "Full name",
+            "placeholder": "",
+            "description": "",
+            "required": true,
+            "showLabel": true,
+            "mapTo": "customer.fullName",
+            "prefillValue": "",
+            "urlParam": "",
+            "hideOnPage": false,
+            "multiline": false,
+            "inputType": "text",
+            "limitChars": false,
+            "minChars": 0,
+            "maxChars": 500,
+            "patternPreset": "",
+            "pattern": "",
+            "patternCountries": [],
+            "requiredText": "",
+            "invalidText": ""
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "fcon_5": {
+          "id": "fcon_5",
+          "data": {
+            "type": "form-text",
+            "parent": "fcon_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%"
+          },
+          "config": {
+            "iconPosition": "left"
+          },
+          "specials": {
+            "showIcon": false,
+            "iconName": "",
+            "name": "phone",
+            "label": "Phone number",
+            "placeholder": "",
+            "description": "",
+            "required": true,
+            "showLabel": true,
+            "mapTo": "customer.phone",
+            "prefillValue": "",
+            "urlParam": "",
+            "hideOnPage": false,
+            "multiline": false,
+            "inputType": "tel",
+            "limitChars": false,
+            "minChars": 0,
+            "maxChars": 500,
+            "patternPreset": "",
+            "pattern": "",
+            "patternCountries": [],
+            "requiredText": "",
+            "invalidText": ""
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "fcon_6": {
+          "id": "fcon_6",
+          "data": {
+            "type": "form-text",
+            "parent": "fcon_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%"
+          },
+          "config": {
+            "iconPosition": "left"
+          },
+          "specials": {
+            "showIcon": false,
+            "iconName": "",
+            "name": "notes",
+            "label": "What do you need advice on?",
+            "placeholder": "",
+            "description": "",
+            "required": false,
+            "showLabel": true,
+            "mapTo": "customer.notes",
+            "prefillValue": "",
+            "urlParam": "",
+            "hideOnPage": false,
+            "multiline": true,
+            "inputType": "text",
+            "limitChars": false,
+            "minChars": 0,
+            "maxChars": 500,
+            "patternPreset": "",
+            "pattern": "",
+            "patternCountries": [],
+            "requiredText": "",
+            "invalidText": ""
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "fcon_7": {
+          "id": "fcon_7",
+          "data": {
+            "type": "form-submit",
+            "parent": "fcon_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%",
+            "padding": "10px 16px",
+            "backgroundColor": "var(--wb-sc-buttonBg, #171717)",
+            "color": "var(--wb-sc-buttonText, #ffffff)",
+            "borderRadius": "6px"
+          },
+          "config": {
+            "iconSize": 20,
+            "iconGap": 8,
+            "iconPosition": "left"
+          },
+          "specials": {
+            "text": "Send details",
+            "submittingText": "Sending…"
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        }
+      }
     }
   },
   "booking": {
@@ -3966,6 +7420,7 @@ export const FORM_TEMPLATES = {
             "name": "gio_hen",
             "label": "Giờ hẹn",
             "description": "",
+            "requiredText": "",
             "required": true,
             "showLabel": true,
             "mapTo": "",
@@ -4049,6 +7504,313 @@ export const FORM_TEMPLATES = {
           "specials": {
             "text": "Đặt lịch",
             "submittingText": "Đang gửi…"
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        }
+      }
+    },
+    "document_en": {
+      "root_node_id": "fboo_1",
+      "nodes": {
+        "fboo_1": {
+          "id": "fboo_1",
+          "data": {
+            "type": "form",
+            "parent": null,
+            "nodes": [
+              "fboo_2",
+              "fboo_3",
+              "fboo_4",
+              "fboo_5",
+              "fboo_6",
+              "fboo_7",
+              "fboo_8"
+            ],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "display": "flex",
+            "flexDirection": "column",
+            "width": "100%",
+            "height": "fit-content",
+            "gap": "16px"
+          },
+          "config": {},
+          "specials": {
+            "formId": "",
+            "segmentId": "",
+            "formRules": ""
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "fboo_2": {
+          "id": "fboo_2",
+          "data": {
+            "type": "form-title",
+            "parent": "fboo_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%",
+            "height": "fit-content",
+            "textAlign": "left",
+            "lineHeight": "130%",
+            "fontSize": "20px",
+            "fontWeight": "600",
+            "color": "var(--wb-sc-heading, #171717)"
+          },
+          "config": {},
+          "specials": {
+            "htmlTag": "h3",
+            "text": "Book an appointment"
+          },
+          "responsive": {
+            "mobile": {
+              "style": {
+                "fontSize": "18px"
+              }
+            }
+          },
+          "events": [],
+          "bindings": []
+        },
+        "fboo_3": {
+          "id": "fboo_3",
+          "data": {
+            "type": "form-text",
+            "parent": "fboo_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%"
+          },
+          "config": {
+            "iconPosition": "left"
+          },
+          "specials": {
+            "showIcon": false,
+            "iconName": "",
+            "name": "full_name",
+            "label": "Full name",
+            "placeholder": "",
+            "description": "",
+            "required": true,
+            "showLabel": true,
+            "mapTo": "customer.fullName",
+            "prefillValue": "",
+            "urlParam": "",
+            "hideOnPage": false,
+            "multiline": false,
+            "inputType": "text",
+            "limitChars": false,
+            "minChars": 0,
+            "maxChars": 500,
+            "patternPreset": "",
+            "pattern": "",
+            "patternCountries": [],
+            "requiredText": "",
+            "invalidText": ""
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "fboo_4": {
+          "id": "fboo_4",
+          "data": {
+            "type": "form-text",
+            "parent": "fboo_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%"
+          },
+          "config": {
+            "iconPosition": "left"
+          },
+          "specials": {
+            "showIcon": false,
+            "iconName": "",
+            "name": "phone",
+            "label": "Phone number",
+            "placeholder": "",
+            "description": "",
+            "required": true,
+            "showLabel": true,
+            "mapTo": "customer.phone",
+            "prefillValue": "",
+            "urlParam": "",
+            "hideOnPage": false,
+            "multiline": false,
+            "inputType": "tel",
+            "limitChars": false,
+            "minChars": 0,
+            "maxChars": 500,
+            "patternPreset": "",
+            "pattern": "",
+            "patternCountries": [],
+            "requiredText": "",
+            "invalidText": ""
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "fboo_5": {
+          "id": "fboo_5",
+          "data": {
+            "type": "form-calendar",
+            "parent": "fboo_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%"
+          },
+          "config": {
+            "iconPosition": "left"
+          },
+          "specials": {
+            "showIcon": false,
+            "iconName": "",
+            "name": "ngay_hen",
+            "label": "Appointment date",
+            "description": "",
+            "required": true,
+            "showLabel": true,
+            "mapTo": "",
+            "defaultMode": "unset",
+            "specificDate": "",
+            "acceptedDates": "future",
+            "availableDays": "1,2,3,4,5,6,7",
+            "picker": "native",
+            "requiredText": "",
+            "invalidText": ""
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "fboo_6": {
+          "id": "fboo_6",
+          "data": {
+            "type": "form-timeslot",
+            "parent": "fboo_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%"
+          },
+          "config": {},
+          "specials": {
+            "showMarker": false,
+            "name": "gio_hen",
+            "label": "Appointment time",
+            "description": "",
+            "requiredText": "",
+            "required": true,
+            "showLabel": true,
+            "mapTo": "",
+            "start": "09:00",
+            "end": "18:00",
+            "step": 60,
+            "breakStart": "12:00",
+            "breakEnd": "13:00",
+            "defaultValue": ""
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "fboo_7": {
+          "id": "fboo_7",
+          "data": {
+            "type": "form-text",
+            "parent": "fboo_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%"
+          },
+          "config": {
+            "iconPosition": "left"
+          },
+          "specials": {
+            "showIcon": false,
+            "iconName": "",
+            "name": "notes",
+            "label": "Note",
+            "placeholder": "",
+            "description": "",
+            "required": false,
+            "showLabel": true,
+            "mapTo": "customer.notes",
+            "prefillValue": "",
+            "urlParam": "",
+            "hideOnPage": false,
+            "multiline": true,
+            "inputType": "text",
+            "limitChars": false,
+            "minChars": 0,
+            "maxChars": 500,
+            "patternPreset": "",
+            "pattern": "",
+            "patternCountries": [],
+            "requiredText": "",
+            "invalidText": ""
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "fboo_8": {
+          "id": "fboo_8",
+          "data": {
+            "type": "form-submit",
+            "parent": "fboo_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%",
+            "padding": "10px 16px",
+            "backgroundColor": "var(--wb-sc-buttonBg, #171717)",
+            "color": "var(--wb-sc-buttonText, #ffffff)",
+            "borderRadius": "6px"
+          },
+          "config": {
+            "iconSize": 20,
+            "iconGap": 8,
+            "iconPosition": "left"
+          },
+          "specials": {
+            "text": "Book appointment",
+            "submittingText": "Sending…"
           },
           "responsive": {},
           "events": [],
@@ -4454,6 +8216,400 @@ export const FORM_TEMPLATES = {
           "bindings": []
         }
       }
+    },
+    "document_en": {
+      "root_node_id": "fsta_1",
+      "nodes": {
+        "fsta_1": {
+          "id": "fsta_1",
+          "data": {
+            "type": "form",
+            "parent": null,
+            "nodes": [
+              "fsta_2",
+              "fsta_3",
+              "fsta_4",
+              "fsta_5",
+              "fsta_6",
+              "fsta_7",
+              "fsta_8",
+              "fsta_9",
+              "fsta_10"
+            ],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "display": "flex",
+            "flexDirection": "column",
+            "width": "100%",
+            "height": "fit-content",
+            "gap": "16px"
+          },
+          "config": {},
+          "specials": {
+            "formId": "",
+            "segmentId": "",
+            "formRules": ""
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "fsta_2": {
+          "id": "fsta_2",
+          "data": {
+            "type": "form-title",
+            "parent": "fsta_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%",
+            "height": "fit-content",
+            "textAlign": "left",
+            "lineHeight": "130%",
+            "fontSize": "20px",
+            "fontWeight": "600",
+            "color": "var(--wb-sc-heading, #171717)"
+          },
+          "config": {},
+          "specials": {
+            "htmlTag": "h3",
+            "text": "Book a room"
+          },
+          "responsive": {
+            "mobile": {
+              "style": {
+                "fontSize": "18px"
+              }
+            }
+          },
+          "events": [],
+          "bindings": []
+        },
+        "fsta_3": {
+          "id": "fsta_3",
+          "data": {
+            "type": "form-text",
+            "parent": "fsta_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%"
+          },
+          "config": {
+            "iconPosition": "left"
+          },
+          "specials": {
+            "showIcon": false,
+            "iconName": "",
+            "name": "full_name",
+            "label": "Full name",
+            "placeholder": "",
+            "description": "",
+            "required": true,
+            "showLabel": true,
+            "mapTo": "customer.fullName",
+            "prefillValue": "",
+            "urlParam": "",
+            "hideOnPage": false,
+            "multiline": false,
+            "inputType": "text",
+            "limitChars": false,
+            "minChars": 0,
+            "maxChars": 500,
+            "patternPreset": "",
+            "pattern": "",
+            "patternCountries": [],
+            "requiredText": "",
+            "invalidText": ""
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "fsta_4": {
+          "id": "fsta_4",
+          "data": {
+            "type": "form-text",
+            "parent": "fsta_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%"
+          },
+          "config": {
+            "iconPosition": "left"
+          },
+          "specials": {
+            "showIcon": false,
+            "iconName": "",
+            "name": "phone",
+            "label": "Phone number",
+            "placeholder": "",
+            "description": "",
+            "required": true,
+            "showLabel": true,
+            "mapTo": "customer.phone",
+            "prefillValue": "",
+            "urlParam": "",
+            "hideOnPage": false,
+            "multiline": false,
+            "inputType": "tel",
+            "limitChars": false,
+            "minChars": 0,
+            "maxChars": 500,
+            "patternPreset": "",
+            "pattern": "",
+            "patternCountries": [],
+            "requiredText": "",
+            "invalidText": ""
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "fsta_5": {
+          "id": "fsta_5",
+          "data": {
+            "type": "form-calendar",
+            "parent": "fsta_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%"
+          },
+          "config": {
+            "iconPosition": "left"
+          },
+          "specials": {
+            "showIcon": false,
+            "iconName": "",
+            "name": "nhan_phong",
+            "label": "Check-in date",
+            "description": "",
+            "required": true,
+            "showLabel": true,
+            "mapTo": "",
+            "defaultMode": "unset",
+            "specificDate": "",
+            "acceptedDates": "future",
+            "availableDays": "1,2,3,4,5,6,7",
+            "picker": "native",
+            "requiredText": "",
+            "invalidText": ""
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "fsta_6": {
+          "id": "fsta_6",
+          "data": {
+            "type": "form-calendar",
+            "parent": "fsta_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%"
+          },
+          "config": {
+            "iconPosition": "left"
+          },
+          "specials": {
+            "showIcon": false,
+            "iconName": "",
+            "name": "tra_phong",
+            "label": "Check-out date",
+            "description": "",
+            "required": true,
+            "showLabel": true,
+            "mapTo": "",
+            "defaultMode": "unset",
+            "specificDate": "",
+            "acceptedDates": "future",
+            "availableDays": "1,2,3,4,5,6,7",
+            "picker": "native",
+            "requiredText": "",
+            "invalidText": ""
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "fsta_7": {
+          "id": "fsta_7",
+          "data": {
+            "type": "form-select",
+            "parent": "fsta_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%"
+          },
+          "config": {
+            "optionSource": "manual",
+            "recordCollectionId": "",
+            "recordLabelField": "",
+            "recordParentField": "",
+            "recordParentNode": ""
+          },
+          "specials": {
+            "name": "loai_phong",
+            "label": "Room type",
+            "description": "",
+            "required": true,
+            "showLabel": true,
+            "mapTo": "",
+            "options": [
+              "Single room",
+              "Double room",
+              "Family room"
+            ],
+            "defaultValue": "",
+            "requiredText": "",
+            "invalidText": "",
+            "placeholder": "Choose a room type",
+            "urlParam": ""
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "fsta_8": {
+          "id": "fsta_8",
+          "data": {
+            "type": "form-number",
+            "parent": "fsta_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%"
+          },
+          "config": {
+            "iconPosition": "left"
+          },
+          "specials": {
+            "showIcon": false,
+            "iconName": "",
+            "name": "so_khach",
+            "label": "Number of guests",
+            "placeholder": "",
+            "description": "",
+            "required": true,
+            "showLabel": true,
+            "requiredText": "",
+            "invalidText": "",
+            "mapTo": "",
+            "prefillValue": "",
+            "urlParam": "",
+            "hideOnPage": false,
+            "setRange": true,
+            "minValue": 1,
+            "maxValue": 10,
+            "step": 1
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "fsta_9": {
+          "id": "fsta_9",
+          "data": {
+            "type": "form-text",
+            "parent": "fsta_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%"
+          },
+          "config": {
+            "iconPosition": "left"
+          },
+          "specials": {
+            "showIcon": false,
+            "iconName": "",
+            "name": "notes",
+            "label": "Special requests",
+            "placeholder": "",
+            "description": "",
+            "required": false,
+            "showLabel": true,
+            "mapTo": "customer.notes",
+            "prefillValue": "",
+            "urlParam": "",
+            "hideOnPage": false,
+            "multiline": true,
+            "inputType": "text",
+            "limitChars": false,
+            "minChars": 0,
+            "maxChars": 500,
+            "patternPreset": "",
+            "pattern": "",
+            "patternCountries": [],
+            "requiredText": "",
+            "invalidText": ""
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "fsta_10": {
+          "id": "fsta_10",
+          "data": {
+            "type": "form-submit",
+            "parent": "fsta_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%",
+            "padding": "10px 16px",
+            "backgroundColor": "var(--wb-sc-buttonBg, #171717)",
+            "color": "var(--wb-sc-buttonText, #ffffff)",
+            "borderRadius": "6px"
+          },
+          "config": {
+            "iconSize": 20,
+            "iconGap": 8,
+            "iconPosition": "left"
+          },
+          "specials": {
+            "text": "Book room",
+            "submittingText": "Sending…"
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        }
+      }
     }
   },
   "feedback": {
@@ -4683,6 +8839,236 @@ export const FORM_TEMPLATES = {
           "specials": {
             "text": "Gửi góp ý",
             "submittingText": "Đang gửi…"
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        }
+      }
+    },
+    "document_en": {
+      "root_node_id": "ffee_1",
+      "nodes": {
+        "ffee_1": {
+          "id": "ffee_1",
+          "data": {
+            "type": "form",
+            "parent": null,
+            "nodes": [
+              "ffee_2",
+              "ffee_3",
+              "ffee_4",
+              "ffee_5",
+              "ffee_6"
+            ],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "display": "flex",
+            "flexDirection": "column",
+            "width": "100%",
+            "height": "fit-content",
+            "gap": "16px"
+          },
+          "config": {},
+          "specials": {
+            "formId": "",
+            "segmentId": "",
+            "formRules": ""
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "ffee_2": {
+          "id": "ffee_2",
+          "data": {
+            "type": "form-title",
+            "parent": "ffee_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%",
+            "height": "fit-content",
+            "textAlign": "left",
+            "lineHeight": "130%",
+            "fontSize": "20px",
+            "fontWeight": "600",
+            "color": "var(--wb-sc-heading, #171717)"
+          },
+          "config": {},
+          "specials": {
+            "htmlTag": "h3",
+            "text": "Your feedback"
+          },
+          "responsive": {
+            "mobile": {
+              "style": {
+                "fontSize": "18px"
+              }
+            }
+          },
+          "events": [],
+          "bindings": []
+        },
+        "ffee_3": {
+          "id": "ffee_3",
+          "data": {
+            "type": "form-radio",
+            "parent": "ffee_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%"
+          },
+          "config": {
+            "columns": 1,
+            "optionSource": "manual",
+            "recordCollectionId": "",
+            "recordLabelField": ""
+          },
+          "specials": {
+            "name": "muc_do_hai_long",
+            "label": "How satisfied are you?",
+            "description": "",
+            "required": true,
+            "showLabel": true,
+            "mapTo": "",
+            "options": [
+              "Very satisfied",
+              "Satisfied",
+              "Neutral",
+              "Not satisfied"
+            ],
+            "defaultValue": "",
+            "requiredText": "",
+            "invalidText": ""
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "ffee_4": {
+          "id": "ffee_4",
+          "data": {
+            "type": "form-text",
+            "parent": "ffee_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%"
+          },
+          "config": {
+            "iconPosition": "left"
+          },
+          "specials": {
+            "showIcon": false,
+            "iconName": "",
+            "name": "notes",
+            "label": "What made you rate it that way?",
+            "placeholder": "",
+            "description": "",
+            "required": true,
+            "showLabel": true,
+            "mapTo": "customer.notes",
+            "prefillValue": "",
+            "urlParam": "",
+            "hideOnPage": false,
+            "multiline": true,
+            "inputType": "text",
+            "limitChars": false,
+            "minChars": 0,
+            "maxChars": 500,
+            "patternPreset": "",
+            "pattern": "",
+            "patternCountries": [],
+            "requiredText": "",
+            "invalidText": ""
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "ffee_5": {
+          "id": "ffee_5",
+          "data": {
+            "type": "form-text",
+            "parent": "ffee_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%"
+          },
+          "config": {
+            "iconPosition": "left"
+          },
+          "specials": {
+            "showIcon": false,
+            "iconName": "",
+            "name": "email",
+            "label": "Email (if you want a reply)",
+            "placeholder": "",
+            "description": "",
+            "required": false,
+            "showLabel": true,
+            "mapTo": "customer.email",
+            "prefillValue": "",
+            "urlParam": "",
+            "hideOnPage": false,
+            "multiline": false,
+            "inputType": "email",
+            "limitChars": false,
+            "minChars": 0,
+            "maxChars": 500,
+            "patternPreset": "",
+            "pattern": "",
+            "patternCountries": [],
+            "requiredText": "",
+            "invalidText": ""
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "ffee_6": {
+          "id": "ffee_6",
+          "data": {
+            "type": "form-submit",
+            "parent": "ffee_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%",
+            "padding": "10px 16px",
+            "backgroundColor": "var(--wb-sc-buttonBg, #171717)",
+            "color": "var(--wb-sc-buttonText, #ffffff)",
+            "borderRadius": "6px"
+          },
+          "config": {
+            "iconSize": 20,
+            "iconGap": 8,
+            "iconPosition": "left"
+          },
+          "specials": {
+            "text": "Send feedback",
+            "submittingText": "Sending…"
           },
           "responsive": {},
           "events": [],
@@ -4969,6 +9355,281 @@ export const FORM_TEMPLATES = {
           "bindings": []
         }
       }
+    },
+    "document_en": {
+      "root_node_id": "feve_1",
+      "nodes": {
+        "feve_1": {
+          "id": "feve_1",
+          "data": {
+            "type": "form",
+            "parent": null,
+            "nodes": [
+              "feve_2",
+              "feve_3",
+              "feve_4",
+              "feve_5",
+              "feve_6",
+              "feve_7"
+            ],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "display": "flex",
+            "flexDirection": "column",
+            "width": "100%",
+            "height": "fit-content",
+            "gap": "16px"
+          },
+          "config": {},
+          "specials": {
+            "formId": "",
+            "segmentId": "",
+            "formRules": ""
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "feve_2": {
+          "id": "feve_2",
+          "data": {
+            "type": "form-title",
+            "parent": "feve_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%",
+            "height": "fit-content",
+            "textAlign": "left",
+            "lineHeight": "130%",
+            "fontSize": "20px",
+            "fontWeight": "600",
+            "color": "var(--wb-sc-heading, #171717)"
+          },
+          "config": {},
+          "specials": {
+            "htmlTag": "h3",
+            "text": "Register to attend"
+          },
+          "responsive": {
+            "mobile": {
+              "style": {
+                "fontSize": "18px"
+              }
+            }
+          },
+          "events": [],
+          "bindings": []
+        },
+        "feve_3": {
+          "id": "feve_3",
+          "data": {
+            "type": "form-text",
+            "parent": "feve_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%"
+          },
+          "config": {
+            "iconPosition": "left"
+          },
+          "specials": {
+            "showIcon": false,
+            "iconName": "",
+            "name": "full_name",
+            "label": "Full name",
+            "placeholder": "",
+            "description": "",
+            "required": true,
+            "showLabel": true,
+            "mapTo": "customer.fullName",
+            "prefillValue": "",
+            "urlParam": "",
+            "hideOnPage": false,
+            "multiline": false,
+            "inputType": "text",
+            "limitChars": false,
+            "minChars": 0,
+            "maxChars": 500,
+            "patternPreset": "",
+            "pattern": "",
+            "patternCountries": [],
+            "requiredText": "",
+            "invalidText": ""
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "feve_4": {
+          "id": "feve_4",
+          "data": {
+            "type": "form-text",
+            "parent": "feve_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%"
+          },
+          "config": {
+            "iconPosition": "left"
+          },
+          "specials": {
+            "showIcon": false,
+            "iconName": "",
+            "name": "phone",
+            "label": "Phone number",
+            "placeholder": "",
+            "description": "",
+            "required": true,
+            "showLabel": true,
+            "mapTo": "customer.phone",
+            "prefillValue": "",
+            "urlParam": "",
+            "hideOnPage": false,
+            "multiline": false,
+            "inputType": "tel",
+            "limitChars": false,
+            "minChars": 0,
+            "maxChars": 500,
+            "patternPreset": "",
+            "pattern": "",
+            "patternCountries": [],
+            "requiredText": "",
+            "invalidText": ""
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "feve_5": {
+          "id": "feve_5",
+          "data": {
+            "type": "form-text",
+            "parent": "feve_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%"
+          },
+          "config": {
+            "iconPosition": "left"
+          },
+          "specials": {
+            "showIcon": false,
+            "iconName": "",
+            "name": "email",
+            "label": "Email",
+            "placeholder": "",
+            "description": "",
+            "required": false,
+            "showLabel": true,
+            "mapTo": "customer.email",
+            "prefillValue": "",
+            "urlParam": "",
+            "hideOnPage": false,
+            "multiline": false,
+            "inputType": "email",
+            "limitChars": false,
+            "minChars": 0,
+            "maxChars": 500,
+            "patternPreset": "",
+            "pattern": "",
+            "patternCountries": [],
+            "requiredText": "",
+            "invalidText": ""
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "feve_6": {
+          "id": "feve_6",
+          "data": {
+            "type": "form-number",
+            "parent": "feve_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%"
+          },
+          "config": {
+            "iconPosition": "left"
+          },
+          "specials": {
+            "showIcon": false,
+            "iconName": "",
+            "name": "so_nguoi",
+            "label": "Number of attendees",
+            "placeholder": "",
+            "description": "",
+            "required": true,
+            "showLabel": true,
+            "requiredText": "",
+            "invalidText": "",
+            "mapTo": "",
+            "prefillValue": "",
+            "urlParam": "",
+            "hideOnPage": false,
+            "setRange": true,
+            "minValue": 1,
+            "maxValue": 20,
+            "step": 1
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "feve_7": {
+          "id": "feve_7",
+          "data": {
+            "type": "form-submit",
+            "parent": "feve_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%",
+            "padding": "10px 16px",
+            "backgroundColor": "var(--wb-sc-buttonBg, #171717)",
+            "color": "var(--wb-sc-buttonText, #ffffff)",
+            "borderRadius": "6px"
+          },
+          "config": {
+            "iconSize": 20,
+            "iconGap": 8,
+            "iconPosition": "left"
+          },
+          "specials": {
+            "text": "Sign up",
+            "submittingText": "Sending…"
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        }
+      }
     }
   },
   "quote": {
@@ -5247,6 +9908,285 @@ export const FORM_TEMPLATES = {
           "specials": {
             "text": "Gửi yêu cầu",
             "submittingText": "Đang gửi…"
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        }
+      }
+    },
+    "document_en": {
+      "root_node_id": "fquo_1",
+      "nodes": {
+        "fquo_1": {
+          "id": "fquo_1",
+          "data": {
+            "type": "form",
+            "parent": null,
+            "nodes": [
+              "fquo_2",
+              "fquo_3",
+              "fquo_4",
+              "fquo_5",
+              "fquo_6",
+              "fquo_7"
+            ],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "display": "flex",
+            "flexDirection": "column",
+            "width": "100%",
+            "height": "fit-content",
+            "gap": "16px"
+          },
+          "config": {},
+          "specials": {
+            "formId": "",
+            "segmentId": "",
+            "formRules": ""
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "fquo_2": {
+          "id": "fquo_2",
+          "data": {
+            "type": "form-title",
+            "parent": "fquo_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%",
+            "height": "fit-content",
+            "textAlign": "left",
+            "lineHeight": "130%",
+            "fontSize": "20px",
+            "fontWeight": "600",
+            "color": "var(--wb-sc-heading, #171717)"
+          },
+          "config": {},
+          "specials": {
+            "htmlTag": "h3",
+            "text": "Request a quote"
+          },
+          "responsive": {
+            "mobile": {
+              "style": {
+                "fontSize": "18px"
+              }
+            }
+          },
+          "events": [],
+          "bindings": []
+        },
+        "fquo_3": {
+          "id": "fquo_3",
+          "data": {
+            "type": "form-text",
+            "parent": "fquo_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%"
+          },
+          "config": {
+            "iconPosition": "left"
+          },
+          "specials": {
+            "showIcon": false,
+            "iconName": "",
+            "name": "full_name",
+            "label": "Full name",
+            "placeholder": "",
+            "description": "",
+            "required": true,
+            "showLabel": true,
+            "mapTo": "customer.fullName",
+            "prefillValue": "",
+            "urlParam": "",
+            "hideOnPage": false,
+            "multiline": false,
+            "inputType": "text",
+            "limitChars": false,
+            "minChars": 0,
+            "maxChars": 500,
+            "patternPreset": "",
+            "pattern": "",
+            "patternCountries": [],
+            "requiredText": "",
+            "invalidText": ""
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "fquo_4": {
+          "id": "fquo_4",
+          "data": {
+            "type": "form-text",
+            "parent": "fquo_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%"
+          },
+          "config": {
+            "iconPosition": "left"
+          },
+          "specials": {
+            "showIcon": false,
+            "iconName": "",
+            "name": "phone",
+            "label": "Phone number",
+            "placeholder": "",
+            "description": "",
+            "required": true,
+            "showLabel": true,
+            "mapTo": "customer.phone",
+            "prefillValue": "",
+            "urlParam": "",
+            "hideOnPage": false,
+            "multiline": false,
+            "inputType": "tel",
+            "limitChars": false,
+            "minChars": 0,
+            "maxChars": 500,
+            "patternPreset": "",
+            "pattern": "",
+            "patternCountries": [],
+            "requiredText": "",
+            "invalidText": ""
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "fquo_5": {
+          "id": "fquo_5",
+          "data": {
+            "type": "form-text",
+            "parent": "fquo_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%"
+          },
+          "config": {
+            "iconPosition": "left"
+          },
+          "specials": {
+            "showIcon": false,
+            "iconName": "",
+            "name": "email",
+            "label": "Email",
+            "placeholder": "",
+            "description": "",
+            "required": false,
+            "showLabel": true,
+            "mapTo": "customer.email",
+            "prefillValue": "",
+            "urlParam": "",
+            "hideOnPage": false,
+            "multiline": false,
+            "inputType": "email",
+            "limitChars": false,
+            "minChars": 0,
+            "maxChars": 500,
+            "patternPreset": "",
+            "pattern": "",
+            "patternCountries": [],
+            "requiredText": "",
+            "invalidText": ""
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "fquo_6": {
+          "id": "fquo_6",
+          "data": {
+            "type": "form-text",
+            "parent": "fquo_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%"
+          },
+          "config": {
+            "iconPosition": "left"
+          },
+          "specials": {
+            "showIcon": false,
+            "iconName": "",
+            "name": "notes",
+            "label": "Which product or service do you need a quote for?",
+            "placeholder": "",
+            "description": "",
+            "required": true,
+            "showLabel": true,
+            "mapTo": "customer.notes",
+            "prefillValue": "",
+            "urlParam": "",
+            "hideOnPage": false,
+            "multiline": true,
+            "inputType": "text",
+            "limitChars": false,
+            "minChars": 0,
+            "maxChars": 500,
+            "patternPreset": "",
+            "pattern": "",
+            "patternCountries": [],
+            "requiredText": "",
+            "invalidText": ""
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "fquo_7": {
+          "id": "fquo_7",
+          "data": {
+            "type": "form-submit",
+            "parent": "fquo_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%",
+            "padding": "10px 16px",
+            "backgroundColor": "var(--wb-sc-buttonBg, #171717)",
+            "color": "var(--wb-sc-buttonText, #ffffff)",
+            "borderRadius": "6px"
+          },
+          "config": {
+            "iconSize": 20,
+            "iconGap": 8,
+            "iconPosition": "left"
+          },
+          "specials": {
+            "text": "Send request",
+            "submittingText": "Sending…"
           },
           "responsive": {},
           "events": [],
@@ -5572,6 +10512,320 @@ export const FORM_TEMPLATES = {
           "bindings": []
         }
       }
+    },
+    "document_en": {
+      "root_node_id": "fapp_1",
+      "nodes": {
+        "fapp_1": {
+          "id": "fapp_1",
+          "data": {
+            "type": "form",
+            "parent": null,
+            "nodes": [
+              "fapp_2",
+              "fapp_3",
+              "fapp_4",
+              "fapp_5",
+              "fapp_6",
+              "fapp_7",
+              "fapp_8"
+            ],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "display": "flex",
+            "flexDirection": "column",
+            "width": "100%",
+            "height": "fit-content",
+            "gap": "16px"
+          },
+          "config": {},
+          "specials": {
+            "formId": "",
+            "segmentId": "",
+            "formRules": ""
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "fapp_2": {
+          "id": "fapp_2",
+          "data": {
+            "type": "form-title",
+            "parent": "fapp_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%",
+            "height": "fit-content",
+            "textAlign": "left",
+            "lineHeight": "130%",
+            "fontSize": "20px",
+            "fontWeight": "600",
+            "color": "var(--wb-sc-heading, #171717)"
+          },
+          "config": {},
+          "specials": {
+            "htmlTag": "h3",
+            "text": "Apply"
+          },
+          "responsive": {
+            "mobile": {
+              "style": {
+                "fontSize": "18px"
+              }
+            }
+          },
+          "events": [],
+          "bindings": []
+        },
+        "fapp_3": {
+          "id": "fapp_3",
+          "data": {
+            "type": "form-text",
+            "parent": "fapp_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%"
+          },
+          "config": {
+            "iconPosition": "left"
+          },
+          "specials": {
+            "showIcon": false,
+            "iconName": "",
+            "name": "ho_ten",
+            "label": "Full name",
+            "placeholder": "",
+            "description": "",
+            "required": true,
+            "showLabel": true,
+            "mapTo": "",
+            "prefillValue": "",
+            "urlParam": "",
+            "hideOnPage": false,
+            "multiline": false,
+            "inputType": "text",
+            "limitChars": false,
+            "minChars": 0,
+            "maxChars": 500,
+            "patternPreset": "",
+            "pattern": "",
+            "patternCountries": [],
+            "requiredText": "",
+            "invalidText": ""
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "fapp_4": {
+          "id": "fapp_4",
+          "data": {
+            "type": "form-text",
+            "parent": "fapp_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%"
+          },
+          "config": {
+            "iconPosition": "left"
+          },
+          "specials": {
+            "showIcon": false,
+            "iconName": "",
+            "name": "so_dien_thoai",
+            "label": "Phone number",
+            "placeholder": "",
+            "description": "",
+            "required": true,
+            "showLabel": true,
+            "mapTo": "",
+            "prefillValue": "",
+            "urlParam": "",
+            "hideOnPage": false,
+            "multiline": false,
+            "inputType": "tel",
+            "limitChars": false,
+            "minChars": 0,
+            "maxChars": 500,
+            "patternPreset": "",
+            "pattern": "",
+            "patternCountries": [],
+            "requiredText": "",
+            "invalidText": ""
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "fapp_5": {
+          "id": "fapp_5",
+          "data": {
+            "type": "form-text",
+            "parent": "fapp_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%"
+          },
+          "config": {
+            "iconPosition": "left"
+          },
+          "specials": {
+            "showIcon": false,
+            "iconName": "",
+            "name": "email",
+            "label": "Email",
+            "placeholder": "",
+            "description": "",
+            "required": true,
+            "showLabel": true,
+            "mapTo": "",
+            "prefillValue": "",
+            "urlParam": "",
+            "hideOnPage": false,
+            "multiline": false,
+            "inputType": "email",
+            "limitChars": false,
+            "minChars": 0,
+            "maxChars": 500,
+            "patternPreset": "",
+            "pattern": "",
+            "patternCountries": [],
+            "requiredText": "",
+            "invalidText": ""
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "fapp_6": {
+          "id": "fapp_6",
+          "data": {
+            "type": "form-text",
+            "parent": "fapp_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%"
+          },
+          "config": {
+            "iconPosition": "left"
+          },
+          "specials": {
+            "showIcon": false,
+            "iconName": "",
+            "name": "gioi_thieu",
+            "label": "A short introduction about you",
+            "placeholder": "",
+            "description": "",
+            "required": false,
+            "showLabel": true,
+            "mapTo": "",
+            "prefillValue": "",
+            "urlParam": "",
+            "hideOnPage": false,
+            "multiline": true,
+            "inputType": "text",
+            "limitChars": false,
+            "minChars": 0,
+            "maxChars": 500,
+            "patternPreset": "",
+            "pattern": "",
+            "patternCountries": [],
+            "requiredText": "",
+            "invalidText": ""
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "fapp_7": {
+          "id": "fapp_7",
+          "data": {
+            "type": "form-file",
+            "parent": "fapp_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%"
+          },
+          "config": {},
+          "specials": {
+            "name": "cv",
+            "label": "Your CV",
+            "placeholder": "Choose a file or drag it here",
+            "hintText": "PDF",
+            "description": "",
+            "required": true,
+            "showLabel": true,
+            "fileFormat": "pdf",
+            "allowMultiple": false,
+            "fileLimit": 3,
+            "buttonLabel": "Choose file",
+            "maxFileMB": 0,
+            "requiredText": "",
+            "invalidText": ""
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "fapp_8": {
+          "id": "fapp_8",
+          "data": {
+            "type": "form-submit",
+            "parent": "fapp_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%",
+            "padding": "10px 16px",
+            "backgroundColor": "var(--wb-sc-buttonBg, #171717)",
+            "color": "var(--wb-sc-buttonText, #ffffff)",
+            "borderRadius": "6px"
+          },
+          "config": {
+            "iconSize": 20,
+            "iconGap": 8,
+            "iconPosition": "left"
+          },
+          "specials": {
+            "text": "Submit application",
+            "submittingText": "Sending…"
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        }
+      }
     }
   },
   "login": {
@@ -5818,6 +11072,255 @@ export const FORM_TEMPLATES = {
           "specials": {
             "text": "Chưa có tài khoản?",
             "linkText": "Đăng ký ngay",
+            "linkTarget": "register",
+            "href": ""
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        }
+      }
+    },
+    "document_en": {
+      "root_node_id": "flog_1",
+      "nodes": {
+        "flog_1": {
+          "id": "flog_1",
+          "data": {
+            "type": "form",
+            "parent": null,
+            "nodes": [
+              "flog_2",
+              "flog_3",
+              "flog_4",
+              "flog_5",
+              "flog_6",
+              "flog_7"
+            ],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "display": "flex",
+            "flexDirection": "column",
+            "width": "100%",
+            "height": "fit-content",
+            "gap": "16px"
+          },
+          "config": {},
+          "specials": {
+            "formId": "",
+            "segmentId": "",
+            "formRules": ""
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "flog_2": {
+          "id": "flog_2",
+          "data": {
+            "type": "form-title",
+            "parent": "flog_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%",
+            "height": "fit-content",
+            "textAlign": "left",
+            "lineHeight": "130%",
+            "fontSize": "20px",
+            "fontWeight": "600",
+            "color": "var(--wb-sc-heading, #171717)"
+          },
+          "config": {},
+          "specials": {
+            "htmlTag": "h3",
+            "text": "Sign in"
+          },
+          "responsive": {
+            "mobile": {
+              "style": {
+                "fontSize": "18px"
+              }
+            }
+          },
+          "events": [],
+          "bindings": []
+        },
+        "flog_3": {
+          "id": "flog_3",
+          "data": {
+            "type": "form-text",
+            "parent": "flog_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%"
+          },
+          "config": {
+            "iconPosition": "left"
+          },
+          "specials": {
+            "showIcon": false,
+            "iconName": "",
+            "name": "email",
+            "label": "Email",
+            "placeholder": "",
+            "description": "",
+            "required": true,
+            "showLabel": true,
+            "mapTo": "customer.email",
+            "prefillValue": "",
+            "urlParam": "",
+            "hideOnPage": false,
+            "multiline": false,
+            "inputType": "email",
+            "limitChars": false,
+            "minChars": 0,
+            "maxChars": 500,
+            "patternPreset": "",
+            "pattern": "",
+            "patternCountries": [],
+            "requiredText": "",
+            "invalidText": ""
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "flog_4": {
+          "id": "flog_4",
+          "data": {
+            "type": "form-text",
+            "parent": "flog_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%"
+          },
+          "config": {
+            "iconPosition": "left"
+          },
+          "specials": {
+            "showIcon": false,
+            "iconName": "",
+            "name": "password",
+            "label": "Password",
+            "placeholder": "",
+            "description": "",
+            "required": true,
+            "showLabel": true,
+            "mapTo": "",
+            "prefillValue": "",
+            "urlParam": "",
+            "hideOnPage": false,
+            "multiline": false,
+            "inputType": "password",
+            "limitChars": false,
+            "minChars": 0,
+            "maxChars": 500,
+            "patternPreset": "",
+            "pattern": "",
+            "patternCountries": [],
+            "requiredText": "",
+            "invalidText": ""
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "flog_5": {
+          "id": "flog_5",
+          "data": {
+            "type": "form-submit",
+            "parent": "flog_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%",
+            "padding": "10px 16px",
+            "backgroundColor": "var(--wb-sc-buttonBg, #171717)",
+            "color": "var(--wb-sc-buttonText, #ffffff)",
+            "borderRadius": "6px"
+          },
+          "config": {
+            "iconSize": 20,
+            "iconGap": 8,
+            "iconPosition": "left"
+          },
+          "specials": {
+            "text": "Sign in",
+            "submittingText": "Sending…"
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "flog_6": {
+          "id": "flog_6",
+          "data": {
+            "type": "form-link",
+            "parent": "flog_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%",
+            "height": "fit-content",
+            "textAlign": "center",
+            "lineHeight": "150%",
+            "fontSize": "14px",
+            "color": "#525252"
+          },
+          "config": {},
+          "specials": {
+            "text": "",
+            "linkText": "Forgot password?",
+            "linkTarget": "forgot",
+            "href": ""
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "flog_7": {
+          "id": "flog_7",
+          "data": {
+            "type": "form-link",
+            "parent": "flog_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%",
+            "height": "fit-content",
+            "textAlign": "center",
+            "lineHeight": "150%",
+            "fontSize": "14px",
+            "color": "#525252"
+          },
+          "config": {},
+          "specials": {
+            "text": "No account yet?",
+            "linkText": "Sign up now",
             "linkTarget": "register",
             "href": ""
           },
@@ -6140,6 +11643,315 @@ export const FORM_TEMPLATES = {
           "bindings": []
         }
       }
+    },
+    "document_en": {
+      "root_node_id": "freg_1",
+      "nodes": {
+        "freg_1": {
+          "id": "freg_1",
+          "data": {
+            "type": "form",
+            "parent": null,
+            "nodes": [
+              "freg_2",
+              "freg_3",
+              "freg_4",
+              "freg_5",
+              "freg_6",
+              "freg_7",
+              "freg_8"
+            ],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "display": "flex",
+            "flexDirection": "column",
+            "width": "100%",
+            "height": "fit-content",
+            "gap": "16px"
+          },
+          "config": {},
+          "specials": {
+            "formId": "",
+            "segmentId": "",
+            "formRules": ""
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "freg_2": {
+          "id": "freg_2",
+          "data": {
+            "type": "form-title",
+            "parent": "freg_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%",
+            "height": "fit-content",
+            "textAlign": "left",
+            "lineHeight": "130%",
+            "fontSize": "20px",
+            "fontWeight": "600",
+            "color": "var(--wb-sc-heading, #171717)"
+          },
+          "config": {},
+          "specials": {
+            "htmlTag": "h3",
+            "text": "Sign up"
+          },
+          "responsive": {
+            "mobile": {
+              "style": {
+                "fontSize": "18px"
+              }
+            }
+          },
+          "events": [],
+          "bindings": []
+        },
+        "freg_3": {
+          "id": "freg_3",
+          "data": {
+            "type": "form-text",
+            "parent": "freg_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%"
+          },
+          "config": {
+            "iconPosition": "left"
+          },
+          "specials": {
+            "showIcon": false,
+            "iconName": "",
+            "name": "name",
+            "label": "Full name",
+            "placeholder": "",
+            "description": "",
+            "required": true,
+            "showLabel": true,
+            "mapTo": "customer.fullName",
+            "prefillValue": "",
+            "urlParam": "",
+            "hideOnPage": false,
+            "multiline": false,
+            "inputType": "text",
+            "limitChars": false,
+            "minChars": 0,
+            "maxChars": 500,
+            "patternPreset": "",
+            "pattern": "",
+            "patternCountries": [],
+            "requiredText": "",
+            "invalidText": ""
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "freg_4": {
+          "id": "freg_4",
+          "data": {
+            "type": "form-text",
+            "parent": "freg_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%"
+          },
+          "config": {
+            "iconPosition": "left"
+          },
+          "specials": {
+            "showIcon": false,
+            "iconName": "",
+            "name": "email",
+            "label": "Email",
+            "placeholder": "",
+            "description": "",
+            "required": true,
+            "showLabel": true,
+            "mapTo": "customer.email",
+            "prefillValue": "",
+            "urlParam": "",
+            "hideOnPage": false,
+            "multiline": false,
+            "inputType": "email",
+            "limitChars": false,
+            "minChars": 0,
+            "maxChars": 500,
+            "patternPreset": "",
+            "pattern": "",
+            "patternCountries": [],
+            "requiredText": "",
+            "invalidText": ""
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "freg_5": {
+          "id": "freg_5",
+          "data": {
+            "type": "form-text",
+            "parent": "freg_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%"
+          },
+          "config": {
+            "iconPosition": "left"
+          },
+          "specials": {
+            "showIcon": false,
+            "iconName": "",
+            "name": "password",
+            "label": "Password",
+            "placeholder": "",
+            "description": "",
+            "required": true,
+            "showLabel": true,
+            "mapTo": "",
+            "prefillValue": "",
+            "urlParam": "",
+            "hideOnPage": false,
+            "multiline": false,
+            "inputType": "password",
+            "limitChars": false,
+            "minChars": 0,
+            "maxChars": 500,
+            "patternPreset": "",
+            "pattern": "",
+            "patternCountries": [],
+            "requiredText": "",
+            "invalidText": ""
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "freg_6": {
+          "id": "freg_6",
+          "data": {
+            "type": "form-text",
+            "parent": "freg_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%"
+          },
+          "config": {
+            "iconPosition": "left"
+          },
+          "specials": {
+            "showIcon": false,
+            "iconName": "",
+            "name": "confirmPassword",
+            "label": "Confirm password",
+            "placeholder": "",
+            "description": "",
+            "required": true,
+            "showLabel": true,
+            "mapTo": "",
+            "prefillValue": "",
+            "urlParam": "",
+            "hideOnPage": false,
+            "multiline": false,
+            "inputType": "password",
+            "limitChars": false,
+            "minChars": 0,
+            "maxChars": 500,
+            "patternPreset": "",
+            "pattern": "",
+            "patternCountries": [],
+            "requiredText": "",
+            "invalidText": ""
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "freg_7": {
+          "id": "freg_7",
+          "data": {
+            "type": "form-submit",
+            "parent": "freg_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%",
+            "padding": "10px 16px",
+            "backgroundColor": "var(--wb-sc-buttonBg, #171717)",
+            "color": "var(--wb-sc-buttonText, #ffffff)",
+            "borderRadius": "6px"
+          },
+          "config": {
+            "iconSize": 20,
+            "iconGap": 8,
+            "iconPosition": "left"
+          },
+          "specials": {
+            "text": "Sign up",
+            "submittingText": "Sending…"
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "freg_8": {
+          "id": "freg_8",
+          "data": {
+            "type": "form-link",
+            "parent": "freg_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%",
+            "height": "fit-content",
+            "textAlign": "center",
+            "lineHeight": "150%",
+            "fontSize": "14px",
+            "color": "#525252"
+          },
+          "config": {},
+          "specials": {
+            "text": "Already have an account?",
+            "linkText": "Sign in",
+            "linkTarget": "login",
+            "href": ""
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        }
+      }
     }
   },
   "forgot": {
@@ -6311,6 +12123,180 @@ export const FORM_TEMPLATES = {
           "specials": {
             "text": "Nhớ mật khẩu rồi?",
             "linkText": "Đăng nhập",
+            "linkTarget": "login",
+            "href": ""
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        }
+      }
+    },
+    "document_en": {
+      "root_node_id": "ffor_1",
+      "nodes": {
+        "ffor_1": {
+          "id": "ffor_1",
+          "data": {
+            "type": "form",
+            "parent": null,
+            "nodes": [
+              "ffor_2",
+              "ffor_3",
+              "ffor_4",
+              "ffor_5"
+            ],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "display": "flex",
+            "flexDirection": "column",
+            "width": "100%",
+            "height": "fit-content",
+            "gap": "16px"
+          },
+          "config": {},
+          "specials": {
+            "formId": "",
+            "segmentId": "",
+            "formRules": ""
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "ffor_2": {
+          "id": "ffor_2",
+          "data": {
+            "type": "form-title",
+            "parent": "ffor_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%",
+            "height": "fit-content",
+            "textAlign": "left",
+            "lineHeight": "130%",
+            "fontSize": "20px",
+            "fontWeight": "600",
+            "color": "var(--wb-sc-heading, #171717)"
+          },
+          "config": {},
+          "specials": {
+            "htmlTag": "h3",
+            "text": "Forgot password"
+          },
+          "responsive": {
+            "mobile": {
+              "style": {
+                "fontSize": "18px"
+              }
+            }
+          },
+          "events": [],
+          "bindings": []
+        },
+        "ffor_3": {
+          "id": "ffor_3",
+          "data": {
+            "type": "form-text",
+            "parent": "ffor_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%"
+          },
+          "config": {
+            "iconPosition": "left"
+          },
+          "specials": {
+            "showIcon": false,
+            "iconName": "",
+            "name": "email",
+            "label": "Email",
+            "placeholder": "",
+            "description": "",
+            "required": true,
+            "showLabel": true,
+            "mapTo": "customer.email",
+            "prefillValue": "",
+            "urlParam": "",
+            "hideOnPage": false,
+            "multiline": false,
+            "inputType": "email",
+            "limitChars": false,
+            "minChars": 0,
+            "maxChars": 500,
+            "patternPreset": "",
+            "pattern": "",
+            "patternCountries": [],
+            "requiredText": "",
+            "invalidText": ""
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "ffor_4": {
+          "id": "ffor_4",
+          "data": {
+            "type": "form-submit",
+            "parent": "ffor_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%",
+            "padding": "10px 16px",
+            "backgroundColor": "var(--wb-sc-buttonBg, #171717)",
+            "color": "var(--wb-sc-buttonText, #ffffff)",
+            "borderRadius": "6px"
+          },
+          "config": {
+            "iconSize": 20,
+            "iconGap": 8,
+            "iconPosition": "left"
+          },
+          "specials": {
+            "text": "Send code",
+            "submittingText": "Sending…"
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "ffor_5": {
+          "id": "ffor_5",
+          "data": {
+            "type": "form-link",
+            "parent": "ffor_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%",
+            "height": "fit-content",
+            "textAlign": "center",
+            "lineHeight": "150%",
+            "fontSize": "14px",
+            "color": "#525252"
+          },
+          "config": {},
+          "specials": {
+            "text": "Remembered your password?",
+            "linkText": "Sign in",
             "linkTarget": "login",
             "href": ""
           },
@@ -6507,6 +12493,195 @@ export const FORM_TEMPLATES = {
           "specials": {
             "text": "Xác minh",
             "submittingText": "Đang gửi…"
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        }
+      }
+    },
+    "document_en": {
+      "root_node_id": "fver_1",
+      "nodes": {
+        "fver_1": {
+          "id": "fver_1",
+          "data": {
+            "type": "form",
+            "parent": null,
+            "nodes": [
+              "fver_2",
+              "fver_3",
+              "fver_4",
+              "fver_5"
+            ],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "display": "flex",
+            "flexDirection": "column",
+            "width": "100%",
+            "height": "fit-content",
+            "gap": "16px"
+          },
+          "config": {},
+          "specials": {
+            "formId": "",
+            "segmentId": "",
+            "formRules": ""
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "fver_2": {
+          "id": "fver_2",
+          "data": {
+            "type": "form-title",
+            "parent": "fver_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%",
+            "height": "fit-content",
+            "textAlign": "left",
+            "lineHeight": "130%",
+            "fontSize": "20px",
+            "fontWeight": "600",
+            "color": "var(--wb-sc-heading, #171717)"
+          },
+          "config": {},
+          "specials": {
+            "htmlTag": "h3",
+            "text": "Verify email"
+          },
+          "responsive": {
+            "mobile": {
+              "style": {
+                "fontSize": "18px"
+              }
+            }
+          },
+          "events": [],
+          "bindings": []
+        },
+        "fver_3": {
+          "id": "fver_3",
+          "data": {
+            "type": "form-text",
+            "parent": "fver_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%"
+          },
+          "config": {
+            "iconPosition": "left"
+          },
+          "specials": {
+            "showIcon": false,
+            "iconName": "",
+            "name": "email",
+            "label": "Email",
+            "placeholder": "",
+            "description": "",
+            "required": true,
+            "showLabel": true,
+            "mapTo": "customer.email",
+            "prefillValue": "",
+            "urlParam": "",
+            "hideOnPage": false,
+            "multiline": false,
+            "inputType": "email",
+            "limitChars": false,
+            "minChars": 0,
+            "maxChars": 500,
+            "patternPreset": "",
+            "pattern": "",
+            "patternCountries": [],
+            "requiredText": "",
+            "invalidText": ""
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "fver_4": {
+          "id": "fver_4",
+          "data": {
+            "type": "form-text",
+            "parent": "fver_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%"
+          },
+          "config": {
+            "iconPosition": "left"
+          },
+          "specials": {
+            "showIcon": false,
+            "iconName": "",
+            "name": "code",
+            "label": "Verification code",
+            "placeholder": "",
+            "description": "",
+            "required": true,
+            "showLabel": true,
+            "mapTo": "",
+            "prefillValue": "",
+            "urlParam": "",
+            "hideOnPage": false,
+            "multiline": false,
+            "inputType": "text",
+            "limitChars": false,
+            "minChars": 0,
+            "maxChars": 500,
+            "patternPreset": "",
+            "pattern": "",
+            "patternCountries": [],
+            "requiredText": "",
+            "invalidText": ""
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "fver_5": {
+          "id": "fver_5",
+          "data": {
+            "type": "form-submit",
+            "parent": "fver_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%",
+            "padding": "10px 16px",
+            "backgroundColor": "var(--wb-sc-buttonBg, #171717)",
+            "color": "var(--wb-sc-buttonText, #ffffff)",
+            "borderRadius": "6px"
+          },
+          "config": {
+            "iconSize": 20,
+            "iconGap": 8,
+            "iconPosition": "left"
+          },
+          "specials": {
+            "text": "Verify",
+            "submittingText": "Sending…"
           },
           "responsive": {},
           "events": [],
@@ -6791,6 +12966,285 @@ export const FORM_TEMPLATES = {
           "specials": {
             "text": "Đặt lại mật khẩu",
             "submittingText": "Đang gửi…"
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        }
+      }
+    },
+    "document_en": {
+      "root_node_id": "fres_1",
+      "nodes": {
+        "fres_1": {
+          "id": "fres_1",
+          "data": {
+            "type": "form",
+            "parent": null,
+            "nodes": [
+              "fres_2",
+              "fres_3",
+              "fres_4",
+              "fres_5",
+              "fres_6",
+              "fres_7"
+            ],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "display": "flex",
+            "flexDirection": "column",
+            "width": "100%",
+            "height": "fit-content",
+            "gap": "16px"
+          },
+          "config": {},
+          "specials": {
+            "formId": "",
+            "segmentId": "",
+            "formRules": ""
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "fres_2": {
+          "id": "fres_2",
+          "data": {
+            "type": "form-title",
+            "parent": "fres_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%",
+            "height": "fit-content",
+            "textAlign": "left",
+            "lineHeight": "130%",
+            "fontSize": "20px",
+            "fontWeight": "600",
+            "color": "var(--wb-sc-heading, #171717)"
+          },
+          "config": {},
+          "specials": {
+            "htmlTag": "h3",
+            "text": "Reset password"
+          },
+          "responsive": {
+            "mobile": {
+              "style": {
+                "fontSize": "18px"
+              }
+            }
+          },
+          "events": [],
+          "bindings": []
+        },
+        "fres_3": {
+          "id": "fres_3",
+          "data": {
+            "type": "form-text",
+            "parent": "fres_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%"
+          },
+          "config": {
+            "iconPosition": "left"
+          },
+          "specials": {
+            "showIcon": false,
+            "iconName": "",
+            "name": "email",
+            "label": "Email",
+            "placeholder": "",
+            "description": "",
+            "required": true,
+            "showLabel": true,
+            "mapTo": "customer.email",
+            "prefillValue": "",
+            "urlParam": "",
+            "hideOnPage": false,
+            "multiline": false,
+            "inputType": "email",
+            "limitChars": false,
+            "minChars": 0,
+            "maxChars": 500,
+            "patternPreset": "",
+            "pattern": "",
+            "patternCountries": [],
+            "requiredText": "",
+            "invalidText": ""
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "fres_4": {
+          "id": "fres_4",
+          "data": {
+            "type": "form-text",
+            "parent": "fres_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%"
+          },
+          "config": {
+            "iconPosition": "left"
+          },
+          "specials": {
+            "showIcon": false,
+            "iconName": "",
+            "name": "code",
+            "label": "Verification code",
+            "placeholder": "",
+            "description": "",
+            "required": true,
+            "showLabel": true,
+            "mapTo": "",
+            "prefillValue": "",
+            "urlParam": "",
+            "hideOnPage": false,
+            "multiline": false,
+            "inputType": "text",
+            "limitChars": false,
+            "minChars": 0,
+            "maxChars": 500,
+            "patternPreset": "",
+            "pattern": "",
+            "patternCountries": [],
+            "requiredText": "",
+            "invalidText": ""
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "fres_5": {
+          "id": "fres_5",
+          "data": {
+            "type": "form-text",
+            "parent": "fres_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%"
+          },
+          "config": {
+            "iconPosition": "left"
+          },
+          "specials": {
+            "showIcon": false,
+            "iconName": "",
+            "name": "password",
+            "label": "New password",
+            "placeholder": "",
+            "description": "",
+            "required": true,
+            "showLabel": true,
+            "mapTo": "",
+            "prefillValue": "",
+            "urlParam": "",
+            "hideOnPage": false,
+            "multiline": false,
+            "inputType": "password",
+            "limitChars": false,
+            "minChars": 0,
+            "maxChars": 500,
+            "patternPreset": "",
+            "pattern": "",
+            "patternCountries": [],
+            "requiredText": "",
+            "invalidText": ""
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "fres_6": {
+          "id": "fres_6",
+          "data": {
+            "type": "form-text",
+            "parent": "fres_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%"
+          },
+          "config": {
+            "iconPosition": "left"
+          },
+          "specials": {
+            "showIcon": false,
+            "iconName": "",
+            "name": "confirmPassword",
+            "label": "Confirm new password",
+            "placeholder": "",
+            "description": "",
+            "required": true,
+            "showLabel": true,
+            "mapTo": "",
+            "prefillValue": "",
+            "urlParam": "",
+            "hideOnPage": false,
+            "multiline": false,
+            "inputType": "password",
+            "limitChars": false,
+            "minChars": 0,
+            "maxChars": 500,
+            "patternPreset": "",
+            "pattern": "",
+            "patternCountries": [],
+            "requiredText": "",
+            "invalidText": ""
+          },
+          "responsive": {},
+          "events": [],
+          "bindings": []
+        },
+        "fres_7": {
+          "id": "fres_7",
+          "data": {
+            "type": "form-submit",
+            "parent": "fres_1",
+            "nodes": [],
+            "isCanvas": false,
+            "hidden": false,
+            "custom": {}
+          },
+          "style": {
+            "width": "100%",
+            "padding": "10px 16px",
+            "backgroundColor": "var(--wb-sc-buttonBg, #171717)",
+            "color": "var(--wb-sc-buttonText, #ffffff)",
+            "borderRadius": "6px"
+          },
+          "config": {
+            "iconSize": 20,
+            "iconGap": 8,
+            "iconPosition": "left"
+          },
+          "specials": {
+            "text": "Reset password",
+            "submittingText": "Sending…"
           },
           "responsive": {},
           "events": [],

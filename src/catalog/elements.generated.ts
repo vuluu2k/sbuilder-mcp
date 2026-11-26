@@ -7548,6 +7548,8 @@ export const ELEMENTS: Record<string, CatalogElement> = {
         "name": "",
         "label": "Địa chỉ",
         "description": "",
+        "requiredText": "",
+        "invalidText": "",
         "required": false,
         "showLabel": true,
         "mapTo": "",
@@ -7725,7 +7727,8 @@ export const ELEMENTS: Record<string, CatalogElement> = {
     "contentTips": [
       "Rename the three box labels to match the shop’s own words; \"Khu vực\" often reads better than \"Tỉnh / Thành phố\" for a single-city seller.",
       "Turn the street line off when delivery is by ward alone — asking for something nobody reads is worse than not asking.",
-      "Map it to the customer address so repeat buyers are recognised."
+      "Map it to the customer address so repeat buyers are recognised.",
+      "Set requiredText (missing) and invalidText (wrong postal code) in the shop’s own voice; leave them empty for the platform sentence."
     ],
     "semantics": [
       "address",
@@ -7753,6 +7756,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
         "label": "Mã giảm giá",
         "placeholder": "Nhập mã giảm giá",
         "description": "",
+        "requiredText": "",
         "required": false,
         "showLabel": true,
         "buttonLabel": "Áp dụng",
@@ -7883,6 +7887,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
     "contentTips": [
       "Write all four outcome lines in the shop's own voice; they are the only words a shopper gets when a code is refused",
       "Keep \"code not usable\" and \"we could not check just now\" distinct — the second is a network problem and must not blame the shopper's code",
+      "requiredText only matters when the box is marked required; leave it empty for the platform sentence",
       "The button label is a verb the shopper presses (\"Áp dụng\", \"Apply\"), not a noun"
     ],
     "semantics": [
@@ -8243,6 +8248,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
         "name": "",
         "label": "Phương thức thanh toán",
         "description": "",
+        "requiredText": "",
         "required": true,
         "showLabel": true,
         "mapTo": "order.paymentMethod",
@@ -8399,7 +8405,8 @@ export const ELEMENTS: Record<string, CatalogElement> = {
     "contentTips": [
       "Keep the description to one sentence about what happens next: \"Nhận số tài khoản và nội dung chuyển khoản sau khi đặt\".",
       "Put the method most shoppers use first and make it the default — cash on delivery for most Vietnamese stores.",
-      "Leave the value alone; it is the gateway id and the server matches it exactly."
+      "Leave the value alone; it is the gateway id and the server matches it exactly.",
+      "Set requiredText to say what to do when no method is chosen; leave it empty for the platform sentence."
     ],
     "semantics": [
       "form",
@@ -8425,6 +8432,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
         "name": "",
         "label": "Giờ hẹn",
         "description": "",
+        "requiredText": "",
         "required": true,
         "showLabel": true,
         "mapTo": "",
@@ -8555,7 +8563,8 @@ export const ELEMENTS: Record<string, CatalogElement> = {
     "contentTips": [
       "Set the slot length to how long one appointment takes, not how often you want the grid to read.",
       "Use the break for lunch or a fixed daily closure; block whole days with the date box’s weekday rule and the form’s closed dates.",
-      "Leave the label short — \"Giờ hẹn\", \"Giờ đến\" — the grid itself explains the rest."
+      "Leave the label short — \"Giờ hẹn\", \"Giờ đến\" — the grid itself explains the rest.",
+      "Set requiredText to ask for a slot in the shop’s own words; leave it empty for the platform sentence."
     ],
     "semantics": [
       "form",

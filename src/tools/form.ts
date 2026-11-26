@@ -44,8 +44,13 @@ type FieldIn = {
   acceptedDates?: 'past' | 'future'; minDate?: string; maxDate?: string; maxFileMB?: number;
 };
 
-/** Message keys: every type that carries field rules (FIELD_RULE_SPECIALS in web_builder); form-timeslot has none. */
+/** Message keys, mirroring FIELD_RULE_SPECIALS in web_builder: every rule type takes both; form-timeslot only
+ *  requiredText, because nothing a visitor types into a slot picker can fail a rule. */
 const MESSAGE = new Set(['form-text', 'form-number', 'form-select', 'form-radio', 'form-checkbox', 'form-date', 'form-calendar', 'form-file']);
+const MESSAGE_KEYS: Record<'requiredText' | 'invalidText', Set<string>> = {
+  requiredText: new Set([...MESSAGE, 'form-timeslot']),
+  invalidText: MESSAGE,
+};
 const RULE_TYPE: Record<string, [string, string]> = {
   minChecked: ['form-checkbox', 'a checkbox group'], maxChecked: ['form-checkbox', 'a checkbox group'],
   acceptedDates: ['form-date', 'a date field'], minDate: ['form-date', 'a date field'], maxDate: ['form-date', 'a date field'],
@@ -56,7 +61,7 @@ const isDay = (v: string) => /^\d{4}-\d{2}-\d{2}$/.test(v) && new Date(`${v}T00:
 /** Throws before any request, like options/placeholder: a rule on the wrong type would be dropped on save, silently. */
 function checkRules(f: FieldIn, type: string): void {
   for (const k of ['requiredText', 'invalidText'] as const) {
-    if (f[k] !== undefined && !MESSAGE.has(type)) throw new Error(`sbuilder: ${type} has no ${k}.`);
+    if (f[k] !== undefined && !MESSAGE_KEYS[k].has(type)) throw new Error(`sbuilder: ${type} has no ${k}.`);
   }
   for (const [k, [owner, what]] of Object.entries(RULE_TYPE)) {
     if ((f as Record<string, unknown>)[k] !== undefined && type !== owner) throw new Error(`sbuilder: ${k} applies to ${what} (${owner}), not ${type}.`);

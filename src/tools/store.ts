@@ -43,7 +43,8 @@ import { API_DEFINITIONS } from '../catalog/api.generated.js';
 import { siteToken } from './credentialpick.js';
 import { siteFor, type ToolContext } from './context.js';
 import { withFreshIds } from '../domains/site/ids.js';
-import { addPlaced, saveRefusal, siteChrome, wearChrome, type PageSession } from './page.js';
+import { langOf } from '../domains/site/seedcopy.js';
+import { addPlaced, saveRefusal, siteChrome, siteLocaleOf, wearChrome, type PageSession } from './page.js';
 import { addSubtree } from '../domains/site/builder.js';
 import {
   attachGlobal,
@@ -65,6 +66,7 @@ import { PAGE_TYPES } from '../catalog/storepages.generated.js';
 import {
   CHECKOUT_FORM,
   CHECKOUT_FORM_DOCUMENT,
+  CHECKOUT_FORM_DOCUMENT_EN,
   CHECKOUT_PAGE_DOCUMENT,
   CHECKOUT_TEXT,
   FORM_ID_SENTINEL,
@@ -263,7 +265,7 @@ function fillDocument(
 ): { document: unknown; methods: Array<{ value: string; label: string }>; shipping: string[] } {
   const methods = paymentMethods(gateways, lang);
   const doc = withFreshIds(
-    JSON.parse(JSON.stringify(CHECKOUT_FORM_DOCUMENT)) as {
+    JSON.parse(JSON.stringify(lang === 'en' ? CHECKOUT_FORM_DOCUMENT_EN : CHECKOUT_FORM_DOCUMENT)) as {
       nodes: Record<string, { data?: { type?: string }; specials?: Record<string, unknown> }>;
     },
   );
@@ -503,10 +505,14 @@ async function seedForm(
     type: string;
     settings: Record<string, unknown>;
     document: { nodes: Record<string, { data?: { type?: string } }> };
+    document_en: { nodes: Record<string, { data?: { type?: string } }> };
   };
   const site = encodeURIComponent(siteId);
   const name = formName ?? tpl.key;
-  const document = withFreshIds(tpl.document);
+  // The editor's pick (cartSeedLocale / siteLocaleOf): primary subtag, `en` ->
+  // the English document, anything else or unset -> today's (vi) one.
+  const en = langOf(await siteLocaleOf(ctx, siteId)) === 'en';
+  const document = withFreshIds(en ? tpl.document_en : tpl.document);
   const fields = Object.values(document.nodes)
     .map((n) => (n as { specials?: { name?: string } }).specials?.name)
     .filter((n): n is string => typeof n === 'string' && n !== '');

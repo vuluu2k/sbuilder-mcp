@@ -3,6 +3,7 @@ import { connectedClient } from './harness.js';
 import { Session } from '../src/transport/auth.js';
 import { Notices } from '../src/mcp/notices.js';
 import { UndoLog } from '../src/tools/undo.js';
+import { FORM_TEMPLATES } from '../src/catalog/checkout.generated.js';
 
 interface Call {
   method: string;
@@ -17,7 +18,7 @@ interface Call {
  * tested — that recovery is the whole reason this flow is a tool rather than
  * four calls the model makes itself.
  */
-function storefront(opts: { fail?: string; publishes?: boolean; gateways?: unknown[] } = {}) {
+function storefront(opts: { fail?: string; publishes?: boolean; gateways?: unknown[]; locale?: string } = {}) {
   const calls: Call[] = [];
   const f = vi.fn(async (url: unknown, init?: RequestInit) => {
     const path = new URL(String(url)).pathname;
@@ -34,6 +35,7 @@ function storefront(opts: { fail?: string; publishes?: boolean; gateways?: unkno
     if (opts.fail && path.includes(opts.fail) && method !== 'GET' && method !== 'DELETE') {
       return json({ error: 'nope', code: 'validation' }, 400);
     }
+    if (path.endsWith('/settings') && method === 'GET') return json({ settings: opts.locale ? { locale: opts.locale } : {} });
     if (path.endsWith('/payment-gateways')) {
       return json({
         paymentGateways: opts.gateways ?? [
@@ -121,6 +123,29 @@ describe('sb_store form', () => {
     expect((out.form as { id: string }).id).toBe('frm_1');
     // The caller is told where the form goes — nothing places it for them.
     expect(String(out.next)).toContain('specials.formId');
+    await close();
+  });
+
+  it.each([
+    ['en', 'document_en'],
+    ['en-US', 'document_en'],
+    ['vi', 'document'],
+    ['fr', 'document'],
+    [undefined, 'document'],
+  ] as const)('seeds the %s site the %s of the template (the editor\'s locale pick)', async (locale, field) => {
+    // Liveness: the two documents really differ, or this proves nothing.
+    const labels = (d: unknown) =>
+      Object.values((d as { nodes: Record<string, { specials?: { label?: string; text?: string } }> }).nodes)
+        .map((n) => n.specials?.label ?? n.specials?.text ?? '')
+        .join('|');
+    const tpl = FORM_TEMPLATES.contact as unknown as Record<string, unknown>;
+    expect(labels(tpl.document)).not.toBe(labels(tpl.document_en));
+
+    const { f, calls } = storefront({ locale });
+    const { client, close } = await clientOver(f);
+    await client.callTool({ name: 'sb_store', arguments: { action: 'form', template: 'contact', dry_run: false } });
+    const doc = calls.find((c) => c.path.endsWith('/document'))!.body!.document;
+    expect(labels(doc)).toBe(labels(tpl[field]));
     await close();
   });
 
