@@ -6,6 +6,14 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.115.0] - 2026-11-26
+
+### Added
+- `sb_form` `action: "create"` accepts per-field limits and custom error messages: `requiredText` and `invalidText` (except on `form-timeslot`), `minChecked` and `maxChecked` for checkbox, `acceptedDates`, `minDate` and `maxDate` for date, and `maxFileMB` (1-25) for file, refusing wrong-type keys and bad values before any request.
+
+### Changed
+- The bundled platform catalog is regenerated from web_builder v1.0.342.
+
 ## [0.114.0] - 2026-11-25
 
 ### Added

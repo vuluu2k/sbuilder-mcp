@@ -6,6 +6,14 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.115.0] - 2026-11-26
+
+### Added
+- `sb_form` `action: "create"` nhận giới hạn theo từng trường và thông báo lỗi tùy chỉnh: `requiredText` và `invalidText` (trừ `form-timeslot`), `minChecked` và `maxChecked` cho checkbox, `acceptedDates`, `minDate` và `maxDate` cho date, và `maxFileMB` (1-25) cho file, đồng thời từ chối khóa sai kiểu và giá trị không hợp lệ trước khi gửi bất kỳ request nào.
+
+### Changed
+- Catalog nền tảng đi kèm được tạo lại từ web_builder v1.0.342.
+
 ## [0.114.0] - 2026-11-25
 
 ### Added
