@@ -131,7 +131,9 @@ export const CHECKOUT_FORM_DOCUMENT = {
         "maxChars": 500,
         "patternPreset": "",
         "pattern": "",
-        "patternCountries": []
+        "patternCountries": [],
+        "requiredText": "",
+        "invalidText": ""
       },
       "responsive": {},
       "events": [],
@@ -173,7 +175,9 @@ export const CHECKOUT_FORM_DOCUMENT = {
         "maxChars": 500,
         "patternPreset": "",
         "pattern": "",
-        "patternCountries": []
+        "patternCountries": [],
+        "requiredText": "",
+        "invalidText": ""
       },
       "responsive": {},
       "events": [],
@@ -215,7 +219,9 @@ export const CHECKOUT_FORM_DOCUMENT = {
         "maxChars": 500,
         "patternPreset": "",
         "pattern": "",
-        "patternCountries": []
+        "patternCountries": [],
+        "requiredText": "",
+        "invalidText": ""
       },
       "responsive": {},
       "events": [],
@@ -379,6 +385,8 @@ export const CHECKOUT_FORM_DOCUMENT = {
         "mapTo": "order.shippingMethod",
         "options": [],
         "defaultValue": "",
+        "requiredText": "",
+        "invalidText": "",
         "placeholder": "Chọn phương thức vận chuyển",
         "urlParam": ""
       },
@@ -422,7 +430,9 @@ export const CHECKOUT_FORM_DOCUMENT = {
         "maxChars": 500,
         "patternPreset": "",
         "pattern": "",
-        "patternCountries": []
+        "patternCountries": [],
+        "requiredText": "",
+        "invalidText": ""
       },
       "responsive": {},
       "events": [],
@@ -488,7 +498,11 @@ export const CHECKOUT_FORM_DOCUMENT = {
         "options": [
           "Xuất hoá đơn VAT"
         ],
-        "defaultValue": ""
+        "defaultValue": "",
+        "requiredText": "",
+        "invalidText": "",
+        "minChecked": 0,
+        "maxChecked": 0
       },
       "responsive": {},
       "events": [],
@@ -530,7 +544,9 @@ export const CHECKOUT_FORM_DOCUMENT = {
         "maxChars": 500,
         "patternPreset": "",
         "pattern": "",
-        "patternCountries": []
+        "patternCountries": [],
+        "requiredText": "",
+        "invalidText": ""
       },
       "responsive": {},
       "events": [],
@@ -572,7 +588,9 @@ export const CHECKOUT_FORM_DOCUMENT = {
         "maxChars": 500,
         "patternPreset": "",
         "pattern": "",
-        "patternCountries": []
+        "patternCountries": [],
+        "requiredText": "",
+        "invalidText": ""
       },
       "responsive": {},
       "events": [],
@@ -614,7 +632,9 @@ export const CHECKOUT_FORM_DOCUMENT = {
         "maxChars": 500,
         "patternPreset": "",
         "pattern": "",
-        "patternCountries": []
+        "patternCountries": [],
+        "requiredText": "",
+        "invalidText": ""
       },
       "responsive": {},
       "events": [],
@@ -656,7 +676,9 @@ export const CHECKOUT_FORM_DOCUMENT = {
         "maxChars": 500,
         "patternPreset": "",
         "pattern": "",
-        "patternCountries": []
+        "patternCountries": [],
+        "requiredText": "",
+        "invalidText": ""
       },
       "responsive": {},
       "events": [],
@@ -698,7 +720,9 @@ export const CHECKOUT_FORM_DOCUMENT = {
         "maxChars": 500,
         "patternPreset": "",
         "pattern": "",
-        "patternCountries": []
+        "patternCountries": [],
+        "requiredText": "",
+        "invalidText": ""
       },
       "responsive": {},
       "events": [],
@@ -1184,7 +1208,9 @@ export const FORM_TEMPLATES = {
             "maxChars": 500,
             "patternPreset": "",
             "pattern": "",
-            "patternCountries": []
+            "patternCountries": [],
+            "requiredText": "",
+            "invalidText": ""
           },
           "responsive": {},
           "events": [],
@@ -1226,7 +1252,9 @@ export const FORM_TEMPLATES = {
             "maxChars": 500,
             "patternPreset": "",
             "pattern": "",
-            "patternCountries": []
+            "patternCountries": [],
+            "requiredText": "",
+            "invalidText": ""
           },
           "responsive": {},
           "events": [],
@@ -1268,7 +1296,9 @@ export const FORM_TEMPLATES = {
             "maxChars": 500,
             "patternPreset": "",
             "pattern": "",
-            "patternCountries": []
+            "patternCountries": [],
+            "requiredText": "",
+            "invalidText": ""
           },
           "responsive": {},
           "events": [],
@@ -1310,7 +1340,9 @@ export const FORM_TEMPLATES = {
             "maxChars": 500,
             "patternPreset": "",
             "pattern": "",
-            "patternCountries": []
+            "patternCountries": [],
+            "requiredText": "",
+            "invalidText": ""
           },
           "responsive": {},
           "events": [],
@@ -1484,7 +1516,9 @@ export const FORM_TEMPLATES = {
             "maxChars": 500,
             "patternPreset": "",
             "pattern": "",
-            "patternCountries": []
+            "patternCountries": [],
+            "requiredText": "",
+            "invalidText": ""
           },
           "responsive": {},
           "events": [],
@@ -1637,7 +1671,9 @@ export const FORM_TEMPLATES = {
             "maxChars": 500,
             "patternPreset": "",
             "pattern": "",
-            "patternCountries": []
+            "patternCountries": [],
+            "requiredText": "",
+            "invalidText": ""
           },
           "responsive": {},
           "events": [],
@@ -1679,7 +1715,9 @@ export const FORM_TEMPLATES = {
             "maxChars": 500,
             "patternPreset": "",
             "pattern": "",
-            "patternCountries": []
+            "patternCountries": [],
+            "requiredText": "",
+            "invalidText": ""
           },
           "responsive": {},
           "events": [],
@@ -1839,6 +1877,8 @@ export const FORM_TEMPLATES = {
             "description": "",
             "required": true,
             "showLabel": true,
+            "requiredText": "",
+            "invalidText": "",
             "mapTo": "order.quantity",
             "prefillValue": "",
             "urlParam": "",
@@ -1888,7 +1928,9 @@ export const FORM_TEMPLATES = {
             "maxChars": 500,
             "patternPreset": "",
             "pattern": "",
-            "patternCountries": []
+            "patternCountries": [],
+            "requiredText": "",
+            "invalidText": ""
           },
           "responsive": {},
           "events": [],
@@ -2051,7 +2093,9 @@ export const FORM_TEMPLATES = {
             "maxChars": 500,
             "patternPreset": "",
             "pattern": "",
-            "patternCountries": []
+            "patternCountries": [],
+            "requiredText": "",
+            "invalidText": ""
           },
           "responsive": {},
           "events": [],
@@ -2093,7 +2137,9 @@ export const FORM_TEMPLATES = {
             "maxChars": 500,
             "patternPreset": "",
             "pattern": "",
-            "patternCountries": []
+            "patternCountries": [],
+            "requiredText": "",
+            "invalidText": ""
           },
           "responsive": {},
           "events": [],
@@ -2135,7 +2181,9 @@ export const FORM_TEMPLATES = {
             "maxChars": 500,
             "patternPreset": "",
             "pattern": "",
-            "patternCountries": []
+            "patternCountries": [],
+            "requiredText": "",
+            "invalidText": ""
           },
           "responsive": {},
           "events": [],
@@ -2299,6 +2347,8 @@ export const FORM_TEMPLATES = {
             "mapTo": "order.shippingMethod",
             "options": [],
             "defaultValue": "",
+            "requiredText": "",
+            "invalidText": "",
             "placeholder": "Chọn phương thức vận chuyển",
             "urlParam": ""
           },
@@ -2342,7 +2392,9 @@ export const FORM_TEMPLATES = {
             "maxChars": 500,
             "patternPreset": "",
             "pattern": "",
-            "patternCountries": []
+            "patternCountries": [],
+            "requiredText": "",
+            "invalidText": ""
           },
           "responsive": {},
           "events": [],
@@ -2408,7 +2460,11 @@ export const FORM_TEMPLATES = {
             "options": [
               "Xuất hoá đơn VAT"
             ],
-            "defaultValue": ""
+            "defaultValue": "",
+            "requiredText": "",
+            "invalidText": "",
+            "minChecked": 0,
+            "maxChecked": 0
           },
           "responsive": {},
           "events": [],
@@ -2450,7 +2506,9 @@ export const FORM_TEMPLATES = {
             "maxChars": 500,
             "patternPreset": "",
             "pattern": "",
-            "patternCountries": []
+            "patternCountries": [],
+            "requiredText": "",
+            "invalidText": ""
           },
           "responsive": {},
           "events": [],
@@ -2492,7 +2550,9 @@ export const FORM_TEMPLATES = {
             "maxChars": 500,
             "patternPreset": "",
             "pattern": "",
-            "patternCountries": []
+            "patternCountries": [],
+            "requiredText": "",
+            "invalidText": ""
           },
           "responsive": {},
           "events": [],
@@ -2534,7 +2594,9 @@ export const FORM_TEMPLATES = {
             "maxChars": 500,
             "patternPreset": "",
             "pattern": "",
-            "patternCountries": []
+            "patternCountries": [],
+            "requiredText": "",
+            "invalidText": ""
           },
           "responsive": {},
           "events": [],
@@ -2576,7 +2638,9 @@ export const FORM_TEMPLATES = {
             "maxChars": 500,
             "patternPreset": "",
             "pattern": "",
-            "patternCountries": []
+            "patternCountries": [],
+            "requiredText": "",
+            "invalidText": ""
           },
           "responsive": {},
           "events": [],
@@ -2618,7 +2682,9 @@ export const FORM_TEMPLATES = {
             "maxChars": 500,
             "patternPreset": "",
             "pattern": "",
-            "patternCountries": []
+            "patternCountries": [],
+            "requiredText": "",
+            "invalidText": ""
           },
           "responsive": {},
           "events": [],
@@ -2779,7 +2845,9 @@ export const FORM_TEMPLATES = {
             "maxChars": 500,
             "patternPreset": "",
             "pattern": "",
-            "patternCountries": []
+            "patternCountries": [],
+            "requiredText": "",
+            "invalidText": ""
           },
           "responsive": {},
           "events": [],
@@ -2821,7 +2889,9 @@ export const FORM_TEMPLATES = {
             "maxChars": 500,
             "patternPreset": "",
             "pattern": "",
-            "patternCountries": []
+            "patternCountries": [],
+            "requiredText": "",
+            "invalidText": ""
           },
           "responsive": {},
           "events": [],
@@ -3547,7 +3617,9 @@ export const FORM_TEMPLATES = {
             "maxChars": 500,
             "patternPreset": "",
             "pattern": "",
-            "patternCountries": []
+            "patternCountries": [],
+            "requiredText": "",
+            "invalidText": ""
           },
           "responsive": {},
           "events": [],
@@ -3589,7 +3661,9 @@ export const FORM_TEMPLATES = {
             "maxChars": 500,
             "patternPreset": "",
             "pattern": "",
-            "patternCountries": []
+            "patternCountries": [],
+            "requiredText": "",
+            "invalidText": ""
           },
           "responsive": {},
           "events": [],
@@ -3631,7 +3705,9 @@ export const FORM_TEMPLATES = {
             "maxChars": 500,
             "patternPreset": "",
             "pattern": "",
-            "patternCountries": []
+            "patternCountries": [],
+            "requiredText": "",
+            "invalidText": ""
           },
           "responsive": {},
           "events": [],
@@ -3782,7 +3858,9 @@ export const FORM_TEMPLATES = {
             "maxChars": 500,
             "patternPreset": "",
             "pattern": "",
-            "patternCountries": []
+            "patternCountries": [],
+            "requiredText": "",
+            "invalidText": ""
           },
           "responsive": {},
           "events": [],
@@ -3824,7 +3902,9 @@ export const FORM_TEMPLATES = {
             "maxChars": 500,
             "patternPreset": "",
             "pattern": "",
-            "patternCountries": []
+            "patternCountries": [],
+            "requiredText": "",
+            "invalidText": ""
           },
           "responsive": {},
           "events": [],
@@ -3859,7 +3939,9 @@ export const FORM_TEMPLATES = {
             "specificDate": "",
             "acceptedDates": "future",
             "availableDays": "1,2,3,4,5,6,7",
-            "picker": "native"
+            "picker": "native",
+            "requiredText": "",
+            "invalidText": ""
           },
           "responsive": {},
           "events": [],
@@ -3934,7 +4016,9 @@ export const FORM_TEMPLATES = {
             "maxChars": 500,
             "patternPreset": "",
             "pattern": "",
-            "patternCountries": []
+            "patternCountries": [],
+            "requiredText": "",
+            "invalidText": ""
           },
           "responsive": {},
           "events": [],
@@ -4087,7 +4171,9 @@ export const FORM_TEMPLATES = {
             "maxChars": 500,
             "patternPreset": "",
             "pattern": "",
-            "patternCountries": []
+            "patternCountries": [],
+            "requiredText": "",
+            "invalidText": ""
           },
           "responsive": {},
           "events": [],
@@ -4129,7 +4215,9 @@ export const FORM_TEMPLATES = {
             "maxChars": 500,
             "patternPreset": "",
             "pattern": "",
-            "patternCountries": []
+            "patternCountries": [],
+            "requiredText": "",
+            "invalidText": ""
           },
           "responsive": {},
           "events": [],
@@ -4164,7 +4252,9 @@ export const FORM_TEMPLATES = {
             "specificDate": "",
             "acceptedDates": "future",
             "availableDays": "1,2,3,4,5,6,7",
-            "picker": "native"
+            "picker": "native",
+            "requiredText": "",
+            "invalidText": ""
           },
           "responsive": {},
           "events": [],
@@ -4199,7 +4289,9 @@ export const FORM_TEMPLATES = {
             "specificDate": "",
             "acceptedDates": "future",
             "availableDays": "1,2,3,4,5,6,7",
-            "picker": "native"
+            "picker": "native",
+            "requiredText": "",
+            "invalidText": ""
           },
           "responsive": {},
           "events": [],
@@ -4238,6 +4330,8 @@ export const FORM_TEMPLATES = {
               "Phòng gia đình"
             ],
             "defaultValue": "",
+            "requiredText": "",
+            "invalidText": "",
             "placeholder": "Chọn loại phòng",
             "urlParam": ""
           },
@@ -4270,6 +4364,8 @@ export const FORM_TEMPLATES = {
             "description": "",
             "required": true,
             "showLabel": true,
+            "requiredText": "",
+            "invalidText": "",
             "mapTo": "",
             "prefillValue": "",
             "urlParam": "",
@@ -4319,7 +4415,9 @@ export const FORM_TEMPLATES = {
             "maxChars": 500,
             "patternPreset": "",
             "pattern": "",
-            "patternCountries": []
+            "patternCountries": [],
+            "requiredText": "",
+            "invalidText": ""
           },
           "responsive": {},
           "events": [],
@@ -4464,7 +4562,9 @@ export const FORM_TEMPLATES = {
               "Bình thường",
               "Chưa hài lòng"
             ],
-            "defaultValue": ""
+            "defaultValue": "",
+            "requiredText": "",
+            "invalidText": ""
           },
           "responsive": {},
           "events": [],
@@ -4506,7 +4606,9 @@ export const FORM_TEMPLATES = {
             "maxChars": 500,
             "patternPreset": "",
             "pattern": "",
-            "patternCountries": []
+            "patternCountries": [],
+            "requiredText": "",
+            "invalidText": ""
           },
           "responsive": {},
           "events": [],
@@ -4548,7 +4650,9 @@ export const FORM_TEMPLATES = {
             "maxChars": 500,
             "patternPreset": "",
             "pattern": "",
-            "patternCountries": []
+            "patternCountries": [],
+            "requiredText": "",
+            "invalidText": ""
           },
           "responsive": {},
           "events": [],
@@ -4698,7 +4802,9 @@ export const FORM_TEMPLATES = {
             "maxChars": 500,
             "patternPreset": "",
             "pattern": "",
-            "patternCountries": []
+            "patternCountries": [],
+            "requiredText": "",
+            "invalidText": ""
           },
           "responsive": {},
           "events": [],
@@ -4740,7 +4846,9 @@ export const FORM_TEMPLATES = {
             "maxChars": 500,
             "patternPreset": "",
             "pattern": "",
-            "patternCountries": []
+            "patternCountries": [],
+            "requiredText": "",
+            "invalidText": ""
           },
           "responsive": {},
           "events": [],
@@ -4782,7 +4890,9 @@ export const FORM_TEMPLATES = {
             "maxChars": 500,
             "patternPreset": "",
             "pattern": "",
-            "patternCountries": []
+            "patternCountries": [],
+            "requiredText": "",
+            "invalidText": ""
           },
           "responsive": {},
           "events": [],
@@ -4813,6 +4923,8 @@ export const FORM_TEMPLATES = {
             "description": "",
             "required": true,
             "showLabel": true,
+            "requiredText": "",
+            "invalidText": "",
             "mapTo": "",
             "prefillValue": "",
             "urlParam": "",
@@ -4970,7 +5082,9 @@ export const FORM_TEMPLATES = {
             "maxChars": 500,
             "patternPreset": "",
             "pattern": "",
-            "patternCountries": []
+            "patternCountries": [],
+            "requiredText": "",
+            "invalidText": ""
           },
           "responsive": {},
           "events": [],
@@ -5012,7 +5126,9 @@ export const FORM_TEMPLATES = {
             "maxChars": 500,
             "patternPreset": "",
             "pattern": "",
-            "patternCountries": []
+            "patternCountries": [],
+            "requiredText": "",
+            "invalidText": ""
           },
           "responsive": {},
           "events": [],
@@ -5054,7 +5170,9 @@ export const FORM_TEMPLATES = {
             "maxChars": 500,
             "patternPreset": "",
             "pattern": "",
-            "patternCountries": []
+            "patternCountries": [],
+            "requiredText": "",
+            "invalidText": ""
           },
           "responsive": {},
           "events": [],
@@ -5096,7 +5214,9 @@ export const FORM_TEMPLATES = {
             "maxChars": 500,
             "patternPreset": "",
             "pattern": "",
-            "patternCountries": []
+            "patternCountries": [],
+            "requiredText": "",
+            "invalidText": ""
           },
           "responsive": {},
           "events": [],
@@ -5247,7 +5367,9 @@ export const FORM_TEMPLATES = {
             "maxChars": 500,
             "patternPreset": "",
             "pattern": "",
-            "patternCountries": []
+            "patternCountries": [],
+            "requiredText": "",
+            "invalidText": ""
           },
           "responsive": {},
           "events": [],
@@ -5289,7 +5411,9 @@ export const FORM_TEMPLATES = {
             "maxChars": 500,
             "patternPreset": "",
             "pattern": "",
-            "patternCountries": []
+            "patternCountries": [],
+            "requiredText": "",
+            "invalidText": ""
           },
           "responsive": {},
           "events": [],
@@ -5331,7 +5455,9 @@ export const FORM_TEMPLATES = {
             "maxChars": 500,
             "patternPreset": "",
             "pattern": "",
-            "patternCountries": []
+            "patternCountries": [],
+            "requiredText": "",
+            "invalidText": ""
           },
           "responsive": {},
           "events": [],
@@ -5373,7 +5499,9 @@ export const FORM_TEMPLATES = {
             "maxChars": 500,
             "patternPreset": "",
             "pattern": "",
-            "patternCountries": []
+            "patternCountries": [],
+            "requiredText": "",
+            "invalidText": ""
           },
           "responsive": {},
           "events": [],
@@ -5404,7 +5532,10 @@ export const FORM_TEMPLATES = {
             "fileFormat": "pdf",
             "allowMultiple": false,
             "fileLimit": 3,
-            "buttonLabel": "Choose file"
+            "buttonLabel": "Choose file",
+            "maxFileMB": 0,
+            "requiredText": "",
+            "invalidText": ""
           },
           "responsive": {},
           "events": [],
@@ -5554,7 +5685,9 @@ export const FORM_TEMPLATES = {
             "maxChars": 500,
             "patternPreset": "",
             "pattern": "",
-            "patternCountries": []
+            "patternCountries": [],
+            "requiredText": "",
+            "invalidText": ""
           },
           "responsive": {},
           "events": [],
@@ -5596,7 +5729,9 @@ export const FORM_TEMPLATES = {
             "maxChars": 500,
             "patternPreset": "",
             "pattern": "",
-            "patternCountries": []
+            "patternCountries": [],
+            "requiredText": "",
+            "invalidText": ""
           },
           "responsive": {},
           "events": [],
@@ -5805,7 +5940,9 @@ export const FORM_TEMPLATES = {
             "maxChars": 500,
             "patternPreset": "",
             "pattern": "",
-            "patternCountries": []
+            "patternCountries": [],
+            "requiredText": "",
+            "invalidText": ""
           },
           "responsive": {},
           "events": [],
@@ -5847,7 +5984,9 @@ export const FORM_TEMPLATES = {
             "maxChars": 500,
             "patternPreset": "",
             "pattern": "",
-            "patternCountries": []
+            "patternCountries": [],
+            "requiredText": "",
+            "invalidText": ""
           },
           "responsive": {},
           "events": [],
@@ -5889,7 +6028,9 @@ export const FORM_TEMPLATES = {
             "maxChars": 500,
             "patternPreset": "",
             "pattern": "",
-            "patternCountries": []
+            "patternCountries": [],
+            "requiredText": "",
+            "invalidText": ""
           },
           "responsive": {},
           "events": [],
@@ -5931,7 +6072,9 @@ export const FORM_TEMPLATES = {
             "maxChars": 500,
             "patternPreset": "",
             "pattern": "",
-            "patternCountries": []
+            "patternCountries": [],
+            "requiredText": "",
+            "invalidText": ""
           },
           "responsive": {},
           "events": [],
@@ -6108,7 +6251,9 @@ export const FORM_TEMPLATES = {
             "maxChars": 500,
             "patternPreset": "",
             "pattern": "",
-            "patternCountries": []
+            "patternCountries": [],
+            "requiredText": "",
+            "invalidText": ""
           },
           "responsive": {},
           "events": [],
@@ -6285,7 +6430,9 @@ export const FORM_TEMPLATES = {
             "maxChars": 500,
             "patternPreset": "",
             "pattern": "",
-            "patternCountries": []
+            "patternCountries": [],
+            "requiredText": "",
+            "invalidText": ""
           },
           "responsive": {},
           "events": [],
@@ -6327,7 +6474,9 @@ export const FORM_TEMPLATES = {
             "maxChars": 500,
             "patternPreset": "",
             "pattern": "",
-            "patternCountries": []
+            "patternCountries": [],
+            "requiredText": "",
+            "invalidText": ""
           },
           "responsive": {},
           "events": [],
@@ -6477,7 +6626,9 @@ export const FORM_TEMPLATES = {
             "maxChars": 500,
             "patternPreset": "",
             "pattern": "",
-            "patternCountries": []
+            "patternCountries": [],
+            "requiredText": "",
+            "invalidText": ""
           },
           "responsive": {},
           "events": [],
@@ -6519,7 +6670,9 @@ export const FORM_TEMPLATES = {
             "maxChars": 500,
             "patternPreset": "",
             "pattern": "",
-            "patternCountries": []
+            "patternCountries": [],
+            "requiredText": "",
+            "invalidText": ""
           },
           "responsive": {},
           "events": [],
@@ -6561,7 +6714,9 @@ export const FORM_TEMPLATES = {
             "maxChars": 500,
             "patternPreset": "",
             "pattern": "",
-            "patternCountries": []
+            "patternCountries": [],
+            "requiredText": "",
+            "invalidText": ""
           },
           "responsive": {},
           "events": [],
@@ -6603,7 +6758,9 @@ export const FORM_TEMPLATES = {
             "maxChars": 500,
             "patternPreset": "",
             "pattern": "",
-            "patternCountries": []
+            "patternCountries": [],
+            "requiredText": "",
+            "invalidText": ""
           },
           "responsive": {},
           "events": [],

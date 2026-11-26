@@ -3,8 +3,8 @@
 
 export const TRANSLATION_SOURCE = {
   "elements": 69,
-  "pairs": 192,
-  "neverKeys": 196,
+  "pairs": 210,
+  "neverKeys": 201,
   "entityTypes": 12
 } as const;
 
@@ -199,18 +199,24 @@ export const TRANSLATABLE_SPECIALS: Record<string, string[]> = {
   "form-text": [
     "label",
     "placeholder",
-    "description"
+    "description",
+    "requiredText",
+    "invalidText"
   ],
   "form-number": [
     "label",
     "placeholder",
-    "description"
+    "description",
+    "requiredText",
+    "invalidText"
   ],
   "form-select": [
     "label",
     "options",
     "placeholder",
-    "description"
+    "description",
+    "requiredText",
+    "invalidText"
   ],
   "form-address": [
     "label",
@@ -236,7 +242,9 @@ export const TRANSLATABLE_SPECIALS: Record<string, string[]> = {
   "form-radio": [
     "label",
     "options",
-    "description"
+    "description",
+    "requiredText",
+    "invalidText"
   ],
   "form-payment": [
     "label",
@@ -250,7 +258,9 @@ export const TRANSLATABLE_SPECIALS: Record<string, string[]> = {
   "form-checkbox": [
     "label",
     "options",
-    "description"
+    "description",
+    "requiredText",
+    "invalidText"
   ],
   "form-date": [
     "label",
@@ -261,21 +271,28 @@ export const TRANSLATABLE_SPECIALS: Record<string, string[]> = {
     "dayLabel",
     "monthLabel",
     "yearLabel",
-    "timeLabel"
+    "timeLabel",
+    "requiredText",
+    "invalidText"
   ],
   "form-calendar": [
     "label",
-    "description"
+    "description",
+    "requiredText",
+    "invalidText"
   ],
   "form-file": [
     "label",
     "placeholder",
     "hintText",
     "description",
-    "buttonLabel"
+    "buttonLabel",
+    "requiredText",
+    "invalidText"
   ],
   "form-paragraph": [
-    "text"
+    "text",
+    "textHtml"
   ],
   "form-link": [
     "text",
@@ -294,7 +311,8 @@ export const TRANSLATABLE_SPECIALS: Record<string, string[]> = {
     "submittingText"
   ],
   "form-title": [
-    "text"
+    "text",
+    "textHtml"
   ],
   "image": [
     "alt"
@@ -478,11 +496,16 @@ export const NEVER_TRANSLATED: string[] = [
   "mapType",
   "maxCents",
   "maxChars",
+  "maxChecked",
+  "maxDate",
+  "maxFileMB",
   "maxLabelText",
   "maxValue",
   "menuId",
   "minCents",
   "minChars",
+  "minChecked",
+  "minDate",
   "minLabelText",
   "minValue",
   "mode",
@@ -985,6 +1008,12 @@ export const TRANSLATABLE_FIELDS: Record<string, TranslatableFieldSpec[]> = {
     },
     {
       "key": "description"
+    },
+    {
+      "key": "requiredText"
+    },
+    {
+      "key": "invalidText"
     }
   ],
   "form-number": [
@@ -996,6 +1025,12 @@ export const TRANSLATABLE_FIELDS: Record<string, TranslatableFieldSpec[]> = {
     },
     {
       "key": "description"
+    },
+    {
+      "key": "requiredText"
+    },
+    {
+      "key": "invalidText"
     }
   ],
   "form-select": [
@@ -1011,6 +1046,12 @@ export const TRANSLATABLE_FIELDS: Record<string, TranslatableFieldSpec[]> = {
     },
     {
       "key": "description"
+    },
+    {
+      "key": "requiredText"
+    },
+    {
+      "key": "invalidText"
     }
   ],
   "form-address": [
@@ -1078,6 +1119,12 @@ export const TRANSLATABLE_FIELDS: Record<string, TranslatableFieldSpec[]> = {
     },
     {
       "key": "description"
+    },
+    {
+      "key": "requiredText"
+    },
+    {
+      "key": "invalidText"
     }
   ],
   "form-payment": [
@@ -1116,6 +1163,12 @@ export const TRANSLATABLE_FIELDS: Record<string, TranslatableFieldSpec[]> = {
     },
     {
       "key": "description"
+    },
+    {
+      "key": "requiredText"
+    },
+    {
+      "key": "invalidText"
     }
   ],
   "form-date": [
@@ -1145,6 +1198,12 @@ export const TRANSLATABLE_FIELDS: Record<string, TranslatableFieldSpec[]> = {
     },
     {
       "key": "timeLabel"
+    },
+    {
+      "key": "requiredText"
+    },
+    {
+      "key": "invalidText"
     }
   ],
   "form-calendar": [
@@ -1153,6 +1212,12 @@ export const TRANSLATABLE_FIELDS: Record<string, TranslatableFieldSpec[]> = {
     },
     {
       "key": "description"
+    },
+    {
+      "key": "requiredText"
+    },
+    {
+      "key": "invalidText"
     }
   ],
   "form-file": [
@@ -1170,11 +1235,21 @@ export const TRANSLATABLE_FIELDS: Record<string, TranslatableFieldSpec[]> = {
     },
     {
       "key": "buttonLabel"
+    },
+    {
+      "key": "requiredText"
+    },
+    {
+      "key": "invalidText"
     }
   ],
   "form-paragraph": [
     {
       "key": "text"
+    },
+    {
+      "key": "textHtml",
+      "html": true
     }
   ],
   "form-link": [
@@ -1212,6 +1287,10 @@ export const TRANSLATABLE_FIELDS: Record<string, TranslatableFieldSpec[]> = {
   "form-title": [
     {
       "key": "text"
+    },
+    {
+      "key": "textHtml",
+      "html": true
     }
   ],
   "image": [

@@ -3,7 +3,7 @@
 import type { ApiOperation } from './types.js';
 
 export const SWAGGER_SOURCE = {
-  "operations": 1013,
+  "operations": 1016,
   "definitions": 445,
   "bodyCarrying": 493,
   "bodyUndescribed": 122,
@@ -14399,6 +14399,27 @@ export const API_OPERATIONS: ApiOperation[] = [
     "credential": "siteScoped"
   },
   {
+    "id": "get:/api/sites/{siteId}/integrations/health",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/integrations/health",
+    "tags": [
+      "integrations"
+    ],
+    "summary": "Is this store's measurement complete?",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
     "id": "get:/api/sites/{siteId}/integrations/{id}",
     "method": "GET",
     "path": "/api/sites/{siteId}/integrations/{id}",
@@ -14501,6 +14522,34 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": true,
     "bodyRef": "github_com_webbuilder_server_internal_integrations.Integration",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/api/sites/{siteId}/integrations/{id}/test",
+    "method": "POST",
+    "path": "/api/sites/{siteId}/integrations/{id}/test",
+    "tags": [
+      "integrations"
+    ],
+    "summary": "Send one test server event for one integration (\"Gửi thử\")",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Integration ID"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
     "credential": "siteScoped"
   },
   {
@@ -14833,6 +14882,41 @@ export const API_OPERATIONS: ApiOperation[] = [
         "required": true,
         "type": "string",
         "description": "Site ID"
+      }
+    ],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/sites/{siteId}/loyalty/members",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/loyalty/members",
+    "tags": [
+      "loyalty"
+    ],
+    "summary": "The program's members, highest balance first",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "limit",
+        "in": "query",
+        "required": false,
+        "type": "integer",
+        "description": "Page size (1-100, default 50)"
+      },
+      {
+        "name": "offset",
+        "in": "query",
+        "required": false,
+        "type": "integer",
+        "description": "Rows to skip"
       }
     ],
     "bodyDescribed": false,
@@ -20020,6 +20104,13 @@ export const API_OPERATIONS: ApiOperation[] = [
         "required": false,
         "type": "boolean",
         "description": "Only sales still waiting: not cancelled and not fulfilled"
+      },
+      {
+        "name": "number",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "One sale by its number, exact: 1001 or #1001 (the receipt barcode)"
       },
       {
         "name": "limit",
@@ -43246,6 +43337,10 @@ export const API_DEFINITIONS: Record<string, unknown> = {
       },
       "priceCents": {
         "type": "integer"
+      },
+      "sku": {
+        "description": "SKU is the product's own code (products.Product.SKU) → the PRESENT-ONLY\n`product.sku` key (render.ProductSKUContext). Empty = no key.",
+        "type": "string"
       },
       "slug": {
         "type": "string"

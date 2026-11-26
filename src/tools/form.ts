@@ -38,7 +38,40 @@ const PLACEHOLDER = new Set(['form-text', 'form-number', 'form-select', 'form-fi
 type Form = { id: string; name: string; type: string; settings?: Record<string, unknown>; submissionCount?: number; unreadCount?: number };
 type Value = { fieldName: string; text?: string; number?: number; bool?: boolean; json?: unknown };
 type Submission = { id: string; status: string; createdAt: string; readAt?: string; values?: Value[]; files?: unknown[] };
-type FieldIn = { type: string; label: string; required?: boolean; placeholder?: string; options?: string[] };
+type FieldIn = {
+  type: string; label: string; required?: boolean; placeholder?: string; options?: string[];
+  requiredText?: string; invalidText?: string; minChecked?: number; maxChecked?: number;
+  acceptedDates?: 'past' | 'future'; minDate?: string; maxDate?: string; maxFileMB?: number;
+};
+
+/** Message keys: every type that carries field rules (FIELD_RULE_SPECIALS in web_builder); form-timeslot has none. */
+const MESSAGE = new Set(['form-text', 'form-number', 'form-select', 'form-radio', 'form-checkbox', 'form-date', 'form-calendar', 'form-file']);
+const RULE_TYPE: Record<string, [string, string]> = {
+  minChecked: ['form-checkbox', 'a checkbox group'], maxChecked: ['form-checkbox', 'a checkbox group'],
+  acceptedDates: ['form-date', 'a date field'], minDate: ['form-date', 'a date field'], maxDate: ['form-date', 'a date field'],
+  maxFileMB: ['form-file', 'a file field'],
+};
+const isDay = (v: string) => /^\d{4}-\d{2}-\d{2}$/.test(v) && new Date(`${v}T00:00:00Z`).toISOString().startsWith(v);
+
+/** Throws before any request, like options/placeholder: a rule on the wrong type would be dropped on save, silently. */
+function checkRules(f: FieldIn, type: string): void {
+  for (const k of ['requiredText', 'invalidText'] as const) {
+    if (f[k] !== undefined && !MESSAGE.has(type)) throw new Error(`sbuilder: ${type} has no ${k}.`);
+  }
+  for (const [k, [owner, what]] of Object.entries(RULE_TYPE)) {
+    if ((f as Record<string, unknown>)[k] !== undefined && type !== owner) throw new Error(`sbuilder: ${k} applies to ${what} (${owner}), not ${type}.`);
+  }
+  for (const k of ['minChecked', 'maxChecked'] as const) {
+    if (f[k] !== undefined && (!Number.isInteger(f[k]) || f[k]! < 0)) throw new Error(`sbuilder: ${k} must be a whole number, 0 or more (0 = no bound).`);
+  }
+  if (f.minChecked && f.maxChecked && f.minChecked > f.maxChecked) throw new Error(`sbuilder: minChecked ${f.minChecked} is above maxChecked ${f.maxChecked}.`);
+  for (const k of ['minDate', 'maxDate'] as const) {
+    if (f[k] !== undefined && f[k] !== '' && !isDay(f[k]!)) throw new Error(`sbuilder: ${k} "${f[k]}" is not a date — use YYYY-MM-DD.`);
+  }
+  if (f.minDate && f.maxDate && f.minDate > f.maxDate) throw new Error(`sbuilder: minDate ${f.minDate} is after maxDate ${f.maxDate}.`);
+  if (f.maxFileMB !== undefined && (!Number.isInteger(f.maxFileMB) || f.maxFileMB < 1 || f.maxFileMB > 25)) throw new Error('sbuilder: maxFileMB must be a whole number from 1 to 25.');
+}
+const RULE_KEYS = ['requiredText', 'invalidText', 'minChecked', 'maxChecked', 'acceptedDates', 'minDate', 'maxDate', 'maxFileMB'] as const;
 
 const plain = (v: unknown): v is Record<string, unknown> => !!v && typeof v === 'object' && !Array.isArray(v);
 /** `patch` over `cur`, one level deep — `settings.notify` is a whole object on the wire too. */
@@ -59,6 +92,7 @@ export function formDocument(fields: FieldIn[]) {
     if (!FIELD_TYPES.includes(type)) throw new Error(`sbuilder: field type "${f.type}" is not one sb_form makes — use ${FIELD_TYPES.join(', ')}. Others: sb_page_open form_id, then sb_add.`);
     if (f.options && !CHOICE.has(type)) throw new Error(`sbuilder: options apply to form-select, form-radio and form-checkbox, not ${type}.`);
     if (f.placeholder !== undefined && !PLACEHOLDER.has(type)) throw new Error(`sbuilder: ${type} has no placeholder.`);
+    checkRules(f, type);
     // The posted name from the label, unique: answers read as {email: …}, not {form-text_x9: …}.
     const stem = nameFromLabel(f.label) || 'field';
     let name = stem;
@@ -68,6 +102,7 @@ export function formDocument(fields: FieldIn[]) {
     if (f.required !== undefined) specials.required = f.required;
     if (f.placeholder !== undefined) specials.placeholder = f.placeholder;
     if (f.options) specials.options = f.options;
+    for (const k of RULE_KEYS) if (f[k] !== undefined) specials[k] = f[k];
     const { patches, ids } = addSubtree(doc, root.id, { type, specials });
     doc.apply(patches);
     out.push({ id: ids[0], type, name });
@@ -123,7 +158,17 @@ export function registerFormTools(server: McpServer, ctx: ToolContext): void {
         form_id: z.string().optional(),
         name: z.string().optional(),
         fields: z
-          .array(z.object({ type: z.string(), label: z.string(), required: z.boolean().optional(), placeholder: z.string().optional(), options: z.array(z.string()).optional() }).strict())
+          .array(
+            z
+              .object({
+                type: z.string(), label: z.string(), required: z.boolean().optional(), placeholder: z.string().optional(), options: z.array(z.string()).optional(),
+                requiredText: z.string().optional(), invalidText: z.string().optional(),
+                minChecked: z.number().optional(), maxChecked: z.number().optional(),
+                acceptedDates: z.enum(['past', 'future']).optional(), minDate: z.string().optional(), maxDate: z.string().optional(),
+                maxFileMB: z.number().optional(),
+              })
+              .strict(),
+          )
           .optional(),
         settings: z.record(z.string(), z.unknown()).optional(),
         limit: z.number().int().optional(),

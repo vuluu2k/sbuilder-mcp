@@ -6822,7 +6822,9 @@ export const ELEMENTS: Record<string, CatalogElement> = {
         "maxChars": 500,
         "patternPreset": "",
         "pattern": "",
-        "patternCountries": []
+        "patternCountries": [],
+        "requiredText": "",
+        "invalidText": ""
       },
       "style": {
         "width": "100%"
@@ -6988,6 +6990,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
       "The same column is already collected by another field in this form — one column takes one value, and the form will be refused."
     ],
     "contentTips": [
+      "requiredText and invalidText replace the platform refusal sentences with your own copy; leave them empty to keep the default.",
       "Label the field with what you want, not with the format you want it in. Put the format in the help line.",
       "A placeholder is not a label: it disappears the moment someone types, so anything they need while writing belongs in the label or the help line.",
       "Mark a field required only if you would genuinely discard the response without it."
@@ -7022,7 +7025,10 @@ export const ELEMENTS: Record<string, CatalogElement> = {
         "fileFormat": "image",
         "allowMultiple": false,
         "fileLimit": 3,
-        "buttonLabel": "Choose file"
+        "buttonLabel": "Choose file",
+        "maxFileMB": 0,
+        "requiredText": "",
+        "invalidText": ""
       },
       "style": {
         "width": "100%"
@@ -7144,6 +7150,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
       "The form is meant to be answered in seconds; asking for an attachment is the step people abandon."
     ],
     "contentTips": [
+      "Cap each file with maxFileMB (1 to 25); 0 keeps the platform limit. Custom requiredText/invalidText replace the default refusal sentences.",
       "Say in the label or the help line which formats you accept and roughly how large a file may be — a visitor who finds out by being refused usually leaves.",
       "The button label is what a visitor reads before choosing; \"Choose a photo\" tells them more than \"Upload\".",
       "Only mark it required if a response without the attachment is genuinely of no use to you.",
@@ -7358,6 +7365,8 @@ export const ELEMENTS: Record<string, CatalogElement> = {
         "description": "",
         "required": false,
         "showLabel": true,
+        "requiredText": "",
+        "invalidText": "",
         "mapTo": "",
         "prefillValue": "",
         "urlParam": "",
@@ -7910,6 +7919,8 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "Tùy chọn 3"
         ],
         "defaultValue": "",
+        "requiredText": "",
+        "invalidText": "",
         "placeholder": "Chọn một mục",
         "urlParam": ""
       },
@@ -8083,7 +8094,9 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "Tùy chọn 2",
           "Tùy chọn 3"
         ],
-        "defaultValue": ""
+        "defaultValue": "",
+        "requiredText": "",
+        "invalidText": ""
       },
       "config": {
         "columns": 1,
@@ -8576,7 +8589,11 @@ export const ELEMENTS: Record<string, CatalogElement> = {
           "Tùy chọn 2",
           "Tùy chọn 3"
         ],
-        "defaultValue": ""
+        "defaultValue": "",
+        "requiredText": "",
+        "invalidText": "",
+        "minChecked": 0,
+        "maxChecked": 0
       },
       "config": {
         "columns": 1,
@@ -8597,7 +8614,8 @@ export const ELEMENTS: Record<string, CatalogElement> = {
             "label": "Option list",
             "controls": [
               "field_option_source",
-              "field_options"
+              "field_options",
+              "field_choice_limit"
             ]
           },
           {
@@ -8676,6 +8694,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
     "controls": [
       "field_option_source",
       "field_options",
+      "field_choice_limit",
       "field_content",
       "field_chrome",
       "checkbox_skin",
@@ -8698,6 +8717,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
       "The list is long enough to scroll; break it into groups with their own labels instead."
     ],
     "contentTips": [
+      "Set a minimum or maximum number of ticks (minChecked, maxChecked) when the choice is a quota — \"pick up to 3\"; 0 means no bound.",
       "Never pre-tick a consent. A box the visitor did not tick is not agreement, and in several places it is not lawful either.",
       "Keep each label short enough to read in one line — a ticked box beside a paragraph is a decision nobody actually made."
     ],
@@ -8735,7 +8755,12 @@ export const ELEMENTS: Record<string, CatalogElement> = {
         "dayLabel": "Ngày",
         "monthLabel": "Tháng",
         "yearLabel": "Năm",
-        "timeLabel": "Giờ"
+        "timeLabel": "Giờ",
+        "acceptedDates": "",
+        "minDate": "",
+        "maxDate": "",
+        "requiredText": "",
+        "invalidText": ""
       },
       "config": {
         "gap": 8
@@ -8753,6 +8778,13 @@ export const ELEMENTS: Record<string, CatalogElement> = {
             "label": "Content",
             "controls": [
               "field_content"
+            ]
+          },
+          {
+            "key": "accepted_dates",
+            "label": "Accepted dates",
+            "controls": [
+              "field_date_accepted"
             ]
           },
           {
@@ -8838,6 +8870,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
     ],
     "controls": [
       "field_content",
+      "field_date_accepted",
       "field_date_format",
       "field_layout",
       "field_chrome",
@@ -8862,6 +8895,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
       "A single free-typed value would do. If the answer is one number — an age, a year — a number field reads better than a lone date box."
     ],
     "contentTips": [
+      "Limit what can be picked with acceptedDates (past or future) or minDate/maxDate (YYYY-MM-DD, inclusive); they apply to day-month-year formats only.",
       "Pick the Format by what the answer needs: Only date for a birthday, Date & time for an appointment moment, Only time for opening hours or a preferred call time.",
       "Drop the year when the year adds nothing — a birthday greeting needs the day and the month, and asking for a birth year asks for the visitor’s age."
     ],
@@ -8899,7 +8933,9 @@ export const ELEMENTS: Record<string, CatalogElement> = {
         "specificDate": "",
         "acceptedDates": "all",
         "availableDays": "1,2,3,4,5,6,7",
-        "picker": "native"
+        "picker": "native",
+        "requiredText": "",
+        "invalidText": ""
       },
       "style": {
         "width": "100%"
@@ -9100,6 +9136,13 @@ export const ELEMENTS: Record<string, CatalogElement> = {
         "tab": "general",
         "groups": [
           {
+            "key": "content",
+            "label": "Content",
+            "controls": [
+              "text_content"
+            ]
+          },
+          {
             "key": "size",
             "label": "Size",
             "controls": [
@@ -9120,8 +9163,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
               "text_align",
               "line_height",
               "text_spacing",
-              "text_transform",
-              "text_content"
+              "text_transform"
             ]
           },
           {
@@ -9161,6 +9203,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
       }
     ],
     "controls": [
+      "text_content",
       "width_select",
       "height_select",
       "size_bounds",
@@ -9173,7 +9216,6 @@ export const ELEMENTS: Record<string, CatalogElement> = {
       "line_height",
       "text_spacing",
       "text_transform",
-      "text_content",
       "html_tag",
       "padding_margin",
       "display",
@@ -9226,6 +9268,13 @@ export const ELEMENTS: Record<string, CatalogElement> = {
         "tab": "general",
         "groups": [
           {
+            "key": "content",
+            "label": "Content",
+            "controls": [
+              "text_content"
+            ]
+          },
+          {
             "key": "size",
             "label": "Size",
             "controls": [
@@ -9246,8 +9295,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
               "text_align",
               "line_height",
               "text_spacing",
-              "text_transform",
-              "text_content"
+              "text_transform"
             ]
           }
         ]
@@ -9280,6 +9328,7 @@ export const ELEMENTS: Record<string, CatalogElement> = {
       }
     ],
     "controls": [
+      "text_content",
       "width_select",
       "height_select",
       "size_bounds",
@@ -9292,7 +9341,6 @@ export const ELEMENTS: Record<string, CatalogElement> = {
       "line_height",
       "text_spacing",
       "text_transform",
-      "text_content",
       "padding_margin",
       "display",
       "class_css"

@@ -83,6 +83,46 @@ describe('sb_form', () => {
     });
   });
 
+  it('rule keys land in specials; the wrong type or a bad value is refused before any request', async () => {
+    const p = platform();
+    await withCall(p, async (call) => {
+      const ok = await call('sb_form', {
+        ...S, action: 'create', dry_run: false,
+        fields: [
+          { type: 'form-checkbox', label: 'Tags', options: ['a', 'b'], minChecked: 1, maxChecked: 2, requiredText: 'Pick one', invalidText: 'Too many' },
+          { type: 'form-date', label: 'Day', acceptedDates: 'future', minDate: '2026-01-01', maxDate: '2026-12-31' },
+          { type: 'form-file', label: 'Doc', maxFileMB: 5 },
+        ],
+      });
+      expect(ok.isError, ok.text).toBe(false);
+      const doc = p.fake.forms.get('frm_n') as { root_node_id: string; nodes: Record<string, any> };
+      const kids = doc.nodes[doc.root_node_id].data.nodes.map((id: string) => doc.nodes[id]);
+      expect(kids[0].specials).toMatchObject({ minChecked: 1, maxChecked: 2, requiredText: 'Pick one', invalidText: 'Too many' });
+      expect(kids[1].specials).toMatchObject({ acceptedDates: 'future', minDate: '2026-01-01', maxDate: '2026-12-31' });
+      expect(kids[2].specials.maxFileMB).toBe(5);
+    });
+    const before = p.hits.length;
+    const bad: Array<[Record<string, unknown>, RegExp]> = [
+      [{ type: 'form-text', label: 'A', minChecked: 1 }, /minChecked applies to a checkbox group/],
+      [{ type: 'form-timeslot', label: 'A', requiredText: 'x' }, /form-timeslot has no requiredText/],
+      [{ type: 'form-checkbox', label: 'A', minChecked: 3, maxChecked: 2 }, /minChecked 3 is above maxChecked 2/],
+      [{ type: 'form-date', label: 'A', minDate: '2026-02-30' }, /minDate "2026-02-30" is not a date/],
+      [{ type: 'form-date', label: 'A', minDate: '2026-05-01', maxDate: '2026-04-01' }, /after maxDate/],
+      [{ type: 'form-file', label: 'A', maxFileMB: 26 }, /maxFileMB must be a whole number from 1 to 25/],
+      [{ type: 'form-file', label: 'A', maxFileMB: 0 }, /maxFileMB must be/],
+    ];
+    await withCall(p, async (call) => {
+      for (const [f, re] of bad) {
+        const r = await call('sb_form', { ...S, action: 'create', fields: [f], dry_run: false });
+        expect(r.isError, JSON.stringify(f)).toBe(true);
+        expect(r.text).toMatch(re);
+      }
+      const z = await call('sb_form', { ...S, action: 'create', fields: [{ type: 'form-date', label: 'A', acceptedDates: 'sometimes' }], dry_run: false });
+      expect(z.isError, 'a bad acceptedDates word passed the schema').toBe(true);
+    });
+    expect(p.hits.length, 'a refused create made a request').toBe(before);
+  });
+
   it('create with fields: POST, then a document of seeded form-* nodes with unique names and a submit', async () => {
     const p = platform();
     await withCall(p, async (call) => {

@@ -38,7 +38,7 @@ describe('specials.text / textHtml on a text-bearing element', () => {
     expect(c.note.fix).toMatch(/textHtml/);
     expect(writeCheck('text', 'specials', { text: 'Giá < 100k & miễn phí' })).toEqual([]);
     // An element with no rich twin has nowhere better to put it.
-    expect(writeCheck('form-title', 'specials', { text: '<b>x</b>' }).map((c) => c.note.code)).not.toContain('text_markup');
+    expect(writeCheck('form-submit', 'specials', { text: '<b>x</b>' }).map((c) => c.note.code)).not.toContain('text_markup');
   });
 
   it('sb_add says it too, once per element type and key', () => {
