@@ -6,6 +6,15 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.116.0] - 2026-11-26
+
+### Added
+- `sb_form` nhận `requiredText` trên các trường `form-timeslot`, còn `invalidText` vẫn bị từ chối ở đó.
+
+### Changed
+- `sb_store` `action: "form"` và bản seed checkout chèn mẫu form tiếng Anh trên site tiếng Anh, còn các ngôn ngữ khác hoặc chưa đặt vẫn giữ văn bản hiện có.
+- Catalog nền tảng đi kèm được tạo lại từ web_builder v1.0.344.
+
 ## [0.115.0] - 2026-11-26
 
 ### Added
