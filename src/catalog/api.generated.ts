@@ -4,9 +4,9 @@ import type { ApiOperation } from './types.js';
 
 export const SWAGGER_SOURCE = {
   "operations": 1026,
-  "definitions": 449,
-  "bodyCarrying": 495,
-  "bodyUndescribed": 116,
+  "definitions": 455,
+  "bodyCarrying": 487,
+  "bodyUndescribed": 118,
   "generatedFrom": "server/docs/swagger.json"
 } as const;
 
@@ -569,7 +569,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     "tags": [
       "storefront"
     ],
-    "summary": "Countries and administrative divisions for an address field",
+    "summary": "The countries the address dataset covers, with each one's postal-code format",
     "params": [],
     "bodyDescribed": false,
     "bodyRef": null,
@@ -582,7 +582,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     "tags": [
       "storefront"
     ],
-    "summary": "Countries and administrative divisions for an address field",
+    "summary": "The 34 Vietnamese provinces, cities first",
     "params": [],
     "bodyDescribed": false,
     "bodyRef": null,
@@ -595,8 +595,37 @@ export const API_OPERATIONS: ApiOperation[] = [
     "tags": [
       "storefront"
     ],
-    "summary": "Countries and administrative divisions for an address field",
-    "params": [],
+    "summary": "Suggest Vietnamese wards matching a typed query",
+    "params": [
+      {
+        "name": "q",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Text typed so far"
+      },
+      {
+        "name": "province",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Narrow to this province code"
+      },
+      {
+        "name": "limit",
+        "in": "query",
+        "required": false,
+        "type": "integer",
+        "description": "Max suggestions"
+      },
+      {
+        "name": "country",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Anything other than VN answers an empty list"
+      }
+    ],
     "bodyDescribed": false,
     "bodyRef": null,
     "credential": "siteScoped"
@@ -608,8 +637,30 @@ export const API_OPERATIONS: ApiOperation[] = [
     "tags": [
       "storefront"
     ],
-    "summary": "Countries and administrative divisions for an address field",
-    "params": [],
+    "summary": "The administrative units one level below a parent, for any country",
+    "params": [
+      {
+        "name": "country",
+        "in": "query",
+        "required": true,
+        "type": "string",
+        "description": "Country code"
+      },
+      {
+        "name": "level",
+        "in": "query",
+        "required": false,
+        "type": "integer",
+        "description": "Level to list, 1 (default) up to the maximum depth"
+      },
+      {
+        "name": "parent",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Parent unit code; omit for level 1"
+      }
+    ],
     "bodyDescribed": false,
     "bodyRef": null,
     "credential": "siteScoped"
@@ -621,8 +672,16 @@ export const API_OPERATIONS: ApiOperation[] = [
     "tags": [
       "storefront"
     ],
-    "summary": "Countries and administrative divisions for an address field",
-    "params": [],
+    "summary": "The wards of one Vietnamese province, in name order",
+    "params": [
+      {
+        "name": "province",
+        "in": "query",
+        "required": true,
+        "type": "string",
+        "description": "Province code"
+      }
+    ],
     "bodyDescribed": false,
     "bodyRef": null,
     "credential": "siteScoped"
@@ -939,79 +998,8 @@ export const API_OPERATIONS: ApiOperation[] = [
     "tags": [
       "storefeed"
     ],
-    "summary": "Storefront catalog feed",
-    "params": [
-      {
-        "name": "f.category",
-        "in": "query",
-        "required": false,
-        "type": "string",
-        "description": "Category ids, comma-separated"
-      },
-      {
-        "name": "f.availability",
-        "in": "query",
-        "required": false,
-        "type": "string",
-        "description": "in_stock and/or out_of_stock"
-      },
-      {
-        "name": "f.attribute",
-        "in": "query",
-        "required": false,
-        "type": "string",
-        "description": "Axis-qualified values, e.g. Color:Pink"
-      },
-      {
-        "name": "f.brand",
-        "in": "query",
-        "required": false,
-        "type": "string",
-        "description": "Brand names, case-insensitive"
-      },
-      {
-        "name": "f.tag",
-        "in": "query",
-        "required": false,
-        "type": "string",
-        "description": "Tags, case-insensitive"
-      },
-      {
-        "name": "f.price",
-        "in": "query",
-        "required": false,
-        "type": "string",
-        "description": "Ranges in minor units, e.g. 1000-2000 or 1000- for Above"
-      },
-      {
-        "name": "f.purchase_history",
-        "in": "query",
-        "required": false,
-        "type": "string",
-        "description": "purchased / not_purchased — REFUSED here (400); it needs a shopper session, so it works on the served page only"
-      },
-      {
-        "name": "ids",
-        "in": "query",
-        "required": false,
-        "type": "string",
-        "description": "products-by-id only: product ids, comma-separated (max 200); ids the catalog no longer has are absent from the answer"
-      },
-      {
-        "name": "limit",
-        "in": "query",
-        "required": false,
-        "type": "integer",
-        "description": "Page size (max 200)"
-      },
-      {
-        "name": "offset",
-        "in": "query",
-        "required": false,
-        "type": "integer",
-        "description": "Page offset"
-      }
-    ],
+    "summary": "Every value a storefront filter can offer, counted",
+    "params": [],
     "bodyDescribed": false,
     "bodyRef": null,
     "credential": "siteScoped"
@@ -1023,7 +1011,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     "tags": [
       "storefeed"
     ],
-    "summary": "Storefront catalog feed",
+    "summary": "One filtered page of the storefront catalog, plus the total match count",
     "params": [
       {
         "name": "f.category",
@@ -1072,14 +1060,7 @@ export const API_OPERATIONS: ApiOperation[] = [
         "in": "query",
         "required": false,
         "type": "string",
-        "description": "purchased / not_purchased — REFUSED here (400); it needs a shopper session, so it works on the served page only"
-      },
-      {
-        "name": "ids",
-        "in": "query",
-        "required": false,
-        "type": "string",
-        "description": "products-by-id only: product ids, comma-separated (max 200); ids the catalog no longer has are absent from the answer"
+        "description": "REFUSED here (400): it needs a shopper session, so it works on the served page only"
       },
       {
         "name": "limit",
@@ -1107,77 +1088,21 @@ export const API_OPERATIONS: ApiOperation[] = [
     "tags": [
       "storefeed"
     ],
-    "summary": "Storefront catalog feed",
+    "summary": "Today's catalog facts for a list of product ids the client already holds",
     "params": [
-      {
-        "name": "f.category",
-        "in": "query",
-        "required": false,
-        "type": "string",
-        "description": "Category ids, comma-separated"
-      },
-      {
-        "name": "f.availability",
-        "in": "query",
-        "required": false,
-        "type": "string",
-        "description": "in_stock and/or out_of_stock"
-      },
-      {
-        "name": "f.attribute",
-        "in": "query",
-        "required": false,
-        "type": "string",
-        "description": "Axis-qualified values, e.g. Color:Pink"
-      },
-      {
-        "name": "f.brand",
-        "in": "query",
-        "required": false,
-        "type": "string",
-        "description": "Brand names, case-insensitive"
-      },
-      {
-        "name": "f.tag",
-        "in": "query",
-        "required": false,
-        "type": "string",
-        "description": "Tags, case-insensitive"
-      },
-      {
-        "name": "f.price",
-        "in": "query",
-        "required": false,
-        "type": "string",
-        "description": "Ranges in minor units, e.g. 1000-2000 or 1000- for Above"
-      },
-      {
-        "name": "f.purchase_history",
-        "in": "query",
-        "required": false,
-        "type": "string",
-        "description": "purchased / not_purchased — REFUSED here (400); it needs a shopper session, so it works on the served page only"
-      },
       {
         "name": "ids",
         "in": "query",
+        "required": true,
+        "type": "string",
+        "description": "Product ids, comma-separated (max 200)"
+      },
+      {
+        "name": "locale",
+        "in": "query",
         "required": false,
         "type": "string",
-        "description": "products-by-id only: product ids, comma-separated (max 200); ids the catalog no longer has are absent from the answer"
-      },
-      {
-        "name": "limit",
-        "in": "query",
-        "required": false,
-        "type": "integer",
-        "description": "Page size (max 200)"
-      },
-      {
-        "name": "offset",
-        "in": "query",
-        "required": false,
-        "type": "integer",
-        "description": "Page offset"
+        "description": "Language to label titles in"
       }
     ],
     "bodyDescribed": false,
@@ -1411,8 +1336,23 @@ export const API_OPERATIONS: ApiOperation[] = [
     "tags": [
       "payments"
     ],
-    "summary": "Payment gateway callback and shopper return",
-    "params": [],
+    "summary": "Receive a payment gateway's settlement callback",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "provider",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Gateway provider key"
+      }
+    ],
     "bodyDescribed": false,
     "bodyRef": null,
     "credential": "siteScoped"
@@ -1424,8 +1364,23 @@ export const API_OPERATIONS: ApiOperation[] = [
     "tags": [
       "payments"
     ],
-    "summary": "Payment gateway callback and shopper return",
-    "params": [],
+    "summary": "Land the shopper after the gateway: redirect to the store's completion page",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "provider",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Gateway provider key"
+      }
+    ],
     "bodyDescribed": false,
     "bodyRef": null,
     "credential": "siteScoped"
@@ -1437,7 +1392,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     "tags": [
       "runtime"
     ],
-    "summary": "Island runtime bundle (loader + node modules)",
+    "summary": "The version of the live island runtime bundle",
     "params": [],
     "bodyDescribed": false,
     "bodyRef": null,
@@ -1450,8 +1405,23 @@ export const API_OPERATIONS: ApiOperation[] = [
     "tags": [
       "runtime"
     ],
-    "summary": "Island runtime bundle (loader + node modules)",
-    "params": [],
+    "summary": "One immutable, content-hash-versioned island runtime bundle file",
+    "params": [
+      {
+        "name": "version",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Bundle version (content hash)"
+      },
+      {
+        "name": "file",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Bundle file name, e.g. Loader.js"
+      }
+    ],
     "bodyDescribed": false,
     "bodyRef": null,
     "credential": "siteScoped"
@@ -1511,7 +1481,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     "tags": [
       "storefront"
     ],
-    "summary": "Public ticket page, QR image, holder edit and lookup",
+    "summary": "The find-my-tickets form",
     "params": [],
     "bodyDescribed": false,
     "bodyRef": null,
@@ -1524,8 +1494,23 @@ export const API_OPERATIONS: ApiOperation[] = [
     "tags": [
       "storefront"
     ],
-    "summary": "Public ticket page, QR image, holder edit and lookup",
-    "params": [],
+    "summary": "Find the tickets of a paid order by order number and the contact it was placed with",
+    "params": [
+      {
+        "name": "orderNumber",
+        "in": "formData",
+        "required": true,
+        "type": "string",
+        "description": "Order number"
+      },
+      {
+        "name": "contact",
+        "in": "formData",
+        "required": true,
+        "type": "string",
+        "description": "Email or phone the order was placed with"
+      }
+    ],
     "bodyDescribed": false,
     "bodyRef": null,
     "credential": "siteScoped"
@@ -1537,8 +1522,16 @@ export const API_OPERATIONS: ApiOperation[] = [
     "tags": [
       "storefront"
     ],
-    "summary": "Public ticket page, QR image, holder edit and lookup",
-    "params": [],
+    "summary": "A ticket's public page",
+    "params": [
+      {
+        "name": "token",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Ticket token"
+      }
+    ],
     "bodyDescribed": false,
     "bodyRef": null,
     "credential": "siteScoped"
@@ -1550,8 +1543,23 @@ export const API_OPERATIONS: ApiOperation[] = [
     "tags": [
       "storefront"
     ],
-    "summary": "Public ticket page, QR image, holder edit and lookup",
-    "params": [],
+    "summary": "Change the holder name on a ticket",
+    "params": [
+      {
+        "name": "token",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Ticket token"
+      },
+      {
+        "name": "name",
+        "in": "formData",
+        "required": true,
+        "type": "string",
+        "description": "New holder name"
+      }
+    ],
     "bodyDescribed": false,
     "bodyRef": null,
     "credential": "siteScoped"
@@ -1563,8 +1571,16 @@ export const API_OPERATIONS: ApiOperation[] = [
     "tags": [
       "storefront"
     ],
-    "summary": "Public ticket page, QR image, holder edit and lookup",
-    "params": [],
+    "summary": "A ticket's QR code image (opens the ticket page; does not admit)",
+    "params": [
+      {
+        "name": "token",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Ticket token"
+      }
+    ],
     "bodyDescribed": false,
     "bodyRef": null,
     "credential": "siteScoped"
@@ -2920,7 +2936,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     "tags": [
       "auth"
     ],
-    "summary": "Begin a Google/GitHub sign-in, or finish one",
+    "summary": "Finish a Google/GitHub sign-in: redirect back to the app with the outcome in the fragment",
     "params": [
       {
         "name": "provider",
@@ -2930,32 +2946,25 @@ export const API_OPERATIONS: ApiOperation[] = [
         "description": "google or github"
       },
       {
-        "name": "intent",
-        "in": "query",
-        "required": false,
-        "type": "string",
-        "description": "login (default) or link; link needs a session"
-      },
-      {
-        "name": "redirect",
-        "in": "query",
-        "required": false,
-        "type": "string",
-        "description": "an in-app path to land on afterwards"
-      },
-      {
         "name": "code",
         "in": "query",
         "required": false,
         "type": "string",
-        "description": "callback only: the provider's authorization code"
+        "description": "the provider's authorization code"
       },
       {
         "name": "state",
         "in": "query",
         "required": false,
         "type": "string",
-        "description": "callback only: the state this server signed"
+        "description": "the state this server signed"
+      },
+      {
+        "name": "error",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "set by the provider when consent was declined"
       }
     ],
     "bodyDescribed": false,
@@ -2969,7 +2978,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     "tags": [
       "auth"
     ],
-    "summary": "Begin a Google/GitHub sign-in, or finish one",
+    "summary": "Begin a Google/GitHub sign-in: the provider's authorize URL and the state to remember",
     "params": [
       {
         "name": "provider",
@@ -2991,20 +3000,6 @@ export const API_OPERATIONS: ApiOperation[] = [
         "required": false,
         "type": "string",
         "description": "an in-app path to land on afterwards"
-      },
-      {
-        "name": "code",
-        "in": "query",
-        "required": false,
-        "type": "string",
-        "description": "callback only: the provider's authorization code"
-      },
-      {
-        "name": "state",
-        "in": "query",
-        "required": false,
-        "type": "string",
-        "description": "callback only: the state this server signed"
       }
     ],
     "bodyDescribed": false,
@@ -10673,7 +10668,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     "tags": [
       "domains"
     ],
-    "summary": "Verify domain ownership or elect the primary domain",
+    "summary": "Elect a verified domain as the site's primary host",
     "params": [
       {
         "name": "siteId",
@@ -10771,7 +10766,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     "tags": [
       "domains"
     ],
-    "summary": "Verify domain ownership or elect the primary domain",
+    "summary": "Check the DNS TXT proof of ownership for a custom domain",
     "params": [
       {
         "name": "siteId",
@@ -12325,7 +12320,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     "tags": [
       "forms"
     ],
-    "summary": "List or create site forms",
+    "summary": "List the site's forms with their response and unread counts",
     "params": [
       {
         "name": "siteId",
@@ -12333,17 +12328,10 @@ export const API_OPERATIONS: ApiOperation[] = [
         "required": true,
         "type": "string",
         "description": "Site ID"
-      },
-      {
-        "name": "form",
-        "in": "body",
-        "required": false,
-        "type": "object",
-        "description": "Form to create (POST only)"
       }
     ],
-    "bodyDescribed": true,
-    "bodyRef": "github_com_webbuilder_server_internal_forms.Form",
+    "bodyDescribed": false,
+    "bodyRef": null,
     "credential": "siteScoped"
   },
   {
@@ -12353,7 +12341,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     "tags": [
       "forms"
     ],
-    "summary": "List or create site forms",
+    "summary": "Create a form",
     "params": [
       {
         "name": "siteId",
@@ -12365,9 +12353,9 @@ export const API_OPERATIONS: ApiOperation[] = [
       {
         "name": "form",
         "in": "body",
-        "required": false,
+        "required": true,
         "type": "object",
-        "description": "Form to create (POST only)"
+        "description": "Form to create"
       }
     ],
     "bodyDescribed": true,
@@ -12542,7 +12530,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     "tags": [
       "forms"
     ],
-    "summary": "List or create site forms",
+    "summary": "The site's total of unread form responses, for the sidebar badge",
     "params": [
       {
         "name": "siteId",
@@ -12550,17 +12538,10 @@ export const API_OPERATIONS: ApiOperation[] = [
         "required": true,
         "type": "string",
         "description": "Site ID"
-      },
-      {
-        "name": "form",
-        "in": "body",
-        "required": false,
-        "type": "object",
-        "description": "Form to create (POST only)"
       }
     ],
-    "bodyDescribed": true,
-    "bodyRef": "github_com_webbuilder_server_internal_forms.Form",
+    "bodyDescribed": false,
+    "bodyRef": null,
     "credential": "siteScoped"
   },
   {
@@ -13739,7 +13720,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     "tags": [
       "gift-cards"
     ],
-    "summary": "Read a gift card's ledger, or adjust its balance",
+    "summary": "Adjust a gift card's balance by a signed amount, with a required note",
     "params": [
       {
         "name": "siteId",
@@ -13758,9 +13739,9 @@ export const API_OPERATIONS: ApiOperation[] = [
       {
         "name": "adjust",
         "in": "body",
-        "required": false,
+        "required": true,
         "type": "object",
-        "description": "Balance adjustment (adjust only)"
+        "description": "deltaCents and the required note"
       }
     ],
     "bodyDescribed": true,
@@ -13774,7 +13755,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     "tags": [
       "gift-cards"
     ],
-    "summary": "Read a gift card's ledger, or adjust its balance",
+    "summary": "A gift card's ledger entries, newest page (up to 200)",
     "params": [
       {
         "name": "siteId",
@@ -13789,17 +13770,10 @@ export const API_OPERATIONS: ApiOperation[] = [
         "required": true,
         "type": "string",
         "description": "Gift card ID"
-      },
-      {
-        "name": "adjust",
-        "in": "body",
-        "required": false,
-        "type": "object",
-        "description": "Balance adjustment (adjust only)"
       }
     ],
-    "bodyDescribed": true,
-    "bodyRef": "internal_giftcards_rest.adjustRequest",
+    "bodyDescribed": false,
+    "bodyRef": null,
     "credential": "siteScoped"
   },
   {
@@ -16998,8 +16972,16 @@ export const API_OPERATIONS: ApiOperation[] = [
     "tags": [
       "payments"
     ],
-    "summary": "Payment gateways and charges for a site",
-    "params": [],
+    "summary": "Every registered payment gateway for the site, configured or not",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      }
+    ],
     "bodyDescribed": false,
     "bodyRef": null,
     "credential": "siteScoped"
@@ -17116,8 +17098,58 @@ export const API_OPERATIONS: ApiOperation[] = [
     "tags": [
       "payments"
     ],
-    "summary": "Payment gateways and charges for a site",
-    "params": [],
+    "summary": "The site's payment transactions (charges), filtered and paginated",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "search",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Search text"
+      },
+      {
+        "name": "orderId",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Only this order's charges"
+      },
+      {
+        "name": "provider",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Only this gateway"
+      },
+      {
+        "name": "status",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Only this status"
+      },
+      {
+        "name": "limit",
+        "in": "query",
+        "required": false,
+        "type": "integer",
+        "description": "Page size"
+      },
+      {
+        "name": "offset",
+        "in": "query",
+        "required": false,
+        "type": "integer",
+        "description": "Page offset"
+      }
+    ],
     "bodyDescribed": false,
     "bodyRef": null,
     "credential": "siteScoped"
@@ -18424,7 +18456,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     "tags": [
       "pos"
     ],
-    "summary": "Bump, recall or reprint a kitchen ticket",
+    "summary": "Mark kitchen ticket lines done (the whole ticket when none are named)",
     "params": [
       {
         "name": "siteId",
@@ -18439,6 +18471,13 @@ export const API_OPERATIONS: ApiOperation[] = [
         "required": true,
         "type": "string",
         "description": "Ticket id"
+      },
+      {
+        "name": "body",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "{\\"
       }
     ],
     "bodyDescribed": false,
@@ -18452,7 +18491,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     "tags": [
       "pos"
     ],
-    "summary": "Bump, recall or reprint a kitchen ticket",
+    "summary": "Return a done kitchen ticket to pending",
     "params": [
       {
         "name": "siteId",
@@ -18480,7 +18519,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     "tags": [
       "pos"
     ],
-    "summary": "Bump, recall or reprint a kitchen ticket",
+    "summary": "Count a reprint of a kitchen ticket (printCount + 1, status unchanged)",
     "params": [
       {
         "name": "siteId",
@@ -19005,7 +19044,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     "tags": [
       "pos"
     ],
-    "summary": "Order or cancel a purchase order",
+    "summary": "Cancel a purchase order without moving stock",
     "params": [
       {
         "name": "siteId",
@@ -19033,7 +19072,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     "tags": [
       "pos"
     ],
-    "summary": "Order or cancel a purchase order",
+    "summary": "Place a draft purchase order (draft to ordered)",
     "params": [
       {
         "name": "siteId",
@@ -19537,7 +19576,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     "tags": [
       "pos"
     ],
-    "summary": "Complete or cancel a counter sale",
+    "summary": "Cancel a counter sale and release its reservation",
     "params": [
       {
         "name": "siteId",
@@ -19552,17 +19591,10 @@ export const API_OPERATIONS: ApiOperation[] = [
         "required": true,
         "type": "string",
         "description": "Order ID"
-      },
-      {
-        "name": "body",
-        "in": "body",
-        "required": false,
-        "type": "object",
-        "description": "Payment lines (complete only; optional)"
       }
     ],
-    "bodyDescribed": true,
-    "bodyRef": "github_com_webbuilder_server_internal_pos.CompleteInput",
+    "bodyDescribed": false,
+    "bodyRef": null,
     "credential": "siteScoped"
   },
   {
@@ -19572,7 +19604,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     "tags": [
       "pos"
     ],
-    "summary": "Complete or cancel a counter sale",
+    "summary": "Complete a counter sale: paid, fulfilled and delivered, with its payment lines recorded as tenders",
     "params": [
       {
         "name": "siteId",
@@ -19593,7 +19625,7 @@ export const API_OPERATIONS: ApiOperation[] = [
         "in": "body",
         "required": false,
         "type": "object",
-        "description": "Payment lines (complete only; optional)"
+        "description": "Payment lines (optional)"
       }
     ],
     "bodyDescribed": true,
@@ -19964,7 +19996,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     "tags": [
       "pos"
     ],
-    "summary": "Pay in/out, close or force-close a shift",
+    "summary": "Record a cash pay-in or pay-out on an open shift",
     "params": [
       {
         "name": "siteId",
@@ -19983,13 +20015,13 @@ export const API_OPERATIONS: ApiOperation[] = [
       {
         "name": "body",
         "in": "body",
-        "required": false,
+        "required": true,
         "type": "object",
-        "description": "MovementInput / CloseInput / ForceCloseInput by action"
+        "description": "The movement"
       }
     ],
     "bodyDescribed": true,
-    "bodyRef": "github_com_webbuilder_server_internal_pos.ForceCloseInput",
+    "bodyRef": "github_com_webbuilder_server_internal_pos.MovementInput",
     "credential": "siteScoped"
   },
   {
@@ -19999,7 +20031,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     "tags": [
       "pos"
     ],
-    "summary": "Pay in/out, close or force-close a shift",
+    "summary": "Close a shift with a blind cash count",
     "params": [
       {
         "name": "siteId",
@@ -20018,13 +20050,13 @@ export const API_OPERATIONS: ApiOperation[] = [
       {
         "name": "body",
         "in": "body",
-        "required": false,
+        "required": true,
         "type": "object",
-        "description": "MovementInput / CloseInput / ForceCloseInput by action"
+        "description": "Counted cash and note"
       }
     ],
     "bodyDescribed": true,
-    "bodyRef": "github_com_webbuilder_server_internal_pos.ForceCloseInput",
+    "bodyRef": "github_com_webbuilder_server_internal_pos.CloseInput",
     "credential": "siteScoped"
   },
   {
@@ -20034,7 +20066,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     "tags": [
       "pos"
     ],
-    "summary": "Pay in/out, close or force-close a shift",
+    "summary": "Force-close a shift, deciding every pending sale",
     "params": [
       {
         "name": "siteId",
@@ -20053,9 +20085,9 @@ export const API_OPERATIONS: ApiOperation[] = [
       {
         "name": "body",
         "in": "body",
-        "required": false,
+        "required": true,
         "type": "object",
-        "description": "MovementInput / CloseInput / ForceCloseInput by action"
+        "description": "One decision per pending sale"
       }
     ],
     "bodyDescribed": true,
@@ -20335,7 +20367,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     "tags": [
       "pos"
     ],
-    "summary": "Finish, reopen, approve or cancel a stocktake",
+    "summary": "Approve a stocktake, applying each counted line's difference to stock (review to approved)",
     "params": [
       {
         "name": "siteId",
@@ -20354,9 +20386,9 @@ export const API_OPERATIONS: ApiOperation[] = [
       {
         "name": "body",
         "in": "body",
-        "required": false,
+        "required": true,
         "type": "object",
-        "description": "Approval (approve only)"
+        "description": "Approval"
       }
     ],
     "bodyDescribed": true,
@@ -20370,7 +20402,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     "tags": [
       "pos"
     ],
-    "summary": "Finish, reopen, approve or cancel a stocktake",
+    "summary": "Cancel a stocktake (counting or review to cancelled); nothing moves",
     "params": [
       {
         "name": "siteId",
@@ -20385,17 +20417,10 @@ export const API_OPERATIONS: ApiOperation[] = [
         "required": true,
         "type": "string",
         "description": "Stocktake ID"
-      },
-      {
-        "name": "body",
-        "in": "body",
-        "required": false,
-        "type": "object",
-        "description": "Approval (approve only)"
       }
     ],
-    "bodyDescribed": true,
-    "bodyRef": "github_com_webbuilder_server_internal_pos.StocktakeApproveInput",
+    "bodyDescribed": false,
+    "bodyRef": null,
     "credential": "siteScoped"
   },
   {
@@ -20440,7 +20465,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     "tags": [
       "pos"
     ],
-    "summary": "Finish, reopen, approve or cancel a stocktake",
+    "summary": "Finish counting a stocktake (counting to review)",
     "params": [
       {
         "name": "siteId",
@@ -20455,17 +20480,10 @@ export const API_OPERATIONS: ApiOperation[] = [
         "required": true,
         "type": "string",
         "description": "Stocktake ID"
-      },
-      {
-        "name": "body",
-        "in": "body",
-        "required": false,
-        "type": "object",
-        "description": "Approval (approve only)"
       }
     ],
-    "bodyDescribed": true,
-    "bodyRef": "github_com_webbuilder_server_internal_pos.StocktakeApproveInput",
+    "bodyDescribed": false,
+    "bodyRef": null,
     "credential": "siteScoped"
   },
   {
@@ -20475,7 +20493,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     "tags": [
       "pos"
     ],
-    "summary": "Finish, reopen, approve or cancel a stocktake",
+    "summary": "Reopen a stocktake under review for more counting (review to counting)",
     "params": [
       {
         "name": "siteId",
@@ -20490,17 +20508,10 @@ export const API_OPERATIONS: ApiOperation[] = [
         "required": true,
         "type": "string",
         "description": "Stocktake ID"
-      },
-      {
-        "name": "body",
-        "in": "body",
-        "required": false,
-        "type": "object",
-        "description": "Approval (approve only)"
       }
     ],
-    "bodyDescribed": true,
-    "bodyRef": "github_com_webbuilder_server_internal_pos.StocktakeApproveInput",
+    "bodyDescribed": false,
+    "bodyRef": null,
     "credential": "siteScoped"
   },
   {
@@ -21035,7 +21046,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     "tags": [
       "pos"
     ],
-    "summary": "Send, move, transfer, bill or cancel a tab",
+    "summary": "Bill a tab into one pending POS sale",
     "params": [
       {
         "name": "siteId",
@@ -21054,9 +21065,9 @@ export const API_OPERATIONS: ApiOperation[] = [
       {
         "name": "body",
         "in": "body",
-        "required": false,
+        "required": true,
         "type": "object",
-        "description": "bills; see the description for the others"
+        "description": "What to bill"
       }
     ],
     "bodyDescribed": true,
@@ -21070,7 +21081,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     "tags": [
       "pos"
     ],
-    "summary": "Send, move, transfer, bill or cancel a tab",
+    "summary": "Cancel a tab",
     "params": [
       {
         "name": "siteId",
@@ -21089,13 +21100,13 @@ export const API_OPERATIONS: ApiOperation[] = [
       {
         "name": "body",
         "in": "body",
-        "required": false,
+        "required": true,
         "type": "object",
-        "description": "bills; see the description for the others"
+        "description": "Reason and expected version"
       }
     ],
     "bodyDescribed": true,
-    "bodyRef": "github_com_webbuilder_server_internal_pos.BillInput",
+    "bodyRef": "github_com_webbuilder_server_internal_pos.CancelTabInput",
     "credential": "siteScoped"
   },
   {
@@ -21308,7 +21319,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     "tags": [
       "pos"
     ],
-    "summary": "Send, move, transfer, bill or cancel a tab",
+    "summary": "Move a tab to another table",
     "params": [
       {
         "name": "siteId",
@@ -21327,13 +21338,13 @@ export const API_OPERATIONS: ApiOperation[] = [
       {
         "name": "body",
         "in": "body",
-        "required": false,
+        "required": true,
         "type": "object",
-        "description": "bills; see the description for the others"
+        "description": "Target table and expected version"
       }
     ],
     "bodyDescribed": true,
-    "bodyRef": "github_com_webbuilder_server_internal_pos.BillInput",
+    "bodyRef": "github_com_webbuilder_server_internal_pos.MoveTabInput",
     "credential": "siteScoped"
   },
   {
@@ -21378,7 +21389,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     "tags": [
       "pos"
     ],
-    "summary": "Send, move, transfer, bill or cancel a tab",
+    "summary": "Send a tab's unsent lines to the kitchen, one ticket per station",
     "params": [
       {
         "name": "siteId",
@@ -21399,11 +21410,11 @@ export const API_OPERATIONS: ApiOperation[] = [
         "in": "body",
         "required": false,
         "type": "object",
-        "description": "bills; see the description for the others"
+        "description": "{\\"
       }
     ],
-    "bodyDescribed": true,
-    "bodyRef": "github_com_webbuilder_server_internal_pos.BillInput",
+    "bodyDescribed": false,
+    "bodyRef": null,
     "credential": "siteScoped"
   },
   {
@@ -21413,7 +21424,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     "tags": [
       "pos"
     ],
-    "summary": "Send, move, transfer, bill or cancel a tab",
+    "summary": "Transfer lines of a tab to another tab or table, or merge the whole tab",
     "params": [
       {
         "name": "siteId",
@@ -21432,13 +21443,13 @@ export const API_OPERATIONS: ApiOperation[] = [
       {
         "name": "body",
         "in": "body",
-        "required": false,
+        "required": true,
         "type": "object",
-        "description": "bills; see the description for the others"
+        "description": "Destination, lines and expected version"
       }
     ],
     "bodyDescribed": true,
-    "bodyRef": "github_com_webbuilder_server_internal_pos.BillInput",
+    "bodyRef": "github_com_webbuilder_server_internal_pos.TabTransferInput",
     "credential": "siteScoped"
   },
   {
@@ -21630,7 +21641,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     "tags": [
       "pos"
     ],
-    "summary": "Send, receive or cancel a stock transfer",
+    "summary": "Cancel a stock transfer; a sent one returns its units to the from-location",
     "params": [
       {
         "name": "siteId",
@@ -21658,7 +21669,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     "tags": [
       "pos"
     ],
-    "summary": "Send, receive or cancel a stock transfer",
+    "summary": "Receive a sent stock transfer: the to-location gains the units",
     "params": [
       {
         "name": "siteId",
@@ -21686,7 +21697,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     "tags": [
       "pos"
     ],
-    "summary": "Send, receive or cancel a stock transfer",
+    "summary": "Send a draft stock transfer: the from-location loses the units",
     "params": [
       {
         "name": "siteId",
@@ -25123,7 +25134,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     "tags": [
       "shipping"
     ],
-    "summary": "Rotate a carrier's webhook secret, reveal its webhook URL, or test its credentials",
+    "summary": "Rotate a carrier's webhook secret",
     "params": [
       {
         "name": "siteId",
@@ -25138,17 +25149,10 @@ export const API_OPERATIONS: ApiOperation[] = [
         "required": true,
         "type": "string",
         "description": "Carrier id: ghn, ghtk"
-      },
-      {
-        "name": "body",
-        "in": "body",
-        "required": false,
-        "type": "object",
-        "description": "Unsaved draft (test only)"
       }
     ],
-    "bodyDescribed": true,
-    "bodyRef": "internal_shipping_carriers_rest.checkBody",
+    "bodyDescribed": false,
+    "bodyRef": null,
     "credential": "siteScoped"
   },
   {
@@ -25158,7 +25162,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     "tags": [
       "shipping"
     ],
-    "summary": "Rotate a carrier's webhook secret, reveal its webhook URL, or test its credentials",
+    "summary": "Test a carrier's credentials with one cheap live call",
     "params": [
       {
         "name": "siteId",
@@ -25179,7 +25183,7 @@ export const API_OPERATIONS: ApiOperation[] = [
         "in": "body",
         "required": false,
         "type": "object",
-        "description": "Unsaved draft (test only)"
+        "description": "Unsaved draft (optional)"
       }
     ],
     "bodyDescribed": true,
@@ -25193,7 +25197,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     "tags": [
       "shipping"
     ],
-    "summary": "Rotate a carrier's webhook secret, reveal its webhook URL, or test its credentials",
+    "summary": "Reveal a carrier's current webhook callback URL",
     "params": [
       {
         "name": "siteId",
@@ -25208,17 +25212,10 @@ export const API_OPERATIONS: ApiOperation[] = [
         "required": true,
         "type": "string",
         "description": "Carrier id: ghn, ghtk"
-      },
-      {
-        "name": "body",
-        "in": "body",
-        "required": false,
-        "type": "object",
-        "description": "Unsaved draft (test only)"
       }
     ],
-    "bodyDescribed": true,
-    "bodyRef": "internal_shipping_carriers_rest.checkBody",
+    "bodyDescribed": false,
+    "bodyRef": null,
     "credential": "siteScoped"
   },
   {
@@ -34286,6 +34283,28 @@ export const API_DEFINITIONS: Record<string, unknown> = {
       }
     }
   },
+  "github_com_webbuilder_server_internal_pos.CancelTabInput": {
+    "type": "object",
+    "properties": {
+      "expectedVersion": {
+        "type": "integer"
+      },
+      "reason": {
+        "type": "string"
+      }
+    }
+  },
+  "github_com_webbuilder_server_internal_pos.CloseInput": {
+    "type": "object",
+    "properties": {
+      "countedCashCents": {
+        "type": "integer"
+      },
+      "note": {
+        "type": "string"
+      }
+    }
+  },
   "github_com_webbuilder_server_internal_pos.CompleteInput": {
     "type": "object",
     "properties": {
@@ -34657,6 +34676,46 @@ export const API_DEFINITIONS: Record<string, unknown> = {
         "type": "integer"
       }
     }
+  },
+  "github_com_webbuilder_server_internal_pos.MoveTabInput": {
+    "type": "object",
+    "properties": {
+      "expectedVersion": {
+        "type": "integer"
+      },
+      "tableId": {
+        "description": "\"\" = takeaway",
+        "type": "string"
+      }
+    }
+  },
+  "github_com_webbuilder_server_internal_pos.MovementInput": {
+    "type": "object",
+    "properties": {
+      "amountCents": {
+        "type": "integer"
+      },
+      "clientRef": {
+        "type": "string"
+      },
+      "kind": {
+        "$ref": "#/definitions/github_com_webbuilder_server_internal_pos.MovementKind"
+      },
+      "reason": {
+        "type": "string"
+      }
+    }
+  },
+  "github_com_webbuilder_server_internal_pos.MovementKind": {
+    "type": "string",
+    "enum": [
+      "pay_in",
+      "pay_out"
+    ],
+    "x-enum-varnames": [
+      "PayIn",
+      "PayOut"
+    ]
   },
   "github_com_webbuilder_server_internal_pos.OpenShiftInput": {
     "type": "object",
@@ -35592,6 +35651,26 @@ export const API_DEFINITIONS: Record<string, unknown> = {
         "type": "string"
       },
       "voidedBy": {
+        "type": "string"
+      }
+    }
+  },
+  "github_com_webbuilder_server_internal_pos.TabTransferInput": {
+    "type": "object",
+    "properties": {
+      "expectedVersion": {
+        "type": "integer"
+      },
+      "lines": {
+        "type": "array",
+        "items": {
+          "$ref": "#/definitions/github_com_webbuilder_server_internal_pos.LineQty"
+        }
+      },
+      "toTabId": {
+        "type": "string"
+      },
+      "toTableId": {
         "type": "string"
       }
     }

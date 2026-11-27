@@ -5,9 +5,9 @@ import type { RequestShape } from './types.js';
 
 export const SHAPE_SOURCE = {
   "writeOperations": 472,
-  "shaped": 380,
+  "shaped": 379,
   "fromHandlers": 368,
-  "fromSwaggerOnly": 12,
+  "fromSwaggerOnly": 11,
   "withReadOnly": 31,
   "structsRead": 3954
 } as const;

@@ -430,16 +430,19 @@ describe('a summary the platform wrote for several routes', () => {
   });
 
   /**
-   * Liveness for the flag: summaries the platform still writes once for routes
-   * with different literal tails — the address lookups share one sentence over
-   * countries/provinces/units/wards/suggest — are still named as shared.
+   * The address lookups were the last group to share one sentence over routes
+   * with different tails (countries/provinces/units/wards/suggest). Since
+   * web_builder v1.0.362 every route has its own operation, and the platform
+   * guards it (server/internal/server/tests/swag_blocks_test.go), so each
+   * carries its own summary and nothing is flagged.
    */
-  it('names the other routes a shared summary covers', () => {
-    const op = findOperation('get:/_wb/address/wards')!;
-    const d = describeOperation(op) as { summary_covers?: string[] };
-    expect(d.summary_covers).toBeDefined();
-    expect(d.summary_covers!.join(' ')).toContain('/_wb/address/provinces');
-    expect(summarizeOperation(op).summary_shared).toBe(true);
+  it('gives each address lookup its own summary, unflagged', () => {
+    const ids = ['countries', 'provinces', 'suggest', 'units', 'wards'].map((t) => `get:/_wb/address/${t}`);
+    const summaries = ids.map((id) => findOperation(id)!.summary);
+    expect(new Set(summaries).size, summaries.join(' | ')).toBe(ids.length);
+    for (const id of ids) {
+      expect((describeOperation(findOperation(id)!) as { summary_covers?: string[] }).summary_covers, id).toBeUndefined();
+    }
   });
 
   /**
@@ -460,10 +463,16 @@ describe('a summary the platform wrote for several routes', () => {
   });
 
   /** Scoped, not sprayed: a flag on most of the surface is not a flag. */
-  it('stays a small share of the surface', () => {
+  /**
+   * ZERO since web_builder v1.0.362: the platform writes one operation per
+   * route. The detector stays as the backstop for a future block that puts
+   * several @Router lines with different tails under one sentence (the
+   * platform's guard only refuses two @Summary in one group); a flagged
+   * operation here is that block — split it in web_builder, do not raise this.
+   */
+  it('flags nothing while the platform writes one operation per route', () => {
     const flagged = API_OPERATIONS.filter((o) => summarizeOperation(o).summary_shared);
-    expect(flagged.length).toBeGreaterThan(0);
-    expect(flagged.length).toBeLessThan(API_OPERATIONS.length * 0.15);
+    expect(flagged.map((o) => `${o.method} ${o.path}: ${o.summary}`)).toEqual([]);
   });
 });
 
