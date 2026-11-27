@@ -702,8 +702,13 @@ function readFuncs(lines: string[]): GoFunc[] {
       let owner = named;
       if (!owner) {
         // The unnamed style: the function that follows the whole comment run.
+        // Blank lines are skipped too: since web_builder v1.0.359 each route of
+        // a handler that serves several is its OWN comment group (swag builds
+        // one operation per group), separated from the next by a blank line —
+        // so only the last group touches the func. The next CODE line must
+        // still be the signature, or the block owns nothing.
         let k = j;
-        while (k < lines.length && /^\s*\/\//.test(lines[k])) k++;
+        while (k < lines.length && /^\s*(\/\/.*)?$/.test(lines[k])) k++;
         const sig = SIG.exec(lines[k] ?? '');
         owner = sig ? sig[1] : null;
       }

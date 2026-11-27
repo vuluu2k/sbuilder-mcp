@@ -5,8 +5,8 @@ import type { ApiOperation } from './types.js';
 export const SWAGGER_SOURCE = {
   "operations": 1026,
   "definitions": 449,
-  "bodyCarrying": 503,
-  "bodyUndescribed": 122,
+  "bodyCarrying": 495,
+  "bodyUndescribed": 116,
   "generatedFrom": "server/docs/swagger.json"
 } as const;
 
@@ -3371,26 +3371,10 @@ export const API_OPERATIONS: ApiOperation[] = [
     "method": "DELETE",
     "path": "/api/invitations/{id}",
     "tags": [
-      "orgs",
-      "orgs",
       "orgs"
     ],
     "summary": "Withdraw an invitation that has not been answered (owner only)",
     "params": [
-      {
-        "name": "id",
-        "in": "path",
-        "required": true,
-        "type": "string",
-        "description": "Invitation ID"
-      },
-      {
-        "name": "id",
-        "in": "path",
-        "required": true,
-        "type": "string",
-        "description": "Invitation ID"
-      },
       {
         "name": "id",
         "in": "path",
@@ -3408,26 +3392,10 @@ export const API_OPERATIONS: ApiOperation[] = [
     "method": "POST",
     "path": "/api/invitations/{id}/accept",
     "tags": [
-      "orgs",
-      "orgs",
       "orgs"
     ],
-    "summary": "Withdraw an invitation that has not been answered (owner only)",
+    "summary": "Accept an invitation",
     "params": [
-      {
-        "name": "id",
-        "in": "path",
-        "required": true,
-        "type": "string",
-        "description": "Invitation ID"
-      },
-      {
-        "name": "id",
-        "in": "path",
-        "required": true,
-        "type": "string",
-        "description": "Invitation ID"
-      },
       {
         "name": "id",
         "in": "path",
@@ -3445,26 +3413,10 @@ export const API_OPERATIONS: ApiOperation[] = [
     "method": "POST",
     "path": "/api/invitations/{id}/decline",
     "tags": [
-      "orgs",
-      "orgs",
       "orgs"
     ],
-    "summary": "Withdraw an invitation that has not been answered (owner only)",
+    "summary": "Decline an invitation",
     "params": [
-      {
-        "name": "id",
-        "in": "path",
-        "required": true,
-        "type": "string",
-        "description": "Invitation ID"
-      },
-      {
-        "name": "id",
-        "in": "path",
-        "required": true,
-        "type": "string",
-        "description": "Invitation ID"
-      },
       {
         "name": "id",
         "in": "path",
@@ -5366,25 +5318,10 @@ export const API_OPERATIONS: ApiOperation[] = [
     "method": "GET",
     "path": "/api/sites/{siteId}/activity",
     "tags": [
-      "sites",
       "sites"
     ],
     "summary": "What has changed who can reach this site, newest first",
     "params": [
-      {
-        "name": "siteId",
-        "in": "path",
-        "required": true,
-        "type": "string",
-        "description": "Site ID"
-      },
-      {
-        "name": "org",
-        "in": "body",
-        "required": false,
-        "type": "object",
-        "description": "orgId (PUT only)"
-      },
       {
         "name": "siteId",
         "in": "path",
@@ -8900,25 +8837,10 @@ export const API_OPERATIONS: ApiOperation[] = [
     "method": "GET",
     "path": "/api/sites/{siteId}/courses/{courseId}/products",
     "tags": [
-      "courses",
       "courses"
     ],
-    "summary": "Link products to a course, or unlink one",
+    "summary": "List, attach or detach the products that unlock a course",
     "params": [
-      {
-        "name": "siteId",
-        "in": "path",
-        "required": true,
-        "type": "string",
-        "description": "Site ID"
-      },
-      {
-        "name": "courseId",
-        "in": "path",
-        "required": true,
-        "type": "string",
-        "description": "Course ID"
-      },
       {
         "name": "siteId",
         "in": "path",
@@ -8943,25 +8865,10 @@ export const API_OPERATIONS: ApiOperation[] = [
     "method": "POST",
     "path": "/api/sites/{siteId}/courses/{courseId}/products",
     "tags": [
-      "courses",
       "courses"
     ],
-    "summary": "Link products to a course, or unlink one",
+    "summary": "List, attach or detach the products that unlock a course",
     "params": [
-      {
-        "name": "siteId",
-        "in": "path",
-        "required": true,
-        "type": "string",
-        "description": "Site ID"
-      },
-      {
-        "name": "courseId",
-        "in": "path",
-        "required": true,
-        "type": "string",
-        "description": "Course ID"
-      },
       {
         "name": "siteId",
         "in": "path",
@@ -8986,25 +8893,10 @@ export const API_OPERATIONS: ApiOperation[] = [
     "method": "DELETE",
     "path": "/api/sites/{siteId}/courses/{courseId}/products/{productId}",
     "tags": [
-      "courses",
       "courses"
     ],
     "summary": "Link products to a course, or unlink one",
     "params": [
-      {
-        "name": "siteId",
-        "in": "path",
-        "required": true,
-        "type": "string",
-        "description": "Site ID"
-      },
-      {
-        "name": "courseId",
-        "in": "path",
-        "required": true,
-        "type": "string",
-        "description": "Course ID"
-      },
       {
         "name": "siteId",
         "in": "path",
@@ -10744,12 +10636,9 @@ export const API_OPERATIONS: ApiOperation[] = [
     "method": "POST",
     "path": "/api/sites/{siteId}/domains/{id}/canonical",
     "tags": [
-      "domains",
-      "sitedomain",
-      "sitedomain",
       "sitedomain"
     ],
-    "summary": "Set the HTTP status a redirecting domain answers with",
+    "summary": "Choose whether www or the bare domain is canonical",
     "params": [
       {
         "name": "siteId",
@@ -10766,63 +10655,7 @@ export const API_OPERATIONS: ApiOperation[] = [
         "description": "Domain ID"
       },
       {
-        "name": "siteId",
-        "in": "path",
-        "required": true,
-        "type": "string",
-        "description": "Site ID"
-      },
-      {
-        "name": "id",
-        "in": "path",
-        "required": true,
-        "type": "string",
-        "description": "Domain ID"
-      },
-      {
         "name": "canonical",
-        "in": "body",
-        "required": true,
-        "type": "object",
-        "description": "{\\"
-      },
-      {
-        "name": "siteId",
-        "in": "path",
-        "required": true,
-        "type": "string",
-        "description": "Site ID"
-      },
-      {
-        "name": "id",
-        "in": "path",
-        "required": true,
-        "type": "string",
-        "description": "Domain ID"
-      },
-      {
-        "name": "redirect",
-        "in": "body",
-        "required": true,
-        "type": "object",
-        "description": "{\\"
-      },
-      {
-        "name": "siteId",
-        "in": "path",
-        "required": true,
-        "type": "string",
-        "description": "Site ID"
-      },
-      {
-        "name": "id",
-        "in": "path",
-        "required": true,
-        "type": "string",
-        "description": "Domain ID"
-      },
-      {
-        "name": "code",
         "in": "body",
         "required": true,
         "type": "object",
@@ -10838,12 +10671,9 @@ export const API_OPERATIONS: ApiOperation[] = [
     "method": "POST",
     "path": "/api/sites/{siteId}/domains/{id}/primary",
     "tags": [
-      "domains",
-      "sitedomain",
-      "sitedomain",
-      "sitedomain"
+      "domains"
     ],
-    "summary": "Set the HTTP status a redirecting domain answers with",
+    "summary": "Verify domain ownership or elect the primary domain",
     "params": [
       {
         "name": "siteId",
@@ -10858,69 +10688,6 @@ export const API_OPERATIONS: ApiOperation[] = [
         "required": true,
         "type": "string",
         "description": "Domain ID"
-      },
-      {
-        "name": "siteId",
-        "in": "path",
-        "required": true,
-        "type": "string",
-        "description": "Site ID"
-      },
-      {
-        "name": "id",
-        "in": "path",
-        "required": true,
-        "type": "string",
-        "description": "Domain ID"
-      },
-      {
-        "name": "canonical",
-        "in": "body",
-        "required": true,
-        "type": "object",
-        "description": "{\\"
-      },
-      {
-        "name": "siteId",
-        "in": "path",
-        "required": true,
-        "type": "string",
-        "description": "Site ID"
-      },
-      {
-        "name": "id",
-        "in": "path",
-        "required": true,
-        "type": "string",
-        "description": "Domain ID"
-      },
-      {
-        "name": "redirect",
-        "in": "body",
-        "required": true,
-        "type": "object",
-        "description": "{\\"
-      },
-      {
-        "name": "siteId",
-        "in": "path",
-        "required": true,
-        "type": "string",
-        "description": "Site ID"
-      },
-      {
-        "name": "id",
-        "in": "path",
-        "required": true,
-        "type": "string",
-        "description": "Domain ID"
-      },
-      {
-        "name": "code",
-        "in": "body",
-        "required": true,
-        "type": "object",
-        "description": "{\\"
       }
     ],
     "bodyDescribed": false,
@@ -10932,12 +10699,9 @@ export const API_OPERATIONS: ApiOperation[] = [
     "method": "POST",
     "path": "/api/sites/{siteId}/domains/{id}/redirect",
     "tags": [
-      "domains",
-      "sitedomain",
-      "sitedomain",
       "sitedomain"
     ],
-    "summary": "Set the HTTP status a redirecting domain answers with",
+    "summary": "Serve this domain directly, or point it at a sibling",
     "params": [
       {
         "name": "siteId",
@@ -10954,63 +10718,7 @@ export const API_OPERATIONS: ApiOperation[] = [
         "description": "Domain ID"
       },
       {
-        "name": "siteId",
-        "in": "path",
-        "required": true,
-        "type": "string",
-        "description": "Site ID"
-      },
-      {
-        "name": "id",
-        "in": "path",
-        "required": true,
-        "type": "string",
-        "description": "Domain ID"
-      },
-      {
-        "name": "canonical",
-        "in": "body",
-        "required": true,
-        "type": "object",
-        "description": "{\\"
-      },
-      {
-        "name": "siteId",
-        "in": "path",
-        "required": true,
-        "type": "string",
-        "description": "Site ID"
-      },
-      {
-        "name": "id",
-        "in": "path",
-        "required": true,
-        "type": "string",
-        "description": "Domain ID"
-      },
-      {
         "name": "redirect",
-        "in": "body",
-        "required": true,
-        "type": "object",
-        "description": "{\\"
-      },
-      {
-        "name": "siteId",
-        "in": "path",
-        "required": true,
-        "type": "string",
-        "description": "Site ID"
-      },
-      {
-        "name": "id",
-        "in": "path",
-        "required": true,
-        "type": "string",
-        "description": "Domain ID"
-      },
-      {
-        "name": "code",
         "in": "body",
         "required": true,
         "type": "object",
@@ -11026,69 +10734,10 @@ export const API_OPERATIONS: ApiOperation[] = [
     "method": "POST",
     "path": "/api/sites/{siteId}/domains/{id}/redirect-code",
     "tags": [
-      "domains",
-      "sitedomain",
-      "sitedomain",
       "sitedomain"
     ],
     "summary": "Set the HTTP status a redirecting domain answers with",
     "params": [
-      {
-        "name": "siteId",
-        "in": "path",
-        "required": true,
-        "type": "string",
-        "description": "Site ID"
-      },
-      {
-        "name": "id",
-        "in": "path",
-        "required": true,
-        "type": "string",
-        "description": "Domain ID"
-      },
-      {
-        "name": "siteId",
-        "in": "path",
-        "required": true,
-        "type": "string",
-        "description": "Site ID"
-      },
-      {
-        "name": "id",
-        "in": "path",
-        "required": true,
-        "type": "string",
-        "description": "Domain ID"
-      },
-      {
-        "name": "canonical",
-        "in": "body",
-        "required": true,
-        "type": "object",
-        "description": "{\\"
-      },
-      {
-        "name": "siteId",
-        "in": "path",
-        "required": true,
-        "type": "string",
-        "description": "Site ID"
-      },
-      {
-        "name": "id",
-        "in": "path",
-        "required": true,
-        "type": "string",
-        "description": "Domain ID"
-      },
-      {
-        "name": "redirect",
-        "in": "body",
-        "required": true,
-        "type": "object",
-        "description": "{\\"
-      },
       {
         "name": "siteId",
         "in": "path",
@@ -11120,12 +10769,9 @@ export const API_OPERATIONS: ApiOperation[] = [
     "method": "POST",
     "path": "/api/sites/{siteId}/domains/{id}/verify",
     "tags": [
-      "domains",
-      "sitedomain",
-      "sitedomain",
-      "sitedomain"
+      "domains"
     ],
-    "summary": "Set the HTTP status a redirecting domain answers with",
+    "summary": "Verify domain ownership or elect the primary domain",
     "params": [
       {
         "name": "siteId",
@@ -11140,69 +10786,6 @@ export const API_OPERATIONS: ApiOperation[] = [
         "required": true,
         "type": "string",
         "description": "Domain ID"
-      },
-      {
-        "name": "siteId",
-        "in": "path",
-        "required": true,
-        "type": "string",
-        "description": "Site ID"
-      },
-      {
-        "name": "id",
-        "in": "path",
-        "required": true,
-        "type": "string",
-        "description": "Domain ID"
-      },
-      {
-        "name": "canonical",
-        "in": "body",
-        "required": true,
-        "type": "object",
-        "description": "{\\"
-      },
-      {
-        "name": "siteId",
-        "in": "path",
-        "required": true,
-        "type": "string",
-        "description": "Site ID"
-      },
-      {
-        "name": "id",
-        "in": "path",
-        "required": true,
-        "type": "string",
-        "description": "Domain ID"
-      },
-      {
-        "name": "redirect",
-        "in": "body",
-        "required": true,
-        "type": "object",
-        "description": "{\\"
-      },
-      {
-        "name": "siteId",
-        "in": "path",
-        "required": true,
-        "type": "string",
-        "description": "Site ID"
-      },
-      {
-        "name": "id",
-        "in": "path",
-        "required": true,
-        "type": "string",
-        "description": "Domain ID"
-      },
-      {
-        "name": "code",
-        "in": "body",
-        "required": true,
-        "type": "object",
-        "description": "{\\"
       }
     ],
     "bodyDescribed": false,
@@ -16468,10 +16051,9 @@ export const API_OPERATIONS: ApiOperation[] = [
     "method": "PUT",
     "path": "/api/sites/{siteId}/org",
     "tags": [
-      "sites",
       "sites"
     ],
-    "summary": "What has changed who can reach this site, newest first",
+    "summary": "Attach this site to an organization, or detach it",
     "params": [
       {
         "name": "siteId",
@@ -16486,27 +16068,6 @@ export const API_OPERATIONS: ApiOperation[] = [
         "required": false,
         "type": "object",
         "description": "orgId (PUT only)"
-      },
-      {
-        "name": "siteId",
-        "in": "path",
-        "required": true,
-        "type": "string",
-        "description": "Site ID"
-      },
-      {
-        "name": "limit",
-        "in": "query",
-        "required": false,
-        "type": "integer",
-        "description": "Page size (max 200)"
-      },
-      {
-        "name": "offset",
-        "in": "query",
-        "required": false,
-        "type": "integer",
-        "description": "Page offset"
       }
     ],
     "bodyDescribed": false,
@@ -16518,10 +16079,9 @@ export const API_OPERATIONS: ApiOperation[] = [
     "method": "DELETE",
     "path": "/api/sites/{siteId}/org",
     "tags": [
-      "sites",
       "sites"
     ],
-    "summary": "What has changed who can reach this site, newest first",
+    "summary": "Attach this site to an organization, or detach it",
     "params": [
       {
         "name": "siteId",
@@ -16536,27 +16096,6 @@ export const API_OPERATIONS: ApiOperation[] = [
         "required": false,
         "type": "object",
         "description": "orgId (PUT only)"
-      },
-      {
-        "name": "siteId",
-        "in": "path",
-        "required": true,
-        "type": "string",
-        "description": "Site ID"
-      },
-      {
-        "name": "limit",
-        "in": "query",
-        "required": false,
-        "type": "integer",
-        "description": "Page size (max 200)"
-      },
-      {
-        "name": "offset",
-        "in": "query",
-        "required": false,
-        "type": "integer",
-        "description": "Page offset"
       }
     ],
     "bodyDescribed": false,
@@ -17002,25 +16541,10 @@ export const API_OPERATIONS: ApiOperation[] = [
     "method": "GET",
     "path": "/api/sites/{siteId}/pages/locate-nodes",
     "tags": [
-      "pages",
       "pages"
     ],
     "summary": "Which page holds each node id",
     "params": [
-      {
-        "name": "siteId",
-        "in": "path",
-        "required": true,
-        "type": "string",
-        "description": "Site ID"
-      },
-      {
-        "name": "page",
-        "in": "body",
-        "required": false,
-        "type": "object",
-        "description": "Page to create (POST only)"
-      },
       {
         "name": "ids",
         "in": "query",
@@ -17029,8 +16553,8 @@ export const API_OPERATIONS: ApiOperation[] = [
         "description": "Comma-separated node ids (max 100)"
       }
     ],
-    "bodyDescribed": true,
-    "bodyRef": "github_com_webbuilder_server_internal_page.CreatePageInput",
+    "bodyDescribed": false,
+    "bodyRef": null,
     "credential": "siteScoped"
   },
   {
@@ -17206,10 +16730,9 @@ export const API_OPERATIONS: ApiOperation[] = [
     "method": "GET",
     "path": "/api/sites/{siteId}/pages/{pageId}/history",
     "tags": [
-      "pages",
       "pages"
     ],
-    "summary": "Restore a page's draft from an autosave checkpoint",
+    "summary": "List a page's autosave checkpoints, newest first",
     "params": [
       {
         "name": "siteId",
@@ -17231,20 +16754,6 @@ export const API_OPERATIONS: ApiOperation[] = [
         "required": false,
         "type": "integer",
         "description": "1-… , default 50"
-      },
-      {
-        "name": "siteId",
-        "in": "path",
-        "required": true,
-        "type": "string",
-        "description": "Site ID"
-      },
-      {
-        "name": "pageId",
-        "in": "path",
-        "required": true,
-        "type": "string",
-        "description": "Page ID"
       }
     ],
     "bodyDescribed": false,
@@ -17256,32 +16765,10 @@ export const API_OPERATIONS: ApiOperation[] = [
     "method": "POST",
     "path": "/api/sites/{siteId}/pages/{pageId}/history/{historyId}/restore",
     "tags": [
-      "pages",
       "pages"
     ],
     "summary": "Restore a page's draft from an autosave checkpoint",
     "params": [
-      {
-        "name": "siteId",
-        "in": "path",
-        "required": true,
-        "type": "string",
-        "description": "Site ID"
-      },
-      {
-        "name": "pageId",
-        "in": "path",
-        "required": true,
-        "type": "string",
-        "description": "Page ID"
-      },
-      {
-        "name": "limit",
-        "in": "query",
-        "required": false,
-        "type": "integer",
-        "description": "1-… , default 50"
-      },
       {
         "name": "siteId",
         "in": "path",
@@ -17397,11 +16884,9 @@ export const API_OPERATIONS: ApiOperation[] = [
     "method": "GET",
     "path": "/api/sites/{siteId}/pages/{pageId}/versions",
     "tags": [
-      "pages",
-      "pages",
       "pages"
     ],
-    "summary": "Restore a page's draft from a version snapshot",
+    "summary": "List a page's labelled version snapshots",
     "params": [
       {
         "name": "siteId",
@@ -17430,41 +16915,6 @@ export const API_OPERATIONS: ApiOperation[] = [
         "required": false,
         "type": "integer",
         "description": "default 0"
-      },
-      {
-        "name": "siteId",
-        "in": "path",
-        "required": true,
-        "type": "string",
-        "description": "Site ID"
-      },
-      {
-        "name": "pageId",
-        "in": "path",
-        "required": true,
-        "type": "string",
-        "description": "Page ID"
-      },
-      {
-        "name": "body",
-        "in": "body",
-        "required": true,
-        "type": "object",
-        "description": "{label, document?}"
-      },
-      {
-        "name": "siteId",
-        "in": "path",
-        "required": true,
-        "type": "string",
-        "description": "Site ID"
-      },
-      {
-        "name": "pageId",
-        "in": "path",
-        "required": true,
-        "type": "string",
-        "description": "Page ID"
       }
     ],
     "bodyDescribed": false,
@@ -17476,40 +16926,10 @@ export const API_OPERATIONS: ApiOperation[] = [
     "method": "POST",
     "path": "/api/sites/{siteId}/pages/{pageId}/versions",
     "tags": [
-      "pages",
-      "pages",
       "pages"
     ],
-    "summary": "Restore a page's draft from a version snapshot",
+    "summary": "Save a labelled version snapshot of a page",
     "params": [
-      {
-        "name": "siteId",
-        "in": "path",
-        "required": true,
-        "type": "string",
-        "description": "Site ID"
-      },
-      {
-        "name": "pageId",
-        "in": "path",
-        "required": true,
-        "type": "string",
-        "description": "Page ID"
-      },
-      {
-        "name": "limit",
-        "in": "query",
-        "required": false,
-        "type": "integer",
-        "description": "1-… , default 50"
-      },
-      {
-        "name": "offset",
-        "in": "query",
-        "required": false,
-        "type": "integer",
-        "description": "default 0"
-      },
       {
         "name": "siteId",
         "in": "path",
@@ -17530,20 +16950,6 @@ export const API_OPERATIONS: ApiOperation[] = [
         "required": true,
         "type": "object",
         "description": "{label, document?}"
-      },
-      {
-        "name": "siteId",
-        "in": "path",
-        "required": true,
-        "type": "string",
-        "description": "Site ID"
-      },
-      {
-        "name": "pageId",
-        "in": "path",
-        "required": true,
-        "type": "string",
-        "description": "Page ID"
       }
     ],
     "bodyDescribed": false,
@@ -17555,61 +16961,10 @@ export const API_OPERATIONS: ApiOperation[] = [
     "method": "POST",
     "path": "/api/sites/{siteId}/pages/{pageId}/versions/{versionId}/restore",
     "tags": [
-      "pages",
-      "pages",
       "pages"
     ],
     "summary": "Restore a page's draft from a version snapshot",
     "params": [
-      {
-        "name": "siteId",
-        "in": "path",
-        "required": true,
-        "type": "string",
-        "description": "Site ID"
-      },
-      {
-        "name": "pageId",
-        "in": "path",
-        "required": true,
-        "type": "string",
-        "description": "Page ID"
-      },
-      {
-        "name": "limit",
-        "in": "query",
-        "required": false,
-        "type": "integer",
-        "description": "1-… , default 50"
-      },
-      {
-        "name": "offset",
-        "in": "query",
-        "required": false,
-        "type": "integer",
-        "description": "default 0"
-      },
-      {
-        "name": "siteId",
-        "in": "path",
-        "required": true,
-        "type": "string",
-        "description": "Site ID"
-      },
-      {
-        "name": "pageId",
-        "in": "path",
-        "required": true,
-        "type": "string",
-        "description": "Page ID"
-      },
-      {
-        "name": "body",
-        "in": "body",
-        "required": true,
-        "type": "object",
-        "description": "{label, document?}"
-      },
       {
         "name": "siteId",
         "in": "path",
@@ -17772,12 +17127,9 @@ export const API_OPERATIONS: ApiOperation[] = [
     "method": "POST",
     "path": "/api/sites/{siteId}/payment-transactions",
     "tags": [
-      "payments",
-      "payments",
-      "payments",
       "payments"
     ],
-    "summary": "ASK the gateway to send the money back",
+    "summary": "Open a pay link for an order",
     "params": [
       {
         "name": "siteId",
@@ -17792,45 +17144,10 @@ export const API_OPERATIONS: ApiOperation[] = [
         "required": true,
         "type": "object",
         "description": "The order and provider to charge; the amount is read from the order, never from the body"
-      },
-      {
-        "name": "siteId",
-        "in": "path",
-        "required": true,
-        "type": "string",
-        "description": "Site ID"
-      },
-      {
-        "name": "siteId",
-        "in": "path",
-        "required": true,
-        "type": "string",
-        "description": "Site ID"
-      },
-      {
-        "name": "refund",
-        "in": "body",
-        "required": false,
-        "type": "object",
-        "description": "An optional merchant note; a missing body is not an error"
-      },
-      {
-        "name": "siteId",
-        "in": "path",
-        "required": true,
-        "type": "string",
-        "description": "Site ID"
-      },
-      {
-        "name": "refund",
-        "in": "body",
-        "required": false,
-        "type": "object",
-        "description": "An optional merchant note"
       }
     ],
     "bodyDescribed": true,
-    "bodyRef": "internal_payments_rest.refundRequest",
+    "bodyRef": "internal_payments_rest.chargeRequest",
     "credential": "siteScoped"
   },
   {
@@ -17838,12 +17155,9 @@ export const API_OPERATIONS: ApiOperation[] = [
     "method": "GET",
     "path": "/api/sites/{siteId}/payment-transactions/{transactionId}",
     "tags": [
-      "payments",
-      "payments",
-      "payments",
       "payments"
     ],
-    "summary": "ASK the gateway to send the money back",
+    "summary": "Read one charge",
     "params": [
       {
         "name": "siteId",
@@ -17853,71 +17167,15 @@ export const API_OPERATIONS: ApiOperation[] = [
         "description": "Site ID"
       },
       {
-        "name": "charge",
-        "in": "body",
-        "required": true,
-        "type": "object",
-        "description": "The order and provider to charge; the amount is read from the order, never from the body"
-      },
-      {
-        "name": "siteId",
-        "in": "path",
-        "required": true,
-        "type": "string",
-        "description": "Site ID"
-      },
-      {
         "name": "transactionId",
         "in": "path",
         "required": true,
         "type": "string",
         "description": "Transaction ID"
-      },
-      {
-        "name": "siteId",
-        "in": "path",
-        "required": true,
-        "type": "string",
-        "description": "Site ID"
-      },
-      {
-        "name": "transactionId",
-        "in": "path",
-        "required": true,
-        "type": "string",
-        "description": "Transaction ID"
-      },
-      {
-        "name": "refund",
-        "in": "body",
-        "required": false,
-        "type": "object",
-        "description": "An optional merchant note; a missing body is not an error"
-      },
-      {
-        "name": "siteId",
-        "in": "path",
-        "required": true,
-        "type": "string",
-        "description": "Site ID"
-      },
-      {
-        "name": "transactionId",
-        "in": "path",
-        "required": true,
-        "type": "string",
-        "description": "Transaction ID"
-      },
-      {
-        "name": "refund",
-        "in": "body",
-        "required": false,
-        "type": "object",
-        "description": "An optional merchant note"
       }
     ],
-    "bodyDescribed": true,
-    "bodyRef": "internal_payments_rest.refundRequest",
+    "bodyDescribed": false,
+    "bodyRef": null,
     "credential": "siteScoped"
   },
   {
@@ -17925,41 +17183,10 @@ export const API_OPERATIONS: ApiOperation[] = [
     "method": "POST",
     "path": "/api/sites/{siteId}/payment-transactions/{transactionId}/refund",
     "tags": [
-      "payments",
-      "payments",
-      "payments",
       "payments"
     ],
-    "summary": "ASK the gateway to send the money back",
+    "summary": "RECORD a refund that was made outside this platform",
     "params": [
-      {
-        "name": "siteId",
-        "in": "path",
-        "required": true,
-        "type": "string",
-        "description": "Site ID"
-      },
-      {
-        "name": "charge",
-        "in": "body",
-        "required": true,
-        "type": "object",
-        "description": "The order and provider to charge; the amount is read from the order, never from the body"
-      },
-      {
-        "name": "siteId",
-        "in": "path",
-        "required": true,
-        "type": "string",
-        "description": "Site ID"
-      },
-      {
-        "name": "transactionId",
-        "in": "path",
-        "required": true,
-        "type": "string",
-        "description": "Transaction ID"
-      },
       {
         "name": "siteId",
         "in": "path",
@@ -17980,27 +17207,6 @@ export const API_OPERATIONS: ApiOperation[] = [
         "required": false,
         "type": "object",
         "description": "An optional merchant note; a missing body is not an error"
-      },
-      {
-        "name": "siteId",
-        "in": "path",
-        "required": true,
-        "type": "string",
-        "description": "Site ID"
-      },
-      {
-        "name": "transactionId",
-        "in": "path",
-        "required": true,
-        "type": "string",
-        "description": "Transaction ID"
-      },
-      {
-        "name": "refund",
-        "in": "body",
-        "required": false,
-        "type": "object",
-        "description": "An optional merchant note"
       }
     ],
     "bodyDescribed": true,
@@ -18012,62 +17218,10 @@ export const API_OPERATIONS: ApiOperation[] = [
     "method": "POST",
     "path": "/api/sites/{siteId}/payment-transactions/{transactionId}/refund-via-gateway",
     "tags": [
-      "payments",
-      "payments",
-      "payments",
       "payments"
     ],
     "summary": "ASK the gateway to send the money back",
     "params": [
-      {
-        "name": "siteId",
-        "in": "path",
-        "required": true,
-        "type": "string",
-        "description": "Site ID"
-      },
-      {
-        "name": "charge",
-        "in": "body",
-        "required": true,
-        "type": "object",
-        "description": "The order and provider to charge; the amount is read from the order, never from the body"
-      },
-      {
-        "name": "siteId",
-        "in": "path",
-        "required": true,
-        "type": "string",
-        "description": "Site ID"
-      },
-      {
-        "name": "transactionId",
-        "in": "path",
-        "required": true,
-        "type": "string",
-        "description": "Transaction ID"
-      },
-      {
-        "name": "siteId",
-        "in": "path",
-        "required": true,
-        "type": "string",
-        "description": "Site ID"
-      },
-      {
-        "name": "transactionId",
-        "in": "path",
-        "required": true,
-        "type": "string",
-        "description": "Transaction ID"
-      },
-      {
-        "name": "refund",
-        "in": "body",
-        "required": false,
-        "type": "object",
-        "description": "An optional merchant note; a missing body is not an error"
-      },
       {
         "name": "siteId",
         "in": "path",
@@ -23699,25 +22853,10 @@ export const API_OPERATIONS: ApiOperation[] = [
     "method": "GET",
     "path": "/api/sites/{siteId}/products/{id}/bundles",
     "tags": [
-      "products",
       "products"
     ],
     "summary": "Bundles containing a product",
     "params": [
-      {
-        "name": "siteId",
-        "in": "path",
-        "required": true,
-        "type": "string",
-        "description": "Site ID"
-      },
-      {
-        "name": "body",
-        "in": "body",
-        "required": false,
-        "type": "object",
-        "description": "Category IDs to set (PUT only): {\\"
-      },
       {
         "name": "siteId",
         "in": "path",
@@ -23742,10 +22881,9 @@ export const API_OPERATIONS: ApiOperation[] = [
     "method": "GET",
     "path": "/api/sites/{siteId}/products/{productId}/categories",
     "tags": [
-      "products",
       "products"
     ],
-    "summary": "Bundles containing a product",
+    "summary": "Get or set a product's category links",
     "params": [
       {
         "name": "siteId",
@@ -23767,13 +22905,6 @@ export const API_OPERATIONS: ApiOperation[] = [
         "required": false,
         "type": "object",
         "description": "Category IDs to set (PUT only): {\\"
-      },
-      {
-        "name": "siteId",
-        "in": "path",
-        "required": true,
-        "type": "string",
-        "description": "Site ID"
       }
     ],
     "bodyDescribed": false,
@@ -23785,10 +22916,9 @@ export const API_OPERATIONS: ApiOperation[] = [
     "method": "PUT",
     "path": "/api/sites/{siteId}/products/{productId}/categories",
     "tags": [
-      "products",
       "products"
     ],
-    "summary": "Bundles containing a product",
+    "summary": "Get or set a product's category links",
     "params": [
       {
         "name": "siteId",
@@ -23810,13 +22940,6 @@ export const API_OPERATIONS: ApiOperation[] = [
         "required": false,
         "type": "object",
         "description": "Category IDs to set (PUT only): {\\"
-      },
-      {
-        "name": "siteId",
-        "in": "path",
-        "required": true,
-        "type": "string",
-        "description": "Site ID"
       }
     ],
     "bodyDescribed": false,

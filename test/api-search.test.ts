@@ -412,19 +412,33 @@ describe('the product-write call sheet', () => {
  */
 describe('a summary the platform wrote for several routes', () => {
   /**
-   * THE COSTLIEST ONE IS MONEY. The platform documents `/refund` as RECORDING a
+   * THE COSTLIEST ONE WAS MONEY. The platform documents `/refund` as RECORDING a
    * refund made elsewhere and `/refund-via-gateway` as ASKING the gateway to
-   * send it; the document gives both — and `POST /payment-transactions`, which
-   * opens a pay link — the single sentence "ASK the gateway to send the money
-   * back". An agent that trusts it records a refund that never pays anybody.
+   * send it; until web_builder v1.0.359 the document gave both — and
+   * `POST /payment-transactions`, which opens a pay link — the single sentence
+   * "ASK the gateway to send the money back" (swag merged one comment block into
+   * one operation). The platform now writes one operation per route, so the
+   * refund carries its OWN sentence and must not be flagged.
    */
-  it('names the other routes a shared summary covers', () => {
+  it('a route the platform now documents on its own keeps its own summary, unflagged', () => {
     const op = findOperation(
       'post:/api/sites/{siteId}/payment-transactions/{transactionId}/refund',
     )!;
+    expect(op.summary).toMatch(/^RECORD a refund/);
+    expect((describeOperation(op) as { summary_covers?: string[] }).summary_covers).toBeUndefined();
+    expect(summarizeOperation(op).summary_shared).toBeUndefined();
+  });
+
+  /**
+   * Liveness for the flag: summaries the platform still writes once for routes
+   * with different literal tails — the address lookups share one sentence over
+   * countries/provinces/units/wards/suggest — are still named as shared.
+   */
+  it('names the other routes a shared summary covers', () => {
+    const op = findOperation('get:/_wb/address/wards')!;
     const d = describeOperation(op) as { summary_covers?: string[] };
     expect(d.summary_covers).toBeDefined();
-    expect(d.summary_covers!.join(' ')).toContain('refund-via-gateway');
+    expect(d.summary_covers!.join(' ')).toContain('/_wb/address/provinces');
     expect(summarizeOperation(op).summary_shared).toBe(true);
   });
 
