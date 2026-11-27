@@ -1482,7 +1482,9 @@ một dải đã thu hẹp theo đúng tag mà URL nêu tên — `list-dataset` 
 `{productTag,blogTag}.{title,description,image,url}` bind được. **Tag là nguồn MỘT BẢN GHI**:
 `config.datasetSource: "productTag"` / `"blogTag"` trên `list-dataset` bị từ chối (`sb_add` và
 `sb_set`) — không có feed danh sách nào đứng sau, và renderer Go sẽ liệt kê cả catalogue dưới tên
-tag. Bản ghi tag là `GET/POST /api/sites/{siteId}/product-tags` và `…/article-tags`
+tag. Server cũng từ chối (web_builder v1.0.354): mọi lần lưu trang, global section hay phiên bản
+chứa nó đều trả 400 `dataset_source_not_repeatable` kèm `details.nodeId` / `details.datasetSource`,
+và không ghi gì. Đổi slug của tag hay thương hiệu thì địa chỉ cũ 301 sang địa chỉ mới. Bản ghi tag là `GET/POST /api/sites/{siteId}/product-tags` và `…/article-tags`
 (`{tags, total}`; 409 `duplicate_slug` / `duplicate_tag`, 400 khi tên trống); `GET …/blog-tags`
 vẫn là danh sách gợi ý tên. Giống `brand`, loại tag không phải loại link của menu.
 
