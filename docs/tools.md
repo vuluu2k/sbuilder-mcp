@@ -1521,9 +1521,9 @@ plus a shelf already narrowed to the tag the URL names — a product `list-datas
 source**: `config.datasetSource: "productTag"` / `"blogTag"` on a `list-dataset` is refused
 (`sb_add` and `sb_set`) — no list feed backs it and the Go renderer would list the whole
 catalogue under the tag's name. The server refuses it too (web_builder v1.0.354): any page,
-global-section or version save carrying one answers 400 `dataset_source_not_repeatable` with
+global-section, version, restore (version/history) or overlay (cart/popup) save carrying one answers 400 `dataset_source_not_repeatable` with
 `details.nodeId` / `details.datasetSource`, and nothing is written. Changing a tag's or brand's
-slug 301s the old address. The records themselves are `GET/POST /api/sites/{siteId}/product-tags`
+slug 301s the old address. Storefront `?f.brand` / `?f.tag` / attribute / `?f.record.*` values match the stored value whether either side is NFC or NFD (v1.0.356). The records themselves are `GET/POST /api/sites/{siteId}/product-tags`
 and `…/article-tags` (`{tags, total}`; 409 `duplicate_slug` / `duplicate_tag`, 400 on a blank
 name); `GET …/blog-tags` is still the distinct-name suggestion list. Like `brand`, tag kinds are
 not menu link kinds.
