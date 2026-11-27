@@ -6,6 +6,14 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.117.2] - 2026-11-27
+
+### Changed
+- The bundled platform catalog is regenerated from web_builder v1.0.362, so every route has its own summary and `sb_api_find` no longer flags any operation as sharing one.
+
+### Fixed
+- `sb_api_find` no longer shows the `/complete` request body on `POST /pos/sales/{orderId}/cancel`.
+
 ## [0.117.1] - 2026-11-27
 
 ### Changed
